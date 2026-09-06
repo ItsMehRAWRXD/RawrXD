@@ -21,6 +21,8 @@
 #ifndef DEEP2_QUANT_KERNEL_REGISTRY_HPP
 #define DEEP2_QUANT_KERNEL_REGISTRY_HPP
 
+#include "QuantTypeTable.hpp"
+
 #include <cstdint>
 #include <cstddef>
 #include <functional>
@@ -30,12 +32,7 @@
 
 namespace Deep2 {
 
-// ---------------------------------------------------------------------------
-// Forward-declare GGMLType to avoid header coupling.
-// The underlying type MUST match the definition in GGUFLoader.hpp / MoEWeightsLoader.hpp
-// (enum class GGMLType : uint32_t).  A mismatch causes a redefinition error.
-// ---------------------------------------------------------------------------
-enum class GGMLType : uint32_t;
+// GGMLType is defined in QuantTypeTable.hpp (canonical ggml IDs).
 
 // ---------------------------------------------------------------------------
 // Universal GEMV kernel signature.

@@ -45,7 +45,7 @@ void ModelDownloader::CleanupSession() {
 std::string ModelDownloader::BuildHuggingFaceUrl(
     const std::string& repo_id,
     const std::string& filename) {
-    return "https://huggingface.co/" + repo_id + "/resolve/main/" + filename;
+    return "local-hf://" + repo_id + "/resolve/main/" + filename;
 }
 
 bool ModelDownloader::DownloadFile(

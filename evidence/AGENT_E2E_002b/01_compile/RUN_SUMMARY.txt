@@ -1,7 +1,7 @@
 ﻿# AGENT-E2E-002b / 01_compile
 
 agent_exit=-1
-elapsed_ms=43847
+elapsed_ms=506228
 demo_break=False
 scripted_runtime=False
 model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
@@ -13,6 +13,6 @@ transcript_has_tool_calls=True
 build_exit=1
 run_exit=-1
 stdout=NO_EXE
-expected=hello from b01
+expected=hello from b01 42
 goal.satisfied=False
 PASS=False

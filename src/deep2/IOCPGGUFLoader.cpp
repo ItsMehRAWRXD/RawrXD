@@ -4,9 +4,11 @@
 // ============================================================================
 
 #include "IOCPGGUFLoader.hpp"
+#include "TelemetrySinks.hpp"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
+#include <unordered_map>
 #include <io.h>
 #include <fcntl.h>
 
@@ -23,47 +25,55 @@ bool IOCPGGUFLoader::Open(const std::wstring& path, const Config& config) {
 
 bool IOCPGGUFLoader::Open(const std::string& path, const Config& config) {
     config_ = config;
-    // Convert UTF-8 to UTF-16 for Windows API
     int wlen = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, nullptr, 0);
-    if (wlen <= 0) return false;
-    std::wstring wpath(wlen, 0);
-    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, wpath.data(), wlen);
+    if (wlen <= 1) return false;
+    std::wstring wpath(static_cast<size_t>(wlen - 1), L'\0');
+    if (MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, wpath.data(), wlen) <= 0)
+        return false;
     return OpenInternal(wpath);
 }
 
 bool IOCPGGUFLoader::OpenInternal(const std::wstring& path) {
-    DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
-    if (config_.noBuffering) {
-        flags |= FILE_FLAG_NO_BUFFERING;
-    }
+    pathW_ = path;
+    Close();
 
-    hFile_ = CreateFileW(
-        path.c_str(),
-        GENERIC_READ,
-        FILE_SHARE_READ,
-        nullptr,
-        OPEN_EXISTING,
-        flags,
-        nullptr
-    );
+    auto tryOpen = [&](bool noBuf) -> bool {
+        DWORD flags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED;
+        if (noBuf)
+            flags |= FILE_FLAG_NO_BUFFERING;
+        // Sequential scan hint helps large GGUF streamer reads.
+        flags |= FILE_FLAG_SEQUENTIAL_SCAN;
 
-    if (hFile_ == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "[IOCPGGUF] CreateFileW failed: %lu\n", GetLastError());
-        return false;
+        hFile_ = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                             OPEN_EXISTING, flags, nullptr);
+        return hFile_ != INVALID_HANDLE_VALUE;
+    };
+
+    if (!tryOpen(config_.noBuffering)) {
+        // Fall back: NO_BUFFERING / DIRECT_IO often fails on some volumes.
+        if (config_.noBuffering && tryOpen(false)) {
+            config_.noBuffering = false;
+            fprintf(stderr,
+                    "[IOCPGGUF] Opened without FILE_FLAG_NO_BUFFERING (fallback)\n");
+        } else {
+            fprintf(stderr, "[IOCPGGUF] CreateFileW failed: %lu\n", GetLastError());
+            return false;
+        }
     }
 
     if (config_.useIOCP) {
-        hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, config_.maxConcurrentReads);
+        hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0,
+                                        (DWORD)config_.maxConcurrentReads);
         if (!hIOCP_) {
-            fprintf(stderr, "[IOCPGGUF] CreateIoCompletionPort failed: %lu\n", GetLastError());
+            fprintf(stderr, "[IOCPGGUF] CreateIoCompletionPort failed: %lu\n",
+                    GetLastError());
             CloseHandle(hFile_);
             hFile_ = INVALID_HANDLE_VALUE;
             return false;
         }
-
-        // Associate file with IOCP
         if (!CreateIoCompletionPort(hFile_, hIOCP_, 0, 0)) {
-            fprintf(stderr, "[IOCPGGUF] Associate IOCP failed: %lu\n", GetLastError());
+            fprintf(stderr, "[IOCPGGUF] Associate IOCP failed: %lu\n",
+                    GetLastError());
             CloseHandle(hIOCP_);
             CloseHandle(hFile_);
             hIOCP_ = nullptr;
@@ -73,8 +83,7 @@ bool IOCPGGUFLoader::OpenInternal(const std::wstring& path) {
     }
 
     if (config_.verbose) {
-        printf("[IOCPGGUF] Opened: %ls (IOCP=%s, NoBuffering=%s)\n",
-               path.c_str(),
+        printf("[IOCPGGUF] Opened: %ls (IOCP=%s, NoBuffering=%s)\n", path.c_str(),
                config_.useIOCP ? "yes" : "no",
                config_.noBuffering ? "yes" : "no");
     }
@@ -93,58 +102,22 @@ void IOCPGGUFLoader::Close() {
 }
 
 // ============================================================================
-// Header Parsing (small reads, synchronous OK)
+// Header Parsing — NEVER use CRT on the overlapped IOCP handle.
+// Open a separate synchronous FILE* for metadata / tensor index only.
 // ============================================================================
 
 bool IOCPGGUFLoader::ParseHeader(ModelMetadata& outMetadata,
                                   std::vector<TensorInfo>& outTensors,
                                   uint64_t& outDataOffset) {
-    if (hFile_ == INVALID_HANDLE_VALUE) return false;
-
-    // Read first 4KB to get header
-    alignas(4096) char headerBuf[4096];
-    DWORD read = 0;
-    OVERLAPPED ov = {};
-
-    if (!ReadFile(hFile_, headerBuf, sizeof(headerBuf), &read, &ov)) {
-        if (GetLastError() != ERROR_IO_PENDING) {
-            fprintf(stderr, "[IOCPGGUF] Header read failed: %lu\n", GetLastError());
-            return false;
-        }
-        // Wait for async completion
-        if (!GetOverlappedResult(hFile_, &ov, &read, TRUE)) {
-            fprintf(stderr, "[IOCPGGUF] Header read completion failed: %lu\n", GetLastError());
-            return false;
-        }
-    }
-
-    // Parse magic, version, counts using GGUFLoader helpers
-    // For now, use a simple FILE* wrapper to reuse existing parser
-    // TODO: refactor GGUFLoader to work with memory buffers instead of FILE*
-    // Duplicate the HANDLE so fclose doesn't close our original
-    HANDLE hDup = nullptr;
-    if (!DuplicateHandle(GetCurrentProcess(), hFile_, GetCurrentProcess(), &hDup,
-                         0, FALSE, DUPLICATE_SAME_ACCESS)) {
-        fprintf(stderr, "[IOCPGGUF] DuplicateHandle failed: %lu\n", GetLastError());
+    if (pathW_.empty())
         return false;
-    }
-    int fd = _open_osfhandle((intptr_t)hDup, _O_RDONLY);
-    if (fd < 0) {
-        CloseHandle(hDup);
-        fprintf(stderr, "[IOCPGGUF] _open_osfhandle failed\n");
-        return false;
-    }
-    FILE* fp = _fdopen(fd, "rb");
+
+    FILE* fp = _wfopen(pathW_.c_str(), L"rb");
     if (!fp) {
-        _close(fd);
-        fprintf(stderr, "[IOCPGGUF] _fdopen failed\n");
+        fprintf(stderr, "[IOCPGGUF] sync metadata fopen failed\n");
         return false;
     }
 
-    // Parse using existing GGUFLoader logic
-    // This is a transitional approach — eventually all parsing should be buffer-based
-    // Use the static Load API; we already have the file open, so parse manually
-    // For now, parse header via the FILE* wrapper then close carefully
     uint64_t tensorCount = 0, kvCount = 0;
     bool ok = GGUFLoader::ParseHeader(fp, tensorCount, kvCount);
     if (ok) {
@@ -152,12 +125,16 @@ bool IOCPGGUFLoader::ParseHeader(ModelMetadata& outMetadata,
         ok = GGUFLoader::ParseMetadataKV(fp, kvCount, outMetadata, rawMeta);
     }
     if (ok) {
-        ok = GGUFLoader::ParseTensors(fp, tensorCount, outTensors, outDataOffset, config_.verbose);
+        ok = GGUFLoader::ParseTensors(fp, tensorCount, outTensors, outDataOffset,
+                                      config_.verbose);
     }
-
-    // fclose will close the duplicated HANDLE (hDup), but not our original hFile_
     fclose(fp);
 
+    if (ok && config_.verbose) {
+        printf("[IOCPGGUF] Parsed header: %llu tensors, dataOffset=%llu\n",
+               (unsigned long long)outTensors.size(),
+               (unsigned long long)outDataOffset);
+    }
     return ok;
 }
 
@@ -245,17 +222,22 @@ bool IOCPGGUFLoader::LoadTensorDataSync(const std::vector<TensorInfo>& tensors,
 
         auto t0 = std::chrono::steady_clock::now();
 
+        const IoTransferId xfer =
+            NoteNvmeRequest(static_cast<uint64_t>(t.size), false);
+
         if (!ReadFile(hFile_, buffer, (DWORD)t.size, &read, &ov)) {
             if (GetLastError() == ERROR_IO_PENDING) {
                 if (!GetOverlappedResult(hFile_, &ov, &read, TRUE)) {
                     fprintf(stderr, "[IOCPGGUF] Sync read failed for %s: %lu\n",
                             t.name.c_str(), GetLastError());
+                    NoteNvmeFailed(xfer);
                     VirtualFree(buffer, 0, MEM_RELEASE);
                     return false;
                 }
             } else {
                 fprintf(stderr, "[IOCPGGUF] ReadFile failed for %s: %lu\n",
                         t.name.c_str(), GetLastError());
+                NoteNvmeFailed(xfer);
                 VirtualFree(buffer, 0, MEM_RELEASE);
                 return false;
             }
@@ -267,6 +249,9 @@ bool IOCPGGUFLoader::LoadTensorDataSync(const std::vector<TensorInfo>& tensors,
         totalBytesRead_ += read;
         totalReads_++;
         totalLatencyUs_ += us;
+        // SHORT_READ_COUNTS_ACTUAL_BYTES — physical = `read`, not requested size.
+        NoteNvmeCompletion(xfer, static_cast<uint64_t>(read));
+        NoteNvmeConsumed(xfer, static_cast<uint64_t>(read));
 
         // Store in tensor (caller owns memory)
         const_cast<TensorInfo&>(t).data = buffer;

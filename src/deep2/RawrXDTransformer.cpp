@@ -1,9 +1,11 @@
 #include "rawrxd_transformer.h"
+#include "../win32app/p1_load_checkpoint.hpp"
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <immintrin.h>
+#include <cstdint>
 
 // C++ Implementations of Kernels (Ensuring Real Logic Execution)
 void MatrixMultiply_AVX512(const float* A, const float* B, float* C, uint64_t M, uint64_t K, uint64_t N) {
@@ -196,17 +198,35 @@ void VectorAdd_AVX512(float* out, const float* a, const float* b, int size) {
 
 
 void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader) {
+    RawrXD::P1LoadCkpt::emit("XFMR_Initialize", "enter");
     this->device = device;
     this->config = cfg;
     this->loader = loader;
-    
-    // Initialize KV Cache
-    int kv_size = config.n_layers * config.n_ctx * config.dim; // Simplified
+
+    // Initialize KV Cache — use 64-bit size to avoid signed overflow on large configs.
+    const int64_t kv_size64 =
+        static_cast<int64_t>(config.n_layers) * static_cast<int64_t>(config.n_ctx) * static_cast<int64_t>(config.dim);
+    {
+        char detail[160];
+        snprintf(detail, sizeof(detail), "before layers=%d ctx=%d dim=%d kv_elems=%lld", config.n_layers, config.n_ctx,
+                 config.dim, static_cast<long long>(kv_size64));
+        RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", detail);
+    }
+    if (kv_size64 <= 0 || kv_size64 > (static_cast<int64_t>(1) << 30))
+    {
+        RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "REJECT_SIZE");
+        printf("[RawrXD] Transformer KV size rejected: %lld\n", static_cast<long long>(kv_size64));
+        return;
+    }
+    const size_t kv_size = static_cast<size_t>(kv_size64);
     kv_cache_k.resize(kv_size);
+    RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "k_ok");
     kv_cache_v.resize(kv_size);
-    
+    RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "v_ok");
+
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
     printf("[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.\n");
+    RawrXD::P1LoadCkpt::emit("XFMR_Initialize", "done");
 }
 
 std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& tokens, int start_pos) {

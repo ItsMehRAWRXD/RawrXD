@@ -1,66 +1,96 @@
 ﻿{
     "gate":  "AGENT-TOOL-EFFECT-001",
     "status":  "FAIL",
-    "frozen_at_utc":  "2026-08-29T17:35:04Z",
+    "frozen_at_utc":  "2026-08-29T18:53:16Z",
     "source_case":  "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\01_compile",
-    "first_false_transition":  "SCHEMA_VALID",
-    "root_domain":  "model/tool-call generation (malformed arguments)",
-    "note":  "Do not attribute to TinyLlama capability until SCHEMA_VALID/FILE_BYTES_CHANGED ladder is green.",
-    "ladder":  {
-                   "MODEL_OUTPUT":  true,
-                   "TOOL_CALL_DETECTED":  true,
-                   "TOOL_CALL_PARSED":  true,
-                   "SCHEMA_VALID":  false,
-                   "TOOL_DISPATCHED":  true,
-                   "TOOL_RESULT_OK":  false,
-                   "FILE_BYTES_CHANGED":  false,
-                   "BUILD_EXECUTED":  true,
-                   "BUILD_EXIT_0":  false,
-                   "PROGRAM_RUN":  false,
-                   "EXPECTED_STDOUT":  false,
-                   "GOAL_SATISFIED":  false
-               },
+    "first_false_transition":  "TOOL_RESULT_OK",
+    "root_domain":  "AGENT_TOOL_EXECUTION",
+    "note":  "Agent BUILD_* must never inherit harness BUILD_* PASS. TOOL_RESULT_OK requires all executed tools ok.",
+    "authority_rule":  "agent_transitions_only; harness_never_promotes_agent_PASS",
+    "ladder_agent":  {
+                         "MODEL_OUTPUT":  true,
+                         "TOOL_CALL_DETECTED":  true,
+                         "TOOL_CALL_PARSED":  true,
+                         "SCHEMA_VALID":  true,
+                         "TOOL_DISPATCHED":  true,
+                         "TOOL_RESULT_OK":  false,
+                         "FILE_BYTES_CHANGED":  true,
+                         "BUILD_AGENT_INVOKED":  true,
+                         "BUILD_AGENT_EXIT_0":  false
+                     },
+    "ladder_harness":  {
+                           "BUILD_HARNESS_INVOKED":  true,
+                           "BUILD_HARNESS_EXIT_0":  true,
+                           "PROGRAM_RUN":  true,
+                           "EXPECTED_STDOUT":  true,
+                           "GOAL_SATISFIED":  true
+                       },
+    "effects":  {
+                    "AGENT_REPAIR_EFFECT":  true,
+                    "AGENT_BUILD_EFFECT":  false,
+                    "HARNESS_BUILD_VERIFICATION":  true,
+                    "RESULTING_PROGRAM_CORRECT":  true,
+                    "UNSUPPORTED_SUCCESS_CLAIM":  true
+                },
     "calls":  [
                   {
                       "index":  0,
+                      "name":  "read_file",
+                      "arguments":  "{path:main.c}",
+                      "parser_accept":  true,
+                      "looks_like_json":  false,
+                      "schema_valid":  true,
+                      "executed":  true,
+                      "execution_ok":  true,
+                      "result":  "#include \u003cstdio.h\u003e\nint main(void) {\n    int x = DOES_NOT_EXIST;\n    printf(\"hello from b01 %d\\\n\", x);\n    return 0;\n}\\r\n",
+                      "is_build_command":  false
+                  },
+                  {
+                      "index":  1,
                       "name":  "replace_in_file",
                       "arguments":  "{path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}",
                       "parser_accept":  true,
                       "looks_like_json":  false,
-                      "schema_valid":  false,
+                      "schema_valid":  true,
                       "executed":  true,
-                      "execution_ok":  false,
-                      "result":  "missing string argument: path"
+                      "execution_ok":  true,
+                      "result":  "replaced 1 occurrence(s) in F:\\\\~dev\\\\rawrxd\\\\evidence\\\\AGENT_E2E_002b\\\\work_01_compile\\\\main.c",
+                      "is_build_command":  false
                   },
                   {
-                      "index":  1,
+                      "index":  2,
                       "name":  "run_command",
                       "arguments":  "{command: \"cmake --build build\"}",
                       "parser_accept":  true,
                       "looks_like_json":  false,
-                      "schema_valid":  false,
+                      "schema_valid":  true,
                       "executed":  true,
                       "execution_ok":  false,
-                      "result":  "missing string argument: command"
+                      "result":  "Error: F:/~dev/rawrxd/evidence/AGENT_E2E_002b/work_01_compile/build is not a directory\n",
+                      "is_build_command":  true
                   }
               ],
     "edit_invariant":  {
-                           "call_0":  {
+                           "call_1":  {
                                           "tool":  "replace_in_file",
                                           "parser_accept":  true,
-                                          "schema_valid":  false,
-                                          "execution_ok":  false,
-                                          "before_sha256_ne_after":  false,
-                                          "invariant_pass":  false
+                                          "schema_valid":  true,
+                                          "execution_ok":  true,
+                                          "before_sha256_ne_after":  true,
+                                          "invariant_pass":  true
                                       }
                        },
     "before_main_sha256":  "4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c",
-    "after_main_sha256":  "4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c",
-    "source_mutated":  false,
-    "build_exit":  1,
-    "run_exit":  -1,
-    "stdout":  "NO_EXE",
-    "goal_satisfied":  false,
+    "after_main_sha256":  "dc2f97803ad95ad0d6e8b5e28276058b0ee67fb1bfa0636b5d8336c2bbc12dd3",
+    "source_mutated":  true,
+    "build_invoked_agent_tool":  true,
+    "build_agent_exit_0":  false,
+    "build_invoked_harness":  true,
+    "build_harness_exit":  0,
+    "run_exit":  0,
+    "stdout":  "hello from b01 42",
+    "goal_satisfied_harness":  true,
     "template_hypothesis":  "CLOSED (not reopened)",
-    "numerical_tracks":  "SEPARATE (Q_PRE_ROPE / O_PROJ not implicated by this transcript)"
+    "numerical_tracks":  "SEPARATE (Q_PRE_ROPE / O_PROJ not implicated by this transcript)",
+    "case_04_disposition":  "NOT_ESTABLISHED_BY_THIS_FREEZE"
 }

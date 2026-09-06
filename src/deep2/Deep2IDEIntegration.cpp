@@ -13,18 +13,79 @@
 #include "FabricTensorTable.hpp"
 #include "IOCPGGUFLoader.hpp"
 #include "ElasticResidencyManager.hpp"
+#include "execution_policy/PolicyApply.hpp"
+#include "execution_policy/LearnedProfileStore.hpp"
+#include "execution_policy/ExecutionPolicyBridge.hpp"
+#include "execution_policy/ExecutionPolicyApply.hpp"
+#include "execution_policy/ObservationBuilder.hpp"
+#include "execution_policy/HostRamTelemetry.hpp"
 
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-using namespace Deep2;
+using namespace ::Deep2;
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
+
+namespace {
+
+std::string ToLowerCopy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return value;
+}
+
+bool HasGGUFExtension(const fs::path& p) {
+    return ToLowerCopy(p.extension().string()) == ".gguf";
+}
+
+bool LooksLikeShardedGGUF(const fs::path& p) {
+    const std::string lowerName = ToLowerCopy(p.filename().string());
+    return lowerName.find("-of-") != std::string::npos && HasGGUFExtension(p);
+}
+
+std::vector<std::string> CollectGGUFFiles(const std::string& dir, bool preferSharded) {
+    std::vector<fs::path> all;
+    std::vector<fs::path> sharded;
+
+    try {
+        for (const auto& entry : fs::directory_iterator(dir)) {
+            if (!entry.is_regular_file()) continue;
+            const fs::path p = entry.path();
+            if (!HasGGUFExtension(p)) continue;
+            all.push_back(p);
+            if (LooksLikeShardedGGUF(p)) {
+                sharded.push_back(p);
+            }
+        }
+    } catch (...) {
+        return {};
+    }
+
+    auto byFilename = [](const fs::path& a, const fs::path& b) {
+        return ToLowerCopy(a.filename().string()) < ToLowerCopy(b.filename().string());
+    };
+    std::sort(all.begin(), all.end(), byFilename);
+    std::sort(sharded.begin(), sharded.end(), byFilename);
+
+    const auto& selected = (preferSharded && !sharded.empty()) ? sharded : all;
+    std::vector<std::string> out;
+    out.reserve(selected.size());
+    for (const auto& p : selected) {
+        out.push_back(p.string());
+    }
+    return out;
+}
+
+} // namespace
 
 namespace RawrXD {
 
@@ -53,46 +114,21 @@ bool Deep2ModelLoader::IsShardedModel(const std::string& path) {
     }
 
     // If it's a single file, check if filename contains shard pattern
-    std::string filename = fs::path(path).filename().string();
+    std::string filename = ToLowerCopy(fs::path(path).filename().string());
     return filename.find("-of-") != std::string::npos;
 }
 
 bool Deep2ModelLoader::DetectKimiK2Shards(const std::string& dir,
                                           std::vector<std::string>& outShards) {
-    outShards.clear();
-
-    // Look for Kimi K2 naming: kimi-k2-instruct-0905-q4_k_m-00001-of-00013.gguf
-    for (int i = 1; i <= 13; ++i) {
-        char buf[256];
-        std::snprintf(buf, sizeof(buf),
-            "kimi-k2-instruct-0905-q4_k_m-%05d-of-00013.gguf", i);
-        fs::path p = fs::path(dir) / buf;
-        if (fs::exists(p)) {
-            outShards.push_back(p.string());
-        }
-    }
-
-    // Also try generic pattern: model-00001-of-00013.gguf
-    if (outShards.empty()) {
-        for (int i = 1; i <= 13; ++i) {
-            char buf[256];
-            std::snprintf(buf, sizeof(buf),
-                "model-%05d-of-00013.gguf", i);
-            fs::path p = fs::path(dir) / buf;
-            if (fs::exists(p)) {
-                outShards.push_back(p.string());
-            }
-        }
-    }
-
+    outShards = CollectGGUFFiles(dir, true);
     return !outShards.empty();
 }
 
 Deep2ModelLoader::LoadResult Deep2ModelLoader::Load(const std::string& path) {
     std::lock_guard<std::mutex> lock(s_mutex);
 
-    // Unload previous
-    Unload();
+    // Unload previous (already hold s_mutex ? do not call Unload())
+    ResetLocked();
 
     LoadResult result;
     result.success = false;
@@ -105,7 +141,12 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::Load(const std::string& path) {
 
     // Determine if sharded
     if (IsShardedModel(path)) {
-        result = LoadShardedDirectory(path);
+        const DWORD attr = GetFileAttributesA(path.c_str());
+        if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+            result = LoadShardedDirectory(path);
+        } else {
+            result = LoadShardedDirectory(fs::path(path).parent_path().string());
+        }
     } else {
         result = LoadSingleFile(path);
     }
@@ -118,86 +159,134 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadSingleFile(const std::string&
     LoadResult result;
     result.success = false;
 
-    // Validate file exists
-    DWORD attr = GetFileAttributesA(path.c_str());
-    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
-        result.error = "File not found: " + path;
-        return result;
-    }
-
-    // Create router, add shard, and scan (metadata only)
-    s_router = std::make_unique<GGUFShardRouter>();
-    s_router->add_shard(path);
-    s_router->scan();
-
-    // Build fabric
-    s_fabric = std::make_unique<FabricTensorTable>();
-    s_fabric->ingest_gguf_router(*s_router);
-
-    // Initialize Elastic Residency Manager for out-of-core operation
-    s_elastic = std::make_unique<ElasticResidencyManager>();
-    s_elastic->Initialize({
-        .maxWarmCompressedBytes = 48ULL * 1024 * 1024 * 1024, // 48 GB RAM
-        .maxWarmStagedBytes = 2ULL * 1024 * 1024 * 1024,     // 2 GB staging
-        .maxHotBytes = 28ULL * 1024 * 1024 * 1024,           // 28 GB VRAM (leave headroom)
-        .prefetchLookahead = 2,
-        .useQuantizedGpuPath = true
-    });
-
-    // Open GGUF with IOCP for explicit async reads (no memory mapping)
-    s_iocpLoader = std::make_unique<IOCPGGUFLoader>();
-    IOCPGGUFLoader::Config iocpCfg;
-    iocpCfg.useIOCP = true;
-    iocpCfg.noBuffering = true;
-    iocpCfg.extentSize = 64 * 1024 * 1024;  // 64 MB read extents
-    iocpCfg.maxConcurrentReads = 8;
-    iocpCfg.registerWithElastic = true;
-    iocpCfg.verbose = false;
-
-    if (!s_iocpLoader->Open(path, iocpCfg)) {
-        result.error = "Failed to open GGUF with IOCP: " + path;
-        Unload();
-        return result;
-    }
-
-    // Parse header and register tensors with Elastic (metadata only, no data loaded yet)
-    ModelMetadata meta;
-    std::vector<TensorInfo> tensors;
-    uint64_t dataOffset = 0;
-    if (!s_iocpLoader->ParseHeader(meta, tensors, dataOffset)) {
-        result.error = "Failed to parse GGUF header: " + path;
-        Unload();
-        return result;
-    }
-
-    s_iocpLoader->SetElasticManager(s_elastic.get());
-    if (!s_iocpLoader->LoadTensorDataAsync(tensors, dataOffset)) {
-        result.error = "Failed to register tensors with Elastic Residency";
-        Unload();
-        return result;
-    }
-
-    // Extract metadata
-    result.success = true;
-    result.modelName = fs::path(path).filename().string();
-    result.shardCount = 1;
-    result.tensorCount = static_cast<uint32_t>(tensors.size());
-    result.totalFileBytes = fs::file_size(path);
-    result.streamingEnabled = true;
-    result.numLayers = meta.numLayers;
-    result.numExperts = meta.numExperts;
-    result.context_length = meta.maxPositionEmbeddings;
-
-    // Detect MoE from tensor names
-    for (const auto& t : tensors) {
-        if (t.name.find("expert") != std::string::npos ||
-            t.name.find("gate") != std::string::npos) {
-            result.isMoE = true;
-            break;
+    try {
+        // Validate file exists
+        DWORD attr = GetFileAttributesA(path.c_str());
+        if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+            result.error = "File not found: " + path;
+            return result;
         }
-    }
 
-    return result;
+        // Fail-closed on ExecutionPolicy before any residency allocation.
+        {
+            using namespace ::Deep2::Exec;
+            EnsurePolicyLoaded();
+            const auto v = Validate(ActivePolicy());
+            if (!v.ok) {
+                result.error = std::string("POLICY_CHANGE_REJECTED: ") + v.detail;
+                return result;
+            }
+        }
+
+        const ElasticResidencyConfig elasticCfg =
+            ::Deep2::Exec::ElasticFromPolicy(::Deep2::Exec::ActivePolicy());
+        s_elastic = std::make_unique<ElasticResidencyManager>();
+        s_elastic->Initialize(elasticCfg);
+
+        // IOCP streamer first ? metadata via sync fopen; weights stay on NVMe
+        // until Elastic.Acquire (no full-model materialize).
+        s_iocpLoader = std::make_unique<IOCPGGUFLoader>();
+        IOCPGGUFLoader::Config iocpCfg;
+        iocpCfg.useIOCP = true;
+        {
+            const auto& pol = ::Deep2::Exec::ActivePolicy();
+            iocpCfg.noBuffering = pol.streaming.directIo.present
+                                      ? pol.streaming.directIo.value
+                                      : false;
+            iocpCfg.extentSize = pol.streaming.chunkSize.present
+                                     ? static_cast<size_t>((std::min)(
+                                           pol.streaming.chunkSize.value.n,
+                                           256ULL << 20))
+                                     : (64ull * 1024ull * 1024ull);
+            iocpCfg.maxConcurrentReads = pol.streaming.queueDepth.present
+                                             ? static_cast<size_t>((std::max)(
+                                                   1, pol.streaming.queueDepth.value))
+                                             : 8u;
+        }
+        iocpCfg.registerWithElastic = true;
+        iocpCfg.verbose = false;
+
+        if (!s_iocpLoader->Open(path, iocpCfg)) {
+            result.error = "Failed to open GGUF with IOCP: " + path;
+            ResetLocked();
+            return result;
+        }
+
+        ModelMetadata meta;
+        std::vector<TensorInfo> tensors;
+        uint64_t dataOffset = 0;
+        if (!s_iocpLoader->ParseHeader(meta, tensors, dataOffset)) {
+            result.error = "Failed to parse GGUF header: " + path;
+            ResetLocked();
+            return result;
+        }
+
+        s_iocpLoader->SetElasticManager(s_elastic.get());
+        if (!s_iocpLoader->LoadTensorDataAsync(tensors, dataOffset)) {
+            result.error = "Failed to register tensors with Elastic Residency";
+            ResetLocked();
+            return result;
+        }
+
+        // Optional router/fabric ? must not abort streaming open on throw.
+        try {
+            s_router = std::make_unique<GGUFShardRouter>();
+            s_router->add_shard(path);
+            s_router->scan();
+            s_fabric = std::make_unique<FabricTensorTable>();
+            s_fabric->ingest_gguf_router(*s_router);
+        } catch (const std::exception& e) {
+            s_router.reset();
+            s_fabric.reset();
+            // Streamer path already registered tensors; continue.
+            (void)e;
+        }
+
+        result.success = true;
+        result.modelPath = path;
+        result.modelName = fs::path(path).filename().string();
+        result.shardCount = 1;
+        result.tensorCount = static_cast<uint32_t>(tensors.size());
+        result.totalFileBytes = fs::file_size(path);
+        result.streamingEnabled = true; // single-file path is always stream-capable
+        result.numLayers = meta.numLayers;
+        result.numExperts = meta.numExperts;
+        result.context_length = meta.maxPositionEmbeddings;
+
+        for (const auto& t : tensors) {
+            if (t.name.find("expert") != std::string::npos ||
+                t.name.find("gate") != std::string::npos) {
+                result.isMoE = true;
+                break;
+            }
+        }
+
+        {
+            using namespace ::Deep2::Exec;
+            auto apply = EnforcePolicyOnIdeLoad(
+                s_elastic.get(), path,
+                static_cast<int>(result.numLayers),
+                result.tensorCount);
+            if (apply.overBudgetFailClosed) {
+                result.success = false;
+                result.error = apply.detail;
+                ResetLocked();
+                return result;
+            }
+        }
+
+        return result;
+    } catch (const std::exception& e) {
+        result.success = false;
+        result.error = std::string("LoadSingleFile exception: ") + e.what();
+        ResetLocked();
+        return result;
+    } catch (...) {
+        result.success = false;
+        result.error = "LoadSingleFile unknown exception";
+        ResetLocked();
+        return result;
+    }
 }
 
 Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::string& path) {
@@ -223,11 +312,12 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
 
     // Compute totals
     result.success = true;
+    result.modelPath = path;
     result.modelName = fs::path(path).filename().string();
     result.shardCount = static_cast<uint32_t>(shards.size());
     result.tensorCount = static_cast<uint32_t>(s_router->tensor_count());
     result.streamingEnabled = true;
-    result.isMoE = true;  // Kimi K2 is MoE
+    result.isMoE = false;
 
     // Sum file sizes
     for (const auto& shard : shards) {
@@ -240,6 +330,8 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
         result.numLayers = meta.layer_count;
         result.numExperts = meta.expert_count;
         result.context_length = meta.context_length;
+        result.isMoE = (meta.expert_count > 0 && meta.expert_used_count > 0);
+        result.modelFamily = meta.architecture;
         // Store additional metadata for downstream consumers
         s_lastResult = result;  // Will be overwritten below, but keeps metadata accessible
     } else {
@@ -252,6 +344,17 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
             }
         }
         result.numLayers = maxLayer + 1;
+    }
+
+    if (!result.isMoE) {
+        for (const auto& [name, loc] : s_router->tensors()) {
+            (void)loc;
+            if (name.find("expert") != std::string::npos ||
+                name.find("ffn_gate_exps") != std::string::npos) {
+                result.isMoE = true;
+                break;
+            }
+        }
     }
 
     return result;
@@ -267,11 +370,27 @@ FabricTensorTable* Deep2ModelLoader::GetFabric() {
     return s_fabric.get();
 }
 
-void Deep2ModelLoader::Unload() {
+::Deep2::ElasticResidencyManager* Deep2ModelLoader::GetElastic() {
     std::lock_guard<std::mutex> lock(s_mutex);
+    return s_elastic.get();
+}
+
+const ::Deep2::Exec::PlacementApplyReport*
+Deep2ModelLoader::GetLastPolicyApplyReport() {
+    return &::Deep2::Exec::LastApplyReport();
+}
+
+void Deep2ModelLoader::ResetLocked() {
     s_router.reset();
     s_fabric.reset();
+    s_iocpLoader.reset();
+    s_elastic.reset();
     s_lastResult = LoadResult{};
+}
+
+void Deep2ModelLoader::Unload() {
+    std::lock_guard<std::mutex> lock(s_mutex);
+    ResetLocked();
 }
 
 bool Deep2ModelLoader::HasTensor(std::string_view tensorName) {
@@ -292,13 +411,45 @@ std::optional<GGUFShardRouter::TensorLocation> Deep2ModelLoader::GetTensorInfo(s
 // Deep2InferenceSession implementation
 // ============================================================================
 
+Deep2InferenceSession::SessionConfig
+Deep2InferenceSession::SessionConfig::FromActivePolicy() {
+    using namespace ::Deep2::Exec;
+    EnsurePolicyLoaded();
+    SessionConfig c{};
+    const auto& p = ActivePolicy();
+    if (const int ctx = PolicyContextTokens(); ctx > 0)
+        c.maxContextLength = static_cast<uint32_t>(ctx);
+    if (p.memory.vramBudget.present)
+        c.vramBudgetBytes = p.memory.vramBudget.value.n;
+    c.enableStreaming = PolicyStreamingEnabled();
+    return c;
+}
+
 bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model,
                                        const SessionConfig& cfg) {
     if (!model.success) {
         return false;
     }
 
+    m_modelName = model.modelName;
+    // Full path required for loadModel (tokenizer + weights). Filename alone fails.
+    m_modelPath = !model.modelPath.empty() ? model.modelPath : model.modelName;
+
+    // Merge caller cfg with ActivePolicy hard caps (policy wins on budgets).
+    using namespace ::Deep2::Exec;
+    EnsurePolicyLoaded(model.modelName.empty() ? std::string{}
+                                               : (std::string("name:") + model.modelName));
     m_config = cfg;
+    const auto& pol = ActivePolicy();
+    if (const uint64_t hard = PolicyVramHardCapBytes(); hard > 0)
+        m_config.vramBudgetBytes = (std::min)(m_config.vramBudgetBytes, hard);
+    else if (pol.memory.vramBudget.present)
+        m_config.vramBudgetBytes = pol.memory.vramBudget.value.n;
+    if (const int ctx = PolicyContextTokens(); ctx > 0)
+        m_config.maxContextLength =
+            (std::min)(m_config.maxContextLength, static_cast<uint32_t>(ctx));
+    if (pol.streaming.enabled.present)
+        m_config.enableStreaming = pol.streaming.enabled.value;
     
     m_engine = std::make_unique<Deep2Engine>();
     EngineConfig engineCfg;
@@ -333,6 +484,13 @@ bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model
         return false;
     }
 
+    // E2E: bind tokenizer + weights. Streaming open registered residency; generate
+    // still requires Deep2Engine::loadModel on the same GGUF path.
+    if (m_modelPath.empty() || !m_engine->loadModel(m_modelPath)) {
+        m_ready = false;
+        return false;
+    }
+
     m_ready = true;
     return true;
 }
@@ -352,6 +510,15 @@ Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
     m_cancelled.store(false);
     auto t0 = std::chrono::high_resolution_clock::now();
 
+    if (m_engine) {
+        if (auto* mars = m_engine->getMARSController()) {
+            if (auto* vm = mars->GetVRAMManager())
+                vm->ResetRunPeaks();
+        }
+    }
+    ::Deep2::GlobalTelemetry().resetRun();
+    ::Deep2::Exec::ResetRunRamPeaks();
+
     ::Deep2::InferenceStats stats;
     std::string accumulated;
     
@@ -370,12 +537,50 @@ Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+    ::Deep2::Exec::SampleRunRamPeaks();
 
     result.text = accumulated;
     result.tokensGenerated = static_cast<uint32_t>(stats.tokensGenerated);
     result.latencyMs = stats.latencyMs * stats.tokensGenerated;
     result.tokensPerSecond = stats.tokensPerSecond;
     result.finishReason = m_cancelled.load() ? "cancelled" : "stop";
+
+    // INV-3/4: observation from live telemetry ? recordSuccess (profiles only).
+    // Must NOT call EnsurePolicyLoaded() here: store.load() clears session_
+    // overlays and mutates ActivePolicy() after the certified load seam.
+    if (result.finishReason == "stop" && result.tokensPerSecond > 0.0) {
+        using namespace ::Deep2::Exec;
+        auto& hw = ActiveHardwareSnapshot();
+        if (hw.fingerprint.empty() && hw.gpus.empty()) {
+            const auto& pol = ActivePolicy();
+            if (pol.memory.vramBudget.present) {
+                GpuTopo g0;
+                g0.index = 0;
+                g0.name = "gpu0";
+                g0.vramBytes = pol.memory.vramBudget.value.n;
+                hw.gpus.push_back(g0);
+            }
+            if (pol.memory.ramBudget.present)
+                hw.ramBytes = pol.memory.ramBudget.value.n;
+            hw.fingerprint = MakeHardwareFingerprint(hw);
+        }
+        std::string mfp = ExecutionPolicyStore::Instance().modelFingerprint();
+        if (mfp.empty() && !m_modelPath.empty())
+            mfp = std::string("path:") + m_modelPath;
+
+        auto* mars = m_engine ? m_engine->getMARSController() : nullptr;
+        if (mars) {
+            PlacementApplyReport obsReport;
+            ObserveMatchesPlan(*mars, LastPlacementPlan(), obsReport);
+            LastApplyReport() = obsReport;
+        }
+
+        ExecutionObservation obs = BuildObservation(
+            hw, mfp, m_modelName, /*quant*/ "", result.tokensPerSecond,
+            stats.latencyMs, /*completed*/ true, /*outputValid*/ true,
+            ActivePolicy(), mars);
+        LearnedProfileStore::Instance().recordSuccess(obs);
+    }
 
     return result;
 }
@@ -430,7 +635,7 @@ bool Deep2LoadModelForIDE(const std::string& path, std::string& outError) {
 }
 
 bool Deep2LoadModelForBridge(const std::string& path, std::string& outError) {
-    // Same as IDE path — unified loader
+    // Same as IDE path ? unified loader
     return Deep2LoadModelForIDE(path, outError);
 }
 

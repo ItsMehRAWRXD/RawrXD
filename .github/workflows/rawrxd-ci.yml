@@ -1,4 +1,4 @@
-name: RawrXD CI
+name: RawrXD Native CI
 
 on:
   push:
@@ -7,163 +7,85 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  # ============================================================
-  # Windows Build (MSVC + Ninja) - Primary CI
-  # ============================================================
-  build-windows:
+  native-build:
     runs-on: windows-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 60
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-
-      - name: Install Ninja
+      - name: Configure headless and service targets
+        shell: pwsh
+        run: >
+          cmake -S . -B build-native -G "Visual Studio 17 2022" -A x64
+          -DRAWRXD_BUILD_CLI=ON -DRAWRXD_BUILD_WIN32IDE=OFF
+          -DRAWRXD_OPTIONAL_OLLAMA=OFF -DRAWRXD_OPTIONAL_CLOUD=OFF
+      - name: Build HeadlessIDE, service, and engine
         shell: pwsh
         run: |
-          choco install ninja -y --no-progress
-          ninja --version
-
-      - name: Configure CMake
+          cmake --build build-native --config Release --target rawrxd --parallel 2
+          cmake --build build-native --config Release --target rawrxd-serve --parallel 2
+          cmake --build build-native --config Release --target RawrEngine --parallel 2
+      - name: Configure Win32IDE
         shell: pwsh
-        run: |
-          # Clean build directory to avoid CMake cache path mismatches
-          if (Test-Path build) {
-            Remove-Item build -Recurse -Force
-          }
-          mkdir build -Force
-          cd build
-          cmake -G Ninja `
-                -DCMAKE_BUILD_TYPE=Release `
-                -DRAWRXD_BUILD_WIN32IDE=ON `
-                ..
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "CMake configuration failed"
-            exit 1
-          }
-
-      - name: Build RawrEngine
-        shell: pwsh
-        run: |
-          cd build
-          ninja -j2 RawrEngine 2>&1 | Select-Object -Last 30
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::warning::RawrEngine build failed (non-blocking for IDE validation)"
-          }
-
+        run: >
+          cmake -S . -B build-win32 -G "Visual Studio 17 2022" -A x64
+          -DRAWRXD_BUILD_CLI=OFF -DRAWRXD_BUILD_WIN32IDE=ON
+          -DRAWRXD_BUILD_RAWRENGINE=OFF
       - name: Build Win32IDE
         shell: pwsh
-        run: |
-          cd build
-          ninja -j2 RawrXD-Win32IDE 2>&1 | Select-Object -Last 30
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::warning::RawrXD-Win32IDE build failed (non-blocking)"
-          }
-
-      - name: Build Deep2 Production Bench
+        run: cmake --build build-win32 --config Release --target RawrXD-Win32IDE --parallel 2
+      - name: Verify required artifacts
         shell: pwsh
         run: |
-          cd build
-          ninja -j2 Deep2_Production_Bench 2>&1 | Select-Object -Last 30
-
-      - name: Verify Artifacts
-        shell: pwsh
-        run: |
-          $artifacts = @(
-            "build/bin/RawrEngine.exe",
-            "build/bin/RawrXD-Win32IDE.exe",
-            "build/bin/Deep2_Production_Bench.exe"
+          $required = @(
+            "build-native/bin/Release/rawrxd.exe",
+            "build-native/bin/Release/rawrxd-serve.exe",
+            "build-native/bin/Release/RawrEngine.exe",
+            "build-win32/bin/Release/RawrXD-Win32IDE.exe"
           )
-          foreach ($a in $artifacts) {
-            if (Test-Path $a) {
-              $size = [math]::Round((Get-Item $a).Length / 1KB, 1)
-              Write-Host "✅ $a ($size KB)"
-            } else {
-              Write-Host "::warning::Missing $a"
-            }
-          }
-
-      - name: Generate Version Manifest
-        shell: pwsh
-        run: |
-          powershell -ExecutionPolicy Bypass -File tools/generate_version_manifest.ps1 -OutputDir . -Version "1.0.0"
-
-      - name: Cleanup
-        if: always()
-        shell: pwsh
-        run: |
-          taskkill /F /IM python.exe 2>$null
-          exit 0
-
-      - name: Upload Build Artifacts
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+          $missing = $required | Where-Object { -not (Test-Path $_) }
+          if ($missing) { throw "Missing artifacts: $($missing -join ', ')" }
+      - uses: actions/upload-artifact@v4
         with:
-          name: RawrXD-Build
+          name: rawrxd-windows-x64
           path: |
-            build/bin/*.exe
-            version_manifest.json
-            build_info.txt
-            RawrXD_RUNTIME_DEPENDENCIES.txt
+            build-native/bin/Release/rawrxd.exe
+            build-native/bin/Release/rawrxd-serve.exe
+            build-native/bin/Release/RawrEngine.exe
+            build-win32/bin/Release/RawrXD-Win32IDE.exe
+          if-no-files-found: error
           retention-days: 14
-          if-no-files-found: ignore
 
-  # ============================================================
-  # Compression Library Build
-  # ============================================================
-  build-compression:
+  hexmag-certification:
     runs-on: windows-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-
-      - name: Install Ninja
+      - name: Run HexMag MASM smoke
         shell: pwsh
-        run: choco install ninja -y --no-progress
-
-      - name: Build Compression Library
+        run: ./scripts/Smoke-HexMagMasm.ps1 -OutDir "$PWD/build/hexmag_masm"
+      - name: Run HexMag runtime-route smoke
         shell: pwsh
-        run: |
-          mkdir build -Force
-          cd build
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-          ninja -j2 RawrXD_Compression 2>&1 | Select-Object -Last 20
-          if (Test-Path "RawrXD_Compression.lib") {
-            Write-Host "✅ RawrXD_Compression.lib built"
-          }
-
-  # ============================================================
-  # Summary Job (always succeeds - reports status)
-  # ============================================================
-  ci-summary:
-    runs-on: ubuntu-latest
-    needs: [build-windows, build-compression]
-    if: always()
-    timeout-minutes: 5
-
-    steps:
-      - name: Report Status
-        run: |
-          echo "## RawrXD CI Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| build-windows | ${{ needs.build-windows.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| build-compression | ${{ needs.build-compression.result }} |" >> $GITHUB_STEP_SUMMARY
+        run: ./scripts/Smoke-HexMagRuntimeRoute.ps1 -Root "$PWD"
+      - name: Run HexMag client MASM certificate
+        shell: pwsh
+        run: ./scripts/Cert-HexMagClientMasm.ps1 -Root "$PWD"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hexmag-certification-evidence
+          path: |
+            build/hexmag_*/
+            evidence/HEXMAG_RUNTIME_ROUTE_SMOKE/
+            evidence/HEXMAG_CLIENT_MASM_001/
+          if-no-files-found: error
+          retention-days: 14

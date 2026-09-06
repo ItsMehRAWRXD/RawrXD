@@ -227,7 +227,7 @@ std::vector<Win32IDE::RuntimeValidationCheck> Win32IDE::runCriticalValidationBat
     RawrXD::Agent::OllamaHealth health{};
     std::vector<std::string> ollamaModels;
     {
-        std::string base = m_ollamaBaseUrl.empty() ? "http://127.0.0.1:11434" : m_ollamaBaseUrl;
+        std::string base = m_ollamaBaseUrl.empty() ? "" : m_ollamaBaseUrl;
         std::string withoutProto = base;
         const size_t p = base.find("://");
         if (p != std::string::npos) {

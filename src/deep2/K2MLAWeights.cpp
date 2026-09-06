@@ -5,6 +5,7 @@
 #include "K2MLAWeights.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
+#include "K2MLAAttention.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
@@ -54,6 +55,14 @@ struct Q4_K_Block {
 };
 #pragma pack(pop)
 static_assert(sizeof(Q4_K_Block) == 144, "Q4_K_Block must be 144 bytes");
+
+#pragma pack(push, 1)
+struct Q8_0_Block {
+    uint16_t d;
+    int8_t qs[32];
+};
+#pragma pack(pop)
+static_assert(sizeof(Q8_0_Block) == 34, "Q8_0_Block must be 34 bytes");
 
 static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
                                      uint8_t& sc, uint8_t& m) {
@@ -187,6 +196,46 @@ static void gemvQ4K(const void* weights, const float* input,
     _aligned_free(dequantBuf);
 }
 
+static void gemvQ80(const void* weights, const float* input, float* output,
+                    size_t rows, size_t cols) {
+    const size_t blocksPerRow = (cols + 31) / 32;
+    const uint8_t* base = static_cast<const uint8_t*>(weights);
+    for (size_t r = 0; r < rows; ++r) {
+        const Q8_0_Block* rowBlocks =
+            reinterpret_cast<const Q8_0_Block*>(base + r * blocksPerRow * sizeof(Q8_0_Block));
+        float sum = 0.0f;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const float d = fp16ToFloat(rowBlocks[b].d);
+            const size_t col0 = b * 32;
+            for (size_t i = 0; i < 32 && col0 + i < cols; ++i)
+                sum += d * static_cast<float>(rowBlocks[b].qs[i]) * input[col0 + i];
+        }
+        output[r] = sum;
+    }
+}
+
+static void gemvQ80Transposed(const void* weights, const float* input, float* output,
+                              size_t rows, size_t cols) {
+    const size_t blocksPerStoredRow = (rows + 31) / 32;
+    float* rowBuf = static_cast<float*>(_aligned_malloc(rows * sizeof(float), 32));
+    if (!rowBuf) return;
+    for (size_t r = 0; r < rows; ++r) output[r] = 0.0f;
+    const uint8_t* base = static_cast<const uint8_t*>(weights);
+    for (size_t c = 0; c < cols; ++c) {
+        const Q8_0_Block* rowBlocks = reinterpret_cast<const Q8_0_Block*>(
+            base + c * blocksPerStoredRow * sizeof(Q8_0_Block));
+        size_t r = 0;
+        for (size_t b = 0; b < blocksPerStoredRow && r < rows; ++b) {
+            const float d = fp16ToFloat(rowBlocks[b].d);
+            for (size_t i = 0; i < 32 && r < rows; ++i)
+                rowBuf[r++] = d * static_cast<float>(rowBlocks[b].qs[i]);
+        }
+        const float inVal = input[c];
+        for (size_t i = 0; i < rows; ++i) output[i] += rowBuf[i] * inVal;
+    }
+    _aligned_free(rowBuf);
+}
+
 // ============================================================================
 // Standalone Q4_K GEMV^T (transposed weights)
 //   weights is [cols, rows] in memory (row-major Q4_K blocks)
@@ -289,6 +338,10 @@ static bool gemvDispatch(const RawrXD::TensorView& weightView,
         gemvQ4K(weightView.data(), input, output, rows, cols);
         return true;
     }
+    if (qt == RawrXD::QuantType::Q8_0) {
+        gemvQ80(weightView.data(), input, output, rows, cols);
+        return true;
+    }
     // Fallback: try F32 anyway (may be mis-tagged)
     const float* w = weightView.asF32();
     if (w) {
@@ -321,6 +374,10 @@ static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
     }
     if (qt == RawrXD::QuantType::Q4_K) {
         gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
+        return true;
+    }
+    if (qt == RawrXD::QuantType::Q8_0) {
+        gemvQ80Transposed(weightView.data(), input, output, rows, cols);
         return true;
     }
     // Safety: do NOT fall back to F32 for unknown quant types — this causes AV
@@ -647,9 +704,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
                          const MLAWeights& weights,
                          const KimiK2Config& config,
                          std::string& error,
-                         class K2KVCache* kvCache,
+                         rawrxd::deep2::K2KVCache* kvCache,
                          uint32_t layerIdx,
-                         uint32_t position) {
+                         uint32_t position,
+                         MlaCompleteStats* stats) {
     if (!hidden || !output) {
         error = "MLAForward: null input/output pointer";
         return false;
@@ -678,25 +736,42 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // attnKV_a_mqa: [hiddenDim, kvLoraRank + qkRopeHeadDim]
     const size_t kvACols = weights.attnKV_a_mqa.dims()[1];
-    // For K2, the split is: first kvLoraRank = compressed_kv, rest = k_pe
-    // We derive kvLoraRank from attnK_b shape since that's the compressed portion
+
+    // attn_k_b / attn_v_b: K2 GGUF is 3D — (nope, kv_lora, heads) / (kv_lora, v, heads)
     size_t kvLoraRank = 0;
-    if (weights.attnK_b.dims().size() >= 1) {
-        kvLoraRank = weights.attnK_b.dims()[0];
+    size_t qkNopeHeadDim = 0;
+    size_t vHeadDim = 0;
+    const auto& kDims = weights.attnK_b.dims();
+    const auto& vDims = weights.attnV_b.dims();
+    const bool kIs3D = (kDims.size() == 3);
+    const bool vIs3D = (vDims.size() == 3);
+    if (kIs3D) {
+        qkNopeHeadDim = kDims[0];
+        kvLoraRank = kDims[1];
+    } else if (kDims.size() >= 2) {
+        kvLoraRank = (config.kvLoraRank > 0) ? config.kvLoraRank : kDims[0];
+        qkNopeHeadDim = (config.qkNopeHeadDim > 0) ? config.qkNopeHeadDim
+            : ((numHeads > 0) ? (kDims[1] / numHeads) : 0);
+    } else if (!kDims.empty()) {
+        kvLoraRank = (config.kvLoraRank > 0) ? config.kvLoraRank : kDims[0];
+        qkNopeHeadDim = (config.qkNopeHeadDim > 0) ? config.qkNopeHeadDim : 128;
     }
-    const size_t qkRopeHeadDim = (kvACols > kvLoraRank) ? (kvACols - kvLoraRank) : 0;
+    if (vIs3D) {
+        vHeadDim = (vDims[0] == kvLoraRank) ? vDims[1] : vDims[0];
+    } else if (vDims.size() >= 2) {
+        vHeadDim = (config.vHeadDim > 0) ? config.vHeadDim
+            : ((numHeads > 0) ? (vDims[1] / numHeads) : 0);
+    } else if (config.vHeadDim > 0) {
+        vHeadDim = config.vHeadDim;
+    }
+    const size_t qkRopeHeadDim = (kvACols > kvLoraRank) ? (kvACols - kvLoraRank)
+        : ((config.qkRopeHeadDim > 0) ? config.qkRopeHeadDim : 0);
 
-    // attnK_b: [kvLoraRank, numHeads * qkNopeHeadDim]
-    const size_t kBCols = (weights.attnK_b.dims().size() >= 2)
-                          ? weights.attnK_b.dims()[1]
-                          : weights.attnK_b.dims()[0];
-    const size_t qkNopeHeadDim = (numHeads > 0) ? (kBCols / numHeads) : 0;
-
-    // attnV_b: [kvLoraRank, numHeads * vHeadDim]
-    const size_t vBCols = (weights.attnV_b.dims().size() >= 2)
-                          ? weights.attnV_b.dims()[1]
-                          : weights.attnV_b.dims()[0];
-    const size_t vHeadDim = (numHeads > 0) ? (vBCols / numHeads) : 0;
+    // Legacy 2D column counts (used only on 2D path)
+    const size_t kBCols = (!kIs3D && kDims.size() >= 2) ? kDims[1]
+        : (numHeads * qkNopeHeadDim);
+    const size_t vBCols = (!vIs3D && vDims.size() >= 2) ? vDims[1]
+        : (numHeads * vHeadDim);
 
     // attnO: [oRows, hiddenDim] — use actual GGUF shape (authoritative)
     // For K2, oRows may differ from numHeads * vHeadDim due to architecture specifics
@@ -778,26 +853,72 @@ bool MLAForward::Execute(const float* hidden, float* output,
         }
     }
 
-    // Step 6: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
-    // GGUF stores attnK_b as [kvLoraRank, numHeads*qkNopeHeadDim]
-    if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
-                                kBCols, kvLoraRank, error)) {
+    // Step 6/7: expand compressed_kv → K_nope / V (2D or 3D GGUF layout)
+    if (kIs3D) {
+        const size_t elemsPerHead = qkNopeHeadDim * kvLoraRank;
+        const auto kQt = weights.attnK_b.quantType();
+        const size_t blockElems = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+        const size_t blockBytes = (kQt == RawrXD::QuantType::Q8_0) ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t bytesPerHead = ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
+        const uint8_t* base = static_cast<const uint8_t*>(weights.attnK_b.data());
+        for (size_t h = 0; h < numHeads; ++h) {
+            const void* wh = base + h * bytesPerHead;
+            if (kQt == RawrXD::QuantType::Q8_0)
+                gemvQ80(wh, compressedKV, k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+            else
+                gemvQ4K(wh, compressedKV, k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+        }
+    } else if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
+                                       kBCols, kvLoraRank, error)) {
         goto cleanup;
     }
 
-    // Step 7: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
-    // GGUF stores attnV_b as [kvLoraRank, numHeads*vHeadDim]
-    if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
-                                vBCols, kvLoraRank, error)) {
+    if (vIs3D) {
+        const size_t elemsPerHead = vHeadDim * kvLoraRank;
+        const auto vQt = weights.attnV_b.quantType();
+        const size_t blockElems = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+        const size_t blockBytes = (vQt == RawrXD::QuantType::Q8_0) ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t bytesPerHead = ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
+        const uint8_t* base = static_cast<const uint8_t*>(weights.attnV_b.data());
+        for (size_t h = 0; h < numHeads; ++h) {
+            const void* wh = base + h * bytesPerHead;
+            if (vQt == RawrXD::QuantType::Q8_0)
+                gemvQ80Transposed(wh, compressedKV, v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+            else
+                gemvQ4KTransposed(wh, compressedKV, v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+        }
+    } else if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
+                                       vBCols, kvLoraRank, error)) {
         goto cleanup;
     }
 
     // =========================================================================
-    // Attention: simplified single-token self-attention
+    // Attention: G10/G11 simplified path OR Gate 12 complete MLA (kvCache set)
     // =========================================================================
-    // For single-token generation, we copy q_b into attnOut and project.
-    // A full implementation would do RoPE, score computation, and softmax.
-    memcpy(attnOut, q_b, numHeads * headDim * sizeof(float));
+    if (!kvCache) {
+        // Retained G10/G11 witness path — do not alter.
+        memcpy(attnOut, q_b, numHeads * headDim * sizeof(float));
+    } else {
+        size_t nope = qkNopeHeadDim ? qkNopeHeadDim : 128;
+        size_t rope = qkRopeHeadDim ? qkRopeHeadDim : 64;
+        size_t vDim = vHeadDim ? vHeadDim : 128;
+        if (headDim >= nope + rope) {
+            // Q already packs [nope|rope]
+        } else if (headDim > nope) {
+            rope = headDim - nope;
+        } else {
+            error = "MLAForward: q headDim incompatible with MLA nope/rope split";
+            goto cleanup;
+        }
+        memset(attnOut, 0, attnOutSize * sizeof(float));
+        if (!MlaAttentionComplete(q_b, k_b, v_b, k_pe, attnOut,
+                                  numHeads, nope, rope, vDim, headDim,
+                                  position, config.ropeTheta,
+                                  config.ropeScalingFactor,
+                                  kvCache, layerIdx, stats, error)) {
+            goto cleanup;
+        }
+    }
 
     // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
     // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]

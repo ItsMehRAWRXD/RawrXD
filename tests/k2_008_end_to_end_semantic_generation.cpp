@@ -33,7 +33,7 @@
 //   - Peak residency ≤ 256 MiB
 //   - Final residency == 0
 //
-// Usage: k2_008_end_to_end_semantic_generation <shard-directory> [numTokens]
+// Usage: k2_008_end_to_end_semantic_generation <shard-directory> [numTokens] [prompt]
 // Exit codes:
 //   0 = ALL GATES PASSED
 //   1 = Shard discovery failed
@@ -51,6 +51,7 @@
 #include "../src/deep2/KimiK2Config.hpp"
 #include "../src/deep2/K2GlobalTensorIndex.hpp"
 #include "../src/deep2/K2MLAWeights.hpp"
+#include "../src/deep2/K2TokenEmbedding.hpp"
 #include "../src/deep2/KVCache.h"
 #include "../src/deep2/GGUFLoader.hpp"
 #include "../src/deep2/TensorView.hpp"
@@ -634,6 +635,61 @@ static bool ExecuteMLALayer(
 // ============================================================================
 // Prefill: run layers on token embedding, produce logits via real projection
 // ============================================================================
+static bool LookupRealTokenEmbed(const Deep2::GlobalTensorIndex& index,
+                                 const Deep2::KimiK2Config& k2cfg,
+                                 int32_t tokenId, float* hidden, std::string& error) {
+    Deep2::K2TokenEmbedding::Config ecfg;
+    ecfg.hiddenSize = k2cfg.hiddenDim;
+    ecfg.vocabSize = k2cfg.vocabSize;
+    ecfg.maxResidentBytes = kBudgetBytes;
+    Deep2::K2TokenEmbedding embed(ecfg);
+    if (!embed.initialize(&index)) {
+        error = "K2TokenEmbedding: initialize failed";
+        return false;
+    }
+    auto r = embed.lookup(static_cast<uint32_t>(tokenId), hidden);
+    if (!r.ok) {
+        error = "K2TokenEmbedding: " + r.error;
+        return false;
+    }
+    TrackAlloc(r.bytesRead);
+    TrackFree(r.bytesRead);
+    return true;
+}
+
+static bool ForwardMLALayers(uint32_t testLayers,
+    const Deep2::GlobalTensorIndex& index, const Deep2::KimiK2Config& k2cfg,
+    float* hidden, std::string& error)
+{
+    size_t hiddenDim = k2cfg.hiddenDim;
+    std::vector<float> scratch(hiddenDim);
+    std::vector<float> tempHidden(hiddenDim);
+    memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
+    for (uint32_t layer = 0; layer < testLayers; ++layer) {
+        float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
+        float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
+        if (!ExecuteMLALayer(layer, index, k2cfg, in, out, scratch.data(), error))
+            return false;
+    }
+    if (testLayers % 2 == 0)
+        memcpy(hidden, tempHidden.data(), hiddenDim * sizeof(float));
+    return true;
+}
+
+static bool ProjectLogitsFull(const Deep2::GlobalTensorIndex& index,
+    const Deep2::GlobalTensorRef& outRef, size_t hiddenDim, size_t vocabSize,
+    const float* hidden, float* logits, std::string& error)
+{
+    for (size_t row = 0; row < vocabSize; ++row) {
+        std::string projErr;
+        if (!StreamOutputRow(index, outRef, row, hiddenDim, hidden, logits[row], projErr)) {
+            error = "Projection row " + std::to_string(row) + ": " + projErr;
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool PrefillToken(
     int32_t tokenId,
     const Deep2::GlobalTensorIndex& index,
@@ -647,23 +703,16 @@ static bool PrefillToken(
     size_t hiddenDim = k2cfg.hiddenDim;
     size_t vocabSize = k2cfg.vocabSize;
 
-    // Synthetic token embedding (deterministic from token ID)
-    for (size_t i = 0; i < hiddenDim; ++i) {
-        hidden[i] = std::sin(float(tokenId * hiddenDim + i) * 0.01f) * 0.1f;
-    }
+    if (!LookupRealTokenEmbed(index, k2cfg, tokenId, hidden, error))
+        return false;
 
-    // Run 4 test layers
     uint32_t testLayers = 4;
-    std::vector<float> scratch(hiddenDim);
-    std::vector<float> tempHidden(hiddenDim);
-    memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
-
-    for (uint32_t layer = 0; layer < testLayers; ++layer) {
-        float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
-        float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
-        if (!ExecuteMLALayer(layer, index, k2cfg, in, out, scratch.data(), error))
-            return false;
+    if (const char* envLayers = std::getenv("RAWRXD_K2_LAYERS")) {
+        testLayers = static_cast<uint32_t>(std::max(1, atoi(envLayers)));
+        if (testLayers > k2cfg.numLayers) testLayers = k2cfg.numLayers;
     }
+    if (!ForwardMLALayers(testLayers, index, k2cfg, hidden, error))
+        return false;
 
     // Load output_norm
     std::vector<uint8_t> outNormPayload;
@@ -672,23 +721,14 @@ static bool PrefillToken(
     TrackAlloc(outNormPayload.size());
     RawrXD::TensorView outNorm = MakeTensorView(outNormPayload, index, "output_norm.weight", RawrXD::QuantType::F32);
     const float* normW = outNorm.asF32();
+    std::vector<float> scratch(hiddenDim);
     if (normW) {
         rmsNorm(hidden, normW, scratch.data(), hiddenDim, 1e-5f);
         memcpy(hidden, scratch.data(), hiddenDim * sizeof(float));
     }
     TrackFree(outNormPayload.size());
 
-    // Real output projection: stream each row
-    for (size_t row = 0; row < vocabSize; ++row) {
-        std::string projErr;
-        bool ok = StreamOutputRow(index, outRef, row, hiddenDim, hidden, logits[row], projErr);
-        if (!ok) {
-            error = "Projection row " + std::to_string(row) + ": " + projErr;
-            return false;
-        }
-    }
-
-    return true;
+    return ProjectLogitsFull(index, outRef, hiddenDim, vocabSize, hidden, logits, error);
 }
 
 // ============================================================================
@@ -702,12 +742,14 @@ int main(int argc, char** argv) {
     printf("╚════════════════════════════════════════════════════════════╝\n\n");
 
     fs::path shardDir = (argc > 1) ? argv[1] : fs::current_path();
-    size_t numTokens = (argc > 2) ? static_cast<size_t>(atoi(argv[2])) : 2;
+    size_t numTokens = (argc > 2) ? static_cast<size_t>(atoi(argv[2])) : 4;
+    std::string prompt = (argc > 3) ? argv[3] : "hello";
     if (numTokens < 1) numTokens = 1;
-    if (numTokens > 4) numTokens = 4;
+    if (numTokens > 16) numTokens = 16;
 
     printf("[INFO] Shard directory: %s\n", shardDir.string().c_str());
-    printf("[INFO] Tokens to generate: %zu\n", numTokens);
+    printf("[INFO] Prompt: \"%s\"\n", prompt.c_str());
+    printf("[INFO] Stream tokens: %zu\n", numTokens);
 
     // ═══════════════════════════════════════════════════════════════
     // Gate 1: Shard Discovery
@@ -748,7 +790,6 @@ int main(int argc, char** argv) {
     // Gate 4: Encode Deterministic Prompt
     // ═══════════════════════════════════════════════════════════════
     printf("\n── Gate 4: Encode Prompt ──\n");
-    std::string prompt = "Hello world";
     printf("       Prompt: \"%s\"\n", prompt.c_str());
     std::vector<int32_t> promptTokens = encoder.Encode(prompt);
     printf("       Token count: %zu\n", promptTokens.size());
@@ -776,7 +817,10 @@ int main(int argc, char** argv) {
     Deep2::KimiK2Config k2cfg;
     k2cfg.hiddenDim = 7168;
     k2cfg.numLayers = 61;
-    k2cfg.numHeads = 128;
+    k2cfg.numHeads = 64;
+    k2cfg.numKVHeads = 1;
+    k2cfg.numExperts = 384;
+    k2cfg.expertsPerToken = 8;
     k2cfg.qLoraRank = 1536;
     k2cfg.kvLoraRank = 512;
     k2cfg.qkNopeHeadDim = 128;
@@ -881,6 +925,58 @@ int main(int argc, char** argv) {
     printf("║  DETERMINISTIC   = %-40s  ║\n", (cs1 == cs2) ? "YES" : "NO");
     printf("╚════════════════════════════════════════════════════════════╝\n");
 
-    printf("\n✅ ALL K2-008 GATES PASSED\n");
+    // ═══════════════════════════════════════════════════════════════
+    // Gate 13: K2 Stream — autoregressive hello (real embed, no 578GB load)
+    // ═══════════════════════════════════════════════════════════════
+    printf("\n── Gate 13: K2 Stream Generation ──\n");
+    printf("       ENGINE_PATH=K2NativeStream\n");
+    printf("       GENERATION=REAL\n");
+    printf("       FALLBACK=NONE\n");
+    std::string streamed;
+    int32_t curToken = promptTokens.back();
+    for (size_t step = 0; step < numTokens; ++step) {
+        std::string stepErr;
+        if (!LookupRealTokenEmbed(index, k2cfg, curToken, hidden.data(), stepErr)) {
+            printf("  [FAIL] embed step %zu: %s\n", step, stepErr.c_str());
+            return 13;
+        }
+        if (!ForwardMLALayers(4, index, k2cfg, hidden.data(), stepErr)) {
+            printf("  [FAIL] forward step %zu: %s\n", step, stepErr.c_str());
+            return 13;
+        }
+        std::vector<uint8_t> outNormPayload;
+        if (!LoadTensorPayload(index, "output_norm.weight", outNormPayload, stepErr)) {
+            printf("  [FAIL] output_norm step %zu\n", step);
+            return 13;
+        }
+        TrackAlloc(outNormPayload.size());
+        RawrXD::TensorView outNorm = MakeTensorView(outNormPayload, index,
+            "output_norm.weight", RawrXD::QuantType::F32);
+        const float* normW = outNorm.asF32();
+        std::vector<float> scratch(hiddenDim);
+        if (normW)
+            rmsNorm(hidden.data(), normW, scratch.data(), hiddenDim, 1e-5f);
+        else
+            memcpy(scratch.data(), hidden.data(), hiddenDim * sizeof(float));
+        memcpy(hidden.data(), scratch.data(), hiddenDim * sizeof(float));
+        TrackFree(outNormPayload.size());
+
+        if (!ProjectLogitsFull(index, outRef, hiddenDim, vocabSize,
+                               hidden.data(), logits.data(), stepErr)) {
+            printf("  [FAIL] projection step %zu: %s\n", step, stepErr.c_str());
+            return 13;
+        }
+        curToken = argmaxFirst(logits.data(), logits.size());
+        std::string piece = encoder.DecodeToken(curToken);
+        streamed += piece;
+        printf("       [STREAM] step=%zu token=%d text=\"%s\"\n",
+               step, curToken, piece.c_str());
+        fflush(stdout);
+    }
+    GATE("Stream produced output", !streamed.empty(), 13);
+    printf("       STREAMING=YES\n");
+    printf("       FULL_RESPONSE=\"%s\"\n", streamed.c_str());
+
+    printf("\n✅ ALL K2-008 GATES PASSED (K2 STREAM)\n");
     return 0;
 }

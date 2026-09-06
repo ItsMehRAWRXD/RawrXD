@@ -2,6 +2,7 @@
 // Sprint 02: UI/UX Enhancement - GDI+ Integration
 
 #include "Win32IDE.h"
+#include "Win32Utf8.hpp"
 #include "resource.h"
 #include "../core/voice_assistant_manager.hpp"
 #include "VoiceAssistantWorker.hpp"
@@ -629,12 +630,9 @@ void Win32IDE::setVoiceAssistantMode(const std::string& mode) {
 
 // Update voice status
 void Win32IDE::updateVoiceStatus(const std::string& status) {
-    // Update status bar if available
     if (m_hwndStatusBar) {
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 2, (LPARAM)("Voice: " + status).c_str());
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 2, "Voice: " + status);
     }
-    
-    // Log to output
     appendToOutput("[Voice Status] " + status + "\n", "Voice", OutputSeverity::Info);
 }
 

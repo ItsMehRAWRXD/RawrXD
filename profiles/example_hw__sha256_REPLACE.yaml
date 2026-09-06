@@ -1,0 +1,79 @@
+# Fingerprint-bound learned profile example (hw × model)
+# AutoPlanner prefers this placement when fingerprints match.
+hardware:
+  fingerprint: "g0:gpu0:12884901888|ram:42949672960"
+  ram: 40GB
+  topology: "single-gpu"
+  gpu0_name: "gpu0"
+  gpu0_vram: 12GB
+
+model:
+  fingerprint: "sha256:REPLACE_WITH_MODEL_SHA"
+  name: "qwen-example"
+  quant: "Q4_K_M"
+
+metrics:
+  tps: 7.8
+  ttft_ms: 610
+  peak_vram: 2.96GB
+  peak_ram: 8.7GB
+  runs: 1
+  successes: 1
+  last: "2026-08-29T00:00:00Z"
+  policy_sha: "policy:example"
+
+execution:
+  mode: expert
+  model_fingerprint: "sha256:REPLACE_WITH_MODEL_SHA"
+  persist_runtime_changes: true
+
+memory:
+  vram: 12GB
+  vram_cap: hard
+  ram: 40GB
+  vram_parts:
+    weights: 6GB
+    kv: 3GB
+    activations: 1GB
+    streaming: 1GB
+    scratch: 512MB
+    reserve: 512MB
+
+placement:
+  embeddings: ram
+  lm_head: gpu0
+  attention: gpu0
+  ffn: hybrid
+  layers:
+    "0-11": gpu0
+    "12-19": gpu1
+    "20-*": stream
+  pin:
+    - "token_embd.weight"
+    - "output_norm.weight"
+
+streaming:
+  enabled: true
+  chunk_size: 64MB
+  prefetch_depth: 4
+  buffers: 3
+
+kv:
+  placement: hybrid
+  gpu_budget: 2GB
+  quant: q8
+  context: 16384
+
+work_avoidance:
+  enabled: true
+  policy: certified
+  fail_closed: true
+
+scheduler:
+  objective: throughput
+  auto_tune: true
+  respect_overrides: true
+
+hotpatch:
+  enabled: true
+  adaptive: true

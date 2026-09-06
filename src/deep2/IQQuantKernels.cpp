@@ -135,15 +135,14 @@ static void gemv_iq2_xs_scalar(
         const block_iq2_xs* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
             float d = f16_to_f32(rowBlocks[b].d);
-            float s0 = f16_to_f32(rowBlocks[b].scales[0]);
-            float s1 = f16_to_f32(rowBlocks[b].scales[1]);
-            for (int i = 0; i < 68; ++i) {
+            // Canonical: 64 qs bytes + 8 uint8 scales (ggml). Provisional decode.
+            for (int i = 0; i < 64; ++i) {
                 uint8_t byte = rowBlocks[b].qs[i];
+                float scale = (float)rowBlocks[b].scales[i / 8] / 16.0f;
                 for (int j = 0; j < 4; ++j) {
                     int code = (byte >> (j * 2)) & 0x03;
                     int idx = i * 4 + j;
                     if (idx >= 256) break;
-                    float scale = (idx < 128) ? s0 : s1;
                     float q = iq2_xs_grid[code] * d * scale;
                     acc += q * x[b * 256 + idx];
                 }
@@ -158,15 +157,13 @@ static void dequant_iq2_xs(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
-        float s0 = f16_to_f32(blocks[b].scales[0]);
-        float s1 = f16_to_f32(blocks[b].scales[1]);
-        for (int i = 0; i < 68; ++i) {
+        for (int i = 0; i < 64; ++i) {
             uint8_t byte = blocks[b].qs[i];
+            float scale = (float)blocks[b].scales[i / 8] / 16.0f;
             for (int j = 0; j < 4; ++j) {
                 int code = (byte >> (j * 2)) & 0x03;
-                int idx = b * 256 + i * 4 + j;
+                int idx = (int)b * 256 + i * 4 + j;
                 if (idx >= (int)n) return;
-                float scale = (idx % 256 < 128) ? s0 : s1;
                 dst[idx] = iq2_xs_grid[code] * d * scale;
             }
         }
@@ -376,19 +373,21 @@ static void gemv_iq4_nl_scalar(
     float*        __restrict__ y,
     size_t rows, size_t cols
 ) {
+    // Canonical IQ4_NL: 18 bytes / 32 elems (ggml QK4_NL)
     const block_iq4_nl* blocks = reinterpret_cast<const block_iq4_nl*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
+    const size_t blocksPerRow = (cols + 31) / 32;
     for (size_t r = 0; r < rows; ++r) {
         float acc = 0.0f;
         const block_iq4_nl* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
-            float d = f16_to_f32(rowBlocks[b].d);
-            for (int i = 0; i < 128; ++i) {
-                uint8_t byte = rowBlocks[b].qs[i];
-                float q0 = iq4_nl_grid[byte & 0x0F] * d;
-                float q1 = iq4_nl_grid[byte >> 4] * d;
-                acc += q0 * x[b * 256 + i * 2];
-                acc += q1 * x[b * 256 + i * 2 + 1];
+            const float d = f16_to_f32(rowBlocks[b].d);
+            const size_t base = b * 32;
+            const size_t nHere = (base + 32 <= cols) ? 32 : (cols - base);
+            for (size_t i = 0; i < nHere / 2; ++i) {
+                const uint8_t byte = rowBlocks[b].qs[i];
+                acc += iq4_nl_grid[byte & 0x0F] * d * x[base + i * 2];
+                if (i * 2 + 1 < nHere)
+                    acc += iq4_nl_grid[byte >> 4] * d * x[base + i * 2 + 1];
             }
         }
         y[r] += acc;
@@ -397,15 +396,15 @@ static void gemv_iq4_nl_scalar(
 
 static void dequant_iq4_nl(const uint8_t* src, float* dst, size_t n) {
     const block_iq4_nl* blocks = reinterpret_cast<const block_iq4_nl*>(src);
-    size_t numBlocks = (n + 255) / 256;
+    const size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 128; ++i) {
-            uint8_t byte = blocks[b].qs[i];
-            int idx0 = b * 256 + i * 2;
-            int idx1 = b * 256 + i * 2 + 1;
-            if (idx0 < (int)n) dst[idx0] = iq4_nl_grid[byte & 0x0F] * d;
-            if (idx1 < (int)n) dst[idx1] = iq4_nl_grid[byte >> 4] * d;
+        const float d = f16_to_f32(blocks[b].d);
+        for (int i = 0; i < 16; ++i) {
+            const uint8_t byte = blocks[b].qs[i];
+            const size_t idx0 = b * 32 + (size_t)i * 2;
+            const size_t idx1 = idx0 + 1;
+            if (idx0 < n) dst[idx0] = iq4_nl_grid[byte & 0x0F] * d;
+            if (idx1 < n) dst[idx1] = iq4_nl_grid[byte >> 4] * d;
         }
     }
 }
@@ -468,10 +467,11 @@ static void dequant_iq4_xs(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ1_S
+// IQ1_S — canonical 50-byte / 256-elem block (d + qs[32] + qh[8])
 // ---------------------------------------------------------------------------
 // (block_iq1_s defined in GGUFLoader.hpp)
-// 32 bytes of packed 1-bit weights + f16 scale = 34 bytes, 256 elements
+// Note: full ggml IQ1_S uses qh grid indices; this scalar path keeps qs-bit
+// stride-correct sizing. P1 will replace with reference dequant.
 
 static void gemv_iq1_s_scalar(
     const uint8_t* __restrict__ w,
@@ -488,7 +488,6 @@ static void gemv_iq1_s_scalar(
             float d = f16_to_f32(rowBlocks[b].d);
             for (int i = 0; i < 32; ++i) {
                 uint8_t byte = rowBlocks[b].qs[i];
-                // 8 weights per byte (1 bit each): 1 -> d, 0 -> 0
                 for (int j = 0; j < 8; ++j) {
                     int bit = (byte >> j) & 1;
                     int idx = i * 8 + j;
@@ -496,6 +495,7 @@ static void gemv_iq1_s_scalar(
                     acc += q * x[b * 256 + idx];
                 }
             }
+            (void)rowBlocks[b].qh; // layout present; used by full ggml decode
         }
         y[r] += acc;
     }
@@ -526,55 +526,8 @@ static void gemv_iq4_nl_avx512(
     float*        __restrict__ y,
     size_t rows, size_t cols
 ) {
-    const block_iq4_nl* blocks = reinterpret_cast<const block_iq4_nl*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-
-    // Load the IQ4_NL grid into a zmm register (16 floats)
-    __m512 gridVec = _mm512_loadu_ps(iq4_nl_grid);
-    const __m512i lowMask = _mm512_set1_epi8(0x0F);
-
-    for (size_t r = 0; r < rows; ++r) {
-        __m512 acc = _mm512_setzero_ps();
-        const block_iq4_nl* rowBlocks = blocks + r * blocksPerRow;
-
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            float d = f16_to_f32(rowBlocks[b].d);
-            __m512 dVec = _mm512_set1_ps(d);
-
-            // Process 128 bytes of packed 4-bit weights (256 weights)
-            for (int chunk = 0; chunk < 128; chunk += 16) {
-                // Load 16 bytes (32 weights)
-                __m128i packed16 = _mm_loadu_si128(
-                    reinterpret_cast<const __m128i*>(rowBlocks[b].qs + chunk));
-                
-                // Extract low nibbles (first 16 weights)
-                __m256i lowNibbles = _mm256_and_si256(
-                    _mm256_cvtepu8_epi16(packed16),
-                    _mm256_set1_epi8(0x0F));
-                
-                // Extract high nibbles (next 16 weights)
-                __m256i highNibbles = _mm256_and_si256(
-                    _mm256_srli_epi16(_mm256_cvtepu8_epi16(packed16), 4),
-                    _mm256_set1_epi8(0x0F));
-
-                // Convert to int32 and gather from grid
-                __m512i lowIdx = _mm512_cvtepi8_epi32(_mm256_castsi256_si128(lowNibbles));
-                __m512 lowQ = _mm512_i32gather_ps(lowIdx, iq4_nl_grid, 4);
-                lowQ = _mm512_mul_ps(lowQ, dVec);
-
-                __m512i highIdx = _mm512_cvtepi8_epi32(_mm256_castsi256_si128(highNibbles));
-                __m512 highQ = _mm512_i32gather_ps(highIdx, iq4_nl_grid, 4);
-                highQ = _mm512_mul_ps(highQ, dVec);
-
-                // Load activations and FMA
-                __m512 xLow = _mm512_loadu_ps(x + b * 256 + chunk * 2);
-                __m512 xHigh = _mm512_loadu_ps(x + b * 256 + chunk * 2 + 16);
-                acc = _mm512_fmadd_ps(lowQ, xLow, acc);
-                acc = _mm512_fmadd_ps(highQ, xHigh, acc);
-            }
-        }
-        y[r] += _mm512_reduce_add_ps(acc);
-    }
+    // Canonical IQ4_NL is 32-wide; reuse scalar until AVX path is reblocked.
+    gemv_iq4_nl_scalar(w, x, y, rows, cols);
 }
 
 // ===========================================================================

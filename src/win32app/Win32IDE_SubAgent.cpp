@@ -251,11 +251,10 @@ void Win32IDE::onSubAgentChain() {
         if (_guard.cancelled) return;
         std::string result = mgr->executeChain("win32ide", promptTemplates, input);
 
-        // Post result back to UI thread
+        // Post result back to UI thread (malloc'd UTF-8; handler frees via free())
         if (isShuttingDown()) return;
         std::string output = "🔗 Chain complete:\n" + result.substr(0, 4000) + "\n";
-        PostMessage(m_hwndMain, WM_AGENT_OUTPUT_SAFE, 0, 
-                   reinterpret_cast<LPARAM>(new std::string(output)));
+        postAgentOutputSafe(output);
     }).detach();
 
     METRICS.increment("subagent.chain.execute");
@@ -308,8 +307,7 @@ void Win32IDE::onSubAgentSwarm() {
         hideSubAgentProgress();
 
         std::string output = "🐝 Swarm complete (merged result):\n" + result.substr(0, 4000) + "\n";
-        PostMessage(m_hwndMain, WM_AGENT_OUTPUT_SAFE, 0,
-                   reinterpret_cast<LPARAM>(new std::string(output)));
+        postAgentOutputSafe(output);
     }).detach();
 
     METRICS.increment("subagent.swarm.execute");
@@ -393,10 +391,6 @@ void Win32IDE::onSubAgentStatus() {
 
 void Win32IDE::appendStreamingToken(const std::string& token) {
     if (token.empty()) return;
-    if (!RawrXD::Flags::FeatureFlagsRuntime::Instance().isEnabled(
-            RawrXD::License::FeatureID::TokenStreaming)) {
-        return;
-    }
 
     {
         std::lock_guard<std::mutex> lock(m_streamingOutputMutex);
@@ -404,13 +398,12 @@ void Win32IDE::appendStreamingToken(const std::string& token) {
         m_streamingActive = true;
     }
 
-    // Append to the output panel in real-time
-    // Use appendToOutput with no severity prefix for clean token display
+    // Paint path must not be license-gated: tokens already produced must reach UI.
+    // Cross-thread safe: postAgentOutputSafe uses strdup + WM_AGENT_OUTPUT_SAFE.
+    // Copilot EDIT paint stays on the UI-thread stream handlers
+    // (HandleCopilotStreamUpdate / onNativeAIToken / HexMag appendCopilotChatTextOnUiThread).
     if (m_hwndMain && IsWindow(m_hwndMain)) {
-        // Post to UI thread safely
-        std::string* tokenCopy = new std::string(token);
-        PostMessage(m_hwndMain, WM_AGENT_OUTPUT_SAFE, 0,
-                   reinterpret_cast<LPARAM>(tokenCopy));
+        postAgentOutputSafe(token);
     }
 
     METRICS.increment("streaming.token.appended");

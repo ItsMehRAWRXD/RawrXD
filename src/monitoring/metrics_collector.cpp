@@ -50,6 +50,10 @@ bool MetricsCollector::initialize(const std::string& config_path) {
     registerMetric(Metric("rawrxd_request_latency_ms", "Request latency in milliseconds", MetricType::HISTOGRAM));
     registerMetric(Metric("rawrxd_tokens_generated", "Total tokens generated", MetricType::COUNTER));
     registerMetric(Metric("rawrxd_tokens_per_second", "Tokens per second", MetricType::GAUGE));
+    registerMetric(Metric("rawrxd_gpu_power_valid", "AMD GPU power telemetry valid", MetricType::GAUGE));
+    registerMetric(Metric("rawrxd_tokens_per_watt_gpu", "Decode tokens per GPU watt", MetricType::GAUGE));
+    registerMetric(Metric("rawrxd_avg_gpu_power_watts", "Average GPU package watts", MetricType::GAUGE));
+    registerMetric(Metric("rawrxd_gpu_power_sample_count", "GPU power samples in decode window", MetricType::GAUGE));
     registerMetric(Metric("rawrxd_memory_usage_bytes", "Memory usage in bytes", MetricType::GAUGE));
     registerMetric(Metric("rawrxd_cpu_usage_percent", "CPU usage percentage", MetricType::GAUGE));
     registerMetric(Metric("rawrxd_gpu_utilization_percent", "GPU utilization percentage", MetricType::GAUGE));

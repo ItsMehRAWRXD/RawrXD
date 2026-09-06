@@ -13,6 +13,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "Win32Utf8.hpp"
 #include "IDELogger.h"
 #include "Win32IDE_SubAgent.h"
 #include <richedit.h>
@@ -227,7 +228,7 @@ void Win32IDE::showModelStatus(const std::string& text, int durationMs) {
 void Win32IDE::showModelLoadError(const std::string& detail) {
     const std::string msg = "Model load failed: " + detail;
     if (m_hwndStatusBar) {
-        SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)msg.c_str());
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 0, msg);
     }
     appendToOutput(msg + "\n", "Errors", OutputSeverity::Error);
 }

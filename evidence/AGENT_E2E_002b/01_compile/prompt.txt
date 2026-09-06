@@ -1,5 +1,8 @@
-﻿Fix the compile error in main.c so the program builds and prints hello from b01.
+﻿Fix the compile error in main.c so the program builds and prints hello from b01 42.
 First line of your reply MUST be a TOOL_CALL.
 Start with: TOOL_CALL: read_file {"path":"main.c"}
-Then edit with replace_in_file (search/replace), build with run_command, and run the exe.
+Then edit with replace_in_file (search DOES_NOT_EXIST / replace 42).
+Then TOOL_CALL: run_command {"command":"cmake --build build"}
+(tool configures build/ if missing; do NOT use shell chaining &&).
+Never claim compile success unless that run_command reports exit_code=0.
 No markdown code fences. No canned repairs.

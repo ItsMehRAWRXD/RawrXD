@@ -3,16 +3,19 @@ PASS lane=A tool=replace_in_file expect_accept=0 got_accept=0 expect_dispatch=0 
   result_json={"ok":false,"tool":"replace_in_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: replace_in_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
 PASS lane=A tool=run_command expect_accept=0 got_accept=0 expect_dispatch=0 got_dispatch=0 error=schema_validation
   result_json={"ok":false,"tool":"run_command","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: run_command {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
-PASS lane=B tool=replace_in_file expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=-
+PASS lane=A tool=read_file expect_accept=0 got_accept=0 expect_dispatch=0 got_dispatch=0 error=schema_validation
+  result_json={"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
+PASS lane=R tool=replace_in_file expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=-
   result_json={"ok":true,"tool":"replace_in_file","exit_code":0,"dispatched":true,"output":"replaced 1 occurrence(s) in F:\\~dev\\rawrxd\\evidence\\AGENT_TOOL_SCHEMA_002\\direct_ws\\main.c"}
+PASS lane=R tool=read_file expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=-
+  result_json={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = 42;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}
+PASS lane=B tool=replace_in_file expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=tool_runtime
+  result_json={"ok":false,"tool":"replace_in_file","exit_code":-1,"dispatched":true,"output":"search text not found","error":"tool_runtime","details":[]}
 PASS lane=B tool=read_file expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=-
   result_json={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = 42;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}
 PASS lane=B tool=run_command expect_accept=1 got_accept=1 expect_dispatch=1 got_dispatch=1 error=-
-  result_json={"ok":false,"tool":"run_command","exit_code":1,"dispatched":true,"output":"Error: F:/~dev/rawrxd/evidence/AGENT_TOOL_SCHEMA_002/direct_ws/build is not a directory\n"}
-STEP2_RENDER_DUMP=F:\~dev\rawrxd\evidence\AGENT_TOOL_SCHEMA_002\RAWRXD_AGENT_STEP2_RENDERED_PROMPT.txt
-STEP2_CONTAINS_TOOL_RESULT_LABEL=0
-STEP2_CONTAINS_OBSERVATION=1
-STEP2_ENDS_WITH_ASSISTANT_PROMPT=1
+  result_json={"ok":false,"tool":"run_command","exit_code":1,"dispatched":true,"output":"[build_discovery]\naction=configure_then_build\nreason=build_dir_missing_or_unconfigured\nrequested_build_dir=F:\\~dev\\rawrxd\\evidence\\AGENT_TOOL_SCHEMA_002\\direct_ws\\build\nconfigure_command=cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release\n[configure_phase]\n[run_command_evidence]\nrequested_cwd=F:\\~dev\\rawrxd\\evidence\\AGENT_TOOL_SCHEMA_002\\direct_ws\neffective_cwd=F:\\~dev\\rawrxd\\evidence\\AGENT_TOOL_SCHEMA_002\\direct_ws\ncommand_requested=cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release\ncommand_line_resolved=cmd.exe /d /s /c \"cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release\"\nresolved_executable=cmd.exe\ntimed_out=false\nexit_code=1\n--- stdout ---\n-- The C compiler identification is unknown\n-- Configuring incomplete, errors occurred!\n--- stderr ---\nCMake Error at CMakeLists.txt:2 (project):\n  No CMAKE_C_COMPILER could be found.\n\n  Tell CMake where to find the compiler by setting either the environment\n  variable \"CC\" or the CMake cache entry CMAKE_C_COMPILER to the full path to\n  the compiler, or to the compiler name if it is in the PATH.\n\n\nCLAIM_COMPILE_SUCCESS=forbidden\n"}
+STEP2_RENDER_DUMP=skipped (pass --model for GGUF metadata)
 LANE_A_MALFORMED_REJECT=PASS
 LANE_B_VALID_ACCEPT=PASS
 VALID_SCHEMA_LANE=PASS

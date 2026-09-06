@@ -1,8 +1,8 @@
-﻿# P1PRA_002 physical E2E - Load GGUF from G:\OllamaModels -> Build Send -> E2E.log
+﻿# P1PRA_002 physical E2E - Load GGUF from F:\OllamaModels -> Build Send -> E2E.log
 $ErrorActionPreference = 'Stop'
-$env:RAWRXD_EVIDENCE_ROOT = 'f:\~dev\rawrxd\evidence'
-$env:OLLAMA_MODELS = 'G:\OllamaModels'
-$env:RAWRXD_MODELS_PATH = 'G:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf'
+$env:RAWRXD_EVIDENCE_ROOT = 'G:\~dev\rawrxd\evidence'
+$env:OLLAMA_MODELS = 'F:\OllamaModels'
+$env:RAWRXD_MODELS_PATH = 'F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf'
 # Host fault: amdvlk64.dll BEX64 / ntdll AV during model load - disable Vulkan ICD.
 $env:VK_ICD_FILENAMES = 'C:\__no_vulkan_icd__.json'
 $env:VK_DRIVER_FILES = 'C:\__no_vulkan_icd__.json'
@@ -11,22 +11,43 @@ $env:RAWRXD_SKIP_STREAMER_POSTLOAD = '1'
 $env:RAWRXD_FORCE_CPU_INFERENCE = '1'
 $env:RAWRXD_BRIDGE_CPU_ONLY = '1'
 $env:RAWRXD_SKIP_DEFERRED_MODEL_LOAD = '1'
+$env:RAWRXD_SKIP_GPU_POWER_PROBE = '1'
 $env:RAWRXD_INFERENCE_CTX = '512'
+# Full DHI thread skip for concurrency discriminator (WM_APP+201 skip alone leaves DHI alive).
+if ($env:RAWRXD_DHI_DISCRIMINATOR -eq '1') {
+  $env:RAWRXD_SKIP_DEFERRED_HEAVY_INIT = '1'
+}
 # Full P1PRA cert requires MASM UTC path — do not inherit isolation skip from shell.
 Remove-Item Env:RAWRXD_SKIP_UTC_MASM -ErrorAction SilentlyContinue
-$exe = if ($env:RAWRXD_E2E_EXE) { $env:RAWRXD_E2E_EXE } else { 'F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe' }
-$e2e = 'f:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\E2E.log'
-$run = 'f:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\RUN.log'
-$witness = 'f:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\WITNESS.log'
+$exe = if ($env:RAWRXD_E2E_EXE) { $env:RAWRXD_E2E_EXE } else { 'G:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe' }
+$e2e = 'G:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\E2E.log'
+$run = 'G:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\RUN.log'
+$witness = 'G:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\WITNESS.log'
 $model = $env:RAWRXD_MODELS_PATH
+
+function Read-WitnessLinesSafe {
+  param([Parameter(Mandatory)][string]$Path)
+  if (-not (Test-Path -LiteralPath $Path)) { return @() }
+  try {
+    $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+      $sr = New-Object System.IO.StreamReader($fs)
+      $txt = $sr.ReadToEnd()
+      $sr.Close()
+    } finally { $fs.Close() }
+    if ([string]::IsNullOrEmpty($txt)) { return @() }
+    return @($txt -split "`r?`n")
+  } catch {
+    return @(Get-Content -LiteralPath $Path -ErrorAction SilentlyContinue)
+  }
+}
 
 function Get-FreshLogLines {
   param(
     [Parameter(Mandatory)][string]$Path,
     [int]$StartLines = 0
   )
-  if (-not (Test-Path -LiteralPath $Path)) { return @() }
-  $all = @(Get-Content -LiteralPath $Path -ErrorAction SilentlyContinue)
+  $all = @(Read-WitnessLinesSafe -Path $Path)
   if ($StartLines -ge $all.Count) { return @() }
   return @($all[$StartLines..($all.Count - 1)])
 }
@@ -99,11 +120,76 @@ foreach ($src in @($e2e, $run, $witness)) {
 Remove-Item $e2e -ErrorAction SilentlyContinue
 Remove-Item $run -ErrorAction SilentlyContinue
 
-$WitnessStartLines = if (Test-Path -LiteralPath $witness) {
-  @(Get-Content -LiteralPath $witness -ErrorAction SilentlyContinue).Count
+$witnessBaseline = Join-Path (Split-Path $witness) 'WITNESS.harness_baseline.log'
+if (Test-Path -LiteralPath $witness) {
+  Copy-Item -LiteralPath $witness -Destination $witnessBaseline -Force
+}
+$WitnessStartLines = if (Test-Path -LiteralPath $witnessBaseline) {
+  @(Read-WitnessLinesSafe -Path $witnessBaseline).Count
 } else { 0 }
 $RunStartLines = 0
-Write-Host "witness_line_baseline=$WitnessStartLines run_line_baseline=$RunStartLines"
+$WitnessRunCopy = Join-Path (Split-Path $witness) "WITNESS_RUN_$stamp.log"
+Write-Host "witness_line_baseline=$WitnessStartLines run_line_baseline=$RunStartLines witness_run_copy=$WitnessRunCopy"
+
+function Save-WitnessRunCopy {
+  if (-not (Test-Path -LiteralPath $witness)) { return }
+  Copy-Item -LiteralPath $witness -Destination $WitnessRunCopy -Force -ErrorAction SilentlyContinue
+  $freshOnly = @(Get-FreshLogLines -Path $witness -StartLines $WitnessStartLines)
+  if ($freshOnly.Count -gt 0) {
+    Set-Content -LiteralPath ($WitnessRunCopy + '.fresh.txt') -Value ($freshOnly -join "`n") -Encoding UTF8
+  }
+  Write-Host "witness_run_copy_saved=$WitnessRunCopy fresh_lines=$($freshOnly.Count)"
+}
+
+function Get-ExpectedModelListIndex {
+  param(
+    [Parameter(Mandatory)][string]$TargetPath,
+    [int]$MaxEntries = 128
+  )
+  $targetNorm = [System.IO.Path]::GetFullPath($TargetPath)
+  $roots = @()
+  if ($env:RAWRXD_MODELS_PATH) {
+    $parent = Split-Path -Parent $env:RAWRXD_MODELS_PATH
+    if ($parent) { $roots += $parent }
+  }
+  if ($env:OLLAMA_MODELS) { $roots += $env:OLLAMA_MODELS }
+  $roots += @('G:\OllamaModels', 'F:\OllamaModels')
+  $roots = @($roots | Where-Object { $_ } | Select-Object -Unique)
+  $entries = New-Object System.Collections.Generic.List[string]
+  foreach ($root in $roots) {
+    if (-not (Test-Path -LiteralPath $root)) { continue }
+    Get-ChildItem -LiteralPath $root -Filter '*.gguf' -File -ErrorAction SilentlyContinue |
+      ForEach-Object { [void]$entries.Add($_.FullName) }
+    Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue |
+      ForEach-Object {
+        Get-ChildItem -LiteralPath $_.FullName -Filter '*.gguf' -File -ErrorAction SilentlyContinue |
+          ForEach-Object { [void]$entries.Add($_.FullName) }
+      }
+  }
+  $sorted = @($entries | Sort-Object { [System.IO.Path]::GetFileName($_) } | Select-Object -First $MaxEntries)
+  try {
+    $ollamaLines = @(cmd /c 'ollama list 2>nul' | Where-Object { $_ -and $_ -notmatch '^NAME\s' })
+    foreach ($line in $ollamaLines) {
+      if ($sorted.Count -ge $MaxEntries) { break }
+      $name = ($line -split '\s{2,}')[0].Trim()
+      if ($name) {
+        $fake = "[Ollama] $name"
+        if (-not ($sorted | Where-Object { $_ -like "*$name*" })) {
+          $sorted += "ollama:$name"
+        }
+      }
+    }
+    $sorted = @($sorted | Sort-Object {
+      if ($_ -like 'ollama:*') { "[Ollama] " + ($_.Substring(7)) } else { [System.IO.Path]::GetFileName($_) }
+    } | Select-Object -First $MaxEntries)
+  } catch {}
+  for ($i = 0; $i -lt $sorted.Count; $i++) {
+    $entry = $sorted[$i]
+    if ($entry -like 'ollama:*') { continue }
+    if ([System.IO.Path]::GetFullPath($entry) -eq $targetNorm) { return $i }
+  }
+  return -1
+}
 
 Add-Type @'
 using System;
@@ -139,9 +225,13 @@ public static class P1E2E {
   public const uint LB_SETCURSEL = 0x0186;
   public const uint LB_GETCOUNT = 0x018B;
   public const uint LB_GETTEXT = 0x0189;
+  public const uint LB_GETTEXTW = 0x018A;
+  public const uint LB_GETTEXTLENW = 0x01A0;
   public static string ListBoxGetText(IntPtr list, int index) {
-    var sb = new StringBuilder(2048);
-    SendMessageStr(list, LB_GETTEXT, (IntPtr)index, sb);
+    int len = (int)SendMessagePtr(list, LB_GETTEXTLENW, (IntPtr)index, IntPtr.Zero).ToInt64();
+    if (len <= 0) { return ""; }
+    var sb = new StringBuilder(len + 2);
+    SendMessageStr(list, LB_GETTEXTW, (IntPtr)index, sb);
     return sb.ToString();
   }
   public static IntPtr FindByCtrlId(IntPtr root, int id) {
@@ -251,6 +341,35 @@ function Test-ModelStatusReady([IntPtr]$MainHwnd) {
   return ($st -match 'ready|loaded|Deep2' -and $st -notmatch 'Loading|failed|No model')
 }
 
+function Get-P1praAuthoritativeMainHwnd {
+  param(
+    [string]$WitnessPath,
+    [int]$WitnessLineAfter = 0,
+    [uint32]$ExpectedPid = 0
+  )
+  if (-not (Test-Path -LiteralPath $WitnessPath)) { return [IntPtr]::Zero }
+  $fresh = Get-FreshLogLines -Path $WitnessPath -StartLines $WitnessLineAfter
+  $line = ($fresh | Select-String 'P1PRA_HWND main=' | Select-Object -Last 1).Line
+  if (-not $line) { return [IntPtr]::Zero }
+  if ($line -notmatch 'P1PRA_HWND main=([0-9A-Fa-fx]+).*userdata=([0-9A-Fa-fx]+).*pid=(\d+)') {
+    return [IntPtr]::Zero
+  }
+  $mainHex = $Matches[1]
+  $userdataHex = $Matches[2]
+  $pidFromWitness = [uint32]$Matches[3]
+  if ($ExpectedPid -ne 0 -and $pidFromWitness -ne $ExpectedPid) { return [IntPtr]::Zero }
+  try {
+    $hwnd = [IntPtr]::new([int64]::Parse($mainHex.Replace('0x',''), [System.Globalization.NumberStyles]::AllowHexSpecifier))
+  } catch {
+    return [IntPtr]::Zero
+  }
+  if (-not [P1E2E]::IsWindow($hwnd)) { return [IntPtr]::Zero }
+  $userdata = [P1E2E]::GetWindowLongPtr($hwnd, [P1E2E]::GWLP_USERDATA)
+  if ($userdata -eq [IntPtr]::Zero) { return [IntPtr]::Zero }
+  Write-Host "P1PRA_HWND authoritative main=$hwnd userdata=$userdata witness_pid=$pidFromWitness"
+  return $hwnd
+}
+
 function Test-ModelLoadSatisfied([IntPtr]$MainHwnd, [string]$WitnessPath, [int]$WitnessLineAfter = 0) {
   $status = [P1E2E]::FindByCtrlId($MainHwnd, 12535)
   if ($status -ne [IntPtr]::Zero) {
@@ -357,6 +476,48 @@ if ($modeCombo -ne [IntPtr]::Zero) {
   Write-Host 'mode=Build'
 }
 
+$initDeadline = (Get-Date).AddSeconds(120)
+while ((Get-Date) -lt $initDeadline) {
+  $freshInit = Get-FreshLogLines -Path $witness -StartLines $WitnessStartLines
+  $initBlob = ($freshInit -join "`n")
+  if ($initBlob -match 'P1PRA_UI=gpu_probe_exit|P1PRA_UI=gpu_probe_skip_env' -and
+      $initBlob -match 'P1PRA_DHI=skip_env_deferred_heavy_init') {
+    Write-Host 'startup_gate=PASS ui_probe+dhi_skip'
+    break
+  }
+  Start-Sleep -Milliseconds 500
+}
+$aliveMain = [P1E2E]::FindMainForPid([uint32]$p.Id)
+if ($aliveMain -ne [IntPtr]::Zero) {
+  $main = $aliveMain
+  $composer = [P1E2E]::FindByCtrlId($main, 12501)
+  $sendBtn = [P1E2E]::FindByCtrlId($main, 12502)
+  $modeCombo = [P1E2E]::FindByCtrlId($main, 12505)
+  $localList = [P1E2E]::FindByCtrlId($main, 12532)
+  $loadBtn = [P1E2E]::FindByCtrlId($main, 12533)
+  Write-Host "post_startup_main=$main list=$localList load=$loadBtn"
+}
+
+if ($localList -ne [IntPtr]::Zero) {
+  for ($ri = 0; $ri -lt 90; $ri++) {
+    $aliveMain = [P1E2E]::FindMainForPid([uint32]$p.Id)
+    if ($aliveMain -ne [IntPtr]::Zero) {
+      $main = $aliveMain
+      $localList = [P1E2E]::FindByCtrlId($main, 12532)
+      $loadBtn = [P1E2E]::FindByCtrlId($main, 12533)
+      $composer = [P1E2E]::FindByCtrlId($main, 12501)
+      $sendBtn = [P1E2E]::FindByCtrlId($main, 12502)
+    }
+    $listCount = 0
+    if ($localList -ne [IntPtr]::Zero) {
+      $listCount = [P1E2E]::SendMessagePtr($localList, [P1E2E]::LB_GETCOUNT, [IntPtr]::Zero, [IntPtr]::Zero).ToInt32()
+    }
+    if ($listCount -ge 100) { break }
+    Start-Sleep -Milliseconds 500
+  }
+  Write-Host "inventory_rediscover list=$localList load=$loadBtn count=$listCount"
+}
+
 if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
   $statusReady = Test-ModelStatusReady $main
   if ($skipLoad -or ($attachExisting -and $statusReady -and -not $forceLoad)) {
@@ -364,13 +525,26 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
   } else {
   $count = [P1E2E]::SendMessagePtr($localList, [P1E2E]::LB_GETCOUNT, [IntPtr]::Zero, [IntPtr]::Zero).ToInt32()
   Write-Host "inventory_count=$count"
+  $listDeadline = (Get-Date).AddSeconds(90)
+  while ((Get-Date) -lt $listDeadline -and $count -lt 100) {
+    Start-Sleep -Milliseconds 500
+    $count = [P1E2E]::SendMessagePtr($localList, [P1E2E]::LB_GETCOUNT, [IntPtr]::Zero, [IntPtr]::Zero).ToInt32()
+  }
+  Write-Host "inventory_count_ready=$count"
+  Start-Sleep -Seconds 2
+  $modelLeaf = [System.IO.Path]::GetFileName($model)
   $sel = -1
-  $pickDeadline = (Get-Date).AddSeconds(60)
+  if ($env:RAWRXD_E2E_MODEL_INDEX -match '^\d+$') {
+    $sel = [int]$env:RAWRXD_E2E_MODEL_INDEX
+    Write-Host "select_env_index[$sel]=$model"
+  }
+  $pickDeadline = (Get-Date).AddSeconds(90)
   while ((Get-Date) -lt $pickDeadline -and $sel -lt 0) {
     $count = [P1E2E]::SendMessagePtr($localList, [P1E2E]::LB_GETCOUNT, [IntPtr]::Zero, [IntPtr]::Zero).ToInt32()
     for ($i = 0; $i -lt $count; $i++) {
       $text = [P1E2E]::ListBoxGetText($localList, $i)
-      if ($text -match 'Phi-3-mini') {
+      if ([string]::IsNullOrWhiteSpace($text)) { continue }
+      if ($text -match 'Phi-3-mini' -or ($modelLeaf -and $text -like "*$modelLeaf*")) {
         $sel = $i
         Write-Host "select[$i]=$text"
         break
@@ -389,6 +563,13 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
     }
   }
   if ($sel -lt 0) {
+    $fsIdx = Get-ExpectedModelListIndex -TargetPath $model
+    if ($fsIdx -ge 0) {
+      $sel = $fsIdx
+      Write-Host "select_fs_index[$sel]=$model"
+    }
+  }
+  if ($sel -lt 0) {
     throw "Phi-3-mini not found in local inventory (count=$count) — refusing index=0 fallback"
   }
   [void][P1E2E]::SendMessagePtr($localList, [P1E2E]::LB_SETCURSEL, [IntPtr]$sel, [IntPtr]::Zero)
@@ -396,7 +577,7 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
   Write-Host "load_target[$sel]=$picked"
   $cmdHost = [P1E2E]::GetParent($loadBtn)
   $witnessLineBefore = 0
-  if (Test-Path $witness) { $witnessLineBefore = @(Get-Content $witness -ErrorAction SilentlyContinue).Count }
+  if (Test-Path $witness) { $witnessLineBefore = @(Read-WitnessLinesSafe -Path $witness).Count }
   # PostMessage: Load can take minutes on UI thread; SendMessage would block automation and hide crashes.
   $posted = [P1E2E]::PostMessage($cmdHost, [P1E2E]::WM_COMMAND, [IntPtr]12533, $loadBtn)
   Write-Host "posted Load selected index=$sel PostMessage=$posted witness_line_before=$witnessLineBefore - polling up to 600s for model/process"
@@ -408,6 +589,7 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
       if ($p -and $p.HasExited) {
         try { $exitHint = $p.ExitCode } catch { $exitHint = 'unknown' }
       }
+      Save-WitnessRunCopy
       throw "IDE process exited during model load (last_pid=$($p.Id) exit=$exitHint)"
     }
     $aliveMain = [P1E2E]::FindMainForPid([uint32]$p.Id)
@@ -419,6 +601,7 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
       break
     }
     if ($satisfied.reason -eq 'witness=fresh_worker_fail') {
+      Save-WitnessRunCopy
       throw 'Model load failed (witness=fresh_worker_fail in current run)'
     }
     $status = [P1E2E]::FindByCtrlId($main, 12535)
@@ -444,6 +627,7 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
       Write-Host "CURRENT_FRESH_worker_ok=$(if ($freshWorkerOk) { 'PRESENT' } else { 'ABSENT' })"
       Write-Host "CURRENT_FRESH_model_ready=$(if ($freshModelReady) { 'PRESENT' } else { 'ABSENT' })"
     }
+    Save-WitnessRunCopy
     throw "Model load not satisfied within 600s (fresh_last_witness=$lastLoad)"
   }
   if (-not (Test-IdeProcessAlive ([ref]$main) ([ref]$p))) {
@@ -451,6 +635,7 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
     if ($p -and $p.HasExited) {
       try { $exitHint = $p.ExitCode } catch { $exitHint = 'unknown' }
     }
+    Save-WitnessRunCopy
     throw "IDE process exited during model load (last_pid=$($p.Id) exit=$exitHint)"
   }
   }
@@ -458,17 +643,23 @@ if ($localList -ne [IntPtr]::Zero -and $loadBtn -ne [IntPtr]::Zero) {
 
 # Re-acquire main HWND + controls after load (pre-load handles go stale; process may recreate shell).
 if (Test-IdeProcessAlive ([ref]$main) ([ref]$p)) {
-  $mainNew = [IntPtr]::Zero
-  for ($i = 0; $i -lt 120 -and $mainNew -eq [IntPtr]::Zero; $i++) {
-    $mainNew = [P1E2E]::FindMainForPid([uint32]$p.Id)
-    if ($mainNew -ne [IntPtr]::Zero) { break }
-    Start-Sleep -Milliseconds 500
-  }
-  if ($mainNew -ne [IntPtr]::Zero) {
-    if ($mainNew -ne $main) { Write-Host "main_reacquired=$mainNew (was $main)" }
-    $main = $mainNew
+  $authMain = Get-P1praAuthoritativeMainHwnd -WitnessPath $witness -WitnessLineAfter $WitnessStartLines -ExpectedPid ([uint32]$p.Id)
+  if ($authMain -ne [IntPtr]::Zero) {
+    if ($authMain -ne $main) { Write-Host "main_authoritative=$authMain (was $main)" }
+    $main = $authMain
   } else {
-    Write-Host "main_reacquire_miss pid=$($p.Id) - retrying with cached main=$main"
+    $mainNew = [IntPtr]::Zero
+    for ($i = 0; $i -lt 120 -and $mainNew -eq [IntPtr]::Zero; $i++) {
+      $mainNew = [P1E2E]::FindMainForPid([uint32]$p.Id)
+      if ($mainNew -ne [IntPtr]::Zero) { break }
+      Start-Sleep -Milliseconds 500
+    }
+    if ($mainNew -ne [IntPtr]::Zero) {
+      if ($mainNew -ne $main) { Write-Host "main_reacquired=$mainNew (was $main)" }
+      $main = $mainNew
+    } else {
+      Write-Host "main_reacquire_miss pid=$($p.Id) - retrying with cached main=$main"
+    }
   }
 } else {
   throw "IDE process exited during model load (pid=$($p.Id))"
@@ -592,3 +783,5 @@ if (-not (Test-Path $e2e)) { exit 1 }
 $e2eBody = Get-Content $e2e -Raw -ErrorAction SilentlyContinue
 if ($e2eBody -notmatch 'FINALIZE=0') { exit 1 }
 if ($sendResultAuthoritative -and -not $validFinalize) { exit 1 }
+
+Save-WitnessRunCopy

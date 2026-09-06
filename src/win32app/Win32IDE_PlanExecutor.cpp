@@ -16,6 +16,7 @@
 
 #include "../agentic/agentic_audit_sink.hpp"
 #include "../agentic/agentic_orchestrator_integration.hpp"
+#include "../command/CommandBroker.h"
 #include "../full_agentic_ide/AgenticPlanningOrchestrator.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
@@ -341,6 +342,25 @@ void Win32IDE::onPlanReady(int stepCount, PlanStep* steps)
 
     // Notify chat that plan is ready for review (design spec #5)
     appendToOutput("[Plan] Plan ready. Approve or reject in the dialog.\n", "Agent", OutputSeverity::Info);
+
+    // ScreenPilot command-home: emit checklist into conversation + /approve hint.
+    {
+        std::ostringstream os;
+        os << "[Plan] Ready — " << stepCount << " step(s), ~" << totalTime
+           << " min, confidence "
+           << (int)(m_currentPlan.overallConfidence * 100) << "%\n";
+        for (size_t i = 0; i < m_currentPlan.steps.size(); ++i) {
+            os << "  " << (i + 1) << ". " << m_currentPlan.steps[i].title;
+            if (!m_currentPlan.steps[i].targetFile.empty())
+                os << " (" << m_currentPlan.steps[i].targetFile << ")";
+            os << "\n";
+        }
+        os << "Reply /approve (or click Allow) to execute.\n";
+        appendCommandConversation(os.str());
+        RawrXD::Command::CommandBroker::instance().setAgentActive(false);
+        RawrXD::Command::CommandBroker::instance().setActivityStatus("Plan — awaiting approval");
+        refreshCommandActivityStrip();
+    }
 }
 
 // ============================================================================
@@ -839,6 +859,23 @@ void Win32IDE::onPlanStepDone(int stepIndex, int result)
 
     // Update plan dialog ListView with current step status
     updatePlanStepInDialog(stepIndex, step.status);
+
+    const char* label = "running";
+    if (result == 1) label = "pass";
+    else if (result == 3) label = "skipped";
+    else if (result == 0) label = "fail";
+    else {
+        switch (step.status) {
+        case PlanStepStatus::Pending: label = "pending"; break;
+        case PlanStepStatus::Running: label = "running"; break;
+        case PlanStepStatus::Completed: label = "pass"; break;
+        case PlanStepStatus::Failed: label = "fail"; break;
+        case PlanStepStatus::Skipped: label = "skipped"; break;
+        default: break;
+        }
+    }
+    appendCommandConversation(std::string("[Plan] step ") + std::to_string(stepIndex + 1) +
+                              " [" + label + "] " + step.title);
 
     if (result == 1)
     {

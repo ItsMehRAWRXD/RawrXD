@@ -14,6 +14,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "Win32Utf8.hpp"
 #include "IDELogger.h"
 
 #ifndef _RICHEDIT_VER
@@ -1025,7 +1026,7 @@ void Win32IDE::applyThemeById(int themeId) {
     // Update status bar to brag about the theme
     if (m_hwndStatusBar) {
         std::string msg = "Theme: " + m_currentTheme.name + " applied";
-        SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)msg.c_str());
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 0, msg);
     }
 
     // Re-trigger syntax coloring with new theme colors
@@ -1218,13 +1219,18 @@ void Win32IDE::applyThemeToAllControls() {
 
     // -- Editor --
     if (m_hwndEditor) {
-        SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, t.backgroundColor);
-        CHARFORMAT2A cf = {};
+        COLORREF bg = t.backgroundColor;
+        COLORREF fg = t.textColor;
+        if (fg == 0 || fg == bg)
+            fg = t.darkMode ? RGB(212, 212, 212) : RGB(30, 30, 30);
+        SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, bg);
+        CHARFORMAT2W cf = {};
         cf.cbSize = sizeof(cf);
         cf.dwMask = CFM_COLOR;
-        cf.crTextColor = t.textColor;
+        cf.crTextColor = fg;
         cf.dwEffects = 0;
-        SendMessageA(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
         InvalidateRect(m_hwndEditor, nullptr, FALSE);
     }
 
@@ -1304,6 +1310,10 @@ void Win32IDE::applyThemeToAllControls() {
 void Win32IDE::setWindowTransparency(BYTE alpha) {
     if (!m_hwndMain) return;
 
+    // Fail-closed: LWA alpha 0 = invisible main window (see-thru launch).
+    if (alpha == 0)
+        alpha = 255;
+
     m_windowAlpha = alpha;
     m_currentTheme.windowAlpha = alpha;
 
@@ -1315,15 +1325,25 @@ void Win32IDE::setWindowTransparency(BYTE alpha) {
         }
         SetLayeredWindowAttributes(m_hwndMain, 0, alpha, LWA_ALPHA);
         m_transparencyEnabled = true;
+        if (m_renderer) {
+            m_renderer->SetTransparency(static_cast<float>(alpha) / 255.0f);
+        }
         LOG_INFO("Window transparency set to " + std::to_string(alpha) + "/255 (" +
                  std::to_string((int)(alpha * 100 / 255)) + "%)");
     } else {
         // Disable layered window for 100% opaque (better performance)
         LONG_PTR exStyle = GetWindowLongPtr(m_hwndMain, GWL_EXSTYLE);
         if (exStyle & WS_EX_LAYERED) {
+            // Force opaque attributes before clearing style (avoids alpha=0 trap).
+            SetLayeredWindowAttributes(m_hwndMain, 0, 255, LWA_ALPHA);
             SetWindowLongPtr(m_hwndMain, GWL_EXSTYLE, exStyle & ~WS_EX_LAYERED);
+            SetWindowPos(m_hwndMain, nullptr, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
         }
         m_transparencyEnabled = false;
+        if (m_renderer) {
+            m_renderer->SetTransparency(1.0f);
+        }
         LOG_INFO("Window transparency disabled (100% opaque)");
     }
 
@@ -1344,7 +1364,7 @@ void Win32IDE::setWindowTransparency(BYTE alpha) {
         int pct = (int)(alpha * 100 / 255);
         std::string msg = "Transparency: " + std::to_string(pct) + "%";
         if (pct == 100) msg = "Transparency: Off (100% opaque)";
-        SendMessageA(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)msg.c_str());
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 0, msg);
     }
 }
 
@@ -1629,7 +1649,7 @@ INT_PTR CALLBACK ThemePickerDlgProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARA
                 }
                 if (s_pickerInstance->m_hwndStatusBar) {
                     std::string msg = "Theme: " + s_pickerInstance->m_currentTheme.name + " applied";
-                    SendMessageA(s_pickerInstance->m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)msg.c_str());
+                    RawrXD::StatusBarSetTextUtf8(s_pickerInstance->m_hwndStatusBar, 0, msg);
                 }
                 LOG_INFO("Theme picker: confirmed \"" + s_pickerInstance->m_currentTheme.name + "\"");
             }

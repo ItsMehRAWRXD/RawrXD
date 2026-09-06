@@ -223,6 +223,10 @@ bool StreamingGGUFLoader::ParseMetadata() {
                 int32_t val;
                 if (!ReadValue(val)) return false;
                 metadata_.kv_pairs[key] = std::to_string(val);
+                if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE && val > 0)
+                    metadata_.vocab_size = static_cast<uint32_t>(val);
+                else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT && val > 0)
+                    metadata_.layer_count = static_cast<uint32_t>(val);
                 break;
             }
             case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32: {
@@ -363,6 +367,15 @@ bool StreamingGGUFLoader::ParseMetadata() {
         }
     }
     
+    // Many GGUFs (including TinyLlama Q4_K_M) omit llama.vocab_size and only
+    // provide tokenizer.ggml.tokens. Derive vocab_size from the token array.
+    if (metadata_.vocab_size == 0) {
+        if (!metadata_.tokens.empty())
+            metadata_.vocab_size = static_cast<uint32_t>(metadata_.tokens.size());
+        else if (!m_vocab.empty())
+            metadata_.vocab_size = static_cast<uint32_t>(m_vocab.size());
+    }
+
     // Save position for BuildTensorIndex
     tensor_info_offset = file_.tellg();
 

@@ -115,7 +115,7 @@ struct GCPConfig {
 //=============================================================================
 struct HuggingFaceConfig {
     std::string apiToken;             // Hugging Face API token
-    std::string endpointUrl = "https://api-inference.huggingface.co";
+    std::string endpointUrl = "https://api-inference.hf.local";
     
     // Available models
     std::vector<std::string> availableModels = {
@@ -138,8 +138,8 @@ struct HuggingFaceConfig {
 // Ollama Configuration (Local)
 //=============================================================================
 struct OllamaConfig {
-    std::string endpoint = "http://localhost:11434";
-    int port = 11434;
+    std::string endpoint = "";
+    int port = 0;
     
     // Available models (installed locally)
     std::vector<std::string> availableModels = {

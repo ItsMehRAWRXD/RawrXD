@@ -6,6 +6,7 @@
 #include "runtime/elastic/ElasticEngine.hpp"
 #include "runtime/elastic/VulkanTensorResidencyBackend.hpp"
 #include "../kernels/attention_contracts.h"
+#include "win32app/p1_load_checkpoint.hpp"
 
 using rawrxd::attention::TensorView;
 
@@ -1846,6 +1847,7 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
 
 void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader)
 {
+    RawrXD::P1LoadCkpt::emit("XFMR_Initialize", "enter");
     this->device = device;
     this->config = cfg;
     this->loader = loader;
@@ -1853,11 +1855,14 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     m_execRouter.setMemoryManager(&m_memoryManager);
 
     // Detect fused QKV (Qwen3.5, Phi-3, etc.)
+    RawrXD::P1LoadCkpt::emit("XFMR_DetectFusedQKV", "before");
     DetectFusedQKV();
+    RawrXD::P1LoadCkpt::emit("XFMR_DetectFusedQKV", "after");
 
     // VX01: Initialize Vulkan GEMM dispatcher using inference-owned device
 #if RAWR_VULKAN_AVAILABLE
     if (device != VK_NULL_HANDLE) {
+        RawrXD::P1LoadCkpt::emit("XFMR_vulkan_gemm", "before");
         // Find compute queue family and get queue handle
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physDevice, &queueFamilyCount, nullptr);
@@ -1909,6 +1914,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
                 }
             }
         }
+        RawrXD::P1LoadCkpt::emit("XFMR_vulkan_gemm", "after");
     }
 #endif
 
@@ -1921,10 +1927,19 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     // Use n_kv_heads dimension for KV cache (GQA/MQA support)
     int kv_dim = (config.n_kv_heads > 0 ? config.n_kv_heads : config.n_heads) * (config.dim / config.n_heads);
     size_t kv_size = (size_t)config.n_layers * ctx * kv_dim;
+    {
+        char detail[160];
+        snprintf(detail, sizeof(detail), "layers=%d ctx=%d kv_dim=%d elems=%zu", config.n_layers, ctx, kv_dim,
+                 kv_size);
+        RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", detail);
+    }
     printf("[RawrXD] KV cache: %zu floats (%.1f MB per cache)\n", kv_size, kv_size * 4.0 / 1e6);
     kv_cache_k.resize(kv_size, 0.0f);
+    RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "k_ok");
     kv_cache_v.resize(kv_size, 0.0f);
+    RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "v_ok");
     kv_cache_pos.assign(static_cast<size_t>(config.n_layers) * static_cast<size_t>(ctx), -1);
+    RawrXD::P1LoadCkpt::emit("XFMR_KV_ALLOC", "pos_ok");
 
     const std::size_t nLay = static_cast<std::size_t>(std::max(1, config.n_layers));
     m_moeReuseResidentRatioEma.assign(nLay, 0.0);
@@ -1957,6 +1972,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         m_moeMixturePlanPackCache = std::make_unique<RawrXD::MoEIntegr::MoEMixturePlanPackCache>(cap, byteCap);
     }
     installSwarmPlanRowEvictionObserver_();
+    RawrXD::P1LoadCkpt::emit("XFMR_moe_setup", "ok");
 
     // B015: Initialize multi-tensor weight residency pool
     m_weightResidencyPool.reset();
@@ -1964,10 +1980,12 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     m_weightResidencyMisses = 0;
     if (config.weight_residency_pool_max_bytes > 0)
     {
+        RawrXD::P1LoadCkpt::emit("XFMR_residency_pool", "before");
         m_weightResidencyPool = std::make_unique<rawrxd::WeightResidencyPool>(
             static_cast<std::size_t>(config.weight_residency_pool_max_bytes));
         printf("[B015] WeightResidencyPool initialized: max_bytes=%llu MB\n",
                static_cast<unsigned long long>(config.weight_residency_pool_max_bytes / (1024 * 1024)));
+        RawrXD::P1LoadCkpt::emit("XFMR_residency_pool", "ok");
     }
 
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
@@ -1975,7 +1993,9 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     // VX01: Initialize persistent GPU activation buffers for Vulkan GEMM
 #if RAWR_VULKAN_AVAILABLE
     if (device != VK_NULL_HANDLE && physDevice != VK_NULL_HANDLE) {
+        RawrXD::P1LoadCkpt::emit("XFMR_gpu_act_buffers", "before");
         InitializeGpuActivationBuffers(device, physDevice);
+        RawrXD::P1LoadCkpt::emit("XFMR_gpu_act_buffers", "after");
     }
 #endif
 
@@ -1983,6 +2003,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
 
     // B016: Initialize governance orchestrator — hardware-triggered autonomous control plane
     {
+        RawrXD::P1LoadCkpt::emit("XFMR_governance", "before");
         RawrXD::Governance::OrchestratorCallbacks cb;
         cb.context_tokens = [this]() -> uint64_t {
             // Return current context token count from KV cache position tracking
@@ -2016,14 +2037,17 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         if (m_governanceOrchestrator->initialize()) {
             m_governanceOrchestrator->start(std::chrono::milliseconds(2000));
             printf("[B016] Governance orchestrator initialized and started (2s period)\n");
+            RawrXD::P1LoadCkpt::emit("XFMR_governance", "started");
         } else {
             printf("[B016] Governance orchestrator initialization failed\n");
             m_governanceOrchestrator.reset();
+            RawrXD::P1LoadCkpt::emit("XFMR_governance", "init_failed");
         }
     }
 
     // Elastic: Initialize architecture-adaptive OOC execution engine
     if (loader) {
+        RawrXD::P1LoadCkpt::emit("XFMR_elastic", "enter");
         RawrXD::Elastic::ElasticConfig elasticCfg{};
         elasticCfg.vram_budget_bytes = 31ULL * 1024 * 1024 * 1024; // 31 GB for R9700
         elasticCfg.enable_dss = true;
@@ -2039,16 +2063,20 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         // Build GGUF index from loader tensor list
         std::shared_ptr<RawrXD::Elastic::ElasticGGUFIndex> ggufIndex;
         try {
+            RawrXD::P1LoadCkpt::emit("XFMR_elastic", "index_ctor_before");
             ggufIndex = std::make_shared<RawrXD::Elastic::ElasticGGUFIndex>(loader->GetModelPath());
+            RawrXD::P1LoadCkpt::emit("XFMR_elastic", "index_ctor_ok");
         } catch (const std::exception& e) {
             printf("[Elastic] GGUF index creation failed: %s — Elastic disabled, continuing with direct loader.\n", e.what());
             // Elastic is optional: do NOT reset m_elasticEngine here; instead
             // skip the ElasticEngine::Initialize() call below and continue
             // with CPU-only transformer operation.
             ggufIndex.reset();
+            RawrXD::P1LoadCkpt::emit("XFMR_elastic", "index_ctor_ex");
         } catch (...) {
             printf("[Elastic] GGUF index creation failed: unknown exception — Elastic disabled, continuing.\n");
             ggufIndex.reset();
+            RawrXD::P1LoadCkpt::emit("XFMR_elastic", "index_ctor_unknown");
         }
 
         if (!ggufIndex) {
@@ -2056,6 +2084,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
             // and continue with direct loader path (CPU inference works fine).
             m_elasticEngine.reset();
             printf("[Elastic] Engine skipped (no index). Running direct loader path.\n");
+            RawrXD::P1LoadCkpt::emit("XFMR_Initialize", "done_no_elastic");
             return;
         }
 
@@ -2066,6 +2095,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
             m_vulkanResidencyBackend = std::move(vulkanBackend);
         }
 
+        RawrXD::P1LoadCkpt::emit("XFMR_elastic", "engine_Initialize_before");
         bool elasticOk = m_elasticEngine->Initialize(
             ggufIndex,
             &m_execRouter,
@@ -2073,6 +2103,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
             nullptr, // HardwareGovernor — could wire from governance
             &m_memoryManager
         );
+        RawrXD::P1LoadCkpt::emit("XFMR_elastic", elasticOk ? "engine_Initialize_ok" : "engine_Initialize_fail");
 
         if (elasticOk && m_vulkanResidencyBackend) {
             auto* resMgr = m_elasticEngine->GetResidencyManager();
@@ -2095,6 +2126,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
             m_elasticEngine.reset();
         }
     }
+    RawrXD::P1LoadCkpt::emit("XFMR_Initialize", "done");
 }
 
 // ============================================================================

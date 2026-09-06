@@ -26,7 +26,6 @@
 #include <nlohmann/json.hpp>
 #include <commctrl.h>
 #include <set>
-#include "gguf_loader.h"
 
 // Agent history and replay — Phase 33 implementation complete
 
@@ -201,17 +200,45 @@ AgentEvent AgentEvent::fromJSONL(const std::string& line) {
 // E6: getAgentHistoryStats includes per-event-type breakdown percentages
 // E7: showAgentHistoryPanel applies current IDE theme colors to ListView
 void Win32IDE::initAgentHistory() {
-    m_agentHistoryEnabled = true;
-    m_currentSessionId    = generateSessionId();
+    // Fail-soft: background SEH marks last_step=agent_history on AV.
+    // Keep each step narrow so a bad history file cannot take down deferred init.
+    OutputDebugStringA("[AgentHistory] init begin\n");
+    m_agentHistoryEnabled = false;
     m_historyStats        = {};
-    m_eventBuffer.clear();
-    m_eventBuffer.reserve(MAX_EVENT_BUFFER);
+    try {
+        m_eventBuffer.clear();
+        m_eventBuffer.reserve(MAX_EVENT_BUFFER);
+    } catch (...) {
+        OutputDebugStringA("[AgentHistory] buffer reserve failed\n");
+        return;
+    }
 
-    // E3: prune on startup if file is large
-    pruneHistory(30, 5 * 1024 * 1024);
+    try {
+        m_currentSessionId = generateSessionId();
+    } catch (...) {
+        m_currentSessionId = "session-fallback";
+        OutputDebugStringA("[AgentHistory] generateSessionId failed; using fallback\n");
+    }
 
-    recordSimpleEvent(AgentEventType::SessionEvent, "IDE session started");
-    LOG_INFO("Agent history initialized (session=" + m_currentSessionId + ")");
+    // Enable only after local state is ready — recordEvent early-outs if false.
+    m_agentHistoryEnabled = true;
+
+    // Prune is best-effort; empty/missing files skip entirely.
+    try {
+        OutputDebugStringA("[AgentHistory] prune begin\n");
+        pruneHistory(30, 5 * 1024 * 1024);
+        OutputDebugStringA("[AgentHistory] prune end\n");
+    } catch (...) {
+        OutputDebugStringA("[AgentHistory] pruneHistory threw — continuing\n");
+    }
+
+    try {
+        recordSimpleEvent(AgentEventType::SessionEvent, "IDE session started");
+    } catch (...) {
+        OutputDebugStringA("[AgentHistory] recordSimpleEvent failed\n");
+    }
+
+    OutputDebugStringA("[AgentHistory] init complete\n");
 }
 
 void Win32IDE::shutdownAgentHistory() {
@@ -419,13 +446,20 @@ std::vector<AgentEvent> Win32IDE::filterHistory(AgentEventType typeFilter, int m
 void Win32IDE::pruneHistory(int maxAgeDays, int maxFileBytes) {
     std::string path = getHistoryFilePath();
 
-    // Check file size first
+    // Check file size first — empty / missing / tiny files: nothing to prune.
     std::ifstream sizeCheck(path, std::ios::ate | std::ios::binary);
     if (!sizeCheck) return;
-    auto fileSize = sizeCheck.tellg();
+    const auto fileSize = sizeCheck.tellg();
     sizeCheck.close();
+    if (fileSize <= 0) return;
 
+    // Fast path: under size cap and no age prune requested.
     if (fileSize < maxFileBytes && maxAgeDays <= 0) return;
+
+    // Under size cap but age prune requested: still cheap to skip when file is
+    // small enough that rewrite churn is pointless for startup latency/stability.
+    if (fileSize < maxFileBytes && fileSize < (512 * 1024))
+        return;
 
     // Read all events
     std::ifstream f(path);
@@ -447,13 +481,27 @@ void Win32IDE::pruneHistory(int maxAgeDays, int maxFileBytes) {
 
         bool keep = true;
 
-        // Age-based pruning
+        // Age-based pruning — lightweight ts extract; full parse only if needed.
         if (cutoffMs > 0) {
-            // Quick parse for timestamp
-            AgentEvent ev = AgentEvent::fromJSONL(line);
-            if (ev.timestampMs > 0 && ev.timestampMs < cutoffMs) {
-                keep = false;
+            uint64_t ts = 0;
+            const auto pos = line.find("\"ts\":");
+            if (pos != std::string::npos) {
+                try {
+                    ts = std::stoull(line.substr(pos + 5));
+                } catch (...) {
+                    ts = 0;
+                }
             }
+            if (ts == 0) {
+                try {
+                    AgentEvent ev = AgentEvent::fromJSONL(line);
+                    ts = ev.timestampMs;
+                } catch (...) {
+                    keep = true;  // retain unparsable lines rather than AV/drop
+                }
+            }
+            if (ts > 0 && ts < cutoffMs)
+                keep = false;
         }
 
         if (keep) {
@@ -486,7 +534,7 @@ void Win32IDE::pruneHistory(int maxAgeDays, int maxFileBytes) {
             out << l << "\n";
         }
         out.close();
-        LOG_INFO("Pruned agent history: " + std::to_string(kept.size()) + " events retained");
+        OutputDebugStringA("[AgentHistory] prune wrote retained events\n");
     }
 }
 

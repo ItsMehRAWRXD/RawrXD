@@ -55,7 +55,7 @@ UpdateSignatureVerifier::UpdateSignatureVerifier()
     memset(m_backups, 0, sizeof(m_backups));
 
     strncpy_s(m_manifestUrl, sizeof(m_manifestUrl),
-              "https://api.github.com/repos/ItsMehRAWRXD/RawrXD/releases/latest",
+              "",
               _TRUNCATE);
     wcscpy_s(m_stagingDir, _countof(m_stagingDir), L"update_staging");
 

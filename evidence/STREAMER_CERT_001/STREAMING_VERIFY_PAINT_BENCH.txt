@@ -1,0 +1,91 @@
+STREAMING ENGINE — VERIFY + PAINT + BENCHMARK
+==============================================
+date=2026-08-30
+authority=F:\~dev\rawrxd
+model=models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+model_sha256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+
+------------------------------------------------------------------------
+A. REQUIRED VERIFICATION (STREAMER-CERT-001)
+------------------------------------------------------------------------
+Harness: build-ninja\bin\deep2_streamer_cert.exe
+Cert SHA: 730EC8062081E19EC311F5CA3C9A2BBA096757563B40F78A18B8F8FDB8303EB1
+
+| Gate | Predicate |
+|------|-----------|
+| STREAM-001 | one token callback bound |
+| STREAM-002 | multi-token count == maxTokens (15) |
+| STREAM-003 | callback concatenation == stream text |
+| STREAM-004 | autoregressive ledger chain sampled[N]==input[N+1] |
+| STREAM-005 | EOS semantics / early stop |
+| STREAM-006 | max-token hard bound |
+| STREAM-007 | cancel-after-N from callback |
+| STREAM-008 | deterministic replay (T=0) |
+| STREAM-009 | sync generateStream parity |
+| STREAM-010 | finite / in-vocab token IDs |
+
+LIVE RESULT: 10/10 PASS — RAWRXD_DEEP2_STREAMER=CERTIFIED  EXIT=0  wall≈15.4s
+
+LIVE PERF (Deep2, TinyLlama Q4_K_M, AVX-512 path)
+| Measurement | prefill_tok/s | decode_tok/s | e2e_tok/s | notes |
+|-------------|---------------|--------------|-----------|-------|
+| STREAM-001 (1 tok) | 14.40 | 63.03 | 11.72 | first token |
+| STREAM-002 (15) | 12.71 | 11.71 | 11.03 | multi |
+| BENCH_64 | 15.09 | 13.15 | 12.98 | sustained |
+| PERF_SUMMARY | — | 13.15 (64) | ~12–13 | live |
+
+Prior frozen E2E baseline was ~1.3 tok/s (2026-08-29). Live lane is ~10× that E2E number;
+do not rewrite the historical freeze without a named PERF cert lane — record as LIVE_PERF.
+
+------------------------------------------------------------------------
+B. REQUIRED PAINT (Win32 token surface)
+------------------------------------------------------------------------
+| Path | Mechanism | Contract |
+|------|-----------|----------|
+| Copilot chat | HandleCopilotStreamUpdate | EM_SETSEL + EM_REPLACESELW + WM_VSCROLL |
+| HexMag → Copilot | appendCopilotChatTextOnUiThread | UI-thread only → HandleCopilotStreamUpdate |
+| Native pipeline | onNativeAIToken (WM_NATIVE_AI_TOKEN) | UI-thread → HandleCopilotStreamUpdate (Unicode) |
+| Agent output | appendStreamingToken → postAgentOutputSafe | strdup + WM_AGENT_OUTPUT_SAFE → onAgentOutput |
+| Agent C API | AgentPanel_AppendToken / FinalizeStream | batch → appendToOutput("Agent"); finalize flushes remainder |
+
+PAINT FIXES APPLIED (this session — product, not scaffolding)
+1. WM_AGENT_OUTPUT_SAFE contract: SubAgent no longer posts `new std::string*` into a
+   free()-expecting handler (heap mismatch). Uses postAgentOutputSafe (_strdup).
+2. appendStreamingToken: removed Professional TokenStreaming license silent-drop on paint;
+   commercial gate remains on StreamingEngine start.
+3. onNativeAIToken: removed license silent-drop; ANSI EM_REPLACESEL → Unicode HandleCopilotStreamUpdate.
+4. AgentPanel_FinalizeStream: flushes g_agentTokenBuf remainder (was dropping trailing tokens).
+
+------------------------------------------------------------------------
+C. GGUFRunner TPS SMOKE (integrated Win32 runner — separate lane)
+------------------------------------------------------------------------
+Harness: build-ninja\bin\RawrXD-TpsSmoke.exe
+TPS SHA: 4A71BE0BAD63EC08B4CE00DC3B499C838C4F15F73E93FCB28FAAF95338581ADA
+Env: RAWRXD_TPS_MACHINE_JSON=1 RAWRXD_TPS_REF=239 max_tokens=8
+
+RAWRXD_TPS_JSON=
+{"exit":0,"phase":"ok","path":"...tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+ "max_tokens":8,"file_bytes":668788096,"arch":"llama","layers":22,"embed":2048,
+ "vocab":32000,"steps":8,"wall_s":30.048152,"tps":0.266239,"ref_tps":239.0,
+ "gen_ms":30048,"beat_ref":false,"detail":""}
+
+RESULT=BELOW_REF (expected for reference C++ GGUFRunner full-forward; not Deep2 streamer)
+
+------------------------------------------------------------------------
+D. ARCHITECTURE (verify → paint → benchmark)
+------------------------------------------------------------------------
+GGUF → Deep2Engine.generateStream(TokenCallback)
+         ├─ VERIFY: STREAM-001..010 (deep2_streamer_cert)
+         ├─ PERF:   prefill/decode/e2e tok/s (same cert + BENCH_64)
+         └─ PAINT:  callback → TitanHost/HexMag/Native WM_* → EDIT / Agent output
+
+GGUF → GGUFRunner.runInference
+         └─ TPS: RawrXD-TpsSmoke vs RAWRXD_TPS_REF=239 (integrated runner lane)
+
+------------------------------------------------------------------------
+E. ARTIFACTS
+------------------------------------------------------------------------
+evidence/STREAMER_CERT_001/streamer_cert_live.stdout.txt
+evidence/STREAMER_CERT_001/tps_smoke_live.stdout.txt
+evidence/STREAMER_CERT_001/tps_smoke_live.stderr.txt
+evidence/STREAMER_CERT_001/STREAMING_VERIFY_PAINT_BENCH.txt (this file)

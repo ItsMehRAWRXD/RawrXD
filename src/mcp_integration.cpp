@@ -2,7 +2,7 @@
 // Full JSON-RPC 2.0 based MCP implementation with tool/resource/prompt support
 // Generated: 2026-01-25 06:34:12 | Completed: 2026-02-08
 
-#include "mcp_integration.h"
+#include "../include/mcp_integration.h"
 #include <sstream>
 #include <fstream>
 #include <cstring>
@@ -21,35 +21,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
-
-// MCP tool list and invoke implementation — Phase 31 complete
-// Reverse-engineered from IDE capability bridge:
-// 1. Dynamic Discovery of MCP Servers (Local/Remote)
-// 2. Schema Translation between MCP and RawrXD Internal Format
-// 3. Low-latency RPC Forwarding
-
-std::string RawrXD::MCP::ListTools() {
-    // Discovery logic: Scan for .mcp.json configs in project root
-    return "{\"tools\":[{\"name\":\"calculate\",\"description\":\"Math tool\"}]}";
-}
-
-std::string RawrXD::MCP::InvokeTool(const std::string& name, const std::string& args) {
-    // RPC forwarding to target MCP server
-    return "{\"result\":\"Tool " + name + " executed via MCP.\"}";
-}
-
-// MCP client implementation (Standalone) — Phase 31 complete
-class MCPClient {
-public:
-    void sendNotification(const std::string& method, const std::string& params) {}
-    std::string request(const std::string& method, const std::string& params) { return ""; }
-};
-
-// MCP integration and tools entry points — Phase 31 complete
-void RawrXD::MCP::Initialize() {
-    // Register MCP tools into AgentToolRegistry
-}
-
 #endif
 
 namespace RawrXD {
@@ -143,133 +114,11 @@ static std::string jsonExtractObject(const std::string& json, const std::string&
     return "{}";
 }
 
-static std::string jsonExtractToolName(const std::string& paramsJson) {
-    std::string toolName = jsonExtractString(paramsJson, "name");
-    if (!toolName.empty()) return toolName;
-
-    toolName = jsonExtractString(paramsJson, "tool_name");
-    if (!toolName.empty()) return toolName;
-
-    toolName = jsonExtractString(paramsJson, "toolName");
-    if (!toolName.empty()) return toolName;
-
-    // MCP-style nested function object
-    std::string fnObj = jsonExtractObject(paramsJson, "function");
-    if (!fnObj.empty() && fnObj != "{}") {
-        toolName = jsonExtractString(fnObj, "name");
-    }
-    return toolName;
-}
-
-// ============================================================================
-// MCPServer Types (defined inline to avoid header dependency issues)
-// ============================================================================
-struct ServerInfo {
-    std::string name;
-    std::string version;
-};
-
-struct ToolDefinition {
-    std::string name;
-    std::string description;
-    nlohmann::json inputSchema;
-};
-
-struct ResourceDefinition {
-    std::string uri;
-    std::string name;
-    std::string mimeType;
-};
-
-struct PromptTemplate {
-    std::string name;
-    std::string description;
-    std::vector<std::string> arguments;
-};
-
-using ToolHandler = std::function<nlohmann::json(const nlohmann::json&)>;
-using ResourceHandler = std::function<nlohmann::json(const std::string&)>;
-using PromptHandler = std::function<nlohmann::json(const std::map<std::string, std::string>&)>;
-
-enum class MCPErrorCode {
-    ParseError = -32700,
-    InvalidRequest = -32600,
-    MethodNotFound = -32601,
-    InvalidParams = -32602,
-    InternalError = -32603,
-};
-
-struct MCPRequest {
-    int64_t id = 0;
-    std::string method;
-    nlohmann::json params;
-};
-
-struct MCPResponse {
-    int64_t id = 0;
-    nlohmann::json result;
-    nlohmann::json error;
-    bool isError = false;
-};
-
 // ============================================================================
 // MCPServer Implementation
 // ============================================================================
 
-class MCPServer {
-public:
-    MCPServer();
-    ~MCPServer();
-
-    bool initialize(const ServerInfo& info);
-    void shutdown();
-
-    void registerTool(const ToolDefinition& def, ToolHandler handler);
-    void unregisterTool(const std::string& name);
-    std::vector<ToolDefinition> listTools() const;
-
-    void registerResource(const ResourceDefinition& def, ResourceHandler handler);
-    void unregisterResource(const std::string& uri);
-    std::vector<ResourceDefinition> listResources() const;
-
-    void registerPrompt(const PromptTemplate& tmpl, PromptHandler handler);
-    std::vector<PromptTemplate> listPrompts() const;
-
-    std::string handleMessage(const std::string& rawJson);
-    bool startStdioTransport();
-    void stopTransport();
-
-private:
-    bool m_running;
-    int64_t m_totalRequests;
-    int64_t m_totalErrors;
-    int64_t m_nextId;
-    ServerInfo m_serverInfo;
-    mutable std::mutex m_mutex;
-    std::map<std::string, std::pair<ToolDefinition, ToolHandler>> m_tools;
-    std::map<std::string, std::pair<ResourceDefinition, ResourceHandler>> m_resources;
-    std::map<std::string, std::pair<PromptTemplate, PromptHandler>> m_prompts;
-
-    MCPResponse dispatch(const MCPRequest& req);
-    MCPResponse handleInitialize(const MCPRequest& req);
-    MCPResponse handlePing(const MCPRequest& req);
-    MCPResponse handleToolsList(const MCPRequest& req);
-    MCPResponse handleToolsCall(const MCPRequest& req);
-    MCPResponse handleResourcesList(const MCPRequest& req);
-    MCPResponse handleResourcesRead(const MCPRequest& req);
-    MCPResponse handlePromptsList(const MCPRequest& req);
-    MCPResponse handlePromptsGet(const MCPRequest& req);
-    std::string serializeResponse(const MCPResponse& resp) const;
-    MCPRequest parseRequest(const std::string& json) const;
-    std::string makeErrorResponse(int64_t id, MCPErrorCode code, const std::string& msg) const;
-};
-
-MCPServer::MCPServer()
-    : m_running(false)
-    , m_totalRequests(0)
-    , m_totalErrors(0)
-    , m_nextId(1)
-{}
+MCPServer::MCPServer() {}
 
 MCPServer::~MCPServer() {
     if (m_running) shutdown();
@@ -451,11 +300,8 @@ MCPResponse MCPServer::handleToolsList(const MCPRequest& req) {
 }
 
 MCPResponse MCPServer::handleToolsCall(const MCPRequest& req) {
-    std::string toolName = jsonExtractToolName(req.params);
+    std::string toolName = jsonExtractString(req.params, "name");
     std::string arguments = jsonExtractObject(req.params, "arguments");
-    if (arguments == "{}") {
-        arguments = jsonExtractObject(req.params, "args");
-    }
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -692,13 +538,7 @@ void MCPServer::stopTransport() {
 // MCPClient Implementation
 // ============================================================================
 
-MCPClient::MCPClient()
-    : m_connected(false)
-    , m_processHandle(nullptr)
-    , m_stdinWrite(nullptr)
-    , m_stdoutRead(nullptr)
-    , m_nextId(1)
-{}
+MCPClient::MCPClient() {}
 
 MCPClient::~MCPClient() {
     disconnect();

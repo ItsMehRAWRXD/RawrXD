@@ -130,7 +130,7 @@ private:
 static ChatWindow* g_pChatWindow = nullptr;
 
 ChatWindow::ChatWindow() {
-    m_ollamaClient = std::make_unique<Backend::NativeClient>("http://localhost:11434");
+    m_ollamaClient = std::make_unique<Backend::NativeClient>("");
 }
 
 ChatWindow::~ChatWindow() {

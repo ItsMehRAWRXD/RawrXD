@@ -49,7 +49,7 @@ private:
     std::unique_ptr<GGUFProxyServer> m_proxyServer;
     bool m_hotPatchingEnabled = false;
     std::string m_proxyPort = "11435";
-    std::string m_ggufEndpoint = "localhost:11434";
+    std::string m_ggufEndpoint = "";
     void logCorrection(const HallucinationDetection& correction);
     void logNavigationFix(const NavigationFix& fix);
 };

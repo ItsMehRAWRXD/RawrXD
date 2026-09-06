@@ -27,6 +27,8 @@ using RawrXD::Agent::AgentToolHandlers;
 using RawrXD::Agent::ToolCallResult;
 using RawrXD::Agent::ToolOutcome;
 using RawrXD::Agent::ToolGuardrails;
+using RawrXD::Agent::IdeTerminalRunnerFn;
+using RawrXD::Agent::StageEditFn;
 using json = nlohmann::json;
 
 static std::string ToLowerCopy(const std::string& s) {
@@ -42,6 +44,16 @@ namespace fs = std::filesystem;
 // Static state
 // ============================================================================
 ToolGuardrails AgentToolHandlers::s_guardrails;
+static IdeTerminalRunnerFn g_ideTerminalRunner;
+static StageEditFn g_stageEditHandler;
+
+void AgentToolHandlers::SetIdeTerminalRunner(IdeTerminalRunnerFn fn) {
+    g_ideTerminalRunner = std::move(fn);
+}
+
+void AgentToolHandlers::SetStageEditHandler(StageEditFn fn) {
+    g_stageEditHandler = std::move(fn);
+}
 
 namespace {
 
@@ -304,6 +316,20 @@ ToolCallResult AgentToolHandlers::WriteFile(const json& args) {
         return ToolCallResult::Error("Content too large: " + std::to_string(content.size()) + " bytes");
     }
 
+    // Build-mode: stage propose/diff instead of immediate disk write
+    if (g_stageEditHandler) {
+        if (g_stageEditHandler(path, content)) {
+            nlohmann::json res_metadata = nlohmann::json::object();
+            res_metadata["staged"] = true;
+            res_metadata["path"] = path;
+            ToolCallResult result = ToolCallResult::Ok(
+                "Edit staged for Build approve/deny (not written yet)", res_metadata);
+            result.filePath = path;
+            result.bytesWritten = content.size();
+            return result;
+        }
+    }
+
     // Create backup if file exists and guardrails require it
     bool existed = fs::exists(path);
     if (existed && s_guardrails.requireBackupOnWrite) {
@@ -343,6 +369,46 @@ ToolCallResult AgentToolHandlers::WriteFile(const json& args) {
     result.filePath = path;
     result.bytesWritten = content.size();
     result.linesAffected = CountLines(content);
+    return result;
+}
+
+// ============================================================================
+// delete_file — Remove a file (CapDestructive / sandbox)
+// ============================================================================
+
+ToolCallResult AgentToolHandlers::DeleteFile(const json& args) {
+    if (!args.contains("path") || !args["path"].is_string()) {
+        return ToolCallResult::Validation("delete_file requires 'path' (string)");
+    }
+
+    std::string path = NormalizePath(args["path"].get<std::string>());
+    if (!IsPathAllowed(path)) {
+        return ToolCallResult::Sandbox("Path not in workspace allowlist: " + path);
+    }
+    if (!fs::exists(path)) {
+        return ToolCallResult::Error("File not found: " + path);
+    }
+    if (fs::is_directory(path)) {
+        return ToolCallResult::Validation("delete_file refuses directories — use a dedicated rmdir tool");
+    }
+
+    if (s_guardrails.requireBackupOnWrite) {
+        std::string backupError = CreateBackup(path);
+        if (!backupError.empty()) {
+            return ToolCallResult::Error(backupError);
+        }
+    }
+
+    std::error_code ec;
+    if (!fs::remove(path, ec)) {
+        return ToolCallResult::Error("delete_file failed: " + ec.message());
+    }
+
+    nlohmann::json res_metadata = nlohmann::json::object();
+    res_metadata["deleted"] = true;
+    res_metadata["path"] = path;
+    ToolCallResult result = ToolCallResult::Ok("File deleted", res_metadata);
+    result.filePath = path;
     return result;
 }
 
@@ -655,6 +721,15 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args) {
         if (!policy.isSuccess()) {
             return policy;
         }
+    }
+
+    // Prefer IDE terminal pane (streamed stdout/stderr + exit) when wired.
+    if (g_ideTerminalRunner) {
+        g_ideTerminalRunner(command);
+        nlohmann::json res_metadata = nlohmann::json::object();
+        res_metadata["routed"] = "ide_terminal";
+        res_metadata["command"] = command;
+        return ToolCallResult::Ok("Command dispatched to IDE terminal pane", res_metadata);
     }
 
     uint32_t timeout = s_guardrails.commandTimeoutMs;
@@ -1724,7 +1799,7 @@ AgentToolHandlers& AgentToolHandlers::Instance() {
 
 bool AgentToolHandlers::HasTool(const std::string& name) const {
     static const char* const tools[] = {
-        "read_file", "write_file", "replace_in_file",
+        "read_file", "write_file", "delete_file", "replace_in_file",
         "list_dir", "list_directory", "execute_command", "run_shell", "search_code", "semantic_search",
         "mention_lookup", "next_edit_hint", "propose_multifile_edits",
         "load_rules", "plan_tasks", "get_diagnostics"
@@ -1739,6 +1814,7 @@ ToolCallResult AgentToolHandlers::Execute(const std::string& name,
                                            const nlohmann::json& args) {
     if (name == "read_file")        return ToolReadFile(args);
     if (name == "write_file")       return WriteFile(args);
+    if (name == "delete_file")      return DeleteFile(args);
     if (name == "replace_in_file")  return ReplaceInFile(args);
     if (name == "list_dir" || name == "list_directory") return ListDir(args);
     if (name == "execute_command")  return ExecuteCommand(args);

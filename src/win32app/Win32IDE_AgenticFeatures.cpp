@@ -9,6 +9,7 @@
 #include "FailureModeFirewall.h"
 #include <windows.h>
 #include <atomic>
+#include <filesystem>
 #include <string>
 #include <cstdint>
 
@@ -249,10 +250,29 @@ bool Win32IDE::validateCurrentAgentSessionMirrorGate() {
 
 bool Win32IDE::rollbackLastAIEditTransaction() {
     FMF_REAL_ENTRY("Win32IDE::rollbackLastAIEditTransaction");
-    
-    // Stub - AI edit history not yet implemented
-    OutputDebugStringA("[Rollback] No transactions to rollback\n");
-    return false;
+
+    // Restore files from .pre_agent_bak written by AgentEditSession::ApplyAccepted
+    namespace fs = std::filesystem;
+    int restored = 0;
+    for (const auto& tab : m_editorTabs) {
+        if (tab.filePath.empty()) continue;
+        const fs::path bak = fs::path(tab.filePath).string() + ".pre_agent_bak";
+        if (!fs::exists(bak)) continue;
+        std::error_code ec;
+        fs::copy_file(bak, tab.filePath, fs::copy_options::overwrite_existing, ec);
+        if (!ec) {
+            ++restored;
+            appendCommandConversation("[System] Undo restore: " + tab.filePath);
+        }
+    }
+    if (restored == 0) {
+        // Workspace-wide scan of open-path backups only — already tried.
+        OutputDebugStringA("[Rollback] No .pre_agent_bak siblings found for open tabs\n");
+        appendCommandConversation("[System] No Build edit backups to undo.");
+        return false;
+    }
+    appendCommandConversation("[System] Undid " + std::to_string(restored) + " file(s) from Build edit backups.");
+    return true;
 }
 
 void Win32IDE::clearAgenticLspConditionWiring() {

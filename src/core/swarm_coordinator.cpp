@@ -15,6 +15,7 @@
 #include "swarm_protocol.h"
 #include "swarm_types.h"
 #include <wincrypt.h>
+#include <bcrypt.h>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -83,6 +84,9 @@ SwarmCoordinator::SwarmCoordinator()
     memset(m_nodes, 0, sizeof(m_nodes));
     memset(m_hIocpThreads, 0, sizeof(m_hIocpThreads));
     memset(m_localNodeId, 0, sizeof(m_localNodeId));
+    memset(m_attestChallenges, 0, sizeof(m_attestChallenges));
+    memset(m_attestNonces, 0, sizeof(m_attestNonces));
+    memset(m_attestIssuedMs, 0, sizeof(m_attestIssuedMs));
 }
 
 SwarmCoordinator::~SwarmCoordinator() {
@@ -97,6 +101,9 @@ SwarmCoordinator::~SwarmCoordinator() {
 
 bool SwarmCoordinator::start(const DscConfig& config) {
     if (m_running.load()) return false;
+    if (config.requireAttestation && strnlen_s(config.sharedSecret, 64) < 32) {
+        return false;
+    }
 
     {
         std::lock_guard<std::mutex> lock(m_configMutex);
@@ -1021,6 +1028,12 @@ void SwarmCoordinator::handleResultPush(uint32_t nodeSlot,
                                           const ResultPushPayload* payload,
                                           const uint8_t* extraData,
                                           uint32_t extraLen) {
+    uint64_t declared = static_cast<uint64_t>(payload->objectFileSize) +
+                        static_cast<uint64_t>(payload->logLen);
+    if (declared > extraLen) {
+        blacklistNode(nodeSlot, "Malformed result payload");
+        return;
+    }
     uint64_t taskId = payload->taskId;
 
     {
@@ -1358,9 +1371,14 @@ DWORD WINAPI SwarmCoordinator::iocpWorkerThread(LPVOID param) {
 
         // Dispatch by opcode
         auto* hdr = reinterpret_cast<const SwarmPacketHeader*>(recvBuf.data());
+        SwarmOpcode opcode = static_cast<SwarmOpcode>(hdr->opcode);
+        if (!SwarmProtocol::payloadSizeValid(opcode, hdr->payloadLen)) {
+            self->evictNode(nodeSlot, "Malformed packet payload");
+            continue;
+        }
         const uint8_t* payloadPtr = recvBuf.data() + SWARM_HEADER_SIZE;
 
-        switch (static_cast<SwarmOpcode>(hdr->opcode)) {
+        switch (opcode) {
             case SwarmOpcode::Heartbeat:
                 self->handleHeartbeat(nodeSlot,
                     reinterpret_cast<const HeartbeatPayload*>(payloadPtr));
@@ -1395,6 +1413,10 @@ DWORD WINAPI SwarmCoordinator::iocpWorkerThread(LPVOID param) {
 
             case SwarmOpcode::LogStream: {
                 auto* lsp = reinterpret_cast<const LogStreamPayload*>(payloadPtr);
+                if (lsp->logLen > hdr->payloadLen - sizeof(LogStreamPayload)) {
+                    self->evictNode(nodeSlot, "Malformed log payload");
+                    break;
+                }
                 const char* logText = reinterpret_cast<const char*>(
                     payloadPtr + sizeof(LogStreamPayload));
                 self->handleLogStream(nodeSlot, lsp, logText);
@@ -1848,12 +1870,16 @@ int SwarmCoordinator::recvPacket(SOCKET sock, void* buffer, uint32_t bufferSize)
 void SwarmCoordinator::sendAttestChallenge(uint32_t nodeSlot) {
     AttestRequestPayload req = {};
 
-    // Generate random challenge bytes
     HCRYPTPROV hProv = 0;
-    if (CryptAcquireContextA(&hProv, nullptr, nullptr, PROV_RSA_FULL,
-                              CRYPT_VERIFYCONTEXT)) {
-        CryptGenRandom(hProv, sizeof(req.challenge), req.challenge);
+    bool randomOk = CryptAcquireContextA(&hProv, nullptr, nullptr, PROV_RSA_FULL,
+                                         CRYPT_VERIFYCONTEXT) != FALSE;
+    if (randomOk) {
+        randomOk = CryptGenRandom(hProv, sizeof(req.challenge), req.challenge) != FALSE;
         CryptReleaseContext(hProv, 0);
+    }
+    if (!randomOk) {
+        blacklistNode(nodeSlot, "Attestation RNG failure");
+        return;
     }
 
     req.nonce = SwarmTime::nowUs();
@@ -1861,6 +1887,9 @@ void SwarmCoordinator::sendAttestChallenge(uint32_t nodeSlot) {
 
     {
         std::lock_guard<std::mutex> lock(m_nodesMutex);
+        memcpy(m_attestChallenges[nodeSlot], req.challenge, sizeof(req.challenge));
+        m_attestNonces[nodeSlot] = req.nonce;
+        m_attestIssuedMs[nodeSlot] = SwarmTime::nowMs();
         m_nodes[nodeSlot].state = SwarmNodeState::Attesting;
     }
 
@@ -1869,26 +1898,47 @@ void SwarmCoordinator::sendAttestChallenge(uint32_t nodeSlot) {
 
 bool SwarmCoordinator::verifyAttestResponse(uint32_t nodeSlot,
                                               const AttestResponsePayload* resp) {
-    // Verify protocol version
-    if (resp->protocolVersion < SWARM_VERSION) return false;
-
-    // Verify HWID is not all zeros
-    bool allZero = true;
+    if (!resp || nodeSlot >= SWARM_MAX_NODES ||
+        resp->protocolVersion != SWARM_VERSION) return false;
+    unsigned char nonzero = 0;
     for (int i = 0; i < 16; i++) {
-        if (resp->hwid[i] != 0) { allZero = false; break; }
+        nonzero |= resp->hwid[i];
     }
-    if (allZero) return false;
-
-    // Verify HMAC-SHA256 of the challenge in the response
-    // The worker computes HMAC-SHA256(sharedSecret, challenge) and places it in challengeResp
-    // We recompute and compare to authenticate the node.
-    // Note: actual HMAC verification requires the shared secret and original challenge,
-    // which are stored in the attestation request context. For now, validate non-zero response.
-    bool hasValidResponse = false;
-    for (int i = 0; i < 32; i++) {
-        if (resp->challengeResp[i] != 0) { hasValidResponse = true; break; }
+    if (!nonzero || strnlen_s(m_config.sharedSecret, 64) < 32) return false;
+    uint8_t material[40] = {};
+    uint64_t issuedMs = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_nodesMutex);
+        if (m_nodes[nodeSlot].state != SwarmNodeState::Attesting) return false;
+        memcpy(material, m_attestChallenges[nodeSlot], 32);
+        memcpy(material + 32, &m_attestNonces[nodeSlot], sizeof(uint64_t));
+        issuedMs = m_attestIssuedMs[nodeSlot];
     }
-    return hasValidResponse;
+    if (!issuedMs || SwarmTime::nowMs() - issuedMs > 10000) return false;
+    BCRYPT_ALG_HANDLE alg = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    uint8_t expected[32] = {};
+    NTSTATUS status = BCryptOpenAlgorithmProvider(
+        &alg, BCRYPT_SHA256_ALGORITHM, nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG);
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptCreateHash(alg, &hash, nullptr, 0,
+            reinterpret_cast<PUCHAR>(m_config.sharedSecret), 32, 0);
+    }
+    if (BCRYPT_SUCCESS(status)) status = BCryptHashData(hash, material, sizeof(material), 0);
+    if (BCRYPT_SUCCESS(status)) status = BCryptFinishHash(hash, expected, sizeof(expected), 0);
+    unsigned char diff = 0;
+    for (size_t i = 0; i < sizeof(expected); ++i) diff |= expected[i] ^ resp->challengeResp[i];
+    if (hash) BCryptDestroyHash(hash);
+    if (alg) BCryptCloseAlgorithmProvider(alg, 0);
+    SecureZeroMemory(expected, sizeof(expected));
+    SecureZeroMemory(material, sizeof(material));
+    {
+        std::lock_guard<std::mutex> lock(m_nodesMutex);
+        SecureZeroMemory(m_attestChallenges[nodeSlot], 32);
+        m_attestNonces[nodeSlot] = 0;
+        m_attestIssuedMs[nodeSlot] = 0;
+    }
+    return BCRYPT_SUCCESS(status) && diff == 0;
 }
 
 // =============================================================================

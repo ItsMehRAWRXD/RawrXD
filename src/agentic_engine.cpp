@@ -1,5 +1,6 @@
 #include "AppState.h"
 #include "agentic_engine.h"
+#include "agentic_model_streamer_bridge.h"
 #include "cpu_inference_engine.h"
 #include "native_agent.hpp"
 #include "reverse_engineering/RawrDumpBin.hpp"
@@ -991,6 +992,26 @@ bool AgenticEngine::loadLocalModel(const std::string& modelPath) {
     if (!m_inferenceEngine) return false;
 
     std::string resolvedPath = resolvePathForEngine(modelPath, m_workspaceRoot);
+
+    // Product path: StreamingGGUFLoader zones + real InferenceEngine backend.
+    auto* streamer = RawrXD::Agentic::GetGlobalAgenticModelStreamer();
+    if (!streamer) {
+        auto owned = std::make_unique<RawrXD::Agentic::AgenticModelStreamerBridge>();
+        owned->Initialize(this);
+        RawrXD::Agentic::SetGlobalAgenticModelStreamer(owned.release());
+        streamer = RawrXD::Agentic::GetGlobalAgenticModelStreamer();
+    }
+    if (streamer) {
+        // Share the real CPU/Deep2 engine — streamer never invents logits.
+        streamer->SetInferenceEngine(
+            std::shared_ptr<RawrXD::InferenceEngine>(
+                m_inferenceEngine, [](RawrXD::InferenceEngine*) {}));
+        if (streamer->LoadModelSync(resolvedPath)) {
+            m_currentModelPath = resolvedPath;
+            return true;
+        }
+    }
+
     bool ok = m_inferenceEngine->LoadModel(resolvedPath);
     if (ok) {
         m_currentModelPath = resolvedPath;

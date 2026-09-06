@@ -4,6 +4,7 @@
 #include "rawrxd_telemetry_exports.h"
 #include <windows.h>
 #include <atomic>
+#include <cstring>
 
 // When the MASM telemetry kernel is linked, it provides the canonical
 // implementations of all telemetry symbols.  This C++ unit only supplies
@@ -14,6 +15,7 @@
 // ============================================================================
 // Atomic Metric Counters — fallback C++ definitions
 // ============================================================================
+#if !defined(RAWRXD_TELEMETRY_EXTERNAL_COUNTERS)
 extern "C" {
 alignas(64) uint64_t g_MetricTableStart = 0;
 alignas(64) uint64_t g_Counter_Inference = 0;
@@ -26,6 +28,7 @@ alignas(64) uint64_t g_Counter_FlushOps = 0;
 alignas(64) uint64_t g_Counter_Errors = 0;
 alignas(64) uint64_t g_MetricTableEnd = 0;
 }
+#endif
 
 // ============================================================================
 // Telemetry Lifecycle — fallback C++ implementation
@@ -47,6 +50,23 @@ extern "C" uint64_t UTC_ShutdownTelemetry(void) {
     if (g_hLogFile != INVALID_HANDLE_VALUE) {
         CloseHandle(g_hLogFile);
         g_hLogFile = INVALID_HANDLE_VALUE;
+    }
+    return 0;
+}
+
+extern "C" uint64_t UTC_LogEvent(const char* message) {
+    if (!message || g_hLogFile == INVALID_HANDLE_VALUE) {
+        return ERROR_INVALID_HANDLE;
+    }
+    DWORD length = static_cast<DWORD>(strlen(message));
+    DWORD written = 0;
+    if (!WriteFile(g_hLogFile, message, length, &written, nullptr) ||
+        written != length) {
+        return GetLastError();
+    }
+    static const char newline[] = "\r\n";
+    if (!WriteFile(g_hLogFile, newline, 2, &written, nullptr) || written != 2) {
+        return GetLastError();
     }
     return 0;
 }

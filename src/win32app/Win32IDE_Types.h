@@ -423,7 +423,7 @@ struct IDESettings
     int aiMaxTokens = 512;
     int aiContextWindow = 4096;
     std::string aiModelPath;
-    std::string aiOllamaUrl = "http://localhost:11434";
+    std::string aiOllamaUrl;  // empty = Deep2/local only (EGRESS_001)
     bool ghostTextEnabled = true;
     bool failureDetectorEnabled = true;
     int failureMaxRetries = 3;
@@ -463,7 +463,7 @@ struct IDESettings
 
     // HexMag swarm (MASM control plane) — IDE → controller → FinalizePolicy
     bool hexmagGgufFallbackEnabled = true;
-    bool hexmagRouteCopilotPanel = true;  // chat send routes through HexMag when true
+    bool hexmagRouteCopilotPanel = false;  // default off — Send uses local/Ollama; toggle enables HexMag
     /** Parallel polymorphic agents per generation (1–8). */
     int hexmagSwarmAgentCount = 3;
 

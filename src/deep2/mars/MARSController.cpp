@@ -4,6 +4,8 @@
 
 #include "MARSController.hpp"
 #include <cstdio>
+#include <cmath>
+#include <algorithm>
 
 namespace Deep2 {
 namespace MARS {
@@ -112,17 +114,23 @@ VRAMLease* MARSController::PlaceTensor(
     const std::string& name,
     size_t bytes,
     float priority,
-    bool hotpatchable) {
+    bool hotpatchable,
+    int producerLayer,
+    bool isWeight) {
 
     VRAMLease* lease = vramManager_.Allocate(tensorId, name, bytes, priority, hotpatchable);
     if (lease) {
-        // Add to graph
+        if (!hotpatchable) {
+            lease->pinned = true;
+        }
         TensorGraphNode node;
         node.tensorId = tensorId;
         node.name = name;
         node.bytes = bytes;
         node.gpu = lease->currentGPU;
         node.priority = priority;
+        node.producerLayer = producerLayer;
+        node.isWeight = isWeight;
         tensorGraph_.AddNode(node);
     }
     return lease;
@@ -168,9 +176,41 @@ void MARSController::Rebalance() {
 }
 
 void MARSController::RebalanceGraph(TensorGraph& graph) {
-    for (size_t i = 0; i < graph.GetNodeCount(); ++i) {
-        // Would iterate and redirect based on runtime state
-        (void)graph;
+    if (!initialized_) return;
+
+    size_t used0 = vramManager_.GetUsedVRAM(0);
+    size_t used1 = vramManager_.GetUsedVRAM(1);
+    size_t total0 = vramManager_.GetTotalVRAM(0);
+    size_t total1 = vramManager_.GetTotalVRAM(1);
+    if (total0 == 0 && total1 == 0) return;
+
+    float ratio0 = total0 > 0 ? (float)used0 / total0 : 0.0f;
+    float ratio1 = total1 > 0 ? (float)used1 / total1 : 0.0f;
+    if (std::abs(ratio0 - ratio1) < 0.15f) return;
+
+    int fromGPU = (ratio0 > ratio1) ? 0 : 1;
+    int toGPU = 1 - fromGPU;
+
+    auto nodes = graph.GetNodesOnGPU(fromGPU);
+    std::sort(nodes.begin(), nodes.end(), [](const TensorGraphNode* a, const TensorGraphNode* b) {
+        return (a ? a->priority : 0.0f) < (b ? b->priority : 0.0f);
+    });
+
+    for (TensorGraphNode* node : nodes) {
+        used0 = vramManager_.GetUsedVRAM(0);
+        used1 = vramManager_.GetUsedVRAM(1);
+        ratio0 = total0 > 0 ? (float)used0 / total0 : 0.0f;
+        ratio1 = total1 > 0 ? (float)used1 / total1 : 0.0f;
+        if (std::abs(ratio0 - ratio1) < 0.15f) break;
+        if (!node) continue;
+
+        VRAMLease* lease = vramManager_.GetLease(node->tensorId);
+        if (!lease || !lease->hotpatchable || lease->pinned) continue;
+        if (vramManager_.GetFreeVRAM(toGPU) < lease->bytes) continue;
+
+        if (tensorHotpatch_.Redirect(lease, toGPU) == HotpatchResult::OK) {
+            node->gpu = toGPU;
+        }
     }
 }
 

@@ -116,8 +116,15 @@ public:
         });
 
         if (!ok) {
+            std::string health;
+            if (!m_session)
+                result.errorMessage = "Failed to start generation — no Deep2 session (load a .gguf first)";
+            else if (!m_session->IsReady())
+                result.errorMessage = "Failed to start generation — Deep2 session not ready";
+            else
+                result.errorMessage = "Failed to start generation";
+            (void)health;
             result.finishReason = "error";
-            result.errorMessage = "Failed to start generation";
             return result;
         }
 

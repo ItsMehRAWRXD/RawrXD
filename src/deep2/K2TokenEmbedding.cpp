@@ -132,9 +132,11 @@ bool K2TokenEmbedding::locateEmbeddingTensor() {
     tensorName_ = "token_embd.weight";
     auto refOpt = index_->Find(tensorName_);
     if (!refOpt) {
+        hasEmbedRef_ = false;
         return false;
     }
-    ref_ = &(*refOpt);
+    embedRef_ = *refOpt;
+    hasEmbedRef_ = true;
     return true;
 }
 
@@ -142,10 +144,12 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     Result result;
     result.tokenId = tokenId;
 
-    if (!index_ || !ref_) {
+    if (!index_ || !hasEmbedRef_) {
         result.error = "K2TokenEmbedding not initialized";
         return result;
     }
+
+    const GlobalTensorRef& ref = embedRef_;
 
     if (tokenId >= config_.vocabSize) {
         result.error = "Token ID out of range";
@@ -156,12 +160,12 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     std::size_t kBlockElems = 256;
     std::size_t kBlockBytes = 0;
 
-    if (ref_->ggmlType == 12) {
+    if (ref.ggmlType == 12) {
         kBlockBytes = 144; // Q4_K
-    } else if (ref_->ggmlType == 14) {
+    } else if (ref.ggmlType == 14) {
         kBlockBytes = 210; // Q6_K
     } else {
-        result.error = "Unsupported GGML type: " + std::to_string(ref_->ggmlType);
+        result.error = "Unsupported GGML type: " + std::to_string(ref.ggmlType);
         return result;
     }
 
@@ -169,10 +173,9 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     std::size_t rowBytes = blocksPerRow * kBlockBytes;
 
     // Validate tensor dimensions
-    if (ref_->nDims >= 2) {
-        std::size_t dim0 = ref_->shape[0];
-        std::size_t dim1 = ref_->shape[1];
-        // token_embd.weight may be [vocabSize, hiddenSize] or [hiddenSize, vocabSize]
+    if (ref.nDims >= 2) {
+        std::size_t dim0 = ref.shape[0];
+        std::size_t dim1 = ref.shape[1];
         bool shapeOk = (dim0 == config_.vocabSize && dim1 == config_.hiddenSize) ||
                        (dim0 == config_.hiddenSize && dim1 == config_.vocabSize);
         if (!shapeOk) {
@@ -181,20 +184,19 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
         }
     }
 
-    // Seek to the row within the tensor payload
     std::size_t rowOffset = tokenId * rowBytes;
-    if (rowOffset + rowBytes > ref_->byteSize) {
+    if (rowOffset + rowBytes > ref.byteSize) {
         result.error = "Row offset exceeds tensor size";
         return result;
     }
 
-    const auto& shardPath = index_->ShardPath(ref_->shardId);
+    const auto& shardPath = index_->ShardPath(ref.shardId);
     std::ifstream f(shardPath.string(), std::ios::binary);
     if (!f) {
         result.error = "Cannot open shard";
         return result;
     }
-    f.seekg(static_cast<std::streamoff>(ref_->fileOffset + rowOffset));
+    f.seekg(static_cast<std::streamoff>(ref.fileOffset + rowOffset));
     if (!f.good()) {
         result.error = "Seek failed";
         return result;
@@ -212,12 +214,13 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     result.bytesRead = rowBytes;
 
     // Dequantize into output
-    bool decodeOk = decodeRow(rowBuf.data(), rowBytes, ref_->ggmlType,
+    bool decodeOk = decodeRow(rowBuf.data(), rowBytes, ref.ggmlType,
                               output, config_.hiddenSize);
     release(rowBytes);
 
     if (!decodeOk) {
-        result.error = "Dequantization failed";
+        result.error = "Dequantization failed (type=" + std::to_string(ref.ggmlType) +
+                       " rowBytes=" + std::to_string(rowBytes) + ")";
         return result;
     }
 

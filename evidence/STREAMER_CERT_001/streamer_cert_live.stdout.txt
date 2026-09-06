@@ -1,0 +1,414 @@
+============================================================
+RAWRXD DEEP2 STREAMER CERTIFICATION
+============================================================
+Model: F:\~dev\tinyllama_fresh.gguf
+[Deep2Engine] Loading model from: F:\~dev\tinyllama_fresh.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=000001EDFF0C0000 rows=2048 cols=2048 type=2(other) — skipping float interpretation
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001EDFA8DED00  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=000001EDFA8DED00  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=275038208  maxResidentBytes=536870912
+[ResidencyManager] this=000001EDFA8DED00  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=635981824  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001EDFA8DED00  registered=201 tensors  bytes=635990016  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF6749FD450 dequant=00007FF6749FABD0 GetGEMV(12)=00007FF6749FD450 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+Model: hidden=2048 layers=22 heads=32 vocab=32000
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 2048
+  Num Layers: 22
+  Num Heads: 32
+  Num KV Heads: 4
+  Head Dim: 64
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=22 seq=4096 kv_heads=4 headDim=64
+[KVCache] Initializing: layers=22 maxSeqLen=4096 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 4096 * 4 * 64 * 2 * 4
+[KVCache]        = 184549376 bytes (K=92274688 + V=92274688)
+[KVCache] Total cache size: 176.00 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF6749FD450 dequant=00007FF6749FABD0 GetGEMV(12)=00007FF6749FD450 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] Initialization complete
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[Deep2Engine] embedToken: type=2 vocabSize=32000 hiddenDim=2048 data=000001ED80000000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=000001EDFF300000 type=2 wk.data=000001EDFA770000 wv.data=000001EDFF540000 wo.data=000001EDFF0C0000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000001EDFA750000 ffnNorm.data=000001EDFA760000
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=111.745
+[AGENT] DECODE_BEGIN max_out=1
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 1 tokens in 125.05 ms (E2E 8.00 TPS)
+[Deep2Engine] PREFILL: 1 tok in 111.75 ms (8.95 tok/s) | DECODE: 1 tok in 11.61 ms (86.16 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-001 one_token
+---- PERF STREAM-001 ----
+  prompt_tokens=1 generated=1
+  prefill_ms=111.745 decode_ms=11.606 total_wall_ms=125.048
+  prefill_tok_s=8.949 decode_tok_s=86.164 e2e_tok_s=7.997 ms_per_gen_tok=125.048
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=89.484
+[AGENT] DECODE_BEGIN max_out=15
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 15 tokens in 1809.90 ms (E2E 8.29 TPS)
+[Deep2Engine] PREFILL: 1 tok in 89.48 ms (11.18 tok/s) | DECODE: 15 tok in 1719.85 ms (8.72 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-002 multi_token
+---- PERF STREAM-002 ----
+  prompt_tokens=1 generated=15
+  prefill_ms=89.484 decode_ms=1719.849 total_wall_ms=1809.904
+  prefill_tok_s=11.175 decode_tok_s=8.722 e2e_tok_s=8.288 ms_per_gen_tok=120.660
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=96.296
+[AGENT] DECODE_BEGIN max_out=15
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 15 tokens in 1867.82 ms (E2E 8.03 TPS)
+[Deep2Engine] PREFILL: 1 tok in 96.30 ms (10.38 tok/s) | DECODE: 15 tok in 1771.03 ms (8.47 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=89.466
+[AGENT] DECODE_BEGIN max_out=15
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 15 tokens in 1579.62 ms (E2E 9.50 TPS)
+[Deep2Engine] PREFILL: 1 tok in 89.47 ms (11.18 tok/s) | DECODE: 15 tok in 1489.33 ms (10.07 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-003 callback_assembly
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=100.114
+[AGENT] DECODE_BEGIN max_out=15
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 15 tokens in 1653.08 ms (E2E 9.07 TPS)
+[Deep2Engine] PREFILL: 1 tok in 100.11 ms (9.99 tok/s) | DECODE: 15 tok in 1552.39 ms (9.66 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-004 autoregressive_chain
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=91.472
+[AGENT] DECODE_BEGIN max_out=5
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 5 tokens in 611.74 ms (E2E 8.17 TPS)
+[Deep2Engine] PREFILL: 1 tok in 91.47 ms (10.93 tok/s) | DECODE: 5 tok in 518.60 ms (9.64 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-005 eos_semantics
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=96.315
+[AGENT] DECODE_BEGIN max_out=8
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 8 tokens in 904.43 ms (E2E 8.85 TPS)
+[Deep2Engine] PREFILL: 1 tok in 96.32 ms (10.38 tok/s) | DECODE: 8 tok in 807.54 ms (9.91 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-006 max_token_bound
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=92.392
+[AGENT] DECODE_BEGIN max_out=15
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 4 tokens in 423.07 ms (E2E 9.45 TPS)
+[Deep2Engine] PREFILL: 1 tok in 92.39 ms (10.82 tok/s) | DECODE: 4 tok in 330.15 ms (12.12 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-007 callback_cancellation
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=98.125
+[AGENT] DECODE_BEGIN max_out=10
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 10 tokens in 1103.09 ms (E2E 9.07 TPS)
+[Deep2Engine] PREFILL: 1 tok in 98.12 ms (10.19 tok/s) | DECODE: 10 tok in 1004.40 ms (9.96 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=100.632
+[AGENT] DECODE_BEGIN max_out=10
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 10 tokens in 1070.00 ms (E2E 9.35 TPS)
+[Deep2Engine] PREFILL: 1 tok in 100.63 ms (9.94 tok/s) | DECODE: 10 tok in 968.82 ms (10.32 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-008 deterministic_replay
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=99.970
+[AGENT] DECODE_BEGIN max_out=10
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 10 tokens in 1061.25 ms (E2E 9.42 TPS)
+[Deep2Engine] PREFILL: 1 tok in 99.97 ms (10.00 tok/s) | DECODE: 10 tok in 960.75 ms (10.41 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=93.251
+[AGENT] DECODE_BEGIN max_out=10
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 10 tokens in 1106.30 ms (E2E 9.04 TPS)
+[Deep2Engine] PREFILL: 1 tok in 93.25 ms (10.72 tok/s) | DECODE: 10 tok in 1012.54 ms (9.88 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-009 sync_stream_parity
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=113.060
+[AGENT] DECODE_BEGIN max_out=10
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 10 tokens in 1175.67 ms (E2E 8.51 TPS)
+[Deep2Engine] PREFILL: 1 tok in 113.06 ms (8.84 tok/s) | DECODE: 10 tok in 1061.93 ms (9.42 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+[CERT_PASS] STREAM-010 finite_valid_tokens
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_DONE prompt_tokens=1 prefill_ms=111.912
+[AGENT] DECODE_BEGIN max_out=64
+[AGENT] TOKEN id=438 piece= O
+[Deep2Engine] Generation complete: 64 tokens in 7352.12 ms (E2E 8.70 TPS)
+[Deep2Engine] PREFILL: 1 tok in 111.91 ms (8.94 tok/s) | DECODE: 64 tok in 7239.04 ms (8.84 tok/s)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+---- PERF BENCH_64 ----
+  prompt_tokens=1 generated=64
+  prefill_ms=111.912 decode_ms=7239.044 total_wall_ms=7352.118
+  prefill_tok_s=8.936 decode_tok_s=8.841 e2e_tok_s=8.705 ms_per_gen_tok=114.877
+============================================================
+Results: 10/10 PASS
+  STREAM-001 one_token                     PASS
+  STREAM-002 multi_token                   PASS
+  STREAM-003 callback_assembly             PASS
+  STREAM-004 autoregressive_chain          PASS
+  STREAM-005 eos_semantics                 PASS
+  STREAM-006 max_token_bound               PASS
+  STREAM-007 callback_cancellation         PASS
+  STREAM-008 deterministic_replay          PASS
+  STREAM-009 sync_stream_parity            PASS
+  STREAM-010 finite_valid_tokens           PASS
+============================================================
+RAWRXD_DEEP2_STREAMER=CERTIFIED
+PERF_SUMMARY one_tok_e2e=7.997 multi15_e2e=8.288 multi15_decode=8.722 bench64_e2e=8.705 bench64_decode=8.841
+============================================================

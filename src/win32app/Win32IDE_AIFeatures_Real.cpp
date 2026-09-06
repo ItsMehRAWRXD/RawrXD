@@ -30,7 +30,7 @@ using json = nlohmann::json;
 
 namespace OllamaClient {
     
-    static std::string g_ollamaUrl = "http://localhost:11434";
+    static std::string g_ollamaUrl = "";
     static std::string g_defaultModel = "qwen2.5-coder:14b";
     
     void setUrl(const std::string& url) {
@@ -208,7 +208,7 @@ namespace Win32IDE_AI {
     void setAIModelProvider(const std::string& provider) {
         g_currentProvider = provider;
         if (provider == "Local_Ollama") {
-            OllamaClient::setUrl("http://localhost:11434");
+            OllamaClient::setUrl("");
         }
     }
     
@@ -218,7 +218,7 @@ namespace Win32IDE_AI {
     
     std::string aiExplainCode(const std::string& code, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Explain this " + language + " code:\n\n```" + language + "\n" + code + "\n```\n\nProvide a clear explanation of what this code does:";
@@ -233,7 +233,7 @@ namespace Win32IDE_AI {
     
     std::string aiGenerateTests(const std::string& code, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Generate unit tests for this " + language + " code:\n\n```" + language + "\n" + code + "\n```\n\nProvide complete test code:";
@@ -248,7 +248,7 @@ namespace Win32IDE_AI {
     
     std::string aiSuggestRefactoring(const std::string& code, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Suggest refactoring improvements for this " + language + " code:\n\n```" + language + "\n" + code + "\n```\n\nProvide specific refactoring suggestions:";
@@ -263,7 +263,7 @@ namespace Win32IDE_AI {
     
     std::string aiFixError(const std::string& code, const std::string& error, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Fix this error in " + language + " code:\n\nError: " + error + "\n\nCode:\n```" + language + "\n" + code + "\n```\n\nProvide the fixed code:";
@@ -278,7 +278,7 @@ namespace Win32IDE_AI {
     
     std::string aiGenerateFromDescription(const std::string& description, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Generate " + language + " code for: " + description + "\n\nProvide complete, working code:";
@@ -293,7 +293,7 @@ namespace Win32IDE_AI {
     
     std::string aiCodeReview(const std::string& code, const std::string& language) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::string prompt = "Review this " + language + " code for issues, best practices, and improvements:\n\n```" + language + "\n" + code + "\n```\n\nProvide a detailed code review:";
@@ -309,7 +309,7 @@ namespace Win32IDE_AI {
     // Chat with AI (multi-turn)
     std::string aiChat(const std::string& message, const std::vector<std::pair<std::string, std::string>>& history) {
         if (!isAvailable()) {
-            return "Error: Ollama not available. Please ensure Ollama is running on localhost:11434";
+            return "Error: Ollama not available. Please ensure Ollama is running on ";
         }
         
         std::vector<std::pair<std::string, std::string>> messages = history;

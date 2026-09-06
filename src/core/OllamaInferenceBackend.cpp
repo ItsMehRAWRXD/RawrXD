@@ -143,14 +143,79 @@ static int HttpPost(const char* url, const char* json_body,
 // Response Parsing
 //==============================================================================
 
+static int RejectReasoningTrace(const char* json_response, const char* content,
+                                char* err, size_t err_size) {
+    static const char* kBlockPrefixes[] = {
+        "Here is", "Let's", "We will", "###", "**Given", "Step 1", "First,"
+    };
+    const char* key = "\"thinking\":\"";
+    const char* t = strstr(json_response, key);
+    if (t) {
+        t += 13;
+        if (*t != '\0' && *t != '"') {
+            snprintf(err, err_size, "RAWRXD_NO_REASONING_EMIT_001: REASONING_FIELD nonempty");
+            return -1;
+        }
+    }
+    if (content && (strstr(content, "<think>") || strncmp(content, "Thinking:", 9) == 0)) {
+        snprintf(err, err_size, "RAWRXD_NO_REASONING_EMIT_001: content think marker");
+        return -1;
+    }
+    if (content) {
+        for (size_t i = 0; i < sizeof(kBlockPrefixes) / sizeof(kBlockPrefixes[0]); ++i) {
+            const size_t n = strlen(kBlockPrefixes[i]);
+            if (strncmp(content, kBlockPrefixes[i], n) == 0) {
+                snprintf(err, err_size, "RAWRXD_FINAL_ONLY_001: blocked prefix");
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int ParseJsonIntField(const char* json, const char* field, int default_value) {
+    char pattern[64];
+    snprintf(pattern, sizeof(pattern), "\"%s\":", field);
+    const char* start = strstr(json, pattern);
+    if (!start) {
+        return default_value;
+    }
+    start += strlen(pattern);
+    while (*start == ' ') {
+        ++start;
+    }
+    return atoi(start);
+}
+
+static size_t JsonEscape(const char* in, char* out, size_t out_size) {
+    size_t o = 0;
+    if (!in || !out || out_size == 0) {
+        return 0;
+    }
+    for (; *in && (o + 2) < out_size; ++in) {
+        const unsigned char c = static_cast<unsigned char>(*in);
+        if (c == '"' || c == '\\') {
+            if ((o + 3) >= out_size) break;
+            out[o++] = '\\';
+            out[o++] = static_cast<char>(c);
+        } else if (c == '\n') {
+            if ((o + 3) >= out_size) break;
+            out[o++] = '\\';
+            out[o++] = 'n';
+        } else if (c != '\r') {
+            out[o++] = static_cast<char>(c);
+        }
+    }
+    out[o] = '\0';
+    return o;
+}
+
 static void ExtractResponseContent(const char* json_response, 
                                    char* content, size_t content_size) {
-    // Look for "response":"..." (Ollama format)
-    const char* key = "\"response\":\"";
+    const char* key = "\"content\":\"";
     const char* start = strstr(json_response, key);
     if (!start) {
-        // Try "content":"..." (OpenAI format)
-        key = "\"content\":\"";
+        key = "\"response\":\"";
         start = strstr(json_response, key);
         if (!start) {
             content[0] = '\0';
@@ -208,7 +273,7 @@ static int Ollama_Initialize(const AgentConfig* config) {
         g_ollama_state.timeout_ms = config->default_timeout_ms;
     } else {
         // Defaults
-        strcpy(g_ollama_state.endpoint, "http://localhost:11434");
+        strcpy(g_ollama_state.endpoint, "");
         strcpy(g_ollama_state.model, "codellama");
         g_ollama_state.timeout_ms = 120000;
     }
@@ -256,7 +321,7 @@ static int Ollama_IsModelLoaded(void) {
         return 0;
     }
     
-    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 11434, 0);
+    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 0, 0);
     if (!hConnect) {
         WinHttpCloseHandle(hSession);
         return 0;
@@ -298,34 +363,35 @@ static int Ollama_Generate(const InferenceRequest* request, InferenceResult* res
     }
     
     uint64_t start_time = GetTickCount64();
-    
-    // Build JSON request
+    const char* raw_prompt = request->prompt ? request->prompt : "";
+    char escaped[AGENT_MAX_PROMPT * 2];
+    JsonEscape(raw_prompt, escaped, sizeof(escaped));
+
+    int npred = request->max_tokens > 0 ? request->max_tokens : 256;
+    if (npred > 256) {
+        npred = 256;
+    }
+    const float temp = request->temperature >= 0 ? request->temperature : 0.0f;
+
     char json_body[AGENT_MAX_PROMPT * 2];
     snprintf(json_body, sizeof(json_body),
         "{"
         "\"model\":\"%s\","
-        "\"prompt\":\"%s\","
+        "\"messages\":["
+        "{\"role\":\"system\",\"content\":\"Return only the final answer. One line maximum. No explanation, derivation, headings, notes, caveats, restatement, or intermediate calculations.\"},"
+        "{\"role\":\"user\",\"content\":\"%s\"}"
+        "],"
+        "\"think\":false,"
         "\"stream\":false,"
-        "\"options\":{"
-        "\"temperature\":%.2f,"
-        "\"num_predict\":%d"
-        "}"
+        "\"options\":{\"temperature\":%.2f,\"num_predict\":%d}"
         "}",
         g_ollama_state.model,
-        request->prompt,
-        request->temperature >= 0 ? request->temperature : 0.7f,
-        request->max_tokens > 0 ? request->max_tokens : 2048);
-    
-    // Escape newlines in JSON
-    char* p = json_body;
-    while (*p) {
-        if (*p == '\n') *p = ' ';
-        p++;
-    }
-    
-    // Send request
+        escaped,
+        temp,
+        npred);
+
     char endpoint[512];
-    snprintf(endpoint, sizeof(endpoint), "%s/api/generate", g_ollama_state.endpoint);
+    snprintf(endpoint, sizeof(endpoint), "%s/api/chat", g_ollama_state.endpoint);
     
     char raw_response[AGENT_MAX_RESPONSE];
     int http_result = HttpPost(endpoint, json_body, raw_response, sizeof(raw_response),
@@ -337,16 +403,28 @@ static int Ollama_Generate(const InferenceRequest* request, InferenceResult* res
         return -1;
     }
     
-    // Extract content
     ExtractResponseContent(raw_response, result->text, result->text_capacity);
+    if (RejectReasoningTrace(raw_response, result->text, result->error_message, sizeof(result->error_message)) != 0) {
+        result->success = 0;
+        result->text_len = 0;
+        if (result->text) {
+            result->text[0] = '\0';
+        }
+        return -1;
+    }
     result->text_len = strlen(result->text);
     result->duration_ms = GetTickCount64() - start_time;
     result->success = 1;
-    
-    // Estimate tokens (Ollama doesn't always return this)
-    result->tokens_generated = result->text_len / 4;  // Rough estimate
-    result->tokens_prompt = strlen(request->prompt) / 4;
-    result->tokens_per_second = (float)result->tokens_generated / (result->duration_ms / 1000.0f);
+
+    const int eval_count = ParseJsonIntField(raw_response, "eval_count", -1);
+    if (eval_count >= 0) {
+        result->tokens_generated = eval_count;
+    } else {
+        result->tokens_generated = static_cast<int>(result->text_len / 4);
+    }
+    result->tokens_prompt = ParseJsonIntField(raw_response, "prompt_eval_count", static_cast<int>(strlen(request->prompt) / 4));
+    const float dur_s = result->duration_ms > 0 ? (static_cast<float>(result->duration_ms) / 1000.0f) : 1.0f;
+    result->tokens_per_second = static_cast<float>(result->tokens_generated) / dur_s;
     
     return 0;
 }

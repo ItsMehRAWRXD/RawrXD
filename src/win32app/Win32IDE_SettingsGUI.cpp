@@ -12,6 +12,9 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "../deep2/execution_policy/IdePolicySet.hpp"
+#include "../deep2/execution_policy/ResourceMap.hpp"
+#include "../deep2/execution_policy/TunerSuggest.hpp"
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -82,6 +85,37 @@ void Win32IDE::buildSettingsSchema()
         m_settingsSchema.push_back(cat);
     }
 
+    // Model Execution — same store as config/rawrxd.settings.yaml
+    {
+        SettingsCategory cat;
+        cat.name = "Model Execution";
+        cat.keys = {"exec.mode",
+                    "exec.vramGb",
+                    "exec.ramGb",
+                    "exec.objective",
+                    "exec.streaming",
+                    "exec.chunkMb",
+                    "exec.prefetch",
+                    "exec.buffers",
+                    "exec.layersGpu0",
+                    "exec.layersGpu1",
+                    "exec.layersStream",
+                    "exec.attention",
+                    "exec.ffn",
+                    "exec.lmHead",
+                    "exec.kv",
+                    "exec.kvGpuGb",
+                    "exec.kvQuant",
+                    "exec.workAvoid",
+                    "exec.reuse",
+                    "exec.autoTune",
+                    "exec.respectOverrides",
+                    "exec.hotpatch",
+                    "exec.persist",
+                    "exec.policySha"};
+        m_settingsSchema.push_back(cat);
+    }
+
     // Theme
     {
         SettingsCategory cat;
@@ -113,6 +147,18 @@ void Win32IDE::buildSettingsSchema()
 
 static std::string getSettingType(const std::string& key)
 {
+    if (key.size() >= 5 && key.compare(0, 5, "exec.") == 0) {
+        if (key == "exec.streaming" || key == "exec.workAvoid" ||
+            key == "exec.autoTune" || key == "exec.respectOverrides" ||
+            key == "exec.persist" || key == "exec.hotpatch")
+            return "bool";
+        if (key == "exec.chunkMb" || key == "exec.prefetch" ||
+            key == "exec.buffers")
+            return "int";
+        if (key == "exec.vramGb" || key == "exec.ramGb" || key == "exec.kvGpuGb")
+            return "float";
+        return "string";
+    }
     if (key == "autoSave" || key == "lineNumbers" || key == "wordWrap" || key == "useSpaces" ||
         key == "syntaxColoring" || key == "minimap" || key == "smoothScroll" || key == "caretAnimation" ||
         key == "breadcrumbs" || key == "ghostText" || key == "failureDetector" || key == "amdUnifiedMemory" ||
@@ -167,6 +213,30 @@ static std::string getSettingLabel(const std::string& key)
         {"modelPrefetchEnabled", "High-Performance Streaming: Prefetch"},
         {"modelWorkingSetLockEnabled", "High-Performance Streaming: Working Set Lock (best-effort)"},
         {"silencePrivilegeWarnings", "Silence Privilege Warnings (1314)"},
+        {"exec.mode", "Execution Mode (auto|guided|expert)"},
+        {"exec.vramGb", "VRAM Hard Cap (GB)"},
+        {"exec.ramGb", "RAM Cap (GB)"},
+        {"exec.objective", "Scheduler Objective"},
+        {"exec.streaming", "Streaming Enabled"},
+        {"exec.chunkMb", "Stream Chunk (MB)"},
+        {"exec.prefetch", "Prefetch Depth"},
+        {"exec.buffers", "Stream Buffers"},
+        {"exec.layersGpu0", "GPU0 Layers (e.g. 0-11)"},
+        {"exec.layersGpu1", "GPU1 Layers (e.g. 12-19)"},
+        {"exec.layersStream", "Streamed Layers (e.g. 20-*)"},
+        {"exec.attention", "Attention Placement"},
+        {"exec.ffn", "FFN Placement"},
+        {"exec.lmHead", "LM Head Placement"},
+        {"exec.kv", "KV Placement"},
+        {"exec.kvGpuGb", "KV GPU Budget (GB)"},
+        {"exec.kvQuant", "KV Quantization"},
+        {"exec.workAvoid", "Work Avoidance"},
+        {"exec.reuse", "Reuse Policy (off|exact|certified)"},
+        {"exec.autoTune", "Auto-Tune Inside Caps"},
+        {"exec.respectOverrides", "Auto Respects Locked Overrides"},
+        {"exec.hotpatch", "Adaptive Hotpatch"},
+        {"exec.persist", "Persist Runtime Changes"},
+        {"exec.policySha", "Policy SHA (read-only)"},
         {"themeId", "Color Theme"},
         {"windowAlpha", "Window Transparency (0-255)"},
         {"fileIconTheme", "File Icon Theme"},
@@ -200,6 +270,18 @@ static std::string getSettingDescription(const std::string& key)
                                        "memory pressure (may require rights)."},
         {"silencePrivilegeWarnings",
          "Suppress common privilege warnings (e.g. ERROR_PRIVILEGE_NOT_HELD/1314) during high-iteration benchmarks."},
+        {"exec.mode",
+         "AUTO plans Expert knobs inside locks. EXPERT edits them. GUIDED exposes budgets + layers + target."},
+        {"exec.vramGb", "Hard VRAM budget. Partition sum must fit; rejected if live working set cannot shrink."},
+        {"exec.ramGb", "Host RAM budget for mapped weights, KV spill, and staging."},
+        {"exec.objective", "throughput | latency | lowest_memory | power | balanced"},
+        {"exec.streaming", "Allow NVMe→RAM→GPU streaming for overflow layers/tensors."},
+        {"exec.layersGpu0", "Layer range permanently / preferentially on GPU0."},
+        {"exec.kv", "gpu | gpu_paged | ram | hybrid | disk_paged"},
+        {"exec.reuse", "Certified reuse only skips work with verified invariants."},
+        {"exec.respectOverrides", "AUTO — RESPECT OVERRIDES: keep UserLocked fields, optimize the rest."},
+        {"exec.persist", "Write IDE/session changes back to rawrxd.settings.yaml / model profile."},
+        {"exec.policySha", "Reproducible digest of the effective execution contract."},
         {"windowAlpha", "Window transparency level (255 = fully opaque)."},
         {"autoUpdateCheck", "Periodically check for application updates."},
         {"fileIconTheme", "Icon theme for file explorer (seti, material, none)."}};
@@ -213,6 +295,8 @@ static std::string getSettingDescription(const std::string& key)
 
 std::string Win32IDE_GetSettingValue(const IDESettings& s, const std::string& key)
 {
+    if (key.size() >= 5 && key.compare(0, 5, "exec.") == 0)
+        return Deep2::Exec::Ide::Get(key);
     if (key == "autoSave")
         return s.autoSaveEnabled ? "true" : "false";
     if (key == "autoSaveInterval")
@@ -302,6 +386,11 @@ std::string Win32IDE_GetSettingValue(const IDESettings& s, const std::string& ke
 
 static void Win32IDE_SetSettingValue(IDESettings& s, const std::string& key, const std::string& value)
 {
+    if (key.size() >= 5 && key.compare(0, 5, "exec.") == 0) {
+        if (key != "exec.policySha")
+            Deep2::Exec::Ide::Set(key, value);
+        return;
+    }
     auto toBool = [](const std::string& v) { return v == "true" || v == "1"; };
     auto toInt = [](const std::string& v)
     {
@@ -852,3 +941,71 @@ void Win32IDE::populateSettingsTree()
 {
     // Currently handled by tab control in createSettingsControls
 }
+
+// ============================================================================
+// RESOURCE MAP + TUNER SUGGEST (ExecutionPolicy live tools)
+// ============================================================================
+
+void Win32IDE::showResourceMapDialog()
+{
+    using namespace ::Deep2::Exec;
+    auto snap = BuildResourceMapFromPolicy();
+    std::string text = FormatResourceMap(snap);
+    text += "\n\nYes = refresh only\nNo = pin token_embd.weight\nCancel = move L0-3 → GPU0";
+    const int choice =
+        MessageBoxA(m_hwndMain, text.c_str(), "RawrXD Resource Map", MB_YESNOCANCEL | MB_ICONINFORMATION);
+    if (choice == IDNO) {
+        auto r = PinFromMap("token_embd.weight");
+        MessageBoxA(m_hwndMain, r.ok ? "Pinned token_embd.weight" : r.detail.c_str(),
+                    "Resource Map", MB_OK);
+    } else if (choice == IDCANCEL) {
+        auto r = MoveLayers(LayerRange{0, 3}, DeviceKind::Gpu0);
+        MessageBoxA(m_hwndMain, r.ok ? "Moved L0-3 → GPU0 (session)" : r.detail.c_str(),
+                    "Resource Map", MB_OK);
+    }
+}
+
+void Win32IDE::showTunerSuggestDialog()
+{
+    using namespace ::Deep2::Exec;
+    EnsurePolicyLoaded();
+    LearnedProfile learned;
+    const auto& hw = ActiveHardwareSnapshot();
+    const std::string hwFp =
+        hw.fingerprint.empty() ? MakeHardwareFingerprint(hw) : hw.fingerprint;
+    const std::string mfp = ExecutionPolicyStore::Instance().modelFingerprint();
+    if (!hwFp.empty() && !mfp.empty())
+        LearnedProfileStore::Instance().load(hwFp, mfp, learned);
+
+    TunerProposal prop = Suggest(ActivePolicy(), learned.valid ? &learned : nullptr);
+    if (!prop.hasProposal) {
+        MessageBoxA(m_hwndMain, "No tuner suggestion right now.", "Tuner Suggest",
+                    MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    const std::string body = FormatProposal(prop) +
+                             "\n\nYes = Apply once\nNo = Ignore\nCancel = Apply + lock";
+    const int choice =
+        MessageBoxA(m_hwndMain, body.c_str(), "Tuner Suggest", MB_YESNOCANCEL | MB_ICONQUESTION);
+    TunerAction act = TunerAction::Ignore;
+    if (choice == IDYES) act = TunerAction::ApplyOnce;
+    else if (choice == IDCANCEL) act = TunerAction::ApplyAndLock;
+    auto r = ApplyProposal(prop, act, &hw, mfp.empty() ? nullptr : &mfp);
+    if (act == TunerAction::ApplyAndLock && r.ok && !hwFp.empty() && !mfp.empty()) {
+        LearnedProfile lp;
+        lp.hardware = hw;
+        if (lp.hardware.fingerprint.empty())
+            lp.hardware.fingerprint = hwFp;
+        lp.modelFingerprint = mfp;
+        lp.policy = ActivePolicy();
+        lp.policySha = r.policySha;
+        lp.valid = true;
+        LearnedProfileStore::Instance().save(lp);
+        r.detail += "; profile saved";
+    }
+    if (act != TunerAction::Ignore) {
+        std::string msg = r.ok ? ("Applied: " + r.detail) : ("Rejected: " + r.detail);
+        MessageBoxA(m_hwndMain, msg.c_str(), "Tuner Suggest", MB_OK);
+    }
+}
+

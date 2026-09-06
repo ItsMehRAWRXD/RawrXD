@@ -6,12 +6,17 @@
 #include "cpu_inference_engine.h"
 #include "rawrxd_inference.h"
 #include "deep2/GGUFLoader.hpp"
+#include "win32app/p1_load_checkpoint.hpp"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#endif
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <mutex>
@@ -76,12 +81,22 @@ CPUInferenceEngine::~CPUInferenceEngine()
 // ============================================================================
 bool CPUInferenceEngine::LoadModel(const std::string& model_path)
 {
+    static std::mutex s_loadModelMutex;
+    std::lock_guard<std::mutex> loadGuard(s_loadModelMutex);
+    if (m_modelLoaded)
+    {
+        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "already_loaded");
+        return true;
+    }
+    RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "enter");
     m_lastLoadErrorMessage.clear();
     if (model_path.empty())
     {
         m_lastLoadErrorMessage = "empty model path";
+        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "empty_path");
         return false;
     }
+    RawrXD::P1LoadCkpt::emit("CIE_path", model_path.c_str());
 
     // UTF-8 → wchar_t for the loader
     std::wstring wpath;
@@ -93,6 +108,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
         if (!wpath.empty() && wpath.back() == L'\0')
             wpath.pop_back();
     }
+    RawrXD::P1LoadCkpt::emit("CIE_utf16", "ok");
 
     // Locate tokenizer files alongside the model.
     // The backend (RawrXDInference) should prefer GGUF-internal tokenizer metadata
@@ -108,14 +124,50 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
         vocabPath.clear();
     if (!fs::exists(mergesPath))
         mergesPath.clear();
+    RawrXD::P1LoadCkpt::emit("CIE_ext_tokenizer",
+                             (!vocabPath.empty() || !mergesPath.empty()) ? "present" : "absent_use_gguf");
 
     printf("[CPUInferenceEngine] Loading model: %s\n", model_path.c_str());
     printf("[CPUInferenceEngine] Stage: initialize backend\n");
+    fflush(stdout);
+    RawrXD::P1LoadCkpt::emit("CIE_before_InferenceBackend_Initialize");
 
     try
     {
-        if (InferenceBackend().Initialize(wpath.c_str(), vocabPath.c_str(), mergesPath.c_str()))
+        // IDE UI-thread Vulkan init has aborted at INF_vulkan (0xC0000409 / silent die).
+        // Harness PASSes AUTO; product path can pin CPU via RAWRXD_FORCE_CPU_INFERENCE=1.
+        RawrXDInference::Backend backend = RawrXDInference::Backend::AUTO;
+        const char* forceCpu = std::getenv("RAWRXD_FORCE_CPU_INFERENCE");
+        if (forceCpu && forceCpu[0] == '1')
         {
+            backend = RawrXDInference::Backend::CPU_AVX2;
+            RawrXD::P1LoadCkpt::emit("CIE_backend", "CPU_AVX2_forced");
+        }
+        else
+        {
+            RawrXD::P1LoadCkpt::emit("CIE_backend", "AUTO");
+        }
+
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "engine_construct_begin");
+        // #region agent log
+        P1PRA_AgentDbg("H8", "CPUInferenceEngine", "before_backend_static", 0, 0, 0);
+        // #endregion agent log
+#endif
+        RawrXDInference& backendRef = InferenceBackend();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "inference_backend_static_ok");
+        // #region agent log
+        P1PRA_AgentDbg("H8", "CPUInferenceEngine", "after_backend_static", 0, 0, 0);
+        P1PRA_Witness("P1PRA_LOAD", "inference_init_call_begin");
+        // #endregion agent log
+#endif
+        if (backendRef.Initialize(wpath.c_str(), vocabPath.c_str(), mergesPath.c_str(), backend))
+        {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "engine_construct_ok");
+#endif
+            RawrXD::P1LoadCkpt::emit("CIE_Initialize", "returned_true");
             m_modelLoaded = true;
             m_lastLoadErrorMessage.clear();
 
@@ -128,10 +180,17 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             m_embeddingDim = (bdim > 0) ? bdim : 4096;
             m_numLayers = (blay > 0) ? blay : 32;
             m_numHeads = (bhd > 0) ? bhd : 32;
+            {
+                char meta[128];
+                snprintf(meta, sizeof(meta), "vocab=%d dim=%d layers=%d heads=%d", m_vocabSize, m_embeddingDim,
+                         m_numLayers, m_numHeads);
+                RawrXD::P1LoadCkpt::emit("CIE_metadata", meta);
+            }
 
             // Try to load Titan ASM DLL if available
             if (m_useTitanAssembly && !m_hTitanDLL)
             {
+                RawrXD::P1LoadCkpt::emit("CIE_titan", "before_LoadLibrary");
                 HMODULE hDll = LoadLibraryA("RawrXD_Titan.dll");
                 if (hDll)
                 {
@@ -150,22 +209,27 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
                         fnTitan_LoadModel(m_pTitanContext, model_path.c_str());
                     }
                 }
+                RawrXD::P1LoadCkpt::emit("CIE_titan", hDll ? "loaded" : "absent");
             }
 
             printf("[CPUInferenceEngine] Model loaded successfully\n");
+            RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "success");
             return true;
         }
+        RawrXD::P1LoadCkpt::emit("CIE_Initialize", "returned_false");
     }
     catch (const std::bad_alloc&)
     {
         m_lastLoadErrorMessage = "OOM during RawrXDInference::Initialize";
         printf("[CPUInferenceEngine] OOM during backend initialization\n");
+        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "bad_alloc");
         return false;
     }
     catch (const std::exception& e)
     {
         m_lastLoadErrorMessage = std::string("exception during RawrXDInference::Initialize: ") + e.what();
         printf("[CPUInferenceEngine] Exception during backend initialization: %s\n", e.what());
+        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", e.what());
         return false;
     }
 
@@ -175,6 +239,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
         m_lastLoadErrorMessage = "RawrXDInference::Initialize returned false without detail";
     }
     printf("[CPUInferenceEngine] Failed to load model\n");
+    RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "fail");
     return false;
 }
 

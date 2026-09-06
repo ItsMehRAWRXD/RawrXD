@@ -16,9 +16,9 @@ handler_execution_count=1
 first_args={path:main.c}
 second_args={"path":"main.c"}
 second_response=
-To resend the same tool with corrected strict JSON, use the `TOOL_CALL` variable with the same key and value as the original observation. For example, if the original observation was `read_file {"path":"main.c"}`, the next observation should be `TOOL_CALL: read_file {"path":"main.c"}`.
-
-To avoid inventing content, do not invent the content of the tool observation. Instead, use the strict JSON double-quoted keys and string values as the input to the tool.
+In summary, the observation from `read_file` in ID=call_1 shows that a schema_validation error occurred during the execution of the tool. To resend the same tool with strict JSON double-quoted keys, use TOOL_CALL: read_file {"path":"main.c"} as the next command to execute. The observation contains details on the error and how to fix the issue by using double-quoted keys and string values in quotes.
 first_result={"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
 second_result={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = DOES_NOT_EXIST;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}
+RETRY_PROMPT_CORRECT=1
+DISPOSITION=RETRY_PROMPT_CORRECT + MODEL_CORRECTED → PASS
 AGENT_SCHEMA_RETRY_001=PASS

@@ -97,7 +97,8 @@ void matmul_kernel_avx2(const float* A, const float* B, float* C,
     ggml_gemm_q4_0(A, B, C, M, N, K);
 }
 
-// Pyre compute kernels
+#if !defined(RAWRXD_HAS_ASM_PYRE)
+// Pyre compute kernels (C fallback). When RawrXD_Pyre_Compute.asm is linked, omit these.
 void asm_pyre_gemm_fp32(const float* A, const float* B, float* C,
                         int M, int N, int K) {
     ggml_gemm_q4_0(A, B, C, M, N, K);
@@ -235,5 +236,6 @@ void asm_pyre_embedding_lookup(const float* table, const int* indices,
         std::memcpy(dst, src, static_cast<size_t>(embed_dim) * sizeof(float));
     }
 }
+#endif // !RAWRXD_HAS_ASM_PYRE
 
 } // extern "C"

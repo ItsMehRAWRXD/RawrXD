@@ -1,0 +1,262 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\~dev\llama-direct\vulkan\llama.dll
+
+File Type: DLL
+
+  Section contains the following exports for llama.dll
+
+    00000000 characteristics
+           0 time date stamp
+        0.00 version
+           1 ordinal base
+         233 number of functions
+         233 number of names
+
+    ordinal hint RVA      name
+
+          1    0 0003BA60 ?llama_graph_reserve@@YAPEAUggml_cgraph@@PEAUllama_context@@III@Z
+          2    1 00012B80 llama_adapter_get_alora_invocation_tokens
+          3    2 00012B60 llama_adapter_get_alora_n_invocation_tokens
+          4    3 00012B50 llama_adapter_lora_free
+          5    4 0000EEA0 llama_adapter_lora_init
+          6    5 000129C0 llama_adapter_meta_count
+          7    6 000129D0 llama_adapter_meta_key_by_index
+          8    7 00012680 llama_adapter_meta_val_str
+          9    8 00012A90 llama_adapter_meta_val_str_by_index
+         10    9 001B3470 llama_add_bos_token
+         11    A 001B3480 llama_add_eos_token
+         12    B 0003B2D0 llama_attach_threadpool
+         13    C 00005B00 llama_backend_free
+         14    D 00005A50 llama_backend_init
+         15    E 0001F820 llama_batch_free
+         16    F 0001F720 llama_batch_get_one
+         17   10 0001F750 llama_batch_init
+         18   11 00007410 llama_chat_apply_template
+         19   12 0002C040 llama_chat_builtin_templates
+         20   13 0003AEB0 llama_context_default_params
+         21   14 0003BE00 llama_copy_state_data
+         22   15 0003CA40 llama_decode
+         23   16 0003B320 llama_detach_threadpool
+         24   17 001B3510 llama_detokenize
+         25   18 0003CA00 llama_encode
+         26   19 00001000 llama_flash_attn_type_name
+         27   1A 0003B230 llama_free
+         28   1B 0017D150 llama_free_model
+         29   1C 0003B4F0 llama_get_embeddings
+         30   1D 0003B520 llama_get_embeddings_ith
+         31   1E 0003B540 llama_get_embeddings_seq
+         32   1F 0003B480 llama_get_logits
+         33   20 0003B4B0 llama_get_logits_ith
+         34   21 0003BC10 llama_get_memory
+         35   22 0003B2B0 llama_get_model
+         36   23 0003B7D0 llama_get_sampled_candidates_count_ith
+         37   24 0003B700 llama_get_sampled_candidates_ith
+         38   25 0003B8A0 llama_get_sampled_logits_count_ith
+         39   26 0003B6E0 llama_get_sampled_logits_ith
+         40   27 0003B990 llama_get_sampled_probs_count_ith
+         41   28 0003B6C0 llama_get_sampled_probs_ith
+         42   29 0003B5C0 llama_get_sampled_token_ith
+         43   2A 0003BCE0 llama_get_state_size
+         44   2B 0003AEE0 llama_init_from_model
+         45   2C 00006BC0 llama_load_model_from_file
+         46   2D 0003C0C0 llama_load_session_file
+         47   2E 0006A1A0 llama_log_get
+         48   2F 0006A1B0 llama_log_set
+         49   30 000059A0 llama_max_devices
+         50   31 00046490 llama_max_parallel_sequences
+         51   32 000059B0 llama_max_tensor_buft_overrides
+         52   33 0003CD80 llama_memory_breakdown_print
+         53   34 0003BCD0 llama_memory_can_shift
+         54   35 0003BC20 llama_memory_clear
+         55   36 0003BC70 llama_memory_seq_add
+         56   37 0003BC50 llama_memory_seq_cp
+         57   38 0003BC80 llama_memory_seq_div
+         58   39 0003BC60 llama_memory_seq_keep
+         59   3A 0003BCB0 llama_memory_seq_pos_max
+         60   3B 0003BC90 llama_memory_seq_pos_min
+         61   3C 0003BC30 llama_memory_seq_rm
+         62   3D 0017D950 llama_model_chat_template
+         63   3E 0017D240 llama_model_cls_label
+         64   3F 0017DC80 llama_model_decoder_start_token
+         65   40 0017D100 llama_model_default_params
+         66   41 0017D7C0 llama_model_desc
+         67   42 0017D180 llama_model_free
+         68   43 0017D140 llama_model_get_vocab
+         69   44 0017DC70 llama_model_has_decoder
+         70   45 0017DC60 llama_model_has_encoder
+         71   46 00005B10 llama_model_init_from_user
+         72   47 0017DCB0 llama_model_is_diffusion
+         73   48 0017DCA0 llama_model_is_hybrid
+         74   49 0017DC90 llama_model_is_recurrent
+         75   4A 00006C00 llama_model_load_from_file
+         76   4B 00006E20 llama_model_load_from_splits
+         77   4C 0017D610 llama_model_meta_count
+         78   4D 0017D640 llama_model_meta_key_by_index
+         79   4E 0017D620 llama_model_meta_key_str
+         80   4F 0017D2D0 llama_model_meta_val_str
+         81   50 0017D700 llama_model_meta_val_str_by_index
+         82   51 0017D230 llama_model_n_cls_out
+         83   52 0017D1B0 llama_model_n_ctx_train
+         84   53 0017D1C0 llama_model_n_embd
+         85   54 0017D1D0 llama_model_n_embd_inp
+         86   55 0017D1E0 llama_model_n_embd_out
+         87   56 0017D200 llama_model_n_head
+         88   57 0017D210 llama_model_n_head_kv
+         89   58 0017D1F0 llama_model_n_layer
+         90   59 0017DC50 llama_model_n_params
+         91   5A 0017D220 llama_model_n_swa
+         92   5B 00185100 llama_model_quantize
+         93   5C 001850C0 llama_model_quantize_default_params
+         94   5D 0017D2C0 llama_model_rope_freq_scale_train
+         95   5E 000B8760 llama_model_rope_type
+         96   5F 00007220 llama_model_save_to_file
+         97   60 0017D940 llama_model_size
+         98   61 0003B280 llama_n_batch
+         99   62 0003B260 llama_n_ctx
+        100   63 0003B270 llama_n_ctx_seq
+        101   64 0017D280 llama_n_ctx_train
+        102   65 0017D290 llama_n_embd
+        103   66 0017D2B0 llama_n_head
+        104   67 0017D2A0 llama_n_layer
+        105   68 0003B2A0 llama_n_seq_max
+        106   69 0003B390 llama_n_threads
+        107   6A 0003B3A0 llama_n_threads_batch
+        108   6B 0003B290 llama_n_ubatch
+        109   6C 001B2EC0 llama_n_vocab
+        110   6D 0003B1F0 llama_new_context_with_model
+        111   6E 00005A90 llama_numa_init
+        112   6F 00041FD0 llama_opt_epoch
+        113   70 00041F90 llama_opt_init
+        114   71 00041F80 llama_opt_param_filter_all
+        115   72 00001040 llama_params_fit
+        116   73 0003CA80 llama_perf_context
+        117   74 0003CB30 llama_perf_context_print
+        118   75 0003CD40 llama_perf_context_reset
+        119   76 00197920 llama_perf_sampler
+        120   77 00197990 llama_perf_sampler_print
+        121   78 00197A10 llama_perf_sampler_reset
+        122   79 0003B2C0 llama_pooling_type
+        123   7A 00007C60 llama_print_system_info
+        124   7B 00193B30 llama_sampler_accept
+        125   7C 00193B50 llama_sampler_apply
+        126   7D 00194360 llama_sampler_chain_add
+        127   7E 00005990 llama_sampler_chain_default_params
+        128   7F 001943B0 llama_sampler_chain_get
+        129   80 00193C70 llama_sampler_chain_init
+        130   81 00194460 llama_sampler_chain_n
+        131   82 00194400 llama_sampler_chain_remove
+        132   83 00193BC0 llama_sampler_clone
+        133   84 00193C30 llama_sampler_free
+        134   85 00197890 llama_sampler_get_seed
+        135   86 00193AE0 llama_sampler_init
+        136   87 001973C0 llama_sampler_init_adaptive_p
+        137   88 00194510 llama_sampler_init_dist
+        138   89 00195B20 llama_sampler_init_dry
+        139   8A 00194EF0 llama_sampler_init_grammar
+        140   8B 00195790 llama_sampler_init_grammar_lazy
+        141   8C 001957D0 llama_sampler_init_grammar_lazy_patterns
+        142   8D 00194480 llama_sampler_init_greedy
+        143   8E 00197720 llama_sampler_init_infill
+        144   8F 00197560 llama_sampler_init_logit_bias
+        145   90 00194800 llama_sampler_init_min_p
+        146   91 00194C80 llama_sampler_init_mirostat
+        147   92 00194DC0 llama_sampler_init_mirostat_v2
+        148   93 00195810 llama_sampler_init_penalties
+        149   94 00194950 llama_sampler_init_temp
+        150   95 00194A10 llama_sampler_init_temp_ext
+        151   96 00194670 llama_sampler_init_top_k
+        152   97 00195AB0 llama_sampler_init_top_n_sigma
+        153   98 00194720 llama_sampler_init_top_p
+        154   99 001948D0 llama_sampler_init_typical
+        155   9A 00194B20 llama_sampler_init_xtc
+        156   9B 00193B10 llama_sampler_name
+        157   9C 00193BA0 llama_sampler_reset
+        158   9D 00193CC0 llama_sampler_sample
+        159   9E 0003C240 llama_save_session_file
+        160   9F 0002FE10 llama_set_abort_callback
+        161   A0 0003BB90 llama_set_adapter_cvec
+        162   A1 0003BB40 llama_set_adapters_lora
+        163   A2 0003B3F0 llama_set_causal_attn
+        164   A3 0003B3B0 llama_set_embeddings
+        165   A4 0003B350 llama_set_n_threads
+        166   A5 0003B5B0 llama_set_sampler
+        167   A6 0003BF60 llama_set_state_data
+        168   A7 0003B430 llama_set_warmup
+        169   A8 00007850 llama_split_path
+        170   A9 000078A0 llama_split_prefix
+        171   AA 0003BEB0 llama_state_get_data
+        172   AB 0003BD70 llama_state_get_size
+        173   AC 0003C180 llama_state_load_file
+        174   AD 0003C2F0 llama_state_save_file
+        175   AE 0003C500 llama_state_seq_get_data
+        176   AF 0003C5E0 llama_state_seq_get_data_ext
+        177   B0 0003C3A0 llama_state_seq_get_size
+        178   B1 0003C450 llama_state_seq_get_size_ext
+        179   B2 0003C940 llama_state_seq_load_file
+        180   B3 0003C880 llama_state_seq_save_file
+        181   B4 0003C6C0 llama_state_seq_set_data
+        182   B5 0003C7A0 llama_state_seq_set_data_ext
+        183   B6 0003C010 llama_state_set_data
+        184   B7 000059E0 llama_supports_gpu_offload
+        185   B8 000059D0 llama_supports_mlock
+        186   B9 000059C0 llama_supports_mmap
+        187   BA 00005A30 llama_supports_rpc
+        188   BB 0003B470 llama_synchronize
+        189   BC 00001200 llama_time_us
+        190   BD 001B3400 llama_token_bos
+        191   BE 001B3430 llama_token_cls
+        192   BF 001B3410 llama_token_eos
+        193   C0 001B3420 llama_token_eot
+        194   C1 001B34B0 llama_token_fim_mid
+        195   C2 001B34C0 llama_token_fim_pad
+        196   C3 001B3490 llama_token_fim_pre
+        197   C4 001B34D0 llama_token_fim_rep
+        198   C5 001B34E0 llama_token_fim_sep
+        199   C6 001B34A0 llama_token_fim_suf
+        200   C7 001B32F0 llama_token_get_attr
+        201   C8 001B3280 llama_token_get_score
+        202   C9 001B3200 llama_token_get_text
+        203   CA 001B33B0 llama_token_is_control
+        204   CB 001B3360 llama_token_is_eog
+        205   CC 001B3450 llama_token_nl
+        206   CD 001B3460 llama_token_pad
+        207   CE 001B3440 llama_token_sep
+        208   CF 001B3500 llama_token_to_piece
+        209   D0 001B34F0 llama_tokenize
+        210   D1 001B30F0 llama_vocab_bos
+        211   D2 001B3120 llama_vocab_cls
+        212   D3 001B3100 llama_vocab_eos
+        213   D4 001B3110 llama_vocab_eot
+        214   D5 001B31B0 llama_vocab_fim_mid
+        215   D6 001B31C0 llama_vocab_fim_pad
+        216   D7 001B3190 llama_vocab_fim_pre
+        217   D8 001B31D0 llama_vocab_fim_rep
+        218   D9 001B31E0 llama_vocab_fim_sep
+        219   DA 001B31A0 llama_vocab_fim_suf
+        220   DB 001B3160 llama_vocab_get_add_bos
+        221   DC 001B3170 llama_vocab_get_add_eos
+        222   DD 001B3180 llama_vocab_get_add_sep
+        223   DE 001B2FE0 llama_vocab_get_attr
+        224   DF 001B2F70 llama_vocab_get_score
+        225   E0 001B2EF0 llama_vocab_get_text
+        226   E1 001B30A0 llama_vocab_is_control
+        227   E2 001B3050 llama_vocab_is_eog
+        228   E3 001B31F0 llama_vocab_mask
+        229   E4 001B2EA0 llama_vocab_n_tokens
+        230   E5 001B3140 llama_vocab_nl
+        231   E6 001B3150 llama_vocab_pad
+        232   E7 001B3130 llama_vocab_sep
+        233   E8 001B2EE0 llama_vocab_type
+
+  Summary
+
+       29000 .data
+       16000 .pdata
+       9D000 .rdata
+        2000 .reloc
+        1000 .rsrc
+      22B000 .text
+        1000 .tls

@@ -1,21 +1,6 @@
 // ============================================================================
 // K2TokenEmbedding.hpp — Real Token Embedding Lookup (K2-009)
 // ============================================================================
-//
-// Streams exactly one embedding row from token_embd.weight without loading
-// the full ~918 MiB matrix. Reuses the proven GGUF streaming and Q6_K
-// dequantization from K2-007.
-//
-// Architecture:
-//   GGUF shards → GlobalTensorIndex → stream one row → dequantize → FP32
-//
-// Hard requirements:
-//   - No full embedding-matrix residency
-//   - Stream only the requested row
-//   - Support the quantization actually present in the GGUF
-//   - Deterministic output
-//   - Explicit residency accounting
-// ============================================================================
 
 #pragma once
 
@@ -24,11 +9,9 @@
 #include <string>
 #include <vector>
 
-namespace Deep2 {
+#include "K2GlobalTensorIndex.hpp"
 
-// Forward declaration
-class GlobalTensorIndex;
-struct GlobalTensorRef;
+namespace Deep2 {
 
 class K2TokenEmbedding {
 public:
@@ -51,10 +34,7 @@ public:
 
     explicit K2TokenEmbedding(const Config& config = Config{});
 
-    // Bind to an existing GlobalTensorIndex (must outlive this object)
     bool initialize(const GlobalTensorIndex* index);
-
-    // Fetch exactly one embedding row into output (must contain hiddenSize floats)
     Result lookup(std::uint32_t tokenId, float* output);
 
     std::size_t hiddenSize() const noexcept { return config_.hiddenSize; }
@@ -64,7 +44,8 @@ public:
 private:
     Config config_;
     const GlobalTensorIndex* index_ = nullptr;
-    const GlobalTensorRef* ref_ = nullptr;
+    GlobalTensorRef embedRef_{};
+    bool hasEmbedRef_ = false;
     std::string tensorName_;
 
     std::size_t currentResidency_ = 0;

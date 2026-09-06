@@ -35,7 +35,7 @@ typedef std::function<void()> CompleteCallback;
 class ModelConnection
 {
 public:
-    ModelConnection(const std::string& endpoint = "http://localhost:11434")
+    ModelConnection(const std::string& endpoint = std::string())
         : m_endpoint(endpoint), m_connected(false), m_isProcessing(false),
           m_workerThread(nullptr), m_stopWorker(false)
     {
@@ -382,7 +382,7 @@ private:
 
         // Parse endpoint
         std::wstring endpoint_wide(m_endpoint.begin(), m_endpoint.end());
-        HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 11434, 0);
+        HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 0, 0);
 
         if (!hConnect) {
             WinHttpCloseHandle(hSession);

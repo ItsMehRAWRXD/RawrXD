@@ -217,25 +217,13 @@ std::string Win32IDE::generateNativeResponse(const std::string& prompt) {
 void Win32IDE::onNativeAIToken(WPARAM wParam, LPARAM lParam) {
     auto* entry = reinterpret_cast<RawrXD::TokenStreamEntry*>(lParam);
     if (!entry) return;
-    if (!RawrXD::Flags::FeatureFlagsRuntime::Instance().isEnabled(
-            RawrXD::License::FeatureID::TokenStreaming)) {
-        VirtualFree(entry, 0, MEM_RELEASE);
-        return;
-    }
 
-    // Append the token text to the active chat response
+    // Append the token text to the active chat response (paint is not a license gate).
     std::string tokenText(entry->text, entry->textLen);
 
-    // Update the copilot chat output with the streaming token
+    // Update the copilot chat output with the streaming token (Unicode path).
     if (m_hwndCopilotChatOutput && !tokenText.empty()) {
-        // Append to the edit control
-        int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
-        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-        SendMessage(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                    (LPARAM)tokenText.c_str());
-
-        // Auto-scroll to bottom
-        SendMessage(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+        HandleCopilotStreamUpdate(tokenText.c_str(), tokenText.size());
     }
 
     // Update status bar with throughput

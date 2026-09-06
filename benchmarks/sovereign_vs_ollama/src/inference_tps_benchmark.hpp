@@ -7,6 +7,7 @@
 #include "benchmark_common.hpp"
 #include "json_reporter.hpp"
 #include "backends/backend_factory.hpp"
+#include "../../../src/core/GpuDecodeEfficiency.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -105,6 +106,8 @@ public:
         
         // Measurement phase
         std::cout << "Measurement phase (" << config.measured_runs << " runs)...\n";
+        rawrxd::GpuDecodeEfficiencyAuthority::Instance().BeginDecodeWindow();
+        uint64_t measureTokens = 0;
         for (int i = 0; i < config.measured_runs; ++i) {
             const char* prompt = test_prompts[i % 4];
             
@@ -122,6 +125,7 @@ public:
                 prompt_latencies.push_back(latency_ms);
                 tokens_per_sec_samples.push_back(tps);
                 total_tokens_generated += config.max_tokens;
+                measureTokens += config.max_tokens;
                 success_count++;
                 
                 if (config.verbose && (i + 1) % 10 == 0) {
@@ -135,6 +139,9 @@ public:
             }
         }
         std::cout << "\n\n";
+        
+        rawrxd::GpuDecodeEfficiencyAuthority::Instance().EndAndPublish(
+            measureTokens > 0 ? measureTokens : 1);
         
         total_timer.Stop();
         result.total_time_ms = total_timer.ElapsedMs();
@@ -154,7 +161,12 @@ public:
         // Add custom metrics
         result.custom_metrics["total_tokens_generated"] = total_tokens_generated;
         result.custom_metrics["avg_tokens_per_run"] = total_tokens_generated / static_cast<double>(config.measured_runs);
-        result.custom_metrics["tokens_per_watt"] = 0.0; // Would need power measurement
+        const auto& eff = rawrxd::GpuDecodeEfficiencyAuthority::Instance().Last();
+        result.custom_metrics["gpu_power_valid"] = eff.power_valid ? 1.0 : 0.0;
+        if (eff.power_valid) {
+            result.custom_metrics["tokens_per_watt_gpu"] = eff.tokens_per_watt_gpu;
+            result.custom_metrics["avg_gpu_power_watts"] = eff.average_gpu_watts;
+        }
         
         // Calculate quality metrics (simplified)
         result.quality.structure_score = 70.0; // Placeholder

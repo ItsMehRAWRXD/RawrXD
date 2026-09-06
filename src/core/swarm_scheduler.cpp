@@ -11,6 +11,10 @@
 #endif
 #include "../logging/Logger.h"
 
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#endif
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -483,6 +487,9 @@ SwarmScheduler::~SwarmScheduler()
 
 void SwarmScheduler::prefetchIoThreadMain_()
 {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ThreadStartWitness("swarm_prefetch_io");
+#endif
     while (!m_prefetchIoStop.load(std::memory_order_acquire))
     {
         std::unique_lock<std::mutex> lk(m_prefetchIoMutex);
@@ -496,6 +503,9 @@ void SwarmScheduler::prefetchIoThreadMain_()
         (void)prefetchPump();
         (void)pruneWorkingSet();
     }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ThreadStopWitness("swarm_prefetch_io");
+#endif
 }
 
 void SwarmScheduler::startPrefetchIoThread_()

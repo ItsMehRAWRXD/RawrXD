@@ -467,190 +467,46 @@ bool StreamingModelInferenceEngine::IsModelLoaded() const {
 
 std::vector<int32_t> StreamingModelInferenceEngine::Tokenize(const std::string& text) {
     if (!m_bridge || text.empty()) return {};
-    
-    // Simple character-level tokenization as fallback
-    // Map each unique character to an ID
-    std::vector<int32_t> tokens;
-    tokens.reserve(text.length());
-    
-    // Simple approach: use ASCII value for basic chars, hash for others
-    for (char c : text) {
-        if (static_cast<unsigned char>(c) < 128) {
-            tokens.push_back(static_cast<int32_t>(c));
-        } else {
-            // For non-ASCII, use a hash-based approach
-            tokens.push_back(128 + (static_cast<unsigned char>(c) % 100));
-        }
+
+    // Prefer real inference engine (CPU/Deep2) when wired — never ASCII fake tokens.
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Tokenize(text);
     }
-    
-    return tokens;
+    return {};
 }
 
 std::string StreamingModelInferenceEngine::Detokenize(const std::vector<int32_t>& tokens) {
     if (tokens.empty()) return "";
-    
-    // Simple character-level detokenization
-    std::string result;
-    result.reserve(tokens.size());
-    
-    for (int32_t token : tokens) {
-        if (token >= 0 && token < 128) {
-            result += static_cast<char>(token);
-        } else if (token >= 128 && token < 256) {
-            // Extended ASCII range - map to valid UTF-8 continuation bytes
-            // These are valid ISO-8859-1 characters that map directly to Unicode U+0080-U+00FF
-            result += static_cast<char>(0xC0 | (token >> 6));
-            result += static_cast<char>(0x80 | (token & 0x3F));
-        } else {
-            // Multi-byte UTF-8 for tokens >= 256
-            result += static_cast<char>(0xE0 | (token >> 12));
-            result += static_cast<char>(0x80 | ((token >> 6) & 0x3F));
-            result += static_cast<char>(0x80 | (token & 0x3F));
-        }
+    if (!m_bridge) return "";
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Detokenize(tokens);
     }
-    
-    return result;
+    return {};
 }
 
 std::vector<int32_t> StreamingModelInferenceEngine::Generate(const std::vector<int32_t>& input_tokens, int max_tokens) {
     if (!m_bridge || input_tokens.empty() || max_tokens <= 0) return {};
-    
-    // Get the streaming loader to access model weights
-    auto* loader = m_bridge->GetStreamingLoader();
-    if (!loader || !loader->IsModelLoaded()) {
-        // Fallback: return empty if no model loaded
-        return {};
-    }
-    
-    std::vector<int32_t> output;
-    output.reserve(max_tokens);
-    
-    // Get model metadata for dimensions
-    auto metadata = loader->GetMetadata();
-    int vocab_size = static_cast<int>(metadata.vocab_size);
-    if (vocab_size <= 0) vocab_size = 32000;
-    
-    // Simple greedy generation using loaded model weights
-    // This performs actual transformer forward pass with loaded tensors
-    std::vector<int32_t> context = input_tokens;
-    
-    for (int i = 0; i < max_tokens; ++i) {
-        // Check for interrupt signal (UI Stop button / Ctrl+C)
-        if (g_interrupt_flag.load(std::memory_order_acquire)) {
-            g_interrupt_flag.store(false, std::memory_order_release);
-            break; // Clean exit on interrupt
-        }
 
-        // Get logits from model forward pass
-        auto logits = Eval(context);
-        if (logits.empty()) break;
-        
-        // Greedy sampling: select token with highest logit
-        int32_t next_token = 0;
-        float max_logit = logits[0];
-        for (size_t j = 1; j < logits.size(); ++j) {
-            if (logits[j] > max_logit) {
-                max_logit = logits[j];
-                next_token = static_cast<int32_t>(j);
-            }
-        }
-        
-        // Check for EOS
-        if (next_token == 0 || next_token == 2) break; // EOS tokens
-        
-        output.push_back(next_token);
-        context.push_back(next_token);
-        
-        // Limit context window to prevent excessive computation
-        if (context.size() > static_cast<size_t>(metadata.context_length)) {
-            context.erase(context.begin(), context.begin() + (context.size() - metadata.context_length));
-        }
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Generate(input_tokens, max_tokens);
     }
-    
-    return output;
+
+    // Fail closed: streamer without a real engine must not invent tokens.
+    return {};
 }
 
 std::vector<float> StreamingModelInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) {
     if (!m_bridge || input_tokens.empty()) return {};
-    
-    // Get the streaming loader to access model weights
-    auto* loader = m_bridge->GetStreamingLoader();
-    if (!loader || !loader->IsModelLoaded()) {
-        return {};
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this))
+            return real->Eval(input_tokens);
     }
-    
-    // Get model metadata
-    auto metadata = loader->GetMetadata();
-    int vocab_size = static_cast<int>(metadata.vocab_size);
-    int embedding_dim = static_cast<int>(metadata.embedding_dim);
-    if (vocab_size <= 0) vocab_size = 32000;
-    if (embedding_dim <= 0) embedding_dim = 4096;
-    
-    // Initialize logits
-    std::vector<float> logits(vocab_size, 0.0f);
-    
-    // Try to load embedding weights and compute hidden state
-    std::vector<uint8_t> embed_data;
-    if (loader->GetTensorData("token_embd.weight", embed_data) && !embed_data.empty()) {
-        // Compute average embedding of input tokens
-        std::vector<float> avg_hidden(embedding_dim, 0.0f);
-        int valid_tokens = 0;
-        
-        // Assume F32 embeddings for now (4 bytes per element)
-        const float* embed_weights = reinterpret_cast<const float*>(embed_data.data());
-        size_t embed_stride = embedding_dim;
-        
-        for (int32_t token : input_tokens) {
-            if (token >= 0 && token < vocab_size) {
-                const float* token_embed = embed_weights + token * embed_stride;
-                for (int d = 0; d < embedding_dim; ++d) {
-                    avg_hidden[d] += token_embed[d];
-                }
-                valid_tokens++;
-            }
-        }
-        
-        if (valid_tokens > 0) {
-            for (int d = 0; d < embedding_dim; ++d) {
-                avg_hidden[d] /= valid_tokens;
-            }
-        }
-        
-        // Try to load output projection weights (lm_head)
-        std::vector<uint8_t> lm_head_data;
-        if (loader->GetTensorData("output.weight", lm_head_data) ||
-            loader->GetTensorData("token_embd.weight", lm_head_data)) {
-            // Compute logits = lm_head * hidden_state
-            const float* lm_head = reinterpret_cast<const float*>(lm_head_data.data());
-            
-            for (int v = 0; v < vocab_size; ++v) {
-                float logit = 0.0f;
-                const float* vocab_embed = lm_head + v * embedding_dim;
-                for (int d = 0; d < embedding_dim; ++d) {
-                    logit += vocab_embed[d] * avg_hidden[d];
-                }
-                logits[v] = logit;
-            }
-        } else {
-            // Fallback: use input token frequencies as logits
-            for (size_t i = 0; i < input_tokens.size() && i < static_cast<size_t>(vocab_size); ++i) {
-                int32_t token = input_tokens[i];
-                if (token >= 0 && token < vocab_size) {
-                    logits[token] += 1.0f / (i + 1);
-                }
-            }
-        }
-    } else {
-        // Fallback: use input token frequencies as logits
-        for (size_t i = 0; i < input_tokens.size() && i < static_cast<size_t>(vocab_size); ++i) {
-            int32_t token = input_tokens[i];
-            if (token >= 0 && token < vocab_size) {
-                logits[token] += 1.0f / (i + 1);
-            }
-        }
-    }
-    
-    return logits;
+    return {};
 }
 
 void StreamingModelInferenceEngine::GenerateStreaming(
@@ -659,31 +515,22 @@ void StreamingModelInferenceEngine::GenerateStreaming(
     std::function<void(const std::string&)> token_callback,
     std::function<void()> complete_callback,
     std::function<void(int32_t)> token_id_callback) {
-    
+
     if (!m_bridge || !token_callback) {
         if (complete_callback) complete_callback();
         return;
     }
-    
-    // Generate tokens and stream them
-    auto tokens = Generate(input_tokens, max_tokens);
-    
-    for (int32_t token_id : tokens) {
-        if (token_id_callback) {
-            token_id_callback(token_id);
+
+    if (auto real = m_bridge->GetInferenceEngine()) {
+        if (real.get() != static_cast<InferenceEngine*>(this)) {
+            real->GenerateStreaming(input_tokens, max_tokens, token_callback,
+                                    complete_callback, token_id_callback);
+            return;
         }
-        
-        // Convert token to string (simplified)
-        std::string token_str = std::to_string(token_id) + " ";
-        token_callback(token_str);
-        
-        // Small delay to simulate streaming
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    
-    if (complete_callback) {
-        complete_callback();
-    }
+
+    // Fail closed — no sleep-simulated fake stream.
+    if (complete_callback) complete_callback();
 }
 
 int StreamingModelInferenceEngine::GetVocabSize() const {

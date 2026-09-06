@@ -226,6 +226,7 @@ int main(int argc, char** argv) {
     std::vector<float> emb2(k2cfg.hiddenDim);
 
     auto res0 = embed.lookup(0, emb0.data());
+    if (!res0.ok) printf("       Token 0 error: %s\n", res0.error.c_str());
     GATE("Token 0 lookup succeeds", res0.ok, 6);
     printf("       Token 0: dims=%zu, bytes=%zu, checksum=0x%016llX\n",
            res0.dimensions, res0.bytesRead, (unsigned long long)res0.checksum);

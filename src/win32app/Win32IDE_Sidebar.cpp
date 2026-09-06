@@ -19,6 +19,7 @@
 
 #include "IDELogger.h"
 #include "vsix_loader.h"
+#include "../marketplace/extension_package_local.hpp"
 #include <nlohmann/json.hpp>
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
@@ -46,6 +47,21 @@ static std::wstring utf8ToWide(const std::string& utf8)
         return {};
     std::wstring out(static_cast<size_t>(len), L'\0');
     if (MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
+        return {};
+    return out;
+}
+
+static std::string wideToUtf8(const std::wstring& wide)
+{
+    if (wide.empty())
+        return {};
+    const int len = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), nullptr, 0,
+                                        nullptr, nullptr);
+    if (len <= 0)
+        return {};
+    std::string out(static_cast<size_t>(len), '\0');
+    if (WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), out.data(), len, nullptr,
+                            nullptr) == 0)
         return {};
     return out;
 }
@@ -283,15 +299,15 @@ void Win32IDE::createPrimarySidebar(HWND hwndParent)
 
     // Visible title bar so the pane is clearly named (e.g. "File Explorer", "Search")
     m_hwndSidebarTitle =
-        CreateWindowExA(0, "STATIC", "File Explorer", WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, SIDEBAR_DEFAULT_WIDTH,
+        CreateWindowExW(0, L"STATIC", L"File Explorer", WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, SIDEBAR_DEFAULT_WIDTH,
                         SIDEBAR_TITLE_HEIGHT, m_hwndSidebar, nullptr, m_hInstance, nullptr);
     if (m_hwndSidebarTitle)
     {
-        SetWindowLongPtrA(m_hwndSidebarTitle, GWLP_USERDATA, (LONG_PTR)this);
-        HFONT hFont = CreateFontA(-14, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                                  CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+        SetWindowLongPtrW(m_hwndSidebarTitle, GWLP_USERDATA, (LONG_PTR)this);
+        HFONT hFont = CreateFontW(-14, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                                  CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
         if (hFont)
-            SendMessage(m_hwndSidebarTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageW(m_hwndSidebarTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
     m_hwndSidebarContent =
@@ -320,7 +336,7 @@ void Win32IDE::createPrimarySidebar(HWND hwndParent)
     // initial directory population until after the window is visible.
     m_currentSidebarView = SidebarView::Explorer;
     if (m_hwndSidebarTitle)
-        SetWindowTextA(m_hwndSidebarTitle, "File Explorer");
+        SetWindowTextW(m_hwndSidebarTitle, L"File Explorer");
     if (m_hwndExplorerTree)
         ShowWindow(m_hwndExplorerTree, SW_SHOW);
     if (m_hwndExplorerToolbar)
@@ -666,7 +682,7 @@ void Win32IDE::setSidebarView(SidebarView view)
             break;
     }
     if (m_hwndSidebarTitle)
-        SetWindowTextA(m_hwndSidebarTitle, titleText);
+        SetWindowTextW(m_hwndSidebarTitle, utf8ToWide(titleText).c_str());
     if (m_hwndActivityBar)
         InvalidateRect(m_hwndActivityBar, nullptr, TRUE);
 
@@ -1716,20 +1732,20 @@ void Win32IDE::createSourceControlView(HWND hwndParent)
         CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, 5, 40,
                         SIDEBAR_DEFAULT_WIDTH - 10, 60, hwndParent, (HMENU)IDC_SCM_MESSAGE, m_hInstance, nullptr);
 
-    // File list (ListView for changed files)
+    // File list (ListView for changed files) — UNICODE build requires W class + W structs
     m_hwndSCMFileList =
-        CreateWindowExA(WS_EX_CLIENTEDGE, WC_LISTVIEWA, "", WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL, 5, 105,
+        CreateWindowExW(WS_EX_CLIENTEDGE, WC_LISTVIEWW, L"", WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL, 5, 105,
                         SIDEBAR_DEFAULT_WIDTH - 10, 490, hwndParent, (HMENU)IDC_SCM_FILE_LIST, m_hInstance, nullptr);
 
     // Setup columns
-    LVCOLUMNA col = {};
+    LVCOLUMNW col = {};
     col.mask = LVCF_TEXT | LVCF_WIDTH;
     col.cx = 40;
-    col.pszText = (LPSTR) "Stat";
+    col.pszText = const_cast<LPWSTR>(L"Stat");
     ListView_InsertColumn(m_hwndSCMFileList, 0, &col);
 
     col.cx = 180;
-    col.pszText = (LPSTR) "File";
+    col.pszText = const_cast<LPWSTR>(L"File");
     ListView_InsertColumn(m_hwndSCMFileList, 1, &col);
 
     appendToOutput("Source Control view created with Git integration\n", "Output", OutputSeverity::Info);
@@ -1746,7 +1762,7 @@ void Win32IDE::refreshSourceControlView()
     // Get changed files from Git
     std::vector<GitFile> files = getGitChangedFiles();
 
-    LVITEMA item = {};
+    LVITEMW item = {};
     item.mask = LVIF_TEXT;
 
     for (size_t i = 0; i < files.size(); i++)
@@ -1754,12 +1770,13 @@ void Win32IDE::refreshSourceControlView()
         item.iItem = (int)i;
         item.iSubItem = 0;
 
-        char status[3] = {files[i].status, 0, 0};
+        wchar_t status[3] = {static_cast<wchar_t>(files[i].status), 0, 0};
         item.pszText = status;
         ListView_InsertItem(m_hwndSCMFileList, &item);
 
         item.iSubItem = 1;
-        item.pszText = (LPSTR)files[i].path.c_str();
+        std::wstring pathW = utf8ToWide(files[i].path);
+        item.pszText = pathW.data();
         ListView_SetItem(m_hwndSCMFileList, &item);
     }
 
@@ -1772,13 +1789,13 @@ void Win32IDE::stageSelectedFiles()
     int idx = ListView_GetNextItem(m_hwndSCMFileList, -1, LVNI_SELECTED);
     if (idx >= 0)
     {
-        char file[260];
-        LVITEMA lvi = {0};
+        wchar_t file[260];
+        LVITEMW lvi = {0};
         lvi.iSubItem = 1;
         lvi.pszText = file;
         lvi.cchTextMax = 260;
-        SendMessage(m_hwndSCMFileList, LVM_GETITEMTEXTA, idx, (LPARAM)&lvi);
-        gitStageFile(file);
+        SendMessageW(m_hwndSCMFileList, LVM_GETITEMTEXTW, idx, (LPARAM)&lvi);
+        gitStageFile(wideToUtf8(file));
         refreshSourceControlView();
     }
 }
@@ -1788,13 +1805,13 @@ void Win32IDE::unstageSelectedFiles()
     int idx = ListView_GetNextItem(m_hwndSCMFileList, -1, LVNI_SELECTED);
     if (idx >= 0)
     {
-        char file[260];
-        LVITEMA lvi = {0};
+        wchar_t file[260];
+        LVITEMW lvi = {0};
         lvi.iSubItem = 1;
         lvi.pszText = file;
         lvi.cchTextMax = 260;
-        SendMessage(m_hwndSCMFileList, LVM_GETITEMTEXTA, idx, (LPARAM)&lvi);
-        gitUnstageFile(file);
+        SendMessageW(m_hwndSCMFileList, LVM_GETITEMTEXTW, idx, (LPARAM)&lvi);
+        gitUnstageFile(wideToUtf8(file));
         refreshSourceControlView();
     }
 }
@@ -2317,20 +2334,20 @@ void Win32IDE::createExtensionsView(HWND hwndParent)
     CreateWindowExA(0, "BUTTON", "Details", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 38, 50, 24, hwndParent,
                     (HMENU)IDC_EXT_DETAILS, m_hInstance, nullptr);
 
-    // Extensions list (shifted down to make room for buttons)
+    // Extensions list — UNICODE build: W class + W column/item structs (A structs → CJK mojibake)
     m_hwndExtensionsList =
-        CreateWindowExA(WS_EX_CLIENTEDGE, WC_LISTVIEWA, "", WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL, 5, 68,
+        CreateWindowExW(WS_EX_CLIENTEDGE, WC_LISTVIEWW, L"", WS_CHILD | LVS_REPORT | LVS_SINGLESEL | WS_VSCROLL, 5, 68,
                         SIDEBAR_DEFAULT_WIDTH - 10, 527, hwndParent, (HMENU)IDC_EXT_LIST, m_hInstance, nullptr);
 
     // Setup columns
-    LVCOLUMNA col = {};
+    LVCOLUMNW col = {};
     col.mask = LVCF_TEXT | LVCF_WIDTH;
     col.cx = 150;
-    col.pszText = (LPSTR) "Name";
+    col.pszText = const_cast<LPWSTR>(L"Name");
     ListView_InsertColumn(m_hwndExtensionsList, 0, &col);
 
     col.cx = 60;
-    col.pszText = (LPSTR) "Version";
+    col.pszText = const_cast<LPWSTR>(L"Version");
     ListView_InsertColumn(m_hwndExtensionsList, 1, &col);
 
     appendToOutput("Extensions view created\n", "Output", OutputSeverity::Info);
@@ -2350,7 +2367,7 @@ void Win32IDE::searchExtensions(const std::string& query)
     std::string lowerQuery = query;
     std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
 
-    LVITEMA item = {};
+    LVITEMW item = {};
     item.mask = LVIF_TEXT;
     int idx = 0;
 
@@ -2370,11 +2387,13 @@ void Win32IDE::searchExtensions(const std::string& query)
             s_extensionDisplayIds.push_back(ext.id);
             item.iItem = idx;
             item.iSubItem = 0;
-            item.pszText = (LPSTR)ext.name.c_str();
+            std::wstring nameW = utf8ToWide(ext.name);
+            item.pszText = nameW.data();
             ListView_InsertItem(m_hwndExtensionsList, &item);
 
             item.iSubItem = 1;
-            item.pszText = (LPSTR)ext.version.c_str();
+            std::wstring verW = utf8ToWide(ext.version);
+            item.pszText = verW.data();
             ListView_SetItem(m_hwndExtensionsList, &item);
             idx++;
         }
@@ -2410,12 +2429,13 @@ void Win32IDE::searchExtensions(const std::string& query)
                 s_extensionDisplayIds.push_back(dirName);
                 item.iItem = idx;
                 item.iSubItem = 0;
-                item.pszText = (LPSTR)dirName.c_str();
+                std::wstring dirW = utf8ToWide(dirName);
+                item.pszText = dirW.data();
                 ListView_InsertItem(m_hwndExtensionsList, &item);
 
-                std::string notInstalled = "(available)";
+                std::wstring notInstalled = L"(available)";
                 item.iSubItem = 1;
-                item.pszText = (LPSTR)notInstalled.c_str();
+                item.pszText = notInstalled.data();
                 ListView_SetItem(m_hwndExtensionsList, &item);
                 idx++;
             }
@@ -2510,8 +2530,9 @@ void Win32IDE::installFromVSIXFile()
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = filePath;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = L"VSIX Packages (*.vsix)\0*.vsix\0All Files (*.*)\0*.*\0";
-    ofn.lpstrTitle = L"Install VSIX Extension";
+    const std::wstring filter = RawrXD::Extensions::Local::BuildInstallFileFilter();
+    ofn.lpstrFilter = filter.c_str();
+    ofn.lpstrTitle = L"Install IDE Extension Package (top-25 formats)";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
     if (!GetOpenFileNameW(&ofn))
@@ -2521,7 +2542,10 @@ void Win32IDE::installFromVSIXFile()
     std::string utf8Path(utf8Len - 1, '\0');
     WideCharToMultiByte(CP_UTF8, 0, filePath, -1, utf8Path.data(), utf8Len, nullptr, nullptr);
 
-    if (RawrXD::VSIXInstaller::Install(utf8Path))
+    const auto fmt = RawrXD::Extensions::Local::DetectFormat(utf8Path);
+    const char* fmtName = RawrXD::Extensions::Local::FormatName(fmt);
+    const auto result = RawrXD::Extensions::Local::InstallPackage(utf8Path);
+    if (result.success)
     {
         std::string extStem = std::filesystem::path(utf8Path).stem().string();
         std::string installDir = RawrXD::GetExtensionsInstallRoot() + extStem;
@@ -2532,31 +2556,33 @@ void Win32IDE::installFromVSIXFile()
                 appendToOutput("VSIXLoader: loaded " + installDir + "\n", "Output", OutputSeverity::Info);
         }
         loadInstalledExtensions();
-        appendToOutput("Installed VSIX to %APPDATA%\\RawrXD\\extensions: " + utf8Path + "\n", "Output",
-                       OutputSeverity::Info);
-        // Extension host: load into QuickJS immediately (no stub)
+        appendToOutput(std::string("Installed [") + fmtName + "] to %APPDATA%\\RawrXD\\extensions: " +
+                           utf8Path + "\n",
+                       "Output", OutputSeverity::Info);
         auto& jsHost = QuickJSExtensionHost::instance();
-        auto result = jsHost.installVSIX(utf8Path.c_str());
-        if (result.success)
+        auto jsResult = jsHost.installVSIX(utf8Path.c_str());
+        if (jsResult.success)
         {
-            appendToOutput(std::string("[Extension Host] Loaded: ") + (result.detail ? result.detail : "") + "\n",
+            appendToOutput(std::string("[Extension Host] Loaded: ") + (jsResult.detail ? jsResult.detail : "") + "\n",
                            "Output", OutputSeverity::Info);
         }
-        else
+        else if (fmt == RawrXD::Extensions::ExtensionPackageFormat::VsCodeVsix)
         {
-            appendToOutput(std::string("[Extension Host] ") + (result.detail ? result.detail : "") +
+            appendToOutput(std::string("[Extension Host] ") + (jsResult.detail ? jsResult.detail : "") +
                                " (native-only or stub build)\n",
                            "Output", OutputSeverity::Info);
         }
-        MessageBoxW(m_hwndMain, L"Extension installed successfully.", L"VSIX Install", MB_OK | MB_ICONINFORMATION);
+        MessageBoxW(m_hwndMain, L"Extension package installed.", L"Extension Install", MB_OK | MB_ICONINFORMATION);
     }
     else
     {
-        appendToOutput("Failed to install VSIX: " + utf8Path + "\n", "Output", OutputSeverity::Error);
+        appendToOutput("Failed to install package: " + utf8Path + " — " + result.detail + "\n", "Output",
+                       OutputSeverity::Error);
         MessageBoxW(
             m_hwndMain,
-            L"Installation failed. Set RAWRXD_ALLOW_UNSIGNED_EXTENSIONS=1 for unsigned extensions. See Output panel.",
-            L"VSIX Install", MB_OK | MB_ICONWARNING);
+            L"Installation failed. Supported: VS Code/Cursor/Windsurf .vsix, JetBrains .jar/.zip, "
+            L"Eclipse, Sublime, Zed, Neovim, Emacs, NetBeans, Nova, Lapce, native DLL, and more.",
+            L"Extension Install", MB_OK | MB_ICONWARNING);
     }
 }
 
@@ -2883,18 +2909,20 @@ void Win32IDE::loadInstalledExtensions()
 
     // Populate ListView and display-id map
     s_extensionDisplayIds.clear();
-    LVITEMA item = {};
+    LVITEMW item = {};
     item.mask = LVIF_TEXT;
     for (size_t i = 0; i < m_extensions.size(); i++)
     {
         s_extensionDisplayIds.push_back(m_extensions[i].id);
         item.iItem = (int)i;
         item.iSubItem = 0;
-        item.pszText = (LPSTR)m_extensions[i].name.c_str();
+        std::wstring nameW = utf8ToWide(m_extensions[i].name);
+        item.pszText = nameW.data();
         ListView_InsertItem(m_hwndExtensionsList, &item);
 
         item.iSubItem = 1;
-        item.pszText = (LPSTR)m_extensions[i].version.c_str();
+        std::wstring verW = utf8ToWide(m_extensions[i].version);
+        item.pszText = verW.data();
         ListView_SetItem(m_hwndExtensionsList, &item);
     }
 

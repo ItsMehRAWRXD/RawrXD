@@ -19,7 +19,7 @@ namespace {
 RawrXD::Agent::AgentOllamaClient createOllamaClient() {
     RawrXD::Agent::OllamaConfig cfg;
     cfg.host = "127.0.0.1";
-    cfg.port = 11434;
+    cfg.port = 0;
     return RawrXD::Agent::AgentOllamaClient(cfg);
 }
 
@@ -56,7 +56,7 @@ CommandResult runAiPrompt(const CommandContext& ctx,
 
     auto client = createOllamaClient();
     if (!client.TestConnection()) {
-        ctx.output("[AI] Ollama not available at 127.0.0.1:11434\n");
+        ctx.output("[AI] Ollama not available at \n");
         return CommandResult::error(opName);
     }
 
@@ -98,7 +98,7 @@ CommandResult handleAIInlineComplete(const CommandContext& ctx) {
 
     auto client = createOllamaClient();
     if (!client.TestConnection()) {
-        ctx.output("[AI] Ollama not available at 127.0.0.1:11434\n");
+        ctx.output("[AI] Ollama not available at \n");
         return CommandResult::error("ai.inlineComplete: no ollama");
     }
 
@@ -196,7 +196,7 @@ CommandResult handleAIModelSelect(const CommandContext& ctx) {
 
     auto client = createOllamaClient();
     if (!client.TestConnection()) {
-        ctx.output("[AI] Ollama not available at 127.0.0.1:11434\n");
+        ctx.output("[AI] Ollama not available at \n");
         return CommandResult::error("ai.modelSelect: no ollama");
     }
 

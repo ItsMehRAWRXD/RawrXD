@@ -128,7 +128,7 @@ static RawrXD::Agent::AgentOllamaClient createOllamaClientExt()
 {
     RawrXD::Agent::OllamaConfig cfg;
     cfg.host = "127.0.0.1";
-    cfg.port = 11434;
+    cfg.port = 0;
     return RawrXD::Agent::AgentOllamaClient(cfg);
 }
 
@@ -4721,7 +4721,7 @@ CommandResult handleAIInlineComplete(const CommandContext& ctx)
 
     if (!client.TestConnection())
     {
-        ctx.output("[AI] Ollama not available at 127.0.0.1:11434. Using offline completion.\n");
+        ctx.output("[AI] Ollama not available at . Using offline completion.\n");
         std::string completion = localInlineCompletion(ctx.args);
         if (completion.empty())
         {
@@ -6064,7 +6064,7 @@ CommandResult handleToolsSettings(const CommandContext& ctx)
         if (hw != INVALID_HANDLE_VALUE)
         {
             const char* defaults = "{\n  \"theme\": \"dark\",\n  \"fontSize\": 14,\n  \"tabSize\": 4,\n  \"autoSave\": "
-                                   "true,\n  \"ollamaUrl\": \"http://127.0.0.1:11434\"\n}\n";
+                                   "true,\n  \"ollamaUrl\": \"\"\n}\n";
             DWORD written = 0;
             WriteFile(hw, defaults, (DWORD)strlen(defaults), &written, nullptr);
             CloseHandle(hw);
@@ -28158,7 +28158,7 @@ struct AIBackendConfig
 
     // Ollama specific
     std::string ollamaHost = "127.0.0.1";
-    uint16_t ollamaPort = 11434;
+    uint16_t ollamaport = 0;
     std::string ollamaModel = "llama3:8b";
 
     // API Keys

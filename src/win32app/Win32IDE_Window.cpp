@@ -8,9 +8,9 @@
 #include <shellscalingapi.h>  // GetDpiForWindow
 #include <windowsx.h>
 
-// ORPHAN TRANSLATION UNIT — not listed on the root CMake Win32IDE target (see docs/IDE_MASTER_PROGRESS.md).
-// Production WindowProc / onCreate / onDestroy / deferred bootstrap live in Win32IDE_Core.cpp. Do not add
-// lifecycle or IPC here expecting the shipped binary to run it; merge into Core if you need this path live.
+// ORPHAN TRANSLATION UNIT — removed from root CMake Win32IDE sources (P1_UI_WINDOW_OWNERSHIP_001).
+// Production WindowProc / createWindow / onCreate live only in Win32IDE_Core.cpp.
+// Kept on disk for reference; do not re-add without deleting the duplicate CreateWindowEx path.
 
 // Forward declaration for trace logging
 extern void fileTrace(const char* msg);
@@ -77,37 +77,12 @@ static LRESULT TrackSendMessageW(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
 bool Win32IDE::createWindow()
 {
-    WNDCLASSEXA wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = Win32IDE::WindowProc;
-    wc.hInstance = m_hInstance;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszClassName = "RawrXD_Win32IDE";
-    wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-
-    if (!RegisterClassExA(&wc))
-    {
-        // Class might already be registered
-        // Check error
-        if (GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
-        {
-            LOG_ERROR("Failed to register window class");
-            return false;
-        }
-    }
-
-    m_hwndMain = CreateWindowExA(0, "RawrXD_Win32IDE", "RawrXD IDE (Native/No Qt)", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-                                 CW_USEDEFAULT, 1280, 800, nullptr, nullptr, m_hInstance, this);
-
-    if (!m_hwndMain)
-    {
-        LOG_ERROR("Failed to create main window");
-        return false;
-    }
-
-    return true;
+    // Neutralized: never CreateWindowEx here. Core owns the sole product shell.
+    OutputDebugStringA("[Win32IDE_Window] createWindow stub — refuse second shell path\n");
+    if (m_hwndMain && IsWindow(m_hwndMain))
+        return true;
+    LOG_ERROR("Win32IDE_Window::createWindow must not run; use Win32IDE_Core");
+    return false;
 }
 
 void Win32IDE::showWindow()
@@ -527,6 +502,7 @@ void Win32IDE::onDestroy()
     shutdownLogging();
 }
 
+#if 0  // onSize authority lives in Win32IDE_Core.cpp (spatial + shell rebuild)
 void Win32IDE::onSize(int width, int height)
 {
     // Guard against re-entrancy
@@ -624,3 +600,4 @@ void Win32IDE::onSize(int width, int height)
         SendMessage(m_hwndStatusBar, WM_SIZE, 0, 0);  // specific for statusbar control
     }
 }
+#endif  // legacy onSize removed — Win32IDE_Core.cpp owns layout

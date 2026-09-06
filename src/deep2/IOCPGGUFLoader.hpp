@@ -22,7 +22,9 @@ class IOCPGGUFLoader {
 public:
     struct Config {
         bool useIOCP = true;              // false = fallback to synchronous
-        bool noBuffering = true;          // FILE_FLAG_NO_BUFFERING
+        // Default false: FILE_FLAG_NO_BUFFERING breaks CRT/metadata parses and
+        // requires sector-aligned buffers. Enable only for aligned tensor DMA.
+        bool noBuffering = false;
         size_t extentSize = 64 * 1024 * 1024;  // 64 MB read extents
         size_t maxConcurrentReads = 8;
         bool registerWithElastic = true;  // auto-register tensors to Elastic
@@ -36,7 +38,7 @@ public:
     bool Open(const std::wstring& path, const Config& config = Config{});
     bool Open(const std::string& path, const Config& config = Config{});
 
-    // Parse header + metadata (small, synchronous)
+    // Parse header + metadata (small, synchronous — separate sync handle)
     bool ParseHeader(ModelMetadata& outMetadata,
                      std::vector<TensorInfo>& outTensors,
                      uint64_t& outDataOffset);
@@ -57,6 +59,8 @@ public:
     // Close file and cleanup
     void Close();
 
+    const std::wstring& pathW() const { return pathW_; }
+
     // Telemetry
     struct Telemetry {
         uint64_t totalBytesRead = 0;
@@ -71,6 +75,7 @@ private:
     HANDLE hFile_ = INVALID_HANDLE_VALUE;
     HANDLE hIOCP_ = nullptr;
     Config config_;
+    std::wstring pathW_;
     ElasticResidencyManager* elastic_ = nullptr;
     std::atomic<uint64_t> totalBytesRead_{0};
     std::atomic<uint64_t> totalReads_{0};

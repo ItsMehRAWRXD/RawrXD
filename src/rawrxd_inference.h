@@ -284,6 +284,9 @@ class RawrXDInference
     bool Initialize(const wchar_t* modelPath, const char* vocabPath, const char* mergesPath, Backend backend)
     {
         RawrXD::P1LoadCkpt::emit("INF_Initialize", "enter");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "inference_init_enter");
+#endif
         m_lastLoadErrorMessage.clear();
         loader.SetLoadErrorCallback([this](const std::string& stage, const std::string& message)
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
@@ -342,9 +345,16 @@ class RawrXDInference
 
         printf("[RawrXD] Stage: loader.Load\n");
         RawrXD::P1LoadCkpt::emit("INF_loader_Load", "before");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "gguf_loader_enter");
+        P1PRA_AgentDbg("H7", "RawrXDInference", "loader_load_before", 0, 0, 0);
+#endif
         if (!loader.Load(modelPath, device, physDevice))
         {
             RawrXD::P1LoadCkpt::emit("INF_loader_Load", "fail");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "gguf_loader_fail");
+#endif
             if (m_lastLoadErrorMessage.empty())
             {
                 m_lastLoadErrorMessage = loader.GetLastLoadErrorMessage();
@@ -353,6 +363,10 @@ class RawrXDInference
             return false;
         }
         RawrXD::P1LoadCkpt::emit("INF_loader_Load", "ok");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "gguf_loader_ok");
+        P1PRA_AgentDbg("H7", "RawrXDInference", "loader_load_ok", 0, 0, 0);
+#endif
 
         RawrXD::P1LoadCkpt::emit("INF_model_config", "alloc");
         RawrXDTransformer::Config cfg{};  // Zero-init all fields
@@ -402,7 +416,13 @@ class RawrXDInference
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
         printf("[RawrXD] Stage: transformer.Initialize\n");
         RawrXD::P1LoadCkpt::emit("INF_transformer_Initialize", "before");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "engine_construct_begin");
+#endif
         transformer.Initialize(device, physDevice, cfg, &loader);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "engine_construct_ok");
+#endif
         RawrXD::P1LoadCkpt::emit("INF_transformer_Initialize", "after");
 
         RawrXD::P1LoadCkpt::emit("INF_swarm", "make_scheduler");

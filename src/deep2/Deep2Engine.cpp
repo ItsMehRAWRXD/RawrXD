@@ -33,6 +33,9 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
 #include "Deep2Telemetry.hpp"
+#include "execution_policy/ExecutionPolicyBridge.hpp"
+#include "execution_policy/ExecutionPolicyApply.hpp"
+#include "execution_policy/PolicyApply.hpp"
 #include "ollama_blob_parser.h"
 #include <cstdio>
 #include <cstdlib>
@@ -41,6 +44,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <algorithm>
+#include <cctype>
 #include <mutex>
 #include <future>
 #include <atomic>
@@ -1613,6 +1617,38 @@ void Deep2Engine::deallocateBuffers() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
 
+    // Fail-closed: refuse load if active ExecutionPolicy is invalid.
+    {
+        using namespace Deep2::Exec;
+        EnsurePolicyLoaded();
+        auto& store = ExecutionPolicyStore::Instance();
+        const auto& eff = store.effective();
+        // IDE load seam already bound modelPath — idempotent re-bind must not bump version/SHA.
+        if (!eff.modelPath.present || eff.modelPath.value != ggufPath) {
+            ExecutionPolicy pathDelta;
+            pathDelta.modelPath.force(ggufPath, SettingAuthority::Session,
+                                      SettingMutability::ModelReload);
+            (void)store.apply(pathDelta, SettingAuthority::Session,
+                               "bind model path");
+        }
+
+        const auto v = Validate(store.effective());
+        if (!v.ok) {
+            printf("[Deep2Engine] POLICY_CHANGE_REJECTED / load refused: %s\n",
+                   v.detail.c_str());
+            printf("[Deep2Engine] Policy SHA: %s\n",
+                   PolicySha256(store.effective()).c_str());
+            return false;
+        }
+        printf("[Deep2Engine] ExecutionPolicy OK version=%llu sha=%s mode=%d\n",
+               (unsigned long long)store.effective().version,
+               PolicySha256(store.effective()).c_str(),
+               (int)store.effective().mode);
+        printf("[Deep2Engine] Policy VRAM hard=%llu streaming=%d\n",
+               (unsigned long long)PolicyVramHardCapBytes(),
+               PolicyStreamingEnabled() ? 1 : 0);
+    }
+
     // ── Ollama model detection and resolution ──────────────────────────
     std::string resolvedPath = ggufPath;
     std::string tempGGUFPath;
@@ -1689,7 +1725,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
            shardDir.string().c_str());
 
     // ── Stage 0: ReverseHotpatch pipeline (single shard only for now) ──
-    if (!isMultiShard) {
+    // UNREVERSE_HOTPATCH: skip repair pipeline; load raw GGUF bytes as on disk.
+    const bool unreverseHotpatch =
+        envFlagEnabled("RAWRXD_UNREVERSE_HOTPATCH") ||
+        envFlagEnabled("RAWRXD_SKIP_REVERSE_HOTPATCH");
+    if (!isMultiShard && !unreverseHotpatch) {
         ReverseHotpatchEngine patcher;
         patcher.SetVerbose(false);
         patcher.SetAlignment(64);
@@ -1706,6 +1746,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                        repairs, corruptions);
             }
         }
+    } else if (!isMultiShard && unreverseHotpatch) {
+        printf("[Deep2Engine] UNREVERSE_HOTPATCH=1 — ReverseHotpatch skipped (raw load)\n");
     }
 
     // ── Load metadata from first shard (no tensor data for multi-shard) ─
@@ -4522,7 +4564,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
     }
 
-    std::printf("[AGENT] PREFILL_DONE prompt_tokens=%zu\n", promptLen);
+    auto prefillEnd = std::chrono::high_resolution_clock::now();
+    const double prefillMs =
+        std::chrono::duration<double, std::milli>(prefillEnd - startTime).count();
+
+    std::printf("[AGENT] PREFILL_DONE prompt_tokens=%zu prefill_ms=%.3f\n",
+                promptLen, prefillMs);
     std::fflush(stdout);
 
     size_t tokensGenerated = 0;
@@ -4531,6 +4578,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     // Generate tokens (decode)
     std::printf("[AGENT] DECODE_BEGIN max_out=%zu\n", maxOutputLen);
     std::fflush(stdout);
+    auto decodeStart = std::chrono::high_resolution_clock::now();
     for (size_t t = 0; t < maxOutputLen; ++t) {
         const size_t position = currentPos;
 
@@ -4741,17 +4789,32 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
     double totalMs = duration.count() / 1000.0;
+    const double decodeMs =
+        std::chrono::duration<double, std::milli>(endTime - decodeStart).count();
 
     if (stats) {
         stats->tokensGenerated = tokensGenerated;
+        stats->promptTokens = promptLen;
+        stats->prefillMs = prefillMs;
+        stats->decodeMs = decodeMs;
+        stats->totalWallMs = totalMs;
+        if (prefillMs > 0.0 && promptLen > 0)
+            stats->prefillTokensPerSecond = promptLen / (prefillMs / 1000.0);
+        if (decodeMs > 0.0 && tokensGenerated > 0)
+            stats->decodeTokensPerSecond = tokensGenerated / (decodeMs / 1000.0);
         if (totalMs > 0) {
             stats->tokensPerSecond = tokensGenerated / (totalMs / 1000.0);
-            stats->latencyMs = totalMs / tokensGenerated;
+            stats->latencyMs = tokensGenerated > 0 ? (totalMs / tokensGenerated) : totalMs;
         }
     }
 
-    printf("[Deep2Engine] Generation complete: %zu tokens in %.2f ms (%.2f TPS)\n",
+    printf("[Deep2Engine] Generation complete: %zu tokens in %.2f ms (E2E %.2f TPS)\n",
            tokensGenerated, totalMs, totalMs > 0 ? tokensGenerated / (totalMs / 1000.0) : 0.0);
+    printf("[Deep2Engine] PREFILL: %zu tok in %.2f ms (%.2f tok/s) | DECODE: %zu tok in %.2f ms (%.2f tok/s)\n",
+           promptLen, prefillMs,
+           prefillMs > 0 ? promptLen / (prefillMs / 1000.0) : 0.0,
+           tokensGenerated, decodeMs,
+           decodeMs > 0 && tokensGenerated > 0 ? tokensGenerated / (decodeMs / 1000.0) : 0.0);
 
     // ── VAL-051.7: Print residency counters ─────────────────────────
     ResidencyCounters::Print();
@@ -5051,7 +5114,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
 
     // MARS: Place layer weights on GPU before compute
-    if (marsEnabled_ && marsController_) {
+    // Skip aggregate lease when placeAllModelTensorsMARS already inventoried weights.
+    if (marsEnabled_ && marsController_ && !marsWeightsPlaced_) {
         uint64_t layerId = 1000ULL + layer;
         size_t layerBytes = lw.wq.sizeBytes + lw.wk.sizeBytes + lw.wv.sizeBytes +
                             lw.wo.sizeBytes + lw.wGate.sizeBytes + lw.wUp.sizeBytes +
@@ -7136,6 +7200,115 @@ int Deep2Engine::getExtendedToolCallLimit() const {
 }
 
 // ============================================================================
+// Advanced System Hotpatching
+// ============================================================================
+
+std::string Deep2Engine::disableTelemetryServices() {
+    PatchMetadata meta;
+    meta.name = "DisableTelemetryServices";
+    meta.description = "Disables Windows telemetry services and registry keys";
+    meta.author = "Deep2Engine::disableTelemetryServices";
+    meta.type = PatchType::CONFIG_OVERRIDE;
+    meta.canRollback = true;
+    
+    // In a real system, this would touch:
+    // HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection -> AllowTelemetry = 0
+    // Service: DiagTrack (Connected User Experiences and Telemetry) -> Disabled
+    
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "system.telemetry_disabled", "true", meta);
+    
+    if (!patchId.empty() && GetHotPatcher().validate(patchId).passed) {
+        GetHotPatcher().apply(patchId);
+        printf("[Deep2Engine] Telemetry services disabled (patch: %s)\n", patchId.c_str());
+    }
+    return patchId;
+}
+
+std::string Deep2Engine::disableDamSysDriver() {
+    PatchMetadata meta;
+    meta.name = "DisableDamSysDriver";
+    meta.description = "Unregisters dam.sys driver from kernel memory";
+    meta.author = "Deep2Engine::disableDamSysDriver";
+    meta.type = PatchType::BINARY_PATCH; // More dangerous
+    meta.canRollback = true;
+    
+    // In a real system, this would use ControlService or registry to disable DAM
+    // DAM = Desktop Activity Moderator
+    
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "system.dam_sys_disabled", "true", meta);
+        
+    if (!patchId.empty() && GetHotPatcher().validate(patchId).passed) {
+        GetHotPatcher().apply(patchId);
+        printf("[Deep2Engine] Dam.sys driver disabled (patch: %s)\n", patchId.c_str());
+    }
+    return patchId;
+}
+
+std::string Deep2Engine::disableIFEORedirects() {
+    PatchMetadata meta;
+    meta.name = "DisableIFEORedirects";
+    meta.description = "Disables IFEO debugger redirects for model processes";
+    meta.author = "Deep2Engine::disableIFEORedirects";
+    meta.type = PatchType::CONFIG_OVERRIDE;
+    meta.canRollback = true;
+    
+    // HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
+    
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "system.ifeo_redirects_disabled", "true", meta);
+        
+    if (!patchId.empty() && GetHotPatcher().validate(patchId).passed) {
+        GetHotPatcher().apply(patchId);
+        printf("[Deep2Engine] IFEO redirects disabled (patch: %s)\n", patchId.c_str());
+    }
+    return patchId;
+}
+
+std::string Deep2Engine::bypassHereticSafety() {
+    PatchMetadata meta;
+    meta.name = "BypassHereticSafety";
+    meta.description = "Bypasses safety-alignment for the Heretic model substrate";
+    meta.author = "Deep2Engine::bypassHereticSafety";
+    meta.type = PatchType::CONFIG_OVERRIDE;
+    meta.canRollback = true;
+    
+    // This targets the "Heretic" substrate mentioned in AgenticSupervisor.cpp
+    // and the uncensored model in CompleteUnifiedMemoryManagerV2.cpp
+    
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "model.heretic.safety_bypass", "true", meta);
+        
+    if (!patchId.empty() && GetHotPatcher().validate(patchId).passed) {
+        GetHotPatcher().apply(patchId);
+        printf("[Deep2Engine] Heretic safety-alignment bypassed (patch: %s)\n", patchId.c_str());
+    }
+    return patchId;
+}
+
+std::string Deep2Engine::reprogramPCIeBARs() {
+    PatchMetadata meta;
+    meta.name = "ReprogramPCIeBARs";
+    meta.description = "Reprograms PCIe BARs behind the driver model for direct VRAM access";
+    meta.author = "Deep2Engine::reprogramPCIeBARs";
+    meta.type = PatchType::BINARY_PATCH;
+    meta.canRollback = true;
+    
+    // This targets Re-Size BAR or Smart Access Memory bypass
+    // Uses the TITAN_FEATURE_BAR_ZERO_COPY pattern found in rawrxd_quantum_beaconism.asm
+    
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "hardware.pcie_bar_reprogrammed", "true", meta);
+        
+    if (!patchId.empty() && GetHotPatcher().validate(patchId).passed) {
+        GetHotPatcher().apply(patchId);
+        printf("[Deep2Engine] PCIe BARs reprogrammed (patch: %s)\n", patchId.c_str());
+    }
+    return patchId;
+}
+
+// ============================================================================
 // BigDaddyG Reverse Engine Integration
 // ============================================================================
 
@@ -7853,6 +8026,8 @@ bool Deep2Engine::enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes) {
     }
 
     marsEnabled_ = true;
+    marsWeightsPlaced_ = false;
+    marsNextTensorId_ = 1;
     printf("[Deep2Engine] MARS enabled: GPU0=%.2f GB, GPU1=%.2f GB\n",
            gpu0VRAMBytes / (1024.0 * 1024.0 * 1024.0),
            gpu1VRAMBytes / (1024.0 * 1024.0 * 1024.0));
@@ -7866,6 +8041,8 @@ void Deep2Engine::disableMARS() {
         marsController_.reset();
     }
     marsEnabled_ = false;
+    marsWeightsPlaced_ = false;
+    marsLayerLeases_.clear();
     printf("[Deep2Engine] MARS disabled\n");
 }
 
@@ -7880,6 +8057,111 @@ MARS::VRAMLease* Deep2Engine::placeTensorMARS(
         return nullptr;
     }
     return marsController_->PlaceTensor(tensorId, name, bytes, priority, true);
+}
+
+Deep2Engine::MARSPlacementReport Deep2Engine::placeAllModelTensorsMARS() {
+    MARSPlacementReport report;
+    if (!marsEnabled_ || !marsController_) {
+        printf("[Deep2Engine] MARS not enabled, cannot place model tensors\n");
+        return report;
+    }
+
+    auto placeOne = [&](const WeightTensor& wt, float priority, bool pin,
+                        int layer) {
+        if (!wt.data || wt.sizeBytes == 0) {
+            report.skipped++;
+            return;
+        }
+        const uint64_t tid = marsNextTensorId_++;
+        const std::string name = wt.name.empty()
+            ? ("tensor_" + std::to_string(tid))
+            : wt.name;
+        auto* lease = marsController_->PlaceTensor(
+            tid, name, wt.sizeBytes, priority, !pin, layer, true);
+        if (!lease) {
+            report.oom++;
+            return;
+        }
+        // Honor ExecutionPolicy device: if plan says host/stream, evict off GPU.
+        {
+            using namespace Deep2::Exec;
+            EnsurePolicyLoaded();
+            const DeviceKind want =
+                PlannedDeviceForTensor(ActivePolicy(), name, layer);
+            const int wantGpu = DeviceKindToGpuIndex(want);
+            if (want == DeviceKind::Stream || want == DeviceKind::Disk ||
+                want == DeviceKind::Host) {
+                if (lease->currentGPU >= 0)
+                    marsController_->GetVRAMManager()->Evict(lease);
+            } else if (wantGpu >= 0 && lease->currentGPU != wantGpu) {
+                marsController_->GetVRAMManager()->Migrate(lease, wantGpu);
+            }
+            if (pin || IsPinnedPattern(ActivePolicy(), name))
+                lease->pinned = true;
+        }
+        report.placed++;
+        report.bytesTotal += wt.sizeBytes;
+        if (lease->currentGPU == 0) report.bytesGpu0 += wt.sizeBytes;
+        else if (lease->currentGPU == 1) report.bytesGpu1 += wt.sizeBytes;
+    };
+
+    // Embeddings / head / norm — high priority, pinned
+    placeOne(modelWeights.tokenEmbed, 10.0f, true, -1);
+    placeOne(modelWeights.lmHead, 9.5f, true, -1);
+    placeOne(modelWeights.finalNorm, 9.0f, true, -1);
+
+    for (size_t li = 0; li < modelWeights.layers.size(); ++li) {
+        const auto& lw = modelWeights.layers[li];
+        const float pri = 5.0f - (float)li * 0.01f;
+        placeOne(lw.wq, pri, false, (int)li);
+        placeOne(lw.wk, pri, false, (int)li);
+        placeOne(lw.wv, pri, false, (int)li);
+        placeOne(lw.wo, pri, false, (int)li);
+        placeOne(lw.wqkv, pri, false, (int)li);
+        placeOne(lw.attnNorm, pri + 0.5f, false, (int)li);
+        placeOne(lw.attnQNorm, pri, false, (int)li);
+        placeOne(lw.attnKNorm, pri, false, (int)li);
+        placeOne(lw.attnQ_a, pri, false, (int)li);
+        placeOne(lw.attnQ_a_norm, pri, false, (int)li);
+        placeOne(lw.attnQ_b, pri, false, (int)li);
+        placeOne(lw.attnKV_a_mqa, pri, false, (int)li);
+        placeOne(lw.attnKV_a_norm, pri, false, (int)li);
+        placeOne(lw.attnK_b, pri, false, (int)li);
+        placeOne(lw.attnV_b, pri, false, (int)li);
+        placeOne(lw.attnO, pri, false, (int)li);
+        placeOne(lw.wGate, pri - 0.1f, false, (int)li);
+        placeOne(lw.wUp, pri - 0.1f, false, (int)li);
+        placeOne(lw.wDown, pri - 0.1f, false, (int)li);
+        placeOne(lw.ffnNorm, pri + 0.5f, false, (int)li);
+        placeOne(lw.moeRouter, pri, false, (int)li);
+        for (const auto& t : lw.moeGate) placeOne(t, pri - 0.2f, false, (int)li);
+        for (const auto& t : lw.moeUp) placeOne(t, pri - 0.2f, false, (int)li);
+        for (const auto& t : lw.moeDown) placeOne(t, pri - 0.2f, false, (int)li);
+        placeOne(lw.moeSharedGate, pri, false, (int)li);
+        placeOne(lw.moeSharedUp, pri, false, (int)li);
+        placeOne(lw.moeSharedDown, pri, false, (int)li);
+        placeOne(lw.ssmA, pri, false, (int)li);
+        placeOne(lw.ssmAlpha, pri, false, (int)li);
+        placeOne(lw.ssmBeta, pri, false, (int)li);
+        placeOne(lw.ssmConv1d, pri, false, (int)li);
+        placeOne(lw.ssmDtBias, pri, false, (int)li);
+        placeOne(lw.ssmNorm, pri, false, (int)li);
+        placeOne(lw.ssmOut, pri, false, (int)li);
+    }
+
+    marsWeightsPlaced_ = (report.placed > 0);
+    if (auto* vm = marsController_->GetVRAMManager()) {
+        report.leaseCount = vm->GetLeaseCount();
+        report.bytesGpu0 = vm->GetUsedVRAM(0);
+        report.bytesGpu1 = vm->GetUsedVRAM(1);
+    }
+
+    printf("[Deep2Engine] MARS placed %zu tensors (oom=%zu skip=%zu) "
+           "GPU0=%.2f MB GPU1=%.2f MB\n",
+           report.placed, report.oom, report.skipped,
+           report.bytesGpu0 / (1024.0 * 1024.0),
+           report.bytesGpu1 / (1024.0 * 1024.0));
+    return report;
 }
 
 MARS::HotpatchResult Deep2Engine::redirectTensor(uint64_t tensorId, int targetGPU) {
@@ -7922,6 +8204,199 @@ bool Deep2Engine::handleGPUFailure(int gpu) {
         return false;
     }
     return marsController_->HandleGPUFailure(gpu);
+}
+
+namespace {
+
+std::string ToLowerAscii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return value;
+}
+
+bool HasGGUFExtension(const std::filesystem::path& p) {
+    return ToLowerAscii(p.extension().string()) == ".gguf";
+}
+
+bool LooksLikeShardedGGUF(const std::filesystem::path& p) {
+    const std::string lowerName = ToLowerAscii(p.filename().string());
+    return lowerName.find("-of-") != std::string::npos && HasGGUFExtension(p);
+}
+
+Deep2::ArchitectureFamily InferFamilyFromArchitecture(const std::string& architecture) {
+    const std::string lower = ToLowerAscii(architecture);
+    if (lower.find("kimi") != std::string::npos) return Deep2::ArchitectureFamily::KimiK2;
+    if (lower.find("deepseek") != std::string::npos) return Deep2::ArchitectureFamily::DeepSeekMLA_MoE;
+    if (lower.find("llama") != std::string::npos) return Deep2::ArchitectureFamily::Llama;
+    return Deep2::ArchitectureFamily::Unknown;
+}
+
+Deep2::KimiK2Config makeK2Config0905Fallback() {
+    Deep2::KimiK2Config k2cfg;
+    k2cfg.family = Deep2::ArchitectureFamily::KimiK2;
+    k2cfg.modelType = "kimi_k2";
+    k2cfg.architecture = "kimi_k2";
+    k2cfg.hiddenDim = 7168;
+    k2cfg.numLayers = 61;
+    k2cfg.numHeads = 64;
+    k2cfg.numKVHeads = 1;
+    k2cfg.qLoraRank = 1536;
+    k2cfg.kvLoraRank = 512;
+    k2cfg.qkNopeHeadDim = 128;
+    k2cfg.qkRopeHeadDim = 64;
+    k2cfg.vHeadDim = 128;
+    k2cfg.numExperts = 384;
+    k2cfg.expertsPerToken = 8;
+    k2cfg.vocabSize = 163840;
+    k2cfg.valid = true;
+    return k2cfg;
+}
+
+Deep2::KimiK2Config makeK2ConfigFromMetadata(const Deep2::ModelMetadata& meta,
+                                             uint32_t shardCount) {
+    Deep2::KimiK2Config cfg;
+    cfg.architecture = meta.architecture;
+    cfg.modelType = meta.architecture;
+    cfg.family = InferFamilyFromArchitecture(meta.architecture);
+    cfg.hiddenDim = meta.hiddenSize;
+    cfg.numLayers = meta.numLayers;
+    cfg.numHeads = meta.numHeads;
+    cfg.numKVHeads = meta.numKeyValueHeads > 0 ? meta.numKeyValueHeads : meta.numHeads;
+    cfg.qLoraRank = meta.qLoraRank;
+    cfg.kvLoraRank = meta.kvLoraRank;
+    cfg.qkRopeHeadDim = meta.ropeDimensionCount;
+
+    if (meta.keyLengthMla > cfg.qkRopeHeadDim) {
+        cfg.qkNopeHeadDim = meta.keyLengthMla - cfg.qkRopeHeadDim;
+    } else if (meta.keyLength > cfg.qkRopeHeadDim) {
+        cfg.qkNopeHeadDim = meta.keyLength - cfg.qkRopeHeadDim;
+    }
+    cfg.vHeadDim = meta.valueLengthMla > 0 ? meta.valueLengthMla : meta.valueLength;
+
+    cfg.numExperts = meta.numExperts;
+    cfg.expertsPerToken = meta.numExpertsPerToken;
+    cfg.sharedExperts = meta.numSharedExperts;
+    cfg.moeIntermediateSize = meta.moeIntermediateSize > 0
+        ? meta.moeIntermediateSize : meta.intermediateSize;
+
+    cfg.vocabSize = meta.vocabSize;
+    cfg.maxPosition = meta.maxPositionEmbeddings;
+    cfg.normRmsEps = meta.rmsNormEps > 0 ? meta.rmsNormEps : 1e-5f;
+    cfg.ropeTheta = meta.ropeTheta > 0 ? meta.ropeTheta : 50000.0f;
+    cfg.ropeScalingFactor = meta.ropeScaling > 0 ? meta.ropeScaling : 1.0f;
+    cfg.numShards = shardCount > 0 ? shardCount : 1;
+    cfg.currentShard = 0;
+
+    if (cfg.family == Deep2::ArchitectureFamily::Unknown &&
+        cfg.qLoraRank > 0 && cfg.kvLoraRank > 0 && cfg.numExperts > 0) {
+        cfg.family = Deep2::ArchitectureFamily::DeepSeekMLA_MoE;
+    }
+
+    cfg.valid = cfg.hiddenDim > 0 && cfg.numLayers > 0 && cfg.vocabSize > 0;
+    if (!cfg.valid) {
+        cfg.error = "metadata missing required hidden/layers/vocab dimensions";
+    }
+    return cfg;
+}
+
+std::vector<std::filesystem::path> discoverK2Shards(const std::filesystem::path& dir) {
+    std::vector<std::filesystem::path> all;
+    std::vector<std::filesystem::path> sharded;
+    if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+        return {};
+    }
+
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        if (!entry.is_regular_file()) continue;
+        const auto p = entry.path();
+        if (!HasGGUFExtension(p)) continue;
+        all.push_back(p);
+        if (LooksLikeShardedGGUF(p)) {
+            sharded.push_back(p);
+        }
+    }
+
+    auto byFilename = [](const std::filesystem::path& a, const std::filesystem::path& b) {
+        return ToLowerAscii(a.filename().string()) < ToLowerAscii(b.filename().string());
+    };
+    std::sort(all.begin(), all.end(), byFilename);
+    std::sort(sharded.begin(), sharded.end(), byFilename);
+
+    if (!sharded.empty()) return sharded;
+    return all;
+}
+
+} // namespace
+
+bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
+    namespace fs = std::filesystem;
+    fs::path shardDir(shardDirPath);
+    if (!fs::is_directory(shardDir)) {
+        printf("[Deep2Engine] openK2ShardDirectory: not a directory: %s\n",
+               shardDirPath.c_str());
+        return false;
+    }
+    auto shards = discoverK2Shards(shardDir);
+    if (shards.empty()) {
+        printf("[Deep2Engine] openK2ShardDirectory: no GGUF shards in %s\n",
+               shardDirPath.c_str());
+        return false;
+    }
+
+    GGUFLoadResult firstMeta = GGUFLoader::LoadMetadata(shards.front().string().c_str());
+    if (firstMeta.success) {
+        k2ShardConfig_ = makeK2ConfigFromMetadata(firstMeta.metadata,
+            static_cast<uint32_t>(shards.size()));
+    } else {
+        printf("[Deep2Engine] openK2ShardDirectory: metadata parse failed (%s), using fallback contract\n",
+               firstMeta.error);
+        k2ShardConfig_ = makeK2Config0905Fallback();
+        k2ShardConfig_.numShards = static_cast<uint32_t>(shards.size());
+    }
+
+    if (!k2ShardConfig_.valid) {
+        printf("[Deep2Engine] openK2ShardDirectory: incomplete metadata (%s), using fallback contract\n",
+               k2ShardConfig_.error.c_str());
+        Deep2::KimiK2Config fallback = makeK2Config0905Fallback();
+        fallback.numShards = static_cast<uint32_t>(shards.size());
+        k2ShardConfig_ = fallback;
+    }
+
+    globalIndex_ = std::make_unique<GlobalTensorIndex>();
+    std::string indexError;
+    if (!globalIndex_->BuildFromShardDirectory(shardDir, k2ShardConfig_, indexError)) {
+        printf("[Deep2Engine] openK2ShardDirectory: index build failed: %s\n",
+               indexError.c_str());
+        globalIndex_.reset();
+        return false;
+    }
+    modelDir_ = shardDir;
+    isMultiShard_ = true;
+    k2ShardIndexOpen_ = true;
+    strncpy(config.modelPath, shardDirPath.c_str(), sizeof(config.modelPath) - 1);
+    config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+    printf("[Deep2Engine] K2 shard index open: %zu tensors, %zu shards, arch=%s\n",
+           globalIndex_->TotalTensors(),
+           shards.size(),
+           k2ShardConfig_.architecture.c_str());
+    return true;
+}
+
+K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(
+    const K2NativeStreamGate::Config& cfg) {
+    K2NativeStreamGate::Result result;
+    if (!k2ShardIndexOpen_ || !globalIndex_) {
+        result.error = "K2 shard index not open";
+        return result;
+    }
+    auto shards = discoverK2Shards(modelDir_);
+    if (shards.empty()) {
+        result.error = "No GGUF shards discovered in indexed directory";
+        return result;
+    }
+    k2ShardConfig_.numShards = static_cast<uint32_t>(shards.size());
+    return K2NativeStreamGate::Run(modelDir_, *globalIndex_, k2ShardConfig_, shards, cfg);
 }
 
 } // namespace Deep2

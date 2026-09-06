@@ -1,17 +1,18 @@
 ﻿# AGENT-E2E-002b / 04_logic_bug
 
 agent_exit=-1
-elapsed_ms=197107
-demo_break=false
-scripted_runtime=false
-tool_log_hits=0
+elapsed_ms=566573
+demo_break=False
+scripted_runtime=False
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+model_sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+source_before_sha256=a246e9c0fece3e1536a50c75405bde78e00b83d055d9b3b24896ff72a480ac4a
+source_after_sha256=a246e9c0fece3e1536a50c75405bde78e00b83d055d9b3b24896ff72a480ac4a
+source_mutated=False
+transcript_has_tool_calls=False
 build_exit=0
 run_exit=1
 stdout=FAIL got=-1 expected=5
 expected=hello from b04
-source_mutated=False
+goal.satisfied=False
 PASS=False
-model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
-greedy=1
-max_steps=4
-max_tokens=64

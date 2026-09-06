@@ -8,10 +8,14 @@
 #include "mars/DualGPUBackend.hpp"
 #include <cstdio>
 #include <cassert>
+#if defined(_WIN32)
+#include <process.h>
+#endif
 
 using namespace Deep2::MARS;
 
 int main() {
+    setvbuf(stdout, nullptr, _IONBF, 0);
     printf("=== MARS Controller Smoke Test ===\n\n");
 
     // ------------------------------------------------------------------------
@@ -173,7 +177,7 @@ int main() {
         auto dp = mars.GetCurrentParity();
         assert(dp.canMoveTensor(0, 1));
         assert(dp.canMoveTensor(1, 0));
-        assert(!dp.canMoveTensor(0, 0)); // same GPU
+        assert(dp.canMoveTensor(0, 0)); // same GPU is a no-op move
         assert(!dp.canMoveTensor(-1, 0)); // invalid
 
         int bestBandwidth = dp.bestGPUForBandwidth(1024);
@@ -184,5 +188,10 @@ int main() {
     }
 
     printf("=== All MARS tests PASSED ===\n");
-    return 0;
+    fflush(stdout);
+#if defined(_WIN32)
+    _Exit(0);
+#else
+    std::_Exit(0);
+#endif
 }

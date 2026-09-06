@@ -20,6 +20,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "Win32IDE_MainMenuAuthority.hpp"
 #include "IDELogger.h"
 #include <richedit.h>
 #include <commctrl.h>
@@ -607,7 +608,8 @@ void Win32IDE::enterZenMode() {
     if (m_hwndToolbar)       ShowWindow(m_hwndToolbar, SW_HIDE);
     if (m_hwndOutputTabs)    ShowWindow(m_hwndOutputTabs, SW_HIDE);
     if (m_hwndFileExplorer)  ShowWindow(m_hwndFileExplorer, SW_HIDE);
-    if (m_hMenu)             SetMenu(m_hwndMain, nullptr);
+    if (m_hMenu)
+        RawrXD::MainMenuAuthority::DetachAuthorized(m_hwndMain, "ZEN_MODE");
 
     m_sidebarVisible = false;
     m_outputPanelVisible = false;
@@ -648,7 +650,7 @@ void Win32IDE::exitZenMode() {
         if (m_hwndOutputTabs) ShowWindow(m_hwndOutputTabs, SW_SHOW);
     }
     if (m_zenModePrevState.menuWasVisible && m_hMenu)
-        SetMenu(m_hwndMain, m_hMenu);
+        RawrXD::MainMenuAuthority::Reattach(m_hwndMain, m_hMenu);
     if (m_hwndFileExplorer && m_sidebarVisible)
         ShowWindow(m_hwndFileExplorer, SW_SHOW);
 

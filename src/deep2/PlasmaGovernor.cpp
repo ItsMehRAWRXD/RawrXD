@@ -74,10 +74,22 @@ size_t PlasmaGovernor::adaptiveBatchSize(size_t requested) const {
     return std::max(size_t(1), static_cast<size_t>(requested * factor));
 }
 
+void PlasmaGovernor::feedMeasuredPowerWatts(float watts) noexcept {
+    if (watts > 0.0f)
+        measured_power_watts_.store(watts, std::memory_order_relaxed);
+}
+
+float PlasmaGovernor::measuredPowerWatts() const noexcept {
+    return measured_power_watts_.load(std::memory_order_relaxed);
+}
+
 ThermalState PlasmaGovernor::lastState() const {
-    // Reconstruct from atomic (lossy but sufficient for telemetry)
     ThermalState state;
-    state.junction_temp_c = temp_history_[(history_index_ + TEMP_HISTORY_SIZE - 1) % TEMP_HISTORY_SIZE];
+    state.junction_temp_c =
+        temp_history_[(history_index_ + TEMP_HISTORY_SIZE - 1) % TEMP_HISTORY_SIZE];
+    const float pw = measured_power_watts_.load(std::memory_order_relaxed);
+    if (pw > 0.0f)
+        state.power_watts = pw;
     return state;
 }
 

@@ -1,5 +1,5 @@
 // k2_runtime_validation.cpp — Deterministic K2-001 Runtime Gate
-// Usage: RawrEngine --k2-validate <shard-directory>
+// Usage: k2_runtime_validation [--run-generation] [--prompt <text>] <shard-directory>
 //
 // This gate proves:
 //   1. K2 shards discovered
@@ -21,18 +21,28 @@
 //   6 = Data location verification failed
 //   7 = Engine initialization failed
 //   8 = Generation failed or produced synthetic output
-//   9 = Streaming callback never fired
+//   9 = Architecture metadata validation failed
+//  10 = --run-generation K2NativeStream gate failed
+//  11 = --run-generation-deep2 Deep2 bridge gate failed
+//  12 = --run-generation-mla-g12 complete MLA gate failed
+//  13 = additive RetainedProofGate failed (only when K2_ENABLE_RETAINED_PROOF_GATE)
 
 #include "../src/deep2/KimiK2Config.hpp"
+#if defined(K2_ENABLE_RETAINED_PROOF_GATE)
+#include "../src/runtime/retained_proof_gate.hpp"
+#endif
 #include "../src/deep2/K2GlobalTensorIndex.hpp"
 #include "../src/deep2/K2MLAWeights.hpp"
 #include "../src/deep2/K2MoEWeights.hpp"
 #include "../src/deep2/GGUFLoader.hpp"
 #include "../src/deep2/Deep2Bridge.hpp"
+#include "k2_native_stream_gate.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -119,15 +129,56 @@ static bool DiscoverK2Shards(const fs::path& dir, std::vector<fs::path>& shards,
     return !shards.empty();
 }
 
+static void ParseArgs(int argc, char** argv, fs::path& shardDir,
+                      bool& runGeneration, bool& runGenerationDeep2,
+                      bool& runGenerationMlaG12, std::string& prompt) {
+    runGeneration = false;
+    runGenerationDeep2 = false;
+    runGenerationMlaG12 = false;
+    prompt = "hello";
+    shardDir = fs::current_path();
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--run-generation") {
+            runGeneration = true;
+        } else if (arg == "--run-generation-deep2") {
+            runGenerationDeep2 = true;
+        } else if (arg == "--run-generation-mla-g12") {
+            runGenerationMlaG12 = true;
+        } else if (arg == "--prompt" && i + 1 < argc) {
+            prompt = argv[++i];
+        } else if (arg == "--help" || arg == "-h") {
+            printf("Usage: k2_runtime_validation [--run-generation|--run-generation-deep2|--run-generation-mla-g12] [--prompt <text>] <shard-directory>\n");
+            std::exit(0);
+        } else if (!arg.empty() && arg[0] != '-') {
+            shardDir = arg;
+        }
+    }
+}
+
 // ── Main Validation ──
 int main(int argc, char** argv) {
     printf("╔════════════════════════════════════════════════════════════╗\n");
     printf("║  K2-001 Runtime Validation Gate                            ║\n");
     printf("╚════════════════════════════════════════════════════════════╝\n\n");
 
-    // Parse arguments
-    fs::path shardDir = (argc > 1) ? argv[1] : fs::current_path();
+    fs::path shardDir;
+    bool runGeneration = false;
+    bool runGenerationDeep2 = false;
+    bool runGenerationMlaG12 = false;
+    std::string prompt;
+    ParseArgs(argc, argv, shardDir, runGeneration, runGenerationDeep2, runGenerationMlaG12, prompt);
     printf("[INFO] Shard directory: %s\n", shardDir.string().c_str());
+    printf("[INFO] --run-generation: %s\n", runGeneration ? "YES" : "NO");
+    printf("[INFO] --run-generation-deep2: %s\n", runGenerationDeep2 ? "YES" : "NO");
+    printf("[INFO] --run-generation-mla-g12: %s\n", runGenerationMlaG12 ? "YES" : "NO");
+    if (runGeneration || runGenerationDeep2 || runGenerationMlaG12)
+        printf("[INFO] Prompt: \"%s\"\n", prompt.c_str());
+#if defined(K2_ENABLE_RETAINED_PROOF_GATE)
+    printf("[INFO] K2_ENABLE_RETAINED_PROOF_GATE: YES (additive unit compiled in)\n");
+#else
+    printf("[INFO] K2_ENABLE_RETAINED_PROOF_GATE: NO (certified path only)\n");
+#endif
 
     // ═══════════════════════════════════════════════════════════════
     // Gate 1: Shard Discovery
@@ -438,11 +489,128 @@ int main(int argc, char** argv) {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // Gate 10: K2NativeStream Generation (--run-generation only)
+    // Proves production validator invokes real partial-forward stream.
+    // Default path (flag absent): skipped — Gates 1-9 unchanged.
+    // ═══════════════════════════════════════════════════════════════
+    if (runGeneration) {
+        printf("\n── Gate 10: K2NativeStream Generation (--run-generation) ──\n");
+        K2NativeStreamGate::Config gcfg;
+        gcfg.prompt = prompt;
+        gcfg.streamTokens = 1;
+        gcfg.layerDepth = 4;
+        gcfg.budgetBytes = 256ull * 1024 * 1024;
+
+        auto genResult = K2NativeStreamGate::Run(shardDir, index, k2cfg, shards, gcfg);
+        K2NativeStreamGate::PrintCertificationContract(genResult, true);
+
+        if (!genResult.ok) {
+            printf("\n❌ Gate 10 FAILED: %s\n", genResult.error.c_str());
+            return 10;
+        }
+
+        g_path.enginePath = "K2NativeStream";
+        g_path.generationType = "REAL";
+        g_path.fallbackStatus = "NONE";
+        g_path.streamingCallbackFired = genResult.streamingCallbackFired;
+        g_path.peakResidencyBytes = genResult.peakResidencyBytes;
+        printf("  [PASS] Gate: K2NativeStream partial-forward generation\n");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Gate 11: Deep2Bridge → Deep2Engine → K2NativeStream (production)
+    // Requires --run-generation-deep2; does NOT call test harness directly.
+    // ═══════════════════════════════════════════════════════════════
+    if (runGenerationDeep2) {
+        printf("\n── Gate 11: Deep2 Native Stream Bridge (--run-generation-deep2) ──\n");
+        _putenv_s("RAWRXD_UNREVERSE_HOTPATCH", "1");
+
+        rawr::K2NativeStreamBridgeResult bridgeResult;
+        auto& bridge = rawr::Deep2Bridge::Get();
+        bool ok = bridge.GenerateK2NativeStreamPartial(
+            shardDir.string().c_str(), prompt.c_str(), 1, 4, &bridgeResult);
+
+        K2NativeStreamGate::Gate11Telemetry tel;
+        tel.deep2BridgeEntered = bridgeResult.deep2BridgeEntered;
+        tel.deep2EngineEntered = bridgeResult.deep2EngineEntered;
+        tel.k2NativeStreamSelected = bridgeResult.k2NativeStreamSelected;
+        tel.noTestHarnessDirectCall = bridgeResult.noTestHarnessDirectCall;
+        K2NativeStreamGate::PrintGate11Contract(bridgeResult.stream, tel);
+
+        if (!ok || !bridgeResult.stream.ok) {
+            printf("\nGate 11 FAILED: %s\n", bridgeResult.stream.error.c_str());
+            return 11;
+        }
+
+        g_path.enginePath = "Deep2Bridge/K2NativeStream";
+        g_path.generationType = "REAL";
+        g_path.fallbackStatus = "NONE";
+        g_path.streamingCallbackFired = bridgeResult.stream.streamingCallbackFired;
+        g_path.peakResidencyBytes = bridgeResult.stream.peakResidencyBytes;
+        printf("  [PASS] Gate: Deep2 production bridge partial-forward generation\n");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Gate 12: Complete MLA (RoPE/softmax/KV) — additive; does not reopen G10/G11
+    // ═══════════════════════════════════════════════════════════════
+    if (runGenerationMlaG12) {
+        printf("\n── Gate 12: Complete MLA Attention (--run-generation-mla-g12) ──\n");
+        K2NativeStreamGate::Config gcfg;
+        gcfg.prompt = prompt;
+        gcfg.streamTokens = 1;
+        gcfg.layerDepth = 4;
+        gcfg.budgetBytes = 256ull * 1024 * 1024;
+        gcfg.enableMlaComplete = true;
+
+        auto genResult = K2NativeStreamGate::Run(shardDir, index, k2cfg, shards, gcfg);
+        K2NativeStreamGate::PrintGate12Contract(genResult);
+
+        if (!genResult.ok) {
+            printf("\nGate 12 FAILED: %s\n", genResult.error.c_str());
+            return 12;
+        }
+
+        g_path.enginePath = "K2NativeStream/MLAComplete";
+        g_path.generationType = "REAL";
+        g_path.fallbackStatus = "NONE";
+        g_path.mlaStatus = "COMPLETE_ROPE_SOFTMAX_KV";
+        g_path.streamingCallbackFired = genResult.streamingCallbackFired;
+        g_path.peakResidencyBytes = genResult.peakResidencyBytes;
+        printf("  [PASS] Gate: Complete MLA attention (RoPE/softmax/KV)\n");
+    }
+
+#if defined(K2_ENABLE_RETAINED_PROOF_GATE)
+    // ═══════════════════════════════════════════════════════════════
+    // Additive only: RetainedProofGate (authority → RX image → Deep2 bind → tokens)
+    // Does not modify Gate 10/11/12 control flow or telemetry contracts.
+    // ═══════════════════════════════════════════════════════════════
+    {
+        printf("\n── Additive: RetainedProofGate (K2_ENABLE_RETAINED_PROOF_GATE) ──\n");
+        const k2::runtime::RetainedProofGateResult gate = k2::runtime::VerifyAndBindRuntime();
+        printf("  [%s] verify_generation_authority\n", gate.authorityOk ? "PASS" : "FAIL");
+        printf("  [%s] map_immutable_RX_RealtimeImage\n", gate.rxMapped ? "PASS" : "FAIL");
+        printf("  [%s] bind_Deep2Bridge_entrypoint\n", gate.deep2Bound ? "PASS" : "FAIL");
+        printf("  [%s] first_token_proof\n", gate.firstTokenOk ? "PASS" : "FAIL");
+        printf("  [%s] streamed_token_proof\n", gate.streamedTokenOk ? "PASS" : "FAIL");
+        if (!gate.ok()) {
+            printf("\nAdditive RetainedProofGate FAILED: %s\n", gate.detail.c_str());
+            return 13;
+        }
+        printf("  [PASS] Additive RetainedProofGate (G=%llu)\n",
+               (unsigned long long)gate.generation);
+    }
+#else
+    // Default: certified G10/G11/G12 paths only — no retained-proof unit linked.
+#endif
+
+    // ═══════════════════════════════════════════════════════════════
     // Execution Path Report
     // ═══════════════════════════════════════════════════════════════
     printf("\n╔════════════════════════════════════════════════════════════╗\n");
     printf("║  K2-001 Execution Path Telemetry                           ║\n");
     printf("╠════════════════════════════════════════════════════════════╣\n");
+    printf("║  K2_GENERATION_REQUESTED = %-31s ║\n",
+           (runGeneration || runGenerationDeep2 || runGenerationMlaG12) ? "YES" : "NO");
     printf("║  ENGINE_PATH     = %-40s ║\n", g_path.enginePath);
     printf("║  MODEL_FORMAT    = %-40s ║\n", g_path.modelFormat);
     printf("║  INDEX           = %-40s ║\n", g_path.indexType);
@@ -452,8 +620,19 @@ int main(int argc, char** argv) {
     printf("║  FALLBACK        = %-40s ║\n", g_path.fallbackStatus);
     printf("║  LAYERS          = %-40u ║\n", g_path.layersResolved);
     printf("║  STREAMING       = %-40s ║\n", g_path.streamingCallbackFired ? "YES" : "NO");
+    if (runGeneration || runGenerationDeep2 || runGenerationMlaG12) {
+        printf("║  PEAK_RESIDENCY  = %-37.1f MiB ║\n",
+               g_path.peakResidencyBytes / (1024.0 * 1024.0));
+    }
     printf("╚════════════════════════════════════════════════════════════╝\n");
 
-    printf("\n✅ ALL K2-001 RUNTIME GATES PASSED\n");
+    if (runGenerationMlaG12) {
+        printf("\nALL K2-001 RUNTIME GATES PASSED (Gate 12 Complete MLA)\n");
+    } else if (runGenerationDeep2) {
+        printf("\nALL K2-001 RUNTIME GATES PASSED (Gate 11 Deep2Bridge)\n");
+    } else {
+        printf("\nALL K2-001 RUNTIME GATES PASSED%s\n",
+               runGeneration ? " (Gate 10 K2NativeStream)" : "");
+    }
     return 0;
 }

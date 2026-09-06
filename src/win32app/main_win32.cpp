@@ -30,6 +30,12 @@
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_CommandFlight.hpp"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#endif
+#ifdef RAWRXD_TOKEN_PRESSURE_VALVE
+#include "TokenPressure.hpp"
+#endif
 #include <commctrl.h>
 #include <dbghelp.h>
 #include <shellscalingapi.h>
@@ -1506,6 +1512,10 @@ static bool hasFeatureProbeFlag(LPSTR lpCmdLine)
 static bool queryLocalOllamaEndpoint(const wchar_t* endpoint, std::string& outBody)
 {
     outBody.clear();
+#if !RAWRXD_OPTIONAL_OLLAMA
+    (void)endpoint;
+    return false;
+#else
 #ifdef _WIN32
     bool ok = false;
     HINTERNET hSession = WinHttpOpen(L"RawrXD-FeatureProbe/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
@@ -1562,6 +1572,7 @@ static bool queryLocalOllamaEndpoint(const wchar_t* endpoint, std::string& outBo
     (void)outBody;
     return false;
 #endif
+#endif // RAWRXD_OPTIONAL_OLLAMA
 }
 
 static bool getArgValue(int argc, char** argv, const char* key, std::string& out)
@@ -2133,6 +2144,12 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
     setCwdToExeDirectory();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ProcessStartup();
+#endif
+#ifdef RAWRXD_TOKEN_PRESSURE_VALVE
+    token_pressure::ProcessStartup();
+#endif
     RawrXD::CommandTelemetry::CmdDiagMarkArmed();
     RawrXD::Runtime::bootstrapRuntimeSurface();
 
@@ -2488,14 +2505,29 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     // Flush deferred session-restore GGUF load only after the live loop is armed.
     if (ide.pendingApp201ModelLoad())
     {
-        HWND hwnd = ide.getMainWindow();
-        if (hwnd && IsWindow(hwnd))
+        char skip201[8] = {};
+        const bool skipDeferred =
+            GetEnvironmentVariableA("RAWRXD_SKIP_DEFERRED_MODEL_LOAD", skip201,
+                                    (DWORD)sizeof(skip201)) > 0 &&
+            skip201[0] != '0';
+        if (skipDeferred)
         {
-            PostMessageA(hwnd, WM_APP + 201, 0, 0);
-            startupTrace("P1_message_loop_flush_WM_APP_201");
-            fprintf(stderr, "[STARTUP] message_loop: posted WM_APP+201 flush (FORCE_CPU=1)\n");
+            startupTrace("P1_message_loop_skip_WM_APP_201");
+            fprintf(stderr, "[STARTUP] message_loop: skip WM_APP+201 (RAWRXD_SKIP_DEFERRED_MODEL_LOAD)\n");
             fflush(stderr);
-            RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO", "flush_after_message_loop_entered");
+        }
+        else
+        {
+            HWND hwnd = ide.getMainWindow();
+            if (hwnd && IsWindow(hwnd))
+            {
+                PostMessageA(hwnd, WM_APP + 201, 0, 0);
+                startupTrace("P1_message_loop_flush_WM_APP_201");
+                fprintf(stderr, "[STARTUP] message_loop: posted WM_APP+201 flush (FORCE_CPU=1)\n");
+                fflush(stderr);
+                RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO",
+                                         "flush_after_message_loop_entered");
+            }
         }
     }
 
@@ -2694,6 +2726,9 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     }
 
     RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_export_artifacts");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ProcessShutdownEvidence();
+#endif
     exportCommandArtifacts("runtime-exit");
 
     RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_RETURN");

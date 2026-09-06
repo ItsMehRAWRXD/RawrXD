@@ -1462,7 +1462,7 @@ MultiModelManager::ParallelResult MultiModelManager::executeParallel(
                     // Support provider-based endpoint override via modelId prefix:
                     // "http://host:port/model_name" → parse host/port
                     LPCWSTR host = L"127.0.0.1";
-                    INTERNET_PORT port = 11434;
+                    INTERNET_PORT port = 0;
                     std::wstring hostStorage;
                     // If provider field looks like a URL, parse it
                     if (!model.provider.empty() &&
@@ -1482,7 +1482,7 @@ MultiModelManager::ParallelResult MultiModelManager::executeParallel(
                             try {
                                 port = static_cast<INTERNET_PORT>(
                                     std::stoi(prov.substr(colonPos + 1)));
-                            } catch (...) { port = 11434; }
+                            } catch (...) { port = 0; }
                         }
                         hostStorage.assign(hostStr.begin(), hostStr.end());
                         host = hostStorage.c_str();
@@ -3192,7 +3192,7 @@ ExecutionResult QuantumTaskGenerator::executeTask(
                              &timeoutMs, sizeof(timeoutMs));
 
             HINTERNET hConnect = WinHttpConnect(
-                hSession, L"127.0.0.1", 11434, 0);
+                hSession, L"127.0.0.1", 0, 0);
             if (hConnect) {
                 HINTERNET hRequest = WinHttpOpenRequest(
                     hConnect, L"POST", L"/api/generate",

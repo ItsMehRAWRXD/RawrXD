@@ -1,59 +1,144 @@
-name: HexMag Swarm & IDE Build Test
+name: RawrXD Deployment Validation
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [main, dev]
   pull_request:
-  workflow_dispatch:   # allows the "Run workflow" button
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: RawrXD-ModelLoader
+  native-hosted:
+    runs-on: windows-2022
+    timeout-minutes: 90
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v1.3
-
-      - name: Build Win32 IDE
-        run: .\scripts\build.ps1 -Config Release -A x64
-
-      - name: Sovereign Dashboard Gate
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Configure fail-closed native profile
+        run: >
+          cmake -S . -B build-hosted -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DRAWRXD_BUILD_CLI=ON
+          -DRAWRXD_BUILD_WIN32IDE=OFF
+          -DRAWRXD_OPTIONAL_OLLAMA=OFF
+          -DRAWRXD_OPTIONAL_CLOUD=OFF
+          -DRAWRXD_OPTIONAL_TELEMETRY=OFF
+      - name: Build gateway and native certificates
+        run: >
+          cmake --build build-hosted --target
+          rawrxd
+          local_only_001_cert
+          hexmag_repeat_tuner_cert
+          hexmag_ide_e2e_cert
+          hexmag_runtime_controller_cert
+          -- -j2
+      - name: Ensure Ollama is not reachable on 11434
         shell: pwsh
         run: |
-          Write-Host "Running Sovereign Dashboard Gate (8-point validation)..."
-          .\scripts\sovereign_dashboard_gate.ps1 -SkipKernel
-        continue-on-error: true  # Gate advisory on main until NVMe Oracle available in CI
+          Get-Process ollama -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          $conn = Get-NetTCPConnection -LocalPort 11434 -State Listen -ErrorAction SilentlyContinue
+          if ($conn) {
+            Write-Error "Port 11434 is still listening; LOCAL_ONLY_001 requires fail-closed isolation."
+            exit 1
+          }
+      - name: Run native fail-closed certificates
+        run: |
+          .\build-hosted\bin\local_only_001_cert.exe
+          .\build-hosted\bin\hexmag_repeat_tuner_cert.exe
+          .\build-hosted\bin\hexmag_ide_e2e_cert.exe
+          .\build-hosted\bin\hexmag_runtime_controller_cert.exe
+      - name: Enforce hosted authentication and CORS contract
+        run: |
+          $env:RAWRXD_HOSTED_API_KEY = "ci-hosted-contract-key"
+          $env:RAWRXD_ALLOWED_ORIGINS = "https://screenpilot.tech"
+          $process = Start-Process `
+            -FilePath ".\build-hosted\bin\rawrxd.exe" `
+            -ArgumentList "--hosted","--port","18086","--bind","127.0.0.1","--quiet" `
+            -PassThru
+          try {
+            Start-Sleep -Seconds 5
+            $anonymous = curl.exe --silent --output NUL --write-out "%{http_code}" `
+              http://127.0.0.1:18086/status
+            if ($anonymous -ne "401") { throw "anonymous status was $anonymous" }
+            curl.exe --silent --show-error --fail --dump-header headers.txt `
+              --header "Authorization: Bearer ci-hosted-contract-key" `
+              --header "Origin: https://screenpilot.tech" `
+              http://127.0.0.1:18086/api/metrics --output metrics.json
+            findstr.exe /C:"Access-Control-Allow-Origin: https://screenpilot.tech" headers.txt
+            findstr.exe /C:'"cloudEgressEnabled":false' metrics.json
+          } finally {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+          }
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+  deployment-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject unresolved deployment conflicts and placeholders
+        run: |
+          ! grep -REn '^(<<<<<<<|=======|>>>>>>>)' \
+            Dockerfile docker-compose.yml docker/nginx.conf
+          ! grep -REni '(python|powershell|pwsh)' \
+            Dockerfile docker-compose.yml docker/nginx.conf
+      - name: Validate Compose profiles
+        run: |
+          docker compose config --quiet
+          docker compose --profile ollama-cpu config --quiet
+          docker compose --profile ollama-gpu config --quiet
+      - name: Verify inference remains private
+        run: |
+          docker compose --profile ollama-cpu config --format json > /tmp/cpu.json
+          docker compose --profile ollama-gpu config --format json > /tmp/gpu.json
+          jq -e '.services["ollama-cpu"].ports == null' /tmp/cpu.json
+          jq -e '.services["ollama-gpu"].ports == null' /tmp/gpu.json
+      - name: Verify hosted UI uses same-origin API
+        run: |
+          ! grep -En 'https?://(localhost|127\.0\.0\.1)' \
+            sites/screenpilot.tech/gui/screenpilot-hosted.js
+          grep -Fq "https://api.screenpilot.tech" \
+            sites/screenpilot.tech/gui/screenpilot-hosted.js
+          grep -Fq "_hostedApiBase" \
+            sites/screenpilot.tech/gui/ide_chatbot_standalone.html
+      - name: Build TLS gateway image
+        run: docker build --tag rawrxd/gateway:ci .
+      - name: Validate nginx TLS configuration
+        run: |
+          mkdir -p /tmp/rawrxd-tls
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -subj /CN=rawrxd-ci.invalid \
+            -keyout /tmp/rawrxd-tls/key.pem \
+            -out /tmp/rawrxd-tls/cert.pem
+          docker run --rm \
+            -v /tmp/rawrxd-tls:/etc/nginx/ssl:ro \
+            rawrxd/gateway:ci nginx -t
+      - name: Package deployment bundle
+        run: |
+          mkdir rawrxd-deployment
+          cp Dockerfile docker-compose.yml rawrxd-deployment/
+          mkdir -p rawrxd-deployment/docker rawrxd-deployment/site
+          cp docker/nginx.conf docker/ssl/README.md rawrxd-deployment/docker/
+          cp -R sites/screenpilot.tech/. rawrxd-deployment/site/
+          rm -rf rawrxd-deployment/site/.git
+          tar -czf rawrxd-deployment.tar.gz rawrxd-deployment
+      - uses: actions/upload-artifact@v4
         with:
-          python-version: '3.11'
+          name: rawrxd-deployment
+          path: rawrxd-deployment.tar.gz
+          if-no-files-found: error
+          retention-days: 14
 
-      - name: Install Python dependencies
-        working-directory: RawrXD-ModelLoader/services
-        run: pip install -r requirements.txt
-
-      - name: Start HexMag Test Swarm (background on port 8001)
-        working-directory: RawrXD-ModelLoader
-        shell: pwsh
+  hosted-gates:
+    if: always()
+    needs: [native-hosted, deployment-config]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every hosted production gate
+        env:
+          NATIVE_RESULT: ${{ needs.native-hosted.result }}
+          DEPLOYMENT_RESULT: ${{ needs.deployment-config.result }}
         run: |
-          Start-Process python -ArgumentList @('hexmag_engine.py', '--port', '8001') -NoNewWindow
-          do {
-            Start-Sleep -Seconds 1
-            $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-          } while ($r -ne 200)
-
-      - name: Smoke-test /ask and /agent endpoints
-        working-directory: RawrXD-ModelLoader/services
-        shell: pwsh
-        run: python test_smoke.py
-
-      - name: Kill test swarm
-        if: always()
-        shell: pwsh
-        run: taskkill /F /IM python.exe
+          test "$NATIVE_RESULT" = success
+          test "$DEPLOYMENT_RESULT" = success

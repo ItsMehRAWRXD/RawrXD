@@ -74,6 +74,9 @@ SwarmWorker::~SwarmWorker() {
 
 bool SwarmWorker::start(const DscConfig& config) {
     if (m_running.load()) return false;
+    if (config.requireAttestation && strnlen_s(config.sharedSecret, 64) < 32) {
+        return false;
+    }
 
     m_config = config;
     m_shutdownRequested.store(false);
@@ -243,11 +246,16 @@ DWORD WINAPI SwarmWorker::receiverThread(LPVOID param) {
 
         // Validate via MASM
         if (Swarm_ValidatePacketHeader(buf.data()) != 0) continue;
+        SwarmOpcode opcode = static_cast<SwarmOpcode>(hdr->opcode);
+        if (!SwarmProtocol::payloadSizeValid(opcode, payloadLen)) {
+            self->disconnect();
+            return 0;
+        }
 
         const uint8_t* payloadPtr = buf.data() + SWARM_HEADER_SIZE;
 
         // Dispatch
-        switch (static_cast<SwarmOpcode>(hdr->opcode)) {
+        switch (opcode) {
             case SwarmOpcode::TaskPush:
                 self->handleTaskPush(
                     reinterpret_cast<const TaskPushPayload*>(payloadPtr),
@@ -360,6 +368,13 @@ DWORD WINAPI SwarmWorker::taskExecutorThread(LPVOID param) {
 
 void SwarmWorker::handleTaskPush(const TaskPushPayload* payload,
                                    const uint8_t* extraData, uint32_t extraLen) {
+    uint64_t declared = static_cast<uint64_t>(payload->sourceFileLen) +
+                        static_cast<uint64_t>(payload->compilerArgsLen);
+    if (!payload->sourceFileLen || !payload->compilerArgsLen ||
+        declared > extraLen || declared > SWARM_MAX_PAYLOAD - sizeof(TaskPushPayload)) {
+        disconnect();
+        return;
+    }
     WorkerTask task;
     task.taskId = payload->taskId;
     task.taskType = static_cast<SwarmTaskType>(payload->taskType);
@@ -397,48 +412,41 @@ void SwarmWorker::handleTaskPush(const TaskPushPayload* payload,
 }
 
 void SwarmWorker::handleAttestRequest(const AttestRequestPayload* payload) {
+    if (!payload || payload->requiredVersion != SWARM_VERSION ||
+        strnlen_s(m_config.sharedSecret, 64) < 32) {
+        disconnect();
+        return;
+    }
     AttestResponsePayload resp = {};
     memcpy(resp.hwid, m_localNodeId, 16);
     resp.protocolVersion = SWARM_VERSION;
     resp.fitnessScore = m_fitnessScore;
     resp.uptimeMs = SwarmTime::nowMs();
 
-    // Compute HMAC-SHA256(sharedSecret, challenge) for node attestation
-    {
-        BCRYPT_ALG_HANDLE hAlg = nullptr;
-        BCRYPT_HASH_HANDLE hHash = nullptr;
-        NTSTATUS st = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_SHA256_ALGORITHM,
-                                                   nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG);
-        if (BCRYPT_SUCCESS(st)) {
-            // Use the first 32 bytes of shared secret as the HMAC key
-            uint8_t hmacKey[32];
-            for (int i = 0; i < 32; i++) {
-                hmacKey[i] = static_cast<uint8_t>(m_config.sharedSecret[i]);
-            }
-            st = BCryptCreateHash(hAlg, &hHash, nullptr, 0, hmacKey, 32, 0);
-            if (BCRYPT_SUCCESS(st)) {
-                BCryptHashData(hHash, (PUCHAR)payload->challenge, 32, 0);
-                BCryptFinishHash(hHash, resp.challengeResp, 32, 0);
-                BCryptDestroyHash(hHash);
-            }
-            SecureZeroMemory(hmacKey, sizeof(hmacKey));
-            BCryptCloseAlgorithmProvider(hAlg, 0);
-        }
-        if (!BCRYPT_SUCCESS(st)) {
-            // Fallback: BLAKE2b-based MAC if BCrypt HMAC unavailable
-            uint8_t macInput[96]; // challenge(32) + sharedSecret(64)
-            memcpy(macInput, payload->challenge, 32);
-            for (int i = 0; i < 64; i++) {
-                macInput[32 + i] = static_cast<uint8_t>(m_config.sharedSecret[i]);
-            }
-            // Simple hash-based MAC: H(secret || challenge)
-            uint8_t hashBuf[32];
-            // Use the platform hash or a trivial XOR-fold as last resort
-            for (int i = 0; i < 32; i++) {
-                resp.challengeResp[i] = macInput[i] ^ macInput[32 + i] ^ macInput[64 + i % 32];
-            }
-            SecureZeroMemory(macInput, sizeof(macInput));
-        }
+    uint8_t material[40] = {};
+    memcpy(material, payload->challenge, 32);
+    memcpy(material + 32, &payload->nonce, sizeof(payload->nonce));
+    BCRYPT_ALG_HANDLE algorithm = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    NTSTATUS status = BCryptOpenAlgorithmProvider(
+        &algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG);
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptCreateHash(algorithm, &hash, nullptr, 0,
+            reinterpret_cast<PUCHAR>(m_config.sharedSecret), 32, 0);
+    }
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptHashData(hash, material, sizeof(material), 0);
+    }
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptFinishHash(hash, resp.challengeResp,
+                                  sizeof(resp.challengeResp), 0);
+    }
+    if (hash) BCryptDestroyHash(hash);
+    if (algorithm) BCryptCloseAlgorithmProvider(algorithm, 0);
+    SecureZeroMemory(material, sizeof(material));
+    if (!BCRYPT_SUCCESS(status)) {
+        disconnect();
+        return;
     }
 
     sendPacketToLeader(SwarmOpcode::AttestResponse, &resp, sizeof(resp));

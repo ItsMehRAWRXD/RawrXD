@@ -13,6 +13,8 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "Win32IDE_ShellLayout.hpp"
+#include "Win32IDE_MainMenuAuthority.hpp"
 #include "IDELogger.h"
 #include "../SettingsManager.h"
 #include <nlohmann/json.hpp>
@@ -95,12 +97,17 @@ void Win32IDE::loadSession() {
 // ============================================================================
 void Win32IDE::restoreSession() {
     LOG_INFO("Restoring IDE session...");
+    HWND traceHwnd = m_hwndMain;
     
     try {
         std::string path = getSessionFilePath();
         std::ifstream in(path);
         if (!in.is_open()) {
             LOG_INFO("No session file found at: " + path);
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_JSON_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_TABS_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_PANELS_OK");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_PATH_OK");
             return;
         }
         
@@ -109,6 +116,7 @@ void Win32IDE::restoreSession() {
         in.close();
         
         nlohmann::json session = nlohmann::json::parse(content);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_JSON_OK");
         
         // Validate version (accept v1 and v2)
         int version = session.value("version", 0);
@@ -124,55 +132,42 @@ void Win32IDE::restoreSession() {
         std::string schemaVer = session.value("schemaVersion", "1.0");
         LOG_INFO("Session: schema version " + schemaVer + ", data version " + std::to_string(version));
         
-        // Restore each section
+        // Restore each section (UI/metadata only — no synchronous model load)
         restoreSessionTabs(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_TABS_OK");
         restoreSessionPanelState(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_PANELS_OK");
         restoreSessionEditorState(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_EDITOR_OK");
         restoreSessionAnnotations(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_ANNOTATIONS_OK");
         restoreSessionTheme(session);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_THEME_OK");
         
-        // Restore working directory
+        // NEVER touch CWD synchronously here — SetCurrentDirectory/GetFileAttributes/
+        // GetDriveType on a dead/mapped root (observed: G:\rawrxd-p1-promote\...) can hang
+        // the UI thread for minutes and block RESTORE_SESSION_COMPLETE.
         std::string cwd = session.value("workingDirectory", "");
-        if (!cwd.empty()) {
-            SetCurrentDirectoryA(cwd.c_str());
+        if (!cwd.empty() && m_hwndMain && IsWindow(m_hwndMain)) {
+            m_pendingRestoreCwd = cwd;
+            PostMessageA(m_hwndMain, WM_APP_RESTORE_CWD, 0, 0);
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_CWD_DEFERRED");
+        } else {
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_CWD_OK");
         }
 
-        // Restore loaded model after the working directory is set so relative paths resolve.
+        // Record desired model path and POST async restore — never loadGGUFModel here.
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_BEGIN");
         std::string savedModelPath = session.value("loadedModelPath", "");
         if (!savedModelPath.empty()) {
-            bool restoredModel = false;
-            DWORD modelAttrs = GetFileAttributesA(savedModelPath.c_str());
-            if (modelAttrs != INVALID_FILE_ATTRIBUTES && !(modelAttrs & FILE_ATTRIBUTE_DIRECTORY)) {
-                LOG_INFO("Session: restoring model from path " + savedModelPath);
-                // Keep path even if StreamingGGUFLoader is not ready yet (created in deferredHeavyInit).
-                setLoadedModelPath(savedModelPath);
-                bool ggufOk = false;
-                if (m_ggufLoader) {
-                    ggufOk = loadGGUFModel(savedModelPath);
-                    if (ggufOk) {
-                        initializeInference();
-                        initBackendManager();
-                        initLLMRouter();
-                    }
-                } else {
-                    LOG_WARNING("Session: StreamingGGUFLoader not ready — deferring GGUF metadata load");
-                    // WM_APP+201 handler reloads from getLoadedModelPath() once init completes.
-                    PostMessageA(m_hwndMain, WM_APP + 201, 0, 0);
-                }
-                bool bridgeOk = loadModelForInference(savedModelPath);
-                restoredModel = ggufOk || bridgeOk || !savedModelPath.empty();
-            } else {
-                LOG_INFO("Session: attempting logical model restore via bridge for " + savedModelPath);
-                restoredModel = ensureAgenticBridgeHasModel(savedModelPath);
-                if (!restoredModel) {
-                    LOG_WARNING("Session model missing or unavailable: " + savedModelPath);
-                }
-            }
-
-            if (!restoredModel) {
-                m_loadedModelPath.clear();
-            }
+            // Do not GetFileAttributes here (same hang class as CWD). Record + defer.
+            LOG_INFO("Session: recording model path for deferred restore: " + savedModelPath);
+            setLoadedModelPath(savedModelPath);
+            m_pendingApp201ModelLoad = true;
+            if (m_hwndMain && IsWindow(m_hwndMain))
+                PostMessage(m_hwndMain, WM_APP_RESTORE_MODEL, 0, 0);
         }
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MODEL_PATH_OK");
         
         m_sessionRestored = true;
         LOG_INFO("Session restored successfully.");
@@ -180,13 +175,16 @@ void Win32IDE::restoreSession() {
         // v1→v2 write-once migration: if we just loaded a v1 session,
         // re-save immediately as v2 so the legacy format is retired on disk.
         if (version == 1) {
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MIGRATE_BEGIN");
             LOG_INFO("Session: performing v1→v2 migration write...");
             saveSession();
             LOG_INFO("Session: v1→v2 migration complete — legacy format retired.");
+            RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "RESTORE_SESSION_MIGRATE_OK");
         }
         
     } catch (const std::exception& e) {
         LOG_ERROR("Session restore error: " + std::string(e.what()));
+        RawrXD::MainMenuAuthority::TraceLine("RESTORE_SESSION_ERROR what=%s", e.what());
     }
 }
 
@@ -257,6 +255,8 @@ void Win32IDE::saveSessionPanelState(nlohmann::json& session) {
 }
 
 void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
+    if (RawrXD::ShellLayout::RebuildActive())
+        return;
     if (!session.contains("panel")) return;
     
     const auto& panel = session["panel"];
@@ -389,7 +389,11 @@ void Win32IDE::saveSessionTheme(nlohmann::json& session) {
 }
 
 void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
-    if (!session.contains("theme")) return;
+    if (!session.contains("theme")) {
+        // No theme block: still force opaque (session without theme must not leave layered alpha=0).
+        setWindowTransparency(255);
+        return;
+    }
 
     const auto& theme = session["theme"];
     std::string savedName = theme.value("name", "");
@@ -420,10 +424,14 @@ void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
     applyTheme();
     applyThemeToAllControls();
 
-    // Restore transparency (clamp to 30-255 for safety)
+    // Restore transparency ONLY when session explicitly enabled it.
+    // Alpha alone must not make launch see-through (END_WITHOUT_ONE → E2E gated).
+    const bool wantTransparency = theme.value("transparency", false);
     BYTE alpha = (BYTE)std::clamp(savedAlpha, 30, 255);
-    if (alpha < 255) {
+    if (wantTransparency && alpha < 255) {
         setWindowTransparency(alpha);
+    } else {
+        setWindowTransparency(255);
     }
 
     // Re-trigger syntax coloring with restored theme palette

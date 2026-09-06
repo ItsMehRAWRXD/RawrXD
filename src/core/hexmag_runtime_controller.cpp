@@ -86,15 +86,19 @@ ControllerResult HexMagRuntimeController::sequenceClientResult(
                           "STALE_GENERATION");
     }
 
-    const bool pathUnavailable =
+    // Default ClientIdentity.clientPath is "UNAVAILABLE" — that alone is not a
+    // backend failure (scripted certs inject candidates without fillIdentity).
+    // Require transport failure signals: !clientSuccess and/or explicit diagnostics.
+    const bool pathMarkedUnavailable =
         c.trace.id.clientPath
         && std::strcmp(c.trace.id.clientPath, "UNAVAILABLE") == 0;
-    if (pathUnavailable
-        || c.trace.diagnostic.find("unavailable") != std::string::npos
+    const bool unavailableDiag =
+        c.trace.diagnostic.find("unavailable") != std::string::npos
         || c.ask.error.find("unavailable") != std::string::npos
         || c.ask.error.find("fail-closed") != std::string::npos
         || c.ask.error.find("HexMag_Init failed") != std::string::npos
-        || c.ask.error.find("no transport") != std::string::npos) {
+        || c.ask.error.find("no transport") != std::string::npos;
+    if (unavailableDiag || (!c.clientSuccess && pathMarkedUnavailable)) {
         return failClosed(std::move(r), ControllerFail::BackendFailure,
                           "BACKEND_FAILURE");
     }

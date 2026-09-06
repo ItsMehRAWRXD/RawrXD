@@ -21,7 +21,13 @@
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include "Win32IDE_SubAgent.h"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#endif
+#include "../command/CommandBroker.h"
+#include "../command/CapabilityProfile.h"
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -37,6 +43,12 @@ bool envDisablesCapabilityHotpatch(const char* varName)
     char buf[12] = {};
     const DWORD n = GetEnvironmentVariableA(varName, buf, static_cast<DWORD>(sizeof(buf)));
     return n > 0 && (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' || buf[0] == 'y' || buf[0] == 'Y');
+}
+
+bool bridgeLoadSkipsDeep2()
+{
+    return envDisablesCapabilityHotpatch("RAWRXD_FORCE_CPU_INFERENCE") ||
+           envDisablesCapabilityHotpatch("RAWRXD_BRIDGE_CPU_ONLY");
 }
 
 }  // namespace
@@ -386,16 +398,22 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
             response = pr.correctedOutput;
             LOG_INFO("AgenticPuppeteer correction applied");
         }
-    }
-    {
+
+        // Hotpatch rewrite is opt-in with autoCorrect. Never apply on
+        // CorrectionAction::None / RetryWithBias / Escalate — those used to
+        // assign an uninitialized correctedBuf into the answer.
         char correctedBuf[65536];
+        correctedBuf[0] = '\0';
         CorrectionOutcome hot = AgenticHotpatchOrchestrator::instance().analyzeAndCorrect(
-            response.c_str(), response.size(), refinedPrompt.c_str(), refinedPrompt.size(), correctedBuf,
-            sizeof(correctedBuf));
-        if (hot.success && hot.detail && correctedBuf[0] != '\0')
+            response.c_str(), response.size(), refinedPrompt.c_str(), refinedPrompt.size(),
+            correctedBuf, sizeof(correctedBuf));
+        if (hot.success &&
+            hot.actionTaken == CorrectionAction::RewriteOutput &&
+            correctedBuf[0] != '\0')
         {
             response.assign(correctedBuf);
-            LOG_INFO("AgenticHotpatchOrchestrator correction applied: " + std::string(hot.detail ? hot.detail : ""));
+            LOG_INFO("AgenticHotpatchOrchestrator rewrite applied: " +
+                     std::string(hot.detail ? hot.detail : ""));
         }
     }
 
@@ -1145,27 +1163,69 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
     auto* mgr = GetSubAgentManager();
     if (!mgr)
         return false;
+
+    std::string toolName = "unknown";
+    auto toolPos = modelOutput.find("tool:");
+    if (toolPos == std::string::npos)
+        toolPos = modelOutput.find("TOOL:");
+    if (toolPos != std::string::npos)
+    {
+        size_t nameStart = toolPos + 5;
+        while (nameStart < modelOutput.size() && modelOutput[nameStart] == ' ')
+            nameStart++;
+        size_t nameEnd = modelOutput.find_first_of(" \n\r({[", nameStart);
+        if (nameEnd == std::string::npos)
+            nameEnd = modelOutput.size();
+        toolName = modelOutput.substr(nameStart, nameEnd - nameStart);
+        for (auto& c : toolName)
+            c = static_cast<char>(::tolower(static_cast<unsigned char>(c)));
+    }
+
+    using RawrXD::Command::CapDestructive;
+    using RawrXD::Command::CapEdit;
+    using RawrXD::Command::CapExecute;
+    using RawrXD::Command::CapRead;
+    using RawrXD::Command::Capability;
+    using RawrXD::Command::CommandBroker;
+    Capability need = CapRead;
+    if (toolName == "write_file" || toolName == "replace_in_file" ||
+        toolName == "propose_multifile_edits")
+        need = CapEdit;
+    else if (toolName == "delete_file")
+        need = CapDestructive;
+    else if (toolName == "execute_command" || toolName == "run_shell")
+        need = CapExecute;
+
+    if (need == CapEdit || need == CapDestructive || need == CapExecute) {
+        if (!CommandBroker::instance().checkCap(need)) {
+            const auto approval = CommandBroker::instance().requestApproval(
+                toolName, "Agent tool requires capability gate", need);
+            if (approval.needsApproval) {
+                toolResult = approval.text.empty()
+                                 ? ("Approval required for tool: " + toolName)
+                                 : approval.text;
+                return true;
+            }
+            if (!approval.ok) {
+                toolResult = approval.text.empty()
+                                 ? ("Capability denied for tool: " + toolName)
+                                 : approval.text;
+                return true;
+            }
+        }
+    }
+
+    // Build-mode edit staging: prefer propose/diff over direct disk write.
+    if (m_ide && (toolName == "write_file" || toolName == "replace_in_file")) {
+        // Best-effort: if output embeds a path+content protocol, stage it.
+        // Direct dispatch still runs for structured SubAgent tool JSON.
+    }
+
     bool dispatched = mgr->dispatchToolCall("bridge", modelOutput, toolResult);
 
     // Phase 4B: Choke Point 2 — hookToolResult at the dispatch funnel
-    // Every tool result flows through here, regardless of caller (Autonomy, Bridge, etc.)
     if (dispatched && m_ide)
     {
-        // Extract tool name from the model output (first tool: directive)
-        std::string toolName = "unknown";
-        auto toolPos = modelOutput.find("tool:");
-        if (toolPos == std::string::npos)
-            toolPos = modelOutput.find("TOOL:");
-        if (toolPos != std::string::npos)
-        {
-            size_t nameStart = toolPos + 5;
-            while (nameStart < modelOutput.size() && modelOutput[nameStart] == ' ')
-                nameStart++;
-            size_t nameEnd = modelOutput.find_first_of(" \n\r({[", nameStart);
-            if (nameEnd == std::string::npos)
-                nameEnd = modelOutput.size();
-            toolName = modelOutput.substr(nameStart, nameEnd - nameStart);
-        }
         FailureClassification toolFailure = m_ide->hookToolResult(toolName, toolResult);
         if (toolFailure.reason != AgentFailureType::None)
         {
@@ -1182,8 +1242,54 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
 // Model Loading
 // ============================================================================
 
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+void AgenticBridge::p1praWitnessLoadMemberAddrs() const noexcept
+{
+    P1PRA_Witness("P1PRA_LOAD", "member_addrs");
+    char buf[320]{};
+    snprintf(buf, sizeof(buf),
+             "bridge=%p deep2Ready_addr=%p modelName_addr=%p "
+             "loadErrorCallback_addr=%p ide_addr=%p",
+             static_cast<const void*>(this),
+             static_cast<const void*>(&m_deep2Ready),
+             static_cast<const void*>(&m_modelName),
+             static_cast<const void*>(&m_modelLoadErrorCallback),
+             static_cast<const void*>(m_ide));
+    P1PRA_Witness("P1PRA_LOAD", buf);
+}
+
+static const char* p1praBackendSelectLabel() noexcept
+{
+    if (bridgeLoadSkipsDeep2())
+        return "backend=cpu";
+    char buf[64] = {};
+    if (GetEnvironmentVariableA("RAWRXD_FORCE_CPU_INFERENCE", buf, sizeof(buf)) > 0)
+        return "backend=cpu";
+    if (GetEnvironmentVariableA("RAWRXD_BRIDGE_CPU_ONLY", buf, sizeof(buf)) > 0)
+        return "backend=cpu";
+    if (GetEnvironmentVariableA("RAWRXD_DISABLE_GPU", buf, sizeof(buf)) > 0)
+        return "backend=cpu";
+    if (GetEnvironmentVariableA("VK_ICD_FILENAMES", buf, sizeof(buf)) > 0 &&
+        strstr(buf, "__no_vulkan") != nullptr)
+        return "backend=cpu";
+    return "backend=vulkan";
+}
+
+static void p1praWitnessLoadBindSuccess() noexcept
+{
+    P1PRA_Witness("P1PRA_LOAD", "engine_bind_begin");
+    P1PRA_Witness("P1PRA_LOAD", "engine_bind_end");
+    P1PRA_Witness("P1PRA_LOAD", "bridge_load_exit_ok");
+}
+#endif
+
 bool AgenticBridge::LoadModel(const std::string& path)
 {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_LOAD", "bridge_load_enter");
+    p1praWitnessLoadMemberAddrs();
+    P1PRA_Witness("P1PRA_LOAD", "backend_select_enter");
+#endif
     SCOPED_METRIC("agentic.load_model");
     METRICS.increment("agentic.model_load_attempts");
     if (!m_initialized)
@@ -1192,13 +1298,24 @@ bool AgenticBridge::LoadModel(const std::string& path)
     m_deep2Ready = false;
     m_deep2ModelPath.clear();
 
+    const bool cpuOnlyLane = bridgeLoadSkipsDeep2();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_LOAD",
+                    cpuOnlyLane ? "backend=cpu" : p1praBackendSelectLabel());
+    P1PRA_Witness("P1PRA_LOAD", "backend_select_exit");
+#endif
+
     // Prefer Deep2 sovereign runtime (no Ollama). Fail closed into CPU only if Deep2 cannot load.
+    if (!cpuOnlyLane)
     {
         const std::string workDir =
             m_workspaceRoot.empty()
                 ? std::filesystem::current_path().string()
                 : m_workspaceRoot;
         auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
+#endif
         if (orch.Initialize(workDir, "deep2", path)) {
             m_deep2Ready = true;
             m_deep2ModelPath = path;
@@ -1206,26 +1323,73 @@ bool AgenticBridge::LoadModel(const std::string& path)
             m_lastModelLoadError.clear();
             LOG_INFO("Model loaded via Deep2 OrchestratorBridge: " + path);
             SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
+            p1praWitnessLoadBindSuccess();
+#endif
             return true;
         }
         std::string deep2Err;
         if (RawrXD::Deep2LoadModelForBridge(path, deep2Err)) {
-            // Loader OK but orchestrator init failed — still mark Deep2 path for retry on execute.
             if (orch.Initialize(workDir, "deep2", path)) {
                 m_deep2Ready = true;
                 m_deep2ModelPath = path;
                 m_modelName = path;
                 m_lastModelLoadError.clear();
                 LOG_INFO("Model loaded via Deep2LoadModelForBridge + Orchestrator: " + path);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
+                p1praWitnessLoadBindSuccess();
+#endif
                 return true;
             }
         }
         LOG_WARNING("Deep2 load failed for AgenticBridge (" + deep2Err +
                     "); falling back to CPUInferenceEngine");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "backend=cpu");
+#endif
+    }
+    else
+    {
+        LOG_INFO("AgenticBridge: skipping Deep2 orchestrator (CPU-only env)");
+        const auto cpu = SharedCpuEngine();
+        auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "bridge_mem_plugin_begin");
+        P1PRA_AgentDbg("H8", "AgenticBridge", "before_RegisterMemoryPlugin", 0, 0, 0);
+#endif
+        cpu->RegisterMemoryPlugin(memPlugin);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "bridge_mem_plugin_ok");
+        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
+        P1PRA_AgentDbg("H8", "AgenticBridge", "before_cpu_LoadModel", 0, 0, 0);
+#endif
+        if (cpu->LoadModel(path))
+        {
+            m_modelName = path;
+            m_lastModelLoadError.clear();
+            SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
+            p1praWitnessLoadBindSuccess();
+#endif
+            return true;
+        }
+        m_lastModelLoadError = cpu->GetLastLoadErrorMessage();
+        if (m_lastModelLoadError.empty())
+            m_lastModelLoadError = "CPU LoadModel failed in AgenticBridge";
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
+#endif
+        return false;
     }
 
     if (g_agentEngine)
     {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
+#endif
         bool success = g_agentEngine->loadLocalModel(path);
         if (success)
         {
@@ -1233,6 +1397,10 @@ bool AgenticBridge::LoadModel(const std::string& path)
             m_lastModelLoadError.clear();
             LOG_INFO("Model loaded in bridge (CPU fallback): " + m_modelName);
             SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
+            p1praWitnessLoadBindSuccess();
+#endif
         }
         else
         {
@@ -1245,6 +1413,9 @@ bool AgenticBridge::LoadModel(const std::string& path)
             {
                 m_modelLoadErrorCallback(m_lastModelLoadError);
             }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
+#endif
         }
         return success;
     }
@@ -1253,6 +1424,9 @@ bool AgenticBridge::LoadModel(const std::string& path)
     {
         m_modelLoadErrorCallback(m_lastModelLoadError);
     }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
+#endif
     return false;
 }
 

@@ -185,14 +185,14 @@ KimiK2Config ParseKimiK2ConfigFromGGUF(const std::unordered_map<std::string, std
 
     ParseUint32WithFallback(metadata, config.hiddenDim, {"llama.embedding_length", "llama.hidden_size", "embedding_length"});
     ParseUint32WithFallback(metadata, config.numLayers, {"llama.block_count", "llama.num_hidden_layers", "num_layers"});
-    ParseUint32WithFallback(metadata, config.numHeads, {"llama.attention.head_count", "num_attention_heads"});
-    ParseUint32WithFallback(metadata, config.numKVHeads, {"llama.attention.head_count_kv", "num_key_value_heads"});
+    ParseUint32WithFallback(metadata, config.numHeads, {"llama.attention.head_count", "deepseek2.attention.head_count", "num_attention_heads"});
+    ParseUint32WithFallback(metadata, config.numKVHeads, {"llama.attention.head_count_kv", "deepseek2.attention.head_count_kv", "num_key_value_heads"});
 
-    ParseUint32WithFallback(metadata, config.qLoraRank, {"llama.attention.q_lora_rank", "q_lora_rank"});
-    ParseUint32WithFallback(metadata, config.kvLoraRank, {"llama.kv_lora_rank", "kv_lora_rank"});
-    ParseUint32WithFallback(metadata, config.qkNopeHeadDim, {"llama.qk_nope_head_dim", "qk_nope_head_dim"});
-    ParseUint32WithFallback(metadata, config.qkRopeHeadDim, {"llama.qk_rope_head_dim", "qk_rope_head_dim"});
-    ParseUint32WithFallback(metadata, config.vHeadDim, {"llama.v_head_dim", "v_head_dim", "llama.attention.value_length"});
+    ParseUint32WithFallback(metadata, config.qLoraRank, {"llama.attention.q_lora_rank", "deepseek2.attention.q_lora_rank", "q_lora_rank"});
+    ParseUint32WithFallback(metadata, config.kvLoraRank, {"llama.kv_lora_rank", "deepseek2.attention.kv_lora_rank", "kv_lora_rank"});
+    ParseUint32WithFallback(metadata, config.qkNopeHeadDim, {"llama.qk_nope_head_dim", "deepseek2.attention.qk_nope_head_dim", "qk_nope_head_dim"});
+    ParseUint32WithFallback(metadata, config.qkRopeHeadDim, {"llama.qk_rope_head_dim", "deepseek2.rope.dimension_count", "qk_rope_head_dim"});
+    ParseUint32WithFallback(metadata, config.vHeadDim, {"llama.v_head_dim", "deepseek2.attention.v_head_dim", "v_head_dim", "llama.attention.value_length"});
 
     ParseUint32WithFallback(metadata, config.numExperts, {"llama.expert_count", "llama.n_expert", "n_expert"});
     ParseUint32WithFallback(metadata, config.expertsPerToken, {"llama.expert_used_count", "llama.experts_per_token", "experts_per_token"});
@@ -217,8 +217,8 @@ KimiK2Config ParseKimiK2ConfigFromGGUF(const std::unordered_map<std::string, std
     ParseFloatWithFallback(metadata, config.routedScalingFactor, {"llama.moe.routed_scaling_factor", "llama.routed_scaling_factor", "routed_scaling_factor"}, 2.827f);
 
     ParseFloatWithFallback(metadata, config.normRmsEps, {"llama.attention.layer_norm_rms_epsilon", "llama.attention.layer_norm_rms_epsilon", "attention.layer_norm_rms_epsilon"}, 1e-5f);
-    ParseFloatWithFallback(metadata, config.ropeTheta, {"llama.rope.freq_base", "rope.freq_base", "rope_theta"}, 50000.0f);
-    ParseFloatWithFallback(metadata, config.ropeScalingFactor, {"llama.rope.scaling.factor", "rope.scaling.factor", "rope_scaling_factor"}, 64.0f);
+    ParseFloatWithFallback(metadata, config.ropeTheta, {"llama.rope.freq_base", "deepseek2.rope.freq_base", "rope.freq_base", "rope_theta"}, 50000.0f);
+    ParseFloatWithFallback(metadata, config.ropeScalingFactor, {"llama.rope.scaling.factor", "deepseek2.rope.scaling.factor", "rope.scaling.factor", "rope_scaling_factor"}, 64.0f);
     ParseFloatWithFallback(metadata, config.ropeScalingYarnLogMultiplier, {"llama.rope.scaling.yarn_log_multiplier", "rope.scaling.yarn_log_multiplier"}, 0.1f);
     ParseUint32WithFallback(metadata, config.ropeScalingOriginalMax, {"llama.rope.scaling.original_max_position_embeddings", "rope.scaling.original_max_position_embeddings"});
 

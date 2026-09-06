@@ -611,9 +611,9 @@ CommandResult handleAgentConfigureModel(const CommandContext& ctx) {
     if (ctx.args && ctx.args[0]) {
         std::string backend(ctx.args);
         std::string endpoint;
-        if (backend == "deep2") endpoint = "http://localhost:11434";
-        else if (backend == "openai") endpoint = "https://api.openai.com/v1";
-        else if (backend == "claude") endpoint = "https://api.anthropic.com/v1";
+        if (backend == "deep2") endpoint = "";
+        else if (backend == "openai") endpoint = "";
+        else if (backend == "claude") endpoint = "";
         else if (backend == "local") endpoint = "local://gguf";
         else endpoint = backend; // treat as custom URL
         getModelInvoker().setLLMBackend(backend, endpoint);
@@ -1299,9 +1299,9 @@ CommandResult handleAiModelSelect(const CommandContext& ctx) {
         // Map friendly names to actual model identifiers
         std::string endpoint;
         if (model == "gpt-4o" || model == "gpt-4-turbo") {
-            getModelInvoker().setLLMBackend("openai", "https://api.openai.com/v1");
+            getModelInvoker().setLLMBackend("openai", "");
         } else if (model == "claude-3-sonnet" || model == "claude") {
-            getModelInvoker().setLLMBackend("claude", "https://api.anthropic.com/v1");
+            getModelInvoker().setLLMBackend("claude", "");
         } else if (model == "local-gguf") {
             getModelInvoker().setLLMBackend("local", "local://gguf");
         } else {
@@ -2196,12 +2196,12 @@ CommandResult handleAutonomyStatus(const CommandContext& ctx) {
 CommandResult handleBackendSwitchOpenai(const CommandContext& ctx) {
     ctx.output("[Backend] Switching to OpenAI GPT-4o...\n");
     // Actually perform the backend switch (same pattern as handleAgentConfigureModel)
-    getModelInvoker().setLLMBackend("openai", "https://api.openai.com/v1/chat/completions");
+    getModelInvoker().setLLMBackend("openai", "");
     // Verify the switch took effect
     auto current = getModelInvoker().getLLMBackend();
     char buf[256];
     if (current == "openai") {
-        ctx.output("Backend: openai @ https://api.openai.com/v1/chat/completions\n");
+        ctx.output("Backend: openai @ \n");
         ctx.output("Model:   gpt-4o (128K context)\n");
         ctx.output("[Backend] Switch successful.\n");
     } else {
@@ -2465,7 +2465,7 @@ CommandResult handleFileModelFromHf(const CommandContext& ctx) {
     ctx.output(buf);
     // Launch curl download in background
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "curl -L -o model.gguf \"https://huggingface.co/%s/resolve/main/model.gguf\" 2>&1", ctx.args);
+    snprintf(cmd, sizeof(cmd), "curl -L -o model.gguf \"local-hf://%s/resolve/main/model.gguf\" 2>&1", ctx.args);
     FILE* pipe = _popen(cmd, "r");
     if (pipe) {
         char line[512]; int lc = 0;
@@ -4230,8 +4230,8 @@ CommandResult handleRouterShowCapabilities(const CommandContext& ctx) {
     // Query registered backends from known endpoint configurations
     const char* knownBackends[][3] = {
         {"deep2",    "http://localhost:11436",             "local inference, streaming"},
-        {"openai",   "https://api.openai.com/v1",          "GPT models, function calling"},
-        {"claude",   "https://api.anthropic.com/v1",       "Claude models, tool use"},
+        {"openai",   "",          "GPT models, function calling"},
+        {"claude",   "",       "Claude models, tool use"},
         {"directml", "local://dml",                        "local GPU inference (DirectML)"},
         {"local",    "local://gguf",                       "CPU/Vulkan GGUF inference"}
     };

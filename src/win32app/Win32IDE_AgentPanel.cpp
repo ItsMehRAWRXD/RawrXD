@@ -23,6 +23,9 @@
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "IDEConfig.h"
+#ifdef RAWRXD_TOKEN_PRESSURE_VALVE
+#include "TokenPressure.hpp"
+#endif
 
 #include "../agentic/ToolCallResult.h"
 #include "../agentic/DiffEngine.h"
@@ -140,6 +143,27 @@ public:
         edit.diff = DiffEngine::ComputeDiff("", content);
         edit.agentReasoning = reasoning;
 
+        m_edits.push_back(edit);
+        return true;
+    }
+
+    bool ProposeFullReplace(const std::string& path,
+                            const std::string& content,
+                            const std::string& reasoning = "") {
+        std::string original;
+        if (fs::exists(path)) {
+            std::ifstream file(path, std::ios::binary);
+            if (!file.is_open()) return false;
+            std::ostringstream ss;
+            ss << file.rdbuf();
+            original = ss.str();
+        }
+        FileEdit edit;
+        edit.path = path;
+        edit.originalContent = original;
+        edit.proposedContent = content;
+        edit.diff = DiffEngine::ComputeDiff(original, content);
+        edit.agentReasoning = reasoning;
         m_edits.push_back(edit);
         return true;
     }
@@ -513,7 +537,7 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         AgentLoopConfig config;
         config.maxSteps = std::clamp(IDEConfig::getInstance().getInt("agent.cycleCount", 10), 1, 99);
         // model left empty — auto-detected from Ollama /api/tags at runtime
-        config.ollamaBaseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
+        config.ollamaBaseUrl = m_ollamaBaseUrl.empty() ? "" : m_ollamaBaseUrl;
         config.workingDirectory = m_settings.workingDirectory;
 
         // Populate open files
@@ -808,5 +832,50 @@ void Win32IDE::onBoundedAgentLoop() {
                        "Agent", OutputSeverity::Info);
         startAgentSession(promptText);
     }
+}
+
+bool Win32IDE::stageCommandBuildEdit(const std::string& path, const std::string& newContent) {
+    if (path.empty()) return false;
+    if (!s_agentSession)
+        s_agentSession = std::make_unique<AgentEditSession>();
+    const bool ok = s_agentSession->ProposeFullReplace(path, newContent, "Build-mode staged edit");
+    if (!ok) return false;
+    appendCommandConversation("[Build] Proposed edit: " + path +
+                              " — review diff, then Allow to apply / Deny to reject.");
+    refreshAgentDiffDisplay();
+    return true;
+}
+
+void Win32IDE::runAgentCommandInTerminal(const std::string& command) {
+    if (command.empty()) return;
+    if (m_terminalPanes.empty())
+        createTerminalPane(Win32TerminalManager::CommandPrompt, "Agent");
+    TerminalPane* pane = nullptr;
+    for (auto& p : m_terminalPanes) {
+        if (p.manager) {
+            pane = &p;
+            break;
+        }
+    }
+    if (!pane || !pane->manager) return;
+    if (!pane->manager->isRunning())
+        pane->manager->start(Win32TerminalManager::CommandPrompt);
+    pane->manager->onOutput = [this](const std::string& chunk) {
+        if (!chunk.empty())
+            appendCommandConversationStream(chunk);
+    };
+    pane->manager->onError = [this](const std::string& chunk) {
+        if (!chunk.empty())
+            appendCommandConversationStream(chunk);
+    };
+    pane->manager->onFinished = [this](int exitCode) {
+        appendCommandConversation("\n[Terminal] exit=" + std::to_string(exitCode) + "\n");
+#ifdef RAWRXD_TOKEN_PRESSURE_VALVE
+        if (exitCode != 0)
+            token_pressure::ObserveTerminalError();
+#endif
+    };
+    pane->manager->writeInput(command + "\r\n");
+    appendCommandConversation("[Terminal] ran: " + command);
 }
 

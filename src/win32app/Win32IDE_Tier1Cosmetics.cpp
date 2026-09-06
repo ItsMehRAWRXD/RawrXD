@@ -63,6 +63,8 @@
 #define IDM_T1_SETTINGS_GUI 12040
 #define IDM_T1_SETTINGS_SEARCH 12041
 #define IDM_T1_SETTINGS_RESET 12042
+#define IDM_T1_RESOURCE_MAP 12043
+#define IDM_T1_TUNER_SUGGEST 12044
 
 // Welcome Page (12050–12059)
 #define IDM_T1_WELCOME_SHOW 12050
@@ -194,6 +196,16 @@ bool Win32IDE::handleTier1Command(int commandId)
     {
         applyDefaultSettings();
         saveSettings();
+        return true;
+    }
+    if (commandId == IDM_T1_RESOURCE_MAP)
+    {
+        showResourceMapDialog();
+        return true;
+    }
+    if (commandId == IDM_T1_TUNER_SUGGEST)
+    {
+        showTunerSuggestDialog();
         return true;
     }
 
@@ -2494,6 +2506,11 @@ void Win32IDE::shutdownAutoUpdateUI()
 
 void Win32IDE::checkForUpdates()
 {
+#if !RAWRXD_OPTIONAL_CLOUD
+    // EGRESS_001: no GitHub / update egress in default shipping binary.
+    (void)m_updateDismissed;
+    return;
+#else
     if (m_updateDismissed)
         return;
 
@@ -2584,6 +2601,7 @@ void Win32IDE::checkForUpdates()
             }
         });
     checkThread.detach();
+#endif // RAWRXD_OPTIONAL_CLOUD
 }
 
 void Win32IDE::showUpdateNotification()

@@ -41,6 +41,8 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdlib>
+#include <cerrno>
+#include <limits>
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -51,6 +53,17 @@
 #include "gguf_loader.h"
 
 #include <winhttp.h>
+#include <bcrypt.h>
+
+#ifndef RAWRXD_HEADLESS_NATIVE_HEXMAG
+#define RAWRXD_HEADLESS_NATIVE_HEXMAG 0
+#endif
+#ifndef RAWRXD_HEADLESS_NATIVE_SUBAGENT
+#define RAWRXD_HEADLESS_NATIVE_SUBAGENT 0
+#endif
+#if RAWRXD_HEADLESS_NATIVE_HEXMAG
+#include "../core/hexmag_ide_send_path.hpp"
+#endif
 
 // ============================================================================
 // RGUF (RawrXD GGUF Unified Format) — Pack / Inspect / Patch
@@ -80,6 +93,15 @@ public:
 // --- Fix #4: Async-signal-safe shutdown flag ---
 static std::atomic<bool> g_shutdownRequested{false};
 static std::atomic<int> g_signalReceived{0};
+static thread_local bool g_hostedCloudConsent = false;
+
+struct ScopedCloudConsent {
+    bool previous;
+    explicit ScopedCloudConsent(bool enabled) : previous(g_hostedCloudConsent) {
+        g_hostedCloudConsent = enabled;
+    }
+    ~ScopedCloudConsent() { g_hostedCloudConsent = previous; }
+};
 
 static void headlessSignalHandler(int sig) {
     g_signalReceived.store(sig);
@@ -112,29 +134,138 @@ static std::string jsonEscape(const std::string& s) {
     return out;
 }
 
-// --- Fix #8: Simple API key auth ---
-static bool checkApiKey(const std::string& request, const std::string& expectedKey) {
-    if (expectedKey.empty()) return true; // Auth disabled
-    size_t pos = request.find("X-API-Key: ");
-    if (pos == std::string::npos) return false;
-    pos += 11;
-    size_t end = request.find("\r\n", pos);
-    if (end == std::string::npos) end = request.find("\n", pos);
-    std::string provided = (end != std::string::npos) ? request.substr(pos, end - pos) : request.substr(pos);
-    return provided == expectedKey;
+static std::string trimAscii(const std::string& value) {
+    size_t first = 0;
+    while (first < value.size() && (value[first] == ' ' || value[first] == '\t')) ++first;
+    size_t last = value.size();
+    while (last > first && (value[last - 1] == ' ' || value[last - 1] == '\t')) --last;
+    return value.substr(first, last - first);
 }
 
-// --- Fix #10: Path sanitization ---
-static bool isPathSafe(const std::string& path) {
-    if (path.empty()) return false;
-    // Reject path traversal
-    if (path.find("..") != std::string::npos) return false;
-    // Reject absolute paths outside expected dirs (simple check)
-    if (path.find(":") != std::string::npos && path.find("/OllamaModels") == std::string::npos
-        && path.find("/models") == std::string::npos && path.find("/gguf") == std::string::npos) {
-        return false;
+static std::string lowerAscii(std::string value) {
+    for (char& ch : value) {
+        if (ch >= 'A' && ch <= 'Z') ch = static_cast<char>(ch + ('a' - 'A'));
+    }
+    return value;
+}
+
+static std::string requestHeader(const std::string& headers, const char* name) {
+    std::string needle = lowerAscii(name);
+    size_t pos = headers.find('\n');
+    while (pos != std::string::npos && pos + 1 < headers.size()) {
+        size_t end = headers.find('\n', pos + 1);
+        std::string line = headers.substr(pos + 1, end - pos - 1);
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        size_t colon = line.find(':');
+        if (colon != std::string::npos && lowerAscii(line.substr(0, colon)) == needle) {
+            return trimAscii(line.substr(colon + 1));
+        }
+        pos = end;
+    }
+    return {};
+}
+
+static bool constantTimeEqual(const std::string& left, const std::string& right) {
+    size_t count = (left.size() > right.size()) ? left.size() : right.size();
+    size_t diff = left.size() ^ right.size();
+    for (size_t i = 0; i < count; ++i) {
+        unsigned char a = i < left.size() ? static_cast<unsigned char>(left[i]) : 0;
+        unsigned char b = i < right.size() ? static_cast<unsigned char>(right[i]) : 0;
+        diff |= static_cast<size_t>(a ^ b);
+    }
+    return diff == 0;
+}
+
+static bool csvContains(const std::string& csv, const std::string& value) {
+    size_t pos = 0;
+    while (pos <= csv.size()) {
+        size_t end = csv.find(',', pos);
+        std::string item = trimAscii(csv.substr(pos, end - pos));
+        if (item == value) return true;
+        if (end == std::string::npos) break;
+        pos = end + 1;
+    }
+    return false;
+}
+
+static std::string routeScope(const std::string& path, const std::string& method) {
+    if (path == "/api/github/webhook") return "github";
+    if (path.find("/api/model/load") == 0 || path.find("/api/model/unload") == 0) return "models";
+    if (path.find("/api/generate") == 0 || path.find("/api/hexmag/") == 0 ||
+        path == "/api/subagent" || path == "/api/chain" || path == "/ask" ||
+        path == "/v1/chat/completions") return "inference";
+    if (method == "POST" && path.find("/api/instructions/reload") == 0) return "admin";
+    return "read";
+}
+
+static bool isHealthRoute(const std::string& path) {
+    return path == "/health" || path == "/api/health";
+}
+
+static bool authenticateRequest(const std::string& headers,
+                                const HeadlessConfig& config,
+                                const std::string& scope) {
+    if (config.apiKey.empty()) return false;
+    std::string supplied = requestHeader(headers, "x-api-key");
+    if (supplied.empty()) {
+        supplied = requestHeader(headers, "authorization");
+        const std::string prefix = "Bearer ";
+        if (supplied.compare(0, prefix.size(), prefix) != 0) return false;
+        supplied.erase(0, prefix.size());
+    }
+    bool scoped = csvContains(config.apiScopes, scope) ||
+                  csvContains(config.apiScopes, "*");
+    return constantTimeEqual(supplied, config.apiKey) && scoped;
+}
+
+static bool originAllowed(const std::string& headers, const HeadlessConfig& config,
+                          std::string& origin) {
+    origin = requestHeader(headers, "origin");
+    if (origin.empty()) return true;
+    return !config.allowedOrigins.empty() && csvContains(config.allowedOrigins, origin);
+}
+
+static bool isLoopbackAddress(const std::string& address) {
+    return address == "::1" || address == "localhost" ||
+        address.compare(0, 4, "127.") == 0 ||
+        address.compare(0, 11, "::ffff:127.") == 0;
+}
+
+static bool localOriginAllowed(const std::string& origin, int port) {
+    if (origin.empty()) return true;
+    std::string suffix = ":" + std::to_string(port);
+    return origin == "http://127.0.0.1" + suffix ||
+        origin == "http://localhost" + suffix ||
+        origin == "http://[::1]" + suffix;
+}
+
+static bool sendAllBytes(SOCKET socketFd, const char* data, size_t length) {
+    while (length > 0) {
+        int chunk = length > INT_MAX ? INT_MAX : static_cast<int>(length);
+        int sent = send(socketFd, data, chunk, 0);
+        if (sent <= 0) return false;
+        data += sent;
+        length -= static_cast<size_t>(sent);
     }
     return true;
+}
+
+static const char* httpReason(int status) {
+    switch (status) {
+        case 200: return "OK";
+        case 202: return "Accepted";
+        case 204: return "No Content";
+        case 400: return "Bad Request";
+        case 401: return "Unauthorized";
+        case 403: return "Forbidden";
+        case 404: return "Not Found";
+        case 405: return "Method Not Allowed";
+        case 413: return "Payload Too Large";
+        case 429: return "Too Many Requests";
+        case 500: return "Internal Server Error";
+        case 503: return "Service Unavailable";
+        default: return "Error";
+    }
 }
 
 // --- Fix #11: Rate limiter (token bucket) ---
@@ -176,6 +307,293 @@ static bool readEnvFlag(const char* name, bool defaultValue) {
         return false;
     }
     return defaultValue;
+}
+
+static std::string readEnvText(const char* name, const char* fallback = "") {
+    const char* value = std::getenv(name);
+    return (value && value[0]) ? std::string(value) : std::string(fallback);
+}
+
+static uint64_t readEnvUnsigned(const char* name, uint64_t fallback) {
+    const char* value = std::getenv(name);
+    if (!value || !value[0] || value[0] == '-') return fallback;
+    char* end = nullptr;
+    errno = 0;
+    unsigned long long parsed = std::strtoull(value, &end, 10);
+    if (errno != 0 || end == value || *end != '\0') return fallback;
+    return static_cast<uint64_t>(parsed);
+}
+
+struct CloudBudgetReservation {
+    std::atomic<uint64_t>* ledger = nullptr;
+    uint64_t amount = 0;
+
+    ~CloudBudgetReservation() {
+        if (ledger && amount) ledger->fetch_sub(amount, std::memory_order_acq_rel);
+    }
+
+    void settle(uint64_t actual) {
+        if (!ledger) return;
+        if (actual < amount) ledger->fetch_sub(amount - actual, std::memory_order_acq_rel);
+        else if (actual > amount) ledger->fetch_add(actual - amount, std::memory_order_acq_rel);
+        ledger = nullptr;
+        amount = 0;
+    }
+};
+
+static bool checkedCloudCost(uint64_t inputTokens, uint64_t outputTokens,
+                             uint64_t inputRate, uint64_t outputRate,
+                             uint64_t& cost) {
+    if (!inputRate || !outputRate ||
+        inputTokens > std::numeric_limits<uint64_t>::max() / inputRate ||
+        outputTokens > std::numeric_limits<uint64_t>::max() / outputRate) return false;
+    uint64_t inputCost = inputTokens * inputRate;
+    uint64_t outputCost = outputTokens * outputRate;
+    if (inputCost > std::numeric_limits<uint64_t>::max() - outputCost) return false;
+    cost = inputCost + outputCost;
+    return true;
+}
+
+static bool reserveCloudBudget(std::atomic<uint64_t>& ledger, uint64_t budget,
+                               uint64_t inputTokens, uint64_t outputTokens,
+                               uint64_t inputRate, uint64_t outputRate,
+                               CloudBudgetReservation& reservation) {
+    uint64_t amount = 0;
+    if (!budget || !checkedCloudCost(inputTokens, outputTokens, inputRate,
+                                     outputRate, amount)) return false;
+    uint64_t current = ledger.load(std::memory_order_acquire);
+    while (current <= budget && amount <= budget - current) {
+        if (ledger.compare_exchange_weak(current, current + amount,
+                                         std::memory_order_acq_rel,
+                                         std::memory_order_acquire)) {
+            reservation.ledger = &ledger;
+            reservation.amount = amount;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool appendBoundedFile(const std::string& path, const std::string& line,
+                              uint64_t maximumBytes) {
+    HANDLE file = CreateFileA(path.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr,
+                              OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) return false;
+    LARGE_INTEGER size = {};
+    if (!GetFileSizeEx(file, &size) ||
+        static_cast<uint64_t>(size.QuadPart) + line.size() > maximumBytes) {
+        CloseHandle(file);
+        std::string oldPath = path + ".old";
+        DeleteFileA(oldPath.c_str());
+        MoveFileExA(path.c_str(), oldPath.c_str(), MOVEFILE_REPLACE_EXISTING);
+        file = CreateFileA(path.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file == INVALID_HANDLE_VALUE) return false;
+    }
+    DWORD written = 0;
+    bool ok = WriteFile(file, line.data(), static_cast<DWORD>(line.size()),
+                        &written, nullptr) && written == line.size();
+    FlushFileBuffers(file);
+    CloseHandle(file);
+    return ok;
+}
+
+static bool appendBudgetDelta(const std::string& path, int64_t delta) {
+    HANDLE file = CreateFileA(path.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr,
+                              OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) return false;
+    LARGE_INTEGER size = {};
+    std::string line = std::to_string(delta) + "\r\n";
+    if (!GetFileSizeEx(file, &size) ||
+        static_cast<uint64_t>(size.QuadPart) + line.size() > 4ULL * 1024 * 1024) {
+        CloseHandle(file);
+        return false;
+    }
+    DWORD written = 0;
+    bool ok = WriteFile(file, line.data(), static_cast<DWORD>(line.size()),
+                        &written, nullptr) && written == line.size() &&
+              FlushFileBuffers(file);
+    CloseHandle(file);
+    return ok;
+}
+
+static bool loadBudgetLedger(const std::string& path, uint64_t& total) {
+    DWORD attributes = GetFileAttributesA(path.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        DWORD error = GetLastError();
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+            total = 0;
+            return true;
+        }
+        return false;
+    }
+    std::ifstream input(path);
+    if (!input) return false;
+    int64_t delta = 0;
+    int64_t sum = 0;
+    while (input >> delta) {
+        if ((delta > 0 && sum > INT64_MAX - delta) ||
+            (delta < 0 && sum < INT64_MIN - delta)) return false;
+        sum += delta;
+        if (sum < 0) return false;
+    }
+    if (!input.eof()) return false;
+    total = static_cast<uint64_t>(sum);
+    return true;
+}
+
+static void appendAudit(std::mutex& mutex, const HeadlessConfig& config,
+                        const std::string& peer, const std::string& method,
+                        const std::string& path, int status, const char* outcome) {
+    std::lock_guard<std::mutex> lock(mutex);
+    FILETIME ft = {};
+    GetSystemTimeAsFileTime(&ft);
+    ULARGE_INTEGER ticks = {};
+    ticks.LowPart = ft.dwLowDateTime;
+    ticks.HighPart = ft.dwHighDateTime;
+    uint64_t epochMs = (ticks.QuadPart - 116444736000000000ULL) / 10000ULL;
+    std::ostringstream record;
+    record << "{\"ts\":" << epochMs << ",\"peer\":\"" << jsonEscape(peer)
+           << "\",\"method\":\"" << jsonEscape(method) << "\",\"path\":\""
+           << jsonEscape(path) << "\",\"status\":" << status << ",\"outcome\":\""
+           << outcome << "\"}\r\n";
+    appendBoundedFile(config.auditFile, record.str(), 4ULL * 1024 * 1024);
+}
+
+static std::string getPeerId(SOCKET socketFd) {
+    sockaddr_storage address = {};
+    int length = sizeof(address);
+    if (getpeername(socketFd, reinterpret_cast<sockaddr*>(&address), &length) != 0) {
+        return "unknown";
+    }
+    char host[NI_MAXHOST] = {};
+    if (getnameinfo(reinterpret_cast<sockaddr*>(&address), length, host, sizeof(host),
+                    nullptr, 0, NI_NUMERICHOST) != 0) {
+        return "unknown";
+    }
+    return host;
+}
+
+static std::string fullPathName(const std::string& path) {
+    DWORD needed = GetFullPathNameA(path.c_str(), 0, nullptr, nullptr);
+    if (needed == 0 || needed > 32768) return {};
+    std::vector<char> buffer(needed + 1);
+    DWORD actual = GetFullPathNameA(path.c_str(), needed, buffer.data(), nullptr);
+    if (actual == 0 || actual >= needed) return {};
+    std::string result(buffer.data(), actual);
+    while (result.size() > 3 && (result.back() == '\\' || result.back() == '/')) result.pop_back();
+    return result;
+}
+
+static std::string finalExistingPath(const std::string& path, bool directory) {
+    DWORD flags = directory ? FILE_FLAG_BACKUP_SEMANTICS : FILE_ATTRIBUTE_NORMAL;
+    HANDLE handle = CreateFileA(path.c_str(), FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+        OPEN_EXISTING, flags, nullptr);
+    if (handle == INVALID_HANDLE_VALUE) return {};
+    DWORD needed = GetFinalPathNameByHandleA(handle, nullptr, 0, FILE_NAME_NORMALIZED);
+    if (!needed || needed > 32768) {
+        CloseHandle(handle);
+        return {};
+    }
+    std::vector<char> buffer(needed + 1);
+    DWORD actual = GetFinalPathNameByHandleA(
+        handle, buffer.data(), needed, FILE_NAME_NORMALIZED);
+    CloseHandle(handle);
+    if (!actual || actual >= needed) return {};
+    std::string result(buffer.data(), actual);
+    const std::string devicePrefix = "\\\\?\\";
+    if (result.compare(0, devicePrefix.size(), devicePrefix) == 0) {
+        result.erase(0, devicePrefix.size());
+    }
+    while (result.size() > 3 && (result.back() == '\\' || result.back() == '/')) result.pop_back();
+    return result;
+}
+
+static bool pathHasRoot(const std::string& path, const std::string& root) {
+    std::string foldedPath = lowerAscii(path);
+    std::string foldedRoot = lowerAscii(root);
+    if (foldedPath.compare(0, foldedRoot.size(), foldedRoot) != 0) return false;
+    if (foldedPath.size() == foldedRoot.size()) return true;
+    char boundary = foldedPath[foldedRoot.size()];
+    return boundary == '\\' || boundary == '/';
+}
+
+static bool canonicalWorkspacePath(const std::string& input, const std::string& root,
+                                   std::string& resolved) {
+    if (input.empty() || root.empty() || input.find('\0') != std::string::npos) return false;
+    std::string canonicalRoot = finalExistingPath(fullPathName(root), true);
+    if (canonicalRoot.empty()) return false;
+    bool absolute = input.size() > 2 && input[1] == ':';
+    std::string candidate = absolute ? input : canonicalRoot + "\\" + input;
+    resolved = finalExistingPath(fullPathName(candidate), false);
+    return !resolved.empty() && pathHasRoot(resolved, canonicalRoot);
+}
+
+static bool hmacSha256(const std::string& secret, const std::string& data,
+                       std::array<unsigned char, 32>& digest) {
+    BCRYPT_ALG_HANDLE algorithm = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    NTSTATUS status = BCryptOpenAlgorithmProvider(
+        &algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG);
+    if (!BCRYPT_SUCCESS(status)) return false;
+    status = BCryptCreateHash(algorithm, &hash, nullptr, 0,
+        reinterpret_cast<PUCHAR>(const_cast<char*>(secret.data())),
+        static_cast<ULONG>(secret.size()), 0);
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptHashData(hash,
+            reinterpret_cast<PUCHAR>(const_cast<char*>(data.data())),
+            static_cast<ULONG>(data.size()), 0);
+    }
+    if (BCRYPT_SUCCESS(status)) {
+        status = BCryptFinishHash(hash, digest.data(),
+                                  static_cast<ULONG>(digest.size()), 0);
+    }
+    if (hash) BCryptDestroyHash(hash);
+    BCryptCloseAlgorithmProvider(algorithm, 0);
+    return BCRYPT_SUCCESS(status);
+}
+
+static std::string hexLower(const unsigned char* bytes, size_t count) {
+    static const char digits[] = "0123456789abcdef";
+    std::string result(count * 2, '0');
+    for (size_t i = 0; i < count; ++i) {
+        result[i * 2] = digits[bytes[i] >> 4];
+        result[i * 2 + 1] = digits[bytes[i] & 15];
+    }
+    return result;
+}
+
+static bool verifyGitHubSignature(const std::string& headers, const std::string& body,
+                                  const std::string& secret) {
+    if (secret.empty()) return false;
+    std::string supplied = requestHeader(headers, "x-hub-signature-256");
+    const std::string prefix = "sha256=";
+    if (supplied.compare(0, prefix.size(), prefix) != 0) return false;
+    std::array<unsigned char, 32> digest = {};
+    if (!hmacSha256(secret, body, digest)) return false;
+    std::string expected = prefix + hexLower(digest.data(), digest.size());
+    bool valid = constantTimeEqual(supplied, expected);
+    SecureZeroMemory(digest.data(), digest.size());
+    return valid;
+}
+
+static bool readBoundedFile(const char* path, size_t limit, std::string& content) {
+    HANDLE file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE) return false;
+    LARGE_INTEGER size = {};
+    if (!GetFileSizeEx(file, &size) || size.QuadPart < 0 ||
+        static_cast<uint64_t>(size.QuadPart) > limit) {
+        CloseHandle(file);
+        return false;
+    }
+    content.resize(static_cast<size_t>(size.QuadPart));
+    DWORD read = 0;
+    bool ok = content.empty() || ReadFile(file, &content[0],
+        static_cast<DWORD>(content.size()), &read, nullptr);
+    CloseHandle(file);
+    return ok && read == content.size();
 }
 
 
@@ -399,6 +817,60 @@ HeadlessResult HeadlessIDE::initialize(int argc, char* argv[]) {
 
 HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     m_config = config;
+    if (readEnvFlag("RAWRXD_HOSTED_MODE", false)) {
+        m_config.ingressMode = HeadlessIngressMode::Hosted;
+    }
+    if (m_config.apiKey.empty()) {
+        m_config.apiKey = readEnvText("RAWRXD_HOSTED_API_KEY");
+    }
+    if (m_config.apiScopes.empty()) {
+        m_config.apiScopes = readEnvText(
+            "RAWRXD_HOSTED_API_SCOPES", "read,inference,models,github,admin");
+    }
+    if (m_config.allowedOrigins.empty()) {
+        m_config.allowedOrigins = readEnvText("RAWRXD_ALLOWED_ORIGINS");
+    }
+    if (m_config.githubWebhookSecret.empty()) {
+        m_config.githubWebhookSecret = readEnvText("RAWRXD_GITHUB_WEBHOOK_SECRET");
+    }
+    if (m_config.auditFile.empty()) {
+        m_config.auditFile = readEnvText("RAWRXD_AUDIT_FILE", "rawrxd_audit.jsonl");
+    }
+    m_config.allowCloudEgress =
+        m_config.allowCloudEgress || readEnvFlag("RAWRXD_CLOUD_EGRESS", false);
+    if (m_config.cloudBudgetNanodollars == 0) {
+        m_config.cloudBudgetNanodollars =
+            readEnvUnsigned("RAWRXD_CLOUD_BUDGET_NANODOLLARS", 0);
+    }
+    if (m_config.cloudInputNanodollarsPerToken == 0) {
+        m_config.cloudInputNanodollarsPerToken =
+            readEnvUnsigned("RAWRXD_CLOUD_INPUT_NANODOLLARS_PER_TOKEN", 0);
+    }
+    if (m_config.cloudOutputNanodollarsPerToken == 0) {
+        m_config.cloudOutputNanodollarsPerToken =
+            readEnvUnsigned("RAWRXD_CLOUD_OUTPUT_NANODOLLARS_PER_TOKEN", 0);
+    }
+    m_config.cloudMaxInputBytes = static_cast<uint32_t>(readEnvUnsigned(
+        "RAWRXD_CLOUD_MAX_INPUT_BYTES", m_config.cloudMaxInputBytes));
+    m_config.cloudMaxOutputTokens = static_cast<uint32_t>(readEnvUnsigned(
+        "RAWRXD_CLOUD_MAX_OUTPUT_TOKENS", m_config.cloudMaxOutputTokens));
+    if (m_config.cloudBudgetFile.empty()) {
+        m_config.cloudBudgetFile = readEnvText(
+            "RAWRXD_CLOUD_BUDGET_FILE", "rawrxd_cloud_budget.ledger");
+    }
+    if (m_config.allowCloudEgress) {
+        uint64_t persistedSpend = 0;
+        if (!loadBudgetLedger(m_config.cloudBudgetFile, persistedSpend)) {
+            m_config.allowCloudEgress = false;
+        } else {
+            m_cloudReservedNanodollars.store(persistedSpend,
+                                              std::memory_order_release);
+        }
+    }
+    if (m_config.workingDir.empty()) {
+        char current[MAX_PATH] = {};
+        if (GetCurrentDirectoryA(MAX_PATH, current)) m_config.workingDir = current;
+    }
 
     // Breadcrumb file: trace headless init for hang diagnostics
     {
@@ -421,7 +893,6 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
             fclose(f);
         }
     }
-
     // Experimental toggles (env-driven)
     m_expHotpatchEnabled        = readEnvFlag("RAWRXD_ENABLE_70B_HOTPATCH", true);
     m_expLayerEvictionEnabled   = readEnvFlag("RAWRXD_ENABLE_LAYER_EVICTION", true);
@@ -466,36 +937,44 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     tryInit(&HeadlessIDE::initFailureDetection, "FailureDetection");
     tryInit(&HeadlessIDE::initAgentHistory, "AgentHistory");
     tryInit(&HeadlessIDE::initAsmSemantic, "AsmSemantic");
-    tryInit(&HeadlessIDE::initLSPClient, "LSPClient");
-    tryInit(&HeadlessIDE::initHybridBridge, "HybridBridge");
-    tryInit(&HeadlessIDE::initMultiResponse, "MultiResponse");
-    if (m_expGovernorEnabled) {
-        tryInit(&HeadlessIDE::initPhase10, "Phase10-ExecGovernor");
-        m_expGovernorActivated = m_phase10Initialized;
-        if (m_expGovernorActivated) {
-            m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)", OutputSeverity::Info);
-        }
+    if (m_config.mode != HeadlessRunMode::Server) {
+        tryInit(&HeadlessIDE::initLSPClient, "LSPClient");
     } else {
-        m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=false (RAWRXD_ENABLE_GOVERNOR=0)", OutputSeverity::Debug);
+        m_outputSink->appendOutput("LSP client disabled in server profile",
+                                   OutputSeverity::Debug);
+    }
+    if (m_config.mode != HeadlessRunMode::Server) {
+        tryInit(&HeadlessIDE::initHybridBridge, "HybridBridge");
+        tryInit(&HeadlessIDE::initMultiResponse, "MultiResponse");
+        if (m_expGovernorEnabled) {
+            tryInit(&HeadlessIDE::initPhase10, "Phase10-ExecGovernor");
+            m_expGovernorActivated = m_phase10Initialized;
+            if (m_expGovernorActivated) {
+                m_outputSink->appendOutput("[EXPERIMENTAL] governor_activated=true (RAWRXD_ENABLE_GOVERNOR=1)", OutputSeverity::Info);
+            }
+        }
     }
     tryInit(&HeadlessIDE::initPhase11, "Phase11-Swarm");
-    tryInit(&HeadlessIDE::initPhase12, "Phase12-NativeDebug");
-    if (m_expHotpatchEnabled) {
-        tryInit(&HeadlessIDE::initHotpatch, "Hotpatch");
-        m_expHotpatchActivated = m_hotpatchInitialized;
-        if (m_expHotpatchActivated) {
-            m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)", OutputSeverity::Info);
+    if (m_config.mode != HeadlessRunMode::Server) {
+        tryInit(&HeadlessIDE::initPhase12, "Phase12-NativeDebug");
+        if (m_expHotpatchEnabled) {
+            tryInit(&HeadlessIDE::initHotpatch, "Hotpatch");
+            m_expHotpatchActivated = m_hotpatchInitialized;
+            if (m_expHotpatchActivated) {
+                m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=true (RAWRXD_ENABLE_70B_HOTPATCH=1)", OutputSeverity::Info);
+            }
         }
+        if (m_expLayerEvictionEnabled && m_hotpatchInitialized) {
+            m_expLayerEvictionActivated = true;
+            m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)", OutputSeverity::Info);
+        }
+    }
+    if (m_config.mode != HeadlessRunMode::Server) {
+        tryInit(&HeadlessIDE::initInstructions, "Instructions");
     } else {
-        m_outputSink->appendOutput("[EXPERIMENTAL] hotpatch70b_activated=false (RAWRXD_ENABLE_70B_HOTPATCH=0)", OutputSeverity::Debug);
+        m_outputSink->appendOutput("Instructions provider disabled in server profile",
+                                   OutputSeverity::Debug);
     }
-    if (m_expLayerEvictionEnabled && m_hotpatchInitialized) {
-        m_expLayerEvictionActivated = true;
-        m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)", OutputSeverity::Info);
-    } else if (m_expLayerEvictionEnabled) {
-        m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=false (waiting on hotpatch init)", OutputSeverity::Debug);
-    }
-    tryInit(&HeadlessIDE::initInstructions, "Instructions");
 
     // Quantum feature markers (no-op wiring; status/log visibility)
     if (m_expQuantumTimeEnabled) {
@@ -590,6 +1069,12 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[]) {
         if (arg == "--headless") {
             // Already in headless mode (this flag is consumed by main_win32.cpp)
             continue;
+        }
+        else if (arg == "--hosted") {
+            m_config.ingressMode = HeadlessIngressMode::Hosted;
+        }
+        else if (arg == "--local") {
+            m_config.ingressMode = HeadlessIngressMode::Local;
         }
         else if (arg == "--port" && i + 1 < argc) {
             m_config.port = std::atoi(argv[++i]);
@@ -1486,6 +1971,19 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
         }
     }
 
+    // Optional OpenAI-compatible aggregator fallback. This remains fail-closed
+    // unless egress consent, endpoint, key, model, rates, and budget are all set.
+    const char* aggregatorEndpoint = std::getenv("RAWRXD_AGGREGATOR_ENDPOINT");
+    const char* aggregatorKey = std::getenv("RAWRXD_AGGREGATOR_API_KEY");
+    const char* aggregatorModel = std::getenv("RAWRXD_AGGREGATOR_MODEL");
+    if (aggregatorEndpoint && aggregatorEndpoint[0] &&
+        aggregatorKey && aggregatorKey[0] &&
+        aggregatorModel && aggregatorModel[0]) {
+        std::string apiResponse = performCloudInference(
+            aggregatorEndpoint, aggregatorKey, prompt, aggregatorModel);
+        if (!apiResponse.empty()) return apiResponse;
+    }
+
     // Secondary path: route through engine manager if available
     if (m_engineManager) {
         std::string currentId = m_engineManager->GetCurrentEngine();
@@ -1858,322 +2356,507 @@ void HeadlessIDE::serverLoop() {
     }
 }
 
-void HeadlessIDE::handleClient(SOCKET clientFd) {
-    // Fix #7: Read full HTTP request with chunked/buffered reading
-    std::string request;
-    char buf[8192];
-    int bytesRead;
-    bool headersComplete = false;
-    size_t contentLength = 0;
-    size_t bodyBytesRead = 0;
-    
-    // Read headers first
-    while ((bytesRead = recv(clientFd, buf, sizeof(buf) - 1, 0)) > 0) {
-        buf[bytesRead] = '\0';
-        request.append(buf, bytesRead);
-        
-        // Check if we've received the full headers
-        if (!headersComplete) {
-            size_t headerEnd = request.find("\r\n\r\n");
-            if (headerEnd == std::string::npos) {
-                headerEnd = request.find("\n\n");
-            }
-            if (headerEnd != std::string::npos) {
-                headersComplete = true;
-                bodyBytesRead = request.size() - (headerEnd + 4);
-                
-                // Parse Content-Length
-                size_t clPos = request.find("Content-Length: ");
-                if (clPos != std::string::npos) {
-                    size_t clEnd = request.find("\r\n", clPos);
-                    if (clEnd == std::string::npos) clEnd = request.find("\n", clPos);
-                    std::string clStr = request.substr(clPos + 16, clEnd - (clPos + 16));
-                    contentLength = std::stoull(clStr);
-                }
-            }
+bool HeadlessIDE::readHttpRequest(SOCKET clientFd, HostedHttpRequest& parsed,
+                                  int& failureStatus) {
+    constexpr size_t kMaxHeaders = 64 * 1024;
+    constexpr size_t kMaxBody = 1024 * 1024;
+    DWORD timeoutMs = 10000;
+    setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO,
+               reinterpret_cast<const char*>(&timeoutMs), sizeof(timeoutMs));
+    std::string wire;
+    char buffer[8192];
+    size_t headerEnd = std::string::npos;
+    size_t separatorSize = 4;
+    while (headerEnd == std::string::npos) {
+        int received = recv(clientFd, buffer, sizeof(buffer), 0);
+        if (received <= 0) { failureStatus = 400; return false; }
+        wire.append(buffer, static_cast<size_t>(received));
+        headerEnd = wire.find("\r\n\r\n");
+        if (headerEnd == std::string::npos) {
+            headerEnd = wire.find("\n\n");
+            separatorSize = 2;
         }
-        
-        // If we have the full body, stop reading
-        if (headersComplete && bodyBytesRead >= contentLength) {
-            break;
+        if (wire.size() > kMaxHeaders) { failureStatus = 413; return false; }
+    }
+    parsed.headers = wire.substr(0, headerEnd);
+    size_t firstSpace = parsed.headers.find(' ');
+    size_t secondSpace = parsed.headers.find(' ', firstSpace + 1);
+    if (firstSpace == std::string::npos || secondSpace == std::string::npos) {
+        failureStatus = 400; return false;
+    }
+    parsed.method = parsed.headers.substr(0, firstSpace);
+    parsed.path = parsed.headers.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+    size_t query = parsed.path.find('?');
+    if (query != std::string::npos) parsed.path.resize(query);
+    std::string transfer = lowerAscii(requestHeader(parsed.headers, "transfer-encoding"));
+    if (!transfer.empty() && transfer != "identity") { failureStatus = 400; return false; }
+    std::string lengthText = requestHeader(parsed.headers, "content-length");
+    char* end = nullptr;
+    unsigned long long contentLength = lengthText.empty() ? 0 :
+        std::strtoull(lengthText.c_str(), &end, 10);
+    if ((!lengthText.empty() && (!end || *end)) || contentLength > kMaxBody) {
+        failureStatus = 413; return false;
+    }
+    parsed.body = wire.substr(headerEnd + separatorSize);
+    while (parsed.body.size() < contentLength) {
+        int received = recv(clientFd, buffer, sizeof(buffer), 0);
+        if (received <= 0) { failureStatus = 400; return false; }
+        parsed.body.append(buffer, static_cast<size_t>(received));
+        if (parsed.body.size() > kMaxBody) { failureStatus = 413; return false; }
+    }
+    if (parsed.body.size() > contentLength) parsed.body.resize(static_cast<size_t>(contentLength));
+    parsed.peer = getPeerId(clientFd);
+    return true;
+}
+
+bool HeadlessIDE::authorizeHttpRequest(const HostedHttpRequest& request,
+                                       HostedHttpResponse& response) {
+    static RateLimiter limiter(120, 60.0);
+    std::string checkedOrigin;
+    bool localLoopback = m_config.ingressMode == HeadlessIngressMode::Local &&
+        isLoopbackAddress(request.peer) && isLoopbackAddress(m_config.bindAddress);
+    bool acceptedOrigin = localLoopback
+        ? localOriginAllowed(request.origin, m_config.port)
+        : originAllowed(request.headers, m_config, checkedOrigin);
+    if (!acceptedOrigin) {
+        response.status = 403;
+        response.body = "{\"error\":\"origin_denied\"}";
+        return false;
+    }
+    if (isHealthRoute(request.path)) return true;
+    if (!limiter.allow(request.peer)) {
+        response.status = 429;
+        response.body = "{\"error\":\"rate_limit\"}";
+        return false;
+    }
+    if (request.method == "OPTIONS") {
+        if (requestHeader(request.headers, "origin").empty()) {
+            response.status = 403;
+            response.body = "{\"error\":\"origin_required\"}";
+            return false;
         }
-        
-        // Safety: max 10MB total request size
-        if (request.size() > 10 * 1024 * 1024) {
-            std::string error = "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-            send(clientFd, error.c_str(), static_cast<int>(error.size()), 0);
+        response.status = 204;
+        response.body.clear();
+        return true;
+    }
+    bool githubSigned = request.path == "/api/github/webhook" &&
+        verifyGitHubSignature(request.headers, request.body, m_config.githubWebhookSecret);
+    if (request.path == "/api/github/webhook" && !githubSigned) {
+        response.status = 401;
+        response.body = "{\"error\":\"invalid_github_signature\"}";
+        return false;
+    }
+    if (localLoopback) return true;
+    bool apiAuthenticated = authenticateRequest(
+        request.headers, m_config, routeScope(request.path, request.method));
+    if (request.path != "/api/github/webhook" && !apiAuthenticated) {
+        response.status = m_config.apiKey.empty() ? 503 : 401;
+        response.body = m_config.apiKey.empty()
+            ? "{\"error\":\"authentication_not_configured\"}"
+            : "{\"error\":\"unauthorized\"}";
+        return false;
+    }
+    return true;
+}
+
+void HeadlessIDE::streamGenerationResponse(SOCKET clientFd,
+                                           const HostedHttpRequest& request,
+                                           const std::string& prompt,
+                                           const char* protocol,
+                                           HostedHttpResponse& response) {
+    bool ollama = std::strcmp(protocol, "ollama") == 0;
+    bool openai = std::strcmp(protocol, "openai") == 0;
+    std::ostringstream head;
+    head << "HTTP/1.1 200 OK\r\nContent-Type: "
+         << (ollama ? "application/x-ndjson" : "text/event-stream")
+         << "\r\nCache-Control: no-cache\r\nConnection: close\r\n"
+         << "X-Content-Type-Options: nosniff\r\n";
+    if (!request.origin.empty()) {
+        head << "Access-Control-Allow-Origin: " << request.origin << "\r\nVary: Origin\r\n";
+    }
+    head << "\r\n";
+    std::string headers = head.str();
+    sendAllBytes(clientFd, headers.data(), headers.size());
+    runInferenceStreaming(prompt, [clientFd, ollama, openai](const char* token, size_t length) {
+        std::string escaped = jsonEscape(std::string(token, length));
+        std::string frame;
+        if (ollama) {
+            frame = "{\"model\":\"rawrxd\",\"response\":\"" + escaped +
+                "\",\"done\":false}\n";
+        } else if (openai) {
+            frame = "data: {\"id\":\"rawrxd\",\"object\":\"chat.completion.chunk\","
+                "\"choices\":[{\"index\":0,\"delta\":{\"content\":\"" + escaped +
+                "\"},\"finish_reason\":null}]}\n\n";
+        } else {
+            frame = "data: {\"token\":\"" + escaped + "\"}\n\n";
+        }
+        sendAllBytes(clientFd, frame.data(), frame.size());
+    });
+    std::string done;
+    if (ollama) {
+        done = "{\"model\":\"rawrxd\",\"response\":\"\",\"done\":true}\n";
+    } else if (openai) {
+        done = "data: {\"id\":\"rawrxd\",\"object\":\"chat.completion.chunk\","
+            "\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n"
+            "data: [DONE]\n\n";
+    } else {
+        done = "data: [DONE]\n\n";
+    }
+    sendAllBytes(clientFd, done.data(), done.size());
+    response.alreadySent = true;
+}
+
+void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
+                                         const HostedHttpRequest& request,
+                                         HostedHttpResponse& response) {
+    if (request.method != "POST") {
+        response.status = 405;
+        response.body = "{\"error\":\"method_not_allowed\"}";
+        return;
+    }
+    std::string prompt = request.body;
+    bool stream = request.path == "/api/generate";
+    try {
+        auto json = nlohmann::json::parse(request.body);
+        prompt = json.value("prompt", json.value("message", ""));
+        stream = json.value("stream", stream);
+        if (request.path == "/v1/chat/completions") {
+            auto messages = json.value("messages", nlohmann::json::array());
+            if (!messages.empty()) prompt = messages.back().value("content", "");
+        }
+    } catch (...) {}
+    if (requestHeader(request.headers, "accept").find("text/event-stream") !=
+        std::string::npos) {
+        stream = true;
+    }
+    if (prompt.empty() || prompt.size() > 256 * 1024) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_prompt\"}";
+        return;
+    }
+    ScopedCloudConsent cloudConsent(
+        requestHeader(request.headers, "x-rawrxd-cloud-consent") == "1");
+    if (request.path == "/api/generate/stream") {
+        streamGenerationResponse(clientFd, request, prompt, "legacy", response);
+        return;
+    }
+    if (stream && request.path == "/api/generate") {
+        streamGenerationResponse(clientFd, request, prompt, "ollama", response);
+        return;
+    }
+    if (stream && request.path == "/v1/chat/completions") {
+        streamGenerationResponse(clientFd, request, prompt, "openai", response);
+        return;
+    }
+    std::string result = routeInferenceRequest(prompt);
+    if (request.path == "/v1/chat/completions") {
+        response.body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" +
+            jsonEscape(result) + "\"}}]}";
+    } else {
+        response.body = "{\"response\":\"" + jsonEscape(result) + "\"}";
+    }
+}
+
+void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
+                                     HostedHttpResponse& response) {
+#if !RAWRXD_HEADLESS_NATIVE_HEXMAG
+    (void)request;
+    response.status = 503;
+    response.body = "{\"error\":\"hexmag_unavailable_on_platform\"}";
+#else
+    nlohmann::json input;
+    try { input = nlohmann::json::parse(request.body); }
+    catch (...) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_json\"}";
+        return;
+    }
+    nlohmann::json steps = nlohmann::json::array();
+    if (request.path == "/api/chain") {
+        steps = input.value("steps", nlohmann::json::array());
+    } else {
+        steps.push_back(input);
+    }
+    if (!steps.is_array() || steps.empty() || steps.size() > 8) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_hexmag_steps\"}";
+        return;
+    }
+    nlohmann::json results = nlohmann::json::array();
+    bool allFinal = true;
+    for (const auto& step : steps) {
+        std::string prompt = step.value("prompt",
+            step.value("task", step.value("question", "")));
+        std::string context = step.value("context", "");
+        if (prompt.empty() || prompt.size() > 256 * 1024 || context.size() > 256 * 1024) {
+            response.status = 400;
+            response.body = "{\"error\":\"invalid_hexmag_request\"}";
             return;
         }
+        const auto result =
+            RawrXD::HexMag::ideHexMagSendPath().operatorTurn(prompt, context);
+        std::string answer = !result.lastClient.ask.answer.empty()
+            ? result.lastClient.ask.answer : result.lastClient.ask.selectedCandidate;
+        bool final = result.finalAuthority && result.finalize.allowed;
+        allFinal = allFinal && final;
+        results.push_back({{"final", final}, {"needInput", result.needInputLatched},
+            {"generation", result.generation}, {"output", answer},
+            {"diagnostic", result.diagnostic}});
+        if (result.needInputLatched || !final) break;
     }
-    
-    if (request.empty()) return;
+    response.status = allFinal ? 200 : 503;
+    response.body = nlohmann::json({
+        {"success", allFinal}, {"results", results},
+        {"output", results.empty() ? "" : results.back().value("output", "")}
+    }).dump();
+#endif
+}
 
-    // Parse method and path
-    std::string method, path;
-    {
-        size_t sp1 = request.find(' ');
-        size_t sp2 = request.find(' ', sp1 + 1);
-        if (sp1 != std::string::npos && sp2 != std::string::npos) {
-            method = request.substr(0, sp1);
-            path = request.substr(sp1 + 1, sp2 - sp1 - 1);
-        }
-    }
-
-    // Extract body (after double newline)
-    std::string body;
-    {
-        size_t bodyStart = request.find("\r\n\r\n");
-        if (bodyStart != std::string::npos) {
-            body = request.substr(bodyStart + 4);
-        }
-    }
-
-    // Route to handlers (mirrors Win32IDE_LocalServer.cpp endpoints)
-    std::string responseBody;
-    std::string contentType = "application/json";
-    int statusCode = 200;
-
-    // Fix #9: Handle CORS preflight OPTIONS requests
-    if (method == "OPTIONS") {
-        responseBody = "{}";
-        statusCode = 204;
-    }
-    else if (path == "/api/status" || path == "/api/headless/status") {
-        responseBody = getFullStatusDump();
-    }
-    else if (path == "/api/version") {
-        responseBody = "{\"version\":\"" + jsonEscape(VERSION) + "\",\"phase\":\"" + jsonEscape(BUILD_PHASE) + "\",\"mode\":\"headless\"}";
-    }
-    else if (path == "/api/model/info") {
-        responseBody = "{\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") +
-                       ",\"name\":\"" + jsonEscape(m_loadedModelName) + "\"}";
-    }
-    else if (path == "/api/generate" && method == "POST") {
-        // Parse prompt from JSON body
-        std::string prompt;
+void HeadlessIDE::routeNativeRequest(const HostedHttpRequest& request,
+                                     HostedHttpResponse& response) {
+    if ((request.path == "/models" || request.path == "/api/models" ||
+         request.path == "/v1/models") && request.method == "GET") {
+        response.body = getModelsJson();
+    } else if (request.path == "/api/tags" && request.method == "GET") {
+        response.body = getModelsOllamaJson();
+    } else if (request.path == "/api/model/info" && request.method == "GET") {
+        response.body = "{\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") +
+            ",\"name\":\"" + jsonEscape(m_loadedModelName) + "\"}";
+    } else if (request.path == "/api/model/load" && request.method == "POST") {
+        std::string modelPath = request.body;
         try {
-            auto j = nlohmann::json::parse(body);
-            prompt = j.value("prompt", "");
-        } catch (...) {
-            prompt = body;
+            auto json = nlohmann::json::parse(request.body);
+            modelPath = json.value("modelPath", json.value("model", json.value("name", "")));
+        } catch (...) {}
+        std::string resolved;
+        if (!canonicalWorkspacePath(modelPath, m_config.workingDir, resolved)) {
+            response.status = 403;
+            response.body = "{\"success\":false,\"error\":\"workspace_path_denied\"}";
+            return;
         }
-        std::string result = runInference(prompt);
-        responseBody = "{\"response\":\"" + jsonEscape(result) + "\"}";
+        bool loaded = loadModel(resolved);
+        response.status = loaded ? 200 : 400;
+        response.body = "{\"success\":" + std::string(loaded ? "true" : "false") +
+            ",\"model\":\"" + jsonEscape(m_loadedModelName) + "\"}";
+    } else if (request.path == "/api/model/unload" && request.method == "POST") {
+        bool unloaded = unloadModel();
+        response.status = unloaded ? 200 : 400;
+        response.body = "{\"success\":" + std::string(unloaded ? "true" : "false") + "}";
+    } else if (request.path == "/api/engine/capabilities" && request.method == "GET") {
+        response.body = getEngineCapabilitiesJson();
+    } else {
+        response.status = 405;
+        response.body = "{\"error\":\"method_not_allowed\"}";
     }
-    else if (path == "/v1/chat/completions" && method == "POST") {
-        // OpenAI-compatible endpoint
-        std::string prompt;
-        try {
-            auto j = nlohmann::json::parse(body);
-            auto messages = j.value("messages", nlohmann::json::array());
-            if (!messages.empty()) {
-                prompt = messages[messages.size() - 1].value("content", "");
-            }
-        } catch (...) {
-            prompt = body;
+}
+
+bool HeadlessIDE::routeStatusRequest(const HostedHttpRequest& request,
+                                     HostedHttpResponse& response) {
+    const std::string& path = request.path;
+    bool reload = path == "/api/instructions/reload" && request.method == "POST";
+    if (request.method != "GET" && !reload) return false;
+    if (path == "/api/backend/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getBackendStatusString()) + "\"}";
+    } else if (path == "/api/router/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getRouterStatusString()) + "\"}";
+    } else if (path == "/api/governor/status") {
+        response.body = getGovernorStatusJson();
+    } else if (path == "/api/swarm/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getSwarmStatus()) + "\"}";
+    } else if (path == "/api/safety/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getSafetyStatus()) + "\"}";
+    } else if (path == "/api/hotpatch/status") {
+        response.body = getHotpatchStatusJson();
+    } else if (path == "/api/quantum/status") {
+        response.body = getQuantumStatusJson();
+    } else if (path == "/api/debug/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getNativeDebugStatus()) + "\"}";
+    } else if (path == "/api/asm/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getAsmSemanticStatsString()) + "\"}";
+    } else if (path == "/api/lsp/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getLSPStatusString()) + "\"}";
+    } else if (path == "/api/hybrid/status") {
+        response.body = "{\"status\":\"" + jsonEscape(getHybridBridgeStatusString()) + "\"}";
+    } else if (path == "/api/agent/history") {
+        response.body = "{\"stats\":\"" + jsonEscape(getAgentHistoryStats()) + "\"}";
+    } else if (path == "/api/failure/stats") {
+        response.body = "{\"stats\":\"" + jsonEscape(getFailureDetectorStats()) + "\"}";
+    } else if (path == "/api/metrics") {
+        response.body = "{\"requests\":" + std::to_string(m_inferenceRequestCount) +
+            ",\"tokensPerSec\":0,\"memUsedMB\":0,\"ollamaReachable\":" +
+            std::string(getActiveBackendType() == AIBackendType::Ollama ? "true" : "false") +
+            ",\"cloudEgressEnabled\":" +
+            std::string(m_config.allowCloudEgress ? "true" : "false") +
+            ",\"cloudReservedNanodollars\":" +
+            std::to_string(m_cloudReservedNanodollars.load(std::memory_order_acquire)) +
+            ",\"uptimeMs\":" + std::to_string(getUptimeMs()) + "}";
+    } else if (path == "/api/manifest" || path == "/api/features") {
+        response.body = getFeatureManifestJSON();
+    } else if (path.find("/api/instructions") == 0) {
+        if (m_config.mode == HeadlessRunMode::Server) {
+            response.status = 503;
+            response.body = "{\"error\":\"instructions_unavailable_in_server_profile\"}";
+            return true;
         }
-        std::string result = runInference(prompt);
-        responseBody = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + jsonEscape(result) + "\"}}]}";
-    }
-    else if (path == "/api/backend/status") {
-        responseBody = "{\"status\":\"" + getBackendStatusString() + "\"}";
-    }
-    else if (path == "/api/router/status") {
-        responseBody = "{\"status\":\"" + getRouterStatusString() + "\"}";
-    }
-    else if (path == "/api/governor/status") {
-        responseBody = getGovernorStatusJson();
-    }
-    else if (path == "/api/safety/status") {
-        responseBody = "{\"status\":\"" + getSafetyStatus() + "\"}";
-    }
-    else if (path == "/api/swarm/status") {
-        responseBody = "{\"status\":\"" + getSwarmStatus() + "\"}";
-    }
-    else if (path == "/api/debug/status") {
-        responseBody = "{\"status\":\"" + getNativeDebugStatus() + "\"}";
-    }
-    else if (path == "/api/hotpatch/status") {
-        responseBody = getHotpatchStatusJson();
-    }
-    else if (path == "/api/quantum/status") {
-        responseBody = getQuantumStatusJson();
-    }
-    else if (path == "/api/asm/status") {
-        responseBody = "{\"status\":\"" + getAsmSemanticStatsString() + "\"}";
-    }
-    else if (path == "/api/lsp/status") {
-        responseBody = "{\"status\":\"" + getLSPStatusString() + "\"}";
-    }
-    else if (path == "/api/hybrid/status") {
-        responseBody = "{\"status\":\"" + getHybridBridgeStatusString() + "\"}";
-    }
-    else if (path == "/api/agent/history") {
-        responseBody = "{\"stats\":\"" + getAgentHistoryStats() + "\"}";
-    }
-    else if (path == "/api/failure/stats") {
-        responseBody = "{\"stats\":\"" + getFailureDetectorStats() + "\"}";
-    }
-    else if (path == "/api/manifest" || path == "/api/features") {
-        responseBody = getFeatureManifestJSON();
-        if (responseBody.empty()) {
-            responseBody = "{\"features\":\"headless mode\"}";
-        }
-    }
-    else if (path == "/health" || path == "/api/health") {
-        // Fix #19: Deep health check
-        bool ollamaHealthy = false;
-        bool modelHealthy = m_modelLoaded;
-        bool lspHealthy = false;
-        
-        // Quick Ollama probe
-        {
-            RawrXD::Agent::OllamaConfig cfg;
-            cfg.host = "127.0.0.1";
-            cfg.port = 11434;
-            cfg.timeout_ms = 1000;
-            RawrXD::Agent::AgentOllamaClient client(cfg);
-            ollamaHealthy = client.TestConnection();
-        }
-        
-        // LSP health
-        {
-            std::lock_guard<std::mutex> lk(g_embeddedLSPMutex);
-            lspHealthy = g_embeddedLSP && g_embeddedLSP->getState() == RawrXD::LSPServer::ServerState::Running;
-        }
-        
-        std::string overall = (modelHealthy || ollamaHealthy) ? "healthy" : "degraded";
-        responseBody = "{\"status\":\"" + overall + "\",\"mode\":\"headless\",\"uptime\":" +
-                       std::to_string(getUptimeMs()) + ",\"subsystems\":{\"model\":" +
-                       std::string(modelHealthy ? "true" : "false") + ",\"ollama\":" +
-                       std::string(ollamaHealthy ? "true" : "false") + ",\"lsp\":" +
-                       std::string(lspHealthy ? "true" : "false") + "}}";
-    }
-    // ========== Phase 34: Production Instructions Context ==========
-    else if (path == "/api/instructions" && method == "GET") {
-        auto& ip = InstructionsProvider::instance();
-        if (!ip.isLoaded()) ip.loadAll();
-        responseBody = ip.toJSON();
-    }
-    else if (path == "/api/instructions/summary" && method == "GET") {
-        auto& ip = InstructionsProvider::instance();
-        if (!ip.isLoaded()) ip.loadAll();
-        responseBody = ip.toJSONSummary();
-    }
-    else if (path == "/api/instructions/content" && method == "GET") {
-        auto& ip = InstructionsProvider::instance();
-        if (!ip.isLoaded()) ip.loadAll();
-        std::string content = ip.getAllContent();
-        responseBody = "{\"content\":\"" + content + "\"}";
-        // Return raw markdown as text/markdown
-        contentType = "text/markdown; charset=utf-8";
-        responseBody = ip.getAllContent();
-    }
-    else if (path == "/api/instructions/reload" && method == "POST") {
-        auto& ip = InstructionsProvider::instance();
-        auto r = ip.reload();
-        responseBody = "{\"success\":" + std::string(r.success ? "true" : "false") +
-                       ",\"detail\":\"" + std::string(r.detail) + "\"}";
-    }
-    // ========== Phase 35: RawrXD-Native API (Browser → C++ Runtime) ==========
-    // These endpoints restore the original RawrXD backend contract that the
-    // IDE frontend (gui/ide_chatbot.html) was designed for, eliminating the
-    // Ollama-only fallback. The browser now talks directly to the native
-    // C++ runtime via the HeadlessIDE HTTP server.
-    else if (path == "/api/models" && method == "GET") {
-        responseBody = getModelsJson();
-    }
-    else if (path == "/api/model/load" && method == "POST") {
-        std::string modelPath;
-        try {
-            auto j = nlohmann::json::parse(body);
-            modelPath = j.value("modelPath", j.value("model", j.value("name", "")));
-        } catch (...) { modelPath = body; }
-        // Fix #10: Path sanitization
-        if (!isPathSafe(modelPath)) {
-            responseBody = "{\"success\":false,\"error\":\"Invalid path - traversal not allowed\"}";
-            statusCode = 403;
+        auto& provider = InstructionsProvider::instance();
+        if (!provider.isLoaded()) provider.loadAll();
+        if (path == "/api/instructions/reload" && request.method == "POST") {
+            auto result = provider.reload();
+            response.body = "{\"success\":" + std::string(result.success ? "true" : "false") +
+                ",\"detail\":\"" + jsonEscape(result.detail) + "\"}";
+        } else if (path == "/api/instructions/summary") {
+            response.body = provider.toJSONSummary();
+        } else if (path == "/api/instructions/content") {
+            response.contentType = "text/markdown; charset=utf-8";
+            response.body = provider.getAllContent();
         } else {
-            bool ok = !modelPath.empty() && loadModel(modelPath);
-            responseBody = "{\"success\":" + std::string(ok ? "true" : "false") +
-                           ",\"model\":\"" + jsonEscape(m_loadedModelName) + "\"" +
-                           ",\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") + "}";
-            statusCode = ok ? 200 : 400;
+            response.body = provider.toJSON();
         }
+    } else {
+        return false;
     }
-    else if (path == "/api/model/unload" && method == "POST") {
-        bool ok = unloadModel();
-        responseBody = "{\"success\":" + std::string(ok ? "true" : "false") + "}";
-        statusCode = ok ? 200 : 400;
-    }
-    else if (path == "/api/engine/capabilities" && method == "GET") {
-        responseBody = getEngineCapabilitiesJson();
-    }
-    else if (path == "/api/agent/dual/init" && method == "POST") {
-        responseBody = "{\"success\":true,\"agentId\":\"dual-headless-" +
-                       std::to_string(++m_inferenceRequestCount) +
-                       "\",\"status\":\"ready\",\"message\":\"DualAgent initialized (native)\"}";
-    }
-    else if (path == "/api/agent/dual/execute" && method == "POST") {
-        std::string prompt;
-        try {
-            auto j = nlohmann::json::parse(body);
-            prompt = j.value("prompt", "");
-        } catch (...) { prompt = body; }
-        std::string result = runInference(prompt);
-        responseBody = "{\"success\":true,\"output\":\"" + jsonEscape(result) + "\"}";
-    }
-    else if (path == "/api/generate/stream" && method == "POST") {
-        // Fix #3: SSE streaming endpoint
-        std::string prompt;
-        try {
-            auto j = nlohmann::json::parse(body);
-            prompt = j.value("prompt", "");
-        } catch (...) { prompt = body; }
-        
-        // Send SSE headers
-        std::string sseHeaders = "HTTP/1.1 200 OK\r\n";
-        sseHeaders += "Content-Type: text/event-stream\r\n";
-        sseHeaders += "Cache-Control: no-cache\r\n";
-        sseHeaders += "Connection: keep-alive\r\n";
-        sseHeaders += "Access-Control-Allow-Origin: *\r\n";
-        sseHeaders += "\r\n";
-        send(clientFd, sseHeaders.c_str(), static_cast<int>(sseHeaders.size()), 0);
-        
-        // Stream tokens
-        runInferenceStreaming(prompt, [clientFd](const char* token, size_t len) {
-            std::string event = "data: " + std::string(token, len) + "\n\n";
-            send(clientFd, event.c_str(), static_cast<int>(event.size()), 0);
-        });
-        
-        // Send done event
-        std::string done = "data: [DONE]\n\n";
-        send(clientFd, done.c_str(), static_cast<int>(done.size()), 0);
-        return; // Don't send normal response
-    }
-    else if (path == "/api/tags" && method == "GET") {
-        // Ollama-compatible model list (for legacy frontend fallback)
-        responseBody = getModelsOllamaJson();
-    }
-    else {
-        statusCode = 404;
-        responseBody = "{\"error\":\"Not found\",\"path\":\"" + path + "\"}";
-    }
+    return true;
+}
 
-    // Send HTTP response
-    std::ostringstream resp;
-    resp << "HTTP/1.1 " << statusCode << " " << (statusCode == 200 ? "OK" : "Not Found") << "\r\n";
-    resp << "Content-Type: " << contentType << "\r\n";
-    resp << "Content-Length: " << responseBody.size() << "\r\n";
-    resp << "Access-Control-Allow-Origin: *\r\n";
-    resp << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
-    resp << "Access-Control-Allow-Headers: Content-Type, X-API-Key\r\n";
-    resp << "Connection: close\r\n";
-    resp << "\r\n";
-    resp << responseBody;
+void HeadlessIDE::routeGitHubWebhook(const HostedHttpRequest& request,
+                                     HostedHttpResponse& response) {
+    std::string event = requestHeader(request.headers, "x-github-event");
+    std::string delivery = requestHeader(request.headers, "x-github-delivery");
+    if (event.empty() || delivery.empty() || event.size() > 64 || delivery.size() > 128) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_github_headers\"}";
+        return;
+    }
+    std::string repo;
+    std::string action;
+    try {
+        auto json = nlohmann::json::parse(request.body);
+        action = json.value("action", "");
+        if (json.contains("repository")) repo = json["repository"].value("full_name", "");
+    } catch (...) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_json\"}";
+        return;
+    }
+    if (repo.size() > 256 || action.size() > 64) {
+        response.status = 400;
+        response.body = "{\"error\":\"github_metadata_too_large\"}";
+        return;
+    }
+    std::string record = "{\"delivery\":\"" + jsonEscape(delivery) + "\",\"event\":\"" +
+        jsonEscape(event) + "\",\"repository\":\"" + jsonEscape(repo) +
+        "\",\"action\":\"" + jsonEscape(action) + "\",\"state\":\"queued\"}\r\n";
+    bool persisted = false;
+    {
+        std::lock_guard<std::mutex> lock(m_auditMutex);
+        persisted = appendBoundedFile(m_config.workingDir + "\\rawrxd_github_jobs.jsonl",
+                                      record, 8ULL * 1024 * 1024);
+    }
+#if RAWRXD_HEADLESS_NATIVE_HEXMAG
+    if (persisted) {
+        std::string mission = "GitHub " + event + " event for " + repo;
+        if (!action.empty()) mission += " action " + action;
+        const auto result = RawrXD::HexMag::ideHexMagSendPath().operatorTurn(
+            mission, request.body.substr(0, 64 * 1024));
+        bool final = result.finalAuthority && result.finalize.allowed;
+        std::string outcome = "{\"delivery\":\"" + jsonEscape(delivery) +
+            "\",\"state\":\"" + (final ? "completed" : "failed") +
+            "\",\"final\":" + (final ? "true" : "false") +
+            ",\"diagnostic\":\"" + jsonEscape(result.diagnostic) + "\"}\r\n";
+        std::lock_guard<std::mutex> lock(m_auditMutex);
+        persisted = appendBoundedFile(m_config.workingDir + "\\rawrxd_github_jobs.jsonl",
+                                      outcome, 8ULL * 1024 * 1024);
+    }
+#endif
+    response.status = persisted ? 202 : 500;
+    response.body = persisted
+        ? "{\"accepted\":true,\"jobId\":\"" + jsonEscape(delivery) + "\"}"
+        : "{\"error\":\"job_persistence_failed\"}";
+}
 
-    std::string response = resp.str();
-    send(clientFd, response.c_str(), static_cast<int>(response.size()), 0);
+void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& request,
+                                   HostedHttpResponse& response) {
+    const std::string& path = request.path;
+    if (request.method == "OPTIONS") return;
+    if (isHealthRoute(path)) {
+        response.body = "{\"status\":\"ok\",\"mode\":\"" +
+            std::string(m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") +
+            "\",\"authConfigured\":" + (m_config.apiKey.empty() ? "false" : "true") +
+            ",\"uptime\":" + std::to_string(getUptimeMs()) + "}";
+    } else if (path == "/status" || path == "/api/status" || path == "/api/headless/status") {
+        response.body = getFullStatusDump();
+    } else if (path == "/api/version") {
+        response.body = "{\"version\":\"" + jsonEscape(VERSION) + "\",\"mode\":\"" +
+            (m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") + "\"}";
+    } else if (path == "/api/generate" || path == "/api/generate/stream" ||
+               path == "/v1/chat/completions" || path == "/ask") {
+        routeGenerationRequest(clientFd, request, response);
+    } else if (path == "/models" || path == "/api/models" || path == "/v1/models" ||
+               path == "/api/tags" || path.find("/api/model/") == 0 ||
+               path == "/api/engine/capabilities") {
+        routeNativeRequest(request, response);
+    } else if ((path == "/gui" || path == "/gui/") && request.method == "GET") {
+        response.contentType = "text/html; charset=utf-8";
+        if (!readBoundedFile("sites/screenpilot.tech/gui/ide_chatbot_standalone.html",
+                             2 * 1024 * 1024, response.body)) {
+            response.status = 404;
+            response.body = "{\"error\":\"gui_not_found\"}";
+            response.contentType = "application/json; charset=utf-8";
+        }
+    } else if ((path == "/api/hexmag/ask" || path == "/api/subagent" ||
+                path == "/api/chain") && request.method == "POST") {
+        routeHexMagRequest(request, response);
+    } else if (routeStatusRequest(request, response)) {
+        return;
+    } else if (path == "/api/github/webhook" && request.method == "POST") {
+        routeGitHubWebhook(request, response);
+    } else if (path.find("/api/tool") == 0 || path.find("/run-tool") == 0 ||
+               path.find("/api/file") == 0 || path.find("/api/command") == 0) {
+        response.status = 403;
+        response.body = "{\"error\":\"public_command_and_file_routes_disabled\"}";
+    } else {
+        response.status = 404;
+        response.body = "{\"error\":\"not_found\",\"path\":\"" + jsonEscape(path) + "\"}";
+    }
+}
+
+void HeadlessIDE::sendHttpResponse(SOCKET clientFd, const HostedHttpRequest& request,
+                                   const HostedHttpResponse& response) {
+    std::ostringstream wire;
+    wire << "HTTP/1.1 " << response.status << " " << httpReason(response.status) << "\r\n"
+         << "Content-Type: " << response.contentType << "\r\n"
+         << "Content-Length: " << response.body.size() << "\r\n"
+         << "X-Content-Type-Options: nosniff\r\n"
+         << "Cache-Control: no-store\r\n"
+         << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+         << "Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key, "
+            "X-RawrXD-Cloud-Consent, X-GitHub-Event, X-GitHub-Delivery, "
+            "X-Hub-Signature-256\r\n";
+    if (!request.origin.empty()) {
+        wire << "Access-Control-Allow-Origin: " << request.origin << "\r\nVary: Origin\r\n";
+    }
+    if (response.status == 401) wire << "WWW-Authenticate: Bearer realm=\"RawrXD\"\r\n";
+    wire << "Connection: close\r\n\r\n" << response.body;
+    std::string message = wire.str();
+    sendAllBytes(clientFd, message.data(), message.size());
+}
+
+void HeadlessIDE::handleClient(SOCKET clientFd) {
+    HostedHttpRequest request;
+    HostedHttpResponse response;
+    int failureStatus = 400;
+    if (!readHttpRequest(clientFd, request, failureStatus)) {
+        response.status = failureStatus;
+        response.body = "{\"error\":\"invalid_request\"}";
+        sendHttpResponse(clientFd, request, response);
+        return;
+    }
+    request.origin = requestHeader(request.headers, "origin");
+    bool authorized = authorizeHttpRequest(request, response);
+    if (authorized) routeHttpRequest(clientFd, request, response);
+    if (!response.alreadySent) sendHttpResponse(clientFd, request, response);
+    appendAudit(m_auditMutex, m_config, request.peer, request.method, request.path,
+                response.status, authorized ? "handled" : "denied");
 }
 
 // ============================================================================
@@ -2297,7 +2980,16 @@ std::string HeadlessIDE::getEngineCapabilitiesJson() const {
         << "\"phase\":\"" << BUILD_PHASE << "\","
         << "\"backends\":[\"cpu\",\"vulkan\",\"ollama\",\"openai\",\"claude\",\"gemini\"],"
         << "\"features\":[\"moe\",\"flash_attention\",\"quantization\",\"streaming\","
-        << "\"dual_agent\",\"hotpatch\",\"lsp\",\"swarm\",\"replay\"],"
+        << "\"hotpatch\",\"lsp\",\"swarm\",\"replay\""
+#if RAWRXD_HEADLESS_NATIVE_HEXMAG
+        << ",\"hexmag_masm\""
+#endif
+#if RAWRXD_HEADLESS_NATIVE_SUBAGENT
+        << ",\"native_subagent\""
+#endif
+        << "],"
+        << "\"nativeHexMag\":" << (RAWRXD_HEADLESS_NATIVE_HEXMAG ? "true" : "false") << ","
+        << "\"nativeSubagent\":" << (RAWRXD_HEADLESS_NATIVE_SUBAGENT ? "true" : "false") << ","
         << "\"maxContextLength\":131072,"
         << "\"maxBatchSize\":512,"
         << "\"modelLoaded\":" << (m_modelLoaded ? "true" : "false") << ","
@@ -2328,7 +3020,8 @@ std::string HeadlessIDE::getQuantumStatusJson() const {
 std::string HeadlessIDE::getFullStatusDump() const {
     std::ostringstream oss;
     oss << "{\n";
-    oss << "  \"mode\": \"headless\",\n";
+    oss << "  \"mode\": \"" <<
+        (m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") << "\",\n";
     oss << "  \"version\": \"" << VERSION << "\",\n";
     oss << "  \"phase\": \"" << BUILD_PHASE << "\",\n";
     oss << "  \"session\": \"" << m_sessionId << "\",\n";
@@ -2428,6 +3121,16 @@ int HeadlessIDE::runSingleShotMode() {
 
     std::string result = runInference(m_config.prompt);
     m_outputSink->appendOutput(result.c_str(), OutputSeverity::Info);
+
+    // Durable artifact for product-runtime smoke (stdout may be a console).
+    if (FILE* f = nullptr; fopen_s(&f, "headless_oneshot.txt", "wb") == 0 && f) {
+        std::fprintf(f, "PROMPT=%s\n", m_config.prompt.c_str());
+        std::fprintf(f, "MODEL=%s\n", m_loadedModelPath.c_str());
+        std::fprintf(f, "MODEL_LOADED=%d\n", m_modelLoaded ? 1 : 0);
+        std::fprintf(f, "BYTES=%zu\n", result.size());
+        std::fprintf(f, "RESPONSE_BEGIN\n%s\nRESPONSE_END\n", result.c_str());
+        std::fclose(f);
+    }
     return 0;
 }
 
@@ -2963,7 +3666,39 @@ void HeadlessIDE::shutdownAll() {
 // ============================================================================
 std::string HeadlessIDE::performCloudInference(const std::string& endpoint, const std::string& apiKey,
                                                 const std::string& prompt, const std::string& model) {
-    // Simple WinHTTP-based cloud inference
+    if (!m_config.allowCloudEgress || endpoint.rfind("https://", 0) != 0 ||
+        (m_config.ingressMode == HeadlessIngressMode::Hosted && !g_hostedCloudConsent) ||
+        prompt.size() > m_config.cloudMaxInputBytes ||
+        m_config.cloudMaxOutputTokens == 0 || m_config.maxTokens <= 0) {
+        safeAppendOutput("Cloud inference denied by egress or token bounds",
+                         OutputSeverity::Warning);
+        return "";
+    }
+    uint64_t outputLimit = std::min<uint64_t>(
+        static_cast<uint64_t>(m_config.maxTokens), m_config.cloudMaxOutputTokens);
+    uint64_t conservativeInputTokens = static_cast<uint64_t>(prompt.size()) + 128;
+    CloudBudgetReservation reservation;
+    if (!reserveCloudBudget(m_cloudReservedNanodollars,
+                            m_config.cloudBudgetNanodollars,
+                            conservativeInputTokens, outputLimit,
+                            m_config.cloudInputNanodollarsPerToken,
+                            m_config.cloudOutputNanodollarsPerToken,
+                            reservation)) {
+        safeAppendOutput("Cloud inference denied by atomic spend reservation",
+                         OutputSeverity::Warning);
+        return "";
+    }
+    {
+        std::lock_guard<std::mutex> lock(m_auditMutex);
+        if (reservation.amount > static_cast<uint64_t>(INT64_MAX) ||
+            !appendBudgetDelta(m_config.cloudBudgetFile,
+                               static_cast<int64_t>(reservation.amount))) {
+            safeAppendOutput("Cloud inference denied: budget ledger unavailable",
+                             OutputSeverity::Error);
+            return "";
+        }
+    }
+
     HINTERNET hSession = WinHttpOpen(L"RawrXD-Headless/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                                       WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!hSession) return "";
@@ -3006,20 +3741,23 @@ std::string HeadlessIDE::performCloudInference(const std::string& endpoint, cons
 
     // Build JSON payload
     nlohmann::json payload;
-    if (endpoint.find("openai") != std::string::npos) {
+    bool isAnthropic = endpoint.find("anthropic") != std::string::npos;
+    bool isGoogle = endpoint.find("googleapis") != std::string::npos;
+    bool isOpenAICompatible = !isAnthropic && !isGoogle;
+    if (isOpenAICompatible) {
         payload["model"] = model;
         payload["messages"] = nlohmann::json::array({
             {{"role", "user"}, {"content", prompt}}
         });
-        payload["max_tokens"] = m_config.maxTokens;
+        payload["max_tokens"] = outputLimit;
         payload["temperature"] = m_config.temperature;
-    } else if (endpoint.find("anthropic") != std::string::npos) {
+    } else if (isAnthropic) {
         payload["model"] = model;
-        payload["max_tokens"] = m_config.maxTokens;
+        payload["max_tokens"] = outputLimit;
         payload["messages"] = nlohmann::json::array({
             {{"role", "user"}, {"content", prompt}}
         });
-    } else if (endpoint.find("googleapis") != std::string::npos) {
+    } else if (isGoogle) {
         payload["contents"] = nlohmann::json::array({
             {{"role", "user"}, {"parts", {{"text", prompt}}}}
         });
@@ -3061,21 +3799,77 @@ std::string HeadlessIDE::performCloudInference(const std::string& endpoint, cons
     // Parse response
     try {
         auto j = nlohmann::json::parse(response);
-        if (endpoint.find("openai") != std::string::npos) {
+        uint64_t inputTokens = conservativeInputTokens;
+        uint64_t outputTokens = outputLimit;
+        if (j.contains("usage")) {
+            const auto& usage = j["usage"];
+            inputTokens = usage.value("prompt_tokens", usage.value("input_tokens", inputTokens));
+            outputTokens = usage.value("completion_tokens", usage.value("output_tokens", outputTokens));
+        } else if (j.contains("usageMetadata")) {
+            const auto& usage = j["usageMetadata"];
+            inputTokens = usage.value("promptTokenCount", inputTokens);
+            outputTokens = usage.value("candidatesTokenCount", outputTokens);
+        }
+        uint64_t actual = 0;
+        if (!checkedCloudCost(inputTokens, outputTokens,
+                              m_config.cloudInputNanodollarsPerToken,
+                              m_config.cloudOutputNanodollarsPerToken, actual)) {
+            actual = m_config.cloudBudgetNanodollars;
+        }
+        bool settled = true;
+        if (actual != reservation.amount) {
+            uint64_t magnitude = actual < reservation.amount
+                ? reservation.amount - actual : actual - reservation.amount;
+            if (magnitude > static_cast<uint64_t>(INT64_MAX)) {
+                settled = false;
+            } else {
+                int64_t delta = static_cast<int64_t>(magnitude);
+                if (actual < reservation.amount) delta = -delta;
+                std::lock_guard<std::mutex> lock(m_auditMutex);
+                settled = appendBudgetDelta(m_config.cloudBudgetFile, delta);
+            }
+        }
+        if (settled) {
+            reservation.settle(actual);
+        } else {
+            m_cloudReservedNanodollars.store(m_config.cloudBudgetNanodollars,
+                                              std::memory_order_release);
+            reservation.ledger = nullptr;
+            reservation.amount = 0;
+        }
+        safeAppendOutput(("Cloud receipt provider=" + host + " model=" + model +
+                          " input=" + std::to_string(inputTokens) +
+                          " output=" + std::to_string(outputTokens) +
+                          " nanodollars=" + std::to_string(actual)).c_str(),
+                         OutputSeverity::Info);
+        std::ostringstream cloudAudit;
+        cloudAudit << "{\"event\":\"cloud_usage\",\"session\":\""
+                   << jsonEscape(m_sessionId) << "\",\"provider\":\""
+                   << jsonEscape(host) << "\",\"model\":\"" << jsonEscape(model)
+                   << "\",\"inputTokens\":" << inputTokens
+                   << ",\"outputTokens\":" << outputTokens
+                   << ",\"actualNanodollars\":" << actual << "}\r\n";
+        {
+            std::lock_guard<std::mutex> lock(m_auditMutex);
+            appendBoundedFile(m_config.auditFile, cloudAudit.str(), 4ULL * 1024 * 1024);
+        }
+        if (isOpenAICompatible) {
             if (j.contains("choices") && !j["choices"].empty()) {
                 return j["choices"][0]["message"]["content"].get<std::string>();
             }
-        } else if (endpoint.find("anthropic") != std::string::npos) {
+        } else if (isAnthropic) {
             if (j.contains("content") && !j["content"].empty()) {
                 return j["content"][0]["text"].get<std::string>();
             }
-        } else if (endpoint.find("googleapis") != std::string::npos) {
+        } else if (isGoogle) {
             if (j.contains("candidates") && !j["candidates"].empty()) {
                 return j["candidates"][0]["content"]["parts"][0]["text"].get<std::string>();
             }
         }
     } catch (...) {
-        // Return raw response if parsing fails
+        // A provider may still charge an unparseable response. Retain the full
+        // conservative reservation so malformed receipts cannot reopen budget.
+        reservation.settle(reservation.amount);
         return response;
     }
 

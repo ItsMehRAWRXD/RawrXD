@@ -23,6 +23,8 @@
 #include "NVMeStream.h"
 #include "SlidingWindowEngine.h"
 #include "K2GlobalTensorIndex.hpp"
+#include "KimiK2Config.hpp"
+#include "K2NativeStreamGate.hpp"
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
 #include "ElasticResidencyManager.hpp"
@@ -212,9 +214,15 @@ struct EngineConfig {
 // Inference Statistics
 // ============================================================================
 struct InferenceStats {
-    double tokensPerSecond = 0.0;
-    double latencyMs = 0.0;
+    double tokensPerSecond = 0.0;       // E2E: generated / total_wall
+    double latencyMs = 0.0;             // E2E: total_wall / generated
     size_t tokensGenerated = 0;
+    size_t promptTokens = 0;
+    double prefillMs = 0.0;             // wall ms for prompt prefill only
+    double decodeMs = 0.0;              // wall ms for decode loop only
+    double prefillTokensPerSecond = 0.0; // promptTokens / prefill_s
+    double decodeTokensPerSecond = 0.0;  // generated / decode_s
+    double totalWallMs = 0.0;
     size_t cacheHits = 0;
     size_t cacheMisses = 0;
     double memoryBandwidthGBps = 0.0;
@@ -310,6 +318,11 @@ public:
     
     // Unload model and free weight memory
     void unloadModel();
+
+    // K2 Gate 11: index-only shard open + certified partial-forward (no full load)
+    bool openK2ShardDirectory(const std::string& shardDirPath);
+    bool isK2ShardIndexOpen() const { return k2ShardIndexOpen_; }
+    K2NativeStreamGate::Result runK2NativeStreamPartial(const K2NativeStreamGate::Config& cfg);
     
     // Get engine info
     bool isInitialized() const { return initialized; }
@@ -403,6 +416,13 @@ public:
     bool rollbackKernelPatch(const std::string& patchId);
     void emergencyRollbackAllPatches();
     
+    // Advanced System Hotpatching
+    std::string disableTelemetryServices();
+    std::string disableDamSysDriver();
+    std::string disableIFEORedirects();
+    std::string bypassHereticSafety();
+    std::string reprogramPCIeBARs();
+    
     // Tool Call Limit Extension via Hotpatching
     // Dynamically extends the maximum tool iterations limit at runtime
     // Returns patch ID on success, empty string on failure
@@ -470,6 +490,7 @@ public:
     bool enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes);
     void disableMARS();
     bool isMARSEnabled() const { return marsEnabled_; }
+    MARS::MARSController* getMARSController() { return marsController_.get(); }
 
     // Place a model tensor under MARS lease control
     MARS::VRAMLease* placeTensorMARS(
@@ -477,6 +498,18 @@ public:
         const std::string& name,
         size_t bytes,
         float priority = 1.0f);
+
+    // Inventory all loaded WeightTensors into MARS leases (dual-GPU split).
+    struct MARSPlacementReport {
+        size_t placed = 0;
+        size_t skipped = 0;
+        size_t oom = 0;
+        size_t bytesTotal = 0;
+        size_t bytesGpu0 = 0;
+        size_t bytesGpu1 = 0;
+        size_t leaseCount = 0;
+    };
+    MARSPlacementReport placeAllModelTensorsMARS();
 
     // Hotpatch redirect a tensor to a different GPU
     MARS::HotpatchResult redirectTensor(uint64_t tensorId, int targetGPU);
@@ -544,7 +577,9 @@ private:
     // MARS: Dynamic dual-GPU VRAM orchestration
     std::unique_ptr<MARS::MARSController> marsController_;
     bool marsEnabled_ = false;
+    bool marsWeightsPlaced_ = false;
     std::unordered_map<size_t, MARS::VRAMLease*> marsLayerLeases_; // layer -> lease
+    uint64_t marsNextTensorId_ = 1;
     
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
@@ -554,6 +589,8 @@ private:
     std::unique_ptr<gguf_shard_cache::TensorResidencyCache> residencyCache_;
     std::filesystem::path modelDir_;
     bool isMultiShard_ = false;
+    bool k2ShardIndexOpen_ = false;
+    Deep2::KimiK2Config k2ShardConfig_{};
     
     // VAL-051.7: Bounded-window tensor residency manager (legacy)
     std::unique_ptr<ResidencyManager> residencyManager_;

@@ -317,7 +317,7 @@ json ModelInvoker::sendClaudeRequest(const std::string& prompt,
         {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
     });
 
-    std::string resp = httpPost("https://api.anthropic.com/v1/messages",
+    std::string resp = httpPost("",
                                 payload.dump(), m_apiKey,
                                 "x-api-key", m_apiKey, 30000);
     // Note: Claude uses x-api-key header, not Bearer token; we send both
@@ -339,7 +339,7 @@ json ModelInvoker::sendOpenAIRequest(const std::string& prompt,
         {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
     });
 
-    std::string resp = httpPost("https://api.openai.com/v1/chat/completions",
+    std::string resp = httpPost("",
                                 payload.dump(), m_apiKey, {}, {}, 30000);
 
     if (resp.empty()) return {};

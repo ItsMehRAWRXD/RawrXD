@@ -97,10 +97,15 @@ void Win32IDE::initBackendManager()
     auto& ollama = m_backendConfigs[(size_t)AIBackendType::Ollama];
     ollama.type = AIBackendType::Ollama;
     ollama.name = "Ollama";
+#if RAWRXD_OPTIONAL_OLLAMA
     ollama.endpoint = "http://localhost:11434";
-    ollama.model = "";  // Will be populated from Ollama /api/tags or settings
-    ollama.apiKey = "";
     ollama.enabled = true;
+#else
+    ollama.endpoint.clear();
+    ollama.enabled = false;
+#endif
+    ollama.model = "";
+    ollama.apiKey = "";
     ollama.timeoutMs = 30000;
     ollama.maxTokens = 2048;
     ollama.temperature = 0.7f;
@@ -108,7 +113,11 @@ void Win32IDE::initBackendManager()
     auto& openai = m_backendConfigs[(size_t)AIBackendType::OpenAI];
     openai.type = AIBackendType::OpenAI;
     openai.name = "OpenAI";
+#if RAWRXD_OPTIONAL_CLOUD
     openai.endpoint = "https://api.openai.com";
+#else
+    openai.endpoint.clear();
+#endif
     openai.model = "gpt-4o";
     openai.apiKey = "";
     openai.enabled = false;  // Disabled until API key set
@@ -119,7 +128,11 @@ void Win32IDE::initBackendManager()
     auto& claude = m_backendConfigs[(size_t)AIBackendType::Claude];
     claude.type = AIBackendType::Claude;
     claude.name = "Claude";
+#if RAWRXD_OPTIONAL_CLOUD
     claude.endpoint = "https://api.anthropic.com";
+#else
+    claude.endpoint.clear();
+#endif
     claude.model = "claude-sonnet-4-20250514";
     claude.apiKey = "";
     claude.enabled = false;  // Disabled until API key set
@@ -130,7 +143,11 @@ void Win32IDE::initBackendManager()
     auto& gemini = m_backendConfigs[(size_t)AIBackendType::Gemini];
     gemini.type = AIBackendType::Gemini;
     gemini.name = "Gemini";
+#if RAWRXD_OPTIONAL_CLOUD
     gemini.endpoint = "https://generativelanguage.googleapis.com";
+#else
+    gemini.endpoint.clear();
+#endif
     gemini.model = "gemini-2.0-flash";
     gemini.apiKey = "";
     gemini.enabled = false;  // Disabled until API key set

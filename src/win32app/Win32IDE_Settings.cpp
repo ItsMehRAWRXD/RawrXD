@@ -5,6 +5,8 @@
 
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include "../deep2/execution_policy/ExecutionPolicyStore.hpp"
+#include "../deep2/execution_policy/ExecutionPolicyBridge.hpp"
 #include <filesystem>
 #include <fstream>
 #include <immintrin.h>
@@ -422,9 +424,27 @@ bool UpdateSovereignConfig(const SovereignIDEConfig& new_config)
 // Hot-reload dispatcher (for runtime settings changes)
 void HotReloadSettings()
 {
-    // Future: notify all components of settings changes
-    // For now, just reload
     LoadSettingsSovereign(g_sovereign_config);
+
+    // Keep ExecutionPolicy store in sync (IDE toggles ↔ settings file).
+    auto& store = Deep2::Exec::ExecutionPolicyStore::Instance();
+    const char* candidates[] = {
+        "config/rawrxd.settings.yaml",
+        "rawrxd.settings.yaml",
+        nullptr
+    };
+    for (int i = 0; candidates[i]; ++i) {
+        if (std::filesystem::exists(candidates[i])) {
+            store.setPaths(candidates[i], "profiles");
+            break;
+        }
+    }
+    auto r = store.reloadFromDisk();
+    if (r.ok) {
+        OutputDebugStringA(("[HotReloadSettings] ExecutionPolicy "
+                            + r.detail + " version=" + std::to_string(r.version)
+                            + " sha=" + r.policySha + "\n").c_str());
+    }
 }
 
 // Settings Watchdog (1027ns tamper detection)
@@ -474,7 +494,7 @@ void Win32IDE::loadSettings()
     m_settings.aiMaxTokens = 512;
     m_settings.aiContextWindow = 4096;
     m_settings.aiModelPath = "";
-    m_settings.aiOllamaUrl = "http://localhost:11434";
+    m_settings.aiOllamaUrl.clear();  // EGRESS_001: no default remote endpoint
     m_settings.ghostTextEnabled = true;
     m_settings.failureDetectorEnabled = true;
     m_settings.failureMaxRetries = 3;
@@ -487,6 +507,9 @@ void Win32IDE::loadSettings()
     m_settings.minimapEnabled = true;
     m_settings.breadcrumbsEnabled = true;
     m_settings.smoothScrollEnabled = true;
+
+    // ExecutionPolicy: Session > Model > Global (IDE Model Execution category)
+    Deep2::Exec::EnsurePolicyLoaded();
 }
 
 void Win32IDE::saveSettings()
@@ -500,6 +523,12 @@ void Win32IDE::saveSettings()
     config.silence_privilege_warnings = m_settings.silencePrivilegeWarnings;
 
     UpdateSovereignConfig(config);
+
+    // Persist ExecutionPolicy (Model Execution category ↔ YAML)
+    auto& store = Deep2::Exec::ExecutionPolicyStore::Instance();
+    store.saveGlobal();
+    if (!store.modelFingerprint().empty())
+        store.saveModelProfile();
 }
 
 void Win32IDE::applyDefaultSettings()

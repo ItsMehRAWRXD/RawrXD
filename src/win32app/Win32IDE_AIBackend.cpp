@@ -29,7 +29,7 @@ public:
     bool checkConnection() {
         bool secure = false;
         std::string host = "localhost";
-        INTERNET_PORT port = 11434;
+        INTERNET_PORT port = 0;
         std::string path = "/api/tags";
 
         std::string endpoint = baseUrl;
@@ -224,7 +224,7 @@ void Win32IDE::initializeAIBackend()
     // We wrap it here to ensure the onAIBackendVerified() handler is also
     // called when the result arrives.
     HWND hwnd = m_hwndMain;
-    std::string endpoint = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
+    std::string endpoint = m_ollamaBaseUrl.empty() ? "" : m_ollamaBaseUrl;
 
     std::thread([hwnd, endpoint]() {
         ModelConnection conn(endpoint);

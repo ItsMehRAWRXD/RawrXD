@@ -109,6 +109,7 @@ VRAMLease* VRAMManager::Allocate(
     {
         std::lock_guard<std::mutex> slock(statsMutex_);
         stats_.totalAllocated += bytes;
+        stats_.bytesHostToGpu += bytes;
     }
 
     printf("[VRAMManager] Allocated '%s' (%zu bytes) on GPU %d\n",
@@ -133,6 +134,7 @@ bool VRAMManager::Evict(VRAMLease* lease) {
     {
         std::lock_guard<std::mutex> slock(statsMutex_);
         stats_.totalEvicted += bytes;
+        stats_.spillToRam += 1;
     }
 
     if (onEvict_) {
@@ -349,6 +351,17 @@ size_t VRAMManager::GetResidentCount(int gpu) const {
     return count;
 }
 
+std::vector<VRAMLease*> VRAMManager::SnapshotLeases() const {
+    std::lock_guard<std::mutex> lock(leaseMutex_);
+    std::vector<VRAMLease*> out;
+    out.reserve(leases_.size());
+    for (const auto& [id, lease] : leases_) {
+        (void)id;
+        if (lease) out.push_back(lease.get());
+    }
+    return out;
+}
+
 // ============================================================================
 // Dynamic Parity
 // ============================================================================
@@ -360,10 +373,18 @@ void VRAMManager::UpdateGPUState(int gpu, const GPUState& state) {
 }
 
 DynamicParity VRAMManager::GetDynamicParity() const {
-    std::lock_guard<std::mutex> lock(stateMutex_);
+    std::lock_guard<std::mutex> glock(gpuMutex_);
+    std::lock_guard<std::mutex> slock(stateMutex_);
     DynamicParity dp;
-    dp.gpu[0] = gpuState_[0];
-    dp.gpu[1] = gpuState_[1];
+    for (int i = 0; i < 2; ++i) {
+        dp.gpu[i] = gpuState_[i];
+        dp.gpu[i].index = i;
+        dp.gpu[i].vramTotal = gpuTotal_[i];
+        dp.gpu[i].vramUsed = gpuUsed_[i];
+        dp.gpu[i].vramFree = (gpuTotal_[i] > gpuUsed_[i])
+            ? (gpuTotal_[i] - gpuUsed_[i]) : 0;
+        dp.gpu[i].healthy = gpuState_[i].healthy;
+    }
     return dp;
 }
 
@@ -445,6 +466,63 @@ void VRAMManager::ResetStats() {
     stats_ = Stats{};
 }
 
+void VRAMManager::ResetRunPeaks() {
+    {
+        std::lock_guard<std::mutex> glock(gpuMutex_);
+        gpuPeak_[0] = gpuUsed_[0];
+        gpuPeak_[1] = gpuUsed_[1];
+    }
+    std::lock_guard<std::mutex> slock(statsMutex_);
+    stats_.peakUsed[0] = gpuPeak_[0];
+    stats_.peakUsed[1] = gpuPeak_[1];
+    stats_.bytesHostToGpu = 0;
+    stats_.bytesNvmeToRam = 0;
+    stats_.residencyMisses = 0;
+    stats_.spillToRam = 0;
+    stats_.spillToNvme = 0;
+}
+
+void VRAMManager::NoteNvmeToRam(uint64_t bytes) {
+    std::lock_guard<std::mutex> lock(statsMutex_);
+    stats_.bytesNvmeToRam += bytes;
+}
+
+void VRAMManager::NoteResidencyMiss() {
+    std::lock_guard<std::mutex> lock(statsMutex_);
+    stats_.residencyMisses += 1;
+}
+
+void VRAMManager::NoteSpillToNvme() {
+    std::lock_guard<std::mutex> lock(statsMutex_);
+    stats_.spillToNvme += 1;
+}
+
+VRAMManager::LiveSnapshot VRAMManager::SnapshotLive() const {
+    LiveSnapshot s{};
+    {
+        std::lock_guard<std::mutex> lock(gpuMutex_);
+        s.usedVram[0] = gpuUsed_[0];
+        s.usedVram[1] = gpuUsed_[1];
+        s.totalVram[0] = gpuTotal_[0];
+        s.totalVram[1] = gpuTotal_[1];
+        s.peakVram[0] = gpuPeak_[0];
+        s.peakVram[1] = gpuPeak_[1];
+    }
+    {
+        std::lock_guard<std::mutex> lock(statsMutex_);
+        s.bytesHostToGpu = stats_.bytesHostToGpu;
+        s.bytesNvmeToRam = stats_.bytesNvmeToRam;
+        s.migrations = static_cast<uint32_t>(stats_.totalMigrated / (1ULL << 20));
+        if (stats_.totalMigrated > 0 && s.migrations == 0) s.migrations = 1;
+        s.residencyMisses = stats_.residencyMisses;
+        s.spillToRam = stats_.spillToRam;
+        s.spillToNvme = stats_.spillToNvme;
+    }
+    s.peakVramTotal = s.peakVram[0] + s.peakVram[1];
+    s.residentCount = static_cast<uint32_t>(GetResidentCount(0) + GetResidentCount(1));
+    return s;
+}
+
 // ============================================================================
 // Internal
 // ============================================================================
@@ -455,6 +533,8 @@ bool VRAMManager::TryReserveVRAM(int gpu, size_t bytes) {
         return false;
     }
     gpuUsed_[gpu] += bytes;
+    if (gpuUsed_[gpu] > gpuPeak_[gpu])
+        gpuPeak_[gpu] = gpuUsed_[gpu];
     return true;
 }
 

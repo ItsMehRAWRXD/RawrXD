@@ -107,7 +107,7 @@ AgenticDeepThinkingEngine::ThinkingResult AgenticDeepThinkingEngine::think(const
     r.steps.push_back(s1);
 
     ReasoningStep s2;
-    s2.step = ThinkingStep::HypothesisGeneration;
+    s2.step = ThinkingStep::HypothesiGeneration;
     s2.title = "Hypothesis Generation";
     s2.content = "Generated prioritized implementation hypotheses.";
     s2.findings.push_back("Hypothesis A: direct fix path");

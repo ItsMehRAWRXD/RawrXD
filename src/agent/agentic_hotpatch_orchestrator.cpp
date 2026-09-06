@@ -355,8 +355,10 @@ CorrectionOutcome AgenticHotpatchOrchestrator::orchestrateCorrection(
     const InferenceFailureEvent& failure,
     char* outputBuffer, size_t bufferCapacity)
 {
-    // Context-agnostic behavior: hotpatch orchestration is always available.
-    m_enabled = true;
+    if (!m_enabled) {
+        return CorrectionOutcome::error(CorrectionAction::None,
+                                         "Hotpatch orchestrator disabled");
+    }
 
     const CorrectionPolicy* policy = findPolicy(failure.type);
     if (!policy || !policy->enabled) {
@@ -456,6 +458,19 @@ CorrectionOutcome AgenticHotpatchOrchestrator::analyzeAndCorrect(
     const char* prompt, size_t promptLen,
     char* correctedOutput, size_t correctedCapacity)
 {
+    // Always seed the output buffer from the live response. Callers previously
+    // passed an uninitialized stack buffer; Rewrite/Retry paths then ran
+    // proxy rewrites on garbage and could replace a good answer with junk.
+    if (correctedOutput && correctedCapacity > 0) {
+        correctedOutput[0] = '\0';
+        if (output && outputLen > 0) {
+            const size_t n = (outputLen < correctedCapacity - 1) ? outputLen
+                                                                : (correctedCapacity - 1);
+            std::memcpy(correctedOutput, output, n);
+            correctedOutput[n] = '\0';
+        }
+    }
+
     InferenceFailureEvent evt = detectFailure(output, outputLen, prompt, promptLen);
 
     if (evt.type == InferenceFailureType::None) {
@@ -774,11 +789,12 @@ void AgenticHotpatchOrchestrator::setAutoEscalate(bool enabled) {
 void AgenticHotpatchOrchestrator::setModelTemperature(float temperature) {
     m_modelTemperature = clampf(temperature, 0.0f, 2.0f);
 
-    // Keep global controls aligned with temperature profile.
+    // Keep thresholds aligned with temperature profile — do NOT force-enable.
+    // Forcing m_enabled=true here re-armed hotpatch mid-chat and poisoned
+    // Command-home turns after any temperature write.
     const float tNorm = clampf(m_modelTemperature / 1.5f, 0.0f, 1.0f);
     m_confidenceThreshold = clampf(0.8f - (0.6f * tNorm), 0.2f, 0.9f);
     m_maxRetries = 1 + static_cast<int>(tNorm * 5.0f);
-    m_enabled = true;
 }
 
 float AgenticHotpatchOrchestrator::getModelTemperature() const {

@@ -1951,7 +1951,7 @@ TaskResult AgenticTaskGraph::executor_agenticLoop(TaskNode* self, void* context)
     RawrXD::Agent::AgentLoopConfig config;
     config.maxSteps = 8;
     // model left empty — auto-detected from Ollama /api/tags at runtime
-    config.ollamaBaseUrl = "http://localhost:11434";
+    config.ollamaBaseUrl = "";
     config.autoVerify = true;
 
     // Extract working directory from checkpointData if present

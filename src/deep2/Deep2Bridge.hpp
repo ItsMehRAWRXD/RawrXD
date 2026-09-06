@@ -12,6 +12,8 @@
 #include <memory>
 #include <string>
 
+#include "K2NativeStreamGate.hpp"
+
 // Forward declaration for the real engine
 namespace Deep2 { class Deep2Engine; }
 class LlamaNativeBridge;
@@ -72,6 +74,15 @@ enum class EngineStatus : uint8_t {
 using TokenCallback = std::function<void(const char* token, uint32_t index)>;
 using ErrorCallback = std::function<void(const char* message)>;
 
+// Gate 11 — Deep2Bridge → Deep2Engine → K2NativeStream (production dispatch)
+struct K2NativeStreamBridgeResult {
+    K2NativeStreamGate::Result stream;
+    bool deep2BridgeEntered = false;
+    bool deep2EngineEntered = false;
+    bool k2NativeStreamSelected = false;
+    bool noTestHarnessDirectCall = false;
+};
+
 // ============================================================================
 // Deep2Bridge — Native binding to Deep2Engine
 // ============================================================================
@@ -95,6 +106,13 @@ public:
     bool GenerateStream(const char* prompt, TokenCallback onToken, ErrorCallback onError);
     void CancelGeneration();
     bool IsGenerating() const { return m_generating; }
+
+    // Gate 11: production path Deep2Bridge → Deep2Engine → K2NativeStreamGate
+    bool GenerateK2NativeStreamPartial(const char* shardDir,
+                                         const char* prompt,
+                                         uint32_t streamTokens,
+                                         uint32_t layerDepth,
+                                         K2NativeStreamBridgeResult* out);
 
     // Metrics
     struct Metrics {

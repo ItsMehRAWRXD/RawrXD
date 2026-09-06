@@ -79,11 +79,24 @@ struct PluginSignatureResult {
 // Plugin Package Type
 // ============================================================================
 enum class PackageType : uint32_t {
-    NativeDLL       = 0,   // .dll — Authenticode verification
-    VSIX            = 1,   // .vsix — ZIP with signature manifest
-    JSModule        = 2,   // .js — SHA-256 hash check against manifest
-    PythonPackage   = 3,   // .whl/.egg — PGP/GPG signature
-    RawrPlugin      = 4,   // .rawrpkg — Custom format with RSA-4096
+    NativeDLL         = 0,   // .dll — Authenticode verification
+    VSIX              = 1,   // .vsix — VS Code / Visual Studio / forks
+    JSModule          = 2,   // .js — SHA-256 hash check against manifest
+    PythonPackage     = 3,   // .whl/.egg — PGP/GPG signature
+    RawrPlugin        = 4,   // .rawrpkg — Custom format with RSA-4096
+    JetBrainsPlugin   = 5,   // ZIP/JAR + META-INF/plugin.xml
+    EclipseBundle     = 6,   // JAR + plugin.xml / OSGi MANIFEST.MF
+    SublimePackage    = 7,   // .sublime-package (ZIP)
+    NeovimPack        = 8,   // pack/*/start|opt or plugin/*.lua|vim
+    EmacsPackage      = 9,   // .tar/.el / *-pkg.el (ELPA/MELPA)
+    XcodeBundle       = 10,  // .appex / .plugin / Info.plist bundle
+    NetBeansNBM       = 11,  // .nbm (ZIP module)
+    ZedExtension      = 12,  // extension.toml + WASM/crate
+    QtCreatorPlugin   = 13,  // Qt Creator plugin JSON + native
+    NovaExtension     = 14,  // .novaextension
+    AtomPackage       = 15,  // Atom/Pulsar package.json
+    LapcePlugin       = 16,  // Lapce plugin.toml / WASI
+    UnknownArchive    = 17,  // Generic ZIP/JAR pending content sniff
 };
 
 // ============================================================================

@@ -840,7 +840,7 @@ int ModelDownload_ResolveHFUrl(const char* model_id, char* out_url, size_t url_s
     
     // Build HuggingFace download URL
     snprintf(out_url, url_size,
-             "https://huggingface.co/%s/%s/resolve/main/%s",
+             "local-hf://%s/%s/resolve/main/%s",
              org, model, file);
     
     return 0;
@@ -872,10 +872,10 @@ int ModelDownload_ListHFFiles(const char* model_id, char** out_files, int max_fi
     char api_url[512];
     if (strlen(org) > 0) {
         snprintf(api_url, sizeof(api_url), 
-                 "https://huggingface.co/api/models/%s/%s/tree/main", org, model);
+                 "local-hf://api/models/%s/%s/tree/main", org, model);
     } else {
         snprintf(api_url, sizeof(api_url), 
-                 "https://huggingface.co/api/models/%s/tree/main", model);
+                 "local-hf://api/models/%s/tree/main", model);
     }
     
     // Initialize WinINet
@@ -957,10 +957,10 @@ int ModelDownload_GetHFModelInfo(const char* model_id, char* out_info_json, size
     char api_url[512];
     if (strlen(org) > 0) {
         snprintf(api_url, sizeof(api_url),
-                 "https://huggingface.co/api/models/%s/%s", org, model);
+                 "local-hf://api/models/%s/%s", org, model);
     } else {
         snprintf(api_url, sizeof(api_url),
-                 "https://huggingface.co/api/models/%s", model);
+                 "local-hf://api/models/%s", model);
     }
     
     // Initialize WinINet

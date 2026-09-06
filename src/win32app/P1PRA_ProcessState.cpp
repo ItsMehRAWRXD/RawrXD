@@ -4,6 +4,7 @@
 #include "P1_ProductRuntimeAuthority_x64.hpp"
 #include "P1PRA_RuntimeAuthority.hpp"
 #include "../core/GpuDecodeEfficiency.hpp"
+#include "../core/AmdGpuPowerBackend.hpp"
 
 #include <atomic>
 #include <cstdio>
@@ -94,6 +95,7 @@ static void agentDbgAppendLine(const char* line) noexcept
     if (evidencePath[0])
         paths[n++] = evidencePath;
     paths[n++] = "F:\\~dev\\debug-5daacc.log";
+    paths[n++] = "F:\\~dev\\debug-536900.log";
     for (int i = 0; i < n; ++i) {
         bool dup = false;
         for (int j = 0; j < i; ++j) {
@@ -130,7 +132,7 @@ void P1PRA_AgentDbg(const char* hyp, const char* loc, const char* msg,
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     char line[512];
     snprintf(line, sizeof(line),
-             "{\"sessionId\":\"5daacc\",\"hypothesisId\":\"%s\","
+             "{\"sessionId\":\"536900\",\"hypothesisId\":\"%s\","
              "\"location\":\"%s\",\"message\":\"%s\","
              "\"data\":{\"d0\":%llu,\"d1\":%llu,\"d2\":%llu},"
              "\"timestamp\":%llu,\"runId\":\"pre-fix\"}\n",
@@ -712,11 +714,70 @@ extern "C" void P1PRA_UtcShadowSnapLight(void* frameRsp,
     P1PRA_Witness("P1PRA_UTC_SNAP", detail);
 }
 
+// Dual-adapter AMD stacks (iGPU + R9700 + 7800 XT) can AV inside atiadlxx after
+// UI init even when our ADL probe is skipped. Quarantine those faults so E2E
+// inventory/load survives.
+static bool p1praFaultInAmdAdlModule(void* addr) noexcept
+{
+    if (!addr)
+        return false;
+    HMODULE mod = nullptr;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            reinterpret_cast<LPCSTR>(addr), &mod) ||
+        !mod)
+        return false;
+    char path[MAX_PATH] = {};
+    if (!GetModuleFileNameA(mod, path, MAX_PATH))
+        return false;
+    for (char* p = path; *p; ++p) {
+        if (*p >= 'A' && *p <= 'Z')
+            *p = static_cast<char>(*p - 'A' + 'a');
+    }
+    return std::strstr(path, "atiadlxx") != nullptr ||
+           std::strstr(path, "atiadlxy") != nullptr ||
+           std::strstr(path, "amdocl") != nullptr ||
+           std::strstr(path, "amd_ags") != nullptr;
+}
+
+static bool p1praUnwindOneFrameAsFailedCall(CONTEXT* ctx) noexcept
+{
+#ifdef _WIN64
+    if (!ctx || ctx->Rsp < 0x10000ull)
+        return false;
+    MEMORY_BASIC_INFORMATION mbi = {};
+    if (VirtualQuery(reinterpret_cast<void*>(ctx->Rsp), &mbi, sizeof(mbi)) == 0)
+        return false;
+    const DWORD prot = mbi.Protect & 0xFFu;
+    if (prot != PAGE_READONLY && prot != PAGE_READWRITE && prot != PAGE_WRITECOPY &&
+        prot != PAGE_EXECUTE_READ && prot != PAGE_EXECUTE_READWRITE &&
+        prot != PAGE_EXECUTE_WRITECOPY)
+        return false;
+    const ULONG64 ret =
+        *reinterpret_cast<ULONG64*>(static_cast<ULONG_PTR>(ctx->Rsp));
+    if (ret < 0x10000ull)
+        return false;
+    ctx->Rsp += 8;
+    ctx->Rip = ret;
+    ctx->Rax = 0;
+    return true;
+#else
+    (void)ctx;
+    return false;
+#endif
+}
+
 static LONG CALLBACK P1PRA_Veh(EXCEPTION_POINTERS* ep)
 {
     if (!ep || !ep->ExceptionRecord)
         return EXCEPTION_CONTINUE_SEARCH;
-    if (ep->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
+    const DWORD code = ep->ExceptionRecord->ExceptionCode;
+    // Dual-AMD (iGPU+R9700+7800XT) can FailFast with heap corruption after ADL activity.
+    if (code == 0xC0000374ul) {
+        P1PRA_Witness("P1PRA_FAULT", "heap_corruption_c0000374");
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+    if (code != EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_CONTINUE_SEARCH;
     const DWORD tid = GetCurrentThreadId();
     void* rip = ep->ExceptionRecord->ExceptionAddress;
@@ -732,17 +793,21 @@ static LONG CALLBACK P1PRA_Veh(EXCEPTION_POINTERS* ep)
         g_p1praTelemetryStage.load(std::memory_order_acquire);
     const std::uint32_t utcStageId =
         g_p1praUtcStage.load(std::memory_order_acquire);
+    ULONG_PTR faultTarget = 0;
+    ULONG_PTR faultOp = 3;
+    if (ep->ExceptionRecord->NumberParameters >= 2) {
+        faultOp = ep->ExceptionRecord->ExceptionInformation[0];
+        faultTarget = ep->ExceptionRecord->ExceptionInformation[1];
+    }
     char buf[512];
     if (ep->ExceptionRecord->NumberParameters >= 2) {
-        const ULONG_PTR op = ep->ExceptionRecord->ExceptionInformation[0];
-        const ULONG_PTR target = ep->ExceptionRecord->ExceptionInformation[1];
         const char* opStr =
-            (op == 0) ? "read" : (op == 1) ? "write" : "execute";
+            (faultOp == 0) ? "read" : (faultOp == 1) ? "write" : "execute";
         snprintf(buf, sizeof(buf),
                  "code=%08lX tid=%lu rip=%p rsp=%p op=%s target=%p stage=%u telemetry_stage=%u utc_stage=%u",
                  static_cast<unsigned long>(ep->ExceptionRecord->ExceptionCode),
                  static_cast<unsigned long>(tid), rip, rsp, opStr,
-                 reinterpret_cast<void*>(target),
+                 reinterpret_cast<void*>(faultTarget),
                  static_cast<unsigned>(stageId),
                  static_cast<unsigned>(telemetryStageId),
                  static_cast<unsigned>(utcStageId));
@@ -768,6 +833,27 @@ static LONG CALLBACK P1PRA_Veh(EXCEPTION_POINTERS* ep)
         // #region agent log
         P1PRA_DebugLog("H2", "P1PRA_Veh", "access_violation", dbg);
         // #endregion
+    }
+
+    // Dual discrete AMD + iGPU: atiadlxx AVs (null/-1 target) kill startup.
+    // When GPU probe is suppressed, quarantine those faults instead of dying.
+    if (rawrxd::GpuPowerProbeSuppressed() && ep->ContextRecord) {
+        const bool adlMod = p1praFaultInAmdAdlModule(rip);
+        const bool nullIshTarget =
+            faultTarget == ~static_cast<ULONG_PTR>(0) || faultTarget < 0x10000ull;
+        const ULONG_PTR ripVal = reinterpret_cast<ULONG_PTR>(rip);
+        const bool adlRvaHint = ((ripVal & 0xFFFFull) == 0x93C4ull) ||
+                                ((ripVal & 0xFFFFull) == 0x9304ull) ||
+                                ((ripVal & 0xFFFFull) == 0x097Dull);
+        if ((adlMod || (nullIshTarget && adlRvaHint)) &&
+            p1praUnwindOneFrameAsFailedCall(ep->ContextRecord)) {
+            P1PRA_Witness("P1PRA_UI",
+                          adlMod ? "adl_av_swallowed_dual_gpu"
+                                 : "adl_av_swallowed_rva_hint");
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+        if (!adlMod && nullIshTarget && adlRvaHint)
+            P1PRA_Witness("P1PRA_UI", "adl_av_unwind_failed");
     }
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -1006,6 +1092,7 @@ static void witnessStageHook(const char* hook, bool advanced) noexcept
 void P1PRA_ProcessStartup() noexcept
 {
     P1PRA_EnsureVeh();
+    rawrxd::InstallAmdAdlLoadBlockIfSuppressed();
     P1PRA_Initialize(g_P1PRA_State);
     P1PRA_RuntimeAuthorityInit();
     g_P1PRA_StartupFinalize = P1PRA_Finalize(g_P1PRA_State);

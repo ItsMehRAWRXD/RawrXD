@@ -217,89 +217,26 @@ static void gemv_f16_masm(
 }
 
 // ---------------------------------------------------------------------------
-// Static block geometry lookup
+// Static block geometry lookup — authoritative QuantTypeTable (fail-closed).
 // ---------------------------------------------------------------------------
 BlockGeometry GetBlockGeometryForType(int quantType) {
-    auto t = static_cast<GGMLType>(quantType);
-    switch (t) {
-        case GGMLType::GGML_TYPE_F32:  return {4, 1, false, false};
-        case GGMLType::GGML_TYPE_F16:  return {2, 1, false, false};
-        case GGMLType::GGML_TYPE_Q4_0: return {18, 32, true, false};
-        case GGMLType::GGML_TYPE_Q4_1: return {20, 32, true, true};
-        case GGMLType::GGML_TYPE_Q5_0: return {22, 32, true, false};
-        case GGMLType::GGML_TYPE_Q5_1: return {24, 32, true, true};
-        case GGMLType::GGML_TYPE_Q8_0: return {34, 32, true, false};
-        case GGMLType::GGML_TYPE_Q8_K: return {29, 256, true, false};
-        case GGMLType::GGML_TYPE_Q2_K: return {84, 256, true, true};
-        case GGMLType::GGML_TYPE_Q3_K: return {110, 256, true, false};
-        case GGMLType::GGML_TYPE_Q4_K: return {144, 256, true, true};
-        case GGMLType::GGML_TYPE_Q5_K: return {176, 256, true, true};
-        case GGMLType::GGML_TYPE_Q6_K: return {210, 256, true, true};
-        case GGMLType::GGML_TYPE_IQ2_XXS: return {66, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ2_XS:  return {74, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ3_XXS: return {98, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ3_S:   return {110, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ2_S:  return {82, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ4_NL: return {132, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ4_XS: return {136, 256, true, false};
-        case GGMLType::GGML_TYPE_IQ1_S: return {34, 256, true, false};
-        case GGMLType::GGML_TYPE_I8:  return {1, 1, false, false};
-        case GGMLType::GGML_TYPE_I16: return {2, 1, false, false};
-        case GGMLType::GGML_TYPE_I32: return {4, 1, false, false};
-        case GGMLType::GGML_TYPE_I64: return {8, 1, false, false};
-        case GGMLType::GGML_TYPE_F64: return {8, 1, false, false};
-        default: return {0, 0, false, false};
-    }
+    const auto* d = LookupQuantType(static_cast<uint32_t>(quantType));
+    if (!d) return {0, 0, false, false};
+    return {d->blockBytes, d->blockElements, d->hasScales, d->hasMin};
 }
 
 // ---------------------------------------------------------------------------
 // Type name
 // ---------------------------------------------------------------------------
 const char* GGMLTypeName(int type) {
-    auto t = static_cast<GGMLType>(type);
-    switch (t) {
-        case GGMLType::GGML_TYPE_F32:    return "F32";
-        case GGMLType::GGML_TYPE_F16:    return "F16";
-        case GGMLType::GGML_TYPE_Q4_0:   return "Q4_0";
-        case GGMLType::GGML_TYPE_Q4_1:   return "Q4_1";
-        case GGMLType::GGML_TYPE_Q5_0:   return "Q5_0";
-        case GGMLType::GGML_TYPE_Q5_1:   return "Q5_1";
-        case GGMLType::GGML_TYPE_Q8_0:   return "Q8_0";
-        case GGMLType::GGML_TYPE_Q8_K:   return "Q8_K";
-        case GGMLType::GGML_TYPE_Q2_K:   return "Q2_K";
-        case GGMLType::GGML_TYPE_Q3_K:   return "Q3_K";
-        case GGMLType::GGML_TYPE_Q4_K:   return "Q4_K";
-        case GGMLType::GGML_TYPE_Q5_K:   return "Q5_K";
-        case GGMLType::GGML_TYPE_Q6_K:   return "Q6_K";
-        case GGMLType::GGML_TYPE_IQ2_XXS: return "IQ2_XXS";
-        case GGMLType::GGML_TYPE_IQ2_XS:  return "IQ2_XS";
-        case GGMLType::GGML_TYPE_IQ3_XXS: return "IQ3_XXS";
-        case GGMLType::GGML_TYPE_IQ3_S:   return "IQ3_S";
-        case GGMLType::GGML_TYPE_IQ2_S:   return "IQ2_S";
-        case GGMLType::GGML_TYPE_IQ4_NL:  return "IQ4_NL";
-        case GGMLType::GGML_TYPE_IQ4_XS:  return "IQ4_XS";
-        case GGMLType::GGML_TYPE_IQ1_S:   return "IQ1_S";
-        case GGMLType::GGML_TYPE_I8:      return "I8";
-        case GGMLType::GGML_TYPE_I16:     return "I16";
-        case GGMLType::GGML_TYPE_I32:     return "I32";
-        case GGMLType::GGML_TYPE_I64:     return "I64";
-        case GGMLType::GGML_TYPE_F64:     return "F64";
-        default: return "UNKNOWN";
-    }
+    return QuantTypeName(static_cast<uint32_t>(type));
 }
 
 // ---------------------------------------------------------------------------
 // UniversalTensorProxy helpers
 // ---------------------------------------------------------------------------
 bool UniversalTensorProxy::IsQuantized() const {
-    auto t = static_cast<GGMLType>(quantType);
-    return t != GGMLType::GGML_TYPE_F32 &&
-           t != GGMLType::GGML_TYPE_F16 &&
-           t != GGMLType::GGML_TYPE_I8 &&
-           t != GGMLType::GGML_TYPE_I16 &&
-           t != GGMLType::GGML_TYPE_I32 &&
-           t != GGMLType::GGML_TYPE_I64 &&
-           t != GGMLType::GGML_TYPE_F64;
+    return QuantTypeIsQuantized(static_cast<uint32_t>(quantType));
 }
 
 const char* UniversalTensorProxy::TypeName() const {

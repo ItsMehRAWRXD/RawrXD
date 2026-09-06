@@ -7,6 +7,7 @@
 #pragma once
 
 #include "UniversalTensorDescriptor.hpp"
+#include "QuantTypeTable.hpp"
 #include <cstdint>
 #include <cstddef>
 #include <cstdio>
@@ -31,24 +32,9 @@ enum class GGUFValueType : uint32_t {
     STRING  = 8, ARRAY = 9, UINT64 = 10, INT64 = 11, FLOAT64 = 12
 };
 
-// GGML Quantization types
-enum class GGMLType : uint32_t {
-    GGML_TYPE_F32 = 0, GGML_TYPE_F16 = 1,
-    GGML_TYPE_Q4_0 = 2, GGML_TYPE_Q4_1 = 3,
-    GGML_TYPE_Q5_0 = 6, GGML_TYPE_Q5_1 = 7,
-    GGML_TYPE_Q8_0 = 8, GGML_TYPE_Q8_K = 9,
-    GGML_TYPE_Q2_K = 10, GGML_TYPE_Q3_K = 11,
-    GGML_TYPE_Q4_K = 12, GGML_TYPE_Q5_K = 13, GGML_TYPE_Q6_K = 14,
-    GGML_TYPE_IQ2_XXS = 17, GGML_TYPE_IQ2_XS = 18,
-    GGML_TYPE_IQ3_XXS = 19, GGML_TYPE_IQ1_S = 20,
-    GGML_TYPE_IQ4_NL = 21, GGML_TYPE_IQ3_S = 22,
-    GGML_TYPE_IQ2_S = 23, GGML_TYPE_IQ4_XS = 24,
-    GGML_TYPE_I8 = 25, GGML_TYPE_I16 = 26,
-    GGML_TYPE_I32 = 27, GGML_TYPE_I64 = 28, GGML_TYPE_F64 = 29,
-    GGML_TYPE_COUNT
-};
+// GGMLType + QuantTypeDescriptor live in QuantTypeTable.hpp (canonical IDs).
 
-// Quantization block structures
+// Quantization block structures — layouts MUST match ggml-common.h sizes.
 #pragma pack(push, 1)
 struct block_q4_0 { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 32 elements
 struct block_q4_1 { uint16_t d; uint16_t m; uint8_t qs[16]; }; // 20 bytes
@@ -62,17 +48,59 @@ struct block_q4_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[12
 struct block_q5_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qh[32]; uint8_t qs[128]; }; // 176 bytes
 struct block_q6_K { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; uint16_t d; }; // 210 bytes
 struct block_q8_K { float d; int8_t qs[256]; int16_t bsums[16]; }; // 292 bytes
+// IQ / modern formats (canonical ggml sizes)
+struct block_iq2_xxs { uint16_t d; uint8_t qs[64]; }; // 66 bytes (== ggml uint16 qs[32])
+struct block_iq2_xs  { uint16_t d; uint8_t qs[64]; uint8_t scales[8]; }; // 74 bytes
+struct block_iq2_s   { uint16_t d; uint8_t qs[64]; uint8_t qh[8]; uint8_t scales[8]; }; // 82 bytes
+struct block_iq3_xxs { uint16_t d; uint8_t qs[96]; }; // 98 bytes
+struct block_iq3_s   { uint16_t d; uint8_t qs[64]; uint8_t qh[8]; uint8_t signs[32]; uint8_t scales[4]; }; // 110
+struct block_iq1_s   { uint16_t d; uint8_t qs[32]; uint16_t qh[8]; }; // 50 bytes, 256 elems
+struct block_iq1_m   { uint8_t qs[32]; uint8_t qh[16]; uint8_t scales[8]; }; // 56 bytes
+struct block_iq4_nl  { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 32 elems (NOT 132/256)
+struct block_iq4_xs  {
+    uint16_t d;
+    union {
+        struct { uint16_t scales_h; uint8_t scales_l[4]; };
+        uint8_t scales[6]; // legacy kernel access (same 6 bytes)
+    };
+    uint8_t qs[128];
+}; // 136 bytes
+struct block_tq1_0   { uint8_t qs[48]; uint8_t qh[4]; uint16_t d; }; // 54 bytes
+struct block_tq2_0   { uint8_t qs[64]; uint16_t d; }; // 66 bytes
+struct block_mxfp4   { uint8_t e; uint8_t qs[16]; }; // 17 bytes, 32 elems
+struct block_nvfp4   { uint8_t d[4]; uint8_t qs[32]; }; // 36 bytes, 64 elems
+struct block_q1_0    { uint16_t d; uint8_t qs[16]; }; // 18 bytes, 128 elems
+struct block_bf16    { uint16_t bits; }; // 2 bytes, 1 elem
 #pragma pack(pop)
-struct block_iq2_xxs { uint16_t d; uint8_t qs[64]; }; // 66 bytes, 256 elements
-struct block_iq2_xs  { uint16_t d; uint16_t scales[2]; uint8_t qs[68]; }; // 74 bytes, 256 elements
-struct block_iq2_s   { uint16_t d; uint8_t scales[8]; uint8_t qs[72]; }; // 82 bytes, 256 elements
-struct block_iq3_xxs { uint16_t d; uint8_t qs[96]; }; // 98 bytes, 256 elements
-struct block_iq3_s   { uint16_t d; uint8_t scales[8]; uint8_t qs[100]; }; // 110 bytes, 256 elements
-struct block_iq4_nl  { uint16_t d; uint16_t dmin; uint8_t qs[128]; }; // 132 bytes, 256 elements
-struct block_iq4_xs  { uint16_t d; uint8_t scales[6]; uint8_t qs[128]; }; // 136 bytes, 256 elements
-struct block_iq1_s   { uint8_t qs[32]; uint16_t d; }; // 34 bytes, 32 elements (1-bit weights + scale)
 
-// Block sizes (elements per block)
+static_assert(sizeof(block_q4_0) == 18, "q4_0");
+static_assert(sizeof(block_q4_1) == 20, "q4_1");
+static_assert(sizeof(block_q5_0) == 22, "q5_0");
+static_assert(sizeof(block_q5_1) == 24, "q5_1");
+static_assert(sizeof(block_q8_0) == 34, "q8_0");
+static_assert(sizeof(block_q8_1) == 36, "q8_1");
+static_assert(sizeof(block_q2_K) == 84, "q2_K");
+static_assert(sizeof(block_q3_K) == 110, "q3_K");
+static_assert(sizeof(block_q4_K) == 144, "q4_K");
+static_assert(sizeof(block_q5_K) == 176, "q5_K");
+static_assert(sizeof(block_q6_K) == 210, "q6_K");
+static_assert(sizeof(block_q8_K) == 292, "q8_K MUST be 292 not 29");
+static_assert(sizeof(block_iq2_xxs) == 66, "iq2_xxs");
+static_assert(sizeof(block_iq2_xs) == 74, "iq2_xs");
+static_assert(sizeof(block_iq2_s) == 82, "iq2_s");
+static_assert(sizeof(block_iq3_xxs) == 98, "iq3_xxs");
+static_assert(sizeof(block_iq3_s) == 110, "iq3_s");
+static_assert(sizeof(block_iq1_s) == 50, "iq1_s MUST be 50 not 34");
+static_assert(sizeof(block_iq1_m) == 56, "iq1_m");
+static_assert(sizeof(block_iq4_nl) == 18, "iq4_nl MUST be 18 not 132");
+static_assert(sizeof(block_iq4_xs) == 136, "iq4_xs");
+static_assert(sizeof(block_tq1_0) == 54, "tq1_0");
+static_assert(sizeof(block_tq2_0) == 66, "tq2_0");
+static_assert(sizeof(block_mxfp4) == 17, "mxfp4");
+static_assert(sizeof(block_nvfp4) == 36, "nvfp4");
+static_assert(sizeof(block_q1_0) == 18, "q1_0");
+
+// Block sizes (elements per block) — prefer QuantTypeTable; kept for call sites.
 constexpr size_t QK4_0 = 32;
 constexpr size_t QK4_1 = 32;
 constexpr size_t QK5_0 = 32;
@@ -108,66 +136,22 @@ struct TensorInfo {
     }
 
     size_t GetNumBlocks() const {
-        size_t blockSize = GetBlockSize();
         size_t elemsPerBlock = GetElemsPerBlock();
         if (elemsPerBlock == 0) return 0;
         return (GetNumElements() + elemsPerBlock - 1) / elemsPerBlock;
     }
 
     bool IsQuantized() const {
-        return type != GGMLType::GGML_TYPE_F32 &&
-               type != GGMLType::GGML_TYPE_F16 &&
-               type != GGMLType::GGML_TYPE_I8 &&
-               type != GGMLType::GGML_TYPE_I16 &&
-               type != GGMLType::GGML_TYPE_I32 &&
-               type != GGMLType::GGML_TYPE_I64 &&
-               type != GGMLType::GGML_TYPE_F64;
+        return QuantTypeIsQuantized(static_cast<uint32_t>(type));
     }
 
+    // Authoritative: QuantTypeTable. Returns 0 for unknown → fail-closed (no silent {4,1}).
     size_t GetBlockSize() const {
-        switch (type) {
-            case GGMLType::GGML_TYPE_F32: return 4;
-            case GGMLType::GGML_TYPE_F16: return 2;
-            case GGMLType::GGML_TYPE_Q4_0: return sizeof(block_q4_0);
-            case GGMLType::GGML_TYPE_Q4_1: return sizeof(block_q4_1);
-            case GGMLType::GGML_TYPE_Q5_0: return sizeof(block_q5_0);
-            case GGMLType::GGML_TYPE_Q5_1: return sizeof(block_q5_1);
-            case GGMLType::GGML_TYPE_Q8_0: return sizeof(block_q8_0);
-            case GGMLType::GGML_TYPE_Q8_K: return sizeof(block_q8_K);
-            case GGMLType::GGML_TYPE_Q2_K: return sizeof(block_q2_K);
-            case GGMLType::GGML_TYPE_Q3_K: return sizeof(block_q3_K);
-            case GGMLType::GGML_TYPE_Q4_K: return sizeof(block_q4_K);
-            case GGMLType::GGML_TYPE_Q5_K: return sizeof(block_q5_K);
-            case GGMLType::GGML_TYPE_Q6_K: return sizeof(block_q6_K);
-            case GGMLType::GGML_TYPE_IQ1_S: return sizeof(block_iq1_s);
-            default: return 4;
-        }
+        return QuantTypeBlockBytes(static_cast<uint32_t>(type));
     }
 
     size_t GetElemsPerBlock() const {
-        switch (type) {
-            case GGMLType::GGML_TYPE_F32:
-            case GGMLType::GGML_TYPE_F16:
-            case GGMLType::GGML_TYPE_I8:
-            case GGMLType::GGML_TYPE_I16:
-            case GGMLType::GGML_TYPE_I32:
-            case GGMLType::GGML_TYPE_I64:
-            case GGMLType::GGML_TYPE_F64:
-                return 1;
-            case GGMLType::GGML_TYPE_Q4_0: return QK4_0;
-            case GGMLType::GGML_TYPE_Q4_1: return QK4_1;
-            case GGMLType::GGML_TYPE_Q5_0: return QK5_0;
-            case GGMLType::GGML_TYPE_Q5_1: return QK5_1;
-            case GGMLType::GGML_TYPE_Q8_0: return QK8_0;
-            case GGMLType::GGML_TYPE_Q8_K: return QK_K;
-            case GGMLType::GGML_TYPE_Q2_K: return QK_K;
-            case GGMLType::GGML_TYPE_Q3_K: return QK_K;
-            case GGMLType::GGML_TYPE_Q4_K: return QK_K;
-            case GGMLType::GGML_TYPE_Q5_K: return QK_K;
-            case GGMLType::GGML_TYPE_Q6_K: return QK_K;
-            case GGMLType::GGML_TYPE_IQ1_S: return QK_K;
-            default: return 1;
-        }
+        return QuantTypeBlockElements(static_cast<uint32_t>(type));
     }
 };
 

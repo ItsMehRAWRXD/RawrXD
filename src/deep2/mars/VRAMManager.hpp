@@ -83,6 +83,9 @@ public:
     size_t GetLeaseCount() const;
     size_t GetResidentCount(int gpu) const;
 
+    // Snapshot of live lease pointers (valid until Free/Shutdown).
+    std::vector<VRAMLease*> SnapshotLeases() const;
+
     // ------------------------------------------------------------------------
     // Dynamic Parity
     // ------------------------------------------------------------------------
@@ -122,9 +125,35 @@ public:
         uint64_t totalRestored = 0;
         uint64_t oomCount = 0;
         uint64_t rollbackCount = 0;
+        uint64_t peakUsed[2] = {0, 0};
+        uint64_t bytesHostToGpu = 0;
+        uint64_t bytesNvmeToRam = 0;
+        uint32_t residencyMisses = 0;
+        uint32_t spillToRam = 0;
+        uint32_t spillToNvme = 0;
     };
     Stats GetStats() const;
     void ResetStats();
+    void ResetRunPeaks();
+    void NoteNvmeToRam(uint64_t bytes);
+    void NoteResidencyMiss();
+    void NoteSpillToNvme();
+
+    // Live snapshot for INV-4 / Resource Map
+    struct LiveSnapshot {
+        uint64_t usedVram[2] = {0, 0};
+        uint64_t peakVram[2] = {0, 0};
+        uint64_t totalVram[2] = {0, 0};
+        uint64_t peakVramTotal = 0;
+        uint64_t bytesHostToGpu = 0;
+        uint64_t bytesNvmeToRam = 0;
+        uint32_t migrations = 0;
+        uint32_t residencyMisses = 0;
+        uint32_t spillToRam = 0;
+        uint32_t spillToNvme = 0;
+        uint32_t residentCount = 0;
+    };
+    LiveSnapshot SnapshotLive() const;
 
 private:
     bool initialized_ = false;
@@ -132,6 +161,7 @@ private:
     // Per-GPU VRAM tracking
     size_t gpuTotal_[2] = {0, 0};
     size_t gpuUsed_[2]  = {0, 0};
+    size_t gpuPeak_[2]  = {0, 0};
     mutable std::mutex gpuMutex_;
 
     // Lease registry

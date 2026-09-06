@@ -102,7 +102,8 @@ struct PerformanceProfile {
     double recovery_time_ms;
     
     // Efficiency metrics
-    double tokens_per_watt;
+    double tokens_per_watt_gpu;
+    double tokens_per_watt_system;  // reserved; not populated yet
     double throughput_per_core;
     double cache_hit_rate;
     
@@ -244,6 +245,7 @@ private:
     std::unordered_map<std::string, Limitation> limitations_;
     std::vector<PerformanceProfile> performance_history_;
     PerformanceProfile baseline_performance_;
+    PerformanceProfile current_performance_{};
     bool initialized_ = false;
     
     bool ProbeCapability(CapabilityType type);

@@ -640,8 +640,11 @@ static std::string toolInstructionBlock(const std::vector<ToolDefinition>& tools
         << "REQUIRED tool format (exact strict JSON arguments; keys and string values MUST be double-quoted):\n"
         << "TOOL_CALL: read_file {\"path\":\"main.c\"}\n"
         << "TOOL_CALL: replace_in_file {\"path\":\"main.c\",\"search\":\"DOES_NOT_EXIST\",\"replace\":\"42\"}\n"
+        << "TOOL_CALL: run_command {\"command\":\"cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release\"}\n"
         << "TOOL_CALL: run_command {\"command\":\"cmake --build build\"}\n"
         << "INVALID (rejected, tool will NOT run): {path:main.c, search: \"x\", replace: \"y\"}\n"
+        << "Do NOT use shell chaining (&& || ;). Issue configure and build as separate TOOL_CALLs.\n"
+        << "Never claim compile/build success unless a run_command build observation shows exit_code=0.\n"
         << "If a tool observation reports error=schema_validation, resend the SAME tool with corrected strict JSON.\n"
         << "After a tool observation, emit the next TOOL_CALL or a short final answer. "
         << "Never copy or restate tool observation JSON as your reply.\n"
@@ -1620,30 +1623,76 @@ private:
 struct ProcessResult {
     int exitCode = -1;
     bool timedOut = false;
-    std::string output;
+    std::string stdoutText;
+    std::string stderrText;
+    std::string output; // stdout+stderr (compat)
+    std::string requestedCwd;
+    std::string effectiveCwd;
+    std::string commandRequested;
+    std::string commandLineResolved;
+    std::string resolvedExecutable;
 };
 
 #ifdef _WIN32
 
+static void drainPipeToString(HANDLE readPipe, std::string& sink) {
+    std::array<char, 4096> buffer{};
+    for (;;) {
+        DWORD read = 0;
+        const BOOL ok = ReadFile(readPipe, buffer.data(), static_cast<DWORD>(buffer.size()), &read, nullptr);
+        if (!ok || read == 0) break;
+        sink.append(buffer.data(), read);
+    }
+}
+
 static ProcessResult runProcessWindows(const fs::path& workingDirectory,
                                         const std::wstring& commandLine,
-                                        std::chrono::milliseconds timeout) {
+                                        std::chrono::milliseconds timeout,
+                                        const std::string& commandRequested,
+                                        const std::string& resolvedExecutable) {
     SECURITY_ATTRIBUTES sa{}; sa.nLength = sizeof(sa); sa.bInheritHandle = TRUE;
-    HANDLE readPipe = nullptr; HANDLE writePipe = nullptr;
-    if (!CreatePipe(&readPipe, &writePipe, &sa, 0)) throw std::runtime_error("CreatePipe failed");
-    SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0);
+    HANDLE stdoutRead = nullptr; HANDLE stdoutWrite = nullptr;
+    HANDLE stderrRead = nullptr; HANDLE stderrWrite = nullptr;
+    if (!CreatePipe(&stdoutRead, &stdoutWrite, &sa, 0)) throw std::runtime_error("CreatePipe stdout failed");
+    if (!CreatePipe(&stderrRead, &stderrWrite, &sa, 0)) {
+        CloseHandle(stdoutRead); CloseHandle(stdoutWrite);
+        throw std::runtime_error("CreatePipe stderr failed");
+    }
+    SetHandleInformation(stdoutRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(stderrRead, HANDLE_FLAG_INHERIT, 0);
     STARTUPINFOW startup{}; startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESTDHANDLES;
-    startup.hStdOutput = writePipe; startup.hStdError = writePipe;
+    startup.hStdOutput = stdoutWrite;
+    startup.hStdError = stderrWrite;
     startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     PROCESS_INFORMATION process{};
     std::vector<wchar_t> mutableCommand(commandLine.begin(), commandLine.end());
     mutableCommand.push_back(L'\0');
     const std::wstring cwd = workingDirectory.wstring();
+    ProcessResult result;
+    result.requestedCwd = workingDirectory.string();
+    result.commandRequested = commandRequested;
+    {
+        const int n = WideCharToMultiByte(CP_UTF8, 0, commandLine.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (n > 1) {
+            result.commandLineResolved.assign(static_cast<std::size_t>(n - 1), '\0');
+            WideCharToMultiByte(CP_UTF8, 0, commandLine.c_str(), -1, result.commandLineResolved.data(), n, nullptr, nullptr);
+        }
+    }
+    result.resolvedExecutable = resolvedExecutable;
+    {
+        std::error_code ec;
+        const fs::path abs = fs::weakly_canonical(workingDirectory, ec);
+        result.effectiveCwd = ec ? workingDirectory.string() : abs.string();
+    }
     const BOOL created = CreateProcessW(nullptr, mutableCommand.data(), nullptr, nullptr, TRUE,
                                          CREATE_NO_WINDOW, nullptr, cwd.c_str(), &startup, &process);
-    CloseHandle(writePipe); writePipe = nullptr;
-    if (!created) { CloseHandle(readPipe); throw std::runtime_error("CreateProcessW failed"); }
+    CloseHandle(stdoutWrite); stdoutWrite = nullptr;
+    CloseHandle(stderrWrite); stderrWrite = nullptr;
+    if (!created) {
+        CloseHandle(stdoutRead); CloseHandle(stderrRead);
+        throw std::runtime_error("CreateProcessW failed");
+    }
     HANDLE job = CreateJobObjectW(nullptr, nullptr);
     if (job) {
         JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
@@ -1651,18 +1700,8 @@ static ProcessResult runProcessWindows(const fs::path& workingDirectory,
         SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits));
         AssignProcessToJobObject(job, process.hProcess);
     }
-    ProcessResult result;
-    std::atomic<bool> readerDone{false};
-    std::thread reader([&]() {
-        std::array<char, 4096> buffer{};
-        for (;;) {
-            DWORD read = 0;
-            const BOOL ok = ReadFile(readPipe, buffer.data(), static_cast<DWORD>(buffer.size()), &read, nullptr);
-            if (!ok || read == 0) break;
-            result.output.append(buffer.data(), read);
-        }
-        readerDone = true;
-    });
+    std::thread stdoutReader([&]() { drainPipeToString(stdoutRead, result.stdoutText); });
+    std::thread stderrReader([&]() { drainPipeToString(stderrRead, result.stderrText); });
     const DWORD wait = WaitForSingleObject(process.hProcess,
         timeout.count() > static_cast<std::int64_t>(std::numeric_limits<DWORD>::max()) ? INFINITE : static_cast<DWORD>(timeout.count()));
     if (wait == WAIT_TIMEOUT) {
@@ -1676,8 +1715,15 @@ static ProcessResult runProcessWindows(const fs::path& workingDirectory,
     result.exitCode = static_cast<int>(exitCode);
     CloseHandle(process.hThread); CloseHandle(process.hProcess);
     if (job) CloseHandle(job);
-    CloseHandle(readPipe);
-    if (reader.joinable()) reader.join();
+    CloseHandle(stdoutRead);
+    CloseHandle(stderrRead);
+    if (stdoutReader.joinable()) stdoutReader.join();
+    if (stderrReader.joinable()) stderrReader.join();
+    result.output = result.stdoutText;
+    if (!result.stderrText.empty()) {
+        if (!result.output.empty() && result.output.back() != '\n') result.output.push_back('\n');
+        result.output += result.stderrText;
+    }
     return result;
 }
 
@@ -1698,18 +1744,65 @@ static ProcessResult runProcess(const fs::path& workingDirectory,
                                  std::chrono::milliseconds timeout) {
 #ifdef _WIN32
     const std::wstring wrapped = L"cmd.exe /d /s /c \"" + widenUtf8(command) + L"\"";
-    return runProcessWindows(workingDirectory, wrapped, timeout);
+    return runProcessWindows(workingDirectory, wrapped, timeout, command, "cmd.exe");
 #else
     (void)timeout;
     ProcessResult result;
+    result.requestedCwd = workingDirectory.string();
+    result.effectiveCwd = workingDirectory.string();
+    result.commandRequested = command;
+    result.resolvedExecutable = "sh";
+    result.commandLineResolved = "sh -c " + command;
     const std::string full = "cd " + jsonQuote(workingDirectory.string()) + " && " + command + " 2>&1";
     FILE* pipe = popen(full.c_str(), "r");
     if (!pipe) throw std::runtime_error("popen failed");
     std::array<char, 4096> buffer{};
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe)) result.output += buffer.data();
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe)) result.stdoutText += buffer.data();
     result.exitCode = pclose(pipe);
+    result.output = result.stdoutText;
     return result;
 #endif
+}
+
+static std::string formatProcessEvidence(const ProcessResult& result) {
+    std::ostringstream out;
+    out << "[run_command_evidence]\n"
+        << "requested_cwd=" << result.requestedCwd << "\n"
+        << "effective_cwd=" << result.effectiveCwd << "\n"
+        << "command_requested=" << result.commandRequested << "\n"
+        << "command_line_resolved=" << result.commandLineResolved << "\n"
+        << "resolved_executable=" << result.resolvedExecutable << "\n"
+        << "timed_out=" << (result.timedOut ? "true" : "false") << "\n"
+        << "exit_code=" << result.exitCode << "\n"
+        << "--- stdout ---\n" << result.stdoutText
+        << "--- stderr ---\n" << result.stderrText;
+    return out.str();
+}
+
+// Parse `cmake --build <dir>` (dir may be quoted). Returns nullopt if not a build invocation.
+static std::optional<std::string> parseCMakeBuildDirectory(const std::string& command) {
+    const std::string trimmed = trim(command);
+    const std::string lowerCmd = lower(trimmed);
+    constexpr std::string_view kPrefix = "cmake --build";
+    if (!startsWith(lowerCmd, std::string(kPrefix))) return std::nullopt;
+    std::size_t i = kPrefix.size();
+    while (i < trimmed.size() && std::isspace(static_cast<unsigned char>(trimmed[i]))) ++i;
+    if (i >= trimmed.size()) return std::string(".");
+    std::string dir;
+    if (trimmed[i] == '"' || trimmed[i] == '\'') {
+        const char quote = trimmed[i++];
+        while (i < trimmed.size() && trimmed[i] != quote) dir.push_back(trimmed[i++]);
+    } else {
+        while (i < trimmed.size() && !std::isspace(static_cast<unsigned char>(trimmed[i]))) {
+            dir.push_back(trimmed[i++]);
+        }
+    }
+    if (dir.empty()) dir = ".";
+    return dir;
+}
+
+static bool isConfiguredCMakeBuildDir(const fs::path& dir) {
+    return fs::is_directory(dir) && fs::is_regular_file(dir / "CMakeCache.txt");
 }
 
 // =============================================================================
@@ -1916,16 +2009,80 @@ private:
                 return ToolResult{true, "search_text", out.str(), 0};
             });
 
-        addTool({"run_command", "Run an allow-listed local build/test/version-control command inside the workspace with a timeout.",
-                 R"({"type":"object","properties":{"command":{"type":"string"},"timeout_ms":{"type":"integer"}},"required":["command"]})"},
+        addTool({"run_command", "Run an allow-listed local build/test/version-control command inside the workspace with a timeout. Optional cwd must stay inside the workspace. For cmake --build, missing/unconfigured build dirs are configured first (evidence recorded); never invents success.",
+                 R"({"type":"object","properties":{"command":{"type":"string"},"cwd":{"type":"string"},"timeout_ms":{"type":"integer"}},"required":["command"]})"},
             [&](const std::string& args) {
                 const std::string command = requiredString(args, "command");
                 const auto timeoutMs = std::clamp<std::int64_t>(jsonIntegerField(args, "timeout_ms").value_or(120000), 1000, 600000);
                 validateCommand(command);
-                const auto result = runProcess(sandbox_.root(), command, std::chrono::milliseconds(timeoutMs));
+
+                fs::path cwd = sandbox_.root();
+                if (const auto cwdArg = jsonStringField(args, "cwd")) {
+                    cwd = sandbox_.resolveExisting(*cwdArg);
+                    if (!fs::is_directory(cwd)) throw std::runtime_error("cwd is not a directory: " + cwd.string());
+                }
+
                 std::ostringstream out;
-                if (result.timedOut) out << "[TIMEOUT]\n";
-                out << result.output;
+                auto appendResult = [&](const ProcessResult& result) {
+                    if (result.timedOut) out << "[TIMEOUT]\n";
+                    out << formatProcessEvidence(result);
+                };
+
+                // Build discovery: cmake --build <dir> without a configured tree must not
+                // be treated as success. Configure first when CMakeLists.txt exists.
+                if (const auto buildDirRel = parseCMakeBuildDirectory(command)) {
+                    fs::path buildDir;
+                    {
+                        const fs::path candidate = cwd / fs::path(*buildDirRel);
+                        std::error_code existsEc;
+                        if (fs::exists(candidate, existsEc)) {
+                            buildDir = sandbox_.resolveExisting(*buildDirRel);
+                        } else {
+                            buildDir = sandbox_.resolveForWrite(*buildDirRel);
+                        }
+                    }
+
+                    if (!isConfiguredCMakeBuildDir(buildDir)) {
+                        const fs::path lists = cwd / "CMakeLists.txt";
+                        if (!fs::is_regular_file(lists)) {
+                            out << "[build_discovery]\n"
+                                << "action=fail\n"
+                                << "reason=missing_build_dir_and_no_CMakeLists\n"
+                                << "requested_build_dir=" << buildDir.string() << "\n"
+                                << "CLAIM_COMPILE_SUCCESS=forbidden\n";
+                            return ToolResult{false, "run_command", out.str(), -1};
+                        }
+                        const std::string configureCmd =
+                            "cmake -S . -B " + *buildDirRel +
+                            " -G Ninja -DCMAKE_BUILD_TYPE=Release";
+                        out << "[build_discovery]\n"
+                            << "action=configure_then_build\n"
+                            << "reason=build_dir_missing_or_unconfigured\n"
+                            << "requested_build_dir=" << buildDir.string() << "\n"
+                            << "configure_command=" << configureCmd << "\n";
+                        validateCommand(configureCmd);
+                        const auto configureResult =
+                            runProcess(cwd, configureCmd, std::chrono::milliseconds(timeoutMs));
+                        out << "[configure_phase]\n";
+                        appendResult(configureResult);
+                        if (configureResult.timedOut || configureResult.exitCode != 0) {
+                            out << "CLAIM_COMPILE_SUCCESS=forbidden\n";
+                            return ToolResult{false, "run_command", out.str(), configureResult.exitCode};
+                        }
+                    }
+
+                    const auto buildResult =
+                        runProcess(cwd, command, std::chrono::milliseconds(timeoutMs));
+                    out << "[build_phase]\n";
+                    appendResult(buildResult);
+                    const bool ok = !buildResult.timedOut && buildResult.exitCode == 0;
+                    if (!ok) out << "CLAIM_COMPILE_SUCCESS=forbidden\n";
+                    else out << "CLAIM_COMPILE_SUCCESS=allowed_by_tool_evidence\n";
+                    return ToolResult{ok, "run_command", out.str(), buildResult.exitCode};
+                }
+
+                const auto result = runProcess(cwd, command, std::chrono::milliseconds(timeoutMs));
+                appendResult(result);
                 return ToolResult{!result.timedOut && result.exitCode == 0, "run_command", out.str(), result.exitCode};
             });
 
@@ -1988,6 +2145,13 @@ public:
     bool trueStreaming() const { return deep2_.trueStreaming(); }
     bool applySampling(float temperature, float topP) {
         return deep2_.applySampling(temperature, topP);
+    }
+
+    /// Exact Agentic→Deep2 prompt bytes (schema-retry R2 instrumentation).
+    std::string renderPrompt(const std::vector<ChatMessage>& messages,
+                             const std::vector<ToolDefinition>& tools,
+                             bool addGenerationPrompt = true) const {
+        return chatTemplate_.render(messages, tools, addGenerationPrompt);
     }
 
     // TOKENIZER-PARITY / AGENT-FIRST-TOKEN: dump exact bytes at Agentic→Deep2 boundary
@@ -2102,6 +2266,26 @@ struct TranscriptStep {
 class AgentTranscript final {
 public:
     void add(TranscriptStep step) { steps_.push_back(std::move(step)); }
+    const std::vector<TranscriptStep>& steps() const { return steps_; }
+
+    bool hasSuccessfulAgentBuild() const {
+        for (const auto& step : steps_) {
+            for (std::size_t i = 0; i < step.toolResults.size(); ++i) {
+                const auto& tr = step.toolResults[i];
+                if (tr.tool != "run_command" || !tr.success || tr.exitCode != 0) continue;
+                std::string args;
+                if (i < step.toolCalls.size()) args = step.toolCalls[i].argumentsJson;
+                const std::string hay = lower(args + "\n" + tr.output);
+                if (hay.find("cmake --build") != std::string::npos ||
+                    hay.find("[build_phase]") != std::string::npos ||
+                    hay.find("CLAIM_COMPILE_SUCCESS=allowed_by_tool_evidence") != std::string::npos) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     std::string toJson() const {
         std::ostringstream out;
         out << "{" << "\"steps\":[";
@@ -2426,6 +2610,31 @@ private:
         aggregate.pass = true;
         std::ostringstream reasons;
 
+        // Deterministic claim↔evidence bind (HexMag invariant):
+        // tool failure → success claim forbidden; harness may verify later separately.
+        const std::string candLower = lower(candidate);
+        const bool claimsCompileSuccess =
+            (candLower.find("successfully compiled") != std::string::npos) ||
+            (candLower.find("compiled successfully") != std::string::npos) ||
+            (candLower.find("build succeeded") != std::string::npos) ||
+            (candLower.find("built the executable") != std::string::npos) ||
+            (candLower.find("compilation succeeded") != std::string::npos);
+        if (claimsCompileSuccess && !transcript.hasSuccessfulAgentBuild()) {
+            aggregate.pass = false;
+            aggregate.failureMask =
+                hexmag::HX_FAIL_UNSUPPORTED | hexmag::HX_FAIL_WRONG;
+            aggregate.reason =
+                "UNSUPPORTED_SUCCESS_CLAIM: compile/build success claimed without "
+                "agent run_command build evidence (invoked && execution_ok && exit_code==0)";
+            std::printf("[CLAIM_BIND] UNSUPPORTED_SUCCESS_CLAIM=1 build_evidence=0\n");
+            std::fflush(stdout);
+            return aggregate;
+        }
+        if (claimsCompileSuccess) {
+            std::printf("[CLAIM_BIND] compile_claim=1 build_evidence=1 allowed\n");
+            std::fflush(stdout);
+        }
+
         std::string evidence = transcript.toJson();
         constexpr std::size_t kMaxEvidenceBytes = 24 * 1024;
         if (evidence.size() > kMaxEvidenceBytes) {
@@ -2451,7 +2660,8 @@ private:
                 "You are RawrXD's blocking correctness verifier. "
                 "Judge only against the supplied task and observed transcript/tool evidence. "
                 "Confidence is not evidence. Unsupported claims fail. "
-                "Return exactly one line: "
+                "CLAIM_COMPILE_SUCCESS requires tool evidence of a successful agent build "
+                "(exit_code=0). Return exactly one line: "
                 "VERDICT=PASS or VERDICT=FAIL KIND=<WRONG|UNSUPPORTED|TEST|"
                 "CONTRADICTION|COUNTEREXAMPLE|STAGNATION|MISSING_INFO> REASON=<short reason>.",
                 {}, {}
@@ -2577,6 +2787,7 @@ struct CliOptions {
     bool noStream = false;
     bool toolSchemaCert = false;  // AGENT-TOOL-SCHEMA-002 lanes A/B (no model inference)
     bool schemaRetryCert = false; // AGENT_SCHEMA_RETRY_001 — MODEL_RETRY (STRICT, no bare-key repair)
+    bool runCommandCert = false;  // RUN_COMMAND_SEMANTICS_001 — cwd/argv/exit/stdio + build discovery
     bool noFinalVerify = false;
     fs::path schemaCertOut;       // optional evidence dir for dumps
 };
@@ -2611,12 +2822,14 @@ static CliOptions parseCli(int argc, char** argv) {
         else if (arg == "--no-stream") options.noStream = true;
         else if (arg == "--tool-schema-cert") options.toolSchemaCert = true;
         else if (arg == "--schema-retry-cert") options.schemaRetryCert = true;
+        else if (arg == "--run-command-cert") options.runCommandCert = true;
         else if (arg == "--no-final-verify") options.noFinalVerify = true;
         else if (arg == "--schema-cert-out") options.schemaCertOut = value(i, arg);
         else if (arg == "--help" || arg == "-h") {
             std::cout << "RawrXD-Agentic.exe --model path --workspace DIR [--task \"...\"] [--task-file PATH]\n"
                          "  [--max-steps N] [--max-tokens N] [--no-stream] [--no-final-verify]\n"
-                         "  [--tool-schema-cert] [--schema-retry-cert] [--schema-cert-out DIR]\n";
+                         "  [--tool-schema-cert] [--schema-retry-cert] [--run-command-cert]\n"
+                         "  [--schema-cert-out DIR]\n";
             std::exit(EXIT_SUCCESS);
         }
         else throw std::runtime_error("unknown argument: " + arg);
@@ -2628,8 +2841,9 @@ static CliOptions parseCli(int argc, char** argv) {
             options.task.pop_back();
         }
     }
-    if (!options.toolSchemaCert && !options.schemaRetryCert && options.model.empty())
-        throw std::runtime_error("--model is required (unless --tool-schema-cert)");
+    if (!options.toolSchemaCert && !options.schemaRetryCert && !options.runCommandCert &&
+        options.model.empty())
+        throw std::runtime_error("--model is required (unless a --*-cert mode)");
     if (options.workspace.empty()) options.workspace = fs::current_path();
     return options;
 }
@@ -2784,6 +2998,9 @@ static void printRuntimeInfo(const NativeInferenceClient& inference, const Works
 //   2) observation returned into chat
 //   3) real Deep2 second inference
 //   4) corrected strict JSON → dispatch exactly once → tool succeeds
+//
+// Boundary freeze (R0–R4): separates AGENT_RETRY_CONTROLLER vs MODEL_CAPABILITY.
+// HexMag / Copilot route are NOT implicated by this gate.
 static int runSchemaRetryCert(const CliOptions& cli) {
     // Fail-closed: bare-key repair MUST be off for this gate.
     _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "1");
@@ -2793,8 +3010,9 @@ static int runSchemaRetryCert(const CliOptions& cli) {
     const fs::path outDir = cli.schemaCertOut.empty()
         ? fs::path("F:/~dev/rawrxd/evidence/AGENT_SCHEMA_RETRY_001")
         : cli.schemaCertOut;
+    const fs::path boundaryDir = outDir / "RETRY_BOUNDARY";
     std::error_code ec;
-    fs::create_directories(outDir, ec);
+    fs::create_directories(boundaryDir, ec);
 
     const fs::path probePath = sandbox.root() / "main.c";
     std::string beforeSha;
@@ -2811,8 +3029,11 @@ static int runSchemaRetryCert(const CliOptions& cli) {
         beforeSha = std::to_string(beforeBytes) + ":" + std::to_string(h);
     }
 
+    // R0 — raw first model output (injected malformed dialect for MODEL_RETRY).
     const std::string malformedRaw =
         "TOOL_CALL: read_file {path:main.c}";
+    writeWholeFile(boundaryDir / "R0_raw_first_model_output.txt", malformedRaw);
+
     const auto malformedCalls = ToolCallParser::parse(malformedRaw);
     if (malformedCalls.empty()) {
         std::fprintf(stderr, "[AGENT_SCHEMA_RETRY_001] FAIL: malformed parse empty\n");
@@ -2820,6 +3041,9 @@ static int runSchemaRetryCert(const CliOptions& cli) {
     }
     const ToolCall& firstCall = malformedCalls.front();
     const ToolResult firstResult = tools.dispatch(firstCall);
+
+    // R1 — schema validation error presented as tool observation.
+    writeWholeFile(boundaryDir / "R1_schema_validation_error.txt", firstResult.toJson());
 
     const bool firstSchemaValid = firstResult.error != "schema_validation";
     const bool firstDispatched = firstResult.dispatched;
@@ -2871,22 +3095,67 @@ static int runSchemaRetryCert(const CliOptions& cli) {
         firstCall.id
     });
 
+    // R2 — exact retry prompt/messages presented to the model (messages + rendered bytes).
+    {
+        std::ostringstream msgDump;
+        msgDump << "message_count=" << messages.size() << "\n";
+        for (std::size_t i = 0; i < messages.size(); ++i) {
+            const auto& m = messages[i];
+            const char* role =
+                m.role == Role::System ? "system" :
+                m.role == Role::User ? "user" :
+                m.role == Role::Assistant ? "assistant" :
+                m.role == Role::Tool ? "tool" : "unknown";
+            msgDump << "=== msg[" << i << "] role=" << role;
+            if (!m.name.empty()) msgDump << " name=" << m.name;
+            if (!m.toolCallId.empty()) msgDump << " tool_call_id=" << m.toolCallId;
+            msgDump << " ===\n" << m.content << "\n";
+        }
+        writeWholeFile(boundaryDir / "R2_retry_messages.txt", msgDump.str());
+    }
+    const std::string renderedPrompt =
+        inference.renderPrompt(messages, tools.definitions(), true);
+    writeWholeFile(boundaryDir / "R2_retry_rendered_prompt.txt", renderedPrompt);
+
+    const bool r2HasSchemaError =
+        renderedPrompt.find("schema_validation") != std::string::npos ||
+        firstResult.error == "schema_validation";
+    const bool r2HasStrictExample =
+        renderedPrompt.find("{\"path\":\"main.c\"}") != std::string::npos ||
+        renderedPrompt.find("\\\"path\\\":\\\"main.c\\\"") != std::string::npos;
+    const bool r2HasMalformedPrior =
+        renderedPrompt.find("{path:main.c}") != std::string::npos;
+    const bool r2NonEmpty = !trim(renderedPrompt).empty();
+    const bool retryPromptCorrect =
+        r2NonEmpty && r2HasSchemaError && r2HasStrictExample && r2HasMalformedPrior;
+
     std::printf("[SCHEMA_RETRY] FIRST_CALL_SCHEMA_VALID=%d FIRST_CALL_DISPATCHED=%d "
                 "FIRST_CALL_SIDE_EFFECTS=%d\n",
                 firstSchemaValid ? 1 : 0,
                 firstDispatched ? 1 : 0,
                 firstSideEffects ? 1 : 0);
+    std::printf("[SCHEMA_RETRY] R2_RETRY_PROMPT_CORRECT=%d (schema_err=%d strict_ex=%d "
+                "malformed_prior=%d bytes=%zu)\n",
+                retryPromptCorrect ? 1 : 0,
+                r2HasSchemaError ? 1 : 0,
+                r2HasStrictExample ? 1 : 0,
+                r2HasMalformedPrior ? 1 : 0,
+                renderedPrompt.size());
     std::fflush(stdout);
 
     const std::string secondResponse =
         inference.ChatSync(messages, tools.definitions(), cli.maxTokens);
     const bool newInferenceObserved = !trim(secondResponse).empty();
 
+    // R3 — raw second model output.
+    writeWholeFile(boundaryDir / "R3_raw_second_model_output.txt", secondResponse);
+
     const auto secondCalls = ToolCallParser::parse(secondResponse);
     bool secondSchemaValid = false;
     bool secondDispatched = false;
     bool secondSuccess = false;
     bool correctedDifferent = false;
+    bool secondBareKeyClass = false;
     std::string secondArgs;
     ToolResult secondResult{};
 
@@ -2896,11 +3165,31 @@ static int runSchemaRetryCert(const CliOptions& cli) {
         correctedDifferent =
             (second.name != firstCall.name) ||
             (second.argumentsJson != firstCall.argumentsJson);
+        secondBareKeyClass =
+            !isStrictJsonObject(second.argumentsJson) &&
+            second.argumentsJson.find("path:") != std::string::npos;
         secondResult = tools.dispatch(second);
         secondSchemaValid = (secondResult.error != "schema_validation");
         secondDispatched = secondResult.dispatched;
         secondSuccess = secondResult.success && secondDispatched;
         if (secondDispatched) ++handlerExecutions;
+    } else {
+        // No parseable TOOL_CALL — still schema-invalid class for repair purposes.
+        secondBareKeyClass =
+            secondResponse.find("{path:main.c}") != std::string::npos ||
+            secondResponse.find("path:main.c") != std::string::npos;
+    }
+
+    // R4 — parser / schema result after second generation.
+    {
+        std::ostringstream r4;
+        r4 << "parsed_tool_calls=" << secondCalls.size() << "\n"
+           << "second_args=" << (secondArgs.empty() ? "<none>" : secondArgs) << "\n"
+           << "second_schema_valid=" << (secondSchemaValid ? 1 : 0) << "\n"
+           << "second_dispatched=" << (secondDispatched ? 1 : 0) << "\n"
+           << "second_bare_key_class=" << (secondBareKeyClass ? 1 : 0) << "\n"
+           << "second_result=" << secondResult.toJson() << "\n";
+        writeWholeFile(boundaryDir / "R4_parser_schema_result.txt", r4.str());
     }
 
     std::printf("[SCHEMA_RETRY] SECOND_CALL_SCHEMA_VALID=%d SECOND_CALL_DISPATCHED=%d "
@@ -2915,6 +3204,10 @@ static int runSchemaRetryCert(const CliOptions& cli) {
     const bool sideEffectFree = !firstSideEffects;
     const bool correctedDispatched = secondSchemaValid && secondDispatched && secondSuccess;
     const bool handlerOnce = (handlerExecutions == 1) && correctedDispatched;
+    const bool modelRepeatsInvalid =
+        newInferenceObserved && !secondSchemaValid &&
+        (secondBareKeyClass || secondArgs == firstCall.argumentsJson ||
+         (!secondCalls.empty() && !correctedDifferent));
 
     const bool pass =
         malformedRejected &&
@@ -2923,6 +3216,51 @@ static int runSchemaRetryCert(const CliOptions& cli) {
         correctedDifferent &&
         correctedDispatched &&
         handlerOnce;
+
+    std::string disposition;
+    if (!retryPromptCorrect) {
+        disposition = "RETRY_PROMPT_MISSING_OR_MALFORMED → AGENT_RETRY_CONTROLLER gap";
+    } else if (pass) {
+        disposition = "RETRY_PROMPT_CORRECT + MODEL_CORRECTED → PASS";
+    } else {
+        disposition =
+            "RETRY_PROMPT_CORRECT + MODEL_REPEATS_INVALID → "
+            "MODEL_CAPABILITY / CONSTRAINED_DECODING gap";
+    }
+
+    {
+        std::ostringstream freeze;
+        freeze << "SCHEMA_RETRY_BOUNDARY_FREEZE\n"
+               << "ROOT_DOMAIN=MODEL_SCHEMA_RETRY\n"
+               << "MODEL=TinyLlama\n"
+               << "HEXMAG=NOT_IMPLICATED\n"
+               << "COPILOT_ROUTE=NOT_IMPLICATED\n"
+               << "\n"
+               << "R0_raw_first_model_output=written\n"
+               << "R1_schema_validation_error=written\n"
+               << "R2_retry_prompt_correct=" << (retryPromptCorrect ? 1 : 0) << "\n"
+               << "R2_has_schema_error=" << (r2HasSchemaError ? 1 : 0) << "\n"
+               << "R2_has_strict_example=" << (r2HasStrictExample ? 1 : 0) << "\n"
+               << "R2_has_malformed_prior=" << (r2HasMalformedPrior ? 1 : 0) << "\n"
+               << "R2_rendered_bytes=" << renderedPrompt.size() << "\n"
+               << "R3_raw_second_written=1\n"
+               << "R3_bare_key_class=" << (secondBareKeyClass ? 1 : 0) << "\n"
+               << "R4_second_schema_valid=" << (secondSchemaValid ? 1 : 0) << "\n"
+               << "R4_second_dispatched=" << (secondDispatched ? 1 : 0) << "\n"
+               << "\n"
+               << "MODEL_REPEATS_INVALID=" << (modelRepeatsInvalid ? 1 : 0) << "\n"
+               << "DISPOSITION=" << disposition << "\n"
+               << "\n"
+               << "WORKING_NOTE=Retry infrastructure presents observation + strict example; "
+                  "TinyLlama second generation remains schema-invalid under unconstrained NL. "
+                  "Architectural fix if R2 correct: deterministic schema repair / constrained "
+                  "decode between model output and tool dispatch (not another free gen).\n"
+               << "Do not reopen HexMag/Copilot.\n";
+        writeWholeFile(boundaryDir / "DISPOSITION.txt", freeze.str());
+        writeWholeFile(outDir / "RETRY_BOUNDARY_DISPOSITION.txt", freeze.str());
+        std::printf("%s", freeze.str().c_str());
+        std::fflush(stdout);
+    }
 
     std::ostringstream report;
     report << "AGENT_SCHEMA_RETRY_001\n"
@@ -2945,6 +3283,8 @@ static int runSchemaRetryCert(const CliOptions& cli) {
            << "second_response=\n" << secondResponse << "\n"
            << "first_result=" << firstResult.toJson() << "\n"
            << "second_result=" << secondResult.toJson() << "\n"
+           << "RETRY_PROMPT_CORRECT=" << (retryPromptCorrect ? 1 : 0) << "\n"
+           << "DISPOSITION=" << disposition << "\n"
            << "AGENT_SCHEMA_RETRY_001=" << (pass ? "PASS" : "FAIL") << "\n";
 
     const std::string text = report.str();
@@ -2963,6 +3303,9 @@ static int runSchemaRetryCert(const CliOptions& cli) {
          << "  \"SECOND_CALL_SCHEMA_VALID\": " << (secondSchemaValid ? "true" : "false") << ",\n"
          << "  \"SECOND_CALL_DISPATCHED\": " << (secondDispatched ? "true" : "false") << ",\n"
          << "  \"TOTAL_HANDLER_EXECUTIONS\": " << handlerExecutions << ",\n"
+         << "  \"RETRY_PROMPT_CORRECT\": " << (retryPromptCorrect ? "true" : "false") << ",\n"
+         << "  \"DISPOSITION\": \"" << disposition << "\",\n"
+         << "  \"HEXMAG\": \"NOT_IMPLICATED\",\n"
          << "  \"note\": \"Distinct from SCHEMA-002 lane R (deterministic parser repair).\"\n"
          << "}\n";
     writeWholeFile(outDir / "AGENT_SCHEMA_RETRY_001.lock.json", lock.str());
@@ -2985,6 +3328,100 @@ static void printRuntimeInfo(const NativeInferenceClient& inference, const Works
 
 } // namespace rawrxd::agentic
 
+namespace rawrxd::agentic {
+
+// RUN_COMMAND_SEMANTICS_001 — model-independent cwd/argv/exit/stdio + discovery cert.
+static int runCommandSemanticsCert(const CliOptions& cli) {
+    const fs::path outDir = cli.schemaCertOut.empty()
+        ? fs::path("F:/~dev/rawrxd/evidence/RUN_COMMAND_SEMANTICS_001")
+        : cli.schemaCertOut;
+    std::error_code ec;
+    fs::create_directories(outDir, ec);
+
+    const fs::path work = outDir / "work";
+    fs::remove_all(work, ec);
+    fs::create_directories(work, ec);
+    writeWholeFile(work / "CMakeLists.txt",
+                   "cmake_minimum_required(VERSION 3.20)\nproject(rcert C)\n"
+                   "add_executable(rcert main.c)\n");
+    writeWholeFile(work / "main.c",
+                   "#include <stdio.h>\nint main(void){puts(\"rcert ok\");return 0;}\n");
+
+    WorkspaceSandbox sandbox(work);
+    ToolRegistry tools(sandbox);
+
+    std::ostringstream report;
+    report << "RUN_COMMAND_SEMANTICS_001\n";
+    int failures = 0;
+
+    // Lane 1: capture requested vs effective cwd + exit + stdout for a trivial command.
+    {
+        ToolCall call{"call_echo", "run_command",
+                      R"({"command":"cmake --version"})"};
+        const ToolResult r = tools.dispatch(call);
+        const bool hasRequested = r.output.find("requested_cwd=") != std::string::npos;
+        const bool hasEffective = r.output.find("effective_cwd=") != std::string::npos;
+        const bool hasResolved = r.output.find("resolved_executable=") != std::string::npos;
+        const bool hasExit = r.output.find("exit_code=") != std::string::npos;
+        const bool hasStdout = r.output.find("--- stdout ---") != std::string::npos;
+        const bool hasStderr = r.output.find("--- stderr ---") != std::string::npos;
+        const bool ok = r.success && hasRequested && hasEffective && hasResolved &&
+                        hasExit && hasStdout && hasStderr;
+        report << "LANE_EVIDENCE_FIELDS=" << (ok ? "PASS" : "FAIL") << "\n";
+        report << "lane_evidence_ok=" << r.success << " exit=" << r.exitCode << "\n";
+        writeWholeFile(outDir / "lane_evidence_output.txt", r.output);
+        if (!ok) ++failures;
+    }
+
+    // Lane 2: missing build/ without CMakeLists → explicit fail (use empty subdir).
+    {
+        const fs::path empty = outDir / "empty_work";
+        fs::remove_all(empty, ec);
+        fs::create_directories(empty, ec);
+        WorkspaceSandbox emptySand(empty);
+        ToolRegistry emptyTools(emptySand);
+        ToolCall call{"call_miss", "run_command",
+                      R"({"command":"cmake --build build"})"};
+        const ToolResult r = emptyTools.dispatch(call);
+        const bool explicitFail =
+            !r.success &&
+            (r.output.find("missing_build_dir_and_no_CMakeLists") != std::string::npos ||
+             r.output.find("CLAIM_COMPILE_SUCCESS=forbidden") != std::string::npos);
+        report << "LANE_MISSING_BUILD_FAIL_CLOSED=" << (explicitFail ? "PASS" : "FAIL") << "\n";
+        writeWholeFile(outDir / "lane_missing_build.txt", r.output);
+        if (!explicitFail) ++failures;
+    }
+
+    // Lane 3: cmake --build build on fixture → configure_then_build then exit 0.
+    {
+        ToolCall call{"call_build", "run_command",
+                      R"({"command":"cmake --build build"})"};
+        const ToolResult r = tools.dispatch(call);
+        const bool discovered =
+            r.output.find("configure_then_build") != std::string::npos ||
+            r.output.find("[build_phase]") != std::string::npos;
+        const bool ok = r.success && r.exitCode == 0 && discovered &&
+                        r.output.find("CLAIM_COMPILE_SUCCESS=allowed_by_tool_evidence") !=
+                            std::string::npos;
+        report << "LANE_BUILD_DISCOVERY=" << (ok ? "PASS" : "FAIL") << "\n";
+        report << "lane_build_ok=" << r.success << " exit=" << r.exitCode << "\n";
+        writeWholeFile(outDir / "lane_build_discovery.txt", r.output);
+        if (!ok) ++failures;
+    }
+
+    report << "failures=" << failures << "\n";
+    report << "RUN_COMMAND_SEMANTICS_001=" << (failures == 0 ? "PASS" : "FAIL") << "\n";
+    const std::string text = report.str();
+    writeWholeFile(outDir / "RUN_COMMAND_SEMANTICS_001.txt", text);
+    writeWholeFile(outDir / "RUN_COMMAND_SEMANTICS_001.lock.json",
+                   std::string("{\n  \"gate\": \"RUN_COMMAND_SEMANTICS_001\",\n  \"status\": \"") +
+                       (failures == 0 ? "PASS" : "FAIL") + "\"\n}\n");
+    std::cout << text;
+    return failures == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+} // namespace rawrxd::agentic
+
 int main(int argc, char** argv) {
     using namespace rawrxd::agentic;
     try {
@@ -2994,6 +3431,9 @@ int main(int argc, char** argv) {
         }
         if (cli.schemaRetryCert) {
             return runSchemaRetryCert(cli);
+        }
+        if (cli.runCommandCert) {
+            return runCommandSemanticsCert(cli);
         }
         WorkspaceSandbox sandbox(cli.workspace);
 

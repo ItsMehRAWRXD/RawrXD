@@ -13,6 +13,9 @@
 #include <future>
 #include <functional>
 #include <atomic>
+#include <thread>
+#include <chrono>
+#include <string>
 
 namespace Deep2 {
 namespace MARS {

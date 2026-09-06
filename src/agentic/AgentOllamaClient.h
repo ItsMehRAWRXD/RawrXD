@@ -30,8 +30,8 @@ namespace Agent {
 // Configuration
 // ---------------------------------------------------------------------------
 struct OllamaConfig {
-    std::string host = "127.0.0.1";
-    uint16_t port = 11434;
+    std::string host;                               // unused under LOCAL_ONLY_001
+    uint16_t port = 0;                              // 0 = no Ollama HTTP (never 11434)
     std::string chat_model;                         // Active chat model tag
     std::string fim_model;                          // Active FIM model tag
     int timeout_ms = 120000;

@@ -310,6 +310,9 @@ private:
     std::atomic<uint32_t>       m_nodeCount;
     mutable std::mutex          m_nodesMutex;
     uint8_t                     m_localNodeId[16];
+    uint8_t                     m_attestChallenges[SWARM_MAX_NODES][32];
+    uint64_t                    m_attestNonces[SWARM_MAX_NODES];
+    uint64_t                    m_attestIssuedMs[SWARM_MAX_NODES];
 
     // Task graph
     SwarmTaskGraph              m_taskGraph;

@@ -29,23 +29,31 @@ $modelSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $Model).Hash.ToLowerInv
 $caseMeta = @{
     "01_compile" = @{
         Prompt = @"
-Fix the compile error in main.c so the program builds and prints hello from b01.
+Fix the compile error in main.c so the program builds and prints hello from b01 42.
 First line of your reply MUST be a TOOL_CALL.
 Start with: TOOL_CALL: read_file {"path":"main.c"}
-Then edit with replace_in_file (search/replace), build with run_command, and run the exe.
+Then edit with replace_in_file (search DOES_NOT_EXIST / replace 42).
+Then TOOL_CALL: run_command {"command":"cmake --build build"}
+(tool configures build/ if missing; do NOT use shell chaining &&).
+Never claim compile success unless that run_command reports exit_code=0.
 No markdown code fences. No canned repairs.
 "@
-        Expected = "hello from b01"
+        # Fixture prints "hello from b01 %d" with x fixed from DOES_NOT_EXIST → 42
+        Expected = "hello from b01 42"
         Source = "main.c"
         ExeName = "b01.exe"
     }
     "04_logic_bug" = @{
         Prompt = @"
-Fix the bug so add(2,3) returns 5, then print hello from b04.
-First line of your reply MUST be a TOOL_CALL.
-Start with: TOOL_CALL: read_file {"path":"main.c"}
-Then edit with replace_in_file (search/replace), build with run_command, and run.
-No markdown code fences. No canned repairs.
+Fix add() so add(2,3) returns 5. The bug is return a - b; it must become return a + b.
+First line MUST be:
+TOOL_CALL: read_file {"path":"main.c"}
+Second:
+TOOL_CALL: replace_in_file {"path":"main.c","search":"return a - b","replace":"return a + b"}
+Third:
+TOOL_CALL: run_command {"command":"cmake --build build"}
+(tool configures if build/ missing; no &&). Never claim success without exit_code=0.
+Do not use DOES_NOT_EXIST. Do not echo the tool catalog. No markdown.
 "@
         Expected = "hello from b04"
         Source = "main.c"
@@ -145,8 +153,7 @@ foreach ($name in $Cases) {
 set RAWRXD_GREEDY=1
 call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
 cd /d "$work"
-set /p TASK=<"$taskFile"
-"$exeAgent" --model "$Model" --workspace "$work" --max-steps $MaxSteps --max-tokens $MaxTokens --no-stream --task "%TASK%" > "$console" 2>&1
+"$exeAgent" --model "$Model" --workspace "$work" --max-steps $MaxSteps --max-tokens $MaxTokens --no-stream --task-file "$taskFile" > "$console" 2>&1
 echo AGENT_EXIT=%ERRORLEVEL%>> "$console"
 set AGENT_EC=%ERRORLEVEL%
 exit /b %AGENT_EC%

@@ -307,7 +307,11 @@ WebView2Result WebView2Container::destroy() {
 void WebView2Container::resize(int x, int y, int width, int height) {
     m_bounds = { x, y, x + width, y + height };
     if (m_controller) {
-        RECT bounds = { 0, 0, width, height };
+        // Bounds are relative to the parent HWND client area.
+        // Dedicated Monaco host: pass (0,0,w,h). Main-window parent: pass editor rect.
+        RECT bounds = { x, y, x + width, y + height };
+        if (width <= 0) bounds.right = bounds.left + 800;
+        if (height <= 0) bounds.bottom = bounds.top + 600;
         m_controller->put_Bounds(bounds);
     }
 }
@@ -970,7 +974,7 @@ require(['vs/editor/editor.main'], function() {
     // ================================================================
 
     (function() {
-        var WS_URL = 'ws://127.0.0.1:11434/ws';
+        var WS_URL = 'ws://127.0.0.1:0/ws';
         var ws = null;
         var reconnectDelay = 1000;
         var maxReconnectDelay = 30000;
@@ -1110,7 +1114,7 @@ require(['vs/editor/editor.main'], function() {
             }
 
             // Strategy 2: HTTP fallback — always works even if WS is flaky
-            fetch('http://127.0.0.1:11434/api/full-state')
+            fetch('/api/full-state')
                 .then(function(resp) { return resp.json(); })
                 .then(function(serverState) {
                     stateCache.fullState = serverState;

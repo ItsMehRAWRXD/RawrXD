@@ -1558,6 +1558,7 @@ std::string RawrXDLSPServer::getStatsString() const {
 // ENTRY POINT
 // ============================================================================
 
+#ifndef RAWRXD_LSP_NO_MAIN
 int main(int argc, char* argv[]) {
     using namespace RawrXD::LSPServer;
 
@@ -1590,3 +1591,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+#endif

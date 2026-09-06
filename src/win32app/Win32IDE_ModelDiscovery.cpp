@@ -19,6 +19,7 @@ static const std::vector<std::string> DEFAULT_MODEL_PATHS = {
     "F:\\OllamaModels",
     "C:\\Users\\Public\\Models",
     "D:\\Models",
+    "D:\\OllamaModels",
     "E:\\Models"
 };
 
@@ -42,8 +43,9 @@ void Win32IDE::initModelDiscovery() {
         m_modelDiscoveryPaths.insert(m_modelDiscoveryPaths.begin(), customModelsPath);
     }
 
-    // Initial scan
+    // Initial scan, then hydrate the AI model combo (may already exist)
     scanForModels();
+    populateModelSelector();
 
     LOG_INFO("Model discovery initialized");
 }

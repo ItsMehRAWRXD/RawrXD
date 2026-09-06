@@ -51,27 +51,41 @@ private:
     std::string m_extensionsDir;
 
     // Shared helper: call ExtensionShutdown then FreeLibrary on a single ext.
-    // Returns true if FreeLibrary succeeded (or module was already null).
+    // Idempotent: nulls nativeModule before FreeLibrary so a concurrent/dtor
+    // path cannot double-free the same HMODULE.
     static bool ShutdownAndFree(ExtensionInfo& ext, const char* context) {
-        if (!ext.nativeModule) {
+        HMODULE mod = ext.nativeModule;
+        if (!mod) {
+            ext.isActive = false;
             return true;
         }
+        ext.nativeModule = nullptr;
+        ext.isActive = false;
 
         auto fnShutdown = reinterpret_cast<void(*)()>(
-            GetProcAddress(ext.nativeModule, "ExtensionShutdown"));
+            GetProcAddress(mod, "ExtensionShutdown"));
+        // Native ExtensionShutdown may re-enter JS/host during WM_DESTROY;
+        // contain AV so FreeLibrary still runs (idempotent unload).
+#if defined(_MSC_VER)
         if (fnShutdown) {
-            fnShutdown();
+            __try {
+                fnShutdown();
+            } __except (EXCEPTION_EXECUTE_HANDLER) {
+                OutputDebugStringA(
+                    "[ExtensionLoader] ExtensionShutdown fault swallowed\n");
+            }
         }
+#else
+        if (fnShutdown)
+            fnShutdown();
+#endif
 
-        const BOOL freed = FreeLibrary(ext.nativeModule);
+        const BOOL freed = FreeLibrary(mod);
         if (!freed) {
             std::cout << "[ExtensionLoader] FreeLibrary failed (" << context
                       << "): " << ext.name
                       << " (error " << GetLastError() << ")" << std::endl;
         }
-
-        ext.nativeModule = nullptr;
-        ext.isActive = false;
         return freed != 0;
     }
 
@@ -184,10 +198,19 @@ public:
     }
 
     ~ExtensionLoader() {
+        UnloadAllNative("dtor");
+    }
+
+    // Explicit teardown: unload every native HMODULE once. Safe to call
+    // repeatedly (onDestroy then unique_ptr dtor / ~Win32IDE).
+    void UnloadAllNative(const char* context = "unload_all") {
         for (auto& kv : m_extensions) {
-            if (ShutdownAndFree(kv.second, "shutdown")) {
-                std::cout << "[ExtensionLoader] Unloaded native module on shutdown: "
-                          << kv.first << std::endl;
+            if (!kv.second.nativeModule)
+                continue;
+            const std::string name = kv.first;
+            if (ShutdownAndFree(kv.second, context)) {
+                std::cout << "[ExtensionLoader] Unloaded native module on "
+                          << context << ": " << name << std::endl;
             }
         }
     }

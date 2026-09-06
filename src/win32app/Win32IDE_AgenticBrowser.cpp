@@ -168,6 +168,7 @@ extern "C"
 
     void Win32IDE_AgenticBrowser_Shutdown(void)
     {
+        // Idempotent: safe from WM_DESTROY and again from WinMain.
         if (g_layer)
         {
             g_layer->destroy();
@@ -175,7 +176,8 @@ extern "C"
         }
         if (g_host)
         {
-            DestroyWindow(g_host);
+            if (IsWindow(g_host))
+                DestroyWindow(g_host);
             g_host = nullptr;
         }
         g_visible = false;

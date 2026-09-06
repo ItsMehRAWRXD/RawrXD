@@ -104,7 +104,7 @@ struct ExtensionManifest {
     std::vector<ContributionPoint> contributions;
 
     // Extension file info
-    std::string vsixPath;           // Local path to .vsix file
+    std::string vsixPath;           // Local path to source package (any format)
     std::string installPath;        // Unpacked install directory
     uint64_t fileSize;
     uint64_t installedAt;           // Epoch timestamp
@@ -116,10 +116,52 @@ struct ExtensionManifest {
     std::string engineVersion;      // Required RawrXD version
     std::vector<std::string> supportedPlatforms;  // "win32-x64", etc.
 
+    // Source IDE package format (see ExtensionPackageFormat)
+    uint32_t packageFormat = 0;
+    std::string sourceIde;          // e.g. "VS Code", "IntelliJ IDEA"
+
     ExtensionManifest()
         : fileSize(0), installedAt(0), updatedAt(0),
-          isEnabled(true), isBuiltIn(false) {}
+          isEnabled(true), isBuiltIn(false),
+          packageFormat(0) {}
 };
+
+// ============================================================================
+// Cross-IDE package formats (top-25 IDE coverage)
+// ============================================================================
+enum class ExtensionPackageFormat : uint32_t {
+    Unknown           = 0,
+    VsCodeVsix        = 1,   // package.json + engines.vscode
+    VisualStudioVsix  = 2,   // extension.vsixmanifest (MSVS)
+    JetBrainsPlugin   = 3,   // META-INF/plugin.xml
+    EclipseBundle     = 4,   // plugin.xml / OSGi JAR
+    SublimePackage    = 5,   // .sublime-package
+    NeovimPack        = 6,   // Neovim/Vim pack layout
+    EmacsPackage      = 7,   // ELPA/MELPA
+    XcodeBundle       = 8,   // .appex / Cocoa plugin
+    NetBeansNBM       = 9,   // .nbm
+    ZedExtension      = 10,  // extension.toml
+    QtCreatorPlugin   = 11,  // Qt Creator plugin
+    NovaExtension     = 12,  // .novaextension
+    AtomPackage       = 13,  // Atom/Pulsar
+    LapcePlugin       = 14,  // Lapce
+    NativeDll         = 15,  // RawrXD / native host DLL
+    RawrPlugin        = 16,  // .rawrpkg
+    PythonWheel       = 17,  // .whl
+    JsModule          = 18,  // loose .js module
+};
+
+struct IdeExtensionFormatInfo {
+    const char* ideName;                 // Product display name
+    ExtensionPackageFormat primaryFormat;
+    const char* packageExtensions;       // Comma-separated file extensions
+    const char* manifestHint;            // Marker file / path pattern
+    bool installSupported;               // Can unpack + register
+    bool runtimeHosted;                  // Full in-process host today
+};
+
+// Catalog size: top 25 IDEs (distinct products; shared formats collapse)
+static constexpr size_t kTopIdeExtensionCatalogCount = 25;
 
 // ============================================================================
 // Extension State
@@ -272,6 +314,16 @@ public:
     // Install from local .vsix file
     ExtResult installFromVsix(const std::string& vsixPath);
 
+    // Install from any supported IDE package format (top-25 catalog)
+    ExtResult installFromPackage(const std::string& packagePath);
+
+    // Detect package format from path + optional content sniff
+    ExtensionPackageFormat detectPackageFormat(const std::string& packagePath) const;
+
+    // Top-25 IDE → format catalog
+    static const IdeExtensionFormatInfo* ideExtensionCatalog(size_t& outCount);
+    static const char* packageFormatName(ExtensionPackageFormat fmt);
+
     // Install from a URL
     ExtResult installFromUrl(const std::string& downloadUrl);
 
@@ -325,16 +377,25 @@ public:
                                 std::vector<std::string>& orderedDeps);
 
     // -----------------------------------------------------------------------
-    // VSIX Package Operations
+    // VSIX / Multi-format Package Operations
     // -----------------------------------------------------------------------
 
     // Extract .vsix package (ZIP format) to install directory
     ExtResult extractVsix(const std::string& vsixPath,
                           const std::string& targetDir);
 
+    // Extract ZIP-compatible packages (.vsix, .sublime-package, .jar, .nbm, …)
+    ExtResult extractZipPackage(const std::string& packagePath,
+                                const std::string& targetDir);
+
     // Parse package.json / extension manifest from .vsix
     ExtResult parseManifest(const std::string& manifestPath,
                             ExtensionManifest& manifest);
+
+    // Parse foreign IDE manifests into ExtensionManifest
+    ExtResult parseForeignManifest(ExtensionPackageFormat fmt,
+                                   const std::string& installDir,
+                                   ExtensionManifest& manifest);
 
     // Verify .vsix package signature (if policy requires)
     ExtResult verifySignature(const std::string& vsixPath);

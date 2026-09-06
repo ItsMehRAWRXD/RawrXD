@@ -6,20 +6,26 @@
 // It uses EXISTING working backends in priority order:
 //   1. RawrXD_Titan.dll (native, fastest) — already loaded by GhostText
 //   2. BackendOrchestrator (queue-based, reliable) — already used by AgentOllamaClient
-//   3. Ollama HTTP direct (fallback, always works if Ollama running)
+//   3. Ollama HTTP direct (optional — compiled only when RAWRXD_OPTIONAL_OLLAMA=1)
 //
 // No new abstractions. No routers. No bridges. Just real tokens.
 // ============================================================================
 
 #include <windows.h>
-#include <winhttp.h>
 #include <string>
 #include <vector>
 #include <chrono>
 #include <future>
 #include <nlohmann/json.hpp>
 
+#ifndef RAWRXD_OPTIONAL_OLLAMA
+#define RAWRXD_OPTIONAL_OLLAMA 0
+#endif
+
+#if RAWRXD_OPTIONAL_OLLAMA
+#include <winhttp.h>
 #pragma comment(lib, "winhttp.lib")
+#endif
 
 // --- Existing RawrXD includes (these already compile in your build) ---
 #include "../BackendOrchestrator.h"
@@ -29,9 +35,11 @@
 // CONFIGURATION — Adjust these to match your setup
 // ============================================================================
 
+#if RAWRXD_OPTIONAL_OLLAMA
 static const char* OLLAMA_HOST = "localhost";
 static const int   OLLAMA_PORT = 11434;
-static const char* OLLAMA_MODEL = "codellama:7b-code";  // Change to your loaded model
+static const char* OLLAMA_MODEL = "codellama:7b-code";
+#endif
 
 // Titan DLL path — already used by GhostText
 static const char* TITAN_DLL_PATH = "D:\\rawrxd\\bin\\RawrXD_Titan.dll";
@@ -187,8 +195,9 @@ static std::string FIM_Orchestrator(const std::string& prefix, const std::string
     return future.get();
 }
 
+#if RAWRXD_OPTIONAL_OLLAMA
 // ============================================================================
-// BACKEND 3: OLLAMA HTTP DIRECT (fallback, no dependencies)
+// BACKEND 3: OLLAMA HTTP DIRECT (optional adapter only — excluded when OFF)
 // ============================================================================
 
 static std::string EscapeJson(const std::string& s) {
@@ -287,6 +296,7 @@ static std::string FIM_OllamaDirect(const std::string& prefix, const std::string
     // Extract completion from JSON
     return ExtractJsonField(response, "response");
 }
+#endif // RAWRXD_OPTIONAL_OLLAMA
 
 // ============================================================================
 // PUBLIC API: ONE FUNCTION
@@ -316,10 +326,11 @@ std::string DirectFIM_Complete(const std::string& prefix, const std::string& suf
     result = FIM_Orchestrator(prefix, suffix, maxTokens);
     if (!result.empty()) return result;
     
-    // 3. Ollama HTTP (fallback, always works if Ollama running)
+#if RAWRXD_OPTIONAL_OLLAMA
     result = FIM_OllamaDirect(prefix, suffix, maxTokens);
     if (!result.empty()) return result;
-    
+#endif
+
     // All backends failed
     return "";
 }
@@ -338,10 +349,15 @@ bool DirectFIM_CompleteWithStream(const std::string& prefix, const std::string& 
                                    const std::string& modelPath, int maxTokens,
                                    std::function<void(const std::string&)> onToken) {
     if (!onToken) return false;
-    
-    // For streaming, we use Ollama HTTP with stream=true
-    // (Titan streaming requires more complex async setup)
-    
+
+#if !RAWRXD_OPTIONAL_OLLAMA
+    (void)prefix;
+    (void)suffix;
+    (void)modelPath;
+    (void)maxTokens;
+    return false;
+#else
+    // Streaming uses Ollama HTTP when optional adapter is linked
     std::string fimPrompt = "<PRE> " + prefix + " <SUF>" + suffix + " <MID>";
     
     std::string jsonBody = "{";
@@ -429,6 +445,24 @@ bool DirectFIM_CompleteWithStream(const std::string& prefix, const std::string& 
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     return true;
+#endif // RAWRXD_OPTIONAL_OLLAMA
+}
+
+void DirectFIM_SetOllamaHost(const char* host, int port) {
+#if RAWRXD_OPTIONAL_OLLAMA
+    (void)host;
+    (void)port;
+#endif
+}
+
+void DirectFIM_SetOllamaModel(const char* modelName) {
+#if RAWRXD_OPTIONAL_OLLAMA
+    (void)modelName;
+#endif
+}
+
+void DirectFIM_SetTitanPath(const char* dllPath) {
+    (void)dllPath;
 }
 
 // ============================================================================
@@ -457,8 +491,10 @@ int main(int argc, char* argv[]) {
         std::cout << "SUCCESS: \"" << result << "\"\n";
     } else {
         std::cout << "FAILED: All backends returned empty\n";
+#if RAWRXD_OPTIONAL_OLLAMA
         std::cout << "  - Is Ollama running on " << OLLAMA_HOST << ":" << OLLAMA_PORT << "?\n";
         std::cout << "  - Is model '" << OLLAMA_MODEL << "' loaded?\n";
+#endif
         std::cout << "  - Is Titan DLL at " << TITAN_DLL_PATH << "?\n";
     }
     

@@ -1,4 +1,4 @@
-need_input_resume: BACKEND_FAILURE
+need_input_resume: NEED_INPUT_LATCH: reject FINAL resurrection
 empty_events: EMPTY_EVENT_STREAM
 ooo: OUT_OF_ORDER_EVENT
 unavailable: BACKEND_FAILURE

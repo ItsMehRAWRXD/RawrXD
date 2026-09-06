@@ -17,6 +17,7 @@ extern "C" void ShutdownAICompletion();
 #include "BenchmarkMenu.h"
 #include "p1_gguf_load_cert.hpp"
 #include "p1_load_checkpoint.hpp"
+#include "P1PRA_ProcessState.hpp"
 #include <thread>
 #include <cstdlib>
 #include <vector>
@@ -27,6 +28,7 @@ extern "C" void ShutdownAICompletion();
 #include "../../include/model_registry.h"
 #include "../../include/multi_file_search.h"
 #include "../core/enterprise_license.h"
+#include "../core/AmdGpuPowerBackend.hpp"
 #include "../cpu_inference_engine.h"
 #include "../modules/ExtensionLoader.hpp"
 
@@ -43,6 +45,9 @@ void RunUiMenuE2eProbe(Win32IDE* ide);
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "resource.h"
+#include "../command/CommandEventJournal.h"
+#include "../command/CommandBroker.h"
 #include "Win32IDE_MainMenuAuthority.hpp"
 #include "Win32IDE_CommandFlight.hpp"
 #include "Win32IDE_ShellLayout.hpp"
@@ -220,6 +225,25 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
         RawrXD::CommandTelemetry::CmdDiagNoteMessage(
             uMsg, static_cast<unsigned long long>(wParam), hwnd,
             static_cast<unsigned long long>(lParam));
+        if (uMsg == WM_APP + 209) {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_SEND", "wndproc_route");
+            // #region agent log
+            P1PRA_AgentDbg("H1", "WindowProc", "wm_app_209_route",
+                           reinterpret_cast<unsigned long long>(hwnd),
+                           reinterpret_cast<unsigned long long>(pThis),
+                           static_cast<unsigned long long>(GetCurrentThreadId()));
+            // #endregion agent log
+#endif
+        }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        if (uMsg == WM_APP_MENU_IDLE_STABLE) {
+            // #region agent log
+            P1PRA_AgentDbg("H13", "WindowProc", "menu_idle_wndproc_enter",
+                           reinterpret_cast<unsigned long long>(hwnd), 0, 0);
+            // #endregion agent log
+        }
+#endif
         return pThis->handleMessage(hwnd, uMsg, wParam, lParam);
     }
 
@@ -763,7 +787,24 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
             return 0;  // Message consumed by v280 bridge
         }
+        if (uMsg == WM_APP + 209) {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_Witness("P1PRA_SEND", "post_v280");
+#endif
+        }
     }
+
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    if (uMsg == WM_APP_MENU_IDLE_STABLE ||
+        (uMsg == WM_TIMER && wParam == IDT_GPU_TELEMETRY)) {
+        // #region agent log
+        P1PRA_AgentDbg("H12", "handleMessage", "dispatch_enter",
+                       static_cast<unsigned long long>(uMsg),
+                       static_cast<unsigned long long>(wParam),
+                       static_cast<unsigned long long>(GetCurrentThreadId()));
+        // #endregion
+    }
+#endif
 
     switch (uMsg)
     {
@@ -1180,7 +1221,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (wParam == IDT_GPU_TELEMETRY)
             {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_UI", "gpu_telemetry_timer_enter");
+                P1PRA_AgentDbg("H10", "WM_TIMER", "gpu_telemetry_enter", 0, 0, 0);
+#endif
                 updateStatusBarBackend();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_UI", "gpu_telemetry_timer_exit");
+#endif
                 return 0;
             }
             if (wParam == 42)
@@ -1469,6 +1517,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (uMsg == WM_APP_DEFERRED_INIT)
             {
                 sehCallDeferredInit(deferredInitTrampoline, this);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_UI", "wm_app_deferred_init_done");
+                P1PRA_AgentDbg("H10", "handleMessage", "after_wm_deferred_init", 0, 0, 0);
+#endif
                 return 0;
             }
             // HexMag controller → Copilot render (shared WM_HEXMAG_COPILOT_DONE)
@@ -1519,6 +1571,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (uMsg == WM_APP_MENU_IDLE_STABLE)
             {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_UI", "menu_idle_stable_enter");
+                P1PRA_AgentDbg("H11", "handleMessage", "menu_idle_stable", 0, 0, 0);
+                P1PRA_AgentDbg("H12", "handleMessage", "menu_idle_handler_body", 0, 0, 0);
+#endif
                 RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "IDLE_ENTERED");
                 if (m_hMenu)
                     RawrXD::MainMenuAuthority::EnsureAttached(hwnd, m_hMenu);
@@ -1684,6 +1741,61 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     appendToOutput("Native LoadModel failed (see p1_gguf_load_cert / p1_cpu_load_ckpt).\n",
                                    "Errors", OutputSeverity::Error);
                 }
+                return 0;
+            }
+            // WM_APP+206: command-home AgenticBridge LoadModel worker finished
+            if (uMsg == WM_APP + 206)
+            {
+                std::unique_ptr<std::string> path(reinterpret_cast<std::string*>(lParam));
+                const bool loadOk = (wParam != 0);
+                onCommandModelLoadWorkerDone(loadOk, path ? *path : std::string{});
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                if (loadOk) {
+                    DWORD pid = 0;
+                    const DWORD tid = GetWindowThreadProcessId(hwnd, &pid);
+                    const LONG_PTR ud = GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+                    char line[192];
+                    snprintf(line, sizeof(line),
+                             "main=%p self=%p userdata=%p pid=%lu tid=%lu",
+                             static_cast<void*>(m_hwndMain), static_cast<void*>(hwnd),
+                             reinterpret_cast<void*>(ud),
+                             static_cast<unsigned long>(pid),
+                             static_cast<unsigned long>(tid));
+                    P1PRA_Witness("P1PRA_HWND", line);
+                    P1PRA_ThreadWitness("ui_post_window");
+                }
+#endif
+                return 0;
+            }
+            // P1PRA E2E: UI-thread Send inject (avoid cross-process WM_COMMAND to cmdHost).
+            if (uMsg == WM_APP + 209)
+            {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                if (P1PRA_SafeProcessE2EPostState(
+                        hwnd, uMsg, wParam,
+                        GetWindowLongPtrW(hwnd, GWLP_USERDATA)) < 0) {
+                    P1PRA_Witness("P1PRA_SEND", "target_invalid");
+                    return 0;
+                }
+                P1PRA_Witness("P1PRA_SEND", "hook_enter");
+#endif
+                HWND composer = nullptr;
+                if (m_hwndCommandComposer && IsWindow(m_hwndCommandComposer))
+                    composer = m_hwndCommandComposer;
+                else if (m_hwndCommandHost && IsWindow(m_hwndCommandHost)) {
+                    HWND c = GetDlgItem(m_hwndCommandHost, IDC_CMD_COMPOSER_INPUT);
+                    if (c && IsWindow(c))
+                        composer = c;
+                }
+                if (composer && IsWindow(composer))
+                    SetWindowTextW(composer, L"ping");
+                HWND host = nullptr;
+                if (m_hwndCommandHost && IsWindow(m_hwndCommandHost))
+                    host = m_hwndCommandHost;
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                P1PRA_Witness("P1PRA_SEND", "before_handle");
+#endif
+                handleCommandSend(host);
                 return 0;
             }
             // RE: set binary from build output (Game Engine or other build that posted path)
@@ -1909,9 +2021,14 @@ bool Win32IDE::createWindow()
         // 0xC0000409 fail-fast from synchronous network I/O + JSON parsing
         // during GUI startup. Use config fallback for initial URL.
         fileTrace("[Core] createWindow_before_ollamaUrl_deferred");
-        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
+        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "");
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
-        fprintf(stderr, "[Win32IDE] Using config fallback: %s\n", m_ollamaBaseUrl.c_str());
+        if (m_ollamaBaseUrl.find("11434") != std::string::npos) {
+            fprintf(stderr, "[Win32IDE] LOCAL_ONLY_001: clearing forbidden Ollama URL\n");
+            m_ollamaBaseUrl.clear();
+        }
+        fprintf(stderr, "[Win32IDE] Using config fallback: %s\n",
+                m_ollamaBaseUrl.empty() ? "(empty/local-only)" : m_ollamaBaseUrl.c_str());
         fflush(stderr);
         fileTrace("[Core] createWindow_after_ollamaUrl_deferred");
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
@@ -2229,7 +2346,12 @@ void Win32IDE::showWindow()
     forceWindowToForeground(m_hwndMain);
     restoreWindowOpacityIfNeeded(m_hwndMain);
     SetTimer(m_hwndMain, IDT_VISIBILITY_WATCHDOG, 1000, nullptr);
-    SetTimer(m_hwndMain, IDT_GPU_TELEMETRY, 2000, nullptr);
+    if (!rawrxd::GpuPowerProbeSuppressed())
+        SetTimer(m_hwndMain, IDT_GPU_TELEMETRY, 2000, nullptr);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    else
+        P1PRA_Witness("P1PRA_UI", "gpu_telemetry_timer_suppressed");
+#endif
     FLASHWINFO fwi = {sizeof(FLASHWINFO), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 3, 0};
     FlashWindowEx(&fwi);
 }
@@ -2252,6 +2374,16 @@ int Win32IDE::runMessageLoop()
         BOOL gm;
         while ((gm = GetMessage(&msg, nullptr, 0, 0)) > 0)
         {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            if (msg.message == WM_APP + 209) {
+                // #region agent log
+                P1PRA_AgentDbg("H2", "runMessageLoop", "dequeue_wm_app_209",
+                               reinterpret_cast<unsigned long long>(msg.hwnd),
+                               static_cast<unsigned long long>(msg.wParam),
+                               static_cast<unsigned long long>(GetCurrentThreadId()));
+                // #endregion agent log
+            }
+#endif
             if (!s_tracedFirstIdle && msg.message == WM_ENTERIDLE) {
                 s_tracedFirstIdle = true;
                 if (m_hwndMain && m_hMenu)
@@ -2295,6 +2427,16 @@ int Win32IDE::runMessageLoop()
                         routeCommandUnified(IDM_FILE_SAVEAS, this, m_hwndMain);
                     else
                         routeCommandUnified(IDM_FILE_SAVE, this, m_hwndMain);
+                    continue;
+                }
+                if (ctrl && shift && msg.wParam == 'W')
+                {
+                    enterWorkMode();
+                    continue;
+                }
+                if (ctrl && shift && msg.wParam == '1')
+                {
+                    enterCommandMode();
                     continue;
                 }
                 // Ctrl+Shift+L → License Creator, Ctrl+Shift+F → Feature Registry (before plain Ctrl+F)
@@ -2417,6 +2559,17 @@ int Win32IDE::runMessageLoop()
                 }
             }
 
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            if (msg.message == WM_APP_MENU_IDLE_STABLE ||
+                (msg.message == WM_TIMER && msg.wParam == IDT_GPU_TELEMETRY)) {
+                // #region agent log
+                P1PRA_AgentDbg("H12", "runMessageLoop", "pre_dispatch",
+                               static_cast<unsigned long long>(msg.message),
+                               static_cast<unsigned long long>(msg.wParam),
+                               static_cast<unsigned long long>(GetCurrentThreadId()));
+                // #endregion
+            }
+#endif
             TranslateMessage(&msg);
             AIWorkersProcessInvokeQueue();
             DispatchMessage(&msg);
@@ -2555,10 +2708,100 @@ void Win32IDE::onSize(int width, int height)
     if (width <= 0 || height <= 0)
         return;
 
+    if (m_shellMode == AppShellMode::Command && m_hwndCommandHost &&
+        IsWindow(m_hwndCommandHost)) {
+        MoveWindow(m_hwndCommandHost, 0, 0, width, height, TRUE);
+        layoutCommandSurface(width, height);
+        return;
+    }
+
     if (RawrXD::ShellLayout::RebuildActive() &&
         !RawrXD::ShellLayout::UseLegacySpatial(RawrXD::ShellLayout::PhaseFromEnvironment())) {
         RawrXD::ShellLayout::LayoutIDE(this, width, height);
-        return;
+
+        // ShellLayout owns outer rects; PowerShell children still need a
+        // client-relative pass or Execute stays at creation coords.
+        if (m_powerShellPanelVisible && m_hwndPowerShellPanel &&
+            IsWindow(m_hwndPowerShellPanel)) {
+            RECT panelClient{};
+            if (GetClientRect(m_hwndPowerShellPanel, &panelClient)) {
+                const int panelW = panelClient.right - panelClient.left;
+                const int panelH = panelClient.bottom - panelClient.top;
+                if (panelW > 0 && panelH > 0)
+                    updatePowerShellPanelLayout(panelW, panelH);
+            }
+        }
+
+        bool shellLayoutValid = true;
+        if (!RawrXD::ShellLayout::FrameOnlyMode()) {
+            RECT mainClient{};
+            if (!m_hwndMain || !IsWindow(m_hwndMain) ||
+                !GetClientRect(m_hwndMain, &mainClient) ||
+                mainClient.right <= mainClient.left ||
+                mainClient.bottom <= mainClient.top) {
+                shellLayoutValid = false;
+            }
+
+            auto mapToMainClient = [this](HWND child, RECT& mapped) -> bool {
+                if (!child || !IsWindow(child) || !GetWindowRect(child, &mapped))
+                    return false;
+                SetLastError(ERROR_SUCCESS);
+                return MapWindowPoints(nullptr, m_hwndMain,
+                                       reinterpret_cast<POINT*>(&mapped), 2) != 0 ||
+                       GetLastError() == ERROR_SUCCESS;
+            };
+            auto hasArea = [](const RECT& r) -> bool {
+                return r.right > r.left && r.bottom > r.top;
+            };
+            auto isContained = [&hasArea](const RECT& outer,
+                                          const RECT& inner) -> bool {
+                return hasArea(inner) && inner.left >= outer.left &&
+                       inner.top >= outer.top && inner.right <= outer.right &&
+                       inner.bottom <= outer.bottom;
+            };
+
+            RECT editorRect{};
+            const bool editorRequired =
+                m_hwndEditor && IsWindow(m_hwndEditor) &&
+                IsWindowVisible(m_hwndEditor);
+            const bool editorMapped =
+                editorRequired && mapToMainClient(m_hwndEditor, editorRect);
+            if (editorRequired &&
+                (!editorMapped || !isContained(mainClient, editorRect))) {
+                shellLayoutValid = false;
+            }
+
+            if (m_powerShellPanelVisible && m_powerShellPanelDocked &&
+                m_hwndPowerShellPanel && IsWindow(m_hwndPowerShellPanel)) {
+                RECT terminalRect{};
+                const bool terminalMapped =
+                    mapToMainClient(m_hwndPowerShellPanel, terminalRect);
+                if (GetParent(m_hwndPowerShellPanel) != m_hwndMain ||
+                    !terminalMapped || !isContained(mainClient, terminalRect)) {
+                    shellLayoutValid = false;
+                }
+
+                if (terminalMapped && editorMapped) {
+                    RECT overlap{};
+                    if (IntersectRect(&overlap, &terminalRect, &editorRect) &&
+                        hasArea(overlap)) {
+                        shellLayoutValid = false;
+                    }
+                }
+            }
+        }
+
+        if (shellLayoutValid) {
+            if (m_secondarySidebarVisible && m_hwndSecondarySidebar &&
+                IsWindow(m_hwndSecondarySidebar))
+                layoutAiChatChildren();
+            updateLineNumbers();
+            Win32IDE_AgenticBrowser_Relayout();
+            return;
+        }
+
+        OutputDebugStringA(
+            "[P1_UI_SHELL_LAYOUT] invalid child geometry; using spatial manifest fallback\n");
     }
 
     using namespace RawrXD::Ui;
@@ -2766,72 +3009,15 @@ std::string Win32IDE::getResolvedOllamaModel() const
 }
 
 // ============================================================================
-// trySendToOllama - Attempt to send a prompt to Ollama and get a response
+// trySendToOllama - LOCAL_ONLY_001: permanently fail-closed (no HTTP / no stub text)
 // ============================================================================
 bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outResponse)
 {
-    try
-    {
-        // Use discovered backend URL (already resolved by Deep2 Discovery)
-        const std::string& backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
-        ModelConnection conn(backendUrl);
-
-        if (!conn.checkConnection())
-        {
-            return false;
-        }
-
-        const std::string& modelTag = getResolvedOllamaModel();
-
-        // Synchronous send for simplicity — uses sendPrompt internally
-        bool gotResponse = false;
-        std::string responseText;
-        std::mutex mtx;
-        std::condition_variable cv;
-
-        conn.sendPrompt(
-            modelTag, prompt, {},
-            [&](const std::string& token)
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                responseText += token;
-            },
-            [&](const std::string& error)
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                responseText = "[Error] " + error;
-                gotResponse = true;
-                cv.notify_one();
-            },
-            [&]()
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                gotResponse = true;
-                cv.notify_one();
-            });
-
-        // Wait up to 60 seconds
-        std::unique_lock<std::mutex> lock(mtx);
-        cv.wait_for(lock, std::chrono::seconds(60), [&]() { return gotResponse; });
-
-        if (!responseText.empty())
-        {
-            outResponse = responseText;
-            return true;
-        }
-
-        return false;
-    }
-    catch (const std::exception& e)
-    {
-        outResponse = std::string("[Error] ") + e.what();
-        return false;
-    }
-    catch (...)
-    {
-        outResponse = "[Error] Unknown exception in Ollama communication";
-        return false;
-    }
+    (void)prompt;
+    outResponse =
+        "LOCAL_ONLY_001: FAIL_CLOSED — Ollama/HTTP inference is forbidden. "
+        "Load a local GGUF and use Deep2/GGUF only.";
+    return false;
 }
 
 // ============================================================================
@@ -3337,6 +3523,8 @@ void Win32IDE::onCreateChildren(HWND hwnd)
                        "DEFERRED_CHILD_05", "DEFERRED_CHILD_05_OK");
     sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 6,
                        "DEFERRED_CHILD_06", "DEFERRED_CHILD_06_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 7,
+                       "DEFERRED_CHILD_07", "DEFERRED_CHILD_07_OK");
 
     if (m_hwndMain && m_hMenu)
         RawrXD::MainMenuAuthority::EnsureAttached(m_hwndMain, m_hMenu);
@@ -3348,6 +3536,8 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     if (m_hwndMain && IsWindow(m_hwndMain)) {
         RawrXD::ShellLayout::ApplyFromIde(this);
     }
+    if (m_shellMode == AppShellMode::Command)
+        applyShellModeChrome();
     
     // Update HWND audit after deferred creation
     if (m_hwndMain)
@@ -3364,14 +3554,11 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     if (m_hwndMain && IsWindow(m_hwndMain))
         PostMessage(m_hwndMain, WM_APP_PS_SESSION_BRINGUP, 0, 0);
 
-    // Skip menu E2E probe under shell rebuild — it mutates chrome visibility.
-    // Also skip under RAWRXD_P1_UI_MENU_E2E: external black-box cert owns the ladder;
-    // in-process canaries race SendInput and have crashed (0xC0000409) post-heavy.
+    // Menu E2E probe is cert-only (opens Find on startup if left enabled).
     const char* e2eExt = std::getenv("RAWRXD_P1_UI_MENU_E2E");
-    const bool skipProbe =
-        RawrXD::ShellLayout::RebuildActive() ||
-        (e2eExt && e2eExt[0] && e2eExt[0] != '0');
-    if (!skipProbe)
+    const bool runProbe =
+        e2eExt && e2eExt[0] && e2eExt[0] != '0' && !RawrXD::ShellLayout::RebuildActive();
+    if (runProbe)
         RunUiMenuE2eProbe(this);
 
     dumpUiWindowOwnership("AFTER_ONCREATECHILDREN");
@@ -3420,6 +3607,13 @@ void Win32IDE::onCreateChildrenStep(int step, HWND hwnd)
             OutputDebugStringA("[onCreateChildren] Sovereign theme applied to TabManager\n");
         }
         logStackUsage("onCreateChildren after applySovereignTheme");
+        break;
+    case 7:
+        OutputDebugStringA("[onCreateChildren] createCommandSurface (ScreenPilot)...\n");
+        logStackUsage("onCreateChildren before createCommandSurface");
+        if (m_hwndMain)
+            createCommandSurface(m_hwndMain);
+        logStackUsage("onCreateChildren after createCommandSurface");
         break;
     default:
         break;
@@ -3529,15 +3723,40 @@ static const DWORD kDeferredInitStackSize = 4 * 1024 * 1024;
 DWORD WINAPI Win32IDE::deferredHeavyInitThreadProc(LPVOID param)
 {
     Win32IDE* self = static_cast<Win32IDE*>(param);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ThreadStartWitness("deferred_heavy_init");
+#endif
     DetachedThreadGuard _guard(self->m_activeDetachedThreads, self->m_shuttingDown);
-    if (_guard.cancelled)
+    if (_guard.cancelled) {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_ThreadStopWitness("deferred_heavy_init");
+#endif
         return 0;
+    }
     sehRunBgThread(bgInitBody, self);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_ThreadStopWitness("deferred_heavy_init");
+#endif
     return 0;
 }
 
 void Win32IDE::deferredHeavyInit()
 {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_UI", "dhi_entry");
+#endif
+    char skipDhi[8] = {};
+    if (GetEnvironmentVariableA("RAWRXD_SKIP_DEFERRED_HEAVY_INIT", skipDhi,
+                                (DWORD)sizeof(skipDhi)) > 0 &&
+        skipDhi[0] != '0')
+    {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_DHI", "skip_env_deferred_heavy_init");
+        P1PRA_Witness("P1PRA_UI", "deferred_heavy_init_skip_return");
+#endif
+        OutputDebugStringA("[deferredHeavyInit] skipped (RAWRXD_SKIP_DEFERRED_HEAVY_INIT)\n");
+        return;
+    }
     // Run heavy initialization on a background thread with large stack to avoid 0xC00000FD.
     HANDLE h = CreateThread(nullptr, kDeferredInitStackSize, &Win32IDE::deferredHeavyInitThreadProc, this, 0, nullptr);
     if (h)
@@ -3571,47 +3790,71 @@ void bgInitBody(void* self)
     ide->deferredHeavyInitBody();
 }
 
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+namespace {
+struct P1PRA_DhiScope {
+    const char* stage_;
+    explicit P1PRA_DhiScope(const char* stage, std::uint32_t id) : stage_(stage)
+    {
+        P1PRA_DhiEnter(stage, id);
+    }
+    ~P1PRA_DhiScope() { P1PRA_DhiExit(stage_); }
+    P1PRA_DhiScope(const P1PRA_DhiScope&) = delete;
+    P1PRA_DhiScope& operator=(const P1PRA_DhiScope&) = delete;
+};
+}  // namespace
+#define P1PRA_DHI_SCOPE(stage, id) P1PRA_DhiScope _p1dhi_##id(stage, id)
+#else
+#define P1PRA_DHI_SCOPE(stage, id)
+#endif
+
 void Win32IDE::deferredHeavyInitBody()
 {
     if (m_hwndMain)
         RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "BEFORE_DEFERRED_HEAVY");
-    bgInitMark("logger_init");
-    // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
-    try
     {
-        std::string logPath = "RawrXD_IDE.log";
-        char appData[MAX_PATH] = {};
-        if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appData)))
+        P1PRA_DHI_SCOPE("logger_init", P1PRA_DHI_LOGGER_INIT);
+        bgInitMark("logger_init");
+        // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
+        try
         {
-            std::string dir = std::string(appData) + "\\RawrXD";
-            CreateDirectoryA(dir.c_str(), nullptr);
-            logPath = dir + "\\ide.log";
+            std::string logPath = "RawrXD_IDE.log";
+            char appData[MAX_PATH] = {};
+            if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appData)))
+            {
+                std::string dir = std::string(appData) + "\\RawrXD";
+                CreateDirectoryA(dir.c_str(), nullptr);
+                logPath = dir + "\\ide.log";
+            }
+            IDELogger::getInstance().initialize(logPath);
         }
-        IDELogger::getInstance().initialize(logPath);
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: Logger init failed\n");
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: Logger init failed\n");
+        }
     }
     if (isShuttingDown())
         return;
 
     // Standby StreamingGGUFLoader so File→Load Model / session restore never hit a nullptr gate.
-    bgInitMark("streaming_gguf_loader");
-    if (!m_ggufLoader)
     {
-        try
+        P1PRA_DHI_SCOPE("streaming_gguf_loader", P1PRA_DHI_STREAMING_GGUF_LOADER);
+        bgInitMark("streaming_gguf_loader");
+        if (!m_ggufLoader)
         {
-            m_ggufLoader = std::make_unique<RawrXD::StreamingGGUFLoader>();
-            OutputDebugStringA("[deferredHeavyInit] StreamingGGUFLoader ready\n");
-            // If session restore stashed a model path before the loader existed, load it now.
-            const std::string pending = getLoadedModelPath();
-            if (!pending.empty())
-                PostMessageA(m_hwndMain, WM_APP + 201, 0, 0);
-        }
-        catch (...)
-        {
-            OutputDebugStringA("ERROR: StreamingGGUFLoader allocation failed (non-fatal)\n");
+            try
+            {
+                m_ggufLoader = std::make_unique<RawrXD::StreamingGGUFLoader>();
+                OutputDebugStringA("[deferredHeavyInit] StreamingGGUFLoader ready\n");
+                // If session restore stashed a model path before the loader existed, load it now.
+                const std::string pending = getLoadedModelPath();
+                if (!pending.empty())
+                    PostMessageA(m_hwndMain, WM_APP + 201, 0, 0);
+            }
+            catch (...)
+            {
+                OutputDebugStringA("ERROR: StreamingGGUFLoader allocation failed (non-fatal)\n");
+            }
         }
     }
     if (isShuttingDown())
@@ -3620,20 +3863,25 @@ void Win32IDE::deferredHeavyInitBody()
     // ================================================================
     // Enterprise License System — initialize FIRST (gates engine registration)
     // ================================================================
-    bgInitMark("enterprise_license");
-    try
     {
-        initializeEnterpriseSubsystemsSafe(this);
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: Enterprise license init failed\n");
+        P1PRA_DHI_SCOPE("enterprise_license", P1PRA_DHI_ENTERPRISE_LICENSE);
+        bgInitMark("enterprise_license");
+        try
+        {
+            initializeEnterpriseSubsystemsSafe(this);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: Enterprise license init failed\n");
+        }
     }
     if (isShuttingDown())
         return;
 
     // Initialize Native CPU Inference Engine
-    bgInitMark("cpu_inference_engine");
+    {
+        P1PRA_DHI_SCOPE("cpu_inference_engine", P1PRA_DHI_CPU_INFERENCE_ENGINE);
+        bgInitMark("cpu_inference_engine");
     try
     {
         m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
@@ -3648,11 +3896,14 @@ void Win32IDE::deferredHeavyInitBody()
         m_nativeEngineLoaded = false;
         OutputDebugStringA("ERROR: CPUInferenceEngine init failed\n");
     }
+    }
     if (isShuttingDown())
         return;
 
     // Initialize DirectX renderer (needs to be on UI thread ideally, but creation is OK)
-    bgInitMark("transparent_renderer");
+    {
+        P1PRA_DHI_SCOPE("transparent_renderer", P1PRA_DHI_TRANSPARENT_RENDERER);
+        bgInitMark("transparent_renderer");
     try
     {
         m_renderer = std::make_unique<TransparentRenderer>();
@@ -3662,9 +3913,12 @@ void Win32IDE::deferredHeavyInitBody()
         m_renderer = nullptr;
         OutputDebugStringA("ERROR: TransparentRenderer creation failed\n");
     }
+    }
 
     // Initialize PowerShell state
-    bgInitMark("powershell_state");
+    {
+        P1PRA_DHI_SCOPE("powershell_state", P1PRA_DHI_POWERSHELL_STATE);
+        bgInitMark("powershell_state");
     try
     {
         initializePowerShellState();
@@ -3673,11 +3927,14 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: PowerShell init failed\n");
     }
+    }
 
     // Theme already applied in onCreate — skip here
 
     // Load code snippets
-    bgInitMark("code_snippets");
+    {
+        P1PRA_DHI_SCOPE("code_snippets", P1PRA_DHI_CODE_SNIPPETS);
+        bgInitMark("code_snippets");
     try
     {
         loadCodeSnippets();
@@ -3686,9 +3943,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: Code snippets loading failed\n");
     }
+    }
 
     // Initialize Agent
-    bgInitMark("native_agent");
+    {
+        P1PRA_DHI_SCOPE("native_agent", P1PRA_DHI_NATIVE_AGENT);
+        bgInitMark("native_agent");
     try
     {
         if (m_nativeEngine)
@@ -3705,9 +3965,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: NativeAgent init failed\n");
     }
+    }
 
     // Initialize Extension Loader
-    bgInitMark("extension_loader");
+    {
+        P1PRA_DHI_SCOPE("extension_loader", P1PRA_DHI_EXTENSION_LOADER);
+        bgInitMark("extension_loader");
     try
     {
         m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
@@ -3718,11 +3981,14 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: ExtensionLoader init failed\n");
     }
+    }
     if (isShuttingDown())
         return;
 
     // Initialise the agentic bridge (needs m_hwndMain, which is set)
-    bgInitMark("agentic_bridge");
+    {
+        P1PRA_DHI_SCOPE("agentic_bridge", P1PRA_DHI_AGENTIC_BRIDGE);
+        bgInitMark("agentic_bridge");
     try
     {
         initializeAgenticBridge();
@@ -3731,11 +3997,14 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initializeAgenticBridge failed\n");
     }
+    }
 
     // Initialize AI/Extensions panels so menu -> show() creates real UI
     if (isShuttingDown())
         return;
-    bgInitMark("ai_panels");
+    {
+        P1PRA_DHI_SCOPE("ai_panels", P1PRA_DHI_AI_PANELS);
+        bgInitMark("ai_panels");
     try
     {
         if (m_modelRegistry)
@@ -3752,9 +4021,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: AI panels init failed\n");
     }
+    }
 
     // Initialize Ghost Text renderer (Copilot-style inline completions)
-    bgInitMark("ghost_text");
+    {
+        P1PRA_DHI_SCOPE("ghost_text", P1PRA_DHI_GHOST_TEXT);
+        bgInitMark("ghost_text");
     try
     {
         initGhostText();
@@ -3763,9 +4035,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initGhostText failed\n");
     }
+    }
 
     // Initialize Failure Detector (agent self-correction)
-    bgInitMark("failure_detector");
+    {
+        P1PRA_DHI_SCOPE("failure_detector", P1PRA_DHI_FAILURE_DETECTOR);
+        bgInitMark("failure_detector");
     try
     {
         initFailureDetector();
@@ -3774,9 +4049,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initFailureDetector failed\n");
     }
+    }
 
     // Initialize Agent Diff Panel (Win32IDE_AgentPanel.cpp)
-    bgInitMark("agent_panel");
+    {
+        P1PRA_DHI_SCOPE("agent_panel", P1PRA_DHI_AGENT_PANEL);
+        bgInitMark("agent_panel");
     try
     {
         initAgentPanel();
@@ -3785,9 +4063,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initAgentPanel failed\n");
     }
+    }
 
     // Load persistent settings from %APPDATA%\RawrXD\settings.json
-    bgInitMark("load_apply_settings");
+    {
+        P1PRA_DHI_SCOPE("load_apply_settings", P1PRA_DHI_LOAD_APPLY_SETTINGS);
+        bgInitMark("load_apply_settings");
     try
     {
         loadSettings();
@@ -3805,13 +4086,15 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: syncAgentModeUiFromBridge failed\n");
     }
+    }
 
     if (isShuttingDown())
         return;
 
     // Initialize Agent History (append-only JSONL event log)
-    bgInitMark("agent_history");
     {
+        P1PRA_DHI_SCOPE("agent_history", P1PRA_DHI_AGENT_HISTORY);
+        bgInitMark("agent_history");
         // P1_UI_MENU_E2E_001: initAgentHistory (and the following heavy tail) currently
         // __fastfail's (0xC0000409). Under E2E, stop heavy init here so the menu routing
         // ladder can run. Defect remains separate from MENU_LIFETIME / MENU_E2E routing.
@@ -3839,39 +4122,46 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Failure Intelligence — Phase 6 (classification + retry strategies)
-    try
     {
-        initFailureIntelligence();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initFailureIntelligence failed\n");
+        P1PRA_DHI_SCOPE("failure_intelligence", P1PRA_DHI_FAILURE_INTELLIGENCE);
+        try
+        {
+            initFailureIntelligence();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initFailureIntelligence failed\n");
+        }
     }
 
     // Initialize Unified Model Source Resolver (HuggingFace, Ollama blobs, HTTP, local)
-    try
     {
-        m_modelResolver = std::make_unique<RawrXD::ModelSourceResolver>();
-        // Set cache directory for downloaded models
-        m_modelResolver->SetCacheDirectory(
-            m_modelResolver->GetCacheDirectory());  // Use default: %USERPROFILE%/.cache/rawrxd/models
-        OutputDebugStringA("ModelSourceResolver initialized OK\n");
-    }
-    catch (const std::exception& e)
-    {
-        m_modelResolver.reset();
-        OutputDebugStringA("ERROR: ModelSourceResolver init failed: ");
-        OutputDebugStringA(e.what());
-        OutputDebugStringA("\n");
-    }
-    catch (...)
-    {
-        m_modelResolver.reset();
-        OutputDebugStringA("ERROR: ModelSourceResolver init failed (unknown)\n");
+        P1PRA_DHI_SCOPE("model_resolver", P1PRA_DHI_MODEL_RESOLVER);
+        try
+        {
+            m_modelResolver = std::make_unique<RawrXD::ModelSourceResolver>();
+            // Set cache directory for downloaded models
+            m_modelResolver->SetCacheDirectory(
+                m_modelResolver->GetCacheDirectory());  // Use default: %USERPROFILE%/.cache/rawrxd/models
+            OutputDebugStringA("ModelSourceResolver initialized OK\n");
+        }
+        catch (const std::exception& e)
+        {
+            m_modelResolver.reset();
+            OutputDebugStringA("ERROR: ModelSourceResolver init failed: ");
+            OutputDebugStringA(e.what());
+            OutputDebugStringA("\n");
+        }
+        catch (...)
+        {
+            m_modelResolver.reset();
+            OutputDebugStringA("ERROR: ModelSourceResolver init failed (unknown)\n");
+        }
     }
 
     // GPU Backend Bridge — detect and initialize Vulkan compute if available
     {
+        P1PRA_DHI_SCOPE("gpu_backend_bridge", P1PRA_DHI_GPU_BACKEND_BRIDGE);
         HMODULE hVulkan = LoadLibraryA("vulkan-1.dll");
         if (hVulkan)
         {
@@ -3888,164 +4178,211 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 10: Execution Governor + Safety + Replay + Confidence
-    try
     {
-        initPhase10();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initPhase10 failed\n");
+        P1PRA_DHI_SCOPE("phase10", P1PRA_DHI_PHASE10);
+        try
+        {
+            initPhase10();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initPhase10 failed\n");
+        }
     }
 
     // Initialize MultiResponse, LSP Server, Hotpatch UI (lazy-ready)
-    try
     {
-        initMultiResponse();
+        P1PRA_DHI_SCOPE("multi_response", P1PRA_DHI_MULTI_RESPONSE);
+        try
+        {
+            initMultiResponse();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initMultiResponse failed\n");
+        }
     }
-    catch (...)
     {
-        OutputDebugStringA("ERROR: initMultiResponse failed\n");
+        P1PRA_DHI_SCOPE("lsp_server", P1PRA_DHI_LSP_SERVER);
+        try
+        {
+            initLSPServer();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initLSPServer failed\n");
+        }
     }
-    try
     {
-        initLSPServer();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initLSPServer failed\n");
-    }
-    try
-    {
-        initHotpatchUI();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initHotpatchUI failed\n");
+        P1PRA_DHI_SCOPE("hotpatch_ui", P1PRA_DHI_HOTPATCH_UI);
+        try
+        {
+            initHotpatchUI();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initHotpatchUI failed\n");
+        }
     }
 
     // Initialize Phase 11: Distributed Swarm Compilation
-    try
     {
-        initPhase11();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initPhase11 failed\n");
+        P1PRA_DHI_SCOPE("phase11", P1PRA_DHI_PHASE11);
+        try
+        {
+            initPhase11();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initPhase11 failed\n");
+        }
     }
 
     // Initialize Phase 12: Native Debugger Engine
-    try
     {
-        initPhase12();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initPhase12 failed\n");
+        P1PRA_DHI_SCOPE("phase12", P1PRA_DHI_PHASE12);
+        try
+        {
+            initPhase12();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initPhase12 failed\n");
+        }
     }
 
     // Initialize Decompiler View (Phase 18B)
-    try
     {
-        initDecompilerView();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initDecompilerView failed\n");
+        P1PRA_DHI_SCOPE("decompiler_view", P1PRA_DHI_DECOMPILER_VIEW);
+        try
+        {
+            initDecompilerView();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initDecompilerView failed\n");
+        }
     }
 
     // Initialize Phase 33: Voice Chat Engine
-    try
     {
-        initVoiceChat();
-        voiceLoadPreferences();
-        createVoiceChatPanel(m_hwndMain);
-        registerVoiceHotkeys();
-        updateVoiceStatusBar();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initVoiceChat failed\n");
+        P1PRA_DHI_SCOPE("voice_chat", P1PRA_DHI_VOICE_CHAT);
+        try
+        {
+            initVoiceChat();
+            voiceLoadPreferences();
+            createVoiceChatPanel(m_hwndMain);
+            registerVoiceHotkeys();
+            updateVoiceStatusBar();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initVoiceChat failed\n");
+        }
     }
 
     // Initialize Phase 44: Voice Automation (TTS for responses)
-    try
     {
-        RECT rc;
-        GetClientRect(m_hwndMain, &rc);
-        extern void Win32IDE_CreateVoiceAutomationPanel(HWND, int, int, int, int);
-        Win32IDE_CreateVoiceAutomationPanel(m_hwndMain, 0, rc.bottom - 80, rc.right, 80);
-        extern void Win32IDE_AddVoiceAutomationMenu(HMENU);
-        // Menu items already added in menu creation; just mark initialized
-        m_voiceAutomationInitialized = true;
-        OutputDebugStringA("Phase 44: VoiceAutomation panel created\n");
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: VoiceAutomation init failed\n");
+        P1PRA_DHI_SCOPE("voice_automation", P1PRA_DHI_VOICE_AUTOMATION);
+        try
+        {
+            RECT rc;
+            GetClientRect(m_hwndMain, &rc);
+            extern void Win32IDE_CreateVoiceAutomationPanel(HWND, int, int, int, int);
+            Win32IDE_CreateVoiceAutomationPanel(m_hwndMain, 0, rc.bottom - 80, rc.right, 80);
+            extern void Win32IDE_AddVoiceAutomationMenu(HMENU);
+            // Menu items already added in menu creation; just mark initialized
+            m_voiceAutomationInitialized = true;
+            OutputDebugStringA("Phase 44: VoiceAutomation panel created\n");
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: VoiceAutomation init failed\n");
+        }
     }
 
     // Initialize Tier 3: Polish (QoL) — smooth caret, ligatures, file watcher, etc.
-    try
     {
-        initTier3Polish();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initTier3Polish failed\n");
+        P1PRA_DHI_SCOPE("tier3_polish", P1PRA_DHI_TIER3_POLISH);
+        try
+        {
+            initTier3Polish();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initTier3Polish failed\n");
+        }
     }
 
     // Initialize Tier 1: Critical Cosmetics (smooth scroll, minimap, fuzzy palette, etc.)
-    try
     {
-        initTier1Cosmetics();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initTier1Cosmetics failed\n");
+        P1PRA_DHI_SCOPE("tier1_cosmetics", P1PRA_DHI_TIER1_COSMETICS);
+        try
+        {
+            initTier1Cosmetics();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initTier1Cosmetics failed\n");
+        }
     }
 
     // Initialize Phase 33: Quick-Win Systems (Shortcuts, Backups, Alerts, SLO)
-    try
     {
-        initQuickWinSystems();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initQuickWinSystems failed\n");
+        P1PRA_DHI_SCOPE("quick_win_systems", P1PRA_DHI_QUICK_WIN_SYSTEMS);
+        try
+        {
+            initQuickWinSystems();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initQuickWinSystems failed\n");
+        }
     }
 
     // Initialize Phase 32B: Chain-of-Thought Multi-Model Review Engine
-    try
     {
-        initChainOfThought();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initChainOfThought failed\n");
+        P1PRA_DHI_SCOPE("chain_of_thought", P1PRA_DHI_CHAIN_OF_THOUGHT);
+        try
+        {
+            initChainOfThought();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initChainOfThought failed\n");
+        }
     }
 
     // Initialize Phase 34: Telemetry Export Subsystem
-    try
     {
-        initTelemetry();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initTelemetry failed\n");
+        P1PRA_DHI_SCOPE("telemetry", P1PRA_DHI_TELEMETRY);
+        try
+        {
+            initTelemetry();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initTelemetry failed\n");
+        }
     }
 
     // Initialize Phase 36: Flight Recorder — persistent binary ring-buffer
-    try
     {
-        initFlightRecorder();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initFlightRecorder failed\n");
+        P1PRA_DHI_SCOPE("flight_recorder", P1PRA_DHI_FLIGHT_RECORDER);
+        try
+        {
+            initFlightRecorder();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initFlightRecorder failed\n");
+        }
     }
 
     // Initialize Phase 36: MCP Integration — Model Context Protocol
-    bgInitMark("init_mcp");
+    {
+        P1PRA_DHI_SCOPE("init_mcp", P1PRA_DHI_INIT_MCP);
+        bgInitMark("init_mcp");
     try
     {
         initMCP();
@@ -4054,9 +4391,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initMCP failed\n");
     }
+    }
 
     // Initialize Phase 29+36: VS Code Extension API + QuickJS VSIX Host
-    bgInitMark("init_vscode_extension_api");
+    {
+        P1PRA_DHI_SCOPE("init_vscode_extension_api", P1PRA_DHI_INIT_VSCODE_EXTENSION_API);
+        bgInitMark("init_vscode_extension_api");
     try
     {
         initVSCodeExtensionAPI();
@@ -4065,12 +4405,15 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initVSCodeExtensionAPI failed\n");
     }
+    }
 
     if (isShuttingDown())
         return;
 
     // Initialize Phase 43: Plugin System (Native Win32 DLL loading)
-    bgInitMark("init_plugin_system");
+    {
+        P1PRA_DHI_SCOPE("init_plugin_system", P1PRA_DHI_INIT_PLUGIN_SYSTEM);
+        bgInitMark("init_plugin_system");
     try
     {
         initPluginSystem();
@@ -4079,10 +4422,12 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initPluginSystem failed\n");
     }
+    }
 
-    // Auto-start Local HTTP server (port 11435) so HTML beacon / Ghost can detect IDE
+    // Auto-start Local HTTP server (port 11435) — loopback-only for /gui preview
     if (!isShuttingDown())
     {
+        P1PRA_DHI_SCOPE("start_local_server", P1PRA_DHI_START_LOCAL_SERVER);
         bgInitMark("start_local_server");
         try
         {
@@ -4097,6 +4442,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Cursor/JB-Parity Feature Modules
     if (!isShuttingDown())
     {
+        P1PRA_DHI_SCOPE("init_all_feature_modules", P1PRA_DHI_INIT_ALL_FEATURE_MODULES);
         bgInitMark("init_all_feature_modules");
         try
         {
@@ -4120,6 +4466,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Tier 5 cosmetic features (Emoji, Telemetry Dashboard, Shortcut Editor, etc.)
     if (!isShuttingDown())
     {
+        P1PRA_DHI_SCOPE("init_tier5_cosmetics", P1PRA_DHI_INIT_TIER5_COSMETICS);
         bgInitMark("init_tier5_cosmetics");
         try
         {
@@ -4131,14 +4478,18 @@ void Win32IDE::deferredHeavyInitBody()
         }
     }
 
-    bgInitMark("deferredHeavyInit_complete");
-    OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
-    if (m_hwndMain)
-        RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "AFTER_DEFERRED_HEAVY");
+    {
+        P1PRA_DHI_SCOPE("deferredHeavyInit_complete", P1PRA_DHI_DEFERRED_HEAVY_INIT_COMPLETE);
+        bgInitMark("deferredHeavyInit_complete");
+        OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
+        if (m_hwndMain)
+            RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "AFTER_DEFERRED_HEAVY");
+    }
 
     // Initialize AI backend probe (background thread, posts WM_AI_BACKEND_STATUS on result)
     if (!isShuttingDown())
     {
+        P1PRA_DHI_SCOPE("ai_backend", P1PRA_DHI_AI_BACKEND);
         try
         {
             initializeAIBackend();
@@ -4171,6 +4522,10 @@ void Win32IDE::onDestroy()
     if (m_hwndMain)
         RawrXD::MainMenuAuthority::MarkWindowDestroying(m_hwndMain);
     LOG_INFO("Win32IDE::onDestroy - shutting down");
+
+#ifdef RAWRXD_PRODUCT100
+    product100Shutdown();
+#endif
 
     clearInferenceLayerProgressCallback();
 
@@ -4545,6 +4900,16 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
     // Other control notifications: do not fall through to "unknown command"
     // unless this is a button click (BN_CLICKED / menu-equivalent).
+    if (id == IDC_CMD_MODE_COMBO && codeNotify == CBN_SELCHANGE && m_hwndCmdModeCombo)
+    {
+        const int modeSel = (int)SendMessageW(m_hwndCmdModeCombo, CB_GETCURSEL, 0, 0);
+        using SM = RawrXD::Command::SteerMode;
+        const SM mode =
+            modeSel == 0 ? SM::Plan : (modeSel == 1 ? SM::Build : SM::Agent);
+        RawrXD::Command::CommandBroker::instance().setSteerMode(mode);
+        refreshCommandActivityStrip();
+        return;
+    }
     if (hwndCtl != nullptr && codeNotify != 0 && codeNotify != BN_CLICKED)
         return;
 
@@ -4586,6 +4951,78 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     if (id == 1209)  // IDC_MODEL_BROWSE_BTN
     {
         handleModelBrowse();
+        return;
+    }
+    if (id == IDC_CMD_SEND_BTN)
+    {
+        handleCommandSend();
+        return;
+    }
+    if (id == IDC_CMD_STOP_BTN)
+    {
+        handleCommandStop();
+        return;
+    }
+    if (id == IDC_CMD_WORK_MODE_BTN)
+    {
+        enterWorkMode();
+        return;
+    }
+    if (id == IDC_CMD_APPROVE_BTN)
+    {
+        handleCommandApprove();
+        return;
+    }
+    if (id == IDC_CMD_DENY_BTN)
+    {
+        handleCommandDeny();
+        return;
+    }
+    if (id == IDM_CMD_ENTER_COMMAND)
+    {
+        enterCommandMode();
+        return;
+    }
+    if (id == IDM_CMD_ENTER_WORK)
+    {
+        enterWorkMode();
+        return;
+    }
+    if (id == IDM_CMD_NEW_TASK)
+    {
+        RawrXD::Command::CommandEventJournal::instance().append(
+            RawrXD::Command::JournalEventType::ModeSwitch, "\"new_task\"");
+        if (m_hwndCommandComposer) SetWindowTextW(m_hwndCommandComposer, L"");
+        appendCommandConversation("[System] New task — session binding retained.");
+        bindCommandSessionFromWorkspace();
+        refreshCommandContextBar();
+        refreshCommandActivityStrip();
+        enterCommandMode();
+        return;
+    }
+    if (id == IDC_CMD_MODEL_LOAD_BTN)
+    {
+        handleCommandModelLoad();
+        return;
+    }
+    if (id == IDC_CMD_MODEL_BROWSE_BTN)
+    {
+        handleCommandModelBrowse();
+        return;
+    }
+    if (id == IDC_CMD_MODEL_UNLOAD_BTN)
+    {
+        handleCommandModelUnload();
+        return;
+    }
+    if (id == IDC_CMD_MODEL_RELOAD_BTN)
+    {
+        handleCommandModelReload();
+        return;
+    }
+    if (id == IDC_CMD_MODEL_CANCEL_BTN)
+    {
+        handleCommandInferenceCancel();
         return;
     }
 

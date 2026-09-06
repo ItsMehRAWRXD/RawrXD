@@ -6,6 +6,7 @@
 #include "ElasticResidencyManager.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "ResidencyTrace.hpp"
+#include "TelemetrySinks.hpp"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -144,6 +145,32 @@ bool ElasticResidencyManager::RegisterTensor(
 
     tensors_.emplace(name, tensor);
     return true;
+}
+
+bool ElasticResidencyManager::SetPlannedPlacement(const std::string& name,
+                                                  int plannedGpu,
+                                                  bool pinned) {
+    std::lock_guard<std::mutex> lock(tensorsMutex_);
+    auto it = tensors_.find(name);
+    if (it == tensors_.end() || !it->second) return false;
+    it->second->plannedGpu = plannedGpu;
+    it->second->policyPinned = pinned;
+    return true;
+}
+
+std::vector<std::string> ElasticResidencyManager::ListTensorNames() const {
+    std::lock_guard<std::mutex> lock(tensorsMutex_);
+    std::vector<std::string> out;
+    out.reserve(tensors_.size());
+    for (const auto& kv : tensors_)
+        out.push_back(kv.first);
+    return out;
+}
+
+int ElasticResidencyManager::GetPlannedGpu(const std::string& name) const {
+    auto t = FindTensor(name);
+    if (!t) return -2;
+    return t->plannedGpu;
 }
 
 // ============================================================================
@@ -709,7 +736,10 @@ void ElasticResidencyManager::ExecuteNvmeToRam(ElasticResidentTensor& t) {
         }
 
         if (t.sourceData) {
+            // Logical residency fill from already-mapped source — NOT a new ReadFile.
+            const IoTransferId xfer = NoteNvmeRequest(t.compressedBytes, false);
             memcpy(t.compressedData, t.sourceData, t.compressedBytes);
+            NoteNvmeConsumed(xfer, t.compressedBytes);
         } else {
             // No source pointer available — zero-fill as fallback (will fail validation)
             memset(t.compressedData, 0, t.compressedBytes);

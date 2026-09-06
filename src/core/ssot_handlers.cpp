@@ -2139,7 +2139,7 @@ CommandResult handleBackendSwitchOllama(const CommandContext& ctx)
     bool ok = client.TestConnection();
 
     std::string host;
-    int port = 11434;
+    int port = 0;
     std::string model;
     {
         std::lock_guard<std::mutex> lock(bs.mtx);

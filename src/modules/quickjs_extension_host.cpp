@@ -219,42 +219,39 @@ VSCodeAPIResult QuickJSExtensionHost::initialize(Win32IDE* host, HWND mainWindow
 }
 
 VSCodeAPIResult QuickJSExtensionHost::shutdown() {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (!m_initialized) {
-        return VSCodeAPIResult::ok("QuickJS host not initialized");
-    }
-
-    logInfo("[QuickJS Host] Shutting down — %zu runtimes to destroy",
-            m_runtimes.size());
-
-    // Deactivate and destroy all runtimes
-    // Copy IDs first to avoid mutation during iteration
     std::vector<std::string> ids;
     {
-        std::lock_guard<std::mutex> rtLock(m_runtimesMutex);
-        for (const auto& [id, _] : m_runtimes) {
-            ids.push_back(id);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (!m_initialized) {
+            return VSCodeAPIResult::ok("QuickJS host not initialized");
         }
+        // Mark down immediately so new loads/activations refuse work.
+        m_initialized = false;
+        m_host = nullptr;
+        m_mainWindow = nullptr;
+        logInfo("[QuickJS Host] Shutting down — collecting runtimes");
+        std::lock_guard<std::mutex> rtLock(m_runtimesMutex);
+        ids.reserve(m_runtimes.size());
+        for (const auto& [id, _] : m_runtimes)
+            ids.push_back(id);
     }
 
+    // Unload only — skip deactivate JS path. destroyRuntime clears the module
+    // loader then FreeContext/FreeRuntime (same WM_DESTROY fault class as
+    // JSExtensionHost::moduleLoader).
     for (const auto& id : ids) {
-        deactivateExtension(id.c_str());
         unloadExtension(id.c_str());
     }
 
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         std::lock_guard<std::mutex> rtLock(m_runtimesMutex);
         m_runtimes.clear();
     }
-
     {
         std::lock_guard<std::mutex> actLock(m_activationMutex);
         m_activationListeners.clear();
     }
-
-    m_initialized = false;
-    m_host = nullptr;
-    m_mainWindow = nullptr;
 
     return VSCodeAPIResult::ok("QuickJS host shut down");
 }
@@ -365,7 +362,11 @@ void QuickJSExtensionHost::destroyRuntime(QuickJSExtensionRuntime* rt) {
         rt->eventLoopThread.join();
     }
 
-    // Free QuickJS resources
+    // Free QuickJS resources — clear module loader before FreeRuntime so a
+    // late require during FreeContext cannot re-enter host teardown.
+    if (rt->runtime) {
+        JS_SetModuleLoaderFunc(rt->runtime, nullptr, nullptr, nullptr);
+    }
     if (rt->context) {
         JS_FreeContext(rt->context);
         rt->context = nullptr;

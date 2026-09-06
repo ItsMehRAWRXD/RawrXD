@@ -22,6 +22,7 @@
 #include "Win32IDE.h"
 #include "../config/IDEConfig.h"
 #include "../core/perf_telemetry.hpp"
+#include "../core/GpuDecodeEfficiency.hpp"
 #include "../core/system_integrity_audit_trail.h"
 #include "../inference/Deep2Engine.hpp"
 #include <cstdio>
@@ -79,6 +80,12 @@ struct InferenceMetrics {
     double integrityPassRate = 0.0;
     double integrityFailures = 0.0;
     double perfActiveSlots = 0.0;
+
+    bool gpuPowerValid = false;
+    double avgGpuPowerWatts = -1.0;
+    double tokensPerWattGpu = -1.0;
+    double decodeTpsGpu = 0.0;
+    uint32_t gpuPowerSamples = 0;
 
     // Deep2Engine live stats (671B dual-GPU inference)
     bool deep2Available = false;
@@ -141,6 +148,15 @@ static InferenceMetrics getMetricsSnapshot()
     auto& perf = RawrXD::Perf::PerfTelemetry::instance();
     if (perf.isInitialized()) {
         m.perfActiveSlots = static_cast<double>(perf.getActiveSlotCount());
+    }
+
+    m.gpuPowerValid = METRICS.getGauge("inference.gpu_power_valid") >= 1.0;
+    if (m.gpuPowerValid) {
+        m.avgGpuPowerWatts = METRICS.getGauge("inference.avg_gpu_power_watts");
+        m.tokensPerWattGpu = METRICS.getGauge("inference.tokens_per_watt_gpu");
+        m.decodeTpsGpu = METRICS.getGauge("inference.decode_tps");
+        m.gpuPowerSamples = static_cast<uint32_t>(
+            METRICS.getGauge("inference.gpu_power_sample_count"));
     }
 
     // Pull live stats from the Deep2Engine if it has been initialized.
@@ -303,14 +319,18 @@ static void CALLBACK MetricsTimerProc(HWND hwnd, UINT msg, UINT_PTR idTimer, DWO
              m.currentTPS, m.avgTPS);
     SetWindowTextW(s_metrics.hwndTPSDisplay, buf);
 
-    // Update latency display
-    swprintf(buf, _countof(buf), L"Latency: P50=%.2f ms  P95=%.2f ms",
-             m.p50Latency, m.p95Latency);
+    if (m.gpuPowerValid) {
+        swprintf(buf, _countof(buf),
+                 L"GPU: %.1f W  decode %.1f tok/s  %.3f tok/W  (%u samples)",
+                 m.avgGpuPowerWatts, m.decodeTpsGpu, m.tokensPerWattGpu,
+                 m.gpuPowerSamples);
+    } else {
+        swprintf(buf, _countof(buf), L"GPU power: unavailable (no AMD sensor)");
+    }
     SetWindowTextW(s_metrics.hwndLatDisplay, buf);
 
-    // Update batching display
-    swprintf(buf, _countof(buf), L"Batching: %d active requests  avg size=%d",
-             m.activeBatches, m.avgBatchSize);
+    swprintf(buf, _countof(buf), L"Latency: P50=%.2f ms  P95=%.2f ms",
+             m.p50Latency, m.p95Latency);
     SetWindowTextW(s_metrics.hwndBatchDisplay, buf);
 
     // Update KV cache display

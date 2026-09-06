@@ -1,0 +1,53 @@
+# Example model profile — bound by fingerprint, not filename
+execution:
+  mode: expert
+  model_fingerprint: "sha256:REPLACE_WITH_MODEL_SHA"
+  persist_runtime_changes: true
+
+memory:
+  vram: 8GB
+  vram_cap: hard
+  ram: 32GB
+  vram_parts:
+    weights: 4GB
+    kv: 2GB
+    activations: 512MB
+    streaming: 512MB
+    scratch: 512MB
+    reserve: 512MB
+
+placement:
+  embeddings: ram
+  lm_head: gpu0
+  attention: gpu0
+  ffn: hybrid
+  layers:
+    "0-9": gpu0
+    "10-17": gpu1
+    "18-*": stream
+
+streaming:
+  enabled: true
+  chunk_size: 64MB
+  prefetch_depth: 3
+  buffers: 3
+
+kv:
+  placement: hybrid
+  gpu_budget: 2GB
+  quant: q8
+  context: 16384
+
+work_avoidance:
+  enabled: true
+  policy: certified
+  fail_closed: true
+
+scheduler:
+  objective: throughput
+  auto_tune: true
+  respect_overrides: true
+
+hotpatch:
+  enabled: true
+  adaptive: true

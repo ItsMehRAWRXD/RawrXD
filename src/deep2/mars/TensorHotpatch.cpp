@@ -5,6 +5,7 @@
 #include "TensorHotpatch.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <cmath>
 
 namespace Deep2 {
 namespace MARS {
@@ -171,10 +172,12 @@ size_t TensorHotpatch::RedirectWhere(std::function<bool(const VRAMLease&)> predi
     if (!vramManager_) return 0;
 
     size_t count = 0;
-    // Note: Without a lease iterator, this is limited.
-    // In production, VRAMManager would expose a foreach or snapshot.
-    (void)predicate;
-    (void)targetGPU;
+    for (VRAMLease* lease : vramManager_->SnapshotLeases()) {
+        if (!lease || !predicate(*lease)) continue;
+        if (Redirect(lease, targetGPU) == HotpatchResult::OK) {
+            ++count;
+        }
+    }
     return count;
 }
 
@@ -182,16 +185,20 @@ size_t TensorHotpatch::EvictLowPriority(int gpu, float priorityThreshold) {
     if (!vramManager_) return 0;
 
     size_t count = 0;
-    // Would iterate leases and evict those below threshold on given GPU
-    (void)gpu;
-    (void)priorityThreshold;
+    for (VRAMLease* lease : vramManager_->SnapshotLeases()) {
+        if (!lease || lease->currentGPU != gpu) continue;
+        if (!lease->IsResident() || lease->pinned) continue;
+        if (lease->priority >= priorityThreshold) continue;
+        if (vramManager_->Evict(lease)) {
+            ++count;
+        }
+    }
     return count;
 }
 
 void TensorHotpatch::Rebalance() {
     if (!vramManager_) return;
 
-    auto dp = vramManager_->GetDynamicParity();
     size_t used0 = vramManager_->GetUsedVRAM(0);
     size_t used1 = vramManager_->GetUsedVRAM(1);
     size_t total0 = vramManager_->GetTotalVRAM(0);
@@ -200,16 +207,38 @@ void TensorHotpatch::Rebalance() {
     float ratio0 = total0 > 0 ? (float)used0 / total0 : 0.0f;
     float ratio1 = total1 > 0 ? (float)used1 / total1 : 0.0f;
 
-    // If one GPU is significantly more loaded, move tensors to the other
-    const float threshold = 0.15f; // 15% imbalance threshold
-    if (ratio0 > ratio1 + threshold) {
-        // Move some from GPU0 to GPU1
-        // (requires lease iteration - simplified here)
-        printf("[TensorHotpatch] Rebalance: GPU0 %.1f%% -> GPU1 %.1f%%\n",
-               ratio0 * 100.0f, ratio1 * 100.0f);
-    } else if (ratio1 > ratio0 + threshold) {
-        printf("[TensorHotpatch] Rebalance: GPU1 %.1f%% -> GPU0 %.1f%%\n",
-               ratio1 * 100.0f, ratio0 * 100.0f);
+    const float threshold = 0.15f;
+    if (std::abs(ratio0 - ratio1) < threshold) {
+        return;
+    }
+
+    int fromGPU = (ratio0 > ratio1) ? 0 : 1;
+    int toGPU = 1 - fromGPU;
+
+    printf("[TensorHotpatch] Rebalance: GPU%d %.1f%% -> GPU%d %.1f%%\n",
+           fromGPU, (fromGPU == 0 ? ratio0 : ratio1) * 100.0f,
+           toGPU, (toGPU == 0 ? ratio0 : ratio1) * 100.0f);
+
+    // Move lowest-priority hotpatchable residents until imbalance eases.
+    auto leases = vramManager_->SnapshotLeases();
+    std::sort(leases.begin(), leases.end(), [](const VRAMLease* a, const VRAMLease* b) {
+        float pa = a ? a->priority : 0.0f;
+        float pb = b ? b->priority : 0.0f;
+        return pa < pb;
+    });
+
+    for (VRAMLease* lease : leases) {
+        used0 = vramManager_->GetUsedVRAM(0);
+        used1 = vramManager_->GetUsedVRAM(1);
+        ratio0 = total0 > 0 ? (float)used0 / total0 : 0.0f;
+        ratio1 = total1 > 0 ? (float)used1 / total1 : 0.0f;
+        if (std::abs(ratio0 - ratio1) < threshold) break;
+
+        if (!lease || lease->currentGPU != fromGPU) continue;
+        if (!lease->hotpatchable || lease->pinned || !lease->IsResident()) continue;
+        if (vramManager_->GetFreeVRAM(toGPU) < lease->bytes) continue;
+
+        Redirect(lease, toGPU);
     }
 }
 

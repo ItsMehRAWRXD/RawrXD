@@ -11,6 +11,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "Win32Utf8.hpp"
 #include "../core/voice_chat.hpp"
 #include <commctrl.h>
 #include <shlobj.h>
@@ -583,25 +584,20 @@ void Win32IDE::updateVoiceStatusBar()
 {
     if (!m_hwndStatusBar) return;
 
-    const char* stateText = "Voice: Off";
-    COLORREF clr = RGB(128, 128, 128);
+    std::string stateText = "Voice: Off";
 
     if (g_voiceChatInitialized && g_voiceChat) {
         if (g_voiceChat->isRecording()) {
-            stateText = "\xF0\x9F\x8E\x99 Recording...";   // 🎙 Recording...
-            clr = RGB(255, 60, 60);
+            stateText = "\xF0\x9F\x8E\x99 Recording...";   // 🎙
         } else if (g_voiceChat->isPlaying()) {
-            stateText = "\xE2\x8F\xB3 Playing...";          // ⏳ Playing...
-            clr = RGB(255, 200, 0);
+            stateText = "\xE2\x8F\xB3 Playing...";          // ⏳
         } else {
-            stateText = "\xF0\x9F\x94\x87 Voice: Ready";    // 🔇 Voice: Ready
-            clr = RGB(100, 200, 100);
+            stateText = "\xF0\x9F\x94\x87 Voice: Ready";    // 🔇
         }
     }
 
-    // Update status bar part 3 (voice indicator)
-    // SendMessage with SB_SETTEXT
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 3, (LPARAM)stateText);
+    // UTF-8 → UTF-16 → SB_SETTEXTW only (never SB_SETTEXTA).
+    RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 3, stateText);
 }
 
 // ============================================================================

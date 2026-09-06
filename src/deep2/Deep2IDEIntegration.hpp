@@ -19,10 +19,14 @@
 #include <optional>
 #include <vector>
 #include <cstdint>
+#include <functional>
+#include <atomic>
+#include <mutex>
 
 #include "GGUFShardRouter.hpp"
 #include "GGUFShardRouter_lanes.hpp"
 #include "FabricTensorTable.hpp"
+#include "execution_policy/PlacementPlan.hpp"
 
 namespace Deep2 {
     class Deep2Engine;
@@ -40,6 +44,7 @@ public:
     struct LoadResult {
         bool success = false;
         std::string error;
+        std::string modelPath;   // absolute/resolved path used for open + generate
         std::string modelName;
         std::string modelFamily;
         uint64_t parameterCount = 0;
@@ -68,6 +73,12 @@ public:
     // Get the fabric tensor table for residency management
     static FabricTensorTable* GetFabric();
 
+    // Elastic residency (policy-enforced placement lives here on IDE load path)
+    static ::Deep2::ElasticResidencyManager* GetElastic();
+
+    // Last IDE policy-apply report (P1_IDE_EXEC_POLICY_APPLY_001 readback)
+    static const ::Deep2::Exec::PlacementApplyReport* GetLastPolicyApplyReport();
+
     // Unload current model, free router + fabric state
     static void Unload();
 
@@ -82,6 +93,9 @@ private:
     static std::unique_ptr<FabricTensorTable> s_fabric;
     static LoadResult s_lastResult;
     static std::mutex s_mutex;
+
+    // Caller must hold s_mutex.
+    static void ResetLocked();
 
     static LoadResult LoadSingleFile(const std::string& path);
     static LoadResult LoadShardedDirectory(const std::string& path);
@@ -103,6 +117,9 @@ public:
         bool enableStreaming = true;
         bool enableMoERouting = true;
         uint32_t activeExpertWindow = 8;  // keep 8 experts hot
+
+        // Fill from ActivePolicy() — honors hard caps; no silent inflation.
+        static SessionConfig FromActivePolicy();
     };
 
     struct GenerationResult {
@@ -133,6 +150,8 @@ private:
     SessionConfig m_config;
     std::atomic<bool> m_cancelled{false};
     std::unique_ptr<::Deep2::Deep2Engine> m_engine;
+    std::string m_modelName;
+    std::string m_modelPath;
 };
 
 // ============================================================================

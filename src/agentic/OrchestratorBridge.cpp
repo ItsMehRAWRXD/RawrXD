@@ -547,15 +547,30 @@ RawrXD::Runtime::GenerationRequest OrchestratorBridge::BuildGenerationRequest(
 {
     RawrXD::Runtime::GenerationRequest req;
     req.prompt = prompt;
-    req.systemPrompt = RawrXD::Agent::AgentToolHandlers::GetSystemPrompt(m_workingDir, {});
-    req.maxTokens = 4096;
+    // ScreenPilot Command-home steers are chat, not tool loops. A full tool
+    // schema dump + hotpatch SubAgent manifesto was drowning short prompts and
+    // steering Deep2 into empty/failed generations.
+    const bool screenPilotChat =
+        prompt.rfind("[ScreenPilot", 0) == 0 ||
+        prompt.find("[ScreenPilot Plan mode]") != std::string::npos ||
+        prompt.find("[ScreenPilot Build mode]") != std::string::npos ||
+        prompt.find("[ScreenPilot Agent mode]") != std::string::npos;
+    if (screenPilotChat) {
+        req.systemPrompt =
+            "You are RawrXD ScreenPilot on the local machine. Answer concisely. "
+            "Do not emit TOOL_CALL lines unless the user explicitly asks for tools.";
+        req.maxTokens = 512;
+    } else {
+        req.systemPrompt = RawrXD::Agent::AgentToolHandlers::GetSystemPrompt(m_workingDir, {});
+        req.maxTokens = 4096;
+    }
     req.temperature = AgenticHotpatchOrchestrator::instance().getModelTemperature();
     req.topP = 0.9f;
     req.topK = 40;
     req.repeatPenalty = 1.0f;
 
-    // Add tool schemas if runtime supports tool calling
-    if (m_runtime && m_runtime->SupportsToolCalling()) {
+    // Tool schemas only for non-chat agent loops.
+    if (!screenPilotChat && m_runtime && m_runtime->SupportsToolCalling()) {
         const json tools = RawrXD::Agent::AgentToolHandlers::GetAllSchemas();
         for (const auto& tool : tools) {
             req.toolSchemas.push_back(tool.dump());

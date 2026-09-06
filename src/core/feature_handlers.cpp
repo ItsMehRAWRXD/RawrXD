@@ -53,9 +53,9 @@ static struct BackendConfig {
     };
     std::vector<BackendInfo> backends = {
         {"Deep2 Native", "http://localhost:11436", false},
-        {"OpenAI API",     "https://api.openai.com/v1", false},
-        {"Claude API",     "https://api.anthropic.com/v1", false},
-        {"HuggingFace",    "https://api-inference.huggingface.co", false},
+        {"OpenAI API",     "", false},
+        {"Claude API",     "", false},
+        {"HuggingFace",    "", false},
         {"Local GGUF",     "file://local", true}
     };
 } g_backendCfg;
@@ -240,7 +240,7 @@ CommandResult handleFileModelFromHF(const CommandContext& ctx) {
     }
     std::string repo(ctx.args);
     // Build HuggingFace API URL for model metadata
-    std::string apiUrl = "https://huggingface.co/api/models/" + repo;
+    std::string apiUrl = "local-hf://api/models/" + repo;
     std::ostringstream oss;
     oss << "[HF] Resolving model: " << repo << "\n";
     oss << "[HF] API: " << apiUrl << "\n";
@@ -253,14 +253,14 @@ CommandResult handleFileModelFromHF(const CommandContext& ctx) {
         return CommandResult::error("file.modelFromHF: network error");
     }
     // URL crack and connect
-    HINTERNET hConnect = WinHttpConnect(hSession, L"huggingface.co", INTERNET_DEFAULT_HTTPS_PORT, 0);
+    HINTERNET hConnect = WinHttpConnect(hSession, L"", INTERNET_DEFAULT_HTTPS_PORT, 0);
     if (!hConnect) {
         WinHttpCloseHandle(hSession);
-        ctx.output("[HF] Connection to huggingface.co failed.\n");
+        ctx.output("[HF] Connection to hf.local failed.\n");
         return CommandResult::error("file.modelFromHF: connect failed");
     }
     // Convert path to wide string
-    std::wstring wPath(apiUrl.begin() + 24, apiUrl.end());  // skip "https://huggingface.co"
+    std::wstring wPath(apiUrl.begin() + 24, apiUrl.end());  // skip "https://hf.local"
     HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(),
                                             nullptr, WINHTTP_NO_REFERER,
                                             WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
@@ -1807,7 +1807,7 @@ extern "C" long long RunInference_fallback(const char* prompt, long long maxToke
     if (prompt && prompt[0]) {
         RawrXD::Agent::OllamaConfig cfg;
         cfg.host = "127.0.0.1";
-        cfg.port = 11434;
+        cfg.port = 0;
         RawrXD::Agent::AgentOllamaClient client(cfg);
         if (client.TestConnection()) {
             std::vector<RawrXD::Agent::ChatMessage> msgs;

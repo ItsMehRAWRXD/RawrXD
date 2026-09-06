@@ -583,6 +583,10 @@ void Win32IDE::onCommandModelLoadWorkerDone(bool ok, const std::string& path) {
         snprintf(dj, sizeof(dj), "{\"ok\":%u,\"path_len\":%zu}", ok ? 1u : 0u, path.size());
         // #region agent log
         P1PRA_DebugLog("H5", "onCommandModelLoadWorkerDone", "ui_callback", dj);
+        P1PRA_AgentDbg("H2", "onCommandModelLoadWorkerDone", "enter",
+                       ok ? 1u : 0u,
+                       reinterpret_cast<unsigned long long>(m_hwndMain),
+                       static_cast<unsigned long long>(GetCurrentThreadId()));
         // #endregion
     }
 #endif
@@ -636,6 +640,12 @@ void Win32IDE::onCommandModelLoadWorkerDone(bool ok, const std::string& path) {
         }
         refreshCommandActivityStrip();
     }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    // #region agent log
+    P1PRA_AgentDbg("H2", "onCommandModelLoadWorkerDone", "exit",
+                   ok ? 1u : 0u, 0, static_cast<unsigned long long>(GetCurrentThreadId()));
+    // #endregion agent log
+#endif
 }
 
 void Win32IDE::handleCommandModelBrowse() {
@@ -1223,7 +1233,24 @@ void Win32IDE::createCommandSurface(HWND parent) {
     refreshCommandContextBar();
     refreshCommandFooter();
     refreshCommandModelHub();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    {
+        char skipGpu[8] = {};
+        if (GetEnvironmentVariableA("RAWRXD_SKIP_GPU_POWER_PROBE", skipGpu,
+                                      (DWORD)sizeof(skipGpu)) > 0 &&
+            skipGpu[0] != '0')
+            P1PRA_Witness("P1PRA_UI", "gpu_probe_skip_env");
+    }
+    P1PRA_Witness("P1PRA_UI", "gpu_probe_enter");
+    // #region agent log
+    P1PRA_AgentDbg("H9", "initCommandSurface", "before_gpu_probe", 0, 0, 0);
+    // #endregion agent log
+#endif
     rawrxd::InitGpuPowerProbeMainThread();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_UI", "gpu_probe_exit");
+    P1PRA_AgentDbg("H9", "initCommandSurface", "after_gpu_probe", 0, 0, 0);
+#endif
     RawrXD::Agent::AgentToolHandlers::SetIdeTerminalRunner(
         [this](const std::string& cmd) { runAgentCommandInTerminal(cmd); });
     RawrXD::Agent::AgentToolHandlers::SetStageEditHandler(

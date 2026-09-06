@@ -17,6 +17,9 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#endif
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -31,6 +34,26 @@
 #include <iomanip>
 #include <commdlg.h>
 #include <shlobj.h>
+
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#include <intrin.h>
+namespace {
+struct P1PRA_TlmScope {
+    const char* stage_;
+    explicit P1PRA_TlmScope(const char* stage, std::uint32_t id) : stage_(stage)
+    {
+        P1PRA_TlmEnter(stage, id);
+    }
+    ~P1PRA_TlmScope() { P1PRA_TlmExit(stage_); }
+    P1PRA_TlmScope(const P1PRA_TlmScope&) = delete;
+    P1PRA_TlmScope& operator=(const P1PRA_TlmScope&) = delete;
+};
+}  // namespace
+#define P1PRA_TLM_SCOPE(stage, id) P1PRA_TlmScope _p1tlm_##id(stage, id)
+#else
+#define P1PRA_TLM_SCOPE(stage, id)
+#endif
 
 // MASM Telemetry Kernel bridge — lock-free counters + ring buffer + Prometheus
 #include "rawrxd_telemetry_exports.h"
@@ -130,58 +153,154 @@ static std::string jsonEscape(const std::string& s)
 // ============================================================================
 void Win32IDE::initTelemetry()
 {
-    if (m_telemetryInitialized) return;
+    {
+        P1PRA_TLM_SCOPE("prologue", P1PRA_TLM_PROLOGUE);
+        if (m_telemetryInitialized)
+            return;
 
-    OutputDebugStringA("[Phase 34] Initializing Telemetry Export subsystem...\n");
-
-    std::lock_guard<std::mutex> lock(g_telemetryMutex);
-
-    // Generate anonymous session ID
-    telemetryGenerateSessionId(g_currentSessionId, sizeof(g_currentSessionId));
-    g_sessionStartMs = telemetryNowMs();
-    g_sessionEventCount = 0;
-
-    // Check for opt-in via environment variable
-    const char* envVal = getenv("RAWRXD_TELEMETRY");
-    if (envVal && (strcmp(envVal, "1") == 0 || strcmp(envVal, "true") == 0)) {
-        m_telemetryEnabled = true;
+        OutputDebugStringA("[Phase 34] Initializing Telemetry Export subsystem...\n");
     }
 
-    // Also check for settings file preference
-    char appDataPath[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, appDataPath))) {
-        std::string prefsPath = std::string(appDataPath) + "\\RawrXD\\telemetry_prefs.json";
-        FILE* f = fopen(prefsPath.c_str(), "rb");
-        if (f) {
-            char buf[256] = {};
-            fread(buf, 1, sizeof(buf) - 1, f);
-            fclose(f);
-            if (strstr(buf, "\"enabled\":true") || strstr(buf, "\"enabled\": true")) {
+    {
+        P1PRA_TLM_SCOPE("mutex_lock", P1PRA_TLM_MUTEX_LOCK);
+        std::lock_guard<std::mutex> lock(g_telemetryMutex);
+
+        {
+            P1PRA_TLM_SCOPE("session_init", P1PRA_TLM_SESSION_INIT);
+            telemetryGenerateSessionId(g_currentSessionId, sizeof(g_currentSessionId));
+            g_sessionStartMs = telemetryNowMs();
+            g_sessionEventCount = 0;
+        }
+
+        {
+            P1PRA_TLM_SCOPE("env_opt_in", P1PRA_TLM_ENV_OPT_IN);
+            const char* envVal = getenv("RAWRXD_TELEMETRY");
+            if (envVal && (strcmp(envVal, "1") == 0 || strcmp(envVal, "true") == 0)) {
                 m_telemetryEnabled = true;
             }
         }
-    }
 
-    m_telemetryInitialized = true;
+        {
+            P1PRA_TLM_SCOPE("prefs_opt_in", P1PRA_TLM_PREFS_OPT_IN);
+            char appDataPath[MAX_PATH];
+            if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, appDataPath))) {
+                std::string prefsPath = std::string(appDataPath) + "\\RawrXD\\telemetry_prefs.json";
+                FILE* f = fopen(prefsPath.c_str(), "rb");
+                if (f) {
+                    char buf[256] = {};
+                    fread(buf, 1, sizeof(buf) - 1, f);
+                    fclose(f);
+                    if (strstr(buf, "\"enabled\":true") || strstr(buf, "\"enabled\": true")) {
+                        m_telemetryEnabled = true;
+                    }
+                }
+            }
+        }
 
-    // Initialize MASM Telemetry Kernel (lock-free counters + ring buffer)
+        {
+            P1PRA_TLM_SCOPE("mark_initialized", P1PRA_TLM_MARK_INITIALIZED);
+        }
+
 #if defined(RAWRXD_LINK_TELEMETRY_KERNEL_ASM) || defined(RAWR_HAS_MASM)
-    {
-        uint64_t masmResult = UTC_InitTelemetry(nullptr);
-        char masmMsg[256];
-        snprintf(masmMsg, sizeof(masmMsg),
-            "[Telemetry] MASM Kernel init: %s (code=%llu)",
-            masmResult == 0 ? "OK" : "FAILED",
-            static_cast<unsigned long long>(masmResult));
-        OutputDebugStringA(masmMsg);
-    }
+        {
+            P1PRA_TLM_SCOPE("masm_kernel_init", P1PRA_TLM_MASM_KERNEL_INIT);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_UtcSymbolResolve(reinterpret_cast<void*>(
+                reinterpret_cast<uintptr_t>(&UTC_InitTelemetry)));
+            P1PRA_UtcPreCall(reinterpret_cast<void*>(
+                                 reinterpret_cast<uintptr_t>(&UTC_InitTelemetry)),
+                             _ReturnAddress());
+            {
+                char own[192];
+                snprintf(own, sizeof(own),
+                         "ownership fn=UTC_InitTelemetry ptr=%p callbacks=0 threads=0",
+                         reinterpret_cast<void*>(
+                             reinterpret_cast<uintptr_t>(&UTC_InitTelemetry)));
+                P1PRA_TlmOwnership(own);
+            }
+#endif
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            // #region agent log
+            P1PRA_AgentDbg("H3", "initTelemetry", "utc_init_before",
+                          reinterpret_cast<std::uintptr_t>(&UTC_InitTelemetry),
+                          static_cast<unsigned long>(GetCurrentThreadId()),
+                          m_telemetryInitialized ? 1u : 0u);
+            // #endregion agent log
+#endif
+            char skipUtc[8] = {};
+            const bool skipUtcMasm =
+                GetEnvironmentVariableA("RAWRXD_SKIP_UTC_MASM", skipUtc,
+                                        sizeof(skipUtc)) > 0 &&
+                skipUtc[0] == '1';
+            uint64_t masmResult = 0;
+            if (skipUtcMasm) {
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                // #region agent log
+                P1PRA_DebugLog("H3", "initTelemetry", "UTC_skip_env",
+                                 "{\"skip\":1}");
+                P1PRA_TlmOwnership(
+                    "ownership UTC_InitTelemetry skipped=RAWRXD_SKIP_UTC_MASM");
+                // #endregion agent log
+#endif
+                m_telemetryInitialized = true;
+            } else {
+            masmResult = UTC_InitTelemetry(nullptr);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            {
+                char dj[64];
+                snprintf(dj, sizeof(dj), "{\"result\":%llu}",
+                         static_cast<unsigned long long>(masmResult));
+                // #region agent log
+                P1PRA_DebugLog("H3", "initTelemetry", "UTC_InitTelemetry_after", dj);
+                // #endregion
+            }
+#endif
+            char masmMsg[256];
+            snprintf(masmMsg, sizeof(masmMsg),
+                "[Telemetry] MASM Kernel init: %s (code=%llu)",
+                masmResult == 0 ? "OK" : "FAILED",
+                static_cast<unsigned long long>(masmResult));
+            OutputDebugStringA(masmMsg);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            {
+                char own[128];
+                snprintf(own, sizeof(own),
+                         "ownership UTC_InitTelemetry result=%llu handle_threads=0",
+                         static_cast<unsigned long long>(masmResult));
+                P1PRA_TlmOwnership(own);
+            }
+#endif
+            if (masmResult == 0)
+                m_telemetryInitialized = true;
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            // #region agent log
+            P1PRA_AgentDbg("H5", "initTelemetry", "utc_init_result",
+                           masmResult,
+                           P1PRA_UtcStageId(),
+                           m_telemetryInitialized ? 1u : 0u);
+            // #endregion agent log
+#endif
+            }
+        }
+#else
+        {
+            P1PRA_TLM_SCOPE("masm_kernel_init", P1PRA_TLM_MASM_KERNEL_INIT);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_TlmOwnership("ownership fn=UTC_InitTelemetry skipped=not_linked callbacks=0 threads=0");
+#endif
+            m_telemetryInitialized = true;
+        }
 #endif
 
-    char msg[256];
-    snprintf(msg, sizeof(msg),
-        "[Telemetry] Initialized — session: %s, opt-in: %s",
-        g_currentSessionId, m_telemetryEnabled ? "YES" : "NO");
-    OutputDebugStringA(msg);
+        {
+            P1PRA_TLM_SCOPE("complete_log", P1PRA_TLM_COMPLETE_LOG);
+            char msg[256];
+            snprintf(msg, sizeof(msg),
+                "[Telemetry] Initialized — session: %s, opt-in: %s",
+                g_currentSessionId, m_telemetryEnabled ? "YES" : "NO");
+            OutputDebugStringA(msg);
+        }
+    }
 }
 
 // ============================================================================

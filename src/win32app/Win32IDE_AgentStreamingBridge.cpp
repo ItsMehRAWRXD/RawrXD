@@ -21,11 +21,14 @@ void appendAgentOutput(const std::string& text) {
     g_pMainIDE->appendToOutput(text, "Agent", Win32IDE::OutputSeverity::Info);
 }
 
+// Shared stream buffer — AppendToken fills; FinalizeStream must flush remainder.
+std::string g_agentTokenBuf;
+
 } // namespace
 
 // E1: AgentPanel_AppendMessage records to agent history when IDE is live
 // E2: AgentPanel_AppendToken batches tokens and flushes on newline for efficiency
-// E3: AgentPanel_FinalizeStream triggers refreshAgentDiffDisplay if panel is open
+// E3: AgentPanel_FinalizeStream flushes remainder + triggers refreshAgentDiffDisplay
 // E4: role prefix color-coded in output (user=cyan, assistant=green, system=yellow)
 // E5: empty role defaults to "agent" for consistent history attribution
 // E6: wideToUtf8 handles null gracefully with empty-string return
@@ -54,13 +57,12 @@ __declspec(dllexport)
 #endif
 void AgentPanel_AppendToken(const wchar_t* token) {
     if (!token) return;
-    // E2: batch tokens, flush on newline
-    static std::string s_tokenBuf;
     std::string t = wideToUtf8(token);
-    s_tokenBuf += t;
-    if (!s_tokenBuf.empty() && (s_tokenBuf.back() == '\n' || s_tokenBuf.size() > 256)) {
-        appendAgentOutput(s_tokenBuf);
-        s_tokenBuf.clear();
+    g_agentTokenBuf += t;
+    if (!g_agentTokenBuf.empty() &&
+        (g_agentTokenBuf.back() == '\n' || g_agentTokenBuf.size() > 256)) {
+        appendAgentOutput(g_agentTokenBuf);
+        g_agentTokenBuf.clear();
     }
 }
 
@@ -68,6 +70,10 @@ void AgentPanel_AppendToken(const wchar_t* token) {
 __declspec(dllexport)
 #endif
 void AgentPanel_FinalizeStream(void) {
+    if (!g_agentTokenBuf.empty()) {
+        appendAgentOutput(g_agentTokenBuf);
+        g_agentTokenBuf.clear();
+    }
     appendAgentOutput("\n");
     // E3: trigger diff panel refresh
     if (g_pMainIDE && g_pMainIDE->bridgeIsAgentPanelReady())

@@ -269,7 +269,7 @@ namespace RawrXD {
 namespace Agent {
 struct ChatMessage { std::string role; std::string content; };
 struct InferenceResult { bool success = false; std::string response; std::string metadata; };
-struct OllamaConfig { std::string host = "localhost"; int port = 11434; std::string model = "llama2"; };
+struct OllamaConfig { std::string host = "localhost"; int port = 0; std::string model = "llama2"; };
 class AgentOllamaClient {
 public:
     AgentOllamaClient(const OllamaConfig& config) : config_(config) {}

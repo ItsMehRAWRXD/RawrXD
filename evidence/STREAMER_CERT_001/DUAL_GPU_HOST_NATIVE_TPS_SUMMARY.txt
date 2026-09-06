@@ -1,0 +1,29 @@
+NATIVE DEEP2 STREAMER TPS (NOT Ollama) — dual discrete AMD host
+Date: 2026-09-06
+Host GPUs: AMD Radeon AI PRO R9700 (32GB) + RX 7800 XT (16GB) + AMD iGPU
+Engine: deep2_streamer_cert (Deep2 generateStream) — NOT Ollama HTTP
+
+Compute path note:
+  Vulkan ICD blocked (dual-AMD ICD unstable / heap corruption when ICD loads).
+  Streamer ran AVX-512 CPU path with ExecutionPolicy streaming=1 / VRAM hard=12GB.
+  Deep2MultiGpuBridge (R9700?7800XT layer shard) exists but is NOT wired into
+  streamer_cert GGUF decode yet — so both cards were present, not both computing tokens.
+
+BASELINE (prior STREAMER_PERF_LIVE TinyLlama):
+  BENCH_64 decode_tok_s=8.515  e2e_tok_s=8.347
+
+THIS RUN — TinyLlama 1.1B Q4_K_M (G:\~dev\rawrxd\models\...):
+  multi15 decode_tok_s=12.571  e2e_tok_s=11.829
+  BENCH_64 decode_tok_s=12.266  e2e_tok_s=12.094   (+44% decode vs baseline)
+  Result: RAWRXD_DEEP2_STREAMER=CERTIFIED (10/10)
+  Log: evidence/STREAMER_CERT_001/NATIVE_STREAMER_TPS_TINYLLAMA_20260906_130544.txt
+
+THIS RUN — Phi-3-mini-4k Q8_0 (F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf):
+  multi15 decode_tok_s=2.974  e2e_tok_s=2.794
+  BENCH_64 decode_tok_s=2.612  e2e_tok_s=2.571
+  Result: RAWRXD_DEEP2_STREAMER=CERTIFIED (10/10)
+  Log: evidence/STREAMER_CERT_001/NATIVE_STREAMER_TPS_PHI3_20260906_130621.txt
+
+Next for true dual-card TPS:
+  Wire Deep2MultiGpuBridge + PlasmaGovernor into GGUF decode, or fix AMD Vulkan ICD
+  selection (prefer R9700, secondary 7800XT) and re-bench with ICD enabled.

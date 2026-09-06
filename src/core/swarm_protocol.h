@@ -349,6 +349,29 @@ extern "C" {
 
 namespace SwarmProtocol {
 
+    inline bool payloadSizeValid(SwarmOpcode opcode, uint16_t length) {
+        switch (opcode) {
+            case SwarmOpcode::Heartbeat: return length == sizeof(HeartbeatPayload);
+            case SwarmOpcode::TaskPush: return length >= sizeof(TaskPushPayload);
+            case SwarmOpcode::TaskPull: return length == sizeof(TaskPullPayload);
+            case SwarmOpcode::ResultPush: return length >= sizeof(ResultPushPayload);
+            case SwarmOpcode::AttestRequest: return length == sizeof(AttestRequestPayload);
+            case SwarmOpcode::AttestResponse: return length == sizeof(AttestResponsePayload);
+            case SwarmOpcode::CapsReport: return length == sizeof(CapsReportPayload);
+            case SwarmOpcode::DiscoveryPing:
+            case SwarmOpcode::DiscoveryPong: return length == sizeof(DiscoveryPayload);
+            case SwarmOpcode::DagSync: return length >= sizeof(DagSyncPayload);
+            case SwarmOpcode::ShardRequest: return length == sizeof(ShardRequestPayload);
+            case SwarmOpcode::ShardTransfer: return length >= sizeof(ShardTransferPayload);
+            case SwarmOpcode::ConsensusVote: return length == sizeof(ConsensusVotePayload);
+            case SwarmOpcode::ConsensusCommit: return length == sizeof(ConsensusCommitPayload);
+            case SwarmOpcode::LogStream: return length >= sizeof(LogStreamPayload);
+            case SwarmOpcode::MetricReport: return length == sizeof(MetricReportPayload);
+            case SwarmOpcode::Shutdown: return length == 0;
+            default: return false;
+        }
+    }
+
     // Build a complete packet (header + payload) into a buffer.
     // Returns total size written (header + payload).
     inline uint32_t buildPacket(void* buffer, SwarmOpcode opcode,

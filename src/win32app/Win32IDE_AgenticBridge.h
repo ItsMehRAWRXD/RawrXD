@@ -86,6 +86,9 @@ class AgenticBridge
 
     void SetContextSize(const std::string& sizeName);
     bool LoadModel(const std::string& path);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    void P1PRA_WitnessLoadMemberAddrs() const noexcept;
+#endif
     /** Forwards to CPUInferenceEngine::GetSharedInstance() (same object as Win32IDE::m_nativeEngine). */
     void SetCpuEngineLayerProgressCallback(std::function<void(const std::string&)> cb);
     void SetCpuEngineSwarmTelemetryOutputCallback(std::function<void(const std::string&)> cb);
@@ -204,10 +207,11 @@ class AgenticBridge
     bool m_deepResearch = true;
     bool m_noRefusal = true;
     bool m_autoCorrect = false;
-    /// Default ON: inject tool/subagent line format for models without native function-calling.
-    bool m_hotpatchSubAgentToolProtocol = true;
-    /// Default ON: inject <thought> scaffolding when Deep Thinking is enabled.
-    bool m_hotpatchThoughtProtocol = true;
+    /// Default OFF for Command-home: SubAgent tool manifesto was bloating every steer.
+    /// Enable explicitly for Work-mode agent loops that need TOOL:runSubagent lines.
+    bool m_hotpatchSubAgentToolProtocol = false;
+    /// Default OFF: <thought> scaffolding only when Deep Thinking + explicit enable.
+    bool m_hotpatchThoughtProtocol = false;
     std::string m_languageContext;  // Current language (e.g. "C/C++")
     std::string m_fileContext;      // Current file path
     std::string m_workspaceRoot;    // Project/workspace folder for agent context
@@ -223,4 +227,8 @@ class AgenticBridge
     /// When true, agent prompts use OrchestratorBridge + Deep2 (not CPU/Ollama stub path).
     bool m_deep2Ready = false;
     std::string m_deep2ModelPath;
+
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    void p1praWitnessLoadMemberAddrs() const noexcept;
+#endif
 };

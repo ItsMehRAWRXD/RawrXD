@@ -117,7 +117,7 @@ struct AgentRunConfig {
     std::string transcriptPath;
     std::string workingDirectory;
     std::string model;
-    std::string ollamaBaseUrl = "http://localhost:11434";
+    std::string ollamaBaseUrl = "";
 };
 
 // ============================================================================

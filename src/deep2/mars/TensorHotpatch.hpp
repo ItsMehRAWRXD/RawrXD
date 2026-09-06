@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <functional>
+#include <atomic>
 
 namespace Deep2 {
 namespace MARS {

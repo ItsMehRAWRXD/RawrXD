@@ -1,6 +1,7 @@
 // RawrXD-Win32IDE resource script - embeds DPI-aware manifest + agent prompt dialog
 #include <winver.h>
 #include <windows.h>
+#include "resource.h"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION 7,4,0,0
@@ -41,4 +42,18 @@ BEGIN
     EDITTEXT        102, 12, 34, 316, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK", IDOK, 168, 68, 72, 16
     PUSHBUTTON      "Cancel", IDCANCEL, 252, 68, 72, 16
+END
+
+IDD_FIND DIALOGEX 0, 0, 430, 132
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 9, "Segoe UI"
+BEGIN
+    LTEXT           "Find what:", -1, 10, 12, 72, 12
+    EDITTEXT        IDC_FIND_TEXT, 88, 10, 330, 14, ES_AUTOHSCROLL
+    CONTROL         "Case sensitive", IDC_CASE_SENSITIVE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 38, 96, 12
+    CONTROL         "Whole word", IDC_WHOLE_WORD, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 112, 38, 88, 12
+    CONTROL         "Regex", IDC_USE_REGEX, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 208, 38, 64, 12
+    DEFPUSHBUTTON   "Find Next", IDC_BTN_FIND_NEXT, 10, 72, 88, 24
+    PUSHBUTTON      "Close", IDC_BTN_CLOSE, 108, 72, 88, 24
 END

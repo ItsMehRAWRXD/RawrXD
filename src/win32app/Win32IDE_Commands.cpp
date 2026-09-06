@@ -17,6 +17,7 @@
 #include "../core/omega_orchestrator.hpp"
 #include "IDEConfig.h"
 #include "Win32IDE.h"
+#include "resource.h"
 #include "Win32IDE_Types.h"
 #include "Win32IDE_CommandFlight.hpp"
 #include "win32_feature_adapter.h"
@@ -80,7 +81,7 @@ HybridCloudManager& commandCloudManager()
         CloudProvider local;
         local.providerId = "ollama";
         local.name = "Ollama";
-        local.endpoint = "http://127.0.0.1:11434";
+        local.endpoint.clear();  // EGRESS_001: Deep2/local only — no :11434 default
         local.isEnabled = true;
         local.isHealthy = true;
         local.costPerRequest = 0.0;
@@ -10813,6 +10814,8 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({2029, "View: Terminal", "", "View"});
     m_commandRegistry.push_back({2030, "View: File Explorer", "Ctrl+Shift+E", "View"});
     m_commandRegistry.push_back({2031, "View: Extensions", "Ctrl+Shift+X", "View"});
+    m_commandRegistry.push_back({IDM_CMD_ENTER_WORK, "ScreenPilot: Open Work Mode Editor", "Ctrl+Shift+W", "View"});
+    m_commandRegistry.push_back({IDM_CMD_ENTER_COMMAND, "ScreenPilot: Command Home", "Ctrl+Shift+1", "View"});
     m_commandRegistry.push_back({3007, "View: AI Chat", "Ctrl+Alt+B", "View"});
     m_commandRegistry.push_back({3009, "View: Agent Chat (autonomous)", "", "View"});
     // Tier 1 cosmetics (12000–12099, handleTier1Command) — accessible from View/category

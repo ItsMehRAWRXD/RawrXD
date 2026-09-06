@@ -22,11 +22,11 @@ using json = nlohmann::json;
 
 /**
  * @brief Create a CoTInferenceCallback that calls Ollama via StlHttpClient
- * @param endpoint Base URL, e.g. "http://localhost:11434"
+ * @param endpoint Base URL, e.g. ""
  * @param defaultModel Default model name, e.g. "bigdaddyg-fast:latest"
  */
 inline CoTInferenceCallback makeOllamaCallback(
-    const std::string& endpoint = "http://localhost:11434",
+    const std::string& endpoint = "",
     const std::string& defaultModel = "bigdaddyg-fast:latest")
 {
     return [endpoint, defaultModel](
@@ -183,7 +183,7 @@ inline CoTInferenceCallback makeClaudeCallback(
  */
 inline void wireCoTToOllama(
     ChainOfThoughtEngine& engine,
-    const std::string& endpoint = "http://localhost:11434",
+    const std::string& endpoint = "",
     const std::string& model = "bigdaddyg-fast:latest")
 {
     engine.setDefaultModel(model);
@@ -196,7 +196,7 @@ inline void wireCoTToOllama(
  * @brief Quick connectivity test — hit Ollama /api/tags endpoint.
  * Returns true if the server is reachable and responds.
  */
-inline bool testOllamaConnection(const std::string& endpoint = "http://localhost:11434") {
+inline bool testOllamaConnection(const std::string& endpoint = "") {
     HttpResponse resp = StlHttpClient::instance().get(endpoint + "/api/tags", 5000);
     if (resp.success) {
         fprintf(stderr, "[INFO] [LLM Bridge] Ollama alive at %s (%dms)\n",
@@ -213,7 +213,7 @@ inline bool testOllamaConnection(const std::string& endpoint = "http://localhost
  * Returns a JSON array of model names, or empty array on failure.
  */
 inline std::vector<std::string> listOllamaModels(
-    const std::string& endpoint = "http://localhost:11434")
+    const std::string& endpoint = "")
 {
     std::vector<std::string> models;
     HttpResponse resp = StlHttpClient::instance().get(endpoint + "/api/tags", 5000);

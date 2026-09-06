@@ -4138,21 +4138,20 @@ if(MSVC)
         )
     endif()
 
-    # Phase RDNA3: RX 7800 XT GPU Kernels ΓÇö Q4MatMul, KV Attention, Tile Streamer
-    # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101)
-    # Note: Kernels are in d:/rawrxd/src/kernels/rdna3/, not in ci-bootstrap
-    set(ASM_RDNA3_KERNELS_SRC "D:/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm")
-    set(_ASM_RDNA3_KERNELS_PREBUILT "D:/rawrxd/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels — Q4MatMul, KV Attention, Tile Streamer
+    # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
+    set(ASM_RDNA3_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
+    set(_ASM_RDNA3_KERNELS_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
     if(EXISTS "${_ASM_RDNA3_KERNELS_PREBUILT}")
         set(ASM_RDNA3_KERNELS_OBJ "${_ASM_RDNA3_KERNELS_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RDNA3_Full_Test.obj (RX 7800 XT kernels)")
-    elseif(EXISTS "D:/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm")
+        message(STATUS "[MASM] Using prebuilt RDNA3_Full_Test.obj (RDNA3 kernels)")
+    elseif(EXISTS "${ASM_RDNA3_KERNELS_SRC}")
         set(ASM_RDNA3_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RDNA3_Full_Test.obj")
         add_custom_command(
             OUTPUT ${ASM_RDNA3_KERNELS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /W3 /nologo /Zi /Fo${ASM_RDNA3_KERNELS_OBJ} "D:/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm"
-            DEPENDS "D:/rawrxd/src/kernels/rdna3/RDNA3_Full_Test.asm"
-            COMMENT "[MASM] Assembling RDNA3_Full_Test.asm (Q4MatMul, KV Attention, Tile Streamer for gfx1101)"
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /W3 /nologo /Zi /Fo${ASM_RDNA3_KERNELS_OBJ} "${ASM_RDNA3_KERNELS_SRC}"
+            DEPENDS "${ASM_RDNA3_KERNELS_SRC}"
+            COMMENT "[MASM] Assembling RDNA3_Full_Test.asm (Q4MatMul, KV Attention, Tile Streamer)"
             VERBATIM
         )
     else()
@@ -7840,13 +7839,18 @@ option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
         src/deep2/deep2_streamer_cert.cpp
+        src/core/GpuDecodeEfficiency.cpp
+        src/core/AmdGpuPowerBackend.cpp
+        src/deep2/K2NativeStreamGate.cpp
     )
-    target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine)
+    target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
         target_compile_options(deep2_streamer_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
     target_include_directories(deep2_streamer_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
         ${CMAKE_SOURCE_DIR}/include
     )
     set_target_properties(deep2_streamer_cert PROPERTIES

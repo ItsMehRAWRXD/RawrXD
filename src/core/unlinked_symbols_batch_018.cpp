@@ -57,7 +57,7 @@ struct InferenceResult {
 // OllamaConfig structure
 struct OllamaConfig {
     std::string host = "localhost";
-    int port = 11434;
+    int port = 0;
     std::string defaultModel = "llama3";
     int timeoutMs = 30000;
     bool useGPU = true;

@@ -65,6 +65,12 @@ struct StreamBenchmark {
     uint32_t    temperature_c;
     uint32_t    power_watts;
     
+    // GPU decode efficiency (AMD sensor only; invalid when gpu_power_valid=false)
+    bool        gpu_power_valid;
+    double      avg_gpu_power_watts;
+    double      tokens_per_watt_gpu;
+    uint32_t    gpu_power_sample_count;
+    
     // Stability
     uint32_t    token_drops;        // Missed decode deadlines
     uint32_t    thermal_throttle_events;

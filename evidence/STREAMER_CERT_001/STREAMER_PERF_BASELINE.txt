@@ -1,0 +1,56 @@
+STREAMER-CERT-001 PERFORMANCE BASELINE — FROZEN
+================================================
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+authority_stdout=evidence/STREAMER_CERT_001/streamer_cert.stdout.txt
+authority_verdict=evidence/STREAMER_CERT_001/STREAMER_CERT_VERDICT.txt
+cert_status=RAWRXD_DEEP2_STREAMER=CERTIFIED (10/10 PASS)
+
+FROZEN_BASELINE
+---------------
+DEEP2_STREAMER_TPS ≈ 1.3 tok/s
+
+qualification=
+  measurement = end-to-end wall-clock generation
+  model       = TinyLlama Q4_K_M
+  includes    = prefill + decode
+  excludes    = any claim of pure decode TPS
+
+AUTHORITY_RANGE (from streamer_cert.stdout.txt)
+-----------------------------------------------
+| Measurement             |              Result |
+| ----------------------- | ------------------: |
+| 1-token run             |      1.19 tok/s     |
+| Typical multi-token     | 1.26–1.32 tok/s     |
+| Best observed           |      1.51 tok/s     |
+| Practical cert baseline |     ~1.3 tok/s      |
+
+CANONICAL_PHRASE (use this wording)
+-----------------------------------
+STREAMER-CERT-001 measured approximately 1.3 generated tokens/sec
+end-to-end on TinyLlama, including prompt prefill and decode.
+
+DO_NOT_SAY
+----------
+"Deep2 decodes at 1.3 tok/s"   # implies decode-only; INVALID vs this baseline
+
+FUTURE_PERF_CERT_SPLIT
+----------------------
+PREFILL
+  prompt_tokens/sec
+  prefill_ms
+
+DECODE
+  generated_tokens/sec
+  ms/token
+
+E2E
+  total wall_ms
+  output_tokens
+  effective tok/s
+
+NOTE
+----
+~1.3 tok/s remains the historical E2E streamer baseline.
+Future kernel work must attribute gains to PREFILL, DECODE, or both —
+do not overwrite this E2E number without a new named cert lane.

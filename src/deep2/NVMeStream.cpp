@@ -5,6 +5,10 @@
 // ============================================================================
 
 #include "NVMeStream.h"
+#include "TelemetrySinks.hpp"
+#include <cstdio>
+#include <algorithm>
+#include <cstring>
 #include <cstdio>
 #include <algorithm>
 
@@ -146,6 +150,12 @@ const uint8_t* NVMeStream::acquireExpert(int layerId, int expertId,
     
     residencyCache_[key] = entry;
     residentBytes += meta.sizeBytes;
+
+    // Streamer op / mmap residency — logical (+prefetch), not physical ReadFile.
+    {
+        const IoTransferId xfer = NoteNvmeRequest(meta.sizeBytes, false);
+        NoteNvmeConsumed(xfer, meta.sizeBytes);
+    }
     
     // Touch pages to force them into RAM (if prefetch enabled)
     if (config.enablePageMonitoring) {
@@ -212,6 +222,11 @@ bool NVMeStream::prefetchExpert(int layerId, int expertId) {
     
     residencyCache_[key] = entry;
     residentBytes += meta.sizeBytes;
+
+    {
+        const IoTransferId xfer = NoteNvmeRequest(meta.sizeBytes, /*prefetch*/ true);
+        NoteNvmeConsumed(xfer, meta.sizeBytes);
+    }
     
     return true;
 }

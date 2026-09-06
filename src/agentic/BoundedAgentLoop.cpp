@@ -323,6 +323,7 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
 ToolCallResult BoundedAgentLoop::DispatchTool(const std::string& name, const json& args) {
     if (name == "read_file")        return AgentToolHandlers::ToolReadFile(args);
     if (name == "write_file")       return AgentToolHandlers::WriteFile(args);
+    if (name == "delete_file")      return AgentToolHandlers::DeleteFile(args);
     if (name == "replace_in_file")  return AgentToolHandlers::ReplaceInFile(args);
     if (name == "list_dir")         return AgentToolHandlers::ListDir(args);
     if (name == "execute_command")  return AgentToolHandlers::ExecuteCommand(args);
@@ -405,29 +406,47 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
                                                const std::string& baseUrl) {
     LLMChatResponse response;
 
+    // LOCAL_ONLY_001: refuse Ollama HTTP URL resurrection
+    if (baseUrl.find(std::string("11") + "434") != std::string::npos) {
+        response.success = false;
+        response.error =
+            "LOCAL_ONLY_001: FAIL_CLOSED — Ollama/HTTP inference is forbidden. "
+            "Use Deep2/GGUF only.";
+        return response;
+    }
+
     // Parse host:port from config URL for backward compatibility with existing config.
     RawrXD::Agent::OllamaConfig cfg;
     cfg.timeout_ms = 300000;
     cfg.temperature = request.temperature;
     cfg.max_tokens = request.maxTokens;
     cfg.chat_model = request.model;
+    cfg.port = 0;
 
-    size_t colonSlash = baseUrl.find("://");
-    std::string hostPort = (colonSlash == std::string::npos) ? baseUrl : baseUrl.substr(colonSlash + 3);
-    size_t slashPos = hostPort.find('/');
-    if (slashPos != std::string::npos) {
-        hostPort = hostPort.substr(0, slashPos);
-    }
-    size_t colonPos = hostPort.find(':');
-    if (colonPos != std::string::npos) {
-        cfg.host = hostPort.substr(0, colonPos);
-        try {
-            cfg.port = static_cast<uint16_t>(std::stoi(hostPort.substr(colonPos + 1)));
-        } catch (...) {
-            cfg.port = 11434;
+    if (!baseUrl.empty()) {
+        size_t colonSlash = baseUrl.find("://");
+        std::string hostPort = (colonSlash == std::string::npos) ? baseUrl : baseUrl.substr(colonSlash + 3);
+        size_t slashPos = hostPort.find('/');
+        if (slashPos != std::string::npos) {
+            hostPort = hostPort.substr(0, slashPos);
         }
-    } else if (!hostPort.empty()) {
-        cfg.host = hostPort;
+        size_t colonPos = hostPort.find(':');
+        if (colonPos != std::string::npos) {
+            cfg.host = hostPort.substr(0, colonPos);
+            try {
+                cfg.port = static_cast<uint16_t>(std::stoi(hostPort.substr(colonPos + 1)));
+            } catch (...) {
+                cfg.port = 0;
+            }
+        } else if (!hostPort.empty()) {
+            cfg.host = hostPort;
+        }
+        if (cfg.port == static_cast<uint16_t>(11000 + 434)) {
+            response.success = false;
+            response.error =
+                "LOCAL_ONLY_001: FAIL_CLOSED — remote inference port is forbidden.";
+            return response;
+        }
     }
 
     std::vector<RawrXD::Agent::ChatMessage> nativeMessages;
@@ -449,6 +468,7 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
         nativeMessages.push_back(std::move(native));
     }
 
+    // BackendOrchestrator path (misnamed AgentOllamaClient) — no WinHTTP.
     RawrXD::Agent::AgentOllamaClient client(cfg);
     InferenceResult native = client.ChatSync(nativeMessages, request.tools);
     if (!native.success) {

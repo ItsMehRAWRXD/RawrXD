@@ -13,6 +13,10 @@
 #include <memory>
 #include <functional>
 #include <atomic>
+#include <string>
+#include <mutex>
+#include <unordered_map>
+#include <algorithm>
 
 namespace Deep2 {
 namespace MARS {
@@ -90,7 +94,9 @@ public:
         const std::string& name,
         size_t bytes,
         float priority = 1.0f,
-        bool hotpatchable = true);
+        bool hotpatchable = true,
+        int producerLayer = -1,
+        bool isWeight = true);
 
     // ------------------------------------------------------------------------
     // Rebalancing

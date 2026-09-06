@@ -193,6 +193,11 @@ struct ElasticResidentTensor {
 
     // For predictive prefetch: predicted next use layer/token
     std::atomic<uint32_t> predictedNextLayer{~0u};
+
+    // ExecutionPolicy placement (set at register / apply time)
+    // -1 = host/stream/disk, 0/1 = GPU, -2 = unset
+    int plannedGpu = -2;
+    bool policyPinned = false;
 };
 
 // ============================================================================
@@ -251,6 +256,11 @@ public:
                         size_t compressedBytes,
                         TensorFormat nativeFormat,
                         const void* sourceData = nullptr);
+
+    // ExecutionPolicy: stamp planned device before promote/evict.
+    bool SetPlannedPlacement(const std::string& name, int plannedGpu, bool pinned);
+    std::vector<std::string> ListTensorNames() const;
+    int GetPlannedGpu(const std::string& name) const;
 
     // ── State Queries ────────────────────────────────────────────────
     ResidencyState GetTensorState(const std::string& name) const;

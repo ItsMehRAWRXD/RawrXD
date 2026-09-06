@@ -189,7 +189,10 @@ VRAMLease* MARSController::PlaceTensor(
     VRAMLease* result = lease.get();
     pools_[gpu].tensors[tensorId] = std::move(lease);
     pools_[gpu].usedBytes += bytes;
+    if (pools_[gpu].usedBytes > pools_[gpu].peakUsedBytes)
+        pools_[gpu].peakUsedBytes = pools_[gpu].usedBytes;
     totalAllocated_ += bytes;
+    bytesHostToGpu_ += bytes;
     
     printf("[MARS] Placed '%s' (%.2f MB) on GPU%d (priority=%.2f)\n",
            name.c_str(), bytes / (1024.0 * 1024.0), gpu, priority);
@@ -258,6 +261,7 @@ bool MARSController::EvictLeastImportant(int gpu, size_t minBytesToFree) {
             }
             freed += it->second->bytes;
             pools_[gpu].usedBytes -= it->second->bytes;
+            spillToRam_++;
             printf("[MARS] Evicted '%s' (%.2f MB) from GPU%d (score=%zu)\n",
                    it->second->tensorName.c_str(),
                    it->second->bytes / (1024.0 * 1024.0),
@@ -565,9 +569,14 @@ bool MARSController::MigrateTensorInternal(uint64_t tensorId, int sourceGPU, int
         lease->currentGPU = targetGPU;
         pools_[targetGPU].tensors[tensorId] = std::move(lease);
         pools_[targetGPU].usedBytes += lease->bytes;
+        if (pools_[targetGPU].usedBytes > pools_[targetGPU].peakUsedBytes)
+            pools_[targetGPU].peakUsedBytes = pools_[targetGPU].usedBytes;
     }
     
-    printf("[MARS] Migrated tensor %llu from GPU%d to GPU%d\n", tensorId, sourceGPU, targetGPU);
+    migrationCount_++;
+    bytesHostToGpu_ += 0; // device↔device; counted separately if needed
+    printf("[MARS] Migrated tensor %llu from GPU%d to GPU%d\n",
+           (unsigned long long)tensorId, sourceGPU, targetGPU);
     return true;
 }
 
@@ -589,6 +598,63 @@ void* MARSController::AllocateDeviceMemory(size_t bytes) {
 void MARSController::FreeDeviceMemory(void* ptr) {
     if (ptr) {
         std::free(ptr);
+    }
+}
+
+void MARSController::ResetRunTelemetry() {
+    bytesHostToGpu_.store(0);
+    bytesNvmeToRam_.store(0);
+    residencyMisses_.store(0);
+    spillToRam_.store(0);
+    spillToNvme_.store(0);
+    // Keep migrationCount_ cumulative across process; session delta via Snapshot.
+    for (int g = 0; g < 2; ++g) {
+        std::lock_guard<std::mutex> lock(pools_[g].mutex);
+        pools_[g].peakUsedBytes = pools_[g].usedBytes;
+    }
+}
+
+void MARSController::NoteHostToGpu(uint64_t bytes) { bytesHostToGpu_ += bytes; }
+void MARSController::NoteNvmeToRam(uint64_t bytes) { bytesNvmeToRam_ += bytes; }
+void MARSController::NoteResidencyMiss() { residencyMisses_++; }
+void MARSController::NoteSpillToRam() { spillToRam_++; }
+void MARSController::NoteSpillToNvme() { spillToNvme_++; }
+
+LiveTelemetry MARSController::SnapshotTelemetry() const {
+    LiveTelemetry t{};
+    for (int g = 0; g < 2; ++g) {
+        std::lock_guard<std::mutex> lock(pools_[g].mutex);
+        t.usedVram[g] = pools_[g].usedBytes;
+        t.peakVram[g] = pools_[g].peakUsedBytes;
+        t.totalVram[g] = pools_[g].totalBytes;
+        for (const auto& [id, lease] : pools_[g].tensors) {
+            (void)id;
+            if (!lease) continue;
+            if (lease->pinned) t.pinnedCount++;
+            if (lease->resident) t.residentCount++;
+            else t.hostOnlyCount++;
+        }
+    }
+    t.peakVramTotal = t.peakVram[0] + t.peakVram[1];
+    t.bytesHostToGpu = bytesHostToGpu_.load();
+    t.bytesNvmeToRam = bytesNvmeToRam_.load();
+    t.migrations = static_cast<uint32_t>(migrationCount_.load());
+    t.residencyMisses = residencyMisses_.load();
+    t.spillToRam = spillToRam_.load();
+    t.spillToNvme = spillToNvme_.load();
+    return t;
+}
+
+void MARSController::CollectEffectivePlacement(
+    std::vector<std::pair<std::string, int>>& outNameToGpu) const {
+    outNameToGpu.clear();
+    for (int g = 0; g < 2; ++g) {
+        std::lock_guard<std::mutex> lock(pools_[g].mutex);
+        for (const auto& [id, lease] : pools_[g].tensors) {
+            (void)id;
+            if (!lease || !lease->resident) continue;
+            outNameToGpu.emplace_back(lease->tensorName, g);
+        }
     }
 }
 

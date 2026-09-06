@@ -61,7 +61,7 @@ void parseHostPort(const std::string& ep, std::string& host, int& port) {
         port = std::atoi(ep.substr(colon + 1).c_str());
     } else {
         host = ep;
-        port = 11434;
+        port = 0;
     }
 }
 
@@ -185,7 +185,7 @@ void GGUFProxyServer::forwardToGGUF(uintptr_t socketDescriptor) {
     // Connect to GGUF if needed
     if (!conn->ggufSocket) {
         std::string host;
-        int port = 11434;
+        int port = 0;
         parseHostPort(m_ggufEndpoint, host, port);
 
         auto sock = static_cast<SocketType>(::socket(AF_INET, SOCK_STREAM, 0));

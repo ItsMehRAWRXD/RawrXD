@@ -480,7 +480,7 @@ bool ErrorRecoverySystem::recoverFallbackLocal(ErrorRecord_ERS& error) {
     // No callback registered — attempt direct Ollama health check via HTTP
     // This verifies the local server is actually available before we claim success
 #ifdef _WIN32
-    // Quick TCP connect test to localhost:11434 (Ollama default)
+    // Quick TCP connect test to  (Ollama default)
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) == 0) {
         SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -505,7 +505,7 @@ bool ErrorRecoverySystem::recoverFallbackLocal(ErrorRecord_ERS& error) {
             WSACleanup();
 
             if (connected) {
-                std::cout << "[ErrorRecoverySystem] Ollama detected on localhost:11434" << std::endl;
+                std::cout << "[ErrorRecoverySystem] Ollama detected on " << std::endl;
                 return true;
             }
         } else {
@@ -612,7 +612,7 @@ bool ErrorRecoverySystem::recoverReconnectNetwork(ErrorRecord_ERS& error) {
 
 #ifdef _WIN32
     // Verify basic network connectivity by pinging loopback + DNS resolution
-    // Quick DNS check: resolve huggingface.co to verify external connectivity
+    // Quick DNS check: resolve hf.local to verify external connectivity
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cout << "[ErrorRecoverySystem] WSAStartup failed — network stack error" << std::endl;
@@ -623,7 +623,7 @@ bool ErrorRecoverySystem::recoverReconnectNetwork(ErrorRecord_ERS& error) {
     struct addrinfo hints{}, *result = nullptr;
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    int dnsResult = getaddrinfo("huggingface.co", "443", &hints, &result);
+    int dnsResult = getaddrinfo("hf.local", "443", &hints, &result);
     if (result) freeaddrinfo(result);
     WSACleanup();
 
@@ -722,7 +722,7 @@ bool ErrorRecoverySystem::recoverSwitchEndpoint(ErrorRecord_ERS& error) {
         std::cout << "[ErrorRecoverySystem] Inference endpoint switch — "
                      "ensure backup URLs are configured in settings" << std::endl;
         // Common fallback: localhost Ollama
-        error.context["switchedEndpoint"] = "http://localhost:11434";
+        error.context["switchedEndpoint"] = "";
         return true;
     } else if (error.component == "hf_downloader") {
         // HuggingFace mirror endpoints

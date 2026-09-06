@@ -23,6 +23,14 @@
 #include <string>
 #include <chrono>
 #include <cmath>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <dxgi.h>
+#pragma comment(lib, "dxgi.lib")
+#endif
 
 using namespace Deep2;
 
@@ -70,9 +78,9 @@ static bool check(bool condition, const char* label, const char* detail) {
 
 static bool runStreamTest(Deep2Engine& engine, const std::string& prompt,
                           const GenerationOptions& opts, size_t expectedMax,
-                          bool enableCancel = false, size_t cancelAfter = 0) {
+                          bool enableCancel = false, size_t cancelAfter = 0,
+                          InferenceStats* outStats = nullptr) {
     resetLedger();
-    // Options must configure the same sampler generate() uses.
     engine.reset();
     engine.configureGeneration(opts);
 
@@ -81,11 +89,12 @@ static bool runStreamTest(Deep2Engine& engine, const std::string& prompt,
 
     const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(opts.maxTokens)));
     std::vector<int> outputTokens(maxTokens);
+    InferenceStats localStats{};
 
     size_t generated = engine.generate(
         promptTokens.data(), promptTokens.size(),
         outputTokens.data(), maxTokens,
-        nullptr,
+        outStats ? outStats : &localStats,
         [&](int tokenId) -> bool {
             if (enableCancel && g_callbackCount >= cancelAfter) {
                 g_cancelled = true;
@@ -114,7 +123,68 @@ static bool runStreamTest(Deep2Engine& engine, const std::string& prompt,
         });
 
     (void)generated;
+    (void)expectedMax;
     return true;
+}
+
+static void printPerfBlock(const char* tag, const InferenceStats& s) {
+    printf("---- PERF %s ----\n", tag);
+    printf("  prompt_tokens=%zu generated=%zu\n", s.promptTokens, s.tokensGenerated);
+    printf("  prefill_ms=%.3f decode_ms=%.3f total_wall_ms=%.3f\n",
+           s.prefillMs, s.decodeMs, s.totalWallMs);
+    printf("  prefill_tok_s=%.3f decode_tok_s=%.3f e2e_tok_s=%.3f ms_per_gen_tok=%.3f\n",
+           s.prefillTokensPerSecond, s.decodeTokensPerSecond,
+           s.tokensPerSecond, s.latencyMs);
+}
+
+// Host vs compute topology witnesses (STREAMER_MULTIGPU disposition).
+static unsigned countHostGpusDxgi() {
+#ifdef _WIN32
+    IDXGIFactory* factory = nullptr;
+    if (FAILED(CreateDXGIFactory(__uuidof(IDXGIFactory),
+                                 reinterpret_cast<void**>(&factory))) ||
+        !factory)
+        return 0;
+    unsigned n = 0;
+    IDXGIAdapter* adapter = nullptr;
+    for (UINT i = 0; factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+        if (!adapter)
+            continue;
+        DXGI_ADAPTER_DESC desc{};
+        if (SUCCEEDED(adapter->GetDesc(&desc))) {
+            // Skip Microsoft Basic Render Driver / software.
+            if (desc.VendorId != 0x1414)
+                ++n;
+        }
+        adapter->Release();
+        adapter = nullptr;
+    }
+    factory->Release();
+    return n;
+#else
+    return 0;
+#endif
+}
+
+static void emitComputeTopologyWitnesses(FILE* extra, bool streamerPass,
+                                         unsigned gpuCount, unsigned gpuComputeActive,
+                                         const char* backend) {
+    const char* cert = streamerPass ? "10/10" : "FAIL";
+    printf("DEEP2_COMPUTE_BACKEND=%s\n", backend);
+    printf("DEEP2_GPU_COUNT=%u\n", gpuCount);
+    printf("DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
+    printf("DEEP2_STREAMER_CERT=%s\n", cert);
+    printf("DUAL_GPU_HOST=%s\n", gpuCount >= 2 ? "YES" : "NO");
+    printf("DUAL_GPU_COMPUTE=%s\n", gpuComputeActive >= 2 ? "YES" : "NO");
+    if (extra) {
+        fprintf(extra, "DEEP2_COMPUTE_BACKEND=%s\n", backend);
+        fprintf(extra, "DEEP2_GPU_COUNT=%u\n", gpuCount);
+        fprintf(extra, "DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
+        fprintf(extra, "DEEP2_STREAMER_CERT=%s\n", cert);
+        fprintf(extra, "DUAL_GPU_HOST=%s\n", gpuCount >= 2 ? "YES" : "NO");
+        fprintf(extra, "DUAL_GPU_COMPUTE=%s\n",
+                gpuComputeActive >= 2 ? "YES" : "NO");
+    }
 }
 
 static bool runSyncTest(Deep2Engine& engine, const std::string& prompt,
@@ -163,14 +233,16 @@ int main(int argc, char** argv) {
     std::string prompt = "hello";
 
     // ── STREAM-001: one token ──────────────────────────────────────
+    InferenceStats perf1{}, perf15{}, perfBest{};
     {
         GenerationOptions opts;
         opts.maxTokens = 1;
         opts.temperature = 0.0f;
         opts.topK = 1;
-        runStreamTest(engine, prompt, opts, 1);
+        runStreamTest(engine, prompt, opts, 1, false, 0, &perf1);
         check(g_callbackCount <= 1, "STREAM-001 one_token",
               ("callbackCount=" + std::to_string(g_callbackCount)).c_str());
+        printPerfBlock("STREAM-001", perf1);
     }
 
     // ── STREAM-002: multi-token (15) ───────────────────────────────
@@ -179,9 +251,10 @@ int main(int argc, char** argv) {
         opts.maxTokens = 15;
         opts.temperature = 0.0f;
         opts.topK = 1;
-        runStreamTest(engine, prompt, opts, 15);
+        runStreamTest(engine, prompt, opts, 15, false, 0, &perf15);
         check(g_callbackCount == 15, "STREAM-002 multi_token",
               ("callbackCount=" + std::to_string(g_callbackCount)).c_str());
+        printPerfBlock("STREAM-002", perf15);
     }
 
     // ── STREAM-003: callback assembly ──────────────────────────────
@@ -313,6 +386,17 @@ int main(int argc, char** argv) {
               "invalid token or non-finite logits detected");
     }
 
+    // ── PERF: dedicated 64-token decode benchmark (greedy) ─────────
+    {
+        GenerationOptions opts;
+        opts.maxTokens = 64;
+        opts.temperature = 0.0f;
+        opts.topK = 1;
+        opts.seed = 42;
+        runStreamTest(engine, prompt, opts, 64, false, 0, &perfBest);
+        printPerfBlock("BENCH_64", perfBest);
+    }
+
     // ── Summary ────────────────────────────────────────────────────
     printf("============================================================\n");
     size_t passCount = 0;
@@ -324,19 +408,49 @@ int main(int argc, char** argv) {
         printf("  %-40s %s\n", r.label.c_str(), r.pass ? "PASS" : "FAIL");
     }
     bool allPass = (passCount == g_results.size());
+    // Current certified path is CPU-native only; GPU compute active stays 0 until
+    // STREAMER_MULTIGPU_001 wires Deep2MultiGpuBridge into this GGUF decode path.
+    const unsigned gpuCount = countHostGpusDxgi();
+    const unsigned gpuComputeActive = 0;
+    const char* backend = "CPU_NATIVE";
     printf("============================================================\n");
     printf("RAWRXD_DEEP2_STREAMER=%s\n", allPass ? "CERTIFIED" : "FAILED");
+    printf("PERF_SUMMARY one_tok_e2e=%.3f multi15_e2e=%.3f multi15_decode=%.3f bench64_e2e=%.3f bench64_decode=%.3f\n",
+           perf1.tokensPerSecond, perf15.tokensPerSecond, perf15.decodeTokensPerSecond,
+           perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond);
+    emitComputeTopologyWitnesses(nullptr, allPass, gpuCount, gpuComputeActive, backend);
     printf("============================================================\n");
     fflush(stdout);
     fflush(stderr);
-    FILE* vf = fopen("F:\\~dev\\rawrxd\\build-ninja\\bin\\STREAMER_CERT_VERDICT.txt", "w");
+    FILE* vf = fopen("G:\\~dev\\rawrxd\\build-ninja\\bin\\STREAMER_CERT_VERDICT.txt", "w");
     if (vf) {
         fprintf(vf, "%s\n", allPass ? "CERTIFIED" : "FAILED");
         for (const auto& r : g_results) {
             fprintf(vf, "%s %s\n", r.label.c_str(), r.pass ? "PASS" : "FAIL");
         }
+        fprintf(vf, "PERF one_e2e=%.3f multi15_e2e=%.3f multi15_decode=%.3f bench64_e2e=%.3f bench64_decode=%.3f\n",
+                perf1.tokensPerSecond, perf15.tokensPerSecond, perf15.decodeTokensPerSecond,
+                perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond);
+        fprintf(vf, "PERF_SPLIT multi15_prefill_ms=%.3f multi15_decode_ms=%.3f bench64_prefill_ms=%.3f bench64_decode_ms=%.3f\n",
+                perf15.prefillMs, perf15.decodeMs, perfBest.prefillMs, perfBest.decodeMs);
+        emitComputeTopologyWitnesses(vf, allPass, gpuCount, gpuComputeActive, backend);
         fclose(vf);
     }
-    // Skip Deep2Engine destructor path (known 0xC0000409 teardown crash).
+    FILE* pf = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_CERT_001\\STREAMER_PERF_LIVE.txt", "w");
+    if (pf) {
+        fprintf(pf, "STREAMER-CERT-001 LIVE PERF (split PREFILL/DECODE/E2E)\n");
+        fprintf(pf, "model=%s\n", modelPath);
+        fprintf(pf, "STREAM-001 e2e_tok_s=%.3f prefill_ms=%.3f decode_ms=%.3f\n",
+                perf1.tokensPerSecond, perf1.prefillMs, perf1.decodeMs);
+        fprintf(pf, "STREAM-002 e2e_tok_s=%.3f decode_tok_s=%.3f prefill_ms=%.3f decode_ms=%.3f generated=%zu\n",
+                perf15.tokensPerSecond, perf15.decodeTokensPerSecond,
+                perf15.prefillMs, perf15.decodeMs, perf15.tokensGenerated);
+        fprintf(pf, "BENCH_64 e2e_tok_s=%.3f decode_tok_s=%.3f prefill_ms=%.3f decode_ms=%.3f generated=%zu\n",
+                perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond,
+                perfBest.prefillMs, perfBest.decodeMs, perfBest.tokensGenerated);
+        emitComputeTopologyWitnesses(pf, allPass, gpuCount, gpuComputeActive, backend);
+        fprintf(pf, "NOTE=host_topology_vs_compute_topology; dual_gpu_compute_requires_STREAMER_MULTIGPU_001\n");
+        fclose(pf);
+    }
     _Exit(allPass ? 0 : 1);
 }

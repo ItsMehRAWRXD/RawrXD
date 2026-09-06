@@ -4,6 +4,7 @@
 
 #include "Deep2Bridge.hpp"
 #include "Deep2Engine.h"
+#include "K2NativeStreamGate.hpp"
 #include "Tokenizer.hpp"
 #include "../inference/RawrXD_LlamaNative.h"
 #include "../runtime/RawrRuntime.hpp"
@@ -256,6 +257,63 @@ void Deep2Bridge::ResetSession() {
     m_sessionId++;
     m_metrics = {};
     RawrRuntime::Get().Log(LogLevel::Info, "Session reset");
+}
+
+bool Deep2Bridge::GenerateK2NativeStreamPartial(const char* shardDir,
+                                                  const char* prompt,
+                                                  uint32_t streamTokens,
+                                                  uint32_t layerDepth,
+                                                  K2NativeStreamBridgeResult* out) {
+    if (!out) return false;
+    *out = {};
+    out->deep2BridgeEntered = true;
+    out->noTestHarnessDirectCall = true;
+
+    if (m_backend != InferenceBackend::Deep2Engine) {
+        out->stream.error = "K2NativeStream requires Deep2Engine backend";
+        return false;
+    }
+
+    if (!m_engine) {
+        EngineConfig ecfg;
+        ecfg.hiddenDim = 7168;
+        ecfg.numLayers = 61;
+        ecfg.numHeads = 64;
+        ecfg.numKVHeads = 1;
+        ecfg.vocabSize = 163840;
+        ecfg.useMLA = true;
+        if (!Initialize(ecfg)) {
+            out->stream.error = "Deep2Bridge Initialize failed";
+            return false;
+        }
+    }
+
+    out->deep2EngineEntered = true;
+    if (!shardDir || !shardDir[0]) {
+        out->stream.error = "shardDir required";
+        return false;
+    }
+    if (!m_engine->openK2ShardDirectory(shardDir)) {
+        out->stream.error = "Deep2Engine::openK2ShardDirectory failed";
+        return false;
+    }
+
+    out->k2NativeStreamSelected = true;
+    K2NativeStreamGate::Config gcfg;
+    gcfg.prompt = prompt ? prompt : "hello";
+    gcfg.streamTokens = streamTokens;
+    gcfg.layerDepth = layerDepth;
+    gcfg.budgetBytes = 256ull * 1024 * 1024;
+
+    out->stream = m_engine->runK2NativeStreamPartial(gcfg);
+    m_modelLoaded = true;
+    m_config.modelPath = shardDir;
+
+    if (out->stream.streamingCallbackFired && !out->stream.generatedText.empty()) {
+        RawrRuntime::Get().Log(LogLevel::Info,
+            ("K2NativeStream token: " + out->stream.generatedText).c_str());
+    }
+    return out->stream.ok;
 }
 
 } // namespace rawr

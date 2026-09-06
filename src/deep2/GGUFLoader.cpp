@@ -443,8 +443,9 @@ bool GGUFLoader::ParseTensors(FILE* fp, uint64_t tensorCount,
         }
 
         uint32_t type = ReadUint32(fp);
-        if (type >= (uint32_t)GGMLType::GGML_TYPE_COUNT) {
-            printf("[GGUF] ERROR: Tensor '%s' has invalid type: %u\n", t.name.c_str(), type);
+        if (type >= (uint32_t)GGMLType::GGML_TYPE_COUNT || !LookupQuantType(type)) {
+            printf("[GGUF] ERROR: Tensor '%s' has unsupported/unknown type id=%u name=%s\n",
+                   t.name.c_str(), type, QuantTypeName(type));
             return false;
         }
         t.type = (GGMLType)type;
@@ -608,17 +609,12 @@ size_t GGUFLoader::CalculateTensorSize(const TensorInfo& tensor) {
     const size_t MAX_TENSOR_SIZE = (size_t)1024 * 1024 * 1024 * 1024; // 1TB limit
 
     if (!tensor.IsQuantized()) {
-        // Unquantized: size = elements * sizeof(type)
-        size_t elemSize = 0;
-        switch (tensor.type) {
-            case GGMLType::GGML_TYPE_F32: elemSize = 4; break;
-            case GGMLType::GGML_TYPE_F16: elemSize = 2; break;
-            case GGMLType::GGML_TYPE_I8:  elemSize = 1; break;
-            case GGMLType::GGML_TYPE_I16: elemSize = 2; break;
-            case GGMLType::GGML_TYPE_I32: elemSize = 4; break;
-            case GGMLType::GGML_TYPE_I64: elemSize = 8; break;
-            case GGMLType::GGML_TYPE_F64: elemSize = 8; break;
-            default: elemSize = 4; break;
+        // Unquantized: size = elements * sizeof(type) via table (fail-closed)
+        size_t elemSize = tensor.GetBlockSize(); // elems=1 for F32/F16/I*/BF16
+        if (elemSize == 0) {
+            printf("[GGUF] ERROR: Unknown unquantized type for %s id=%u\n",
+                   tensor.name.c_str(), (unsigned)tensor.type);
+            return 0;
         }
 
         // Check for overflow
@@ -630,14 +626,15 @@ size_t GGUFLoader::CalculateTensorSize(const TensorInfo& tensor) {
         return numElements * elemSize;
     }
 
-    // Quantized: size = numBlocks * blockSize
+    // Quantized: size = numBlocks * blockSize (fail-closed on 0)
     size_t elemsPerBlock = tensor.GetElemsPerBlock();
-    if (elemsPerBlock == 0) {
-        printf("[GGUF] ERROR: Invalid elemsPerBlock for tensor %s\n", tensor.name.c_str());
+    size_t blockSize = tensor.GetBlockSize();
+    if (elemsPerBlock == 0 || blockSize == 0) {
+        printf("[GGUF] ERROR: fail-closed geometry for tensor %s type=%s\n",
+               tensor.name.c_str(), QuantTypeName((uint32_t)tensor.type));
         return 0;
     }
 
-    size_t blockSize = tensor.GetBlockSize();
     size_t numBlocks = (numElements + elemsPerBlock - 1) / elemsPerBlock;
 
     // Check for overflow
@@ -1107,19 +1104,7 @@ RawrXD::QuantType GGUFLoader::ConvertGGMLType(GGMLType ggmlType) {
 }
 
 const char* GGUFLoader::GetTypeName(GGMLType type) {
-    switch (type) {
-        case GGMLType::GGML_TYPE_F32: return "F32";
-        case GGMLType::GGML_TYPE_F16: return "F16";
-        case GGMLType::GGML_TYPE_Q4_0: return "Q4_0";
-        case GGMLType::GGML_TYPE_Q4_1: return "Q4_1";
-        case GGMLType::GGML_TYPE_Q5_0: return "Q5_0";
-        case GGMLType::GGML_TYPE_Q5_1: return "Q5_1";
-        case GGMLType::GGML_TYPE_Q8_0: return "Q8_0";
-        case GGMLType::GGML_TYPE_Q4_K: return "Q4_K";
-        case GGMLType::GGML_TYPE_Q5_K: return "Q5_K";
-        case GGMLType::GGML_TYPE_Q6_K: return "Q6_K";
-        default: return "UNKNOWN";
-    }
+    return QuantTypeName(static_cast<uint32_t>(type));
 }
 
 bool GGUFLoader::ValidateFile(const char* filepath, char* error) {

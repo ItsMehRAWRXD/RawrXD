@@ -287,6 +287,7 @@ IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_UtcWitnessExit szUtcCounterMetrics
     P1PRA_UtcWitnessEnterFlat szUtcCounterRing, P1PRA_UtcCounterResetRingIdx
 ENDIF
+    xor  rax, rax
     mov  g_HeadIdx, rax
     mov  g_TailIdx, rax
 IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
@@ -531,6 +532,7 @@ ENDIF
     lock xadd qword ptr [g_HeadIdx], rax
 IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_UtcWitnessExitFlat szUtcLogSlotReserve
+    P1PRA_UtcWitnessExitFlat szUtcExportLogEvent
     mov  rcx, rsp
     test rcx, 0Fh
     jz   @log_ts_rsp_aligned

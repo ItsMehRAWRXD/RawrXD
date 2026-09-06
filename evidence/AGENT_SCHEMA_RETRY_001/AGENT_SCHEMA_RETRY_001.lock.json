@@ -1,13 +1,25 @@
-{
-  "gate": "AGENT_SCHEMA_RETRY_001",
-  "status": "PASS",
-  "lane": "MODEL_RETRY",
-  "strict": true,
-  "bare_key_repair": false,
-  "FIRST_CALL_SCHEMA_VALID": false,
-  "FIRST_CALL_DISPATCHED": false,
-  "SECOND_CALL_SCHEMA_VALID": true,
-  "SECOND_CALL_DISPATCHED": true,
-  "TOTAL_HANDLER_EXECUTIONS": 1,
-  "note": "Distinct from SCHEMA-002 lane R (deterministic parser repair)."
+﻿{
+    "gate":  "AGENT_SCHEMA_RETRY_001",
+    "status":  "PASS",
+    "frozen_at_utc":  "2026-08-29T20:28:43Z",
+    "lane":  "MODEL_RETRY",
+    "strict":  true,
+    "bare_key_repair":  false,
+    "AGENT_NATIVE_EXIT":  0,
+    "note":  "Gate on native ExitCode + assertions. PowerShell NativeCommandError from stderr is irrelevant.",
+    "gates":  {
+                  "FIRST_INVALID_REJECTED":  true,
+                  "FIRST_DISPATCHED_ZERO":  true,
+                  "FIRST_SIDE_EFFECTS_ZERO":  true,
+                  "MODEL_RETRY_OCCURRED":  true,
+                  "CORRECTED_CALL_DIFFERENT":  true,
+                  "SECOND_SCHEMA_VALID":  true,
+                  "SECOND_DISPATCHED_ONCE":  true,
+                  "HANDLER_EXECUTIONS_ONE":  true,
+                  "NATIVE_EXIT_ZERO":  true,
+                  "TEARDOWN_COMPLETE":  true,
+                  "REPORT_PASS_LINE":  true
+              },
+    "DEEP2_DESTRUCTOR_BEGIN":  true,
+    "DEEP2_DESTRUCTOR_END":  true
 }

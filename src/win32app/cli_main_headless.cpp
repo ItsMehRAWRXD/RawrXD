@@ -41,7 +41,8 @@ static int ensureDefaultReplMode(int argc, char* argv[], std::vector<std::string
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         if (a == "--prompt" || a == "--input" || a == "--repl" ||
-            a == "--help" || a == "-h") {
+            a == "--hosted" || a == "--local" || a == "--port" ||
+            a == "--bind" || a == "--help" || a == "-h") {
             return argc;  // Mode already specified, use original args
         }
     }

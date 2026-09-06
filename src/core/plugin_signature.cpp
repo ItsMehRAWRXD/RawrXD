@@ -492,6 +492,28 @@ PluginSignatureResult PluginSignatureVerifier::verify(const wchar_t* packagePath
     if (_wcsicmp(ext, L".js") == 0)        return verifyJSModule(packagePath, nullptr);
     if (_wcsicmp(ext, L".rawrpkg") == 0)   return verifyRawrPackage(packagePath);
 
+    // ZIP-compatible foreign IDE packages — treat like VSIX (ZIP signature check)
+    if (_wcsicmp(ext, L".zip") == 0 ||
+        _wcsicmp(ext, L".jar") == 0 ||
+        _wcsicmp(ext, L".nbm") == 0 ||
+        _wcsicmp(ext, L".sublime-package") == 0 ||
+        _wcsicmp(ext, L".novaextension") == 0 ||
+        _wcsicmp(ext, L".whl") == 0) {
+        return verifyVSIX(packagePath);
+    }
+
+    // Bundles / native plugin containers
+    if (_wcsicmp(ext, L".appex") == 0 ||
+        _wcsicmp(ext, L".plugin") == 0 ||
+        _wcsicmp(ext, L".el") == 0 ||
+        _wcsicmp(ext, L".tar") == 0 ||
+        _wcsicmp(ext, L".tgz") == 0 ||
+        _wcsicmp(ext, L".gz") == 0) {
+        // No Authenticode; allow under relaxed policy via NoSignature path
+        return PluginSignatureResult::error(SignatureStatus::NoSignature,
+                                            "Unsigned foreign IDE package");
+    }
+
     // Default: try Authenticode
     return verifyDLL(packagePath);
 }

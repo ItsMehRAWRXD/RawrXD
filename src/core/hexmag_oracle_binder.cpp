@@ -37,8 +37,9 @@ bool containsCi(const std::string& hay, const char* needle) {
 
 bool hasActionableToken(const std::string& goal) {
     static const char* kActs[] = {
-        "create", "implement", "write", "build", "fix", "print",
-        "hello", "masm", "verify", "refactor", "program", "code",
+        "create", "implement", "write", "build", "fix", "repair", "make",
+        "open", "run", "print", "hello", "masm", "verify", "refactor",
+        "program", "code",
     };
     for (const char* a : kActs) {
         if (containsCi(goal, a)) return true;
@@ -54,6 +55,53 @@ bool hasDeficitMarker(const std::string& goal) {
         if (containsCi(goal, m)) return true;
     }
     return false;
+}
+
+/// Usable target / evidence / path — distinguishes "Fix it." from "Fix the compile error."
+bool hasUsableTargetOrEvidence(const std::string& low) {
+    static const char* kTargets[] = {
+        ".cpp", ".hpp", ".hxx", ".cc", ".cxx", ".h", ".c", ".md", ".asm",
+        ".py", ".js", ".ts", ".json", ".txt",
+        "error", "fail", "test", "line", "src/", "src\\", "file", "project",
+        "compile", "function", "readme", "bug", "crash", "tokenizer",
+        "main.cpp", "hello.cpp", "/", "\\",
+    };
+    for (const char* t : kTargets) {
+        if (low.find(t) != std::string::npos) return true;
+    }
+    return false;
+}
+
+bool hasRepairClassVerb(const std::string& low) {
+    return low.find("fix") != std::string::npos
+        || low.find("repair") != std::string::npos
+        || low.find("make") != std::string::npos;
+}
+
+bool hasUnresolvedPronounObject(const std::string& low) {
+    // Space-prefixed pronouns catch "fix it" / "repair this" / "make them".
+    return low.find(" it") != std::string::npos
+        || low.find(" this") != std::string::npos
+        || low.find(" that") != std::string::npos
+        || low.find(" them") != std::string::npos
+        || low.find("it work") != std::string::npos;
+}
+
+/// action verb + unresolved pronoun/missing object + no usable target/evidence
+bool isObjectlessImperative(const std::string& goal) {
+    const std::string low = toLower(goal);
+    if (!hasRepairClassVerb(low)) return false;
+    if (hasUsableTargetOrEvidence(low)) return false;
+    if (hasUnresolvedPronounObject(low)) return true;
+    // Bare repair verbs with no object at all ("Fix." / "Repair")
+    std::string stripped;
+    for (unsigned char c : low) {
+        if (std::isalnum(c) || c == ' ') stripped.push_back(static_cast<char>(c));
+    }
+    while (!stripped.empty() && stripped.front() == ' ') stripped.erase(stripped.begin());
+    while (!stripped.empty() && stripped.back() == ' ') stripped.pop_back();
+    return stripped == "fix" || stripped == "repair" || stripped == "make"
+        || stripped == "make work";
 }
 
 /// Strip authority-looking FINAL phrases; body remains candidate text only.
@@ -123,6 +171,8 @@ bool looksUnsupportedClaimOnly(const std::string& t) {
 bool goalLooksUnderspecified(const std::string& goal) {
     if (goal.empty()) return true;
     if (hasDeficitMarker(goal)) return true;
+    // Imperative without resolvable object ("Fix it.") — not short-length alone.
+    if (isObjectlessImperative(goal)) return true;
     if (!hasActionableToken(goal)) return true;
     return false;
 }

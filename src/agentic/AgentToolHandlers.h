@@ -23,6 +23,7 @@
 #include <vector>
 #include <filesystem>
 #include <cstdint>
+#include <functional>
 #include <nlohmann/json.hpp>
 
 #ifdef _WIN32
@@ -49,6 +50,9 @@ struct ToolGuardrails {
     bool   requireBackupOnWrite   = true;               // Always backup before overwrite
 };
 
+using IdeTerminalRunnerFn = std::function<void(const std::string& command)>;
+using StageEditFn = std::function<bool(const std::string& path, const std::string& content)>;
+
 // ============================================================================
 // AgentToolHandlers — Static tool implementations
 // ============================================================================
@@ -57,10 +61,13 @@ public:
     // ---- Initialization ----
     static void SetGuardrails(const ToolGuardrails& guards);
     static const ToolGuardrails& GetGuardrails();
+    static void SetIdeTerminalRunner(IdeTerminalRunnerFn fn);
+    static void SetStageEditHandler(StageEditFn fn);
 
     // ---- Tool implementations ----
     static ToolCallResult ToolReadFile(const nlohmann::json& args);
     static ToolCallResult WriteFile(const nlohmann::json& args);
+    static ToolCallResult DeleteFile(const nlohmann::json& args);
     static ToolCallResult ReplaceInFile(const nlohmann::json& args);
     static ToolCallResult ListDir(const nlohmann::json& args);
     static ToolCallResult ExecuteCommand(const nlohmann::json& args);

@@ -173,9 +173,29 @@ enum class EvictionPolicy {
 struct GPUPool {
     size_t totalBytes = 0;
     size_t usedBytes = 0;
+    size_t peakUsedBytes = 0;
     bool healthy = true;
     mutable std::mutex mutex;
     std::unordered_map<uint64_t, std::unique_ptr<VRAMLease>> tensors;
+};
+
+// ============================================================================
+// LiveTelemetry — observed resource flow for INV-4 learning + Resource Map
+// ============================================================================
+struct LiveTelemetry {
+    uint64_t usedVram[2] = {0, 0};
+    uint64_t peakVram[2] = {0, 0};
+    uint64_t totalVram[2] = {0, 0};
+    uint64_t peakVramTotal = 0;
+    uint64_t bytesHostToGpu = 0;
+    uint64_t bytesNvmeToRam = 0;
+    uint32_t migrations = 0;
+    uint32_t residencyMisses = 0;
+    uint32_t spillToRam = 0;
+    uint32_t spillToNvme = 0;
+    uint32_t pinnedCount = 0;
+    uint32_t residentCount = 0;
+    uint32_t hostOnlyCount = 0;
 };
 
 // ============================================================================
@@ -266,6 +286,19 @@ public:
     TensorHotpatch* GetTensorHotpatch() const { return hotpatch_.get(); }
 
     // ------------------------------------------------------------------------
+    // Live telemetry (INV-4 / Resource Map / TunerSuggest)
+    // ------------------------------------------------------------------------
+    void ResetRunTelemetry();
+    void NoteHostToGpu(uint64_t bytes);
+    void NoteNvmeToRam(uint64_t bytes);
+    void NoteResidencyMiss();
+    void NoteSpillToRam();
+    void NoteSpillToNvme();
+    LiveTelemetry SnapshotTelemetry() const;
+    void CollectEffectivePlacement(
+        std::vector<std::pair<std::string, int>>& outNameToGpu) const;
+
+    // ------------------------------------------------------------------------
     // Internal allocation (host placeholder for device memory)
     // ------------------------------------------------------------------------
     void* AllocateDeviceMemory(size_t bytes);
@@ -281,12 +314,19 @@ private:
     std::atomic<size_t> totalFreed_{0};
     std::atomic<size_t> migrationCount_{0};
     std::atomic<size_t> faultCount_{0};
+    std::atomic<uint64_t> bytesHostToGpu_{0};
+    std::atomic<uint64_t> bytesNvmeToRam_{0};
+    std::atomic<uint32_t> residencyMisses_{0};
+    std::atomic<uint32_t> spillToRam_{0};
+    std::atomic<uint32_t> spillToNvme_{0};
 
     size_t minFreeBytes_ = 64 * 1024 * 1024;  // 64 MB minimum free
     float rebalanceThreshold_ = 0.2f;        // 20% imbalance threshold
     EvictionPolicy evictionPolicy_ = EvictionPolicy::HYBRID;
 
     std::unique_ptr<TensorHotpatch> hotpatch_;
+
+    void TouchPeakLocked(int gpu);
 
     // Internal methods (friend access for TensorHotpatch)
     int SelectBestGPU(size_t bytes, float priority);
@@ -297,6 +337,12 @@ private:
 
     friend class TensorHotpatch;
 };
+
+// Optional process-wide MARS used by observation / Resource Map (nullable).
+inline MARSController*& ActiveMARSController() {
+    static MARSController* p = nullptr;
+    return p;
+}
 
 // ============================================================================
 // Free helpers

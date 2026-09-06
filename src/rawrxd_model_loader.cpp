@@ -1,5 +1,12 @@
 #include "rawrxd_model_loader.h"
 #include "runtime/memory/WeightResidencyPool.hpp"
+#include "win32app/p1_load_checkpoint.hpp"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#define P1PRA_LOAD_W(v) P1PRA_Witness("P1PRA_LOAD", (v))
+#else
+#define P1PRA_LOAD_W(v) ((void)0)
+#endif
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -1532,6 +1539,7 @@ struct GGUFFileHeader
 
 bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalDevice physDevice)
 {
+    RawrXD::P1LoadCkpt::emit("LOADER_Load", "enter");
     m_lastLoadErrorStage.clear();
     m_lastLoadErrorMessage.clear();
     const auto setLoadError = [this](const std::string& stage, const std::string& message)
@@ -1568,6 +1576,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
 
     printf("[GGUF] validation begin\n");
     printf("[GGUF] path=%s\n", modelPathUtf8.c_str());
+    RawrXD::P1LoadCkpt::emit("LOADER_gguf_reader", "validation_begin");
 
     // Gate 1: enforce GGUF extension before any heavy work.
     if (!endsWith(modelPathLower, ".gguf"))
@@ -1606,6 +1615,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
 #endif
 
     // 1. Memory-mapped file (zero copy from disk)
+    P1PRA_LOAD_W("gguf_open_enter");
     m_file =
         CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
     if (m_file == INVALID_HANDLE_VALUE)
@@ -1616,6 +1626,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         setLoadError("gate_file_access", msg);
         return false;
     }
+    P1PRA_LOAD_W("gguf_open_ok");
 
     LARGE_INTEGER size;
     if (!GetFileSizeEx(m_file, &size))
@@ -1650,8 +1661,10 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         return false;
     }
     printf("[RawrXD][BACKEND] backend=%s result=ok reason=%s\n", resolvedLane.c_str(), laneReason.c_str());
+    RawrXD::P1LoadCkpt::emit("LOADER_backend", resolvedLane.c_str());
 
     // Initialize sliding window for large files
+    RawrXD::P1LoadCkpt::emit("LOADER_sliding_window", "before");
     if (!InitializeSlidingWindow(m_fileSize))
     {
         const std::string msg = "[RawrXD] Failed to initialize sliding window memory mapping";
@@ -1661,6 +1674,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         m_file = INVALID_HANDLE_VALUE;
         return false;
     }
+    RawrXD::P1LoadCkpt::emit("LOADER_sliding_window", "ok");
 
     // Attempt large-page capable mappings first (SEC_LARGE_PAGES requires SeLockMemoryPrivilege).
     // If the privilege or the mapping is unavailable, transparently fall back to normal mapping.
@@ -1681,6 +1695,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         protect |= 0x80000000u;  // SEC_LARGE_PAGES
     }
 
+    P1PRA_LOAD_W("mapping_begin");
     m_mapping = CreateFileMapping(m_file, nullptr, protect, 0, 0, nullptr);
     if (!m_mapping && m_useLargePages)
     {
@@ -1697,6 +1712,8 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         m_file = INVALID_HANDLE_VALUE;
         return false;
     }
+    P1PRA_LOAD_W("mapping_ok");
+    RawrXD::P1LoadCkpt::emit("LOADER_file_mapping", "ok");
 
     // Optional: "residency insurance" when large pages are active (best-effort).
     if (m_workingSetLockEnabled && m_useLargePages && !m_workingSetLocked)
@@ -1706,7 +1723,9 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
 
     // 2. Parse GGUF structure using sliding window
+    P1PRA_LOAD_W("gguf_header_begin");
     printf("[RawrXD] Stage: parse_header_metadata\n");
+    RawrXD::P1LoadCkpt::emit("LOADER_metadata", "parse_before");
     uint8_t* ptr = (uint8_t*)MapWindow(0, 1024 * 1024);  // Map first 1MB for headers
     if (!ptr)
     {
@@ -1744,6 +1763,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
     printf("[GGUF] magic=PASS\n");
     printf("[GGUF] version=PASS\n");
+    P1PRA_LOAD_W("gguf_header_ok");
 
     ptr += sizeof(GGUFFileHeader);
     if (ptr > end)
@@ -1759,6 +1779,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
 
     // Skip metadata (simple parser to just skip it)
     ptr = ParseMetadata(ptr, hdr->kv_count, end);
+    RawrXD::P1LoadCkpt::emit("LOADER_metadata", "parse_after");
 
     // Some GGUFs omit KV head count; default it to attention head count if present.
     if (n_heads_kv <= 0 && n_heads > 0)
@@ -1798,8 +1819,10 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
 
     // 3. Tensor info array
+    P1PRA_LOAD_W("tensor_index_begin");
     printf("[RawrXD] Stage: parse_tensor_index tensor_count=%llu\n",
            static_cast<unsigned long long>(hdr->tensor_count));
+    RawrXD::P1LoadCkpt::emit("LOADER_tensor_table", "parse_before");
     std::vector<Tensor> tensorInfos;
     tensorInfos.reserve(hdr->tensor_count);
 
@@ -1817,6 +1840,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         // Usually, `tensorDataOffset` is calculated after headers.
         tensorInfos.push_back(t);
     }
+    P1PRA_LOAD_W("tensor_index_ok");
 
     // 4. Align to 32 bytes for tensor data start
     uint64_t headerBytes = (uint64_t)(ptr - start);
@@ -1832,6 +1856,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     printf("[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=%zu indexed_storage=%.2f GB\n",
            tensorInfos.size(), totalTensorStorageBytes / (1024.0 * 1024.0 * 1024.0));
     printf("[RawrXD] Data starts at offset %llu\n", dataStart);
+    RawrXD::P1LoadCkpt::emit("LOADER_tensor_table", "materialize_lazy");
 
     for (size_t i = 0; i < tensorInfos.size(); i++)
     {
@@ -1841,6 +1866,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
 
     // 6. Build tensor lookup map
     printf("[RawrXD] Stage: build_tensor_lookup_map\n");
+    RawrXD::P1LoadCkpt::emit("LOADER_tensor_table", "lookup_map");
     {
         std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
         for (auto& t : tensorInfos)
@@ -1867,6 +1893,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     printf("[GGUF] metadata=PASS\n");
     printf("[GGUF] tensors=PASS\n");
     printf("[GGUF] accepted=PASS\n");
+    RawrXD::P1LoadCkpt::emit("LOADER_Load", "ok");
     printf("[RawrXD] Model loaded successfully. VRAM used: %.2f GB\n", CalculateVRAMUsage() / 1e9);
     printf("[RawrXD] Config: dim=%d, layers=%d, heads=%d, kv_heads=%d, vocab=%d, ctx=%d, experts=%d, experts_used=%d\n",
            n_embd, n_layers, n_heads, n_heads_kv, vocab_size, n_ctx, n_experts, n_experts_used);
@@ -1886,6 +1913,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
     m_lastLoadErrorStage.clear();
     m_lastLoadErrorMessage.clear();
+    P1PRA_LOAD_W("gguf_load_exit");
     return true;
 }
 

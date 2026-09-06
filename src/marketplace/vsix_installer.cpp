@@ -1,4 +1,5 @@
 #include "marketplace/vsix_installer.h"
+#include "marketplace/extension_marketplace.hpp"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -138,9 +139,22 @@ void VsixInstaller::installFromUrl(const std::string& url, const std::string& ex
 }
 
 void VsixInstaller::installFromFile(const std::string& filePath) {
-    // try to infer extension ID from filename or manifest
+    // Multi-IDE: route non-VSIX packages through marketplace format installer.
+    auto& market = RawrXD::Extensions::ExtensionMarketplace::instance();
+    auto fmt = market.detectPackageFormat(filePath);
+    using Fmt = RawrXD::Extensions::ExtensionPackageFormat;
+    if (fmt != Fmt::VsCodeVsix && fmt != Fmt::VisualStudioVsix &&
+        fmt != Fmt::Unknown) {
+        auto result = market.installFromPackage(filePath);
+        if (result.success) {
+            if (installationCompleted) installationCompleted(result.detail, true);
+        } else if (installationError) {
+            installationError(filePath, result.detail);
+        }
+        return;
+    }
     std::string filename = fs::path(filePath).stem().string();
-    installFromFile(filePath, filename); 
+    installFromFile(filePath, filename);
 }
 
 void VsixInstaller::installFromFile(const std::string& filePath, const std::string& extensionId) {
@@ -171,8 +185,24 @@ bool VsixInstaller::extractVsixPackage(const std::string& vsixPath, const std::s
     
     int result = std::system(cmd.c_str());
     if (result == 0) {
-        // Validate extraction
-        if (fs::exists(destination + "/extension.vsixmanifest") || fs::exists(destination + "/package.json")) {
+        // Validate extraction — accept markers from top-25 IDE formats
+        if (fs::exists(destination + "/extension.vsixmanifest") ||
+            fs::exists(destination + "/package.json") ||
+            fs::exists(destination + "/META-INF/plugin.xml") ||
+            fs::exists(destination + "/plugin.xml") ||
+            fs::exists(destination + "/extension.toml") ||
+            fs::exists(destination + "/plugin.toml") ||
+            fs::exists(destination + "/Info/info.xml") ||
+            fs::exists(destination + "/plugin.json") ||
+            fs::exists(destination + "/extension.json") ||
+            fs::exists(destination + "/Info.plist") ||
+            fs::exists(destination + "/plugin") ||
+            fs::exists(destination + "/lua")) {
+            return true;
+        }
+        // Non-empty extract still counts (e.g. Sublime packages)
+        for (const auto& e : fs::directory_iterator(destination)) {
+            (void)e;
             return true;
         }
     }

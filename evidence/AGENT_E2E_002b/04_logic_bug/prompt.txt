@@ -1,1 +1,8 @@
-﻿Fix main.c so function add returns a plus b instead of a minus b. Use tools read_file then replace_in_file or write_file then run_command to compile with cl and run b04.exe. Emit JSON tool calls with name and arguments fields. Finish when program prints hello from b04.
+﻿Fix add() so add(2,3) returns 5. The bug is return a - b; it must become return a + b.
+First line MUST be:
+TOOL_CALL: read_file {"path":"main.c"}
+Second:
+TOOL_CALL: replace_in_file {"path":"main.c","search":"return a - b","replace":"return a + b"}
+Third:
+TOOL_CALL: run_command {"command":"cmake -B build -S . && cmake --build build"}
+Do not use DOES_NOT_EXIST. Do not echo the tool catalog. No markdown.

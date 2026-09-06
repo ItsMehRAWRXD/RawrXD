@@ -39,8 +39,10 @@ float4 main(PS_INPUT input) : SV_TARGET {
 )";
 
 TransparentRenderer::TransparentRenderer()
-    : m_hwnd(nullptr), m_width(TARGET_WIDTH), m_height(TARGET_HEIGHT), 
-      m_clearColor{0.01f, 0.01f, 0.02f, 0.25f}, m_targetHz(TARGET_REFRESH_HZ)
+    : m_hwnd(nullptr), m_width(TARGET_WIDTH), m_height(TARGET_HEIGHT),
+      // Opaque by default — glass/see-through only when explicitly enabled.
+      m_clearColor{0.01f, 0.01f, 0.02f, 1.0f}, m_targetHz(TARGET_REFRESH_HZ),
+      m_glassEnabled(false)
 {
     m_lastFrameTime = std::chrono::high_resolution_clock::now();
     m_waveVertices.resize((WAVE_SEGMENTS + 1) * 2);
@@ -74,7 +76,10 @@ bool TransparentRenderer::Initialize(HWND hwnd)
     if (!createWaveResources()) return false;
     createD2DResources();
 
-    enableGlassEffect();
+    // Do NOT enable DWM glass / layered alpha here.
+    // Launch must be opaque; glass is END_TO_END only via SetGlassEnabled(true)
+    // (transparency toggle / setWindowTransparency). Auto-glass was END_WITHOUT_ONE.
+    m_glassEnabled = false;
     return true;
 }
 
@@ -790,11 +795,47 @@ void TransparentRenderer::enableGlassEffect()
         SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
     }
     SetLayeredWindowAttributes(m_hwnd, 0, 255, LWA_ALPHA);
+    m_glassEnabled = true;
+}
+
+void TransparentRenderer::disableGlassEffect()
+{
+    if (!m_hwnd) return;
+
+    DWM_BLURBEHIND blur{};
+    blur.dwFlags = DWM_BB_ENABLE;
+    blur.fEnable = FALSE;
+    blur.hRgnBlur = nullptr;
+    DwmEnableBlurBehindWindow(m_hwnd, &blur);
+
+    LONG_PTR exStyle = GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_LAYERED) {
+        SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_LAYERED);
+    }
+    m_clearColor[3] = 1.0f;
+    m_glassEnabled = false;
+}
+
+void TransparentRenderer::SetGlassEnabled(bool enabled)
+{
+    if (enabled) {
+        enableGlassEffect();
+        if (m_clearColor[3] >= 0.999f)
+            m_clearColor[3] = 0.85f; // visible glass without going fully invisible
+    } else {
+        disableGlassEffect();
+    }
 }
 
 void TransparentRenderer::SetTransparency(float alpha)
 {
-    m_clearColor[3] = alpha;
+    const float a = (alpha < 0.0f) ? 0.0f : ((alpha > 1.0f) ? 1.0f : alpha);
+    m_clearColor[3] = a;
+    // Transparency API is the toggle gate: glass on when alpha < 1, off when opaque.
+    if (a < 0.999f)
+        SetGlassEnabled(true);
+    else
+        SetGlassEnabled(false);
 }
 
 void TransparentRenderer::DrawText(const std::wstring& text, float x, float y, float size, uint32_t color)

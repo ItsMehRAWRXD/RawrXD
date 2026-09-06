@@ -5,6 +5,7 @@
 #include "Deep2Benchmark.h"
 #include "Deep2Engine.h"
 #include "Tokenizer.hpp"
+#include "../../core/GpuDecodeEfficiency.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -193,6 +194,9 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     
     auto t_decode_start = nowNs();
     
+    rawrxd::GpuDecodeEfficiencySession gpuEff;
+    gpuEff.BeginDecodeWindow();
+    
     for (uint64_t i = 0; i < maxTokens; ++i) {
         auto tok_start = nowNs();
         
@@ -215,6 +219,21 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.generated_tokens = perTokenTimes.size();
     bench.total_decode_ns = t_decode_end - t_decode_start;
     bench.decode_tps = bench.generated_tokens / (bench.total_decode_ns / 1e9);
+    
+    const auto gpuResult = gpuEff.Finalize(bench.generated_tokens);
+    bench.gpu_power_valid = gpuResult.power_valid;
+    if (gpuResult.power_valid) {
+        bench.avg_gpu_power_watts = gpuResult.average_gpu_watts;
+        bench.tokens_per_watt_gpu = gpuResult.tokens_per_watt_gpu;
+        bench.gpu_power_sample_count = gpuResult.power_sample_count;
+        bench.power_watts = static_cast<uint32_t>(gpuResult.average_gpu_watts);
+    } else {
+        bench.avg_gpu_power_watts = -1.0;
+        bench.tokens_per_watt_gpu = -1.0;
+        bench.gpu_power_sample_count = 0;
+        bench.power_watts = 0;
+    }
+    rawrxd::PublishGpuDecodeEfficiency(gpuResult);
     
     // Per-token statistics
     bench.per_token_min_ns = *std::min_element(perTokenTimes.begin(), perTokenTimes.end());
@@ -240,13 +259,12 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.peak_vram_bytes = pImpl->getPeakVRAM();
     bench.peak_system_bytes = pImpl->getPeakSystemRAM();
     
-    // GPU telemetry
+    // GPU telemetry (util/temp only — watts from GpuDecodeEfficiencySession)
     uint32_t gpuUtil = 0, vramUtil = 0, temp = 0, power = 0;
     pImpl->sampleGpuTelemetry(gpuUtil, vramUtil, temp, power);
     bench.gpu_util_percent = gpuUtil;
     bench.vram_util_percent = vramUtil;
     bench.temperature_c = temp;
-    bench.power_watts = power;
     
     // Stability assessment
     bench.stream_stable = (bench.tps_variance < 0.15);  // CV < 15%
@@ -728,6 +746,12 @@ void EmitBenchmarkTelemetry(const StreamBenchmark& bench, BenchmarkPhase phase) 
     telemetry << "GPU_UTIL=" << bench.gpu_util_percent << "\n";
     telemetry << "GPU_TEMP=" << bench.temperature_c << "\n";
     telemetry << "POWER_W=" << bench.power_watts << "\n";
+    telemetry << "GPU_POWER_VALID=" << (bench.gpu_power_valid ? "YES" : "NO") << "\n";
+    if (bench.gpu_power_valid) {
+        telemetry << "AVG_GPU_WATTS=" << bench.avg_gpu_power_watts << "\n";
+        telemetry << "TOKENS_PER_WATT_GPU=" << bench.tokens_per_watt_gpu << "\n";
+        telemetry << "GPU_POWER_SAMPLES=" << bench.gpu_power_sample_count << "\n";
+    }
     telemetry << "STABLE=" << (bench.stream_stable ? "YES" : "NO") << "\n";
     telemetry << "DEGRADATION=" << bench.degradation_ratio << "\n";
     telemetry << "BENCHMARK_END\n";

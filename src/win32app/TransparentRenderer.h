@@ -68,6 +68,9 @@ public:
     void Render() override;
     void Resize(UINT width, UINT height) override;
     void SetTransparency(float alpha) override;
+    // Glass/see-through is OFF at init; call only from transparency toggle path.
+    void SetGlassEnabled(bool enabled);
+    bool IsGlassEnabled() const { return m_glassEnabled; }
     void DrawText(const std::wstring& text, float x, float y, float size, uint32_t color) override;
     void DrawRect(float x, float y, float w, float h, uint32_t color) override;
     void BeginFrame() override;
@@ -124,7 +127,9 @@ private:
     bool rebuildTextLayout(const std::wstring& text, const RECT& editorRect);
     void renderEditorOverlay();
     void enableGlassEffect();
-    
+    void disableGlassEffect();
+    bool m_glassEnabled = false;
+
     // Wave rendering
     void updateWaveVertices();
     void renderSingleWaveLayer(int layer);

@@ -76,6 +76,8 @@ public:
     ThermalState lastState() const;
     float averageTempOverWindow(size_t seconds) const;
     float peakTempRecorded() const { return peak_temp_.load(std::memory_order_relaxed); }
+    void feedMeasuredPowerWatts(float watts) noexcept;
+    float measuredPowerWatts() const noexcept;
 
     // ------------------------------------------------------------------------
     // Emergency stop
@@ -86,6 +88,7 @@ public:
 private:
     std::atomic<float> current_throttle_{0.0f};
     std::atomic<float> peak_temp_{0.0f};
+    std::atomic<float> measured_power_watts_{-1.0f};
     std::atomic<bool> emergency_stop_{false};
     std::atomic<uint64_t> last_update_us_{0};
 

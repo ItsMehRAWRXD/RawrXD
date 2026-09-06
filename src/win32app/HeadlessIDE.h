@@ -48,7 +48,6 @@
 #include "IOutputSink.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Autonomy.h"
-#include "Win32IDE_SubAgent.h"
 #include "multi_response_engine.h"
 #include "../agentic_engine.h"
 #include "../gguf_loader.h"
@@ -61,7 +60,6 @@
 
 // Forward declarations
 class MultiResponseEngine;
-class SubAgentManager;
 class AgentHistoryRecorder;
 class AgenticEngine;
 struct AgentHistoryDeleter {
@@ -95,11 +93,17 @@ enum class HeadlessRunMode {
     Batch        // Read prompts from --input file, write results to --output
 };
 
+enum class HeadlessIngressMode {
+    Local,
+    Hosted
+};
+
 // ============================================================================
 // Headless configuration (parsed from argc/argv)
 // ============================================================================
 struct HeadlessConfig {
     HeadlessRunMode mode           = HeadlessRunMode::Server;
+    HeadlessIngressMode ingressMode = HeadlessIngressMode::Local;
     int             port           = 11435;
     std::string     bindAddress    = "127.0.0.1";
     std::string     modelPath;            // --model <path>
@@ -116,8 +120,20 @@ struct HeadlessConfig {
     int             maxTokens      = 2048;
     float           temperature    = 0.7f;
     std::string     ollamaHost     = "127.0.0.1";
-    int             ollamaPort     = 11434;
+    int             ollamaPort = 0;
     std::string     workingDir;             // --dir <path>
+    std::string     apiKey;                 // RAWRXD_HOSTED_API_KEY
+    std::string     apiScopes;              // comma-separated capability scopes
+    std::string     allowedOrigins;         // exact comma-separated origins
+    std::string     githubWebhookSecret;    // RAWRXD_GITHUB_WEBHOOK_SECRET
+    std::string     auditFile;               // bounded JSONL audit sink
+    bool            allowCloudEgress = false; // explicit RAWRXD_CLOUD_EGRESS consent
+    uint64_t        cloudBudgetNanodollars = 0;
+    uint64_t        cloudInputNanodollarsPerToken = 0;
+    uint64_t        cloudOutputNanodollarsPerToken = 0;
+    uint32_t        cloudMaxInputBytes = 4096;
+    uint32_t        cloudMaxOutputTokens = 1024;
+    std::string     cloudBudgetFile;
     bool            listModelsOnly = false; // --list: list Ollama models and exit
 };
 
@@ -129,6 +145,22 @@ struct ConversationSession {
     std::vector<std::pair<std::string, std::string>> messages; // role, content
     std::chrono::steady_clock::time_point lastActivity;
     size_t messageCount = 0;
+};
+
+struct HostedHttpRequest {
+    std::string method;
+    std::string path;
+    std::string headers;
+    std::string body;
+    std::string peer;
+    std::string origin;
+};
+
+struct HostedHttpResponse {
+    int status = 200;
+    std::string contentType = "application/json; charset=utf-8";
+    std::string body;
+    bool alreadySent = false;
 };
 
 class ConversationManager {
@@ -319,9 +351,25 @@ private:
     // ---- Tool execution (parity with Win32 Agent > Run Tool; used by /api/tool and /run-tool) ----
     bool executeToolRepl(const std::string& toolName, const std::string& argsJson, std::string& outResult);
 
-    // ---- HTTP server (delegating to Win32IDE_LocalServer logic) ----
+    // ---- HTTP server (consolidated hosted/local contract) ----
     void serverLoop();
     void handleClient(SOCKET clientFd);
+    bool readHttpRequest(SOCKET clientFd, HostedHttpRequest& request, int& failureStatus);
+    bool authorizeHttpRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
+    void routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& request,
+                          HostedHttpResponse& response);
+    void routeGenerationRequest(SOCKET clientFd, const HostedHttpRequest& request,
+                                HostedHttpResponse& response);
+    void streamGenerationResponse(SOCKET clientFd, const HostedHttpRequest& request,
+                                  const std::string& prompt, const char* protocol,
+                                  HostedHttpResponse& response);
+    void routeHexMagRequest(const HostedHttpRequest& request,
+                            HostedHttpResponse& response);
+    void routeNativeRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
+    bool routeStatusRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
+    void routeGitHubWebhook(const HostedHttpRequest& request, HostedHttpResponse& response);
+    void sendHttpResponse(SOCKET clientFd, const HostedHttpRequest& request,
+                          const HostedHttpResponse& response);
 
     // ---- Thread-safe output sink wrapper (Fix #14) ----
     void safeAppendOutput(const char* msg, OutputSeverity severity);
@@ -380,9 +428,8 @@ private:
     std::unique_ptr<MultiResponseEngine> m_multiResponse;
     std::unique_ptr<AgentHistoryRecorder, AgentHistoryDeleter> m_historyRecorder;
 
-    // Agentic stack (101% parity with Win32 — chat, tool dispatch, subagent, chain, swarm)
+    // Agentic stack. Native subagent_core is linked by the headless target.
     std::unique_ptr<AgenticEngine>     m_agenticEngine;
-    std::unique_ptr<SubAgentManager>   m_subAgentManager;
 
     // Fix #14: Conversation manager for HTTP endpoints
     class ConversationManager;
@@ -436,6 +483,8 @@ private:
     // Fix #6: Thread pool for client handling
     std::vector<std::thread>          m_threadPool;
     std::mutex                        m_threadPoolMutex;
+    std::mutex                        m_auditMutex;
+    std::atomic<uint64_t>             m_cloudReservedNanodollars{0};
     size_t                            m_maxThreads = 64;
 
     // Version

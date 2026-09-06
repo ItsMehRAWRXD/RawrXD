@@ -1,47 +1,40 @@
-# AGENT_SCHEMA_RETRY_001 - LOCK
+﻿# AGENT_SCHEMA_RETRY_001 - LOCK
 
-**Status:** `PASS`  
-**Frozen:** 2026-08-29T18:46:50Z  
-**Lane:** MODEL_RETRY (`RAWRXD_TOOL_ARGS_STRICT=1`; bare-key repair OFF)
+**Status:** `PASS`
+**Frozen:** 2026-08-29T20:28:43Z
+**Lane:** MODEL_RETRY (RAWRXD_TOOL_ARGS_STRICT=1; bare-key repair OFF)
 
-Distinct from SCHEMA-002 lane **R** (deterministic parser repair before dispatch).
-
-```text
-AGENT_SCHEMA_RETRY_001=PASS
-malformed_rejected=PASS
-malformed_side_effect_free=PASS
-new_inference_observed=PASS
-corrected_call_different=PASS
-corrected_call_dispatched=PASS
-handler_execution_count=1
-
-FIRST_CALL_SCHEMA_VALID=0
-FIRST_CALL_DISPATCHED=0
-FIRST_CALL_SIDE_EFFECTS=0
-SECOND_CALL_SCHEMA_VALID=1
-SECOND_CALL_DISPATCHED=1
-TOTAL_HANDLER_EXECUTIONS=1
-CORRECTION_REQUIRED_NEW_INFERENCE=1
-
-first_args={path:main.c}
-second_args={"path":"main.c"}
-```
-
-## Sequence proven
+## Certification rule
 
 ```text
-malformed bare-key args
-  -> schema_validation, dispatched=false, no side effects
-  -> observation returned to model
-  -> real Deep2 second inference
-  -> corrected strict JSON
-  -> dispatch exactly once
-  -> tool succeeds
+native_exe_exit_0         = required
+powershell_stderr_record  = irrelevant to native success
+schema_retry_assertions   = required
+DEEP2_DESTRUCTOR BEGIN+END = required (real teardown)
 ```
+
+## Harness gates
+
+- `FIRST_INVALID_REJECTED` = PASS
+- `FIRST_DISPATCHED_ZERO` = PASS
+- `FIRST_SIDE_EFFECTS_ZERO` = PASS
+- `MODEL_RETRY_OCCURRED` = PASS
+- `CORRECTED_CALL_DIFFERENT` = PASS
+- `SECOND_SCHEMA_VALID` = PASS
+- `SECOND_DISPATCHED_ONCE` = PASS
+- `HANDLER_EXECUTIONS_ONE` = PASS
+- `NATIVE_EXIT_ZERO` = PASS
+- `TEARDOWN_COMPLETE` = PASS
+- `REPORT_PASS_LINE` = PASS
+
+`AGENT_NATIVE_EXIT=0`
+`DEEP2_DESTRUCTOR_BEGIN=1`
+`DEEP2_DESTRUCTOR_END=1`
 
 ## Artifacts
 
-- `AGENT_SCHEMA_RETRY_001.txt`
-- `AGENT_SCHEMA_RETRY_001.lock.json`
-- `agent.console.txt`
-- Regenerator: `scripts/RUN_AGENT_SCHEMA_RETRY_001.ps1`
+- stdout.txt / stderr.txt (separate; no 2>&1 Tee contamination)
+- agent.console.txt (combined)
+- AGENT_SCHEMA_RETRY_001.txt (native report)
+- HARNESS_GATE.txt
+- Regenerator: scripts/RUN_AGENT_SCHEMA_RETRY_001.ps1

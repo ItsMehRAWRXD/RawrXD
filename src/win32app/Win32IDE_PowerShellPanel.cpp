@@ -69,11 +69,13 @@ void Win32IDE::createPowerShellPanel() {
     }
     
     // Unicode container — ANSI parent can coerce child text through ACP.
+    // Hidden + zero-sized until spatial layout places it — avoids Execute
+    // (IDC_PS_BTN_EXECUTE) painting at placeholder coords over the editor.
     m_hwndPowerShellPanel = CreateWindowExW(
         WS_EX_CLIENTEDGE,
         L"STATIC", L"PowerShell Console",
-        WS_CHILD | WS_VISIBLE | WS_BORDER,
-        0, 0, 800, m_powerShellPanelHeight,
+        WS_CHILD | WS_BORDER | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+        0, 0, 0, 0,
         m_hwndMain,
         (HMENU)IDC_PS_PANEL_CONTAINER,
         m_hInstance,
@@ -102,8 +104,8 @@ void Win32IDE::createPowerShellPanel() {
     m_hwndPowerShellOutput = CreateWindowExW(
         WS_EX_CLIENTEDGE,
         MSFTEDIT_CLASS, L"",
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-        5, 35, 790, m_powerShellPanelHeight - 95,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+        0, 0, 0, 0,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_OUTPUT,
         m_hInstance,
@@ -114,8 +116,8 @@ void Win32IDE::createPowerShellPanel() {
         m_hwndPowerShellOutput = CreateWindowExW(
             WS_EX_CLIENTEDGE,
             RICHEDIT_CLASSW, L"",
-            WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-            5, 35, 790, m_powerShellPanelHeight - 95,
+            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+            0, 0, 0, 0,
             m_hwndPowerShellPanel,
             (HMENU)IDC_PS_OUTPUT,
             m_hInstance,
@@ -129,46 +131,53 @@ void Win32IDE::createPowerShellPanel() {
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas"
     );
-    SendMessage(m_hwndPowerShellOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndPowerShellOutput)
+        SendMessage(m_hwndPowerShellOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     // Set background color
-    SendMessage(m_hwndPowerShellOutput, EM_SETBKGNDCOLOR, 0, RGB(1, 36, 86)); // PowerShell blue
+    if (m_hwndPowerShellOutput)
+        SendMessage(m_hwndPowerShellOutput, EM_SETBKGNDCOLOR, 0, RGB(1, 36, 86)); // PowerShell blue
     
     // Create input area
     m_hwndPowerShellInput = CreateWindowExA(
         WS_EX_CLIENTEDGE,
         "EDIT", "",
-        WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-        5, m_powerShellPanelHeight - 55, 690, 25,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER | ES_AUTOHSCROLL,
+        0, 0, 0, 0,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_INPUT,
         m_hInstance,
         NULL
     );
     
-    SendMessage(m_hwndPowerShellInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndPowerShellInput)
+        SendMessage(m_hwndPowerShellInput, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     // Subclass input for custom handling (Enter key, history navigation)
-    SetPropA(m_hwndPowerShellInput, "IDE_PTR", this);
-    WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(m_hwndPowerShellInput, GWLP_WNDPROC, (LONG_PTR)PowerShellInputProc);
-    SetPropA(m_hwndPowerShellInput, "OLDPROC", (HANDLE)oldProc);
+    if (m_hwndPowerShellInput) {
+        SetPropA(m_hwndPowerShellInput, "IDE_PTR", this);
+        WNDPROC oldProc = (WNDPROC)SetWindowLongPtr(
+            m_hwndPowerShellInput, GWLP_WNDPROC, (LONG_PTR)PowerShellInputProc);
+        SetPropA(m_hwndPowerShellInput, "OLDPROC", (HANDLE)oldProc);
+    }
     
     // Create Execute button
     m_hwndPSBtnExecute = CreateWindowExA(
         0, "BUTTON", "Execute",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        700, m_powerShellPanelHeight - 55, 90, 25,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
+        0, 0, 0, 0,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_EXECUTE,
         m_hInstance,
         NULL
     );
-    SendMessage(m_hwndPSBtnExecute, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndPSBtnExecute)
+        SendMessage(m_hwndPSBtnExecute, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     m_hwndPowerShellStatusBar = CreateWindowExW(
         0, L"STATIC", L"PowerShell: starting...",
-        WS_CHILD | WS_VISIBLE | SS_LEFT,
-        5, m_powerShellPanelHeight - 25, 790, 20,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | SS_LEFT,
+        0, 0, 0, 0,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_STATUSBAR,
         m_hInstance,
@@ -180,7 +189,8 @@ void Win32IDE::createPowerShellPanel() {
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI"
     );
-    SendMessage(m_hwndPowerShellStatusBar, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
+    if (m_hwndPowerShellStatusBar)
+        SendMessage(m_hwndPowerShellStatusBar, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
     
     // Initialize PowerShell UI only. The shell session itself is started lazily
     // on first use so the IDE can finish painting immediately.
@@ -209,6 +219,17 @@ void Win32IDE::createPowerShellPanel() {
 
     // P1_UI_ENCODING_001 live probe (no model / no GGUF)
     runUiEncodingProbe();
+
+    // Place via spatial layout while still hidden, then show if toggled on.
+    RECT mainClient{};
+    if (m_hwndMain && GetClientRect(m_hwndMain, &mainClient) &&
+        mainClient.right > mainClient.left &&
+        mainClient.bottom > mainClient.top) {
+        onSize(mainClient.right - mainClient.left,
+               mainClient.bottom - mainClient.top);
+    }
+    ShowWindow(m_hwndPowerShellPanel,
+               m_powerShellPanelVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
 }
 
 void Win32IDE::createPowerShellToolbar() {
@@ -223,7 +244,7 @@ void Win32IDE::createPowerShellToolbar() {
     
     m_hwndPSBtnClear = CreateWindowExA(
         0, "BUTTON", "Clear",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_CLEAR,
@@ -233,7 +254,7 @@ void Win32IDE::createPowerShellToolbar() {
     
     m_hwndPSBtnStop = CreateWindowExA(
         0, "BUTTON", "Stop",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_STOP,
@@ -243,7 +264,7 @@ void Win32IDE::createPowerShellToolbar() {
     
     m_hwndPSBtnHistory = CreateWindowExA(
         0, "BUTTON", "History",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_HISTORY,
@@ -253,7 +274,7 @@ void Win32IDE::createPowerShellToolbar() {
     
     m_hwndPSBtnRestart = CreateWindowExA(
         0, "BUTTON", "Restart",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
         btnX, btnY, btnWidth, btnHeight,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_RESTART,
@@ -263,7 +284,7 @@ void Win32IDE::createPowerShellToolbar() {
     
     m_hwndPSBtnLoadRawrXD = CreateWindowExA(
         0, "BUTTON", "Load RawrXD",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON,
         btnX, btnY, 120, btnHeight,
         m_hwndPowerShellPanel,
         (HMENU)IDC_PS_BTN_LOAD_RAWRXD,
@@ -353,13 +374,14 @@ void Win32IDE::initializePowerShellPanel() {
 
 void Win32IDE::showPowerShellPanel() {
     if (m_hwndPowerShellPanel) {
-        ShowWindow(m_hwndPowerShellPanel, SW_SHOW);
         m_powerShellPanelVisible = true;
-        
-        // Force layout update
+
+        // Layout while hidden so stale creation coordinates never flash over
+        // unrelated siblings.
         RECT rc;
         GetClientRect(m_hwndMain, &rc);
         onSize(rc.right - rc.left, rc.bottom - rc.top);
+        ShowWindow(m_hwndPowerShellPanel, SW_SHOWNOACTIVATE);
     }
 }
 
@@ -396,40 +418,110 @@ void Win32IDE::layoutPowerShellPanel() {
 }
 
 void Win32IDE::updatePowerShellPanelLayout(int width, int height) {
-    if (!m_hwndPowerShellPanel) return;
-    
-    // Layout internal controls
-    if (m_hwndPowerShellOutput) {
-        SetWindowPos(m_hwndPowerShellOutput, NULL,
-            5, 35,
-            width - 10, height - 95,
-            SWP_NOZORDER);
+    if (!m_hwndPowerShellPanel || !IsWindow(m_hwndPowerShellPanel) ||
+        width <= 0 || height <= 0)
+        return;
+
+    const int nominalPad = dpiScale(5);
+    const int nominalGap = dpiScale(5);
+    const int xPad = (std::min)(nominalPad, width / 2);
+    const int yPad = (std::min)(nominalPad, height / 2);
+    const int innerW = (std::max)(0, width - 2 * xPad);
+    const int innerH = (std::max)(0, height - 2 * yPad);
+    const int verticalGap = (std::min)(nominalGap, innerH / 4);
+    const int toolbarH = (std::min)(dpiScale(25), innerH);
+    const int statusH = (std::min)(dpiScale(20), innerH);
+    const int executeW = (std::min)(dpiScale(90), innerW);
+    const int horizontalGap =
+        (std::min)(nominalGap, (std::max)(0, innerW - executeW));
+    const int outputY =
+        (std::min)(height - yPad, yPad + toolbarH + verticalGap);
+    const int statusY = (std::max)(yPad, height - yPad - statusH);
+    const int inputH = (std::min)(dpiScale(25),
+                                  (std::max)(0, statusY - verticalGap - outputY));
+    const int inputY =
+        (std::max)(outputY, statusY - verticalGap - inputH);
+    const int outputH =
+        (std::max)(0, inputY - verticalGap - outputY);
+    const int inputW =
+        (std::max)(0, innerW - executeW - horizontalGap);
+
+    HWND toolbarButtons[] = {
+        m_hwndPSBtnClear,
+        m_hwndPSBtnStop,
+        m_hwndPSBtnHistory,
+        m_hwndPSBtnRestart,
+        m_hwndPSBtnLoadRawrXD,
+    };
+    constexpr int toolbarCount = static_cast<int>(_countof(toolbarButtons));
+    const int toolbarGap = toolbarCount > 1
+                               ? (std::min)(nominalGap,
+                                            innerW / (toolbarCount - 1))
+                               : 0;
+    const int toolbarGaps = toolbarGap * (toolbarCount - 1);
+    const int toolbarButtonW =
+        (std::max)(0, (innerW - toolbarGaps) / toolbarCount);
+
+    struct ChildPlacement {
+        HWND hwnd;
+        int x;
+        int y;
+        int w;
+        int h;
+    };
+    ChildPlacement placements[9]{};
+    int placementCount = 0;
+    auto addPlacement = [&placements, &placementCount](HWND hwnd, int x, int y,
+                                                        int w, int h) {
+        if (!hwnd || !IsWindow(hwnd) || placementCount >= 9)
+            return;
+        placements[placementCount++] = {
+            hwnd, x, y, (std::max)(0, w), (std::max)(0, h)};
+    };
+
+    int toolbarX = xPad;
+    for (HWND button : toolbarButtons) {
+        addPlacement(button, toolbarX, yPad, toolbarButtonW, toolbarH);
+        toolbarX += toolbarButtonW + toolbarGap;
     }
-    
-    if (m_hwndPowerShellInput) {
-        SetWindowPos(m_hwndPowerShellInput, NULL,
-            5, height - 55,
-            width - 110, 25,
-            SWP_NOZORDER);
+
+    addPlacement(m_hwndPowerShellOutput, xPad, outputY, innerW, outputH);
+    addPlacement(m_hwndPowerShellInput, xPad, inputY, inputW, inputH);
+    addPlacement(m_hwndPSBtnExecute, xPad + inputW + horizontalGap, inputY,
+                 executeW, inputH);
+    addPlacement(m_hwndPowerShellStatusBar, xPad, statusY, innerW, statusH);
+
+    // Keep all children in one atomic placement transaction.
+    const UINT flags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    bool batchOk = placementCount == 0;
+    HDWP batch = placementCount > 0 ? BeginDeferWindowPos(placementCount) : nullptr;
+    if (batch) {
+        batchOk = true;
+        for (int i = 0; i < placementCount; ++i) {
+            const ChildPlacement& p = placements[i];
+            batch = DeferWindowPos(batch, p.hwnd, nullptr, p.x, p.y,
+                                   p.w, p.h, flags);
+            if (!batch) {
+                batchOk = false;
+                break;
+            }
+        }
+        if (batch && !EndDeferWindowPos(batch))
+            batchOk = false;
     }
-    
-    if (m_hwndPSBtnExecute) {
-        SetWindowPos(m_hwndPSBtnExecute, NULL,
-            width - 100, height - 55,
-            90, 25,
-            SWP_NOZORDER);
+    if (!batchOk) {
+        for (int i = 0; i < placementCount; ++i) {
+            const ChildPlacement& p = placements[i];
+            SetWindowPos(p.hwnd, nullptr, p.x, p.y, p.w, p.h, flags);
+        }
     }
-    
-    if (m_hwndPowerShellStatusBar) {
-        SetWindowPos(m_hwndPowerShellStatusBar, NULL,
-            5, height - 25,
-            width - 10, 20,
-            SWP_NOZORDER);
-    }
+    RedrawWindow(m_hwndPowerShellPanel, nullptr, nullptr,
+                 RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
 }
 
 void Win32IDE::resizePowerShellPanel(int width, int height) {
-    m_powerShellPanelHeight = height;
+    (void)width;
+    m_powerShellPanelHeight = (std::max)(dpiScale(120), height);
     layoutPowerShellPanel();
 }
 

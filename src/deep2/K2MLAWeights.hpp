@@ -12,9 +12,12 @@
 // ============================================================================
 #pragma once
 #include "KimiK2Config.hpp"
+#include "K2MLAAttention.hpp"
 #include "TensorView.hpp"
 #include <cstdint>
 #include <string>
+
+namespace rawrxd::deep2 { class K2KVCache; }
 
 namespace Deep2 {
 
@@ -101,14 +104,15 @@ struct MLAWeights {
 // ============================================================================
 struct MLAForward {
     // Forward pass — returns false on error with message in error
-    // K2-005: kvCache is optional for prefill; required for autoregressive decode
+    // K2-005: kvCache null keeps G10/G11 simplified path; non-null = Gate 12 complete MLA
     bool Execute(const float* hidden, float* output,
                  const MLAWeights& weights,
                  const KimiK2Config& config,
                  std::string& error,
-                 class K2KVCache* kvCache = nullptr,
+                 rawrxd::deep2::K2KVCache* kvCache = nullptr,
                  uint32_t layerIdx = 0,
-                 uint32_t position = 0);
+                 uint32_t position = 0,
+                 MlaCompleteStats* stats = nullptr);
 
     // Standalone test: compare against deterministic reference fixture
     // Used for K2-003 validation gate
