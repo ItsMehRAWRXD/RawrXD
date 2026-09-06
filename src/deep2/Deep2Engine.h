@@ -411,6 +411,11 @@ public:
     bool forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
                                    const float* hostIn, float* hostOut);
     bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
+    bool tryGpuTokenForward(float* hidden);
+    bool forwardTokenAllLayers(float* hidden, size_t seqLen);
+    bool gpuResidentDecodeEnabled() const;
+    void emitHotpathWitnesses();
+    void emitLiveDecodeWitnesses(FILE* f = nullptr);
     uint64_t vulkanGpuWeightBytes() const { return vulkanGpuWeightBytes_; }
     uint64_t vulkanGpuTensorBytes() const { return vulkanGpuTensorBytes_; }
     uint64_t vulkanRealWeightLayers() const { return vulkanRealWeightLayers_; }
@@ -682,6 +687,7 @@ private:
     uint64_t plannedCpuGemvOps_ = 0;
     uint64_t plannedGpuGemvOps_ = 0;
     GpuForwardCounters gpuFwd_{};
+    bool gpuFwdCommitted_ = false;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     int parseWeightLayerIndex(const std::string& name) const;

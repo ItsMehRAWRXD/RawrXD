@@ -1,4 +1,4 @@
-// Deep2GpuForward.hpp — STREAMER_GPU_FORWARD_OPS_001 counters + contracts
+// Deep2GpuForward.hpp — STREAMER_GPU_FORWARD_OPS_001 + RESIDENT_DECODE_001
 #pragma once
 #include <cstdint>
 #include <cstdio>
@@ -23,6 +23,11 @@ struct GpuForwardCounters {
     uint64_t hostMaterializations = 0;
     uint64_t ownershipTransfers = 0;
     uint64_t intraSlotHostTransfers = 0;
+    uint64_t liveDecodeResidentTokens = 0;
+    uint64_t liveDecodeTokens = 0;
+    uint64_t hostForwardLayerCalls = 0;
+    uint64_t plannedCpuLayerCalls = 0;
+    uint64_t gpuLayersLastToken = 0;
 };
 
 inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t cpuFallback) noexcept {
@@ -64,6 +69,15 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.ownershipTransfers);
         fprintf(o, "DEEP2_INTRA_SLOT_HOST_TRANSFERS=%llu\n",
                 (unsigned long long)c.intraSlotHostTransfers);
+        fprintf(o, "LIVE_DECODE_RESIDENT_FORWARD=%u\n",
+                c.liveDecodeResidentTokens > 0 ? 1u : 0u);
+        fprintf(o, "TOKENS_DECODED=%llu\n", (unsigned long long)c.liveDecodeTokens);
+        fprintf(o, "GPU_FORWARD_LAYERS_PER_TOKEN=%llu\n",
+                (unsigned long long)c.gpuLayersLastToken);
+        fprintf(o, "HOST_FORWARD_LAYER_CALLS=%llu\n",
+                (unsigned long long)c.hostForwardLayerCalls);
+        fprintf(o, "PLANNED_CPU_LAYER_CALLS=%llu\n",
+                (unsigned long long)c.plannedCpuLayerCalls);
         fprintf(o, "DEEP2_REAL_GPU_FORWARD=%u\n",
                 Deep2GpuForward_IsReal(c, cpuFb) ? 1u : 0u);
     };

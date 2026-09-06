@@ -1449,6 +1449,17 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     printf("  Use KV Cache: %s\n", config.useKVCache ? "YES" : "NO");
     printf("  Use RoPE: %s\n", config.useRoPE ? "YES" : "NO");
 
+    // Drop satellites that pin buffers/threads before rebuild (SOLO C0000374).
+    if (elasticResidency_) {
+        elasticResidency_->Shutdown();
+        elasticResidency_.reset();
+        elasticResidencyEnabled_ = false;
+    }
+    if (nvmeStream_) {
+        nvmeStream_.reset();
+        nvmeStreamingEnabled_ = false;
+    }
+
     // Clean up any previously allocated resources
     deallocateBuffers();
     kvCache.reset();
@@ -2602,7 +2613,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
-    enableAllEnhancements();
     return true;
 }
 
@@ -2801,7 +2811,6 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
 
     printf("[Deep2Engine] BP16 model loaded successfully (%zu tensors)\n",
            bp16Streamer_->tensorCount());
-    enableAllEnhancements();
     return true;
 }
 
@@ -3845,7 +3854,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     WeightTensor wtEffective = wt;
     Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
     bool acquired = false;
-    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
+    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty() &&
+        !vulkanEnabled_) {
         auto status = elasticResidency_->AcquireTensor(wt.name, 0, 0, resHandle);
         if (status == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready) {
             wtEffective.data = resHandle.cpuPtr;
@@ -4033,6 +4043,8 @@ void Deep2Engine::reset() {
         kvCache->reset();
     }
     if (compressedKV_) compressedKV_->reset();
+    gpuFwdCommitted_ = false;
+    gpuFwd_ = GpuForwardCounters{};
     // Reset sampler state (repetition penalty history)
     if (sampler) {
         sampler->Reset();
@@ -4477,6 +4489,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
 
     B3_ResetFirstBad();
+    emitHotpathWitnesses();
+    resetGpuForwardCounters();
+    gpuFwdCommitted_ = false;
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
@@ -4527,13 +4542,25 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // ── B3: Trace prompt embedding ─────────────────────────────────
         B3_TraceState("PROMPT_EMBED", t, h, config.hiddenDim);
 
+        if (!B3_StageDigestEnabled()) {
+            try {
+                if (!forwardTokenAllLayers(h, t + 1)) {
+                    fprintf(stderr, "[B3_ABORT] prefill gpu/cpu forward fail pos=%zu\n", t);
+                    return 0;
+                }
+            } catch (const std::exception& ex) {
+                fprintf(stderr, "[B3_ABORT] prefill: %s\n", ex.what());
+                return 0;
+            }
+        } else {
         // Forward through all layers
         float* layerInput = h;
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
             // ── Batch 15: Prefetch next layer weights into residency ──
-            if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
+            if (elasticResidencyEnabled_ && elasticResidency_ && !vulkanEnabled_ &&
+                layer + 1 < modelWeights.numLayers) {
                 const auto& nextLw = modelWeights.layers[layer + 1];
                 auto prefetchWt = [&](const WeightTensor& wt) {
                     if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
@@ -4572,6 +4599,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Store it back to hiddenStates for this position
         if (layerInput != h) {
             memcpy(h, layerInput, config.hiddenDim * sizeof(float));
+        }
         }
 
         // ── B3: Trace after final layer for prompt ────────────────────
@@ -4639,12 +4667,24 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 break;
             }
 
+            if (!B3_StageDigestEnabled()) {
+                try {
+                    if (!forwardTokenAllLayers(h, inputPos + 1)) {
+                        fprintf(stderr, "[B3_ABORT] decode gpu/cpu forward fail\n");
+                        return tokensGenerated;
+                    }
+                } catch (const std::exception& ex) {
+                    fprintf(stderr, "[B3_ABORT] decode: %s\n", ex.what());
+                    return tokensGenerated;
+                }
+            } else {
             float* layerInput = h;
             float* layerOutput = attentionOutput;
 
             for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
                 // ── Batch 15: Prefetch next layer weights into residency ──
-                if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
+                if (elasticResidencyEnabled_ && elasticResidency_ && !vulkanEnabled_ &&
+                layer + 1 < modelWeights.numLayers) {
                     const auto& nextLw = modelWeights.layers[layer + 1];
                     auto prefetchWt = [&](const WeightTensor& wt) {
                         if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
@@ -4672,6 +4712,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
             if (layerInput != h) {
                 memcpy(h, layerInput, config.hiddenDim * sizeof(float));
+            }
             }
 
             if (modelWeights.finalNorm.data) {
@@ -4852,6 +4893,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
            prefillMs > 0 ? promptLen / (prefillMs / 1000.0) : 0.0,
            tokensGenerated, decodeMs,
            decodeMs > 0 && tokensGenerated > 0 ? tokensGenerated / (decodeMs / 1000.0) : 0.0);
+    emitLiveDecodeWitnesses(nullptr);
 
     // ── VAL-051.7: Print residency counters ─────────────────────────
     ResidencyCounters::Print();
@@ -5020,6 +5062,29 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     std::vector<int> outputTokens(maxTokens);
     std::string streamed;
     bool wasCancelled = false;
+
+    if (medusaEnabled_ && medusaDecoder_ && medusaDecoder_->hasHeadWeights(0) &&
+        maxTokens > 0 && !gpuResidentDecodeEnabled()) {
+        emitHotpathWitnesses();
+        size_t generated = generateWithMedusa(
+            promptTokens.data(), promptTokens.size(),
+            outputTokens.data(), maxTokens, nullptr);
+        for (size_t i = 0; i < generated; ++i) {
+            std::string piece = tokenizer ? tokenizer->Decode(outputTokens[i])
+                                          : detokenize(std::vector<int>{outputTokens[i]});
+            streamed += piece;
+            if (callback && !callback((int32_t)outputTokens[i], piece)) {
+                wasCancelled = true;
+                break;
+            }
+        }
+        GenerationResult medusaResult;
+        medusaResult.promptTokens = promptTokens.size();
+        medusaResult.generatedTokens = generated;
+        medusaResult.completed = generated > 0 && !wasCancelled;
+        medusaResult.cancelled = wasCancelled;
+        return medusaResult;
+    }
 
     std::printf("[AGENT] PREFILL_BEGIN prompt_tokens=%zu\n", promptTokens.size());
     std::fflush(stdout);
@@ -6943,20 +7008,38 @@ static uint64_t Deep2LocalHeapBytes(CPUInference::VulkanCompute* vc, uint64_t fb
     return fb;
 }
 
+static bool EnhanceWanted(const char* name) {
+    const char* skip = std::getenv("RAWRXD_ENHANCE_SKIP");
+    if (!skip || !*skip) return true;
+    const size_t nlen = std::strlen(name);
+    const char* p = skip;
+    while (*p) {
+        while (*p == ',' || *p == ' ') ++p;
+        if (std::strncmp(p, name, nlen) == 0 &&
+            (p[nlen] == 0 || p[nlen] == ',' || p[nlen] == ' '))
+            return false;
+        while (*p && *p != ',') ++p;
+        if (*p == ',') ++p;
+    }
+    return true;
+}
+
 void Deep2Engine::enableAllEnhancements() {
     printf("[Deep2Engine] ENHANCEMENT STACK: ON\n");
-    enableElasticResidency(true);
-    setAsyncPrefetchEnabled(true);
-    enableResidencyTelemetry(true);
-    enableMedusa(true);
-    enableNUPacking(true);
-    enableWarmupScheduler(true);
-    enableCompressedKV(true, KVQuantType::KV_Q8_0);
-    enableNVMeStreaming(true, config.modelPath[0] ? config.modelPath : "");
-    enableSlidingWindow(true, 4096);
-    enableChamber(true);
-    enablePlasmaGovernor(true);
-    enableSovereignRuntime(true);
+    if (modelWeights.loaded && !vulkanInitialized_) enableVulkan(true);
+    if (EnhanceWanted("elastic") && !vulkanEnabled_) enableElasticResidency(true);
+    if (EnhanceWanted("prefetch") && !vulkanEnabled_) setAsyncPrefetchEnabled(true);
+    if (EnhanceWanted("telemetry")) enableResidencyTelemetry(true);
+    if (EnhanceWanted("medusa")) enableMedusa(true);
+    if (EnhanceWanted("nu")) enableNUPacking(true);
+    if (EnhanceWanted("warmup")) enableWarmupScheduler(true);
+    if (EnhanceWanted("ckv") && !vulkanEnabled_) enableCompressedKV(true, KVQuantType::KV_Q8_0);
+    if (EnhanceWanted("nvme") && !vulkanEnabled_)
+        enableNVMeStreaming(true, config.modelPath[0] ? config.modelPath : "");
+    if (EnhanceWanted("slide")) enableSlidingWindow(true, 4096);
+    if (EnhanceWanted("chamber")) enableChamber(true);
+    if (EnhanceWanted("plasma")) enablePlasmaGovernor(true);
+    if (EnhanceWanted("sov")) enableSovereignRuntime(true);
     compressedKVConfig_.numLayers =
         config.numLayers ? config.numLayers : modelWeights.numLayers;
     compressedKVConfig_.maxSeqLen = config.maxSeqLen ? config.maxSeqLen : 4096;
@@ -6968,15 +7051,15 @@ void Deep2Engine::enableAllEnhancements() {
         config.headDim ? config.headDim : modelWeights.headDim;
     if (modelWeights.loaded) {
         const size_t torus = compressedKVConfig_.maxSeqLen;
-        enableToroidalKV(true, torus ? torus : 4096);
-        if (!vulkanInitialized_) enableVulkan(true);
+        if (EnhanceWanted("torus") && !vulkanEnabled_)
+            enableToroidalKV(true, torus ? torus : 4096);
     }
-    if (!marsEnabled_ && !multiGpuLayerPlan_.active) {
+    if (!marsEnabled_ && !vulkanEnabled_ && EnhanceWanted("mars")) {
         const uint64_t g0 = Deep2LocalHeapBytes(getVulkanComputeSlot(0), 32ull << 30);
         const uint64_t g1 = Deep2LocalHeapBytes(getVulkanComputeSlot(1), 16ull << 30);
         (void)enableMARS(g0, g1);
-    } else if (multiGpuLayerPlan_.active) {
-        printf("[Deep2Engine] MARS skipped (MULTI/HYBRID layer plan owns devices=%u)\n",
+    } else if (vulkanEnabled_) {
+        printf("[Deep2Engine] MARS skipped (Vulkan owns compute devices=%u)\n",
                vulkanDeviceCount());
     }
     if (marsEnabled_ && modelWeights.loaded && !marsWeightsPlaced_ &&
@@ -7179,6 +7262,9 @@ void Deep2Engine::enableVulkan(bool enable) {
             if (!Deep2MultiGpu_BuildContiguousPlan(snap, nLayers, bytesPerLayer, plan)) {
                 fprintf(stderr, "[Deep2Engine] layer plan failed — SOLO primary\n");
             } else {
+                const char* forceSplit = std::getenv("DEEP2_FORCE_SPLIT");
+                if (!(forceSplit && forceSplit[0] == '1'))
+                    Deep2MultiGpu_ApplyCostWeightedCut(plan);
                 if (wantHybrid) {
                     unsigned cpuLayers = 0;
                     if (const char* cl = std::getenv("DEEP2_HYBRID_CPU_LAYERS"))

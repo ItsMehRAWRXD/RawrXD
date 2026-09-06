@@ -20,6 +20,7 @@ uint64_t WeightKey(const WeightTensor& wt) {
 
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
                        std::unordered_map<std::string, std::vector<float>>& cache) {
+    (void)e;
     if (!wt.data) return nullptr;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32)
         return reinterpret_cast<const float*>(wt.data);
@@ -49,7 +50,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)modelWeights.numHeads,
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
-        128u,
+        (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22));
 }
 
@@ -188,57 +189,67 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     if (!vc || !ensureGpuForwardArena(slot)) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
     if (!vc->UploadHidden(hostIn, H)) return false;
-    gpuFwd_.hostMaterializations = 0;
+    ++gpuFwd_.hostSyncBoundaries;
     for (uint32_t L = lo; L <= hi; ++L) {
-        const bool first = (L == lo);
-        const bool last = (L == hi);
-        if (!forwardLayerGpuResident(L, slot, first, last)) return false;
-        // no host transfer between layers in the contiguous range
+        if (!forwardLayerGpuResident(L, slot, false, false)) return false;
     }
     if (!vc->DownloadHidden(hostOut, H)) return false;
+    ++gpuFwd_.hostSyncBoundaries;
     return true;
 }
 
 bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
     if (!multiGpuLayerPlan_.active || multiGpuLayerPlan_.gpuSlotCount < 1) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
-    std::vector<float> cur(H);
-    std::memcpy(cur.data(), hostIn, H * sizeof(float));
+    const unsigned gpuN = multiGpuLayerPlan_.gpuSlotCount;
 
-    for (unsigned s = 0; s < multiGpuLayerPlan_.gpuSlotCount; ++s) {
+    for (unsigned s = 0; s < gpuN; ++s)
+        if (!ensureGpuForwardArena(s)) return false;
+
+    auto* vc0 = getVulkanComputeSlot(0);
+    if (!vc0 || !vc0->UploadHidden(hostIn, H)) return false;
+    ++gpuFwd_.hostSyncBoundaries;
+
+    for (unsigned s = 0; s < gpuN; ++s) {
+        auto* vc = getVulkanComputeSlot(s);
+        if (!vc) return false;
         const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
-        if (!forwardGpuContiguousRange(s, lo, hi, cur.data(), cur.data())) return false;
-        if (s + 1 < multiGpuLayerPlan_.gpuSlotCount) {
-            auto* a = getVulkanComputeSlot(s);
-            auto* b = getVulkanComputeSlot(s + 1);
-            if (!a || !b || !b->EnsureForwardArena(
-                    H,
-                    (uint32_t)(modelWeights.intermediateDim ? modelWeights.intermediateDim : H * 4),
-                    (uint32_t)modelWeights.numHeads, (uint32_t)modelWeights.numKVHeads,
-                    (uint32_t)modelWeights.headDim, 128u,
-                    (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22)))
-                return false;
-            if (!a->CopyArenaHiddenTo(*b, H)) return false;
+        for (uint32_t L = lo; L <= hi; ++L) {
+            if (!forwardLayerGpuResident(L, s, false, false)) return false;
+        }
+        if (s + 1 < gpuN) {
+            auto* next = getVulkanComputeSlot(s + 1);
+            if (!next || !vc->CopyArenaHiddenTo(*next, H)) return false;
             ++gpuFwd_.ownershipTransfers;
         }
     }
 
-    // Planned CPU trailing range — first-class, not fallback
+    auto* lastGpu = getVulkanComputeSlot(gpuN - 1);
+    if (!lastGpu) return false;
+
     if (multiGpuLayerPlan_.hybrid) {
+        std::vector<float> cur(H);
+        if (!lastGpu->DownloadHidden(cur.data(), H)) return false;
+        ++gpuFwd_.hostSyncBoundaries;
         const unsigned cpuSlot = multiGpuLayerPlan_.plannedCount - 1;
         if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, (int)cpuSlot)) {
             const uint32_t lo = multiGpuLayerPlan_.rangeLo[cpuSlot];
             const uint32_t hi = multiGpuLayerPlan_.rangeHi[cpuSlot];
             std::vector<float> tmp(H);
+            const size_t seqPos = kvCache ? kvCache->currentLength() + 1 : 1;
             for (uint32_t L = lo; L <= hi; ++L) {
-                forwardLayer(L, cur.data(), tmp.data(), 1);
+                forwardLayer(L, cur.data(), tmp.data(), seqPos);
                 std::memcpy(cur.data(), tmp.data(), H * sizeof(float));
+                ++gpuFwd_.plannedCpuLayerCalls;
                 ++plannedCpuGemvOps_;
             }
         }
+        std::memcpy(hostOut, cur.data(), H * sizeof(float));
+    } else {
+        if (!lastGpu->DownloadHidden(hostOut, H)) return false;
+        ++gpuFwd_.hostSyncBoundaries;
     }
-    std::memcpy(hostOut, cur.data(), H * sizeof(float));
     return true;
 }
 
