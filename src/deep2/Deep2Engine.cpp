@@ -7094,10 +7094,23 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
     const uint64_t weightBytes = elems * sizeof(float);
     const uint64_t inputBytes = wt.cols * sizeof(float);
     const uint64_t outputBytes = wt.rows * sizeof(float);
+    // Stable cache key: name hash if present, else host pointer identity.
+    uint64_t cacheKey = 0;
+    if (!wt.name.empty()) {
+        cacheKey = 14695981039346656037ull;
+        for (unsigned char c : wt.name) {
+            cacheKey ^= c;
+            cacheKey *= 1099511628211ull;
+        }
+        cacheKey ^= ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols ^ (uint64_t)(uint32_t)wt.type;
+    } else {
+        cacheKey = (uint64_t)(uintptr_t)wF32 ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
+    }
     const bool ok = vulkanCompute_->DispatchGEMV(
         wF32, input, output,
         static_cast<uint32_t>(wt.rows),
-        static_cast<uint32_t>(wt.cols));
+        static_cast<uint32_t>(wt.cols),
+        cacheKey);
     if (ok) {
         ++vulkanGemvOk_;
         vulkanGpuWeightBytes_ += weightBytes;

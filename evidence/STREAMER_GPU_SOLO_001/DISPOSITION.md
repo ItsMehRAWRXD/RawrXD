@@ -60,6 +60,19 @@ TinyLlama multi15 decode ≈ 12.1–12.6 tok/s
 BENCH_64 frozen baseline = 8.52
 ```
 
-## Current SOLO blocker
+## Current SOLO status (2026-09-06)
 
-`UPLOAD_BOUND_NO_RESIDENT_WEIGHTS` — GEMV works; e2e tok/s low until weights stay in DEVICE_LOCAL.
+```text
+DEEP2_REAL_GPU_GEMV=1
+DEEP2_CPU_FALLBACK_USED=0
+DEEP2_GPU_WEIGHT_UPLOADS=155
+DEEP2_GPU_WEIGHT_HITS=2325
+DEEP2_GPU_RESIDENT_BYTES≈3.85 GiB
+warm multi15 e2e ≈ 17.6 tok/s  (CPU ref 12.1–12.6)
+STREAMER_GPU_SOLO_BLOCKER=NONE
+DEEP2_REAL_GPU_FORWARD=0  (full layer chain / native quant kernels still open)
+```
+
+Weights stay `DEVICE_LOCAL` after first upload; activations use host-visible I/O.
+Next: native quant GEMV / fused forward → `DEEP2_REAL_GPU_FORWARD=1`.
+

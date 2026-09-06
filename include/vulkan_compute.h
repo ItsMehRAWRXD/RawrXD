@@ -211,9 +211,9 @@ public:
                              uint32_t K,
                              uint32_t N);
     
-    // GEMV dispatch for transformer inference (FP32 weights, uploads data, dispatches, downloads result)
+    // GEMV dispatch — resident DEVICE_LOCAL weights; host-visible act I/O
     bool DispatchGEMV(const float* weights, const float* input, float* output,
-                      uint32_t rows, uint32_t cols);
+                      uint32_t rows, uint32_t cols, uint64_t cacheKey = 0);
     
     VulkanDeviceInfo GetDeviceInfo() const { return device_info_; }
     bool IsAMDDevice() const { return device_info_.vendor_id == 0x1002; }
@@ -312,12 +312,42 @@ private:
     uint64_t gemv_desc_reuses_ = 0;
     uint64_t gemv_attempts_ = 0;
     uint64_t gemv_success_ = 0;
+    uint64_t gemv_weight_uploads_ = 0;
+    uint64_t gemv_weight_hits_ = 0;
+    uint64_t gemv_resident_bytes_ = 0;
+
+    struct GemvResidentWeight {
+        VkBuffer buffer = nullptr;
+        VkDeviceMemory memory = nullptr;
+        size_t bytes = 0;
+        uint32_t rows = 0;
+        uint32_t cols = 0;
+    };
+    std::unordered_map<uint64_t, GemvResidentWeight> gemv_weight_cache_;
+
+    // Reusable host-visible activation buffers (grow-only)
+    VkBuffer gemv_in_buf_ = nullptr;
+    VkDeviceMemory gemv_in_mem_ = nullptr;
+    size_t gemv_in_cap_ = 0;
+    VkBuffer gemv_out_buf_ = nullptr;
+    VkDeviceMemory gemv_out_mem_ = nullptr;
+    size_t gemv_out_cap_ = 0;
+
+    bool EnsureGemvPipeline();
+    bool CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);
+    bool CreateHostVisibleBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);
+    bool UploadToDeviceLocal(const void* src, size_t size, VkBuffer dst);
+    bool EnsureHostIo(size_t inBytes, size_t outBytes);
+    void ReleaseGemvResidents();
 
 public:
     uint64_t GemvDescriptorAllocations() const { return gemv_desc_allocs_; }
     uint64_t GemvDescriptorReuses() const { return gemv_desc_reuses_; }
     uint64_t GemvAttempts() const { return gemv_attempts_; }
     uint64_t GemvSuccess() const { return gemv_success_; }
+    uint64_t GemvWeightUploads() const { return gemv_weight_uploads_; }
+    uint64_t GemvWeightHits() const { return gemv_weight_hits_; }
+    uint64_t GemvResidentBytes() const { return gemv_resident_bytes_; }
 
 private:
     VulkanDeviceInfo device_info_;

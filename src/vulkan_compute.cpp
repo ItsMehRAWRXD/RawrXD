@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cstdint>
 
 namespace CPUInference {
 
@@ -85,6 +86,7 @@ void VulkanCompute::Cleanup() {
         }
         gemv_ds_ = nullptr;
         gemv_pipeline_created_ = false;
+        ReleaseGemvResidents();
         
         // Free staging buffer
         if (staging_buffer_) {
@@ -183,383 +185,359 @@ bool VulkanCompute::DispatchMatMulAsync(uint32_t input_a_idx,
 }
 
 // ============================================================================
-// DispatchGEMV: GPU-accelerated matrix-vector multiply for transformer inference
-// Uploads FP32 weights + input, dispatches compute shader, downloads result.
-// Returns true on success, false on any failure (caller falls back to CPU).
+// GEMV helpers — resident DEVICE_LOCAL weights; host-visible activations
+// ============================================================================
+void VulkanCompute::ReleaseGemvResidents() {
+    for (auto& kv : gemv_weight_cache_) {
+        if (kv.second.buffer) vkDestroyBuffer(device_, kv.second.buffer, nullptr);
+        if (kv.second.memory) vkFreeMemory(device_, kv.second.memory, nullptr);
+    }
+    gemv_weight_cache_.clear();
+    gemv_resident_bytes_ = 0;
+    if (gemv_in_buf_) { vkDestroyBuffer(device_, gemv_in_buf_, nullptr); gemv_in_buf_ = nullptr; }
+    if (gemv_in_mem_) { vkFreeMemory(device_, gemv_in_mem_, nullptr); gemv_in_mem_ = nullptr; }
+    gemv_in_cap_ = 0;
+    if (gemv_out_buf_) { vkDestroyBuffer(device_, gemv_out_buf_, nullptr); gemv_out_buf_ = nullptr; }
+    if (gemv_out_mem_) { vkFreeMemory(device_, gemv_out_mem_, nullptr); gemv_out_mem_ = nullptr; }
+    gemv_out_cap_ = 0;
+}
+
+bool VulkanCompute::CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem) {
+    VkBufferCreateInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bi.size = size;
+    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateBuffer(device_, &bi, nullptr, &buf) != VK_SUCCESS) return false;
+    VkMemoryRequirements mr{};
+    vkGetBufferMemoryRequirements(device_, buf, &mr);
+    VkMemoryAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    ai.allocationSize = mr.size;
+    ai.memoryTypeIndex = FindMemoryType(mr.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (ai.memoryTypeIndex == UINT32_MAX) {
+        vkDestroyBuffer(device_, buf, nullptr); buf = nullptr; return false;
+    }
+    if (vkAllocateMemory(device_, &ai, nullptr, &mem) != VK_SUCCESS) {
+        vkDestroyBuffer(device_, buf, nullptr); buf = nullptr; return false;
+    }
+    vkBindBufferMemory(device_, buf, mem, 0);
+    return true;
+}
+
+bool VulkanCompute::CreateHostVisibleBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem) {
+    VkBufferCreateInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bi.size = size;
+    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateBuffer(device_, &bi, nullptr, &buf) != VK_SUCCESS) return false;
+    VkMemoryRequirements mr{};
+    vkGetBufferMemoryRequirements(device_, buf, &mr);
+    VkMemoryAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    ai.allocationSize = mr.size;
+    ai.memoryTypeIndex = FindMemoryType(
+        mr.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    if (ai.memoryTypeIndex == UINT32_MAX) {
+        vkDestroyBuffer(device_, buf, nullptr); buf = nullptr; return false;
+    }
+    if (vkAllocateMemory(device_, &ai, nullptr, &mem) != VK_SUCCESS) {
+        vkDestroyBuffer(device_, buf, nullptr); buf = nullptr; return false;
+    }
+    vkBindBufferMemory(device_, buf, mem, 0);
+    return true;
+}
+
+bool VulkanCompute::UploadToDeviceLocal(const void* src, size_t size, VkBuffer dst) {
+    VkBuffer staging = nullptr;
+    VkDeviceMemory stagingMem = nullptr;
+    if (!CreateHostVisibleBuffer(size, staging, stagingMem)) return false;
+    // Host-visible was created with STORAGE usage; fine for staging memcpy path.
+    // Re-create as TRANSFER_SRC for correctness on strict drivers:
+    vkDestroyBuffer(device_, staging, nullptr);
+    vkFreeMemory(device_, stagingMem, nullptr);
+    VkBufferCreateInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bi.size = size;
+    bi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateBuffer(device_, &bi, nullptr, &staging) != VK_SUCCESS) return false;
+    VkMemoryRequirements mr{};
+    vkGetBufferMemoryRequirements(device_, staging, &mr);
+    VkMemoryAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    ai.allocationSize = mr.size;
+    ai.memoryTypeIndex = FindMemoryType(
+        mr.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    if (ai.memoryTypeIndex == UINT32_MAX ||
+        vkAllocateMemory(device_, &ai, nullptr, &stagingMem) != VK_SUCCESS) {
+        vkDestroyBuffer(device_, staging, nullptr);
+        return false;
+    }
+    vkBindBufferMemory(device_, staging, stagingMem, 0);
+    void* mapped = nullptr;
+    vkMapMemory(device_, stagingMem, 0, size, 0, &mapped);
+    std::memcpy(mapped, src, size);
+    vkUnmapMemory(device_, stagingMem);
+
+    VkCommandBufferAllocateInfo cai{};
+    cai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cai.commandPool = command_pool_;
+    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cai.commandBufferCount = 1;
+    VkCommandBuffer cmd = nullptr;
+    vkAllocateCommandBuffers(device_, &cai, &cmd);
+    VkCommandBufferBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+    VkBufferCopy copy{};
+    copy.size = size;
+    vkCmdCopyBuffer(cmd, staging, dst, 1, &copy);
+    vkEndCommandBuffer(cmd);
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &cmd;
+    vkQueueSubmit(compute_queue_, 1, &si, VK_NULL_HANDLE);
+    vkQueueWaitIdle(compute_queue_);
+    vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
+    vkDestroyBuffer(device_, staging, nullptr);
+    vkFreeMemory(device_, stagingMem, nullptr);
+    return true;
+}
+
+bool VulkanCompute::EnsureHostIo(size_t inBytes, size_t outBytes) {
+    if (inBytes > gemv_in_cap_) {
+        if (gemv_in_buf_) { vkDestroyBuffer(device_, gemv_in_buf_, nullptr); gemv_in_buf_ = nullptr; }
+        if (gemv_in_mem_) { vkFreeMemory(device_, gemv_in_mem_, nullptr); gemv_in_mem_ = nullptr; }
+        gemv_in_cap_ = 0;
+        if (!CreateHostVisibleBuffer(inBytes, gemv_in_buf_, gemv_in_mem_)) return false;
+        gemv_in_cap_ = inBytes;
+    }
+    if (outBytes > gemv_out_cap_) {
+        if (gemv_out_buf_) { vkDestroyBuffer(device_, gemv_out_buf_, nullptr); gemv_out_buf_ = nullptr; }
+        if (gemv_out_mem_) { vkFreeMemory(device_, gemv_out_mem_, nullptr); gemv_out_mem_ = nullptr; }
+        gemv_out_cap_ = 0;
+        if (!CreateHostVisibleBuffer(outBytes, gemv_out_buf_, gemv_out_mem_)) return false;
+        gemv_out_cap_ = outBytes;
+    }
+    return true;
+}
+
+bool VulkanCompute::EnsureGemvPipeline() {
+    if (gemv_pipeline_created_) return true;
+    std::string spirvPath = "src/backend/gemv.spv";
+    std::ifstream file(spirvPath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        const char* candidates[] = {
+            "gemv.spv", "bin/gemv.spv",
+            "G:/~dev/rawrxd/src/backend/gemv.spv",
+            "G:\\~dev\\rawrxd\\src\\backend\\gemv.spv",
+            "G:/~dev/rawrxd/build-ninja/bin/gemv.spv",
+        };
+        for (const char* c : candidates) {
+            file.open(c, std::ios::binary | std::ios::ate);
+            if (file.is_open()) { spirvPath = c; break; }
+        }
+        if (!file.is_open()) return false;
+    }
+    size_t fileSize = (size_t)file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<uint32_t> spirvCode(fileSize / sizeof(uint32_t));
+    file.read(reinterpret_cast<char*>(spirvCode.data()), (std::streamsize)fileSize);
+    file.close();
+
+    VkShaderModuleCreateInfo shaderInfo{};
+    shaderInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    shaderInfo.codeSize = spirvCode.size() * sizeof(uint32_t);
+    shaderInfo.pCode = spirvCode.data();
+    VkShaderModule shaderModule = nullptr;
+    if (vkCreateShaderModule(device_, &shaderInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        return false;
+
+    VkDescriptorSetLayoutBinding bindings[3] = {};
+    for (int i = 0; i < 3; ++i) {
+        bindings[i].binding = (uint32_t)i;
+        bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindings[i].descriptorCount = 1;
+        bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo dslInfo{};
+    dslInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    dslInfo.bindingCount = 3;
+    dslInfo.pBindings = bindings;
+    if (vkCreateDescriptorSetLayout(device_, &dslInfo, nullptr, &gemv_ds_layout_) != VK_SUCCESS) {
+        vkDestroyShaderModule(device_, shaderModule, nullptr);
+        return false;
+    }
+
+    VkPushConstantRange pcRange{};
+    pcRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    pcRange.offset = 0;
+    pcRange.size = sizeof(uint32_t) * 2;
+    VkPipelineLayoutCreateInfo plInfo{};
+    plInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    plInfo.setLayoutCount = 1;
+    plInfo.pSetLayouts = &gemv_ds_layout_;
+    plInfo.pushConstantRangeCount = 1;
+    plInfo.pPushConstantRanges = &pcRange;
+    if (vkCreatePipelineLayout(device_, &plInfo, nullptr, &gemv_pipeline_layout_) != VK_SUCCESS) {
+        vkDestroyDescriptorSetLayout(device_, gemv_ds_layout_, nullptr);
+        gemv_ds_layout_ = nullptr;
+        vkDestroyShaderModule(device_, shaderModule, nullptr);
+        return false;
+    }
+
+    VkPipelineShaderStageCreateInfo stageInfo{};
+    stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    stageInfo.module = shaderModule;
+    stageInfo.pName = "main";
+    VkComputePipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = gemv_pipeline_layout_;
+    pipelineInfo.stage = stageInfo;
+    VkResult pr = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo,
+                                           nullptr, &gemv_pipeline_);
+    vkDestroyShaderModule(device_, shaderModule, nullptr);
+    if (pr != VK_SUCCESS) {
+        vkDestroyPipelineLayout(device_, gemv_pipeline_layout_, nullptr);
+        gemv_pipeline_layout_ = nullptr;
+        vkDestroyDescriptorSetLayout(device_, gemv_ds_layout_, nullptr);
+        gemv_ds_layout_ = nullptr;
+        return false;
+    }
+
+    VkDescriptorPoolSize poolSize{};
+    poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    poolSize.descriptorCount = 3;
+    VkDescriptorPoolCreateInfo dpInfo{};
+    dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dpInfo.maxSets = 1;
+    dpInfo.poolSizeCount = 1;
+    dpInfo.pPoolSizes = &poolSize;
+    if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS)
+        return false;
+    VkDescriptorSetAllocateInfo onceAlloc{};
+    onceAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    onceAlloc.descriptorPool = gemv_desc_pool_;
+    onceAlloc.descriptorSetCount = 1;
+    onceAlloc.pSetLayouts = &gemv_ds_layout_;
+    if (vkAllocateDescriptorSets(device_, &onceAlloc, &gemv_ds_) != VK_SUCCESS || !gemv_ds_)
+        return false;
+    ++gemv_desc_allocs_;
+    gemv_pipeline_created_ = true;
+    return true;
+}
+
+// ============================================================================
+// DispatchGEMV: resident weights + host-visible activations on planned primary
 // ============================================================================
 bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float* output,
-                                 uint32_t rows, uint32_t cols) {
-    if (!device_ || !compute_queue_ || !command_pool_) {
-        printf("[DispatchGEMV] FAIL: device/queue/pool null\n");
+                                 uint32_t rows, uint32_t cols, uint64_t cacheKey) {
+    if (!device_ || !compute_queue_ || !command_pool_ || !weights || !input || !output)
         return false;
-    }
-
-    // --- 1. Create GEMV pipeline on first use ---
-    if (!gemv_pipeline_created_) {
-        // Load SPIR-V from disk (compiled at build time)
-        std::string spirvPath = "src/backend/gemv.spv";
-        std::ifstream file(spirvPath, std::ios::binary | std::ios::ate);
-        if (!file.is_open()) {
-            const char* candidates[] = {
-                "gemv.spv",
-                "bin/gemv.spv",
-                "G:/~dev/rawrxd/src/backend/gemv.spv",
-                "G:\\~dev\\rawrxd\\src\\backend\\gemv.spv",
-                "G:/~dev/rawrxd/build-ninja/bin/gemv.spv",
-            };
-            for (const char* c : candidates) {
-                file.open(c, std::ios::binary | std::ios::ate);
-                if (file.is_open()) { spirvPath = c; break; }
-            }
-            if (!file.is_open()) {
-                printf("[DispatchGEMV] FAIL: cannot open gemv.spv\n");
-                return false;
-            }
-        }
-        size_t fileSize = file.tellg();
-        file.seekg(0, std::ios::beg);
-        std::vector<uint32_t> spirvCode(fileSize / sizeof(uint32_t));
-        file.read(reinterpret_cast<char*>(spirvCode.data()), fileSize);
-        file.close();
-        printf("[DispatchGEMV] Loaded SPIR-V: %zu dwords from %s\n", spirvCode.size(), spirvPath.c_str());
-
-        // Create shader module
-        VkShaderModuleCreateInfo shaderInfo{};
-        shaderInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderInfo.codeSize = spirvCode.size() * sizeof(uint32_t);
-        shaderInfo.pCode = spirvCode.data();
-        VkShaderModule shaderModule = nullptr;
-        if (vkCreateShaderModule(device_, &shaderInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-            printf("[DispatchGEMV] FAIL: vkCreateShaderModule\n");
-            return false;
-        }
-        printf("[DispatchGEMV] Shader module created OK\n");
-
-        // Descriptor set layout: 3 storage buffers (weight, input, output)
-        VkDescriptorSetLayoutBinding bindings[3] = {};
-        for (int i = 0; i < 3; ++i) {
-            bindings[i].binding = i;
-            bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            bindings[i].descriptorCount = 1;
-            bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-        }
-        VkDescriptorSetLayoutCreateInfo dslInfo{};
-        dslInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        dslInfo.bindingCount = 3;
-        dslInfo.pBindings = bindings;
-        if (vkCreateDescriptorSetLayout(device_, &dslInfo, nullptr, &gemv_ds_layout_) != VK_SUCCESS) {
-            printf("[DispatchGEMV] FAIL: vkCreateDescriptorSetLayout\n");
-            vkDestroyShaderModule(device_, shaderModule, nullptr);
-            return false;
-        }
-        printf("[DispatchGEMV] Descriptor set layout created OK\n");
-
-        // Push constants: rows, cols
-        VkPushConstantRange pcRange{};
-        pcRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-        pcRange.offset = 0;
-        pcRange.size = sizeof(uint32_t) * 2;
-
-        VkPipelineLayoutCreateInfo plInfo{};
-        plInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        plInfo.setLayoutCount = 1;
-        plInfo.pSetLayouts = &gemv_ds_layout_;
-        plInfo.pushConstantRangeCount = 1;
-        plInfo.pPushConstantRanges = &pcRange;
-        if (vkCreatePipelineLayout(device_, &plInfo, nullptr, &gemv_pipeline_layout_) != VK_SUCCESS) {
-            printf("[DispatchGEMV] FAIL: vkCreatePipelineLayout\n");
-            vkDestroyDescriptorSetLayout(device_, gemv_ds_layout_, nullptr);
-            gemv_ds_layout_ = nullptr;
-            vkDestroyShaderModule(device_, shaderModule, nullptr);
-            return false;
-        }
-        printf("[DispatchGEMV] Pipeline layout created OK\n");
-
-        VkPipelineShaderStageCreateInfo stageInfo{};
-        stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-        stageInfo.module = shaderModule;
-        stageInfo.pName = "main";
-
-        VkComputePipelineCreateInfo pipelineInfo{};
-        pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        pipelineInfo.layout = gemv_pipeline_layout_;
-        pipelineInfo.stage = stageInfo;
-
-        VkResult result = vkCreateComputePipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &gemv_pipeline_);
-        vkDestroyShaderModule(device_, shaderModule, nullptr);
-        if (result != VK_SUCCESS) {
-            printf("[DispatchGEMV] FAIL: vkCreateComputePipelines result=%d\n", (int)result);
-            vkDestroyPipelineLayout(device_, gemv_pipeline_layout_, nullptr);
-            gemv_pipeline_layout_ = nullptr;
-            vkDestroyDescriptorSetLayout(device_, gemv_ds_layout_, nullptr);
-            gemv_ds_layout_ = nullptr;
-            return false;
-        }
-        printf("[DispatchGEMV] Compute pipeline created OK\n");
-
-        // Descriptor pool sized for ONE persistent set (update bindings per GEMV).
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        poolSize.descriptorCount = 3;
-        VkDescriptorPoolCreateInfo dpInfo{};
-        dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        dpInfo.maxSets = 1;
-        dpInfo.poolSizeCount = 1;
-        dpInfo.pPoolSizes = &poolSize;
-        if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS) {
-            printf("[DispatchGEMV] FAIL: vkCreateDescriptorPool\n");
-            vkDestroyPipeline(device_, gemv_pipeline_, nullptr);
-            gemv_pipeline_ = nullptr;
-            vkDestroyPipelineLayout(device_, gemv_pipeline_layout_, nullptr);
-            gemv_pipeline_layout_ = nullptr;
-            vkDestroyDescriptorSetLayout(device_, gemv_ds_layout_, nullptr);
-            gemv_ds_layout_ = nullptr;
-            return false;
-        }
-        VkDescriptorSetAllocateInfo onceAlloc{};
-        onceAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        onceAlloc.descriptorPool = gemv_desc_pool_;
-        onceAlloc.descriptorSetCount = 1;
-        onceAlloc.pSetLayouts = &gemv_ds_layout_;
-        if (vkAllocateDescriptorSets(device_, &onceAlloc, &gemv_ds_) != VK_SUCCESS || !gemv_ds_) {
-            printf("[DispatchGEMV] FAIL: persistent vkAllocateDescriptorSets\n");
-            return false;
-        }
-        ++gemv_desc_allocs_;
-        gemv_pipeline_created_ = true;
-        printf("[DispatchGEMV] persistent descriptor set allocated (once)\n");
-    }
-
+    if (!EnsureGemvPipeline()) return false;
     ++gemv_attempts_;
-    if (gemv_ds_)
-        ++gemv_desc_reuses_;
+    if (gemv_ds_) ++gemv_desc_reuses_;
 
-    // --- 2. Allocate GPU buffers ---
-    size_t weightBytes = (size_t)rows * cols * sizeof(float);
-    size_t inputBytes  = (size_t)cols * sizeof(float);
-    size_t outputBytes = (size_t)rows * sizeof(float);
+    const size_t weightBytes = (size_t)rows * cols * sizeof(float);
+    const size_t inputBytes = (size_t)cols * sizeof(float);
+    const size_t outputBytes = (size_t)rows * sizeof(float);
+    if (cacheKey == 0)
+        cacheKey = (uint64_t)(uintptr_t)weights ^ ((uint64_t)rows << 32) ^ (uint64_t)cols;
 
-    auto createDeviceBuffer = [&](size_t size, VkBufferUsageFlags usage) -> std::pair<VkBuffer, VkDeviceMemory> {
-        VkBufferCreateInfo bufInfo{};
-        bufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufInfo.size = size;
-        bufInfo.usage = usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        VkBuffer buf = nullptr;
-        VkResult r = vkCreateBuffer(device_, &bufInfo, nullptr, &buf);
-        if (r != VK_SUCCESS) { printf("[DispatchGEMV] FAIL: vkCreateBuffer result=%d\n", (int)r); return {nullptr, nullptr}; }
-        VkMemoryRequirements memReq;
-        vkGetBufferMemoryRequirements(device_, buf, &memReq);
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memReq.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memReq.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        if (allocInfo.memoryTypeIndex == UINT32_MAX) {
-            printf("[DispatchGEMV] FAIL: FindMemoryType DEVICE_LOCAL returned UINT32_MAX\n");
-            vkDestroyBuffer(device_, buf, nullptr);
-            return {nullptr, nullptr};
+    GemvResidentWeight* resident = nullptr;
+    auto it = gemv_weight_cache_.find(cacheKey);
+    if (it != gemv_weight_cache_.end() && it->second.rows == rows && it->second.cols == cols) {
+        resident = &it->second;
+        ++gemv_weight_hits_;
+    } else {
+        GemvResidentWeight rw{};
+        if (!CreateDeviceLocalBuffer(weightBytes, rw.buffer, rw.memory)) return false;
+        if (!UploadToDeviceLocal(weights, weightBytes, rw.buffer)) {
+            vkDestroyBuffer(device_, rw.buffer, nullptr);
+            vkFreeMemory(device_, rw.memory, nullptr);
+            return false;
         }
-        VkDeviceMemory mem = nullptr;
-        r = vkAllocateMemory(device_, &allocInfo, nullptr, &mem);
-        if (r != VK_SUCCESS) { printf("[DispatchGEMV] FAIL: vkAllocateMemory result=%d\n", (int)r); vkDestroyBuffer(device_, buf, nullptr); return {nullptr, nullptr}; }
-        vkBindBufferMemory(device_, buf, mem, 0);
-        return {buf, mem};
-    };
-
-    auto [weightBuf, weightMem] = createDeviceBuffer(weightBytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-    auto [inputBuf, inputMem]   = createDeviceBuffer(inputBytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-    auto [outputBuf, outputMem]   = createDeviceBuffer(outputBytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-
-    if (!weightBuf || !inputBuf || !outputBuf) {
-        if (weightBuf) { vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr); }
-        if (inputBuf)  { vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr); }
-        if (outputBuf) { vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr); }
-        return false;
+        rw.bytes = weightBytes;
+        rw.rows = rows;
+        rw.cols = cols;
+        if (it != gemv_weight_cache_.end()) {
+            if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
+            if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
+            gemv_resident_bytes_ -= it->second.bytes;
+        }
+        gemv_weight_cache_[cacheKey] = rw;
+        gemv_resident_bytes_ += weightBytes;
+        ++gemv_weight_uploads_;
+        resident = &gemv_weight_cache_[cacheKey];
     }
 
-    // --- 3. Upload data via staging buffer ---
-    auto uploadViaStaging = [&](const void* data, size_t size, VkBuffer dstBuf) {
-        VkBufferCreateInfo stagingInfo{};
-        stagingInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        stagingInfo.size = size;
-        stagingInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        stagingInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        VkBuffer stagingBuf = nullptr;
-        vkCreateBuffer(device_, &stagingInfo, nullptr, &stagingBuf);
-        VkMemoryRequirements stagingReq;
-        vkGetBufferMemoryRequirements(device_, stagingBuf, &stagingReq);
-        VkMemoryAllocateInfo stagingAlloc{};
-        stagingAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        stagingAlloc.allocationSize = stagingReq.size;
-        stagingAlloc.memoryTypeIndex = FindMemoryType(stagingReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        if (stagingAlloc.memoryTypeIndex == UINT32_MAX) {
-            printf("[DispatchGEMV] FAIL: FindMemoryType HOST_VISIBLE returned UINT32_MAX\n");
-            vkDestroyBuffer(device_, stagingBuf, nullptr);
-            return;
-        }
-        VkDeviceMemory stagingMem = nullptr;
-        vkAllocateMemory(device_, &stagingAlloc, nullptr, &stagingMem);
-        vkBindBufferMemory(device_, stagingBuf, stagingMem, 0);
-        void* mapped = nullptr;
-        vkMapMemory(device_, stagingMem, 0, size, 0, &mapped);
-        memcpy(mapped, data, size);
-        vkUnmapMemory(device_, stagingMem);
+    if (!EnsureHostIo(inputBytes, outputBytes)) return false;
+    void* mappedIn = nullptr;
+    vkMapMemory(device_, gemv_in_mem_, 0, inputBytes, 0, &mappedIn);
+    std::memcpy(mappedIn, input, inputBytes);
+    vkUnmapMemory(device_, gemv_in_mem_);
 
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = command_pool_;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = 1;
-        VkCommandBuffer cmdBuf = nullptr;
-        vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuf);
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(cmdBuf, &beginInfo);
-        VkBufferCopy copyRegion{};
-        copyRegion.size = size;
-        vkCmdCopyBuffer(cmdBuf, stagingBuf, dstBuf, 1, &copyRegion);
-        vkEndCommandBuffer(cmdBuf);
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &cmdBuf;
-        vkQueueSubmit(compute_queue_, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(compute_queue_);
-        vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
-        vkDestroyBuffer(device_, stagingBuf, nullptr);
-        vkFreeMemory(device_, stagingMem, nullptr);
-    };
-
-    uploadViaStaging(weights, weightBytes, weightBuf);
-    uploadViaStaging(input, inputBytes, inputBuf);
-
-    // --- 4. Dispatch compute shader ---
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = command_pool_;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
-    VkCommandBuffer cmdBuf = nullptr;
-    vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuf);
-
-    VkDescriptorSet ds = gemv_ds_;
-    if (!ds) {
-        printf("[DispatchGEMV] FAIL: persistent descriptor set null\n");
-        vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
-        vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr);
-        vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
-        vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
-        return false;
-    }
-
-    VkDescriptorBufferInfo dbiWeight{weightBuf, 0, weightBytes};
-    VkDescriptorBufferInfo dbiInput{inputBuf, 0, inputBytes};
-    VkDescriptorBufferInfo dbiOutput{outputBuf, 0, outputBytes};
-
+    VkDescriptorBufferInfo dbiW{resident->buffer, 0, weightBytes};
+    VkDescriptorBufferInfo dbiI{gemv_in_buf_, 0, inputBytes};
+    VkDescriptorBufferInfo dbiO{gemv_out_buf_, 0, outputBytes};
     VkWriteDescriptorSet writes[3] = {};
     for (int i = 0; i < 3; ++i) {
         writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[i].dstSet = ds;
+        writes[i].dstSet = gemv_ds_;
         writes[i].descriptorCount = 1;
         writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     }
-    writes[0].dstBinding = 0; writes[0].pBufferInfo = &dbiWeight;
-    writes[1].dstBinding = 1; writes[1].pBufferInfo = &dbiInput;
-    writes[2].dstBinding = 2; writes[2].pBufferInfo = &dbiOutput;
+    writes[0].dstBinding = 0; writes[0].pBufferInfo = &dbiW;
+    writes[1].dstBinding = 1; writes[1].pBufferInfo = &dbiI;
+    writes[2].dstBinding = 2; writes[2].pBufferInfo = &dbiO;
     vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
 
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmdBuf, &beginInfo);
-    vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_);
-    vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_layout_, 0, 1, &ds, 0, nullptr);
-    uint32_t pushConsts[2] = {rows, cols};
-    vkCmdPushConstants(cmdBuf, gemv_pipeline_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConsts), pushConsts);
-    vkCmdDispatch(cmdBuf, (rows + 255) / 256, 1, 1);
-    vkEndCommandBuffer(cmdBuf);
+    VkCommandBufferAllocateInfo cai{};
+    cai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cai.commandPool = command_pool_;
+    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cai.commandBufferCount = 1;
+    VkCommandBuffer cmd = nullptr;
+    vkAllocateCommandBuffers(device_, &cai, &cmd);
+    VkCommandBufferBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_);
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_layout_,
+                            0, 1, &gemv_ds_, 0, nullptr);
+    uint32_t pc[2] = {rows, cols};
+    vkCmdPushConstants(cmd, gemv_pipeline_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), pc);
+    vkCmdDispatch(cmd, (rows + 255u) / 256u, 1, 1);
+    vkEndCommandBuffer(cmd);
 
     VkFence fence = nullptr;
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    vkCreateFence(device_, &fenceInfo, nullptr, &fence);
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &cmdBuf;
-    VkResult result = vkQueueSubmit(compute_queue_, 1, &submitInfo, fence);
-    if (result != VK_SUCCESS) {
-        printf("[DispatchGEMV] FAIL: vkQueueSubmit result=%d\n", (int)result);
+    VkFenceCreateInfo fi{};
+    fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    vkCreateFence(device_, &fi, nullptr, &fence);
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &cmd;
+    if (vkQueueSubmit(compute_queue_, 1, &si, fence) != VK_SUCCESS) {
         vkDestroyFence(device_, fence, nullptr);
-        vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
-        vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr);
-        vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
-        vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
+        vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
         return false;
     }
     vkWaitForFences(device_, 1, &fence, VK_TRUE, 10000000000ULL);
-
-    // --- 5. Download result ---
-    VkBufferCreateInfo readbackInfo{};
-    readbackInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    readbackInfo.size = outputBytes;
-    readbackInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    readbackInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    VkBuffer readbackBuf = nullptr;
-    vkCreateBuffer(device_, &readbackInfo, nullptr, &readbackBuf);
-    VkMemoryRequirements readbackReq;
-    vkGetBufferMemoryRequirements(device_, readbackBuf, &readbackReq);
-    VkMemoryAllocateInfo readbackAlloc{};
-    readbackAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    readbackAlloc.allocationSize = readbackReq.size;
-    readbackAlloc.memoryTypeIndex = FindMemoryType(readbackReq.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    if (readbackAlloc.memoryTypeIndex == UINT32_MAX) {
-        printf("[DispatchGEMV] FAIL: FindMemoryType HOST_VISIBLE for readback returned UINT32_MAX\n");
-        vkDestroyBuffer(device_, readbackBuf, nullptr);
-        vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
-        vkDestroyFence(device_, fence, nullptr);
-        vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr);
-        vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
-        vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
-        return false;
-    }
-    VkDeviceMemory readbackMem = nullptr;
-    vkAllocateMemory(device_, &readbackAlloc, nullptr, &readbackMem);
-    vkBindBufferMemory(device_, readbackBuf, readbackMem, 0);
-
-    VkCommandBuffer dlCmdBuf = nullptr;
-    vkAllocateCommandBuffers(device_, &allocInfo, &dlCmdBuf);
-    VkCommandBufferBeginInfo dlBeginInfo{};
-    dlBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    dlBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(dlCmdBuf, &dlBeginInfo);
-    VkBufferCopy dlCopy{};
-    dlCopy.size = outputBytes;
-    vkCmdCopyBuffer(dlCmdBuf, outputBuf, readbackBuf, 1, &dlCopy);
-    vkEndCommandBuffer(dlCmdBuf);
-    VkSubmitInfo dlSubmit{};
-    dlSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    dlSubmit.commandBufferCount = 1;
-    dlSubmit.pCommandBuffers = &dlCmdBuf;
-    vkQueueSubmit(compute_queue_, 1, &dlSubmit, VK_NULL_HANDLE);
-    vkQueueWaitIdle(compute_queue_);
     void* mappedOut = nullptr;
-    vkMapMemory(device_, readbackMem, 0, outputBytes, 0, &mappedOut);
-    memcpy(output, mappedOut, outputBytes);
-    vkUnmapMemory(device_, readbackMem);
-
-    // --- 6. Cleanup ---
-    vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
-    vkFreeCommandBuffers(device_, command_pool_, 1, &dlCmdBuf);
+    vkMapMemory(device_, gemv_out_mem_, 0, outputBytes, 0, &mappedOut);
+    std::memcpy(output, mappedOut, outputBytes);
+    vkUnmapMemory(device_, gemv_out_mem_);
     vkDestroyFence(device_, fence, nullptr);
-    vkDestroyBuffer(device_, readbackBuf, nullptr);
-    vkFreeMemory(device_, readbackMem, nullptr);
-    vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr);
-    vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
-    vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
-
+    vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     ++gemv_success_;
     return true;
 }
@@ -940,8 +918,8 @@ bool VulkanCompute::Initialize() { return false; }
 bool VulkanCompute::InitializeSolo(const char*) { return false; }
 
 bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float* output,
-                                 uint32_t rows, uint32_t cols) {
-    (void)weights; (void)input; (void)output; (void)rows; (void)cols;
+                                 uint32_t rows, uint32_t cols, uint64_t cacheKey) {
+    (void)weights; (void)input; (void)output; (void)rows; (void)cols; (void)cacheKey;
     return false;
 }
 
