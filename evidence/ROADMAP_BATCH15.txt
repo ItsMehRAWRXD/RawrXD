@@ -3,17 +3,14 @@
 01-07 residency / wall seals              - PASS
 08 K2_MLA_KV_EXPAND_001                   - PASS (stage attribution)
 09 K2_MLA_KV_EXPAND_OPT_001               - PASS: host fused default (6.3x vs GPU dual)
-10 K2_MLA_QKV_PROJ_001                    - PASS: SUB_OWNER=KV_A (~570k / ~935k QKV)
-11 OPTIMIZE_MLA_KV_A                      - NOW (GPU FusedQ4KT; FLOPs say should be << Q_A)
+10 K2_MLA_QKV_PROJ_001                    - PASS: Q_A→KV_A reuse + GPU-Q∥host-KV_A (~2.4x)
+11 OPTIMIZE_MLA_KV_A_GPU                  - NOW (still sub-owner under serial; refine host parity)
 12 STREAM_BYTES_CORPUS_SPLIT_001
 15 SOVEREIGN_FREEZE_001
 
-REVERSE (fused KV + serial GPU QKV timed):
-  OWNER=QKV_PROJ → sub KV_A
-  QA~191k QB~173k KVA~570k (KVA ~3x FLOP-share — kernel/occupancy smell)
-  MLA_FUSED_Q4KT OPS=1464 FAIL=0 COMPAT=0
-  HIT_Q=976 HIT_K=488 (expand host; O separate)
-  QKV_SPLIT host∥GPU measured flaky / host slower — opt-in only (DEEP2_MLA_QKV_SPLIT)
+SEALS:
+  Host fused KV expand default (DEEP2_MLA_FUSED_KV=0 to opt out)
+  QKV: GPU Q ∥ host KV_A default; =0 → serial with hidden reuse
+  vulkan_fwd_q4k_fused.cpp / q4k_host.cpp tracked (were local-only)
 
-LAW: host fused KV expand default; QKV split opt-in.
-NEXT: attack KV_A FusedQ4KT path only (do not retune logits / expand).
+NEXT: tighten host KV_A parity vs GPU; or cut O_PROJ / logits if wall re-attribs.

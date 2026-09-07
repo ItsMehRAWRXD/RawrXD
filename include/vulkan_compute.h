@@ -244,6 +244,11 @@ public:
     bool DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
                                const float* input, float* output,
                                uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
+    // After a GEMV that uploaded `cols` activations, skip the next host→GPU
+    // input copy when the next GEMV consumes the same device-side vector
+    // (Q_A then KV_A both read hidden).
+    void GemvReuseInputNext();
+    uint64_t GemvInputReuseHits() const;
     uint64_t Q4kFusedOps() const { return q4k_fused_ops_; }
     bool DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                const float* input, float* output,
@@ -589,6 +594,9 @@ private:
     VkBuffer gemv_in_buf_ = nullptr;
     VkDeviceMemory gemv_in_mem_ = nullptr;
     size_t gemv_in_cap_ = 0;
+    uint32_t gemv_in_live_cols_ = 0;
+    bool gemv_reuse_in_next_ = false;
+    uint64_t gemv_in_reuse_hits_ = 0;
     VkBuffer gemv_out_buf_ = nullptr;
     VkDeviceMemory gemv_out_mem_ = nullptr;
     size_t gemv_out_cap_ = 0;

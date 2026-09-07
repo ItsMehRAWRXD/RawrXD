@@ -5,6 +5,8 @@
 #include "K2MLAWeights.hpp"
 #include "K2MLA_GpuGemv.hpp"
 #include "K2MLA_KvExpand_Fused.hpp"
+#include "K2GpuStreamCopy.hpp"
+#include "vulkan_compute.h"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
@@ -301,6 +303,7 @@ static void gemvQ80(const void* weights, const float* input, float* output,
     }
 }
 
+// Q8_0 GEMV^T: stored [cols][rows] Q8 blocks (rows contiguous per input col).
 static void gemvQ80Transposed(const void* weights, const float* input, float* output,
                               size_t rows, size_t cols) {
     const size_t blocksPerStoredRow = (rows + 31) / 32;
@@ -524,7 +527,8 @@ static bool gemvDispatchT(const RawrXD::TensorView& weightView,
         if (MLA_Gemv(8, weightView.data(), weightView.byteSize(), input, output,
                            (uint32_t)rows, (uint32_t)cols))
             return true;
-        gemvQ80Transposed(weightView.data(), input, output, rows, cols);
+        // ggml Q8_0 is [ne1][ne0] blocked like Q4_K T path — use row GEMV.
+        gemvQ80(weightView.data(), input, output, rows, cols);
         return true;
     }
     error = "gemvDispatchT: unsupported quant type " + std::to_string((int)qt);
@@ -552,7 +556,7 @@ static bool gemvDispatchT_Host(const RawrXD::TensorView& weightView,
         return true;
     }
     if (qt == RawrXD::QuantType::Q8_0) {
-        gemvQ80Transposed(weightView.data(), input, output, rows, cols);
+        gemvQ80(weightView.data(), input, output, rows, cols);
         return true;
     }
     error = "gemvDispatchT_Host: unsupported quant";
@@ -1065,20 +1069,31 @@ bool MLAForward::Execute(const float* hidden, float* output,
     auto pin = [&](uint8_t tag) {
         MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | (uint64_t)tag);
     };
-    auto runQ = [&]() {
+    auto runQa = [&]() {
         pin(1);
         uint64_t t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
                                     qLoraRank, hiddenDim, qErr)) return;
         StreamPathTiming_Add(MlaStage_QaUs(), t);
+        qOk = true;
+    };
+    auto runQb = [&]() {
         if (weights.attnQ_a_norm.data())
             rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
         pin(2);
-        t = StreamPathTiming_NowUs();
+        uint64_t t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
-                                    qBCols, qLoraRank, qErr)) return;
+                                    qBCols, qLoraRank, qErr)) {
+            qOk = false;
+            return;
+        }
         StreamPathTiming_Add(MlaStage_QbUs(), t);
         qOk = true;
+    };
+    auto runQ = [&]() {
+        runQa();
+        if (!qOk) return;
+        runQb();
     };
     auto runQHost = [&]() {
         uint64_t t = StreamPathTiming_NowUs();
@@ -1114,17 +1129,16 @@ bool MLAForward::Execute(const float* hidden, float* output,
                               kvLoraRank, config.normRmsEps);
         kvOk = true;
     };
-    // DEEP2_MLA_QKV_SPLIT (opt-in; host side is slower than GPU — default OFF):
-    //   1/kv → GPU Q ∥ host KV_A
-    //   q    → host Q ∥ GPU KV_A
-    //   0/unset → serial GPU Q then GPU KV (default)
+    // DEEP2_MLA_QKV_SPLIT:
+    //   unset/1/kv → GPU Q ∥ host KV_A (default when GPU MLA on)
+    //   q          → host Q ∥ GPU KV_A
+    //   0          → serial GPU; Q_A then KV_A reuses device hidden
     const char* ser = std::getenv("DEEP2_MLA_SERIAL");
     const char* splitEnv = std::getenv("DEEP2_MLA_QKV_SPLIT");
-    const bool splitOn =
-        splitEnv && splitEnv[0] && splitEnv[0] != '0';
+    const bool splitOff = splitEnv && splitEnv[0] == '0';
     const bool hostQ =
-        splitOn && (splitEnv[0] == 'q' || splitEnv[0] == 'Q');
-    const bool qkvSplit = MLA_GpuGemvWanted() && splitOn;
+        splitEnv && (splitEnv[0] == 'q' || splitEnv[0] == 'Q');
+    const bool qkvSplit = MLA_GpuGemvWanted() && !splitOff;
     const bool serial =
         !qkvSplit && (MLA_GpuGemvWanted() || (ser && ser[0] == '1'));
     tQkv = StreamPathTiming_NowUs();
@@ -1137,6 +1151,21 @@ bool MLAForward::Execute(const float* hidden, float* output,
             std::thread kvTh(runKvHost);
             runQ();
             kvTh.join();
+        }
+    } else if (serial && MLA_GpuGemvWanted()) {
+        // Q_A uploads hidden; KV_A reuses gemv_in before Q_B overwrites it.
+        qOk = false;
+        runQa();
+        if (qOk) {
+            if (auto* vc = K2GpuStreamCopy_Vc()) {
+                vc->GemvReuseInputNext();
+            } else {
+                // Bound VC missing — cannot arm hidden reuse.
+                static std::atomic<uint64_t> miss{0};
+                miss.fetch_add(1, std::memory_order_relaxed);
+            }
+            runKv();
+            runQb();
         }
     } else if (serial) {
         runQ();
