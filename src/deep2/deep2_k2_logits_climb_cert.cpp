@@ -253,7 +253,7 @@ int main() {
 
     const int hotAllocOk = LogitsHotAlloc().load() == 0 ? 1 : 0;
     // Substantial vs wall-attribution baseline (~413 ms/tok). Stretch target 200.
-    const int logitsSubstantial = maxLogitsMsTok < 300.0 ? 1 : 0;
+    const int logitsSubstantial = maxLogitsMsTok < 280.0 ? 1 : 0;
     const int logitsStretch = maxLogitsMsTok < 200.0 ? 1 : 0;
     const int pass =
         allOk && argmaxParity && hotAllocOk && logitsSubstantial ? 1 : 0;

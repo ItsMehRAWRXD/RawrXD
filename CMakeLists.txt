@@ -4839,6 +4839,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/RawrXDInferenceAdapter.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
     src/deep2/K2MLAAttention.cpp
     src/deep2/K2TokenEmbedding.cpp
@@ -4847,6 +4848,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2GpuStreamCopy.cpp
     src/deep2/K2GpuStreamCopy_Overlap.cpp
     src/deep2/K2MLA_GpuGemv.cpp
+    src/deep2/K2BraidExecutionPolicy.cpp
     src/deep2/K2MLA_FusedQ4KT.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/K2WeightResolve.cpp
@@ -6868,6 +6870,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/rkc/RKC_C_ABI.cpp
         src/deep2/KimiK2Config.cpp
         src/deep2/K2MLAWeights.cpp
+        src/deep2/K2MLA_KvExpand_Fused.cpp
         src/deep2/K2MoEWeights.cpp
         src/deep2/K2GlobalTensorIndex.cpp
         # Deep2 component files required by Deep2Engine.cpp
@@ -12209,6 +12212,7 @@ if(WIN32)
         src/deep2/Deep2Engine.cpp
         src/deep2/KimiK2Config.cpp
         src/deep2/K2MLAWeights.cpp
+        src/deep2/K2MLA_KvExpand_Fused.cpp
         src/deep2/K2MoEWeights.cpp
         src/deep2/K2GlobalTensorIndex.cpp
         src/deep2/Deep2Bridge.cpp
@@ -13874,6 +13878,7 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/adapter/RawrXDEngineAdapter.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/KimiK2Config.cpp
@@ -13950,6 +13955,7 @@ add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosschec
 add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Engine.cpp
@@ -13996,6 +14002,7 @@ add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTOR
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
@@ -14043,6 +14050,7 @@ add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DI
 add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
@@ -14091,6 +14099,7 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
@@ -14104,6 +14113,7 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
@@ -14116,6 +14126,7 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
@@ -14164,6 +14175,7 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
@@ -14177,6 +14189,7 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/KVCache.cpp
@@ -14191,6 +14204,7 @@ add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_ca
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/KVCache.cpp
@@ -14239,6 +14253,7 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/KVCache.cpp

@@ -1040,6 +1040,47 @@ static void gemv_q8_0_avx512(
     }
 }
 
+// --- Q8_K GEMV (AVX-512) ---
+static void gemv_q8_k_avx512(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q8_K* blocks = reinterpret_cast<const block_q8_K*>(w);
+    size_t blocksPerRow = (cols + 255) / 256;
+
+    for (size_t r = 0; r < rows; ++r) {
+        __m512 acc = _mm512_setzero_ps();
+        const block_q8_K* rowBlocks = blocks + r * blocksPerRow;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q8_K& blk = rowBlocks[b];
+            __m512 dVec = _mm512_set1_ps(blk.d);
+            size_t base = b * 256;
+            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
+            if (elemsInBlock == 0) break;
+
+            // Process 16 int8 weights at a time (16 iterations per 256-element block)
+            size_t i = 0;
+            for (; i + 16 <= elemsInBlock; i += 16) {
+                __m128i q8 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(&blk.qs[i]));
+                __m512i i32 = _mm512_cvtepi8_epi32(q8);
+                __m512 wv = _mm512_cvtepi32_ps(i32);
+                __m512 xv = _mm512_loadu_ps(x + base + i);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(wv, dVec), xv, acc);
+            }
+            // Tail scalar
+            float tail = 0.0f;
+            for (; i < elemsInBlock; ++i) {
+                tail += blk.d * (float)blk.qs[i] * x[base + i];
+            }
+            acc = _mm512_add_ps(acc, _mm512_set1_ps(tail));
+        }
+        y[r] += _mm512_reduce_add_ps(acc);
+    }
+}
+
 // ===========================================================================
 // AVX2 FALLBACK KERNELS
 // ===========================================================================
@@ -1749,7 +1790,8 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q8_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_K, dequant_q8_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar);
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_avx512);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar);
 
     // --- IQ types (registered via IQQuantKernels.cpp) ---
     RegisterIQKernels();

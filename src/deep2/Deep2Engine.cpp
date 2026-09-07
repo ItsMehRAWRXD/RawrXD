@@ -1539,6 +1539,21 @@ bool Deep2Engine::allocateBuffers() {
     size_t headDim = config.headDim > 0 ? config.headDim : (hiddenSize / config.numHeads);
     size_t kvHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
 
+    // K2_MLA_QB_DIM_001: When MLA is active, headDim must include both RoPE and non-RoPE
+    // components.  The default config.headDim (128) omits qkRopeHeadDim (64), which would
+    // under-allocate mlaQ_b by 4096 elements (64 heads * 64 missing dims).
+    if (config.useMLA) {
+        size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
+        size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
+        size_t mlaHeadDim = qkNopeHeadDim + qkRopeHeadDim;
+        // K2_SEMANTIC_SEAL_001: Hard gate — mismatch here is a buffer-overflow CVE.
+        if (config.numHeads == 64 && mlaHeadDim != 192) {
+            fprintf(stderr, "[K2_SEMANTIC_SEAL_001] FATAL: MLA headDim mismatch. expected=192 got=%zu\n", mlaHeadDim);
+            return false;
+        }
+        headDim = mlaHeadDim;
+    }
+
     // Use model's intermediateDim if available, otherwise fallback to hidden*4
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
 

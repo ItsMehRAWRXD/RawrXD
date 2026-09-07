@@ -112,38 +112,57 @@ void quantize_row_q8_K(const float* x, block_q8_K* y, size_t k) {
     }
 }
 
-// ggml_vec_dot_q6_K_q8_K-style single block; AVX-512 int MAC when available.
+// ggml-style Q6_K × Q8_K block dot — AVX2 int16 madd (default climb path).
 float vec_dot_q6_K_q8_K_block(const Q6_K_Block* x, const block_q8_K* y) {
     const float d = fp16ToFloat(x->d) * y->d;
     const uint8_t* ql = x->ql;
     const uint8_t* qh = x->qh;
     const int8_t* sc = x->scales;
     const int8_t* q8 = y->qs;
-    int32_t sumi0 = 0, sumi1 = 0, sumi2 = 0, sumi3 = 0;
+    int32_t sumi = 0;
+
+    auto madd16 = [](const int8_t* a, const int8_t* b) -> int32_t {
+        const __m128i va = _mm_loadu_si128(reinterpret_cast<const __m128i*>(a));
+        const __m128i vb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(b));
+        const __m256i pa = _mm256_cvtepi8_epi16(va);
+        const __m256i pb = _mm256_cvtepi8_epi16(vb);
+        const __m256i pr = _mm256_madd_epi16(pa, pb);
+        __m128i lo = _mm256_castsi256_si128(pr);
+        __m128i hi = _mm256_extracti128_si256(pr, 1);
+        lo = _mm_add_epi32(lo, hi);
+        lo = _mm_hadd_epi32(lo, lo);
+        lo = _mm_hadd_epi32(lo, lo);
+        return _mm_cvtsi128_si32(lo);
+    };
+
     for (int half = 0; half < 2; ++half) {
+        alignas(16) int8_t a1[16], a2[16], a3[16], a4[16];
         for (int l = 0; l < 16; ++l) {
-            const int q1 = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
-            const int q2 = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
-            const int q3 = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
-            const int q4 = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
-            sumi0 += (int)sc[0] * q1 * (int)q8[l];
-            sumi1 += (int)sc[2] * q2 * (int)q8[l + 32];
-            sumi2 += (int)sc[4] * q3 * (int)q8[l + 64];
-            sumi3 += (int)sc[6] * q4 * (int)q8[l + 96];
+            a1[l] = (int8_t)(((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32);
+            a2[l] = (int8_t)(((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32);
+            a3[l] = (int8_t)(((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32);
+            a4[l] = (int8_t)(((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32);
         }
-        for (int l = 16; l < 32; ++l) {
-            const int q1 = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
-            const int q2 = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
-            const int q3 = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
-            const int q4 = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
-            sumi0 += (int)sc[1] * q1 * (int)q8[l];
-            sumi1 += (int)sc[3] * q2 * (int)q8[l + 32];
-            sumi2 += (int)sc[5] * q3 * (int)q8[l + 64];
-            sumi3 += (int)sc[7] * q4 * (int)q8[l + 96];
+        sumi += (int)sc[0] * madd16(a1, q8 + 0);
+        sumi += (int)sc[2] * madd16(a2, q8 + 32);
+        sumi += (int)sc[4] * madd16(a3, q8 + 64);
+        sumi += (int)sc[6] * madd16(a4, q8 + 96);
+
+        for (int l = 0; l < 16; ++l) {
+            const int li = l + 16;
+            a1[l] = (int8_t)(((ql[li] & 0xF) | ((qh[li] & 3) << 4)) - 32);
+            a2[l] = (int8_t)(((ql[li + 32] & 0xF) | (((qh[li] >> 2) & 3) << 4)) - 32);
+            a3[l] = (int8_t)(((ql[li] >> 4) | (((qh[li] >> 4) & 3) << 4)) - 32);
+            a4[l] = (int8_t)(((ql[li + 32] >> 4) | (((qh[li] >> 6) & 3) << 4)) - 32);
         }
+        sumi += (int)sc[1] * madd16(a1, q8 + 16);
+        sumi += (int)sc[3] * madd16(a2, q8 + 48);
+        sumi += (int)sc[5] * madd16(a3, q8 + 80);
+        sumi += (int)sc[7] * madd16(a4, q8 + 112);
+
         ql += 64; qh += 32; sc += 8; q8 += 128;
     }
-    return d * (float)(sumi0 + sumi1 + sumi2 + sumi3);
+    return d * (float)sumi;
 }
 
 float DotQ6KQ8Row(const uint8_t* rowPtr, size_t blocksPerRow,
@@ -511,9 +530,10 @@ bool LogitsClimb_ArgmaxPackedSerial(const uint8_t* base, size_t baseBytes,
     const size_t rowBytes = blocksPerRow * kBlockBytes;
     if (rowBytes == 0 || baseBytes / rowBytes < vocabSize) return false;
 
+    // Default: Q6×Q8_K (ggml mul_mat authority). Set DEEP2_LOGITS_Q8=0 for float AVX-512.
     const bool useQ8 = (hiddenDim % kBlockElems) == 0 &&
-        std::getenv("DEEP2_LOGITS_Q8") &&
-        std::getenv("DEEP2_LOGITS_Q8")[0] == '1';
+        !(std::getenv("DEEP2_LOGITS_Q8") &&
+          std::getenv("DEEP2_LOGITS_Q8")[0] == '0');
     std::vector<block_q8_K> xQ8;
     if (useQ8) {
         xQ8.resize(blocksPerRow);
@@ -555,10 +575,11 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
     }
     if (vocabSize < nThreads * 256u) nThreads = 1;
 
+    // Default: Q6×Q8_K. Set DEEP2_LOGITS_Q8=0 for float AVX-512 fallback.
     const bool useQ8 = (hiddenDim % kBlockElems) == 0 &&
-        std::getenv("DEEP2_LOGITS_Q8") &&
-        std::getenv("DEEP2_LOGITS_Q8")[0] == '1';
-    // Reused per-token Q8 activation (~8 KiB) when Q8 path enabled.
+        !(std::getenv("DEEP2_LOGITS_Q8") &&
+          std::getenv("DEEP2_LOGITS_Q8")[0] == '0');
+    // Reused per-token Q8 activation (~8 KiB).
     static thread_local std::vector<block_q8_K> tlsQ8;
     block_q8_K* xQ8 = nullptr;
     if (useQ8) {

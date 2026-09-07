@@ -4,6 +4,7 @@
 
 #include "K2MLAWeights.hpp"
 #include "K2MLA_GpuGemv.hpp"
+#include "K2MLA_KvExpand_Fused.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
@@ -257,8 +258,40 @@ static void gemvQ80(const void* weights, const float* input, float* output,
     for (size_t r = 0; r < rows; ++r) {
         const Q8_0_Block* rowBlocks =
             reinterpret_cast<const Q8_0_Block*>(base + r * blocksPerRow * sizeof(Q8_0_Block));
-        float sum = 0.0f;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
+        __m256 acc0 = _mm256_setzero_ps();
+        __m256 acc1 = _mm256_setzero_ps();
+        __m256 acc2 = _mm256_setzero_ps();
+        __m256 acc3 = _mm256_setzero_ps();
+        size_t b = 0;
+        // Full 32-wide Q8_0 blocks via 4×AVX2 FMA (8 lanes each).
+        for (; b < blocksPerRow; ++b) {
+            const size_t col0 = b * 32;
+            if (col0 + 32 > cols) break;
+            _mm_prefetch((const char*)(rowBlocks + b + 1), _MM_HINT_T0);
+            const float d = fp16ToFloat(rowBlocks[b].d);
+            const __m256 scale = _mm256_set1_ps(d);
+            const __m128i q8_lo = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(rowBlocks[b].qs));
+            const __m128i q8_hi = _mm_loadu_si128(
+                reinterpret_cast<const __m128i*>(rowBlocks[b].qs + 16));
+            const __m256 qw0 = _mm256_mul_ps(
+                _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(q8_lo)), scale);
+            const __m256 qw1 = _mm256_mul_ps(
+                _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(q8_lo, 8))),
+                scale);
+            const __m256 qw2 = _mm256_mul_ps(
+                _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(q8_hi)), scale);
+            const __m256 qw3 = _mm256_mul_ps(
+                _mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_srli_si128(q8_hi, 8))),
+                scale);
+            acc0 = _mm256_fmadd_ps(qw0, _mm256_loadu_ps(input + col0), acc0);
+            acc1 = _mm256_fmadd_ps(qw1, _mm256_loadu_ps(input + col0 + 8), acc1);
+            acc2 = _mm256_fmadd_ps(qw2, _mm256_loadu_ps(input + col0 + 16), acc2);
+            acc3 = _mm256_fmadd_ps(qw3, _mm256_loadu_ps(input + col0 + 24), acc3);
+        }
+        float sum = hsum256(_mm256_add_ps(_mm256_add_ps(acc0, acc1),
+                                          _mm256_add_ps(acc2, acc3)));
+        for (; b < blocksPerRow; ++b) {
             const float d = fp16ToFloat(rowBlocks[b].d);
             const size_t col0 = b * 32;
             for (size_t i = 0; i < 32 && col0 + i < cols; ++i)
@@ -1053,79 +1086,122 @@ bool MLAForward::Execute(const float* hidden, float* output,
         qkNopeHeadDim = (config.qkNopeHeadDim && config.qkNopeHeadDim < per)
             ? config.qkNopeHeadDim : (per / 2);
         vHeadDim = per - qkNopeHeadDim;
-        fusedTmp = (float*)_aligned_malloc(fusedCols * sizeof(float), 32);
-        if (!fusedTmp) { error = "MLAForward: fused kv_b alloc failed"; goto cleanup; }
-        pin(4);
-        if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, fusedTmp,
-                                    fusedCols, kvLoraRank, error)) {
+
+        // Try host fused only when GPU MLA is off (else host dequant steals wall).
+        const char* fusedEnv = std::getenv("DEEP2_MLA_FUSED_KV");
+        const bool forceHostFused = fusedEnv && fusedEnv[0] == '1';
+        const bool useFused =
+            forceHostFused ||
+            ((!MLA_GpuGemvWanted()) && (!fusedEnv || fusedEnv[0] != '0'));
+        const auto qt = weights.attnK_b.quantType();
+        KvExpandQuantType kqt = KvExpandQuantType::F32;
+        if (qt == RawrXD::QuantType::Q4_K) kqt = KvExpandQuantType::Q4_K;
+        else if (qt == RawrXD::QuantType::Q8_0) kqt = KvExpandQuantType::Q8_0;
+
+        if (useFused && MLA_KvExpand_Fused_SingleWeight(
+                weights.attnK_b.data(), compressedKV, k_b, v_b,
+                numHeads, qkNopeHeadDim, vHeadDim, kvLoraRank, kqt)) {
+            // Host fused path
+        } else {
+            // Fallback: legacy two-pass (GEMV + split)
+            fusedTmp = (float*)_aligned_malloc(fusedCols * sizeof(float), 32);
+            if (!fusedTmp) { error = "MLAForward: fused kv_b alloc failed"; goto cleanup; }
+            pin(4);
+            if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, fusedTmp,
+                                        fusedCols, kvLoraRank, error)) {
+                _aligned_free(fusedTmp);
+                goto cleanup;
+            }
+            for (size_t h = 0; h < numHeads; ++h) {
+                const float* src = fusedTmp + h * per;
+                memcpy(k_b + h * qkNopeHeadDim, src, qkNopeHeadDim * sizeof(float));
+                memcpy(v_b + h * vHeadDim, src + qkNopeHeadDim, vHeadDim * sizeof(float));
+            }
             _aligned_free(fusedTmp);
-            goto cleanup;
+            fusedTmp = nullptr;
         }
-        for (size_t h = 0; h < numHeads; ++h) {
-            const float* src = fusedTmp + h * per;
-            memcpy(k_b + h * qkNopeHeadDim, src, qkNopeHeadDim * sizeof(float));
-            memcpy(v_b + h * vHeadDim, src + qkNopeHeadDim, vHeadDim * sizeof(float));
-        }
-        _aligned_free(fusedTmp);
-        fusedTmp = nullptr;
     } else if (kIs3D && vIs3D) {
-        // Batched head expand: contiguous per-head packs → one GEMV each.
-        const size_t kElems = qkNopeHeadDim * kvLoraRank;
-        const size_t vElems = vHeadDim * kvLoraRank;
+        // Host fused dequant bypasses GPU MLA_Gemv — regression when GPU MLA is on.
+        // DEEP2_MLA_FUSED_KV=1 forces host fused even with GPU (debug only).
+        // Default: GPU dual MLA_Gemv when DEEP2_K2_GPU_MLA=1.
+        const char* fusedEnv = std::getenv("DEEP2_MLA_FUSED_KV");
+        const bool forceHostFused = fusedEnv && fusedEnv[0] == '1';
+        const bool allowHostFused =
+            forceHostFused ||
+            ((!MLA_GpuGemvWanted()) && (!fusedEnv || fusedEnv[0] != '0'));
         const auto kQt = weights.attnK_b.quantType();
         const auto vQt = weights.attnV_b.quantType();
-        const size_t kBlkE = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-        const size_t vBlkE = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-        const size_t kBlkB = (kQt == RawrXD::QuantType::Q8_0)
-            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
-        const size_t vBlkB = (vQt == RawrXD::QuantType::Q8_0)
-            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
-        const size_t kBytes = numHeads *
-            (((kElems + kBlkE - 1) / kBlkE) * kBlkB);
-        const size_t vBytes = numHeads *
-            (((vElems + vBlkE - 1) / vBlkE) * vBlkB);
-        const void* kBase = weights.attnK_b.data();
-        const void* vBase = weights.attnV_b.data();
-        const uint32_t kRows = (uint32_t)(numHeads * qkNopeHeadDim);
-        const uint32_t vRows = (uint32_t)(numHeads * vHeadDim);
-        const uint32_t kCols = (uint32_t)kvLoraRank;
-        // K∥V expand — explicit orientation (3D pack authority; not dim-guess).
-        const bool kT = false;
-        const bool vT = true;
-        std::thread kTh([&]() {
+
+        if (allowHostFused && kQt == vQt) {
+            // Host single-pass expand: compressedKV read once → both K and V
+            KvExpandQuantType qt = KvExpandQuantType::F32;
+            if (kQt == RawrXD::QuantType::Q4_K) qt = KvExpandQuantType::Q4_K;
+            else if (kQt == RawrXD::QuantType::Q8_0) qt = KvExpandQuantType::Q8_0;
+
             MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 4u);
-            if (kQt == RawrXD::QuantType::Q4_K) {
-                if (!(MLA_Gemv(12, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
-                    gemvQ4KOriented(kT, kBase, compressedKV, k_b, kRows, kCols);
-            } else if (kQt == RawrXD::QuantType::Q8_0) {
-                if (!(MLA_Gemv(8, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
-                    gemvQ80Oriented(kT, kBase, compressedKV, k_b, kRows, kCols);
-            } else {
-                for (size_t h = 0; h < numHeads; ++h) {
-                    const size_t hb = ((kElems + kBlkE - 1) / kBlkE) * kBlkB;
-                    gemvQ80Oriented(kT, (const uint8_t*)kBase + h * hb, compressedKV,
-                                    k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
-                }
+            if (!MLA_KvExpand_Fused(weights.attnK_b.data(), weights.attnV_b.data(),
+                                    compressedKV, k_b, v_b,
+                                    numHeads, qkNopeHeadDim, vHeadDim, kvLoraRank,
+                                    qt, qt)) {
+                goto legacy_kv_expand_3d;
             }
-        });
-        std::thread vTh([&]() {
-            MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 5u);
-            if (vQt == RawrXD::QuantType::Q4_K) {
-                if (!(MLA_Gemv(12, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
-                    gemvQ4KOriented(vT, vBase, compressedKV, v_b, vRows, kCols);
-            } else if (vQt == RawrXD::QuantType::Q8_0) {
-                if (!(MLA_Gemv(8, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
-                    gemvQ80Oriented(vT, vBase, compressedKV, v_b, vRows, kCols);
-            } else {
-                for (size_t h = 0; h < numHeads; ++h) {
-                    const size_t hb = ((vElems + vBlkE - 1) / vBlkE) * vBlkB;
-                    gemvQ80Oriented(vT, (const uint8_t*)vBase + h * hb, compressedKV,
-                                    v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+        } else {
+        legacy_kv_expand_3d:
+            // Legacy: separate K and V expand threads (original behavior)
+            const size_t kElems = qkNopeHeadDim * kvLoraRank;
+            const size_t vElems = vHeadDim * kvLoraRank;
+            const size_t kBlkE = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+            const size_t vBlkE = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+            const size_t kBlkB = (kQt == RawrXD::QuantType::Q8_0)
+                ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+            const size_t vBlkB = (vQt == RawrXD::QuantType::Q8_0)
+                ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+            const size_t kBytes = numHeads *
+                (((kElems + kBlkE - 1) / kBlkE) * kBlkB);
+            const size_t vBytes = numHeads *
+                (((vElems + vBlkE - 1) / vBlkE) * vBlkB);
+            const void* kBase = weights.attnK_b.data();
+            const void* vBase = weights.attnV_b.data();
+            const uint32_t kRows = (uint32_t)(numHeads * qkNopeHeadDim);
+            const uint32_t vRows = (uint32_t)(numHeads * vHeadDim);
+            const uint32_t kCols = (uint32_t)kvLoraRank;
+            const bool kT = false;
+            const bool vT = true;
+            std::thread kTh([&]() {
+                MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 4u);
+                if (kQt == RawrXD::QuantType::Q4_K) {
+                    if (!(MLA_Gemv(12, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
+                        gemvQ4KOriented(kT, kBase, compressedKV, k_b, kRows, kCols);
+                } else if (kQt == RawrXD::QuantType::Q8_0) {
+                    if (!(MLA_Gemv(8, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
+                        gemvQ80Oriented(kT, kBase, compressedKV, k_b, kRows, kCols);
+                } else {
+                    for (size_t h = 0; h < numHeads; ++h) {
+                        const size_t hb = ((kElems + kBlkE - 1) / kBlkE) * kBlkB;
+                        gemvQ80Oriented(kT, (const uint8_t*)kBase + h * hb, compressedKV,
+                                        k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+                    }
                 }
-            }
-        });
-        kTh.join();
-        vTh.join();
+            });
+            std::thread vTh([&]() {
+                MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 5u);
+                if (vQt == RawrXD::QuantType::Q4_K) {
+                    if (!(MLA_Gemv(12, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
+                        gemvQ4KOriented(vT, vBase, compressedKV, v_b, vRows, kCols);
+                } else if (vQt == RawrXD::QuantType::Q8_0) {
+                    if (!(MLA_Gemv(8, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
+                        gemvQ80Oriented(vT, vBase, compressedKV, v_b, vRows, kCols);
+                } else {
+                    for (size_t h = 0; h < numHeads; ++h) {
+                        const size_t hb = ((vElems + vBlkE - 1) / vBlkE) * vBlkB;
+                        gemvQ80Oriented(vT, (const uint8_t*)vBase + h * hb, compressedKV,
+                                        v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+                    }
+                }
+            });
+            kTh.join();
+            vTh.join();
+        }
     } else if (kIs3D) {
         const size_t elemsPerHead = qkNopeHeadDim * kvLoraRank;
         const auto kQt = weights.attnK_b.quantType();

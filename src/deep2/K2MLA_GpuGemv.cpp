@@ -2,6 +2,7 @@
 // LOCK: live callers MUST use MLA_Gemv — never MLA_TryGpuGemv (parity drift).
 // Q4 path: MLA_Gemv → (FUSED_Q4KT|DispatchGEMVPacked) → GetGEMV fallback.
 #include "K2MLA_GpuGemv.hpp"
+#include "K2BraidExecutionPolicy.hpp"
 #include "K2MLA_FusedQ4KT.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "QuantKernelRegistry.hpp"
@@ -168,22 +169,69 @@ bool MLA_TryGpuGemv(int ggmlType, const void* packed, size_t bytes,
     return TryGpu(ggmlType, packed, bytes, input, output, rows, cols);
 }
 
+// Map pinKey low byte to KernelRole for braid policy attribution.
+static KernelRole PinKeyToRole(uint64_t pk) {
+    switch (pk & 0xffu) {
+        case 1: case 2: return KernelRole::Q_PROJ;
+        case 3: case 4: return KernelRole::K_PROJ;
+        case 5:         return KernelRole::V_PROJ;
+        case 6:         return KernelRole::O_PROJ;
+        default:        return KernelRole::UNKNOWN;
+    }
+}
+
 bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
               const float* input, float* output,
               uint32_t rows, uint32_t cols) {
     ++g_gemvEntry;
     (void)bytes;
-    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols))
+
+    // -- Braid execution policy: plan + note for every GEMV call --
+    // Authority sequence: MLA_Gemv entry -> Plan -> (packed exec | fallback).
+    // PLAN != EXECUTED != PACKED_EXECUTED — a policy call cannot masquerade
+    // as braid actually owning packed execution.
+    K2Braid_NoteMlaGemvEntry();
+
+    BraidExecutionPlan plan;
+    BraidGGMLType braidType = BraidGGMLType::Q4_K;
+    if (ggmlType == 8)  braidType = BraidGGMLType::Q8_0;
+    else if (ggmlType == 14) braidType = BraidGGMLType::Q6_K;
+    else if (ggmlType == 12) braidType = BraidGGMLType::Q4_K;
+    else if (ggmlType == 0)  braidType = BraidGGMLType::F32;
+    else if (ggmlType == 1)  braidType = BraidGGMLType::F16;
+    const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
+    const KernelRole role = PinKeyToRole(pk);
+    K2Braid_Plan(role, braidType, plan);
+    K2Braid_NotePlan(role);
+    // If the format is not directly packable, flag it (should not happen
+    // in the MLA hot path — Q4_K/Q8_0 are always direct packable).
+    if (!K2Braid_IsDirectPackable(braidType) &&
+        braidType != BraidGGMLType::F32 &&
+        braidType != BraidGGMLType::F16) {
+        K2Braid_NoteUnsupportedReinterpret();
+    }
+
+    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols)) {
+        // Packed GPU GEMV succeeded — braid owns packed execution.
+        K2Braid_NotePackedExec(role);
+        K2Braid_NoteExecuted(role);
         return true;
+    }
     if (!MLA_GpuGemvWanted()) return false;
     if (!packed || !input || !output || !rows || !cols) return false;
     auto gemv = QuantKernelRegistry::Instance().GetGEMV(ggmlType);
     if (!gemv) return false;
     // Only Q4_K GetGEMV implies decompressed-weight authority loss for #04.
-    if (ggmlType == 12)
-        MLA_NoteF32WeightExpand((uint64_t)rows * (uint64_t)cols * 4ull);
+    if (ggmlType == 12) {
+        const uint64_t expandedBytes = (uint64_t)rows * (uint64_t)cols * 4ull;
+        MLA_NoteF32WeightExpand(expandedBytes);
+        // Braid invariant violation: GetGEMV fallback decompresses to F32.
+        K2Braid_NoteF32Warehouse(expandedBytes);
+    }
     std::memset(output, 0, (size_t)rows * sizeof(float));
     gemv(reinterpret_cast<const uint8_t*>(packed), input, output, rows, cols);
+    // Fallback executed (not packed) — preserve execution truth.
+    K2Braid_NoteExecuted(role);
     return true;
 }
 
