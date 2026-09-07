@@ -1,4 +1,4 @@
-// K2MLA_KvExpand_Fused.hpp — Fused K+V LoRA GEMV for MLA KV expand
+// K2MLA_KvExpand_Fused.hpp — Fused K+V LoRA GEMV (default MLA KV expand)
 // Reads compressedKV once, writes both K_nope and V in a single pass.
 // ~2x memory bandwidth reduction vs separate K-expand + V-expand.
 //

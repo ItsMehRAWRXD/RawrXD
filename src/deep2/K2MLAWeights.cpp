@@ -1087,12 +1087,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
             ? config.qkNopeHeadDim : (per / 2);
         vHeadDim = per - qkNopeHeadDim;
 
-        // Try host fused only when GPU MLA is off (else host dequant steals wall).
+        // Host fused expand is default (measured faster than GPU dual GEMV).
+        // DEEP2_MLA_FUSED_KV=0 → legacy dual MLA_Gemv.
         const char* fusedEnv = std::getenv("DEEP2_MLA_FUSED_KV");
-        const bool forceHostFused = fusedEnv && fusedEnv[0] == '1';
-        const bool useFused =
-            forceHostFused ||
-            ((!MLA_GpuGemvWanted()) && (!fusedEnv || fusedEnv[0] != '0'));
+        const bool useFused = !fusedEnv || fusedEnv[0] != '0';
         const auto qt = weights.attnK_b.quantType();
         KvExpandQuantType kqt = KvExpandQuantType::F32;
         if (qt == RawrXD::QuantType::Q4_K) kqt = KvExpandQuantType::Q4_K;
@@ -1121,14 +1119,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
             fusedTmp = nullptr;
         }
     } else if (kIs3D && vIs3D) {
-        // Host fused dequant bypasses GPU MLA_Gemv — regression when GPU MLA is on.
-        // DEEP2_MLA_FUSED_KV=1 forces host fused even with GPU (debug only).
-        // Default: GPU dual MLA_Gemv when DEEP2_K2_GPU_MLA=1.
+        // Host fused: one compressedKV pass → K+V (default). Opt out with =0.
         const char* fusedEnv = std::getenv("DEEP2_MLA_FUSED_KV");
-        const bool forceHostFused = fusedEnv && fusedEnv[0] == '1';
-        const bool allowHostFused =
-            forceHostFused ||
-            ((!MLA_GpuGemvWanted()) && (!fusedEnv || fusedEnv[0] != '0'));
+        const bool allowHostFused = !fusedEnv || fusedEnv[0] != '0';
         const auto kQt = weights.attnK_b.quantType();
         const auto vQt = weights.attnV_b.quantType();
 

@@ -361,12 +361,9 @@ bool MLA_KvExpand_Fused(
 
     if (!kWeights || !vWeights || !compressedKV || !kOut || !vOut) return false;
     if (numHeads == 0 || kvLoraRank == 0) return false;
-    // Refuse host dequant when GPU MLA owns expand (unless DEEP2_MLA_FUSED_KV=1).
-    if (const char* g = std::getenv("DEEP2_K2_GPU_MLA")) {
-        if (g[0] == '1') {
-            const char* f = std::getenv("DEEP2_MLA_FUSED_KV");
-            if (!(f && f[0] == '1')) return false;
-        }
+    // Opt-out: DEEP2_MLA_FUSED_KV=0 forces legacy dual MLA_Gemv expand.
+    if (const char* f = std::getenv("DEEP2_MLA_FUSED_KV")) {
+        if (f[0] == '0') return false;
     }
 
     // Require same quant type for both (simplifies single-pass logic)
@@ -417,11 +414,8 @@ bool MLA_KvExpand_Fused_SingleWeight(
 
     if (!fusedWeights || !compressedKV || !kOut || !vOut) return false;
     if (numHeads == 0 || kvLoraRank == 0) return false;
-    if (const char* g = std::getenv("DEEP2_K2_GPU_MLA")) {
-        if (g[0] == '1') {
-            const char* f = std::getenv("DEEP2_MLA_FUSED_KV");
-            if (!(f && f[0] == '1')) return false;
-        }
+    if (const char* f = std::getenv("DEEP2_MLA_FUSED_KV")) {
+        if (f[0] == '0') return false;
     }
 
     const size_t perHeadCols = qkNopeHeadDim + vHeadDim;

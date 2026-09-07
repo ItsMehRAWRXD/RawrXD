@@ -2,19 +2,20 @@
 
 01-07 residency / wall seals              - PASS
 08 K2_MLA_KV_EXPAND_001                   - PASS (stage attribution)
-09 OPTIMIZE_MLA_KV_EXPAND (fused)         - PASS: KV_EXPAND 621k→242k us
+09 K2_MLA_KV_EXPAND_OPT_001               - PASS: host fused default (6.3x vs GPU dual)
 10 K2_MLA_QKV_PROJ_001                    - NOW (owner after fused KV)
 11 STREAM_BYTES_CORPUS_SPLIT_001
 15 SOVEREIGN_FREEZE_001
 
-REVERSE (DEEP2_MLA_FUSED_KV=1 timed):
-  OWNER=QKV_PROJ  (~1021k us)
-  KV_EXPAND       (~243k us)   ← fused single-pass won
-  O_PROJ          (~299k us)
-  ATTN            (~24k us)
+REVERSE (DEEP2_MLA_FUSED_KV default / =1 timed):
+  OWNER=QKV_PROJ  (~1.2M us)
+  KV_EXPAND       (~200k us)   ← fused single-pass authority
+  O_PROJ          (~var)
+  ATTN            (~25k us)
   MLA_GEMV_OPS 2928→1952 (K∥V expand collapsed)
-  FREEZE_OK=1
+  FREEZE_OK=1  SPEEDUP≈6.3x vs GPU dual
 
+LAW: host fused KV expand is default; DEEP2_MLA_FUSED_KV=0 = legacy dual.
 NEXT: attack QKV_PROJ only (q_a/q_b/kv_a GEMVs). Do not retune logits/FUSED_Q4KT.
 BraidExecutionPolicy linked into InferenceEngine (cleared LNK2001 batch).
 AgentRuntime::CallModel → Deep2SovereignInferenceGateway (no mock).
