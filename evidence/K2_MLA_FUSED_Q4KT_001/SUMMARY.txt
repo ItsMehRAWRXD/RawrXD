@@ -1,0 +1,6 @@
+K2_MLA_FUSED_Q4KT_001=PASS
+AUTHORITY=MLA_Gemv→MLA_FusedQ4KT (compat=DispatchGEMVPacked)
+WARM u=183 h=549
+BASE  u=0 h=732 compatUs=660579
+FUSED u=0 h=732 fusedUs=642559 ops=732 f32=0 tempB=0
+FASTER=1 (fusedUs < baseUs)

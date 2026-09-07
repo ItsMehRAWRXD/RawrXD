@@ -1,0 +1,10 @@
+# K2_MLA_FUSED_Q4KT_001 — BATCH15 #04
+# Authority: MLAForward → MLA_Gemv → MLA_FusedQ4KT (compat: DispatchGEMVPacked)
+# Not a residency gate. Requires hot pins from reuse promote shape.
+#
+# PASS when:
+#   TIMED_UPLOADS=0 on BASE and FUSED
+#   MLA_FUSED_Q4KT_CALLS>0 OPS==expect FAIL=0
+#   F32_WEIGHT_EXPANDS=0 Q4K_TEMP_WEIGHT_BYTES=0
+#   MLA_FUSED_Q4KT_US < BASE MLA_GEMV_COMPAT_US
+#   pinRej=0 MLA_GPU_GEMV_FAIL=0
