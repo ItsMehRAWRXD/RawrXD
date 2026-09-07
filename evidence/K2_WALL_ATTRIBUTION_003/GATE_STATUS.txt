@@ -1,0 +1,7 @@
+FREEZE_OK=1 ACCT_OK=1 OPS_OK=1
+T=32 wall=11066.1 mla=6617.0 logits=4017.1 shard=0.0 sample=0.0 detok=0.0 stream=0.1 other=431.9 max=MLA
+T=64 wall=22134.5 mla=13447.0 logits=7881.1 shard=0.0 sample=0.0 detok=0.0 stream=0.1 other=806.2 max=MLA
+T=128 wall=45513.2 mla=28897.8 logits=15068.4 shard=0.0 sample=0.0 detok=0.0 stream=0.2 other=1546.8 max=MLA
+OWNER=MLA OWNER_TOTAL_MS=48961.810
+K2_WALL_ATTRIBUTION_003=PASS
+NOTE=no optimization; attack OWNER only next.
