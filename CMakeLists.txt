@@ -4850,6 +4850,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLA_GpuGemv.cpp
     src/deep2/K2BraidExecutionPolicy.cpp
     src/deep2/K2MLA_FusedQ4KT.cpp
+    src/deep2/K2MLA_QaCritical.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/K2WeightResolve.cpp
     src/deep2/K2ShardIo.cpp
@@ -9395,6 +9396,26 @@ if(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] K2 MLA QKV proj attrib: deep2_k2_mla_qkv_proj_cert")
+endif()
+
+option(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT "Build K2_MLA_QA_CRITICAL_001" ON)
+if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
+    add_executable(deep2_k2_mla_qa_critical_cert
+        src/deep2/deep2_k2_mla_qa_critical_cert.cpp)
+    target_link_libraries(deep2_k2_mla_qa_critical_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_qa_critical_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_qa_critical_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_qa_critical_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_qa_critical_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 MLA q_a critical: deep2_k2_mla_qa_critical_cert")
 endif()
 
 option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" ON)

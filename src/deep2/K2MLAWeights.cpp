@@ -1079,9 +1079,12 @@ bool MLAForward::Execute(const float* hidden, float* output,
         qOk = true;
     };
     auto runQb = [&]() {
+        // Gap = norm + pin between q_a done and q_b GEMV submit.
+        const uint64_t tGap = StreamPathTiming_NowUs();
         if (weights.attnQ_a_norm.data())
             rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
         pin(2);
+        QBr_NoteGap(StreamPathTiming_NowUs() - tGap);
         uint64_t t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
                                     qBCols, qLoraRank, qErr)) {
@@ -1144,15 +1147,35 @@ bool MLAForward::Execute(const float* hidden, float* output,
     const uint64_t kva0 = MlaStage_KvaUs().load();
     tQkv = StreamPathTiming_NowUs();
     if (qkvSplit) {
+        // Topology probe: wall vs max(Q_BRANCH, KV_BRANCH).
+        uint64_t qBranchUs = 0, kvBranchUs = 0, joinUs = 0;
         if (hostQ) {
-            std::thread qTh(runQHost);
+            std::thread qTh([&]() {
+                const uint64_t t0 = StreamPathTiming_NowUs();
+                runQHost();
+                qBranchUs = StreamPathTiming_NowUs() - t0;
+            });
+            const uint64_t tKv0 = StreamPathTiming_NowUs();
             runKv();
+            kvBranchUs = StreamPathTiming_NowUs() - tKv0;
+            const uint64_t tJ0 = StreamPathTiming_NowUs();
             qTh.join();
+            joinUs = StreamPathTiming_NowUs() - tJ0;
         } else {
-            std::thread kvTh(runKvHost);
+            std::thread kvTh([&]() {
+                const uint64_t t0 = StreamPathTiming_NowUs();
+                runKvHost();
+                kvBranchUs = StreamPathTiming_NowUs() - t0;
+            });
+            const uint64_t tQ0 = StreamPathTiming_NowUs();
             runQ();
+            qBranchUs = StreamPathTiming_NowUs() - tQ0;
+            const uint64_t tJ0 = StreamPathTiming_NowUs();
             kvTh.join();
+            joinUs = StreamPathTiming_NowUs() - tJ0;
         }
+        const uint64_t wallUs = StreamPathTiming_NowUs() - tQkv;
+        MlaStage_NoteSplitTopology(wallUs, qBranchUs, kvBranchUs, joinUs);
     } else if (serial && MLA_GpuGemvWanted()) {
         // Q_A uploads hidden; KV_A reuses gemv_in before Q_B overwrites it.
         // DEEP2_MLA_HIDDEN_REUSE=0 → legacy runQ+runKv baseline.

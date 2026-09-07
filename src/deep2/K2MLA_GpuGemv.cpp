@@ -4,6 +4,8 @@
 #include "K2MLA_GpuGemv.hpp"
 #include "K2BraidExecutionPolicy.hpp"
 #include "K2MLA_FusedQ4KT.hpp"
+#include "K2MLA_QaCritical.hpp"
+#include "K2MlaQBranchTiming.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "vulkan_compute.h"
@@ -69,6 +71,7 @@ void MLA_GpuGemv_Reset() {
     g_keyNew = g_keyReuse = 0;
     g_slotEvict = g_metaUp = g_weightUp = g_pinKeyZero = 0;
     MLA_FusedQ4KT_Reset();
+    MLA_QaCrit_Reset();
 }
 uint64_t MLA_GpuGemvOps() { return g_ops; }
 uint64_t MLA_GpuGemvFail() { return g_fail; }
@@ -111,6 +114,7 @@ void MLA_GpuGemv_Emit(FILE* f) {
             (unsigned long long)g_slotEvict, (unsigned long long)g_metaUp,
             (unsigned long long)g_weightUp, (unsigned long long)g_pinKeyZero);
     MLA_FusedQ4KT_Emit(f);
+    MLA_QaCrit_Emit(f);
 }
 
 static bool TryGpu(int ty, const void* packed, size_t bytes,
@@ -119,7 +123,6 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
                    const BraidExecutionPlan* braidPlan) {
     if (!MLA_GpuGemvWanted() || !packed || !input || !output) return false;
     if (ty != 12 && ty != 8) { ++g_skip; return false; }
-    // Q8 GPU on by default. Opt-out only when DEEP2_MLA_GPU_Q4_ONLY=1.
     if (ty == 8) {
         const char* q4 = std::getenv("DEEP2_MLA_GPU_Q4_ONLY");
         if (q4 && q4[0] == '1') { ++g_skip; return false; }
@@ -131,26 +134,51 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     if (bytes < need) { ++g_skip; return false; }
     auto* vc = K2GpuStreamCopy_Vc();
     if (!vc) { ++g_skip; return false; }
+    const uint64_t tWait0 = MLA_FusedQ4KT_NowUs();
     std::lock_guard<std::mutex> lock(g_mu);
+    const uint64_t waitUs = MLA_FusedQ4KT_NowUs() - tWait0;
     const uint64_t rej0 = vc->WeightPinRejects();
     const uint64_t up0 = vc->GemvWeightUploads();
     const uint64_t hit0 = vc->WeightContentHits();
     const uint64_t ev0 = vc->WeightPinEvicts();
     const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
     if (!pk) ++g_pinKeyZero;
+    const uint8_t tag = (uint8_t)(pk & 0xffu);
+    const bool isQa = (tag == 1);
+    const uint64_t tCall0 = isQa ? MLA_FusedQ4KT_NowUs() : 0;
+    if (isQa) {
+        MLA_QaCrit_Begin();
+        MLA_QaCrit_NoteSetup(waitUs);
+    }
+
     bool ok = false;
-    const bool allowFused = !braidPlan || braidPlan->preferFusedQ4KT;
-    if (ty == 12 && allowFused && MLA_FusedQ4KT_Wanted())
+    const bool braidFused = !braidPlan || braidPlan->preferFusedQ4KT;
+    const bool allowFused =
+        isQa ? MLA_QaAllowFused(braidFused) : braidFused;
+    const bool wantFused =
+        isQa ? MLA_QaWantFused() : MLA_FusedQ4KT_Wanted();
+
+    const uint64_t tBody0 = MLA_FusedQ4KT_NowUs();
+    if (ty == 12 && allowFused && wantFused) {
+        const uint64_t t0 = MLA_FusedQ4KT_NowUs();
         ok = MLA_FusedQ4KT(packed, bytes, input, output, rows, cols, pk);
+        if (isQa) MLA_QaCrit_NoteFused(MLA_FusedQ4KT_NowUs() - t0, ok);
+    }
     if (!ok && ty == 12) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
         ok = vc->DispatchGEMVPacked(packed, bytes, input, output, rows, cols, pk);
         if (ok) MLA_NoteGemvCompatUs(t0);
+        if (isQa) MLA_QaCrit_NoteCompat(MLA_FusedQ4KT_NowUs() - t0, ok);
     } else if (!ok) {
         ok = vc->DispatchGEMVQuant(ty, packed, bytes, input, output, rows, cols,
                                    pk);
     }
+    const uint64_t bodyUs = MLA_FusedQ4KT_NowUs() - tBody0;
     if (!ok) {
+        if (isQa) {
+            MLA_QaCrit_NoteFallback();
+            MLA_QaCrit_End(MLA_FusedQ4KT_NowUs() - tCall0);
+        }
         if (vc->WeightPinRejects() > rej0) ++g_skip;
         else ++g_fail;
         return false;
@@ -159,7 +187,11 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     const bool hit = vc->WeightContentHits() > hit0;
     g_slotEvict += vc->WeightPinEvicts() - ev0;
     if (uploaded) ++g_weightUp;
-    NoteFamily((uint8_t)(pk & 0xffu), uploaded, hit);
+    if (isQa && uploaded) MLA_QaCrit_NoteUpload();
+    NoteFamily(tag, uploaded, hit);
+    QBr_NoteLane(tag, waitUs, uploaded ? bodyUs : 0ull,
+                 uploaded ? 0ull : bodyUs);
+    if (isQa) MLA_QaCrit_End(MLA_FusedQ4KT_NowUs() - tCall0);
     ++g_ops;
     return true;
 }
@@ -233,6 +265,7 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
     }
     std::memset(output, 0, (size_t)rows * sizeof(float));
     gemv(reinterpret_cast<const uint8_t*>(packed), input, output, rows, cols);
+    if (laneTag == 1) MLA_QaCrit_NoteFallback();
     // Fallback executed (not packed) — preserve execution truth.
     K2Braid_NoteExecuted(role);
     return true;
