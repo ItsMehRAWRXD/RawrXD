@@ -1,0 +1,9 @@
+K2_MLA_KV_EXPAND_001=PASS
+
+Timed (D61, residency frozen):
+  MLA_STAGE_OWNER=QKV_PROJ
+  QKV_US=881343  KV_EXPAND_US=620848  ATTN_US=31198  O_US=251179
+  SUM≈MLA_COMPUTE (cover OK)
+
+Authority: attribution-only. Attack QKV_PROJ next.
+Do not retune logits / MLA_FUSED until re-attribute after QKV climb.

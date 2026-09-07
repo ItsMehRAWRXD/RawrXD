@@ -7,6 +7,7 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
+#include "K2MlaStageTiming.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
@@ -993,6 +994,7 @@ bool MLAForward::Execute(const float* hidden, float* output,
     const size_t oCols       = hiddenDim;
     const bool fusedKv = weights.fusedKvB || (kDims.size() == 2 && vDims.empty());
     float* fusedTmp = nullptr;
+    uint64_t tQkv = 0, tExp = 0, tAttn = 0, tO = 0;
 
     // Q-path || KV compress (independent until expand/attn).
     // GPU MLA serializes through one VkQueue — keep host path sequential too
@@ -1024,6 +1026,7 @@ bool MLAForward::Execute(const float* hidden, float* output,
     };
     const char* ser = std::getenv("DEEP2_MLA_SERIAL");
     const bool serial = MLA_GpuGemvWanted() || (ser && ser[0] == '1');
+    tQkv = StreamPathTiming_NowUs();
     if (serial) {
         runQ();
         runKv();
@@ -1033,10 +1036,12 @@ bool MLAForward::Execute(const float* hidden, float* output,
         qTh.join();
         kvTh.join();
     }
+    StreamPathTiming_Add(MlaStage_QkvUs(), tQkv);
     if (!qOk) { error = qErr.empty() ? "MLAForward: Q path failed" : qErr; goto cleanup; }
     if (!kvOk) { error = kvErr.empty() ? "MLAForward: KV path failed" : kvErr; goto cleanup; }
 
     // Step 6/7: expand compressed_kv → K_nope / V
+    tExp = StreamPathTiming_NowUs();
     if (fusedKv) {
         const size_t fusedCols = kDims[1];
         kvLoraRank = kDims[0];
@@ -1188,10 +1193,12 @@ bool MLAForward::Execute(const float* hidden, float* output,
                                 v_b + h * vHeadDim, vHeadDim, kvLoraRank);
         }
     }
+    StreamPathTiming_Add(MlaStage_KvExpandUs(), tExp);
 
     // =========================================================================
     // Attention: G10/G11 simplified path OR Gate 12 complete MLA (kvCache set)
     // =========================================================================
+    tAttn = StreamPathTiming_NowUs();
     if (!kvCache) {
         // Retained G10/G11 witness path — do not alter.
         memcpy(attnOut, q_b, numHeads * headDim * sizeof(float));
@@ -1213,18 +1220,22 @@ bool MLAForward::Execute(const float* hidden, float* output,
                                   position, config.ropeTheta,
                                   config.ropeScalingFactor,
                                   kvCache, layerIdx, stats, error)) {
+            StreamPathTiming_Add(MlaStage_AttnUs(), tAttn);
             goto cleanup;
         }
     }
+    StreamPathTiming_Add(MlaStage_AttnUs(), tAttn);
 
     // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
     // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]
     // Use actual tensor shape (already pre-fetched into oCols / oActualRows)
     pin(6);
+    tO = StreamPathTiming_NowUs();
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
                                 oCols, oActualRows, error)) {
         goto cleanup;
     }
+    StreamPathTiming_Add(MlaStage_OProjUs(), tO);
 
     // Success — TLS owns scratch; only free fusedTmp if set.
     _aligned_free(fusedTmp);

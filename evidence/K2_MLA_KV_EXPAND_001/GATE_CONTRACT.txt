@@ -1,0 +1,4 @@
+# K2_MLA_KV_EXPAND_001
+# Attribute MLA_COMPUTE into QKV_PROJ / KV_EXPAND / ATTN / O_PROJ.
+# PASS when freeze seals hold and stage sum ≈ MLA_COMPUTE (≥85%).
+# Emit MLA_STAGE_OWNER as next climb target (no optimization in this gate).

@@ -15,6 +15,7 @@
 #include "StreamPathTiming.hpp"
 #include "K2LogitsResidency.hpp"
 #include "K2LogitsClimb.hpp"
+#include "K2MlaStageTiming.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -931,6 +932,7 @@ Result Run(const fs::path& shardDir,
     Deep2::WeightResolve_Reset();
     Deep2::LogitsResidency_Reset();
     Deep2::LogitsClimb_Reset();
+    Deep2::MlaStage_Reset();
     // Preserve sticky MLA host cache + open shard HANDLEs across warm→timed.
     // Full K2ShardIo_Reset() closed handles every request → reopen/mapfault.
     Deep2::K2ShardIo_ResetCounters();
@@ -1149,6 +1151,7 @@ Result Run(const fs::path& shardDir,
     Deep2::WeightResolve_Emit(stdout);
     Deep2::LogitsResidency_Emit(stdout);
     Deep2::LogitsClimb_Emit(stdout);
+    Deep2::MlaStage_Emit(stdout);
     Deep2::K2ShardIo_Emit(stdout);
     Deep2::K2LiveCache_Clear(); // sticky MLA retained (see Clear impl)
     // Keep SHARD_IO handles across warm→timed when GPU MLA is production policy.

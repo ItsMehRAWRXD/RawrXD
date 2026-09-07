@@ -9334,6 +9334,66 @@ if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
     message(STATUS "[Deep2] K2 LOGITS Q6K resident: deep2_k2_logits_q6k_resident_cert")
 endif()
 
+option(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT "Build K2_MLA_KV_EXPAND_001" ON)
+if(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT)
+    add_executable(deep2_k2_mla_kv_expand_cert
+        src/deep2/deep2_k2_mla_kv_expand_cert.cpp)
+    target_link_libraries(deep2_k2_mla_kv_expand_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_kv_expand_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_kv_expand_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_kv_expand_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_kv_expand_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 MLA KV expand attrib: deep2_k2_mla_kv_expand_cert")
+endif()
+
+option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" ON)
+if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
+    add_executable(deep2_k2_semantic_seal_cert
+        src/deep2/deep2_k2_semantic_seal_cert.cpp)
+    target_link_libraries(deep2_k2_semantic_seal_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_semantic_seal_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_semantic_seal_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_semantic_seal_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_semantic_seal_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 semantic seal: deep2_k2_semantic_seal_cert")
+endif()
+
+option(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT "Build K2_SERVERLESS_STREAM_LATENCY_001" ON)
+if(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT)
+    add_executable(deep2_k2_serverless_stream_latency_cert
+        src/deep2/deep2_k2_serverless_stream_latency_cert.cpp)
+    target_link_libraries(deep2_k2_serverless_stream_latency_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_serverless_stream_latency_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_serverless_stream_latency_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_serverless_stream_latency_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_serverless_stream_latency_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 serverless latency: deep2_k2_serverless_stream_latency_cert")
+endif()
+
 option(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT "Build K2_LIVE_DECODE_SUSTAINED_001" ON)
 if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
     add_executable(deep2_k2_live_decode_sustained_cert
