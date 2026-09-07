@@ -18,6 +18,24 @@
 // Stream bounce: A→B→A… via BounceChain + dispatchRWExpected(+RW++).
 // Stale writer: GenerationMismatch(expected, observed).
 //
+// Generation is an authority receipt first (scratch ticket), not a bare counter.
+// See UcfGenerationTicket.hpp — Reverse Manifest fingerprints this header's law.
+// AUTHORITY CHAIN (never reverse):
+//   AGENTS.md → toolchain → this header → Reverse Manifest → Ticket
+//     → Halo/sparkUnified(G) → BounceChain.obj / zipline
+// BounceChain.obj / MASM / zipline mechanics MUST NOT redefine:
+//   acquire, generation, host fallback, GPU identity, or coherence.
+// Halo creates temporary unified execution memory (mem+ory); it does not
+// claim physical coherence. Bounce is an internal shuttle, not the model.
+// If MASM and this header disagree: MASM = defect, header = authority.
+//
+// Acquisition law:
+//   READ  acquireRead:        materialize newest → receipt(requested, acquired=current)
+//   WRITE acquireWrite:       reserve current+1 → publish only on successful commit
+//   STRICT acquireExpected:   BounceChain / certs — mismatch fails (no silent converge)
+//
+// materialized ≠ acquired; resident ≠ current; current ≠ writable.
+//
 // C++20, standard library only.
 
 #include <atomic>
@@ -139,6 +157,24 @@ public:
 private:
     Generation expected_ = 0;
     Generation observed_ = 0;
+};
+
+// Receipt never overwrites requested with acquired — convergence stays observable.
+struct AcquireReceipt {
+    ObjectId tensorId = 0;
+    Generation requestedGeneration = 0; // caller intent
+    Generation acquiredGeneration = 0;  // fabric grant (read: replica gen; write: reserved G+1)
+    PhysicalView physical{};
+    std::uint32_t readerReceipt = 0;    // BusyReaders after grant; 0 for writers
+
+    bool converged() const noexcept {
+        return requestedGeneration != acquiredGeneration;
+    }
+
+    // Read invariant: requested <= acquired.
+    bool validConvergence() const noexcept {
+        return requestedGeneration <= acquiredGeneration;
+    }
 };
 
 struct BackendOps {
@@ -323,6 +359,7 @@ public:
         return generation_.load(std::memory_order_acquire);
     }
 
+    // Strict: expected must equal observed (BounceChain / certs).
     void beginWrite(Generation expected) {
         if (immutable_)
             throw std::logic_error("immutable tensor cannot be write-leased");
@@ -344,6 +381,21 @@ public:
             writerGate_.store(false, std::memory_order_release);
             throw GenerationMismatch(expected, afterGate);
         }
+    }
+
+    // Reserve path: lock writer on actual current; return observed (CAS base).
+    // Caller publishes observed → observed+1; two writers cannot reserve the same successor.
+    Generation beginWriteReserved() {
+        if (immutable_)
+            throw std::logic_error("immutable tensor cannot be write-leased");
+
+        bool unlocked = false;
+        if (!writerGate_.compare_exchange_strong(
+                unlocked, true,
+                std::memory_order_acq_rel))
+            throw std::runtime_error("tensor already has an object-level writer");
+
+        return generation_.load(std::memory_order_acquire);
     }
 
     void endWrite() noexcept {
@@ -438,20 +490,38 @@ public:
     PhysicalView view() const noexcept {
         if (!replica_)
             return {};
+        // Physical generation = leased replica truth (not caller intent).
         return PhysicalView{
             replica_->device,
             replica_->address,
             bytes_,
-            acquiredGeneration_
+            replica_->generation.load(std::memory_order_acquire)
         };
     }
 
     Generation generation() const noexcept { return acquiredGeneration_; }
+    Generation requestedGeneration() const noexcept {
+        return requestedGeneration_;
+    }
+    Generation publishBase() const noexcept { return publishBase_; }
+    bool converged() const noexcept {
+        return requestedGeneration_ != acquiredGeneration_;
+    }
     DeviceId device() const noexcept { return replica_ ? replica_->device : 0; }
     Access access() const noexcept { return access_; }
     explicit operator bool() const noexcept { return static_cast<bool>(replica_); }
 
     Generation commit();
+
+    AcquireReceipt receipt() const noexcept {
+        AcquireReceipt r;
+        r.tensorId = object_ ? object_->id() : 0;
+        r.requestedGeneration = requestedGeneration_;
+        r.acquiredGeneration = acquiredGeneration_;
+        r.readerReceipt = readerToken_;
+        r.physical = view();
+        return r;
+    }
 
 private:
     friend class Fabric;
@@ -461,14 +531,20 @@ private:
         std::shared_ptr<TensorObject> object,
         std::shared_ptr<Replica> replica,
         Access access,
-        Generation generation,
-        std::uint64_t bytes)
+        Generation requested,
+        Generation acquired,
+        Generation publishBase,
+        std::uint64_t bytes,
+        std::uint32_t readerToken = 0)
         : fabric_(fabric),
           object_(std::move(object)),
           replica_(std::move(replica)),
           access_(access),
-          acquiredGeneration_(generation),
-          bytes_(bytes)
+          requestedGeneration_(requested),
+          acquiredGeneration_(acquired),
+          publishBase_(publishBase),
+          bytes_(bytes),
+          readerToken_(readerToken)
     {}
 
     void release() noexcept;
@@ -477,14 +553,20 @@ private:
         object_ = std::move(other.object_);
         replica_ = std::move(other.replica_);
         access_ = other.access_;
+        requestedGeneration_ = other.requestedGeneration_;
         acquiredGeneration_ = other.acquiredGeneration_;
+        publishBase_ = other.publishBase_;
         bytes_ = other.bytes_;
+        readerToken_ = other.readerToken_;
         committed_ = other.committed_;
         ownsObjectWriter_ = other.ownsObjectWriter_;
 
         other.fabric_ = nullptr;
+        other.requestedGeneration_ = 0;
         other.acquiredGeneration_ = 0;
+        other.publishBase_ = 0;
         other.bytes_ = 0;
+        other.readerToken_ = 0;
         other.committed_ = true;
         other.ownsObjectWriter_ = false;
     }
@@ -493,8 +575,11 @@ private:
     std::shared_ptr<TensorObject> object_;
     std::shared_ptr<Replica> replica_;
     Access access_ = Access::Read;
+    Generation requestedGeneration_ = 0;
     Generation acquiredGeneration_ = 0;
+    Generation publishBase_ = 0; // write CAS base; 0 for reads
     std::uint64_t bytes_ = 0;
+    std::uint32_t readerToken_ = 0;
     bool committed_ = false;
     bool ownsObjectWriter_ = false;
 };
@@ -544,16 +629,23 @@ public:
         r->state.store(ReplicaState::Present, std::memory_order_release);
     }
 
+    // Read-only convenience: snapshots object generation as expected.
+    // Write/ReadWrite: use acquireExpected (strict) or acquireWrite (reserve).
     FabricLease acquire(
         TensorRef ref,
         DeviceId destination,
         Access access)
     {
+        if (access == Access::Write || access == Access::ReadWrite)
+            throw std::logic_error(
+                "RW requires acquireExpected or acquireWrite; "
+                "generation-less write is forbidden");
         auto obj = object(ref);
         const Generation expected = obj->generation();
         return acquireExpected(ref, destination, access, expected);
     }
 
+    // STRICT: expected != observed → GenerationMismatch (BounceChain / certs).
     FabricLease acquireExpected(
         TensorRef ref,
         DeviceId destination,
@@ -581,6 +673,7 @@ public:
             if (observed != expected)
                 throw GenerationMismatch(expected, observed);
 
+            std::uint32_t token = 0;
             if (writing) {
                 bool unlocked = false;
                 if (!dst->writer.compare_exchange_strong(
@@ -597,12 +690,14 @@ public:
                 if (dst->writer.load(std::memory_order_acquire))
                     throw std::runtime_error(
                         "replica currently leased by writer");
-                dst->readers.fetch_add(1, std::memory_order_acq_rel);
+                token = static_cast<std::uint32_t>(
+                    dst->readers.fetch_add(1, std::memory_order_acq_rel) + 1);
             }
 
             FabricLease lease(
                 this, std::move(obj), std::move(dst),
-                access, expected, ref.bytes);
+                access, expected, expected,
+                writing ? expected : 0, ref.bytes, token);
             lease.ownsObjectWriter_ = writing;
             return lease;
         } catch (...) {
@@ -610,6 +705,101 @@ public:
                 obj->endWrite();
             throw;
         }
+    }
+
+    // CONVERGING READ: stale requested is convergence, not error.
+    // Invariant: requested <= acquired && acquired == replica.generation
+    FabricLease acquireRead(
+        TensorRef ref,
+        DeviceId destination,
+        Generation requestedGeneration)
+    {
+        auto obj = object(ref);
+        auto dst = ensureCurrent(obj, destination);
+
+        const Generation acquired = obj->generation();
+        const Generation repGen =
+            dst->generation.load(std::memory_order_acquire);
+        if (repGen != acquired)
+            throw GenerationMismatch(acquired, repGen);
+
+        if (requestedGeneration > acquired)
+            throw GenerationMismatch(requestedGeneration, acquired);
+
+        if (dst->writer.load(std::memory_order_acquire))
+            throw std::runtime_error("replica currently leased by writer");
+
+        const auto token = static_cast<std::uint32_t>(
+            dst->readers.fetch_add(1, std::memory_order_acq_rel) + 1);
+
+        if (obj->generation() != acquired ||
+            dst->generation.load(std::memory_order_acquire) != acquired)
+        {
+            dst->readers.fetch_sub(1, std::memory_order_acq_rel);
+            throw GenerationMismatch(acquired, obj->generation());
+        }
+
+        return FabricLease(
+            this, std::move(obj), std::move(dst),
+            Access::Read, requestedGeneration, acquired, 0, ref.bytes, token);
+    }
+
+    // Alias — same converging read law.
+    FabricLease acquireReadConverging(
+        TensorRef ref,
+        DeviceId destination,
+        Generation requestedGeneration)
+    {
+        return acquireRead(ref, destination, requestedGeneration);
+    }
+
+    // WRITE reserve: materialize current → exclusive → candidate = current+1.
+    // Receipt.acquired = reserved candidate; publishBase = current (CAS).
+    FabricLease acquireWrite(
+        TensorRef ref,
+        DeviceId destination,
+        Generation requestedGeneration)
+    {
+        auto obj = object(ref);
+        const Generation current = obj->beginWriteReserved();
+
+        try {
+            auto dst = ensureCurrent(obj, destination);
+            const Generation repGen =
+                dst->generation.load(std::memory_order_acquire);
+            if (repGen != current)
+                throw GenerationMismatch(current, repGen);
+
+            bool unlocked = false;
+            if (!dst->writer.compare_exchange_strong(
+                    unlocked, true, std::memory_order_acq_rel))
+                throw std::runtime_error("replica already has a writer");
+
+            if (dst->readers.load(std::memory_order_acquire) != 0) {
+                dst->writer.store(false, std::memory_order_release);
+                throw std::runtime_error(
+                    "replica currently leased by readers");
+            }
+
+            const Generation reserved = current + 1;
+            FabricLease lease(
+                this, std::move(obj), std::move(dst),
+                Access::ReadWrite, requestedGeneration, reserved,
+                current, ref.bytes);
+            lease.ownsObjectWriter_ = true;
+            return lease;
+        } catch (...) {
+            obj->endWrite();
+            throw;
+        }
+    }
+
+    FabricLease acquireRWConverging(
+        TensorRef ref,
+        DeviceId destination,
+        Generation requestedGeneration)
+    {
+        return acquireWrite(ref, destination, requestedGeneration);
     }
 
     bool retireReplica(TensorRef ref, DeviceId device) {
@@ -636,57 +826,13 @@ public:
         return true;
     }
 
+    // Deleted: generation-less dispatch quietly becomes "latest pointer wins".
     template<class Fn>
-    decltype(auto) dispatch(
-        DeviceId device,
-        std::span<const TensorRef> reads,
-        std::span<const TensorRef> writes,
-        Fn&& fn)
-    {
-        std::vector<FabricLease> readLeases;
-        std::vector<FabricLease> writeLeases;
-        readLeases.reserve(reads.size());
-        writeLeases.reserve(writes.size());
-
-        for (const auto& r : reads)
-            readLeases.emplace_back(acquire(r, device, Access::Read));
-
-        for (const auto& w : writes)
-            writeLeases.emplace_back(acquire(w, device, Access::ReadWrite));
-
-        std::vector<PhysicalView> readViews;
-        std::vector<PhysicalView> writeViews;
-        readViews.reserve(readLeases.size());
-        writeViews.reserve(writeLeases.size());
-
-        for (const auto& l : readLeases)
-            readViews.push_back(l.view());
-        for (const auto& l : writeLeases)
-            writeViews.push_back(l.view());
-
-        if constexpr (std::is_void_v<std::invoke_result_t<
-                          Fn,
-                          std::span<const PhysicalView>,
-                          std::span<const PhysicalView>>>) {
-            std::invoke(
-                std::forward<Fn>(fn),
-                std::span<const PhysicalView>(readViews),
-                std::span<const PhysicalView>(writeViews));
-
-            for (auto& l : writeLeases)
-                l.commit();
-        } else {
-            decltype(auto) result = std::invoke(
-                std::forward<Fn>(fn),
-                std::span<const PhysicalView>(readViews),
-                std::span<const PhysicalView>(writeViews));
-
-            for (auto& l : writeLeases)
-                l.commit();
-
-            return result;
-        }
-    }
+    void dispatch(
+        DeviceId,
+        std::span<const TensorRef>,
+        std::span<const TensorRef>,
+        Fn&&) = delete;
 
     // +RW++ : expected N → acquire RW → execute → commit → N+1
     template<class Fn>
@@ -702,8 +848,13 @@ public:
         readLeases.reserve(reads.size());
         readViews.reserve(reads.size());
 
-        for (const auto& r : reads)
-            readLeases.emplace_back(acquire(r, device, Access::Read));
+        for (const auto& r : reads) {
+            auto obj = object(r);
+            const Generation readExpect =
+                obj->immutable() ? obj->generation() : expected;
+            readLeases.emplace_back(
+                acquireExpected(r, device, Access::Read, readExpect));
+        }
 
         for (const auto& l : readLeases)
             readViews.push_back(l.view());
@@ -873,8 +1024,11 @@ private:
         if (l.committed_)
             return l.acquiredGeneration_;
 
-        const Generation next =
-            l.object_->publishWrite(l.acquiredGeneration_);
+        // Publication uses CAS base (strict expected or reserved current).
+        // No successful publish → no generation advance.
+        const Generation base =
+            l.publishBase_ ? l.publishBase_ : l.acquiredGeneration_;
+        const Generation next = l.object_->publishWrite(base);
 
         l.replica_->generation.store(next, std::memory_order_release);
         l.replica_->state.store(ReplicaState::Present, std::memory_order_release);

@@ -9437,6 +9437,173 @@ if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
     message(STATUS "[Deep2] UCF bounce smoke: deep2_ucf_bounce_smoke")
 endif()
 
+option(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001
+    "Build UCF_NO_STALE_DISPATCH_001" ON)
+if(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001)
+    add_executable(deep2_ucf_no_stale_dispatch_001
+        src/deep2/deep2_ucf_no_stale_dispatch_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_no_stale_dispatch_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_no_stale_dispatch_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_no_stale_dispatch_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_no_stale_dispatch_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF no-stale dispatch: deep2_ucf_no_stale_dispatch_001")
+endif()
+
+option(BUILD_DEEP2_UCF_READ_CONVERGE_001
+    "Build UCF_READ_CONVERGE_001" ON)
+if(BUILD_DEEP2_UCF_READ_CONVERGE_001)
+    add_executable(deep2_ucf_read_converge_001
+        src/deep2/deep2_ucf_read_converge_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_read_converge_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_read_converge_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_read_converge_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_read_converge_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF read converge: deep2_ucf_read_converge_001")
+endif()
+
+option(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001
+    "Build UCF_LOGITS_RANGE_BOUNCE_001" ON)
+if(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001)
+    add_executable(deep2_ucf_logits_range_bounce_001
+        src/deep2/deep2_ucf_logits_range_bounce_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_logits_range_bounce_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_logits_range_bounce_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_logits_range_bounce_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_logits_range_bounce_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF logits range bounce: deep2_ucf_logits_range_bounce_001")
+endif()
+
+option(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1 "Build UCF_SEMANTIC_ABI_V1" ON)
+if(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1)
+    add_executable(deep2_ucf_semantic_abi_v1_cert
+        src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_semantic_abi_v1_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_semantic_abi_v1_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_semantic_abi_v1_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_semantic_abi_v1_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF semantic ABI v1: deep2_ucf_semantic_abi_v1_cert")
+endif()
+
+option(BUILD_DEEP2_UCF_GENERATION_TICKET_001
+    "Build UCF_GENERATION_TICKET_001" ON)
+if(BUILD_DEEP2_UCF_GENERATION_TICKET_001)
+    add_executable(deep2_ucf_generation_ticket_001
+        src/deep2/deep2_ucf_generation_ticket_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_generation_ticket_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_generation_ticket_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_generation_ticket_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_generation_ticket_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF generation ticket: deep2_ucf_generation_ticket_001")
+endif()
+
+option(BUILD_DEEP2_UCF_GPU_READY_E2E "Build UCF_GPU_READY_E2E / GPU_READY_E2E" ON)
+if(BUILD_DEEP2_UCF_GPU_READY_E2E)
+    add_executable(deep2_ucf_gpu_ready_e2e
+        src/deep2/deep2_ucf_gpu_ready_e2e.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_gpu_ready_e2e PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_gpu_ready_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_gpu_ready_e2e PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_gpu_ready_e2e
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF GPU ready E2E: deep2_ucf_gpu_ready_e2e")
+endif()
+
+option(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE
+    "Build UCF_BOUNCEHOUSE_TRACE_001 observational smoke" ON)
+if(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE)
+    add_executable(deep2_ucf_bouncehouse_example
+        src/deep2/deep2_ucf_bouncehouse_example.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_bouncehouse_example PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_bouncehouse_example PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_bouncehouse_example PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_bouncehouse_example
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF bouncehouse trace: deep2_ucf_bouncehouse_example")
+endif()
+
+option(BUILD_DEEP2_UCF_HALO_SPARK_001 "Build UCF_HALO_SPARK_001" ON)
+if(BUILD_DEEP2_UCF_HALO_SPARK_001)
+    add_executable(deep2_ucf_halo_spark_001
+        src/deep2/deep2_ucf_halo_spark_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_halo_spark_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_halo_spark_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_halo_spark_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_halo_spark_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF Halo/Spark: deep2_ucf_halo_spark_001")
+endif()
+
+option(BUILD_DEEP2_UCF_MOBILITY_FAULT_001 "Build UCF_MOBILITY_FAULT_001" ON)
+if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
+    add_executable(deep2_ucf_mobility_fault_001
+        src/deep2/deep2_ucf_mobility_fault_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_mobility_fault_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_mobility_fault_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_mobility_fault_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_mobility_fault_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF mobility fault: deep2_ucf_mobility_fault_001")
+endif()
+
 option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" ON)
 if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
     add_executable(deep2_k2_semantic_seal_cert
