@@ -18,6 +18,8 @@ namespace Deep2 {
 struct GGUFTokenizerBundle {
     std::vector<std::string> tokens;
     std::vector<float> scores;
+    std::vector<std::string> merges;
+    std::string model; // "llama" | "gpt2" | ...
     SpecialTokens special;
     std::string chatTemplate;
     bool addBos = true;
@@ -182,11 +184,25 @@ inline GGUFTokenizerBundle LoadTokenizerFromGGUF(const char* filepath) {
             return bundle;
         }
 
+        if (key == "tokenizer.ggml.model" && vtype == 8) {
+            if (!detail::readString(fp, bundle.model)) {
+                std::snprintf(bundle.error, sizeof(bundle.error), "model read failed");
+                std::fclose(fp);
+                return bundle;
+            }
+            continue;
+        }
         if (key == "tokenizer.ggml.tokens" && vtype == 9) {
             if (!detail::readStringArray(fp, bundle.tokens)) {
                 std::snprintf(bundle.error, sizeof(bundle.error), "tokens array failed");
                 std::fclose(fp);
                 return bundle;
+            }
+            continue;
+        }
+        if (key == "tokenizer.ggml.merges" && vtype == 9) {
+            if (!detail::readStringArray(fp, bundle.merges)) {
+                // Non-fatal for SPM models without merges
             }
             continue;
         }
@@ -289,7 +305,15 @@ inline GGUFTokenizerBundle LoadTokenizerFromGGUF(const char* filepath) {
 inline bool ApplyTokenizerBundle(BPETokenizer& tok, const GGUFTokenizerBundle& bundle) {
     if (!bundle.ok || bundle.tokens.empty()) return false;
     if (!tok.LoadVocab(bundle.tokens)) return false;
-    if (!bundle.scores.empty()) {
+    if (!bundle.model.empty()) {
+        tok.SetTokenizerModel(bundle.model);
+    } else {
+        tok.InferTokenizerFamily();
+    }
+    // GPT-2: prefer merge ranks as scores; GGUF scores often absent/zero.
+    if (tok.IsGpt2() && !bundle.merges.empty()) {
+        tok.LoadMergesAsScores(bundle.merges);
+    } else if (!bundle.scores.empty()) {
         tok.LoadScores(bundle.scores);
     }
     tok.SetSpecialTokens(bundle.special);

@@ -96,10 +96,16 @@ void ResidencyManager::Reset() {
 bool ResidencyManager::RegisterTensor(const std::string& name,
                                        size_t fileOffset,
                                        size_t tensorBytes,
-                                       const void* sourceData) {
+                                       const void* sourceData,
+                                       uint32_t shardId) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_) {
         fprintf(stderr, "[ResidencyManager] ERROR: not initialized\n");
+        return false;
+    }
+    if (tensorBytes == 0 || name.empty()) {
+        fprintf(stderr, "[ResidencyManager] ERROR: invalid descriptor '%s' bytes=%zu\n",
+                name.c_str(), tensorBytes);
         return false;
     }
 
@@ -107,22 +113,26 @@ bool ResidencyManager::RegisterTensor(const std::string& name,
     src.fileOffset = fileOffset;
     src.tensorBytes = tensorBytes;
     src.sourceData = sourceData;
+    src.shardId = shardId;
     sources_[name] = std::move(src);
 
-    // Instrumentation: compute cumulative registered bytes
     size_t registeredBytes = 0;
+    size_t zeroOffsetCount = 0;
     for (const auto& kv : sources_) {
         registeredBytes += kv.second.tensorBytes;
+        if (kv.second.fileOffset == 0)
+            ++zeroOffsetCount;
     }
 
-    bool isFirst = (sources_.size() == 1);
-    bool isLast = (sources_.size() % 100 == 0) || (sources_.size() > 500 && sources_.size() < 510);
+    const bool isFirst = (sources_.size() == 1);
+    const bool isMilestone = (sources_.size() % 100 == 0) ||
+                             (sources_.size() > 500 && sources_.size() < 510);
 
-    if (isFirst || isLast) {
-        printf("[ResidencyManager] this=%p  Registered '%s': offset=%zu bytes=%zu  |  "
-               "registry_size=%zu  registeredBytes=%zu  maxResidentBytes=%zu\n",
-               (void*)this, name.c_str(), fileOffset, tensorBytes,
-               sources_.size(), registeredBytes, config_.maxResidentBytes);
+    if (isFirst || isMilestone) {
+        printf("[ResidencyManager] this=%p  Registered '%s': shard=%u offset=%zu bytes=%zu  |  "
+               "registry_size=%zu  registeredBytes=%zu  zeroOffset=%zu  maxResidentBytes=%zu\n",
+               (void*)this, name.c_str(), shardId, fileOffset, tensorBytes,
+               sources_.size(), registeredBytes, zeroOffsetCount, config_.maxResidentBytes);
     }
     return true;
 }

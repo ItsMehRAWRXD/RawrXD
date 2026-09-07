@@ -2,6 +2,12 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
 
 // Proves the fail-closed embed guard source is present and disposition sealed.
 int main() {
@@ -20,6 +26,20 @@ int main() {
     }
     // Live zero-embed injection remains a dedicated Deep2 unit; this gate
     // seals the documented refuse-shard contract is on disk.
+#ifdef _WIN32
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence", nullptr);
+    CreateDirectoryA(
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_EMBED_NORM_GUARD_001", nullptr);
+    FILE* gf = nullptr;
+    fopen_s(
+        &gf,
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_EMBED_NORM_GUARD_001\\GATE.txt",
+        "w");
+    if (gf) {
+        fprintf(gf, "RAWRXD_EMBED_NORM_GUARD_001=PASS\n");
+        fclose(gf);
+    }
+#endif
     puts("RAWRXD_EMBED_NORM_GUARD_001=PASS");
     return 0;
 }

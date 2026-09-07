@@ -64,6 +64,13 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
     std::string arch = toLower(architecture);
     std::string name = toLower(modelName);
 
+    // TinyLlama / Zephyr chat (must beat generic "llama" → LLAMA2)
+    if (name.find("tinyllama") != std::string::npos ||
+        name.find("tiny-llama") != std::string::npos ||
+        name.find("zephyr") != std::string::npos) {
+        return ChatTemplateType::PHI3;
+    }
+
     // Phi family
     if (arch.find("phi3") != std::string::npos || name.find("phi3") != std::string::npos ||
         arch.find("phi-3") != std::string::npos || name.find("phi-3") != std::string::npos) {

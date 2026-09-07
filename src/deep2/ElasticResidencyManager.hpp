@@ -30,6 +30,8 @@
 
 namespace Deep2 {
 
+namespace vwa { struct IPhysicalBackend; }
+
 // ============================================================================
 // Residency State Machine
 // ============================================================================
@@ -166,6 +168,7 @@ struct ElasticResidentTensor {
 
     // Source location in GGUF
     size_t fileOffset = 0;
+    uint32_t shardId = 0;
     size_t compressedBytes = 0;
     const void* sourceData = nullptr; // optional: already-mapped GGUF data pointer
 
@@ -255,7 +258,11 @@ public:
                         size_t fileOffset,
                         size_t compressedBytes,
                         TensorFormat nativeFormat,
-                        const void* sourceData = nullptr);
+                        const void* sourceData = nullptr,
+                        uint32_t shardId = 0);
+
+    // Pluggable NVMe/file/memory backend for Cold→RAM (VWA physical authority).
+    void SetPhysicalBackend(vwa::IPhysicalBackend* backend);
 
     // ExecutionPolicy: stamp planned device before promote/evict.
     bool SetPlannedPlacement(const std::string& name, int plannedGpu, bool pinned);
@@ -366,6 +373,7 @@ private:
     ElasticResidencyConfig config_;
     std::atomic<bool> initialized_{false};
     std::atomic<bool> shutdownRequested_{false};
+    vwa::IPhysicalBackend* physicalBackend_ = nullptr;
 
     std::map<std::string, std::shared_ptr<ElasticResidentTensor>> tensors_;
     mutable std::mutex tensorsMutex_;

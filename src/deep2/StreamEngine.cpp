@@ -69,7 +69,7 @@ void StreamEngine::Shutdown() {
     initialized_ = false;
     cache_.clear();
     while (!lruQueue_.empty()) lruQueue_.pop();
-    printf("[StreamEngine] Shutdown\n");
+    fprintf(stderr, "[StreamEngine] Shutdown\n");
 }
 
 // ============================================================================

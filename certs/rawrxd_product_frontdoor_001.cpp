@@ -7,6 +7,12 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
 
 static int fail(const char* w) {
     fprintf(stderr, "FAIL:%s\n", w);
@@ -53,6 +59,20 @@ int main() {
     if (rawr::RunAgentLoop(ag, rawr::AutonomyLevel::Build) != 0)
         return fail("agent");
 
+#ifdef _WIN32
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence", nullptr);
+    CreateDirectoryA(
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_PRODUCT_FRONTDOOR_001", nullptr);
+    FILE* gf = nullptr;
+    fopen_s(
+        &gf,
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_PRODUCT_FRONTDOOR_001\\GATE.txt",
+        "w");
+    if (gf) {
+        fprintf(gf, "RAWRXD_PRODUCT_FRONTDOOR_001=PASS\n");
+        fclose(gf);
+    }
+#endif
     puts("RAWRXD_PRODUCT_FRONTDOOR_001=PASS");
     return 0;
 }

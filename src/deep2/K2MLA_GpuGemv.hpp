@@ -1,5 +1,6 @@
-// K2MLA_GpuGemv.hpp — live MLA GPU GEMV (Q4_K + Q8_0)
+// K2MLA_GpuGemv.hpp — live MLA GPU GEMV (Q4_K + Q8_0 + Q6_K via TryGpuHot)
 #pragma once
+#include "K2MLA_TryGpuHot.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>

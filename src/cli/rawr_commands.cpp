@@ -7,6 +7,7 @@
 #include "rawr_agent_loop.hpp"
 #include "rawr_steering_client.hpp"
 #include "rawr_evidence_writer.hpp"
+#include "rawr_product_serve.hpp"
 #include "terminal/rawr_terminal_commands.hpp"
 #include "../deep2/Deep2SemanticSafeMode.hpp"
 #include "../deep2/Deep2GenerateStream.hpp"
@@ -43,6 +44,7 @@ void PrintUsage() {
     Diag("  rawr steer <command>\n");
     Diag("  rawr resume <session-id>\n");
     Diag("  rawr term start|list|tail|send|stop|killall ...\n");
+    Diag("  rawr serve [--pipe \\\\.\\pipe\\rawrxd_product]\n");
 }
 
 int CmdRun(const CliArgs& a) {
@@ -200,5 +202,7 @@ int CmdTerm(const CliArgs& a) {
     int rc = rawr::term::CmdTermDispatch(host, a.termSub, a.termName, rest);
     return rc == 0 ? ExitCode::Ok : ExitCode::BuildFail;
 }
+
+int CmdServe(const CliArgs& a) { return RunProductServe(a.pipeName); }
 
 } // namespace rawr

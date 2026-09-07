@@ -1,46 +1,70 @@
-# Product Unlock Ladder — next 15 gates
-# Updated 2026-09-07 after SemanticSafe CPU coherent TinyLlama + unlock batch
+# Product Unlock Ladder — dual wave
+# Updated 2026-09-07 after U08 FAIL seal + Wave B P10–P15 execution
 
-## Baseline sealed
+## Critical distinction
 ```
-RAWRXD_AGENTIC_CLI_001=PASS
-RAWRXD_NORMAL_GGUF_FINAL_001=PASS
-RAWRXD_RUN_QUALITY_001=PASS
-LOCAL_AGENT_AUDIT_001=PASS
-LOCAL_MODEL_TPS_001=PASS
+implementation completeness  ≠  live-production decode certification
+U08 FAIL blocks PRODUCT_E2E even when Win32/product surface is green
 ```
 
-TinyLlama coherent paragraph proven (`HOTPATH_*=CPU`, elastic/medusa/cyclone=0).
-Root cause of prior garbage: elastic zero-embed / non-CPU hotpath (see GIBBERISH_EMBED_ZERO_001).
-Fix lane: SemanticSafeApply → GPU_DEVICES=CPU + ENHANCE_SKIP + GREEDY + LIVE_MECH=none.
-
-## Next 15
+## Wave A — engine / agent (15)
 
 | # | Gate | Status | Notes |
 |---|------|--------|-------|
-| U01 | RAWRXD_STDOUT_CLEAN_001 | **PASS** | generated text has no debug leak |
-| U02 | RAWRXD_CHAT_REPL_001 | **PASS** | multi-turn session persist |
-| U03 | RAWRXD_AGENT_PATCH_LIVE_001 | OPEN | agent loop must call ToolApplyPatch on fixture |
-| U04 | RAWRXD_AGENT_BUILD_LIVE_001 | OPEN | agent loop must invoke real build target |
-| U05 | RAWRXD_STEER_LIVE_001 | OPEN | pause/continue mid-agent via pipe |
-| U06 | RAWRXD_RESUME_CHAT_001 | OPEN | resume + continue generate with model |
-| U07 | RAWRXD_AUTO_LADDER_001 | **PASS** | off/read/patch/build + git-push block |
-| U08 | RAWRXD_SECOND_MODEL_001 | OPEN | coherent run on qwen-coder/phi |
-| U09 | RAWRXD_EMBED_NORM_GUARD_001 | **PASS** | disposition/contract on disk (live inject later) |
-| U10 | RAWRXD_NO_OLLAMA_CONTRACT_001 | **PASS** | OLLAMA=0 NETWORK=0 alias resolve |
-| U11 | VWA_K2_PREFETCH_OVERLAP_001 | OPEN | measured overlap (not stub) |
-| U12 | VWA_BOUNDED_K2_001 | OPEN | live K2 RSS/wall (not math stub) |
-| U13 | K2_USEFUL_TPS_001 | OPEN | live useful TPS |
-| U14 | G15_SEMANTIC_COHERENCE_K2 | OPEN | K2 coherent gen (ladder G15) |
-| U15 | RAWRXD_PRODUCT_FRONTDOOR_001 | **PASS** | parse+agent+steer+safety umbrella |
+| U01–U07, U09–U10, U15 | — | **PASS** | disk GATEs |
+| U03–U06 | — | **PASS** | workspace + steer sealed |
+| **U08** | RAWRXD_SECOND_MODEL_001 | **FAIL** | REAL_TOKEN_IDS=1; LOGITS_CONSTANT; `ussen`×N |
+| U11–U14 | K2 | OPEN | optional valuation lane |
 
-## Score
+### Wave A score: **10/15** (U08 FAIL, K2 open)
+
+## Wave B — product surface (15)
+
+| # | Gate | Status | Evidence |
+|---|------|--------|----------|
+| P01–P09 | layers / win32 / ghost / pipe / editor-agent | **PASS** | SEAL/GATE |
+| **P10** | RAWRXD_AUTOCOMPLETE_E2E_001 | **PASS** | TinyLlama REAL_LOCAL_DECODE=1, 3937ms |
+| **P11** | RAWRXD_AUTOCOMPLETE_CANCEL_001 | **PASS** | cancel+stale+type |
+| **P12** | RAWRXD_PRODUCT_E2E_001 | **FAIL** (required) | fail-closed: U08=FAIL on disk |
+| **P13** | RAWRXD_INSTALLER_CLEAN_MACHINE_001 | **PASS** | INSTALL.md + rawr.exe + seals |
+| **P14** | RAWRXD_OFFLINE_DEMO_001 | **PASS** | surface OLLAMA=0 NETWORK=0 |
+| **P15** | RAWRXD_REPEATABLE_DEMO_RECORD_001 | **PASS** | SHA256_MANIFEST.txt |
+
+### Wave B score: **14/15** (only P12 correctly FAIL)
+
+## U08 diagnosis (authoritative)
 ```
-UNLOCKED_NOW = 6/15 (U01 U02 U07 U09 U10 U15)
-REMAINING    = 9/15 (U03–U06 U08 U11–U14)
+evidence/RAWRXD_SECOND_MODEL_001/GATE_STATUS.txt
+evidence/RAWRXD_SECOND_MODEL_001/DIAGNOSIS.txt
+
+LOAD=1 PREFILL=1 REAL_DECODE=1 TOKENS=128 REAL_TOKEN_IDS=1
+ARGMAX_NONCONSTANT=0 → FAIL_OWNER=LOGITS_CONSTANT
+output stuck on "ussen" repeat after successful tokenizer round-trip
 ```
 
-## Attack order remaining
+## Next 15 unlocks (Wave C — production certification)
+
+| # | Gate | Purpose |
+|---|------|---------|
+| C01 | RAWRXD_LLAMA32_LOGITS_CONSTANT_001 | root-cause stuck argmax after prefill |
+| C02 | RAWRXD_LLAMA32_KV_CARRY_001 | prove K/V write+read across decode steps |
+| C03 | RAWRXD_LLAMA32_SAMPLER_GREEDY_001 | greedy argmax changes on known logits |
+| C04 | RAWRXD_SECOND_MODEL_001 | re-seal coherent llama32 paragraph |
+| C05 | RAWRXD_PRODUCT_E2E_001 | fail-closed root PASS (needs C04) |
+| C06 | RAWRXD_AUTOCOMPLETE_LIVE_SECOND_001 | autocomplete via llama32 (not only TinyLlama) |
+| C07 | RAWRXD_AUTOCOMPLETE_OFFLINE_NETWORK_CUT_001 | NIC-down buyer demo |
+| C08 | RAWRXD_INSTALLER_SILENT_EXE_001 | real silent installer package |
+| C09 | RAWRXD_CLEAN_VM_SMOKE_001 | fresh Win11 VM install+run |
+| C10 | RAWRXD_DEMO_RECORDING_001 | screen+log+hash package |
+| C11 | VWA_K2_PREFETCH_OVERLAP_001 | U11 live |
+| C12 | VWA_BOUNDED_K2_001 | U12 live |
+| C13 | K2_USEFUL_TPS_001 | U13 live |
+| C14 | G15_SEMANTIC_COHERENCE_K2 | U14 live |
+| C15 | RAWRXD_VALUATION_EVIDENCE_BUNDLE_001 | buyer-facing evidence zip |
+
+## Branch law
 ```
-U03 → U04 → U05 → U06 → U08 → U15-live-gen → U11 → U12 → U13 → U14
+U08 FAIL ──► do not green PRODUCT_E2E
+TinyLlama autocomplete PASS is product-surface proof, not second-model seal
+Next critical work = C01–C04 (llama32 logits), then C05 umbrella
 ```

@@ -15,10 +15,13 @@
 #include "StreamPathTiming.hpp"
 #include "K2LogitsResidency.hpp"
 #include "K2LogitsClimb.hpp"
+#include "K2LogitsSplit.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
+#include "VirtualTensorDesc.hpp"
+#include "VirtualTensorRange.hpp"
 #include "vulkan_compute.h"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
@@ -392,13 +395,40 @@ bool StreamOutputRow(const Deep2::GlobalTensorIndex& index,
     size_t rowOffset = rowIdx * rowBytes;
     if (rowOffset + rowBytes > ref.byteSize) { error = "Row offset exceeds tensor size"; return false; }
 
+    // Same range law as logits GPU cut: RMV desc → ResolveQuantBlockRange → slice.
+    Deep2::VirtualTensorDesc desc{};
+    {
+        uint64_t tid = 1469598103934665603ull;
+        const char* nm = "output.weight";
+        for (const char* p = nm; *p; ++p) {
+            tid ^= (uint8_t)*p;
+            tid *= 1099511628211ull;
+        }
+        desc.id = tid;
+        desc.shard = ref.shardId;
+        desc.fileOffset = ref.fileOffset;
+        desc.byteLength = ref.byteSize;
+        desc.type = ref.ggmlType;
+        desc.addressed = ref.byteSize > 0;
+    }
+    Deep2::QuantBlockRange req{};
+    req.firstBlock = (uint64_t)rowIdx * (uint64_t)blocksPerRow;
+    req.blockCount = (uint64_t)blocksPerRow;
+    Deep2::PhysicalTensorRange pr{};
+    if (!Deep2::ResolveQuantBlockRange(desc, (uint32_t)kBlockBytes, req, pr) ||
+        pr.tensorRelativeOffset != (uint64_t)rowOffset ||
+        pr.byteCount != (uint64_t)rowBytes) {
+        error = "StreamOutputRow range resolve mismatch";
+        return false;
+    }
+
     // Authority: ResolveWeight → retained Q6_K borrow (no OwnsOutput gate).
     Deep2::WeightSpan span{};
     std::vector<uint8_t> owned;
     const uint64_t t0 = Deep2::StreamPathTiming_NowUs();
     if (!Deep2::ResolveWeight(index, "output.weight", span, owned, error))
         return false;
-    if (!span.data || span.bytes < rowOffset + rowBytes) {
+    if (!span.data || span.bytes < pr.tensorRelativeOffset + pr.byteCount) {
         error = "output.weight resolve OOB";
         return false;
     }
@@ -409,7 +439,7 @@ bool StreamOutputRow(const Deep2::GlobalTensorIndex& index,
         Deep2::StreamPathTiming_Add(Deep2::SPT_outW(), t0);
         Deep2::LogitsShardRowReads().fetch_add(1, std::memory_order_relaxed);
     }
-    const uint8_t* rowPtr = span.data + rowOffset;
+    const uint8_t* rowPtr = span.data + (size_t)pr.tensorRelativeOffset;
     // Packed Q6_K fused dot — not F32 vocab dequant / warehouse.
     outLogit = DotQ6KRow(rowPtr, blocksPerRow, cols, hidden);
     Deep2::LogitsPackedDotRows().fetch_add(1, std::memory_order_relaxed);
@@ -781,6 +811,23 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     const uint8_t* base = span.data;
     const size_t baseN = span.bytes;
 
+    // RMV desc for logits — resolve once upstream of TryGpuHot (no name relookup).
+    Deep2::VirtualTensorDesc logitsDesc{};
+    {
+        uint64_t tid = 1469598103934665603ull;
+        const char* nm = "output.weight";
+        for (const char* p = nm; *p; ++p) {
+            tid ^= (uint8_t)*p;
+            tid *= 1099511628211ull;
+        }
+        logitsDesc.id = tid;
+        logitsDesc.shard = outRef.shardId;
+        logitsDesc.fileOffset = outRef.fileOffset;
+        logitsDesc.byteLength = outRef.byteSize;
+        logitsDesc.type = outRef.ggmlType;
+        logitsDesc.addressed = outRef.byteSize > 0;
+    }
+
     float best = -std::numeric_limits<float>::infinity();
     size_t br = 0;
     const bool legacy =
@@ -791,9 +838,13 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     if (!legacy) {
         int32_t tok = -1;
         float bv = 0.f;
-        if (!Deep2::LogitsClimb_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
-                                            hidden, tok, &bv)) {
-            error = "LogitsClimb_ArgmaxPacked failed";
+        const bool okSplit = Deep2::LogitsSplit_Wanted()
+            ? Deep2::LogitsSplit_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
+                                             hidden, &logitsDesc, tok, &bv)
+            : Deep2::LogitsClimb_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
+                                             hidden, tok, &bv);
+        if (!okSplit) {
+            error = "LogitsClimb/Split_ArgmaxPacked failed";
             return false;
         }
         best = bv;

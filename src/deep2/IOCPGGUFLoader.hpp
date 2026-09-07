@@ -56,6 +56,11 @@ public:
     // Bind to ElasticResidencyManager for out-of-core operation
     void SetElasticManager(ElasticResidencyManager* elastic) { elastic_ = elastic; }
 
+    // Fulfill an already-resolved absolute file range (no tensor math here).
+    bool ReadRangeAsync(uint64_t absoluteOffset, void* dst, size_t byteCount,
+                        OVERLAPPED* ov);
+    bool WaitRangeAsync(OVERLAPPED* ov, DWORD& bytesTransferred);
+
     // Close file and cleanup
     void Close();
 

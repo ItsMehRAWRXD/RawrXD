@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "ElasticResidencyManager.hpp"
+#include "vwa/VwaPhysical.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "ResidencyTrace.hpp"
 #include "TelemetrySinks.hpp"
@@ -17,10 +18,40 @@
 #else
 #include <sys/mman.h>
 #include <unistd.h>
-#include ?cntl.h>
+#include <fcntl.h>
 #endif
 
+#include "VwaRangeAbi.hpp"
+#include "VwaRangePopulate.hpp"
+#include "QuantTypeTable.hpp"
 namespace Deep2 {
+
+namespace {
+// Map Elastic TensorFormat → certified quant blockBytes (no second GGML table).
+unsigned long BlockBytesForFormat(TensorFormat fmt) {
+    uint32_t ggml = 0;
+    switch (fmt) {
+    case TensorFormat::FP32: ggml = 0; break;
+    case TensorFormat::FP16: ggml = 1; break;
+    case TensorFormat::Q4_0: ggml = 2; break;
+    case TensorFormat::Q4_1: ggml = 3; break;
+    case TensorFormat::Q5_0: ggml = 6; break;
+    case TensorFormat::Q5_1: ggml = 7; break;
+    case TensorFormat::Q8_0: ggml = 8; break;
+    case TensorFormat::Q2_K: ggml = 10; break;
+    case TensorFormat::Q3_K: ggml = 11; break;
+    case TensorFormat::Q4_K: ggml = 12; break;
+    case TensorFormat::Q5_K: ggml = 13; break;
+    case TensorFormat::Q6_K: ggml = 14; break;
+    default: return 0;
+    }
+    return static_cast<unsigned long>(QuantTypeBlockBytes(ggml));
+}
+
+// Host VirtualAlloc is not GPU DMA — B7 must not seal on this path.
+std::atomic<uint64_t> g_vwaHostStagingHot{0};
+std::atomic<uint64_t> g_vwaHotWithNullGpu{0};
+} // namespace
 
 // ============================================================================
 // Lifecycle
@@ -134,7 +165,8 @@ bool ElasticResidencyManager::RegisterTensor(
     size_t fileOffset,
     size_t compressedBytes,
     TensorFormat nativeFormat,
-    const void* sourceData)
+    const void* sourceData,
+    uint32_t shardId)
 {
     std::lock_guard<std::mutex> lock(tensorsMutex_);
     if (!initialized_.load()) {
@@ -151,6 +183,7 @@ bool ElasticResidencyManager::RegisterTensor(
     tensor->layerIndex = layerIndex;
     tensor->expertIndex = expertIndex;
     tensor->fileOffset = fileOffset;
+    tensor->shardId = shardId;
     tensor->compressedBytes = compressedBytes;
     tensor->sourceData = sourceData;
     tensor->nativeFormat = nativeFormat;
@@ -162,6 +195,10 @@ bool ElasticResidencyManager::RegisterTensor(
 
     tensors_.emplace(name, tensor);
     return true;
+}
+
+void ElasticResidencyManager::SetPhysicalBackend(vwa::IPhysicalBackend* backend) {
+    physicalBackend_ = backend;
 }
 
 bool ElasticResidencyManager::SetPlannedPlacement(const std::string& name,
@@ -747,7 +784,21 @@ void ElasticResidencyManager::ExecuteNvmeToRam(ElasticResidentTensor& t) {
 #endif
     t.compressedAllocated = allocSize;
 
-    // Read from source (already-mapped GGUF data or file)
+    auto freeCompressedFail = [&]() {
+#ifdef _WIN32
+        if (t.compressedData) VirtualFree(t.compressedData, 0, MEM_RELEASE);
+#else
+        if (t.compressedData) free(t.compressedData);
+#endif
+        t.compressedData = nullptr;
+        t.compressedAllocated = 0;
+        ReleaseWarmCompressed(allocSize);
+        t.state.store(ResidencyState::Failed);
+        t.inFlightOps.fetch_sub(1);
+    };
+
+    // Read from source (already-mapped GGUF data or resolved physical range).
+    // LAW: zero-fill is forbidden (VWA_ELASTIC_ZERO_FILL=0).
     if (t.compressedData) {
         auto* ev = TraceBegin(0, t.layerIndex, t.expertIndex, t.compressedBytes, 0, 1); // COLD → RAM
         if (ev) {
@@ -755,13 +806,83 @@ void ElasticResidencyManager::ExecuteNvmeToRam(ElasticResidentTensor& t) {
         }
 
         if (t.sourceData) {
-            // Logical residency fill from already-mapped source — NOT a new ReadFile.
+            // Mapped backing only — not a second resolver.
             const IoTransferId xfer = NoteNvmeRequest(t.compressedBytes, false);
             memcpy(t.compressedData, t.sourceData, t.compressedBytes);
             NoteNvmeConsumed(xfer, t.compressedBytes);
+        } else if (physicalBackend_) {
+            // Resolve whole-tensor span from audited RMV facts, then exact read.
+            const unsigned long bb = BlockBytesForFormat(t.nativeFormat);
+            VwaMountedPhysical mounted{};
+            unsigned long vs = VwaPopulateMountedPhysicalFromRmvFacts(
+                static_cast<unsigned __int64>(t.fileOffset),
+                static_cast<unsigned __int64>(t.compressedBytes),
+                bb ? bb : 1ul, // opaque blob: treat as 1-byte blocks if unknown
+                t.shardId,
+                static_cast<unsigned __int64>(t.generation.load()),
+                /*fileBacked=*/true,
+                mounted);
+            if (vs != VWA_OK) {
+                fprintf(stderr,
+                    "[ElasticResidencyManager] FATAL: VwaPopulate failed '%s' code=%lu\n",
+                    t.name.c_str(), vs);
+                freeCompressedFail();
+                return;
+            }
+            VwaBlockRange ask{};
+            ask.firstBlock = 0;
+            ask.blockCount = mounted.tensorByteSize / mounted.blockBytes;
+            if (ask.blockCount == 0 ||
+                (mounted.tensorByteSize % mounted.blockBytes) != 0) {
+                // Non-integral geometry: fall back to single opaque span via backend
+                // at registered absolute offset (still no zero-fill).
+                ask.blockCount = 0;
+            }
+            VwaPhysicalRange span{};
+            if (ask.blockCount) {
+                vs = VwaResolveBlocks(&mounted, &ask, &span);
+                if (vs != VWA_OK ||
+                    span.absoluteFileOffset !=
+                        static_cast<unsigned __int64>(t.fileOffset) ||
+                    span.byteCount !=
+                        static_cast<unsigned __int64>(t.compressedBytes)) {
+                    fprintf(stderr,
+                        "[ElasticResidencyManager] FATAL: VwaResolveBlocks "
+                        "mismatch '%s' code=%lu\n",
+                        t.name.c_str(), vs);
+                    freeCompressedFail();
+                    return;
+                }
+            } else {
+                span.absoluteFileOffset =
+                    static_cast<unsigned __int64>(t.fileOffset);
+                span.byteCount =
+                    static_cast<unsigned __int64>(t.compressedBytes);
+                span.shardId = t.shardId;
+            }
+
+            const IoTransferId xfer = NoteNvmeRequest(t.compressedBytes, true);
+            if (!physicalBackend_->Read(t.shardId,
+                                        span.absoluteFileOffset,
+                                        span.byteCount,
+                                        t.compressedData)) {
+                fprintf(stderr,
+                    "[ElasticResidencyManager] FATAL: physical Read failed '%s' "
+                    "shard=%u off=%llu bytes=%llu\n",
+                    t.name.c_str(), t.shardId,
+                    (unsigned long long)span.absoluteFileOffset,
+                    (unsigned long long)span.byteCount);
+                freeCompressedFail();
+                return;
+            }
+            NoteNvmeConsumed(xfer, t.compressedBytes);
         } else {
-            // No source pointer available — zero-fill as fallback (will fail validation)
-            memset(t.compressedData, 0, t.compressedBytes);
+            fprintf(stderr,
+                "[ElasticResidencyManager] FATAL: tensor '%s' has no sourceData "
+                "and no physicalBackend (fileOffset=%zu bytes=%zu) — zero-fill forbidden\n",
+                t.name.c_str(), t.fileOffset, t.compressedBytes);
+            freeCompressedFail();
+            return;
         }
 
         if (ev) {
@@ -782,13 +903,19 @@ void ElasticResidencyManager::ExecuteDequantStage(ElasticResidentTensor& t) {
         return;
     }
 
-    // Determine output element count and size
-    // For now, assume FP32 staging. Real implementation should query
-    // the tensor shape from metadata.
-    size_t elementCount = t.compressedBytes * 2;  // rough: Q4_0 is 4 bits per weight
-    size_t stagedBytes = elementCount * sizeof(float);
-    size_t allocSize = (stagedBytes + config_.pageAlignment - 1) & ~(config_.pageAlignment - 1);
+    // Packed GPU path: keep quantized bytes; no whole-tensor FP32 expand.
+    if (config_.useQuantizedGpuPath) {
+        t.stagedData = nullptr;
+        t.stagedBytes = 0;
+        t.stagedAllocated = 0;
+        t.stagedFormat = t.nativeFormat;
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
 
+    // Host path: stage opaque copy of compressed for DMA (not FP32 undigest).
+    size_t stagedBytes = t.compressedBytes;
+    size_t allocSize = (stagedBytes + config_.pageAlignment - 1) & ~(config_.pageAlignment - 1);
     if (!ReserveWarmStaged(allocSize)) {
         EvictLeastRecentlyUsed(allocSize);
         if (!ReserveWarmStaged(allocSize)) {
@@ -799,7 +926,6 @@ void ElasticResidencyManager::ExecuteDequantStage(ElasticResidentTensor& t) {
             return;
         }
     }
-
 #ifdef _WIN32
     t.stagedData = VirtualAlloc(nullptr, allocSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #else
@@ -807,17 +933,9 @@ void ElasticResidencyManager::ExecuteDequantStage(ElasticResidentTensor& t) {
 #endif
     t.stagedBytes = stagedBytes;
     t.stagedAllocated = allocSize;
-    t.stagedFormat = TensorFormat::FP32;
-
-    // Dequantize using QuantKernelRegistry
-    // TODO: integrate with actual registry singleton
-    // For now, stub: call the corrected dequant_q4_0 if format matches
-    if (t.nativeFormat == TensorFormat::Q4_0 && t.compressedData) {
-        // dequant_q4_0 expects block_q4_0 layout
-        // This is a placeholder; real integration needs shape info
-        // QuantKernelRegistry::Instance().Dequantize(t.compressedData, (float*)t.stagedData, ...);
-    }
-
+    t.stagedFormat = t.nativeFormat;
+    if (t.stagedData && t.compressedData)
+        memcpy(t.stagedData, t.compressedData, stagedBytes);
     t.inFlightOps.fetch_sub(1);
 }
 
@@ -835,7 +953,21 @@ void ElasticResidencyManager::ExecuteRamToVram(ElasticResidentTensor& t) {
         return;
     }
 
-    size_t uploadBytes = config_.useQuantizedGpuPath ? t.compressedBytes : t.stagedBytes;
+    const void* src = nullptr;
+    size_t uploadBytes = 0;
+    if (config_.useQuantizedGpuPath || !t.stagedData) {
+        src = t.compressedData;
+        uploadBytes = t.compressedBytes;
+    } else {
+        src = t.stagedData;
+        uploadBytes = t.stagedBytes;
+    }
+    if (!src || uploadBytes == 0) {
+        t.state.store(srcState);
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
+
     if (!ReserveHot(uploadBytes)) {
         EvictLeastRecentlyUsed(uploadBytes);
         if (!ReserveHot(uploadBytes)) {
@@ -847,14 +979,32 @@ void ElasticResidencyManager::ExecuteRamToVram(ElasticResidentTensor& t) {
         }
     }
 
-    // TODO: actual GPU upload via Vulkan/CUDA
-    // void* gpuPtr = GpuBackend::Upload(t.stagedData or t.compressedData, uploadBytes);
-    // t.gpuData = gpuPtr;
-    // t.gpuBytes = uploadBytes;
-
-    // Stub: no real vkCmdCopyBuffer — do not count GPU transfer here.
-    t.gpuData = nullptr;  // placeholder
+    // Host-side staging copy — NOT proven GPU DMA / vkCmdCopyBuffer.
+    // B7 VWA_GPU_STAGE_001 must not PASS on this path (witness HOST_STAGING_HOT).
+    // Real device upload binds later via Vulkan transfer; null-Hot remains forbidden.
+#ifdef _WIN32
+    t.gpuData = VirtualAlloc(nullptr, uploadBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
+    t.gpuData = aligned_alloc(config_.pageAlignment, uploadBytes);
+#endif
+    if (!t.gpuData) {
+        g_vwaHotWithNullGpu.fetch_add(1, std::memory_order_relaxed);
+        ReleaseHot(uploadBytes);
+        t.state.store(srcState);
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
+    memcpy(t.gpuData, src, uploadBytes);
     t.gpuBytes = uploadBytes;
+    if (!t.gpuData) {
+        // Defense in depth: never publish Hot with null device object.
+        g_vwaHotWithNullGpu.fetch_add(1, std::memory_order_relaxed);
+        ReleaseHot(uploadBytes);
+        t.state.store(srcState);
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
+    g_vwaHostStagingHot.fetch_add(1, std::memory_order_relaxed);
     t.state.store(ResidencyState::Hot);
     t.inFlightOps.fetch_sub(1);
 }
@@ -867,12 +1017,16 @@ void ElasticResidencyManager::ExecuteVramToRam(ElasticResidentTensor& t) {
         return;
     }
 
-    // TODO: actual GPU download or free
-    // GpuBackend::Free(t.gpuData);
-    t.gpuData = nullptr;
+    if (t.gpuData) {
+#ifdef _WIN32
+        VirtualFree(t.gpuData, 0, MEM_RELEASE);
+#else
+        free(t.gpuData);
+#endif
+        t.gpuData = nullptr;
+    }
     ReleaseHot(t.gpuBytes);
     t.gpuBytes = 0;
-
     t.inFlightOps.fetch_sub(1);
 }
 

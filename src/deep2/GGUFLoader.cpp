@@ -831,15 +831,17 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
     result.loadTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
     result.success = true;
 
-    // Calculate total size
-    result.totalSize = 0;
+    // totalSize = on-disk file EOF (range-audit authority). Payload sum is print-only.
+    size_t payloadBytes = 0;
     for (const auto& t : result.tensors) {
-        result.totalSize += t.size;
+        payloadBytes += t.size;
     }
+    result.totalSize = static_cast<size_t>(fileSize);
 
     if (options.verbose) {
-        printf("[GGUF] Loaded %zu tensors, %.2f MB in %.1f ms\n",
+        printf("[GGUF] Loaded %zu tensors, %.2f MB payload / %.2f MB file in %.1f ms\n",
                result.tensors.size(),
+               payloadBytes / (1024.0 * 1024.0),
                result.totalSize / (1024.0 * 1024.0),
                result.loadTimeMs);
         result.metadata.Print();

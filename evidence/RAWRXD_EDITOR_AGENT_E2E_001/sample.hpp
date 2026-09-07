@@ -1,0 +1,1 @@
+int generate(int n);

@@ -143,7 +143,8 @@ public:
     bool RegisterTensor(const std::string& name,
                         size_t fileOffset,
                         size_t tensorBytes,
-                        const void* sourceData);
+                        const void* sourceData,
+                        uint32_t shardId = 0);
 
     // ── Acquisition ──────────────────────────────────────────────────
     // Acquire a lease on a tensor. May trigger eviction/remap.
@@ -217,6 +218,7 @@ private:
         size_t fileOffset = 0;
         size_t tensorBytes = 0;
         const void* sourceData = nullptr;
+        uint32_t shardId = 0;
     };
     std::map<std::string, SourceTensor> sources_;
 

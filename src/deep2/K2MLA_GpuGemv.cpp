@@ -3,6 +3,7 @@
 // Q4 path: MLA_Gemv → (FUSED_Q4KT|DispatchGEMVPacked) → GetGEMV fallback.
 #include "K2MLA_GpuGemv.hpp"
 #include "K2BraidExecutionPolicy.hpp"
+#include "K2LogitsLineage.hpp"
 #include "K2MLA_FusedQ4KT.hpp"
 #include "K2MLA_QaCritical.hpp"
 #include "K2MlaQBranchTiming.hpp"
@@ -13,6 +14,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <mutex>
+#include <vector>
 
 namespace Deep2 {
 namespace {
@@ -35,8 +37,17 @@ size_t PackedNeed(int ty, uint32_t rows, uint32_t cols) {
         if ((cols % 32u) != 0) return 0;
         return (size_t)rows * ((size_t)cols / 32u) * 34u;
     }
+    if (ty == 14) {
+        if ((cols % 256u) != 0) return 0;
+        return (size_t)rows * ((size_t)cols / 256u) * 210u;
+    }
     return 0;
 }
+
+uint64_t g_q6Ops = 0, g_rangeArgmaxOps = 0;
+uint64_t g_argmaxBytes = 0, g_rangeOutBytes = 0, g_fullReadback = 0;
+std::mutex g_pinMu;
+std::vector<float> g_rangeScratch;
 
 void NoteFamily(uint8_t tag, bool uploaded, bool hit) {
     auto add = [&](uint64_t& u, uint64_t& h) {
@@ -70,6 +81,8 @@ void MLA_GpuGemv_Reset() {
     g_hitQ = g_hitK = g_hitV = g_hitO = 0;
     g_keyNew = g_keyReuse = 0;
     g_slotEvict = g_metaUp = g_weightUp = g_pinKeyZero = 0;
+    g_q6Ops = g_rangeArgmaxOps = 0;
+    g_argmaxBytes = g_rangeOutBytes = g_fullReadback = 0;
     MLA_FusedQ4KT_Reset();
     MLA_QaCrit_Reset();
 }
@@ -120,23 +133,43 @@ void MLA_GpuGemv_Emit(FILE* f) {
 static bool TryGpu(int ty, const void* packed, size_t bytes,
                    const float* input, float* output,
                    uint32_t rows, uint32_t cols,
-                   const BraidExecutionPlan* braidPlan) {
-    if (!MLA_GpuGemvWanted() || !packed || !input || !output) return false;
-    if (ty != 12 && ty != 8) { ++g_skip; return false; }
+                   const BraidExecutionPlan* braidPlan,
+                   const MlaPackedExec* exec) {
+    if (!MLA_GpuGemvWanted() || !packed || !input) return false;
+    const bool rangeArgmax =
+        exec && exec->mode == MlaPackedExecMode::RangeArgmax;
+    if (!output && !rangeArgmax) return false;
+    if (ty != 12 && ty != 8 && ty != 14) { ++g_skip; return false; }
     if (ty == 8) {
         const char* q4 = std::getenv("DEEP2_MLA_GPU_Q4_ONLY");
         if (q4 && q4[0] == '1') { ++g_skip; return false; }
     }
+    uint32_t useRows = rows;
+    if (exec && exec->rowCount) useRows = exec->rowCount;
     ++g_attempts;
-    const size_t need = PackedNeed(ty, rows, cols);
+    const size_t need = PackedNeed(ty, useRows, cols);
     if (!need) { ++g_skip; return false; }
     if (!bytes) bytes = need;
     if (bytes < need) { ++g_skip; return false; }
     auto* vc = K2GpuStreamCopy_Vc();
     if (!vc) { ++g_skip; return false; }
+
+    float* outBuf = output;
+    if (rangeArgmax) {
+        if (!exec->argmaxOut) { ++g_skip; return false; }
+        if (g_rangeScratch.size() < useRows) g_rangeScratch.resize(useRows);
+        outBuf = g_rangeScratch.data();
+    }
+
+    // Pin metadata under g_pinMu; dispatch under g_mu (shared host IO).
     const uint64_t tWait0 = MLA_FusedQ4KT_NowUs();
-    std::lock_guard<std::mutex> lock(g_mu);
+    std::unique_lock<std::mutex> pinLk(g_pinMu, std::defer_lock);
+    std::unique_lock<std::mutex> dispLk(g_mu, std::defer_lock);
+    pinLk.lock();
+    dispLk.lock();
+    pinLk.unlock(); // residency lookup done at Dispatch entry; release early
     const uint64_t waitUs = MLA_FusedQ4KT_NowUs() - tWait0;
+
     const uint64_t rej0 = vc->WeightPinRejects();
     const uint64_t up0 = vc->GemvWeightUploads();
     const uint64_t hit0 = vc->WeightContentHits();
@@ -161,17 +194,22 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     const uint64_t tBody0 = MLA_FusedQ4KT_NowUs();
     if (ty == 12 && allowFused && wantFused) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
-        ok = MLA_FusedQ4KT(packed, bytes, input, output, rows, cols, pk);
+        ok = MLA_FusedQ4KT(packed, bytes, input, outBuf, useRows, cols, pk);
         if (isQa) MLA_QaCrit_NoteFused(MLA_FusedQ4KT_NowUs() - t0, ok);
     }
     if (!ok && ty == 12) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
-        ok = vc->DispatchGEMVPacked(packed, bytes, input, output, rows, cols, pk);
+        ok = vc->DispatchGEMVPacked(packed, bytes, input, outBuf, useRows, cols,
+                                    pk);
         if (ok) MLA_NoteGemvCompatUs(t0);
         if (isQa) MLA_QaCrit_NoteCompat(MLA_FusedQ4KT_NowUs() - t0, ok);
+    } else if (!ok && ty == 14) {
+        // Logits Q6: stream window only — never pin (avoids MLA resident eviction).
+        ok = vc->DispatchGEMVQ6kPacked(packed, bytes, input, outBuf, useRows,
+                                       cols);
     } else if (!ok) {
-        ok = vc->DispatchGEMVQuant(ty, packed, bytes, input, output, rows, cols,
-                                   pk);
+        ok = vc->DispatchGEMVQuant(ty, packed, bytes, input, outBuf, useRows,
+                                   cols, pk);
     }
     const uint64_t bodyUs = MLA_FusedQ4KT_NowUs() - tBody0;
     if (!ok) {
@@ -191,6 +229,21 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     NoteFamily(tag, uploaded, hit);
     QBr_NoteLane(tag, waitUs, uploaded ? bodyUs : 0ull,
                  uploaded ? 0ull : bodyUs);
+    if (ty == 14) ++g_q6Ops;
+    if (rangeArgmax) {
+        float best = outBuf[0];
+        uint32_t bi = 0;
+        for (uint32_t i = 1; i < useRows; ++i) {
+            if (outBuf[i] > best) { best = outBuf[i]; bi = i; }
+        }
+        const uint32_t base =
+            exec->rowStart ? exec->rowStart : 0u;
+        exec->argmaxOut->value = best;
+        exec->argmaxOut->row = base + bi;
+        g_rangeOutBytes += (uint64_t)useRows * 4ull;
+        g_argmaxBytes += sizeof(PackedArgmax);
+        ++g_rangeArgmaxOps;
+    }
     if (isQa) MLA_QaCrit_End(MLA_FusedQ4KT_NowUs() - tCall0);
     ++g_ops;
     return true;
@@ -200,7 +253,8 @@ bool MLA_TryGpuGemv(int ggmlType, const void* packed, size_t bytes,
                     const float* input, float* output,
                     uint32_t rows, uint32_t cols) {
     ++g_tryEntry;
-    return TryGpu(ggmlType, packed, bytes, input, output, rows, cols, nullptr);
+    return TryGpu(ggmlType, packed, bytes, input, output, rows, cols, nullptr,
+                  nullptr);
 }
 
 // Map pinKey low byte to KernelRole for braid policy attribution.
@@ -246,7 +300,8 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
         K2Braid_NoteUnsupportedReinterpret();
     }
 
-    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols, &plan)) {
+    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols, &plan,
+               nullptr)) {
         // Packed GPU GEMV succeeded — braid owns packed execution.
         K2Braid_NotePackedExec(role);
         K2Braid_NoteExecuted(role);
@@ -276,5 +331,86 @@ bool MLA_GemvQ4K(const void* packed, size_t bytes,
                  uint32_t rows, uint32_t cols) {
     return MLA_Gemv(12, packed, bytes, input, output, rows, cols);
 }
+
+bool MLA_GemvRangeArgmax(int ggmlType, const void* packed, size_t bytes,
+                         const float* input, uint32_t rowStart,
+                         uint32_t rowCount, uint32_t cols,
+                         const PhysicalTensorRange* sourceRanges,
+                         size_t sourceRangeCount,
+                         PackedArgmax& out) {
+    ++g_gemvEntry;
+    if (!packed || !input || !rowCount || !cols) return false;
+    // Provenance required for live logits cut — no anonymous GPU dispatch.
+    if (!sourceRanges || sourceRangeCount == 0) return false;
+    const size_t rowBytes = PackedNeed(ggmlType, 1, cols);
+    if (!rowBytes) return false;
+    const size_t need = rowBytes * (size_t)rowCount;
+    const size_t off = rowBytes * (size_t)rowStart;
+    if (bytes && bytes < off + need) return false;
+    // Range law: packed slice offset/length must match resolved relative span.
+    uint64_t sumBytes = 0;
+    for (size_t i = 0; i < sourceRangeCount; ++i)
+        sumBytes += sourceRanges[i].byteCount;
+    if (sumBytes != need) return false;
+    if (sourceRangeCount == 1 &&
+        sourceRanges[0].tensorRelativeOffset != (uint64_t)off)
+        return false;
+    const void* slice =
+        static_cast<const uint8_t*>(packed) + off;
+
+    K2Braid_NoteMlaGemvEntry();
+    BraidExecutionPlan plan;
+    BraidGGMLType braidType = BraidGGMLType::Q6_K;
+    if (ggmlType == 12) braidType = BraidGGMLType::Q4_K;
+    else if (ggmlType == 8) braidType = BraidGGMLType::Q8_0;
+    MLA_GpuGemv_SetPinKey(7ull); // logits / output.weight family
+    K2Braid_PlanTagged(KernelRole::UNKNOWN, braidType, 7, plan);
+    K2Braid_NotePlan(KernelRole::UNKNOWN);
+
+    MlaPackedExec exec{};
+    exec.mode = MlaPackedExecMode::RangeArgmax;
+    exec.rowStart = rowStart;
+    exec.rowCount = rowCount;
+    exec.argmaxOut = &out;
+    exec.sourceRanges = sourceRanges;
+    exec.sourceRangeCount = sourceRangeCount;
+    if (!TryGpu(ggmlType, slice, need, input, nullptr, rowCount, cols, &plan,
+                &exec))
+        return false;
+    // Receipt = same ranges passed in (no second resolve / name relookup).
+    LogitsLineage_NoteDispatched(sourceRanges, sourceRangeCount);
+    K2Braid_NotePackedExec(KernelRole::UNKNOWN);
+    K2Braid_NoteExecuted(KernelRole::UNKNOWN);
+    return true;
+}
+
+void MLA_TryGpuHot_Reset() {
+    g_q6Ops = g_rangeArgmaxOps = 0;
+    g_argmaxBytes = g_rangeOutBytes = g_fullReadback = 0;
+}
+
+void MLA_TryGpuHot_Emit(FILE* f) {
+    if (!f) f = stdout;
+    fprintf(f,
+            "TRYGPU_HOTPATCH=1 LIVE_CALLER=MLA_Gemv TRYGPU_DIRECT_LIVE_ENTRY=%llu\n"
+            "PACKED_Q4_EXEC=1 PACKED_Q6_EXEC=%u\n"
+            "MLA_Q6_PACKED_OPS=%llu RANGE_ARGMAX_OPS=%llu\n"
+            "GPU_ARGMAX_BYTES=%llu GPU_RANGE_OUT_BYTES=%llu "
+            "GPU_LOGITS_FULL_READBACK=%llu\n",
+            (unsigned long long)g_tryEntry,
+            g_q6Ops ? 1u : 0u,
+            (unsigned long long)g_q6Ops,
+            (unsigned long long)g_rangeArgmaxOps,
+            (unsigned long long)g_argmaxBytes,
+            (unsigned long long)g_rangeOutBytes,
+            (unsigned long long)g_fullReadback);
+    fflush(f);
+}
+
+uint64_t MLA_Q6PackedOps() { return g_q6Ops; }
+uint64_t MLA_RangeArgmaxOps() { return g_rangeArgmaxOps; }
+uint64_t MLA_GpuArgmaxBytes() { return g_argmaxBytes; }
+uint64_t MLA_GpuRangeOutBytes() { return g_rangeOutBytes; }
+uint64_t MLA_GpuFullReadback() { return g_fullReadback; }
 
 } // namespace Deep2

@@ -47,6 +47,36 @@ int main() {
         wit.planCreated && wit.patchCreated && wit.patchApplied &&
         wit.buildStarted && wit.buildCompleted && wit.buildExitCaptured &&
         wit.diffRendered && wit.undoAvailable && wit.agentResultEmitted;
+
+#ifdef _WIN32
+    CreateDirectoryA(
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_AGENT_WORKSPACE_LIVE_001", nullptr);
+    FILE* gf = nullptr;
+    fopen_s(
+        &gf,
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_AGENT_WORKSPACE_LIVE_001\\GATE.txt",
+        "w");
+    if (gf) {
+        fprintf(gf, "RAWRXD_AGENT_WORKSPACE_LIVE_001=%s\n",
+                pass ? "PASS" : "FAIL");
+        fprintf(gf, "U03_AGENT_PATCH_LIVE=%s\n", pass ? "PASS" : "FAIL");
+        fprintf(gf, "U04_AGENT_BUILD_LIVE=%s\n", pass ? "PASS" : "FAIL");
+        fprintf(gf, "SESSION_CREATED=%d\n", wit.sessionCreated);
+        fprintf(gf, "WORKSPACE_OPENED=%d\n", wit.workspaceOpened);
+        fprintf(gf, "FILES_READ=%d\n", wit.filesRead);
+        fprintf(gf, "PLAN_CREATED=%d\n", wit.planCreated);
+        fprintf(gf, "PATCH_CREATED=%d\n", wit.patchCreated);
+        fprintf(gf, "PATCH_APPLIED=%d\n", wit.patchApplied);
+        fprintf(gf, "BUILD_STARTED=%d\n", wit.buildStarted);
+        fprintf(gf, "BUILD_COMPLETED=%d\n", wit.buildCompleted);
+        fprintf(gf, "BUILD_EXIT_CODE_CAPTURED=%d\n", wit.buildExitCaptured);
+        fprintf(gf, "DIFF_RENDERED=%d\n", wit.diffRendered);
+        fprintf(gf, "UNDO_AVAILABLE=%d\n", wit.undoAvailable);
+        fprintf(gf, "AGENT_RESULT_EMITTED=%d\n", wit.agentResultEmitted);
+        fclose(gf);
+    }
+#endif
+
     puts(pass ? "RAWRXD_AGENT_WORKSPACE_LIVE_001=PASS"
               : "RAWRXD_AGENT_WORKSPACE_LIVE_001=FAIL");
     return pass ? 0 : 1;

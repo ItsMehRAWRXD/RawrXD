@@ -43,4 +43,11 @@ bool LogitsClimb_ArgmaxPackedSerial(const uint8_t* base, size_t baseBytes,
                                     const float* hidden, int32_t& bestTok,
                                     float* bestValOut);
 
+// Persistent pool over [rowLo, rowHi).
+bool LogitsClimb_ArgmaxPackedRange(const uint8_t* base, size_t baseBytes,
+                                   size_t vocabSize, size_t hiddenDim,
+                                   size_t rowLo, size_t rowHi,
+                                   const float* hidden, bool forceFloat,
+                                   int32_t& bestTok, float* bestValOut);
+
 } // namespace Deep2

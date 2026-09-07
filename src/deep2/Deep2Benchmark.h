@@ -22,6 +22,29 @@ enum class BenchmarkPhase : uint8_t {
     LATENCY = 6         // First token and per-token latency
 };
 
+// Fail reason codes for certification (hard guards)
+enum BenchmarkFailReason : uint32_t {
+    BENCH_FAIL_NONE = 0,
+    BENCH_FAIL_NON_PRODUCTION_DECODE_PATH = 1,
+    BENCH_FAIL_DECODE_UNSTABLE = 2,
+    BENCH_FAIL_ZERO_TOKENS = 3,
+    BENCH_FAIL_INSUFFICIENT_WINDOWS = 4,
+};
+
+// Full 512-token windows required before endurance / certify stream lock.
+constexpr uint64_t kBenchDecodeWindowTokens = 512;
+constexpr uint32_t kBenchRequiredFullWindowsCertify = 4;
+
+// Rolling decode window (endurance / stability)
+struct DecodeWindow {
+    uint64_t tokenBegin = 0;
+    uint64_t tokenEnd = 0;
+    double   seconds = 0.0;
+    double   tps = 0.0;
+    uint64_t vramBytes = 0;
+    uint64_t kvBytes = 0;
+};
+
 // ============================================================================
 // Stream Benchmark Telemetry Structure
 // Native ABI for Deep2 Engine telemetry emission
@@ -40,22 +63,35 @@ struct StreamBenchmark {
     uint64_t    target_tokens;
     
     // Timing (nanoseconds for precision, reported as ms)
-    uint64_t    first_token_ns;
+    uint64_t    first_token_ns;                 // legacy: TTFT_E2E
     uint64_t    total_decode_ns;
     uint64_t    per_token_min_ns;
     uint64_t    per_token_max_ns;
     uint64_t    per_token_avg_ns;
+    uint64_t    ttft_e2e_ns;                    // submit → first emittable token
+    uint64_t    first_decode_after_prefill_ns;  // prefill end → first decode token
     
     // Throughput
     double      prefill_tps;
-    double      decode_tps;
-    double      sustained_tps;      // TPS at 90% of stream completion
+    double      decode_tps;                     // DECODE_TPS_AVG (engine decode window)
+    double      sustained_tps;                  // min rolling-window TPS
+    double      decode_tps_start;               // first window TPS
+    double      decode_tps_min_window;          // lowest window TPS
+    double      max_stable_streaming_tps;       // certified stream capacity
+    
+    // Latency percentiles (per-token decode, ms)
+    double      decode_p50_ms;
+    double      decode_p95_ms;
+    double      decode_p99_ms;
     
     // Memory
     uint64_t    kv_bytes;
+    uint64_t    kv_start_bytes;
+    uint64_t    kv_end_bytes;
     uint64_t    peak_vram_bytes;
     uint64_t    peak_system_bytes;
     double      kv_bytes_per_token;
+    double      duration_sec;
     
     // GPU
     uint64_t    gpu_cycles;
@@ -72,13 +108,22 @@ struct StreamBenchmark {
     uint32_t    gpu_power_sample_count;
     
     // Stability
-    uint32_t    token_drops;        // Missed decode deadlines
+    uint32_t    token_drops;
     uint32_t    thermal_throttle_events;
-    double      tps_variance;       // Coefficient of variation
+    double      tps_variance;
     
-    // Stream health
-    bool        stream_stable;
-    double      degradation_ratio;    // TPS(end) / TPS(start)
+    // Stream health / certification guards
+    bool        stream_stable;              // cert AND: decode+vram+kv+production
+    bool        used_production_decode_path;
+    bool        decode_real;
+    bool        decode_stable;              // full windows + degradation only
+    bool        vram_stable;
+    bool        kv_stable;
+    bool        endurance_certifiable;      // >= kBenchRequiredFullWindowsCertify
+    double      degradation_ratio;          // min_full_window / start_full_window
+    uint32_t    full_window_count;          // complete 512-token windows only
+    uint32_t    tail_window_tokens;         // incomplete final window (excluded from min)
+    uint32_t    fail_reason_code;
     
     StreamBenchmark() {
         memset(this, 0, sizeof(*this));
@@ -107,6 +152,9 @@ struct SaturationResult {
     double          aggregate_tps;
     double          worst_first_token_ms;
     double          avg_stream_tps;
+    double          worst_stream_tps;
+    double          p95_ttft_ms;
+    double          fairness_ratio;     // slowest / fastest stream TPS
     uint64_t        total_tokens_generated;
     bool            all_streams_stable;
 };
@@ -132,10 +180,13 @@ struct CertificationReport {
     std::string timestamp;
     std::string hardware_summary;
     std::string model_info;
+    std::string quant_info;
+    std::string fail_reason;
     
     // Phase results
     StreamBenchmark     single_stream;
     std::vector<EnduranceResult> endurance_matrix;
+    std::vector<DecodeWindow> decode_windows;
     SaturationResult    saturation;
     ThermalResult       thermal;
     
@@ -146,6 +197,7 @@ struct CertificationReport {
     bool endurance_pass;
     bool saturation_pass;
     bool thermal_pass;
+    bool production_decode_pass;
     bool overall_certified;
     
     // Targets
@@ -231,10 +283,13 @@ public:
     
     // Emit telemetry
     void emitBenchmarkTelemetry(const StreamBenchmark& bench, BenchmarkPhase phase);
+    void emitBenchmarkCertTelemetry(const StreamBenchmark& bench,
+                                    const CertificationReport* report = nullptr);
     
     // Generate reports
     std::string generateJSONReport(const CertificationReport& report);
     std::string generateMarkdownReport(const CertificationReport& report);
+    std::string generateCertTelemetry(const CertificationReport& report);
     void saveReport(const CertificationReport& report, const std::string& path);
     
     // Utility
@@ -251,5 +306,12 @@ private:
 // Global benchmark telemetry emitter
 // ============================================================================
 void EmitBenchmarkTelemetry(const StreamBenchmark& bench, BenchmarkPhase phase);
+void EmitBenchmarkCertTelemetry(const StreamBenchmark& bench,
+                                const char* model,
+                                const char* quant,
+                                const char* device,
+                                uint32_t concurrentStreams = 1);
+
+const char* BenchmarkFailReasonString(uint32_t code);
 
 } // namespace Deep2

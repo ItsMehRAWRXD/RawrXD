@@ -46,6 +46,21 @@ inline std::string normalizeMetaspace(std::string_view text) {
     return normalized;
 }
 
+// GPT-2 / Llama-3 BPE: space → U+0120 (Ġ). No leading dummy prefix.
+inline std::string normalizeGpt2(std::string_view text) {
+    static const char kG[] = "\xC4\xA0"; // U+0120 Ġ
+    std::string normalized;
+    normalized.reserve(text.size() + 8);
+    for (char c : text) {
+        if (c == ' ') {
+            normalized.append(kG, 2);
+        } else {
+            normalized.push_back(c);
+        }
+    }
+    return normalized;
+}
+
 struct Symbol {
     std::string text;
     int prev = -1;
@@ -203,6 +218,19 @@ inline bool encode(
     std::vector<int>& output)
 {
     const std::string normalized = normalizeMetaspace(text);
+    return encodeNormalized(
+        normalized, vocab, byteFallback, scores, unkId, output);
+}
+
+inline bool encodeGpt2(
+    std::string_view text,
+    const std::unordered_map<std::string, int>& vocab,
+    const std::array<int, 256>& byteFallback,
+    const float* scores,
+    int unkId,
+    std::vector<int>& output)
+{
+    const std::string normalized = normalizeGpt2(text);
     return encodeNormalized(
         normalized, vocab, byteFallback, scores, unkId, output);
 }

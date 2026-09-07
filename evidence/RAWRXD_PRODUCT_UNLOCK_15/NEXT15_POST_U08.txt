@@ -1,0 +1,50 @@
+# NEXT 15 gates / unlocks — post U08 LOGITS_CONSTANT localization
+# Updated 2026-09-07 — closure mode (no new product surfaces until U08 green)
+
+## Current freeze
+```
+U08 RAWRXD_SECOND_MODEL_001     OPEN  FAIL_OWNER=LOGITS_CONSTANT (ussen×128)
+                                bootstrap PASS: load/tok/greedy/feedback
+PRODUCT_E2E                     FAIL-CLOSED until U08 PASS
+K2 / HTTP / MCP                 OPTIONAL — do not block product climb
+```
+
+## Next 15 (ordered)
+
+| # | Gate | Purpose | Depends |
+|---|------|---------|---------|
+| N01 | `RAWRXD_LLAMA32_PREFILL_DIVERGENCE_001` | P1/P2: prompt A vs B + bare vs template; 1-token only | U08 open |
+| N02 | `RAWRXD_LLAMA32_LAYER_COLLAPSE_001` | P3: first layer/stage where A≠B embeddings collapse | N01 → PREFILL_MATH |
+| N03 | `RAWRXD_LLAMA32_GQA_MAP_001` | queryHead→kvHead indexing vs metadata | N02 points attn |
+| N04 | `RAWRXD_LLAMA32_ROPE_GEOM_001` | rope dim/layout/pos vs GGUF rope metadata | N02/N03 |
+| N05 | `RAWRXD_LLAMA32_Q3K_GEMV_PARITY_001` | scalar vs prod GEMV on same GGUF block | N02 points proj |
+| N06 | `RAWRXD_LLAMA32_FIRST_LOGIT_SANITY_001` | first argmax ≠ locked junk; top5 diversity | N03–N05 |
+| N07 | `RAWRXD_SECOND_MODEL_001` re-seal | 128 greedy coherent; ussen lock gone | N06 |
+| N08 | `RAWRXD_AGENT_STEER_RESUME_001` disk GATE | continuity witnesses | N07 or parallel |
+| N09 | `RAWRXD_PRODUCT_E2E_001` | aggregator fail-closed over seals | N07+N08 |
+| N10 | LADDER.txt refresh | U03–U08 + PRODUCT reflect disk truth | N09 |
+| N11 | `RAWRXD_AUTOCOMPLETE_E2E_001` | editor→model→insert; TinyLlama OK | after N09 or parallel on TinyLlama |
+| N12 | `RAWRXD_AUTOCOMPLETE_CANCEL_001` | cancel + stale suppress | N11 |
+| N13 | `RAWR_DEMO_REPEATABLE_001` | load→stream→unload→reload script | N09 |
+| N14 | `RAWR_LOCAL_API_COMPAT_001` | deferred HTTP surface (not climb-critical) | optional |
+| N15 | `K2_USEFUL_TPS_001` / `G15_SEMANTIC_COHERENCE_K2` | K-lane only; not product blocker | optional |
+
+## Attack rule for N01–N06
+```
+Do NOT re-run 128-token U08 integrity until N01 names FIRST_COLLAPSE_STAGE.
+If P1_FINAL_LOGITS_DIFFER=0 and P1_EMBED_FINGERPRINT_DIFFER=1
+  → owner = PREFILL_MATH (GQA / RoPE / Q3_K) → N02
+If P2_LOGITS_DIFFER=1 and bare argmax sane
+  → owner = TEMPLATE / input-ID construction
+If embeds identical across prompts
+  → owner = EMBED path (unexpected after tok roundtrip PASS)
+```
+
+## Scoreboard target after climb
+```
+N01–N07 → U08 PASS
+N08–N10 → PRODUCT_E2E PASS
+N11–N12 → autocomplete product claim
+N13     → demo seal
+N14–N15 → optional valuation lane
+```

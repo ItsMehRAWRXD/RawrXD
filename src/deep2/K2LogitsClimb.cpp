@@ -330,6 +330,8 @@ struct Pool {
     size_t blocksPerRow = 0;
     size_t cols = 0;
     size_t vocab = 0;
+    size_t rowLo = 0;
+    size_t rowHi = 0;
     const float* hidden = nullptr;
     const block_q8_K* xQ8 = nullptr;
     bool useQ8 = false;
@@ -359,10 +361,12 @@ struct Pool {
                 if (stop) return;
                 seen = epoch;
             }
-            const size_t V = vocab;
+            const size_t V0 = rowLo;
+            const size_t V1 = rowHi ? rowHi : vocab;
+            const size_t span = (V1 > V0) ? (V1 - V0) : 0;
             const unsigned nw = nWorkers;
-            const size_t begin = (V * tid) / nw;
-            const size_t end = (V * (tid + 1)) / nw;
+            const size_t begin = V0 + (span * tid) / nw;
+            const size_t end = V0 + (span * (tid + 1)) / nw;
             float bv = -1e30f;
             size_t br = begin;
             const bool q8 = useQ8;
@@ -395,12 +399,14 @@ struct Pool {
 
     void run(const uint8_t* b, size_t rb, size_t bp, size_t c, size_t V,
              const float* h, const block_q8_K* xq, bool q8, unsigned nw,
-             float& outV, size_t& outR) {
+             float& outV, size_t& outR, size_t lo = 0, size_t hi = 0) {
         ensure(nw);
         {
             std::unique_lock<std::mutex> lk(mu);
             base = b; rowBytes = rb; blocksPerRow = bp; cols = c;
             vocab = V; hidden = h; xQ8 = xq; useQ8 = q8;
+            rowLo = lo;
+            rowHi = hi ? hi : V;
             remaining = nWorkers;
             ++epoch;
         }
@@ -634,6 +640,57 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
     uint32_t bits = 0;
     std::memcpy(&bits, &bestV, sizeof(bits));
     g_lastValBits.store(bits, std::memory_order_relaxed);
+    return true;
+}
+
+bool LogitsClimb_ArgmaxPackedRange(const uint8_t* base, size_t baseBytes,
+                                   size_t vocabSize, size_t hiddenDim,
+                                   size_t rowLo, size_t rowHi,
+                                   const float* hidden, bool forceFloat,
+                                   int32_t& bestTok, float* bestValOut) {
+    if (!base || !hidden || vocabSize == 0 || hiddenDim == 0) return false;
+    if (rowHi <= rowLo || rowHi > vocabSize) return false;
+    const size_t blocksPerRow = (hiddenDim + kBlockElems - 1) / kBlockElems;
+    const size_t rowBytes = blocksPerRow * kBlockBytes;
+    if (rowBytes == 0 || baseBytes / rowBytes < vocabSize) return false;
+
+    unsigned hw = std::thread::hardware_concurrency();
+    if (hw == 0) hw = 8;
+    unsigned nThreads = (std::min)(20u, (std::max)(1u, hw));
+    if (const char* e = std::getenv("DEEP2_LOGITS_THREADS")) {
+        const unsigned v = static_cast<unsigned>(std::strtoul(e, nullptr, 10));
+        if (v >= 1 && v <= 64) nThreads = v;
+    }
+    const size_t span = rowHi - rowLo;
+    if (span < nThreads * 256u) nThreads = 1;
+
+    const bool useQ8 = !forceFloat && (hiddenDim % kBlockElems) == 0 &&
+        !(std::getenv("DEEP2_LOGITS_Q8") &&
+          std::getenv("DEEP2_LOGITS_Q8")[0] == '0');
+    static thread_local std::vector<block_q8_K> tlsQ8;
+    block_q8_K* xQ8 = nullptr;
+    if (useQ8) {
+        if (tlsQ8.size() < blocksPerRow) tlsQ8.resize(blocksPerRow);
+        quantize_row_q8_K(hidden, tlsQ8.data(), hiddenDim);
+        xQ8 = tlsQ8.data();
+    }
+
+    float bestV = -1e30f;
+    size_t bestR = rowLo;
+    if (nThreads == 1) {
+        for (size_t r = rowLo; r < rowHi; ++r) {
+            const float sc = useQ8
+                ? DotQ6KQ8Row(base + r * rowBytes, blocksPerRow, xQ8)
+                : LogitsClimb_DotQ6KRow(
+                      base + r * rowBytes, blocksPerRow, hiddenDim, hidden);
+            if (sc > bestV) { bestV = sc; bestR = r; }
+        }
+    } else {
+        pool().run(base, rowBytes, blocksPerRow, hiddenDim, vocabSize, hidden,
+                   xQ8, useQ8, nThreads, bestV, bestR, rowLo, rowHi);
+    }
+    bestTok = static_cast<int32_t>(bestR);
+    if (bestValOut) *bestValOut = bestV;
     return true;
 }
 

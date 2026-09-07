@@ -127,6 +127,15 @@ public:
         uint32_t expertId) const;
 
     // -------------------------------------------------------------------------
+    // Iteration (physical mount / residency registration)
+    // -------------------------------------------------------------------------
+    template <typename Fn>
+    void ForEach(Fn&& fn) const {
+        for (const auto& kv : tensors_)
+            fn(kv.second);
+    }
+
+    // -------------------------------------------------------------------------
     // Statistics
     // -------------------------------------------------------------------------
     size_t TotalTensors() const { return tensors_.size(); }

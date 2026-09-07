@@ -69,6 +69,16 @@ int main() {
         return 1;
     }
 
+#ifdef _WIN32
+    FILE* gf = nullptr;
+    fopen_s(&gf,
+            "G:\\~dev\\rawrxd\\evidence\\RAWRXD_PRODUCT_UNLOCK_15\\GATE.txt",
+            "w");
+    if (gf) {
+        fprintf(gf, "RAWRXD_AUTO_LADDER_001=PASS\n");
+        fclose(gf);
+    }
+#endif
     puts("RAWRXD_AUTO_LADDER_001=PASS");
     return 0;
 }

@@ -10075,9 +10075,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
 
 # Deep2 Gateway cert island — Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
 # Background terminals (host/termctl) + remaining ChatGPT/Codex/Cursor style layer
 include(${CMAKE_SOURCE_DIR}/cmake/RawrBackgroundTerminals.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/RawrRemainingStyleCli.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/RawrProductLayer.fragment.cmake)
 
 if(TARGET deep2_vwa_file_coalesce_001 AND TARGET deep2_vwa_range_core)
     target_link_libraries(deep2_vwa_file_coalesce_001 PRIVATE deep2_vwa_range_core)

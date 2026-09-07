@@ -5,6 +5,10 @@
 #include <cstdio>
 #include <string>
 #ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #endif
@@ -63,6 +67,19 @@ int main() {
     // Emit as the product would: text only on stdout last line witness.
     fputs(text.c_str(), stdout);
     fputc('\n', stdout);
+#ifdef _WIN32
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence", nullptr);
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence\\RAWRXD_STDOUT_CLEAN_001",
+                     nullptr);
+    FILE* gf = nullptr;
+    fopen_s(&gf,
+            "G:\\~dev\\rawrxd\\evidence\\RAWRXD_STDOUT_CLEAN_001\\GATE.txt",
+            "w");
+    if (gf) {
+        fprintf(gf, "RAWRXD_STDOUT_CLEAN_001=PASS\n");
+        fclose(gf);
+    }
+#endif
     puts("RAWRXD_STDOUT_CLEAN_001=PASS");
     return 0;
 }

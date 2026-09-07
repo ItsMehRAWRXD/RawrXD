@@ -1511,6 +1511,8 @@ static void gemv_q3_k_scalar(
     const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(w);
     size_t blocksPerRow = (cols + 255) / 256;
     if (diagCount < 3) {
+        const char* dq = std::getenv("RAWRXD_Q3K_GEMV_DIAG");
+        if (dq && dq[0] == '1') {
         printf("[Q3K_GEMV_DIAG#%d] rows=%zu cols=%zu blocksPerRow=%zu sizeof(block)=%zu\n",
                diagCount, rows, cols, blocksPerRow, sizeof(block_q3_K));
         if (blocksPerRow > 0) {
@@ -1520,6 +1522,7 @@ static void gemv_q3_k_scalar(
                    (unsigned)blocks[0].scales[0], (unsigned)blocks[0].scales[1],
                    (unsigned)blocks[0].scales[2], (unsigned)blocks[0].scales[3],
                    (unsigned)blocks[0].qs[0], (unsigned)blocks[0].hmask[0]);
+        }
         }
         ++diagCount;
     }

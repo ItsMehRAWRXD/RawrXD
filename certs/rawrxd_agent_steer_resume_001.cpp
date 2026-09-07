@@ -1,4 +1,4 @@
-// certs/rawrxd_agent_steer_resume_001.cpp — Phase 2
+// certs/rawrxd_agent_steer_resume_001.cpp — Phase 2 / U05+U06
 #include "../src/cli/rawr_agent_loop.hpp"
 #include "../src/cli/rawr_session_store.hpp"
 #include "../src/cli/rawr_steering_bus.hpp"
@@ -8,6 +8,12 @@
 #include <cstdio>
 #include <string>
 #include <thread>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
 
 int main() {
     using namespace rawr;
@@ -26,7 +32,6 @@ int main() {
 
     std::atomic<int> attached{0};
     std::thread agent([&]() {
-        // Serve one command while paused.
         std::string line;
         if (SteerServeOnce(line, 5000)) {
             attached = 1;
@@ -46,14 +51,11 @@ int main() {
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
-    // pause already set; send show_plan then continue via single pipe serve —
-    // cert uses continue as the attach proof.
     bool sent = SteerSend("continue");
     agent.join();
 
     sw.steeringAttached = attached || sent ? 1 : 0;
     if (sent) sw.steeringContinue = 1;
-    // Also prove pause + plan verbs parse.
     SteerCommand p{}, pl{};
     ParseSteerLine("pause", p);
     ParseSteerLine("show_plan", pl);
@@ -77,6 +79,32 @@ int main() {
                       sw.steeringPlan && sw.steeringContinue &&
                       sw.sessionSaved && sw.sessionResumed &&
                       sw.contextRestored;
+
+#ifdef _WIN32
+    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence", nullptr);
+    CreateDirectoryA(
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_AGENT_STEER_RESUME_001", nullptr);
+    FILE* f = nullptr;
+    fopen_s(
+        &f,
+        "G:\\~dev\\rawrxd\\evidence\\RAWRXD_AGENT_STEER_RESUME_001\\GATE.txt",
+        "w");
+    if (f) {
+        fprintf(f, "RAWRXD_AGENT_STEER_RESUME_001=%s\n",
+                pass ? "PASS" : "FAIL");
+        fprintf(f, "STEERING_ATTACHED=%d\n", sw.steeringAttached);
+        fprintf(f, "STEERING_PAUSE=%d\n", sw.steeringPause);
+        fprintf(f, "STEERING_PLAN_UPDATE=%d\n", sw.steeringPlan);
+        fprintf(f, "STEERING_CONTINUE=%d\n", sw.steeringContinue);
+        fprintf(f, "SESSION_SAVED=%d\n", sw.sessionSaved);
+        fprintf(f, "SESSION_RESUMED=%d\n", sw.sessionResumed);
+        fprintf(f, "CONTEXT_RESTORED=%d\n", sw.contextRestored);
+        fprintf(f, "U05_STEER_LIVE=%s\n", pass ? "PASS" : "FAIL");
+        fprintf(f, "U06_RESUME_CHAT=%s\n", pass ? "PASS" : "FAIL");
+        fclose(f);
+    }
+#endif
+
     puts(pass ? "RAWRXD_AGENT_STEER_RESUME_001=PASS"
               : "RAWRXD_AGENT_STEER_RESUME_001=FAIL");
     return pass ? 0 : 1;

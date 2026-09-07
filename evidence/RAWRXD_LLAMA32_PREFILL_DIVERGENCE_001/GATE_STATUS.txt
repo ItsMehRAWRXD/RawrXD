@@ -1,0 +1,7 @@
+GATE=RAWRXD_LLAMA32_PREFILL_DIVERGENCE_001
+MODE=P1_PROMPT_SENSITIVITY+P2_TEMPLATE_BYPASS
+MAX_TOKENS=1
+MODEL_PATH=G:\~dev\rawrxd\llama3.2-3b-Q3_K_S.gguf
+LOAD=1
+PROMPT_A=The capital of France is
+PROMPT_B=Write a haiku about volcanic ash and copper wire.

@@ -4711,14 +4711,31 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         return 0;
     }
 
+    // Token-id generate() path must honor greedy independently of generateStream.
+    if (SemanticSafeWanted() ||
+        (std::getenv("RAWRXD_GREEDY") && std::getenv("RAWRXD_GREEDY")[0] == '1')) {
+        GenerationOptions greedyOpts{};
+        greedyOpts.temperature = 0.0f;
+        greedyOpts.topK = 1;
+        greedyOpts.maxTokens = static_cast<uint32_t>(maxOutputLen);
+        configureGeneration(greedyOpts);
+    }
+
     B3_ResetFirstBad();
     emitHotpathWitnesses();
     resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
     clearCancel();
 
-    // â”€â”€ Reset KV cache and sampler state for fresh generation â”€â”€â”€â”€â”€â”€
+    // ―€”€ Reset KV cache and sampler state for fresh generation ―€”€â€”€â€”€â€”€â€”€
     reset();
+    // reset() must not drop greedy mode once configured above.
+    if (SemanticSafeWanted() ||
+        (std::getenv("RAWRXD_GREEDY") && std::getenv("RAWRXD_GREEDY")[0] == '1')) {
+        deterministicGreedy_ = true;
+        if (!sampler)
+            sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
+    }
 
     const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
     if (remainingContext == 0) {
@@ -4976,7 +4993,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     DecodeFeedbackReset();
     if (tokenizer) {
         const auto& sp = tokenizer->GetSpecialTokens();
-        DecodeFeedbackNoteSpecials(sp.eosId, sp.bosId, sp.unkId, "gguf");
+        DecodeFeedbackNoteSpecials(sp.eosId, sp.bosId, sp.unkId, "gguf",
+                                   (int)config.vocabSize);
+    } else {
+        DecodeFeedbackNoteSpecials(-1, -1, -1, "none", (int)config.vocabSize);
     }
     auto decodeStart = std::chrono::high_resolution_clock::now();
     for (size_t t = 0; t < maxOutputLen; ++t) {
@@ -5129,6 +5149,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                     position, config.vocabSize);
             return tokensGenerated;
         }
+
+        DecodeFeedbackOnLogits((int)tokensGenerated, logits, config.vocabSize);
 
         // Sample next token
         if (B3_LogitsTraceEnabled()) {

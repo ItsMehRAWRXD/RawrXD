@@ -150,6 +150,7 @@ bool IOCPGGUFLoader::LoadTensorDataAsync(const std::vector<TensorInfo>& tensors,
     }
 
     // For out-of-core: register tensors with Elastic but don't load yet
+#if !defined(VWA_IOCP_RANGE_CERT)
     if (elastic_ && config_.registerWithElastic) {
         for (const auto& t : tensors) {
             uint32_t layerIdx = ~0u;
@@ -190,6 +191,10 @@ bool IOCPGGUFLoader::LoadTensorDataAsync(const std::vector<TensorInfo>& tensors,
         }
         return true;
     }
+#else
+    (void)tensors;
+    (void)dataOffset;
+#endif
 
     // If no Elastic manager, fall back to synchronous load
     return LoadTensorDataSync(tensors, dataOffset);
@@ -277,6 +282,98 @@ IOCPGGUFLoader::Telemetry IOCPGGUFLoader::GetTelemetry() const {
     uint64_t reads = totalReads_.load();
     t.avgReadLatencyMs = reads > 0 ? (double)totalLatencyUs_.load() / (double)reads / 1000.0 : 0.0;
     return t;
+}
+
+// ============================================================================
+// Exact range I/O (absolute offsets — VWA consumer, no tensor reinterpretation)
+// ============================================================================
+
+bool IOCPGGUFLoader::ReadSync(void* buffer, uint64_t offset, size_t size) {
+    if (hFile_ == INVALID_HANDLE_VALUE || !buffer || size == 0) return false;
+    OVERLAPPED ov{};
+    ov.Offset = (DWORD)(offset & 0xFFFFFFFFull);
+    ov.OffsetHigh = (DWORD)(offset >> 32);
+    DWORD read = 0;
+    if (!ReadFile(hFile_, buffer, (DWORD)size, &read, &ov)) {
+        if (GetLastError() != ERROR_IO_PENDING) {
+            totalErrors_++;
+            return false;
+        }
+        if (!GetOverlappedResult(hFile_, &ov, &read, TRUE)) {
+            totalErrors_++;
+            return false;
+        }
+    }
+    totalBytesRead_ += read;
+    totalReads_++;
+    return read == size;
+}
+
+bool IOCPGGUFLoader::ReadAsync(void* buffer, uint64_t offset, size_t size, OVERLAPPED* ov) {
+    if (hFile_ == INVALID_HANDLE_VALUE || !buffer || !ov || size == 0) return false;
+    ZeroMemory(ov, sizeof(*ov));
+    ov->Offset = (DWORD)(offset & 0xFFFFFFFFull);
+    ov->OffsetHigh = (DWORD)(offset >> 32);
+    DWORD ignored = 0;
+    if (ReadFile(hFile_, buffer, (DWORD)size, &ignored, ov))
+        return true; // completed inline
+    const DWORD err = GetLastError();
+    if (err == ERROR_IO_PENDING)
+        return true;
+    totalErrors_++;
+    return false;
+}
+
+bool IOCPGGUFLoader::WaitForAsync(OVERLAPPED* ov, DWORD& bytesRead) {
+    bytesRead = 0;
+    if (hFile_ == INVALID_HANDLE_VALUE || !ov) return false;
+
+    // Synchronous completion of ReadFile: do not wait on the IOCP port.
+    if (HasOverlappedIoCompleted(ov)) {
+        if (!GetOverlappedResult(hFile_, ov, &bytesRead, FALSE)) {
+            totalErrors_++;
+            return false;
+        }
+        totalBytesRead_ += bytesRead;
+        totalReads_++;
+        return true;
+    }
+
+    // Pending I/O on an IOCP-associated handle completes via the port.
+    if (hIOCP_) {
+        DWORD transferred = 0;
+        ULONG_PTR key = 0;
+        LPOVERLAPPED popped = nullptr;
+        if (!GetQueuedCompletionStatus(hIOCP_, &transferred, &key, &popped, INFINITE)) {
+            totalErrors_++;
+            return false;
+        }
+        if (popped != ov) {
+            totalErrors_++;
+            return false;
+        }
+        bytesRead = transferred;
+        totalBytesRead_ += bytesRead;
+        totalReads_++;
+        return true;
+    }
+
+    if (!GetOverlappedResult(hFile_, ov, &bytesRead, TRUE)) {
+        totalErrors_++;
+        return false;
+    }
+    totalBytesRead_ += bytesRead;
+    totalReads_++;
+    return true;
+}
+
+bool IOCPGGUFLoader::ReadRangeAsync(uint64_t absoluteOffset, void* dst, size_t byteCount,
+                                    OVERLAPPED* ov) {
+    return ReadAsync(dst, absoluteOffset, byteCount, ov);
+}
+
+bool IOCPGGUFLoader::WaitRangeAsync(OVERLAPPED* ov, DWORD& bytesTransferred) {
+    return WaitForAsync(ov, bytesTransferred);
 }
 
 } // namespace Deep2

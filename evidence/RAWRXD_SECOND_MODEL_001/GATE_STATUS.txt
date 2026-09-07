@@ -1,9 +1,33 @@
-PRIMARY_MODEL=tinyllama
+MODEL_1=tinyllama
+MODEL_2=llama3.2-3b-Q3_K_S
 SECOND_MODEL=llama32
-FALLBACK_MODEL=phi3
-PHI3_Q2K_PREFERRED=0
-FILE_LOCK_RECOVERED=1
-RETRY_AFTER_KILL=1
-EMBED_DIAG_ON_STDOUT=0
+TEMPERATURE=0
+TOP_K=1
 MAX_TOKENS=128
 TRY_ALIAS=llama32 PATH=G:\~dev\rawrxd\llama3.2-3b-Q3_K_S.gguf
+TOKENIZER_ROUNDTRIP=1
+TOK_ROUNDTRIP_TEXT=[The quick brown fox]
+SECOND_MODEL_LOAD=1
+SECOND_MODEL_PREFILL=1
+SECOND_MODEL_REAL_DECODE=1
+GENERATED_TOKEN_COUNT=128
+REAL_TOKEN_IDS=1
+FEEDBACK_TOKEN_MATCH=1
+TOKENIZER_DECODE=PASS
+SPECIAL_TOKEN_POLICY=PASS
+SECOND_MODEL_TOKENS=128
+SECOND_MODEL_COHERENT=0
+LOGITS_FINITE=1
+ARGMAX_NONCONSTANT=0
+SAMPLE_NEQ_ARGMAX=0
+TOKEN_IDS_IN_VOCAB=1
+TOKEN_PIECES_VISIBLE=1
+SPECIAL_TOKEN_RATIO=0.000
+COHERENT_PARAGRAPH=0
+FAIL_OWNER=LOGITS_CONSTANT
+STDOUT_DIAG_LEAK=0
+--- GENERATED ---
+ussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussenussen
+--- END ---
+SECOND_MODEL_EXIT=1
+RAWRXD_SECOND_MODEL_001=FAIL

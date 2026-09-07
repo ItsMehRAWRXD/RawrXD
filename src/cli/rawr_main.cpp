@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
     if (a.cmd == "steer") return rawr::CmdSteer(a);
     if (a.cmd == "resume") return rawr::CmdResume(a);
     if (a.cmd == "term") return rawr::CmdTerm(a);
+    if (a.cmd == "serve") return rawr::CmdServe(a);
     rawr::PrintUsage();
     return rawr::ExitCode::Usage;
 }

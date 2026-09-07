@@ -43,6 +43,7 @@ set(RAWR_AGENTIC_SOURCES
   src/cli/rawr_agent_executor.cpp
   src/cli/rawr_agent_loop.cpp
   src/cli/rawr_agent_tools.cpp
+  src/cli/rawr_product_serve.cpp
   src/cli/tools/rawr_file_tool.cpp
   src/cli/tools/rawr_search_tool.cpp
   src/cli/tools/rawr_patch_tool.cpp
@@ -166,6 +167,8 @@ rawr_agent_cert(rawrxd_agent_workspace_live_001 certs/rawrxd_agent_workspace_liv
 rawr_agent_cert(rawrxd_agent_loop_e2e_001 certs/rawrxd_agent_loop_e2e_001.cpp)
 rawr_agent_cert(rawrxd_agent_steer_resume_001 certs/rawrxd_agent_steer_resume_001.cpp)
 rawr_ie_cert(rawrxd_second_model_001 certs/rawrxd_second_model_001.cpp)
+rawr_ie_cert(rawrxd_llama32_prefill_divergence_001 certs/rawrxd_llama32_prefill_divergence_001.cpp)
+rawr_ie_cert(rawrxd_autocomplete_e2e_001 certs/rawrxd_autocomplete_e2e_001.cpp)
 rawr_ie_cert(rawrxd_k2_product_e2e_001 certs/rawrxd_k2_product_e2e_001.cpp)
 rawr_agent_cert(rawrxd_product_e2e_001 certs/rawrxd_product_e2e_001.cpp)
 

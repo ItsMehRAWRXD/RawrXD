@@ -18,6 +18,7 @@ struct CliArgs {
     std::string termCmd;
     std::string bindTerm;
     std::string styleProfile;
+    std::string pipeName;
     AutonomyLevel autoLevel = AutonomyLevel::Off;
     bool help = false;
 };
@@ -43,6 +44,14 @@ inline CliArgs ParseArgs(int argc, char** argv) {
         }
         if (a.termSub == "send" || a.termSub == "tail") a.prompt = a.termCmd;
         if (a.workspace.empty()) a.workspace = "G:\\~dev\\rawrxd";
+        return a;
+    }
+    if (a.cmd == "serve") {
+        a.pipeName = "\\\\.\\pipe\\rawrxd_product";
+        for (int i = 2; i < argc; ++i) {
+            if (argv[i] && !std::strcmp(argv[i], "--pipe") && i + 1 < argc)
+                a.pipeName = argv[++i];
+        }
         return a;
     }
     for (int i = 2; i < argc; ++i) {

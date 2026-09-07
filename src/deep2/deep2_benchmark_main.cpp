@@ -264,17 +264,26 @@ int main(int argc, char** argv) {
         
         auto bench = harness.runSingleStreamTest(args.prompt, args.maxTokens, args.contextSize);
         
-        std::cout << "\n=== Single-Stream Results ===\n";
-        std::cout << "Prompt Tokens:      " << bench.prompt_tokens << "\n";
-        std::cout << "Generated Tokens:   " << bench.generated_tokens << "\n";
-        std::cout << "Prefill TPS:        " << bench.prefill_tps << "\n";
-        std::cout << "Decode TPS:         " << bench.decode_tps << "\n";
-        std::cout << "Sustained TPS:      " << bench.sustained_tps << "\n";
-        std::cout << "First Token:        " << (bench.first_token_ns / 1e6) << " ms\n";
-        std::cout << "Avg Token Latency:  " << (bench.per_token_avg_ns / 1e6) << " ms\n";
-        std::cout << "Variance (CV):      " << bench.tps_variance << "\n";
-        std::cout << "Stream Stable:      " << (bench.stream_stable ? "YES" : "NO") << "\n";
-        
+        if (args.outputFormat == "telemetry") {
+            // Cert block already emitted to stderr by runSingleStreamTest.
+        } else {
+            std::cout << "\n=== Single-Stream Results ===\n";
+            std::cout << "Prompt Tokens:      " << bench.prompt_tokens << "\n";
+            std::cout << "Generated Tokens:   " << bench.generated_tokens << "\n";
+            std::cout << "Prefill TPS:        " << bench.prefill_tps << "\n";
+            std::cout << "Decode TPS (avg):   " << bench.decode_tps << "\n";
+            std::cout << "Decode TPS start:   " << bench.decode_tps_start << "\n";
+            std::cout << "Decode TPS min win: " << bench.decode_tps_min_window << "\n";
+            std::cout << "Max stable stream:  " << bench.max_stable_streaming_tps << "\n";
+            std::cout << "TTFT E2E:           " << (bench.ttft_e2e_ns / 1e6) << " ms\n";
+            std::cout << "First after prefill:" << (bench.first_decode_after_prefill_ns / 1e6) << " ms\n";
+            std::cout << "Decode real:        " << (bench.decode_real ? "YES" : "NO") << "\n";
+            std::cout << "Degradation:        " << bench.degradation_ratio << "\n";
+            std::cout << "Stream Stable:      " << (bench.stream_stable ? "YES" : "NO") << "\n";
+            if (!bench.used_production_decode_path)
+                std::cout << "FAIL_REASON:        NON_PRODUCTION_DECODE_PATH\n";
+        }
+        return bench.used_production_decode_path && bench.stream_stable ? 0 : 1;
     }
     else if (args.phase == "endurance") {
         // Endurance matrix
@@ -356,25 +365,27 @@ int main(int argc, char** argv) {
         config.verbose = args.verbose;
         
         auto report = harness.runFullCertification(config);
-        
-        if (args.verbose) {
+
+        if (args.outputFormat == "telemetry") {
+            std::cout << harness.generateCertTelemetry(report);
+        } else if (args.verbose) {
             std::cout << "\n";
             std::cout << "╔══════════════════════════════════════════════════════════════════════════╗\n";
-            std::cout << "║                                                                          ║\n";
             if (report.overall_certified) {
-                std::cout << "║     ✅ CERTIFICATION PASSED                                              ║\n";
+                std::cout << "║     CERTIFICATION PASSED                                                 ║\n";
             } else {
-                std::cout << "║     ❌ CERTIFICATION FAILED                                              ║\n";
+                std::cout << "║     CERTIFICATION FAILED                                                 ║\n";
             }
-            std::cout << "║                                                                          ║\n";
             std::cout << "║     Certification ID: " << report.certification_id << "\n";
-            std::cout << "║                                                                          ║\n";
+            if (!report.fail_reason.empty())
+                std::cout << "║     Fail reason: " << report.fail_reason << "\n";
             std::cout << "╚══════════════════════════════════════════════════════════════════════════╝\n";
             std::cout << "\nReports saved:\n";
-            std::cout << "  JSON:    " << args.outputPath << "\n";
+            std::cout << "  JSON:     " << args.outputPath << "\n";
             std::cout << "  Markdown: " << args.outputPath.substr(0, args.outputPath.rfind('.')) << ".md\n";
+            std::cout << "  Cert:     " << args.outputPath.substr(0, args.outputPath.rfind('.')) << ".cert.txt\n";
         }
-        
+
         return report.overall_certified ? 0 : 1;
     }
     else {

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
 #include <algorithm>
 #include <array>
 
@@ -109,6 +110,59 @@ public:
         return true;
     }
 
+    // gpt2 (Llama-3) vs llama (SentencePiece ▁). Auto-detect if unset.
+    void SetTokenizerModel(const std::string& model) {
+        model_ = model;
+        gpt2_ = false;
+        for (char& c : model_) c = (char)tolower((unsigned char)c);
+        if (model_ == "gpt2" || model_ == "gpt-2") gpt2_ = true;
+    }
+    void InferTokenizerFamily() {
+        if (!model_.empty()) return;
+        // Vocab probe: Ġ (U+0120) vs ▁ (U+2581)
+        int g = 0, u = 0;
+        for (const auto& kv : reverseVocab_) {
+            const std::string& p = kv.second;
+            for (size_t i = 0; i + 1 < p.size(); ++i) {
+                if ((unsigned char)p[i] == 0xC4 &&
+                    (unsigned char)p[i + 1] == 0xA0)
+                    ++g;
+                if (i + 2 < p.size() && (unsigned char)p[i] == 0xE2 &&
+                    (unsigned char)p[i + 1] == 0x96 &&
+                    (unsigned char)p[i + 2] == 0x81)
+                    ++u;
+            }
+            if (g > 32 || u > 32) break;
+        }
+        gpt2_ = (g > u);
+        model_ = gpt2_ ? "gpt2" : "llama";
+    }
+    const std::string& TokenizerModel() const { return model_; }
+    bool IsGpt2() const { return gpt2_; }
+
+    // Apply merge ranks as scores (higher priority = larger score).
+    bool LoadMergesAsScores(const std::vector<std::string>& merges) {
+        if (reverseVocab_.empty()) return false;
+        scores_.assign(reverseVocab_.size(), 0.0f);
+        int rank = 0;
+        for (const auto& line : merges) {
+            if (line.empty() || line[0] == '#') continue;
+            size_t sp = line.find(' ');
+            if (sp == std::string::npos) continue;
+            const std::string a = line.substr(0, sp);
+            const std::string b = line.substr(sp + 1);
+            if (a.empty() || b.empty()) continue;
+            auto it = vocab_.find(a + b);
+            if (it != vocab_.end() && it->second >= 0 &&
+                (size_t)it->second < scores_.size()) {
+                // Earlier merges win (llama.cpp rank order).
+                scores_[(size_t)it->second] = (float)(1000000 - rank);
+            }
+            ++rank;
+        }
+        return rank > 0;
+    }
+
     std::vector<int> Encode(const std::string& text) const override {
         std::vector<int> tokens;
         if (text.empty()) return tokens;
@@ -140,8 +194,15 @@ public:
         auto encodeSpan = [&](std::string_view span) {
             if (span.empty()) return;
             std::vector<int> part;
-            RawrXD::Spm::encode(
-                span, vocab_, byteFallback_, scorePtr, special_.unkId, part);
+            if (gpt2_) {
+                RawrXD::Spm::encodeGpt2(
+                    span, vocab_, byteFallback_, scorePtr, special_.unkId,
+                    part);
+            } else {
+                RawrXD::Spm::encode(
+                    span, vocab_, byteFallback_, scorePtr, special_.unkId,
+                    part);
+            }
             tokens.insert(tokens.end(), part.begin(), part.end());
         };
 
@@ -217,12 +278,19 @@ public:
         std::string out;
         out.reserve(raw.size());
         for (size_t i = 0; i < raw.size();) {
+            // SentencePiece metaspace U+2581 ▁
             if (i + 2 < raw.size() &&
                 static_cast<unsigned char>(raw[i]) == 0xE2 &&
                 static_cast<unsigned char>(raw[i + 1]) == 0x96 &&
                 static_cast<unsigned char>(raw[i + 2]) == 0x81) {
                 out.push_back(' ');
                 i += 3;
+            // GPT-2 / Llama-3 space marker U+0120 Ġ
+            } else if (i + 1 < raw.size() &&
+                       static_cast<unsigned char>(raw[i]) == 0xC4 &&
+                       static_cast<unsigned char>(raw[i + 1]) == 0xA0) {
+                out.push_back(' ');
+                i += 2;
             } else {
                 out.push_back(raw[i]);
                 ++i;
@@ -245,6 +313,8 @@ private:
     std::array<int, 256> byteFallback_{};
     std::vector<float> scores_;
     SpecialTokens special_;
+    std::string model_;
+    bool gpt2_ = false;
 };
 
 } // namespace Deep2

@@ -27,6 +27,7 @@
 #include "K2NativeStreamGate.hpp"
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
+#include "VirtualTensorDesc.hpp"
 #include "ElasticResidencyManager.hpp"
 #include "CycloneScheduler.hpp"
 #include "Deep2LivePath.hpp"
@@ -66,6 +67,11 @@ struct WeightTensor {
     size_t      numBlocks = 0;        // For quantized types
     size_t      sizeBytes = 0;        // Total bytes
     std::string name;                 // Tensor name from GGUF
+
+    // Physical backing (VWA/RMV) — absolute offset from GGUF; lost ⇒ mount FAIL
+    uint32_t    shardId        = 0;
+    uint64_t    fileOffset     = 0;
+    bool        hasFileBacking = false;
 
     // BP16 / external mapping support
     bool        mapped    = false;    // true if data is externally owned (do not free)
@@ -454,6 +460,7 @@ public:
     void enableNUPacking(bool enable);
     void enableWarmupScheduler(bool enable);
     void enableCompressedKV(bool enable, KVQuantType quantType = KVQuantType::KV_Q8_0);
+    bool isCompressedKVEnabled() const { return compressedKVEnabled_; }
     void enableNVMeStreaming(bool enable, const std::string& modelPath = "");
     void enableSlidingWindow(bool enable, size_t windowSize = 4096);
     // Turn on the full VAL-000 + Sovereign + GPU stack (fail-soft per feature).
