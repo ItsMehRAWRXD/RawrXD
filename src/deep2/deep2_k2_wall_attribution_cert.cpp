@@ -202,6 +202,13 @@ static void EmitWin(const char* tag, const AttrWin& w, uint64_t expectOps) {
 }
 
 int main() {
+    const char* gateId =
+        (std::getenv("DEEP2_WALL_ATTR_ID") && std::getenv("DEEP2_WALL_ATTR_ID")[0])
+            ? std::getenv("DEEP2_WALL_ATTR_ID")
+            : "K2_WALL_ATTRIBUTION_001";
+    char evidDir[256];
+    std::snprintf(evidDir, sizeof(evidDir),
+                  "G:\\~dev\\rawrxd\\evidence\\%s", gateId);
 #ifdef _WIN32
     SetEnvironmentVariableA("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1", "1");
     Sync("DEEP2_WEIGHT_MODE", "BOUNDED_STREAM");
@@ -209,8 +216,7 @@ int main() {
     Sync("DEEP2_TPS_DISPLAY_SCALE", "1");
     Sync("DEEP2_CERT_STEP_LOG", "1"); // diagnostic fflush only
     Sync("DEEP2_MLA_GPU_Q4_ONLY", "0");
-    CreateDirectoryA("G:\\~dev\\rawrxd\\evidence\\K2_WALL_ATTRIBUTION_001",
-                     nullptr);
+    CreateDirectoryA(evidDir, nullptr);
 #endif
     std::string dir =
         (std::getenv("DEEP2_K2_SHARD_DIR") && std::getenv("DEEP2_K2_SHARD_DIR")[0])
@@ -220,13 +226,13 @@ int main() {
     const uint64_t unique = 6ull * depth;
     const uint32_t winsTok[] = {32, 64, 128};
 
-    printf("K2_WALL_ATTRIBUTION_001\n");
+    printf("%s\n", gateId);
     printf("ROLE=ATTRIBUTION_ONLY freeze=sustained_winner no_opt\n");
     printf("MODEL=%s D=%u CACHE_N_EXPECT=366 PIN_MIB_EXPECT~3673 "
            "FULL_DEPTH_PROMO\n",
            dir.c_str(), depth);
     if (!fs::is_directory(dir)) {
-        printf("K2_WALL_ATTRIBUTION_001=SKIP\n");
+        printf("%s=SKIP\n", gateId);
         _exit(0);
     }
 
@@ -260,7 +266,7 @@ int main() {
     cfg.useThreadPool = true;
     cfg.numThreads = 8;
     if (!eng.initialize(cfg) || !eng.openK2ShardDirectory(dir)) {
-        printf("K2_WALL_ATTRIBUTION_001=FAIL open\n");
+        printf("%s=FAIL open\n", gateId);
         _exit(2);
     }
     ElasticDynamicProbe p{};
@@ -358,18 +364,18 @@ int main() {
     printf("OWNER=%s OWNER_TOTAL_MS=%.3f\n", names[owner], tot[owner]);
     printf("NEXT_CLIMB=");
     if (owner == 0) printf("MLA_RETUNE_ONLY_IF_STILL_MAX\n");
-    else if (owner == 1) printf("K2_LOGITS_Q6K_RESIDENT_001\n");
+    else if (owner == 1) printf("K2_LOGITS_CLIMB\n");
     else if (owner == 2) printf("K2_SHARD_IO_CLIMB\n");
     else if (owner == 3) printf("K2_SAMPLE_CLIMB\n");
     else if (owner == 4) printf("K2_DETOK_CLIMB\n");
     else if (owner == 5) printf("K2_STREAM_CLIMB\n");
     else printf("SPLIT_OTHER_MS\n");
-    printf("K2_WALL_ATTRIBUTION_001=%s\n", pass ? "PASS" : "FAIL");
+    printf("%s=%s\n", gateId, pass ? "PASS" : "FAIL");
     fflush(stdout);
 
-    FILE* f = fopen(
-        "G:\\~dev\\rawrxd\\evidence\\K2_WALL_ATTRIBUTION_001\\GATE_STATUS.txt",
-        "w");
+    char gatePath[320];
+    std::snprintf(gatePath, sizeof(gatePath), "%s\\GATE_STATUS.txt", evidDir);
+    FILE* f = fopen(gatePath, "w");
     if (f) {
         fprintf(f, "FREEZE_OK=%d ACCT_OK=%d OPS_OK=%d\n", freezeOk ? 1 : 0,
                 acctOk ? 1 : 0, opsOk ? 1 : 0);
@@ -381,7 +387,7 @@ int main() {
                     w.sampleMs, w.detokMs, w.streamMs, w.otherMs, w.maxBucket);
         }
         fprintf(f, "OWNER=%s OWNER_TOTAL_MS=%.3f\n", names[owner], tot[owner]);
-        fprintf(f, "K2_WALL_ATTRIBUTION_001=%s\n", pass ? "PASS" : "FAIL");
+        fprintf(f, "%s=%s\n", gateId, pass ? "PASS" : "FAIL");
         fprintf(f, "NOTE=no optimization; attack OWNER only next.\n");
         fclose(f);
     }

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <condition_variable>
 #include <cstdlib>
 #include <cstring>
@@ -11,11 +12,12 @@
 #include <thread>
 #include <vector>
 
+#include "GGUFLoader.hpp"
+
 #if defined(_MSC_VER) || defined(__AVX2__)
 #include <immintrin.h>
 #endif
-// Keep scalar multi-acc parity with K2NativeStreamGate::q6kDotBlockFull.
-// Naive AVX unpack→stack→hadd was measured slower (~1s/tok vs ~0.4s).
+// Legacy float AVX path kept off; Q6×Q8_K is the production climb path.
 #define DEEP2_LOGITS_AVX2 0
 
 namespace Deep2 {
@@ -73,8 +75,89 @@ inline float fp16ToFloat(uint16_t h) {
     return f;
 }
 
-// Exact parity with K2NativeStreamGate::q6kDotBlockFull.
-// AVX-512 path: 16-wide FMA accumulators (unpack still scalar; MACs vectorized).
+inline int nearest_int_q8k(float fval) {
+    float val = fval + 12582912.f;
+    int i;
+    std::memcpy(&i, &val, sizeof(int));
+    return (i & 0x007fffff) - 0x00400000;
+}
+
+void quantize_row_q8_K(const float* x, block_q8_K* y, size_t k) {
+    const size_t nb = k / 256;
+    for (size_t i = 0; i < nb; ++i) {
+        float max = 0.f, amax = 0.f;
+        for (int j = 0; j < 256; ++j) {
+            float ax = std::fabs(x[j]);
+            if (ax > amax) { amax = ax; max = x[j]; }
+        }
+        if (!amax) {
+            y[i].d = 0.f;
+            std::memset(y[i].qs, 0, 256);
+            std::memset(y[i].bsums, 0, sizeof(y[i].bsums));
+            x += 256;
+            continue;
+        }
+        const float iscale = -127.f / max;
+        for (int j = 0; j < 256; ++j) {
+            int v = nearest_int_q8k(iscale * x[j]);
+            y[i].qs[j] = static_cast<int8_t>(v > 127 ? 127 : v);
+        }
+        for (int j = 0; j < 16; ++j) {
+            int sum = 0;
+            for (int ii = 0; ii < 16; ++ii) sum += y[i].qs[j * 16 + ii];
+            y[i].bsums[j] = static_cast<int16_t>(sum);
+        }
+        y[i].d = 1.f / iscale;
+        x += 256;
+    }
+}
+
+// ggml_vec_dot_q6_K_q8_K-style single block; AVX-512 int MAC when available.
+float vec_dot_q6_K_q8_K_block(const Q6_K_Block* x, const block_q8_K* y) {
+    const float d = fp16ToFloat(x->d) * y->d;
+    const uint8_t* ql = x->ql;
+    const uint8_t* qh = x->qh;
+    const int8_t* sc = x->scales;
+    const int8_t* q8 = y->qs;
+    int32_t sumi0 = 0, sumi1 = 0, sumi2 = 0, sumi3 = 0;
+    for (int half = 0; half < 2; ++half) {
+        for (int l = 0; l < 16; ++l) {
+            const int q1 = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
+            const int q2 = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+            const int q3 = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+            const int q4 = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+            sumi0 += (int)sc[0] * q1 * (int)q8[l];
+            sumi1 += (int)sc[2] * q2 * (int)q8[l + 32];
+            sumi2 += (int)sc[4] * q3 * (int)q8[l + 64];
+            sumi3 += (int)sc[6] * q4 * (int)q8[l + 96];
+        }
+        for (int l = 16; l < 32; ++l) {
+            const int q1 = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
+            const int q2 = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+            const int q3 = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+            const int q4 = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+            sumi0 += (int)sc[1] * q1 * (int)q8[l];
+            sumi1 += (int)sc[3] * q2 * (int)q8[l + 32];
+            sumi2 += (int)sc[5] * q3 * (int)q8[l + 64];
+            sumi3 += (int)sc[7] * q4 * (int)q8[l + 96];
+        }
+        ql += 64; qh += 32; sc += 8; q8 += 128;
+    }
+    return d * (float)(sumi0 + sumi1 + sumi2 + sumi3);
+}
+
+float DotQ6KQ8Row(const uint8_t* rowPtr, size_t blocksPerRow,
+                  const block_q8_K* xQ8) {
+    float sum = 0.f;
+    for (size_t b = 0; b < blocksPerRow; ++b) {
+        sum += vec_dot_q6_K_q8_K_block(
+            reinterpret_cast<const Q6_K_Block*>(rowPtr + b * kBlockBytes),
+            xQ8 + b);
+    }
+    return sum;
+}
+
+// Exact parity float path (fallback / non-256-aligned).
 float q6kDotBlockFull(const Q6_K_Block* block, const float* x) {
     const float d = fp16ToFloat(block->d);
     const uint8_t* ql = block->ql;
@@ -229,6 +312,8 @@ struct Pool {
     size_t cols = 0;
     size_t vocab = 0;
     const float* hidden = nullptr;
+    const block_q8_K* xQ8 = nullptr;
+    bool useQ8 = false;
     WorkerLocal locals[64]{};
 
     void ensure(unsigned want) {
@@ -261,6 +346,8 @@ struct Pool {
             const size_t end = (V * (tid + 1)) / nw;
             float bv = -1e30f;
             size_t br = begin;
+            const bool q8 = useQ8;
+            const block_q8_K* xq = xQ8;
             for (size_t r = begin; r < end; ++r) {
                 if (r + 1 < end) {
                     _mm_prefetch(reinterpret_cast<const char*>(
@@ -272,8 +359,10 @@ struct Pool {
                                      base + (r + 2) * rowBytes),
                                  _MM_HINT_T1);
                 }
-                const float sc = LogitsClimb_DotQ6KRow(
-                    base + r * rowBytes, blocksPerRow, cols, hidden);
+                const float sc = q8
+                    ? DotQ6KQ8Row(base + r * rowBytes, blocksPerRow, xq)
+                    : LogitsClimb_DotQ6KRow(
+                          base + r * rowBytes, blocksPerRow, cols, hidden);
                 if (sc > bv) { bv = sc; br = r; }
             }
             locals[tid].bestV = bv;
@@ -286,12 +375,13 @@ struct Pool {
     }
 
     void run(const uint8_t* b, size_t rb, size_t bp, size_t c, size_t V,
-             const float* h, unsigned nw, float& outV, size_t& outR) {
+             const float* h, const block_q8_K* xq, bool q8, unsigned nw,
+             float& outV, size_t& outR) {
         ensure(nw);
         {
             std::unique_lock<std::mutex> lk(mu);
             base = b; rowBytes = rb; blocksPerRow = bp; cols = c;
-            vocab = V; hidden = h;
+            vocab = V; hidden = h; xQ8 = xq; useQ8 = q8;
             remaining = nWorkers;
             ++epoch;
         }
@@ -421,11 +511,22 @@ bool LogitsClimb_ArgmaxPackedSerial(const uint8_t* base, size_t baseBytes,
     const size_t rowBytes = blocksPerRow * kBlockBytes;
     if (rowBytes == 0 || baseBytes / rowBytes < vocabSize) return false;
 
+    const bool useQ8 = (hiddenDim % kBlockElems) == 0 &&
+        std::getenv("DEEP2_LOGITS_Q8") &&
+        std::getenv("DEEP2_LOGITS_Q8")[0] == '1';
+    std::vector<block_q8_K> xQ8;
+    if (useQ8) {
+        xQ8.resize(blocksPerRow);
+        quantize_row_q8_K(hidden, xQ8.data(), hiddenDim);
+    }
+
     float bestV = -1e30f;
     size_t bestR = 0;
     for (size_t r = 0; r < vocabSize; ++r) {
-        const float sc = LogitsClimb_DotQ6KRow(
-            base + r * rowBytes, blocksPerRow, hiddenDim, hidden);
+        const float sc = useQ8
+            ? DotQ6KQ8Row(base + r * rowBytes, blocksPerRow, xQ8.data())
+            : LogitsClimb_DotQ6KRow(
+                  base + r * rowBytes, blocksPerRow, hiddenDim, hidden);
         if (sc > bestV) { bestV = sc; bestR = r; }
     }
     bestTok = static_cast<int32_t>(bestR);
@@ -447,7 +548,6 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
 
     unsigned hw = std::thread::hardware_concurrency();
     if (hw == 0) hw = 8;
-    // Prefer more workers once AVX-512 MACs are on (still capped vs MLA).
     unsigned nThreads = (std::min)(20u, (std::max)(1u, hw));
     if (const char* e = std::getenv("DEEP2_LOGITS_THREADS")) {
         const unsigned v = static_cast<unsigned>(std::strtoul(e, nullptr, 10));
@@ -455,18 +555,32 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
     }
     if (vocabSize < nThreads * 256u) nThreads = 1;
 
+    const bool useQ8 = (hiddenDim % kBlockElems) == 0 &&
+        std::getenv("DEEP2_LOGITS_Q8") &&
+        std::getenv("DEEP2_LOGITS_Q8")[0] == '1';
+    // Reused per-token Q8 activation (~8 KiB) when Q8 path enabled.
+    static thread_local std::vector<block_q8_K> tlsQ8;
+    block_q8_K* xQ8 = nullptr;
+    if (useQ8) {
+        if (tlsQ8.size() < blocksPerRow) tlsQ8.resize(blocksPerRow);
+        quantize_row_q8_K(hidden, tlsQ8.data(), hiddenDim);
+        xQ8 = tlsQ8.data();
+    }
+
     float bestV = -1e30f;
     size_t bestR = 0;
     const auto tDot0 = clock::now();
     if (nThreads == 1) {
         for (size_t r = 0; r < vocabSize; ++r) {
-            const float sc = LogitsClimb_DotQ6KRow(
-                base + r * rowBytes, blocksPerRow, hiddenDim, hidden);
+            const float sc = useQ8
+                ? DotQ6KQ8Row(base + r * rowBytes, blocksPerRow, xQ8)
+                : LogitsClimb_DotQ6KRow(
+                      base + r * rowBytes, blocksPerRow, hiddenDim, hidden);
             if (sc > bestV) { bestV = sc; bestR = r; }
         }
     } else {
         pool().run(base, rowBytes, blocksPerRow, hiddenDim, vocabSize, hidden,
-                   nThreads, bestV, bestR);
+                   xQ8, useQ8, nThreads, bestV, bestR);
     }
     const auto tDot1 = clock::now();
     const auto t1 = clock::now();
@@ -481,7 +595,8 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
     g_mat.store(0, std::memory_order_relaxed);
     g_deq.store(0, std::memory_order_relaxed);
     g_alloc.store(0, std::memory_order_relaxed);
-    g_temp.store(0, std::memory_order_relaxed);
+    g_temp.store(useQ8 ? (uint64_t)blocksPerRow * sizeof(block_q8_K) : 0,
+                 std::memory_order_relaxed);
     g_dotUs.fetch_add(static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::microseconds>(tDot1 - tDot0)
             .count()),
