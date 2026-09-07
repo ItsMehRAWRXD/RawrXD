@@ -1,30 +1,14 @@
-# ROADMAP_BATCH15 — post-NU / live-MLA spine (ordered by leverage)
+# ROADMAP_BATCH15 ? post-NU / live-MLA spine
 
-01 K2_GPU_MLA_SLOT_REUSE_001     - PASS
-02 K2_MLA_REBENCH_PROMOTE_001    - PASS (cold HOLD) / REUSE_PROMOTE PASS
-03 K2_LIVE_DECODE_MLA_001        - PASS (u->0; MLA_Gemv authority)
-04 K2_MLA_FUSED_Q4KT_001         - PASS (fusedUs < compatUs; F32_EXP=0)
-05 K2_SHARD_ATTN_RESIDENCY_001   - PASS (timed SHARD_ATTN=0; borrow authority)
-06 K2_LOGITS_Q6K_RESIDENT_001    - PASS (packed resident; HOT_ALLOC=0; parity=1)
-07 K2_WALL_ATTRIBUTION_001       - PASS OWNER=MLA (post AVX-512 logits)
-08 K2_MLA_KV_EXPAND_001          - PASS OWNER=QKV_PROJ (KV_EXPAND runner-up)
-09 K2_MLA_QKV_PROJ_001           - NOW (attack QKV only; freeze seals)
-10 STREAM_BYTES_CORPUS_SPLIT_001 - witness corpus GiB != stream transfer
-11 LIVE_PATH_NU_E2E_001          - generate() with DEEP2_LIVE_NU
-12 RKC_NU_CONSUME_FACT_001       - RKC fact: live_nu_consume_proven
-13 GPU_TRANSFER_NU_COUNTER_001   - NU unpack/upload in GpuTransfer
-14 K2_POLICY_NU_AWARE_001        - AUTO policy NU residency budget
-15 SOVEREIGN_FREEZE_001          - freeze contracts into evidence index
+01-06 residency/fused seals - PASS
+07 K2_WALL_ATTRIBUTION_001       - PASS OWNER=MLA
+08 K2_MLA_KV_EXPAND_001          - PASS OWNER=KV_EXPAND (~48% of MLA)
+09 OPTIMIZE_MLA_KV_EXPAND        - NOW (K/V expand GEMV under MLA_Gemv)
+10 STREAM_BYTES_CORPUS_SPLIT_001
+15 SOVEREIGN_FREEZE_001
 
-AUTHORITY LOCK:
-  live MLA -> MLA_Gemv only (TRYGPU_ENTRY=0)
-  MLA_Gemv -> MLA_FusedQ4KT (default ON) | DispatchGEMVPacked | GetGEMV
-  weights -> ResolveWeight (retained cache BorrowSpan)
-  logits -> LogitsClimb packed Q6_K (resident)
-
-REVERSE (after KV_EXPAND_001 timed):
-  MLA_STAGE_OWNER=QKV_PROJ (~881ms)
-  KV_EXPAND runner-up (~621ms)  O_PROJ (~251ms)  ATTN (~31ms)
-  STAGE_SUM ? MLA_COMPUTE (cover OK)
-  FREEZE SHARD/KEY_MISS/COPY/UP/TRY/FB held
-  NEXT: attack QKV_PROJ only (do not retune logits / FUSED yet)
+REVERSE timed MLA stages:
+  KV_EXPAND 1.64e6 us  ? attack
+  QKV_PROJ  1.27e6 us
+  O_PROJ    0.42e6 us
+  ATTN      0.08e6 us

@@ -208,7 +208,7 @@ int main() {
            (unsigned long long)timed.mlaUs, (unsigned long long)timed.logitsUs,
            (unsigned long long)stageSum, owner, (unsigned long long)best);
     printf("FREEZE_OK=%d ATTRIB_OK=%d\n", freeze ? 1 : 0, attribOk ? 1 : 0);
-    printf("NEXT_CLIMB=K2_MLA_%s_001\n", owner);
+    printf("NEXT_CLIMB=OPTIMIZE_MLA_%s\n", owner);
     printf("K2_MLA_KV_EXPAND_001=%s\n", pass ? "PASS" : "FAIL");
 
     FILE* f = fopen(

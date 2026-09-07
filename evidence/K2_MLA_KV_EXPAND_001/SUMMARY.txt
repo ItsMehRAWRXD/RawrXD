@@ -1,9 +1,14 @@
 K2_MLA_KV_EXPAND_001=PASS
 
-Timed (D61, residency frozen):
-  MLA_STAGE_OWNER=QKV_PROJ
-  QKV_US=881343  KV_EXPAND_US=620848  ATTN_US=31198  O_US=251179
-  SUM≈MLA_COMPUTE (cover OK)
+TIMED D=61 T=8 (seals held):
+  MLA_COMPUTE_US=3427159
+  QKV_PROJ      =1265479  (~37%)
+  KV_EXPAND     =1638732  (~48%)  ← OWNER
+  ATTN          =  76547  (~2%)
+  O_PROJ        = 417324  (~12%)
+  STAGE_SUM/MLA ≈ 99.2%
 
-Authority: attribution-only. Attack QKV_PROJ next.
-Do not retune logits / MLA_FUSED until re-attribute after QKV climb.
+FREEZE: SHARD_ATTN=0 COPY=0 MLA u=0 tryExt=0 q6Hit>0 hotAlloc=0 cacheN>=551
+
+NEXT: OPTIMIZE_MLA_KV_EXPAND (K/V LoRA expand GEMV path under MLA_Gemv)
+Do not retune logits or fused Q4KT Q-path until KV_EXPAND collapses.
