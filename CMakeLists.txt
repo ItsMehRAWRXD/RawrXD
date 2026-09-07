@@ -4845,6 +4845,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
     src/deep2/K2LogitsClimb.cpp
+    src/deep2/K2LogitsSplit.cpp
     src/deep2/K2GpuStreamCopy.cpp
     src/deep2/K2GpuStreamCopy_Overlap.cpp
     src/deep2/K2MLA_GpuGemv.cpp
@@ -9418,6 +9419,24 @@ if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
     message(STATUS "[Deep2] K2 MLA q_a critical: deep2_k2_mla_qa_critical_cert")
 endif()
 
+option(BUILD_DEEP2_UCF_BOUNCE_SMOKE "Build UCF BounceChain smoke" ON)
+if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
+    add_executable(deep2_ucf_bounce_smoke
+        src/deep2/deep2_ucf_bounce_smoke.cpp)
+    if(MSVC)
+        target_compile_options(deep2_ucf_bounce_smoke PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_ucf_bounce_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_ucf_bounce_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_ucf_bounce_smoke
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] UCF bounce smoke: deep2_ucf_bounce_smoke")
+endif()
+
 option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" ON)
 if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
     add_executable(deep2_k2_semantic_seal_cert
@@ -9516,6 +9535,26 @@ if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] K2 logits climb: deep2_k2_logits_climb_cert")
+endif()
+
+option(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT "Build K2_TRYGPU_LOGITS_SPLIT_001" ON)
+if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
+    add_executable(deep2_k2_trygpu_logits_split_cert
+        src/deep2/deep2_k2_trygpu_logits_split_cert.cpp)
+    target_link_libraries(deep2_k2_trygpu_logits_split_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_trygpu_logits_split_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_trygpu_logits_split_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_trygpu_logits_split_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_trygpu_logits_split_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
 endif()
 
 option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" ON)

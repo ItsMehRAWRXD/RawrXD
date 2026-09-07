@@ -1,5 +1,10 @@
 // K2BraidExecutionPolicy.cpp — transient braid policy implementation
 #include "K2BraidExecutionPolicy.hpp"
+#include "K2RainbowFoldTable.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <mutex>
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
@@ -292,6 +297,7 @@ void K2Braid_ObserveQkvWindow(uint64_t qaUs, uint64_t qbUs, uint64_t kvaUs,
 
 void K2Braid_ReportParity(bool parityOk) {
     if (parityOk) return;
+    K2RainbowFold_ParityFallback();
     K2Braid_ObserveQkvWindow(0, 0, 0, false);
 }
 
@@ -303,6 +309,11 @@ BraidQkvMode K2Braid_GetQkvMode() {
         if (e[0] == '1' || e[0] == 'k' || e[0] == 'K')
             return BraidQkvMode::SplitKv;
     }
+    // )ter*N: frozen ROUTING fold steers topology; EMA cannot flip it.
+    if (K2RainbowFold_IsFrozenRouting(RainbowFoldId::QKV_SPLIT_KV))
+        return BraidQkvMode::SplitKv;
+    if (K2RainbowFold_IsFrozenRouting(RainbowFoldId::QKV_SERIAL_REUSE))
+        return BraidQkvMode::SerialReuse;
     std::lock_guard<std::mutex> lock(g_adaptMu);
     return g_adapt.mode;
 }
@@ -375,6 +386,7 @@ void K2Braid_EmitAdaptive(FILE* f) {
             s.qaFused ? "FUSED" : "COMPAT", s.qbFused ? "FUSED" : "COMPAT",
             s.kvaFused ? "FUSED" : "COMPAT",
             (unsigned long long)s.windows);
+    K2RainbowFold_Emit(f);
     fflush(f);
 }
 
