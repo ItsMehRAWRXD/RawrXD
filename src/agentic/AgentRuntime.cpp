@@ -495,15 +495,43 @@ bool AgentRuntime::CancelAgent(const std::string& runId) {
 }
 
 bool AgentRuntime::PauseAgent(const std::string& runId) {
-    // TODO: Implement pause/resume with state serialization
-    printf("[AgentRuntime] Pause not yet implemented for %s\n", runId.c_str());
-    return false;
+    std::lock_guard<std::mutex> lock(runsMutex_);
+    auto it = activeRuns_.find(runId);
+    if (it == activeRuns_.end()) return false;
+    auto& run = *it->second;
+    if (run.state == AgentState::COMPLETED || run.state == AgentState::FAILED ||
+        run.state == AgentState::CANCELLED || run.state == AgentState::PAUSED)
+        return false;
+    run.resumeState = run.state;
+    run.state = AgentState::PAUSED;
+    run.persistentState["pausedAt"] =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    run.persistentState["resumeState"] = AgentStateToString(run.resumeState);
+    printf("[AgentRuntime] Paused %s (was %s)\n", runId.c_str(),
+           AgentStateToString(run.resumeState).c_str());
+    return true;
 }
 
 bool AgentRuntime::ResumeAgent(const std::string& runId) {
-    // TODO: Implement pause/resume with state deserialization
-    printf("[AgentRuntime] Resume not yet implemented for %s\n", runId.c_str());
-    return false;
+    std::lock_guard<std::mutex> lock(runsMutex_);
+    auto it = activeRuns_.find(runId);
+    if (it == activeRuns_.end()) return false;
+    auto& run = *it->second;
+    if (run.state != AgentState::PAUSED) return false;
+    AgentState next = run.resumeState;
+    if (next == AgentState::IDLE || next == AgentState::PAUSED)
+        next = AgentState::THINKING;
+    run.state = next;
+    run.resumeState = AgentState::IDLE;
+    run.persistentState["resumedAt"] =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    printf("[AgentRuntime] Resumed %s → %s\n", runId.c_str(),
+           AgentStateToString(run.state).c_str());
+    return true;
 }
 
 bool AgentRuntime::ExtendBudget(const std::string& runId, uint32_t additionalTools) {
@@ -791,6 +819,7 @@ void AgentRuntime::ProcessingLoop() {
         
         std::lock_guard<std::mutex> lock(runsMutex_);
         for (auto& [runId, run] : activeRuns_) {
+            if (run->state == AgentState::PAUSED) continue;
             if (run->state == AgentState::THINKING) {
                 ProcessTurn(*run);
             }
@@ -808,6 +837,7 @@ std::string AgentStateToString(AgentState state) {
         case AgentState::TOOL_CALLS_READY: return "TOOL_CALLS_READY";
         case AgentState::EXECUTING_TOOLS: return "EXECUTING_TOOLS";
         case AgentState::COLLECTING_RESULTS: return "COLLECTING_RESULTS";
+        case AgentState::PAUSED: return "PAUSED";
         case AgentState::COMPLETED: return "COMPLETED";
         case AgentState::FAILED: return "FAILED";
         case AgentState::CANCELLED: return "CANCELLED";

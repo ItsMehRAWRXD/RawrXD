@@ -100,6 +100,7 @@ enum class AgentState {
     TOOL_CALLS_READY,  // Model emitted tool calls
     EXECUTING_TOOLS,   // Tools running
     COLLECTING_RESULTS,// Waiting for tool results
+    PAUSED,            // User paused — resume restores prior state
     COMPLETED,         // Task done
     FAILED,            // Unrecoverable error
     CANCELLED,         // User cancelled
@@ -116,6 +117,7 @@ public:
     std::string runId;
     std::string task;
     AgentState state = AgentState::IDLE;
+    AgentState resumeState = AgentState::IDLE; // set on Pause
     
     // Budgets
     ToolBudget toolBudget;

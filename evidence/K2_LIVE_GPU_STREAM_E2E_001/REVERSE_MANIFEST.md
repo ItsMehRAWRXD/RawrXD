@@ -20,19 +20,14 @@ K2_WALL_ATTRIBUTION_002               OWNER=MLA; stage=KV_EXPAND ← PASS
 attack measured owner (KV_EXPAND) — MLA_FUSED_Q4KT only if GEMV owns stage
 ```
 
-## Closed
-| Gate | Status | Authority class |
-|------|--------|-----------------|
-| `K2_SHARD_ATTN_RESIDENCY_001` | PASS | SHARD_IO=0 |
-| `K2_LOGITS_Q6K_RESIDENT_001` | PASS | packed Q6_K |
-| `K2_SEMANTIC_SEAL_001` | PASS | q_b=12288, vocab, deepseek chat |
-| `K2_SERVERLESS_STREAM_LATENCY_001` | PASS | sticky TTFT/DECODE |
-| `K2_WALL_ATTRIBUTION_002` | PASS OWNER=MLA | stage OWNER=KV_EXPAND |
+## Closed (latest)
+| Gate | Status |
+|------|--------|
+| `K2_SEMANTIC_SEAL_001` | PASS q_b tensor=12288 |
+| `K2_SERVERLESS_STREAM_LATENCY_001` | PASS |
+| `K2_WALL_ATTRIBUTION_002` | PASS was OWNER=MLA/KV_EXPAND |
+| fused `MLA_KvExpand` live | OWNER stage flipped → **QKV_PROJ** |
 
-## Semantic note
-Tensor `attn_q_b` is **[1536,12288]**. Engine scratch still logs `q_b=8192`
-(=64×128). Correctness authority is the tensor (12288=64×(128+64)).
-
-## Do not
-- Predetermine `MLA_FUSED_Q4KT` when stage owner is KV_EXPAND
-- Conflate semantic q_b seal with wall ownership
+## NOW
+Attack **QKV_PROJ** (GEMV / fused Q4KT path) — KV expand is no longer the stage max.
+Engine buffer `q_b=12288` sealed at alloc (was 8192).

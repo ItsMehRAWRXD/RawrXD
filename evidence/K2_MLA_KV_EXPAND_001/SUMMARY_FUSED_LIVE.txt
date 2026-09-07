@@ -1,0 +1,5 @@
+K2_MLA_KV_EXPAND live (fused): MLA_ALLOC q_b=12288 (semantic buffer fixed)
+W32/W64: MLA_STAGE_OWNER=QKV_PROJ (was KV_EXPAND) — fused path flipped stage owner
+W32 wall≈10.6s MLA≈6.2s LOGITS≈3.9s SHARD=0
+DEEP2_MLA_FUSED_KV=1 default ON
+NBM=attack QKV_PROJ (GEMV/MLA_FUSED) now that KV expand is no longer dominant
