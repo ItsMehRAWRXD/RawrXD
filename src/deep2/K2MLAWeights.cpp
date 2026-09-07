@@ -6,6 +6,7 @@
 #include "K2MLA_GpuGemv.hpp"
 #include "K2MLA_KvExpand_Fused.hpp"
 #include "K2GpuStreamCopy.hpp"
+#include "K2BraidExecutionPolicy.hpp"
 #include "vulkan_compute.h"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
@@ -1129,18 +1130,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
                               kvLoraRank, config.normRmsEps);
         kvOk = true;
     };
-    // DEEP2_MLA_QKV_SPLIT:
-    //   unset/1/kv → GPU Q ∥ host KV_A (default when GPU MLA on)
-    //   q          → host Q ∥ GPU KV_A
-    //   0          → serial GPU; Q_A then KV_A reuses device hidden
+    // Topology: env override OR adaptive braid mode (default SplitKv).
     const char* ser = std::getenv("DEEP2_MLA_SERIAL");
-    const char* splitEnv = std::getenv("DEEP2_MLA_QKV_SPLIT");
-    const bool splitOff = splitEnv && splitEnv[0] == '0';
-    const bool hostQ =
-        splitEnv && (splitEnv[0] == 'q' || splitEnv[0] == 'Q');
-    const bool qkvSplit = MLA_GpuGemvWanted() && !splitOff;
+    const BraidQkvMode mode = K2Braid_GetQkvMode();
+    const bool hostQ = (mode == BraidQkvMode::SplitQ);
+    const bool qkvSplit =
+        MLA_GpuGemvWanted() &&
+        (mode == BraidQkvMode::SplitKv || mode == BraidQkvMode::SplitQ);
     const bool serial =
         !qkvSplit && (MLA_GpuGemvWanted() || (ser && ser[0] == '1'));
+    const uint64_t qa0 = MlaStage_QaUs().load();
+    const uint64_t qb0 = MlaStage_QbUs().load();
+    const uint64_t kva0 = MlaStage_KvaUs().load();
     tQkv = StreamPathTiming_NowUs();
     if (qkvSplit) {
         if (hostQ) {
@@ -1154,18 +1155,25 @@ bool MLAForward::Execute(const float* hidden, float* output,
         }
     } else if (serial && MLA_GpuGemvWanted()) {
         // Q_A uploads hidden; KV_A reuses gemv_in before Q_B overwrites it.
-        qOk = false;
-        runQa();
-        if (qOk) {
-            if (auto* vc = K2GpuStreamCopy_Vc()) {
-                vc->GemvReuseInputNext();
-            } else {
-                // Bound VC missing — cannot arm hidden reuse.
-                static std::atomic<uint64_t> miss{0};
-                miss.fetch_add(1, std::memory_order_relaxed);
-            }
+        // DEEP2_MLA_HIDDEN_REUSE=0 → legacy runQ+runKv baseline.
+        const char* hr = std::getenv("DEEP2_MLA_HIDDEN_REUSE");
+        const bool doReuse = !hr || hr[0] != '0';
+        if (!doReuse) {
+            runQ();
             runKv();
-            runQb();
+        } else {
+            qOk = false;
+            runQa();
+            if (qOk) {
+                if (auto* vc = K2GpuStreamCopy_Vc()) {
+                    vc->GemvReuseInputNext();
+                } else {
+                    static std::atomic<uint64_t> miss{0};
+                    miss.fetch_add(1, std::memory_order_relaxed);
+                }
+                runKv();
+                runQb();
+            }
         }
     } else if (serial) {
         runQ();
@@ -1177,6 +1185,13 @@ bool MLAForward::Execute(const float* hidden, float* output,
         kvTh.join();
     }
     StreamPathTiming_Add(MlaStage_QkvUs(), tQkv);
+    if (MLA_GpuGemvWanted()) {
+        K2Braid_ObserveQkvWindow(
+            MlaStage_QaUs().load() - qa0,
+            MlaStage_QbUs().load() - qb0,
+            MlaStage_KvaUs().load() - kva0,
+            true);
+    }
     if (!qOk) { error = qErr.empty() ? "MLAForward: Q path failed" : qErr; goto cleanup; }
     if (!kvOk) { error = kvErr.empty() ? "MLAForward: KV path failed" : kvErr; goto cleanup; }
 

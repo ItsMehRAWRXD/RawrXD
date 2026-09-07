@@ -115,7 +115,8 @@ void MLA_GpuGemv_Emit(FILE* f) {
 
 static bool TryGpu(int ty, const void* packed, size_t bytes,
                    const float* input, float* output,
-                   uint32_t rows, uint32_t cols) {
+                   uint32_t rows, uint32_t cols,
+                   const BraidExecutionPlan* braidPlan) {
     if (!MLA_GpuGemvWanted() || !packed || !input || !output) return false;
     if (ty != 12 && ty != 8) { ++g_skip; return false; }
     // Q8 GPU on by default. Opt-out only when DEEP2_MLA_GPU_Q4_ONLY=1.
@@ -134,11 +135,12 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     const uint64_t rej0 = vc->WeightPinRejects();
     const uint64_t up0 = vc->GemvWeightUploads();
     const uint64_t hit0 = vc->WeightContentHits();
-    const uint64_t ev0 = vc->WeightPinEvicts(); // pin LRU only (not stream slot reuse)
+    const uint64_t ev0 = vc->WeightPinEvicts();
     const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
     if (!pk) ++g_pinKeyZero;
     bool ok = false;
-    if (ty == 12 && MLA_FusedQ4KT_Wanted())
+    const bool allowFused = !braidPlan || braidPlan->preferFusedQ4KT;
+    if (ty == 12 && allowFused && MLA_FusedQ4KT_Wanted())
         ok = MLA_FusedQ4KT(packed, bytes, input, output, rows, cols, pk);
     if (!ok && ty == 12) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
@@ -166,7 +168,7 @@ bool MLA_TryGpuGemv(int ggmlType, const void* packed, size_t bytes,
                     const float* input, float* output,
                     uint32_t rows, uint32_t cols) {
     ++g_tryEntry;
-    return TryGpu(ggmlType, packed, bytes, input, output, rows, cols);
+    return TryGpu(ggmlType, packed, bytes, input, output, rows, cols, nullptr);
 }
 
 // Map pinKey low byte to KernelRole for braid policy attribution.
@@ -201,7 +203,8 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
     else if (ggmlType == 1)  braidType = BraidGGMLType::F16;
     const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
     const KernelRole role = PinKeyToRole(pk);
-    K2Braid_Plan(role, braidType, plan);
+    const uint8_t laneTag = static_cast<uint8_t>(pk & 0xffu);
+    K2Braid_PlanTagged(role, braidType, laneTag, plan);
     K2Braid_NotePlan(role);
     // If the format is not directly packable, flag it (should not happen
     // in the MLA hot path — Q4_K/Q8_0 are always direct packable).
@@ -211,7 +214,7 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
         K2Braid_NoteUnsupportedReinterpret();
     }
 
-    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols)) {
+    if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols, &plan)) {
         // Packed GPU GEMV succeeded — braid owns packed execution.
         K2Braid_NotePackedExec(role);
         K2Braid_NoteExecuted(role);

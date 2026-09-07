@@ -1,7 +1,9 @@
 // K2BraidExecutionPolicy.cpp — transient braid policy implementation
 #include "K2BraidExecutionPolicy.hpp"
+#include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <mutex>
 
@@ -117,16 +119,268 @@ K2BraidWitnessSnapshot K2Braid_GetWitnessSnapshot() {
     return s;
 }
 
-void K2Braid_Plan(KernelRole role, BraidGGMLType sourceFormat,
-                  BraidExecutionPlan& out) {
+// ===========================================================================
+// Adaptive QKV topology controller
+// REDUCE  = GPU Q || host KV_A when KV_A owns QKV wall
+// UNREDUCE = serial GPU + hidden reuse when ownership collapses
+// HOLD    = keep sticky mode
+// Lane preferFused: A/B fused vs compat for GPU lanes still on device.
+// ===========================================================================
+namespace {
+
+struct QkvLaneCtrl {
+    float emaPct = 0.f;
+    bool emaValid = false;
+    bool preferFused = true;
+    uint32_t hot = 0, cold = 0, cooldown = 0;
+};
+
+struct QkvAdapt {
+    QkvLaneCtrl lane[3];
+    uint64_t windows = 0;
+    uint64_t qaUs = 0, qbUs = 0, kvaUs = 0;
+    float pct[3] = {};
+    BraidQkvMode mode = BraidQkvMode::SplitKv;
+    BraidAdaptiveAction lastAction = BraidAdaptiveAction::HOLD;
+    int owner = -1;
+    uint32_t modeHot = 0, modeCold = 0;
+};
+
+std::mutex g_adaptMu;
+QkvAdapt g_adapt{};
+
+constexpr float kEmaA = 0.25f;
+constexpr float kEnter = 0.40f;
+constexpr float kExit = 0.24f;
+constexpr float kDom = 1.50f;
+// Observe is per-layer (~1ms); absolute floor must match layer scale.
+constexpr uint64_t kMinUs = 400ull;
+constexpr uint32_t kHotN = 2, kColdN = 8, kCd = 8;
+
+static int TagLane(uint8_t tag) {
+    if (tag == 1) return 0;
+    if (tag == 2) return 1;
+    if (tag == 3) return 2;
+    return -1;
+}
+
+} // namespace (adaptive continues in Deep2)
+
+void K2Braid_PlanTagged(KernelRole role, BraidGGMLType sourceFormat,
+                        uint8_t pinTag, BraidExecutionPlan& out) {
+    out = BraidExecutionPlan{};
     out.sourceFormat = sourceFormat;
     out.role = role;
-    out.precision = BraidPrecision::BP8;  // native packed by default
-    out.directPacked = true;
+    out.laneTag = pinTag;
+    out.precision = BraidPrecision::BP8;
+    out.directPacked = K2Braid_IsDirectPackable(sourceFormat);
     out.f32Warehouse = false;
-    // Correction lane only for aggressive approximation modes
     out.correctionEnabled = false;
-    // BP1/BP2 would enable correction; BP8 = native, no correction needed
+    out.preferFusedQ4KT = true;
+    const int lane = TagLane(pinTag);
+    if (lane >= 0) {
+        std::lock_guard<std::mutex> lock(g_adaptMu);
+        out.preferFusedQ4KT = g_adapt.lane[lane].preferFused;
+    }
+}
+
+void K2Braid_ObserveQkvWindow(uint64_t qaUs, uint64_t qbUs, uint64_t kvaUs,
+                              bool parityOk) {
+    std::lock_guard<std::mutex> lock(g_adaptMu);
+    ++g_adapt.windows;
+    g_adapt.qaUs = qaUs;
+    g_adapt.qbUs = qbUs;
+    g_adapt.kvaUs = kvaUs;
+    g_adapt.lastAction = BraidAdaptiveAction::HOLD;
+
+    if (!parityOk) {
+        g_adapt.mode = BraidQkvMode::SerialReuse;
+        g_adapt.lastAction = BraidAdaptiveAction::UNREDUCE;
+        for (int i = 0; i < 3; ++i) {
+            g_adapt.lane[i].preferFused = true;
+            g_adapt.lane[i].hot = g_adapt.lane[i].cold = 0;
+            g_adapt.lane[i].cooldown = kCd;
+        }
+        return;
+    }
+
+    const uint64_t total = qaUs + qbUs + kvaUs;
+    if (!total) return;
+
+    const uint64_t raw[3] = {qaUs, qbUs, kvaUs};
+    g_adapt.pct[0] = (float)qaUs / (float)total;
+    g_adapt.pct[1] = (float)qbUs / (float)total;
+    g_adapt.pct[2] = (float)kvaUs / (float)total;
+
+    for (int i = 0; i < 3; ++i) {
+        auto& l = g_adapt.lane[i];
+        if (!l.emaValid) { l.emaPct = g_adapt.pct[i]; l.emaValid = true; }
+        else l.emaPct += kEmaA * (g_adapt.pct[i] - l.emaPct);
+        if (l.cooldown) --l.cooldown;
+    }
+
+    const float qPct = g_adapt.lane[0].emaPct + g_adapt.lane[1].emaPct;
+    const float kvaPct = g_adapt.lane[2].emaPct;
+    const float second = (std::max)(g_adapt.lane[0].emaPct, g_adapt.lane[1].emaPct);
+    g_adapt.owner = (kvaPct >= qPct) ? 2 : (g_adapt.lane[0].emaPct >= g_adapt.lane[1].emaPct ? 0 : 1);
+
+    const bool kvDom =
+        kvaPct >= kEnter && kvaPct >= qPct * kDom && raw[2] >= kMinUs;
+    const bool qDom =
+        qPct >= kEnter && qPct >= kvaPct * kDom &&
+        (raw[0] + raw[1]) >= kMinUs;
+
+    BraidQkvMode want = g_adapt.mode;
+    if (g_adapt.mode == BraidQkvMode::SplitKv ||
+        g_adapt.mode == BraidQkvMode::SplitQ) {
+        // Sticky split: component % under parallel Q||KV looks Q-heavy and must
+        // not auto-flip SplitKv↔SplitQ. Soft-cold → Serial only (below).
+        want = g_adapt.mode;
+    } else {
+        if (kvDom) want = BraidQkvMode::SplitKv;
+        else if (qDom) want = BraidQkvMode::SplitQ;
+    }
+    // Do NOT demote Split→Serial on weak absolute samples. Only soft-cold below.
+
+    if (want != g_adapt.mode) {
+        ++g_adapt.modeHot;
+        g_adapt.modeCold = 0;
+        if (g_adapt.modeHot >= kHotN) {
+            const bool reducing =
+                (want == BraidQkvMode::SplitKv || want == BraidQkvMode::SplitQ) &&
+                g_adapt.mode == BraidQkvMode::SerialReuse;
+            const bool unreducing =
+                want == BraidQkvMode::SerialReuse &&
+                g_adapt.mode != BraidQkvMode::SerialReuse;
+            g_adapt.mode = want;
+            g_adapt.modeHot = 0;
+            g_adapt.lastAction = reducing ? BraidAdaptiveAction::REDUCE
+                                : unreducing ? BraidAdaptiveAction::UNREDUCE
+                                             : BraidAdaptiveAction::HOLD;
+            // Secondary: when reducing onto SplitKv, try compat path on KVA
+            // lane if still GPU (serial); for SplitKv host path fused N/A.
+            if (reducing && want == BraidQkvMode::SplitKv) {
+                // Keep GPU Q lanes fused; mark KVA preferFused for when
+                // UNREDUCE returns it to GPU.
+                g_adapt.lane[2].preferFused = false;
+            }
+            if (unreducing) {
+                for (int i = 0; i < 3; ++i)
+                    g_adapt.lane[i].preferFused = true;
+            }
+        }
+    } else {
+        g_adapt.modeHot = 0;
+        // Soft unreduce sticky: split mode loses ownership → SerialReuse.
+        const bool coldSplit =
+            (g_adapt.mode == BraidQkvMode::SplitKv && kvaPct <= kExit) ||
+            (g_adapt.mode == BraidQkvMode::SplitQ && qPct <= kExit);
+        if (coldSplit) {
+            if (++g_adapt.modeCold >= kColdN) {
+                g_adapt.mode = BraidQkvMode::SerialReuse;
+                g_adapt.modeCold = 0;
+                g_adapt.lastAction = BraidAdaptiveAction::UNREDUCE;
+                for (int i = 0; i < 3; ++i)
+                    g_adapt.lane[i].preferFused = true;
+            }
+        } else {
+            g_adapt.modeCold = 0;
+        }
+        (void)second;
+    }
+}
+
+void K2Braid_ReportParity(bool parityOk) {
+    if (parityOk) return;
+    K2Braid_ObserveQkvWindow(0, 0, 0, false);
+}
+
+BraidQkvMode K2Braid_GetQkvMode() {
+    // Env wins for certs / A/B. Empty string = unset (CRT leaves var present).
+    if (const char* e = std::getenv("DEEP2_MLA_QKV_SPLIT")) {
+        if (e[0] == '0') return BraidQkvMode::SerialReuse;
+        if (e[0] == 'q' || e[0] == 'Q') return BraidQkvMode::SplitQ;
+        if (e[0] == '1' || e[0] == 'k' || e[0] == 'K')
+            return BraidQkvMode::SplitKv;
+    }
+    std::lock_guard<std::mutex> lock(g_adaptMu);
+    return g_adapt.mode;
+}
+
+BraidAdaptiveSnapshot K2Braid_GetAdaptiveSnapshot() {
+    std::lock_guard<std::mutex> lock(g_adaptMu);
+    BraidAdaptiveSnapshot s{};
+    s.windows = g_adapt.windows;
+    s.qaUs = g_adapt.qaUs;
+    s.qbUs = g_adapt.qbUs;
+    s.kvaUs = g_adapt.kvaUs;
+    s.qaPct = g_adapt.pct[0];
+    s.qbPct = g_adapt.pct[1];
+    s.kvaPct = g_adapt.pct[2];
+    s.qaEmaPct = g_adapt.lane[0].emaPct;
+    s.qbEmaPct = g_adapt.lane[1].emaPct;
+    s.kvaEmaPct = g_adapt.lane[2].emaPct;
+    s.owner = g_adapt.owner == 0   ? BraidQkvLane::QA
+              : g_adapt.owner == 1 ? BraidQkvLane::QB
+              : g_adapt.owner == 2 ? BraidQkvLane::KVA
+                                   : BraidQkvLane::NONE;
+    s.lastAction = g_adapt.lastAction;
+    s.mode = g_adapt.mode;
+    s.qaFused = g_adapt.lane[0].preferFused;
+    s.qbFused = g_adapt.lane[1].preferFused;
+    s.kvaFused = g_adapt.lane[2].preferFused;
+    return s;
+}
+
+const char* K2Braid_ActionName(BraidAdaptiveAction a) {
+    switch (a) {
+    case BraidAdaptiveAction::REDUCE: return "REDUCE";
+    case BraidAdaptiveAction::UNREDUCE: return "UNREDUCE";
+    default: return "HOLD";
+    }
+}
+const char* K2Braid_QkvLaneName(BraidQkvLane lane) {
+    switch (lane) {
+    case BraidQkvLane::QA: return "Q_A";
+    case BraidQkvLane::QB: return "Q_B";
+    case BraidQkvLane::KVA: return "KV_A";
+    default: return "NONE";
+    }
+}
+const char* K2Braid_QkvModeName(BraidQkvMode m) {
+    switch (m) {
+    case BraidQkvMode::SerialReuse: return "SERIAL_REUSE";
+    case BraidQkvMode::SplitKv: return "SPLIT_KV";
+    case BraidQkvMode::SplitQ: return "SPLIT_Q";
+    }
+    return "SERIAL_REUSE";
+}
+
+void K2Braid_EmitAdaptive(FILE* f) {
+    if (!f) f = stdout;
+    const auto s = K2Braid_GetAdaptiveSnapshot();
+    const BraidQkvMode live = K2Braid_GetQkvMode();
+    fprintf(f,
+            "BRAID_QKV_US QA=%llu QB=%llu KVA=%llu\n"
+            "BRAID_QKV_PCT QA=%.2f QB=%.2f KVA=%.2f "
+            "EMA_QA=%.2f EMA_QB=%.2f EMA_KVA=%.2f\n"
+            "BRAID_QKV_OWNER=%s ACTION=%s LIVE_MODE=%s POLICY_MODE=%s\n"
+            "BRAID_QKV_PATH QA=%s QB=%s KVA=%s WINDOWS=%llu\n",
+            (unsigned long long)s.qaUs, (unsigned long long)s.qbUs,
+            (unsigned long long)s.kvaUs, s.qaPct * 100.f, s.qbPct * 100.f,
+            s.kvaPct * 100.f, s.qaEmaPct * 100.f, s.qbEmaPct * 100.f,
+            s.kvaEmaPct * 100.f, K2Braid_QkvLaneName(s.owner),
+            K2Braid_ActionName(s.lastAction), K2Braid_QkvModeName(live),
+            K2Braid_QkvModeName(s.mode),
+            s.qaFused ? "FUSED" : "COMPAT", s.qbFused ? "FUSED" : "COMPAT",
+            s.kvaFused ? "FUSED" : "COMPAT",
+            (unsigned long long)s.windows);
+    fflush(f);
+}
+
+void K2Braid_Plan(KernelRole role, BraidGGMLType sourceFormat,
+                  BraidExecutionPlan& out) {
+    K2Braid_PlanTagged(role, sourceFormat, 0, out);
 }
 
 void K2Braid_NoteExecuted(const BraidExecutionPlan& plan) {
@@ -149,9 +403,16 @@ void K2Braid_NoteExecuted(const BraidExecutionPlan& plan) {
 }
 
 void K2Braid_ResetCounters() {
-    std::lock_guard<std::mutex> lock(g_mu);
-    g_counters = BraidCounters{};
+    {
+        std::lock_guard<std::mutex> lock(g_mu);
+        g_counters = BraidCounters{};
+    }
     K2Braid_ResetWitnesses();
+    {
+        std::lock_guard<std::mutex> lock(g_adaptMu);
+        g_adapt = QkvAdapt{};
+        g_adapt.mode = BraidQkvMode::SplitKv;
+    }
 }
 
 BraidCounters K2Braid_GetCounters() {
@@ -163,31 +424,34 @@ BraidCounters K2Braid_GetCounters() {
 
 void K2Braid_EmitCounters(FILE* f) {
     if (!f) f = stdout;
-    std::lock_guard<std::mutex> lock(g_mu);
-    fprintf(f,
-        "BRAID_PLANS=%llu DIRECT_PACKED=%llu F32_WAREHOUSE=%llu\n"
-        "BRAID_SOURCE_REWRITES=%llu SOURCE_REWRITE_BYTES=%llu\n"
-        "BRAID_CORRECTION_LANE=%llu UNSUPPORTED_REINTERPRET=%llu\n"
-        "BRAID_ROLE_Q=%llu K=%llu V=%llu O=%llu FFN=%llu EXPERT=%llu "
-        "LOGITS=%llu EMBED=%llu\n"
-        "BRAID_F32_WAREHOUSE_BYTES=%llu\n",
-        (unsigned long long)g_counters.plansIssued,
-        (unsigned long long)g_counters.directPacked,
-        (unsigned long long)g_counters.f32Warehouse,
-        (unsigned long long)g_counters.sourceRewrites,
-        (unsigned long long)g_sourceRewriteBytes.load(std::memory_order_acquire),
-        (unsigned long long)g_counters.correctionLane,
-        (unsigned long long)g_counters.unsupportedReinterpret,
-        (unsigned long long)g_counters.roleQ,
-        (unsigned long long)g_counters.roleK,
-        (unsigned long long)g_counters.roleV,
-        (unsigned long long)g_counters.roleO,
-        (unsigned long long)g_counters.roleFFN,
-        (unsigned long long)g_counters.roleExpert,
-        (unsigned long long)g_counters.roleLogits,
-        (unsigned long long)g_counters.roleEmbed,
-        (unsigned long long)g_f32WarehouseBytes.load(std::memory_order_acquire));
-    fflush(f);
+    {
+        std::lock_guard<std::mutex> lock(g_mu);
+        fprintf(f,
+            "BRAID_PLANS=%llu DIRECT_PACKED=%llu F32_WAREHOUSE=%llu\n"
+            "BRAID_SOURCE_REWRITES=%llu SOURCE_REWRITE_BYTES=%llu\n"
+            "BRAID_CORRECTION_LANE=%llu UNSUPPORTED_REINTERPRET=%llu\n"
+            "BRAID_ROLE_Q=%llu K=%llu V=%llu O=%llu FFN=%llu EXPERT=%llu "
+            "LOGITS=%llu EMBED=%llu\n"
+            "BRAID_F32_WAREHOUSE_BYTES=%llu\n",
+            (unsigned long long)g_counters.plansIssued,
+            (unsigned long long)g_counters.directPacked,
+            (unsigned long long)g_counters.f32Warehouse,
+            (unsigned long long)g_counters.sourceRewrites,
+            (unsigned long long)g_sourceRewriteBytes.load(std::memory_order_acquire),
+            (unsigned long long)g_counters.correctionLane,
+            (unsigned long long)g_counters.unsupportedReinterpret,
+            (unsigned long long)g_counters.roleQ,
+            (unsigned long long)g_counters.roleK,
+            (unsigned long long)g_counters.roleV,
+            (unsigned long long)g_counters.roleO,
+            (unsigned long long)g_counters.roleFFN,
+            (unsigned long long)g_counters.roleExpert,
+            (unsigned long long)g_counters.roleLogits,
+            (unsigned long long)g_counters.roleEmbed,
+            (unsigned long long)g_f32WarehouseBytes.load(std::memory_order_acquire));
+        fflush(f);
+    }
+    K2Braid_EmitAdaptive(f);
 }
 
 const char* K2Braid_PrecisionName(BraidPrecision p) {

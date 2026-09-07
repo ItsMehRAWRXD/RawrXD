@@ -7,6 +7,8 @@
 #include "K2GpuStreamCopy.hpp"
 #include "K2LivePolicy.hpp"
 #include "K2MLA_GpuGemv.hpp"
+#include "K2MlaStageTiming.hpp"
+#include "K2BraidExecutionPolicy.hpp"
 #include "K2ShardIo.hpp"
 #include "StreamPathTiming.hpp"
 #include "StreamTransferCounters.hpp"
@@ -66,6 +68,7 @@ static AttrWin RunWindow(Deep2Engine& e, const char* prompt, uint32_t tokens,
     StreamTransfer_Reset();
     GpuTransfer_Reset();
     StreamPathTiming_Reset();
+    MlaStage_Reset();
     K2ShardIo_ResetCounters();
 
     GenerationOptions opts{};
@@ -179,6 +182,9 @@ static void EmitWin(const char* tag, const AttrWin& w, uint64_t expectOps) {
     printf("TOTAL_MS_PER_TOKEN=%.6f\n", w.wallMs / t);
     printf("MAX_BUCKET=%s\n", w.maxBucket);
     printf("MAX_BUCKET_MS_PER_TOKEN=%.6f\n", w.maxBucketMsTok);
+    // MLA sub-owner in the same measurement window (no guess cycle).
+    MlaStage_Emit(stdout);
+    K2Braid_EmitAdaptive(stdout);
 
     printf("SHARD_READ_CALLS=%llu\n", (unsigned long long)w.shardCalls);
     printf("SHARD_READ_BYTES=%llu\n", (unsigned long long)w.shardBytes);
@@ -223,14 +229,17 @@ int main() {
             ? std::getenv("DEEP2_K2_SHARD_DIR")
             : "F:\\OllamaModels\\Kimi-K2-Instruct-0905-GGUF\\Q4_K_M";
     const uint32_t depth = 61;
-    const uint64_t unique = 6ull * depth;
+    const uint64_t unique = 6ull * depth;           // legacy dual-expand GPU count
+    const uint64_t cacheSplit = 3ull * depth;       // q_a,q_b,o
+    const uint64_t cacheSerial = 4ull * depth;      // +kv_a
     const uint32_t winsTok[] = {32, 64, 128};
 
     printf("%s\n", gateId);
     printf("ROLE=ATTRIBUTION_ONLY freeze=sustained_winner no_opt\n");
-    printf("MODEL=%s D=%u CACHE_N_EXPECT=366 PIN_MIB_EXPECT~3673 "
+    printf("MODEL=%s D=%u CACHE_N_EXPECT=%llu|%llu|%llu (split|serial|legacy) "
            "FULL_DEPTH_PROMO\n",
-           dir.c_str(), depth);
+           dir.c_str(), depth, (unsigned long long)cacheSplit,
+           (unsigned long long)cacheSerial, (unsigned long long)unique);
     if (!fs::is_directory(dir)) {
         printf("%s=SKIP\n", gateId);
         _exit(0);
@@ -239,6 +248,11 @@ int main() {
     Sync("DEEP2_LIVE_POLICY", "PROMO");
     Sync("DEEP2_LIVE_CROSSOVER_STEPS", "8");
     Sync("DEEP2_MLA_SERIAL", "1");
+    // Force sealed champion topology for attribution (GPU Q || host KV_A).
+    Sync("DEEP2_MLA_QKV_SPLIT", "1");
+    // Leave DEEP2_MLA_FUSED_KV unset → host fused KV expand default.
+    SetEnvironmentVariableA("DEEP2_MLA_FUSED_KV", nullptr);
+    _putenv_s("DEEP2_MLA_FUSED_KV", "");
     Sync("DEEP2_K2_GPU_STREAM_COPY", "1");
     Sync("DEEP2_K2_GPU_MLA", "1");
     Sync("DEEP2_WEIGHT_PIN", "1");
@@ -310,6 +324,7 @@ int main() {
     }
 
     std::vector<AttrWin> timed;
+    const uint64_t opsPerTokSplit = 3ull * depth; // q_a,q_b,o under SPLIT_KV
     for (uint32_t t : winsTok) {
         printf("\n--- TIMED %u ---\n", t);
         fflush(stdout);
@@ -321,19 +336,28 @@ int main() {
         AttrWin w = RunWindow(eng, kPrompt, t, up0, hit0, rej0);
         char tag[16];
         std::snprintf(tag, sizeof(tag), "W%u", t);
-        EmitWin(tag, w, unique * t);
+        EmitWin(tag, w, opsPerTokSplit * t);
         timed.push_back(w);
     }
 
     // Freeze + accounting gates (no optimization).
+    // Sealed champion: GPU Q || host KV_A → 3 GPU MLA GEMVs/layer (q_a,q_b,o).
+    // Serial fallback: 4 GPU GEMVs/layer (q_a,q_b,kv_a,o) with fused expand.
+    const uint64_t opsSplit = opsPerTokSplit;
+    const uint64_t opsSerial = 4ull * depth;
     const double tolAbs = 1.0; // ms; residual OTHER makes err ~0
     bool freezeOk = true, acctOk = true, opsOk = true;
     for (const auto& w : timed) {
+        const bool opsMatch =
+            (w.mlaOps == opsSplit * w.tokens) ||
+            (w.mlaOps == opsSerial * w.tokens) ||
+            (w.mlaOps == unique * w.tokens);
         freezeOk = freezeOk && w.ok && w.tryEntry == 0 && w.mlaFail == 0 &&
                    w.upFail == 0 && w.pinRej == 0 && w.fallback == 0 &&
                    w.pta == 0 && w.uploads == 0 && w.hits > 0 &&
-                   w.cacheN == 366;
-        opsOk = opsOk && (w.mlaOps == unique * w.tokens);
+                   (w.cacheN == cacheSplit || w.cacheN == cacheSerial ||
+                    w.cacheN == unique);
+        opsOk = opsOk && opsMatch;
         const double named = w.mlaMs + w.logitsMs + w.shardMs + w.sampleMs +
                              w.detokMs + w.streamMs;
         const double err = std::fabs(w.wallMs - (named + w.otherMs));

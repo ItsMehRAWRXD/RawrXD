@@ -351,6 +351,7 @@ bool VulkanCompute::EnsureHostIo(size_t inBytes, size_t outBytes) {
         if (gemv_in_buf_) { vkDestroyBuffer(device_, gemv_in_buf_, nullptr); gemv_in_buf_ = nullptr; }
         if (gemv_in_mem_) { vkFreeMemory(device_, gemv_in_mem_, nullptr); gemv_in_mem_ = nullptr; }
         gemv_in_cap_ = 0;
+        gemv_in_live_cols_ = 0;
         if (!CreateHostVisibleBuffer(inBytes, gemv_in_buf_, gemv_in_mem_)) return false;
         gemv_in_cap_ = inBytes;
     }

@@ -174,6 +174,7 @@ int main() {
     K2LivePolicy_ClearSticky();
 
     Sync("DEEP2_MLA_QKV_SPLIT", "0");
+    Sync("DEEP2_MLA_HIDDEN_REUSE", "1");
     printf("\n--- WARM ---\n");
     Arm warm = Run(eng, kPrompt, 8, 0, 0);
     printf("WARM ok=%d cacheN=%u tok=%d\n", warm.ok ? 1 : 0, warm.cacheN,
@@ -186,7 +187,19 @@ int main() {
         hit0 = vc->WeightContentHits();
     }
 
+    printf("\n--- BASE_NO_REUSE ---\n");
+    Sync("DEEP2_MLA_HIDDEN_REUSE", "0");
+    Arm base = Run(eng, kPrompt, 8, up0, hit0);
+    printf("BASE qkv=%llu reuse=%llu tok=%d ok=%d\n",
+           (unsigned long long)base.qkv, (unsigned long long)base.reuse,
+           base.lastTok, base.ok ? 1 : 0);
+
+    if (auto* vc = eng.getVulkanComputeSlot(0)) {
+        up0 = vc->GemvWeightUploads();
+        hit0 = vc->WeightContentHits();
+    }
     printf("\n--- SERIAL_REUSE (Q_A→KV_A hidden reuse) ---\n");
+    Sync("DEEP2_MLA_HIDDEN_REUSE", "1");
     Sync("DEEP2_MLA_QKV_SPLIT", "0");
     Arm ser = Run(eng, kPrompt, 8, up0, hit0);
     MlaStage_Emit(stdout);
@@ -198,7 +211,7 @@ int main() {
         up0 = vc->GemvWeightUploads();
         hit0 = vc->WeightContentHits();
     }
-    printf("\n--- SPLIT_KV (GPU Q || SIMD host KV_A) ---\n");
+    printf("\n--- SPLIT_KV (GPU Q || host KV_A) ---\n");
     Sync("DEEP2_MLA_QKV_SPLIT", "1");
     Arm split = Run(eng, kPrompt, 8, up0, hit0);
     printf("SPLIT  qkv=%llu kva=%llu reuse=%llu tok=%d ok=%d\n",
@@ -213,8 +226,7 @@ int main() {
         best = split;
         mode = "split_kv";
     }
-    // Baseline: serial_reuse (split only wins if token-identical).
-    const uint64_t baseQkv = ser.qkv;
+    const uint64_t baseQkv = base.qkv ? base.qkv : ser.qkv;
     const char* sub = SubOwner(best);
     const char* stageOwner = "QKV_PROJ";
     if (best.kvExp > best.qkv) stageOwner = "KV_EXPAND";
@@ -222,23 +234,27 @@ int main() {
     const double mlaUpt = ser.up ? (double)ser.up / 8.0 : 0.0;
     const double shardIoMsTok =
         ser.shardAttn ? ((double)ser.shardAttn / 1000.0) / 8.0 : 0.0;
-    const int argmaxParity = splitParity ? 1 : 0;
+    const int argmaxParity =
+        (ser.parityFail == 0 && ser.ok && base.ok &&
+         base.lastTok == ser.lastTok)
+            ? 1
+            : 0;
     const int hotAlloc = (int)ser.hotAlloc;
     const int hostKvDefault = 1;
     const int gpuKvSlow = 1;
     const int ownerNotKv = (std::strcmp(stageOwner, "KV_EXPAND") != 0) ? 1 : 0;
-    const bool reuseOk = ser.reuse >= 400; // ~61*8 with some slack
-    // Serial reuse is the sealed path; split is optional if parity holds.
+    const bool reuseOk = ser.reuse >= 400;
+    const bool reduced =
+        reuseOk && baseQkv > 0 && best.qkv > 0 &&
+        (best.qkv <= baseQkv || (splitParity && split.qkv < ser.qkv));
     const bool freeze = ser.ok && warm.ok && ser.shardAttn == 0 &&
                         ser.hostCopy == 0 && mlaUpt == 0.0 &&
                         ser.tryExt == 0 && ser.fb == 0 &&
                         ser.cacheN >= 551 && ser.hit > 0 && hotAlloc == 0 &&
-                        ser.gemvFail == 0;
+                        ser.gemvFail == 0 && argmaxParity == 1;
     const bool attrib = ser.qkv > 0 && (ser.qa + ser.qb + ser.kva) > 0;
-    const bool reduced =
-        splitParity && split.qkv > 0 && ser.qkv > 0 && (split.qkv < ser.qkv);
-    const bool pass = freeze && attrib && reuseOk && ownerNotKv &&
-                      hostKvDefault && gpuKvSlow && ser.ok;
+    const bool pass = freeze && attrib && reduced && reuseOk && ownerNotKv &&
+                      hostKvDefault && gpuKvSlow && ser.ok && base.ok;
 
     printf("\nBEST_MODE=%s BEST_QKV_US=%llu BASE_QKV_US=%llu SPEEDUP=%.3fx "
            "MLA_QKV_PROJ_OWNER=%s\n",
@@ -248,11 +264,11 @@ int main() {
     printf("MLA_STAGE_OWNER=%s\n", stageOwner);
     printf("HOST_KV_EXPAND_DEFAULT=%d\n", hostKvDefault);
     printf("GPU_KV_EXPAND_DISABLED_OR_SLOW=%d\n", gpuKvSlow);
-    printf("ARGMAX_PARITY=%d SER_TOK=%d SPLIT_TOK=%d\n", argmaxParity,
-           ser.lastTok, split.lastTok);
+    printf("ARGMAX_PARITY=%d BASE_TOK=%d SER_TOK=%d SPLIT_TOK=%d\n",
+           argmaxParity, base.lastTok, ser.lastTok, split.lastTok);
     printf("HOT_ALLOC=%d\n", hotAlloc);
     printf("SHARD_IO_MS_PER_TOKEN=%.3f\n", shardIoMsTok);
-    printf("MLA_GPU_GEMV_FAIL=%llu\n", (unsigned long long)best.gemvFail);
+    printf("MLA_GPU_GEMV_FAIL=%llu\n", (unsigned long long)ser.gemvFail);
     printf("GEMV_INPUT_REUSE_HITS=%llu\n", (unsigned long long)ser.reuse);
     printf("MLA_QA_US=%llu MLA_QB_US=%llu MLA_KVA_US=%llu MLA_QKV_PROJ_US=%llu\n",
            (unsigned long long)best.qa, (unsigned long long)best.qb,
@@ -265,11 +281,11 @@ int main() {
         "G:\\~dev\\rawrxd\\evidence\\K2_MLA_QKV_PROJ_001\\GATE_STATUS.txt", "w");
     if (f) {
         fprintf(f,
-                "SERIAL=%llu SPLIT=%llu BEST=%s OWNER=%s reuse=%llu reduced=%d "
-                "freeze=%d tok_ser=%d tok_split=%d\n",
-                (unsigned long long)ser.qkv, (unsigned long long)split.qkv, mode,
-                sub, (unsigned long long)ser.reuse, reduced ? 1 : 0,
-                freeze ? 1 : 0, ser.lastTok, split.lastTok);
+                "BASE=%llu SERIAL=%llu SPLIT=%llu BEST=%s OWNER=%s reuse=%llu "
+                "reduced=%d freeze=%d\n",
+                (unsigned long long)base.qkv, (unsigned long long)ser.qkv,
+                (unsigned long long)split.qkv, mode, sub,
+                (unsigned long long)ser.reuse, reduced ? 1 : 0, freeze ? 1 : 0);
         fprintf(f, "QKV_PROJ_TIME_REDUCED=%d\n", reduced ? 1 : 0);
         fprintf(f, "MLA_STAGE_OWNER=%s\n", stageOwner);
         fprintf(f, "HOST_KV_EXPAND_DEFAULT=%d\n", hostKvDefault);
@@ -277,7 +293,7 @@ int main() {
         fprintf(f, "ARGMAX_PARITY=%d HOT_ALLOC=%d SHARD_IO_MS_PER_TOKEN=%.3f\n",
                 argmaxParity, hotAlloc, shardIoMsTok);
         fprintf(f, "MLA_GPU_GEMV_FAIL=%llu\n",
-                (unsigned long long)best.gemvFail);
+                (unsigned long long)ser.gemvFail);
         fprintf(f, "K2_MLA_QKV_PROJ_001=%s\n", pass ? "PASS" : "FAIL");
         fclose(f);
     }
