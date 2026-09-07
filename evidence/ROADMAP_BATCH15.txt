@@ -1,12 +1,12 @@
-# ROADMAP_BATCH15 — post-NU / live-MLA spine (ordered by leverage)
+# ROADMAP_BATCH15 ? post-NU / live-MLA spine (ordered by leverage)
 
 01 K2_GPU_MLA_SLOT_REUSE_001     - PASS
 02 K2_MLA_REBENCH_PROMOTE_001    - PASS (cold HOLD) / REUSE_PROMOTE PASS
 03 K2_LIVE_DECODE_MLA_001        - PASS (u->0; MLA_Gemv authority)
 04 K2_MLA_FUSED_Q4KT_001         - PASS (fusedUs < compatUs; F32_EXP=0)
 05 K2_SHARD_ATTN_RESIDENCY_001   - PASS (timed SHARD_ATTN=0; borrow authority)
-06 K2_LOGITS_Q6K_RESIDENT_001    - NOW (NEXT_BEST_MOVE=LOGITS_Q6K after #05)
-07 MLA_ATTN_KV_EXPAND            - remaining MLA wall post-fused
+06 K2_LOGITS_Q6K_RESIDENT_001    - PASS (packed resident; HOT_ALLOC=0; parity=1)
+07 MLA_ATTN_KV_EXPAND            - NOW if MLA retakes wall after re-attribute
 08 STREAM_BYTES_CORPUS_SPLIT_001 - witness corpus GiB != stream transfer
 09 LIVE_PATH_NU_E2E_001          - generate() with DEEP2_LIVE_NU
 10 RKC_NU_CONSUME_FACT_001       - RKC fact: live_nu_consume_proven
@@ -19,8 +19,9 @@
 AUTHORITY LOCK:
   live MLA -> MLA_Gemv only (TRYGPU_ENTRY=0)
   MLA_Gemv -> MLA_FusedQ4KT (default ON) | DispatchGEMVPacked | GetGEMV
-  weights -> ResolveWeight (retained cache BorrowSpan; no MayCache gate on TryGet)
+  weights -> ResolveWeight (retained cache BorrowSpan)
 
-REVERSE (live D=61 T=8 fused ON, after #05):
-  NEXT_BEST_MOVE=LOGITS_Q6K
+REVERSE (timed after #06):
   SHARD_ATTN=0 COPY=0 MLA u/tok=0
+  Q6K resident HIT>0 DEQUANT=0 F32=0 HOT_ALLOC=0 SHARD_LOGITS=0 PARITY=1
+  LOGITS_US still compute-dominant (packed dots) ? re-attribute next

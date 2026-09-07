@@ -1,3 +1,2 @@
-outWBytes=963379200 packed=1 warehouse0=1 up=0
-argmax=8 packedHits=8 parityFail=0
+Q6K_HIT=8 UPLOAD=0 DEQUANT=0 F32=0 HOT=0 SHARD_B=0 PARITY_FAIL=0
 K2_LOGITS_Q6K_RESIDENT_001=PASS

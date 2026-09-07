@@ -1,7 +1,11 @@
 K2_LOGITS_Q6K_RESIDENT_001=PASS
-LAW=packed Q6_K resident; no F32 vocab warehouse; greedy argmax
-TIMED: outWBytes=963379200 (~918 MiB packed ≪ F32 warehouse)
-TIMED: FULL_MAT=0 FULL_DEQ=0 F32_WH=0 SHARD_ROW=0 HOST_COPY=0
-TIMED: MLA_UP=0 ARGMAX=8 PACKED_HITS=8 PARITY_FAIL=0
-NBM=semantic seals (independent) then latency then WALL_ATTRIBUTION_002
-EVIDENCE=RUN_LOG_FUSED.txt GATE_STATUS.txt
+
+TIMED (D=61 T=8 after warm):
+  FREEZE: SHARD_ATTN_US=0 ATTN_MISS=0 COPY=0 MLA_UP=0 TRY=0 FB=0 cacheN=551
+  Q6K_VOCAB_UPLOAD_TIMED=0 Q6K_RESIDENT_HIT=8
+  Q6K_FULL_DEQUANT_BYTES=0 LOGITS_FULL_F32_MATERIALIZE=0
+  HOT_ALLOC=0 SHARD_LOGITS_BYTES=0 ARGMAX_PARITY=1
+  LOGITS_US still wall-dominant (packed resident dots)
+
+Authority: ResolveWeight borrow packed output.weight ? LogitsClimb_ArgmaxPacked
+Next: re-attribute wall; MLA_FUSED only if MLA retakes ownership
