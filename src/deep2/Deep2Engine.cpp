@@ -9228,6 +9228,25 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
            globalIndex_->TotalTensors(),
            shards.size(),
            k2ShardConfig_.architecture.c_str());
+    // Propagate MLA dims into EngineConfig so allocateBuffers / live path
+    // use tensor authority (q_b cols = heads*(nope+rope) = 12288).
+    config.useMLA = true;
+    config.hiddenDim = k2ShardConfig_.hiddenDim ? k2ShardConfig_.hiddenDim
+                                                : config.hiddenDim;
+    config.numLayers = k2ShardConfig_.numLayers ? k2ShardConfig_.numLayers
+                                                : config.numLayers;
+    config.numHeads = k2ShardConfig_.numHeads ? k2ShardConfig_.numHeads
+                                              : config.numHeads;
+    config.numKVHeads = k2ShardConfig_.numKVHeads ? k2ShardConfig_.numKVHeads
+                                                  : config.numKVHeads;
+    config.vocabSize = k2ShardConfig_.vocabSize ? k2ShardConfig_.vocabSize
+                                                : config.vocabSize;
+    config.qLoraRank = k2ShardConfig_.qLoraRank;
+    config.kvLoraRank = k2ShardConfig_.kvLoraRank;
+    config.qkNopeHeadDim = k2ShardConfig_.qkNopeHeadDim;
+    config.qkRopeHeadDim = k2ShardConfig_.qkRopeHeadDim;
+    config.vHeadDim = k2ShardConfig_.vHeadDim;
+    config.headDim = k2ShardConfig_.qkNopeHeadDim + k2ShardConfig_.qkRopeHeadDim;
     return true;
 }
 

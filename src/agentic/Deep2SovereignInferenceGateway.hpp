@@ -55,7 +55,24 @@ class Deep2SovereignInferenceGateway final {
 public:
     bool loadModel(const std::string& modelPath, std::string* error = nullptr) {
         unload();
-        if (!engine_.loadModel(modelPath)) {
+        fs::path p(modelPath);
+        EngineConfig cfg{};
+        cfg.useMLA = true;
+        cfg.maxSeqLen = 256;
+        cfg.useKVCache = true;
+        if (!engine_.initialize(cfg)) {
+            if (error) *error = "Deep2Engine::initialize failed";
+            loaded_ = false;
+            return false;
+        }
+        if (fs::is_directory(p)) {
+            if (!engine_.openK2ShardDirectory(modelPath)) {
+                if (error) *error = "openK2ShardDirectory failed: " + modelPath;
+                loaded_ = false;
+                return false;
+            }
+            if (!engine_.isVulkanInitialized()) engine_.enableVulkan(true);
+        } else if (!engine_.loadModel(modelPath)) {
             if (error) *error = "Deep2Engine::loadModel failed for: " + modelPath;
             loaded_ = false;
             return false;
@@ -75,9 +92,23 @@ public:
             return out;
         }
         try {
-            out.text = engine_.generateText(prompt, cfg.maxTokens);
-            out.success = !out.text.empty();
-            if (!out.success) out.error = "empty generation";
+            GenerationOptions opts{};
+            opts.maxTokens = static_cast<uint32_t>(cfg.maxTokens);
+            opts.temperature = cfg.temperature;
+            opts.topP = cfg.topP;
+            opts.topK = static_cast<uint32_t>(cfg.topK > 0 ? cfg.topK : 1);
+            opts.seed = static_cast<uint64_t>(cfg.seed);
+            std::string text;
+            auto r = engine_.generateStream(
+                prompt, opts,
+                [&](int32_t, const std::string& tok) -> bool {
+                    text += tok;
+                    return true;
+                });
+            out.text = std::move(text);
+            out.success = r.completed && !out.text.empty();
+            if (!out.success)
+                out.error = r.cancelled ? "cancelled" : "empty generation";
         } catch (const std::exception& ex) {
             out.error = ex.what();
             out.success = false;
