@@ -1,0 +1,20 @@
+# RAWRXD quality follow-up from TinyLlama baseline recon
+# Source: GIBBERISH_EMBED_ZERO_001 + BATCH2_L10 known-good CPU lane
+Date: 2026-09-07
+
+Actions
+-------
+1. SemanticSafeApply() now also sets:
+   RAWRXD_GPU_DEVICES=CPU
+   DEEP2_LIVE_MECH=none
+   DEEP2_LIVE_PATH=0
+   DEEP2_GEN_ALG=standard
+   RAWRXD_GREEDY=1
+2. LOCAL_AGENT_AUDIT_001 reconfirmed PASS (elastic=0 cyclone=0 medusa=0).
+3. Coherent prose still NOT sealed — next probe: rawr run under new safe env.
+
+Known gap
+---------
+G15 coherent generation NOT PROVEN.
+HOTPATH_GEMV may still report VULKAN unless GPU_DEVICES=CPU is honored
+by streamer path; probe after rebuild.

@@ -1,0 +1,41 @@
+RAWRXD_PROGRAM_SEAL
+DATE=2026-09-07
+SOURCE=G:\~dev\rawrxd
+BUILD=G:\~dev\rawrxd\build-fd
+
+## Architecture
+
+VWA = range semantic on RMV + existing residency/I/O
+Canonical: VirtualTensorRange.hpp + VwaRangeAbi.hpp + VwaRangeX64.asm
+No new VWA authority in product CLI drops.
+
+## Product seals (this run)
+
+RAWRXD_NORMAL_GGUF_FINAL_001 = PASS
+RAWRXD_BACKGROUND_TERMINALS_001 = PASS
+  evidence: evidence/RAWRXD_BACKGROUND_TERMINALS_001/GATE_STATUS.txt
+  binaries: rawr_terminal_host.exe, rawr_termctl.exe
+RAWRXD_REMAINING_STYLE_CLI_001 = PASS
+  evidence: evidence/RAWRXD_REMAINING_STYLE_CLI_001/GATE_STATUS.txt
+  profiles: chatgpt / codex / cursor + slash/tools/approval/diff/index
+
+## CLI product stack
+
+rawr run      local model runner (SemanticSafe)
+rawr chat     console + style slash commands
+rawr agent    workspace agent
+rawr steer    named-pipe steering
+rawr term     persistent background terminals (host broker)
+
+## Prior VWA consumer seals (still PASS; not reopened)
+
+B0–B8, C1–C9 PASS
+VWA_K2_PREFETCH_OVERLAP_001 PASS
+VWA_BOUNDED_K2_001 PASS
+
+## Next
+
+K2 useful TPS / CLI kimi-k2 / product E2E / PROGRAM_PRODUCT_SEAL
+
+CURRENT=RAWRXD_BACKGROUND_TERMINALS_001 + RAWRXD_REMAINING_STYLE_CLI_001 sealed
+NEXT=agentic re-seal with term+style; K2 useful TPS

@@ -146,6 +146,14 @@ public:
         return (h + m) > 0 ? (float)h / (float)(h + m) : 0.0f;
     }
 
+    // Visit resident entries (used by DecodeCarry pin/prepare).
+    template <typename Fn>
+    void for_each_resident(Fn&& fn) {
+        for (auto& kv : weights_) {
+            if (kv.second.resident && kv.second.data) fn(kv.second);
+        }
+    }
+
 private:
     void touch_lru(const std::string& name) {
         auto it = lru_pos_.find(name);

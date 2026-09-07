@@ -1,0 +1,21 @@
+# RAWRXD_SECOND_MODEL_001 — decode domain (no load/liveness retry)
+
+## Classification
+LOAD=PASS
+FIRST_TOKEN=PASS
+AUTOREGRESSIVE_FEEDBACK=?
+TOKENIZER_DECODE=?
+SPECIAL_TOKEN_POLICY=?
+QUALITY=FAIL
+
+## Instrumentation (wired, not re-run)
+Env: RAWRXD_DECODE_FEEDBACK=1
+Probe: src/deep2/DecodeFeedbackProbe.hpp
+Hooked in Deep2Engine::generate decode loop:
+  - DecodeFeedbackOnSample after sampleToken
+  - DecodeFeedbackOnFeed before embedToken (N+1)
+  - Dump FIRST/NEXT_16/EOS/BOS/UNK/FEEDBACK_TOKEN_MATCH/REPEAT_RUN
+
+## Policy
+Do not retry SECOND_MODEL for hang/watchdog.
+Next run (when scheduled) must print FEEDBACK_TOKEN_MATCH before any sampling change.

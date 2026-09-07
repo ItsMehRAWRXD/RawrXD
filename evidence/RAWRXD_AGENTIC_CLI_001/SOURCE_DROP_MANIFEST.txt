@@ -1,0 +1,10 @@
+RAWRXD_AGENTIC_CLI_SOURCE_DROP_001
+contains:
+  normal GGUF correctness helpers (Deep2*Audit*)
+  rawr run/chat/agent/steer/resume
+  session store
+  tool bus
+  patch/build/test loop
+  steering named pipe
+  safety policy
+  final certs

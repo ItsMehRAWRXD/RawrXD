@@ -4846,6 +4846,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2NativeStreamGate.cpp
     src/deep2/K2LogitsClimb.cpp
     src/deep2/K2LogitsSplit.cpp
+    src/deep2/K2LogitsLineage.cpp
     src/deep2/K2GpuStreamCopy.cpp
     src/deep2/K2GpuStreamCopy_Overlap.cpp
     src/deep2/K2MLA_GpuGemv.cpp
@@ -8853,6 +8854,141 @@ if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
     )
 endif()
 
+option(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001 "Build LOCAL_AGENT_AUDIT_001 cert" ON)
+if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
+    add_executable(deep2_local_agent_audit_001
+        src/deep2/deep2_local_agent_audit_001.cpp
+    )
+    target_link_libraries(deep2_local_agent_audit_001 PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_local_agent_audit_001 PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_local_agent_audit_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_local_agent_audit_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_local_agent_audit_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001")
+endif()
+
+# A0 — product floor: process stays alive (no model / no VWA / no InferenceEngine)
+option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" ON)
+if(BUILD_P0_PROCESS_ALIVE_001)
+    add_executable(p0_process_alive_001
+        src/deep2/p0_process_alive_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p0_process_alive_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(p0_process_alive_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p0_process_alive_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001")
+endif()
+
+# B0 — VWA range contract (RMV-layered; no second mount)
+option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" ON)
+if(BUILD_VWA_RANGE_CONTRACT_001)
+    add_executable(vwa_range_contract_001
+        src/deep2/vwa_range_contract_001.cpp
+    )
+    target_include_directories(vwa_range_contract_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    if(MSVC)
+        target_compile_options(vwa_range_contract_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(vwa_range_contract_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME vwa_range_contract_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001")
+endif()
+
+# C1 substrate — K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
+option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" ON)
+if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
+    add_executable(deep2_k2_logits_vwa_lineage_001
+        src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(deep2_k2_logits_vwa_lineage_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(deep2_k2_logits_vwa_lineage_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_logits_vwa_lineage_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001")
+endif()
+
+# B0 — VWA address contract (types + ResolvePhysicalSpan only)
+option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" ON)
+if(BUILD_VWA_ADDRESS_CONTRACT_001)
+    add_executable(vwa_address_contract_001
+        src/deep2/vwa_address_contract_001.cpp
+    )
+    target_include_directories(vwa_address_contract_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    if(MSVC)
+        target_compile_options(vwa_address_contract_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(vwa_address_contract_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME vwa_address_contract_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001")
+endif()
+
+# B1 — VWA POC-1: RMV → MASM resolve → exact ReadFile + dequant (real GGUF)
+option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" ON)
+if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
+    set(_VWA_POC_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
+    set(_VWA_POC_ASM_OBJ "${CMAKE_BINARY_DIR}/VwaRangeX64_poc1.obj")
+    add_custom_command(
+        OUTPUT ${_VWA_POC_ASM_OBJ}
+        COMMAND "${_VWA_POC_ML64}" /nologo /c /Fo"${_VWA_POC_ASM_OBJ}"
+                "${CMAKE_SOURCE_DIR}/src/deep2/VwaRangeX64.asm"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/VwaRangeX64.asm"
+        COMMENT "Assembling VwaRangeX64.asm (POC-1)"
+        VERBATIM)
+    add_executable(vwa_poc_1_001
+        src/deep2/vwa_poc_1_001.cpp
+        src/deep2/GGUFLoader.cpp
+        ${_VWA_POC_ASM_OBJ}
+    )
+    target_include_directories(vwa_poc_1_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(vwa_poc_1_001 PRIVATE kernel32)
+    target_compile_options(vwa_poc_1_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
+    set_target_properties(vwa_poc_1_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME vwa_poc_1_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA_POC_1_001: vwa_poc_1_001 (MASM fulfill)")
+endif()
+
 set(DEEP2_R1_DECODE_ASM
     src/asm/Deep2R1_StrEq.asm
     src/asm/Deep2R1_IsArch.asm
@@ -9586,6 +9722,115 @@ if(BUILD_DEEP2_UCF_HALO_SPARK_001)
     message(STATUS "[Deep2] UCF Halo/Spark: deep2_ucf_halo_spark_001")
 endif()
 
+option(BUILD_DEEP2_RMV_MOUNT_001 "Build RMV_MOUNT_001" ON)
+if(BUILD_DEEP2_RMV_MOUNT_001)
+    add_executable(deep2_rmv_mount_001
+        src/deep2/deep2_rmv_mount_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_rmv_mount_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_rmv_mount_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_rmv_mount_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_rmv_mount_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] RMV mount gate: deep2_rmv_mount_001")
+endif()
+
+# Synthetic VWA manager E2E is NOT the authority path (second residency risk).
+option(BUILD_DEEP2_VWA_E2E_001 "Build legacy VWA_E2E_001 (non-authority)" OFF)
+if(BUILD_DEEP2_VWA_E2E_001)
+    add_executable(deep2_vwa_e2e_001
+        src/deep2/deep2_vwa_e2e_001.cpp
+        src/deep2/vwa/VwaScheduler_Fulfill.cpp
+        src/deep2/vwa/VwaScheduler_Lease.cpp)
+    if(MSVC)
+        target_compile_options(deep2_vwa_e2e_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_vwa_e2e_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_vwa_e2e_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_vwa_e2e_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001" ON)
+if(BUILD_DEEP2_VWA_RANGE_CONTRACT_001)
+    add_executable(deep2_vwa_range_contract_001
+        src/deep2/deep2_vwa_range_contract_001.cpp)
+    if(MSVC)
+        target_compile_options(deep2_vwa_range_contract_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_vwa_range_contract_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    set_target_properties(deep2_vwa_range_contract_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_vwa_range_contract_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA range contract: deep2_vwa_range_contract_001")
+endif()
+
+option(BUILD_DEEP2_VWA_POC_1_001 "Build VWA_POC_1_001" ON)
+if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
+    set(_VWA_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
+    set(_VWA_ASM_OBJ "${CMAKE_BINARY_DIR}/VwaRangeX64.obj")
+    add_custom_command(
+        OUTPUT ${_VWA_ASM_OBJ}
+        COMMAND "${_VWA_ML64}" /nologo /c /Fo"${_VWA_ASM_OBJ}"
+                "${CMAKE_SOURCE_DIR}/src/deep2/VwaRangeX64.asm"
+        DEPENDS "${CMAKE_SOURCE_DIR}/src/deep2/VwaRangeX64.asm"
+        COMMENT "Assembling VwaRangeX64.asm"
+        VERBATIM)
+    add_executable(deep2_vwa_poc_1_001
+        src/deep2/deep2_vwa_poc_1_001.cpp
+        ${_VWA_ASM_OBJ})
+    target_compile_options(deep2_vwa_poc_1_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    target_include_directories(deep2_vwa_poc_1_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_link_libraries(deep2_vwa_poc_1_001 PRIVATE kernel32)
+    set_target_properties(deep2_vwa_poc_1_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_vwa_poc_1_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA POC-1: deep2_vwa_poc_1_001")
+endif()
+
+option(BUILD_DEEP2_VWA_FILE_COALESCE_001 "Build VWA_FILE_COALESCE_001" ON)
+# Target is created in cmake/Deep2VwaB3B8.fragment.cmake after deep2_vwa_range_core.
+if(FALSE)
+endif()
+
+option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" ON)
+if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
+    add_executable(deep2_vwa_iocp_range_001
+        src/deep2/deep2_vwa_iocp_range_001.cpp
+        src/deep2/IOCPGGUFLoader.cpp
+        src/deep2/GGUFLoader.cpp)
+    target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
+    target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20 /Gy)
+    target_include_directories(deep2_vwa_iocp_range_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2)
+    target_link_libraries(deep2_vwa_iocp_range_001 PRIVATE kernel32)
+    target_link_options(deep2_vwa_iocp_range_001 PRIVATE /OPT:REF)
+    set_target_properties(deep2_vwa_iocp_range_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_vwa_iocp_range_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] VWA IOCP range: deep2_vwa_iocp_range_001")
+endif()
+
 option(BUILD_DEEP2_UCF_MOBILITY_FAULT_001 "Build UCF_MOBILITY_FAULT_001" ON)
 if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
     add_executable(deep2_ucf_mobility_fault_001
@@ -9722,6 +9967,123 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
+
+    # C1 live — fulfilled→TryGpuHot range attribution under BOUNDED_STREAM
+    add_executable(deep2_k2_logits_gpu_range_attribution_001
+        src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
+    target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
+        PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_logits_gpu_range_attribution_001 PRIVATE
+            /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_logits_gpu_range_attribution_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_logits_gpu_range_attribution_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_logits_gpu_range_attribution_001
+    )
+    message(STATUS "[Deep2] C1 logits GPU range attribution: "
+                   "deep2_k2_logits_gpu_range_attribution_001")
+endif()
+
+# C1–C9 additive helpers (observational lineage + cut/overlap/bound validators)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2C1C9.fragment.cmake)
+if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
+    target_link_libraries(InferenceEngine PUBLIC deep2_c1_c9)
+    if(TARGET deep2_k2_logits_gpu_range_attribution_001)
+        target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
+            PRIVATE deep2_c1_c9)
+    endif()
+    message(STATUS "[Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine")
+endif()
+
+# VWA B3–B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaB3B8.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaConsumerGates.fragment.cmake)
+if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
+    target_link_libraries(InferenceEngine PUBLIC deep2_vwa_range_core)
+    message(STATUS "[Deep2] VWA B3-B8 range core: deep2_vwa_range_core")
+endif()
+
+# RAWRXD_RUN_MODELNAME_001 — Ollama-style `rawr run <alias>` front door (Deep2).
+option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" ON)
+if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
+    add_executable(rawrxd_run_modelname_001
+        src/deep2/rawrxd_run_modelname_001.cpp)
+    target_link_libraries(rawrxd_run_modelname_001 PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(rawrxd_run_modelname_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rawrxd_run_modelname_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rawrxd_run_modelname_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawrxd_run_modelname_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    add_executable(rawr src/deep2/rawr_run.cpp)
+    target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(rawr PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rawr PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rawr PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawr
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
+    target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_useful_tps_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_useful_tps_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_useful_tps_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_useful_tps_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    add_executable(rawrxd_normal_gguf_final_001
+        src/deep2/rawrxd_normal_gguf_final_001.cpp)
+    target_link_libraries(rawrxd_normal_gguf_final_001 PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(rawrxd_normal_gguf_final_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rawrxd_normal_gguf_final_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rawrxd_normal_gguf_final_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawrxd_normal_gguf_final_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
+endif()
+
+# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 — run/chat/agent/steer/resume + certs
+include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
+
+# Deep2 Gateway cert island — Win32 only (no Ship / no C++23)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
+# Background terminals (host/termctl) + remaining ChatGPT/Codex/Cursor style layer
+include(${CMAKE_SOURCE_DIR}/cmake/RawrBackgroundTerminals.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/RawrRemainingStyleCli.fragment.cmake)
+
+if(TARGET deep2_vwa_file_coalesce_001 AND TARGET deep2_vwa_range_core)
+    target_link_libraries(deep2_vwa_file_coalesce_001 PRIVATE deep2_vwa_range_core)
+endif()
+if(TARGET deep2_vwa_iocp_range_001 AND TARGET deep2_vwa_range_core)
+    target_link_libraries(deep2_vwa_iocp_range_001 PRIVATE deep2_vwa_range_core)
 endif()
 
 option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" ON)
@@ -16047,3 +16409,13 @@ if(TARGET InferenceEngine)
     target_include_directories(test_o_proj_mulmat_002 PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/include)
     set_target_properties(test_o_proj_mulmat_002 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin OUTPUT_NAME test_o_proj_mulmat_002)
 endif()
+
+
+option(BUILD_PROBE_CHAT_QUALITY "probe" ON)
+if(BUILD_PROBE_CHAT_QUALITY AND TARGET InferenceEngine)
+  add_executable(_probe_chat_quality src/deep2/_probe_chat_quality.cpp)
+  target_link_libraries(_probe_chat_quality PRIVATE InferenceEngine dxgi)
+  target_include_directories(_probe_chat_quality PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+  set_target_properties(_probe_chat_quality PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+

@@ -1,0 +1,18 @@
+# NEXT15 product unlocks after NORMAL_GGUF + BACKGROUND_TERMINALS + STYLE_CLI
+# Band: agentic product surface + K2 climb (no new VWA authority)
+
+1. RAWRXD_BACKGROUND_TERMINALS_001 — PASS (this drop)
+2. RAWRXD_REMAINING_STYLE_CLI_001 — PASS (this drop)
+3. RAWRXD_AGENTIC_CLI_001 — re-seal with term+style included
+4. RAWR_PRODUCT_E2E_001 — run/chat/agent/steer/term scripted demo
+5. RAWR_CLI_STDOUT_ONLY_001 — answer-only stdout under SemanticSafe
+6. K2_USEFUL_TPS_001 — wall-clock decode TPS useful (>=5) on local GGUF
+7. RAWR_CLI_KIMI_K2_001 — rawr run kimi-k2 streams real tokens from shards
+8. VWA_BOUNDED_K2_LIVE_001 — live peak RAM/VRAM/IO under budgets on K2
+9. VWA_NVME_HIDDEN_COMPUTE_001 — measured NVMe stall hidden behind compute
+10. RAWR_INSTALLER_REGISTRY_001 — alias registry + model path resolution
+11. RAWR_LOCAL_API_COMPAT_001 — local OpenAI-ish / generate surface
+12. RAWR_DEMO_REPEATABLE_001 — load → stream → unload → reload script
+13. K2_SHARDED_SECOND_RUN_001 — K2 second run without process restart
+14. TERM_HOST_PERSIST_001 — termctl start/tail/stop across process boundary
+15. PROGRAM_PRODUCT_SEAL_001 — PROGRAM_SEAL reflects runner+agent+term+style

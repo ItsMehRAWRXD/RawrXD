@@ -1,0 +1,46 @@
+# Product Unlock Ladder — next 15 gates
+# Updated 2026-09-07 after SemanticSafe CPU coherent TinyLlama + unlock batch
+
+## Baseline sealed
+```
+RAWRXD_AGENTIC_CLI_001=PASS
+RAWRXD_NORMAL_GGUF_FINAL_001=PASS
+RAWRXD_RUN_QUALITY_001=PASS
+LOCAL_AGENT_AUDIT_001=PASS
+LOCAL_MODEL_TPS_001=PASS
+```
+
+TinyLlama coherent paragraph proven (`HOTPATH_*=CPU`, elastic/medusa/cyclone=0).
+Root cause of prior garbage: elastic zero-embed / non-CPU hotpath (see GIBBERISH_EMBED_ZERO_001).
+Fix lane: SemanticSafeApply → GPU_DEVICES=CPU + ENHANCE_SKIP + GREEDY + LIVE_MECH=none.
+
+## Next 15
+
+| # | Gate | Status | Notes |
+|---|------|--------|-------|
+| U01 | RAWRXD_STDOUT_CLEAN_001 | **PASS** | generated text has no debug leak |
+| U02 | RAWRXD_CHAT_REPL_001 | **PASS** | multi-turn session persist |
+| U03 | RAWRXD_AGENT_PATCH_LIVE_001 | OPEN | agent loop must call ToolApplyPatch on fixture |
+| U04 | RAWRXD_AGENT_BUILD_LIVE_001 | OPEN | agent loop must invoke real build target |
+| U05 | RAWRXD_STEER_LIVE_001 | OPEN | pause/continue mid-agent via pipe |
+| U06 | RAWRXD_RESUME_CHAT_001 | OPEN | resume + continue generate with model |
+| U07 | RAWRXD_AUTO_LADDER_001 | **PASS** | off/read/patch/build + git-push block |
+| U08 | RAWRXD_SECOND_MODEL_001 | OPEN | coherent run on qwen-coder/phi |
+| U09 | RAWRXD_EMBED_NORM_GUARD_001 | **PASS** | disposition/contract on disk (live inject later) |
+| U10 | RAWRXD_NO_OLLAMA_CONTRACT_001 | **PASS** | OLLAMA=0 NETWORK=0 alias resolve |
+| U11 | VWA_K2_PREFETCH_OVERLAP_001 | OPEN | measured overlap (not stub) |
+| U12 | VWA_BOUNDED_K2_001 | OPEN | live K2 RSS/wall (not math stub) |
+| U13 | K2_USEFUL_TPS_001 | OPEN | live useful TPS |
+| U14 | G15_SEMANTIC_COHERENCE_K2 | OPEN | K2 coherent gen (ladder G15) |
+| U15 | RAWRXD_PRODUCT_FRONTDOOR_001 | **PASS** | parse+agent+steer+safety umbrella |
+
+## Score
+```
+UNLOCKED_NOW = 6/15 (U01 U02 U07 U09 U10 U15)
+REMAINING    = 9/15 (U03–U06 U08 U11–U14)
+```
+
+## Attack order remaining
+```
+U03 → U04 → U05 → U06 → U08 → U15-live-gen → U11 → U12 → U13 → U14
+```

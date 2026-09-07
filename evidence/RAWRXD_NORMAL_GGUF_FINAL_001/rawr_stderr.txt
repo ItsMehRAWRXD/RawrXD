@@ -1,0 +1,289 @@
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:b2dfe39c2ff8ea8a mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=000001D10A120000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001D12B5DA8F0  Registered 'output.weight': shard=0 offset=1709440 bytes=53760000  |  registry_size=1  registeredBytes=53760000  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000001D12B5DA8F0  Registered 'blk.18.attn_q.weight': shard=0 offset=377767296 bytes=2359296  |  registry_size=100  registeredBytes=378417152  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000001D12B5DA8F0  Registered 'blk.9.attn_v.weight': shard=0 offset=668349824 bytes=430080  |  registry_size=200  registeredBytes=667070464  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=201
+TENSORS_ADDRESSED=201
+TENSORS_REGISTERED=201
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000001D12B5DA8F0  registered=201 tensors  bytes=667078656  max=536870912
+[RMV_MOUNT_001]=PASS
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF772F09B20 dequant=00007FF772F073A0 GetGEMV(12)=00007FF772F09B20 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 2048
+  Num Layers: 22
+  Num Heads: 32
+  Num KV Heads: 4
+  Head Dim: 64
+  Max Seq Len: 512
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=22 seq=512 kv_heads=4 headDim=64
+[KVCache] Initializing: layers=22 maxSeqLen=512 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 512 * 4 * 64 * 2 * 4
+[KVCache]        = 23068672 bytes (K=11534336 + V=11534336)
+[KVCache] Total cache size: 22.00 MB
+[KVCache] Initialization complete
+[SAFETY] Crash rMODEL=tinyllama
+PATH=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+OLLAMA_USED=0
+NETWORK_USED=0
+ecovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF772F09B20 dequant=00007FF772F073A0 GetGEMV(12)=00007FF772F09B20 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: SEMANTIC_SAFE (no vulkan/speed features)
+[Deep2Engine] Initialization complete
+[ChatTemplate] PHI3 heal=eos_token stop=2
+[ChatTemplate] Detected 'phi3' from template string
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=20
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=MIN
+K2_LIVE_POLICY_MODE=1
+K2_LIVE_POLICY_REASON=force_min
+K2_LIVE_POLICY_REUSE_STEPS=5632
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=22 TOKENS=256
+CACHE_BUDGET=3221225472 PREDICTED_LAYER=1216600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=none WANTED=1
+[HotPatcher] Registered decoder mode: 1 (patch_6f4e612571304956)
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[HotPatcher] GENERATE_DECODER_ALG=1
+[LivePath] GENERATE_ALG_MASK=0x00000000 random=0
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=000001D106880000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=000001D10A360000 type=12 wk.data=000001D101DB0000 wv.data=000001D10A5A0000 wo.data=000001D10A120000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=000001D101D90000 ffnNorm.data=000001D101DA0000
+[AGENT] PREFILL_DONE prompt_tokens=20 prefill_ms=1493.703
+[AGENT] DECODE_BEGIN max_out=256
+[Deep2Engine] Generation complete: 256 tokens in 25109.18 ms (E2E 10.20 TPS)
+[Deep2Engine] PREFILL: 20 tok in 1493.70 ms (13.39 tok/s) | DECODE: 256 tok in 23615.44 ms (10.84 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=275
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=6050
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=6050
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+LIVE_DECODE_COMMITTED=0
+DEEP2_CPU_FALLBACK_USED=0
+DEEP2_UNPLANNED_DEVICE_FALLBACKS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=0
+LIVE_PATH_TRAMPOLINE_HITS=0
+LIVE_PATH_CYCLONE=0
+LIVE_PATH_CYCLONE_LAYER_STARTS=0
+LIVE_PATH_CYCLONE_LAYER_ENDS=0
+LIVE_PATH_CYCLONE_DEMANDS=0
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=0
+LIVE_PATH_STREAM=0
+LIVE_PATH_STREAM_ALIVE=0
+LIVE_PATH_NVME_HOPS=0
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=0
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=0
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=0
+STREAM_READ_OPS=0
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=0
+RESIDENT_WEIGHT_PEAK=0
+CACHE_HITS=0
+CACHE_MISSES=0
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=0
+FUSED_ENABLED=0
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=0
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=0
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+LIVE_NU_WANTED=0
+LIVE_NU_AUTHORIZED=1
+LIVE_NU_ACTIVE=0
+LIVE_NU_CONSUME_OPS=0
+LIVE_NU_CONSUME_BYTES=0
+LIVE_NU_REJECT_OFF=0
+LIVE_NU_REJECT_NO_AUTH=0
+LIVE_NU_FAIL=0
+TPS_RAW=0.000000
+TPS_DISPLAY=0.0
+TPS_SCALE=1000
+TPB_RAW=2.000000000e-08
+TPB_REVERSE_BPT=50000000.0
+TPS_WORK=0.000
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] release vulkan devices
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete
+[StreamEngine] Shutdown
