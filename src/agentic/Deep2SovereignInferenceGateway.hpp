@@ -56,7 +56,7 @@ public:
     bool loadModel(const std::string& modelPath, std::string* error = nullptr) {
         unload();
         fs::path p(modelPath);
-        EngineConfig cfg{};
+        Deep2::EngineConfig cfg{};
         cfg.useMLA = true;
         cfg.maxSeqLen = 256;
         cfg.useKVCache = true;
@@ -92,7 +92,7 @@ public:
             return out;
         }
         try {
-            GenerationOptions opts{};
+            Deep2::GenerationOptions opts{};
             opts.maxTokens = static_cast<uint32_t>(cfg.maxTokens);
             opts.temperature = cfg.temperature;
             opts.topP = cfg.topP;
