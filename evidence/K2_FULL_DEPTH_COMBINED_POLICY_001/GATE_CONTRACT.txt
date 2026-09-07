@@ -1,0 +1,4 @@
+# K2_FULL_DEPTH_COMBINED_POLICY_001
+# DEPTH=61. Arms: A0 | B2 trampoline | Bbest cyclone+elastic | C trampoline+cyclone+elastic
+# C must beat true champion max(B2,Bbest) by >=3% TPS, lower wall, bytes<=champ, bounds OK.
+# Else POLICY_DECISION=SPLIT_FREEZE with workload-split policies recorded.

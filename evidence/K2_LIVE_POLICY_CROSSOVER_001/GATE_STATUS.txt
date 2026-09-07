@@ -1,0 +1,18 @@
+K2_LIVE_POLICY_CROSSOVER_001=PASS
+CROSSOVER_STEPS=8
+RULE=reuse_steps=depth*tokens; steps<8 -> OFF; else CACHE_FULL
+ENV=DEEP2_LIVE_POLICY=AUTO enables runtime Apply; MANUAL leaves harness arms
+
+# Sparse sweep (all WIN=1 on current cache stack)
+d=4 t=2 steps=8  TPS_D=+0.0055 WALL_D=-1.6s  READ_D=-1.47GB HITS=327815
+d=4 t=4 steps=16 TPS_D=+0.0694 WALL_D=-35.4s READ_D=-4.41GB HITS=655639
+d=4 t=8 steps=32 TPS_D=+0.0563 WALL_D=-41.6s READ_D=-10.3GB HITS=1311287
+d=8 t=2 steps=16 TPS_D=+0.0365 WALL_D=-7.8s  READ_D=-1.47GB HITS=327815
+d=8 t=4 steps=32 TPS_D=+0.0495 WALL_D=-19.1s READ_D=-4.41GB HITS=655639
+d=8 t=8 steps=64 TPS_D=+0.0557 WALL_D=-38.2s READ_D=-10.3GB HITS=1311287
+d=16 t=4 steps=64 TPS_D=+0.0503 WALL_D=-17.9s READ_D=-4.41GB HITS=655639
+d=16 t=8 steps=128 TPS_D=+0.0520 WALL_D=-36.2s READ_D=-10.3GB HITS=1311287
+
+NOTE: Earlier 2x4 NO_MOVEMENT_WIN predated effective K2LiveCache amortisation.
+With current cache, first measured win is at reuse_steps=8 (4x2).
+GPU_COPY remains 0 on this K2 stream lane (storage/host only).

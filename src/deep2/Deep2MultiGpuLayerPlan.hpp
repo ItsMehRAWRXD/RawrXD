@@ -35,6 +35,9 @@ bool Deep2MultiGpu_BuildContiguousPlan(
     uint64_t bytesPerLayerEstimate,
     MultiGpuLayerPlan& out) noexcept;
 
+// Inverse-score cut including SOLO. Writes DEEP2_COST_* witnesses.
+bool Deep2MultiGpu_ApplyCostWeightedCut(MultiGpuLayerPlan& plan) noexcept;
+
 // Steal trailing layers onto a planned CPU slot (hybrid). cpuLayers=0 → ~10%.
 bool Deep2MultiGpu_AttachPlannedCpu(
     MultiGpuLayerPlan& plan,

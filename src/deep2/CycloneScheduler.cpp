@@ -6,9 +6,15 @@
 #include "CycloneScheduler.hpp"
 #include "ElasticResidencyManager.hpp"
 #include <algorithm>
-#include <math>
+#include <cmath>
+#include <cstdio>
 
 namespace Deep2 {
+
+static uint64_t CycloneNowUs() {
+    return (uint64_t)std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
 // ============================================================================
 // CyclonePredictionEngine
@@ -65,16 +71,26 @@ std::vector<TensorDemand> CyclonePredictionEngine::PredictNextLayer(
         std::min(1.0f, (float)it->second.hitCount /
                        (float)(it->second.hitCount + it->second.missCount + 1)) : 0.5f;
 
-    // Dense layer weights
-    TensorDemand d;
-    d.layerIndex = nextLayer;
-    d.expertIndex = ~0u;
-    d.predictedSequenceNumber = currentSequence + 1;
-    d.deadlineTicks = deadlineTicks;
-    d.priority = 64;  // high but not urgent
-    d.predictionConfidence = confidence;
-    d.fromRouter = false;
-    demands.push_back(d);
+    // K2 / DeepSeek2 MLA names (legacy attn_q/ffn_* never hit Elastic on stream)
+    const char* suffixes[] = {
+        "attn_q_a.weight", "attn_q_b.weight", "attn_kv_a_mqa.weight",
+        "attn_kv_b.weight", "attn_output.weight",
+        "attn_norm.weight", "attn_q_a_norm.weight"
+    };
+    for (const char* suf : suffixes) {
+        TensorDemand d;
+        char name[96];
+        std::snprintf(name, sizeof(name), "blk.%u.%s", nextLayer, suf);
+        d.tensorName = name;
+        d.layerIndex = nextLayer;
+        d.expertIndex = ~0u;
+        d.predictedSequenceNumber = currentSequence + 1;
+        d.deadlineTicks = deadlineTicks;
+        d.priority = 64;
+        d.predictionConfidence = confidence;
+        d.fromRouter = false;
+        demands.push_back(d);
+    }
 
     return demands;
 }
@@ -118,6 +134,11 @@ std::vector<TensorDemand> CyclonePredictionEngine::PredictExperts(
         float blended = 0.7f * confidence + 0.3f * historical;
 
         TensorDemand d;
+        char name[96];
+        // Expert tensors: blk.L.ffn_gate_exps.<expert>
+        std::snprintf(name, sizeof(name), "blk.%u.ffn_gate_exps.%u",
+                      layerIndex, scores[i].idx);
+        d.tensorName = name;
         d.layerIndex = layerIndex;
         d.expertIndex = scores[i].idx;
         d.predictedSequenceNumber = currentSequence;
@@ -186,6 +207,10 @@ bool CycloneScheduler::Initialize(ElasticResidencyManager* elastic) {
     return true;
 }
 
+void CycloneScheduler::RebindElastic(ElasticResidencyManager* elastic) {
+    elastic_ = elastic;
+}
+
 void CycloneScheduler::Shutdown() {
     running_ = false;
     if (schedulerThread_.joinable()) schedulerThread_.join();
@@ -222,7 +247,7 @@ void CycloneScheduler::OnLayerStart(uint32_t layerIndex,
             QueuedDemand qd;
             qd.demand = d;
             qd.enqueueSequence = sequenceNumber;
-            qd.enqueueTimeUs = 0;  // TODO: real timestamp
+            qd.enqueueTimeUs = CycloneNowUs();
             prefetchQueue_.push_back(qd);
         }
         for (auto& d : expertDemands) {
@@ -230,12 +255,16 @@ void CycloneScheduler::OnLayerStart(uint32_t layerIndex,
             QueuedDemand qd;
             qd.demand = d;
             qd.enqueueSequence = sequenceNumber;
-            qd.enqueueTimeUs = 0;
+            qd.enqueueTimeUs = CycloneNowUs();
             prefetchQueue_.push_back(qd);
         }
     }
 
     accum_.demandsIssued += (uint64_t)nextLayerDemands.size() + (uint64_t)expertDemands.size();
+
+    // Live generate: pump prefetch immediately so cyclone affects residency
+    // order on this request — not only the 1ms background scheduler loop.
+    ProcessPrefetchQueue();
 }
 
 void CycloneScheduler::OnLayerComplete(uint32_t layerIndex,
@@ -258,8 +287,10 @@ void CycloneScheduler::OnLayerComplete(uint32_t layerIndex,
 
 void CycloneScheduler::OnTensorUsed(const std::string& tensorName,
                                      uint64_t sequenceNumber) {
-    // Update LRU / telemetry
-    // TODO: signal Elastic for touch
+    currentSequence_.store(sequenceNumber);
+    if (!elastic_ || tensorName.empty()) return;
+    ElasticResidencyManager::ResidencyHandle handle;
+    (void)elastic_->AcquireTensor(tensorName, 200, 0, handle);
 }
 
 // ------------------------------------------------------------------------
@@ -270,21 +301,19 @@ bool CycloneScheduler::AcquireTensorNow(const std::string& tensorName,
                                          uint32_t layerIndex,
                                          uint32_t expertIndex) {
     if (!elastic_) return false;
+    (void)layerIndex;
+    (void)expertIndex;
 
-    // Build urgent demand
-    TensorDemand d;
-    d.tensorName = tensorName;
-    d.layerIndex = layerIndex;
-    d.expertIndex = expertIndex;
-    d.deadlineTicks = config_.urgentDeadlineTicks;
-    d.priority = 0;  // highest
-    d.predictionConfidence = 1.0f;
-    d.fromRouter = false;
-
-    // Issue synchronous acquire through Elastic
-    // TODO: implement Elastic::AcquireTensor with deadline
-    // For now, return true to allow compilation
-    return true;
+    ElasticResidencyManager::ResidencyHandle handle;
+    auto st = elastic_->AcquireTensor(
+        tensorName, 0, config_.urgentDeadlineTicks, handle);
+    if (st == ElasticResidencyManager::AcquireStatus::Ready && handle.ready) {
+        accum_.demandsSatisfied++;
+        return true;
+    }
+    if (st == ElasticResidencyManager::AcquireStatus::DeadlineMiss)
+        accum_.demandsMissed++;
+    return false;
 }
 
 void CycloneScheduler::PrefetchTensor(const std::string& tensorName,
@@ -318,7 +347,7 @@ void CycloneScheduler::PrefetchTensor(const std::string& tensorName,
 
 void CycloneScheduler::ReleaseTensor(const std::string& tensorName) {
     if (!elastic_) return;
-    // TODO: call Elastic::ReleaseTensor
+    elastic_->ReleaseTensor(tensorName);
 }
 
 // ------------------------------------------------------------------------
@@ -343,7 +372,7 @@ bool CycloneScheduler::IsLaneEnabled(BraidLane lane) const {
 
 CycloneScheduler::TelemetrySnapshot CycloneScheduler::GetTelemetry() const {
     TelemetrySnapshot snap;
-    snap.timestampUs = 0;  // TODO
+    snap.timestampUs = CycloneNowUs();
     snap.currentLayer = currentLayer_.load();
     snap.currentSequence = currentSequence_.load();
 
@@ -367,8 +396,10 @@ CycloneScheduler::TelemetrySnapshot CycloneScheduler::GetTelemetry() const {
 
     for (size_t i = 0; i < static_cast<size_t>(BraidLane::Count); i++) {
         snap.laneUtilization[i] = laneTelemetry_[i].Utilization();
+        snap.activeCyclesTotal += laneTelemetry_[i].cyclesActive.load();
+        snap.stallCyclesTotal += laneTelemetry_[i].cyclesStalled.load();
     }
-
+    snap.queuePeak = queuePeak_.load();
     return snap;
 }
 
@@ -392,7 +423,12 @@ void CycloneScheduler::ResetTelemetry() {
 void CycloneScheduler::OnTransferComplete(const std::string& tensorName,
                                            uint64_t completionSequence) {
     accum_.demandsSatisfied++;
-    // TODO: record latency
+    uint64_t now = CycloneNowUs();
+    uint64_t dt = (now > completionSequence) ? (now - completionSequence) : 0;
+    accum_.totalDemandLatencyUs += dt;
+    uint64_t mx = accum_.maxDemandLatencyUs.load();
+    while (dt > mx && !accum_.maxDemandLatencyUs.compare_exchange_weak(mx, dt)) {}
+    (void)tensorName;
 }
 
 void CycloneScheduler::OnTransferFailed(const std::string& tensorName,
@@ -423,21 +459,35 @@ void CycloneScheduler::TelemetryLoop() {
 
 void CycloneScheduler::ProcessDemandQueue() {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    // Sort urgent queue by deadline
+    {
+        const uint32_t q = (uint32_t)(urgentQueue_.size() + prefetchQueue_.size());
+        uint32_t cur = queuePeak_.load();
+        while (q > cur && !queuePeak_.compare_exchange_weak(cur, q)) {}
+    }
     std::sort(urgentQueue_.begin(), urgentQueue_.end(),
         [](const QueuedDemand& a, const QueuedDemand& b) {
             return a.demand.deadlineTicks < b.demand.deadlineTicks;
         });
 
-    // Issue top demands to Elastic
     size_t issued = 0;
     for (auto& qd : urgentQueue_) {
-        if (issued >= 4) break;  // throttle
+        if (issued >= 4) break;
         if (ShouldDrop(qd.demand)) {
             accum_.demandsDropped++;
             continue;
         }
-        // TODO: call elastic_->AcquireTensor(...)
+        if (!elastic_ || qd.demand.tensorName.empty()) continue;
+        ElasticResidencyManager::ResidencyHandle handle;
+        auto st = elastic_->AcquireTensor(
+            qd.demand.tensorName,
+            CalculatePriority(qd.demand),
+            qd.demand.deadlineTicks,
+            handle);
+        if (st == ElasticResidencyManager::AcquireStatus::Ready)
+            OnTransferComplete(qd.demand.tensorName, qd.enqueueTimeUs);
+        else if (st == ElasticResidencyManager::AcquireStatus::DeadlineMiss ||
+                 st == ElasticResidencyManager::AcquireStatus::Failed)
+            accum_.demandsMissed++;
         issued++;
     }
     urgentQueue_.clear();
@@ -445,7 +495,11 @@ void CycloneScheduler::ProcessDemandQueue() {
 
 void CycloneScheduler::ProcessPrefetchQueue() {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    // Sort by confidence descending
+    {
+        const uint32_t q = (uint32_t)(urgentQueue_.size() + prefetchQueue_.size());
+        uint32_t cur = queuePeak_.load();
+        while (q > cur && !queuePeak_.compare_exchange_weak(cur, q)) {}
+    }
     std::sort(prefetchQueue_.begin(), prefetchQueue_.end(),
         [](const QueuedDemand& a, const QueuedDemand& b) {
             return a.demand.predictionConfidence > b.demand.predictionConfidence;
@@ -455,14 +509,33 @@ void CycloneScheduler::ProcessPrefetchQueue() {
     for (auto& qd : prefetchQueue_) {
         if (issued >= config_.maxConcurrentPrefetches) break;
         if (ShouldDrop(qd.demand)) continue;
-        // TODO: call elastic_->PrefetchTensor(...)
+        if (!elastic_ || qd.demand.tensorName.empty()) continue;
+        ElasticResidencyManager::ResidencyHandle handle;
+        auto st = elastic_->AcquireTensor(
+            qd.demand.tensorName,
+            CalculatePriority(qd.demand),
+            qd.demand.deadlineTicks,
+            handle);
+        if (st == ElasticResidencyManager::AcquireStatus::Ready ||
+            st == ElasticResidencyManager::AcquireStatus::Pending) {
+            accum_.prefetchHits++;
+            if (st == ElasticResidencyManager::AcquireStatus::Ready)
+                OnTransferComplete(qd.demand.tensorName, qd.enqueueTimeUs);
+        }
+        else
+            accum_.prefetchMisses++;
         issued++;
     }
     prefetchQueue_.clear();
 }
 
 void CycloneScheduler::UpdateLaneStates() {
-    // TODO: track per-lane active/stall cycles
+    for (size_t i = 0; i < static_cast<size_t>(BraidLane::Count); i++) {
+        if (laneEnabled_[i].load())
+            laneTelemetry_[i].cyclesActive.fetch_add(1, std::memory_order_relaxed);
+        else
+            laneTelemetry_[i].cyclesStalled.fetch_add(1, std::memory_order_relaxed);
+    }
 }
 
 uint32_t CycloneScheduler::CalculatePriority(const TensorDemand& demand) const {

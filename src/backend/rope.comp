@@ -12,18 +12,17 @@ void main() {
   uint kv = h / group;
   uint qd = h * pc.head_dim;
   uint kd = kv * pc.head_dim;
-  uint half_d = pc.head_dim / 2u;
-  for (uint i = 0u; i < half_d; ++i) {
-    float freq = 1.0 / pow(pc.theta, float(i) * 2.0 / float(pc.head_dim));
+  for (uint i = 0u; i < pc.head_dim; i += 2u) {
+    float freq = 1.0 / pow(pc.theta, float(i) / float(pc.head_dim));
     float ang = float(pc.pos) * freq;
     float c = cos(ang), s = sin(ang);
-    float q0 = q[qd + i], q1 = q[qd + i + half_d];
+    float q0 = q[qd + i], q1 = q[qd + i + 1u];
     q[qd + i] = q0 * c - q1 * s;
-    q[qd + i + half_d] = q0 * s + q1 * c;
+    q[qd + i + 1u] = q0 * s + q1 * c;
     if ((h % group) == 0u) {
-      float k0 = k[kd + i], k1 = k[kd + i + half_d];
+      float k0 = k[kd + i], k1 = k[kd + i + 1u];
       k[kd + i] = k0 * c - k1 * s;
-      k[kd + i + half_d] = k0 * s + k1 * c;
+      k[kd + i + 1u] = k0 * s + k1 * c;
     }
   }
 }

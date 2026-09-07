@@ -321,6 +321,10 @@ public:
     const ResidencyTelemetry& GetTelemetry() const { return telemetry_; }
     void PrintTelemetry() const;
 
+    // Live re-derive: raise/lower caps without re-init (never below used).
+    void ApplyDynamicCaps(const ElasticResidencyConfig& caps);
+    const ElasticResidencyConfig& GetConfig() const { return config_; }
+
     // ── Internal: Scheduler Thread ───────────────────────────────────
     void SchedulerThreadBody();
 

@@ -182,6 +182,8 @@ void Deep2MultiGpu_EmitPlanWitnesses(FILE* f, const MultiGpuLayerPlan& plan) noe
         fprintf(o, "DEEP2_DEVICE_EXECUTING_COUNT=%u\n", plan.executingCount);
         fprintf(o, "DEEP2_LAYERS_EXECUTED=%u\n", plan.layersExecuted);
         fprintf(o, "DEEP2_REAL_GPU_LAYER_EXEC=%u\n",
+                (plan.layersExecuted > 0) ? 1u : 0u);
+        fprintf(o, "DEEP2_REAL_GPU_LAYER_COVERAGE=%u\n",
                 (plan.layersExecuted >= plan.numLayers && plan.numLayers > 0) ? 1u : 0u);
         fprintf(o, "DEEP2_PLAN_DEVICE_COUNT=%u\n", plan.plannedCount);
         fprintf(o, "DEEP2_PLAN_NUM_LAYERS=%u\n", plan.numLayers);

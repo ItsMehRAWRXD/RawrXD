@@ -16,6 +16,9 @@
 #include "../../include/chain_of_thought_engine.h"
 #include "../core/instructions_provider.hpp"
 #include "../deep2/Deep2IDEIntegration.hpp"
+#define RAWR_HAS_NATIVE_E2E 1
+#include "../../native_e2e/RawrNativeServerDispatch.hpp"
+#include "../../native_e2e/rawr_native_engine_hooks.h"
 
 // Phase 10+ singletons — wired for real status queries
 #include "../core/execution_governor.h"
@@ -2516,6 +2519,7 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
     }
     std::string prompt = request.body;
     bool stream = request.path == "/api/generate";
+    uint64_t nativeReqId = 0;
     try {
         auto json = nlohmann::json::parse(request.body);
         prompt = json.value("prompt", json.value("message", ""));
@@ -2524,6 +2528,20 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
             auto messages = json.value("messages", nlohmann::json::array());
             if (!messages.empty()) prompt = messages.back().value("content", "");
         }
+#if defined(RAWR_HAS_NATIVE_E2E)
+        if (json.contains("rawr_native_request_id")) {
+            if (json["rawr_native_request_id"].is_number_unsigned())
+                nativeReqId = json["rawr_native_request_id"].get<uint64_t>();
+            else if (json["rawr_native_request_id"].is_number_integer())
+                nativeReqId = (uint64_t)json["rawr_native_request_id"].get<int64_t>();
+            else if (json["rawr_native_request_id"].is_string())
+                nativeReqId = (uint64_t)_strtoui64(
+                    json["rawr_native_request_id"].get<std::string>().c_str(), nullptr, 10);
+        }
+        if (nativeReqId)
+            RAWR_NATIVE_ENGINE_ENTER(nativeReqId, 1u,
+                RN_ENGINE_MODE_SAFEDECODE | RN_ENGINE_MODE_TENSORHOP);
+#endif
     } catch (...) {}
     if (requestHeader(request.headers, "accept").find("text/event-stream") !=
         std::string::npos) {
@@ -2532,23 +2550,50 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
     if (prompt.empty() || prompt.size() > 256 * 1024) {
         response.status = 400;
         response.body = "{\"error\":\"invalid_prompt\"}";
+#if defined(RAWR_HAS_NATIVE_E2E)
+        if (nativeReqId) RAWR_NATIVE_COMPLETE(nativeReqId, 0, -1);
+#endif
         return;
     }
     ScopedCloudConsent cloudConsent(
         requestHeader(request.headers, "x-rawrxd-cloud-consent") == "1");
     if (request.path == "/api/generate/stream") {
         streamGenerationResponse(clientFd, request, prompt, "legacy", response);
+#if defined(RAWR_HAS_NATIVE_E2E)
+        if (nativeReqId) {
+            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
+        }
+#endif
         return;
     }
     if (stream && request.path == "/api/generate") {
         streamGenerationResponse(clientFd, request, prompt, "ollama", response);
+#if defined(RAWR_HAS_NATIVE_E2E)
+        if (nativeReqId) {
+            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
+        }
+#endif
         return;
     }
     if (stream && request.path == "/v1/chat/completions") {
         streamGenerationResponse(clientFd, request, prompt, "openai", response);
+#if defined(RAWR_HAS_NATIVE_E2E)
+        if (nativeReqId) {
+            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
+        }
+#endif
         return;
     }
     std::string result = routeInferenceRequest(prompt);
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (nativeReqId) {
+        if (!result.empty()) RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+        RAWR_NATIVE_COMPLETE(nativeReqId, result.empty() ? 0 : 1, 0);
+    }
+#endif
     if (request.path == "/v1/chat/completions") {
         response.body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" +
             jsonEscape(result) + "\"}}]}";
@@ -2778,6 +2823,20 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
                                    HostedHttpResponse& response) {
     const std::string& path = request.path;
     if (request.method == "OPTIONS") return;
+
+#if defined(RAWR_HAS_NATIVE_E2E)
+    {
+        std::string nativeJson;
+        uint32_t nativeSt = 0;
+        if (RawrNativeE2E::TryHandle(request.method, path, request.body, nativeJson, nativeSt)) {
+            response.status = (int)nativeSt;
+            response.body = std::move(nativeJson);
+            response.contentType = "application/json";
+            return;
+        }
+    }
+#endif
+
     if (isHealthRoute(path)) {
         response.body = "{\"status\":\"ok\",\"mode\":\"" +
             std::string(m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") +

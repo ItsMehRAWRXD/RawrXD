@@ -81,6 +81,12 @@ public:
     static ToolCallResult LoadRules(const nlohmann::json& args);
     static ToolCallResult PlanTasks(const nlohmann::json& args);
 
+    // AGENT_RUNTIME: first-class git / build / multifile patch
+    static ToolCallResult GitStatus(const nlohmann::json& args);
+    static ToolCallResult GitDiff(const nlohmann::json& args);
+    static ToolCallResult RunBuild(const nlohmann::json& args);
+    static ToolCallResult ApplyPatch(const nlohmann::json& args);
+
     // ---- Schema generation (OpenAI function-calling format) ----
     static nlohmann::json GetAllSchemas();
     static nlohmann::json GetSchema(const std::string& toolName);

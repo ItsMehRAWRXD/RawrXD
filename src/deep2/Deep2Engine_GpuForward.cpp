@@ -2,7 +2,9 @@
 #include "Deep2Engine.h"
 #include "Deep2GpuForward.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "GpuTransferCounters.hpp"
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <unordered_map>
@@ -18,12 +20,40 @@ uint64_t WeightKey(const WeightTensor& wt) {
     return h;
 }
 
+bool PackedQuant(const WeightTensor& wt) {
+    if (!wt.data || !wt.sizeBytes) return false;
+    const int t = wt.type;
+    return t == (int)GGMLType::GGML_TYPE_Q8_0 ||
+           t == (int)GGMLType::GGML_TYPE_Q2_K ||
+           t == (int)GGMLType::GGML_TYPE_Q3_K ||
+           t == (int)GGMLType::GGML_TYPE_Q4_K ||
+           t == (int)GGMLType::GGML_TYPE_Q5_K ||
+           t == (int)GGMLType::GGML_TYPE_Q6_K;
+}
+
+size_t StreamBytes(const WeightTensor& wt) {
+    if (!wt.data || !wt.rows || !wt.cols) return 0;
+    return PackedQuant(wt) ? wt.sizeBytes : wt.rows * wt.cols * sizeof(float);
+}
+
 const float* EnsureF32(Deep2Engine& e, const WeightTensor& wt,
                        std::unordered_map<std::string, std::vector<float>>& cache) {
     (void)e;
     if (!wt.data) return nullptr;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32)
         return reinterpret_cast<const float*>(wt.data);
+    // BOUNDED_STREAM: ephemeral scratch — no permanent F32 warehouse
+    const char* mode = std::getenv("DEEP2_WEIGHT_MODE");
+    const bool stream = !(mode && (std::strcmp(mode, "RESIDENT_CACHE") == 0 ||
+                                   std::strcmp(mode, "0") == 0));
+    if (stream) {
+        static thread_local std::vector<float> scratch;
+        auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
+        if (!deq) return nullptr;
+        scratch.resize(wt.rows * wt.cols);
+        deq(reinterpret_cast<const uint8_t*>(wt.data), scratch.data(), scratch.size());
+        return scratch.data();
+    }
     auto it = cache.find(wt.name);
     if (it != cache.end()) return it->second.data();
     auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
@@ -45,13 +75,39 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
                                  ? modelWeights.layers[0].wGate.rows
                                  : modelWeights.intermediateDim));
     const uint32_t inter = I ? I : (uint32_t)modelWeights.intermediateDim;
-    return vc->EnsureForwardArena(
+    if (!vc->EnsureForwardArena(
+        H, inter ? inter : H * 4,
+        (uint32_t)modelWeights.numHeads,
+        (uint32_t)modelWeights.numKVHeads,
+        (uint32_t)modelWeights.headDim,
+        (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
+        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22)))
+        return false;
+    size_t maxB = 0;
+    auto acc = [&](const WeightTensor& w) {
+        size_t b = StreamBytes(w);
+        if (b > maxB) maxB = b;
+    };
+    for (const auto& L : modelWeights.layers) {
+        acc(L.wq); acc(L.wk); acc(L.wv); acc(L.wo); acc(L.attnO);
+        acc(L.wGate); acc(L.wUp); acc(L.wDown);
+    }
+    acc(modelWeights.lmHead);
+    if (maxB == 0) maxB = (size_t)H * (size_t)H * 4;
+    size_t budget = (size_t)512 << 20;
+    const char* b = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+    if (b && *b) budget = (size_t)std::atoi(b) << 20;
+    uint32_t ov = 0;
+    const char* ns = std::getenv("DEEP2_WEIGHT_SLOTS");
+    if (ns && *ns) ov = (uint32_t)std::atoi(ns);
+    const size_t arena = CPUInference::VulkanCompute::ForwardArenaReserveBytes(
         H, inter ? inter : H * 4,
         (uint32_t)modelWeights.numHeads,
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22));
+    return vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
 }
 
 bool Deep2Engine::forwardLayerGpuResident(
@@ -82,91 +138,164 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.hostSyncBoundaries; // entry boundary only — not a mid-layer materialization
     }
 
-    // Norm weights (F32 expected for TinyLlama)
+    const bool prefetch = vc->WeightPrefetchActive() ||
+        (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
+         std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
+    const bool fuse = !prefetch;
+    if (fuse && !vc->BeginFusedLayer()) return false;
+    auto fail = [&]() -> bool {
+        if (fuse) (void)vc->EndFusedLayer();
+        (void)vc->FlushWeightComputes();
+        return false;
+    };
     const float* attnW = EnsureF32(*this, lw.attnNorm, vulkanWeightF32_);
+    if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return fail();
     const float* ffnW = EnsureF32(*this, lw.ffnNorm, vulkanWeightF32_);
-    if (!attnW || !ffnW) return false;
-    if (!vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return false;
-    if (!vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return false;
+    if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return fail();
+    const WeightTensor* woWt = lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
+    if (!woWt) return fail();
+    auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
+                    CPUInference::VulkanCompute::DeviceBuf& out,
+                    uint32_t rows, uint32_t cols) -> bool {
+        if (PackedQuant(wt)) {
+            if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
+            else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
+            if (prefetch && vc->WeightStreamActive()) {
+                if (!vc->FlushWeightComputes()) return false;
+                uint32_t sl = 0;
+                if (!vc->PrefetchWeight(wt.data, wt.sizeBytes, sl)) return false;
+                return vc->SubmitGemvPrefetch(sl, in, out, rows, cols, wt.sizeBytes, wt.type);
+            }
+            return vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
+        }
+        const float* w = EnsureF32(*this, wt, vulkanWeightF32_);
+        if (!w) return false;
+        if (wt.type != (int)GGMLType::GGML_TYPE_F32) ++c.cpuF32Expands;
+        if (prefetch && vc->WeightStreamActive()) {
+            if (!vc->FlushWeightComputes()) return false;
+            uint32_t sl = 0;
+            if (!vc->PrefetchWeight(w, (size_t)rows * cols * 4, sl)) return false;
+            return vc->SubmitGemvPrefetch(sl, in, out, rows, cols);
+        }
+        return vc->DispatchGemvDevice(w, WeightKey(wt), in, out, rows, cols);
+    };
+    // Overlapped QKV: upload next while prior GEMV runs
+    auto gemvOverlap3 = [&](const WeightTensor& a, const WeightTensor& b, const WeightTensor& c,
+                            CPUInference::VulkanCompute::DeviceBuf& in,
+                            CPUInference::VulkanCompute::DeviceBuf& outA,
+                            CPUInference::VulkanCompute::DeviceBuf& outB,
+                            CPUInference::VulkanCompute::DeviceBuf& outC,
+                            uint32_t rA, uint32_t rB, uint32_t rC, uint32_t cols) -> bool {
+        if (!(prefetch && vc->WeightStreamActive())) {
+            return gemv(a, in, outA, rA, cols) && gemv(b, in, outB, rB, cols) &&
+                   gemv(c, in, outC, rC, cols);
+        }
+        if (PackedQuant(a) && PackedQuant(b) && PackedQuant(c)) {
+            if (!vc->FlushWeightComputes()) return false;
+            uint32_t sa = 0, sb = 0, sc = 0;
+            if (!vc->PrefetchWeight(a.data, a.sizeBytes, sa)) return false;
+            if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols, a.sizeBytes, a.type))
+                return false;
+            if (!vc->PrefetchWeight(b.data, b.sizeBytes, sb)) return false;
+            if (!vc->WaitWeightCompute(sa)) return false;
+            if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols, b.sizeBytes, b.type))
+                return false;
+            if (!vc->PrefetchWeight(c.data, c.sizeBytes, sc)) return false;
+            if (!vc->WaitWeightCompute(sb)) return false;
+            if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols, c.sizeBytes, c.type))
+                return false;
+            return vc->WaitWeightCompute(sc);
+        }
+        if (!vc->FlushWeightComputes()) return false;
+        const float* wa = EnsureF32(*this, a, vulkanWeightF32_);
+        uint32_t sa = 0;
+        if (!wa || !vc->PrefetchWeight(wa, (size_t)rA * cols * 4, sa)) return false;
+        if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols)) return false;
+        const float* wb = EnsureF32(*this, b, vulkanWeightF32_);
+        uint32_t sb = 0;
+        if (!wb || !vc->PrefetchWeight(wb, (size_t)rB * cols * 4, sb)) return false; // overlaps GEMV A
+        if (!vc->WaitWeightCompute(sa)) return false;
+        if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols)) return false;
+        const float* wc = EnsureF32(*this, c, vulkanWeightF32_);
+        uint32_t sc = 0;
+        if (!wc || !vc->PrefetchWeight(wc, (size_t)rC * cols * 4, sc)) return false; // overlaps GEMV B
+        if (!vc->WaitWeightCompute(sb)) return false;
+        if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols)) return false;
+        return vc->WaitWeightCompute(sc);
+    };
 
     if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
-        return false;
+        return fail();
     ++c.rmsNormOps;
 
-    const WeightTensor* woWt = lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
-    if (!woWt) return false;
-    const float* wq = EnsureF32(*this, lw.wq, vulkanWeightF32_);
-    const float* wk = EnsureF32(*this, lw.wk, vulkanWeightF32_);
-    const float* wv = EnsureF32(*this, lw.wv, vulkanWeightF32_);
-    const float* wo = EnsureF32(*this, *woWt, vulkanWeightF32_);
-    if (!wq || !wk || !wv || !wo) return false;
-
-    if (!vc->DispatchGemvDevice(wq, WeightKey(lw.wq), vc->ArenaNormed(), vc->ArenaQ(),
-                                H, H))
-        return false;
-    if (!vc->DispatchGemvDevice(wk, WeightKey(lw.wk), vc->ArenaNormed(), vc->ArenaK(),
-                                kvDim, H))
-        return false;
-    if (!vc->DispatchGemvDevice(wv, WeightKey(lw.wv), vc->ArenaNormed(), vc->ArenaV(),
-                                kvDim, H))
-        return false;
+    if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
+                      vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
+        return fail();
     c.qkvOps += 3;
 
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
     if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
                           modelWeights.ropeTheta))
-        return false;
+        return fail();
     ++c.ropeOps;
 
-    if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return false;
+    if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
     const float scale = 1.0f / std::sqrt((float)headDim);
     if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
                                 vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
                                 layer))
-        return false;
+        return fail();
     ++c.attnScoreOps;
     ++c.softmaxOps;
     ++c.attnValueOps;
 
-    if (!vc->DispatchGemvDevice(wo, WeightKey(*woWt), vc->ArenaAttn(), vc->ArenaDown(),
-                                H, H))
-        return false;
+    if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
     ++c.oProjOps;
 
-    // residual: hidden + attn_out(down) -> residual
     if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(), vc->ArenaResidual(), H))
-        return false;
+        return fail();
     ++c.residualOps;
 
     if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
-        return false;
+        return fail();
     ++c.ffnNormOps;
 
-    const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
-    const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
-    const float* wd = EnsureF32(*this, lw.wDown, vulkanWeightF32_);
-    if (!wg || !wu || !wd) return false;
-    if (!vc->DispatchGemvDevice(wg, WeightKey(lw.wGate), vc->ArenaNormed(), vc->ArenaGate(),
-                                inter, H))
-        return false;
-    if (!vc->DispatchGemvDevice(wu, WeightKey(lw.wUp), vc->ArenaNormed(), vc->ArenaUp(),
-                                inter, H))
-        return false;
-    c.qkvOps += 2; // reuse QKV counter bucket for GEMV projections; FFN gate/up tracked in act
+    if (prefetch && vc->WeightStreamActive() &&
+        !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
+        if (!vc->FlushWeightComputes()) return fail();
+        const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
+        uint32_t sg = 0;
+        if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
+        if (!vc->SubmitGemvPrefetch(sg, vc->ArenaNormed(), vc->ArenaGate(), inter, H))
+            return fail();
+        const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
+        uint32_t su = 0;
+        if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
+        if (!vc->WaitWeightCompute(sg)) return fail();
+        if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
+            return fail();
+        if (!vc->WaitWeightCompute(su)) return fail();
+    } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
+               !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
+        return fail();
+    c.qkvOps += 2;
     if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
-        return false;
+        return fail();
     ++c.ffnActOps;
-    if (!vc->DispatchGemvDevice(wd, WeightKey(lw.wDown), vc->ArenaFFNAct(), vc->ArenaDown(),
-                                H, inter))
-        return false;
+    if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail();
 
     if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(), vc->ArenaHidden(), H))
-        return false;
+        return fail();
     ++c.ffnResidualOps;
 
+    if (fuse && !vc->EndFusedLayer()) return false;
+    if (!vc->FlushWeightComputes()) return false;
+    if (!fuse) vc->ResetWeightWindowLayerCursor();
+    if (fuse) ++c.layerSubmits;
     ++c.forwardLayers;
+    GpuTransfer_RecordFwdLayerExec(1);
     if (slot < 8) ++c.forwardSlot[slot];
     if (multiGpuLayerPlan_.active)
         Deep2MultiGpu_MarkLayerExecuted(multiGpuLayerPlan_, layer);

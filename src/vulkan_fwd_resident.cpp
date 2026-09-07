@@ -4,11 +4,13 @@
 #endif
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <cmath>
 
 namespace CPUInference {
 namespace {
@@ -130,10 +132,10 @@ bool VulkanCompute::LoadComputePipeline(
     }
     vkDestroyShaderModule(device_, mod, nullptr);
 
-    VkDescriptorPoolSize ps{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nBind};
+    VkDescriptorPoolSize ps{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nBind * 4};
     VkDescriptorPoolCreateInfo dpi{};
     dpi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpi.maxSets = 1;
+    dpi.maxSets = 4;
     dpi.poolSizeCount = 1;
     dpi.pPoolSizes = &ps;
     if (vkCreateDescriptorPool(device_, &dpi, nullptr, &pool) != VK_SUCCESS) return false;
@@ -153,7 +155,10 @@ bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
     bool ok = vkQueueSubmit(compute_queue_, 1, &si, fence) == VK_SUCCESS;
-    if (ok) vkWaitForFences(device_, 1, &fence, VK_TRUE, 30ull * 1000000000ull);
+    if (ok) {
+        vkWaitForFences(device_, 1, &fence, VK_TRUE, 30ull * 1000000000ull);
+        ++op_submits_;
+    }
     vkDestroyFence(device_, fence, nullptr);
     vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     return ok;
@@ -261,6 +266,17 @@ bool VulkanCompute::EnsureForwardArena(uint32_t hidden, uint32_t inter, uint32_t
         return false;
     if (!LoadComputePipeline("swiglu.spv", 3, 4, swiglu_pipe_, swiglu_layout_, swiglu_dsl_, swiglu_pool_, swiglu_ds_))
         return false;
+    {
+        VkDescriptorSetAllocateInfo dai{};
+        dai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        dai.descriptorPool = rms_pool_;
+        dai.descriptorSetCount = 1;
+        dai.pSetLayouts = &rms_dsl_;
+        if (vkAllocateDescriptorSets(device_, &dai, &rms_ds2_) != VK_SUCCESS) return false;
+        dai.descriptorPool = add_pool_;
+        dai.pSetLayouts = &add_dsl_;
+        if (vkAllocateDescriptorSets(device_, &dai, &add_ds2_) != VK_SUCCESS) return false;
+    }
     fwd_hidden_n_ = hidden;
     fwd_inter_n_ = inter;
     fwd_kv_dim_ = kvDim;
@@ -310,39 +326,56 @@ bool VulkanCompute::DispatchGemvDevice(const float* weights, uint64_t cacheKey,
     if (!EnsureGemvPipeline() || !weights || !in.buffer || !out.buffer) return false;
     ++gemv_attempts_;
     const size_t weightBytes = (size_t)rows * cols * sizeof(float);
-    if (cacheKey == 0)
-        cacheKey = (uint64_t)(uintptr_t)weights ^ ((uint64_t)rows << 32) ^ (uint64_t)cols;
-    GemvResidentWeight* resident = nullptr;
-    auto it = gemv_weight_cache_.find(cacheKey);
-    if (it != gemv_weight_cache_.end() && it->second.rows == rows && it->second.cols == cols) {
-        resident = &it->second;
-        ++gemv_weight_hits_;
+    VkBuffer weightBuf = nullptr;
+    if (WantWeightStream()) {
+        if (!ww_active_ || weightBytes > ww_slot_bytes_) {
+            size_t budget = ww_budget_bytes_ ? ww_budget_bytes_ : (size_t)512 << 20;
+            const char* b = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+            if (b && *b) budget = (size_t)std::atoi(b) << 20;
+            uint32_t nSlots = 8;
+            const char* ns = std::getenv("DEEP2_WEIGHT_SLOTS");
+            if (ns && *ns) nSlots = (uint32_t)std::atoi(ns);
+            if (!EnsureWeightWindow(weightBytes, nSlots, budget)) return false;
+        }
+        if (!StreamWeightToSlot(weights, weightBytes, weightBuf)) return false;
     } else {
-        GemvResidentWeight rw{};
-        if (!CreateDeviceLocalBuffer(weightBytes, rw.buffer, rw.memory)) return false;
-        if (!UploadToDeviceLocal(weights, weightBytes, rw.buffer)) {
-            vkDestroyBuffer(device_, rw.buffer, nullptr);
-            vkFreeMemory(device_, rw.memory, nullptr);
-            return false;
+        if (cacheKey == 0)
+            cacheKey = (uint64_t)(uintptr_t)weights ^ ((uint64_t)rows << 32) ^ (uint64_t)cols;
+        auto it = gemv_weight_cache_.find(cacheKey);
+        if (it != gemv_weight_cache_.end() && it->second.rows == rows && it->second.cols == cols) {
+            weightBuf = it->second.buffer;
+            ++gemv_weight_hits_;
+        } else {
+            GemvResidentWeight rw{};
+            ++ww_hotpath_create_buf_;
+            if (!CreateDeviceLocalBuffer(weightBytes, rw.buffer, rw.memory)) return false;
+            if (!UploadToDeviceLocal(weights, weightBytes, rw.buffer)) {
+                ++ww_hotpath_destroy_buf_;
+                vkDestroyBuffer(device_, rw.buffer, nullptr);
+                vkFreeMemory(device_, rw.memory, nullptr);
+                return false;
+            }
+            rw.bytes = weightBytes; rw.rows = rows; rw.cols = cols;
+            if (it != gemv_weight_cache_.end()) {
+                ++ww_hotpath_destroy_buf_;
+                if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
+                if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
+                gemv_resident_bytes_ -= it->second.bytes;
+            }
+            gemv_weight_cache_[cacheKey] = rw;
+            gemv_resident_bytes_ += weightBytes;
+            ++gemv_weight_uploads_;
+            weightBuf = rw.buffer;
         }
-        rw.bytes = weightBytes; rw.rows = rows; rw.cols = cols;
-        if (it != gemv_weight_cache_.end()) {
-            if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
-            if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
-            gemv_resident_bytes_ -= it->second.bytes;
-        }
-        gemv_weight_cache_[cacheKey] = rw;
-        gemv_resident_bytes_ += weightBytes;
-        ++gemv_weight_uploads_;
-        resident = &gemv_weight_cache_[cacheKey];
     }
-    VkDescriptorBufferInfo dbiW{resident->buffer, 0, weightBytes};
+    VkDescriptorSet ds = fused_cmd_ ? NextGemvDs() : gemv_ds_;
+    VkDescriptorBufferInfo dbiW{weightBuf, 0, weightBytes};
     VkDescriptorBufferInfo dbiI{in.buffer, 0, (VkDeviceSize)cols * 4};
     VkDescriptorBufferInfo dbiO{out.buffer, 0, (VkDeviceSize)rows * 4};
     VkWriteDescriptorSet writes[3]{};
     for (int i = 0; i < 3; ++i) {
         writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[i].dstSet = gemv_ds_;
+        writes[i].dstSet = ds;
         writes[i].descriptorCount = 1;
         writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     }
@@ -350,24 +383,10 @@ bool VulkanCompute::DispatchGemvDevice(const float* weights, uint64_t cacheKey,
     writes[1].dstBinding = 1; writes[1].pBufferInfo = &dbiI;
     writes[2].dstBinding = 2; writes[2].pBufferInfo = &dbiO;
     vkUpdateDescriptorSets(device_, 3, writes, 0, nullptr);
-
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo begin{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &begin);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, gemv_pipeline_layout_,
-                            0, 1, &gemv_ds_, 0, nullptr);
     uint32_t pc[2] = {rows, cols};
-    vkCmdPushConstants(cmd, gemv_pipeline_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), pc);
-    vkCmdDispatch(cmd, (rows + 255u) / 256u, 1, 1);
-    vkEndCommandBuffer(cmd);
-    if (!SubmitOne(cmd)) return false;
+    if (!RecordCompute(gemv_pipeline_, gemv_pipeline_layout_, ds, pc, sizeof(pc),
+                       (rows + 255u) / 256u))
+        return false;
     ++gemv_success_;
     return true;
 }
@@ -391,45 +410,19 @@ static void Bind3(VkDevice dev, VkDescriptorSet ds, VulkanCompute::DeviceBuf& a,
 
 bool VulkanCompute::DispatchRmsNorm(DeviceBuf& in, DeviceBuf& w, DeviceBuf& out,
                                     uint32_t n, float eps) {
-    if (!rms_pipe_) return false;
-    Bind3(device_, rms_ds_, in, w, out);
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &bi);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, rms_pipe_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, rms_layout_, 0, 1, &rms_ds_, 0, nullptr);
+    if (!rms_pipe_ || !rms_ds_) return false;
+    VkDescriptorSet ds = (fused_cmd_ && ((rms_use_++) & 1u) && rms_ds2_) ? rms_ds2_ : rms_ds_;
+    Bind3(device_, ds, in, w, out);
     struct { uint32_t n; float eps; } pc{n, eps};
-    vkCmdPushConstants(cmd, rms_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
-    vkCmdDispatch(cmd, 1, 1, 1);
-    vkEndCommandBuffer(cmd);
-    return SubmitOne(cmd);
+    return RecordCompute(rms_pipe_, rms_layout_, ds, &pc, sizeof(pc), 1);
 }
 
 bool VulkanCompute::DispatchResidualAdd(DeviceBuf& a, DeviceBuf& b, DeviceBuf& out, uint32_t n) {
-    if (!add_pipe_) return false;
-    Bind3(device_, add_ds_, a, b, out);
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &bi);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, add_pipe_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, add_layout_, 0, 1, &add_ds_, 0, nullptr);
+    if (!add_pipe_ || !add_ds_) return false;
+    VkDescriptorSet ds = (fused_cmd_ && ((add_use_++) & 1u) && add_ds2_) ? add_ds2_ : add_ds_;
+    Bind3(device_, ds, a, b, out);
     uint32_t pc = n;
-    vkCmdPushConstants(cmd, add_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, &pc);
-    vkCmdDispatch(cmd, (n + 255u) / 256u, 1, 1);
-    vkEndCommandBuffer(cmd);
-    return SubmitOne(cmd);
+    return RecordCompute(add_pipe_, add_layout_, ds, &pc, 4, (n + 255u) / 256u);
 }
 
 bool VulkanCompute::DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, uint32_t nHeads,
@@ -447,22 +440,9 @@ bool VulkanCompute::DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, u
     }
     w[0].pBufferInfo = &i0; w[1].pBufferInfo = &i1;
     vkUpdateDescriptorSets(device_, 2, w, 0, nullptr);
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &bi);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, rope_pipe_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, rope_layout_, 0, 1, &rope_ds_, 0, nullptr);
     struct { uint32_t hd, nh, nk, pos; float th; } pc{headDim, nHeads, nKv, pos, theta};
-    vkCmdPushConstants(cmd, rope_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
-    vkCmdDispatch(cmd, nHeads, 1, 1);
-    vkEndCommandBuffer(cmd);
-    return SubmitOne(cmd);
+    return RecordCompute(rope_pipe_, rope_layout_, rope_ds_, &pc, sizeof(pc),
+                         (nHeads + 63u) / 64u);
 }
 
 bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
@@ -487,43 +467,16 @@ bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBu
         w[i].pBufferInfo = &infos[i];
     }
     vkUpdateDescriptorSets(device_, 4, w, 0, nullptr);
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &bi);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, attn_pipe_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, attn_layout_, 0, 1, &attn_ds_, 0, nullptr);
     struct { uint32_t hd, nh, nk, seq; float scale; } pc{headDim, nHeads, nKv, seq, scale};
-    vkCmdPushConstants(cmd, attn_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
-    vkCmdDispatch(cmd, nHeads, 1, 1);
-    vkEndCommandBuffer(cmd);
-    return SubmitOne(cmd);
+    return RecordCompute(attn_pipe_, attn_layout_, attn_ds_, &pc, sizeof(pc),
+                         (nHeads + 63u) / 64u);
 }
 
 bool VulkanCompute::DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out, uint32_t n) {
     if (!swiglu_pipe_) return false;
     Bind3(device_, swiglu_ds_, gate, up, out);
-    VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    cai.commandPool = command_pool_;
-    cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cai.commandBufferCount = 1;
-    VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
-    VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &bi);
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, swiglu_pipe_);
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, swiglu_layout_, 0, 1, &swiglu_ds_, 0, nullptr);
     uint32_t pc = n;
-    vkCmdPushConstants(cmd, swiglu_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, &pc);
-    vkCmdDispatch(cmd, (n + 255u) / 256u, 1, 1);
-    vkEndCommandBuffer(cmd);
-    return SubmitOne(cmd);
+    return RecordCompute(swiglu_pipe_, swiglu_layout_, swiglu_ds_, &pc, 4, (n + 255u) / 256u);
 }
 
 bool VulkanCompute::AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim, uint32_t pos,
@@ -531,28 +484,10 @@ bool VulkanCompute::AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim, u
     if (!fwd_arena_ready_ || pos >= fwd_max_seq_ || layer >= fwd_n_layers_ ||
         !kTok.buffer || !vTok.buffer)
         return false;
-    const size_t bytes = (size_t)kvDim * 4;
-    const size_t off = ((size_t)layer * fwd_max_seq_ + pos) * bytes;
-    auto copyAt = [&](VkBuffer src, VkBuffer dst) -> bool {
-        VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-        cai.commandPool = command_pool_;
-        cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        cai.commandBufferCount = 1;
-        VkCommandBuffer cmd = nullptr;
-        vkAllocateCommandBuffers(device_, &cai, &cmd);
-        VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-        bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkBeginCommandBuffer(cmd, &bi);
-        VkBufferCopy c{};
-        c.srcOffset = 0;
-        c.dstOffset = off;
-        c.size = bytes;
-        vkCmdCopyBuffer(cmd, src, dst, 1, &c);
-        vkEndCommandBuffer(cmd);
-        return SubmitOne(cmd);
-    };
-    return copyAt(kTok.buffer, fwd_k_cache_.buffer) &&
-           copyAt(vTok.buffer, fwd_v_cache_.buffer);
+    const VkDeviceSize bytes = (VkDeviceSize)kvDim * 4;
+    const VkDeviceSize off = (VkDeviceSize)((size_t)layer * fwd_max_seq_ + pos) * bytes;
+    return RecordCopy(kTok.buffer, fwd_k_cache_.buffer, 0, off, bytes) &&
+           RecordCopy(vTok.buffer, fwd_v_cache_.buffer, 0, off, bytes);
 }
 
 } // namespace CPUInference

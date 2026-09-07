@@ -1,0 +1,5 @@
+# K2_AUTO_WORKLOAD_POLICY_001
+# AUTO selects TRAMPOLINE_OUTPUT_CACHE by default.
+# Budget-fit veto forbids cyclone/elastic when predicted layer WS > usable budget.
+# PASS: AUTO matches frozen B2 arm, TPS>=0.97*champ, parity, fallback0, active0,
+#       CACHE_BUDGET_EXCEEDED=0 for selected path, POLICY_SWITCHES<=1.

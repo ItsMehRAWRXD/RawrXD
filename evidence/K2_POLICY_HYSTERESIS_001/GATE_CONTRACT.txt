@@ -1,0 +1,3 @@
+# K2_POLICY_HYSTERESIS_001
+# Sticky AUTO policy: hold band around crossover prevents Off/Trampoline thrash.
+# PASS: sticky flips << raw flips; 61-layer stays trampoline+veto; hold_on works.

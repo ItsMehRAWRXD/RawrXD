@@ -1,0 +1,10 @@
+K2_LIVE_POLICY_CROSSOVER_001=PASS (DEEP2_CROSSOVER_QUICK=1)
+
+Arms (independent Decide, ClearSticky between):
+  (1,1)  → OFF
+  (4,2)  → TRAMPOLINE_OUTPUT_CACHE (layerVeto=0)
+  (61,8) → FULL_DEPTH_PROMO (layerVeto=1)
+
+CROSSOVER_STEPS=8
+Rule: reuse < crossover → OFF; shallow → trampoline+cache;
+      full-depth layer veto → FULL_DEPTH_PROMO

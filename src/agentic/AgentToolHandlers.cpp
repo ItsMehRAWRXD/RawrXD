@@ -1744,6 +1744,53 @@ json AgentToolHandlers::GetAllSchemas() {
     gd["function"] = gd_f;
     tools.push_back(gd);
 
+    auto addSimple = [&](const char* name, const char* desc) {
+        json t = json::object();
+        t["type"] = "function";
+        json f = json::object();
+        f["name"] = name;
+        f["description"] = desc;
+        json p = json::object();
+        p["type"] = "object";
+        p["properties"] = json::object();
+        f["parameters"] = p;
+        t["function"] = f;
+        tools.push_back(t);
+    };
+    addSimple("git_status", "Show git status (porcelain).");
+    {
+        json t = json::object(); t["type"] = "function";
+        json f = json::object(); f["name"] = "git_diff";
+        f["description"] = "Show git diff; optional path filter.";
+        json p = json::object(); p["type"] = "object";
+        json prop = json::object();
+        json path = json::object(); path["type"] = "string";
+        prop["path"] = path; p["properties"] = prop;
+        f["parameters"] = p; t["function"] = f; tools.push_back(t);
+    }
+    {
+        json t = json::object(); t["type"] = "function";
+        json f = json::object(); f["name"] = "run_build";
+        f["description"] = "Run cmake --build on a build directory.";
+        json p = json::object(); p["type"] = "object";
+        json prop = json::object();
+        json bd = json::object(); bd["type"] = "string";
+        json tg = json::object(); tg["type"] = "string";
+        prop["build_dir"] = bd; prop["target"] = tg; p["properties"] = prop;
+        f["parameters"] = p; t["function"] = f; tools.push_back(t);
+    }
+    {
+        json t = json::object(); t["type"] = "function";
+        json f = json::object(); f["name"] = "apply_patch";
+        f["description"] = "Atomically apply multifile edits via transaction.";
+        json p = json::object(); p["type"] = "object";
+        json prop = json::object();
+        json edits = json::object(); edits["type"] = "array";
+        prop["edits"] = edits; p["properties"] = prop;
+        p["required"] = jstrArr({"edits"});
+        f["parameters"] = p; t["function"] = f; tools.push_back(t);
+    }
+
     return tools;
 }
 
@@ -1788,6 +1835,77 @@ std::string AgentToolHandlers::GetSystemPrompt(const std::string& cwd,
     return ss.str();
 }
 
+ToolCallResult AgentToolHandlers::GitStatus(const json& args) {
+    (void)args;
+    return ExecuteCommand(json{{"command", "git status --porcelain -b"}});
+}
+
+ToolCallResult AgentToolHandlers::GitDiff(const json& args) {
+    std::string path = args.value("path", "");
+    std::string cmd = "git diff --no-color";
+    if (!path.empty()) {
+        if (!IsPathAllowed(path))
+            return ToolCallResult::Sandbox("path outside workspace");
+        cmd += " -- \"" + path + "\"";
+    }
+    return ExecuteCommand(json{{"command", cmd}});
+}
+
+ToolCallResult AgentToolHandlers::RunBuild(const json& args) {
+    std::string dir = args.value("build_dir", "build-ninja");
+    std::string target = args.value("target", "");
+    uint32_t timeout = (uint32_t)args.value("timeout_ms",
+                                            (int)s_guardrails.commandTimeoutMs);
+    if (timeout < 1000) timeout = 1000;
+    std::string cmd = "cmake --build \"" + dir + "\" -j 8";
+    if (!target.empty()) cmd += " --target " + target;
+    json a = json{{"command", cmd}, {"timeout", (int)timeout}};
+    auto r = ExecuteCommand(a);
+    if (!r.metadata.is_object()) r.metadata = json::object();
+    r.metadata["tool"] = "run_build";
+    r.metadata["build_dir"] = dir;
+    if (!r.metadata.contains("exit_code"))
+        r.metadata["exit_code"] = r.isSuccess() ? 0 : 1;
+    return r;
+}
+
+ToolCallResult AgentToolHandlers::ApplyPatch(const json& args) {
+    if (!args.contains("edits") || !args["edits"].is_array())
+        return ToolCallResult::Validation("apply_patch requires edits[]");
+    // Stage all contents first; write only if every edit resolves.
+    struct Staged { std::string path; std::string next; };
+    std::vector<Staged> staged;
+    for (const auto& ed : args["edits"]) {
+        std::string path = ed.value("path", "");
+        std::string oldS = ed.value("old_string", "");
+        std::string newS = ed.value("new_string", "");
+        if (path.empty()) return ToolCallResult::Validation("edit missing path");
+        if (!IsPathAllowed(path))
+            return ToolCallResult::Sandbox("path outside workspace: " + path);
+        std::ifstream in(path, std::ios::binary);
+        if (!in) return ToolCallResult::Error("cannot read: " + path);
+        std::stringstream ss; ss << in.rdbuf();
+        std::string content = ss.str(), next = content;
+        if (!oldS.empty()) {
+            auto pos = content.find(oldS);
+            if (pos == std::string::npos)
+                return ToolCallResult::Error("old_string not found: " + path);
+            next.replace(pos, oldS.size(), newS);
+        } else next = newS;
+        staged.push_back({path, next});
+    }
+    for (const auto& s : staged) {
+        if (s_guardrails.requireBackupOnWrite) CreateBackup(s.path);
+        std::ofstream out(s.path, std::ios::binary | std::ios::trunc);
+        if (!out) return ToolCallResult::Error("cannot write: " + s.path);
+        out.write(s.next.data(), (std::streamsize)s.next.size());
+    }
+    json meta = json::object();
+    meta["applied"] = (int)staged.size(); meta["tool"] = "apply_patch";
+    auto r = ToolCallResult::Ok("applied " + std::to_string(staged.size()) + " edits");
+    r.metadata = meta; return r;
+}
+
 // ============================================================================
 // Generic dispatch — Instance / HasTool / Execute
 // Used by DeterministicReplayEngine for transcript replay.
@@ -1802,7 +1920,8 @@ bool AgentToolHandlers::HasTool(const std::string& name) const {
         "read_file", "write_file", "delete_file", "replace_in_file",
         "list_dir", "list_directory", "execute_command", "run_shell", "search_code", "semantic_search",
         "mention_lookup", "next_edit_hint", "propose_multifile_edits",
-        "load_rules", "plan_tasks", "get_diagnostics"
+        "load_rules", "plan_tasks", "get_diagnostics",
+        "git_status", "git_diff", "run_build", "apply_patch"
     };
     for (const auto* t : tools) {
         if (name == t) return true;
@@ -1827,5 +1946,9 @@ ToolCallResult AgentToolHandlers::Execute(const std::string& name,
     if (name == "load_rules")       return LoadRules(args);
     if (name == "plan_tasks")       return PlanTasks(args);
     if (name == "get_diagnostics")  return GetDiagnostics(args);
+    if (name == "git_status")       return GitStatus(args);
+    if (name == "git_diff")         return GitDiff(args);
+    if (name == "run_build")        return RunBuild(args);
+    if (name == "apply_patch")      return ApplyPatch(args);
     return ToolCallResult::NotFound(name);
 }

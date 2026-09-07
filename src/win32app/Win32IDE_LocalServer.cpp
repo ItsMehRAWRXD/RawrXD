@@ -21,6 +21,10 @@
 #include "../core/instructions_provider.hpp"
 #include "../core/model_name_util.h"
 #include "../core/unified_hotpatch_manager.hpp"
+#include "../deep2/NvmeBunnyHopApi.hpp"
+#define RAWR_HAS_NATIVE_E2E 1
+#include "../../native_e2e/RawrNativeServerDispatch.hpp"
+#include "../../native_e2e/rawr_native_engine_hooks.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include <algorithm>
@@ -575,7 +579,8 @@ static std::string modelBridgeCapabilitiesJson()
                       "\"cpu\":{\"avx2\":%s,\"fma3\":%s,\"avx512f\":%s,\"avx512bw\":%s},"
                       "\"memory\":{\"total_ram_gb\":%llu,\"free_ram_gb\":%llu},"
                       "\"engine\":{\"model_loaded\":%s,\"swarm\":%s,\"dual_engine\":%s,"
-                      "\"five_drive\":%s,\"tensor_hop\":%s,\"flash_attention\":%s,\"safe_decode\":%s},"
+                      "\"five_drive\":%s,\"tensor_hop\":%s,\"flash_attention\":%s,\"safe_decode\":%s,"
+                      "\"nvme_reverse_bunnyhop\":%s},"
                       "\"active_tier\":\"%s\","
                       "\"profile_count\":%u,"
                       "\"model_range\":\"1.5B-800B (24 profiles, MASM-bridged)\","
@@ -587,6 +592,7 @@ static std::string modelBridgeCapabilitiesJson()
                       (caps & 0x20) ? "true" : "false", (caps & 0x40) ? "true" : "false",
                       (caps & 0x80) ? "true" : "false", (caps & 0x100) ? "true" : "false",
                       (caps & 0x200) ? "true" : "false", (caps & 0x400) ? "true" : "false",
+                      Deep2::NvmeBunnyHopApi::ForceEnabled() ? "true" : "false",
                       state ? mbTierName(state->active_tier) : "unknown", state ? state->profile_count : 0u);
         return std::string(buf);
     }
@@ -786,6 +792,19 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // Route
     std::string response;
 
+#if defined(RAWR_HAS_NATIVE_E2E)
+    {
+        std::string nativeJson;
+        uint32_t nativeSt = 0;
+        if (RawrNativeE2E::TryHandle(method, path, body, nativeJson, nativeSt)) {
+            LocalServerUtil::sendAll(client,
+                LocalServerUtil::buildHttpResponse((int)nativeSt, nativeJson));
+            closesocket(client);
+            return;
+        }
+    }
+#endif
+
     if (method == "OPTIONS")
     {
         response = LocalServerUtil::buildHttpResponse(204, "");
@@ -864,6 +883,30 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     else if (method == "GET" && path == "/api/engine/capabilities")
     {
         handleEngineCapabilitiesEndpoint(client);
+        closesocket(client);
+        return;
+    }
+    else if (method == "GET" && path == "/api/nvme/bunnyhop/status")
+    {
+        std::string j = Deep2::NvmeBunnyHopApi::StatusJson();
+        std::string resp = LocalServerUtil::buildHttpResponse(200, j);
+        LocalServerUtil::sendAll(client, resp);
+        closesocket(client);
+        return;
+    }
+    else if (method == "POST" && path == "/api/nvme/bunnyhop/arm")
+    {
+        std::string j = Deep2::NvmeBunnyHopApi::ArmJson(true, 4);
+        std::string resp = LocalServerUtil::buildHttpResponse(200, j);
+        LocalServerUtil::sendAll(client, resp);
+        closesocket(client);
+        return;
+    }
+    else if (method == "POST" && path == "/api/nvme/bunnyhop/disarm")
+    {
+        std::string j = Deep2::NvmeBunnyHopApi::ArmJson(false);
+        std::string resp = LocalServerUtil::buildHttpResponse(200, j);
+        LocalServerUtil::sendAll(client, resp);
         closesocket(client);
         return;
     }
@@ -1842,6 +1885,7 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
     LocalServerUtil::extractJsonString(body, "prompt", prompt);
     LocalServerUtil::extractJsonString(body, "model", model);
     LocalServerUtil::extractJsonBool(body, "stream", stream);
+    (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
 
     int numPredict = 0;
     if (LocalServerUtil::extractJsonInt(body, "num_predict", numPredict) && numPredict > 0)
@@ -1859,45 +1903,12 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
 
     if (activeBackend != AIBackendType::LocalGGUF)
     {
-        // Remote backend — route through LLM Router (task classification,
-        // capability matching, fallback chains). When router is disabled,
-        // routeWithIntelligence() passes straight to routeInferenceRequest().
-        std::string result = routeWithIntelligence(prompt);
-        bool isError = result.find("[BackendSwitcher] Error") != std::string::npos;
-
-        if (isError)
-        {
-            std::string json = "{\"error\":\"" + LocalServerUtil::escapeJson(result) + "\"}";
-            std::string resp = LocalServerUtil::buildHttpResponse(502, json);
-            LocalServerUtil::sendAll(client, resp);
-            return;
-        }
-
-        // Use the Router's actual selected backend for the response model name
-        // (may differ from activeBackend if Router reclassified the task)
-        AIBackendType routedBackend = getLastRoutingDecision().selectedBackend;
-        if (!m_routerEnabled || !m_routerInitialized)
-            routedBackend = activeBackend;
-        std::string backendName = LocalServerUtil::toLower(backendTypeString(routedBackend));
-        m_localServerStats.totalTokens++;
-
-        if (stream)
-        {
-            LocalServerUtil::sendSSEHeaders(client);
-            std::string event = "{\"model\":\"" + LocalServerUtil::escapeJson(backendName) + "\",\"response\":\"" +
-                                LocalServerUtil::escapeJson(result) + "\",\"done\":false}\n";
-            LocalServerUtil::sendAll(client, event);
-            std::string doneEvent =
-                "{\"model\":\"" + LocalServerUtil::escapeJson(backendName) + "\",\"response\":\"\",\"done\":true}\n";
-            LocalServerUtil::sendAll(client, doneEvent);
-        }
-        else
-        {
-            std::string json = "{\"model\":\"" + LocalServerUtil::escapeJson(backendName) + "\",\"response\":\"" +
-                               LocalServerUtil::escapeJson(result) + "\",\"done\":true}";
-            std::string resp = LocalServerUtil::buildHttpResponse(200, json);
-            LocalServerUtil::sendAll(client, resp);
-        }
+        // LOCAL_ONLY: refuse Ollama / cloud backends for /api/generate
+        std::string json =
+            "{\"error\":\"LOCAL_ONLY_NO_OLLAMA: backend must be LocalGGUF. "
+            "Switch via Backend Switcher to LocalGGUF and load a model.\"}";
+        std::string resp = LocalServerUtil::buildHttpResponse(503, json);
+        LocalServerUtil::sendAll(client, resp);
         return;
     }
 
@@ -1909,8 +1920,31 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
         return;
     }
 
+    uint64_t nativeReqId = 0;
+#if defined(RAWR_HAS_NATIVE_E2E)
+    {
+        // HTML prepare → generate carries rawr_native_request_id
+        std::string idStr;
+        if (LocalServerUtil::extractJsonString(body, "rawr_native_request_id", idStr) && !idStr.empty())
+            nativeReqId = (uint64_t)_strtoui64(idStr.c_str(), nullptr, 10);
+        else {
+            int idInt = 0;
+            if (LocalServerUtil::extractJsonInt(body, "rawr_native_request_id", idInt) && idInt > 0)
+                nativeReqId = (uint64_t)idInt;
+        }
+        if (nativeReqId)
+            RAWR_NATIVE_ENGINE_ENTER(nativeReqId, /*LocalGGUF*/1u,
+                RN_ENGINE_MODE_SAFEDECODE | RN_ENGINE_MODE_TENSORHOP);
+    }
+#endif
+
     auto tokens = m_nativeEngine->Tokenize(prompt);
     auto generated = m_nativeEngine->Generate(tokens, maxTokens);
+
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (nativeReqId && !generated.empty())
+        RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+#endif
 
     if (stream)
     {
@@ -1925,7 +1959,13 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
                 "{\"model\":\"rawrxd\",\"response\":\"" + LocalServerUtil::escapeJson(text) + "\",\"done\":false}\n";
             bool r = LocalServerUtil::sendAll(client, event);
             if (!r)
+            {
+#if defined(RAWR_HAS_NATIVE_E2E)
+                if (nativeReqId)
+                    RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), -1);
+#endif
                 return;
+            }
         }
 
         std::string doneEvent = "{\"model\":\"rawrxd\",\"response\":\"\",\"done\":true}\n";
@@ -1941,6 +1981,11 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
         std::string resp = LocalServerUtil::buildHttpResponse(200, json);
         LocalServerUtil::sendAll(client, resp);
     }
+
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (nativeReqId)
+        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), 0);
+#endif
 }
 
 // ============================================================================
@@ -1998,46 +2043,10 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
 
     if (activeBackend != AIBackendType::LocalGGUF)
     {
-        // Remote backend — route through LLM Router (task classification,
-        // capability matching, fallback chains). When router is disabled,
-        // routeWithIntelligence() passes straight to routeInferenceRequest().
-        std::string result = routeWithIntelligence(prompt);
-        bool isError = result.find("[BackendSwitcher] Error") != std::string::npos;
-
-        if (isError)
-        {
-            std::string errJson = "{\"error\":{\"message\":\"" + LocalServerUtil::escapeJson(result) + "\"}}";
-            std::string resp = LocalServerUtil::buildHttpResponse(502, errJson);
-            LocalServerUtil::sendAll(client, resp);
-            return;
-        }
-
-        m_localServerStats.totalTokens++;
-
-        if (stream)
-        {
-            LocalServerUtil::sendSSEHeaders(client);
-            std::ostringstream event;
-            event << "data: {\"id\":\"" << requestId << "\",\"object\":\"chat.completion.chunk\""
-                  << ",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"" << LocalServerUtil::escapeJson(result)
-                  << "\"}}]}\n\n";
-            std::string eventStr = event.str();
-            LocalServerUtil::sendAll(client, eventStr);
-            std::string doneStr = "data: [DONE]\n\n";
-            LocalServerUtil::sendAll(client, doneStr);
-        }
-        else
-        {
-            std::ostringstream j;
-            j << "{\"id\":\"" << requestId << "\",\"object\":\"chat.completion\""
-              << ",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\""
-              << LocalServerUtil::escapeJson(result) << "\"},\"finish_reason\":\"stop\"}]"
-              << ",\"usage\":{\"prompt_tokens\":0"
-              << ",\"completion_tokens\":0"
-              << ",\"total_tokens\":0}}";
-            std::string resp = LocalServerUtil::buildHttpResponse(200, j.str());
-            LocalServerUtil::sendAll(client, resp);
-        }
+        std::string errJson =
+            "{\"error\":{\"message\":\"LOCAL_ONLY_NO_OLLAMA: backend must be LocalGGUF\"}}";
+        std::string resp = LocalServerUtil::buildHttpResponse(503, errJson);
+        LocalServerUtil::sendAll(client, resp);
         return;
     }
 
@@ -2049,8 +2058,30 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
         return;
     }
 
+    uint64_t nativeReqId = 0;
+#if defined(RAWR_HAS_NATIVE_E2E)
+    {
+        std::string idStr;
+        if (LocalServerUtil::extractJsonString(body, "rawr_native_request_id", idStr) && !idStr.empty())
+            nativeReqId = (uint64_t)_strtoui64(idStr.c_str(), nullptr, 10);
+        else {
+            int idInt = 0;
+            if (LocalServerUtil::extractJsonInt(body, "rawr_native_request_id", idInt) && idInt > 0)
+                nativeReqId = (uint64_t)idInt;
+        }
+        if (nativeReqId)
+            RAWR_NATIVE_ENGINE_ENTER(nativeReqId, 1u,
+                RN_ENGINE_MODE_SAFEDECODE | RN_ENGINE_MODE_TENSORHOP);
+    }
+#endif
+
     auto tokens = m_nativeEngine->Tokenize(prompt);
     auto generated = m_nativeEngine->Generate(tokens, maxTokens);
+
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (nativeReqId && !generated.empty())
+        RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
+#endif
 
     if (stream)
     {
@@ -2069,7 +2100,13 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
             std::string eventStr = event.str();
             bool r = LocalServerUtil::sendAll(client, eventStr);
             if (!r)
+            {
+#if defined(RAWR_HAS_NATIVE_E2E)
+                if (nativeReqId)
+                    RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), -1);
+#endif
                 return;
+            }
         }
 
         std::string doneStr = "data: [DONE]\n\n";
@@ -2090,6 +2127,11 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
         std::string resp = LocalServerUtil::buildHttpResponse(200, j.str());
         LocalServerUtil::sendAll(client, resp);
     }
+
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (nativeReqId)
+        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), 0);
+#endif
 }
 
 // ============================================================================

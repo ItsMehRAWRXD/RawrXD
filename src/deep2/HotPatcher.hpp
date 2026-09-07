@@ -234,6 +234,14 @@ public:
         FuncType* targetFunc,
         FuncType* replacementFunc,
         const PatchMetadata& meta);
+
+    // Non-template hook for live-path / MASM call sites
+    std::string registerRawFunctionHook(
+        const std::string& name,
+        void* targetFunc,
+        void* replacementFunc,
+        size_t patchSize,
+        const PatchMetadata& meta);
     
     // Register a kernel replacement
     std::string registerKernelReplacement(

@@ -1,0 +1,19 @@
+K2_TPS_RAINBOW_001=PASS
+
+HIT key=000000000001cdc6
+SCORE=199.276  TARGET=150 (STREAM_NORM)
+wall=2.615 tok/s   stream=199.276 (= REF_BW/BPT)
+bpt=37636288
+
+WINNER (byteless — knobs only):
+  DEPTH=61 TOKENS=64
+  GPU_MLA=1 PIN=1 Q4_ONLY=0 SERIAL=1
+  PROMO=1 STREAM_COPY=0
+  MECH=trampoline,cyclone,elastic
+  SLOTS=16 CROSS=8
+
+Serverless streamer reverse:
+  pin-resident MLA → BPT collapses → TPS_STREAM > NORM 150
+  Wall-clock remains ~2.6 tok/s (honest DD number; not ×1000)
+
+Replay: source WINNER.env then sustained/live decode.

@@ -28,20 +28,21 @@ struct GpuForwardCounters {
     uint64_t hostForwardLayerCalls = 0;
     uint64_t plannedCpuLayerCalls = 0;
     uint64_t gpuLayersLastToken = 0;
+    uint64_t layerSubmits = 0;
+    uint64_t opSubmits = 0;
+    uint64_t q4kPackedOps = 0;
+    uint64_t q6kPackedOps = 0;
+    uint64_t cpuF32Expands = 0;
 };
 
-inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t cpuFallback) noexcept {
-    const uint64_t attn = c.attnScoreOps + c.softmaxOps + c.attnValueOps;
-    const uint64_t ffn = c.ffnNormOps + c.ffnActOps + c.ffnResidualOps;
-    return c.forwardLayers > 0 &&
-           c.rmsNormOps > 0 &&
-           c.qkvOps > 0 &&
-           c.ropeOps > 0 &&
-           attn > 0 &&
-           c.residualOps > 0 &&
-           ffn > 0 &&
-           c.hostMaterializations == 0 &&
-           cpuFallback == 0;
+inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
+    return c.forwardLayers > 0 && c.rmsNormOps > 0 && c.qkvOps > 0 &&
+           c.ropeOps > 0 && c.attnScoreOps > 0 && c.residualOps > 0 &&
+           c.ffnActOps > 0 && c.hostForwardLayerCalls == 0;
+}
+
+inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexcept {
+    return Deep2GpuForward_Resident(c) && c.hostMaterializations == 0;
 }
 
 inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t cpuFb) noexcept {
@@ -78,8 +79,24 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.hostForwardLayerCalls);
         fprintf(o, "PLANNED_CPU_LAYER_CALLS=%llu\n",
                 (unsigned long long)c.plannedCpuLayerCalls);
+        fprintf(o, "DEEP2_GPU_RESIDENT_FORWARD=%u\n",
+                Deep2GpuForward_Resident(c) ? 1u : 0u);
+        fprintf(o, "DEEP2_GPU_FORWARD_FALLBACKS=%llu\n",
+                (unsigned long long)c.hostForwardLayerCalls);
+        fprintf(o, "DEEP2_GPU_LAYER_SUBMITS=%llu\n",
+                (unsigned long long)c.layerSubmits);
+        fprintf(o, "DEEP2_GPU_OP_SUBMITS=%llu\n",
+                (unsigned long long)c.opSubmits);
+        fprintf(o, "DEEP2_GPU_HOST_SYNC=%llu\n",
+                (unsigned long long)c.hostSyncBoundaries);
         fprintf(o, "DEEP2_REAL_GPU_FORWARD=%u\n",
                 Deep2GpuForward_IsReal(c, cpuFb) ? 1u : 0u);
+        fprintf(o, "DEEP2_GPU_Q4K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q4kPackedOps);
+        fprintf(o, "DEEP2_GPU_Q6K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q6kPackedOps);
+        fprintf(o, "DEEP2_GPU_CPU_F32_EXPANDS=%llu\n",
+                (unsigned long long)c.cpuF32Expands);
     };
     emit(stdout);
     if (f && f != stdout) emit(f);

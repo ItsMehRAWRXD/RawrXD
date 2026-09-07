@@ -1,0 +1,4 @@
+D=4 T=2 ops=48 u=24 h=24 stream_miss=327755
+parity1=1 cpu=49107 gpu=49107
+K2_GPU_MLA_RE_001=PASS
+NOTE=GPU MLA_OPS=6*D*T (Q4+Q8). MLA_Gemv=GPU|GetGEMV always (no Wanted-gate).

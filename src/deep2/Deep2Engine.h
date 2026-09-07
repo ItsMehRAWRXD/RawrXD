@@ -28,6 +28,8 @@
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
 #include "ElasticResidencyManager.hpp"
+#include "CycloneScheduler.hpp"
+#include "Deep2LivePath.hpp"
 #include "RouterPrefetchTelemetry.hpp"
 #include "ProductionProfiler.hpp"
 // Sovereign Engine components (Dragon Lore)
@@ -45,6 +47,7 @@
 #include <functional>
 #include <filesystem>
 #include <unordered_map>
+#include <atomic>
 
 namespace Deep2 {
 
@@ -243,6 +246,7 @@ struct GenerationOptions {
     uint32_t topK = 40;
 
     float repeatPenalty = 1.0f;
+    float minP = 0.0f;
 
     uint64_t seed = 0;
 };
@@ -321,9 +325,21 @@ public:
     // Unload model and free weight memory
     void unloadModel();
 
+    // Switch to another GGUF (unload → load → re-init from metadata)
+    bool switchModel(const std::string& ggufPath);
+
+    // Grow KV / hidden buffers to a larger max sequence length (reuse existing prefix)
+    bool growContext(size_t newMaxSeqLen);
+
+    // Cooperative cancel for generate / generateStream (checked each decode step)
+    void requestCancel() { cancelRequested_.store(true, std::memory_order_release); }
+    void clearCancel() { cancelRequested_.store(false, std::memory_order_release); }
+    bool isCancelRequested() const { return cancelRequested_.load(std::memory_order_acquire); }
+
     // K2 Gate 11: index-only shard open + certified partial-forward (no full load)
     bool openK2ShardDirectory(const std::string& shardDirPath);
     bool isK2ShardIndexOpen() const { return k2ShardIndexOpen_; }
+    const GlobalTensorIndex* k2TensorIndex() const { return globalIndex_.get(); }
     K2NativeStreamGate::Result runK2NativeStreamPartial(const K2NativeStreamGate::Config& cfg);
     
     // Get engine info
@@ -346,8 +362,14 @@ public:
 
     // Batch 15: Elastic residency control
     void enableElasticResidency(bool enable);
+    void refreshElasticDynamicBudget();
     bool isElasticResidencyEnabled() const { return elasticResidencyEnabled_; }
     ElasticResidencyManager* getElasticResidencyManager() const { return elasticResidency_.get(); }
+
+    // Cyclone temporal scheduler (live generate ownership)
+    void enableCyclone(bool enable);
+    bool isCycloneEnabled() const { return cycloneEnabled_; }
+    CycloneScheduler* getCycloneScheduler() const { return cyclone_.get(); }
 
     // Router-driven prefetch telemetry
     void enableResidencyTelemetry(bool enable);
@@ -567,6 +589,7 @@ private:
     std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
     bool deterministicGreedy_ = false;
+    std::atomic<bool> cancelRequested_{false};
     
     // Real model weights
     ModelWeights modelWeights;
@@ -634,6 +657,10 @@ private:
     // Batch 15: ElasticResidencyManager — representation-aware, async prefetch
     std::unique_ptr<ElasticResidencyManager> elasticResidency_;
     bool elasticResidencyEnabled_ = false;
+
+    // Cyclone: temporal prediction over Elastic (live generate)
+    std::unique_ptr<CycloneScheduler> cyclone_;
+    bool cycloneEnabled_ = false;
 
     // Router-driven prefetch telemetry
     std::unique_ptr<RouterPrefetchTelemetry> residencyTelemetry_;

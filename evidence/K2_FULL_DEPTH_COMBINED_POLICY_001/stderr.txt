@@ -1,0 +1,4 @@
+[MLA_ALLOC] hidden=7168 heads=64 headDim=128 qProjSize=8192 q_b=8192 kv_a=576 k_b=8192 v_b=8192
+[MLA_ALLOC] hidden=7168 heads=64 headDim=128 qProjSize=8192 q_b=8192 kv_a=576 k_b=8192 v_b=8192
+[MLA_ALLOC] hidden=7168 heads=64 headDim=128 qProjSize=8192 q_b=8192 kv_a=576 k_b=8192 v_b=8192
+[MLA_ALLOC] hidden=7168 heads=64 headDim=128 qProjSize=8192 q_b=8192 kv_a=576 k_b=8192 v_b=8192

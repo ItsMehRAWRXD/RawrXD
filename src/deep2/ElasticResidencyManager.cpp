@@ -7,6 +7,7 @@
 #include "QuantKernelRegistry.hpp"
 #include "ResidencyTrace.hpp"
 #include "TelemetrySinks.hpp"
+#include "StreamTransferCounters.hpp"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -56,6 +57,22 @@ bool ElasticResidencyManager::Initialize(const ElasticResidencyConfig& config) {
            config_.maxHotBytes / (1024*1024),
            config_.prefetchLookahead);
     return true;
+}
+
+void ElasticResidencyManager::ApplyDynamicCaps(const ElasticResidencyConfig& caps) {
+    // Keep used ≤ max; only publish fields that are dynamic budgets/lookahead.
+    const size_t warmUsed = warmCompressedUsed_.load();
+    const size_t stagedUsed = warmStagedUsed_.load();
+    const size_t hotUsed = hotUsed_.load();
+    if (caps.maxWarmCompressedBytes >= warmUsed)
+        config_.maxWarmCompressedBytes = caps.maxWarmCompressedBytes;
+    if (caps.maxWarmStagedBytes >= stagedUsed)
+        config_.maxWarmStagedBytes = caps.maxWarmStagedBytes;
+    if (caps.maxHotBytes >= hotUsed)
+        config_.maxHotBytes = caps.maxHotBytes;
+    config_.prefetchLookahead = caps.prefetchLookahead;
+    if (caps.moeHotExpertCount)
+        config_.moeHotExpertCount = caps.moeHotExpertCount;
 }
 
 void ElasticResidencyManager::Shutdown() {
@@ -417,6 +434,8 @@ void ElasticResidencyManager::PrefetchToGpu(const std::string& name, uint32_t ta
     ResidencyState current = t->state.load();
     if (current == ResidencyState::Hot || current == ResidencyState::Uploading) {
         telemetry_.prefetchHit.fetch_add(1);
+        StreamTransfer_RecordRead(t->compressedBytes ? t->compressedBytes : t->stagedBytes,
+                                  /*cacheHit=*/true);
         return;  // Already hot or on its way
     }
 
@@ -833,7 +852,7 @@ void ElasticResidencyManager::ExecuteRamToVram(ElasticResidentTensor& t) {
     // t.gpuData = gpuPtr;
     // t.gpuBytes = uploadBytes;
 
-    // Stub: just mark as hot
+    // Stub: no real vkCmdCopyBuffer — do not count GPU transfer here.
     t.gpuData = nullptr;  // placeholder
     t.gpuBytes = uploadBytes;
     t.state.store(ResidencyState::Hot);
@@ -905,13 +924,26 @@ bool ElasticResidencyManager::ReserveHot(size_t bytes) {
 }
 
 void ElasticResidencyManager::ReleaseWarmCompressed(size_t bytes) {
-    warmCompressedUsed_.fetch_sub(bytes);
+    // Saturate: unsigned fetch_sub underflow looks like "negative" used.
+    size_t cur = warmCompressedUsed_.load();
+    for (;;) {
+        const size_t next = (bytes >= cur) ? 0u : (cur - bytes);
+        if (warmCompressedUsed_.compare_exchange_weak(cur, next)) return;
+    }
 }
 void ElasticResidencyManager::ReleaseWarmStaged(size_t bytes) {
-    warmStagedUsed_.fetch_sub(bytes);
+    size_t cur = warmStagedUsed_.load();
+    for (;;) {
+        const size_t next = (bytes >= cur) ? 0u : (cur - bytes);
+        if (warmStagedUsed_.compare_exchange_weak(cur, next)) return;
+    }
 }
 void ElasticResidencyManager::ReleaseHot(size_t bytes) {
-    hotUsed_.fetch_sub(bytes);
+    size_t cur = hotUsed_.load();
+    for (;;) {
+        const size_t next = (bytes >= cur) ? 0u : (cur - bytes);
+        if (hotUsed_.compare_exchange_weak(cur, next)) return;
+    }
 }
 
 // ============================================================================

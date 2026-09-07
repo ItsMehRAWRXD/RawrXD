@@ -1,0 +1,17 @@
+K2_FULL_DEPTH_FUSED_REBENCH_001=PASS
+POLICY_DECISION=UNFREEZE_C002
+TOKENS=2 DEPTH=61
+
+PROMO_TPS=0.183
+C002_TPS=0.200
+NEED=0.188 (Promo*1.03)
+
+MATERIAL=1 TPS_WIN=1 NO_REGRESS=1
+DUP=0 HOT0 GROWTH0 PARITY ACTIVE0 FALL0
+FUSED_BYPASS=125 FUSED_DECISIONS=0
+
+NOTE: C002 win is fast-bypass overlay (FUSED_CONTROL_002 law) — no
+controller decisions on the healthy 61-layer path. Production AUTO
+full-depth now enables fused=1 on the Promo mech stack.
+
+Explicit B2/TRAMPOLINE force remains fused=0 trampoline-only.

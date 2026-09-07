@@ -1,0 +1,16 @@
+K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001=PASS
+POLICY_DECISION=PROMOTED + C002_UNFROZEN
+TOKENS=2 DEPTH=61
+
+B2_TPS=0.149 BBEST_TPS=0.089 PROMO_TPS=0.156
+FUSED_REBENCH: PROMO=0.183 C002=0.200 → UNFREEZE_C002
+
+ADVANCE (production AUTO)
+  reuse < crossover     → OFF
+  short/shallow         → trampoline + output.weight cache (fused=0)
+  full-depth (layer veto) → cyclone+elastic+trampoline-reuse + FUSED_002
+
+Explicit DEEP2_LIVE_POLICY=B2|TRAMPOLINE → trampoline only, fused=0
+
+FOLLOW-ON (IO, not policy): K2_TRAMPOLINE_FULL_DEPTH_OPT_001=PASS
+  persistent shard HANDLEs ≈1.85× TPS vs legacy ifstream (default on)

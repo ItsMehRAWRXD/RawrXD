@@ -246,6 +246,7 @@ bool Deep2Bridge::GenerateStream(const char* prompt, TokenCallback onToken, Erro
 
 void Deep2Bridge::CancelGeneration() {
     m_generating = false;
+    if (m_engine) m_engine->requestCancel();
     m_status = EngineStatus::Ready;
 }
 

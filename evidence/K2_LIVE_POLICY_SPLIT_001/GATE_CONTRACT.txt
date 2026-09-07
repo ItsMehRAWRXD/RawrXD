@@ -1,0 +1,9 @@
+# K2_LIVE_POLICY_SPLIT_001
+# No model. AUTO policy Decide+Apply wiring.
+#
+# PASS
+#   reuse < crossover → OFF, enhancements off
+#   shallow (4×2, no layer veto) → TRAMPOLINE_OUTPUT_CACHE
+#       mech=trampoline only, fused=0
+#   full-depth (61×2, layer veto) → FULL_DEPTH_PROMO
+#       mech=trampoline,cyclone,elastic fused=1

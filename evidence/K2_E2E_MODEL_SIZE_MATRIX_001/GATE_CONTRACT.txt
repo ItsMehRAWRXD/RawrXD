@@ -1,0 +1,4 @@
+# K2_E2E_MODEL_SIZE_MATRIX_001
+# Workload-size matrix under DEFAULT AUTO on one K2 corpus.
+# PASS: class grid arms correct; live 2x2/4x2/8x2/61x2 ok;
+# CORPUS_GIB >> STREAM_BYTES; 61 LAYER_VETO=1; ACTIVE=0.

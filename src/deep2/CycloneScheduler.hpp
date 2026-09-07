@@ -187,6 +187,11 @@ public:
 
     // Lifecycle
     bool Initialize(ElasticResidencyManager* elastic);
+    void SetPrefetchLookahead(uint32_t layers) {
+        config_.prefetchLookaheadLayers = layers;
+    }
+    uint32_t PrefetchLookahead() const { return config_.prefetchLookaheadLayers; }
+    void RebindElastic(ElasticResidencyManager* elastic);
     void Shutdown();
 
     // ------------------------------------------------------------------------
@@ -270,6 +275,10 @@ public:
         float avgPredictionConfidence = 0.0f;
         uint32_t routerActivationsPredicted = 0;
         uint32_t routerActivationsCorrect = 0;
+
+        uint64_t activeCyclesTotal = 0;
+        uint64_t stallCyclesTotal = 0;
+        uint32_t queuePeak = 0;
     };
 
     TelemetrySnapshot GetTelemetry() const;
@@ -347,6 +356,7 @@ private:
         std::atomic<uint64_t> maxDemandLatencyUs{0};
     };
     AccumulatedTelemetry accum_;
+    std::atomic<uint32_t> queuePeak_{0};
 };
 
 } // namespace Deep2

@@ -196,6 +196,7 @@ public:
     // ------------------------------------------------------------------------
     bool StreamCycle(int tokenIndex);  // One token = all layers
     bool StreamLayer(int layerIndex);  // One layer
+    bool ReviveLayer(int layerIndex);  // quiet Dead/Reverse0 → Alive
 
     // ------------------------------------------------------------------------
     // State machine

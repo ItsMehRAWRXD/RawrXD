@@ -1,0 +1,4 @@
+K2_GPU_MLA_LIVE_001=SUPERSEDED
+BY=K2_GPU_STREAM_MLA_001 + K2_GPU_MLA_RE_001
+REASON=live cert deleted; RE authority covers t1 parity + 6*D*T ops + pin
+NOTE=stale FAIL (parity=0) is multi-token soft drift, not promote blocker

@@ -1,0 +1,3 @@
+# K2_LIVE_GENERATE_POLICY_001
+# Unset DEEP2_LIVE_POLICY => AUTO on live generate / K2 stream path.
+# PASS: DEFAULT_IS_AUTO, below-crossover OFF, parity vs TRAMPOLINE, ACTIVE=0.

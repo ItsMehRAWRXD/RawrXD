@@ -1,0 +1,13 @@
+K2_MLA_REUSE_PROMOTE_001=PASS
+
+PARITY1=1 CPU=GPU=101923 MLA_D1=3
+POLICY arm=FULL_DEPTH_PROMO reuse=244 crossover=8
+A_CPU  TPS=328.5 wall=12177ms
+WARM   uploads=183 hits=549 mla=732  (pin populate)
+B_GPU  TPS=794.0 wall=5038ms mla=732 u=0 h=732 pinRej=0
+       hot=8784MB cachePeak=963407872 entryPeak=2
+U_OVER_OPS=0.000 AMORTIZED=1 FASTER=1 TPS_DELTA=+465.5
+POLICY_DECISION=PROMOTE_GPU_MLA_REUSE
+
+vs cold rebench HOLD (u=ops h=0 −7.9%): reuse turns upload-per-op into
+pin-resident dispatch; GPU overtakes AVX-512 baseline.

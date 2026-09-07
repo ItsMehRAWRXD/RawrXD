@@ -1,0 +1,17 @@
+K2_LIVE_GENERATE_POLICY_001=PASS
+
+DEFAULT (unset DEEP2_LIVE_POLICY) → AUTO → TRAMPOLINE_OUTPUT_CACHE
+  reason=default_auto  LIVE_PATH_CYCLONE=0  LIVE_PATH_ELASTIC=0
+AUTO explicit matches trampoline arm
+Below crossover (2×2) → OFF with autoSelected=1
+Parity vs force TRAMPOLINE: OUTPUT_PARITY=1
+TPS_DEFAULT≈0.605 ≥ 0.97× TPS_MANUAL≈0.609
+ACTIVE after teardown=0  switches≤1
+
+Production changes:
+- Unset/empty DEEP2_LIVE_POLICY defaults to AUTO (manual arms = cert-only)
+- generate() + runK2NativeStreamPartial both apply policy; mech mask gated
+- ApplyMode(TrampolineOutput) sets MECH=trampoline only (B2 freeze)
+
+Evidence: GATE_STATUS.txt GATE_CONTRACT.txt stdout (prior run)
+Next: E2E MODEL-SIZE MATRIX

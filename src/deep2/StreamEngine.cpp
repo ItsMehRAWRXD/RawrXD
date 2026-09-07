@@ -77,21 +77,12 @@ void StreamEngine::Shutdown() {
 // ============================================================================
 bool StreamEngine::unreverseHot() {
     if (!initialized_) return false;
-
-    printf("\n╔══════════════════════════════════════════════════════════════════╗\n");
-    printf("║   ULTIMATE UNIVERSAL STREAMING COMPRESSION VRAM ENGINE            ║\n");
-    printf("║   entry: unreverseHot                                            ║\n");
-    printf("╚══════════════════════════════════════════════════════════════════╝\n\n");
-
-    printf("[unreverseHot] patchEngineer: splitting model into %u layer-chunks\n", config_.numLayers);
-    printf("[unreverseHot] patchCompress: nanoCompress %u:1 paradox L%u\n",
-           config_.compressionRatio, config_.compressionLevel);
-    printf("[unreverseHot] stream*load: MARShop*slingshot ready\n");
-    printf("[unreverseHot] patchUncompress: on-the-fly in VRAM\n");
-    printf("[unreverseHot] patch(undead): undeadHop bridge ready\n");
-    printf("[unreverseHot] hotpatch(relive*++()): revival protocol ready\n");
-    printf("[unreverseHot] streamDead(0) → streamAlive(1) → loop ∞\n\n");
-
+    static bool announced = false;
+    if (!announced) {
+        announced = true;
+        printf("[unreverseHot] streamDead(0) → Reverse0 (layers=%u)\n", config_.numLayers);
+    }
+    TransitionTo(StreamState::Reverse0);
     return true;
 }
 
@@ -219,6 +210,24 @@ bool StreamEngine::StreamLayer(int layerIndex) {
         printf("[StreamLayer] hotpatch(relive++): layer %d revived\n", layerIndex);
     }
 
+    TransitionTo(StreamState::Alive);
+    return true;
+}
+
+bool StreamEngine::ReviveLayer(int layerIndex) {
+    if (!initialized_) return false;
+    if (layerIndex < 0 || layerIndex >= (int)chunks_.size()) return false;
+    if (config_.reuseData && reuseData(layerIndex)) {
+        TransitionTo(StreamState::Alive);
+        return true;
+    }
+    TransitionTo(StreamState::Reverse0);
+    ResolveReverse0(layerIndex);
+    TransitionTo(StreamState::Loading);
+    RecordSlingshotBytes(chunks_[layerIndex].compressedSize);
+    TransitionTo(StreamState::Undead);
+    ReconstructCompression(chunks_[layerIndex]);
+    RecordDecompressBytes(chunks_[layerIndex].reconstructedSize);
     TransitionTo(StreamState::Alive);
     return true;
 }

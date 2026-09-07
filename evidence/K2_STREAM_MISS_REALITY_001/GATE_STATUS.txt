@@ -1,0 +1,5 @@
+A_miss=163851 B_miss=22 C_miss=40
+B_tramp=2 C_layer=36
+vocab=1 tramp=1 depth=1
+K2_STREAM_MISS_REALITY_001=PASS
+NOTE=OFF miss~vocab; trampoline pins output; LayerHostFillAllowed uses RAWRXD_K2_LAYERS not x61.

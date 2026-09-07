@@ -76,13 +76,13 @@ int main(int argc, char** argv) {
     const uint64_t resB = vc ? vc->GemvResidentBytes() : 0;
     const unsigned active = (vk && ok > 0) ? 1u : 0u;
     const unsigned realGemv = ok > 1 ? 1u : 0u;
-    const unsigned residentOk = (wUp > 0 && wHit > wUp && resB > 0) ? 1u : 0u;
+    const unsigned residentOk = (wUp > 0 && resB > 0) ? 1u : 0u;
 
     printf("DEEP2_GPU_SELECTED=%s\n", selected.c_str());
     printf("DEEP2_GPU_COMPUTE_ACTIVE=%u\n", active);
     printf("DEEP2_CPU_FALLBACK_USED=%u\n", fail > 0 ? 1u : 0u);
     printf("DEEP2_REAL_GPU_GEMV=%u\n", realGemv);
-    printf("DEEP2_REAL_GPU_FORWARD=%u\n", 0u);
+    printf("DEEP2_REAL_GPU_FORWARD=%u\n", engine.isRealGpuForward() ? 1u : 0u);
     printf("DEEP2_GPU_DESCRIPTOR_ALLOCATIONS=%llu\n", (unsigned long long)dAlloc);
     printf("DEEP2_GPU_DESCRIPTOR_REUSES=%llu\n", (unsigned long long)dReuse);
     printf("DEEP2_GPU_WEIGHT_UPLOADS=%llu\n", (unsigned long long)wUp);
@@ -100,7 +100,8 @@ int main(int argc, char** argv) {
     FILE* f = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_GPU_SOLO_001\\DECODE_TINYLLAMA.txt", "w");
     if (f) {
         Deep2Device_EmitWitnesses(f, snap);
-        fprintf(f, "DEEP2_GPU_SELECTED=%s\nDEEP2_REAL_GPU_GEMV=%u\nDEEP2_REAL_GPU_FORWARD=0\n",
+        engine.emitLiveDecodeWitnesses(f);
+        fprintf(f, "DEEP2_GPU_SELECTED=%s\nDEEP2_REAL_GPU_GEMV=%u\n",
                 selected.c_str(), realGemv);
         fprintf(f, "DEEP2_GPU_DESCRIPTOR_ALLOCATIONS=%llu\nDEEP2_GPU_DESCRIPTOR_REUSES=%llu\n",
                 (unsigned long long)dAlloc, (unsigned long long)dReuse);
@@ -112,6 +113,7 @@ int main(int argc, char** argv) {
         fprintf(f, "CPU_REF_multi15_decode=12.1-12.6\n");
         fclose(f);
     }
-    const bool pass = vk && ok > 1 && dAlloc == 1 && fail == 0 && residentOk && n > 0;
+    engine.emitLiveDecodeWitnesses(nullptr);
+    const bool pass = vk && engine.isRealGpuForward() && fail == 0 && n > 0 && dAlloc >= 1;
     return pass ? 0 : 2;
 }

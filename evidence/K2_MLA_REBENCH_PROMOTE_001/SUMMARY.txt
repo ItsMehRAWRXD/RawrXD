@@ -1,0 +1,25 @@
+K2_MLA_REBENCH_PROMOTE_001 = FAIL (correctly withheld)
+
+REASON
+  Cold/upload-per-op GPU MLA is slower than AVX-512 CPU for this workload.
+  Correctness sealed; promotion correctly withheld.
+
+WITNESS (cold path, LIVE_POLICY=OFF)
+  PARITY1=1  CPU=49107 GPU=49107
+  TOKEN_PARITY full (when measured) OK
+  MLA_GPU_GEMV_FAIL=0  K2_GPU_STREAM_UPLOAD_FAIL=0  pinRej=0
+  A_CPU ~313.7 tok/s (display×1000)
+  B_GPU ~288.9 tok/s
+  DELTA −24.8 (−7.9%)
+  u≈ops  h=0  → transfer/dispatch amortized zero times
+
+ROOT CAUSE (amortization, not correctness)
+  1) Policy forced OFF → no live cache / reuse steps path
+  2) Shallow t1 Sync set DEEP2_WEIGHT_BUDGET_MIB=512 which overrode
+     pin window despite 32GB VRAM / hot=8784 derive (fixed: prefer
+     SetPinResidentBudget; Lhot floor≥32 for hot derive)
+
+NEXT GATE
+  K2_MLA_REUSE_PROMOTE_001 — retained pin + LIVE_POLICY=PROMO
+  reuse_steps≥8, LIVE_CACHE_ENTRY_PEAK>0, hits>0, u≪ops,
+  TPS_GPU_REUSE > TPS_CPU_BASELINE

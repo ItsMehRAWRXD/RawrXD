@@ -6,13 +6,16 @@
 
 #if RAWR_VULKAN_AVAILABLE
 
+#include "deep2/GpuTransferCounters.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <cstdint>
+#include <chrono>
 
 namespace CPUInference {
 
@@ -68,6 +71,19 @@ void VulkanCompute::Cleanup() {
         vkDeviceWaitIdle(device_);
         
         // Free GEMV pipeline
+        if (q8_pipe_) { vkDestroyPipeline(device_, q8_pipe_, nullptr); q8_pipe_ = nullptr; }
+        if (q2k_pipe_) { vkDestroyPipeline(device_, q2k_pipe_, nullptr); q2k_pipe_ = nullptr; }
+        if (q3k_pipe_) { vkDestroyPipeline(device_, q3k_pipe_, nullptr); q3k_pipe_ = nullptr; }
+        if (q5k_pipe_) { vkDestroyPipeline(device_, q5k_pipe_, nullptr); q5k_pipe_ = nullptr; }
+        if (q6k_pipe_) { vkDestroyPipeline(device_, q6k_pipe_, nullptr); q6k_pipe_ = nullptr; }
+        if (q4k_fused_pipe_) {
+            vkDestroyPipeline(device_, q4k_fused_pipe_, nullptr);
+            q4k_fused_pipe_ = nullptr;
+        }
+        if (q4k_pipe_) {
+            vkDestroyPipeline(device_, q4k_pipe_, nullptr);
+            q4k_pipe_ = nullptr;
+        }
         if (gemv_pipeline_) {
             vkDestroyPipeline(device_, gemv_pipeline_, nullptr);
             gemv_pipeline_ = nullptr;
@@ -87,8 +103,6 @@ void VulkanCompute::Cleanup() {
         gemv_ds_ = nullptr;
         gemv_pipeline_created_ = false;
         ReleaseGemvResidents();
-        ReleaseForwardArena();
-        // Forward-resident pipelines / arena (STREAMER_GPU_FORWARD_OPS_001)
         ReleaseForwardArena();
         auto killPipe = [&](VkPipeline& p, VkPipelineLayout& l, VkDescriptorSetLayout& d,
                             VkDescriptorPool& pool) {
@@ -129,6 +143,7 @@ void VulkanCompute::Cleanup() {
             matmul_descriptor_set_layout_ = nullptr;
         }
         
+        ReleaseFusedPool();
         // Free command pool
         if (command_pool_) {
             vkDestroyCommandPool(device_, command_pool_, nullptr);
@@ -203,12 +218,8 @@ bool VulkanCompute::DispatchMatMulAsync(uint32_t input_a_idx,
 // GEMV helpers — resident DEVICE_LOCAL weights; host-visible activations
 // ============================================================================
 void VulkanCompute::ReleaseGemvResidents() {
-    for (auto& kv : gemv_weight_cache_) {
-        if (kv.second.buffer) vkDestroyBuffer(device_, kv.second.buffer, nullptr);
-        if (kv.second.memory) vkFreeMemory(device_, kv.second.memory, nullptr);
-    }
-    gemv_weight_cache_.clear();
-    gemv_resident_bytes_ = 0;
+    ReleaseWeightWindow();
+    ClearPinnedGemvWeights();
     if (gemv_in_buf_) { vkDestroyBuffer(device_, gemv_in_buf_, nullptr); gemv_in_buf_ = nullptr; }
     if (gemv_in_mem_) { vkFreeMemory(device_, gemv_in_mem_, nullptr); gemv_in_mem_ = nullptr; }
     gemv_in_cap_ = 0;
@@ -314,13 +325,21 @@ bool VulkanCompute::UploadToDeviceLocal(const void* src, size_t size, VkBuffer d
     VkBufferCopy copy{};
     copy.size = size;
     vkCmdCopyBuffer(cmd, staging, dst, 1, &copy);
+    Deep2::GpuTransfer_NoteCopy((uint64_t)size, Deep2::GpuCopyKind::Other);
     vkEndCommandBuffer(cmd);
     VkSubmitInfo si{};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
+    auto t0 = std::chrono::steady_clock::now();
     vkQueueSubmit(compute_queue_, 1, &si, VK_NULL_HANDLE);
+    Deep2::GpuTransfer_AddSubmitUs((uint64_t)std::chrono::duration_cast<
+        std::chrono::microseconds>(std::chrono::steady_clock::now() - t0).count());
+    auto t1 = std::chrono::steady_clock::now();
     vkQueueWaitIdle(compute_queue_);
+    Deep2::GpuTransfer_AddWaitUs((uint64_t)std::chrono::duration_cast<
+        std::chrono::microseconds>(std::chrono::steady_clock::now() - t1).count());
+    if (!ww_active_) ++ww_hotpath_wait_idle_;
     vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
     vkDestroyBuffer(device_, staging, nullptr);
     vkFreeMemory(device_, stagingMem, nullptr);
@@ -431,23 +450,28 @@ bool VulkanCompute::EnsureGemvPipeline() {
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSize.descriptorCount = 3;
+    poolSize.descriptorCount = 3 * 8;
     VkDescriptorPoolCreateInfo dpInfo{};
     dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpInfo.maxSets = 1;
+    dpInfo.maxSets = 8;
     dpInfo.poolSizeCount = 1;
     dpInfo.pPoolSizes = &poolSize;
     if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS)
         return false;
+    VkDescriptorSetLayout layouts[8];
+    for (int i = 0; i < 8; ++i) layouts[i] = gemv_ds_layout_;
     VkDescriptorSetAllocateInfo onceAlloc{};
     onceAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     onceAlloc.descriptorPool = gemv_desc_pool_;
-    onceAlloc.descriptorSetCount = 1;
-    onceAlloc.pSetLayouts = &gemv_ds_layout_;
-    if (vkAllocateDescriptorSets(device_, &onceAlloc, &gemv_ds_) != VK_SUCCESS || !gemv_ds_)
+    onceAlloc.descriptorSetCount = 8;
+    onceAlloc.pSetLayouts = layouts;
+    if (vkAllocateDescriptorSets(device_, &onceAlloc, gemv_ds_arr_) != VK_SUCCESS)
         return false;
-    ++gemv_desc_allocs_;
+    gemv_ds_n_ = 8;
+    gemv_ds_ = gemv_ds_arr_[0];
+    gemv_desc_allocs_ += 8;
     gemv_pipeline_created_ = true;
+    (void)TuneFromDevice();
     return true;
 }
 
@@ -465,34 +489,47 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     const size_t weightBytes = (size_t)rows * cols * sizeof(float);
     const size_t inputBytes = (size_t)cols * sizeof(float);
     const size_t outputBytes = (size_t)rows * sizeof(float);
-    if (cacheKey == 0)
-        cacheKey = (uint64_t)(uintptr_t)weights ^ ((uint64_t)rows << 32) ^ (uint64_t)cols;
 
-    GemvResidentWeight* resident = nullptr;
-    auto it = gemv_weight_cache_.find(cacheKey);
-    if (it != gemv_weight_cache_.end() && it->second.rows == rows && it->second.cols == cols) {
-        resident = &it->second;
-        ++gemv_weight_hits_;
+    VkBuffer weightBuf = nullptr;
+    if (WantWeightStream()) {
+        if (!ww_active_ || weightBytes > ww_slot_bytes_) {
+            size_t budget = (size_t)512 << 20;
+            const char* b = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
+            if (b && *b) budget = (size_t)std::atoi(b) << 20;
+            uint32_t nSlots = ww_slot_count_ ? ww_slot_count_ : 8;
+            const char* ns = std::getenv("DEEP2_WEIGHT_SLOTS");
+            if (ns && *ns && !ww_active_) nSlots = (uint32_t)std::atoi(ns);
+            size_t slotB = weightBytes > ww_slot_bytes_ ? weightBytes
+                           : (ww_slot_bytes_ ? ww_slot_bytes_ : weightBytes);
+            if (!EnsureWeightWindow(slotB, nSlots, budget)) return false;
+        }
+        if (!StreamWeightToSlot(weights, weightBytes, weightBuf)) return false;
     } else {
-        GemvResidentWeight rw{};
-        if (!CreateDeviceLocalBuffer(weightBytes, rw.buffer, rw.memory)) return false;
-        if (!UploadToDeviceLocal(weights, weightBytes, rw.buffer)) {
-            vkDestroyBuffer(device_, rw.buffer, nullptr);
-            vkFreeMemory(device_, rw.memory, nullptr);
-            return false;
+        if (cacheKey == 0)
+            cacheKey = (uint64_t)(uintptr_t)weights ^ ((uint64_t)rows << 32) ^ (uint64_t)cols;
+        auto it = gemv_weight_cache_.find(cacheKey);
+        if (it != gemv_weight_cache_.end() && it->second.rows == rows && it->second.cols == cols) {
+            weightBuf = it->second.buffer;
+            ++gemv_weight_hits_;
+        } else {
+            GemvResidentWeight rw{};
+            if (!CreateDeviceLocalBuffer(weightBytes, rw.buffer, rw.memory)) return false;
+            if (!UploadToDeviceLocal(weights, weightBytes, rw.buffer)) {
+                vkDestroyBuffer(device_, rw.buffer, nullptr);
+                vkFreeMemory(device_, rw.memory, nullptr);
+                return false;
+            }
+            rw.bytes = weightBytes; rw.rows = rows; rw.cols = cols;
+            if (it != gemv_weight_cache_.end()) {
+                if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
+                if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
+                gemv_resident_bytes_ -= it->second.bytes;
+            }
+            gemv_weight_cache_[cacheKey] = rw;
+            gemv_resident_bytes_ += weightBytes;
+            ++gemv_weight_uploads_;
+            weightBuf = rw.buffer;
         }
-        rw.bytes = weightBytes;
-        rw.rows = rows;
-        rw.cols = cols;
-        if (it != gemv_weight_cache_.end()) {
-            if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
-            if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
-            gemv_resident_bytes_ -= it->second.bytes;
-        }
-        gemv_weight_cache_[cacheKey] = rw;
-        gemv_resident_bytes_ += weightBytes;
-        ++gemv_weight_uploads_;
-        resident = &gemv_weight_cache_[cacheKey];
     }
 
     if (!EnsureHostIo(inputBytes, outputBytes)) return false;
@@ -501,7 +538,7 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     std::memcpy(mappedIn, input, inputBytes);
     vkUnmapMemory(device_, gemv_in_mem_);
 
-    VkDescriptorBufferInfo dbiW{resident->buffer, 0, weightBytes};
+    VkDescriptorBufferInfo dbiW{weightBuf, 0, weightBytes};
     VkDescriptorBufferInfo dbiI{gemv_in_buf_, 0, inputBytes};
     VkDescriptorBufferInfo dbiO{gemv_out_buf_, 0, outputBytes};
     VkWriteDescriptorSet writes[3] = {};
@@ -833,15 +870,21 @@ bool VulkanCompute::SelectPhysicalDevice() {
 }
 
 bool VulkanCompute::CreateLogicalDevice() {
-    float queuePriority = 1.0f;
+    const uint32_t fam = device_info_.compute_queue_family;
+    uint32_t famCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device_, &famCount, nullptr);
+    std::vector<VkQueueFamilyProperties> props(famCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physical_device_, &famCount, props.data());
+    const uint32_t avail = (fam < famCount) ? props[fam].queueCount : 1u;
+    const uint32_t nQ = avail >= 2u ? 2u : 1u;
+    float prios[2] = {1.0f, 1.0f};
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = device_info_.compute_queue_family;
-    queueCreateInfo.queueCount = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    queueCreateInfo.queueFamilyIndex = fam;
+    queueCreateInfo.queueCount = nQ;
+    queueCreateInfo.pQueuePriorities = prios;
 
     VkPhysicalDeviceFeatures deviceFeatures{};
-
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = 1;
@@ -854,7 +897,15 @@ bool VulkanCompute::CreateLogicalDevice() {
         return false;
     }
 
-    vkGetDeviceQueue(device_, device_info_.compute_queue_family, 0, &compute_queue_);
+    vkGetDeviceQueue(device_, fam, 0, &compute_queue_);
+    dual_queue_ = false;
+    transfer_queue_ = compute_queue_;
+    if (nQ >= 2) {
+        vkGetDeviceQueue(device_, fam, 1, &transfer_queue_);
+        dual_queue_ = (transfer_queue_ != nullptr && transfer_queue_ != compute_queue_);
+    }
+    printf("[VulkanCompute] QUEUES compute=0 transfer=%u dual=%u\n",
+           dual_queue_ ? 1u : 0u, dual_queue_ ? 1u : 0u);
     return true;
 }
 

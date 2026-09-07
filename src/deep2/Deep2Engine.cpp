@@ -10,6 +10,7 @@
 
 #include "ChatTemplate.hpp"
 #include "Deep2Engine.h"
+#include "FusedLiveController.hpp"
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
@@ -30,6 +31,14 @@
 #include "SlidingWindowEngine.h"
 #include "MoEWeightsLoader.hpp"
 #include "HotPatcher.hpp"
+#include "Deep2LivePath.hpp"
+#include "Deep2LivePath_Internal.hpp"
+#include "K2LivePolicy.hpp"
+#include "K2GpuStreamCopy.hpp"
+#include "K2MLA_GpuGemv.hpp"
+#include "K2ShardIo.hpp"
+#include "CycloneScheduler.hpp"
+#include "ElasticDynamicBudget.hpp"
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
@@ -1667,6 +1676,36 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         printf("[Deep2Engine] Policy VRAM hard=%llu streaming=%d\n",
                (unsigned long long)PolicyVramHardCapBytes(),
                PolicyStreamingEnabled() ? 1 : 0);
+        // #region agent log
+        {
+            uint64_t fileBytes = 0;
+            std::error_code ec;
+            if (std::filesystem::is_regular_file(ggufPath, ec))
+                fileBytes = (uint64_t)std::filesystem::file_size(ggufPath, ec);
+            else if (std::filesystem::is_directory(ggufPath, ec)) {
+                for (auto& e : std::filesystem::directory_iterator(ggufPath, ec)) {
+                    if (e.is_regular_file(ec)) fileBytes += (uint64_t)e.file_size(ec);
+                }
+            }
+            FILE* df = fopen("g:/~dev/debug-83dcc5.log", "a");
+            if (df) {
+                fprintf(df,
+                    "{\"sessionId\":\"83dcc5\",\"runId\":\"witness\",\"hypothesisId\":\"B\","
+                    "\"location\":\"Deep2Engine.cpp:loadModel\","
+                    "\"message\":\"vram_policy_vs_file\","
+                    "\"data\":{\"vramHard\":%llu,\"streaming\":%d,\"fileBytes\":%llu,"
+                    "\"fileGtHard\":%d},"
+                    "\"timestamp\":%lld}\n",
+                    (unsigned long long)PolicyVramHardCapBytes(),
+                    PolicyStreamingEnabled() ? 1 : 0,
+                    (unsigned long long)fileBytes,
+                    (PolicyVramHardCapBytes() > 0 && fileBytes > PolicyVramHardCapBytes()) ? 1 : 0,
+                    (long long)std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count());
+                fclose(df);
+            }
+        }
+        // #endregion
     }
 
     // ── Ollama model detection and resolution ──────────────────────────
@@ -3862,6 +3901,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             acquired = true;
         }
     }
+    if (LivePath_Active() && cyclone_ && !wt.name.empty()) {
+        const uint64_t seq = kvCache ? static_cast<uint64_t>(kvCache->currentLength()) : 0;
+        cyclone_->OnTensorUsed(wt.name, seq);
+    }
 
     size_t cols = wtEffective.cols;
     size_t rows = wtEffective.rows;
@@ -4033,6 +4076,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             std::chrono::duration_cast<std::chrono::microseconds>(tQuant1 - tQuant0).count());
         profiler_->recordQuantTime(wtEffective.type, quantUs);
     }
+
+    // Live Pinball: residual energy from output vs input scale (not hardcoded bounce)
+    if (LivePath_Active() && input && output && outDim > 0) {
+        double outEnergy = 0.0, inEnergy = 0.0;
+        const size_t nIn = cols > 0 ? cols : outDim;
+        const size_t sample = outDim < 64 ? outDim : 64;
+        for (size_t i = 0; i < sample; ++i) {
+            outEnergy += (double)output[i] * (double)output[i];
+            if (i < nIn) inEnergy += (double)input[i] * (double)input[i];
+        }
+        const float scale = (float)std::sqrt(std::max(inEnergy, 1e-12));
+        LivePath_RecordPinball((float)std::sqrt(outEnergy), scale);
+    }
 }
 
 // ============================================================================
@@ -4113,6 +4169,53 @@ void Deep2Engine::unloadModel() {
     printf("[Deep2Engine] Model unloaded.\n");
     std::fprintf(stderr, "[LIFE] unloadModel END\n");
     std::fflush(stderr);
+}
+
+bool Deep2Engine::switchModel(const std::string& ggufPath) {
+    printf("[Deep2Engine] switchModel BEGIN path=%s\n", ggufPath.c_str());
+    unloadModel();
+    if (!loadModel(ggufPath)) {
+        printf("[Deep2Engine] switchModel FAIL load\n");
+        return false;
+    }
+    const auto& mw = modelWeights;
+    EngineConfig cfg = config;
+    cfg.hiddenDim = mw.hiddenDim;
+    cfg.numLayers = mw.numLayers;
+    cfg.numHeads = mw.numHeads;
+    cfg.numKVHeads = mw.numKVHeads;
+    cfg.headDim = mw.headDim;
+    cfg.vocabSize = mw.vocabSize;
+    cfg.intermediateDim = mw.intermediateDim;
+    if (cfg.maxSeqLen == 0) cfg.maxSeqLen = 2048;
+    strncpy_s(cfg.modelPath, ggufPath.c_str(), _TRUNCATE);
+    if (!initialize(cfg)) {
+        printf("[Deep2Engine] switchModel FAIL initialize\n");
+        return false;
+    }
+    printf("[Deep2Engine] switchModel PASS\n");
+    return true;
+}
+
+bool Deep2Engine::growContext(size_t newMaxSeqLen) {
+    if (!initialized || !kvCache) return false;
+    if (newMaxSeqLen <= config.maxSeqLen) return true;
+    const size_t oldMax = config.maxSeqLen;
+    if (!kvCache->grow(newMaxSeqLen)) return false;
+    // Reallocate hiddenStates for longer sequences (preserve used prefix bytes)
+    float* oldH = hiddenStates;
+    const size_t copyElems = (std::min)(oldMax, kvCache->currentLength() + 1) * config.hiddenDim;
+    hiddenStates = alignedAlloc(config.hiddenDim * newMaxSeqLen);
+    if (!hiddenStates) {
+        hiddenStates = oldH;
+        return false;
+    }
+    if (oldH && copyElems > 0)
+        memcpy(hiddenStates, oldH, copyElems * sizeof(float));
+    alignedFree(oldH);
+    config.maxSeqLen = newMaxSeqLen;
+    printf("[Deep2Engine] growContext %zu -> %zu\n", oldMax, newMaxSeqLen);
+    return true;
 }
 
 // ============================================================================
@@ -4492,6 +4595,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     emitHotpathWitnesses();
     resetGpuForwardCounters();
     gpuFwdCommitted_ = false;
+    clearCancel();
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
@@ -4518,6 +4622,107 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                config.hiddenDim, config.vocabSize,
                modelWeights.hiddenDim, modelWeights.vocabSize);
         return 0;
+    }
+
+    // Live-path: AUTO workload policy is the normal path (MANUAL = cert arms).
+    {
+        const uint32_t depth = static_cast<uint32_t>(
+            config.numLayers ? config.numLayers : modelWeights.numLayers);
+        auto pol = K2LivePolicy_Apply(depth, static_cast<uint32_t>(maxOutputLen));
+        K2LivePolicy_Emit(stdout, pol);
+    }
+    CycloneScheduler* liveCyclone = nullptr;
+    struct LivePathScope {
+        CycloneScheduler* c = nullptr;
+        bool armed = false;
+        ~LivePathScope() {
+            if (armed) {
+                LivePath_EndGenerate(c);
+                LivePath_Emit(stdout);
+            }
+        }
+    } livePathScope;
+    if (LivePath_Wanted()) {
+        LivePath_ApplyMechEnv();
+        // Force hotpatch decoder algorithm each generate when DEEP2_GEN_ALG unset/random.
+        {
+            const char* ga = std::getenv("DEEP2_GEN_ALG");
+            DecoderModePatch::Mode mode = DecoderModePatch::Mode::STANDARD;
+            bool doPatch = !ga || !ga[0] || _stricmp(ga, "random") == 0;
+            if (doPatch) {
+                const uint64_t t =
+                    (uint64_t)std::chrono::high_resolution_clock::now()
+                        .time_since_epoch()
+                        .count();
+                const int pick = (int)((t ^ (t >> 17)) % 3u);
+                if (pick == 1) mode = DecoderModePatch::Mode::GREEDY_MEDUSA;
+                else if (pick == 2) mode = DecoderModePatch::Mode::SPECULATIVE_DRAFT;
+            } else if (_stricmp(ga, "medusa") == 0 || _stricmp(ga, "greedy_medusa") == 0) {
+                mode = DecoderModePatch::Mode::GREEDY_MEDUSA;
+                doPatch = true;
+            } else if (_stricmp(ga, "speculative") == 0) {
+                mode = DecoderModePatch::Mode::SPECULATIVE_DRAFT;
+                doPatch = true;
+            } else if (_stricmp(ga, "standard") == 0) {
+                mode = DecoderModePatch::Mode::STANDARD;
+                doPatch = true;
+            }
+            if (doPatch) {
+                DecoderModePatch dm{};
+                dm.targetMode = mode;
+                dm.config = {4, 64, 0.0f, false, mode != DecoderModePatch::Mode::STANDARD};
+                dm.allowInFlightTokens = false;
+                dm.switchPoint = 0;
+                PatchMetadata meta{};
+                meta.name = "generate_decoder_algo";
+                meta.description = "per-generate decoder algorithm hotpatch";
+                meta.author = "Deep2Engine::generate";
+                std::string id = GetHotPatcher().registerDecoderMode(dm, meta);
+                if (!id.empty() && GetHotPatcher().validate(id).passed)
+                    GetHotPatcher().apply(id);
+                const bool wantMedusa =
+                    mode == DecoderModePatch::Mode::GREEDY_MEDUSA ||
+                    mode == DecoderModePatch::Mode::SPECULATIVE_DRAFT;
+                if (wantMedusa && !medusaEnabled_) enableMedusa(true);
+                else if (!wantMedusa && medusaEnabled_ && ga &&
+                         _stricmp(ga, "standard") == 0)
+                    enableMedusa(false);
+                printf("[HotPatcher] GENERATE_DECODER_ALG=%d\n", (int)mode);
+            }
+        }
+        if (LivePath_MechOn(LP_MECH_ELASTIC)) {
+            if (!elasticResidencyEnabled_ || !elasticResidency_)
+                enableElasticResidency(true);
+            // Keep pin residents across generate() — no mid-request budget refresh.
+        }
+        if (LivePath_MechOn(LP_MECH_CYCLONE)) {
+            if (!cyclone_)
+                enableCyclone(true);
+            else if (elasticResidency_)
+                cyclone_->RebindElastic(elasticResidency_.get());
+        }
+        if (LivePath_MechOn(LP_MECH_STREAM)) {
+            if (!plasmaGovernorEnabled_ || !plasmaGovernor_)
+                enablePlasmaGovernor(true);
+            const std::string nvmePath = config.modelPath[0]
+                ? std::string(config.modelPath)
+                : (!modelDir_.empty() ? modelDir_.string() : std::string());
+            enableNVMeStreaming(true, nvmePath);
+            initializeAdvancedFeatures();
+            if (nvmeStream_ && !nvmeStream_->isReverseBunnyHop())
+                (void)nvmeStream_->initializeReverseBunnyHop(nvmeConfig_);
+        }
+        if (LivePath_MechOn(LP_MECH_WARMUP))
+            enableWarmupScheduler(true);
+        LivePath_BindOwners(
+            elasticResidency_.get(), nvmeStream_.get(), plasmaGovernor_.get(),
+            static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers),
+            static_cast<uint32_t>(modelWeights.numHeads ? modelWeights.numHeads : 8));
+        liveCyclone =
+            (LivePath_MechOn(LP_MECH_CYCLONE) && cycloneEnabled_) ? cyclone_.get() : nullptr;
+        LivePath_BeginGenerate(maxOutputLen, elasticResidency_.get(), &liveCyclone);
+        livePathScope.c = liveCyclone;
+        livePathScope.armed = true;
     }
 
     // ── VAL-051.7: Reset residency counters ──────────────────────────
@@ -4561,13 +4766,18 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             // ── Batch 15: Prefetch next layer weights into residency ──
             if (elasticResidencyEnabled_ && elasticResidency_ && !vulkanEnabled_ &&
                 layer + 1 < modelWeights.numLayers) {
-                const auto& nextLw = modelWeights.layers[layer + 1];
-                auto prefetchWt = [&](const WeightTensor& wt) {
-                    if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
-                };
-                prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
-                prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
-                prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                const size_t boost = static_cast<size_t>(LivePath_PrefetchBoost());
+                const size_t target = layer + 1 + boost;
+                if (target < modelWeights.numLayers) {
+                    const auto& nextLw = modelWeights.layers[target];
+                    auto prefetchWt = [&](const WeightTensor& wt) {
+                        if (!wt.name.empty())
+                            elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(target));
+                    };
+                    prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
+                    prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
+                    prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                }
             }
 
             auto layerT0 = std::chrono::high_resolution_clock::now();
@@ -4645,6 +4855,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     std::fflush(stdout);
     auto decodeStart = std::chrono::high_resolution_clock::now();
     for (size_t t = 0; t < maxOutputLen; ++t) {
+        if (isCancelRequested()) {
+            printf("[Deep2Engine] CANCEL requested at decode step %zu (gen=%zu)\n",
+                   t, tokensGenerated);
+            break;
+        }
         const size_t position = currentPos;
 
         float* h = nullptr;
@@ -4685,13 +4900,18 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 // ── Batch 15: Prefetch next layer weights into residency ──
                 if (elasticResidencyEnabled_ && elasticResidency_ && !vulkanEnabled_ &&
                 layer + 1 < modelWeights.numLayers) {
-                    const auto& nextLw = modelWeights.layers[layer + 1];
-                    auto prefetchWt = [&](const WeightTensor& wt) {
-                        if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
-                    };
-                    prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
-                    prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
-                    prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                    const size_t boost = static_cast<size_t>(LivePath_PrefetchBoost());
+                    const size_t target = layer + 1 + boost;
+                    if (target < modelWeights.numLayers) {
+                        const auto& nextLw = modelWeights.layers[target];
+                        auto prefetchWt = [&](const WeightTensor& wt) {
+                            if (!wt.name.empty())
+                                elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(target));
+                        };
+                        prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
+                        prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
+                        prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                    }
                 }
 
                 auto layerT0 = std::chrono::high_resolution_clock::now();
@@ -4810,6 +5030,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
+        LivePath_OnToken(static_cast<uint64_t>(tokensGenerated));
+        if (LivePath_ShouldBrake()) {
+            printf("[Deep2Engine] TrailBrake LIVE brake — ending generate early\n");
+            break;
+        }
 
         if (onToken) {
             if (B3_LogitsTraceEnabled()) {
@@ -4893,6 +5118,30 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
            prefillMs > 0 ? promptLen / (prefillMs / 1000.0) : 0.0,
            tokensGenerated, decodeMs,
            decodeMs > 0 && tokensGenerated > 0 ? tokensGenerated / (decodeMs / 1000.0) : 0.0);
+    // #region agent log
+    {
+        const auto& lc = LivePath_Counters();
+        FILE* df = fopen("g:/~dev/debug-83dcc5.log", "a");
+        if (df) {
+            fprintf(df,
+                "{\"sessionId\":\"83dcc5\",\"runId\":\"witness\",\"hypothesisId\":\"C\","
+                "\"location\":\"Deep2Engine.cpp:generate\","
+                "\"message\":\"generate_tps\","
+                "\"data\":{\"promptTok\":%zu,\"genTok\":%zu,\"prefillMs\":%.3f,"
+                "\"decodeMs\":%.3f,\"e2eMs\":%.3f,\"prefillTps\":%.3f,\"decodeTps\":%.3f,"
+                "\"e2eTps\":%.3f,\"pinballSamples\":%u,\"cycloneStarts\":%u,\"trampHits\":%u},"
+                "\"timestamp\":%lld}\n",
+                promptLen, tokensGenerated, prefillMs, decodeMs, totalMs,
+                prefillMs > 0 ? promptLen / (prefillMs / 1000.0) : 0.0,
+                decodeMs > 0 && tokensGenerated > 0 ? tokensGenerated / (decodeMs / 1000.0) : 0.0,
+                totalMs > 0 ? tokensGenerated / (totalMs / 1000.0) : 0.0,
+                lc.pinballSamples, lc.cycloneLayerStarts, lc.trampolineHits,
+                (long long)std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count());
+            fclose(df);
+        }
+    }
+    // #endregion
     emitLiveDecodeWitnesses(nullptr);
 
     // ── VAL-051.7: Print residency counters ─────────────────────────
@@ -4961,6 +5210,10 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
         printf("[GREEDY] enabled=0 temperature=%.4f topK=%u\n",
                options.temperature, options.topK);
     }
+    if (sampler) {
+        sampler->setRepetitionPenalty(options.repeatPenalty);
+        sampler->setMinP(options.minP);
+    }
 }
 
 void Deep2Engine::setTemperature(float temperature) {
@@ -4993,6 +5246,47 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     TokenCallback callback)
 {
     configureGeneration(options);
+
+    // Ownership seam: real K2 generate consumes MLA_Gemv via native stream
+    // (same control law as forwardTokenAllLayers K2 branch). Do not fall into
+    // TinyLlama GPU-forward / incomplete host MLA.
+    if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA) {
+        const char* real = std::getenv("DEEP2_REAL_K2_GENERATE");
+        const bool force = !real || !real[0] || real[0] == '1';
+        if (force) {
+            K2NativeStreamGate::Config kc;
+            kc.prompt = prompt;
+            kc.streamTokens = (uint32_t)std::max(1, (int)options.maxTokens);
+            uint32_t depth = config.numLayers ? (uint32_t)config.numLayers : 61u;
+            if (const char* el = std::getenv("RAWRXD_K2_LAYERS")) {
+                int n = atoi(el);
+                if (n > 0) depth = (uint32_t)n;
+            }
+            kc.layerDepth = depth;
+            kc.enableMlaComplete = true;
+            if (const char* b = std::getenv("DEEP2_K2_STREAM_BUDGET")) {
+                long long v = std::atoll(b);
+                if (v > 0) kc.budgetBytes = (uint64_t)v;
+            }
+            printf("LIVE_FORWARD=forwardTokenAllLayers\n");
+            printf("LIVE_MLA_DISPATCH=MLA_Gemv\n");
+            printf("LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial\n");
+            fflush(stdout);
+            auto r = runK2NativeStreamPartial(kc);
+            GenerationResult out;
+            out.promptTokens = 1;
+            out.generatedTokens = r.ok ? kc.streamTokens : 0;
+            out.completed = r.ok && !r.generatedText.empty();
+            if (r.ok && callback) {
+                (void)callback(r.generatedTokenId, r.generatedText);
+            }
+            if (!r.ok) {
+                fprintf(stderr, "[Deep2Engine] K2 generateStream: %s\n",
+                        r.error.c_str());
+            }
+            return out;
+        }
+    }
 
     std::vector<int> promptTokens = tokenize(prompt);
 
@@ -5117,8 +5411,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     GenerationResult result;
     result.promptTokens = promptTokens.size();
     result.generatedTokens = generated;
-    result.completed = generated > 0 && !wasCancelled;
-    result.cancelled = wasCancelled;
+    result.cancelled = wasCancelled || isCancelRequested();
+    result.completed = generated > 0 && !result.cancelled;
+    clearCancel();
 
     if (agentFirstToken) {
         const int firstId = generated > 0 ? outputTokens[0] : -1;
@@ -5201,6 +5496,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         memcpy(output, input, config.hiddenDim * sizeof(float));
         return;
     }
+
+    const uint64_t liveSeq = kvCache ? static_cast<uint64_t>(kvCache->currentLength())
+                                     : static_cast<uint64_t>(seqLen);
+    auto layerT0 = std::chrono::high_resolution_clock::now();
+    if (LivePath_Active())
+        LivePath_OnLayerStart(cycloneEnabled_ ? cyclone_.get() : nullptr,
+                              static_cast<uint32_t>(layer), liveSeq);
 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
@@ -5426,6 +5728,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // Reverse analysis hook: layer processed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
         reverseIntegration_->onLayerProcessed(static_cast<int>(layer), output, hiddenDim);
+    }
+
+    if (LivePath_Active()) {
+        auto layerT1 = std::chrono::high_resolution_clock::now();
+        const uint64_t latUs = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(layerT1 - layerT0).count());
+        LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
+                            static_cast<uint32_t>(layer), liveSeq, latUs);
     }
 }
 
@@ -6316,6 +6626,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             tAcquire1 - tAcquire0).count();
 
         if (!handle.valid) continue;
+        recordExpertAccess((int)layer, expertId, weight);
 
         // Telemetry: record invocation and whether prefetch hit
         bool prefetchHit = (acquireUs < 100); // < 100us suggests cache hit
@@ -6358,6 +6669,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             }
         }
     }
+    prefetchNextExperts((int)layer);
 }
 
 // ============================================================================
@@ -6570,8 +6882,8 @@ int Deep2Engine::sampleToken(const float* logits) {
 
     // ── Sovereign Chamber: SM0-DSP clash detection ─────────────────────
     // Use the pre-final-norm hidden state (attentionOutput) as the plasma
-    if (chamberEnabled_ && chamber_ && attentionOutput) {
-        rawrxd::ChamberResult result = chamber_->evaluate(attentionOutput, config.hiddenDim);
+    if ((chamberEnabled_ || sovereignRuntimeEnabled_) && attentionOutput) {
+        rawrxd::ChamberResult result = evaluateChamber(attentionOutput, config.hiddenDim);
         if (result == rawrxd::ChamberResult::CLASH) {
             // Plasma impurity detected — force EOS or resample
             printf("[Deep2Engine] Chamber CLASH detected — forcing EOS\n");
@@ -6580,7 +6892,7 @@ int Deep2Engine::sampleToken(const float* logits) {
         }
         // Chamber PASS: proceed with deterministic routing if available
         uint64_t ctx_hash = rawrxd::TransitionState::hashHiddenState(attentionOutput, config.hiddenDim);
-        rawrxd::FormulaRoute route = chamber_->routePrimitive(ctx_hash);
+        rawrxd::FormulaRoute route = routePrimitive(ctx_hash);
         if (route.valid) {
             printf("[Deep2Engine] Chamber routed to primitive: %u\n", route.primitive_output);
             return static_cast<int>(route.primitive_output);
@@ -6666,27 +6978,93 @@ void Deep2Engine::enableElasticResidency(bool enable) {
     elasticResidencyEnabled_ = enable;
     if (enable && !elasticResidency_) {
         elasticResidency_ = std::make_unique<ElasticResidencyManager>();
-        ElasticResidencyConfig resConfig;
-        resConfig.maxWarmCompressedBytes = 4ULL * 1024 * 1024 * 1024;   // 4 GB
-        resConfig.maxWarmStagedBytes     = 512ULL * 1024 * 1024;       // 512 MB
-        resConfig.maxHotBytes            = 2ULL * 1024 * 1024 * 1024;   // 2 GB
-        resConfig.prefetchLookahead      = 2;
+        ElasticDynamicProbe probe{};
+        ElasticBudget_ProbeHost(probe);
+        probe.layers = (uint32_t)(config.numLayers ? config.numLayers
+                                                   : modelWeights.numLayers);
+        probe.experts = (uint32_t)modelWeights.numExperts;
+        probe.modelBytes = 0;
+        for (const auto& L : modelWeights.layers) {
+            auto add = [&](const WeightTensor& w) {
+                probe.modelBytes += w.sizeBytes;
+            };
+            add(L.attnQ_a); add(L.attnQ_b); add(L.attnO);
+        }
+        ElasticResidencyConfig resConfig = ElasticBudget_Derive(probe);
         resConfig.retainStagedAfterUpload = false;
-        resConfig.useQuantizedGpuPath    = true;
+        resConfig.useQuantizedGpuPath = true;
+        ElasticBudget_Emit(stdout, resConfig, probe);
         if (!elasticResidency_->Initialize(resConfig)) {
             printf("[Deep2Engine] WARNING: ElasticResidencyManager initialization failed\n");
             elasticResidency_.reset();
             elasticResidencyEnabled_ = false;
         } else {
-            printf("[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=%zu MB, warmStaged=%zu MB, hot=%zu MB\n",
+            printf("[Deep2Engine] ElasticResidencyManager DYNAMIC warm=%zu staged=%zu hot=%zu la=%u\n",
                    resConfig.maxWarmCompressedBytes / (1024*1024),
                    resConfig.maxWarmStagedBytes / (1024*1024),
-                   resConfig.maxHotBytes / (1024*1024));
+                   resConfig.maxHotBytes / (1024*1024),
+                   resConfig.prefetchLookahead);
+            if (auto* vc = getVulkanComputeSlot(0))
+                vc->SetPinResidentBudget(resConfig.maxHotBytes);
+            enableCyclone(true);
+            if (cyclone_)
+                cyclone_->SetPrefetchLookahead(resConfig.prefetchLookahead);
         }
+    } else if (enable && elasticResidency_) {
+        refreshElasticDynamicBudget();
     } else if (!enable && elasticResidency_) {
+        enableCyclone(false);
         elasticResidency_->Shutdown();
         elasticResidency_.reset();
         printf("[Deep2Engine] ElasticResidencyManager shut down\n");
+    }
+}
+
+void Deep2Engine::refreshElasticDynamicBudget() {
+    if (!elasticResidency_) return;
+    ElasticDynamicProbe probe{};
+    ElasticBudget_ProbeHost(probe);
+    probe.layers = (uint32_t)(config.numLayers ? config.numLayers
+                                               : modelWeights.numLayers);
+    probe.experts = (uint32_t)modelWeights.numExperts;
+    for (const auto& L : modelWeights.layers) {
+        probe.modelBytes += L.attnQ_a.sizeBytes + L.attnQ_b.sizeBytes +
+                            L.attnO.sizeBytes;
+    }
+    if (Fused_Enabled()) {
+        probe.fusedPrefetchDepth = Fused_Last().prefetchDepth;
+        probe.vramPressure = LivePath_Counters().vramPeak >
+                             (elasticResidency_->GetConfig().maxHotBytes * 3 / 4);
+    }
+    ElasticResidencyConfig caps = ElasticBudget_Derive(probe);
+    elasticResidency_->ApplyDynamicCaps(caps);
+    ElasticBudget_Emit(stdout, caps, probe);
+    if (auto* vc = getVulkanComputeSlot(0))
+        vc->SetPinResidentBudget(caps.maxHotBytes);
+    if (cyclone_)
+        cyclone_->SetPrefetchLookahead(caps.prefetchLookahead);
+}
+
+void Deep2Engine::enableCyclone(bool enable) {
+    cycloneEnabled_ = enable;
+    if (enable && !cyclone_) {
+        CycloneScheduler::Config cfg;
+        cfg.enableTelemetry = true;
+        if (elasticResidency_)
+            cfg.prefetchLookaheadLayers =
+                elasticResidency_->GetConfig().prefetchLookahead;
+        cyclone_ = std::make_unique<CycloneScheduler>(cfg);
+        if (!cyclone_->Initialize(elasticResidency_.get())) {
+            printf("[Deep2Engine] WARNING: CycloneScheduler init failed\n");
+            cyclone_.reset();
+            cycloneEnabled_ = false;
+        } else {
+            printf("[Deep2Engine] CycloneScheduler armed for live generate\n");
+        }
+    } else if (!enable && cyclone_) {
+        cyclone_->Shutdown();
+        cyclone_.reset();
+        printf("[Deep2Engine] CycloneScheduler shut down\n");
     }
 }
 
@@ -6933,10 +7311,35 @@ bool Deep2Engine::initializeAdvancedFeatures() {
 
     if (nvmeStreamingEnabled_ && !nvmeStream_) {
         nvmeStream_ = std::make_unique<NVMeStream>();
-        nvmeConfig_.modelPath = config.modelPath[0] ? std::string(config.modelPath) : "";
+        if (config.modelPath[0])
+            nvmeConfig_.modelPath = config.modelPath;
+        else if (!modelDir_.empty())
+            nvmeConfig_.modelPath = modelDir_.string();
         if (!nvmeStream_->initialize(nvmeConfig_)) {
-            printf("[Deep2Engine] WARNING: Failed to initialize NVMe stream\n");
-            nvmeStreamingEnabled_ = false;
+            // Refill path from shard env before any bunnyhop.
+            if (nvmeConfig_.modelPath.empty()) {
+                if (const char* d = std::getenv("DEEP2_K2_SHARD_DIR"))
+                    if (d && d[0]) nvmeConfig_.modelPath = d;
+                if (!nvmeConfig_.modelPath.empty() &&
+                    nvmeStream_->initialize(nvmeConfig_)) {
+                    printf("[Deep2Engine] NVMe streaming initialized (deferred path)\n");
+                } else {
+                    printf("[Deep2Engine] NVMe defer until openK2ShardDirectory\n");
+                    // Keep enabled; openK2ShardDirectory re-arms SHARD_IO.
+                }
+            } else {
+                printf("[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop\n");
+                if (!nvmeStream_->initializeReverseBunnyHop(nvmeConfig_)) {
+                    printf("[Deep2Engine] WARNING: reverse bunnyhop also failed\n");
+                    nvmeStreamingEnabled_ = false;
+                    LivePath_NoteNvmeAbsence(1);
+                } else {
+                    printf("[Deep2Engine] NVMe REVERSE_BUNNYHOP armed (streaming ON)\n");
+                    LivePath_NoteNvmeAbsence(0);
+                }
+            }
+        } else if (nvmeStream_->isReverseBunnyHop()) {
+            printf("[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)\n");
         } else {
             printf("[Deep2Engine] NVMe streaming initialized\n");
         }
@@ -7028,14 +7431,19 @@ void Deep2Engine::enableAllEnhancements() {
     printf("[Deep2Engine] ENHANCEMENT STACK: ON\n");
     if (modelWeights.loaded && !vulkanInitialized_) enableVulkan(true);
     if (EnhanceWanted("elastic") && !vulkanEnabled_) enableElasticResidency(true);
+    if (EnhanceWanted("cyclone")) enableCyclone(true);
     if (EnhanceWanted("prefetch") && !vulkanEnabled_) setAsyncPrefetchEnabled(true);
     if (EnhanceWanted("telemetry")) enableResidencyTelemetry(true);
     if (EnhanceWanted("medusa")) enableMedusa(true);
     if (EnhanceWanted("nu")) enableNUPacking(true);
     if (EnhanceWanted("warmup")) enableWarmupScheduler(true);
     if (EnhanceWanted("ckv") && !vulkanEnabled_) enableCompressedKV(true, KVQuantType::KV_Q8_0);
-    if (EnhanceWanted("nvme") && !vulkanEnabled_)
-        enableNVMeStreaming(true, config.modelPath[0] ? config.modelPath : "");
+    if (EnhanceWanted("nvme") && !vulkanEnabled_) {
+        const std::string nvmePath = config.modelPath[0]
+            ? std::string(config.modelPath)
+            : (!modelDir_.empty() ? modelDir_.string() : std::string());
+        enableNVMeStreaming(true, nvmePath);
+    }
     if (EnhanceWanted("slide")) enableSlidingWindow(true, 4096);
     if (EnhanceWanted("chamber")) enableChamber(true);
     if (EnhanceWanted("plasma")) enablePlasmaGovernor(true);
@@ -7067,11 +7475,12 @@ void Deep2Engine::enableAllEnhancements() {
         (void)placeAllModelTensorsMARS();
     if (vulkanEnabled_ && marsEnabled_) marsWeightsPlaced_ = true;
     initializeAdvancedFeatures();
-    printf("[Deep2Engine] STACK vk=%d mars=%d elastic=%d medusa=%d nu=%d "
+    printf("[Deep2Engine] STACK vk=%d mars=%d elastic=%d cyclone=%d medusa=%d nu=%d "
            "warmup=%d ckv=%d nvme=%d slide=%d chamber=%d torus=%d plasma=%d "
            "sov=%d prefetch=%d devices=%u\n",
            vulkanEnabled_ ? 1 : 0, marsEnabled_ ? 1 : 0,
-           elasticResidencyEnabled_ ? 1 : 0, medusaEnabled_ ? 1 : 0,
+           elasticResidencyEnabled_ ? 1 : 0, cycloneEnabled_ ? 1 : 0,
+           medusaEnabled_ ? 1 : 0,
            nuPackingEnabled_ ? 1 : 0, warmupEnabled_ ? 1 : 0,
            compressedKVEnabled_ ? 1 : 0, nvmeStreamingEnabled_ ? 1 : 0,
            slidingWindowEnabled_ ? 1 : 0, chamberEnabled_ ? 1 : 0,
@@ -7376,28 +7785,68 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
 
+    if (wt.data && wt.sizeBytes &&
+        (wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
+         wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
+         wt.type == (int)GGMLType::GGML_TYPE_Q3_K ||
+         wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
+         wt.type == (int)GGMLType::GGML_TYPE_Q5_K ||
+         wt.type == (int)GGMLType::GGML_TYPE_Q6_K)) {
+        const bool ok = vc->DispatchGEMVQuant(
+            wt.type, wt.data, wt.sizeBytes, input, output,
+            static_cast<uint32_t>(wt.rows), static_cast<uint32_t>(wt.cols));
+        if (ok) {
+            ++vulkanGemvOk_;
+            if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++gpuFwd_.q4kPackedOps;
+            if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++gpuFwd_.q6kPackedOps;
+            vulkanGpuWeightBytes_ += wt.sizeBytes;
+            vulkanGpuTensorBytes_ += wt.sizeBytes + wt.cols * sizeof(float) + wt.rows * sizeof(float);
+            if (!wt.name.empty() && vulkanWeightSeen_.emplace(wt.name, 1).second)
+                ++vulkanRealWeightLayers_;
+            QuantKernelRegistry::Instance().GetBatch21Counters()
+                .vulkanComputeSubmissions.fetch_add(1, std::memory_order_relaxed);
+            return true;
+        }
+        ++vulkanGemvFail_;
+        QuantKernelRegistry::Instance().GetBatch21Counters()
+            .vulkanComputeFailures.fetch_add(1, std::memory_order_relaxed);
+        return false;
+    }
+
     const float* wF32 = nullptr;
     size_t elems = wt.rows * wt.cols;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
         wF32 = reinterpret_cast<const float*>(wt.data);
     } else {
-        std::string key = wt.name.empty()
-            ? ("anon_" + std::to_string(wt.type) + "_" + std::to_string(wt.rows) + "x" +
-               std::to_string(wt.cols))
-            : wt.name;
-        auto it = vulkanWeightF32_.find(key);
-        if (it == vulkanWeightF32_.end()) {
+        const char* mode = std::getenv("DEEP2_WEIGHT_MODE");
+        const bool stream = !(mode && (std::strcmp(mode, "RESIDENT_CACHE") == 0 ||
+                                       std::strcmp(mode, "0") == 0));
+        if (stream) {
+            static thread_local std::vector<float> scratch;
             auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
-            if (!deq) {
-                ++vulkanGemvFail_;
-                return false;
+            if (!deq) { ++vulkanGemvFail_; return false; }
+            scratch.resize(elems);
+            deq(reinterpret_cast<const uint8_t*>(wt.data), scratch.data(), scratch.size());
+            wF32 = scratch.data();
+        } else {
+            std::string key = wt.name.empty()
+                ? ("anon_" + std::to_string(wt.type) + "_" + std::to_string(wt.rows) + "x" +
+                   std::to_string(wt.cols))
+                : wt.name;
+            auto it = vulkanWeightF32_.find(key);
+            if (it == vulkanWeightF32_.end()) {
+                auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
+                if (!deq) {
+                    ++vulkanGemvFail_;
+                    return false;
+                }
+                std::vector<float> buf(elems);
+                deq(reinterpret_cast<const uint8_t*>(wt.data), buf.data(), buf.size());
+                it = vulkanWeightF32_.emplace(std::move(key), std::move(buf)).first;
             }
-            std::vector<float> buf(elems);
-            deq(reinterpret_cast<const uint8_t*>(wt.data), buf.data(), buf.size());
-            it = vulkanWeightF32_.emplace(std::move(key), std::move(buf)).first;
+            wF32 = it->second.data();
+            elems = it->second.size();
         }
-        wF32 = it->second.data();
-        elems = it->second.size();
     }
     const uint64_t weightBytes = elems * sizeof(float);
     const uint64_t inputBytes = wt.cols * sizeof(float);
@@ -7752,15 +8201,13 @@ void Deep2Engine::recordExpertAccess(int layerId, int expertId, float weight) {
 }
 
 void Deep2Engine::prefetchNextExperts(int layerId) {
+    if (!LivePath_FusedWarmupEnabled()) return;
     if (warmupScheduler_ && warmupEnabled_) {
         auto predictions = warmupScheduler_->predictNextExperts(layerId);
-        // predictions is std::vector<PrefetchRequest> with .expertId, .probability
         for (const auto& req : predictions) {
             if (req.probability > warmupConfig_.prefetchThreshold && moeWeightProxy_) {
-                // MoEWeightProxy has no Prefetch() method; acquire the expert
-                // to warm the cache (handle is released when it goes out of scope).
                 auto handle = moeWeightProxy_->Acquire(layerId, req.expertId);
-                (void)handle;  // warm the page cache
+                (void)handle;
             }
         }
     }
@@ -8750,6 +9197,18 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
     k2ShardIndexOpen_ = true;
     strncpy(config.modelPath, shardDirPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+    // Arm NVMe→K2ShardIo after path is known (init often runs with empty path).
+    nvmeConfig_.modelPath = shardDirPath;
+    _putenv_s("DEEP2_K2_SHARD_DIR", shardDirPath.c_str());
+    const size_t warmed = K2ShardIo_WarmDirectory(shardDirPath);
+    if (!nvmeStream_) nvmeStream_ = std::make_unique<NVMeStream>();
+    nvmeStreamingEnabled_ = true;
+    if (nvmeStream_->initialize(nvmeConfig_)) {
+        LivePath_NoteNvmeAbsence(0);
+        printf("[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=%zu)\n", warmed);
+    } else {
+        printf("[Deep2Engine] WARNING: NVMe lane still cold after shard open\n");
+    }
     printf("[Deep2Engine] K2 shard index open: %zu tensors, %zu shards, arch=%s\n",
            globalIndex_->TotalTensors(),
            shards.size(),
@@ -8759,6 +9218,24 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
 
 K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(
     const K2NativeStreamGate::Config& cfg) {
+    // #region agent log
+    {
+        FILE* df = fopen("g:/~dev/debug-1f4d81.log", "a");
+        if (df) {
+            fprintf(df,
+                "{\"sessionId\":\"1f4d81\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\","
+                "\"location\":\"Deep2Engine.cpp:runK2NativeStreamPartial\","
+                "\"message\":\"stream_partial_enter\","
+                "\"data\":{\"livePathActive\":%d,\"cycloneEnabled\":%d,\"streamTokens\":%u,\"layerDepth\":%u},"
+                "\"timestamp\":%lld}\n",
+                LivePath_Active() ? 1 : 0, cycloneEnabled_ ? 1 : 0,
+                cfg.streamTokens, cfg.layerDepth,
+                (long long)std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count());
+            fclose(df);
+        }
+    }
+    // #endregion
     K2NativeStreamGate::Result result;
     if (!k2ShardIndexOpen_ || !globalIndex_) {
         result.error = "K2 shard index not open";
@@ -8770,7 +9247,124 @@ K2NativeStreamGate::Result Deep2Engine::runK2NativeStreamPartial(
         return result;
     }
     k2ShardConfig_.numShards = static_cast<uint32_t>(shards.size());
-    return K2NativeStreamGate::Run(modelDir_, *globalIndex_, k2ShardConfig_, shards, cfg);
+
+    {
+        uint32_t depth = cfg.layerDepth ? cfg.layerDepth : 1;
+        if (const char* el = std::getenv("RAWRXD_K2_LAYERS")) {
+            int n = atoi(el);
+            if (n > 0) depth = (uint32_t)n;
+        }
+        auto pol = K2LivePolicy_Apply(depth, cfg.streamTokens);
+        K2LivePolicy_Emit(stdout, pol);
+    }
+
+    // K2_GPU_STREAM_COPY / MLA: open Vulkan + bind stream→GPU upload path.
+    if (K2GpuStreamCopy_Wanted() || MLA_GpuGemvWanted()) {
+        if (!vulkanInitialized_) enableVulkan(true);
+        K2GpuStreamCopy_Bind(getVulkanComputeSlot(0));
+        K2GpuStreamCopy_Reset();
+        MLA_GpuGemv_Reset();
+    }
+
+    const bool liveOn = LivePath_Wanted();
+    CycloneScheduler* liveCyclone = nullptr;
+    try {
+        if (liveOn) {
+            fprintf(stdout, "[Deep2Engine] LIVE_SETUP begin wanted=1\n");
+            fflush(stdout);
+            LivePath_ApplyMechEnv();
+            const char* pol = std::getenv("DEEP2_LIVE_POLICY");
+            const bool manual =
+#ifdef _WIN32
+                pol && (_stricmp(pol, "MANUAL") == 0);
+#else
+                pol && (strcasecmp(pol, "MANUAL") == 0);
+#endif
+            // AUTO/force already set enhancements + DEEP2_LIVE_MECH in K2LivePolicy_Apply.
+            if (!manual) {
+                const char* fe = std::getenv("DEEP2_LIVE_FUSED");
+                const bool fusedOff = fe && fe[0] == '0' && fe[1] == 0;
+                LivePath_SetFusedEnabled(!fusedOff);
+            }
+            if (LivePath_MechOn(LP_MECH_ELASTIC)) {
+                if (!elasticResidencyEnabled_ || !elasticResidency_)
+                    enableElasticResidency(true);
+                // Do NOT refreshElasticDynamicBudget here — mid-request
+                // budget churn + window rebuilds destroyed pin reuse (u↑).
+            }
+            if (LivePath_MechOn(LP_MECH_CYCLONE)) {
+                if (!cyclone_)
+                    enableCyclone(true);
+                else if (elasticResidency_)
+                    cyclone_->RebindElastic(elasticResidency_.get());
+            }
+            if (LivePath_MechOn(LP_MECH_STREAM)) {
+                if (!plasmaGovernorEnabled_ || !plasmaGovernor_)
+                    enablePlasmaGovernor(true);
+                const std::string nvmePath = config.modelPath[0]
+                    ? std::string(config.modelPath)
+                    : (!modelDir_.empty() ? modelDir_.string() : std::string());
+                enableNVMeStreaming(true, nvmePath);
+                initializeAdvancedFeatures();
+                if (nvmeStream_ && !nvmeStream_->isReverseBunnyHop())
+                    (void)nvmeStream_->initializeReverseBunnyHop(nvmeConfig_);
+            }
+            if (LivePath_MechOn(LP_MECH_WARMUP))
+                enableWarmupScheduler(true);
+            LivePath_BindOwners(
+                elasticResidency_.get(), nvmeStream_.get(), plasmaGovernor_.get(),
+                static_cast<uint32_t>(config.numLayers ? config.numLayers : modelWeights.numLayers),
+                static_cast<uint32_t>(modelWeights.numHeads ? modelWeights.numHeads : 8));
+            liveCyclone =
+                (LivePath_MechOn(LP_MECH_CYCLONE) && cycloneEnabled_) ? cyclone_.get() : nullptr;
+            LivePath_BeginGenerate(cfg.streamTokens, elasticResidency_.get(), &liveCyclone);
+            // Authoritative NVMe witness AFTER BeginGenerate (ctr reset)
+            if (!nvmeStreamingEnabled_ || !nvmeStream_)
+                LivePath_NoteNvmeAbsence(1);
+            fprintf(stdout, "[Deep2Engine] LIVE_SETUP ok active=%u\n",
+                    LivePath_Active() ? 1u : 0u);
+            fflush(stdout);
+        }
+        // #region agent log
+        {
+            FILE* df = fopen("g:/~dev/debug-1f4d81.log", "a");
+            if (df) {
+                fprintf(df,
+                    "{\"sessionId\":\"1f4d81\",\"runId\":\"eff\",\"hypothesisId\":\"EFF\","
+                    "\"location\":\"Deep2Engine.cpp:runK2NativeStreamPartial\","
+                    "\"message\":\"stream_live_gate\","
+                    "\"data\":{\"liveWanted\":%d,\"livePathActive\":%d,\"streamTokens\":%u},"
+                    "\"timestamp\":0}\n",
+                    liveOn ? 1 : 0, LivePath_Active() ? 1 : 0, cfg.streamTokens);
+                fclose(df);
+            }
+        }
+        // #endregion
+        result = K2NativeStreamGate::Run(modelDir_, *globalIndex_, k2ShardConfig_, shards, cfg);
+    } catch (const std::exception& ex) {
+        result.ok = false;
+        result.error = std::string("stream_partial exception: ") + ex.what();
+        fprintf(stderr, "[Deep2Engine] %s\n", result.error.c_str());
+        fflush(stderr);
+    } catch (...) {
+        result.ok = false;
+        result.error = "stream_partial unknown exception";
+        fprintf(stderr, "[Deep2Engine] %s\n", result.error.c_str());
+        fflush(stderr);
+    }
+    if (K2GpuStreamCopy_Wanted())
+        K2GpuStreamCopy_Emit(stdout);
+    if (MLA_GpuGemvWanted()) {
+        printf("MLA_GPU_GEMV_OPS=%llu MLA_GPU_GEMV_FAIL=%llu\n",
+               (unsigned long long)MLA_GpuGemvOps(),
+               (unsigned long long)MLA_GpuGemvFail());
+    }
+    if (liveOn) {
+        LivePath_NoteResidencyPeak(result.peakResidencyBytes);
+        LivePath_EndGenerate(liveCyclone);
+        LivePath_Emit(stdout);
+    }
+    return result;
 }
 
 } // namespace Deep2

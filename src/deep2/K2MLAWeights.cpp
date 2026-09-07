@@ -3,14 +3,21 @@
 // ============================================================================
 
 #include "K2MLAWeights.hpp"
+#include "K2MLA_GpuGemv.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
+#include "QuantKernelRegistry.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
-#include <fstream>
+#include <cstdlib>
 #include <cstring>
+#include <atomic>
+#include <fstream>
+#include <string>
+#include <thread>
+#include <vector>
 
 // AVX2 for GEMV
 #include <immintrin.h>
@@ -75,6 +82,7 @@ static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
     }
 }
 
+// Interleaved Q4_K dequant (matches live gemv_q4k path used for MLA parity).
 static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
     float d    = fp16ToFloat(block->d);
     float dmin = fp16ToFloat(block->dmin);
@@ -86,10 +94,8 @@ static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
         const uint8_t* quants = block->qs + j * 16;
         for (int k = 0; k < 16; k++) {
             uint8_t byte = quants[k];
-            int lo = byte & 0xF;
-            int hi = (byte >> 4) & 0xF;
-            out[j * 32 + k]      = scale * lo - min;
-            out[j * 32 + k + 16] = scale * hi - min;
+            out[j * 32 + k]      = scale * (float)(byte & 0xF) - min;
+            out[j * 32 + k + 16] = scale * (float)((byte >> 4) & 0xF) - min;
         }
     }
 }
@@ -160,40 +166,87 @@ static void gemvF32Transposed(const float* weights, const float* input,
 // Standalone Q4_K GEMV (dequantize-on-the-fly)
 //   weights is [rows, cols] row-major, each row has blocksPerRow Q4_K blocks
 // ============================================================================
-static void gemvQ4K(const void* weights, const float* input,
-                    float* output, size_t rows, size_t cols) {
-    size_t blocksPerRow = (cols + 255) / 256;
-    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
-    float* dequantBuf = (float*)_aligned_malloc(256 * sizeof(float), 32);
-    if (!dequantBuf) return;
+static inline float hsum256(__m256 v) {
+    __m128 hi = _mm256_extractf128_ps(v, 1);
+    __m128 lo = _mm256_castps256_ps128(v);
+    __m128 s = _mm_add_ps(lo, hi);
+    s = _mm_hadd_ps(s, s);
+    s = _mm_hadd_ps(s, s);
+    return _mm_cvtss_f32(s);
+}
+#if defined(__AVX512F__)
+static inline float hsum512(__m512 v) {
+    __m256 lo = _mm512_castps512_ps256(v);
+    __m256 hi = _mm512_extractf32x8_ps(v, 1);
+    return hsum256(_mm256_add_ps(lo, hi));
+}
+#endif
 
-    for (size_t r = 0; r < rows; ++r) {
+static void gemvQ4KRowRange(const uint8_t* base, const float* input, float* output,
+                            size_t r0, size_t r1, size_t cols, size_t blocksPerRow) {
+    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
+    alignas(64) float dequantBuf[256];
+    for (size_t r = r0; r < r1; ++r) {
         const Q4_K_Block* rowBlocks =
-            (const Q4_K_Block*)((const uint8_t*)weights + r * blocksPerRow * kBlockSize);
-        float sum = 0.0f;
+            (const Q4_K_Block*)(base + r * blocksPerRow * kBlockSize);
+#if defined(__AVX512F__)
+        __m512 acc512 = _mm512_setzero_ps();
+#else
+        __m256 acc256 = _mm256_setzero_ps();
+#endif
+        float sumTail = 0.f;
         for (size_t b = 0; b < blocksPerRow; ++b) {
             dequantizeQ4KBlock(&rowBlocks[b], dequantBuf);
             size_t elemsInBlock = std::min(size_t(256), cols - b * 256);
-            __m256 acc = _mm256_setzero_ps();
+            const float* x = input + b * 256;
             size_t i = 0;
+#if defined(__AVX512F__)
+            for (; i + 16 <= elemsInBlock; i += 16) {
+                acc512 = _mm512_fmadd_ps(_mm512_load_ps(dequantBuf + i),
+                                         _mm512_loadu_ps(x + i), acc512);
+            }
             for (; i + 8 <= elemsInBlock; i += 8) {
-                __m256 w = _mm256_load_ps(dequantBuf + i);
-                __m256 x = _mm256_loadu_ps(input + b * 256 + i);
-                acc = _mm256_fmadd_ps(w, x, acc);
+                sumTail += hsum256(_mm256_mul_ps(_mm256_load_ps(dequantBuf + i),
+                                                 _mm256_loadu_ps(x + i)));
             }
-            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
-            __m128 lo128 = _mm256_castps256_ps128(acc);
-            __m128 sum128 = _mm_add_ps(lo128, hi128);
-            sum128 = _mm_hadd_ps(sum128, sum128);
-            sum128 = _mm_hadd_ps(sum128, sum128);
-            sum += _mm_cvtss_f32(sum128);
-            for (; i < elemsInBlock; ++i) {
-                sum += dequantBuf[i] * input[b * 256 + i];
+#else
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                acc256 = _mm256_fmadd_ps(_mm256_load_ps(dequantBuf + i),
+                                         _mm256_loadu_ps(x + i), acc256);
             }
+#endif
+            for (; i < elemsInBlock; ++i) sumTail += dequantBuf[i] * x[i];
         }
-        output[r] = sum;
+#if defined(__AVX512F__)
+        output[r] = hsum512(acc512) + sumTail;
+#else
+        output[r] = hsum256(acc256) + sumTail;
+#endif
     }
-    _aligned_free(dequantBuf);
+}
+
+static void gemvQ4K(const void* weights, const float* input,
+                    float* output, size_t rows, size_t cols) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    const uint8_t* base = (const uint8_t*)weights;
+    if (rows < 512) {
+        gemvQ4KRowRange(base, input, output, 0, rows, cols, blocksPerRow);
+        return;
+    }
+    unsigned nt = std::thread::hardware_concurrency();
+    if (nt < 2u) nt = 2u;
+    if (nt > 16u) nt = 16u;
+    if (rows < nt) nt = (unsigned)rows;
+    std::vector<std::thread> pool;
+    pool.reserve(nt);
+    for (unsigned t = 0; t < nt; ++t) {
+        const size_t r0 = (rows * t) / nt;
+        const size_t r1 = (rows * (t + 1u)) / nt;
+        pool.emplace_back([&, r0, r1]() {
+            gemvQ4KRowRange(base, input, output, r0, r1, cols, blocksPerRow);
+        });
+    }
+    for (auto& th : pool) th.join();
 }
 
 static void gemvQ80(const void* weights, const float* input, float* output,
@@ -259,130 +312,218 @@ static void gemvQ80Transposed(const void* weights, const float* input, float* ou
 //
 // Temp memory: rows * sizeof(float) — small and safe.
 // ============================================================================
-static void gemvQ4KTransposed(const void* weights, const float* input,
-                              float* output, size_t rows, size_t cols) {
-    size_t blocksPerStoredRow = (rows + 255) / 256;
+// GGUF/ggml Q4_K: dims[0]=ne0 contiguous/blocked; dims[1]=ne1.
+// Call: rows=ne1 (outputs), cols=ne0 (inputs). Column j is contiguous.
+// Fused unpack→FMA; AVX-512 when compiled with /arch:AVX512.
+// Twin of gemv_q4k.comp — 32-wide fused unpack→FMA (ggml nibble layout).
+static void gemvQ4KTransposedRowRange(const uint8_t* base, const float* input,
+                                      float* output, size_t j0, size_t j1,
+                                      size_t cols, size_t blocksPerCol) {
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);
-
-    // Allocate temp buffer for one dequantized stored row
-    float* rowBuf = (float*)_aligned_malloc(rows * sizeof(float), 32);
-    if (!rowBuf) return;
-
-    // Zero output accumulator
-    for (size_t r = 0; r < rows; ++r) output[r] = 0.0f;
-
-    const uint8_t* base = (const uint8_t*)weights;
-
-    for (size_t c = 0; c < cols; ++c) {
-        const uint8_t* rowPtr = base + c * blocksPerStoredRow * kBlockSize;
-        float inVal = input[c];
-
-        // Dequantize this stored row into rowBuf
-        size_t r = 0;
-        for (size_t b = 0; b < blocksPerStoredRow && r < rows; ++b) {
-            const Q4_K_Block* block = (const Q4_K_Block*)(rowPtr + b * kBlockSize);
-            float d    = fp16ToFloat(block->d);
-            float dmin = fp16ToFloat(block->dmin);
-            for (int j = 0; j < 8 && r < rows; ++j) {
+    alignas(64) float blk[32];
+    for (size_t j = j0; j < j1; ++j) {
+        const uint8_t* colPtr = base + j * blocksPerCol * kBlockSize;
+#if defined(__AVX512F__)
+        __m512 acc512 = _mm512_setzero_ps();
+#else
+        __m256 acc256 = _mm256_setzero_ps();
+#endif
+        float sumTail = 0.f;
+        size_t i = 0;
+        for (size_t b = 0; b < blocksPerCol && i < cols; ++b) {
+            if (b + 1 < blocksPerCol)
+                _mm_prefetch((const char*)(colPtr + (b + 1) * kBlockSize), _MM_HINT_T0);
+            const Q4_K_Block* block = (const Q4_K_Block*)(colPtr + b * kBlockSize);
+            const float d = fp16ToFloat(block->d);
+            const float dmin = fp16ToFloat(block->dmin);
+            for (int s = 0; s < 8 && i < cols; ++s) {
                 uint8_t sc, m;
-                unpackQ4KScaleMin(block->scales, j, sc, m);
-                float scale = d * sc;
-                float min   = dmin * m;
-                const uint8_t* quants = block->qs + j * 16;
-                for (int k = 0; k < 16 && r < rows; ++k) {
-                    uint8_t byte = quants[k];
-                    int lo = byte & 0xF;
-                    int hi = (byte >> 4) & 0xF;
-                    rowBuf[r++] = scale * lo - min;
-                    if (r < rows) rowBuf[r++] = scale * hi - min;
+                unpackQ4KScaleMin(block->scales, s, sc, m);
+                const float scale = d * (float)sc;
+                const float minv = dmin * (float)m;
+                const uint8_t* quants = block->qs + s * 16;
+                // Same layout as dequantizeQ4KBlock: lo[0..15], hi[0..15].
+                for (int k = 0; k < 16; ++k) {
+                    const uint8_t byte = quants[k];
+                    blk[k] = scale * (float)(byte & 0xF) - minv;
+                    blk[k + 16] = scale * (float)((byte >> 4) & 0xF) - minv;
                 }
+                const size_t n = (std::min)(size_t(32), cols - i);
+#if defined(__AVX512F__)
+                size_t t = 0;
+                for (; t + 16 <= n; t += 16) {
+                    acc512 = _mm512_fmadd_ps(_mm512_load_ps(blk + t),
+                                             _mm512_loadu_ps(input + i + t), acc512);
+                }
+                for (; t + 8 <= n; t += 8) {
+                    sumTail += hsum256(_mm256_mul_ps(_mm256_load_ps(blk + t),
+                                                     _mm256_loadu_ps(input + i + t)));
+                }
+                for (; t < n; ++t) sumTail += blk[t] * input[i + t];
+#else
+                size_t t = 0;
+                for (; t + 8 <= n; t += 8) {
+                    acc256 = _mm256_fmadd_ps(_mm256_load_ps(blk + t),
+                                             _mm256_loadu_ps(input + i + t), acc256);
+                }
+                for (; t < n; ++t) sumTail += blk[t] * input[i + t];
+#endif
+                i += n;
             }
         }
-
-        // Accumulate: output[r] += rowBuf[r] * input[c]
-        size_t r2 = 0;
-        for (; r2 + 8 <= rows; r2 += 8) {
-            __m256 v = _mm256_loadu_ps(rowBuf + r2);
-            __m256 a = _mm256_loadu_ps(output + r2);
-            __m256 s = _mm256_set1_ps(inVal);
-            a = _mm256_fmadd_ps(v, s, a);
-            _mm256_storeu_ps(output + r2, a);
-        }
-        for (; r2 < rows; ++r2) {
-            output[r2] += rowBuf[r2] * inVal;
-        }
+#if defined(__AVX512F__)
+        output[j] = hsum512(acc512) + sumTail;
+#else
+        output[j] = hsum256(acc256) + sumTail;
+#endif
     }
+}
 
-    _aligned_free(rowBuf);
+static std::atomic<int> g_gemvPoolDepth{0};
+
+static void gemvQ4KTransposed(const void* weights, const float* input,
+                              float* output, size_t rows, size_t cols) {
+    const size_t blocksPerCol = (cols + 255) / 256;
+    const uint8_t* base = (const uint8_t*)weights;
+    // One white face: no nested pools under Q∥KV (oversubscription → MLA wall).
+    const bool nested = g_gemvPoolDepth.load(std::memory_order_relaxed) > 0;
+    if (rows < 1024 || nested) {
+        gemvQ4KTransposedRowRange(base, input, output, 0, rows, cols, blocksPerCol);
+        return;
+    }
+    unsigned nt = std::thread::hardware_concurrency();
+    if (nt < 2u) nt = 2u;
+    if (nt > 8u) nt = 8u;
+    if (rows < nt) nt = (unsigned)rows;
+    g_gemvPoolDepth.fetch_add(1, std::memory_order_relaxed);
+    std::vector<std::thread> pool;
+    pool.reserve(nt);
+    for (unsigned t = 0; t < nt; ++t) {
+        const size_t j0 = (rows * t) / nt;
+        const size_t j1 = (rows * (t + 1u)) / nt;
+        pool.emplace_back([&, j0, j1]() {
+            gemvQ4KTransposedRowRange(base, input, output, j0, j1, cols, blocksPerCol);
+        });
+    }
+    for (auto& th : pool) th.join();
+    g_gemvPoolDepth.fetch_sub(1, std::memory_order_relaxed);
 }
 
 // ============================================================================
 // GEMV dispatch for TensorView
 // ============================================================================
-static bool gemvDispatch(const RawrXD::TensorView& weightView,
-                         const float* input, float* output,
-                         size_t rows, size_t cols,
-                         std::string& error) {
+// ============================================================================
+// GEMV orientation — never static for 2D: resolve T vs row from tensor dims.
+// hint: -1=none, 0=row, 1=T — used when dims are 3D/ambiguous (preserve authority).
+// ============================================================================
+static bool gemvOrientTransposed(const RawrXD::TensorView& w,
+                                 size_t outRows, size_t inCols,
+                                 int hint = -1) {
+    const auto d = w.dims();
+    if (d.size() == 2) {
+        const size_t d0 = (size_t)d[0], d1 = (size_t)d[1];
+        if (d0 == inCols && d1 == outRows) return true;
+        if (d1 == inCols && d0 == outRows) return false;
+        if (d0 == inCols) return true;
+        if (d1 == inCols) return false;
+    }
+    if (hint >= 0) return hint != 0;
+    return true; // Kimi MLA 2D default
+}
+
+static bool gemvDispatchRow(const RawrXD::TensorView& weightView,
+                            const float* input, float* output,
+                            size_t rows, size_t cols,
+                            std::string& error) {
     if (!weightView.data()) {
-        error = "gemvDispatch: weightView has no data";
+        error = "gemvDispatchRow: weightView has no data";
         return false;
     }
     auto qt = weightView.quantType();
     if (qt == RawrXD::QuantType::F32) {
         const float* w = weightView.asF32();
-        if (!w) { error = "gemvDispatch: F32 weight data is null"; return false; }
+        if (!w) { error = "gemvDispatchRow: F32 weight data is null"; return false; }
         gemvF32(w, input, output, rows, cols);
         return true;
     }
     if (qt == RawrXD::QuantType::Q4_K) {
+        if (MLA_Gemv(12, weightView.data(), weightView.byteSize(), input, output,
+                           (uint32_t)rows, (uint32_t)cols))
+            return true;
         gemvQ4K(weightView.data(), input, output, rows, cols);
         return true;
     }
     if (qt == RawrXD::QuantType::Q8_0) {
+        if (MLA_Gemv(8, weightView.data(), weightView.byteSize(), input, output,
+                           (uint32_t)rows, (uint32_t)cols))
+            return true;
         gemvQ80(weightView.data(), input, output, rows, cols);
         return true;
     }
-    // Fallback: try F32 anyway (may be mis-tagged)
-    const float* w = weightView.asF32();
-    if (w) {
-        gemvF32(w, input, output, rows, cols);
-        return true;
-    }
-    error = "gemvDispatch: unsupported quant type";
+    error = "gemvDispatchRow: unsupported quant type";
     return false;
 }
 
-// ============================================================================
-// GEMV dispatch for TRANSPOSED TensorView
-//   weightView is [cols, rows] in memory, but logically [rows, cols]
-//   output[rows] = weightView^T * input[cols]
-// ============================================================================
-static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
-                                   const float* input, float* output,
-                                   size_t rows, size_t cols,
-                                   std::string& error) {
+static bool gemvDispatchT(const RawrXD::TensorView& weightView,
+                          const float* input, float* output,
+                          size_t rows, size_t cols,
+                          std::string& error) {
     if (!weightView.data()) {
-        error = "gemvDispatchTransposed: weightView has no data";
+        error = "gemvDispatchT: weightView has no data";
         return false;
     }
     auto qt = weightView.quantType();
     if (qt == RawrXD::QuantType::F32) {
         const float* w = weightView.asF32();
-        if (!w) { error = "gemvDispatchTransposed: F32 weight data is null"; return false; }
+        if (!w) { error = "gemvDispatchT: F32 weight data is null"; return false; }
         gemvF32Transposed(w, input, output, rows, cols);
         return true;
     }
     if (qt == RawrXD::QuantType::Q4_K) {
+        if (MLA_Gemv(12, weightView.data(), weightView.byteSize(), input, output,
+                           (uint32_t)rows, (uint32_t)cols))
+            return true;
         gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
         return true;
     }
     if (qt == RawrXD::QuantType::Q8_0) {
+        if (MLA_Gemv(8, weightView.data(), weightView.byteSize(), input, output,
+                           (uint32_t)rows, (uint32_t)cols))
+            return true;
         gemvQ80Transposed(weightView.data(), input, output, rows, cols);
         return true;
     }
-    // Safety: do NOT fall back to F32 for unknown quant types — this causes AV
-    error = "gemvDispatchTransposed: unsupported quant type " + std::to_string((int)qt);
+    error = "gemvDispatchT: unsupported quant type " + std::to_string((int)qt);
     return false;
+}
+
+// Orient when dims decide; Transposed call sites keep forced-T authority.
+static bool gemvDispatch(const RawrXD::TensorView& weightView,
+                         const float* input, float* output,
+                         size_t rows, size_t cols,
+                         std::string& error) {
+    if (gemvOrientTransposed(weightView, rows, cols))
+        return gemvDispatchT(weightView, input, output, rows, cols, error);
+    return gemvDispatchRow(weightView, input, output, rows, cols, error);
+}
+
+static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
+                                   const float* input, float* output,
+                                   size_t rows, size_t cols,
+                                   std::string& error) {
+    // Call-site says T — do not re-orient (wrong orient → AV / parity break).
+    return gemvDispatchT(weightView, input, output, rows, cols, error);
+}
+
+static void gemvQ4KOriented(bool transposed, const void* w, const float* in,
+                            float* out, size_t rows, size_t cols) {
+    if (transposed) gemvQ4KTransposed(w, in, out, rows, cols);
+    else gemvQ4K(w, in, out, rows, cols);
+}
+static void gemvQ80Oriented(bool transposed, const void* w, const float* in,
+                            float* out, size_t rows, size_t cols) {
+    if (transposed) gemvQ80Transposed(w, in, out, rows, cols);
+    else gemvQ80(w, in, out, rows, cols);
 }
 
 // ============================================================================
@@ -433,8 +574,9 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
     if (attnQ_b.dims().empty())         { error = "MLAWeights: attn_q_b missing"; return false; }
     if (attnKV_a_mqa.dims().empty())    { error = "MLAWeights: attn_kv_a_mqa missing"; return false; }
     if (attnKV_a_norm.dims().empty())   { error = "MLAWeights: attn_kv_a_norm missing"; return false; }
-    if (attnK_b.dims().empty())         { error = "MLAWeights: attn_k_b missing"; return false; }
-    if (attnV_b.dims().empty())         { error = "MLAWeights: attn_v_b missing"; return false; }
+    if (attnK_b.dims().empty())         { error = "MLAWeights: attn_k_b/attn_kv_b missing"; return false; }
+    const bool fused = fusedKvB || attnV_b.dims().empty();
+    if (!fused && attnV_b.dims().empty()) { error = "MLAWeights: attn_v_b missing"; return false; }
     if (attnO.dims().empty())           { error = "MLAWeights: attn_o missing"; return false; }
     if (attnNorm.dims().empty())        { error = "MLAWeights: attn_norm missing"; return false; }
 
@@ -480,14 +622,18 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
         return false;
     }
 
-    // attn_v_b: rows must match kvLoraRank (same compressed space as K_b)
-    if (attnV_b.dims().size() == 2) {
+    if (fused) {
+        if (attnK_b.dims().size() != 2) {
+            error = "MLAWeights: fused attn_kv_b must be 2D [kvLora, n_head*(nope+v)]";
+            return false;
+        }
+    } else if (attnV_b.dims().size() == 2) {
         if (attnV_b.dims()[0] != kvLoraRank) {
             error = "MLAWeights: attn_v_b 2D shape mismatch (rows != kvLoraRank)"; return false;
         }
     } else if (attnV_b.dims().size() == 3) {
-        if (attnV_b.dims()[0] != kvLoraRank) {
-            error = "MLAWeights: attn_v_b 3D shape mismatch (dim[0] != kvLoraRank)"; return false;
+        if (attnV_b.dims()[0] != kvLoraRank && attnV_b.dims()[1] != kvLoraRank) {
+            error = "MLAWeights: attn_v_b 3D shape mismatch (no kvLoraRank axis)"; return false;
         }
     } else {
         error = "MLAWeights: attn_v_b unexpected dimension count"; return false;
@@ -588,8 +734,17 @@ bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
     if (!resolve(qBName, attnQ_b))       { error = std::string("MLAWeights: ") + qBName + " not found in index"; return false; }
     if (!resolve(kvAName, attnKV_a_mqa)) { error = std::string("MLAWeights: ") + kvAName + " not found in index"; return false; }
     if (!resolve(kvANormName, attnKV_a_norm)) { error = std::string("MLAWeights: ") + kvANormName + " not found in index"; return false; }
-    if (!resolve(kBName, attnK_b))       { error = std::string("MLAWeights: ") + kBName + " not found in index"; return false; }
-    if (!resolve(vBName, attnV_b))       { error = std::string("MLAWeights: ") + vBName + " not found in index"; return false; }
+    fusedKvB = false;
+    if (!resolve(kBName, attnK_b) || !resolve(vBName, attnV_b)) {
+        char kvBName[64];
+        snprintf(kvBName, sizeof(kvBName), "blk.%u.attn_kv_b.weight", layer);
+        if (!resolve(kvBName, attnK_b)) {
+            error = std::string("MLAWeights: ") + kBName + " / " + kvBName + " not found";
+            return false;
+        }
+        fusedKvB = true;
+        attnV_b = RawrXD::TensorView();
+    }
     if (!resolve(oName, attnO))          { error = std::string("MLAWeights: ") + oName + " not found in index"; return false; }
     if (!resolve(normName, attnNorm))    { error = std::string("MLAWeights: ") + normName + " not found in index"; return false; }
 
@@ -655,8 +810,16 @@ uint64_t MLAWeights::ResolveAndLoad(const GlobalTensorIndex& index, uint32_t lay
     if (!loadOne(qBName, attnQ_b, totalLoaded))       { error = "MLAWeights: failed to load " + std::string(qBName); return 0; }
     if (!loadOne(kvAName, attnKV_a_mqa, totalLoaded)) { error = "MLAWeights: failed to load " + std::string(kvAName); return 0; }
     if (!loadOne(kvANormName, attnKV_a_norm, totalLoaded)) { error = "MLAWeights: failed to load " + std::string(kvANormName); return 0; }
-    if (!loadOne(kBName, attnK_b, totalLoaded))       { error = "MLAWeights: failed to load " + std::string(kBName); return 0; }
-    if (!loadOne(vBName, attnV_b, totalLoaded))       { error = "MLAWeights: failed to load " + std::string(vBName); return 0; }
+    if (fusedKvB) {
+        char kvBName[64];
+        snprintf(kvBName, sizeof(kvBName), "blk.%u.attn_kv_b.weight", layer);
+        if (!loadOne(kvBName, attnK_b, totalLoaded)) {
+            error = "MLAWeights: failed to load fused " + std::string(kvBName); return 0;
+        }
+    } else {
+        if (!loadOne(kBName, attnK_b, totalLoaded))       { error = "MLAWeights: failed to load " + std::string(kBName); return 0; }
+        if (!loadOne(vBName, attnV_b, totalLoaded))       { error = "MLAWeights: failed to load " + std::string(vBName); return 0; }
+    }
     if (!loadOne(oName, attnO, totalLoaded))          { error = "MLAWeights: failed to load " + std::string(oName); return 0; }
     if (!loadOne(normName, attnNorm, totalLoaded))    { error = "MLAWeights: failed to load " + std::string(normName); return 0; }
 
@@ -687,7 +850,7 @@ void MLAWeights::ReleaseAll() {
 
 bool MLAWeights::DetectMLA(const std::string& tensorName) {
     static const char* kMLAPrefixes[] = {
-        "attn_q_a", "attn_q_b", "attn_kv_a", "attn_k_b", "attn_v_b",
+        "attn_q_a", "attn_q_b", "attn_kv_a", "attn_kv_b", "attn_k_b", "attn_v_b",
         "attn_output", "attn_norm", "attn_q_a_norm", "attn_kv_a_norm"
     };
     for (const char* prefix : kMLAPrefixes) {
@@ -764,6 +927,15 @@ bool MLAForward::Execute(const float* hidden, float* output,
     } else if (config.vHeadDim > 0) {
         vHeadDim = config.vHeadDim;
     }
+    if ((weights.fusedKvB || vDims.empty()) && kDims.size() == 2 && numHeads > 0 &&
+        (kDims[1] % numHeads) == 0) {
+        const size_t per = kDims[1] / numHeads;
+        if (qkNopeHeadDim == 0 || qkNopeHeadDim >= per)
+            qkNopeHeadDim = (config.qkNopeHeadDim && config.qkNopeHeadDim < per)
+                ? config.qkNopeHeadDim : (per / 2);
+        if (vHeadDim == 0 || qkNopeHeadDim + vHeadDim != per)
+            vHeadDim = per - qkNopeHeadDim;
+    }
     const size_t qkRopeHeadDim = (kvACols > kvLoraRank) ? (kvACols - kvLoraRank)
         : ((config.qkRopeHeadDim > 0) ? config.qkRopeHeadDim : 0);
 
@@ -779,117 +951,242 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // Safety: validate all tensors have actual data before allocating
     if (!weights.attnQ_a.data() || !weights.attnQ_b.data() || !weights.attnKV_a_mqa.data() ||
-        !weights.attnK_b.data() || !weights.attnV_b.data() || !weights.attnO.data()) {
+        !weights.attnK_b.data() || !weights.attnO.data() ||
+        (!weights.fusedKvB && !weights.attnV_b.data())) {
         error = "MLAForward: one or more weight tensors have no data (metadata-only?)";
         return false;
     }
 
-    // =========================================================================
-    // Allocate temporary buffers using ACTUAL derived dimensions
-    // =========================================================================
-    float* q_a      = (float*)_aligned_malloc(qLoraRank     * sizeof(float), 32);
-    float* q_b      = (float*)_aligned_malloc(numHeads * headDim * sizeof(float), 32);
-    float* kv_a     = (float*)_aligned_malloc(kvACols * sizeof(float), 32);
-    float* compressedKV = kv_a;                         // alias: first kvLoraRank elements
-    float* k_pe     = kv_a + kvLoraRank;                // alias: rest = k_pe
-    float* k_b      = (float*)_aligned_malloc(numHeads * qkNopeHeadDim * sizeof(float), 32);
-    float* v_b      = (float*)_aligned_malloc(numHeads * vHeadDim      * sizeof(float), 32);
-    // attnOut must accommodate both q_b (simplified attention) and oRows (output projection)
-    size_t attnOutSize = std::max(numHeads * headDim, oRows);
-    float* attnOut  = (float*)_aligned_malloc(attnOutSize * sizeof(float), 32);
+    // Allocate temporary buffers using ACTUAL derived dimensions (TLS reuse).
+    struct MlaTls {
+        float* q_a = nullptr; float* q_b = nullptr; float* kv_a = nullptr;
+        float* k_b = nullptr; float* v_b = nullptr; float* attnOut = nullptr;
+        size_t qA = 0, qB = 0, kvA = 0, kB = 0, vB = 0, attnN = 0;
+        void ensure(size_t qa, size_t qb, size_t kva, size_t kb, size_t vb, size_t an) {
+            auto grow = [](float*& p, size_t& cap, size_t need) {
+                if (need <= cap) return true;
+                _aligned_free(p);
+                p = (float*)_aligned_malloc(need * sizeof(float), 32);
+                cap = p ? need : 0;
+                return p != nullptr;
+            };
+            if (!grow(q_a, qA, qa) || !grow(q_b, qB, qb) || !grow(kv_a, kvA, kva) ||
+                !grow(k_b, kB, kb) || !grow(v_b, vB, vb) || !grow(attnOut, attnN, an))
+                return;
+        }
+    };
+    static thread_local MlaTls tls;
+    const size_t attnOutSize = std::max(numHeads * headDim, oRows);
+    tls.ensure(qLoraRank, numHeads * headDim, kvACols,
+               numHeads * qkNopeHeadDim, numHeads * vHeadDim, attnOutSize);
+    float* q_a = tls.q_a; float* q_b = tls.q_b; float* kv_a = tls.kv_a;
+    float* compressedKV = kv_a;
+    float* k_pe = kv_a + kvLoraRank;
+    float* k_b = tls.k_b; float* v_b = tls.v_b; float* attnOut = tls.attnOut;
 
     if (!q_a || !q_b || !kv_a || !k_b || !v_b || !attnOut) {
         error = "MLAForward: buffer allocation failed";
-        _aligned_free(q_a); _aligned_free(q_b); _aligned_free(kv_a);
-        _aligned_free(k_b); _aligned_free(v_b); _aligned_free(attnOut);
         return false;
     }
 
-    // Pre-declare variables that may be read after goto cleanup
-    // attnO GGUF shape: [oRows, hiddenDim]
-    // Transposed GEMV: output[hiddenDim] = attnO^T * attnOut[oRows]
-    const size_t oActualRows = oRows;                     // logical cols = oRows
-    const size_t oCols       = hiddenDim;                 // logical rows = hiddenDim
+    const size_t oActualRows = oRows;
+    const size_t oCols       = hiddenDim;
+    const bool fusedKv = weights.fusedKvB || (kDims.size() == 2 && vDims.empty());
+    float* fusedTmp = nullptr;
 
-    // =========================================================================
-    // Q-path: hidden → q_a → RMSNorm → q_b
-    // =========================================================================
-    // Step 1: q_a = attnQ_a^T * hidden  [qLoraRank]
-    // GGUF stores attnQ_a as [hiddenDim, qLoraRank]; we need transpose multiply
-    if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
-                                qLoraRank, hiddenDim, error)) {
-        goto cleanup;
-    }
-
-    // Step 2: RMSNorm on q_a
-    {
-        if (weights.attnQ_a_norm.data()) {
+    // Q-path || KV compress (independent until expand/attn).
+    // GPU MLA serializes through one VkQueue — keep host path sequential too
+    // when DEEP2_MLA_SERIAL=1 or GPU MLA is on (fair + avoids mutex thrash).
+    std::string qErr, kvErr;
+    bool qOk = false, kvOk = false;
+    auto pin = [&](uint8_t tag) {
+        MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | (uint64_t)tag);
+    };
+    auto runQ = [&]() {
+        pin(1);
+        if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
+                                    qLoraRank, hiddenDim, qErr)) return;
+        if (weights.attnQ_a_norm.data())
             rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
+        pin(2);
+        if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
+                                    qBCols, qLoraRank, qErr)) return;
+        qOk = true;
+    };
+    auto runKv = [&]() {
+        pin(3);
+        if (!gemvDispatchTransposed(weights.attnKV_a_mqa, hidden, kv_a,
+                                    kvACols, hiddenDim, kvErr)) return;
+        if (weights.attnKV_a_norm.data())
+            rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV,
+                              kvLoraRank, config.normRmsEps);
+        kvOk = true;
+    };
+    const char* ser = std::getenv("DEEP2_MLA_SERIAL");
+    const bool serial = MLA_GpuGemvWanted() || (ser && ser[0] == '1');
+    if (serial) {
+        runQ();
+        runKv();
+    } else {
+        std::thread qTh(runQ);
+        std::thread kvTh(runKv);
+        qTh.join();
+        kvTh.join();
+    }
+    if (!qOk) { error = qErr.empty() ? "MLAForward: Q path failed" : qErr; goto cleanup; }
+    if (!kvOk) { error = kvErr.empty() ? "MLAForward: KV path failed" : kvErr; goto cleanup; }
+
+    // Step 6/7: expand compressed_kv → K_nope / V
+    if (fusedKv) {
+        const size_t fusedCols = kDims[1];
+        kvLoraRank = kDims[0];
+        if (numHeads == 0 || (fusedCols % numHeads) != 0) {
+            error = "MLAForward: fused attn_kv_b cols not divisible by numHeads";
+            goto cleanup;
         }
-    }
-
-    // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
-    // GGUF stores attnQ_b as [qLoraRank, numHeads*headDim]
-    // CRITICAL: use actual qBCols from tensor, not computed headDim*numHeads
-    if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
-                                qBCols, qLoraRank, error)) {
-        goto cleanup;
-    }
-
-    // =========================================================================
-    // KV-path: hidden → kv_a_mqa → split → [compressed_kv | k_pe]
-    // =========================================================================
-    // Step 4: kv_a = attnKV_a_mqa^T * hidden  [kvACols]
-    // GGUF stores attnKV_a_mqa as [hiddenDim, kvACols]
-    if (!gemvDispatchTransposed(weights.attnKV_a_mqa, hidden, kv_a,
-                                kvACols, hiddenDim, error)) {
-        goto cleanup;
-    }
-
-    // Step 5: RMSNorm on compressed_kv only
-    {
-        if (weights.attnKV_a_norm.data()) {
-            rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV, kvLoraRank, config.normRmsEps);
+        const size_t per = fusedCols / numHeads;
+        qkNopeHeadDim = (config.qkNopeHeadDim && config.qkNopeHeadDim < per)
+            ? config.qkNopeHeadDim : (per / 2);
+        vHeadDim = per - qkNopeHeadDim;
+        fusedTmp = (float*)_aligned_malloc(fusedCols * sizeof(float), 32);
+        if (!fusedTmp) { error = "MLAForward: fused kv_b alloc failed"; goto cleanup; }
+        pin(4);
+        if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, fusedTmp,
+                                    fusedCols, kvLoraRank, error)) {
+            _aligned_free(fusedTmp);
+            goto cleanup;
         }
-    }
-
-    // Step 6/7: expand compressed_kv → K_nope / V (2D or 3D GGUF layout)
-    if (kIs3D) {
+        for (size_t h = 0; h < numHeads; ++h) {
+            const float* src = fusedTmp + h * per;
+            memcpy(k_b + h * qkNopeHeadDim, src, qkNopeHeadDim * sizeof(float));
+            memcpy(v_b + h * vHeadDim, src + qkNopeHeadDim, vHeadDim * sizeof(float));
+        }
+        _aligned_free(fusedTmp);
+        fusedTmp = nullptr;
+    } else if (kIs3D && vIs3D) {
+        // Batched head expand: contiguous per-head packs → one GEMV each.
+        const size_t kElems = qkNopeHeadDim * kvLoraRank;
+        const size_t vElems = vHeadDim * kvLoraRank;
+        const auto kQt = weights.attnK_b.quantType();
+        const auto vQt = weights.attnV_b.quantType();
+        const size_t kBlkE = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+        const size_t vBlkE = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
+        const size_t kBlkB = (kQt == RawrXD::QuantType::Q8_0)
+            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t vBlkB = (vQt == RawrXD::QuantType::Q8_0)
+            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t kBytes = numHeads *
+            (((kElems + kBlkE - 1) / kBlkE) * kBlkB);
+        const size_t vBytes = numHeads *
+            (((vElems + vBlkE - 1) / vBlkE) * vBlkB);
+        const void* kBase = weights.attnK_b.data();
+        const void* vBase = weights.attnV_b.data();
+        const uint32_t kRows = (uint32_t)(numHeads * qkNopeHeadDim);
+        const uint32_t vRows = (uint32_t)(numHeads * vHeadDim);
+        const uint32_t kCols = (uint32_t)kvLoraRank;
+        // K∥V expand — explicit orientation (3D pack authority; not dim-guess).
+        const bool kT = false;
+        const bool vT = true;
+        std::thread kTh([&]() {
+            MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 4u);
+            if (kQt == RawrXD::QuantType::Q4_K) {
+                if (!(MLA_Gemv(12, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
+                    gemvQ4KOriented(kT, kBase, compressedKV, k_b, kRows, kCols);
+            } else if (kQt == RawrXD::QuantType::Q8_0) {
+                if (!(MLA_Gemv(8, kBase, kBytes, compressedKV, k_b, kRows, kCols)))
+                    gemvQ80Oriented(kT, kBase, compressedKV, k_b, kRows, kCols);
+            } else {
+                for (size_t h = 0; h < numHeads; ++h) {
+                    const size_t hb = ((kElems + kBlkE - 1) / kBlkE) * kBlkB;
+                    gemvQ80Oriented(kT, (const uint8_t*)kBase + h * hb, compressedKV,
+                                    k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+                }
+            }
+        });
+        std::thread vTh([&]() {
+            MLA_GpuGemv_SetPinKey(((uint64_t)layerIdx << 8) | 5u);
+            if (vQt == RawrXD::QuantType::Q4_K) {
+                if (!(MLA_Gemv(12, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
+                    gemvQ4KOriented(vT, vBase, compressedKV, v_b, vRows, kCols);
+            } else if (vQt == RawrXD::QuantType::Q8_0) {
+                if (!(MLA_Gemv(8, vBase, vBytes, compressedKV, v_b, vRows, kCols)))
+                    gemvQ80Oriented(vT, vBase, compressedKV, v_b, vRows, kCols);
+            } else {
+                for (size_t h = 0; h < numHeads; ++h) {
+                    const size_t hb = ((vElems + vBlkE - 1) / vBlkE) * vBlkB;
+                    gemvQ80Oriented(vT, (const uint8_t*)vBase + h * hb, compressedKV,
+                                    v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+                }
+            }
+        });
+        kTh.join();
+        vTh.join();
+    } else if (kIs3D) {
         const size_t elemsPerHead = qkNopeHeadDim * kvLoraRank;
         const auto kQt = weights.attnK_b.quantType();
         const size_t blockElems = (kQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-        const size_t blockBytes = (kQt == RawrXD::QuantType::Q8_0) ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
-        const size_t bytesPerHead = ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
+        const size_t blockBytes = (kQt == RawrXD::QuantType::Q8_0)
+            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t bytesPerHead =
+            ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
         const uint8_t* base = static_cast<const uint8_t*>(weights.attnK_b.data());
-        for (size_t h = 0; h < numHeads; ++h) {
-            const void* wh = base + h * bytesPerHead;
-            if (kQt == RawrXD::QuantType::Q8_0)
-                gemvQ80(wh, compressedKV, k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
-            else
-                gemvQ4K(wh, compressedKV, k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
+        const uint32_t kRows = (uint32_t)(numHeads * qkNopeHeadDim);
+        const uint32_t kCols = (uint32_t)kvLoraRank;
+        const bool kT = false;
+        pin(4);
+        if (kQt == RawrXD::QuantType::Q4_K) {
+            if (!(MLA_Gemv(12, base, bytesPerHead * numHeads, compressedKV, k_b,
+                           kRows, kCols)))
+                gemvQ4KOriented(kT, base, compressedKV, k_b, kRows, kCols);
+        } else if (kQt == RawrXD::QuantType::Q8_0) {
+            if (!(MLA_Gemv(8, base, bytesPerHead * numHeads, compressedKV, k_b,
+                           kRows, kCols)))
+                gemvQ80Oriented(kT, base, compressedKV, k_b, kRows, kCols);
+        } else {
+            for (size_t h = 0; h < numHeads; ++h)
+                gemvQ80Oriented(kT, base + h * bytesPerHead, compressedKV,
+                                k_b + h * qkNopeHeadDim, qkNopeHeadDim, kvLoraRank);
         }
-    } else if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
-                                       kBCols, kvLoraRank, error)) {
+    } else {
+        pin(4);
+        if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
+                          kBCols, kvLoraRank, error)) {
         goto cleanup;
+        }
     }
 
-    if (vIs3D) {
+    if (!fusedKv && !vIs3D) {
+        pin(5);
+        if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
+                          vBCols, kvLoraRank, error)) {
+            goto cleanup;
+        }
+    } else if (!fusedKv && vIs3D && !kIs3D) {
         const size_t elemsPerHead = vHeadDim * kvLoraRank;
         const auto vQt = weights.attnV_b.quantType();
         const size_t blockElems = (vQt == RawrXD::QuantType::Q8_0) ? 32u : 256u;
-        const size_t blockBytes = (vQt == RawrXD::QuantType::Q8_0) ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
-        const size_t bytesPerHead = ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
+        const size_t blockBytes = (vQt == RawrXD::QuantType::Q8_0)
+            ? sizeof(Q8_0_Block) : sizeof(Q4_K_Block);
+        const size_t bytesPerHead =
+            ((elemsPerHead + blockElems - 1) / blockElems) * blockBytes;
         const uint8_t* base = static_cast<const uint8_t*>(weights.attnV_b.data());
-        for (size_t h = 0; h < numHeads; ++h) {
-            const void* wh = base + h * bytesPerHead;
-            if (vQt == RawrXD::QuantType::Q8_0)
-                gemvQ80Transposed(wh, compressedKV, v_b + h * vHeadDim, vHeadDim, kvLoraRank);
-            else
-                gemvQ4KTransposed(wh, compressedKV, v_b + h * vHeadDim, vHeadDim, kvLoraRank);
+        const uint32_t vRows = (uint32_t)(numHeads * vHeadDim);
+        const uint32_t vCols = (uint32_t)kvLoraRank;
+        const bool vT = true;
+        pin(5);
+        if (vQt == RawrXD::QuantType::Q4_K) {
+            if (!(MLA_Gemv(12, base, bytesPerHead * numHeads, compressedKV, v_b,
+                           vRows, vCols)))
+                gemvQ4KOriented(vT, base, compressedKV, v_b, vRows, vCols);
+        } else if (vQt == RawrXD::QuantType::Q8_0) {
+            if (!(MLA_Gemv(8, base, bytesPerHead * numHeads, compressedKV, v_b,
+                           vRows, vCols)))
+                gemvQ80Oriented(vT, base, compressedKV, v_b, vRows, vCols);
+        } else {
+            for (size_t h = 0; h < numHeads; ++h)
+                gemvQ80Oriented(vT, base + h * bytesPerHead, compressedKV,
+                                v_b + h * vHeadDim, vHeadDim, kvLoraRank);
         }
-    } else if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
-                                       vBCols, kvLoraRank, error)) {
-        goto cleanup;
     }
 
     // =========================================================================
@@ -923,19 +1220,18 @@ bool MLAForward::Execute(const float* hidden, float* output,
     // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
     // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]
     // Use actual tensor shape (already pre-fetched into oCols / oActualRows)
+    pin(6);
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
                                 oCols, oActualRows, error)) {
         goto cleanup;
     }
 
-    // Success
-    _aligned_free(q_a); _aligned_free(q_b); _aligned_free(kv_a);
-    _aligned_free(k_b); _aligned_free(v_b); _aligned_free(attnOut);
+    // Success — TLS owns scratch; only free fusedTmp if set.
+    _aligned_free(fusedTmp);
     return true;
 
 cleanup:
-    _aligned_free(q_a); _aligned_free(q_b); _aligned_free(kv_a);
-    _aligned_free(k_b); _aligned_free(v_b); _aligned_free(attnOut);
+    _aligned_free(fusedTmp);
     return false;
 }
 

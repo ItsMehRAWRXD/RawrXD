@@ -1,0 +1,13 @@
+=== measured 4tok x 61 (stdout run) ===
+A0_TPS=0.028
+B2_TPS=0.042
+Bbest_TPS=0.034
+C_TPS=0.038
+CHAMPION=B2
+C_TARGET=0.043
+C_BEATS_CHAMP=0
+OUTPUT_PARITY=1
+ACTIVE0=1
+POLICY_DECISION=SPLIT_FREEZE
+FREEZE short/shallow=trampoline+cache full-depth=trampoline+output_cache
+K2_FULL_DEPTH_COMBINED_POLICY_001=PASS

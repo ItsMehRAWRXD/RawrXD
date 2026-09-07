@@ -1,0 +1,10 @@
+# K2_MLA_REUSE_PROMOTE_001
+# After cold rebench HOLD: measure GPU MLA under retained pin + PROMO policy.
+#
+# Require:
+#   t1 exact parity
+#   MLA_GPU_GEMV_FAIL=0, K2_GPU_STREAM_UPLOAD_FAIL=0
+#   K2_LIVE_POLICY_ARM != OFF, REUSE_STEPS >= 8, CROSSOVER >= 8
+#   timed-phase hits > 0 and uploads < MLA ops (amortization)
+#   TPS_GPU_REUSE > TPS_CPU_BASELINE → POLICY_DECISION=PROMOTE_GPU_MLA_REUSE
+# Soft: LIVE_CACHE_ENTRY_PEAK > 0 (witness)

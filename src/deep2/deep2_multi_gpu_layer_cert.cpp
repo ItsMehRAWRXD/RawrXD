@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     SetEnvironmentVariableA("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1", "1");
     _putenv_s("RAWRXD_GPU_POLICY", "AUTO");
     _putenv_s("RAWRXD_GPU_DEVICES", "ALL");
+    _putenv_s("DEEP2_FORCE_SPLIT", "1");
     _putenv_s("DEEP2_GPU_SELECT", "");
     _putenv_s("RAWRXD_GPU_SELECT", "");
     _putenv_s("RAWRXD_GPU_NAME", "");

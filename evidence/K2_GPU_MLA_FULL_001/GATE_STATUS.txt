@@ -1,0 +1,5 @@
+cpu_gen=49107 gpu_gen=49107 mla_ops=6 mla_fail=0
+parity=1 usedGpu=1
+K2_GPU_MLA_FULL_001=PASS
+NOTE=RE: kv_a/k_b/v_b are Q8_0 (ggml 8); q_a/q_b/O are Q4_K.
+Batched K/V 3D expand + MLA_Gemv(8|12) → DispatchGEMVQuant/Packed.

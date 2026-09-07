@@ -60,16 +60,36 @@ static inline uint16_t floatToFP16(float value) {
     return (uint16_t)f16;
 }
 
+static inline float fp16ToFloat(uint16_t h) {
+    uint32_t sign = (h >> 15) & 1u;
+    uint32_t exp = (h >> 10) & 0x1Fu;
+    uint32_t mant = h & 0x3FFu;
+    uint32_t f;
+    if (exp == 0) {
+        f = sign << 31;
+    } else if (exp == 31) {
+        f = (sign << 31) | 0x7F800000u | (mant << 13);
+    } else {
+        f = (sign << 31) | ((exp + 112u) << 23) | (mant << 13);
+    }
+    union { uint32_t i; float f; } u;
+    u.i = f;
+    return u.f;
+}
+
 NUFusedPacker::NUFusedPacker() {}
 NUFusedPacker::~NUFusedPacker() {}
 
 bool NUFusedPacker::initialize(const NUPackerConfig& config) {
     config_ = config;
     stats_ = Stats{};
-    printf("[NUFusedPacker] Initialized: XVA=%s, cacheLine=%zu, targetBpw=%.1f\n",
-           config.enableXVAAlignment ? "ON" : "OFF",
-           config.cacheLineSize,
-           config.targetBitsPerWeight);
+    const char* v = std::getenv("DEEP2_NU_VERBOSE");
+    if (v && v[0] == '1') {
+        printf("[NUFusedPacker] Initialized: XVA=%s, cacheLine=%zu, targetBpw=%.1f\n",
+               config.enableXVAAlignment ? "ON" : "OFF",
+               config.cacheLineSize,
+               config.targetBitsPerWeight);
+    }
     return true;
 }
 
@@ -79,7 +99,7 @@ NUBlockFormat NUFusedPacker::getFormatInfo(NUFormatTag tag) {
         case NUFormatTag::NU_F16:     return {tag, 64,  32, 16.0f};
         case NUFormatTag::NU_Q8_0:    return {tag, 36,  32, 8.0f};
         case NUFormatTag::NU_Q4_0:    return {tag, 20,  32, 4.0f};
-        case NUFormatTag::NU_Q4_K:    return {tag, 144, 256, 4.5f};
+        case NUFormatTag::NU_Q4_K:    return {tag, 256, 256, 8.0f};
         case NUFormatTag::NU_Q2_K:    return {tag, 84,  256, 2.625f};
         case NUFormatTag::NU_IQ2_XXS: return {tag, 66,  256, 2.0625f};
         case NUFormatTag::NU_IQ3_S:   return {tag, 110, 256, 3.4375f};
@@ -191,11 +211,11 @@ void NUFusedPacker::unpackQ4_0(const uint8_t* src, float* dst, size_t n) {
 // Q4_K packing: 256 floats per block with per-8-group scales
 // ---------------------------------------------------------------------------
 void NUFusedPacker::packQ4_K(const float* src, uint8_t* dst, size_t n) {
-    // Q4_K block: 144 bytes per 256 elements
-    // Layout: {scales[32] (FP16), mins[32] (FP16), weights[128] (4-bit packed)}
+    // NU Q4_K block: 256 bytes / 256 elems
+    // Layout: scales[32] FP16 | mins[32] FP16 | qs[128] (4-bit pairs)
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; b++) {
-        // Compute per-8-element group scales and mins
+        uint8_t* block = dst + b * 256;
         for (int g = 0; g < 32; g++) {
             float maxVal = -1e30f, minVal = 1e30f;
             for (int i = 0; i < 8; i++) {
@@ -205,18 +225,19 @@ void NUFusedPacker::packQ4_K(const float* src, uint8_t* dst, size_t n) {
                     minVal = std::min(minVal, src[idx]);
                 }
             }
+            if (minVal > maxVal) {
+                minVal = 0.0f;
+                maxVal = 0.0f;
+            }
             float scale = (maxVal - minVal) / 15.0f;
             if (scale == 0.0f) scale = 1e-10f;
             float min = minVal;
 
-            // Write FP16 scale and min
-            // IEEE 754 compliant FP16 conversion
             uint16_t scaleF16 = floatToFP16(scale);
             uint16_t minF16 = floatToFP16(min);
-            memcpy(dst + b * 144 + g * 2, &scaleF16, 2);
-            memcpy(dst + b * 144 + 64 + g * 2, &minF16, 2);
+            memcpy(block + g * 2, &scaleF16, 2);
+            memcpy(block + 64 + g * 2, &minF16, 2);
 
-            // Pack 8 values as 4-bit
             for (int i = 0; i < 4; i++) {
                 size_t idx0 = b * 256 + g * 8 + i * 2;
                 size_t idx1 = b * 256 + g * 8 + i * 2 + 1;
@@ -224,7 +245,7 @@ void NUFusedPacker::packQ4_K(const float* src, uint8_t* dst, size_t n) {
                 float v1 = (idx1 < n) ? src[idx1] : 0.0f;
                 int q0 = std::max(0, std::min(15, (int)std::round((v0 - min) / scale)));
                 int q1 = std::max(0, std::min(15, (int)std::round((v1 - min) / scale)));
-                dst[b * 144 + 128 + g * 4 + i] = (uint8_t)(q0 | (q1 << 4));
+                block[128 + g * 4 + i] = (uint8_t)(q0 | (q1 << 4));
             }
         }
     }
@@ -233,15 +254,16 @@ void NUFusedPacker::packQ4_K(const float* src, uint8_t* dst, size_t n) {
 void NUFusedPacker::unpackQ4_K(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; b++) {
+        const uint8_t* block = src + b * 256;
         for (int g = 0; g < 32; g++) {
             uint16_t scaleF16, minF16;
-            memcpy(&scaleF16, src + b * 144 + g * 2, 2);
-            memcpy(&minF16, src + b * 144 + 64 + g * 2, 2);
-            float scale = (float)scaleF16 / 1024.0f;
-            float min = (float)minF16 / 1024.0f;
+            memcpy(&scaleF16, block + g * 2, 2);
+            memcpy(&minF16, block + 64 + g * 2, 2);
+            float scale = fp16ToFloat(scaleF16);
+            float min = fp16ToFloat(minF16);
 
             for (int i = 0; i < 4; i++) {
-                uint8_t byte = src[b * 144 + 128 + g * 4 + i];
+                uint8_t byte = block[128 + g * 4 + i];
                 int q0 = byte & 0xF;
                 int q1 = (byte >> 4) & 0xF;
                 size_t idx0 = b * 256 + g * 8 + i * 2;
@@ -258,18 +280,7 @@ void NUFusedPacker::unpackQ4_K(const uint8_t* src, float* dst, size_t n) {
 // ---------------------------------------------------------------------------
 void NUFusedPacker::packF16(const float* src, uint8_t* dst, size_t n) {
     for (size_t i = 0; i < n; i++) {
-        uint32_t f = *(uint32_t*)&src[i];
-        uint32_t sign = (f >> 31) & 1;
-        uint32_t exp = (f >> 23) & 0xFF;
-        uint32_t mant = f & 0x7FFFFF;
-        uint16_t h;
-        if (exp >= 112 && exp <= 142) {
-            h = (sign << 15) | ((exp - 112) << 10) | (mant >> 13);
-        } else if (exp < 113) {
-            h = (uint16_t)(sign << 15);
-        } else {
-            h = (uint16_t)((sign << 15) | 0x7C00);
-        }
+        uint16_t h = floatToFP16(src[i]);
         memcpy(dst + i * 2, &h, 2);
     }
 }
@@ -278,18 +289,7 @@ void NUFusedPacker::unpackF16(const uint8_t* src, float* dst, size_t n) {
     for (size_t i = 0; i < n; i++) {
         uint16_t h;
         memcpy(&h, src + i * 2, 2);
-        uint32_t sign = (h >> 15) & 1;
-        uint32_t exp = (h >> 10) & 0x1F;
-        uint32_t mant = h & 0x3FF;
-        uint32_t f;
-        if (exp == 0) {
-            f = sign << 31;
-        } else if (exp == 31) {
-            f = (sign << 31) | 0x7F800000 | (mant << 13);
-        } else {
-            f = (sign << 31) | ((exp + 112) << 23) | (mant << 13);
-        }
-        memcpy(&dst[i], &f, 4);
+        dst[i] = fp16ToFloat(h);
     }
 }
 
@@ -384,7 +384,6 @@ size_t NUFusedPacker::unpackTensor(
     size_t numElements = std::min((size_t)header->totalElements, maxElements);
     NUFormatTag format = (NUFormatTag)header->formatTable[0];
 
-    const uint32_t* offsets = (const uint32_t*)(packedData + sizeof(NUStreamHeader));
     size_t headerSize = sizeof(NUStreamHeader) + header->numBlocks * sizeof(uint32_t);
     const uint8_t* dataStart = packedData + headerSize;
 
@@ -469,12 +468,21 @@ size_t NUFusedPacker::unpackXVA(
     if (xva->magic != 0x41585632) return 0;
 
     size_t numElements = std::min((size_t)xva->totalElements, maxElements);
-    size_t dataOffset = alignToCacheLine(sizeof(XVAHeader));
+    // XVA payload is Q4_0 blocks at cache-line strides (matches packXVA).
+    auto fmt = getFormatInfo(NUFormatTag::NU_Q4_0);
+    size_t currentOffset = alignToCacheLine(sizeof(XVAHeader));
+    size_t elemsDone = 0;
+    while (elemsDone < numElements) {
+        currentOffset = alignToCacheLine(currentOffset);
+        if (currentOffset + fmt.blockSize > packedSize) break;
+        size_t elemsInBlock =
+            std::min(fmt.elemsPerBlock, numElements - elemsDone);
+        unpackQ4_0(packedData + currentOffset, output + elemsDone, elemsInBlock);
+        currentOffset += fmt.blockSize;
+        elemsDone += elemsInBlock;
+    }
 
-    // Assume Q4_0 for XVA (most common)
-    unpackQ4_0(packedData + dataOffset, output, numElements);
-
-    return numElements;
+    return elemsDone;
 }
 
 // ---------------------------------------------------------------------------

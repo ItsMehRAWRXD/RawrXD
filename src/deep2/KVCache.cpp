@@ -122,6 +122,43 @@ void KVCache::advance() {
     }
 }
 
+bool KVCache::grow(size_t newMaxSeqLen) {
+    if (!initialized || !kCache || !vCache) return false;
+    if (newMaxSeqLen <= config.maxSeqLen) return true;
+    const size_t oldMax = config.maxSeqLen;
+    const size_t heads = config.numHeads;
+    const size_t dim = config.headDim;
+    const size_t layers = config.numLayers;
+    const size_t newElems = layers * newMaxSeqLen * heads * dim;
+    float* nk = alignedAlloc(newElems);
+    float* nv = alignedAlloc(newElems);
+    if (!nk || !nv) {
+        if (nk) alignedFree(nk);
+        if (nv) alignedFree(nv);
+        return false;
+    }
+    memset(nk, 0, newElems * sizeof(float));
+    memset(nv, 0, newElems * sizeof(float));
+    // Layout: [layer][pos][head][dim] — copy each layer's used prefix
+    for (size_t L = 0; L < layers; ++L) {
+        for (size_t p = 0; p < currentPos && p < oldMax; ++p) {
+            for (size_t h = 0; h < heads; ++h) {
+                const size_t oldOff = L * oldMax * heads * dim + p * heads * dim + h * dim;
+                const size_t newOff = L * newMaxSeqLen * heads * dim + p * heads * dim + h * dim;
+                memcpy(nk + newOff, kCache + oldOff, dim * sizeof(float));
+                memcpy(nv + newOff, vCache + oldOff, dim * sizeof(float));
+            }
+        }
+    }
+    alignedFree(kCache);
+    alignedFree(vCache);
+    kCache = nk;
+    vCache = nv;
+    config.maxSeqLen = newMaxSeqLen;
+    printf("[KVCache] grow maxSeqLen %zu -> %zu (pos=%zu)\n", oldMax, newMaxSeqLen, currentPos);
+    return true;
+}
+
 size_t KVCache::memoryUsed() const {
     if (!initialized) return 0;
     return config.totalSize();

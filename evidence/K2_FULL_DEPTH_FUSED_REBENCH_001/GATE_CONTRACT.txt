@@ -1,0 +1,17 @@
+# K2_FULL_DEPTH_FUSED_REBENCH_001
+# DEPTH=61 TOKENS=2. Authority: TRAMPOLINE_PROMOTION_001 + FUSED_CONTROL_002.
+#
+# Arms
+#   Promo = trampoline,cyclone,elastic fused=0  (promoted full-depth baseline)
+#   C002  = trampoline,cyclone,elastic fused=1  (FUSED_CONTROL_002 overlay)
+#
+# Invariants (both arms / C002):
+#   OUTPUT_PARITY ACTIVE0 GROWTH0 DUP0 HOTPATH_ALLOC0 FALLBACK0
+#   TRAMP_REUSES>0 CACHE_REUSES>0
+#   C002 TPS >= 0.97 * Promo (no material regression)
+#
+# POLICY_DECISION
+#   UNFREEZE_C002  if C002 beats Promo by >=3% TPS and lower wall
+#   KEEP_FROZEN_C002 otherwise (fused stays off in production AUTO)
+#
+# Gate PASS = invariants + no-regress (decision recorded either way)

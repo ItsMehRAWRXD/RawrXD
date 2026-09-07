@@ -27,9 +27,15 @@
 #include <fstream>
 #include <sstream>
 #include "core/dual_agent_session.hpp"
+#include "deep2/NvmeBunnyHopApi.hpp"
+#define RAWR_HAS_NATIVE_E2E 1
+#include "../native_e2e/RawrNativeServerDispatch.hpp"
 
 #pragma comment(lib, "winhttp.lib")
 #pragma comment(lib, "psapi.lib")
+#if defined(RAWR_HAS_NATIVE_E2E)
+#pragma comment(lib, "RawrNativeWebBridge.lib")
+#endif
 
 // Real backend integration
 #include "backend/agentic_tools.h"
@@ -400,6 +406,19 @@ private:
             return;
         }
 
+#if defined(RAWR_HAS_NATIVE_E2E)
+        {
+            std::string nativeJson;
+            uint32_t nativeSt = 0;
+            if (RawrNativeE2E::TryHandle(method, path, ExtractBody(request), nativeJson, nativeSt)) {
+                response = RawrNativeE2E::HttpResponse(nativeSt, nativeJson);
+                response = InjectCorsHeaders(response);
+                send(client_socket, response.c_str(), static_cast<int>(response.length()), 0);
+                return;
+            }
+        }
+#endif
+
         // ---- Route to handler ----
 
         // === Existing routes ===
@@ -503,6 +522,21 @@ private:
         }
         else if (method == "GET" && path == "/api/engine/capabilities") {
             response = HandleEngineCapabilitiesRequest();
+        }
+        else if (method == "GET" && path == "/api/nvme/bunnyhop/status") {
+            std::string j = Deep2::NvmeBunnyHopApi::StatusJson();
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+                + std::to_string(j.size()) + "\r\n\r\n" + j;
+        }
+        else if (method == "POST" && path == "/api/nvme/bunnyhop/arm") {
+            std::string j = Deep2::NvmeBunnyHopApi::ArmJson(true, 4);
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+                + std::to_string(j.size()) + "\r\n\r\n" + j;
+        }
+        else if (method == "POST" && path == "/api/nvme/bunnyhop/disarm") {
+            std::string j = Deep2::NvmeBunnyHopApi::ArmJson(false);
+            response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+                + std::to_string(j.size()) + "\r\n\r\n" + j;
         }
         // === Phase 41: Dual-Agent Orchestrator Routes ===
         else if (path.rfind("/api/agent/dual/", 0) == 0) {
@@ -662,7 +696,28 @@ private:
     
     // Proxy /api/generate to Ollama backend via WinHTTP
     std::string HandleGenerateRequest(const std::string& body) {
+        (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
+        // LOCAL_ONLY: Ollama HTTP proxy removed. Native Win32 IDE LocalGGUF only.
+        if (!g_engine || !g_engine->isLoaded()) {
+            return MakeErrorResponse(503,
+                "LOCAL_ONLY_NO_OLLAMA: load a GGUF via Model Bridge on Win32 IDE "
+                "(:11435). tool_server no longer proxies to Ollama.");
+        }
+        return MakeErrorResponse(501,
+            "LOCAL_ONLY: model file validated on disk but tool_server stub has no "
+            "generate kernel — use Win32 IDE LocalGGUF m_nativeEngine on :11435.");
+    }
+
+    // LEGACY_OLLAMA_PROXY_REMOVED — keep symbol so older call sites compile if any
+    std::string HandleGenerateRequest_REMOVED_OLLAMA_PROXY(const std::string& body) {
+        (void)body;
+        return MakeErrorResponse(410, "GONE: Ollama proxy deleted");
+    }
+
+#if 0 // Ollama proxy tombstone
+    std::string HandleGenerateRequest_OLD(const std::string& body) {
         auto start_time = std::chrono::high_resolution_clock::now();
+        (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
 
         // Resolve Ollama host/port from environment or defaults
         std::string ollamaHost = "localhost";
@@ -766,6 +821,7 @@ private:
         response += responseBody;
         return response;
     }
+#endif // Ollama proxy tombstone
 
     // Helper: build a JSON error response
     static std::string MakeErrorResponse(int httpCode, const std::string& message) {
@@ -949,10 +1005,48 @@ private:
     // New Handlers — Standalone HTML Chatbot Support
     // ============================================================
 
-    // GET /models — Returns model list in format expected by ide_chatbot.html
-    // Expected: { models: [{ name, type, size }, ...] }
+    // GET /models — LOCAL_ONLY (MASM bridge + validated GGUF). No Ollama /api/tags.
     std::string HandleModelsRequest() {
-        // Query Ollama /api/tags for real models, merge with local GGUF info
+        std::string modelsJson = "[";
+        bool hasModels = false;
+
+#ifdef RAWR_HAS_MASM
+        if (!g_masm_bridge_initialized) {
+            g_masm_bridge_initialized = (ModelBridge_Init() == 0);
+        }
+        uint32_t n = ModelBridge_GetProfileCount();
+        for (uint32_t i = 0; i < n; ++i) {
+            if (!ModelBridge_GetProfile(i)) continue;
+            if (hasModels) modelsJson += ",";
+            modelsJson += "{\"name\":\"profile-" + std::to_string(i) +
+                "\",\"type\":\"masm-bridge\",\"size\":\"local\","
+                "\"index\":" + std::to_string(i) + "}";
+            hasModels = true;
+        }
+#endif
+        if (g_engine && g_engine->isLoaded()) {
+            if (hasModels) modelsJson += ",";
+            modelsJson += "{\"name\":\"" + g_engine->modelPath() +
+                "\",\"type\":\"gguf\",\"size\":\"local\"}";
+            hasModels = true;
+        }
+        if (!hasModels) {
+            modelsJson += R"({"name":"(none — Model Bridge Load on :11435)","type":"localgguf","size":"0"})";
+        }
+        modelsJson += "]";
+
+        std::string json_body = "{\"models\":" + modelsJson + ",\"policy\":\"LOCAL_ONLY_NO_OLLAMA\"}";
+
+        std::string response = "HTTP/1.1 200 OK\r\n";
+        response += "Content-Type: application/json\r\n";
+        response += "Content-Length: " + std::to_string(json_body.length()) + "\r\n";
+        response += "\r\n";
+        response += json_body;
+        return response;
+    }
+
+#if 0 // Ollama /models merge tombstone
+    std::string HandleModelsRequest_OLD() {
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
         if (const char* env = std::getenv("OLLAMA_HOST")) ollamaHost = env;
@@ -1032,6 +1126,7 @@ private:
         response += json_body;
         return response;
     }
+#endif // Ollama /models tombstone
 
     // ============================================================
     // Model Bridge API (backed by pure x64 MASM model_bridge_x64.asm)
@@ -1265,23 +1360,8 @@ private:
         }
 
         if (profileIdx < 0) {
-            // Custom model name (e.g. Ollama bigdaddyg-fast) not in MASM bridge — accept for Ollama routing
-            if (!name.empty()) {
-                g_model_loaded = true;
-                g_loaded_model = name;
-                std::string escaped;
-                for (char c : name) {
-                    if (c == '"') escaped += "\\\"";
-                    else if (c == '\\') escaped += "\\\\";
-                    else escaped += c;
-                }
-                std::string json_body = "{\"success\":true,\"message\":\"Custom model set for Ollama\","
-                    "\"name\":\"" + escaped + "\",\"bridge\":\"ollama-custom\"}";
-                std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
-                resp += "Content-Length: " + std::to_string(json_body.length()) + "\r\n\r\n" + json_body;
-                return resp;
-            }
-            return MakeErrorResponse(400, "Model not found. Provide 'index' (0-23) or 'name'.");
+            return MakeErrorResponse(400,
+                "LOCAL_ONLY_NO_OLLAMA: model not in MASM bridge. Provide index 0-23 or bridged name.");
         }
 
         // Validate first
@@ -1378,7 +1458,8 @@ private:
             "\"cpu\":{\"avx2\":%s,\"fma3\":%s,\"avx512f\":%s,\"avx512bw\":%s},"
             "\"memory\":{\"total_ram_gb\":%llu,\"free_ram_gb\":%llu},"
             "\"engine\":{\"model_loaded\":%s,\"swarm\":%s,\"dual_engine\":%s,"
-            "\"five_drive\":%s,\"tensor_hop\":%s,\"flash_attention\":%s,\"safe_decode\":%s},"
+            "\"five_drive\":%s,\"tensor_hop\":%s,\"flash_attention\":%s,\"safe_decode\":%s,"
+            "\"nvme_reverse_bunnyhop\":%s},"
             "\"active_tier\":\"%s\","
             "\"profile_count\":%u,"
             "\"model_range\":\"1.5B-800B (24 profiles, MASM-bridged)\","
@@ -1396,6 +1477,7 @@ private:
             (caps & 0x100) ? "true" : "false",
             (caps & 0x200) ? "true" : "false",
             (caps & 0x400) ? "true" : "false",
+            Deep2::NvmeBunnyHopApi::ForceEnabled() ? "true" : "false",
             GetTierName(state->active_tier),
             state->profile_count
         );
@@ -1635,6 +1717,15 @@ private:
             return MakeErrorResponse(400, "No messages provided");
         }
 
+        (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
+        (void)client_socket;
+        (void)model;
+        (void)stream;
+        return MakeErrorResponse(503,
+            "LOCAL_ONLY_NO_OLLAMA: /v1/chat/completions no longer proxies to Ollama. "
+            "Use Win32 IDE LocalGGUF on :11435 after Model Bridge load.");
+
+#if 0 // Ollama chat completions proxy tombstone
         // Resolve Ollama backend
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
@@ -1856,10 +1947,22 @@ private:
         response += json_body;
         return response;
     }
+#endif // Ollama chat completions proxy tombstone
 
-    // POST /ask — Simple question/answer endpoint (legacy)
-    // Proxies to Ollama /api/generate in non-streaming mode
+    // POST /ask — LOCAL_ONLY (no Ollama proxy)
     std::string HandleAskRequest(const std::string& body) {
+        (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
+        std::string question = ExtractJsonValue(body, "question");
+        if (question.empty()) {
+            return MakeErrorResponse(400, "Missing 'question' field");
+        }
+        return MakeErrorResponse(503,
+            "LOCAL_ONLY_NO_OLLAMA: /ask no longer proxies to Ollama. "
+            "Use Win32 IDE LocalGGUF on :11435 after Model Bridge load.");
+    }
+
+#if 0 // Ollama /ask proxy tombstone
+    std::string HandleAskRequest_OLD(const std::string& body) {
         std::string question = ExtractJsonValue(body, "question");
         std::string model = ExtractJsonValue(body, "model");
         if (model.empty()) model = "rawrxd";
@@ -1960,6 +2063,7 @@ private:
         response += json_body;
         return response;
     }
+#endif // Ollama /ask proxy tombstone
 
     // GET /gui — Serve ide_chatbot.html from disk
     std::string HandleGuiRequest() {

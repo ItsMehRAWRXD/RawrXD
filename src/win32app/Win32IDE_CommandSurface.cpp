@@ -15,6 +15,8 @@
 #include "TokenPressure.hpp"
 #endif
 #include "../agentic/AgentToolHandlers.h"
+#include "../core/AmdGpuPowerBackend.hpp"
+#include "../rkc/RKCProductContext.hpp"
 #include <algorithm>
 #include <commctrl.h>
 #include <commdlg.h>
@@ -210,23 +212,21 @@ static std::uint64_t p1praFileSizeBytes(const std::string& path) {
 
 std::string Win32IDE::assembleCommandInferenceContext(const std::string& userMsg,
                                                       std::size_t byteBudget) const {
-    const std::size_t budget = byteBudget == 0 ? 12288 : byteBudget;
-    std::ostringstream ctx;
-    ctx << "[ScreenPilot context â€” bounded]\n";
-    std::size_t used = 0;
-    auto take = [&](const std::string& block) {
-        if (block.empty() || used >= budget) return;
-        const std::size_t room = budget - used;
-        if (block.size() <= room) {
-            ctx << block;
-            used += block.size();
-        } else {
-            ctx << block.substr(0, room) << "\nâ€¦[truncated]\n";
-            used = budget;
-        }
-    };
+    RawrXD::RKC::ProductAssembleInput in;
+    in.query = userMsg;
+    in.modelPath = getLoadedModelPath();
+    in.byteBudget = byteBudget == 0 ? 12288 : byteBudget;
+    in.probeOllama = true;
 
-    if (m_hwndEditor && IsWindow(m_hwndEditor)) {
+    // Selection only fetched when RKC would treat this as patch intent.
+    // Pre-check mirrors AssembleProductContext wantsPatch keys without HWND work
+    // when not needed — still pass selection when available for implement/patch.
+    const bool maybePatch =
+        userMsg.find("implement") != std::string::npos ||
+        userMsg.find("Implement") != std::string::npos ||
+        userMsg.find("patch") != std::string::npos ||
+        userMsg.find("cancel") != std::string::npos;
+    if (maybePatch && m_hwndEditor && IsWindow(m_hwndEditor)) {
         DWORD start = 0, end = 0;
         SendMessageW(m_hwndEditor, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
         if (end > start && (end - start) < 65536) {
@@ -235,28 +235,13 @@ std::string Win32IDE::assembleCommandInferenceContext(const std::string& userMsg
                 std::wstring w(static_cast<size_t>(len) + 1, L'\0');
                 GetWindowTextW(m_hwndEditor, w.data(), len + 1);
                 w.resize(static_cast<size_t>(len));
-                if (end <= w.size() && start < end) {
-                    const std::string sel = RawrXD::WideToUtf8(w.substr(start, end - start));
-                    take("## Selection\n```\n" + sel + "\n```\n");
-                }
+                if (end <= w.size() && start < end)
+                    in.selection = RawrXD::WideToUtf8(w.substr(start, end - start));
             }
         }
     }
 
-    int openCount = 0;
-    for (const auto& tab : m_editorTabs) {
-        if (openCount >= 4 || used >= budget) break;
-        if (tab.filePath.empty() && tab.displayName.empty()) continue;
-        std::string snippet = tab.content;
-        if (snippet.size() > 1500) snippet = snippet.substr(0, 1500) + "\nâ€¦";
-        take(std::string("## Open: ") +
-             (tab.filePath.empty() ? tab.displayName : tab.filePath) + "\n```\n" +
-             snippet + "\n```\n");
-        ++openCount;
-    }
-
-    take("## User\n" + userMsg + "\n");
-    return ctx.str();
+    return RawrXD::RKC::AssembleProductContext(in).assembled;
 }
 
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY

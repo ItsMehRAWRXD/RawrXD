@@ -7,6 +7,8 @@
 
 #include "streaming_engine_registry.h"
 #include <windows.h>
+#include <dxgi.h>
+#pragma comment(lib, "dxgi.lib")
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -508,14 +510,22 @@ EngineSelectionResult StreamingEngineRegistry::selectEngine(const ModelProfile& 
     
     for (const auto& [name, engine] : m_engines) {
         int s = scoreEngine(engine, model, hw);
-        if (s > 0) {
+        if (s > 0)
+            scored.push_back({name, s});
+    }
+    // Hardware/tier mismatch must not hide the model: fall back to any streamer.
+    if (scored.empty()) {
+        for (const auto& [name, engine] : m_engines) {
+            int s = 1;
+            if (hasCapability(engine.capabilities, EngineCapability::Streaming)) s += 20;
+            if (hasCapability(engine.capabilities, EngineCapability::VRAM_Paging)) s += 20;
             scored.push_back({name, s});
         }
-    }
-    
-    if (scored.empty()) {
-        result.reason = "No engines match the model profile";
-        return result;
+        if (scored.empty()) {
+            result.reason = "No engines registered";
+            return result;
+        }
+        result.reason = "HARDWARE_MISMATCH_STREAM_FALLBACK";
     }
     
     // Sort by score descending
@@ -595,28 +605,23 @@ int StreamingEngineRegistry::scoreEngine(const StreamingEngineDescriptor& engine
         if (formatMatch) score += 100;
     }
     
-    // ---- Size tier match ----
+    // ---- Size tier: score, never reject (stream/offload still detects) ----
     if (model.sizeTier >= engine.minSizeTier && model.sizeTier <= engine.maxSizeTier) {
         score += 200;
-        
-        // Bonus for exact tier match (engine designed for this size)
         if (engine.maxModelBillions > 0 && model.parameterCount > 0) {
             uint64_t billionParams = model.parameterCount / 1000000000ULL;
-            if (billionParams <= engine.maxModelBillions) {
+            if (billionParams <= engine.maxModelBillions)
                 score += 50;
-            }
         }
     } else {
-        return 0;  // Engine can't handle this model size
+        score += 15;
     }
-    
-    // ---- VRAM compatibility ----
-    if (engine.minVRAM > 0 && hw.totalVRAM < engine.minVRAM) {
-        return 0;  // Not enough VRAM for this engine
-    }
-    if (engine.minVRAM > 0 && hw.totalVRAM >= engine.minVRAM) {
+
+    // ---- VRAM: prefer fit, never hide the model ----
+    if (engine.minVRAM > 0 && hw.totalVRAM >= engine.minVRAM)
         score += 50;
-    }
+    else if (engine.minVRAM > 0)
+        score += 8;
     
     // ---- Capability bonuses ----
     if (hasCapability(engine.capabilities, EngineCapability::Streaming)) score += 30;
@@ -811,12 +816,33 @@ HardwareProfile StreamingEngineRegistry::detectHardware() {
         hw.cpuName = brand;
     }
     
-    // GPU detection (simplified — real would use DXGI or Vulkan enumeration)
-    // For now, check for known GPU-related registry keys or use defaults
-    hw.gpuCount = 1;       // Assume at least one GPU
-    hw.totalVRAM = 16ULL * 1024 * 1024 * 1024; // Default 16GB (RX 7800 XT target)
+    hw.gpuCount = 0;
+    hw.totalVRAM = 0;
+    hw.availableVRAM = 0;
+    hw.gpuName = "undetected";
+    IDXGIFactory1* factory = nullptr;
+    if (SUCCEEDED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory)) && factory) {
+        IDXGIAdapter1* adapter = nullptr;
+        for (UINT i = 0; factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+            DXGI_ADAPTER_DESC1 d{};
+            if (adapter && SUCCEEDED(adapter->GetDesc1(&d))) {
+                const bool soft = (d.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0;
+                if (!soft && d.DedicatedVideoMemory > (256ull << 20)) {
+                    ++hw.gpuCount;
+                    if (d.DedicatedVideoMemory > hw.totalVRAM) {
+                        hw.totalVRAM = (uint64_t)d.DedicatedVideoMemory;
+                        char name[128] = {};
+                        WideCharToMultiByte(CP_UTF8, 0, d.Description, -1, name, 127, nullptr, nullptr);
+                        hw.gpuName = name;
+                    }
+                }
+            }
+            if (adapter) adapter->Release();
+            adapter = nullptr;
+        }
+        factory->Release();
+    }
     hw.availableVRAM = hw.totalVRAM;
-    hw.gpuName = "Auto-Detected GPU";
     
     // Drive count (check known drive letters)
     hw.driveCount = 0;
@@ -851,9 +877,26 @@ ModelProfile StreamingEngineRegistry::detectModelProfile(const std::string& file
     std::filesystem::path p(filePath);
     profile.modelName = p.stem().string();
     
-    // File size
-    if (std::filesystem::exists(filePath)) {
-        profile.fileSize = std::filesystem::file_size(filePath);
+    try {
+        if (std::filesystem::is_directory(filePath)) {
+            uint64_t sum = 0;
+            uint32_t n = 0;
+            for (const auto& e : std::filesystem::directory_iterator(
+                     filePath, std::filesystem::directory_options::skip_permission_denied)) {
+                if (!e.is_regular_file()) continue;
+                auto ext = e.path().extension().string();
+                if (ext == ".gguf" || ext == ".GGUF") {
+                    sum += (uint64_t)e.file_size();
+                    ++n;
+                }
+            }
+            profile.fileSize = sum;
+            if (n > 1) { profile.isSharded = true; profile.shardCount = n; }
+        } else if (std::filesystem::exists(filePath)) {
+            profile.fileSize = std::filesystem::file_size(filePath);
+        }
+    } catch (...) {
+        profile.fileSize = 0;
     }
     
     // Detect format

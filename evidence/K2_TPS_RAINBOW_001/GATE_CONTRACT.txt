@@ -1,0 +1,8 @@
+# K2_TPS_RAINBOW_001
+# Byteless rainbow: packed knob key → TPS. No weight/tensor bytes stored.
+#
+# HIT when:
+#   TPS_STREAM = REF_BW_BPS / BPT_MEASURED  >= DEEP2_TPS_TARGET (default 150)
+#   OR TPS_WALL (raw tok/s, scale=1) >= target
+#
+# Outputs: TABLE.txt, WINNER.txt, WINNER.env

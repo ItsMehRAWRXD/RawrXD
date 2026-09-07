@@ -1,0 +1,5 @@
+ok=1 bound=1 moved=1 streamTied=1 laneOk=1
+GPU_COPY_BYTES_TOTAL=528482304
+GPU_COPY_OPS_TOTAL=16
+K2_GPU_STREAM_COPY_001=PASS
+NOTE=K2 stream lane now performs real host→device vkCmdCopy; overlap is next gate.

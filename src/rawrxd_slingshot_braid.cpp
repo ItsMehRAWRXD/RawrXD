@@ -1,4 +1,5 @@
 #include "rawrxd_slingshot_braid.hpp"
+#include "Deep2LivePath.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -309,17 +310,19 @@ bool SlingshotBraidEmitter::IsAttentionTensor(const std::string& name)
 uint16_t SlingshotBraidEmitter::DetermineBouncePass(
     const std::string& name, uint32_t tile_id, uint16_t element_count)
 {
-    (void)element_count;  // Unused for now, reserved for adaptive logic
+    (void)element_count;
+
+    // Prefer live Pinball telemetry when generate path is active.
+    if (Deep2::LivePath_Active()) {
+        uint16_t live = Deep2::LivePath_PinballBounce();
+        if (live > 0) return live;
+    }
 
     // Attention tensors: higher precision floor, later bounce
     if (IsAttentionTensor(name)) {
-        // Sacred attention: allow up to full 256 passes
-        // Add some tile-local variation to simulate adaptive convergence
         return static_cast<uint16_t>(200 + (tile_id % 56));
     }
 
-    // FFN tensors: aggressive quantization, early bounce
-    // Simulate the Pinball convergence pattern from telemetry:
-    //   Bounce ~68 for ordinary tensors, with some variation
+    // Offline fallback only when live path is not owning bounce.
     return static_cast<uint16_t>(68 + (tile_id % 32));
 }

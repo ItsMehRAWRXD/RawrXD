@@ -6,11 +6,14 @@
 
 #include "NVMeStream.h"
 #include "TelemetrySinks.hpp"
+#include "StreamTransferCounters.hpp"
+#include "K2ShardIo.hpp"
+#include <filesystem>
 #include <cstdio>
 #include <algorithm>
 #include <cstring>
-#include <cstdio>
-#include <algorithm>
+#include <cstdlib>
+#include "NVMeReverseBunnyHop.cpp"
 
 namespace Deep2 {
 
@@ -28,47 +31,104 @@ NVMeStream::~NVMeStream() {
     shutdown();
 }
 
+bool NVMeStream::initializeReverseBunnyHop(const NVMeStreamConfig& cfg) {
+    config = cfg;
+    bunnyHop_ = std::make_unique<NVMeReverseBunnyHop>();
+    NVMeBunnyHopConfig bc;
+    bc.path = cfg.modelPath;
+    bc.maxResidentBytes = cfg.maxResidentBytes;
+    bc.chunkBytes = 4ull << 20;
+    if (const char* m = std::getenv("RAWRXD_NVME_BUNNYHOP_CHUNK_MIB")) {
+        int mib = std::atoi(m);
+        if (mib > 0) bc.chunkBytes = (size_t)mib << 20;
+    }
+    bc.unlaidout = true;
+    bc.hotpatchRelive = true;
+    if (!bunnyHop_->initialize(bc)) {
+        bunnyHop_.reset();
+        return false;
+    }
+    printf("[NVMeStream] FALLBACK→FORCE %s\n", bunnyHop_->modeName());
+    return true;
+}
+
+// Multi-shard K2: persistent Win32 handles beat reverse-chunk bunnyhop.
+static bool InitShardIoBridge(NVMeStreamConfig& config) {
+    if (config.modelPath.empty()) {
+        if (const char* d = std::getenv("DEEP2_K2_SHARD_DIR"))
+            if (d[0]) config.modelPath = d;
+    }
+    if (config.modelPath.empty()) return false;
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    if (!fs::is_directory(config.modelPath, ec)) return false;
+    if (!Deep2::K2ShardIo_Enabled()) return false;
+    const size_t n = Deep2::K2ShardIo_WarmDirectory(config.modelPath);
+    printf("[NVMeStream] SHARD_IO bridge path=%s warmed=%zu (RANDOM_ACCESS)\n",
+           config.modelPath.c_str(), n);
+    return true; // directory valid; handles open on demand if warm==0
+}
+
 bool NVMeStream::initialize(const NVMeStreamConfig& cfg) {
     config = cfg;
+    const char* forceBh = std::getenv("RAWRXD_NVME_REVERSE_BUNNYHOP");
+    if (forceBh && forceBh[0] && forceBh[0] != '0') {
+        printf("[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop\n");
+        return initializeReverseBunnyHop(cfg);
+    }
+    if (config.modelPath.empty()) {
+        if (const char* d = std::getenv("DEEP2_K2_SHARD_DIR"))
+            if (d[0]) config.modelPath = d;
+    }
+    // Prefer shard-IO bridge for directories (Kimi multi-.gguf).
+    if (InitShardIoBridge(config)) {
+        bunnyHop_.reset();
+        return true;
+    }
+    if (config.modelPath.empty()) {
+        // Do not bunnyhop with empty path — wait for openK2ShardDirectory.
+        printf("[NVMeStream] defer: empty path (await shard dir)\n");
+        return false;
+    }
     
 #ifdef _WIN32
     // Open the GGUF file
     hFile = CreateFileA(config.modelPath.c_str(), GENERIC_READ,
                         FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS,
                         nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
-        printf("[NVMeStream] ERROR: Failed to open %s (err=%lu)\n",
+        printf("[NVMeStream] ERROR: Failed to open %s (err=%lu) → reverse bunnyhop\n",
                config.modelPath.c_str(), GetLastError());
-        return false;
+        return initializeReverseBunnyHop(cfg);
     }
     
     // Get file size
     if (!GetFileSizeEx(hFile, &fileSize)) {
-        printf("[NVMeStream] ERROR: GetFileSizeEx failed\n");
-        CloseHandle(hFile);
-        return false;
+        printf("[NVMeStream] ERROR: GetFileSizeEx failed → reverse bunnyhop\n");
+        CloseHandle(hFile); hFile = INVALID_HANDLE_VALUE;
+        return initializeReverseBunnyHop(cfg);
     }
     
     // Create file mapping
     hFileMapping = CreateFileMappingA(hFile, nullptr, PAGE_READONLY,
                                        0, 0, nullptr);
     if (!hFileMapping) {
-        printf("[NVMeStream] ERROR: CreateFileMapping failed (err=%lu)\n",
+        printf("[NVMeStream] ERROR: CreateFileMapping failed (err=%lu) → bunnyhop\n",
                GetLastError());
-        CloseHandle(hFile);
-        return false;
+        CloseHandle(hFile); hFile = INVALID_HANDLE_VALUE;
+        return initializeReverseBunnyHop(cfg);
     }
     
     // Map view of entire file (OS handles paging)
     fileBase = (const uint8_t*)MapViewOfFile(hFileMapping, FILE_MAP_READ,
                                                0, 0, 0);
     if (!fileBase) {
-        printf("[NVMeStream] ERROR: MapViewOfFile failed (err=%lu)\n",
+        printf("[NVMeStream] ERROR: MapViewOfFile failed (err=%lu) → bunnyhop\n",
                GetLastError());
-        CloseHandle(hFileMapping);
-        CloseHandle(hFile);
-        return false;
+        CloseHandle(hFileMapping); hFileMapping = nullptr;
+        CloseHandle(hFile); hFile = INVALID_HANDLE_VALUE;
+        return initializeReverseBunnyHop(cfg);
     }
     
     printf("[NVMeStream] Mapped %s (%.2f GB)\n",
@@ -118,6 +178,7 @@ const uint8_t* NVMeStream::acquireExpert(int layerId, int expertId,
         cacheHits++;
         touchEntry(key);
         sizeBytes = it->second.sizeBytes;
+        StreamTransfer_RecordRead(sizeBytes, /*cacheHit=*/true);
         return it->second.mappedPtr;
     }
     
@@ -132,6 +193,25 @@ const uint8_t* NVMeStream::acquireExpert(int layerId, int expertId,
     }
     
     const ExpertMeta& meta = metaIt->second;
+
+    // Reverse bunnyhop path: unlaidout chunk hop (no mmap layout).
+    if (bunnyHop_ && bunnyHop_->active()) {
+        (void)bunnyHop_->hopReverseChunk();
+        const uint8_t* ptr = bunnyHop_->computePtr();
+        size_t hopN = bunnyHop_->computeBytes();
+        sizeBytes = (meta.sizeBytes && meta.sizeBytes <= hopN) ? meta.sizeBytes : hopN;
+        ExpertResidencyEntry entry;
+        entry.layerId = layerId; entry.expertId = expertId;
+        entry.mappedPtr = ptr; entry.sizeBytes = sizeBytes;
+        entry.lastAccessTick = currentTick; entry.accessCount = 1;
+        entry.isResident = true;
+        residencyCache_[key] = entry;
+        residentBytes += sizeBytes;
+        const IoTransferId xfer = NoteNvmeRequest(sizeBytes, false);
+        NoteNvmeConsumed(xfer, sizeBytes);
+        StreamTransfer_RecordRead(sizeBytes, /*cacheHit=*/false);
+        return ptr;
+    }
     
     // Check if we need to evict
     while (residentBytes + meta.sizeBytes > config.maxResidentBytes) {
@@ -150,6 +230,8 @@ const uint8_t* NVMeStream::acquireExpert(int layerId, int expertId,
     
     residencyCache_[key] = entry;
     residentBytes += meta.sizeBytes;
+    sizeBytes = meta.sizeBytes;
+    StreamTransfer_RecordRead(meta.sizeBytes, /*cacheHit=*/false);
 
     // Streamer op / mmap residency — logical (+prefetch), not physical ReadFile.
     {
@@ -298,6 +380,7 @@ float NVMeStream::getHitRate() const {
 }
 
 void NVMeStream::shutdown() {
+    if (bunnyHop_) { bunnyHop_->shutdown(); bunnyHop_.reset(); }
 #ifdef _WIN32
     if (fileBase) {
         UnmapViewOfFile(fileBase);

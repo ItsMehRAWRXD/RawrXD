@@ -1,0 +1,19 @@
+K2_E2E_MODEL_SIZE_MATRIX_001=PASS
+
+CORPUS_GIB=578.58 (fixed K2 Q4_K_M; other local quants empty)
+CORPUS_DISTINCT=1  (every live STREAM_BYTES << corpus/20)
+
+CLASS_GRID depth×tokens (6×4=24): all arms match
+  reuse < crossover → OFF
+  else → TRAMPOLINE_OUTPUT_CACHE
+
+LIVE DEFAULT AUTO:
+  D2x2  OFF                      tps=0.224  stream≈2.18 GB
+  D4x2  TRAMPOLINE_OUTPUT_CACHE  tps=0.795  stream≈1.47 GB  cache≈0.96 GB
+  D8x2  TRAMPOLINE_OUTPUT_CACHE  tps=0.691  stream≈1.97 GB
+  D61x2 TRAMPOLINE + LAYER_VETO  tps=0.174  stream≈8.67 GB  veto=1
+
+DEFAULT_AUTO=1  LIVE=4/4  CYCLONE/ELASTIC=0 on trampoline cells
+
+Note: matrix varies workload size (depth×tokens), not alternate quant
+dirs — only Q4_K_M shards are present under Kimi-K2 on this machine.

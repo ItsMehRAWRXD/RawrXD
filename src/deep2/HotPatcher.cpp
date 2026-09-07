@@ -182,7 +182,7 @@ public:
     std::unordered_map<std::string, std::string> abTests;
     
     TrampolineAllocator trampolineAlloc;
-    std::mutex mutex;
+    std::recursive_mutex mutex;
     
     std::atomic<bool> autoRollback{true};
     std::atomic<uint64_t> maxApplyTimeMs{1000};
@@ -263,7 +263,7 @@ public:
         ValidationResult result;
         result.passed = false;
         
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::recursive_mutex> lock(mutex);
         
         auto it = patches.find(patchId);
         if (it == patches.end()) {
@@ -443,7 +443,7 @@ public:
     
     // Rollback a patch
     bool rollbackPatch(const std::string& patchId) {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard<std::recursive_mutex> lock(mutex);
         
         auto it = patches.find(patchId);
         if (it == patches.end()) return false;
@@ -512,40 +512,49 @@ void HotPatcher::shutdown() {
 }
 
 // Register patches
-template<typename FuncType>
-std::string HotPatcher::registerFunctionHook(
+std::string HotPatcher::registerRawFunctionHook(
     const std::string& name,
-    FuncType* targetFunc,
-    FuncType* replacementFunc,
+    void* targetFunc,
+    void* replacementFunc,
+    size_t patchSize,
     const PatchMetadata& meta) {
-    
-    std::lock_guard<std::mutex> lock(impl_->mutex);
-    
+
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
+
     std::string patchId = impl_->generatePatchId();
     auto patch = std::make_unique<PatchImpl>();
-    
+
     patch->metadata = meta;
     patch->metadata.id = patchId;
     patch->metadata.name = name;
     patch->metadata.type = PatchType::FUNCTION_HOOK;
     patch->metadata.createdAt = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
-    
-    patch->funcHook.target = (void*)targetFunc;
-    patch->funcHook.replacement = (void*)replacementFunc;
-    patch->funcHook.patchSize = 12;  // x64: mov rax, addr; jmp rax
-    
+
+    patch->funcHook.target = targetFunc;
+    patch->funcHook.replacement = replacementFunc;
+    patch->funcHook.patchSize = patchSize ? patchSize : 12;
+
     impl_->patches[patchId] = std::move(patch);
-    
+
     printf("[HotPatcher] Registered function hook: %s (%s)\n", name.c_str(), patchId.c_str());
     return patchId;
+}
+
+template<typename FuncType>
+std::string HotPatcher::registerFunctionHook(
+    const std::string& name,
+    FuncType* targetFunc,
+    FuncType* replacementFunc,
+    const PatchMetadata& meta) {
+    return registerRawFunctionHook(name, (void*)targetFunc, (void*)replacementFunc, 12, meta);
 }
 
 std::string HotPatcher::registerKernelReplacement(
     const KernelReplacement& kernel,
     const PatchMetadata& meta) {
     
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     std::string patchId = impl_->generatePatchId();
     auto patch = std::make_unique<PatchImpl>();
@@ -571,7 +580,7 @@ std::string HotPatcher::registerDecoderMode(
     const DecoderModePatch& mode,
     const PatchMetadata& meta) {
     
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     std::string patchId = impl_->generatePatchId();
     auto patch = std::make_unique<PatchImpl>();
@@ -597,7 +606,7 @@ std::string HotPatcher::registerConfigOverride(
     const std::string& newValue,
     const PatchMetadata& meta) {
     
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     std::string patchId = impl_->generatePatchId();
     auto patch = std::make_unique<PatchImpl>();
@@ -625,7 +634,7 @@ ValidationResult HotPatcher::validate(const std::string& patchId) {
 }
 
 bool HotPatcher::apply(const std::string& patchId) {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     auto it = impl_->patches.find(patchId);
     if (it == impl_->patches.end()) return false;
@@ -670,7 +679,7 @@ bool HotPatcher::rollback(const std::string& patchId) {
 
 // Query
 PatchStatus HotPatcher::getStatus(const std::string& patchId) {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     auto it = impl_->patches.find(patchId);
     if (it == impl_->patches.end()) return PatchStatus::FAILED;
@@ -678,7 +687,7 @@ PatchStatus HotPatcher::getStatus(const std::string& patchId) {
 }
 
 std::vector<std::string> HotPatcher::listPatches(PatchStatus filter) {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     std::vector<std::string> result;
     for (const auto& [id, patch] : impl_->patches) {
@@ -703,7 +712,7 @@ bool HotPatcher::isAutoRollbackEnabled() const {
 }
 
 bool HotPatcher::isInErrorState() const {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     for (const auto& [id, patch] : impl_->patches) {
         if (patch->status == PatchStatus::FAILED) {
             return true;
@@ -713,7 +722,7 @@ bool HotPatcher::isInErrorState() const {
 }
 
 PatchMetadata HotPatcher::getMetadata(const std::string& patchId) {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     auto it = impl_->patches.find(patchId);
     if (it != impl_->patches.end()) {
         return it->second->metadata;
@@ -726,7 +735,7 @@ bool HotPatcher::emergencyRollback() {
     
     std::vector<std::string> active;
     {
-        std::lock_guard<std::mutex> lock(impl_->mutex);
+        std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
         for (const auto& [id, patch] : impl_->patches) {
             if (patch->status == PatchStatus::ACTIVE) {
                 active.push_back(id);
@@ -747,7 +756,7 @@ bool HotPatcher::emergencyRollback() {
 
 // Statistics
 void HotPatcher::printStatus() {
-    std::lock_guard<std::mutex> lock(impl_->mutex);
+    std::lock_guard<std::recursive_mutex> lock(impl_->mutex);
     
     printf("\n╔══════════════════════════════════════════════════════════════╗\n");
     printf("║              HotPatcher Status - The Bottle                    ║\n");

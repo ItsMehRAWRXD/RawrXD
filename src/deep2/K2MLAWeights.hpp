@@ -43,8 +43,9 @@ struct MLAWeights {
     RawrXD::TensorView attnKV_a_mqa;      // [hiddenDim, kvLoraRank + qkRopeHeadDim]
                                           //   = [hiddenDim, 576] for K2 0905
     RawrXD::TensorView attnKV_a_norm;     // [kvLoraRank]                — RMSNorm scale (applied to compressed_kv only)
-    RawrXD::TensorView attnK_b;           // [kvLoraRank, numHeads * qkNopeHeadDim] — K_nope projection
-    RawrXD::TensorView attnV_b;           // [kvLoraRank, numHeads * vHeadDim]     — V projection
+    RawrXD::TensorView attnK_b;           // K2: [kvLora, n_head*nope] 3D/2D; R1 fused kv_b if fusedKvB
+    RawrXD::TensorView attnV_b;           // K2 split V_b; empty on DeepSeek-R1 fused attn_kv_b
+    bool fusedKvB = false;                // R1 GGUF: blk.N.attn_kv_b = per-head [K_nope|V]
 
     // --- Attention output ---
     RawrXD::TensorView attnO;             // [numHeads * vHeadDim, hiddenDim]

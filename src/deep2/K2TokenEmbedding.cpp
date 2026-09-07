@@ -4,11 +4,44 @@
 
 #include "K2TokenEmbedding.hpp"
 #include "K2GlobalTensorIndex.hpp"
-#include <fstream>
+#include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <vector>
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
 
 namespace Deep2 {
+
+#ifdef _WIN32
+static bool ReadAtWin32(const std::wstring& wpath, std::uint64_t off,
+                        void* buf, std::size_t len) {
+    HANDLE h = CreateFileW(wpath.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                           nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h == INVALID_HANDLE_VALUE) return false;
+    std::size_t total = 0;
+    while (total < len) {
+        DWORD want = (DWORD)((std::min)(len - total, (std::size_t)(1u << 20)));
+        LARGE_INTEGER li;
+        li.QuadPart = (LONGLONG)(off + total);
+        OVERLAPPED ov{};
+        ov.Offset = li.LowPart;
+        ov.OffsetHigh = (DWORD)li.HighPart;
+        DWORD did = 0;
+        if (!ReadFile(h, (char*)buf + total, want, &did, &ov) || did == 0) {
+            CloseHandle(h);
+            return false;
+        }
+        total += did;
+    }
+    CloseHandle(h);
+    return true;
+}
+#endif
 
 // ── FP16 → FP32 (standalone) ──
 static inline float fp16ToFloat(uint16_t h) {
@@ -191,26 +224,30 @@ K2TokenEmbedding::Result K2TokenEmbedding::lookup(std::uint32_t tokenId, float* 
     }
 
     const auto& shardPath = index_->ShardPath(ref.shardId);
+    std::vector<uint8_t> rowBuf(rowBytes);
+    acquire(rowBytes);
+#ifdef _WIN32
+    const std::uint64_t absOff = ref.fileOffset + rowOffset;
+    if (!ReadAtWin32(shardPath.wstring(), absOff, rowBuf.data(), rowBytes)) {
+        release(rowBytes);
+        result.error = "Read size mismatch for row";
+        return result;
+    }
+#else
     std::ifstream f(shardPath.string(), std::ios::binary);
     if (!f) {
+        release(rowBytes);
         result.error = "Cannot open shard";
         return result;
     }
     f.seekg(static_cast<std::streamoff>(ref.fileOffset + rowOffset));
-    if (!f.good()) {
-        result.error = "Seek failed";
-        return result;
-    }
-
-    // Allocate temporary row buffer
-    std::vector<uint8_t> rowBuf(rowBytes);
-    acquire(rowBytes);
     f.read(reinterpret_cast<char*>(rowBuf.data()), rowBytes);
     if (static_cast<std::size_t>(f.gcount()) != rowBytes) {
         release(rowBytes);
         result.error = "Read size mismatch for row";
         return result;
     }
+#endif
     result.bytesRead = rowBytes;
 
     // Dequantize into output

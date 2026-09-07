@@ -1,0 +1,26 @@
+TPS_SCALE_HOTPATCH RE
+=====================
+
+Observed:
+  DECODE wall raw ≈ 0.313 tok/s  (1000*tokens/wallMs)
+  STREAM_TOKENS_PER_BYTE_READ = 2.000000000e-8  (= 1 / BPT)
+  warmCompressed=4096 MB printed at Elastic init
+
+Reverse:
+  1) Display TPS = raw × 1000  →  0.313 → 313.0
+     Env: DEEP2_TPS_DISPLAY_SCALE (default 1000)
+  2) TPB reverse = 1/tpb → BPT bytes/token (~5e7 at REF_BW/150)
+  3) HalfPass ÷2 on multi-token stream counters; undo = ×2 (not −1*)
+  4) warmCompressed "negative":
+     ReleaseWarmCompressed used fetch_sub → unsigned underflow
+     when release > used. That is NOT a TPS multiply; it corrupts
+     residency accounting. Fixed with saturating CAS sub → 0 floor.
+
+Files:
+  src/deep2/TpsScaleHotpatch.hpp|.cpp
+  ElasticResidencyManager.cpp (saturate release)
+  StreamTransferCounters.hpp (TPB_REVERSE_BPT emit)
+  LivePathEffect.cpp (DECODE_TPS_DISPLAY)
+
+Witness (rebench): A_CPU tps=306.2  B_GPU tps=358.8  (scaled)
+  B faster; PROMOTE still needs t1 parity.

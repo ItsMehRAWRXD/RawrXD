@@ -61,6 +61,9 @@ public:
     
     // Check if cache is full
     bool isFull() const { return currentPos >= config.maxSeqLen; }
+
+    // Grow maxSeqLen, preserving written prefix positions
+    bool grow(size_t newMaxSeqLen);
     
     // Memory usage
     size_t memoryUsed() const;

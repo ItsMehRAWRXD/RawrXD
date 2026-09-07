@@ -1,0 +1,21 @@
+K2_AUTO_WORKLOAD_POLICY_001=PASS
+TOKENS=2 DEPTH=61
+
+CLASSIFY
+  ARM=TRAMPOLINE_OUTPUT_CACHE
+  LAYER_VETO=1 BUDGET_FIT=0
+  reason=default_trampoline_layer_veto
+
+AUTO vs MANUAL trampoline champion
+  CHAMP_TPS=0.050
+  AUTO_TPS=0.051
+  FLOOR=0.049 (0.97×champ)
+  OUTPUT_PARITY=1
+  FALLBACK=0 ACTIVE=0
+  POLICY_SWITCHES_PER_REQUEST=1
+  AUTO_POLICY_SELECTED=1 MANUAL_OVERRIDE=0
+
+Working-set economics encoded:
+  predicted layer WS > usable budget after output reserve
+  → forbid cyclone/elastic
+  → trampoline + output.weight

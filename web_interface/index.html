@@ -473,7 +473,7 @@
       <div class="settings-body">
         <div class="form-group">
           <label>RawrEngine URL</label>
-          <input type="text" id="apiUrl" value="http://localhost:23959" placeholder="http://localhost:23959">
+          <input type="text" id="apiUrl" value="/api" placeholder="/api">
         </div>
         <div class="form-group">
           <label>API Key (optional)</label>
@@ -497,7 +497,7 @@
     // Zero dependencies, vanilla JS, connects to RawrEngine HTTP API
 
     const state = {
-      apiUrl: localStorage.getItem('rawrxd_api_url') || 'http://localhost:23959',
+      apiUrl: localStorage.getItem('rawrxd_api_url') || '/api',
       apiKey: localStorage.getItem('rawrxd_api_key') || '',
       currentModel: '',
       agentMode: 'ask',

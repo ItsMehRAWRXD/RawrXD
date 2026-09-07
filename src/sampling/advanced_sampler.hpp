@@ -163,6 +163,11 @@ public:
     virtual void Reset() {
         tokenHistory_.clear();
     }
+
+    void setRepetitionPenalty(float p) { repetitionPenalty_ = (p > 0.0f) ? p : 1.0f; }
+    void setMinP(float p) { minP_ = (p >= 0.0f) ? p : 0.0f; }
+    float repetitionPenalty() const { return repetitionPenalty_; }
+    float minP() const { return minP_; }
     
     // Sample from logits directly (convenience method)
     // Applies repetition penalties before softmax
@@ -173,6 +178,7 @@ public:
         ctx.vocab_size = static_cast<int>(modified.size());
         ctx.tokens = tokenHistory_;
         auto probs = softmax(modified);
+        applyMinP(probs);
         auto result = sample(probs, ctx);
         return result.selected_token;
     }
@@ -187,17 +193,35 @@ public:
     
 protected:
     std::vector<int> tokenHistory_;
+    float repetitionPenalty_ = 1.0f;
+    float minP_ = 0.0f;
     
     // Apply repetition penalty to logits based on token history
     virtual void applyPenalties(std::vector<float>& logits) {
         if (tokenHistory_.empty() || logits.empty()) return;
+        if (repetitionPenalty_ == 1.0f) return;
         size_t window = (std::min)(tokenHistory_.size(), size_t(64));
         std::unordered_set<int> recent(tokenHistory_.end() - window, tokenHistory_.end());
         for (int tok : recent) {
             if (tok >= 0 && tok < (int)logits.size()) {
-                if (logits[tok] > 0) logits[tok] /= 1.1f;
-                else logits[tok] *= 1.1f;
+                if (logits[tok] > 0) logits[tok] /= repetitionPenalty_;
+                else logits[tok] *= repetitionPenalty_;
             }
+        }
+    }
+
+    void applyMinP(std::vector<float>& probs) const {
+        if (minP_ <= 0.0f || probs.empty()) return;
+        float peak = 0.0f;
+        for (float p : probs) if (p > peak) peak = p;
+        const float floor = peak * minP_;
+        float sum = 0.0f;
+        for (float& p : probs) {
+            if (p < floor) p = 0.0f;
+            sum += p;
+        }
+        if (sum > 0.0f) {
+            for (float& p : probs) p /= sum;
         }
     }
     
@@ -262,6 +286,7 @@ public:
             for (auto& v : scaled) v /= temperature_;
         }
         auto probs = softmax(scaled);
+        applyMinP(probs);
         SamplingContext ctx;
         ctx.vocab_size = static_cast<int>(probs.size());
         ctx.top_k = k_;
@@ -300,6 +325,7 @@ public:
             for (auto& v : scaled) v /= temperature_;
         }
         auto probs = softmax(scaled);
+        applyMinP(probs);
         SamplingContext ctx;
         ctx.vocab_size = static_cast<int>(probs.size());
         ctx.top_p = top_p_;

@@ -1,0 +1,17 @@
+# Production live-path policy (closed)
+
+Authority:
+  K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001=PASS → PROMOTED
+  K2_FULL_DEPTH_FUSED_REBENCH_001=PASS → UNFREEZE_C002
+  K2_LIVE_POLICY_SPLIT_001=PASS → shallow/full wiring
+  K2_POLICY_HYSTERESIS_001=PASS → sticky full-depth arm
+  K2_AUTO_WORKLOAD_POLICY_001=PASS → AUTO ≈ B2
+
+AUTO Decide+Apply:
+  reuse < crossover     → OFF
+  short/shallow         → TRAMPOLINE_OUTPUT_CACHE
+                          mech=trampoline fused=0
+  full-depth (layer veto) → FULL_DEPTH_PROMO
+                          mech=trampoline,cyclone,elastic fused=1
+
+Explicit B2|TRAMPOLINE → trampoline only, fused=0 (A/B witness)

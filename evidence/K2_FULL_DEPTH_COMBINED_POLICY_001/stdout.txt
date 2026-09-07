@@ -1,0 +1,815 @@
+K2_FULL_DEPTH_COMBINED_POLICY_001
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M TOKENS=4 DEPTH=61
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF72FE42C80 dequant=00007FF72FE45670 GetGEMV(12)=00007FF72FE42C80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[DualGPUBackend] Worker 0 started
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[DualGPUBackend] Worker 1 started
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+       [STREAM] step=0 token=127250 text="ĠWednesdays"
+       [STREAM] step=1 token=111272 text="âĢĵand"
+       [STREAM] step=2 token=82681 text="Ġ...ĊĊ"
+       [STREAM] step=3 token=87911 text="-uni"
+TRANSFER_BYTES_READ_TOTAL=19268763392
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=18827689984
+TRANSFER_READ_OPS=657564
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=657564
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=0
+STREAM_CACHE_MISSES=657564
+STREAM_BYTES_PER_TOKEN=4817190848.0
+STREAM_BYTES_PER_LAYER=78970341.8
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=0
+LIVE_CACHE_BYTES_PEAK=0
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=0
+CACHE_HIT_RATE=0.000000
+CACHE_BYTES_SAVED=0
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=0
+CACHE_BYTES_AFTER_WARM=0
+TRAMP_OUTPUT_WEIGHT_HITS=0
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=0
+CYCLONE_LAYER_ACQUIRES=0
+CYCLONE_LAYER_HITS=0
+ELASTIC_RESIDENT_HITS=0
+COMBINED_DUPLICATE_ACQUIRES=0
+COMBINED_REDUNDANT_BYTES=0
+COMBINED_WAIT_US=0
+=== A0 enhancements=0 ===
+PERF WALL_MS=140672.124 DECODE_TPS=0.028 TOKENS=4 DEPTH=61
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=657564
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=0
+CACHE_HITS=0
+CACHE_MISSES=657564
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=4817190848.0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+LIVE_CACHE_PEAK=0 ENTRY_PEAK=0 GROWTH=0 POST_WARM_ALLOCS=1650 ACTIVE=0 LAST_TOK=87911
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF72FE42C80 dequant=00007FF72FE45670 GetGEMV(12)=00007FF72FE42C80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[ElasticResidencyManager] Scheduler thread started
+[DualGPUBackend] Worker 1 started
+[DualGPUBackend] Worker 0 started
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+       [STREAM] step=0 token=127250 text="ĠWednesdays"
+       [STREAM] step=1 token=111272 text="âĢĵand"
+       [STREAM] step=2 token=82681 text="Ġ...ĊĊ"
+       [STREAM] step=3 token=87911 text="-uni"
+TRANSFER_BYTES_READ_TOTAL=16378625792
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=18827689984
+TRANSFER_READ_OPS=2205
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=16378625792
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2205
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=655359
+STREAM_CACHE_MISSES=2205
+STREAM_BYTES_PER_TOKEN=4094656448.0
+STREAM_BYTES_PER_LAYER=67125515.5
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=963379200
+LIVE_CACHE_BYTES_PEAK=963379200
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=1
+CACHE_HIT_RATE=0.999997
+CACHE_BYTES_SAVED=3853510920
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=1
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=963379200
+TRAMP_OUTPUT_WEIGHT_HITS=655359
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=3853510920
+CYCLONE_LAYER_ACQUIRES=0
+CYCLONE_LAYER_HITS=0
+ELASTIC_RESIDENT_HITS=0
+COMBINED_DUPLICATE_ACQUIRES=1
+COMBINED_REDUNDANT_BYTES=963379200
+COMBINED_WAIT_US=0
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=249
+LIVE_PATH_CYCLONE=0
+LIVE_PATH_CYCLONE_LAYER_STARTS=0
+LIVE_PATH_CYCLONE_LAYER_ENDS=0
+LIVE_PATH_CYCLONE_DEMANDS=0
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=0
+LIVE_PATH_STREAM=0
+LIVE_PATH_STREAM_ALIVE=0
+LIVE_PATH_NVME_HOPS=0
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=16378625792
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2205
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=655359
+CACHE_MISSES=2205
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+FUSED_ENABLED=1
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=249
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=249
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+=== B2 enhancements=1 ===
+PERF WALL_MS=95713.891 DECODE_TPS=0.042 TOKENS=4 DEPTH=61
+STREAM_BYTES_READ_TOTAL=16378625792
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2205
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=655359
+CACHE_MISSES=2205
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=4094656448.0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+LIVE_CACHE_PEAK=963379200 ENTRY_PEAK=1 GROWTH=0 POST_WARM_ALLOCS=1650 ACTIVE=0 LAST_TOK=87911
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF72FE42C80 dequant=00007FF72FE45670 GetGEMV(12)=00007FF72FE42C80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[DualGPUBackend] Worker 0 started
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[DualGPUBackend] Worker 1 started
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+       [STREAM] step=0 token=127250 text="ĠWednesdays"
+       [STREAM] step=1 token=111272 text="âĢĵand"
+       [STREAM] step=2 token=82681 text="Ġ...ĊĊ"
+       [STREAM] step=3 token=87911 text="-uni"
+TRANSFER_BYTES_READ_TOTAL=19268763392
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=18827689984
+TRANSFER_READ_OPS=657564
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=657564
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=2160
+STREAM_CACHE_MISSES=657564
+STREAM_BYTES_PER_TOKEN=4817190848.0
+STREAM_BYTES_PER_LAYER=78970341.8
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=3215818752
+LIVE_CACHE_BYTES_PEAK=3217625088
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=458
+CACHE_HIT_RATE=0.983607
+CACHE_BYTES_SAVED=15162408960
+CACHE_EVICTIONS=1738
+CACHE_EVICTION_BYTES=12199297024
+PREFETCH_ACCEPTED=2160
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=0
+CACHE_BYTES_AFTER_WARM=3215818752
+TRAMP_OUTPUT_WEIGHT_HITS=0
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=0
+CYCLONE_LAYER_ACQUIRES=2196
+CYCLONE_LAYER_HITS=2160
+ELASTIC_RESIDENT_HITS=2160
+COMBINED_DUPLICATE_ACQUIRES=0
+COMBINED_REDUNDANT_BYTES=0
+COMBINED_WAIT_US=0
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=0
+LIVE_PATH_TRAMPOLINE_HITS=0
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=244
+LIVE_PATH_CYCLONE_LAYER_ENDS=244
+LIVE_PATH_CYCLONE_DEMANDS=0
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=0
+LIVE_PATH_STREAM_ALIVE=0
+LIVE_PATH_NVME_HOPS=0
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=657564
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=2160
+CACHE_MISSES=657564
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+FUSED_ENABLED=1
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=249
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=249
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+=== Bbest enhancements=1 ===
+PERF WALL_MS=119393.987 DECODE_TPS=0.034 TOKENS=4 DEPTH=61
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=657564
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=2160
+CACHE_MISSES=657564
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=4817190848.0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+LIVE_CACHE_PEAK=3217625088 ENTRY_PEAK=458 GROWTH=1806336 POST_WARM_ALLOCS=30 ACTIVE=0 LAST_TOK=87911
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF72FE42C80 dequant=00007FF72FE45670 GetGEMV(12)=00007FF72FE42C80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[Deep2Engine] CycloneScheduler armed for live generate
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+       [STREAM] step=0 token=127250 text="ĠWednesdays"
+       [STREAM] step=1 token=111272 text="âĢĵand"
+       [STREAM] step=2 token=82681 text="Ġ...ĊĊ"
+       [STREAM] step=3 token=87911 text="-uni"
+TRANSFER_BYTES_READ_TOTAL=19268763392
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=18827689984
+TRANSFER_READ_OPS=2208
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2208
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=657516
+STREAM_CACHE_MISSES=2208
+STREAM_BYTES_PER_TOKEN=4817190848.0
+STREAM_BYTES_PER_LAYER=78970341.8
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=3220930560
+LIVE_CACHE_BYTES_PEAK=3220930560
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=458
+CACHE_HIT_RATE=0.999933
+CACHE_BYTES_SAVED=19015902240
+CACHE_EVICTIONS=1877
+CACHE_EVICTION_BYTES=16047702016
+PREFETCH_ACCEPTED=2160
+PREFETCH_SUPPRESSED=4
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=3220930560
+TRAMP_OUTPUT_WEIGHT_HITS=655356
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=3853493280
+CYCLONE_LAYER_ACQUIRES=2196
+CYCLONE_LAYER_HITS=2160
+ELASTIC_RESIDENT_HITS=2160
+COMBINED_DUPLICATE_ACQUIRES=4
+COMBINED_REDUNDANT_BYTES=3853516800
+COMBINED_WAIT_US=0
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=249
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=244
+LIVE_PATH_CYCLONE_LAYER_ENDS=244
+LIVE_PATH_CYCLONE_DEMANDS=0
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=0
+LIVE_PATH_STREAM_ALIVE=0
+LIVE_PATH_NVME_HOPS=0
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2208
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=657516
+CACHE_MISSES=2208
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+FUSED_ENABLED=1
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=249
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=249
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+=== C enhancements=1 ===
+PERF WALL_MS=106132.043 DECODE_TPS=0.038 TOKENS=4 DEPTH=61
+STREAM_BYTES_READ_TOTAL=19268763392
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=18827689984
+STREAM_READ_OPS=2208
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=111833088
+RESIDENT_WEIGHT_PEAK=111833088
+CACHE_HITS=657516
+CACHE_MISSES=2208
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=4817190848.0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+LIVE_CACHE_PEAK=3220930560 ENTRY_PEAK=458 GROWTH=0 POST_WARM_ALLOCS=33 ACTIVE=0 LAST_TOK=87911
+BBEST_TPS=0.034 C_TPS=0.038 C_TARGET=0.035
+C_BEATS_BBEST=1 BYTES_C_LE_BBEST=1
+OUTPUT_PARITY=1 ACTIVE0=1 QUEUE_PEAK_C=0
+POLICY_DECISION=COMBINED
+K2_FULL_DEPTH_COMBINED_POLICY_001=FAIL

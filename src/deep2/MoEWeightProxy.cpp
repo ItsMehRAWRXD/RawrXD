@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "MoEWeightProxy.hpp"
+#include "MoEEliminate.hpp"
 #include "MoEWeightsLoader.hpp"
 #include "vulkan_compute.h"
 #include <chrono>
@@ -34,6 +35,7 @@ MoEWeightHandle MoEWeightProxy::Acquire(int layer, int expert) {
     auto end = std::chrono::high_resolution_clock::now();
     double ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
     if (h.valid) {
+        MoEEliminate_NoteAcquire(layer, expert);
         stats_.avgLatencyMs = (stats_.avgLatencyMs * 0.95) + (ms * 0.05);
     }
     return h;
@@ -47,11 +49,12 @@ void MoEWeightProxy::Prefetch(int layer, const std::vector<int>& expertIds) {
     }
     if (!loader) return;
 
-    for (int expertId : expertIds) {
-        // Touch the loader's cache for this expert without building a handle.
-        // The loader's internal LRU will keep it resident.
+    // Process of elimination: do not warm never-used speculative experts.
+    std::vector<int> ids = expertIds;
+    MoEEliminate_FilterPrefetch(layer, ids);
+    for (int expertId : ids) {
         const void* packed = loader->LoadExpert(layer, expertId);
-        (void)packed; // We only care about the cache warming side-effect.
+        (void)packed;
     }
 
     // Forward cache-hit accounting from the loader

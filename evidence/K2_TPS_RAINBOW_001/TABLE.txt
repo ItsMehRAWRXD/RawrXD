@@ -1,0 +1,3 @@
+# key_hex depth tok gpu pin q4 serial promo stream mech thr cross tps_raw wall_ms ok up hit mla
+000000000001cdde 61 32 1 1 0 1 1 0 2 8 8 wall=2.669248 stream=99.640550 bpt=75270560.0 11988.4 1 366 14274 11712
+000000000001cdc6 61 64 1 1 0 1 1 0 2 8 8 wall=2.614724 stream=199.275763 bpt=37636288.0 24476.8 1 366 40626 23424

@@ -1,0 +1,4 @@
+cpu_gen=49107 gpu_gen=49107 mla_ops=6 mla_fail=0 copy=6
+parity=1 usedGpu=1
+K2_GPU_STREAM_MLA_001=PASS
+NOTE=Live MLA Q4_K gemvDispatchTransposed → DispatchGEMVPacked.

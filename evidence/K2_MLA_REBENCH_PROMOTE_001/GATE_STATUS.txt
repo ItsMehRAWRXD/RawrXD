@@ -1,0 +1,4 @@
+A=111.800 B=156.200 hits=1281 uploads=183 hitRatio=0.875 parity1=1 parityFull=1 promote=1 warm=2304 staged=288 hot=8784 la=3
+POLICY_DECISION=PROMOTE_GPU_MLA
+K2_MLA_REBENCH_PROMOTE_001=PASS
+NOTE=CPU/GPU share interleaved Q4_K float twin (gemv_q4k.comp + gemvQ4KTransposed). MLA_TryGpuGemv only — GetGEMV never swallows. Q8 stays CPU. DEEP2_LIVE_MECH=none for cert.

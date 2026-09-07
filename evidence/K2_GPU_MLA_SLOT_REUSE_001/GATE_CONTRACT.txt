@@ -1,0 +1,3 @@
+# K2_GPU_MLA_SLOT_REUSE_001
+# Prove DEEP2_WEIGHT_PIN pinKey reuses resident packed weights.
+# FIRST_MISS upload, SECOND_HIT no re-upload, KEY_SPLIT new key uploads.

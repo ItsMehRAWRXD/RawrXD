@@ -1,0 +1,10 @@
+K2_LIVE_POLICY_E2E_001=PASS
+
+AUTO below crossover (2×2) → OFF
+AUTO shallow (4×2) → TRAMPOLINE_OUTPUT_CACHE ≈ MANUAL TRAMPOLINE
+  OUTPUT_PARITY=1 TPS_AUTO≥0.97×MANUAL BYTES match
+AUTO full-depth (61×2) → FULL_DEPTH_PROMO
+  fused=1 FUSED_BYPASS path; trampoline+cyclone+elastic; DUP=0
+
+Sticky cleared between independent workload arms (hysteresis is
+intra-request oscillation damp only).

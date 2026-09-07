@@ -392,6 +392,15 @@ bool Win32IDE::setActiveBackend(AIBackendType type)
         return false;
     }
 
+    // LOCAL_ONLY: Ollama / cloud backends forbidden for chat inference path
+    if (type == AIBackendType::Ollama)
+    {
+        logWarning("setActiveBackend", "LOCAL_ONLY_NO_OLLAMA — refusing Ollama backend");
+        appendToOutput("[BackendSwitcher] LOCAL_ONLY: Ollama forbidden. Use LocalGGUF + Model Bridge.\n",
+                       "General", OutputSeverity::Warning);
+        return false;
+    }
+
     std::lock_guard<std::mutex> lock(m_backendMutex);
 
     const auto& cfg = m_backendConfigs[(size_t)type];

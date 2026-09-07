@@ -1,0 +1,4 @@
+tensor=blk.0.attn_q_a.weight rows=1536 cols=7168 gpuOk=1 moved=1 maxAbs=0.0024826 rms=0.000587587
+GPU_COPY_OPS=1 GPU_COPY_BYTES=6193152
+K2_GPU_STREAM_COMPUTE_001=PASS
+NOTE=Streamed K2 Q4_K weight used for real packed GEMV; MLA live-path substitution is next.

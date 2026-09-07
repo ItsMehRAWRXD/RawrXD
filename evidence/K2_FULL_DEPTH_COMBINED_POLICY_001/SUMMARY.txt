@@ -1,0 +1,11 @@
+K2_FULL_DEPTH_COMBINED_POLICY_001=PASS
+POLICY_DECISION=SPLIT_FREEZE  (historical; SUPERSEDED)
+
+SUPERSEDED BY
+  K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001 → PROMOTED
+  K2_FULL_DEPTH_FUSED_REBENCH_001 → UNFREEZE_C002
+  K2_LIVE_POLICY_SPLIT_001 → shallow/full ApplyMode split
+
+Production AUTO now:
+  short/shallow → trampoline+cache fused=0
+  full-depth    → cyclone+elastic+trampoline-reuse + FUSED_002

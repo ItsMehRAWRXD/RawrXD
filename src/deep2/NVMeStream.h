@@ -27,6 +27,8 @@
 #include <vector>
 #include <mutex>
 #include <chrono>
+#include <memory>
+#include "NVMeReverseBunnyHop.hpp"
 
 #ifdef _WIN32
     #define NOMINMAX
@@ -70,6 +72,12 @@ public:
     
     // Initialize with GGUF model path
     bool initialize(const NVMeStreamConfig& config);
+
+    // Forced when mmap open fails: unlaidout reverse-chunk hotpatch bunnyhop.
+    bool initializeReverseBunnyHop(const NVMeStreamConfig& config);
+    bool isReverseBunnyHop() const { return bunnyHop_ && bunnyHop_->active(); }
+    bool hopReverseChunk() { return bunnyHop_ ? bunnyHop_->hopReverseChunk() : false; }
+    NVMeReverseBunnyHop* reverseBunnyHop() { return bunnyHop_.get(); }
     
     // Acquire expert weights (pages in if not resident)
     // Returns pointer to memory-mapped expert data
@@ -146,6 +154,8 @@ private:
     
     void touchEntry(int64_t key);
     void updateTick();
+
+    std::unique_ptr<NVMeReverseBunnyHop> bunnyHop_;
 };
 
 } // namespace Deep2

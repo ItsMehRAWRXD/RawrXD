@@ -1,0 +1,19 @@
+# K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001
+# DEPTH=61 TOKENS=2. fused OFF. C002 remains frozen.
+#
+# Arms
+#   B2     = trampoline only (reuse baseline)
+#   Bbest  = cyclone+elastic
+#   Promo  = trampoline+cyclone+elastic (trampoline = reuse only)
+#
+# Ownership
+#   cyclone  → blk.* deadline/prefetch acquire when layer WS fits remainder
+#   trampoline → output.weight reuse only (pinned; never second acquire)
+#   elastic  → miss recovery; promote only when not already live
+#   Shared budget + trampoline: skip layer host-fill unless rem >=
+#   kPerLayer * activeDepth (RAWRXD_K2_LAYERS), not fictional full-61 WS.
+#
+# PASS
+#   TPS_Promo >= max(B2, 1.03*Bbest, 0.094)
+#   OUTPUT_PARITY ACTIVE0 GROWTH0 DUP0 HOTPATH_ALLOC0 FALLBACK0
+#   TRAMPOLINE_REUSES>0 CACHE_REUSES>0 FUSED_OFF

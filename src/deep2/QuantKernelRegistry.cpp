@@ -1317,26 +1317,19 @@ static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
+    // Must match ggml dequantize_row_q6_K / rxd_q6k_dequant_block (not flat nibble layout).
+    const size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        if (!std::isfinite(d)) d = 0.0f;
-        const uint8_t* ql = blocks[b].ql;
-        const uint8_t* qh = blocks[b].qh;
-        const int8_t*  sc = blocks[b].scales;
-        for (size_t idx = 0; idx < 256; ++idx) {
-            size_t globalIdx = b * 256 + idx;
+        float w[256];
+        if (!rxd_q6k_dequant_block(src + b * 210, w)) {
+            for (size_t i = 0; i < 256 && b * 256 + i < n; ++i)
+                dst[b * 256 + i] = 0.0f;
+            continue;
+        }
+        for (size_t i = 0; i < 256; ++i) {
+            const size_t globalIdx = b * 256 + i;
             if (globalIdx >= n) return;
-            size_t qlIdx = idx / 2;
-            int    qlShift = (idx % 2) * 4;
-            uint8_t low4 = (ql[qlIdx] >> qlShift) & 0x0F;
-            size_t qhIdx = idx / 4;
-            int    qhShift = (idx % 4) * 2;
-            uint8_t high2 = (qh[qhIdx] >> qhShift) & 0x03;
-            int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
-            int scaleIdx = (int)(idx / 16);
-            dst[globalIdx] = d * (float)sc[scaleIdx] * (float)q;
+            dst[globalIdx] = w[i];
         }
     }
 }

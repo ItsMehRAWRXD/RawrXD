@@ -1,0 +1,17 @@
+K2_POLICY_HYSTERESIS_001=PASS
+
+CROSSOVER=8 HOLD=4 ALLOW_LAYER_CACHE=0
+OSC_RAW_FLIPS=7 OSC_STICKY_FLIPS=1
+DAMP=1 (sticky << raw, sticky<=2)
+FULL_STABLE=1 (61x2/61x4 → TRAMPOLINE_OUTPUT_CACHE + layer_veto)
+HOLD_ON=1 (after 61 sticky, reuse=7 keeps trampoline via hysteresis_hold_on)
+
+Mechanism:
+- DecideRaw: instantaneous arm from reuse vs crossover + budget veto
+- Decide: sticky mode + hold band [crossover-hold, crossover+hold]
+  - Off→On only when reuse >= crossover+hold
+  - On→Off only when reuse <= crossover-hold
+  - Trampoline→Layer blocked while sticky trampoline (no promote thrash)
+
+Files: K2LivePolicy_Hysteresis.cpp, K2LivePolicy.cpp (DecideRaw), K2LivePolicy_Apply.cpp
+Cert: deep2_k2_policy_hysteresis_cert.exe (CPU-only)

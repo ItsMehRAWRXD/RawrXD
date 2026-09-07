@@ -1,0 +1,2 @@
+autoActive=1 noManual=1 matchLo=1 matchHi=1 matchFull=1 parity=1 teardown=1 switches=1 tpsOk=1 bytesOk=1 fallback=0
+K2_LIVE_POLICY_E2E_001=PASS

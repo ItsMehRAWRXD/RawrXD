@@ -359,4 +359,18 @@ void* gguf_reader_load_tensor(void* handle, const char* name) {
 //       Do NOT define them here to avoid LNK2005 duplicate symbol errors.
 // ============================================================================
 
+#include <windows.h>
+uint64_t AssertHardThreadAffinity(HANDLE threadHandle, uint64_t coreBitmask) {
+    (void)threadHandle;
+    (void)coreBitmask;
+    return 0; // force Win32 SetThreadAffinityMask fallback in Deep2ThreadTuning
+}
+void RestrictOsBackgroundTasks(HANDLE processHandle, uint64_t backgroundMask) {
+    if (!processHandle || processHandle == INVALID_HANDLE_VALUE) return;
+    // Vacuum: pin process to keepMask cores + elevate priority for live generate.
+    if (backgroundMask)
+        SetProcessAffinityMask(processHandle, static_cast<DWORD_PTR>(backgroundMask));
+    SetPriorityClass(processHandle, HIGH_PRIORITY_CLASS);
+}
+
 } // extern "C"

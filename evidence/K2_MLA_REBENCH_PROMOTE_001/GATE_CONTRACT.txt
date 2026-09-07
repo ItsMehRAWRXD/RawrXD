@@ -1,0 +1,9 @@
+# K2_MLA_REBENCH_PROMOTE_001
+# After slot-reuse: rebench full-depth GPU MLA vs CPU for PROMOTE.
+#
+# Require:
+#   depth-1 exact token parity
+#   pin reuse (hits >= uploads*(tokens-1))
+#   TPS_GPU >= 0.97 * TPS_CPU  → POLICY_DECISION=PROMOTE_GPU_MLA
+#   pinRej=0, MLA fail=0
+# Witness (soft): full-depth token identity (may drift)

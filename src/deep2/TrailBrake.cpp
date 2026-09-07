@@ -513,6 +513,18 @@ std::string TrailBrake::DropAnchor(const std::string& name, const std::string& c
 bool TrailBrake::VerifyAnchor(const std::string& anchorId) { return impl_->VerifyAnchor(anchorId); }
 std::string TrailBrake::GetLastVerifiedAnchor() const { return impl_->GetLastVerifiedAnchor(); }
 
+void TrailBrake::SetExpectedTokens(uint64_t tokens) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->expectedTokens = tokens;
+}
+void TrailBrake::SetExpectedTime(uint64_t timeMs) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->expectedTimeMs = timeMs;
+}
+void TrailBrake::SetExpectedProgress(float progress) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    impl_->expectedProgress = progress;
+}
 void TrailBrake::ReportActualTokens(uint64_t tokens) { impl_->ReportActualTokens(tokens); }
 void TrailBrake::ReportFailure(const std::string& reason) { impl_->ReportFailure(reason); }
 
@@ -522,6 +534,21 @@ BrakeState TrailBrake::GetState() const {
 }
 
 float TrailBrake::GetBrakeIntensity() const { return impl_->GetBrakeIntensity(); }
+
+size_t TrailBrake::PruneAnchors(size_t keepCount) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    size_t removed = 0;
+    while (impl_->anchors.size() > keepCount) {
+        impl_->anchors.pop_front();
+        ++removed;
+    }
+    return removed;
+}
+
+bool TrailBrake::ShouldProceed() const {
+    const BrakeState st = GetState();
+    return st != BrakeState::BRAKING && st != BrakeState::EMERGENCY;
+}
 
 bool TrailBrake::TrailBack(const std::string& anchorId) { return impl_->TrailBack(anchorId); }
 bool TrailBrake::EmergencyStop() { return impl_->EmergencyStop(); }

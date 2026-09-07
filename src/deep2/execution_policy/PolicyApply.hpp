@@ -6,6 +6,7 @@
 
 #include "ExecutionPolicyBridge.hpp"
 #include "../ElasticResidencyManager.hpp"
+#include "../ElasticDynamicBudget.hpp"
 #include "../StreamEngine.hpp"
 #include "../NVMeStream.h"
 
@@ -17,26 +18,34 @@ namespace Deep2 {
 namespace Exec {
 
 inline ElasticResidencyConfig ElasticFromPolicy(const ExecutionPolicy& p) {
-    ElasticResidencyConfig c{};
-    const uint64_t vram = p.memory.vramBudget.present ? p.memory.vramBudget.value.n
-                                                      : (16ULL << 30);
-    const uint64_t ram = p.memory.ramBudget.present ? p.memory.ramBudget.value.n
-                                                    : (40ULL << 30);
+    ElasticDynamicProbe probe{};
+    ElasticBudget_ProbeHost(probe);
+    if (p.memory.ramBudget.present) {
+        probe.ramTotal = p.memory.ramBudget.value.n;
+        if (!probe.ramAvail) probe.ramAvail = probe.ramTotal / 2;
+    }
+    if (p.memory.vramBudget.present)
+        probe.vramTotal = p.memory.vramBudget.value.n;
+    if (p.streaming.prefetchDepth.present)
+        probe.fusedPrefetchDepth =
+            (uint32_t)(std::max)(0, p.streaming.prefetchDepth.value);
 
+    ElasticResidencyConfig c = ElasticBudget_Derive(probe);
+
+    const uint64_t vram = p.memory.vramBudget.present ? p.memory.vramBudget.value.n
+                                                      : (probe.vramTotal ? probe.vramTotal
+                                                                         : (16ULL << 30));
     const auto& vp = p.memory.vramParts;
-    c.maxHotBytes = vp.weights.present ? vp.weights.value.n : (vram / 2);
-    if (vp.streaming.present)
-        c.maxHotBytes = (std::min)(c.maxHotBytes + vp.streaming.value.n, vram);
+    if (vp.weights.present) {
+        c.maxHotBytes = vp.weights.value.n;
+        if (vp.streaming.present)
+            c.maxHotBytes = (std::min)(c.maxHotBytes + vp.streaming.value.n, vram);
+    }
 
     if (p.memory.ram.weightCache.present)
         c.maxWarmCompressedBytes = p.memory.ram.weightCache.value.n;
-    else
-        c.maxWarmCompressedBytes = ram / 2;
-
     if (p.memory.ram.staging.present)
         c.maxWarmStagedBytes = p.memory.ram.staging.value.n;
-    else
-        c.maxWarmStagedBytes = (std::min)(c.maxWarmCompressedBytes / 8, 2ULL << 30);
 
     if (p.streaming.prefetchDepth.present)
         c.prefetchLookahead = static_cast<uint32_t>(

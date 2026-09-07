@@ -1,0 +1,7 @@
+D=61 T=2 W=2 parity=1
+expect_ops_per_win=732
+W1 tps=199.145 mla=732 fail=0 pinRej=0 upFail=0 peak=111263744 fb=0 pta=0
+W2 tps=199.987 mla=732 fail=0 pinRej=0 upFail=0 peak=111263744 fb=0 pta=0
+tps_spread=0.004 no_leak=1
+K2_MLA_FULL_DEPTH_SOAK_001=PASS
+NOTE=DURABILITY not promote. Authority=MLA_Gemv Q4+Q8|GetGEMV.

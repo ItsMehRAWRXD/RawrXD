@@ -1,0 +1,11 @@
+K2_GPU_STREAM_MLA_001=PASS
+d=1 t=1
+
+CPU GEN=66576 (QuantKernelRegistry Q4_K)
+GPU GEN=66576 MLA_OPS=3 MLA_FAIL=0 COPY_OPS=4
+OUTPUT_PARITY=1
+
+Hook: gemvDispatchTransposed Q4_K → MLA_TryGpuGemvQ4K (DispatchGEMVPacked)
+  else GetGEMV(12) (same authority as stream-compute cert)
+
+Opt-in: DEEP2_K2_GPU_MLA=1
