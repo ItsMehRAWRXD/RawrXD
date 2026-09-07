@@ -3,10 +3,13 @@
 // Autonomous Agent Execution with ToolBudget, State Machine, and Observability
 // ============================================================================
 #include "AgentRuntime.hpp"
+#include "Deep2SovereignInferenceGateway.hpp"
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <thread>
 #include <condition_variable>
+#include <mutex>
 
 namespace RawrXD {
 namespace Agent {
@@ -693,17 +696,60 @@ void AgentRuntime::HandleFailure(AgentRun& run, const std::string& reason) {
 }
 
 // ============================================================================
-// Model Interaction (Stubs - replace with actual model integration)
+// Model Interaction — Deep2SovereignInferenceGateway (real generateText)
 // ============================================================================
-nlohmann::json AgentRuntime::CallModel(const std::string& prompt, 
+nlohmann::json AgentRuntime::CallModel(const std::string& prompt,
                                         const std::vector<ToolResult>& observations) {
-    // TODO: Integrate with actual inference engine
-    // This is a stub that returns a mock response
-    
+    // Real Deep2 path — fail closed on load/generate errors (no mock success).
+    std::string fullPrompt = prompt;
+    if (!observations.empty()) {
+        fullPrompt += "\n\n[tool_results]\n";
+        for (const auto& obs : observations) {
+            fullPrompt += obs.callId;
+            fullPrompt += obs.success ? " OK: " : " ERR: ";
+            fullPrompt += obs.success ? obs.output : obs.error;
+            fullPrompt += "\n";
+        }
+    }
+    if (!systemPrompt_.empty())
+        fullPrompt = systemPrompt_ + "\n\n" + fullPrompt;
+
+    static Deep2SovereignInferenceGateway gateway;
+    static std::string loadedPath;
+    static std::mutex gwMu;
+    std::lock_guard<std::mutex> lock(gwMu);
+
+    std::string path = modelPath_;
+    if (path.empty()) {
+        if (const char* e = std::getenv("DEEP2_K2_SHARD_DIR")) path = e;
+        else if (const char* e = std::getenv("RAWRXD_MODEL_PATH")) path = e;
+    }
     nlohmann::json response;
-    response["content"] = "Task analysis complete. No further actions needed.";
     response["tool_calls"] = nlohmann::json::array();
-    
+    if (path.empty()) {
+        response["content"] = "";
+        response["error"] =
+            "AgentRuntime: no model path (SetModelPath / DEEP2_K2_SHARD_DIR)";
+        return response;
+    }
+    if (!gateway.isLoaded() || loadedPath != path) {
+        std::string err;
+        if (!gateway.loadModel(path, &err)) {
+            response["content"] = "";
+            response["error"] = err.empty() ? "Deep2 load failed" : err;
+            return response;
+        }
+        loadedPath = path;
+    }
+
+    Deep2GatewayGenerationConfig cfg;
+    cfg.maxTokens = 256;
+    cfg.temperature = deterministic_ ? 0.0f : 0.2f;
+    cfg.topK = 1;
+    cfg.seed = static_cast<int>(seed_);
+    auto gen = gateway.generate(fullPrompt, cfg);
+    response["content"] = gen.success ? gen.text : "";
+    if (!gen.success) response["error"] = gen.error;
     return response;
 }
 

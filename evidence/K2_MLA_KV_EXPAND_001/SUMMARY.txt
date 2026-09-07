@@ -1,14 +1,10 @@
-K2_MLA_KV_EXPAND_001=PASS
+K2_MLA_KV_EXPAND_001=PASS (fused climb)
 
-TIMED D=61 T=8 (seals held):
-  MLA_COMPUTE_US=3427159
-  QKV_PROJ      =1265479  (~37%)
-  KV_EXPAND     =1638732  (~48%)  ← OWNER
-  ATTN          =  76547  (~2%)
-  O_PROJ        = 417324  (~12%)
-  STAGE_SUM/MLA ≈ 99.2%
+Before fused: KV_EXPAND ~621k us (often OWNER)
+After  DEEP2_MLA_FUSED_KV=1:
+  KV_EXPAND=242517  QKV=1021365  O=298835  ATTN=23901
+  OWNER=QKV_PROJ  FREEZE_OK=1  GEMV_OPS=1952
 
-FREEZE: SHARD_ATTN=0 COPY=0 MLA u=0 tryExt=0 q6Hit>0 hotAlloc=0 cacheN>=551
-
-NEXT: OPTIMIZE_MLA_KV_EXPAND (K/V LoRA expand GEMV path under MLA_Gemv)
-Do not retune logits or fused Q4KT Q-path until KV_EXPAND collapses.
+Files: K2MLA_KvExpand_Fused.cpp + MLAForward wire + gemvQ80 full-32 AVX2 fix
+       K2BraidExecutionPolicy.cpp linked (8 unresolved cleared)
+Next: K2_MLA_QKV_PROJ_001

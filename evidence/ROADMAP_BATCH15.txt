@@ -1,14 +1,20 @@
-# ROADMAP_BATCH15 ? post-NU / live-MLA spine
+# ROADMAP_BATCH15 — post-NU / live-MLA spine
 
-01-06 residency/fused seals - PASS
-07 K2_WALL_ATTRIBUTION_001       - PASS OWNER=MLA
-08 K2_MLA_KV_EXPAND_001          - PASS OWNER=KV_EXPAND (~48% of MLA)
-09 OPTIMIZE_MLA_KV_EXPAND        - NOW (K/V expand GEMV under MLA_Gemv)
-10 STREAM_BYTES_CORPUS_SPLIT_001
+01-07 residency / wall seals              - PASS
+08 K2_MLA_KV_EXPAND_001                   - PASS (stage attribution)
+09 OPTIMIZE_MLA_KV_EXPAND (fused)         - PASS: KV_EXPAND 621k→242k us
+10 K2_MLA_QKV_PROJ_001                    - NOW (owner after fused KV)
+11 STREAM_BYTES_CORPUS_SPLIT_001
 15 SOVEREIGN_FREEZE_001
 
-REVERSE timed MLA stages:
-  KV_EXPAND 1.64e6 us  ? attack
-  QKV_PROJ  1.27e6 us
-  O_PROJ    0.42e6 us
-  ATTN      0.08e6 us
+REVERSE (DEEP2_MLA_FUSED_KV=1 timed):
+  OWNER=QKV_PROJ  (~1021k us)
+  KV_EXPAND       (~243k us)   ← fused single-pass won
+  O_PROJ          (~299k us)
+  ATTN            (~24k us)
+  MLA_GEMV_OPS 2928→1952 (K∥V expand collapsed)
+  FREEZE_OK=1
+
+NEXT: attack QKV_PROJ only (q_a/q_b/kv_a GEMVs). Do not retune logits/FUSED_Q4KT.
+BraidExecutionPolicy linked into InferenceEngine (cleared LNK2001 batch).
+AgentRuntime::CallModel → Deep2SovereignInferenceGateway (no mock).

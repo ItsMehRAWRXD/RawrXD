@@ -1,7 +1,7 @@
 FREEZE_OK=1 ACCT_OK=1 OPS_OK=1
-T=32 wall=11636.6 mla=6258.3 logits=4879.4 shard=0.0 sample=0.0 detok=0.0 stream=0.1 other=498.9 max=MLA
-T=64 wall=22523.8 mla=12038.5 logits=9633.1 shard=0.0 sample=0.0 detok=0.0 stream=0.1 other=852.1 max=MLA
-T=128 wall=45289.7 mla=24354.7 logits=19360.0 shard=0.0 sample=0.0 detok=0.0 stream=0.3 other=1574.7 max=MLA
-OWNER=MLA OWNER_TOTAL_MS=42651.516
+T=32 wall=15400.8 mla=13297.9 logits=1206.8 shard=0.0 sample=0.0 detok=0.0 stream=0.1 other=896.0 max=MLA
+T=64 wall=26626.9 mla=22936.3 logits=2448.6 shard=0.0 sample=0.0 detok=0.0 stream=0.2 other=1241.8 max=MLA
+T=128 wall=50554.8 mla=44039.4 logits=4475.6 shard=0.0 sample=0.0 detok=0.0 stream=0.4 other=2039.4 max=MLA
+OWNER=MLA OWNER_TOTAL_MS=80273.630
 K2_WALL_ATTRIBUTION_001=PASS
 NOTE=no optimization; attack OWNER only next.
