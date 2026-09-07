@@ -1,0 +1,3 @@
+[1/2] Building CXX object CMakeFiles\test_q_elemdiff.dir\src\deep2\test_q_elemdiff.cpp.obj
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+[2/2] Linking CXX executable bin\test_q_elemdiff.exe

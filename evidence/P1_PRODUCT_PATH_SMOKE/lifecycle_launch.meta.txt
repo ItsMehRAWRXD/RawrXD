@@ -1,0 +1,7 @@
+﻿mode=normal_launch_redirected
+alive_at_probe=False
+elapsed_s=2.538769
+exit=
+stdout_bytes=823
+stderr_bytes=351
+gui_alive=False exit=1

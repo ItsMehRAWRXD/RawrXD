@@ -1,0 +1,64 @@
+P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001
+
+STATUS                        = DIAG COMPLETE
+FROZEN_SPEEDUP_EXE_SHA        = 7DFDA62A55A092B59EA223D0604F27DAEB19417FA86681BEFDB164DDDEF7DBD1
+P1_REAL_SPEEDUP_001_GATE_SHA  = 04451DB16A18D67739A8D68E92B22D9AA1DD0C1C10099AFBCA1FFFE52D5BBA04
+DIAG_EXE                      = build-p1-speedup/bin/p1_repeatability_trial_validity_diag_001.exe
+
+Summary
+-------
+Generation succeeded on both sides. MeasuredGenerate rejected every trial at
+POLICY_SHA_STABLE. This is a harness acceptance-path failure, not an inference
+output failure. Repeatability had zero valid trials (SESSION_1_SPEEDUP undefined).
+
+TRIAL  BASELINE_01
+LOAD_OK                       = PASS
+INIT_OK                       = PASS
+GENERATE_RETURNED             = PASS
+TOKEN_COUNT_VALID             = PASS  (tokens=56)
+OUTPUT_NONEMPTY               = PASS
+GENERATE_OUTPUT_OK            = PASS
+WALL_NS_NONZERO               = PASS
+POLICY_SHA_STABLE             = FAIL
+MEASURED_GENERATE_OK          = FAIL
+FIRST_FALSE                   = POLICY_SHA_STABLE
+POLICY_SHA_AT_SEAM            = policy:aabe7bdbf3b795bf
+POLICY_SHA_AFTER              = policy:9ea709bb4453a556
+OUTPUT_HASH                   = fnv:d531359a74d5ef36
+
+TRIAL  CANDIDATE_01
+LOAD_OK                       = PASS
+INIT_OK                       = PASS
+GENERATE_RETURNED             = PASS
+TOKEN_COUNT_VALID             = PASS  (tokens=9)
+OUTPUT_NONEMPTY               = PASS
+GENERATE_OUTPUT_OK            = PASS
+WALL_NS_NONZERO               = PASS
+POLICY_SHA_STABLE             = FAIL
+MEASURED_GENERATE_OK          = FAIL
+FIRST_FALSE                   = POLICY_SHA_STABLE
+POLICY_SHA_AT_SEAM            = policy:aabe7bdbf3b795bf
+POLICY_SHA_AFTER              = policy:9ea709bb4453a556
+OUTPUT_HASH                   = fnv:b246858d8f2f7c32
+
+REFERENCE_OUTPUT_HASH_MATCH  = FAIL (expected: different profiles)
+
+Classification
+--------------
+GENERATION_CORRECTNESS        = PASS (tokens + text produced)
+HARNESS_ACCEPTANCE            = FAIL @ POLICY_SHA_STABLE
+CONCURRENT_COMPILER_LOAD      = metadata only (not first false)
+
+Repair direction (not executed here)
+------------------------------------
+AT_SEAM != AFTER on observed runs; switching MeasuredGenerate from PRE==AFTER
+to AT_SEAM==AFTER would NOT admit these trials until SEAM→AFTER mutation is
+understood and resolved. See P1_POLICY_SHA_LIFECYCLE_DIAG_001.
+
+Frozen authority unchanged
+--------------------------
+P1_REAL_SPEEDUP_001           = PASS / CLOSED
+P1_REAL_SPEEDUP_REPEATABILITY = FAIL (correct stop)
+P1_PRODUCTION_TAIL_LATENCY    = BLOCKED
+
+FIRST_FALSE_TRANSITION        = POLICY_SHA_STABLE

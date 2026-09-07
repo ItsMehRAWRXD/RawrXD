@@ -1,0 +1,39 @@
+GATE=P1_REPEATABILITY_STATE_DRIFT_DIAG_001
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+DEPENDS_ON=P1_REAL_SPEEDUP_REPEATABILITY_001 (FAIL @ SESSION_02 speedup)
+
+Purpose
+-------
+Test whether cross-session persistent state (learned profiles / recordSuccess)
+explains baseline timing drift between SESSION_01 (~10s) and SESSION_02 (~1.8s)
+without invalidating closed gates.
+
+Do NOT touch
+------------
+P1_REAL_SPEEDUP_001/GATE.txt
+P1_REAL_SPEEDUP_REPEATABILITY_001/SESSION_* evidence (immutable)
+
+Hypothesis
+----------
+recordSuccess() writes profiles/{hw}__{model}.yaml; subsequent sessions may
+consume learned placement/metrics while EXE_SHA and POLICY_SHA appear stable.
+
+Decisive experiment
+-------------------
+A. pristine profiles dir → baseline wall
+B. SESSION_01-equivalent workload → profile mutation capture
+D. fresh process, retained profile → baseline wall
+E. fresh process, restored pristine profile → baseline wall
+
+If A≈slow, D≈fast, E≈slow → persistent-profile contamination confirmed.
+
+Evidence
+--------
+evidence/P1_REPEATABILITY_STATE_DRIFT_DIAG_001/
+  CONTRACT.txt GATE.txt EXPERIMENT.txt profiles_workspace/
+
+Harness
+-------
+build-p1-speedup/bin/p1_repeatability_state_drift_diag_001.exe
+  --phase A|B|D|E --profiles-dir PATH --model PATH --out PATH

@@ -1,0 +1,12 @@
+ITEM: A4
+SOURCE: cmake/P1_ProductRuntimeAuthority.cmake + build dirs
+WITNESS_FIELD: RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY in CMakeCache.txt
+EXERCISE: Read CMakeCache.txt for build_p1pra_win32ide, build-ninja, build_win32ide
+ARTIFACT: evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/reconclusion/A4_BINARY_LANE.txt
+OBSERVED:
+  build_p1pra_win32ide: RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY=ON, RAWRXD_BUILD_WIN32IDE=ON
+  build_p1pra_win32ide exe mtime: 2026-09-01 18:15:12
+  build-ninja: RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY not set (absent from cache grep)
+  build-ninja exe mtime: 2026-08-31 01:27:22
+  build_win32ide: RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY not set (absent from cache grep)
+STATUS: WITNESSED — E2E must use build_p1pra_win32ide only; ninja/win32ide lack P1PRA lane

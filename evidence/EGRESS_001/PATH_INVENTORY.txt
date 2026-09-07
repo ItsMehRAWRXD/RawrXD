@@ -1,0 +1,137 @@
+EGRESS_001 — Network-capable path inventory (default shipping surface)
+Captured: 2026-08-30
+Tree: F:\~dev\rawrxd
+Shipping target under review: RawrXD-Win32IDE.exe (build-ninja)
+
+DISPOSITION KEY
+  ACTIVE_LINK   = object appears on RawrXD-Win32IDE link line (build.ninja)
+  RESIDUAL_SRC  = source still in tree; may or may not link into default EXE
+  FAIL_CLOSED   = LOCAL_ONLY_001 patched entry (must not auto-fallback)
+  CLOUD         = non-local LLM / vendor API
+  TELEMETRY     = metrics/export that can leave the box
+  UPDATE        = auto-update / marketplace / beacon
+  LOCAL_SERVER  = listens or connects on loopback (still network-capable)
+
+===============================================================================
+A. OLLAMA / :11434 — ACTIVE_LINK in default Win32IDE (NOT quarantined yet)
+===============================================================================
+ACTIVE_LINK
+  src/agentic/AgentOllamaClient.cpp
+  src/agentic/OllamaProvider.cpp
+  src/agentic/RobustOllamaParser.cpp
+  src/win32app/Win32IDE_ChatPanel_Ollama.cpp
+  src/win32app/HeadlessIDE.cpp
+
+FAIL_CLOSED patches exist (LOCAL_ONLY_001) but types/strings/link remain:
+  src/win32app/Win32IDE_AgentOllamaClient.cpp   (stubs / fail-closed)
+  src/agentic/LocalOnlyPolicy.h
+  src/agentic/BoundedAgentLoop.cpp              (refuses :11434 URL)
+  src/win32app/Win32IDE.cpp / Win32IDE_Core.cpp (no resurrect default)
+
+RESIDUAL shipping-adjacent (inventory from LOCAL_ONLY_001 + live scan)
+  src/win32app/ModelConnection.h                default endpoint :11434
+  src/win32app/Win32IDE_Types.h                 aiOllamaUrl localhost:11434
+  src/win32app/main_win32.cpp                   WinHttpConnect 127.0.0.1:11434 (feature probe)
+  src/win32app/Win32IDE_BackendSwitcher.cpp
+  src/win32app/Win32IDE_AgentCommands.cpp
+  src/win32app/Win32IDE_AIFeatures*.cpp
+  src/win32app/Win32IDE_ChatWindow.cpp
+  src/win32app/Win32IDE_AuditDashboard.cpp
+  src/inference/ollama_blob_parser.cpp          (ACTIVE via InferenceEngine.lib)
+
+PROOF GAP — CLOSED AS FACT (still OPEN as gate)
+  build-ninja ACTIVE_LINK_MAP.txt proves default EXE *links* Ollama client objects.
+  EXE string probe (SHA AB009150…): 11434×10, localhost:11434×2, 127.0.0.1:11434×5,
+  ollama×43, AgentOllama×15. Whole-product absence = NOT PROVEN / FAIL for claim.
+  Must quarantine (build flag OFF) or delete from link.
+
+===============================================================================
+B. WINHTTP / HTTP CLIENTS — network-capable (sample; shipping-relevant)
+===============================================================================
+ACTIVE / HIGH RISK (Win32 IDE surface)
+  src/win32app/Win32IDE.cpp                     generic WinHttp helper
+  src/win32app/main_win32.cpp                   :11434 feature probe + other
+  src/win32app/Win32IDE_Tier1Cosmetics.cpp      api.github.com HTTPS
+  src/win32app/Win32IDE_ChatPanel_Ollama.cpp    WinHttp :11434
+  src/win32app/HeadlessIDE.cpp                  cloud inference URLs
+  src/win32app/ModelConnection.h                WinHttpConnect
+  src/win32app/VSCodeMarketplaceAPI.cpp
+  src/win32app/spotify/spotify_client.cpp
+  src/win32app/Win32IDE_Collab.cpp
+  src/win32app/Win32IDE_LocalServer.cpp         LOCAL_SERVER
+  src/win32app/Win32IDE_HotpatchWiring.cpp
+  src/win32app/Win32IDE_BackendSwitcher.cpp
+
+RESIDUAL_SRC (tree-wide; confirm link before closing)
+  src/llm_adapter/llm_http_client*.cpp
+  src/agent/llm_http_client.cpp
+  src/win_http_client.cpp
+  src/codex/HttpClient.cpp
+  src/cloud_api_client.cpp
+  src/hf_hub_client.cpp / hf_downloader.cpp / modules/hf_hub_client.cpp
+  src/modules/blob_client.cpp
+  src/marketplace/* / core/vscode_marketplace.cpp
+  src/deep2/Deep2APIServer*.cpp / Deep2LocalServer.cpp / deep2_http_gateway.cpp
+  src/server/RawrXD_HttpServer.cpp / RawrXDGateway.cpp / api_server.cpp
+  src/websocket/* / collab/websocket_hub.cpp
+  src/mcp_client.cpp / github_mcp_bridge.cpp
+  src/hybrid_cloud_manager*.cpp
+  src/features/external_api_client.cpp
+
+===============================================================================
+C. CLOUD LLM / VENDOR ENDPOINTS (explicit strings observed)
+===============================================================================
+  HeadlessIDE.cpp
+    https://api.openai.com/v1/chat/completions
+    https://api.anthropic.com/v1/messages
+    https://generativelanguage.googleapis.com/...
+  Win32IDE.cpp / settings UI
+    huggingface.co download URL examples
+  ide/AwsBedrockClient.cpp
+  api/openai_compatible_server.cpp
+  cloud_provider_config.h / cloud_api_client.cpp
+
+PROOF GAP: default-deny that these paths cannot run without explicit opt-in = NOT PROVEN.
+
+===============================================================================
+D. TELEMETRY / UPDATE / BEACON
+===============================================================================
+  src/telemetry/telemetry_export.cpp
+  src/telemetry/ai_metrics.cpp
+  src/monitoring/telemetry_pipeline.cpp
+  src/agent/telemetry_collector_new.cpp
+  src/agent/sentry_integration_new.cpp
+  src/core/auto_update_system.cpp
+  src/agent/auto_update.cpp / auto_update_new.cpp
+  src/BeaconClient.cpp / beacon/BeaconClient.cpp
+  main_win32.cpp startup phase "auto_update" (deferred but present)
+  Win32IDE_Tier1Cosmetics.cpp → api.github.com (update-adjacent)
+
+PROOF GAP: default product cannot contact these = NOT PROVEN.
+
+===============================================================================
+E. EGRESS_001 WORK ORDER (no repair until authorized)
+===============================================================================
+1. Map ACTIVE_LINK set for RawrXD-Win32IDE.exe only (objdump / link map / strings).
+2. For each ACTIVE network symbol: classify DEFAULT_OFF vs ALWAYS_ON vs OPT_IN.
+3. Quarantine Ollama:
+     CMake option RAWRXD_OPTIONAL_OLLAMA=OFF (default)
+     Exclude AgentOllamaClient / OllamaProvider / ChatPanel_Ollama / HeadlessIDE
+     Ollama HTTP from default target_sources
+4. Fail-closed stubs remain only if needed for symbols; prefer remove.
+5. Cert harness: with Ollama running AND stopped, default EXE inference + chat
+   must be identical (Deep2/GGUF); no WinHTTP to :11434.
+6. Cert harness: block / proxy-deny outbound; prove no cloud/telemetry/update
+   attempts on cold start + File→New + Copilot local path.
+7. Hand off to STATIC_DEP_001 (strings/symbols on shipping EXE).
+
+===============================================================================
+F. CURRENT VERDICT
+===============================================================================
+```
+Deep2 inference dependency on Ollama = NO / CERTIFIED   (LOCAL_ONLY_001)
+Whole-product Ollama absence         = NOT PROVEN       (still linked)
+Default-deny egress                  = NOT PROVEN
+“No-dependency product” claim        = NOT YET CERTIFIABLE
+EGRESS_001                           = OPEN
+```

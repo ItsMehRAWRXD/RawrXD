@@ -1,0 +1,2 @@
+apply=1 content=beta
+AGENT_APPLY_PATCH_001=PASS

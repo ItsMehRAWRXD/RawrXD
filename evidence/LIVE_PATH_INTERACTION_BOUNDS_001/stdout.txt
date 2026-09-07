@@ -1,0 +1,444 @@
+LIVE_PATH_INTERACTION_BOUNDS_001
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M TOKENS=8 DEPTH=4
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF763EB2160 dequant=00007FF763EB4B50 GetGEMV(12)=00007FF763EB2160 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[ElasticResidencyManager] Scheduler thread started
+[DualGPUBackend] Worker 0 started
+[DualGPUBackend] Worker 1 started
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+       [STREAM] step=0 token=21594 text="Ġtap"
+       [STREAM] step=1 token=141238 text="è±¡å½¢"
+       [STREAM] step=2 token=29628 text="å±¯"
+       [STREAM] step=3 token=151017 text="é©¬åĵĪ"
+       [STREAM] step=4 token=117773 text="Ġcontradiction"
+       [STREAM] step=5 token=33198 text="nÃŃ"
+       [STREAM] step=6 token=13162 text="å¤§å¤§"
+       [STREAM] step=7 token=18272 text="lm"
+TRANSFER_BYTES_READ_TOTAL=9728949760
+TRANSFER_BYTES_TO_GPU_TOTAL=0
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=37586272256
+TRANSFER_READ_OPS=1311024
+TRANSFER_GPU_UPLOAD_OPS=0
+STREAM_BYTES_READ_TOTAL=9728949760
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=37586272256
+STREAM_READ_OPS=1311024
+STREAM_GPU_UPLOAD_OPS=0
+STREAM_CACHE_HITS=0
+STREAM_CACHE_MISSES=1311024
+STREAM_BYTES_PER_TOKEN=1216118720.0
+STREAM_BYTES_PER_LAYER=304029680.0
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=0
+LIVE_CACHE_BYTES_PEAK=0
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=0
+CACHE_HIT_RATE=0.000000
+CACHE_BYTES_SAVED=0
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=0
+CACHE_BYTES_AFTER_WARM=0
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 128
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=128 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=128 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 128 * 1 * 128 * 2 * 4
+[KVCache]        = 7995392 bytes (K=3997696 + V=3997696)
+[KVCache] Total cache size: 7.62 MB
+[KVCache] Initialization complete
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF763EB2160 dequant=00007FF763EB4B50 GetGEMV(12)=00007FF763EB2160 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[NUFusedPacker] Initialized: XVA=ON, cacheLine=64, targetBpw=4.0
+[Deep2Engine] NU Fused Packer initialized
+[DualGPUBackend] Worker 0 started
+[CompressedKVCache] Initialized: 2 MB compressed (vs 7 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[DualGPUBackend] Worker 1 started
+[NVMeStream] empty path → reverse bunnyhop fallback
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] NVMe mmap fail → FORCE reverse bunnyhop
+[NVMeBunnyHop] FAIL resolve path=''
+[Deep2Engine] WARNING: reverse bunnyhop also failed
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=0 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf 46.30GB c=4194304 u=1 hp=1
+[NVMeStream] FALLBACK→FORCE UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] Warmup scheduler: ENABLED
+[TrailBrake] Initialized (warning=1.5x, brake=2.0x, emergency=3.0x)
+[TrailBrake] Dropped anchor: live_generate (tokens=0)
+[StreamEngine] Initialized: 61 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 4.36 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=61)
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=0 token=21594 text="Ġtap"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=1 token=141238 text="è±¡å½¢"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=2 token=29628 text="å±¯"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+[TrailBrake] WARNING: Drift=0.50x
+       [STREAM] step=3 token=151017 text="é©¬åĵĪ"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=4 token=117773 text="Ġcontradiction"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=5 token=33198 text="nÃŃ"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+       [STREAM] step=6 token=13162 text="å¤§å¤§"
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/8 slices active, 8.72 GB → 4.36 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/8 slices active, 8.72 GB → 4.36 GB
+[TrailBrake] BRAKING: Drift=1.00x
+       [STREAM] step=7 token=18272 text="lm"
+TRANSFER_BYTES_READ_TOTAL=1216146944
+TRANSFER_BYTES_TO_GPU_TOTAL=963379200
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=37585039360
+TRANSFER_READ_OPS=46
+TRANSFER_GPU_UPLOAD_OPS=1
+STREAM_BYTES_READ_TOTAL=1216146944
+STREAM_BYTES_TO_GPU_TOTAL=963379200
+STREAM_BYTES_RECONSTRUCTED_TOTAL=37585039360
+STREAM_READ_OPS=46
+STREAM_GPU_UPLOAD_OPS=1
+STREAM_CACHE_HITS=1311005
+STREAM_CACHE_MISSES=46
+STREAM_BYTES_PER_TOKEN=152018368.0
+STREAM_BYTES_PER_LAYER=38004592.0
+GPU_COPY_BYTES_TOTAL=0
+GPU_COPY_OPS_TOTAL=0
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=0
+GPU_COPY_SUBMIT_US=0
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=0
+GPU_WEIGHT_CACHE_MISSES=0
+GPU_WEIGHT_BYTES_FIRST_LOAD=0
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=1216114688
+LIVE_CACHE_BYTES_PEAK=1216114688
+LIVE_CACHE_BUDGET=3221225472
+LIVE_CACHE_ENTRY_PEAK=38
+CACHE_HIT_RATE=0.999991
+CACHE_BYTES_SAVED=1262722343702528
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=27
+PREFETCH_SUPPRESSED=1
+PREFETCH_ALREADY_RESIDENT=189
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=1216114688
+LIVE_PATH_VACUUM=1
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=41
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=32
+LIVE_PATH_CYCLONE_LAYER_ENDS=32
+LIVE_PATH_CYCLONE_DEMANDS=0
+LIVE_PATH_PINBALL_SAMPLES=8
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=1
+LIVE_PATH_STREAM_ALIVE=32
+LIVE_PATH_NVME_HOPS=9
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=800.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=1
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=1216146944
+STREAM_BYTES_TO_GPU_TOTAL=963379200
+STREAM_BYTES_RECONSTRUCTED_TOTAL=37585039360
+STREAM_READ_OPS=46
+STREAM_GPU_UPLOAD_OPS=1
+VRAM_PEAK=67006464
+RESIDENT_WEIGHT_PEAK=67006464
+CACHE_HITS=1311005
+CACHE_MISSES=46
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=8
+TRAILBRAKE_TRIGGERED=1
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=1
+FUSED_ENABLED=1
+FUSED_DECISIONS=41
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=1
+FUSED_PREFETCH_DEPTH_MAX=1
+FUSED_REVERSE_DEPTH_MAX=1
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=1
+FUSED_CONFLICTS_AVOIDED=1
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+=== A0 enhancements=1 ===
+PERF WALL_MS=157179.112 DECODE_TPS=0.051 TOKENS=8 DEPTH=4
+STREAM_BYTES_READ_TOTAL=9728949760
+STREAM_BYTES_TO_GPU_TOTAL=0
+STREAM_BYTES_RECONSTRUCTED_TOTAL=37586272256
+STREAM_READ_OPS=1311024
+STREAM_GPU_UPLOAD_OPS=0
+VRAM_PEAK=67006464
+RESIDENT_WEIGHT_PEAK=0
+CACHE_HITS=0
+CACHE_MISSES=1311024
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=1216118720.0
+ABSENCE_NVME=1
+ABSENCE_PLASMA=0
+=== B_ALL enhancements=1 ===
+PERF WALL_MS=60141.995 DECODE_TPS=0.133 TOKENS=8 DEPTH=4
+STREAM_BYTES_READ_TOTAL=1216146944
+STREAM_BYTES_TO_GPU_TOTAL=963379200
+STREAM_BYTES_RECONSTRUCTED_TOTAL=37585039360
+STREAM_READ_OPS=46
+STREAM_GPU_UPLOAD_OPS=1
+VRAM_PEAK=67006464
+RESIDENT_WEIGHT_PEAK=67006464
+CACHE_HITS=1311005
+CACHE_MISSES=46
+CYCLONE_PREFETCH_REQUESTS=0
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+WARMUP_EXPERT_HITS=0
+QUEUE_PEAK=0
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+BYTES_PER_TOKEN=152018368.0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=1
+LIVE_CACHE_BYTES_PEAK=1216114688 BUDGET=3221225472 ENTRY_PEAK=38
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_HIT_RATE=0.999991 CACHE_BYTES_SAVED=1262722343702528
+CACHE_EVICTIONS=0 CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=27 SUPPRESSED=1 ALREADY=189 QPEAK=0
+RESIDENT_WEIGHT_GROWTH=0 PER_TOKEN_ALLOCS=0 FALLBACK=0
+OUTPUT_PARITY=1 PLATEAU=1 HITS_UP=1 XFER_WIN=1
+LIVE_PATH_INTERACTION_BOUNDS_001=PASS

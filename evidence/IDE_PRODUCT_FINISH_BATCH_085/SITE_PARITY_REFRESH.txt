@@ -1,0 +1,13 @@
+SITE_PARITY_REFRESH — VERDICT
+==============================
+Date: 2026-08-31
+
+Repo: sites/screenpilot.tech/index.html
+Remote: https://github.com/ItsMehRAWRXD/screenpilot.tech.git
+Commit: 77bb60c Refresh landing for BATCH_085 disposition and honest RC1 hold.
+Live: https://screenpilot.tech/ — verified serving BATCH_085 certification
+      cards, ~85% target, P1PRA_002/RC1 HOLD, G:\OllamaModels root note.
+
+RC1 not claimed certified. Public copy lags evidence.
+
+SITE_PARITY_REFRESH=PASS

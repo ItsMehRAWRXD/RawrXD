@@ -1,0 +1,32 @@
+LOAD AV CAPTURE RUN 4 — 2026-09-01 19:54 (session 1ed348, post H6 fix)
+============================================================================
+
+H6 m_inferenceRunning init — VERIFIED
+-------------------------------------
+NDJSON: generateResponseAsync entry d0=0 (not busy)
+WITNESS: worker_spawn → inference_worker_enter (tid=15452)
+Prior RUN 3: reject_busy with no worker_spawn (garbage true)
+
+Full stage chain — VERIFIED
+---------------------------
+FORWARD/SAMPLE/DECODE/UI_EMIT all adv=1
+P1PRA_STREAM_PHYS=witnessed
+P1PRA_RESULT_STATUS=stream_ok
+P1PRA_FINALIZE_RC=0
+
+E2E contract — PASS
+-------------------
+P1PRA_002_E2E_PRODUCT_AUTHORITY=PASS
+PRODUCT_INFERENCE_AUTHORITY=WITNESSED
+harness_exit=0
+
+Telemetry isolation still active: RAWRXD_SKIP_UTC_MASM=1 (UTC_skip_env in NDJSON)
+
+Disposition update
+------------------
+Load AV blocker: CLEARED (with UTC skip env)
+B2–B4 stage chain: WITNESSED on this run
+RC1: eligible for re-evaluation (E2E PASS with physical stream counters)
+
+Remaining: root MASM UTC cf_shadow_rsp_pre fix (telemetry kernel); enterprise_license
+stage=3 AV (non-fatal VEH, still present).

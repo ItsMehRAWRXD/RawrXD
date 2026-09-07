@@ -1,0 +1,22 @@
+STREAMER_VRAM_APERTURE_001
+==========================
+MASM: src/asm/StreamRingBufferToVramAperture_x64.asm
+Smoke: src/deep2/streamer_vram_aperture_smoke.cpp
+Build: tests/masm/build_and_run_streamer_vram_aperture_smoke.cmd
+
+Result: PASS
+  NULL arg reject = 1
+  misaligned length reject = 2
+  aligned 4KiB NT copy = 0
+  memcmp match = 1
+
+Wired into:
+  Deep2VramBridge::SynchronousCyclePipeline
+  Deep2EngineExtensions.h (extern C)
+  src/deep2/CMakeLists.txt (Deep2EngineOpt MASM list)
+
+NVMe dual-slot loop restored to main tree:
+  SovereignContinuousStreamingLoop(path, sliceSize, tokenSweepCount)
+  Deep2StorageRing.hpp now includes <atomic>
+
+Not in scope: VAL-051.x numbered gates

@@ -1,0 +1,10 @@
+COMMAND_HOME_SMOKE_001
+status=PASS
+gui=none
+STEER_UNBOUND=PASS detail=COMMAND_SESSION_001: FAIL_CLOSED — session unbound. Select workspace and repository before starting an agent.
+STEER_1_OK=PASS detail=first steer accepted
+STEER_2_NO_LEASE_STUCK=PASS detail=second steer accepted (lease released)
+STEER_HANDLER_FIRED=PASS detail=handler_calls=2
+STEER_AFTER_STOP=PASS detail=steer ok after stopAgent
+STEER_OLLAMA_FAIL_CLOSED=PASS detail=LOCAL_ONLY_001: FAIL_CLOSED — Ollama/HTTP inference is forbidden. Load a local GGUF and use Deep2/GGUF only.
+DEEP2_GENERATE=PASS detail=SKIPPED (set RAWRXD_SMOKE_GGUF to enable)

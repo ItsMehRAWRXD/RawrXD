@@ -1,0 +1,68 @@
+GATE=P1_PRODUCTION_TAIL_LATENCY_001
+STATUS=CONTRACT_FROZEN_STUB
+EFFECTIVE=2026-08-29
+DEPENDS_ON=P1_REAL_SPEEDUP_REPEATABILITY_001
+MUST_NOT_PRECEDE=repeatability PASS
+MUST_NOT_REDEFINE=P1_REAL_SPEEDUP_001
+
+Purpose
+-------
+Localize where production candidate wall time is spent on abnormal trials
+(e.g. ~70 s and ~27 s outliers observed under P1_REAL_SPEEDUP_001).
+
+This gate is NOT an optimization charter. Diagnosis first.
+Do not tune the benchmark or reopen median REAL_SPEEDUP predicates.
+
+Known abnormal observations (from frozen P1_REAL_SPEEDUP_001)
+-------------------------------------------------------------
+CANDIDATE_TRIALS ns:
+  [70011496700, 3108491500, 6266283700, 5237047900, 27071551900]
+Abnormals: index 0 ≈ 70.0 s, index 4 ≈ 27.1 s
+MEDIAN_ACCELERATION was PROVEN; TAIL / COLD_START = NOT PROVEN
+
+Hypotheses to discriminate (instrument, do not guess)
+-----------------------------------------------------
+GPU residency eviction
+streaming cold fault
+file mapping / disk stall
+shader/kernel initialization
+policy transition
+VRAM pressure
+Windows scheduling
+background IDE activity
+thermal/power-state transition
+allocation/deallocation
+model-page remapping
+
+Per-candidate-trial instrumentation (minimum)
+---------------------------------------------
+TOTAL_GENERATE_NS
+PREFILL_NS
+DECODE_NS
+WEIGHT_MAP_NS
+WEIGHT_IO_NS
+GPU_UPLOAD_NS
+GPU_WAIT_NS
+RESIDENCY_MISS_COUNT
+RESIDENCY_BYTES_FAULTED
+PATCH_NS
+WORK_AVOIDANCE_NS
+CPU_WAIT_NS
+WORKING_SET_BEFORE / WORKING_SET_AFTER
+VRAM_BEFORE / VRAM_AFTER
+
+Authority (when implemented)
+----------------------------
+Each abnormal trial MUST attribute >50% of excess wall time to a named
+component bucket (FIRST_ABNORMAL_COMPONENT recorded).
+NORMAL_COMPUTE_NS vs ABNORMAL_COMPONENT_NS vs OTHER_NS must sum to TOTAL.
+
+Evidence (future)
+-----------------
+evidence/P1_PRODUCTION_TAIL_LATENCY_001/
+  CONTRACT.txt GATE.txt TRIALS_ATTR.csv
+
+Disposition until repeatability closes
+--------------------------------------
+NO BUILD / NO RUN of this gate until
+P1_REAL_SPEEDUP_REPEATABILITY_001 = PASS.

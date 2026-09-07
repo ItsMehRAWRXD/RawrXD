@@ -1,0 +1,8 @@
+# NU_LIVE_CONSUMER_001
+# Live generate may consume NU bytes only when wanted + authorized.
+#
+# DEEP2_LIVE_NU=1
+# DEEP2_LIVE_NU_AUTH=1 | parity GATE_STATUS LIVE_NU_CONSUME_AUTHORIZED=1
+# AUTH=0 = explicit deny
+#
+# Prove: off reject, no-auth reject, on+live session consume ops/bytes.

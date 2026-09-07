@@ -1,0 +1,8 @@
+id=sess_1788812322
+model=tinyllama
+path=
+workspace=G:\~dev\rawrxd
+autonomy=build
+plan=Fix the failing unit test.
+patch=patch_2
+turns=0

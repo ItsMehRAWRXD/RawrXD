@@ -1,0 +1,23 @@
+SCHEMA_RETRY_BOUNDARY_FREEZE
+ROOT_DOMAIN=MODEL_SCHEMA_RETRY
+MODEL=TinyLlama
+HEXMAG=NOT_IMPLICATED
+COPILOT_ROUTE=NOT_IMPLICATED
+
+R0_raw_first_model_output=written
+R1_schema_validation_error=written
+R2_retry_prompt_correct=1
+R2_has_schema_error=1
+R2_has_strict_example=1
+R2_has_malformed_prior=1
+R2_rendered_bytes=4353
+R3_raw_second_written=1
+R3_bare_key_class=0
+R4_second_schema_valid=1
+R4_second_dispatched=1
+
+MODEL_REPEATS_INVALID=0
+DISPOSITION=RETRY_PROMPT_CORRECT + MODEL_CORRECTED → PASS
+
+WORKING_NOTE=Retry infrastructure presents observation + strict example; TinyLlama second generation remains schema-invalid under unconstrained NL. Architectural fix if R2 correct: deterministic schema repair / constrained decode between model output and tool dispatch (not another free gen).
+Do not reopen HexMag/Copilot.

@@ -1,0 +1,48 @@
+#version 450
+// gemv_q5k.comp — ggml dequantize_row_q5_K fused dot
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+void scmin(uint base, uint j, out uint sc, out uint m) {
+  if (j < 4u) { sc = u8(base + j) & 63u; m = u8(base + j + 4u) & 63u; }
+  else {
+    uint a = u8(base + j + 4u), b = u8(base + j - 4u), c = u8(base + j);
+    sc = (a & 15u) | ((b >> 6) << 4); m = (a >> 4) | ((c >> 6) << 4);
+  }
+}
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = (pc.cols + 255u) / 256u;
+  uint rowOff = row * nblk * 176u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint blk = rowOff + b * 176u;
+    float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+    float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
+    uint scb = blk + 4u, qh = blk + 16u, ql = blk + 48u;
+    uint elem = b * 256u, is = 0u, u1 = 1u, u2 = 2u;
+    for (uint p = 0u; p < 4u; ++p) {
+      uint sc0, m0, sc1, m1; scmin(scb, is, sc0, m0); scmin(scb, is + 1u, sc1, m1);
+      float d1 = d * float(sc0), min1 = dmin * float(m0);
+      float d2 = d * float(sc1), min2 = dmin * float(m1);
+      for (uint l = 0u; l < 32u; ++l) {
+        uint qv = u8(ql + l), hv = u8(qh + l);
+        uint a = elem + l, c = a + 32u;
+        uint lo = (qv & 15u) + ((hv & u1) != 0u ? 16u : 0u);
+        uint hi = (qv >> 4) + ((hv & u2) != 0u ? 16u : 0u);
+        if (a < pc.cols) sum += (d1 * float(lo) - min1) * x[a];
+        if (c < pc.cols) sum += (d2 * float(hi) - min2) * x[c];
+      }
+      ql += 32u; elem += 64u; is += 2u; u1 <<= 2; u2 <<= 2;
+    }
+  }
+  y[row] = sum;
+}

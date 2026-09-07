@@ -1,0 +1,31 @@
+﻿FROZEN_MODEL_MAP — 2026-08-29
+rule=key_all_evidence_by_absolute_path+SHA256+quant; never cross-compare GGUFs
+bos_work=one_frozen_model_at_a_time_with_matching_llama_oracle
+
+----
+role=Q4_0_stick
+path=F:\~dev\tinyllama_fresh.gguf
+bytes=637699456
+sha256=DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+observed_deep2_greedy1_pong_nobos=!!
+----
+role=Q4_K_M_batch1
+path=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+bytes=668788096
+sha256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+observed_deep2_greedy1_pong_nobos=UE
+
+quant_observed_by_deep2_kernel_logs:
+  tinyllama_fresh.gguf -> type=Q4_0 (KERNEL/Q4_DISPATCH)
+  tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf -> type=Q4_K (KERNEL)
+
+batch2_bos_authority_model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+batch2_bos_do_not_use=F:\~dev\tinyllama_fresh.gguf
+
+BATCH2_BOS_DEEP2_RESULT (Q4_K_M only)
+input_ids=[1,21521,9312]
+deep2_greedy1_id=13 text=<0x0A>/newline logit=8.148
+deep2_comma_id=29892 logit=8.101 (2nd; delta=-0.047 vs top1)
+llama_batch1_bos_golden=,
+verdict=NEAR_MISS_NOT_MATCH — BOS path not yet parity-closed
+note=do_not_compare_to_Q4_0_!!_or_noBOS_UE

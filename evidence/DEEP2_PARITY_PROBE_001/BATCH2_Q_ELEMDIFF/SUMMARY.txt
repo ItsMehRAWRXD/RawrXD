@@ -1,0 +1,41 @@
+BATCH2_Q_ELEMDIFF — 2026-08-29
+authority_ladder=deep2_attn_ladder_bos_q4k.txt + BATCH2_Q4K_BOS_REPROBE_VERDICT.txt
+dumps=
+  deep2_Q_PRE_ROPE_0_pos0.bin   fnv=ced1abe971861249 l2=1.938516985e+00
+  llama_Q_PRE_ROPE_0_pos0.bin   fnv=8d53927ede5ddb3f l2=1.938517021e+00
+  deep2_ATTN_NORM_0_pos0.bin    fnv=b4ca919612be6c51 (MATCH)
+
+ELEMENTWISE
+  n=2048
+  max_abs_error=1.490116119e-07
+  mean_abs_error=5.834749572e-09
+  rms_error=1.011874753e-08
+  number_exact_equal=309
+  number_bitwise_different=1739
+  first_different_index=0
+    deep2=-1.628620550e-02  llama=-1.628620923e-02  abs=3.73e-09  (2 ULP)
+  largest_error_index=1264
+    deep2=1.843456179e-01  llama=1.843457669e-01  abs=1.49e-07  (10 ULP)
+  error_buckets: exact=309  lt1e-8=1435  lt1e-6=304  lt1e-4=0  ge1e-4=0
+  ulp_buckets: ulp1=361  ulp2_8=998  ulp9plus=380
+  diff_mod32: roughly uniform (~49..58) — NOT Q4_K subgroup-periodic
+
+PATTERN
+  many_tiny_fp_diffs => accumulation / FP precision / integer-dot rounding
+  REJECTED: tensor shape / broken Q4_K decode / row-stride / subgroup scale permute
+  (those would produce ge1e-4 or structured mod-32/256 banding)
+
+BLOCK-DOT (row 0 / row 1264 vs FP64 dequant·x)
+  FP64 dequant-dot is ~1e-4 from BOTH deep2 and llama dumps
+  (both sides use Q4_K×Q8_K mul_mat; FP64 is not the live path)
+  per-block dots do not isolate a single bad superblock between deep2 and llama
+
+GATE INTERPRETATION
+  strict_FNV: still FAIL (first numerical mismatch remains Q_PRE_ROPE_0)
+  eps_1e-6: would PASS (max_abs << 1e-6)
+  behavioral: greedy-1 still argmax=13
+
+NEXT (if chasing bit-exact FNV)
+  match llama CPU vec_dot_q4_K_q8_K / quantize_row_q8_K bit-for-bit
+  (AVX path vs generic scalar Q8_K path), not another agent E2E
+  do NOT advance to K/V under strict FNV; under eps_1e-6 K/V becomes next open boundary

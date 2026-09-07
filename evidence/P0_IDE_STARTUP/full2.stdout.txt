@@ -1,0 +1,17 @@
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-08-29 17:19:03 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+17:19:04.284 IDE_LoadModel before_UI_pump
+17:19:04.286 CIE_LoadModel enter
+17:19:04.287 CIE_path F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+17:19:04.288 CIE_utf16 ok
+17:19:04.290 CIE_ext_tokenizer absent_use_gguf
+[CPUInferenceEngine] Loading model: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[CPUInferenceEngine] Stage: initialize backend
+17:19:04.291 CIE_before_InferenceBackend_Initialize
+17:19:04.291 INF_Initialize enter
+17:19:04.293 INF_vulkan attempt

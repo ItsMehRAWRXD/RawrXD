@@ -2601,6 +2601,7 @@ class Win32IDE
                                            const std::string& suffix, const std::string& filePath, int cursorLine,
                                            int cursorCol, uint64_t expectedSeq = 0);
     void onGhostTextReady(int requestedCursorPos, const char* completionText);
+    bool applyProductGhost(const char* text, uint64_t gen, uint64_t id, int line, int col);
     void dismissGhostText();
     void acceptGhostText();
     void renderGhostText(HDC hdc);
@@ -2635,6 +2636,11 @@ class Win32IDE
     std::string m_ghostTextContent;
     int m_ghostTextLine = -1;
     int m_ghostTextColumn = -1;
+    uint64_t m_ghostTextGen = 0;
+    uint64_t m_ghostTextId = 0;
+    uint8_t m_ghostSource = 0; // 0 none, 1 product (legacy cannot write)
+    uint64_t m_editorDocGen = 1;
+    uint64_t m_ghostLegacyRejected = 0;
     HFONT m_ghostTextFont = nullptr;
     std::atomic<uint64_t> m_ghostTextRequestSeq{0};
     std::mutex m_ghostTextCacheMutex;

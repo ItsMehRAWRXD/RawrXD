@@ -1,0 +1,2 @@
+cmake_e_echo=1 run_build_registered=1
+AGENT_BUILD_TEST_001=PASS

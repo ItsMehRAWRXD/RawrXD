@@ -1,0 +1,15 @@
+﻿P0_LIFECYCLE_001
+frozen_at_utc=2026-08-29T21:29:41Z
+candidate_sha=C9ED0031EB6CC36C5D705194751378DD5A7783572F165979EF83BB23D9782CED
+exe=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+SELFTEST_EXIT=0
+status=PASS
+runs=3
+run1=PASS loop=1 pc06=1 pc08=1 seh=0 hold=1 stop=1 exit=0x00000000
+run2=PASS loop=1 pc06=1 pc08=1 seh=0 hold=1 stop=1 exit=0x00000000
+run3=PASS loop=1 pc06=1 pc08=1 seh=0 hold=1 stop=1 exit=0x00000000
+FIRST_PAINT_PROXY=message_loop_entered + held >=2s
+GGUF=BLOCKED
+COPILOT=BLOCKED
+HEXMAG=NOT_TOUCHED
+SEH_WM_APP_201=DEFERRED

@@ -1,0 +1,38 @@
+EGRESS_001 — STATIC BINARY SCAN (Option 1, step 3)
+====================================================
+TIMESTAMP_UTC=2026-08-31
+STATUS=OPEN — not PASS
+
+Smoke authority EXE (COMMAND_HOME_001 CLOSED)
+  SHA256=2073301D4DF5141BA86DEB24DCFB1596DC63B4D0382A658EB6CA5DD7464511A1
+  NOTE=Archive this binary before rebuild; current tree may overwrite bin/
+
+Scan target (latest rebuild)
+  PATH=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe
+  SHA256=CB67B6B1DFF9C9ADC7FFD94B6921B86F1D5082B35DD746FC5D86039CE99C8EB7
+
+Literal counts (rg -a)
+  11434=5
+  11435=3
+  localhost=13
+  ollama=32
+  huggingface.co=2
+  :9999=0
+  :8005=0
+  api.openai.com=0
+  api.anthropic.com=0
+  moonshot.ai=0
+
+Imports (dumpbin /IMPORTS)
+  WINHTTP.dll=PRESENT
+  WS2_32.dll=PRESENT
+
+Verdict
+  Compile quarantine removed Ollama TUs from default link — PASS at CMake layer
+  Static proof NOT closed: network DLLs + endpoint literals still in shipping image
+  Next: triage hits (quarantine strings / UI / dead code) vs live default paths
+  Then: Option 2 runtime default-deny trap on frozen SHA
+  Then: Ollama absent vs :11434 identity check
+
+Script
+  evidence/STATIC_DEP_001/scan_static_dep_fast.ps1

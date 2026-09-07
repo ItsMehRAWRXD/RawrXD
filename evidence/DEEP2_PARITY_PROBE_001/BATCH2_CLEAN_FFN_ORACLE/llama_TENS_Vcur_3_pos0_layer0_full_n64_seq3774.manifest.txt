@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Vcur_3
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=ba20e691befb266c
+l2=1.1482842209556885
+seq=3774
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_CLEAN_FFN_ORACLE\llama_TENS_Vcur_3_pos0_layer0_full_n64_seq3774.bin

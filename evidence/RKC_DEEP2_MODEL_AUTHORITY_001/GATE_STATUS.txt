@@ -1,0 +1,2 @@
+manifest_rejected=1 raw_ok=1 opened=1 generated=1 ollama_required=0
+RKC_DEEP2_MODEL_AUTHORITY_001=PASS

@@ -1,0 +1,3 @@
+# NU_PERF_001
+# Measure NU pack + GEMV vs F32 GEMV (256x256, 32 iters).
+# PASS: ratio<0.55, CPU+GPU NU paths complete, finite timings.

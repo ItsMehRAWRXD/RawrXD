@@ -1,0 +1,9 @@
+raw_events:
+0 kind=1 name=goal.requested payload=Proceed with the remaining steps. Target and parameters are UNSPECIFIED.
+1 kind=14 name=need_input payload=ASK_USER: missing required specification (guessing_missing_facts=FORBIDDEN)
+ask.needInput=1
+ask.success=0
+eventLog:
+goal.requested: Finish when ready — missing information blocks progress.
+need_input: ASK_USER: missing required specification (guessing_missing_facts=FORBIDDEN)
+

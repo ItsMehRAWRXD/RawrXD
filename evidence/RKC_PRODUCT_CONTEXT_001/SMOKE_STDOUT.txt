@@ -1,0 +1,48 @@
+﻿[GOAL]
+model_executable_locally
+
+[TASK]
+Can Deep2 execute this model entirely locally?
+
+[KNOWN]
+FACT compute_backend_exists  REAL  1
+FACT no_remote_dependency  REAL  1
+FACT live_generation_path_exists  REAL  1
+FACT local_generation_proven  DERIVED  1
+
+[MISSING]
+NEED model_format_supported  UNKNOWN
+NEED tokenizer_supported  UNKNOWN
+NEED memory_plan_exists  UNKNOWN
+NEED model_complete  UNKNOWN
+NEED gpu_fit  UNKNOWN  unknown
+
+[NEGATIVE]
+NEG model_exists  NOT_PRESENT  0
+NEG all_required_shards_exist  NOT_OBSERVED  unknown
+
+[CONSTRAINT]
+- No globals for cancellation authority.
+- Existing Deep2 ABI preserved.
+- SYNTHETIC must not become REAL.
+
+[INSTRUCTION]
+Answer from KNOWN/NEGATIVE only. Resolve MISSING via observe/derive.
+Do not invent REAL facts. SYNTHETIC cannot become REAL.
+
+PRODUCT_HAS_GOAL=PASS
+PRODUCT_HAS_KNOWN=PASS
+PRODUCT_HAS_MISSING=PASS
+PRODUCT_NO_OPEN_TABS=PASS
+PRODUCT_SELECTION_ABSENT_NON_PATCH=PASS
+PRODUCT_NO_PATCH_SITE_ORDINARY=PASS
+PRODUCT_REAL_PROVENANCE=PASS
+PRODUCT_MISSING_EXPLICIT=PASS
+PRODUCT_SYNTHETIC_NOT_REAL=PASS
+PRODUCT_PATCH_INTENT=PASS
+PRODUCT_SELECTION_INCLUDED_PATCH=PASS
+PRODUCT_HAS_PATCH_SITE=PASS
+PRODUCT_PATCH_BODY=PASS
+PRODUCT_PATCH_NO_TABS=PASS
+RKC_PRODUCT_CONTEXT_001=PASS
+

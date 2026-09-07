@@ -600,6 +600,10 @@ private:
     VkBuffer gemv_out_buf_ = nullptr;
     VkDeviceMemory gemv_out_mem_ = nullptr;
     size_t gemv_out_cap_ = 0;
+    // Dedicated Q6 logits weight staging — must NOT touch ww slots / MLA pins.
+    VkBuffer q6k_logits_w_buf_ = nullptr;
+    VkDeviceMemory q6k_logits_w_mem_ = nullptr;
+    size_t q6k_logits_w_cap_ = 0;
 
     bool EnsureGemvPipeline();
     bool CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);

@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_ffn_inp_5
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=a926700be5f2e557
+l2=2.209265145061063
+seq=847
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_TENS_ffn_inp_5_pos1_layer0_full_n2048_seq847.bin

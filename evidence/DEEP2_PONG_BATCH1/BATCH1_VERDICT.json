@@ -1,0 +1,24 @@
+﻿{
+  "batch": 1,
+  "date": "2026-08-29",
+  "verdict": "PASS_CORRECTED_GOLDEN",
+  "model": "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "prompt": "PONG",
+  "prompt_tokens_no_bos": [21521, 9312],
+  "deep2_greedy1_token_id": 4462,
+  "deep2_greedy1_text": "UE",
+  "llama_cpp_greedy1_text_no_bos": "UE",
+  "deep2_greedy8_text": "UE,▁a▁19th-",
+  "llama_cpp_greedy8_text_no_bos": "UE, a 19th-",
+  "expect_contains_cert": "UE",
+  "expect_contains_exit": 0,
+  "primary_fix": "Q4_K_nibble_layout_ggml_compatible",
+  "files_fixed": [
+    "src/deep2/QuantKernelRegistry.cpp",
+    "src/deep2/Deep2Engine.cpp",
+    "src/deep2/Deep2QuantReference.h"
+  ],
+  "blocker_class_previous": "DEEP2_FINITE_BUT_INCORRECT_LOGITS",
+  "blocker_class_now": "CLEARED_FOR_NO_BOS_GREEDY_PONG_PROMPT",
+  "next": ["bos_parity_optional", "multi_token_tool_call", "AGENT-E2E-002b"]
+}

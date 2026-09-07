@@ -1,0 +1,13 @@
+side=deep2
+stage=K_PRE_ROPE_21
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=0eb70e8e9f51720c
+l2=6.8395997367460675
+seq=66
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_TIP_ALIGN_001\deep2\deep2_K_PRE_ROPE_21_pos0_layer0_full_n256_seq066.bin

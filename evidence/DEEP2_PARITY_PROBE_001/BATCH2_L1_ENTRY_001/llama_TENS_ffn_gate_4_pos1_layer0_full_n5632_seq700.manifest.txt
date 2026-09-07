@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_ffn_gate_4
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=be29d0cee7863783
+l2=12.136502050573995
+seq=700
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_TENS_ffn_gate_4_pos1_layer0_full_n5632_seq700.bin

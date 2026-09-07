@@ -1,0 +1,10 @@
+BATCH2_L8_L12_EXPAND_001
+authority=EXPAND_V sparse CB 8..12
+
+L8_OUT  abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.151596e-06 first=14 largest=624
+L9_OUT  abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.166497e-06 first=14 largest=624
+L10_OUT  abs=FAIL    dual=FAIL    max_abs=5.829334e-05 max_rel=5.829334e-05 first=0 largest=1198
+FIRST_DUAL_FAIL=L10_OUT
+L11_OUT  abs=FAIL    dual=FAIL    max_abs=1.065433e-04 max_rel=1.065433e-04 first=0 largest=503
+L12_OUT  abs=FAIL    dual=FAIL    max_abs=4.634857e-04 max_rel=4.547238e-04 first=0 largest=1454
+FIRST_DUAL_FAIL=L10_OUT

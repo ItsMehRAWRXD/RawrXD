@@ -1,0 +1,2 @@
+gen=5 prompt=2 prefill_ms=339.102 decode_ms=620.981
+DEEP2_PREFILL_DECODE_001=PASS

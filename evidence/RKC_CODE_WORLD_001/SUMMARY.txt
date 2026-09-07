@@ -1,0 +1,12 @@
+RKC_CODE_WORLD_001=PASS
+
+FILES=3 SYMBOLS=6 CALL_EDGES=5 GRAPH_NODES=9 GRAPH_EDGES=5
+REACH_LIVE=1 (generate→LivePath_BeginGenerate, generate→K2LivePolicy_Apply,
+              stream→LivePath_BeginGenerate)
+NEG_FAKE=1 (FakeRemoteInfer NOT_PRESENT + NOT_REACHABLE from generate)
+EPISTEMIC=1 (SYNTHETIC→REAL rejected)
+
+Ingest: Deep2Engine.cpp, Deep2LivePath.cpp, K2LivePolicy_Apply.cpp
+Atoms are REAL from source text; reachability is Derived via call-edge BFS.
+
+Next RKC: RKC_MINIMAL_SOURCE_001 → RKC_NEGATIVE_KNOWLEDGE_001 → model inventory

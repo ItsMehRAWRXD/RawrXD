@@ -1,0 +1,38 @@
+EXTENSION_TOP25_CATALOG=WIRED
+INSTALL_API=RawrXD::Extensions::Local::InstallPackage
+DETECT_API=RawrXD::Extensions::Local::DetectFormat
+CATALOG_COUNT=25
+
+Top-25 IDE products (primary package format):
+  Visual Studio      Visual Studio VSIX (.vsix)
+  VS Code            VS Code VSIX (.vsix) [runtime hosted]
+  IntelliJ IDEA      JetBrains Plugin (.zip,.jar)
+  PyCharm            JetBrains Plugin
+  WebStorm           JetBrains Plugin
+  Android Studio     JetBrains Plugin
+  Xcode              Xcode Bundle (.appex,.plugin)
+  Eclipse            Eclipse Bundle (.jar,.zip)
+  CLion              JetBrains Plugin
+  PhpStorm           JetBrains Plugin
+  GoLand             JetBrains Plugin
+  Sublime Text       Sublime Package (.sublime-package)
+  Zed                Zed Extension (.zip,.tar.gz)
+  Fleet              JetBrains Plugin
+  Cursor             VS Code VSIX [runtime hosted]
+  Neovim             Neovim Pack
+  GNU Emacs          Emacs Package
+  Rider              JetBrains Plugin
+  RubyMine           JetBrains Plugin
+  NetBeans           NetBeans NBM (.nbm)
+  Qt Creator         Qt Creator Plugin
+  Nova               Nova Extension (.novaextension)
+  Windsurf           VS Code VSIX [runtime hosted]
+  VSCodium           VS Code VSIX [runtime hosted]
+  Lapce              Lapce Plugin
+
+Additional formats: native DLL, .rawrpkg, .whl, .js, .psm1, LSP, DAP, themes.
+
+Win32IDE: Extensions sidebar Install uses BuildInstallFileFilter() + Local::InstallPackage.
+Cloud marketplace remains OPTIONAL_CLOUD=OFF; local install always linked.
+
+DATE=2026-08-31

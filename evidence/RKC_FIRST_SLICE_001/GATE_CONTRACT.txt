@@ -1,0 +1,6 @@
+﻿RKC_FIRST_SLICE_001
+PRIMARY_PROMPT=proof_state_not_tab_stuffing
+SYNTHETIC_TO_REAL=FORBIDDEN
+HOOK=Win32IDE::assembleCommandInferenceContext
+RECIPES=model_complete,local_generation_proven,gpu_fit
+BINARY_SMOKE=rkc_smoke (link InferenceEngine when MSVC available)

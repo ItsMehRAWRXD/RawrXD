@@ -1,0 +1,16 @@
+VWA_GPU_STAGE_001
+LAW=runtime placement stages hostΓåÆdevice; VWA does not select GPU
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[ElasticResidencyManager] Scheduler thread started
+HOST_STAGE_BYTES=288
+DEVICE_STAGE_BYTES=288
+GPU_DMA_BYTES=288
+GPU_UPLOAD_SUBMITS=1
+GPU_UPLOAD_COMPLETIONS=1
+REAL_GPU_DMA=1
+DEVICE_SELECTION_IN_VWA=0
+GPU_API_IN_VWA=0
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+VWA_GPU_STAGE_001=PASS

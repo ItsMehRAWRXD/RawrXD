@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_l_out_18
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=7a947b9e796499e5
+l2=205.49966628663461
+seq=5581
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\llama_TENS_l_out_18_pos0_layer0_full_n2048_seq5581.bin

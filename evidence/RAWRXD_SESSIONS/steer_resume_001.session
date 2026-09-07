@@ -1,0 +1,9 @@
+id=steer_resume_001
+model=tinyllama
+path=
+workspace=G:\~dev\rawrxd
+autonomy=build
+plan=inspect then wait for steer
+patch=patch_1
+turns=1
+user	do the work

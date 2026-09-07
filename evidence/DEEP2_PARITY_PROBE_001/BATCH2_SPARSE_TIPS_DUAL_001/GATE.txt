@@ -1,0 +1,40 @@
+BATCH2_SPARSE_TIPS_DUAL_001
+===========================
+date=2026-08-29
+authority=BATCH2_SPARSE_CLEAN_001 EXPAND_V + deep2_post_swiglu_fix
+prereq=BATCH2_L2_OUT_LOC (SiLU CLOSED; L2 abs-fail = GATE ULP amp)
+policy_dual=PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6)
+           INSPECT if abs<=1e-4 AND rel<=5e-6
+           else FAIL — stop
+
+POS0 RESULTS
+------------
+L2_OUT   abs=FAIL dual=INSPECT  max_abs=4.58e-5  max_rel=3.14e-6
+L4_OUT   abs=FAIL dual=INSPECT  max_abs=4.58e-5  max_rel=3.14e-6
+L8_OUT   abs=FAIL dual=INSPECT  max_abs=4.58e-5  max_rel=3.15e-6
+L12_OUT  abs=FAIL dual=FAIL     max_abs=4.63e-4  max_rel=4.55e-4  << FIRST_DUAL_FAIL
+L16+     not authoritative after stop
+
+FIRST_ABS_FAIL  = L2_OUT (known ULP amp; dual INSPECT — continue)
+FIRST_DUAL_FAIL = L12_OUT
+
+INTERPRETATION
+--------------
+L2→L8 hold the same ~4.58e-5 abs footprint (does not grow).
+Between L8 and L12 abs grows ~10× and rel jumps to ~4.5e-4.
+⇒ new divergence band (L9..L12), not SiLU/wo reopen.
+
+NEXT
+----
+Expand interval L9_OUT L10_OUT L11_OUT L12_OUT under EXPAND_V
+(require llama sparse CB layers 9,10,11 OR full L12 body ladder).
+Then expand first failing layer internals (same operand discipline).
+
+DO_NOT_REOPEN
+-------------
+<=L1 | wo | SiLU | L2 ACT scalar path
+
+Artifacts
+---------
+LADDER.txt  report.json  sparse_tips_dual.py
+gate2_l2_out_loc.exe (prereq)

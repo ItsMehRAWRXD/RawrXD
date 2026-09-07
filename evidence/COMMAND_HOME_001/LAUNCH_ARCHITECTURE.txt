@@ -1,0 +1,141 @@
+RawrXD ScreenPilot — Local-First Launch Architecture (Desktop Preview)
+=========================================================================
+Status: PLANNING / IMPLEMENTATION IN PROGRESS — not a verified production drop.
+Treat prior chat transcripts as planning only unless backed by evidence in-tree.
+
+Release identity (honest)
+-------------------------
+Product:  RawrXD ScreenPilot
+Release:  Desktop Preview (NOT remote-control GA, NOT cloud IDE GA)
+Domain:   screenpilot.tech — REGISTERED through 2028-08-31 (Porkbun;
+          lock + privacy ON). DNS/SSL/host still OPEN until STATIC_DEP_001 PASS.
+          screenpilot.dev → staging/redirect only (DigitalOcean NS).
+Hero:     Your machine. Your models. Your agents. Any screen.
+Claims:   Local Deep2/GGUF, workspace/Git binding, activity + stop controls.
+Withheld: Zero egress, public remote steering, unlimited cloud hosting.
+
+Gate matrix
+-----------
+LOCAL_ONLY_001     CERTIFIED — Deep2/GGUF fail-closed; no Ollama default path
+STREAMER_CERT_001  CERTIFIED — frozen baseline; do not overwrite
+EGRESS_001         OPEN — no "nothing leaves the machine" marketing
+COMMAND_SURFACE_001  PASS — see evidence/COMMAND_SURFACE_001/GATE.txt
+COMMAND_HOME_001     ALIGNED (same shell; smoke on Win32IDE build pending)
+STATIC_DEP_001       OPEN — domain registered; HTTPS landing not verified
+REMOTE_CONTROL_001 OPEN — no paired-device steering exposure
+
+What ships in Desktop Preview (in-process, local)
+-------------------------------------------------
+1. Command-home UI (Dark+): workspace/Git context, agent transcript, composer
+2. Steering belt placeholder: "Remote phone / web — Coming next"
+3. Activity strip + Stop agent (in-process broker cancel)
+4. Native model hub: scan local .gguf/.bin roots (e.g. F:\OllamaModels),
+   browse/load into Deep2 — NO ollama pull, NO cloud weight fetch
+5. Work Mode toggle: restores full IDE chrome; journal preserved
+6. IControlChannel: DisabledControlChannel (fail-closed, no listen)
+7. LocalServer :11435 auto-start SUPPRESSED while Command-home is default
+
+What does NOT ship (explicit rejections from planning transcript)
+-----------------------------------------------------------------
+- Node models.js / slingshot.js on ports 8005/9999 as product backend
+- host 0.0.0.0 inference or workspace control from operator PC
+- MASM ScreenPilotMultiplexProc / mach_143x / TRSS as "production server"
+- Fake UI dashboards (143x TPS, DLSS mode, uncapped wholesale) in product
+- Standalone win32_screenpilot_app.cpp parallel shell (use Win32IDE path)
+- ollama pull pipelines in LOCAL_ONLY_001 path
+- Shared-hosting "unlimited" model hosting (cPanel/PHP/static)
+- Marketing 100x/143x token claims without STREAMER_CERT evidence
+
+Largest local model (honest, public-safe path)
+----------------------------------------------
+Use existing Deep2/GGUF + AgenticBridge in Win32IDE — NOT a second demo exe.
+- Scan/load via ScreenPilotModelHub (F:\OllamaModels, browse .gguf)
+- ~7B–13B: full VRAM on R9700 32GB with headroom for KV
+- ~32B Q4_K_M: primary dense lane (~20–28 GB VRAM); one active stream
+- 70B+ Q4: hybrid GPU+RAM offload; throughput drops; not multi-tenant SaaS
+- Continuous batching may raise aggregate TPS for YOU locally; per-stream
+  latency still bounded by memory bandwidth — no inverse scaling claim
+- In-tree tensor "slingshot" (GGUFShardRouter) = shard prefetch, NOT UI fiction
+
+Concurrency & performance (correct physics)
+-------------------------------------------
+Continuous batching CAN raise aggregate tokens/sec on one GPU by multiplexing
+requests into shared KV/scheduling windows. It CANNOT make per-user latency
+improve indefinitely:
+  - Low concurrency: latency dominated by prefill + decode for one stream
+  - Saturation: queue depth grows; each user waits longer (plateau then degrade)
+  - VRAM: second large model or context can OOM or force swap/throttle
+Marketing must say "efficient local batching when YOU run multiple tasks"
+not "more remote users makes everyone faster."
+
+MASM multiplex sample — classification
+--------------------------------------
+The ring-buffer / LOCK CMPXCHG sketch is a busy-loop prototype only.
+It is NOT a shippable remote steering stack. Missing before any exposure:
+  - Winsock accept loop bound to 127.0.0.1 (or paired tunnel only)
+  - HTTP/TLS (Schannel) or equivalent authenticated framing
+  - Pairing, session tokens, capability scopes, approval replay
+  - Model bridge into Deep2 with cancellation + shutdown
+  - Safe teardown, backpressure, audit journal hooks
+"No third-party runtime" ≠ "no OS facilities." A secure Windows service still
+uses kernel32/ntdll, Winsock, Schannel (or self-built crypto — not recommended).
+
+Remote steering — future architecture (gated)
+-----------------------------------------------
+Remote phone/web control is a SEPARATE authenticated paired-device service,
+not a public model port on the developer machine.
+
+  [ Phone / other screen ]
+           |
+           |  TLS + device pairing + scoped capability tokens
+           v
+  [ Optional relay OR LAN-only tunnel — never raw 0.0.0.0 inference ]
+           |
+           v
+  [ User's ScreenPilot desktop agent — loopback default ]
+           |
+           +-- Deep2/GGUF (local)
+           +-- Workspace/Git (local bind)
+           +-- Approval boundary (fail-closed writes)
+
+Until EGRESS_001 + REMOTE_CONTROL_001 + STATIC_DEP_001 close:
+  - IControlChannel stays disabled
+  - Steering belt remains "Coming next"
+  - No reverse proxy from screenpilot.tech to home PC ports
+
+Cloud variant (separate product lane — not Desktop Preview)
+-----------------------------------------------------------
+Layer 1: Static site @ screenpilot.tech (pricing, docs, download)
+Layer 2: User-local ScreenPilot binary (this preview)
+Layer 3 (future): Optional GPU burst via RunPod/Lambda — per-second metered
+Layer 4 (future): Ephemeral execution sandboxes (E2B/Modal) for untrusted code
+Never colocate multi-GB GGUF serving on shared PHP/cPanel hosts.
+
+UI stack (vertical containment — target)
+----------------------------------------
++ Workspace / Git context bar -----------------------------------+
+| Agent transcript (Deep2 stream outcomes)                        |
+| Steering belt — paired remote control: COMING NEXT              |
+| Engine hub — local inventory + load/browse (no cloud pull)      |
+| Activity strip + Stop                                           |
+| Composer (Plan / Build / Agent)                                 |
++-----------------------------------------------------------------+
+
+Repository note (this workspace)
+--------------------------------
+Partial implementation exists under f:\~dev\rawrxd:
+  - src/win32app/Win32IDE_CommandSurface.cpp
+  - src/win32app/ScreenPilotModelHub.{h,cpp}
+  - src/command/{CommandBroker,SessionBinder,CommandEventJournal}.cpp
+  - evidence/COMMAND_HOME_001/*
+Build tree: D:\rawrxd\build-ninja or F:\~dev\rawrxd\build-ninja (MSVC).
+Last link attempt failed on locked PDB (exe may be running) — not a compile error.
+
+Next verified steps (operator)
+------------------------------
+1. Close running RawrXD-Win32IDE.exe; rebuild Win32IDE target
+2. Launch → confirm ScreenPilot title, steering placeholder, model hub scan
+3. Load local GGUF → send prompt → stop agent → Work Mode round-trip
+4. Confirm no :11435 listen in Command mode (netstat / evidence log)
+5. Close COMMAND_HOME_001 gate in GATE.txt with stdout capture
+6. Confirm screenpilot.tech propagation separately (STATIC_DEP_001)

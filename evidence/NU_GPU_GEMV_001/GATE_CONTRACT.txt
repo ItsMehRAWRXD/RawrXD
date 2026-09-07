@@ -1,0 +1,11 @@
+# NU_GPU_GEMV_001
+# Prove GPU GEMV consumes a validated NU fused stream.
+#
+# Must prove:
+#   - NU magic 0x46554E00 validated before GEMV
+#   - Unpack NU → F32 weights, then Vulkan DispatchGEMV
+#   - Q4_0 / Q8_0 / F16 arms: GPU vs NU-CPU GEMV RMSE ~0
+#   - Counters: NU_GEMV_OPS, NU_BYTES, UNPACKED
+#   - Bad magic fail-closed (no GPU dispatch)
+#
+# Does NOT authorize live generate NU consume (needs NU_GEMV_PARITY_001).

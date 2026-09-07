@@ -1,0 +1,48 @@
+P1_GGUF_LOAD / Scenario 2 — PASS
+=================================
+date=2026-08-29T22:05:28Z
+candidate_sha=02107572E098A7A188A25152AF83F86DA140895F8B6DD60A851AE4AFBCE53F46
+exe=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+(= build-win32ide-p1\bin\RawrXD-Win32IDE.exe)
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+frozen_P1_sha_record=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+sha_freeze_record=KEPT (candidate not auto-promoted)
+
+PRODUCT PATH
+------------
+session restore → pump skip WM_APP+201 → markStartupPumpsComplete (arm only)
+→ message_loop_entered → PostMessage(WM_APP+201)
+→ loadGGUFModel (UI, STREAMING) → LoadModel worker + RAWRXD_FORCE_CPU_INFERENCE=1
+
+CERT (build-win32ide-fresh/bin/logs/p1_gguf_load_cert.txt)
+----------------------------------------------------------
+ENGINE_MANAGER_PRESENT=PASS
+MODEL_FILE_OPEN=PASS
+GGUF_PARSE=PASS
+MODEL_METADATA_VALID=PASS layers=22 vocab=32000 tensors=201
+INFERENCE_ENGINE_CREATED=PASS
+MODEL_READY=PASS
+NO_UNHANDLED_EXCEPTION=PASS worker_ok
+PROCESS_SURVIVAL=True (held ≥3s after READY, then clean kill)
+
+CKPT last stages
+----------------
+INF_Initialize READY → CIE_LoadModel success → IDE_LoadModel ok
+
+FIXES THAT CLOSED S2
+--------------------
+1. Binary lacked post-pump flush (source had SKIP only) — rebuilt with flush
+2. Flush moved to after message_loop_entered (not mid showWindow/heavy)
+3. Session restore no longer calls AgenticBridge::LoadModel during onCreate defer
+4. Native LoadModel off UI pump (worker thread) — UI Vulkan abort at INF_vulkan
+5. RAWRXD_FORCE_CPU_INFERENCE=1 pins Backend::CPU_AVX2 on product path
+
+OPERATOR UI (screenshot idexdrawr.png)
+--------------------------------------
+Streaming banner "Model loaded successfully (STREAMING MODE)!" is expected
+after GGUF_PARSE; native READY is the cert line MODEL_READY=PASS above.
+
+NEXT (still BLOCKED until separately certified)
+-----------------------------------------------
+S3 Copilot UI / FINAL / NEED_INPUT / deny / fallback
+P1_PROMOTE / P1_MERGE still require operator promote of candidate SHA

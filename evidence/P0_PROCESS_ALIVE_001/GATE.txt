@@ -1,0 +1,33 @@
+P0_PROCESS_ALIVE_001
+====================
+PROGRAM_LANE=A0
+DATE=2026-09-07
+
+GATE
+----
+START=1
+INIT=1
+MODEL_OPEN=0          # intentionally not required for A0 floor
+NO_REPL_ENTER=1
+IDLE_10S=1
+EXIT_REQUESTED=1
+CLEAN_EXIT=1
+UNHANDLED_EXCEPTION=0
+
+P0_PROCESS_ALIVE_001=PASS|FAIL
+
+SCOPE
+-----
+No tokenizer, agent, VWA, or performance changes in this gate.
+Crash owner only if FAIL.
+
+FIX LANDED (CLI path)
+---------------------
+agent_self_healing_orchestrator.cpp:
+  Removed TU-static PrometheusExporter thread start.
+  Opt-in via RAWRXD_PROMETHEUS=1 → EnsurePrometheusExporterStarted().
+
+HARNESS
+-------
+src/deep2/p0_process_alive_001.cpp
+build-ninja/bin/p0_process_alive_001.exe

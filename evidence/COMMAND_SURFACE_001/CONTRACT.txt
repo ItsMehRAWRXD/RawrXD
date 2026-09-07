@@ -1,0 +1,35 @@
+COMMAND_SURFACE_001 — FROZEN CONTRACT
+Authorized: 2026-08-30
+Authority: RawrXD Command Primary Surface plan
+
+SHELL REGIONS
+  TopContextBar    = machine → workspace → repository → branch
+  CommandLeftRail  = workspaces, conversations, repos, machines, git, approvals
+  Conversation     = outcome-oriented message stream
+  ActivityStrip    = agent identity, operation, progress, Stop
+  Composer         = steer, attach, Deep2 Local model, execution mode, send
+  Footer           = local authority + approval count
+
+SESSION BINDING (required before agent start)
+  machine, workspace_root, repository, branch, model, permission_profile
+
+CAPABILITIES (separate bits)
+  Read | Edit | Execute | Commit | Push | Destructive
+
+MODES
+  Command = launch default (light chrome)
+  Work    = existing IDE editor/menus/rails
+
+LOCAL_ONLY
+  LOCAL_ONLY_001 PASS — no Ollama/cloud inference fallback
+  Phases 0–4: no listening sockets for phone/browser
+
+OUT OF SCOPE (Phases 0–4)
+  Remote pairing, encrypted transport, device FS access
+
+DOES NOT DISTURB
+  P1_UI_MENU_E2E_001, STREAMER_CERT_001, LOCAL_ONLY_001 evidence
+
+GATES
+  COMMAND_SURFACE_001, COMMAND_SESSION_001, COMMAND_APPROVAL_001,
+  COMMAND_JOURNAL_001, REMOTE_CONTROL_001 (later)

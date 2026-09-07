@@ -1,0 +1,229 @@
+﻿
+
+TimeCreated  : 9/1/2026 7:09:00 PM
+Id           : 1001
+ProviderName : Windows Error Reporting
+Message      : Fault bucket 1625180335069874255, type 4
+               Event Name: APPCRASH
+               Response: Not available
+               Cab Id: 0
+               
+               Problem signature:
+               P1: RawrXD-Win32IDE.exe
+               P2: 7.4.0.0
+               P3: 6a975a42
+               P4: ntdll.dll
+               P5: 10.0.26100.8972
+               P6: 59a29eb0
+               P7: c0000005
+               P8: 000000000000b1eb
+               P9: 
+               P10: 
+               
+               Attached files:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.3b4f5123-f92c-4f3b-94f0-cd001e185069.tmp.mdmp
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.5f39798e-97e3-40c2-b1f7-8c128dfa3798.tmp.WERInternalMetadata.xml
+               WPR_initiated_DiagTrackMiniLogger_OneTrace_User_Logger_20260821_1_EC_0_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.a049081d-0d27-434f-8412-1f4d97449d8d.tmp.etl
+               WPR_initiated_DiagTrackMiniLogger_WPR System Collector_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.e75be050-2abb-48f8-8c7e-7f0cca151628.tmp.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.e9f4f549-e1c3-4827-8029-aa744936c905.tmp.csv
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.e1960f6b-7604-474d-a232-181876ba8c74.tmp.txt
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.0a5d5f8f-20a4-4a6b-9638-15d1c94bed98.tmp.xml
+               
+               These files may be available here:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE._52beff109cd09187bbd7ec1f447e3f15c1f0c8_9e0a7dec_0e4d49b5-a684-486a-bbfc-5bdbaa2e10e0
+               
+               Analysis symbol: 
+               Rechecking for solution: 0
+               Report Id: 918e82ae-d4f2-4574-8727-4c171737bd18
+               Report Status: 268435456
+               Hashed bucket: 6e7b083a5d89dcb1968dcce777ca484f
+               Cab Guid: 0
+
+TimeCreated  : 9/1/2026 7:08:58 PM
+Id           : 1000
+ProviderName : Application Error
+Message      : Faulting application name: RawrXD-Win32IDE.exe, version: 7.4.0.0, time stamp: 0x6a975a42
+               Faulting module name: ntdll.dll, version: 10.0.26100.8972, time stamp: 0x59a29eb0
+               Exception code: 0xc0000005
+               Fault offset: 0x000000000000b1eb
+               Faulting process id: 0x1688
+               Faulting application start time: 0x1DD3A66DDF96CA8
+               Faulting application path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+               Faulting module path: C:\WINDOWS\SYSTEM32\ntdll.dll
+               Report Id: 918e82ae-d4f2-4574-8727-4c171737bd18
+               Faulting package full name: 
+               Faulting package-relative application ID: 
+
+TimeCreated  : 9/1/2026 7:06:38 PM
+Id           : 1001
+ProviderName : Windows Error Reporting
+Message      : Fault bucket 1625180335069874255, type 4
+               Event Name: APPCRASH
+               Response: Not available
+               Cab Id: 0
+               
+               Problem signature:
+               P1: RawrXD-Win32IDE.exe
+               P2: 7.4.0.0
+               P3: 6a975a42
+               P4: ntdll.dll
+               P5: 10.0.26100.8972
+               P6: 59a29eb0
+               P7: c0000005
+               P8: 000000000000b1eb
+               P9: 
+               P10: 
+               
+               Attached files:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.8c920652-a59d-421e-95e1-18f68c501e2b.tmp.mdmp
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.80425e2e-098e-4e20-a1bb-52e18d23a4de.tmp.WERInternalMetadata.xml
+               WPR_initiated_DiagTrackMiniLogger_OneTrace_User_Logger_20260821_1_EC_0_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.5092bcc3-3815-40e4-9b93-70dbe18e0be3.tmp.etl
+               WPR_initiated_DiagTrackMiniLogger_WPR System Collector_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.c48a47f2-135f-4e74-a6b0-1f44a3d7f63d.tmp.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.ea4c9be6-41fe-468a-bac7-b06e45f637af.tmp.csv
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.c254eef3-17e7-4f05-bfb8-a3be2db3be1f.tmp.txt
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.8023101b-da73-4d1e-a3ad-b99f664c99ee.tmp.xml
+               
+               These files may be available here:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE._52beff109cd09187bbd7ec1f447e3f15c1f0c8_9e0a7dec_bc3d8409-cfde-4701-961a-edde1ef82b00
+               
+               Analysis symbol: 
+               Rechecking for solution: 0
+               Report Id: 36e45bdd-156f-44d7-bc16-005a4ed27a2e
+               Report Status: 268435456
+               Hashed bucket: 6e7b083a5d89dcb1968dcce777ca484f
+               Cab Guid: 0
+
+TimeCreated  : 9/1/2026 7:06:35 PM
+Id           : 1000
+ProviderName : Application Error
+Message      : Faulting application name: RawrXD-Win32IDE.exe, version: 7.4.0.0, time stamp: 0x6a975a42
+               Faulting module name: ntdll.dll, version: 10.0.26100.8972, time stamp: 0x59a29eb0
+               Exception code: 0xc0000005
+               Fault offset: 0x000000000000b1eb
+               Faulting process id: 0x6598
+               Faulting application start time: 0x1DD3A6688D098A7
+               Faulting application path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+               Faulting module path: C:\WINDOWS\SYSTEM32\ntdll.dll
+               Report Id: 36e45bdd-156f-44d7-bc16-005a4ed27a2e
+               Faulting package full name: 
+               Faulting package-relative application ID: 
+
+TimeCreated  : 9/1/2026 7:06:09 PM
+Id           : 1001
+ProviderName : Windows Error Reporting
+Message      : Fault bucket 1625180335069874255, type 4
+               Event Name: APPCRASH
+               Response: Not available
+               Cab Id: 0
+               
+               Problem signature:
+               P1: RawrXD-Win32IDE.exe
+               P2: 7.4.0.0
+               P3: 6a975a42
+               P4: ntdll.dll
+               P5: 10.0.26100.8972
+               P6: 59a29eb0
+               P7: c0000005
+               P8: 000000000000b1eb
+               P9: 
+               P10: 
+               
+               Attached files:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.6849d0b9-1f3b-4430-99d0-2380448249b2.tmp.mdmp
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.d7ad2152-6573-4ac6-a1dd-78312c706f0e.tmp.WERInternalMetadata.xml
+               WPR_initiated_DiagTrackMiniLogger_OneTrace_User_Logger_20260821_1_EC_0_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.21e5a47d-4211-42d9-8c63-179bc9b8736f.tmp.etl
+               WPR_initiated_DiagTrackMiniLogger_WPR System Collector_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.d90a717f-1932-46c4-91a0-6c83bafc905d.tmp.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.7f27d569-5dbd-425e-ae5d-e447da6a81bf.tmp.csv
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.441833e3-1351-48f5-afad-1ca8e7384a12.tmp.txt
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.8e130a0d-378f-411b-bf55-1eb5fd330325.tmp.xml
+               
+               These files may be available here:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE._52beff109cd09187bbd7ec1f447e3f15c1f0c8_9e0a7dec_8c4ab868-1adb-4e32-9f89-82a84753ed9c
+               
+               Analysis symbol: 
+               Rechecking for solution: 0
+               Report Id: 509d3066-4a6c-402a-b7a7-ae0042f57678
+               Report Status: 268435456
+               Hashed bucket: 6e7b083a5d89dcb1968dcce777ca484f
+               Cab Guid: 0
+
+TimeCreated  : 9/1/2026 7:06:06 PM
+Id           : 1000
+ProviderName : Application Error
+Message      : Faulting application name: RawrXD-Win32IDE.exe, version: 7.4.0.0, time stamp: 0x6a975a42
+               Faulting module name: ntdll.dll, version: 10.0.26100.8972, time stamp: 0x59a29eb0
+               Exception code: 0xc0000005
+               Fault offset: 0x000000000000b1eb
+               Faulting process id: 0x5DD4
+               Faulting application start time: 0x1DD3A6676EA4DF1
+               Faulting application path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+               Faulting module path: C:\WINDOWS\SYSTEM32\ntdll.dll
+               Report Id: 509d3066-4a6c-402a-b7a7-ae0042f57678
+               Faulting package full name: 
+               Faulting package-relative application ID: 
+
+TimeCreated  : 9/1/2026 7:06:03 PM
+Id           : 1001
+ProviderName : Windows Error Reporting
+Message      : Fault bucket 1625180335069874255, type 4
+               Event Name: APPCRASH
+               Response: Not available
+               Cab Id: 0
+               
+               Problem signature:
+               P1: RawrXD-Win32IDE.exe
+               P2: 7.4.0.0
+               P3: 6a975a42
+               P4: ntdll.dll
+               P5: 10.0.26100.8972
+               P6: 59a29eb0
+               P7: c0000005
+               P8: 000000000000b1eb
+               P9: 
+               P10: 
+               
+               Attached files:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.ee332281-1700-495a-9823-e4a4ce85a42f.tmp.mdmp
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.c7d645cd-678d-4cee-9629-50c4426b250c.tmp.WERInternalMetadata.xml
+               WPR_initiated_DiagTrackMiniLogger_OneTrace_User_Logger_20260821_1_EC_0_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.4ef09148-5af4-4f89-bc7a-85aa7b0f429d.tmp.etl
+               WPR_initiated_DiagTrackMiniLogger_WPR System Collector_inject.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.6a6186e6-2da3-48ff-b319-abfee7d6f6fd.tmp.etl
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.d83477e1-6d34-4e42-abf6-08db2c5a1d54.tmp.csv
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.d217236c-32fd-4c9a-a259-5547f12bfb31.tmp.txt
+               \\?\C:\ProgramData\Microsoft\Windows\WER\Temp\WER.28df1362-9655-451f-9d9d-e2be3b0e4fd1.tmp.xml
+               
+               These files may be available here:
+               \\?\C:\ProgramData\Microsoft\Windows\WER\ReportArchive\AppCrash_RawrXD-Win32IDE._52beff109cd09187bbd7ec1f447e3f15c1f0c8_9e0a7dec_72d616e5-af1a-4d0d-b7dd-3fa6f4fa756a
+               
+               Analysis symbol: 
+               Rechecking for solution: 0
+               Report Id: dbb9eac5-2925-433b-a4e9-c14b174b0e6d
+               Report Status: 268435456
+               Hashed bucket: 6e7b083a5d89dcb1968dcce777ca484f
+               Cab Guid: 0
+
+TimeCreated  : 9/1/2026 7:05:57 PM
+Id           : 1000
+ProviderName : Application Error
+Message      : Faulting application name: RawrXD-Win32IDE.exe, version: 7.4.0.0, time stamp: 0x6a975a42
+               Faulting module name: ntdll.dll, version: 10.0.26100.8972, time stamp: 0x59a29eb0
+               Exception code: 0xc0000005
+               Fault offset: 0x000000000000b1eb
+               Faulting process id: 0x2A80
+               Faulting application start time: 0x1DD3A6671D515AE
+               Faulting application path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+               Faulting module path: C:\WINDOWS\SYSTEM32\ntdll.dll
+               Report Id: dbb9eac5-2925-433b-a4e9-c14b174b0e6d
+               Faulting package full name: 
+               Faulting package-relative application ID: 
+
+
+
+

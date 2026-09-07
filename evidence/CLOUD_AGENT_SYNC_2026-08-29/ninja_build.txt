@@ -1,0 +1,9 @@
+[1/9] Building CXX object CMakeFiles\RawrXD-LocalStreamReverseParserTest.dir\src\tests\local_stream_reverse_parser_test.cpp.obj
+[2/9] Building CXX object CMakeFiles\RawrXD-LocalStreamReverseParserTest.dir\src\streamer\LocalStreamReverseParser.cpp.obj
+[3/9] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[4/9] Linking CXX executable bin\RawrXD-LocalStreamReverseParserTest.exe
+[5/9] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+[6/9] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[7/9] Linking CXX static library InferenceEngine.lib
+[8/9] Linking CXX executable bin\test_generate_one_token.exe
+[9/9] Linking CXX executable bin\ide_agent_loop_cert.exe

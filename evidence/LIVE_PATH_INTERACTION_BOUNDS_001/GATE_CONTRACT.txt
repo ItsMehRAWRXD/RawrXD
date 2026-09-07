@@ -1,0 +1,6 @@
+# LIVE_PATH_INTERACTION_BOUNDS_001
+# Longer tokens @ fixed depth. Prove effectiveness win is bounded.
+# LIVE_CACHE_BYTES_PEAK <= budget; ENTRY_PEAK bounded; OUTPUT_WEIGHT_RESIDENCY <= budget
+# PREFETCH_QUEUE_PEAK bounded; DUPLICATE/suppressed tracked; EVICTIONS observable if saturated
+# PER_TOKEN_ALLOCS(post-warm)=0; RESIDENT_WEIGHT_GROWTH~0; FALLBACK=0; VRAM_PEAK<=512MiB
+# OUTPUT_PARITY A0 vs B_ALL; CACHE_HITS rise; STREAM_BYTES_READ B < A

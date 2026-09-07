@@ -1,0 +1,14 @@
+﻿{
+    "deltaReason":  "integration_reproducibility_not_model_intelligence",
+    "nonClaim":  "01-08 deterministic demo-break prepass not GGUF synthesis",
+    "nextGate":  "AGENT-E2E-002b",
+    "priorMidpointApprox":  125000000,
+    "rangeUsd":  {
+                     "low":  120000000,
+                     "midpoint":  132000000,
+                     "high":  145000000
+                 },
+    "freezeE2E002":  true,
+    "anchor":  "AGENT-E2E-002=CANDIDATE_PASS",
+    "asOf":  "2026-08-29"
+}

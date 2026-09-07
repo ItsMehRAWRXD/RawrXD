@@ -1,0 +1,53 @@
+SOURCE_DROP_APPLY=PASS_COPY
+BUILD_LINK=PASS
+LIVE_CERTIFY=HOLD
+
+Product100 zip SHA256:
+2ba76f491cfe9ed0e2e1404549a2d6f48299a85e190edcc9c51e3dacac1b8363
+(matched Downloads\rawrxd_product100_source_drop.zip)
+
+TokenPressure zip SHA256:
+1d69a4fc8d1a89fbe076256b800ee2d3412df5e0b46c75e509e1d9f699e91def
+(matched Downloads\token_pressure_valve_source_drop.zip)
+
+Applied into F:\~dev\rawrxd:
+  include/RawrXD_Product100.hpp
+  include/RawrXD_Product100_x64.hpp
+  src/win32app/RawrXD_Product100.cpp
+  src/win32app/Win32IDE_Product100Wire.cpp  (host glue)
+  src/asm/RawrXD_Product100_x64.asm
+  src/asm/RawrXD_Product100_x64.inc
+  cmake/RawrXD_Product100.cmake
+  include/RawrXD_TokenPressureValve.hpp
+  include/RawrXD_TokenPressureValveBridge.hpp
+  src/win32app/RawrXD_TokenPressureValveBridge.cpp
+  src/asm/RawrXD_TokenPressureValve_x64.asm
+  src/asm/RawrXD_TokenPressureValve_x64.inc  (PROTO stripped for A2111)
+  cmake/RawrXD_TokenPressureValve.cmake
+  src/win32app/TokenPressure.cpp  (adapter → drop TPV; old TokenPressure_x64.asm NOT linked)
+
+CMake: included after RawrXD-Win32IDE target; RAWRXD_PRODUCT100=1;
+local RAWRXD_TOKEN_PRESSURE_VALVE helper forced OFF; drop defines RAWRXD_TOKEN_PRESSURE_VALVE=1.
+
+Host wiring:
+  product100Init after createCommandSurface
+  product100Shutdown in onDestroy
+  slash: /git status | /git diff | /search <q>
+  TokenPressure stream/steer/terminal via existing ifdefs → drop TPV
+
+Build witness:
+  target=build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+  exe_sha256=7480b7ae1f02772f79efbb06983febe7ecc1eb4494439a3e97d50a4d5067decd
+  P1PRA_SYMBOL_LINKED=1
+  Product100+TPV asm/cpp objects linked (168/168)
+  map confirms P100_Init/Git*/Search*/Save*/Approval*/Smoke/Freeze
+
+Frozen lanes: untouched (STREAMER_VRAM / AGENTIC_TEMPLATE / COMMAND_HOME_SMOKE /
+Deep2-K2 / MASM cert / synthetic-fallback / CommandBroker contract).
+
+PRODUCT_100_VERDICT remains HOLD until:
+  P1PRA E2E FINALIZE=0
+  WAVE_1..4 = PASS
+  clean-launch journey witnessed
+
+DATE=2026-08-31

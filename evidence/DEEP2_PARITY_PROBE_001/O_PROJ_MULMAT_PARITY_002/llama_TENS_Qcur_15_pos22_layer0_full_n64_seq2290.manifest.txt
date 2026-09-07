@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Qcur_15
+pos=22
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=33d48d7410875d1a
+l2=1.9721880156197957
+seq=2290
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\O_PROJ_MULMAT_PARITY_002\llama_TENS_Qcur_15_pos22_layer0_full_n64_seq2290.bin

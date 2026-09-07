@@ -1,0 +1,13 @@
+side=llama
+stage=ATTN_OUT_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=5fe8f56aa443709d
+l2=0.12082990992227174
+seq=102
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\llama_ATTN_OUT_0_pos0_layer0_full_n2048_seq102.bin

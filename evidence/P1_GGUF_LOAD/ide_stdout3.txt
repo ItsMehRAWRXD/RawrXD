@@ -1,0 +1,133 @@
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-08-29 18:05:21 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+18:05:25.515 IDE_LoadModel dispatch_worker
+18:05:25.521 IDE_LoadModel before_worker_LoadModel
+18:05:25.522 CIE_LoadModel enter
+18:05:25.524 CIE_path F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+18:05:25.525 CIE_utf16 ok
+18:05:25.526 CIE_ext_tokenizer absent_use_gguf
+[CPUInferenceEngine] Loading model: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[CPUInferenceEngine] Stage: initialize backend
+18:05:25.527 CIE_before_InferenceBackend_Initialize
+18:05:25.528 CIE_backend CPU_AVX2_forced
+18:05:25.529 INF_Initialize enter
+[RawrXD] Backend=cpu_avx2: skipping Vulkan initialization
+18:05:25.531 INF_vulkan skip
+[RawrXD] CPU-only mode (Vulkan disabled by backend selection)
+18:05:25.532 INF_vulkan cpu_null_device
+[RawrXD] Stage: loader.Load
+18:05:25.533 INF_loader_Load before
+18:05:25.534 LOADER_Load enter
+[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
+[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
+[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
+[GGUF] validation begin
+[GGUF] path=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+18:05:25.535 LOADER_gguf_reader validation_begin
+[GGUF] extension=PASS
+[RawrXD][BACKEND] backend=gpu-only result=ok reason=gpu preflight passed
+18:05:25.565 LOADER_backend gpu-only
+18:05:25.566 LOADER_sliding_window before
+[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 637 MB placeholder window (zero commit)
+18:05:25.567 LOADER_sliding_window ok
+18:05:25.568 LOADER_file_mapping ok
+[RawrXD] Stage: parse_header_metadata
+18:05:25.570 LOADER_metadata parse_before
+[RawrXD] ⚡ SOVEREIGN WINDOW 0-0 GB: Mapped 637 MB at 0000000026AD0000 (2000+ TPS ready)
+[GGUF] size=668788096
+[GGUF] magic=0x46554747
+[GGUF] version=3
+[GGUF] magic=PASS
+[GGUF] version=PASS
+18:05:25.574 LOADER_metadata parse_after
+[RawrXD] Stage: parse_tensor_index tensor_count=201
+18:05:25.575 LOADER_tensor_table parse_before
+[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=201 indexed_storage=0.62 GB
+[RawrXD] Data starts at offset 1709440
+18:05:25.577 LOADER_tensor_table materialize_lazy
+[RawrXD] Stage: build_tensor_lookup_map
+18:05:25.578 LOADER_tensor_table lookup_map
+[GGUF] header=PASS
+[GGUF] metadata=PASS
+[GGUF] tensors=PASS
+[GGUF] accepted=PASS
+18:05:25.579 LOADER_Load ok
+[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
+[RawrXD] Config: dim=2048, layers=22, heads=32, kv_heads=4, vocab=32000, ctx=2048, experts=0, experts_used=0
+[RawrXD] Tensor names in model (201 total):
+  [  0] type=12 dims=2048 5632 blk.0.ffn_gate.weight
+  [  1] type=12 dims=2048 5632 blk.15.ffn_up.weight
+  [  2] type=12 dims=2048 5632 blk.13.ffn_gate.weight
+  [  3] type=14 dims=2048 32000 output.weight
+  [  4] type=14 dims=5632 2048 blk.0.ffn_down.weight
+  [  5] type=14 dims=2048 256 blk.1.attn_v.weight
+  [  6] type=0 dims=2048 blk.19.ffn_norm.weight
+  [  7] type=12 dims=2048 5632 blk.1.ffn_up.weight
+  [  8] type=12 dims=2048 2048 blk.19.attn_output.weight
+  [  9] type=12 dims=2048 32000 token_embd.weight
+  [ 10] type=12 dims=2048 2048 blk.12.attn_output.weight
+  [ 11] type=12 dims=5632 2048 blk.5.ffn_down.weight
+  [ 12] type=12 dims=2048 256 blk.10.attn_k.weight
+  [ 13] type=12 dims=2048 2048 blk.9.attn_output.weight
+  [ 14] type=12 dims=2048 5632 blk.0.ffn_up.weight
+  [ 15] type=12 dims=2048 2048 blk.12.attn_q.weight
+  ... (185 more)
+18:05:25.580 INF_loader_Load ok
+18:05:25.582 INF_model_config alloc
+18:05:25.583 INF_model_config dim=2048 layers=22 heads=32 kv=4 vocab=32000 hidden=5632 ctx=2048
+[RawrXD] Config: dim=2048 layers=22 heads=32 kv_heads=4 vocab=32000 hidden=5632 ctx=2048
+[RawrXD] Stage: transformer.Initialize
+18:05:25.583 INF_transformer_Initialize before
+18:05:25.584 XFMR_Initialize enter
+18:05:25.585 XFMR_DetectFusedQKV before
+[Transformer] Using separate Q/K/V weights (classic architecture)
+18:05:25.587 XFMR_DetectFusedQKV after
+18:05:25.588 XFMR_KV_ALLOC layers=22 ctx=2048 kv_dim=256 elems=11534336
+[RawrXD] KV cache: 11534336 floats (46.1 MB per cache)
+18:05:25.596 XFMR_KV_ALLOC k_ok
+18:05:25.608 XFMR_KV_ALLOC v_ok
+18:05:25.609 XFMR_KV_ALLOC pos_ok
+18:05:25.610 XFMR_moe_setup ok
+18:05:25.611 XFMR_residency_pool before
+[B015] WeightResidencyPool initialized: max_bytes=4096 MB
+18:05:25.611 XFMR_residency_pool ok
+[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.
+18:05:25.614 XFMR_governance before
+[B016] Governance plan applied: tier=0 path=3 ensemble=false reason=critical memory pressure
+[B016] KV cache compaction requested (pressure)
+[B016] Governance orchestrator initialized and started (2s period)
+18:05:25.615 XFMR_governance started
+18:05:25.616 XFMR_elastic enter
+18:05:25.617 XFMR_elastic index_ctor_before
+[Elastic] GGUF index creation failed: [ElasticGGUFIndex] Failed to open GGUF: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf — Elastic disabled, continuing with direct loader.
+18:05:25.620 XFMR_elastic index_ctor_ex
+[Elastic] Engine skipped (no index). Running direct loader path.
+18:05:25.622 XFMR_Initialize done_no_elastic
+18:05:25.623 INF_transformer_Initialize after
+18:05:25.624 INF_swarm make_scheduler
+18:05:25.625 INF_swarm configure
+[RawrXD] Swarm plan: GGUF coalesced (24 slices total=0.62 GiB max=61.76 MiB avg=26.51 MiB)
+18:05:25.625 INF_swarm submitPlan
+18:05:25.628 INF_swarm executePlan_before
+18:05:25.629 INF_swarm executePlan_after
+18:05:25.630 INF_swarm ownership_to_transformer
+[RawrXD] Stage: tokenizer.Load
+18:05:25.631 INF_tokenizer before
+[RawrXD] Stage: tokenizer.SetVocabulary (32000 tokens from GGUF)
+18:05:25.632 INF_tokenizer SetVocabulary
+18:05:25.642 INF_tokenizer after
+[RawrXD] Inference engine READY
+18:05:25.643 INF_Initialize READY
+18:05:25.643 CIE_Initialize returned_true
+18:05:25.645 CIE_metadata vocab=32000 dim=2048 layers=22 heads=32
+18:05:25.646 CIE_titan before_LoadLibrary
+18:05:25.647 CIE_titan absent
+[CPUInferenceEngine] Model loaded successfully
+18:05:25.649 CIE_LoadModel success
+18:05:25.650 IDE_LoadModel ok
+Governor Throttling initialized

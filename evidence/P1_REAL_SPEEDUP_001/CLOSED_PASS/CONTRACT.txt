@@ -1,0 +1,104 @@
+GATE=P1_REAL_SPEEDUP_001
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+
+Purpose
+-------
+External wall-clock superiority on the RawrXD production inference path.
+This gate does NOT validate market valuation (~$35M remains an internal hypothesis).
+
+Authority boundary (inherits live GGUF seam)
+--------------------------------------------
+EXPERT POLICY → BindModelToPolicy → EnforcePolicyOnIdeLoad → MODEL_READY
+    → POLICY_SHA_AT_SEAM (frozen execution authority)
+    → generate()
+    → POLICY_SHA_AFTER
+Invariant: POLICY_SHA_AT_SEAM == POLICY_SHA_AFTER (per run profile)
+
+Frozen comparison contract
+--------------------------
+BASELINE profile (reference path, same binary):
+  RAWRXD_BASELINE: streaming OFF, hotpatch OFF, placement Host-heavy
+CANDIDATE profile (production path):
+  RAWRXD_PRODUCTION: same policy as P1_IDE_EXEC_POLICY_LIVE_GGUF_001 expert seam
+
+Both sides MUST match:
+  same machine / same GPU+CPU availability window
+  same GGUF file (MODEL_FILE_DIGEST)
+  same prompt bytes (PROMPT_DIGEST)
+  same max generated token count
+  same sampling (temperature=0, greedy / deterministic decode)
+  same correctness requirement (completes, valid output)
+
+Measurement
+-----------
+EXTERNAL_TIMER = QueryPerformanceCounter (Windows) wrapping generate() only
+Warm-up: 1 generate per profile before trials (excluded from statistics)
+Trials: N >= 5 per profile (default N=5)
+Interleaved order (thermal/cache hygiene):
+  warmup baseline + warmup candidate
+  B1 C1 C2 B2 B3 C3 C4 B4 B5 C5
+Report authority: median wall NS per side
+Report diagnostics: p95, min, max, variance, REAL_SPEEDUP_P95
+
+REAL_SPEEDUP = median(BASELINE_WALL_NS) / median(CANDIDATE_WALL_NS)
+Pass threshold: REAL_SPEEDUP > 1.00
+
+Required predicates (authority — all PASS for gate close)
+-----------------------------------------------------------
+MODEL_SHA_MATCH
+PROMPT_SHA_MATCH
+TOKEN_COUNT_MATCH
+CORRECTNESS_MATCH
+TRIAL_COUNT               >= 5 each side
+WARMUP_EXCLUDED
+EXTERNAL_TIMER            QPC
+REAL_SPEEDUP_GT_1         median ratio > 1.00
+
+Diagnostics (non-authority — recorded in GATE.txt)
+--------------------------------------------------
+BASELINE_MEDIAN_NS / BASELINE_P95_NS
+CANDIDATE_MEDIAN_NS / CANDIDATE_P95_NS
+REAL_SPEEDUP_MEDIAN / REAL_SPEEDUP_P95
+MODEL_SHA / PROMPT_SHA
+POLICY_SHA_BASELINE / POLICY_SHA_CANDIDATE
+CPU_MODEL / GPU_MODEL / DRIVER_VERSION / POWER_PLAN
+BASELINE_TRIALS=[...] / CANDIDATE_TRIALS=[...]
+
+Evidence outputs
+----------------
+evidence/P1_REAL_SPEEDUP_001/
+  CONTRACT.txt (this file)
+  GATE.txt
+  GATE.json
+  TRIALS.csv
+
+Harness
+-------
+build-ninja/bin/p1_real_speedup_001.exe [gguf_path]
+Env: RAWRXD_TEST_GGUF, RAWRXD_SPEEDUP_TRIALS (default 5)
+
+Disposition
+-----------
+PASS  = all predicates PASS on frozen contract
+FAIL  = any predicate FAIL (FIRST_FALSE_TRANSITION recorded)
+NOTE  = one lucky run is NOT authority; median required (p95 diagnostic only)
+
+CLOSED RESULT (2026-08-29) — DO NOT REDEFINE
+--------------------------------------------
+STATUS                    = PASS
+REAL_SPEEDUP              = 1.48258 (median authority)
+MEDIAN_ACCELERATION       = PROVEN
+TAIL_LATENCY_SUPERIORITY  = NOT PROVEN
+COLD_START_STABILITY      = NOT PROVEN
+Archive: GATE.txt TRIALS.csv run.log ENVIRONMENT.txt AUTHORITY.txt HASHES.txt
+Outliers (~70s / ~27s candidate): deferred to P1_PRODUCTION_TAIL_LATENCY_001
+Next: P1_REAL_SPEEDUP_REPEATABILITY_001 (same harness EXE SHA; no impl change)
+
+Valuation ladder
+----------------
+Loader/generate/policy stability = CLOSED (P1_IDE_EXEC_POLICY_LIVE_GGUF_001)
+REAL_SPEEDUP > 1.00× median      = CLOSED PASS (this gate)
+Repeatability                    = NEXT
+$40M–$75M proof band             = requires further ladder + external traction
+Internal mark                    = ≈ $35M (unchanged by this PASS alone)

@@ -1,0 +1,13 @@
+side=llama
+stage=FFN_UP_6
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=f1fa9a546c10d313
+l2=5.9835594525848492
+seq=2725
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001\llama\llama_FFN_UP_6_pos0_layer0_full_n5632_seq2725.bin

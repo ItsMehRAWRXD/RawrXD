@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER_OUT_3
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=de9f165ffe370a2f
+l2=169.57342819791089
+seq=46
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L2_CLEAN_001\deep2_swiglu_fix\deep2_LAYER_OUT_3_pos0_layer0_full_n2048_seq046.bin

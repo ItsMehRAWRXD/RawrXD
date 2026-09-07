@@ -1,0 +1,92 @@
+HEXMAG_IDE_LINK_001 — MASM HexMag symbols in RawrXD-Win32IDE.exe
+================================================================
+date=2026-08-29
+status=PASS
+
+AUTHORITY
+---------
+DOC CLAIMS DO NOT SET STATE.
+Binary + link map are state.
+
+Binary:
+  F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+Map:
+  F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.map
+
+WHAT WAS WRONG BEFORE
+---------------------
+HEXMAG_POLYMORPHIC_REPEAT_TUNER_001=PASS proved the tuner object / cert exe.
+It did NOT put HexMag into the IDE.
+Prior map hit for "hexmag_swarm" was only a subagent_core.cpp string — not MASM.
+
+CMAKE / LINK CHANGES (F:\~dev\rawrxd\CMakeLists.txt)
+----------------------------------------------------
+WIN32IDE_EXTRA_ASM += 
+  src/asm/RawrXD_HexMag_Swarm.asm
+  src/asm/RawrXD_HexMag_RepeatTuner.asm
+WIN32IDE_SOURCES +=
+  src/core/hexmag_ide_link_probe.cpp
+RawrXD-Win32IDE PRIVATE compile def:
+  RAWR_HAS_MASM=1
+
+PROBE
+-----
+hexmag_ide_link_probe.cpp touches:
+  HexMag_IsInitialized / HexMag_BotCount / HexMag_GetParallelAgents / HexMag_Tuner_GenerationId
+so /OPT:REF cannot strip them.
+Startup diagnostic format string present in image:
+  HEXMAG_BACKEND=%s
+  HEXMAG_LINKED=%d
+  HEXMAG_INIT=%u
+backend string literal "MASM" linked from probe TU.
+Dynamic initializer emits diagnostic via OutputDebugStringA + stderr.
+
+SYMBOL PROOF (map, not dumpbin COFF on PE)
+------------------------------------------
+map_HexMag_count >= 100
+Required exports present in RawrXD-Win32IDE.map / RawrXD_HexMag_Swarm.asm.obj:
+  HexMag_Init
+  HexMag_Shutdown
+  HexMag_SubmitGoal
+  HexMag_Step
+  HexMag_PollEvent
+  HexMag_RunToSatisfied
+  HexMag_IsInitialized
+  HexMag_Feedback
+  HexMag_SetParallelAgents
+  HexMag_GetParallelAgents
+From RawrXD_HexMag_RepeatTuner.asm.obj:
+  HexMag_Tuner_Init
+  HexMag_Tuner_Next
+  HexMag_Tuner_GenerationId
+  HexMag_Tuner_Fingerprint
+  …
+See MAP_SYMBOLS.txt in this evidence dir.
+
+BUILD
+-----
+ninja RawrXD-Win32IDE  (build-win32ide-fresh)
+ASM steps observed:
+  [185/202] RawrXD_HexMag_Swarm.asm.obj
+  [186/202] RawrXD_HexMag_RepeatTuner.asm.obj
+  [202/202] Linking CXX executable bin\RawrXD-Win32IDE.exe
+exit=0
+
+GATE RESULT
+-----------
+HEXMAG_IDE_LINK_001 = PASS
+
+STILL NOT CERTIFIED (do not claim)
+----------------------------------
+HEXMAG_CLIENT_MASM_001     NO  (hexmag_client still FastAPI/JIT stub on F:)
+HEXMAG_IDE_UI_ROUTE_001    NO  (Win32IDE_HexMag.cpp not in IDE source set)
+HEXMAG_RUNTIME_CONTROLLER_001  NO
+HEXMAG_FINALIZE_POLICY_001 NO
+HEXMAG_IDE_E2E_001         NOT_CERTIFIED
+HEXMAG_NATIVE_CONTROL_PLANE = LINKED (symbols) but NOT WIRED (client/UI/controller)
+
+NEXT (P0B only)
+---------------
+Replace hexmag_client MASM path with HexMag_Init / SubmitGoal / RunToSatisfied / PollEvent.
+Remove "HexMag service not implemented" / hexmag_connect_stub for MASM backend.
+Test same client class the IDE will link — without UI yet.

@@ -1,0 +1,8 @@
+﻿ITEM: M1_PRODUCTION_BOUNDED_SCAN
+GENERATED: 2026-09-01 19:43:46
+ROOT: f:\~dev\rawrxd
+SKIP_DIRS: .git, node_modules, 3rdparty, .vs, __pycache__, build, build2_clean, build_clean2, build_fix, build_gold, build_ide, out, dist, .archive, history, reconstructed, Full Source, _source_drops, audit, audit_build, audit_output, build-ninja, build_p1pra_win32ide, build_win32ide, Cursor File History, Advanced_Reverse_Engineered, RELEASE_PACKAGE, Sovereign Singularity Flip_files
+PRODUCTION_SCAN_COUNT=38184
+REGISTRY_COUNT=3488
+ONLY_IN_PRODUCTION_SCAN=34746
+ONLY_IN_REGISTRY=50

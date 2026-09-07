@@ -1,0 +1,38 @@
+{
+  "tips": {
+    "L2_OUT": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1366944313049316e-06,
+      "first_bad": 14,
+      "largest": 624
+    },
+    "L4_OUT": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1366944313049316e-06,
+      "first_bad": 14,
+      "largest": 624
+    },
+    "L8_OUT": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1515955924987793e-06,
+      "first_bad": 14,
+      "largest": 624
+    },
+    "L12_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.0004634857177734375,
+      "max_rel": 0.0004547238349914551,
+      "first_bad": 0,
+      "largest": 1454
+    }
+  },
+  "first_dual_fail": "L12_OUT",
+  "first_abs_fail": "L2_OUT"
+}

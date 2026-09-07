@@ -1,0 +1,84 @@
+﻿P1_UI_WINDOW_OWNERSHIP_001
+TIMESTAMP_UTC=2026-08-30T08:27:03Z
+STATUS=FAIL
+
+## Disposition summary
+RUNTIME_OWNERSHIP=PASS
+STATIC_IMAGE=FAIL
+OVERALL=FAIL
+
+Failure localization:
+  TOPLEVEL_COUNT > 1                  = NOT OBSERVED
+  CHAT_ROOT_EQ_MAIN == FAIL           = NOT OBSERVED
+  all ownership PASS + blank UI        = NOT IN SCOPE THIS RUN (no visual blank reproduced under cert drive)
+  FORCE_MULTIPLE still on link line   = FAIL (blocks overall PASS)
+
+Ownership is exonerated for the launch→maximize→restore→minimize→restore HWND tree.
+Next authorized gate if blank UI reproduces with green ownership: P1_UI_CHILD_VISIBILITY_ZORDER_001
+Do not reopen editor/geometry until this gate can PASS (requires eliminating /FORCE:MULTIPLE or an explicit waiver).
+
+## EXE (certified run)
+PATH=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe
+SHA256=29828B8FC13F678CE031A021622D3D522774A0651EAE7DCA20B3983B1A5C68CE
+BYTES=324286976
+MTIME=2026-08-30T04:25:45.5513111-04:00
+NOTE=Original 3:58 AM EXE was deleted by PRE_LINK during no-FORCE relink attempt; recovered image is ownership-instrumented rebuild with /FORCE:MULTIPLE restored. First live dump (3:58 image) matched the same runtime PASS pattern.
+
+## Static image audit
+DUPLICATE_WINDOW_IMPL_COMPILED=NO
+  map hits for Win32IDE_Window.cpp.obj=0
+FORCE_MULTIPLE_IN_LINK=YES
+FORCE_MULTIPLE_REQUIRED=FAIL
+  Attempted removal: LNK1169 / LNK2005 from asm+stub duplicates
+  (model_streamer_x64.asm vs Win32IDE.cpp; Hotpatch/Snapshot/Pyre vs unlinked_symbols_batch_00*)
+  Not caused by Win32IDE_Window.cpp (already absent from link).
+  /FORCE:MULTIPLE restored to recover shippable EXE.
+
+## Runtime sequence (cert: p1_ui_window_ownership_cert.exe)
+1 Fresh launch
+2 Wait full dock tree
+3 Dump AFTER_CHILDREN
+4 Maximize
+5 Dump SIZE_MAXIMIZED
+6 Restore
+7 Dump SIZE_RESTORED
+8 Minimize
+9 Restore
+10 Dump AFTER_MINIMIZE_RESTORE
+11 Close (CLOSE_NORMALLY=FAIL — process did not exit within 30s on WM_CLOSE; terminated)
+
+## MAIN_HWND freeze (identical across transitions)
+MAIN_HWND_AT_CREATE=0000000000790A80
+MAIN_HWND_AFTER_CHILDREN=0000000000790A80
+MAIN_HWND_MAXIMIZED=0000000000790A80
+MAIN_HWND_RESTORED=0000000000790A80
+MAIN_HWND_AFTER_MINIMIZE_RESTORE=0000000000790A80
+MAIN_HWND_STABLE=PASS
+
+## Predicates (every non-minimized phase)
+RAWRXD_TOPLEVEL_PRODUCT_WINDOWS=1
+MAIN_TOPLEVEL_COUNT=PASS
+EXPLORER_ROOT_EQ_MAIN=PASS
+EDITOR_ROOT_EQ_MAIN=PASS
+CHAT_ROOT_EQ_MAIN=PASS
+OUTPUT_ROOT_EQ_MAIN=PASS
+TERMINAL_ROOT_EQ_MAIN=PASS
+STATUS_ROOT_EQ_MAIN=PASS
+NO_DOCK_PANE_WS_POPUP=PASS
+NO_SECOND_PRODUCT_SHELL=PASS
+PROCESS_SURVIVES=PASS
+RUNTIME_OWNERSHIP=PASS
+
+## Artifacts
+evidence/P1_UI_WINDOW_OWNERSHIP_001/CONTRACT.txt
+evidence/P1_UI_WINDOW_OWNERSHIP_001/ownership_dumps.txt
+evidence/P1_UI_WINDOW_OWNERSHIP_001/run.log
+evidence/P1_UI_WINDOW_OWNERSHIP_001/relink_no_force.log
+src/win32app/p1_ui_window_ownership_cert.cpp
+
+## FORCE elimination follow-up (2026-08-30T14:30:32Z)
+STATUS=INCOMPLETE
+FORCE_MULTIPLE_REQUIRED=FAIL (still present)
+Recovered EXE SHA256=9EA5E2BD9A1EF862C2914225DEB63E78974B8FB81E46D07FFF5F3EFDF2FD66F6
+See FORCE_ELIMINATION_STATUS.txt — surgical ASM ODR fixes kept; full elimination blocked on stub-graph debt.
+Ownership runtime PASS from prior cert is NOT re-run on this SHA yet.

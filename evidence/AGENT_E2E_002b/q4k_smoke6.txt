@@ -1,0 +1,8 @@
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)
+[WARN_EMBED] token=35 zero/nonfinite embedding norm=0.000000e+00 type=12 (continuing; byte-fallback holes tolerated)

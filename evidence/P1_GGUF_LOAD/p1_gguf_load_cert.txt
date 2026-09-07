@@ -1,0 +1,15 @@
+P1_GGUF_LOAD_CERT begin
+PRODUCT_PATH=INFO Win32IDE_session_WM_APP_201
+DEFERRED_LOAD_FLUSHED=INFO armed_wait_message_loop
+DEFERRED_LOAD_FLUSHED=INFO repost_after_startup_pumps
+DEFERRED_LOAD_FLUSHED=INFO flush_after_message_loop_entered
+ENGINE_MANAGER_PRESENT=PASS
+DEFERRED_LOAD_FLUSHED=INFO direct_delivery_no_prior_defer
+MODEL_PATH=INFO F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_FILE_OPEN=PASS F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+GGUF_PARSE=PASS
+MODEL_METADATA_VALID=PASS layers=22 vocab=32000 tensors=201
+INFERENCE_ENGINE_CREATED=INFO calling_LoadModel_worker
+INFERENCE_ENGINE_CREATED=PASS
+MODEL_READY=PASS F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+NO_UNHANDLED_EXCEPTION=PASS worker_ok

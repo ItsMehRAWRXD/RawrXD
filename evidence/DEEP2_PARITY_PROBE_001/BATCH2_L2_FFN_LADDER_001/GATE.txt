@@ -1,0 +1,70 @@
+BATCH2_L2_FFN_LADDER_001 — L2 band under FORCE_EXPAND_V (post SwiGLU fix)
+========================================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0
+authority=BATCH2_L2_CLEAN_001
+  llama/              FORCE_PRE_O_EXPAND_V (PRE_O hygiene)
+  deep2_swiglu_fix/  Deep2 after Deep2Engine::SwiGLU stable SiLU
+harness=g:\rawrxd\tests\gate2_l2_ffn_ladder.cpp
+prereq=BATCH2_L1_FFN_LADDER_001 CLOSED; do not reopen <= L1
+
+ORACLE (L2)
+-----------
+deep2 PRE_O_2 == GQA_expand(V_2)     PASS exact (2048/2048)
+PRE_O_2 vs llama FORCED              PASS max_abs=6.33e-8
+
+L2 LADDER (deep2_swiglu_fix vs llama)
+-------------------------------------
+stage          max_abs     gate
+PRE_O_2        6.33e-8     PASS
+ATTN_NORM_2    7.15e-7     PASS
+ATTN_OUT_2     8.94e-8     PASS
+FFN_INP_2      1.19e-7     PASS
+FFN_NORM_2     2.98e-7     PASS
+FFN_GATE_2     1.91e-6     INSPECT  idx=5475  (~1 ULP @ G~16.76)
+FFN_UP_2       9.54e-7     PASS
+FFN_ACT_2      4.58e-5     FAIL     idx=5475  (silu amplify of dG)
+FFN_DOWN_2     4.58e-5     FAIL     largest=624
+LAYER2_OUT     4.58e-5     FAIL     largest=624
+
+Deep2 SwiGLU self-check
+-----------------------
+ACT == silu_stable(GATE)*UP          PASS exact
+
+ROOT CAUSE CLOSED (material Deep2 defect)
+-----------------------------------------
+Prior: silu = gate * sigmoid(clamp(gate, ±10)) under-scaled |gate|>10
+  → FFN_ACT_2 max_abs ~7.2e-3 (pre-fix)
+Fix: Deep2Engine::SwiGLU / Deep2_SwiGLU stable SiLU (x>20→x; x<-20→0; else x/(1+e^-x))
+  → clamp-class error CLOSED
+Regression: tests/test_swiglu_silu.cpp
+
+RESIDUAL (not clamp; not L0/L1 reopen)
+--------------------------------------
+idx=5475:
+  deep2 G=16.764139 U=9.557144 ACT=160.21730
+  llama G=16.764137 U=9.557143 ACT=160.21725
+  dG=1.907e-6 (~1 ULP)  dACT=4.578e-5
+FIRST_RESIDUAL_AFTER_SWIGLU_FIX = FFN_GATE_2 ULP @ large activation
+Class = Q4_K GEMV / f32 noise floor amplified by SiLU≈id for G≫0
+NOT oracle contamination (PRE_O==expand(V) exact)
+
+STATUS
+------
+L2 attention path              CLOSED
+L2 SwiGLU clamp defect         CLOSED
+L2 LAYER_OUT @ abs_eps=1e-6    OPEN (residual ULP floor 4.58e-5)
+FIRST_GENUINE_MATERIAL_FAIL    NONE remaining in L2 (clamp fixed)
+DO_NOT_REOPEN                  <= L1 | Q/K/V | PRE_O | wo
+
+NEXT
+----
+1) Sparse tips under SPARSE_CLEAN + deep2_post_swiglu_fix (inherits L2 floor)
+2) Optional: FFN GATE GEMV bit-exact vs llama for large rows (separate from SwiGLU)
+3) Tip FINAL_NORM / LOGITS only after tip dumps tip-aligned (deep2 LOGITS pos0)
+
+Artifacts
+---------
+build/gate2/gate2_l2_ffn_ladder.out.txt
+build/gate2/dump5475.exe (idx probe)
+evidence/.../BATCH2_L2_FFN_LADDER_001/GATE.txt

@@ -1,0 +1,33 @@
+﻿EMBED-Q4K-001 / REVERSE_BYTE_SCAN
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+SIZE_CONTRACT
+  token_embd.weight type=Q4_K(12) shape=[2048,32000]
+  n_bytes=36864000
+  expect=32000 rows * 1152 row_bytes = 36864000
+  data_offset_abs=55469440
+  tensor_end=92333440
+
+FORBIDDEN_CONFUSIONS
+  n_bytes_is_32000=FALSE
+  row_bytes_is_32000=FALSE
+  vocab_count_32000=TRUE (row COUNT, not byte length)
+  sha256_first_32000_bytes=f153234aaddb778b
+  sha256_full_36864000_bytes=de998ab2f260c4b8
+  first_32000_bytes_eq_full_tensor=FALSE
+
+REVERSE_ROW_SCAN (tok=31999..0)
+  rows_scanned=32000
+  bad_read_len=0
+  nonzero_rows=31890
+  zero_rows=110
+  zero_ranges=[(16,16),(35,129),(195,196),(198,198),(248,258)]
+
+SPOT
+  row35: 1152 bytes, nz=0 (file-absolute; genuine GGUF hole)
+  row29871 (SPM metaspace): 1152 bytes, nz=1151
+
+VERDICT
+  PASS_not_32000_byte_tensor=TRUE
+  32000 is vocab ROW COUNT only.
+  Embedding table span is 36,864,000 bytes; per-row stride is 1,152 bytes.

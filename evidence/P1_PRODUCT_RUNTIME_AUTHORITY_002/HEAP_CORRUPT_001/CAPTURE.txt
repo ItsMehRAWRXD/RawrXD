@@ -1,0 +1,35 @@
+HEAP_CORRUPT_001 — Phase A capture bundle
+Captured: 2026-09-01T18:41 (user CRT dialog) + agent static seal 2026-09-01T22:55Z
+Binary: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe (Debug, /RTC1)
+EXE_SHA256: D8EABBD81F01ED8BC90D1189122D926BBA900FA82094E71484DD8FB6AB3D5948
+EXE_MTIME: 2026-09-01 18:15:12 (no rebuild during Phase A–B)
+
+=== CRT dialog (user screenshot, Work Mode) ===
+Message: HEAP CORRUPTION DETECTED: after Normal block (#534381)
+Detail: CRT detected application wrote to memory after end of heap buffer.
+Block: Normal block #534381
+Address: ~0x0000000021A6D760
+Repro: Work Mode IDE, chat prompt "test", post-init / post-DHI
+
+=== Retry-break stack (not captured live) ===
+Status: No debugger attached in agent session; user Retry stack not saved.
+Disposition: Writer localized via witness correlation + static analysis (see WRITER_VERDICT.txt).
+If re-validation needed: run run_heap_alloc_break.ps1 on same EXE before any rebuild.
+
+=== Registers / faulting IP (from WITNESS.log, nearest chat window) ===
+Session 18:38:43 send "test" path:
+  P1PRA_SEND accepted -> stream_ok -> FINALIZE_RC=1
+Post-send faults (tid=23996, stale utc_stage=67 from unclean UTC init abort):
+  18:39:08 rip=0x000000001CE31A42 rsp=0x00000000151F4740 op=write target=0x184..0x186
+  18:39:34 rip=0x00000000002B95E4 rsp=0x00000000151FF1B0 op=read  target=0xFFFFFFFFFFFFFFFF
+Note: utc_stage=67 is stale global (DHI thread faulted at counter_reset_ring_idx enter).
+
+=== DHI / UTC init fault (same session, separate from CRT dialog thread) ===
+18:38:35 tid=10580 deferred_heavy_init
+  Last UTC witness: counter_reset_metrics_exit rsp=0x2336E0F0 rsp_align=0
+  P1PRA_FAULT utc_stage=67 rip=0x00007FF930CEB1EB (ntdll) read AV 0xFFFFFFFFFFFFFFFF
+  P1PRA_THREAD_STOP deferred_heavy_init
+
+=== Rules observed ===
+- No taskkill / no harness rerun during capture
+- WITNESS.log preserved (read-only tail)

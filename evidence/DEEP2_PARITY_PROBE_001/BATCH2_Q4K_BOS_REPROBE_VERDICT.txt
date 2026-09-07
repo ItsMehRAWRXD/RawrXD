@@ -1,0 +1,32 @@
+BATCH2_Q4K_BOS_REPROBE ? 2026-08-29
+exe=build-ninja/bin/test_generate_one_token.exe (post Q4_K?Q8_K LinearW fix)
+ids=[1,21521,9312]
+evidence=deep2_attn_ladder_bos_q4k.txt
+
+PROMPT_EMBED pos=0:
+  [STAGE_DIGEST] side=deep2 key=PROMPT_EMBED pos=0 n=2048 l2=1.008737855e-01 max_abs=7.818102837e-03 min=-7.818102837e-03 max=5.915760994e-03 sum=5.792212486e-02 fnv=13123758da8b244a nf=0
+  vs prior deep2 fnv=13123758da8b244a ? MATCH prior deep2 (llama embed authority not rechecked here)
+
+ATTN_NORM_0 pos=0:
+  [STAGE_DIGEST] side=deep2 key=ATTN_NORM_0 pos=0 n=2048 l2=8.105918780e-01 max_abs=3.308502138e-01 min=-3.308502138e-01 max=2.076931447e-01 sum=-1.899722029e+00 fnv=b4ca919612be6c51 nf=0
+  expect_fnv=b4ca919612be6c51 ? PASS
+
+Q_PRE_ROPE_0 pos=0:
+  [STAGE_DIGEST] side=deep2 key=Q_PRE_ROPE_0 pos=0 n=2048 l2=1.938516985e+00 max_abs=3.353509903e-01 min=-3.353509903e-01 max=3.044907451e-01 sum=-3.521634503e+00 fnv=ced1abe971861249 nf=0
+  llama_fnv=8d53927ede5ddb3f llama_l2=1.938517021e+00
+  prior_deep2_fnv=78631c3504e1b579 prior_deep2_l2=1.940769701e+00
+  verdict:
+    old_Q4K_FP32_GEMV_gap=CLOSED (l2 now 1.938516985 ? llama 1.938517021)
+    strict_FNV_vs_llama=DIFF (ced1abe971861249 != 8d53927ede5ddb3f)
+    active_first_diff=Q_PRE_ROPE_0 under strict FNV
+    NOT the old scale/min / FP32-dequant class (that was 1.941 vs 1.938)
+
+K_PRE_ROPE_0 pos=0:
+  [STAGE_DIGEST] side=deep2 key=K_PRE_ROPE_0 pos=0 n=256 l2=1.317964627e+00 max_abs=3.645840883e-01 min=-2.980358601e-01 max=3.645840883e-01 sum=1.105420220e+00 fnv=d61547179ccaf150 nf=0
+
+V_0 pos=0:
+  [STAGE_DIGEST] side=deep2 key=V_0 pos=0 n=256 l2=7.925270207e-02 max_abs=3.409922868e-02 min=-3.409922868e-02 max=1.582657360e-02 sum=-4.310452807e-02 fnv=df87f6368ddea59a nf=0
+
+GREEDY argmax=13 (BOS behavioral still PASS)
+AGENT-E2E-002b=still BLOCKED until Q_PRE_ROPE_0 FNV closes or authority relaxes to l2/eps
+NEXT=elementwise Q dump vs llama Q_0 (not another full agent run); do not reopen BOS/tokenizer

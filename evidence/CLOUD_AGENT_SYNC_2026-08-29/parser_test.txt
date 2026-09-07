@@ -1,0 +1,38 @@
+PASS: empty path fails
+PASS: empty path error
+PASS: empty path lists missing
+PASS: missing file fails
+PASS: missing file error
+PASS: missing file lists gap
+PASS: pure GGUF parses
+PASS: pure GGUF payload parsed
+PASS: pure GGUF magic at 0
+PASS: pure GGUF version 3
+PASS: pure GGUF tensor count
+PASS: pure GGUF architecture
+PASS: pure GGUF name
+PASS: pure GGUF tokenizer
+PASS: pure GGUF vocab
+PASS: pure GGUF layers
+PASS: pure GGUF tensors classified
+PASS: pure GGUF has no missing items
+PASS: embedded blob parses
+PASS: embedded blob offset 256
+PASS: embedded blob magic not at 0
+PASS: embedded blob metadata
+PASS: truncated GGUF fails
+PASS: truncated GGUF error
+PASS: truncated GGUF lists missing
+PASS: plain file kind ok
+PASS: plain file error ok
+PASS: plain file as model fails
+PASS: plain file as model invalid
+PASS: extension without sidecars fails
+PASS: extension lists package.json and entry
+PASS: extension with sidecars ok
+PASS: complete extension has no missing
+PASS: string-kind overload
+PASS: formatted report header
+PASS: formatted report missing none
+PASS: formatted report lists missing file
+All reverse parser checks passed

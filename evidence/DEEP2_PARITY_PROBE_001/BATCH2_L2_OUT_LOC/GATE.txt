@@ -1,0 +1,90 @@
+BATCH2_L2_OUT_LOC — FINAL GATE
+==============================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=2
+authority=CLEAN EXPAND_V + Deep2 post-SwiGLU-fix dumps
+baseline=L2_OUT max_abs≈4.577637e-05 (SPARSE_CLEAN tip)
+harness=l2_out_loc.py → tests/gate2_l2_out_loc.cpp
+
+STAGE LADDER (abs eps 1e-6 / 1e-5)
+----------------------------------
+ATTN_NORM_2   PASS     7.15e-7
+ATTN_OUT_2    PASS     8.94e-8
+FFN_INP_2     PASS     1.19e-7
+FFN_NORM_2    PASS     2.98e-7
+FFN_GATE_2    INSPECT  1.91e-6   << first non-PASS (1 elem idx=5475)
+FFN_UP_2      PASS     9.54e-7
+FFN_ACT_2     FAIL     4.58e-5   << first FAIL tensor (same idx=5475)
+FFN_DOWN_2    FAIL     4.58e-5   (inherits ACT)
+L2_OUT        FAIL     4.58e-5   (inherits; == POST_FFN exact)
+
+Deep2 residuals
+---------------
+FFN_INP_2 == LAYER_OUT_1 + ATTN_OUT_2   PASS ~7e-9
+POST_FFN_2 == LAYER_OUT_2               PASS exact
+
+FIRST_ELEMENT (not merely first tensor)
+---------------------------------------
+idx=5475 (FFN intermediate)
+  GATE Deep2=16.7641391754  llama=16.7641372681  dG=1.9073486e-6  (=1 ULP @ ~16)
+  UP   Deep2=9.5571441650   llama=9.5571432114   dU=9.5367432e-7
+  ACT  Deep2=160.217300415  llama=160.217254639  dA=4.5776367e-5
+
+SCALAR / REFERENCE (decision tree)
+----------------------------------
+f32 silu(Gd)*Ud == Deep2 ACT_dump     EXACT (max_abs=0)
+f32 silu(Gl)*Ul == llama ACT_dump     EXACT (max_abs=0)
+f32 silu(Gd)*Ud vs llama ACT          FAIL 4.58e-5  (== L2_OUT gap)
+pred amp dG*U+G*dU                    ≈3.42e-5 (f64); f32 rounds to 4.58e-5
+
+⇒ scalar/reference MATCHES Deep2 optimized SiLU path.
+⇒ ACT/L2_OUT abs delta is NOT a Deep2 SiLU/SIMD defect.
+⇒ delta is UPSTREAM 1-ULP GATE (+sub-ULP UP) amplified by silu(G)*U
+   at large magnitude (|G|≈16.8, |U|≈9.6, |ACT|≈160).
+
+RELATIVE / ULP re-score (policy gate)
+-------------------------------------
+ACT rel ≈ 5.67e-7                 dual PASS
+GATE ULP count >1e-6 abs          = 1 / 5632
+ACT  elems >1e-5 abs              = 1 / 5632
+L2_OUT abs=4.58e-5 rel≈3.14e-6    dual INSPECT (soft abs + rel≤5e-6)
+
+gate2_l2_out_loc.exe (built)
+----------------------------
+ACT_vs_refD     abs=PASS dual=PASS  max_abs=0 (exact f32)
+FIRST_ABS_FAIL  = FFN_ACT_2
+FIRST_DUAL_FAIL = none
+CLASS           = GATE_ULP_AMPLIFIED_THROUGH_SWIGLU
+exit            = 0
+
+CLASSIFICATION
+--------------
+ROOT = GATE_ULP_AMPLIFIED_THROUGH_SWIGLU
+DOMAIN = L2 FFN (post-attn closed)
+SiLU / Deep2Engine::SwiGLU = CLOSED (f32 ref exact)
+blk.*.attn_output / wo     = DO_NOT_REOPEN
+L2_OUT abs-FAIL @ 4.58e-5  = CHARACTERIZATION / dual-INSPECT
+  — not CERT_BLOCKED arithmetic defect; advance tips under dual gate
+
+DO_NOT
+------
+- reopen wo / PRE_O / L0 / L1
+- treat L2_OUT abs fail as independent DOWN kernel bug without same-op ACT
+- rerun full parity ladder
+- block on rawrxd-gh mirror
+
+NEXT (ordered)
+--------------
+1. DONE: dual gate harness gate2_l2_out_loc (L2 SiLU CLOSED; dual no FAIL)
+2. BATCH2_SPARSE_TIPS_DUAL_001 — L4+ under dual gate; stop only on dual FAIL
+3. FINAL_NORM tip-align → LOGITS → ARGMAX
+4. Optional: same-operand DOWN Gate A only if dual FAIL returns
+
+Artifacts
+---------
+evidence/.../BATCH2_L2_OUT_LOC/LADDER.txt
+evidence/.../BATCH2_L2_OUT_LOC/report.json
+evidence/.../BATCH2_L2_OUT_LOC/GATE.txt
+evidence/.../BATCH2_L2_OUT_LOC/l2_out_loc.py
+tests/gate2_l2_out_loc.cpp
+build/gate2/gate2_l2_out_loc.exe

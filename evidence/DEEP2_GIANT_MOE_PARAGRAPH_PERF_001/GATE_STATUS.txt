@@ -1,0 +1,3 @@
+status=NOT_RUN
+DEEP2_GIANT_MOE_PARAGRAPH_PERF_001=PENDING
+note=protocol_frozen; run deep2_giant_moe_paragraph_perf_cert.exe when ready

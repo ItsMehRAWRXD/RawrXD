@@ -1,0 +1,23 @@
+LOCAL_ONLY_NO_OLLAMA_001
+========================
+Date: 2026-09-06
+
+Policy: absolutely no Ollama fallbacks for chat load/generate.
+
+HTML (gui + sites/screenpilot.tech)
+- ollamaDirectUrl = null; directMode forced false
+- connectBackend: removed Try-2 :11434
+- scanPorts: no 11434
+- switchBackend('ollama'): refused
+- Backend list: Win32IDE only
+
+tool_server.cpp
+- /api/generate,/ask,/v1/chat/completions: 503 LOCAL_ONLY_NO_OLLAMA (no WinHTTP to :11434)
+- /api/model/load: no ollama-custom accept
+- /models: MASM bridge + local GGUF only
+
+Win32IDE
+- /api/generate + chat completions: non-LocalGGUF → 503
+- setActiveBackend(Ollama) → refused
+
+Still OK: GGUF files living under F:\OllamaModels\... (disk paths, not Ollama HTTP).

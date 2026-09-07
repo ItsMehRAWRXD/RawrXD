@@ -1,0 +1,17 @@
+CASE backend_unavailable
+INIT skip UNAVAILABLE
+diag=HexMag MASM unavailable (fail-closed)
+error=HexMag MASM unavailable (fail-closed)
+HexMag_Init
+HexMag_Init ok
+HexMag_SubmitGoal
+HexMag_RunToSatisfied
+HexMag_PollEvent
+HexMag_Init
+HexMag_Init ok
+askWithAutoStart → HexMag_Init/Submit/Run/Poll + FINAL gates
+NATIVE_FALLBACK requires RAWRXD_HEXMAG_ALLOW_NATIVE_FALLBACK=1 AND RAWRXD_HEXMAG_USE_NATIVE_FALLBACK=1; default off.
+
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_CLIENT_PATH=MASM

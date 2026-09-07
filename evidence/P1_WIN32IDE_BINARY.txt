@@ -1,0 +1,15 @@
+﻿P1_WIN32IDE_BINARY
+date=2026-08-29
+status=PASS
+build_dir=F:\~dev\rawrxd\build-win32ide-p1
+exe=F:\~dev\rawrxd\build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+size_bytes=309941248
+mtime_utc=2026-08-29T19:53:23.6501167Z
+cmake=-DRAWRXD_BUILD_WIN32IDE=ON -DRAWRXD_BUILD_RAWRENGINE=OFF -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON
+rawrengine_isolated=1
+rawrengine_ninja_rule=ABSENT
+hexmag_symbols_linked=True
+symbols=HexMag_Init,HexMag_SubmitGoal,HexMag_RunToSatisfied,HexMag_PollEvent,HexMag_Tuner_Init,tryHexMagControllerCopilotSend,HexMagRuntimeController
+map=F:\~dev\rawrxd\build-win32ide-p1\RawrXD-Win32IDE.map
+policy=classifier/controller/FinalizePolicy/Copilot route FROZEN (no edits this gate)

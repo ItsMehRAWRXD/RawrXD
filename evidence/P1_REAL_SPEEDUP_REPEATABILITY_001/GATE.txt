@@ -1,0 +1,66 @@
+P1_REAL_SPEEDUP_REPEATABILITY_001
+
+EXE_LINEAGE
+  PRIOR_FROZEN_PASS_EXE     = 7DFDA62A… (P1_REAL_SPEEDUP_001 CLOSED; untouched)
+  POSTFIX_EXE               = F6999662BF84C55CD3E9E1D52D0EBA02A9174B4925AEA56BC2F2F3D3D6BF2E89
+  FIX                       = Generate() epilogue: no EnsurePolicyLoaded reload
+
+ALL_SESSION_AUTHORITY_VALID = PASS
+  SESSION_01_EXE_SHA_MATCH  = PASS (F6999662…)
+  SESSION_02_EXE_SHA_MATCH  = PASS (F6999662…)
+  MODEL_SHA_MATCH           = PASS (DA3087FB…)
+  NO_AUTHORITY_DRIFT        = PASS
+
+ALL_SESSION_CORRECTNESS     = PASS
+  SESSION_01_CORRECTNESS    = PASS (5+5 trials)
+  SESSION_02_CORRECTNESS    = PASS (5+5 trials)
+  SESSION_03                = NOT_RUN (stop after SESSION_02 speedup FAIL)
+
+SESSION_1_SPEEDUP > 1.00    = PASS  (2.52576×  BASELINE_MED=10026819400  CANDIDATE_MED=3969825300)
+SESSION_2_SPEEDUP > 1.00    = FAIL  (0.591289× BASELINE_MED=1802916900   CANDIDATE_MED=3049132100)
+SESSION_3_SPEEDUP > 1.00    = NOT_EVALUATED
+
+POOLED_REDUCER              = NOT RUN (insufficient: any session <=1.00× freezes FAIL)
+POOLED_BASELINE_MEDIAN      = N/A (authority)
+POOLED_CANDIDATE_MEDIAN     = N/A (authority)
+POOLED_REAL_SPEEDUP > 1.00  = FAIL
+
+FIRST_FALSE_TRANSITION      = SESSION_2_SPEEDUP
+STATUS                      = FAIL
+
+Disposition (frozen rule)
+-------------------------
+any valid session speedup <= 1.00× → REPEATABILITY = FAIL
+SESSION_02 was a valid measured session (correctness PASS, non-empty trials);
+median ratio 0.59× → FAIL. SESSION_03 not launched.
+
+SESSION_01_POSTFIX 2.53× is a legitimate sample median only —
+NOT promoted to overall repeatability claim.
+P1_REAL_SPEEDUP_001 1.48× remains PASS / CLOSED (GATE_SHA=04451DB1…).
+P1_PRODUCTION_TAIL_LATENCY_001 remains BLOCKED.
+
+SESSION_02 notes (non-authority)
+--------------------------------
+Baseline medians collapsed vs SESSION_01 (~1.8s vs ~10.0s) while candidate
+stayed mid (~3.0s). Direction reversed. Not attributed here — do not reopen
+1.48× freeze; do not unblock tail; do not tune benchmark.
+
+Evidence
+--------
+SESSION_01_POSTFIX/  GATE.txt TRIALS.csv AUTHORITY.txt run.log
+SESSION_02_POSTFIX/  GATE.txt TRIALS.csv AUTHORITY.txt run.log
+
+State drift follow-up
+---------------------
+P1_REPEATABILITY_STATE_DRIFT_DIAG_001 = DIAG COMPLETE
+  profile writes confirmed (rawrxd/profiles; runs 40→56)
+  profile isolation broken (EnsurePolicyLoaded clobbers setDir)
+  S01/S02 split by profile alone = NOT PROVEN; multi-factor drift
+  see evidence/P1_REPEATABILITY_STATE_DRIFT_DIAG_001/GATE.txt
+
+Successor cert (not yet run)
+----------------------------
+P1_REAL_SPEEDUP_REPEATABILITY_002 CONTRACT_FROZEN
+  isolation preconditions + BENCH_ISOLATION_FAIL != SPEEDUP_FAIL
+  per-session trial distribution (MIN/MAX/P25/P75) + median authority
+  _001 could not establish isolated repeatability

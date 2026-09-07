@@ -1,0 +1,75 @@
+EGRESS_001 = OPEN / NOT CERTIFIED
+
+CANONICAL STATE (FROZEN AUTHORITY 2026-08-30 — Call 1A)
+```
+GATE                         = EGRESS_001
+STATUS                       = OPEN
+CALL                         = 1A + desktop-only + Dark+
+PHASE                        = 1 (local / fail-closed only)
+REMOTE_CONTROL               = PHASE 2 (blocked until EGRESS_001 + STATIC_DEP_001 PASS)
+DEFAULT_DENY_EGRESS          = NOT PROVEN
+AUTHORITY                    = evidence/EGRESS_001/
+```
+
+DOES NOT REOPEN
+```
+LOCAL_ONLY_001               = PASS / CERTIFIED (narrow Deep2/GGUF — untouched)
+STREAMER_CERT_001            = PASS / CERTIFIED (untouched)
+P1_UI_MENU_E2E_001           = BLOCKED (untouched)
+```
+
+CRITICAL IMPLEMENTATION RULE (authoritative)
+```
+RAWRXD_OPTIONAL_OLLAMA=OFF  (DEFAULT for shipping)
+  → MUST remove Ollama translation units from the default link
+  → Runtime-only disable / soft fallback is FORBIDDEN as the quarantine mechanism
+
+RAWRXD_OPTIONAL_CLOUD=OFF   (DEFAULT for shipping)
+  → MUST remove cloud provider / auto-update / marketplace egress TUs from
+    the default link (or fail-closed stubs with no network)
+```
+
+CLOSURE ORDER (strict)
+```
+1. Compile/link quarantine Ollama + cloud providers (OPTIONAL_*=OFF default)
+2. Prove default-deny runtime egress across every inventoried path
+3. Run STATIC_DEP_001 against the exact shipping EXE
+   (imports, symbols, strings, config defaults, endpoint literals)
+4. Verify identical behavior with Ollama absent / installed / listening :11434
+```
+
+PASS CONDITION
+```
+Default shipping binary cannot reach:
+  - 127.0.0.1:11434 / localhost:11434
+  - cloud LLM endpoints
+  - telemetry / analytics that leave the machine
+  - auto-update / marketplace / beacon egress
+Default binary identical whether Ollama present or absent.
+```
+
+BROAD CLAIM WITHHOLDING
+```
+“No dependency / nothing leaves the machine” remains WITHHELD until
+EGRESS_001 AND STATIC_DEP_001 both PASS on the same frozen shipping SHA.
+```
+
+Evidence
+  PATH_INVENTORY.txt
+  ACTIVE_LINK_MAP.txt
+  GATE.txt (this file)
+  ../LOCAL_ONLY_001/GATE.txt
+  ../STATIC_DEP_001/GATE.txt
+  ../COMMAND_HOME_001/GATE.txt
+
+PROGRESS (Call 1A + step-1 started)
+```
+CMAKE RAWRXD_OPTIONAL_OLLAMA = OFF (default)
+  Win32IDE swaps AgentOllamaClient / OllamaProvider / ChatPanel_Ollama
+  → *_quarantine.cpp fail-closed replacements (real TUs not linked)
+CMAKE RAWRXD_OPTIONAL_CLOUD  = OFF (default)
+  removes cloud_api_client.cpp + auto_update_system.cpp from Win32IDE link
+  RUNTIME_DEFAULT_DENY_PROOF   = NOT STARTED
+  DirectFIM.cpp WinHTTP path   = compile-gated (#if RAWRXD_OPTIONAL_OLLAMA)
+  STATIC_DEP_001 on shipping SHA = NOT STARTED
+```

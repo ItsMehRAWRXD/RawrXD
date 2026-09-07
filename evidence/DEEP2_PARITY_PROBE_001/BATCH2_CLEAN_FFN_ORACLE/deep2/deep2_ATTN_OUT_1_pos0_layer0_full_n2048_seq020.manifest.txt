@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_OUT_1
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=f71175bd40b3c201
+l2=0.33772562740319662
+seq=20
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_CLEAN_FFN_ORACLE\deep2\deep2_ATTN_OUT_1_pos0_layer0_full_n2048_seq020.bin

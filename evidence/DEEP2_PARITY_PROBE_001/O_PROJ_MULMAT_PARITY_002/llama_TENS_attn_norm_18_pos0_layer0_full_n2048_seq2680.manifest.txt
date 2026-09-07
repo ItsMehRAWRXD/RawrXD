@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_attn_norm_18
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=56e1bea0fdaa72c2
+l2=6.2366123892295073
+seq=2680
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\O_PROJ_MULMAT_PARITY_002\llama_TENS_attn_norm_18_pos0_layer0_full_n2048_seq2680.bin

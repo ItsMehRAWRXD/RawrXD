@@ -1,0 +1,19 @@
+ITEM: B3
+SOURCE: Win32IDE.cpp generateResponseAsync (~6568-6574)
+WITNESS_FIELD: P1PRA_INFERENCE=reject_busy|worker_spawn, P1PRA_THREAD=inference_worker_enter
+EXERCISE: Code trace + WITNESS.log grep across 5370 lines
+ARTIFACT: evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/reconclusion/B3_INFERENCE_WORKER.txt
+OBSERVED (pre-fix):
+  P1PRA_CALLBACK_ENTER=38
+  inference_worker_enter in WITNESS.log=0
+  Same-timestamp pattern: accepted -> stream_ok -> FINALIZE_RC=1 with FORWARD/SAMPLE/DECODE/UI all 0
+ROOT CAUSE (reconcluded):
+  m_inferenceRunning busy-reject called callback("Inference already in progress.", true).
+  Build callback treated non-empty token as stream proof -> p1praCompleteProductRequest(stream_ok=true)
+  without inference worker ever spawning P1PRA_OnForward/OnSample.
+FIX APPLIED:
+  reject_busy: P1PRA_Witness + callback("", true) — no false stream proof
+  worker_spawn: P1PRA_Witness before thread launch
+  bridge_missing: P1PRA_Witness + callback("", true)
+  p1praCompleteProductRequest uses P1PRA_PhysicalStreamWitnessed() not token non-empty
+STATUS: RECONCLUDED (code fix); re-verify with post-build harness run

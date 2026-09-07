@@ -1,0 +1,42 @@
+GATE_ROADMAP_003 — RUNTIME CERTIFICATION
+========================================
+Generated: 2026-09-06
+
+IMPLEMENTATION                 = 15/15 PASS
+DEEP2_RUNTIME_BATCH3_001       = PASS fails=0
+
+ 1. STREAMER_GPU_Q5K_GEMV_001           = PASS
+ 2. STREAMER_GPU_Q3K_GEMV_001           = PASS
+ 3. STREAMER_GPU_Q2K_GEMV_001           = PASS
+ 4. STREAMER_GPU_Q8_GEMV_001            = PASS
+ 5. STREAMER_GPU_QUANT_COVERAGE_001     = PASS
+ 6. STREAMER_GPU_PACKED_FORWARD_001     = PASS
+ 7. STREAMER_GPU_ASYNC_PIPELINE_001     = PASS
+ 8. STREAMER_GPU_TRANSFER_BATCH_001     = PASS
+ 9. STREAMER_GPU_COMMAND_REUSE_001      = PASS
+10. STREAMER_GPU_FUSION_001             = PASS
+11. STREAMER_GPU_FUSED_QKV_001          = PASS
+12. STREAMER_GPU_FUSED_FFN_001          = PASS
+13. STREAMER_GPU_KERNEL_TUNE_001        = PASS
+14. STREAMER_GPU_MEMORY_TUNE_001        = PASS
+15. STREAMER_GPU_DYNAMIC_WINDOW_001     = PASS
+
+Note: historical ~85.4 / ~14.38 TPS numbers are OUTSIDE this roadmap.
+See evidence/HISTORICAL_TPS_VS_GATES_001.txt
+Next optional: DEEP2_K2_LIVE_GEN_PERF_001 / DEEP2_DEEPSEEK_LIVE_GEN_PERF_001
+
+--- Live perf (fresh, modern path) ---
+DEEP2_K2_LIVE_GEN_PERF_001        = PASS
+  model   = Kimi-K2-Instruct-0905 Q4_K_M (13/13, ~578.58 GiB)
+  path    = K2NativeStreamPartial
+  measure = DECODE_TPS=0.153 (4 tok, depth=4, bounded peak)
+  note    = NOT the historical ~85.4 TPS (that was K2.5 2.5B Q8_0)
+
+DEEP2_DEEPSEEK_LIVE_GEN_PERF_001  = FAIL
+  model   = DeepSeek-R1-Q4_K_M-COMPLETE (11/11 discovered, ~376.7 GiB)
+  path    = K2NativeStreamPartial (deepseek2 family)
+  blocker = K2_NATIVE_STREAM_PARTIAL_FAIL_ON_R1_TOPOLOGY (ok=0, gen_id=-1)
+  note    = NOT the historical 14.38 TPS (SOVEREIGN_ASYNC_RING_E2E_001)
+  also    = loadModel refuse MLA without RAWRXD_DEEP2_ALLOW_UNSAFE_MLA
+
+See evidence/HISTORICAL_TPS_VS_GATES_001.txt

@@ -1,0 +1,31 @@
+P1_REPEATABILITY_STATE_DRIFT_DIAG_001 — CANONICAL DISPOSITION (FROZEN)
+
+P1_REPEATABILITY_STATE_DRIFT_DIAG_001 = DIAG COMPLETE
+
+PROFILE_WRITES_PERSISTENT              = CONFIRMED
+PROFILE_DIR_ISOLATION                  = BROKEN
+AUTHORITY_DRIFT                        = NOT OBSERVED
+CORRECTNESS_DRIFT                      = NOT OBSERVED
+PERFORMANCE_STATE_DRIFT                = CONFIRMED
+
+PROFILE_CAUSES_FULL_S01/S02_DELTA      = NOT PROVEN
+MULTI_FACTOR_REPEATABILITY_FAILURE     = CONFIRMED
+
+P1_REAL_SPEEDUP_REPEATABILITY_001      = FAIL / UNCHANGED
+SESSION_02_COUNTEREXAMPLE              = VALID / UNCHANGED
+P1_REAL_SPEEDUP_001                    = PASS / CLOSED / UNCHANGED
+P1_PRODUCTION_TAIL_LATENCY_001         = BLOCKED
+
+Key result
+----------
+The benchmark environment was NOT performance-state isolated, but observed
+profile mutation does NOT explain the full repeatability failure. Disabling
+profile writes alone would prematurely declare the issue solved.
+
+Successor cert
+--------------
+P1_REAL_SPEEDUP_REPEATABILITY_002 (CONTRACT_FROZEN — not yet run)
+
+Evidence detail
+---------------
+See GATE.txt EXPERIMENT.txt phase_*.txt

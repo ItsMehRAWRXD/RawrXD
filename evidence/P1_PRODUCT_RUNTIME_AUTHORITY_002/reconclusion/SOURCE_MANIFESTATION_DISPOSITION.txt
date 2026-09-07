@@ -1,0 +1,61 @@
+SOURCE MANIFESTATION AUTHORITY — FINAL DISPOSITION
+=================================================
+Recorded: 2026-09-01
+Authority plane: evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/reconclusion/
+
+SOURCE_MANIFESTATION_AUTHORITY=HOLD
+P1PRA_RC1=HOLD
+CURRENT_EXE_PRODUCT_CERTIFIED=NO
+
+Three unsynchronized authority planes:
+  1. Filesystem/menu discovery
+  2. RawrXD-Win32IDE.exe CMake/link graph
+  3. Runtime certification evidence tied to an exact binary
+
+| #  | Disposition |
+| -- | ----------- |
+| 1  | HOLD — scan contaminated. 83,188-path scan cannot represent production menu while archive/history/reconstruction/audit/build trees are traversed. Bounded re-scan: M1_PRODUCTION_BOUNDED_SCAN.txt (38,184 paths, still 34,746 outside registry). |
+| 2  | STALE REGISTRY — 40 unresolved (+10 drift vs prior 40-only-reg count under bounded scan). Classification artifact: M2_STALE_REGISTRY_40.txt |
+| 3  | NO DEFECT PROVEN. Orphan∩linked=0 expected if orphan_sources.csv subtracts linked set. Test against original candidate universe, not intersection alone. |
+| 4  | AMBIGUOUS COPIES. 1,716 shared basenames; 0 same relative paths between Full Source/src and src/. Compiled copy = normalized target graph; opened copy = exact menu path. |
+| 5  | STALE, NOT REWRITABLE. D:\ artifacts preserved as historical evidence. New F:\ inventory: F_DEV_SOURCE_INVENTORY.txt (does not modify audit/source_audit_queue.txt). |
+| 6  | BUILD IDENTITY UNSEALED. Four hashes now on record; no gate may combine them. Current sealed candidate: M6_BINARY_IDENTITY_SEAL.txt (build_p1pra_win32ide only). |
+| 7  | RUNTIME-EVIDENCE DEFECT. P1PRA_SYMBOL_LINKED=1 ≠ product certification. Empty EXE_SHA256/MODEL_PATH in last E2E.log = incomplete evidence record. A3 fix wired; not re-witnessed. |
+| 8  | BREAKPOINT BOUNDED. Earliest missing physical transition: after USER_PROMPT, before GGUF_OPEN. P1PRA_SEND=accepted proves UI acceptance only. B2_B4_STAGE_CHAIN.txt: BLOCKED_BY_LOAD_CRASH. |
+| 9  | CRASH UNMAPPED. stage=33/utc_stage=67/C0000005 insufficient without exact-hash PDB. C1_C2_FAULT_BISECT.txt: 86 faults; static-image RVA 0x1EB recurring; non-static RIPs unmapped. |
+| 10 | WAVES REMAIN HOLD. Product100 on disk ≠ Wave 3/4 witness predicates executed. WAVE_3_VERDICT=HOLD, WAVE_4_VERDICT=HOLD. |
+| 11 | SPLIT MANIFESTATION AUTHORITY. SourceFileRegistry vs Win32IDE_SourceFilePicker.cpp are separate UI surfaces. Overlap/provenance not measured. Neither establishes build linkage. |
+| 12 | GENERATOR NOT PRODUCTION-SAFE. generate_source_menu.py SKIP_DIRS gap confirmed. Ship/* in matrix: M12_SHIP_WIN32IDE_MATRIX.txt — 2 TUs marked win32ide-linked (AgentCoordinator, AutonomousAgenticPipeline). Matrix vs product-scope exclusion unresolved. |
+
+Bounded verdicts:
+  SOURCE_REGISTRY_COMPLETE=NO
+  SOURCE_MENU_PRODUCTION_BOUNDED=NO
+  WIN32IDE_LINK_GRAPH_RECONCILED=NO
+  RUN_BINARY_IDENTITY_SEALED=PARTIAL (M6 sealed; not yet bound to passing E2E)
+  P1PRA_PHYSICAL_INFERENCE_WITNESSED=NO
+
+  WAVE_1=PASS_IMPLEMENTATION_ONLY
+  WAVE_2=PASS_IMPLEMENTATION_ONLY
+  WAVE_3=HOLD
+  WAVE_4=HOLD
+  PRODUCT_INFERENCE_AUTHORITY=HOLD
+
+Authoritative shipping-source set must be derived from the exact RawrXD-Win32IDE.exe
+target and linked binary — not filesystem scan, registry size, source-drop presence,
+or basename matches.
+
+Reconclusion artifacts:
+  A4_BINARY_LANE.txt          — P1PRA lane = build_p1pra_win32ide only
+  A2_STARTUP_FINALIZE.txt     — startup finalize witness
+  A3_EXE_SHA256.txt           — EXE_SHA256 wiring (unverified on E2E)
+  B2_B4_STAGE_CHAIN.txt       — BLOCKED_BY_LOAD_CRASH
+  B3_INFERENCE_WORKER.txt     — worker path reconcluded
+  C1_C2_FAULT_BISECT.txt      — 86 faults, partial RVA map
+  E1_HARNESS_RESULT.txt       — NOT_WITNESSED
+  M1_PRODUCTION_BOUNDED_SCAN.txt
+  M2_STALE_REGISTRY_40.txt
+  M6_BINARY_IDENTITY_SEAL.txt
+  M12_SHIP_WIN32IDE_MATRIX.txt
+  F_DEV_SOURCE_INVENTORY.txt
+
+Next gate only: P1PRA_002_E2E_PRODUCT_AUTHORITY on M6-sealed binary (E2E_CONTRACT.txt)

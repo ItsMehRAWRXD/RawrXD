@@ -1,0 +1,76 @@
+PERF_CLAIM_BOUNDARY_001 — historical TPS vs sealed gates
+========================================================
+Generated: 2026-09-06
+Authority: operator recovery + GATE_ROADMAP_002 claim split
+
+HARD RULE
+---------
+Do NOT rewrite history as:
+  Kimi-K2 13-shard Q4_K_M = 80+ TPS
+  DeepSeek-R1 Q4_K_M-COMPLETE 11/11 = certified 14.38 TPS
+
+GATE_ROADMAP_002 keeps K2 / DeepSeek as optional-gate completion,
+separate from remembered performance numbers.
+
+HISTORICAL MAP
+--------------
+~85.4 TPS
+  = K2.5 2.5B Q8_0 performance sweep
+  ≠ Kimi-K2-Instruct-0905 Q4_K_M 13-shard
+  Exact command line: NOT recovered in retained evidence
+
+Kimi K2 13/13 (~578.58 GB, shards ~41–46 GB)
+  = D:\rawrxd\build-ninja\tests\k2_runtime_validation.exe
+      "F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M"
+  Intended eight gates: shard discovery, GGUF/header, K2GlobalTensorIndex,
+  MLA resolution, MoE resolution, Deep2Engine init, real GGUF load,
+  generation/streaming
+  = model/runtime validation — NOT the ~80 TPS result
+
+~14.2 TPS
+  = earlier single-R9700 Sovereign/671B operator baseline
+
+14.38 TPS
+  = SOVEREIGN_ASYNC_RING_E2E_001 async-ring Run C
+      (sync Run A = 1.84 TPS; async overlap = 94.21%; ring starvation = 0)
+  Executable association: SovereignSweep_X64.exe
+  Path described then as Sovereign/671B experimental — NOT today's
+  F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE 11/11 Q4_K_M
+  671B certification was subsequently reopened pending weight-traffic
+  accounting → do NOT treat 14.38 as certified for current DeepSeek gate
+
+14.83 TPS
+  = no retained witness found
+
+DeepSeek Q4_K_M 11/11
+  = current source F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE
+  Must be benchmarked separately under modern Deep2 resident/streaming
+
+ALSO SEALED (unrelated to above TPS claims)
+-------------------------------------------
+DEEP2_K2_001 via deep2_runtime_batch2_cert --k2 (mechanism/residency)
+GATE_ROADMAP_002 / DEEP2_RUNTIME_COMPLETE_001 (optional SKIP_NO_MODEL OK)
+
+FRESH PERF SEALS
+----------------
+DEEP2_K2_LIVE_GEN_PERF_001 / DEEP2_DEEPSEEK_LIVE_GEN_PERF_001
+  = short live-gen smoke (not paragraph, not historical TPS inheritance)
+  IMPORTANT: the recorded ~0.153 "DECODE_TPS" on LIVE_GEN is NOT a
+  regression of 14.38 / 85.4. That cert forces:
+    PATH        = K2NativeStreamPartial (residency/stream gate)
+    LAYER_DEPTH = 4 of ~61
+    BUDGET      = 512 MiB BOUNDED_STREAM
+    METRIC      = wall e2e (nTok / WALL_MS), includes open/setup
+  It deliberately proves bounded peak residency, not async-ring decode.
+  Real numbers remain real for their original executables/paths;
+  claim boundary only forbids re-attaching them to the wrong seal ID.
+
+DEEP2_GIANT_MOE_PARAGRAPH_PERF_001  ← canonical head-to-head
+  protocol: evidence/DEEP2_GIANT_MOE_PARAGRAPH_PERF_001/PROTOCOL.txt
+  exe: build-ninja\bin\deep2_giant_moe_paragraph_perf_cert.exe
+  K2 13/13 vs DeepSeek-COMPLETE 11/11
+  same ~120-word paragraph prompt, MAX_NEW=160, TEMP=0, RUNS=3
+  PRIMARY: DECODE_TPS = (gen_tok-1)/decode_seconds_after_TTFT
+  Do not chase 14.83; do not treat ~85.4 as this K2 model.
+  This is the seal that can show whether giant-MoE decode lands near
+  the old ~14 TPS Sovereign class — not LIVE_GEN's 0.15 smoke.

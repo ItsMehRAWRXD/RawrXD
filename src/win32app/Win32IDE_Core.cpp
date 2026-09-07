@@ -1094,6 +1094,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         // Dismiss ghost text when caret moves (anchor becomes stale)
                         if (pNMHDR->code == EN_SELCHANGE && m_ghostTextVisible)
                         {
+                            ++m_editorDocGen;
                             dismissGhostText();
                         }
                         // Update status bar cursor position

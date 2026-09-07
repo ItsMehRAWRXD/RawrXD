@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_NORM_1
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=9b090f03f3e91968
+l2=5.7768831719074605
+seq=158
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_SPARSE_CLEAN_001\deep2_post_swiglu_fix\deep2_FFN_NORM_1_pos2_layer0_full_n2048_seq158.bin

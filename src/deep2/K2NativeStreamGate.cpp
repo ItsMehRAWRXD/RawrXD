@@ -5,6 +5,7 @@
 #include "K2MLAWeights.hpp"
 #include "K2MLAAttention.hpp"
 #include "K2MLA_GpuGemv.hpp"
+#include "MlaCertAuthority.hpp"
 #include "K2KVCache.hpp"
 #include "K2TokenEmbedding.hpp"
 #include "Deep2LivePath.hpp"
@@ -736,6 +737,12 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             aggStats->kvCacheRead = aggStats->kvCacheRead || layerStats.kvCacheRead;
             if (layerStats.kvLength > aggStats->kvLength)
                 aggStats->kvLength = layerStats.kvLength;
+            if (layerStats.ropeApplied && layerStats.softmaxFinite &&
+                layerStats.kvCacheWrite) {
+                Deep2::MlaCertAuthority::NoteCompleteSuccess(
+                    layerStats, out, hiddenDim);
+            }
+        }
         }
     }
     if (kvPtr) {
@@ -965,8 +972,15 @@ bool ForwardHiddenMla(const Deep2::GlobalTensorIndex& index,
         error = "ForwardHiddenMla: bad args";
         return false;
     }
-    return ForwardMLALayers(layerDepth, index, k2cfg, hidden, mlaComplete,
-                            nullptr, error);
+    Deep2::MlaCertAuthority::NoteRequired();
+    Deep2::MlaCertAuthority::NoteForwardEntered();
+    Deep2::MlaCompleteStats agg{};
+    const bool ok = ForwardMLALayers(layerDepth, index, k2cfg, hidden, mlaComplete,
+                                     mlaComplete ? &agg : nullptr, error);
+    if (ok && mlaComplete && agg.ropeApplied && agg.softmaxFinite) {
+        Deep2::MlaCertAuthority::NoteCompleteSuccess(agg, hidden, k2cfg.hiddenDim);
+    }
+    return ok;
 }
 
 Result Run(const fs::path& shardDir,

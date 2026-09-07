@@ -1,0 +1,4 @@
+﻿tag=bisect_C_after_config
+bisect=after_config
+exit=TIMEOUT_KILLED
+trace=F:\~dev\rawrxd\build-win32ide-fresh\bin\win32ide_trace.log

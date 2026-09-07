@@ -1,0 +1,13 @@
+side=deep2
+stage=V_21
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=42ee604d859157a2
+l2=6.736846515361715
+seq=227
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_TIP_ALIGN_001\deep2\deep2_V_21_pos2_layer0_full_n256_seq227.bin

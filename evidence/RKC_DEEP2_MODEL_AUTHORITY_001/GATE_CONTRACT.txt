@@ -1,0 +1,3 @@
+# RKC_DEEP2_MODEL_AUTHORITY_001
+# model selection ? RKC RAW_GGUF facts ? Deep2 open/generate
+# OLLAMA_MANIFEST rejected as load authority; :11434 not required.

@@ -1,0 +1,34 @@
+HEAP_CORRUPT_001 — rebuild + E2E status (2026-09-01)
+
+Rebuild:
+  Win32IDE_CommandSurface.cpp.obj + EXE stamped 2026-09-01 19:05 (utf8w heap fix)
+  Telemetry asm.obj rebuilt (OBJECT_DEPENDS on P1PRA_UtcWitness.inc)
+  Prior EXE_SHA256 (pre-fix): D8EABBD81F01ED8BC90D1189122D926BBA900FA82094E71484DD8FB6AB3D5948
+
+E2E attach runs (user + agent):
+  ATTACH_TARGET_ABSENT when no ScreenPilot window open (expected)
+  Attach pid=10880: harness reported exit during model load (exit code blank)
+  WITNESS at 19:06:05: P1PRA_LOAD_ERR insufficient RAM headroom; UTC fault utc_stage=63
+  Process witness continues at 19:06:35 (new DHI) — stale $p.HasExited false positive likely
+
+Harness fixes applied (run_e2e_product_authority.ps1):
+  - Verify attached process name is RawrXD*
+  - Refresh liveness via HWND each poll (Test-IdeProcessAlive)
+  - Attach: skip Load if status bar already ready (RAWRXD_E2E_FORCE_LOAD=1 to override)
+  - Load success: status bar OR witness P1PRA_LOAD=worker_ok
+  - Note: harness env vars only apply to spawned IDE, not attach target
+
+Recommended attach workflow:
+  1. Start IDE manually with CPU-only env if RAM preflight fails:
+       $env:RAWRXD_FORCE_CPU_INFERENCE='1'
+       $env:RAWRXD_BRIDGE_CPU_ONLY='1'
+       $env:RAWRXD_INFERENCE_CTX='512'
+       & 'F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe'
+  2. Load Phi-3 in UI (or confirm status bar ready)
+  3. Attach E2E:
+       $env:RAWRXD_E2E_ATTACH='1'
+       Remove-Item Env:RAWRXD_E2E_SHUTDOWN -ErrorAction SilentlyContinue
+       & '...\run_e2e_product_authority.ps1'
+  Or skip load step: $env:RAWRXD_E2E_SKIP_LOAD='1'
+
+UTC bisect 67-94: still blocked on DHI UTC fault at stage 63-67 (separate from heap utf8w fix)

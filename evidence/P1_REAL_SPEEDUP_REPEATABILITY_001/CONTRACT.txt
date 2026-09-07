@@ -1,0 +1,124 @@
+GATE=P1_REAL_SPEEDUP_REPEATABILITY_001
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+DEPENDS_ON=P1_REAL_SPEEDUP_001 (PASS CLOSED)
+
+Purpose
+-------
+Prove that the *direction* of REAL_SPEEDUP > 1.00× survives independent
+process sessions — not that every session reproduces 1.48× exactly.
+
+Invariants (MUST match frozen PASS session — no implementation change)
+----------------------------------------------------------------------
+SAME:
+  candidate EXE SHA256          = 7DFDA62A55A092B59EA223D0604F27DAEB19417FA86681BEFDB164DDDEF7DBD1
+                                  (build-p1-speedup/bin/p1_real_speedup_001.exe)
+  baseline implementation       = same harness binary / same profile logic
+  model SHA256                  = DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+  prompt                        = "ping" (PROMPT_SHA_FNV = fnv:bf30e00dc53307a9)
+  token count                   = 16
+  correctness rule              = tokensGenerated > 0 OR non-empty text; policy SHA stable per trial
+  machine / CPU / GPU           = same host as ENVIRONMENT.txt of P1_REAL_SPEEDUP_001
+  driver                        = 32.0.31041.1004 (or record and FAIL if changed)
+  power plan                    = same active scheme family as freeze
+  timer boundary                = QPC wrapping generate() only
+
+FORBIDDEN between sessions
+--------------------------
+  Rebuild of harness EXE
+  Source edits to p1_real_speedup_001.cpp or linked InferenceEngine
+  Policy profile changes
+  Model file replacement
+  Prompt / token-count changes
+  Reinterpretation of P1_REAL_SPEEDUP_001 PASS
+
+Sessions
+--------
+SESSIONS >= 3 independent process launches (separate OS processes)
+Each session:
+  warmup B+C excluded
+  >= 5 measured baseline trials
+  >= 5 measured candidate trials
+  interleaved order: B1 C1 C2 B2 B3 C3 C4 B4 B5 C5 (or same pattern extension)
+
+Each session MUST record (before pooling):
+  baseline median NS
+  candidate median NS
+  session REAL_SPEEDUP (median ratio)
+  correctness disposition (all trials)
+  environment fingerprint (CPU/GPU/driver/power plan)
+
+Pooled statistics computed ONLY after all >= 3 sessions complete:
+  POOLED_BASELINE_MEDIAN   = median(all measured baseline trials)
+  POOLED_CANDIDATE_MEDIAN  = median(all measured candidate trials)
+  POOLED_REAL_SPEEDUP      = POOLED_BASELINE_MEDIAN / POOLED_CANDIDATE_MEDIAN
+
+Authority predicates (all required)
+-----------------------------------
+SESSION_1_REAL_SPEEDUP > 1.00
+SESSION_2_REAL_SPEEDUP > 1.00
+SESSION_3_REAL_SPEEDUP > 1.00
+POOLED_BASELINE_MEDIAN   (all measured baseline trials across sessions)
+POOLED_CANDIDATE_MEDIAN  (all measured candidate trials across sessions)
+POOLED_REAL_SPEEDUP > 1.00
+CORRECTNESS_ALL_TRIALS = PASS
+HARNESS_EXE_SHA_MATCH  = PASS (each session)
+MODEL_SHA_MATCH        = PASS (each session)
+FIRST_FALSE_TRANSITION = NONE
+
+Failure disposition (frozen)
+----------------------------
+any session speedup <= 1.00×          → REPEATABILITY = FAIL
+correctness mismatch                  → REPEATABILITY = FAIL
+EXE / model / prompt authority drift  → RUN INVALID (not a performance result)
+
+PASS requires ALL of:
+  every session speedup > 1.00×
+  POOLED_REAL_SPEEDUP > 1.00×
+  CORRECTNESS_ALL_TRIALS = PASS
+  HARNESS_EXE_SHA_MATCH = PASS (each session)
+  MODEL_SHA_MATCH = PASS (each session)
+  → REPEATABILITY = PASS
+
+Causal separation
+-----------------
+P1_PRODUCTION_TAIL_LATENCY_001 (27s/70s outliers) remains BLOCKED until
+this gate closes. Do not investigate or optimize tail latency during
+repeatability runs.
+
+Non-authority diagnostics
+-------------------------
+Per-session medians, p95, trial arrays
+Session-to-session speedup variance
+Does NOT require equality to 1.48×
+
+Example clean PASS shape
+------------------------
+SESSION_1_SPEEDUP = 1.48×  PASS
+SESSION_2_SPEEDUP = 1.39×  PASS
+SESSION_3_SPEEDUP = 1.44×  PASS
+POOLED_SPEEDUP    = 1.43×  PASS
+REPEATABLE        = PASS
+
+Evidence outputs
+----------------
+evidence/P1_REAL_SPEEDUP_REPEATABILITY_001/
+  CONTRACT.txt (this file)
+  GATE.txt
+  SESSION_1/ GATE.txt TRIALS.csv
+  SESSION_2/ GATE.txt TRIALS.csv
+  SESSION_3/ GATE.txt TRIALS.csv
+  POOLED.txt
+  HASHES.txt
+
+Harness
+-------
+Reuse frozen EXE (do not rebuild):
+  F:\~dev\rawrxd\build-p1-speedup\bin\p1_real_speedup_001.exe
+  F:\~dev\tinyllama_fresh.gguf
+Verify SHA256 before each session against HASHES above.
+
+Valuation
+---------
+Repeatability strengthens the technical claim; it does not move the
+≈ $35M internal mark by itself.

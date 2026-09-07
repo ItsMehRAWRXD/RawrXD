@@ -1,0 +1,19 @@
+# MLA-CERT-001 — certified Multi-head Latent Attention for K2
+#
+# Product seal (MLA_CERTIFIED=1) requires ALL of:
+#   1. Load detects MLA geometry (qLora/kvLora/nope/rope/v)
+#   2. Deep2Engine::computeAttention uses real MLA (not throw stub)
+#   3. Authority: Deep2::MlaAttentionComplete (RoPE+softmax+KV)
+#   4. Finite logits + non-constant greedy decode on K2 (>=32 tokens)
+#   5. UNSAFE_MLA_USED=0  (RAWRXD_DEEP2_ALLOW_UNSAFE_MLA unset)
+#   6. Evidence seal under evidence/MLA_CERT_001/
+#
+# Negative control (already required before U13):
+#   MLA load WITHOUT certified attention MUST fail closed.
+#   UNSAFE bypass must NOT be used for U12/U13/U14 seals.
+#
+# Dependency:
+#   MLA-CERT-001 → U12 VWA_BOUNDED_K2 → U13 K2_USEFUL_TPS → U14 G15_K2
+AUTHORITY=MlaAttentionComplete
+UNSAFE_BYPASS_FORBIDDEN_FOR_PRODUCT=1
+PRODUCTION_LOAD_GATE=Deep2Engine.cpp MLA-CERT-001

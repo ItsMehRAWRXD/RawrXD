@@ -1,0 +1,8 @@
+NU_LIVE_CONSUMER_001=PASS
+
+OFF reject=1  NO_AUTH reject=1  ON consume=1
+LIVE_PATH_ACTIVE during consume=1
+LIVE_NU_CONSUME_OPS=1 BYTES=856 (Q4_0 32x32)
+
+Surface: NULiveConsumer → NU_GemvGpu; LivePath_Emit includes LIVE_NU_*
+Env: DEEP2_LIVE_NU / DEEP2_LIVE_NU_AUTH

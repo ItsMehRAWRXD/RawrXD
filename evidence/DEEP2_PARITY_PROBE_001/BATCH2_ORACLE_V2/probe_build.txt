@@ -1,0 +1,6 @@
+
+G:\rawrxd>"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\lib.exe" /OUT:lib\RawrXD_QuantizedKernels.lib /NOLOGO /MACHINE:X64 obj\quantized_matmul.obj 
+The system cannot find the path specified.
+llama_ref_parity_probe.cpp
+BUILT F:\~dev\rawrxd\tools\parity_ref\bin\llama_ref_parity_probe.exe
+NOTE: This binary is an EXTERNAL measuring stick only. Deep2 has zero llama/Ollama deps.

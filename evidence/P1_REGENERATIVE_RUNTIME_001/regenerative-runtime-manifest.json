@@ -1,0 +1,38 @@
+{
+  "schema": "rawrxd.screenpilot.regenerative-runtime.v1",
+  "architecture": "regenerative-runtime",
+  "generation": 92,
+  "sealed": {
+    "authority": true,
+    "correctness": true,
+    "generator": true,
+    "hardwareInventory": true,
+    "modelMetadata": true,
+    "proofHistory": true,
+    "performanceObservations": true
+  },
+  "generated": {
+    "executionDag": true,
+    "residency": true,
+    "prefetch": true,
+    "kvPolicy": true,
+    "scheduling": true,
+    "optimizationRules": true
+  },
+  "maintenancePolicy": {
+    "mutateActiveRuntime": false,
+    "preferRegeneration": true,
+    "historyDefinesRuntime": false,
+    "patchHistoryIsNotRuntimeAuthority": true
+  },
+  "retention": {
+    "keepProofs": true,
+    "keepMeasurements": true,
+    "keepOldRuntime": false
+  },
+  "lifetimeBias": ["Sealed", "Session", "Generation", "Token", "Ephemeral"],
+  "derivation": {
+    "equation": "I_G+1 = F(sealed, hardware, workload, budgets, retainedProofs)",
+    "partial_wrt_patch_history": 0
+  }
+}

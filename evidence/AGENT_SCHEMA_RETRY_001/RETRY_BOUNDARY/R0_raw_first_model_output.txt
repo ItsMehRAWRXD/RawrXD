@@ -1,0 +1,1 @@
+TOOL_CALL: read_file {path:main.c}

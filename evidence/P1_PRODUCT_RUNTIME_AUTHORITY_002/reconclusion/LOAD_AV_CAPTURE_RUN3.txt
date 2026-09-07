@@ -1,0 +1,32 @@
+LOAD AV CAPTURE RUN 3 — 2026-09-01 19:52 (session 1ed348, post UTC-skip)
+============================================================================
+
+Telemetry isolation (H3 fix) — VERIFIED
+---------------------------------------
+NDJSON line 7: UTC_skip_env {"skip":1}
+WITNESS 6129: ownership UTC_InitTelemetry skipped=RAWRXD_SKIP_UTC_MASM
+WITNESS 6150: deferredHeavyInit_complete_exit (DHI thread completes)
+No fatal 0xC0000005 at utc_stage=63 (contrast RUN 2 line 6037)
+
+Load → Send survival — VERIFIED
+-------------------------------
+WITNESS 6099-6100: worker_ok, model_ready
+WITNESS 6154-6164: P1PRA_SEND chain through accepted
+E2E.log produced (775 bytes); harness no longer dies before Send
+
+New blocker — reject_busy (B2–B4)
+-----------------------------------
+WITNESS 6168: P1PRA_INFERENCE=reject_busy
+No worker_spawn / inference_worker_enter in same run
+E2E: P1PRA_STAGE_CHAIN=INCOMPLETE, CURRENT_STAGE=WEIGHT_ACCESS
+      FORWARD/SAMPLE/DECODE/UI all 0, stream_fail
+
+Hypothesis H6 — CONFIRMED (code + runtime)
+------------------------------------------
+m_inferenceRunning / m_inferenceStopRequested not in Win32IDE constructor
+init list → garbage true → synchronous reject_busy without ever spawning worker.
+
+Fix applied: initialize both to false in constructor; H6 entry log on
+generateResponseAsync for verification run.
+
+RC1: HOLD — E2E_PRODUCT_AUTHORITY=FAIL (EARLIER_STAGE), not load/telemetry blocked.

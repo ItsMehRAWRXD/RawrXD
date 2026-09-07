@@ -1,0 +1,2 @@
+echo_ok=1
+AGENT_TERMINAL_001=PASS

@@ -1,0 +1,13 @@
+side=llama
+stage=LAYER18_OUT
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=b2c044810914c06a
+l2=15.496675375850593
+seq=24
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER18_OUT_pos2_layer0_full_n2048_seq024.bin

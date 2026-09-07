@@ -1,0 +1,27 @@
+ITEM: UTC_MASM_RUN (fresh, no RAWRXD_SKIP_UTC_MASM)
+GENERATED: 2026-09-01 20:35:00
+EXE_SHA256: 31A34BACA55D31A22A00B77E3666A2CB055D96F67486E9D6B66D26EC8D6C13C4
+EXE_MTIME: 2026-09-01 20:33:55 (MASM RawrXD_Telemetry_Kernel.asm.obj rebuilt)
+
+CLASSIFICATION (fresh artifacts only, post-archive):
+
+| Hyp | Verdict | Line evidence |
+|-----|---------|---------------|
+| H1 stale-EXE | REJECTED | module_path=F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe (WITNESS 6662) |
+| H2 load ledger | CONFIRMED load-side | load_witness d0:0 (debug-5daacc L5); P1PRA_LOAD_PATH req_active=0 (WITNESS 6631) |
+| H2 send-side | NOT REACHED | No P1PRA_SEND=accepted; harness: IDE exited before Send |
+| H3 UTC shadow | PARTIAL — new fault site | Past CfSnapAll through stage 62 cf_shadow_rsp_pre_exit (WITNESS 6695-6697); alloc_pending=64; fatal AV immediately after (6698) — before cf_postcall / stages 63-70 |
+| H4 advance | INCONCLUSIVE | snap_enter only (debug-5daacc L6); no advance_enter |
+| H5 telemetry complete | REJECTED | utc_init_before (L6); no utc_init_result; no masm_kernel_init_exit |
+| H6 inference | NOT EXERCISED | No worker_spawn |
+
+debug-5daacc.log (fresh):
+  L7-L9: enter_pre_witness d0=62 d2=0 (C++ utcCfSnapEmit frame — not masm RSP)
+  L10: P1PRA_Veh AV rip=ntdll stage=33 utc_stage=0
+
+E2E.log: ABSENT (Send/finalize never reached)
+RUN.log: startup-only P1PRA_FINALIZE=1 (20:34:04)
+
+RC1: HOLD — MASM UTC path still fatal without skip env; E2E not witnessed on this binary.
+
+NEXT: post-snapall P1PRA_UtcRspSnapLight@stage63 inserted before sub rsp,40h — rebuild and re-run E2E without RAWRXD_SKIP_UTC_MASM.

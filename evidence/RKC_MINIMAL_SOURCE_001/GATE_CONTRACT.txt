@@ -1,0 +1,3 @@
+# RKC_MINIMAL_SOURCE_001
+# Query 'fix GPU fallback' ? SOURCE_REQUIRED only for identified symbols/files.
+# PASS: RKC bytes << naive GPU dump; DispatchGemvDevice + caller + state present.

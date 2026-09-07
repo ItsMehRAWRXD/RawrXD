@@ -1,0 +1,36 @@
+GATE_ROADMAP_001 — next 15 completed items
+============================================
+
+Batch 1 — Master test evidence (1–5)
+ 1. PASS2_RING_PUBLICATION_001 predicates in Deep2EngineExtensions.cpp
+ 2. PASS2_SMT_PREFETCH_LEAD_001 TSC lead/overlap metrics
+ 3. GATE_DISPOSITION_SUMMARY footer in main.cpp
+ 4. run_master_test.cmd: EXIT_CODE log + EXE_SHA256 + incremental mode
+ 5. SMT StopSiblingPrefetcher returns endTsc (no double-join UAF)
+
+Batch 2 — Ollama emit pipeline (6–10)
+ 6. Ollama /api/chat + think=false in OllamaInferenceBackend.cpp
+ 7. RAWRXD_NO_REASONING_EMIT_001 reject in backend
+ 8. RAWRXD_FINAL_ONLY_001 prefix block in backend
+ 9. eval_count parsed from Ollama JSON (not char/4 estimate)
+10. benchmark_ollama_all.py with end_time-safe timing
+
+Batch 3 — Verified emission gates (11–15)
+11. benchmark_ollama.py multi-gate runner (--gate all|no_reason|verified|json|termination)
+12. P1_VERIFIED_EMISSION_001 native compute authority + verified_line emit
+13. RAWRXD_JSON_SCHEMA_001 structured output probe
+14. MODEL_RESPONSE_TERMINATION_001 wall-bound termination probe
+15. run_ollama_emit_gates.cmd → evidence/P1_OLLAMA_EMIT_001/
+
+Run commands
+------------
+Master (clean):  cmd.exe /c "f:\~dev\run_master_test.cmd"
+Master (incr.):  cmd.exe /c "f:\~dev\run_master_test.cmd incremental"
+Ollama gates:    cmd.exe /c "f:\~dev\run_ollama_emit_gates.cmd"
+Single model:    python f:\~dev\benchmark_ollama.py <model> --gate all
+
+Evidence paths
+--------------
+f:\~dev\rawrxd\evidence\P1_1M_CONTEXT_MASTER_001\RAW_RUN.log
+f:\~dev\rawrxd\evidence\P1_1M_CONTEXT_MASTER_001\EXE_SHA256.txt
+f:\~dev\rawrxd\evidence\P1_OLLAMA_EMIT_001\RUN.log

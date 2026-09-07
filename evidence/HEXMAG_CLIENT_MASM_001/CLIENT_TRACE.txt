@@ -1,0 +1,10 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_CLIENT_PATH=MASM
+CASE empty_goal error=empty/no-action goal
+CASE need_input OK
+CASE actionable success=1 finalAuthority=1 emittedFinal=1
+CASE final_deny OK
+CASE event_order n=61
+CASE tuner OK
+CASE native_fallback_policy documented

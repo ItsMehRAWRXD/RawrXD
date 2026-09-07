@@ -226,6 +226,15 @@ void VulkanCompute::ReleaseGemvResidents() {
     if (gemv_out_buf_) { vkDestroyBuffer(device_, gemv_out_buf_, nullptr); gemv_out_buf_ = nullptr; }
     if (gemv_out_mem_) { vkFreeMemory(device_, gemv_out_mem_, nullptr); gemv_out_mem_ = nullptr; }
     gemv_out_cap_ = 0;
+    if (q6k_logits_w_buf_) {
+        vkDestroyBuffer(device_, q6k_logits_w_buf_, nullptr);
+        q6k_logits_w_buf_ = nullptr;
+    }
+    if (q6k_logits_w_mem_) {
+        vkFreeMemory(device_, q6k_logits_w_mem_, nullptr);
+        q6k_logits_w_mem_ = nullptr;
+    }
+    q6k_logits_w_cap_ = 0;
 }
 
 bool VulkanCompute::CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem) {

@@ -1,0 +1,10 @@
+﻿{
+    "exe":  "F:\\~dev\\rawrxd\\build-win32ide-fresh\\bin\\RawrXD-Win32IDE.exe",
+    "pid":  7060,
+    "started":  true,
+    "alive_after_4s":  true,
+    "exit_code_if_exited":  null,
+    "tip":  "2f4bd3ec047ae922df4a72b6d3a26a7d9ce888de",
+    "hexmag_milestone":  "fc409ae9cb224db7cda6ef39303c7c9425863bb6",
+    "stopped_cleanly":  true
+}

@@ -1,0 +1,13 @@
+side=llama
+stage=K_PRE_ROPE_0
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=cc2ba145e3faf522
+l2=17.046023519193689
+seq=52
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_CLEAN_001\llama\llama_K_PRE_ROPE_0_pos1_layer0_full_n256_seq052.bin

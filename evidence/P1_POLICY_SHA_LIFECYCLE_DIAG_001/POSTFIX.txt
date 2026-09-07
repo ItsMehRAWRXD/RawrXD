@@ -1,0 +1,27 @@
+P1_POLICY_SHA_LIFECYCLE_DIAG_001 — POST-FIX VERIFICATION
+
+Fix applied
+-----------
+Deep2IDEIntegration.cpp Generate(): removed EnsurePolicyLoaded() from epilogue.
+recordSuccess remains; ActivePolicy() no longer reloaded post-generate.
+
+Verification (2026-08-29)
+-------------------------
+AT_SEAM_EQ_AFTER            = PASS
+POLICY_SHA_AT_SEAM          = policy:aabe7bdbf3b795bf
+POLICY_SHA_AFTER            = policy:aabe7bdbf3b795bf
+SEAM_TO_AFTER_FIELDS        = (none)
+
+Note: explicit EnsurePolicyLoaded() after generate (diag harness only) still
+mutates policy — expected; production Generate() path does not call it.
+
+Repeatability SESSION_01_POSTFIX
+--------------------------------
+EXE_SHA                     = F6999662BF84C55CD3E9E1D52D0EBA02A9174B4925AEA56BC2F2F3D3D6BF2E89
+CORRECTNESS_MATCH           = PASS
+REAL_SPEEDUP                = 2.53× median
+STATUS                      = PASS (harness gate; 1 of 3 repeatability sessions)
+
+Frozen unchanged
+----------------
+P1_REAL_SPEEDUP_001 GATE_SHA = 04451DB1… (prior PASS / CLOSED)

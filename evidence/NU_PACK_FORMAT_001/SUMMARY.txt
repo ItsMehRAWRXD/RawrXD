@@ -1,0 +1,18 @@
+NU_PACK_FORMAT_001=PASS
+
+Roundtrip (n=1024):
+  Q8_0  packed=1368 ratio=0.334 rmse=0.001658
+  Q4_0  packed=856  ratio=0.209 rmse=0.030664
+  Q4_K  packed=1128 ratio=0.275 rmse=0.005166
+  F16   packed=2264 ratio=0.553 rmse=0.000221
+
+Fail-closed: bad magic 0xDEADBEEF → unpack 0
+XVA: magic=0x41585632 cacheLine=64 payload@64 rmse=0.029770
+Format info: Q4_0 20B/32 elems / 4 bpw
+
+Packer fixes closed by this gate:
+  - Q4_K blockSize 256 (was 144 vs 256B layout → overrun)
+  - Q4_K FP16 scale/min decode via fp16ToFloat
+  - XVA unpack walks cache-line-strided Q4_0 blocks
+
+Next: NU_GPU_GEMV_001 (GPU GEMV on NU bytes; parity gate still blocks live consume)

@@ -1,0 +1,15 @@
+UI_OPAQUE_LAUNCH_001
+status=PASS
+pid=11756
+process_alive=True
+hwnd=23922316
+title=RawrXD IDE
+exstyle=0x00040100
+WS_EX_LAYERED=False
+GetLayeredWindowAttributes=False
+alpha=255
+flags=0
+opaque_predicate=hwnd_found AND ((-not layered) OR alpha>=250) => True
+exe_mtime=2026-08-29T18:08:00
+fix=opacity recover + alpha0 fail-closed + PowerShell RichEdit 1200
+child_layered=1 child_alpha_lt_250=0

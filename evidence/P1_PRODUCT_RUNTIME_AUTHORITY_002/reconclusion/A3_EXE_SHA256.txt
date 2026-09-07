@@ -1,0 +1,7 @@
+ITEM: A3
+SOURCE: P1PRA_ProcessState.cpp P1PRA_GetExeSha256Hex + Win32IDE_CommandSurface.cpp p1praCompleteProductRequest
+WITNESS_FIELD: EXE_SHA256 in E2E.log
+EXERCISE: BCrypt SHA-256 of GetModuleFileName exe at request complete time
+FIX: meta.exeSha256 = P1PRA_GetExeSha256Hex() (was hardcoded "")
+NOTE: E2E_RUN_PROCEDURE.txt pins hash 6D80501B... for prior build; new builds produce new hash — procedure hash is a snapshot not a static contract.
+STATUS: WIRED — verify non-empty EXE_SHA256 on next E2E capture

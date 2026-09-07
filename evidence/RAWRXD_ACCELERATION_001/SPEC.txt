@@ -1,0 +1,187 @@
+# RAWRXD_ACCELERATION_001 — FROZEN VALUATION GATE (spec only; not yet executed)
+
+## Authority (immutable)
+
+```text
+REAL_SPEEDUP = BASELINE_EXTERNAL_WALL_US / CANDIDATE_EXTERNAL_WALL_US
+
+REAL_SPEEDUP > 1.00×
+  ⇔  CANDIDATE_EXTERNAL_WALL_US < BASELINE_EXTERNAL_WALL_US
+```
+
+Do **not** substitute internal timers for external wall.
+Do **not** promote on `WORK_AVOIDED > 0` alone.
+
+```text
+NET_TIME_SAVED =
+    COMPUTE_TIME_AVOIDED
+  + MEMORY_STALL_AVOIDED
+  + IO_TIME_AVOIDED
+  + MIGRATION_TIME_AVOIDED
+  - VERIFY_OVERHEAD
+  - DISCOVERY_OVERHEAD
+  - PATCH_OVERHEAD
+  - EXTRA_SYNC
+
+REAL_SPEEDUP > 1.00×  requires  NET_TIME_SAVED > 0
+                             AND CANDIDATE_WALL < BASELINE_WALL
+```
+
+Type contract: `src/deep2/execution_policy/SpeedupAttribution.hpp`
+
+---
+
+## Reverse-engineered speedup ladder (R0–R10)
+
+```text
+R0  BASELINE_WALL          establish exact external wall authority
+R1  WORK_PRESENTED         computation nominally requested
+R2  WORK_EXECUTED          computation that actually ran
+R3  WORK_AVOIDED           proven unnecessary (explanatory)
+R4  VERIFY_COST            cost of proving avoidance
+R5  MEMORY_TRAFFIC_AVOIDED bytes no longer moved
+R6  RESIDENCY_COST_AVOIDED migrations / misses / reloads removed
+R7  PATCH_OVERHEAD         discovery + hotpatch + dispatch
+R8  NET_AVOIDED            savings − all new overhead
+R9  EXTERNAL_WALL          did the machine finish sooner?
+R10 REAL_SPEEDUP           BASELINE_WALL / CANDIDATE_WALL
+```
+
+Objective reversal:
+
+```text
+Traditional: make every operation faster
+Unstatic/HexMag: make fewer operations necessary
+  while PROOF_OVERHEAD < TIME_OF_AVOIDED_WORK
+```
+
+Candidate wall decomposition (diagnostic):
+
+```text
+CANDIDATE_WALL =
+  USEFUL_COMPUTE + REDUNDANT_COMPUTE + VERIFY
++ MEMORY_STALL + H2D + NVME_IO + MIGRATION
++ SYNCHRONIZATION + PATCH_OVERHEAD + DISCOVERY_OVERHEAD
+```
+
+Ask which term can **physically disappear**.
+
+---
+
+## IDENTITY (required on every run)
+
+```text
+MODEL_SHA256
+MODEL_BYTES
+PROMPT_SHA256
+PROMPT_BYTES
+TOKENIZER_MODE
+CONTEXT
+THREAD_COUNT
+CPU/GPU
+RAM_TOTAL
+BUILD_SHA
+EXE_SHA256
+```
+
+## CORRECTNESS
+
+```text
+REFERENCE_TOKEN_IDS
+RAWRXD_TOKEN_IDS
+OUTPUT_TOKEN_MATCH
+OUTPUT_HASH_MATCH
+TOKEN_COUNT_MATCH
+DETERMINISTIC_10X
+INVALID_SKIP_DETECTED = 0
+```
+
+## BASELINE (external wall)
+
+```text
+BASELINE_PREFILL_MS
+BASELINE_DECODE_MS
+BASELINE_WALL_MS      # → baselineWallUs
+BASELINE_TPS
+BASELINE_PEAK_RSS_MB
+BASELINE_PEAK_VRAM_MB
+```
+
+## CANDIDATE / RAWRXD (external wall)
+
+```text
+RAWRXD_PREFILL_MS
+RAWRXD_DECODE_MS
+RAWRXD_WALL_MS        # → candidateWallUs
+RAWRXD_TPS
+RAWRXD_PEAK_RSS_MB
+RAWRXD_PEAK_VRAM_MB
+```
+
+## ATTRIBUTION (required for HexMag / Unstatic claims)
+
+```text
+WORK_PRESENTED
+WORK_EXECUTED
+WORK_AVOIDED
+COMPUTE_AVOIDED_US
+MEMORY_STALL_AVOIDED_US
+IO_AVOIDED_US
+MIGRATION_AVOIDED_US
+VERIFIER_COST_US
+DISCOVERY_COST_US
+PATCH_COST_US
+SYNC_COST_US
+NET_AVOIDED_US
+REAL_SPEEDUP
+DISCOVERY_CLASS   # KnownOptimization | TunedConfiguration | RuntimeDiscovery | CertifiedHotpatch
+```
+
+## GATE (FINAL=PASS only if all required pass)
+
+```text
+OUTPUT_EQUIVALENT / OUTPUT_MATCH     PASS
+CORRECTNESS_GATE / DETERMINISM       PASS
+NET_AVOIDED_US                       > 0
+CANDIDATE_WALL_US                    < BASELINE_WALL_US
+REAL_SPEEDUP                         > 1.00×
+MEMORY_NONREGRESSION                 PASS
+```
+
+`NET_WORK_AVOIDED_GT_0` means **NET_AVOIDED_US > 0**, not merely WORK_AVOIDED > 0.
+
+## Phase A1 first close target (TinyLlama)
+
+```text
+ACCELERATION_A1
+  OUTPUT_HASH_MATCH       PASS
+  10X_DETERMINISM         PASS
+  NET_AVOIDED_US          > 0
+  CANDIDATE_WALL          < BASELINE_WALL
+  REAL_SPEEDUP            > 1.00×
+```
+
+Matrix (after A1 scaffold exists):
+
+```text
+prompts: P01..P06 (short, code, repetitive, low-reuse, long-prefix, multi-turn)
+gen: 32 / 64 / 128 tokens
+runs: 1 warm-up + 10 measured
+```
+
+## Prerequisite
+
+```text
+P1_UI_ENCODING_002 must be PASS / FROZEN on CURRENT_PRODUCT_SHA
+before product-runtime claims cite this binary.
+```
+
+## Unstatic / HexMag note
+
+```text
+UNSTATIC_MODEL_HYPOTHESIS = OPEN
+HexMag may discover/propose; nothing becomes persistent execution authority
+until verified, measured (this attribution), and promoted through ExecutionPolicy.
+```
+
+Status: **SPEC FROZEN — NOT EXECUTED**

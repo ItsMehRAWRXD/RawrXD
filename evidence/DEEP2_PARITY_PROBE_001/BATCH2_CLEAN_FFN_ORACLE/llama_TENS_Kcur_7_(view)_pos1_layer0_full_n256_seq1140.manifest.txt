@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Kcur_7 (view)
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=437ed19d7c341bd0
+l2=32.44014163704032
+seq=1140
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_CLEAN_FFN_ORACLE\llama_TENS_Kcur_7_(view)_pos1_layer0_full_n256_seq1140.bin

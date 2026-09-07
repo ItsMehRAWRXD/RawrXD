@@ -1,0 +1,2 @@
+ok=1 shards=13 gguf_files=13 gen_id=30443 peak=67006464 budget=536870912 bounded=1 output=1 mla_rope=1 kv_w=1
+DEEP2_K2_001=PASS

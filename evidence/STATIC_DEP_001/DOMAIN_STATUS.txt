@@ -1,0 +1,48 @@
+STATIC_DEP_001 — Domain asset (operator-confirmed)
+==================================================
+Date noted: 2026-08-30
+Canonical primary: screenpilot.tech
+
+Registrar state (summary — no PII in this file)
+-----------------------------------------------
+- screenpilot.tech: registered through 2028-08-31
+- Transfer lock: ON (keep enabled)
+- WHOIS privacy: ON (keep enabled)
+- DNS: Porkbun nameservers; records present; NOT production-bound yet
+- SSL: not provisioned on apex yet
+- Forwarding: not configured yet
+
+Secondary domain
+------------------
+- screenpilot.dev: delegated to DigitalOcean nameservers
+- Role: staging or redirect ONLY — not competing primary brand
+- Do NOT publish .cloud variants (contradicts local-first message)
+
+Hosting lane (honest)
+---------------------
+- Landing/marketing: static host or Porkbun static/cPanel shell ONLY
+- Model inference: NEVER on shared web host (OOM / TOS violation)
+- Future cloud burst: separate GPU compute (RunPod/Lambda) — different product lane
+- "Unmetered" shared hosting ≠ unlimited GGUF serving
+
+Safe DNS rollout sequence
+-------------------------
+1. Keep registrar lock + privacy enabled
+2. Pick ONE production host (Porkbun static, Articulation, or existing in-flight deploy)
+3. Add ONLY records the host documents (A/AAAA or CNAME + verification TXT)
+4. Wait for host to issue Let's Encrypt / SSL on apex
+5. Verify https://screenpilot.tech loads Desktop Preview landing (honest copy)
+6. Point screenpilot.dev → 301 to https://screenpilot.tech (after apex is green)
+7. Enable DNSSEC only after final authoritative DNS provider publishes DS record
+
+Launch copy constraints (Desktop Preview)
+-----------------------------------------
+- Ship: local Deep2/GGUF, workspace/Git, activity/stop, remote labeled Coming next
+- Do NOT claim: zero egress, public remote control, 143x/100x TPS, unlimited cloud AI
+- Do NOT paste registrant contact details into public pages or evidence bundles
+
+Blockers until STATIC_DEP_001 PASS
+----------------------------------
+[ ] Verified HTTPS URL for screenpilot.tech landing build
+[ ] DNS A/CNAME matches production host
+[ ] screenpilot.dev redirect configured (optional same night)

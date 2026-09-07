@@ -1,0 +1,72 @@
+BATCH2_BOS_ATTN_LADDER — 2026-08-29
+
+AUTHORITY
+  workspace_cert = F:\~dev\rawrxd
+  model = F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256 = 9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+  ids = [1, 21521, 9312]   (RAWRXD_PROMPT_TOKEN_IDS)
+  oracle = CPU-only llama (ggml-cpu-zen4); FA/Vulkan contaminated
+
+FROZEN EPSILON (in parity evidence — loader regression guard)
+  rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+  rms_norm_epsilon=9.999999747e-06
+  (GGUF print_info: f_norm_rms_eps = 1.0e-05)
+
+HEXMAG
+  CERTIFIED weightless orchestration generator — unchanged; not on this chase
+
+SUPERSEDES
+  Prior Q_0 / ATTN_NORM conclusions from eps=1e-6 traces (bos_attn_cert_stdout).
+  ATTN_NORM mismatch was a loader metadata bug, not a math-kernel bug.
+
+LADDER BOS pos=0 (Deep2 vs CPU llama FNV+L2)
+
+  PROMPT_EMBED
+    deep2  l2=1.008737855e-01 fnv=13123758da8b244a
+    llama  l2=1.008737855e-01 fnv=13123758da8b244a
+    → PASS
+
+  ATTN_NORM_0
+    deep2  l2=8.105918780e-01 fnv=b4ca919612be6c51
+    llama  l2=8.105918780e-01 fnv=b4ca919612be6c51
+    → PASS  (only with frozen eps above)
+
+  Q_PRE_ROPE_0
+    deep2  l2=1.940769701e+00 fnv=78631c3504e1b579
+    llama  l2=1.938517021e+00 fnv=8d53927ede5ddb3f
+    → FAIL  <<< FIRST REMAINING DIVERGENCE
+
+  K_PRE_ROPE_0
+    deep2  l2=1.321793609e+00 fnv=d45cb1823058d471
+    llama  l2=1.317964609e+00 fnv=f065873c7d34fcfd
+    → FAIL (same class as Q)
+
+  V_0
+    deep2  l2=7.925270207e-02 fnv=df87f6368ddea59a
+    llama  l2=7.974117918e-02 fnv=d4e2dce085d5d6e4
+    → FAIL (same class as Q)
+
+  Q_POST_ROPE_0 / K_POST_ROPE_0
+    At pos=0 RoPE is identity: POST fnv == PRE fnv on both sides.
+    → Not informative for BOS; RoPE not the first miss.
+
+  ATTN_OUT_0 (projected)
+    deep2  l2=1.210775931e-01 fnv=2f30233b2f5fa62e
+    llama  l2=1.208299099e-01 fnv=5fe8f56aa443709d
+    → FAIL (follows Q/K/V)
+
+  Tip (CPU FA-off): both greedy-1 → id=13  (soft agree; not bit-exact hidden)
+
+DECISION
+  Q/K/V pre-RoPE fail
+  => projection / quant GEMV / tensor routing
+  (not RoPE, not scores/softmax — those are downstream of bad QKV)
+
+ARTIFACTS
+  deep2: evidence/DEEP2_PARITY_PROBE_001/deep2_attn_ladder_bos.txt
+  llama: evidence/DEEP2_PARITY_PROBE_001/ref_attn_ladder_eps.txt
+
+NEXT
+  Bisect Q_PRE_ROPE_0: LinearW(q) vs llama Qcur-0 pre-reshape
+  — weight row binding for blk.0.attn_q, Q4_K GEMV, head packing
+  Do not reopen tokenizer/specials, HexMag, or rmsNormEps.

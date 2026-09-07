@@ -1,0 +1,32 @@
+P0_IDE_STARTUP_CLOSED
+=====================
+frozen_at_utc=2026-08-29T21:29:41Z
+candidate_sha=C9ED0031EB6CC36C5D705194751378DD5A7783572F165979EF83BB23D9782CED
+exe=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+frozen_P1_sha_record=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+sha_freeze_record=KEPT (candidate not promoted to frozen P1 SHA yet)
+
+P0_GATES
+--------
+SELFTEST_EXIT=0                         PASS
+SEH_WM_APP_201 deferred                 PASS (see SEH_WM_APP_201_FIX.txt)
+P1_post_create_06/07/08                 PASS
+message_loop_entered                    PASS
+first_paint_proxy (hold>=2s)            PASS
+LIFECYCLE launch→kill→relaunch ×3       PASS (P0_LIFECYCLE_001)
+
+STILL_BLOCKED
+-------------
+P1_GGUF_LOAD     = BLOCKED (WM_APP+201 deferred on purpose)
+P1_COPILOT_CHAIN = BLOCKED
+HEXMAG           = NOT_TOUCHED this gate
+
+ROOT_CLOSED
+-----------
+Startup SEH was WM_APP+201 (0x80c9) mid post_create_2 model load.
+Config/SettingsManager were not the fault.
+
+NEXT
+----
+Reopen P1-2 GGUF only: controlled WM_APP+201 / LoadModel after
+message_loop, with SEH containment — not during post_create pumps.

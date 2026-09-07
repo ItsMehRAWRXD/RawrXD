@@ -1,0 +1,25 @@
+TOKEN_PRESSURE_VALVE_001
+========================
+Date: 2026-08-31
+
+Claim: orthogonal token-flow nozzle between logits/stream and UI.
+Does NOT alter ctx / temp / GPU split / model path.
+
+Spray modes: needle | mist | pulse | rinse | cutoff | repair jet
+Signals: repeat, stall/filler, fence, brace; terminal error → RepairJet
+Actions: Pass | PenalizeRepeat | PreferStop | STOP_REQUEST
+
+Files:
+  src/asm/TokenPressure_x64.{asm,inc}
+  include/TokenPressure.hpp
+  src/win32app/TokenPressure.cpp
+  cmake/TokenPressureValve.cmake (default ON)
+
+Wiring:
+  ProcessStartup in main_win32
+  OnUtf8Chunk in appendCommandConversationStream
+  SteerMode → Needle/RepairJet/Pulse
+  Terminal exit!=0 → ObserveTerminalError
+
+STATUS=WIRED
+CERTIFIED=NO (no numbered VAL gate; product control surface)

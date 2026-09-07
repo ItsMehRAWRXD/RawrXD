@@ -1,0 +1,2 @@
+gen=4 active=1 slots=2 peak=107520000 allocs=2 reuses=619 growth=0
+DEEP2_WEIGHT_WINDOW_RUNTIME_001=PASS

@@ -1,0 +1,14 @@
+﻿ALLOC_BREAK session 2026-09-01 19:05:49
+EXE=F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+ALLOC_NUMBER=534381
+
+PageHeap: gflags not installed.
+
+CRT _CrtSetBreakAlloc (Visual Studio native, same binary):
+  1. Debug -> Start Debugging (F5) on existing EXE
+  2. Immediate: _CrtSetBreakAlloc(534381)
+  3. Repro; on alloc break set data breakpoint (write) on returned pointer
+  4. Save first writer stack here
+
+Agent note: writer statically sealed as utf8w OOB â€” see WRITER_VERDICT.txt.
+Re-run this script only if post-fix regression suspected.

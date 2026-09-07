@@ -1,0 +1,570 @@
+[1/305] [MASM] Assembling RawrXD_GGUF_Vulkan_Loader.asm (GGUF v3, FNV-1a, Tensor Staging, GGML Types)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+[2/305] [MASM] Assembling RawrXD_Debug_Engine.asm (Breakpoints, Watchpoints, Symbolic DynTrace)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Debug_Engine.asm
+[3/305] [MASM] Assembling RawrXD_HardwareSynthesizer.asm (Dataflow, GEMM Spec, Verilog Gen)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_HardwareSynthesizer.asm
+[4/305] [MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_AgenticOrchestrator.asm
+[5/305] [MASM] Assembling RawrXD_EnterpriseLicense.asm (License Validation, HWID, Feature Gates)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_EnterpriseLicense.asm
+[6/305] [MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256_Auth.asm
+[7/305] [MASM] Assembling RawrXD_CopilotGapCloser.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+[8/305] [MASM] Assembling RawrXD_GSIHash.asm (PDB hash, GSI bucket probe)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_GSIHash.asm
+[9/305] [MASM] Assembling RawrXD_Camellia256.asm (Camellia-256 CTR Encrypt, 24-Round Feistel, HWID Key)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Camellia256.asm
+[10/305] [MASM] Assembling RawrCodex.asm (Agentic Decision Tree, Pattern Engine)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrCodex.asm
+[11/305] [MASM] Assembling RawrXD_Hotpatch_Kernel.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+[12/305] [MASM] Assembling RawrXD_KQuant_Kernel.asm (Q4_K AVX2+AVX-512 Dequant, CPUID Dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_KQuant_Kernel.asm
+[13/305] [MASM] Assembling RawrXD_LSP_AI_Bridge.asm (Symbol Ranking, Weight Fusion, Kind Boost)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_LSP_AI_Bridge.asm
+[14/305] [MASM] Assembling RawrXD_LSP_SymbolIndex.asm (Hash Lookup, Batch FNV-1a, Prefix Scan)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_LSP_SymbolIndex.asm
+[15/305] [MASM] Assembling RawrXD_License_Shield.asm (CRC32 Integrity, Anti-Debug, Tamper Detection)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_License_Shield.asm
+[16/305] [MASM] Assembling RawrXD_MeshBrain.asm (CRDT, ZKP, DHT, FedAvg, Gossip)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_MeshBrain.asm
+[17/305] [MASM] Assembling RawrXD_MonacoCore.asm (Gap Buffer, Tokenizer)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_MonacoCore.asm
+[18/305] [MASM] Assembling RawrXD_NeuralBridge.asm (EEG FFT, Intent Classify, Phosphene HUD)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_NeuralBridge.asm
+[19/305] [MASM] Assembling RawrXD_OmegaOrchestrator.asm (Task DAG, Agents, Pipeline, Self-Improve)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_OmegaOrchestrator.asm
+[20/305] [MASM] Assembling RawrXD_PDBKernel.asm (MSF magic, PubSym scan, GUID hex)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_PDBKernel.asm
+[21/305] [MASM] Assembling RawrXD_PerfCounters.asm (RDTSC Cycle Histograms, 64 Slots)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_PerfCounters.asm
+[22/305] [MASM] Assembling RawrXD_Pyre_Compute.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+[23/305] [MASM] Assembling RawrXD_QuadBuffer_Streamer.asm (4-Buffer Ring, Zero-Copy Streaming)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_QuadBuffer_Streamer.asm
+[24/305] [MASM] Assembling RawrXD_RefProvider.asm (Reference hash, pattern match)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_RefProvider.asm
+[25/305] [MASM] Assembling RawrXD_RouterBridge.asm (Fast-Path Router Dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_RouterBridge.asm
+[26/305] [MASM] Assembling RawrXD_SelfHost_Engine.asm (Self-Compile, uASM, Atomic Swap)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_SelfHost_Engine.asm
+[27/305] [MASM] Assembling RawrXD_SelfPatch_Engine.asm (Hotpatch Table, Code Caves, CPUID Optimize, Quant Switch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_SelfPatch_Engine.asm
+[28/305] [MASM] Assembling RawrXD_Snapshot.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Snapshot.asm
+[29/305] [MASM] Assembling RawrXD_SocketResponder.asm (IOCP HTTP: /health /status /models sub-0.5ms)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_SocketResponder.asm
+[30/305] [MASM] Assembling RawrXD_Speciator.asm (Genome, Crossover, Mutation, Speciation)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Speciator.asm
+[31/305] [MASM] Assembling RawrXD_Streaming_QuadBuffer.asm (SPSC Ring, GDI BitBlt, 60 FPS Render)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Streaming_QuadBuffer.asm
+[32/305] [MASM] Assembling RawrXD_StubDetector.asm (Stub Pattern Scanner)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_StubDetector.asm
+[33/305] [MASM] Assembling RawrXD_Swarm_Network.asm (P2P Discovery, Task Distribution)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Swarm_Network.asm
+[34/305] [MASM] Assembling RawrXD_TridentBeacon.asm (COM Trident Host, Beacon IDispatch, Ollama Bridge)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon.asm
+[35/305] [MASM] Assembling RawrXD_TridentBeacon_GPU.asm (IE11 Feature Control, WebGL FBO, OpenGL Bridge)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_TridentBeacon_GPU.asm
+[36/305] [MASM] Assembling gpu_requantize_rocm.asm (HIP dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/gpu_requantize_rocm.asm
+[37/305] [MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_Watchdog.asm
+[38/305] [MASM] Assembling deflate_brutal_masm.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+[39/305] [MASM] Assembling RawrXD_VulkanBridge.asm (GPU Dispatch Shim: Init, MatMul, FlashAttn, Hotswap)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/RawrXD_VulkanBridge.asm
+[40/305] [MASM] Assembling native_speed_kernels.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/native_speed_kernels.asm
+[41/305] [MASM] Assembling rawrxd_cot_dll_entry.asm (DllMain, SRW Lock, Thread Tracking)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/rawrxd_cot_dll_entry.asm
+[42/305] [MASM] Assembling rawrxd_cot_phase39.asm (Snapshot, Telemetry, CopyEngine, Seal, Quotas)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/rawrxd_cot_phase39.asm
+[43/305] [MASM] Assembling rawrxd_cot_engine.asm (CoT Engine: 12 roles, 6 presets, 1GB arena, SEH)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/rawrxd_cot_engine.asm
+[44/305] [MASM] Assembling requantize_q4km_to_q2k_avx512.asm (AVX-512 DQ/BW)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/requantize_q4km_to_q2k_avx512.asm
+[45/305] [MASM] Assembling swarm_tensor_stream.asm (CRC32C, RLE, chunks)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/asm/swarm_tensor_stream.asm
+[46/305] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\dtoa.c.obj
+[47/305] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\libregexp.c.obj
+[48/305] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\libunicode.c.obj
+[49/305] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\quickjs-libc.c.obj
+[50/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_sampler.cpp.obj
+[51/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_vocab_resolver.cpp.obj
+[52/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\compression_interface.cpp.obj
+[53/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_tokenizer.cpp.obj
+[54/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\feature_flags_runtime.cpp.obj
+[55/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\license_enforcement.cpp.obj
+[56/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ollama_blob_parser.cpp.obj
+[57/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\memory_core.cpp.obj
+[58/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_loader.cpp.obj
+[59/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\enterprise_licensev2_impl.cpp.obj
+[60/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\license_anti_tampering.cpp.obj
+[61/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj
+[62/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\polymorphic_loader.cpp.obj
+[63/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ignite_800b.cpp.obj
+[64/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ultra_fast_inference.cpp.obj
+[65/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_model_loader.cpp.obj
+[66/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+[67/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\tools\license_validator_manifest.cpp.obj
+[68/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+[69/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+[70/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+[71/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\gguf_core.cpp.obj
+[72/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+[73/305] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\quickjs.c.obj
+[74/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj
+[75/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ConfigurationValidator.cpp.obj
+[76/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[77/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+[78/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+[79/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\memory_stubs.cpp.obj
+[80/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\InferenceProfiler.cpp.obj
+[81/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+[82/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+[83/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+[84/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+[85/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+[86/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+[87/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\link_stubs.cpp.obj
+[88/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+[89/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+[90/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\backend\VulkanGemmDispatcher.cpp.obj
+[91/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+[92/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\kernels\VulkanComputeKernels.cpp.obj
+[93/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+[94/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+[95/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\TensorExecutionRouter.cpp.obj
+[96/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj
+[97/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PlacementPolicy.cpp.obj
+[98/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_compute.cpp.obj
+[99/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\ResidencyTracker.cpp.obj
+[100/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TransferScheduler.cpp.obj
+[101/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Sovereign_KernelBridge_CPP.cpp.obj
+[102/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TensorPlacementManager.cpp.obj
+[103/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+[104/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+[105/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj
+[106/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj
+[107/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\logging\Logger.cpp.obj
+[108/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\CapacityManager.cpp.obj
+[109/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\StreamRouterAdapter.cpp.obj
+[110/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+[111/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+[112/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+[113/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj
+[114/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sampling\advanced_sampler.cpp.obj
+[115/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+[116/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+[117/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+[118/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\swarm_scheduler.cpp.obj
+[119/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\GenerationBouncer.cpp.obj
+[120/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\RawrRuntime.cpp.obj
+[121/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+[122/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj
+[123/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\compression.cpp.obj
+[124/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2TimeLimitedServing.cpp.obj
+[125/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\gzip_brutal_inflate.cpp.obj
+[126/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelMASM.cpp.obj
+[127/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\brutal_gzip.cpp.obj
+[128/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticArchitectureDetector.cpp.obj
+[129/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KVCache.cpp.obj
+[130/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\gguf_tensor_loader.cpp.obj
+[131/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+[132/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\IQQuantKernels.cpp.obj
+[133/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+[134/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AttnCertProbe.cpp.obj
+[135/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[136/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SsmCertProbe.cpp.obj
+[137/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ThreadPool.cpp.obj
+[138/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\InferenceSession.cpp.obj
+[139/305] Building CXX object CMakeFiles\InferenceEngine.dir\B014\build\b014_profiler.cpp.obj
+[140/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GhostCache.cpp.obj
+[141/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MlaCertProbe.cpp.obj
+[142/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+[143/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoERouter.cpp.obj
+[144/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GGUFLoader.cpp.obj
+[145/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TensorHop.cpp.obj
+[146/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelRegistry.cpp.obj
+[147/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NUFusedPacker.cpp.obj
+[148/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelLoader.cpp.obj
+[149/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RuntimePlanner.cpp.obj
+[150/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightProxy.cpp.obj
+[151/305] Building CXX object CMakeFiles\InferenceEngine.dir\tests\b009\b009b_batched_gemm.cpp.obj
+[152/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CompressedKVCache.cpp.obj
+[153/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedInferenceKernel.cpp.obj
+[154/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamRouter.cpp.obj
+[155/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEArchitectureParser.cpp.obj
+[156/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\UniversalModelLoader.cpp.obj
+[157/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ChatTemplate.cpp.obj
+[158/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[159/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MedusaDecoder.cpp.obj
+[160/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightsLoader.cpp.obj
+[161/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+[162/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RawrXDInferenceAdapter.cpp.obj
+[163/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KimiK2Config.cpp.obj
+[164/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ProductionProfiler.cpp.obj
+[165/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NVMeStream.cpp.obj
+[166/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[167/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLAWeights.cpp.obj
+[168/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcherSafety.cpp.obj
+[169/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+[170/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PatchCache.cpp.obj
+[171/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DualGPUHook.cpp.obj
+[172/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[173/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TrailBrake.cpp.obj
+[174/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MoEWeights.cpp.obj
+[175/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BottleTTL.cpp.obj
+[176/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GoalSystem.cpp.obj
+[177/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcher.cpp.obj
+[178/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[179/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AntiPatcher.cpp.obj
+[180/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+[181/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Chamber.cpp.obj
+[182/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ToroidalKVCache.cpp.obj
+[183/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseEngine.cpp.obj
+[184/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+[185/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseModelLoader.cpp.obj
+[186/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PlasmaGovernor.cpp.obj
+[187/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CPUFrequency.cpp.obj
+[188/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BP16Streamer.cpp.obj
+[189/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FabricTensorTable.cpp.obj
+[190/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseIntegration.cpp.obj
+[191/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+[192/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+[193/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ShardRouterIntegration.cpp.obj
+[194/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\VRAMManager.cpp.obj
+[195/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamEngine.cpp.obj
+[196/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\TensorHotpatch.cpp.obj
+[197/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+[198/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RouterPrefetchTelemetry.cpp.obj
+[199/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\DualGPUBackend.cpp.obj
+[200/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ElasticResidencyManager.cpp.obj
+[201/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ResidencyManager.cpp.obj
+[202/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\hotpatch\Engine.cpp.obj
+[203/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\MARSController.cpp.obj
+[204/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_RewardModel.cpp.obj
+[205/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[206/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_SymbolHealer.cpp.obj
+[207/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_AgentHost.cpp.obj
+[208/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DiffEngine.cpp.obj
+[209/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[210/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\gguf_types.cpp.obj
+[211/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\FIMPromptBuilder.cpp.obj
+[212/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentOllamaClient.cpp.obj
+[213/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentOrchestrator.cpp.obj
+[214/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\BoundedAgentLoop.cpp.obj
+[215/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\OrchestratorBridge.cpp.obj
+[216/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AutonomousFixOrchestrator.cpp.obj
+[217/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\BackendOrchestrator.cpp.obj
+[218/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GGUFLoader.cpp.obj
+[219/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GGMLAgenticEngine.cpp.obj
+[220/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GgmlEngine.cpp.obj
+[221/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolRegistry.cpp.obj
+[222/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RobustOllamaParser.cpp.obj
+[223/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_executor.cpp.obj
+[224/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\context_mention_parser.cpp.obj
+[225/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\KnowledgeGraph.cpp.obj
+[226/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_graph.cpp.obj
+[227/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_scheduler.cpp.obj
+[228/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentToolHandlers.cpp.obj
+[229/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Phase3_Agent_Kernel_Bridge.cpp.obj
+[230/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RepositoryIndexer.cpp.obj
+[231/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DirectFIM.cpp.obj
+[232/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignAssembler_HotPatch.cpp.obj
+[233/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\chain_of_thought.cpp.obj
+[234/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SelfImprovement.cpp.obj
+[235/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SubAgentManager.cpp.obj
+[236/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\context_assembler.cpp.obj
+[237/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Titan_Sovereign_Bridge.cpp.obj
+[238/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\change_impact_analyzer.cpp.obj
+[239/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_AgentLoop.cpp.obj
+[240/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_ToolRegistry.cpp.obj
+[241/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\BackendEmissionService.cpp.obj
+[242/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DeterministicReplayEngine.cpp.obj
+[243/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignStandaloneClient.cpp.obj
+[244/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\vulkan_compute_real.cpp.obj
+[245/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignAssembler.cpp.obj
+[246/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\StreamingResultChannel.cpp.obj
+[247/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Deep2SovereignInferenceGateway.cpp.obj
+[248/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ExecPipeline.cpp.obj
+[249/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\NativeInferenceClient.cpp.obj
+[250/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignDenseEngine.cpp.obj
+[251/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolDispatchTable.cpp.obj
+[252/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignEventBus.cpp.obj
+[253/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignCoreWrapper.cpp.obj
+[254/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\slash_command_parser.cpp.obj
+[255/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignWatchdog.cpp.obj
+[256/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\streaming_command_handler.cpp.obj
+[257/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_call_parser.cpp.obj
+[258/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_registry.cpp.obj
+[259/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_executor.cpp.obj
+[260/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignVCS.cpp.obj
+[261/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\IntegrityChecker.cpp.obj
+[262/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\IDE_Lifecycle_Hook.cpp.obj
+[263/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AgenticEngineSovereignHook.cpp.obj
+[264/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_deep2_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_deep2_kernels.asm
+[265/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q4k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q4k_gemv.asm
+[266/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AutoRepair.cpp.obj
+[267/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\RawrXD_SovereignStatusPanel.cpp.obj
+[268/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q4_1_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q4_1_gemv.asm
+[269/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Profiler.cpp.obj
+[270/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AutoRepairEngine.cpp.obj
+[271/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q5_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q5_k_gemv.asm
+[272/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q8_0_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q8_0_gemv.asm
+[273/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_fp16_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_fp16_gemv.asm
+[274/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\StressTester.cpp.obj
+[275/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\HealthReport.cpp.obj
+[276/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_cpu_features.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\rawr_cpu_features.asm
+[277/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_globals.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\rawr_globals.asm
+[278/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q6_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q6_k_gemv.asm
+[279/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_core.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\inference_core.asm
+[280/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\inference_kernels.asm
+[281/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\quant_avx2.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\quant_avx2.asm
+[282/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_KQuant_Kernel.asm
+[283/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\FlashAttention_AVX512.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\FlashAttention_AVX512.asm
+[284/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Dequant.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_KQuant_Dequant.asm
+[285/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_math_masm.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\masm\rawrxd_math_masm.asm
+[286/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_transformer_masm_fixed.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\masm\rawrxd_transformer_masm_fixed.asm
+[287/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKB.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\QuantKB.asm
+[288/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolDispatcher.cpp.obj
+[289/305] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_Telemetry_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_Telemetry_Kernel.asm
+[290/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\rawr_transport_strict.cpp.obj
+[291/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignCheckpoint.cpp.obj
+[292/305] Linking C static library quickjs_static.lib
+[293/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Beaconism.cpp.obj
+[294/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\CrashRecovery.cpp.obj
+[295/305] Building CXX object CMakeFiles\test_q_elemdiff.dir\src\deep2\test_q_elemdiff.cpp.obj
+FAILED: [code=2] CMakeFiles/test_q_elemdiff.dir/src/deep2/test_q_elemdiff.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\runtime\governance -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl- /arch:AVX2 /EHsc /W4 /std:c++20 /showIncludes /FoCMakeFiles\test_q_elemdiff.dir\src\deep2\test_q_elemdiff.cpp.obj /FdCMakeFiles\test_q_elemdiff.dir\ /FS -c F:\~dev\rawrxd\src\deep2\test_q_elemdiff.cpp
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+F:\~dev\rawrxd\src\deep2\test_q_elemdiff.cpp(267): error C2039: 'lazyLoad': is not a member of 'Deep2::GGUFLoadOptions'
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(237): note: see declaration of 'Deep2::GGUFLoadOptions'
+[296/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj
+[297/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\ExecutionContract.cpp.obj
+[298/305] Building CXX object CMakeFiles\test_generate_one_token.dir\src\tokenizer\gguf_embedded_tokenizer.cpp.obj
+[299/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\DistributedKV.cpp.obj
+[300/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignRuntime.cpp.obj
+[301/305] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\ExpertSharding.cpp.obj
+[302/305] Building CXX object CMakeFiles\test_generate_one_token.dir\src\deep2\test_generate_one_token.cpp.obj
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+F:\~dev\rawrxd\src\deep2\Tokenizer.hpp(57): warning C4100: 'token': unreferenced parameter
+F:\~dev\rawrxd\src\deep2\NVMeStream.h(32): warning C4005: 'NOMINMAX': macro redefinition
+F:\~dev\rawrxd\src\deep2\NVMeStream.h(32): note: 'NOMINMAX' previously declared on the command line
+F:\~dev\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+F:\~dev\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+ninja: build stopped: subcommand failed.

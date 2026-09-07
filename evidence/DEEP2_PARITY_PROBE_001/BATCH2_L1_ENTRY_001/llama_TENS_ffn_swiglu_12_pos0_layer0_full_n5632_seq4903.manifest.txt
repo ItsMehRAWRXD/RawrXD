@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_ffn_swiglu_12
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=00a8fb55b7d96283
+l2=1.3361570855445706
+seq=4903
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_TENS_ffn_swiglu_12_pos0_layer0_full_n5632_seq4903.bin

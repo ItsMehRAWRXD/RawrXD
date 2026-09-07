@@ -1,0 +1,54 @@
+﻿P1PRA_FAULT BISECT - total=86 witness=F:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\WITNESS.log
+generated=2026-09-01T19:06:25.9792913-04:00
+
+## Fault count by stage id
+  stage=3 (P1PRA_DHI_ENTERPRISE_LICENSE): 38
+  stage=33 (P1PRA_DHI_TELEMETRY): 44
+  stage=unknown (unknown): 4
+
+## Sample resolutions (unique RIP, last 20 faults)
+2026-09-01 15:52:14 P1PRA_FAULT=code=C0000005 tid=11088 rip=00007FFA2C7AB1EB rsp=000000001D67D4B8 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=24
+  match=RawrXD-Win32IDE.exe base=0x7FFA2C7AB000 rva=0x1EB
+2026-09-01 16:00:32 P1PRA_FAULT=code=C0000005 tid=11092 rip=0000000002BD0743 rsp=0000000021A6D948 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x2BD0743
+2026-09-01 16:00:32 P1PRA_FAULT=code=C0000005 tid=11092 rip=00007FFA2C7AB1EB rsp=0000000021A6D4A8 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=69
+  (dup rip)
+2026-09-01 16:02:37 P1PRA_FAULT=code=C0000005 tid=22604 rip=0000000002AA0733 rsp=000000002208DE78 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x2AA0733
+2026-09-01 16:02:38 P1PRA_FAULT=code=C0000005 tid=22604 rip=00007FFA2C7AB1EB rsp=000000002208D9D8 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=68
+  (dup rip)
+2026-09-01 18:05:51 P1PRA_FAULT=code=C0000005 tid=28320 rip=00000000027908F3 rsp=000000001D9CDDA8 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x27908F3
+2026-09-01 18:05:51 P1PRA_FAULT=code=C0000005 tid=28320 rip=00007FFA2C7AB1EB rsp=000000001D9CD8A8 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=67
+  (dup rip)
+2026-09-01 18:15:18 P1PRA_FAULT=code=C0000005 tid=10208 rip=0000000002430963 rsp=000000001DCEDBF8 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x2430963
+2026-09-01 18:15:18 P1PRA_FAULT=code=C0000005 tid=10208 rip=00007FF930CEB1EB rsp=000000001DCED6F8 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=67
+  match=RawrXD-Win32IDE.exe base=0x7FF930CEB000 rva=0x1EB
+2026-09-01 18:38:34 P1PRA_FAULT=code=C0000005 tid=10580 rip=0000000001FE0963 rsp=000000002336D758 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x1FE0963
+2026-09-01 18:38:35 P1PRA_FAULT=code=C0000005 tid=10580 rip=00007FF930CEB1EB rsp=000000002336D258 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=67
+  (dup rip)
+2026-09-01 18:39:08 P1PRA_FAULT=code=C0000005 tid=23996 rip=000000001CE31A42 rsp=00000000151F4740 op=write target=0000000000000184 stage=33 telemetry_stage=7 utc_stage=67
+  class=non-static-image rip=0x1CE31A42
+2026-09-01 18:39:08 P1PRA_FAULT=code=C0000005 tid=23996 rip=000000001CE31A42 rsp=00000000151F4740 op=write target=0000000000000185 stage=33 telemetry_stage=7 utc_stage=67
+  (dup rip)
+2026-09-01 18:39:08 P1PRA_FAULT=code=C0000005 tid=23996 rip=000000001CE31A42 rsp=00000000151F4740 op=write target=0000000000000186 stage=33 telemetry_stage=7 utc_stage=67
+  (dup rip)
+2026-09-01 18:39:34 P1PRA_FAULT=code=C0000005 tid=23996 rip=00000000002B95E4 rsp=00000000151FF1B0 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=67
+  class=non-static-image rip=0x2B95E4
+2026-09-01 18:39:34 P1PRA_FAULT=code=C0000005 tid=23996 rip=000000001996FBA9 rsp=00000000151FD560 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=67
+  class=non-static-image rip=0x1996FBA9
+2026-09-01 19:05:56 P1PRA_FAULT=code=C0000005 tid=10952 rip=0000000002471523 rsp=000000001D8DD888 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  class=non-static-image rip=0x2471523
+2026-09-01 19:05:57 P1PRA_FAULT=code=C0000005 tid=10952 rip=00007FF930CEB1EB rsp=000000001D8DD328 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=63
+  (dup rip)
+2026-09-01 19:06:05 P1PRA_FAULT=code=C0000005 tid=2144 rip=0000000002471523 rsp=000000001DCAD7B8 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+  (dup rip)
+2026-09-01 19:06:05 P1PRA_FAULT=code=C0000005 tid=2144 rip=00007FF930CEB1EB rsp=000000001DCAD258 op=read target=FFFFFFFFFFFFFFFF stage=33 telemetry_stage=7 utc_stage=63
+  (dup rip)
+
+ISOLATION: stage=3 -> deferredHeavyInit enterprise_license (Win32IDE_Core.cpp P1PRA_DHI_ENTERPRISE_LICENSE)
+ISOLATION: stage=33/utc_stage=67 -> initTelemetry / UTC_InitTelemetry (Win32IDE_Telemetry.cpp + RawrXD_Telemetry_Kernel.asm)
+STATUS: faults logged non-fatally via VEH; parallel to inference send path unless bridge state corrupted
+

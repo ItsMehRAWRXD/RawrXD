@@ -1,0 +1,57 @@
+SESSION_CHECKPOINT=COMPLETE
+DATE=2026-09-07
+SOURCE_OF_TRUTH=G:\~dev\rawrxd
+BASELINE_FOR=next_session
+
+## Validated implementation checkpoint
+
+Q2_K_GEMV=VALIDATED improvement=3.33x
+Q2_K_LinearW_dispatch=VALIDATED
+BP16_loading=VALIDATED including_GQA_fix
+BP16_cleanup=VALIDATED
+WeightTensor.mapped=VALIDATED zero_copy_mmap
+Q4_K_kernels=VALIDATED unchanged
+Q5_K_kernels=VALIDATED unchanged
+
+## Explicitly dropped
+
+HotPatcher=DROPPED investigation_never_started
+Physical_reverts=NONE_REQUIRED
+Ollama=UNTOUCHED
+
+## BP16 layer-46 zero-weight
+
+STATUS=do_not_revert_Deep2Engine
+IF_PURSUED_LATER=separate_diagnostic_vs_BP16_extraction_loading_artifact_only
+
+## Profiling baseline (instrumented; not an optimization commit)
+
+Q4_K_GEMV aggregate_ms~18310 dequant_share~80.64%
+Q5_K_GEMV aggregate_ms~2161 unpack_share~96.8%
+NOTE=resolve per-projection vs aggregate discrepancy before using hot-projection timings
+NOTE=do_not_revive dequantize-then-dot Q5_K path (materialized float buffer rejected)
+
+## Optimization order (next session, if resumed)
+
+1. Q5_K packed→SIMD unpack→SIMD FMA (no intermediate 256-float buffer)
+2. Q4_K dequant second (largest absolute cost)
+REQUIRE: frozen scalar reference, numerical equivalence, LinearW still PASS
+
+## Concurrent UCF seal (same tree; Git)
+
+HEAD_UCF_PRESERVE:
+  7667ebf1f Seal post-c4c338187 UCF semantic fabric extensions in Git.
+  2a9e4ddc5 chore(ucf): land UCF gate evidence and mobility-fault Trace fix
+BRANCH=cert/p1pra-rc1 ahead_of_rawrxd-gh=2
+INVARIANT=Execution location may change; object history may not
+
+## Forward architecture notes (not started this session)
+
+RMV=RawrXD Model Volume mountable address space (not load/unload copy)
+VWA=Virtual Weight Address under RMV
+MOUNTED≠RESIDENT≠ACTIVE≠PINNED≠EJECTED
+Drive letter M: optional presentation only — AcquireTile remains execution authority
+
+## Stop line
+
+Validated implementation checkpoint reached; HotPatcher investigation explicitly dropped.

@@ -1,0 +1,16 @@
+NU_GPU_GEMV_001=PASS
+
+Device: AMD Radeon AI PRO R9700 (Vulkan OPEN_ONE)
+Matrix: 64x64
+
+Arms (NU validate → unpack → GEMV; GPU vs NU-CPU RMSE):
+  Q4_0  nuBytes=3160  gpu=1  rmse=0
+  Q8_0  nuBytes=5208  gpu=1  rmse=0
+  F16   nuBytes=8792  gpu=1  rmse=0
+
+BAD_MAGIC reject + FAIL counter: OK
+
+Surface: NUGemv.hpp/cpp → NU_ValidateStream / NU_GemvGpu / NU_GemvCpu
+Path: NU bytes → unpackTensor → VulkanCompute::DispatchGEMV
+
+Next: NU_GEMV_PARITY_001 (tight vs F32-original; blocks live NU consume)

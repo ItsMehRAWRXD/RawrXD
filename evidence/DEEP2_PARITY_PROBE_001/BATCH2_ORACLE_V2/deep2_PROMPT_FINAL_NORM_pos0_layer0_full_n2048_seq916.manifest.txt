@@ -1,0 +1,14 @@
+side=deep2
+stage=PROMPT_FINAL_NORM
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=1c218265ffefa4c1
+l2=84.769892322347786
+seq=916
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\deep2_PROMPT_FINAL_NORM_pos0_layer0_full_n2048_seq916.bin
+source=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_Q_ELEMDIFF\deep2_PROMPT_FINAL_NORM_pos0.bin

@@ -1,0 +1,56 @@
+BATCH2_BOS_FIRST_DIVERGENCE — 2026-08-29
+
+AUTHORITY_MODEL=
+  path=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256=9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+  quant=Q4_K
+INPUT_IDS=[1, 21521, 9312]
+
+=== ORACLE SPLIT (do not mix) ===
+
+A) llama with Vulkan backend registered (even n_gpu_layers=0)
+   REF_SELECTED_ID=29892 ","
+   REF_LOGIT_13=8.138248444
+   REF_LOGIT_29892=8.185024261
+   REF_DELTA_13_minus_29892=-0.046775818
+   source=evidence/.../ref_bos_stage_digest.txt (load_all backends)
+
+B) llama CPU-only (ggml-cpu-zen4.dll only; no Vulkan/RPC)
+   REF_SELECTED_ID=13 "\n"
+   REF_LOGIT_13=8.168260574
+   REF_LOGIT_29892=8.158027649
+   REF_DELTA_13_minus_29892=+0.010232925
+   source=evidence/.../ref_bos_cpu_only.txt
+
+C) Deep2 CPU (STAGE_DIGEST)
+   DEEP2_SELECTED_ID=13 "\n"
+   LOGIT_13=8.147993088
+   LOGIT_29892=8.101322174
+   DELTA_13_minus_29892=+0.046670914
+   source=evidence/.../deep2_bos_stage_digest.txt
+
+=== GREEDY ARGMAX ===
+Deep2 vs CPU-only llama: MATCH (both 13)
+Deep2 vs Vulkan-scheduled llama: MISMATCH (13 vs 29892)
+Prior BATCH2_BOS_VERDICT FAIL used oracle class A / batch-1 golden "," —
+that golden is NOT interchangeable with pure-CPU stick B.
+
+=== FINAL_HIDDEN pos=2 (post final RMSNorm; same FNV contract) ===
+Deep2:  l2=7.703270741e+01 fnv=bd7a53d680902d27
+CPU llama: l2=7.615340034e+01 fnv=5dde0dd465c31750
+→ DIVERGES before/at logits (hidden already differs)
+Also diverges at pos=0 (BOS-only forward): Deep2 fnv=56e76ee2... vs CPU llama fnv=59e51b2d...
+→ Not a BOS index/KV-length bug; residual is mid-network / kernel numerics.
+
+=== STAGE NARROWING STATUS ===
+pre_forward_ids          = PASS [1,21521,9312]
+pre_forward_positions    = PASS (AttnCert 0,1,2)
+embeddings               = Deep2 digests captured; llama token-row digests TBD
+final_hidden (all pos)   = FAIL vs CPU llama (first confirmed value divergence class)
+logits magnitudes        = NEAR (same argmax on CPU; ~0.02–0.06 abs)
+argmax vs CPU llama      = PASS
+argmax vs Vulkan llama   = FAIL (oracle contamination; do not use for Deep2 CPU cert)
+
+=== NEXT ===
+Bisect layers on CPU-only stick: L0 post-attn / post-ffn digests vs llama cb_eval
+(or force llama f32 KV if still f16). Keep Vulkan oracle out of BATCH2_BOS authority.

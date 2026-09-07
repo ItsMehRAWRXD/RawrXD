@@ -1,0 +1,68 @@
+IDE_PRODUCT_FINISH_BATCH_085
+============================
+Purpose: move RawrXD-Win32IDE ~70% → 85% as a product-completion batch.
+Frozen: 2026-08-31
+
+## Definition of 85%
+
+Clean-launch user journey must be reliable:
+
+  Launch → open workspace → load GGUF → Ask conversation
+  → Plan checklist → Approve → Agent read/search
+  → Build proposes edits → diff → Apply
+  → Terminal build/test → Agent reads failure → repairs
+  → Git diff/commit → Stop/cancel → Restart restores state
+
+Remaining ~15% reserved for polish/parity (debugger, extensions, multi-agent,
+RAG, remote, a11y, installer, commercial packaging) — out of this batch.
+
+## Work items (15.0 pp)
+
+| #  | Item                            | Weight | Wave |
+| -- | ------------------------------- | -----: | ---- |
+| 01 | P1PRA_002 E2E authority closure |   2.0% | 1    |
+| 02 | Unified model lifecycle         |   1.0% | 1    |
+| 03 | Context assembly                |   1.0% | 1    |
+| 04 | Agent tool execution completion |   1.5% | 2    |
+| 05 | Build-mode edit transaction     |   1.5% | 2    |
+| 06 | Plan execution state machine    |   1.0% | 2    |
+| 07 | Terminal integration            |   1.0% | 2    |
+| 08 | Git product lane                |   1.0% | 3    |
+| 09 | Workspace/codebase search       |   1.0% | 3    |
+| 10 | Conversation persistence        |  0.75% | 3    |
+| 11 | Agent approval center           |  0.75% | 3    |
+| 12 | Settings/model controls         |  0.75% | 3    |
+| 13 | Error/recovery UX               |  0.75% | 4    |
+| 14 | Product smoke matrix            |   0.5% | 4    |
+| 15 | 85% release evidence bundle     |   0.5% | 4    |
+
+## Waves
+
+BATCH 1 — Authority + inference: 01, 02, 03
+BATCH 2 — Coding-agent usefulness: 04, 05, 06, 07
+BATCH 3 — IDE parity: 08, 09, 10, 11, 12
+BATCH 4 — Product hardening: 13, 14, 15
+
+## Frozen — do not reopen unless a new product test proves fault ownership
+
+STREAMER_VRAM_APERTURE_001
+AGENTIC_AUTONOMOUS_TEMPLATE_001
+COMMAND_HOME_SMOKE_001
+existing Deep2/K2 certification
+existing MASM kernel certification
+synthetic-fallback removal
+CommandBroker (message, mode) contract
+
+## Active gate
+
+01 P1PRA_002_E2E_PRODUCT_AUTHORITY — implementation WIRED; live Finalize=0 witness still required
+   (Load GGUF → Build/Ask Send → evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/E2E.log)
+
+Wave status:
+  WAVE_1=PASS (implementation) — see WAVE_1_VERDICT.txt
+  WAVE_2=PASS (implementation) — see WAVE_2_VERDICT.txt
+  WAVE_3=BACKLOG
+  WAVE_4=BACKLOG
+
+EXE_SHA256=6D80501BADFFD437060F58881B6E55E5D09849B3218BAEE858AFBF4140A2CA4F
+No inference optimization or feature expansion ahead of live P1PRA Finalize=0 witness.

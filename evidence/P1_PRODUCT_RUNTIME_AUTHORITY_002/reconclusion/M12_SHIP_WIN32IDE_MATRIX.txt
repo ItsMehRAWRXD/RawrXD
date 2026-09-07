@@ -1,0 +1,6 @@
+﻿ITEM: M12_SHIP_WIN32IDE_MATRIX
+GENERATED: 2026-09-01 19:45:52
+COUNT=2
+
+Ship/RawrXD_AgentCoordinator.cpp	RawrXD-Win32IDE
+Ship/RawrXD_AutonomousAgenticPipeline.cpp	RawrXD-Win32IDE

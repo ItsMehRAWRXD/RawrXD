@@ -1,0 +1,13 @@
+RKC_DEEP2_MODEL_AUTHORITY_001=PASS
+
+Chain:
+  inventory → SelectDeep2Authority(RAW_GGUF) → Deep2 openK2ShardDirectory → stream generate
+
+Witnesses:
+  MANIFEST_REJECTED=1  (OLLAMA_MANIFEST not load authority)
+  RAW_OK=1             Kimi-K2 Q4_K_M shards=13
+  LOCAL_POLICY=1       :11434 forbidden for inference
+  OPENED=1 GENERATED=1 OLLAMA_REQUIRED=0 LOCAL_PROVEN=1
+
+Product rule: Ollama remains optional inventory/import only;
+Deep2 is the sole generation authority.

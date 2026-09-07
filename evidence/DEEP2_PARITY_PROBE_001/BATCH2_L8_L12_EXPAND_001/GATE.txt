@@ -1,0 +1,16 @@
+BATCH2_L8_L12_EXPAND_001
+========================
+date=2026-08-29
+authority=FORCE_PRE_O_EXPAND_V + RAWRXD_REF_CB_SPARSE=8,9,10,11,12
+deep2=BATCH2_SPARSE_CLEAN_001/deep2_post_swiglu_fix
+llama=BATCH2_L8_L12_EXPAND_001/llama
+
+POS0 DUAL LADDER
+----------------
+L8_OUT   abs=FAIL dual=INSPECT  max_abs=4.58e-5
+L9_OUT   abs=FAIL dual=INSPECT  max_abs=4.58e-5
+L10_OUT  abs=FAIL dual=FAIL     max_abs=5.83e-5  << FIRST_DUAL_FAIL
+L11_OUT  abs=FAIL dual=FAIL     max_abs=1.07e-4
+L12_OUT  abs=FAIL dual=FAIL     max_abs=4.63e-4
+
+NEXT → BATCH2_L10_BODY_001 (expand L10 internals)

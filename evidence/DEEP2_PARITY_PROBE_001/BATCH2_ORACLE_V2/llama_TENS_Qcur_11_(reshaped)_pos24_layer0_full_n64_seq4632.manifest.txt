@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Qcur_11 (reshaped)
+pos=24
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=e05915e31856eb77
+l2=3.232623240243981
+seq=4632
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\llama_TENS_Qcur_11_(reshaped)_pos24_layer0_full_n64_seq4632.bin

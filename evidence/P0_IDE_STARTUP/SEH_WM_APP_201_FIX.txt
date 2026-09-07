@@ -1,0 +1,34 @@
+P0_SEH_WM_APP_201_FIX
+=====================
+date=2026-08-29
+
+LOCALIZATION (confirmed)
+------------------------
+createWindow_ok
+P1_post_create_01..05 OK
+P1_pump_before post_create_2 n=0 msg=0x80c9
+  0x80c9 == WM_APP+201 (session/download model load)
+→ unhandled SEH / C++ exception 0xE06D7363 during DispatchMessage
+NEVER reached P1_post_create_06_pump2_ok
+
+ROOT
+----
+Not config destructor. Not SettingsManager.
+Mid-startup GGUF/model load via WM_APP+201 in post_create_2 pump
+(setEngineManager used to flush pending 201 into that pump).
+
+FIX (candidate)
+---------------
+1. setEngineManager: do not PostMessage(WM_APP+201)
+2. pumpMessagesTraced: skip dispatch of WM_APP+201 during post_create_*
+3. handleMessage WM_APP+201: defer unless m_startupPumpsComplete
+4. markStartupPumpsComplete after post_create_07 (no auto GGUF flush)
+
+VERIFY
+------
+ALIVE_12s after relaunch (process held; no FATAL SEH in log)
+P1_post_create_06 / 08 expected in ide_startup.log
+P1_GGUF still BLOCKED (deferred on purpose)
+
+P0_IDE_STARTUP = progressing (SEH edge closed; first_paint/lifecycle next)
+P1_GGUF / Copilot = still BLOCKED

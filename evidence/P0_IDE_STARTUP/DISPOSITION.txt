@@ -1,0 +1,53 @@
+P0_IDE_STARTUP_DISPOSITION
+==========================
+date=2026-08-29
+candidate_sha=F218351EBAC5132753A1FC956C731AE4E9D19DA5C62C26F563555659C9565BA9
+candidate_exe=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+(build tree link source: build-win32ide-p1; copied to fresh\bin)
+frozen_P1_sha_untouched=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+sha_freeze=KEPT
+
+SCOPE
+-----
+P0_IDE_STARTUP = FAIL (process not stable / exits before first_paint cert)
+P1_GGUF_LOAD   = BLOCKED
+P1_COPILOT     = BLOCKED
+HEXMAG/DEEP2   = NOT TOUCHED
+
+ORIGINAL HYPOTHESIS (REJECTED as crash site)
+--------------------------------------------
+createWindow → Configuration loading complete → <crash> before SettingsManager
+
+BISECT RESULTS (RAWRXD_P0_BISECT)
+---------------------------------
+C after_config        = SURVIVE 20s (return true before config scope exit)
+D after_config_scope  = SURVIVE 20s (return true after config locals destroyed)
+E SettingsManager     = REACHES Initialize OK + scope exit on full path
+
+FULL PATH — refined markers (post_oncreate run)
+-----------------------------------------------
+[STARTUP] config complete                         PASS
+[STARTUP] after config scope exit                 PASS
+[STARTUP] SettingsManager Initialize + scope exit PASS
+[STARTUP] onCreate_EXIT (returning to CreateWindowExA) PASS
+[STARTUP] after CreateWindowExA returned          PASS
+then stderr: "Failed to initialise snmalloc."
+createWindow_RETURN_TRUE / stable message loop    FAIL (quick EXIT 0)
+
+EXIT:
+  EXIT_HEX=0x00000000  (NOT 0xC0000409 on this candidate)
+  NOT a stable first_paint hold
+
+REVISED ROOT
+------------
+NOT config destructor.
+NOT SettingsManager singleton init.
+NOT CreateWindowExA/onCreate body (completes).
+Failure/exit window is AFTER CreateWindowExA returns
+  (ShowWindow / first-paint / snmalloc allocator init / main post-create).
+
+NEXT (still P0 only)
+--------------------
+Bisect ShowWindow → UpdateWindow → createWindow return →
+main post-createWindow phases. Investigate snmalloc init failure
+as likely abort driver. Still no GGUF/Copilot/HexMag.

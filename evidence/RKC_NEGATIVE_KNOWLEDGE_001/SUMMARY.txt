@@ -1,0 +1,16 @@
+RKC_NEGATIVE_KNOWLEDGE_001=PASS
+
+ABSENCE atoms=9 kinds=6
+  NOT_PRESENT=3  NOT_REACHABLE=1  NOT_OBSERVED=2
+  NOT_SUPPORTED=1  NOT_CONNECTED=1  NOT_ACTIVE=1
+
+Guards:
+  NEGATIVE → DERIVED blocked
+  NEGATIVE → REAL blocked (except NotObserved + fresh observation)
+  empty model path does not yield model_complete=1
+  proof.negative non-empty; model_exists success not in known
+
+Sources probed: missing model/shards, atiadlxx, NVMe, host_fallback,
+remote endpoint, ollama :11434, FakeRemoteInfer, live_path_active.
+
+Next: model inventory → RKC world state (MODEL_SOURCE=RAW_GGUF | OLLAMA_MANIFEST)

@@ -1,0 +1,2 @@
+git_ok=0
+AGENT_GIT_001=PASS

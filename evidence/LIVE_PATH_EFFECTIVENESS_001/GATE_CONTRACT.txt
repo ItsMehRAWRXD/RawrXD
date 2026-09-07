@@ -1,0 +1,6 @@
+# LIVE_PATH_EFFECTIVENESS_001
+# A = DEEP2_LIVE_PATH=0 (minimal)
+# B = DEEP2_LIVE_PATH=1 + Cyclone×Elastic×Pinball×cache prefetch
+# Same model/prompt/seed/tokens/depth/VRAM budget.
+# PASS: B cuts STREAM_BYTES_READ or raises CACHE_HITS vs A, and
+#       (TPS_DELTA>0 or transfer win). CORPUS_BYTES ≠ transfer bytes.

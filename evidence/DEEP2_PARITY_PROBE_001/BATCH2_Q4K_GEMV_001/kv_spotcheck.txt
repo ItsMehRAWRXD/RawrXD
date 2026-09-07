@@ -1,0 +1,3 @@
+input=ATTN_NORM_0 frozen from BOS token_id=1
+blk.0.attn_k.weight_row0 ggml=0.017700617845971774 prod=1.783476025e-02 delta=1.341424027e-04 DIFF
+blk.0.attn_v.weight_row0 ggml=1050424.5065577172 prod=1.043304562e+06 delta=7.119944058e+03 DIFF

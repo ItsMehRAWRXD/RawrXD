@@ -1,0 +1,26 @@
+COMMAND_HOME_001 — End-game enablement inventory (gated, not exposed)
+====================================================================
+
+Present in tree, fail-closed for Desktop Preview
+------------------------------------------------
+- SharedAgentWorkRegistry / write leases (CommandBroker::steer)
+- CommandEventJournal (.rawrxd/command/journal/events.jsonl)
+- SessionBinder + CapabilityProfile (local read/edit/execute)
+- IControlChannel → DisabledControlChannel (no listen)
+- LocalOnlyPolicy hard diagnostics (no :11434 / ollama)
+- Win32IDE_LocalServer (11435) — auto-start gated off in Command mode
+- Approval queue API (CommandBroker::requestApproval / resolveApproval)
+
+Blocked until EGRESS_001 + STATIC_DEP_001
+-----------------------------------------
+- Phone/web WebSocket steering belt (live controls)
+- Remote pairing / multi-device controller
+- screenpilot.tech → local reverse proxy hooks
+- Marketing: "nothing leaves the machine"
+
+Future cloud lane (separate product — not Desktop Preview)
+----------------------------------------------------------
+- Public static shell @ screenpilot.tech
+- GPU compute: RunPod/Lambda serverless (not shared hosting)
+- Execution sandboxes: E2B/Modal
+- Persistent workspace VPS (Kamatera/DO) — not cPanel PHP

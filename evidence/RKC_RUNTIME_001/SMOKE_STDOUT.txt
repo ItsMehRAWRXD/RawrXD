@@ -1,0 +1,43 @@
+﻿RKC_RUNTIME_EPISTEMIC=PASS
+[GOAL]
+model_executable_locally
+
+[TASK]
+Can Deep2 execute this model entirely locally?
+
+[KNOWN]
+FACT memory_plan_exists  DERIVED  1
+FACT compute_backend_exists  REAL  1
+FACT no_remote_dependency  REAL  1
+FACT live_generation_path_exists  REAL  1
+FACT local_generation_proven  DERIVED  1
+FACT gpu_fit  DERIVED  1
+
+[MISSING]
+NEED model_format_supported  UNKNOWN
+NEED tokenizer_supported  UNKNOWN
+NEED model_complete  UNKNOWN
+
+[NEGATIVE]
+NEG model_exists  NOT_PRESENT  0
+NEG all_required_shards_exist  NOT_OBSERVED  unknown
+
+[CONSTRAINT]
+- No globals for cancellation authority.
+- Existing Deep2 ABI preserved.
+- SYNTHETIC must not become REAL.
+
+[INSTRUCTION]
+Answer from KNOWN/NEGATIVE only. Resolve MISSING via observe/derive.
+Do not invent REAL facts. SYNTHETIC cannot become REAL.
+
+RKC_RUNTIME_REAL_OBS=PASS
+RKC_RUNTIME_DERIVATION=PASS
+RKC_RUNTIME_MINIMAL_EMIT=PASS
+RKC_SMOKE_GOAL=model_executable_locally
+RKC_SMOKE_KNOWN=6
+RKC_SMOKE_MISSING=3
+RKC_SMOKE_LOCAL_GOAL=1
+RKC_RUNTIME_001=PASS
+RKC_C_ABI_TRUNCATE_OK=1
+

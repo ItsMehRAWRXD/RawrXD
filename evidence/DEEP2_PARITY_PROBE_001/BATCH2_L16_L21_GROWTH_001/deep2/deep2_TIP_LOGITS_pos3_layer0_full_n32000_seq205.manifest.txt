@@ -1,0 +1,13 @@
+side=deep2
+stage=TIP_LOGITS
+pos=3
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=32000
+nbytes=128000
+fnv=8b52fd8448a78bd1
+l2=740.40636730117797
+seq=205
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\deep2\deep2_TIP_LOGITS_pos3_layer0_full_n32000_seq205.bin

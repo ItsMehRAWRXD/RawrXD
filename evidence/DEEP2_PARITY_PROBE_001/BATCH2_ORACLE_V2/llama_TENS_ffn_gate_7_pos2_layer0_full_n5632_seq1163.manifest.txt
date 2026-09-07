@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_ffn_gate_7
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=26d1c35841d7b50e
+l2=20.004664082429457
+seq=1163
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\llama_TENS_ffn_gate_7_pos2_layer0_full_n5632_seq1163.bin

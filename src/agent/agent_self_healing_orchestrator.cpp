@@ -20,6 +20,8 @@
 #include "agent_self_healing_orchestrator.hpp"
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
+#include <thread>
 
 // Forward declaration: defined in src/core/unlinked_symbols_batch_012.cpp
 extern "C" void RawrXD_Native_Log(const char* fmt, ...);
@@ -503,16 +505,25 @@ void AgentSelfHealingOrchestrator::ActivateSwarmLink(int gpu_count, std::vector<
 // ---------------------------------------------------------------------------
 // Prometheus Exporter (Background TCP Socket for /metrics)
 // ---------------------------------------------------------------------------
+// P0_PROCESS_ALIVE: NEVER construct this as a function-static / TU-static with
+// a thread in the constructor. Static init + WSAStartup + bind races with CRT
+// and other TUs → 0xC0000005 after "[Prometheus] Listening…" while main never
+// reaches the --no-repl sleep loop. Start only on explicit request.
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
 struct PrometheusExporter {
     std::thread serverThread;
-    std::atomic<bool> running{true};
+    std::atomic<bool> running{false};
+    std::atomic<bool> started{false};
     SOCKET listenSocket = INVALID_SOCKET;
 
-    PrometheusExporter() {
+    void Start() {
+        bool expected = false;
+        if (!started.compare_exchange_strong(expected, true))
+            return;
+        running.store(true);
         serverThread = std::thread([this]() {
             WSADATA wsaData;
             if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -527,7 +538,11 @@ struct PrometheusExporter {
                 return;
             }
 
-            sockaddr_in serverService;
+            BOOL yes = 1;
+            setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR,
+                       (const char*)&yes, sizeof(yes));
+
+            sockaddr_in serverService{};
             serverService.sin_family = AF_INET;
             serverService.sin_addr.s_addr = INADDR_ANY;
             serverService.sin_port = htons(9090);
@@ -568,7 +583,7 @@ struct PrometheusExporter {
                 char recvbuf[512];
                 int iResult = recv(ClientSocket, recvbuf, 512, 0);
                 if (iResult > 0) {
-                    const char* response = 
+                    const char* response =
                         "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/plain; version=0.0.4\r\n"
                         "Connection: close\r\n\r\n"
@@ -580,20 +595,42 @@ struct PrometheusExporter {
                 closesocket(ClientSocket);
             }
 
-            closesocket(listenSocket);
+            if (listenSocket != INVALID_SOCKET) {
+                closesocket(listenSocket);
+                listenSocket = INVALID_SOCKET;
+            }
             WSACleanup();
         });
     }
 
-    ~PrometheusExporter() {
+    void Stop() {
+        if (!started.load())
+            return;
         running.store(false);
         if (listenSocket != INVALID_SOCKET) {
-            closesocket(listenSocket); // Unblock accept/select
+            closesocket(listenSocket);
+            listenSocket = INVALID_SOCKET;
         }
         if (serverThread.joinable()) {
             serverThread.join();
         }
+        started.store(false);
+    }
+
+    ~PrometheusExporter() {
+        Stop();
     }
 };
 
-static PrometheusExporter g_prometheusExporter;
+// No TU-static Start(): opt-in via EnsurePrometheusExporterStarted().
+static PrometheusExporter& PrometheusExporterInstance() {
+    static PrometheusExporter g;
+    return g;
+}
+
+extern "C" void EnsurePrometheusExporterStarted() {
+    // Opt-in only. Set RAWRXD_PROMETHEUS=1 to enable /metrics.
+    const char* en = std::getenv("RAWRXD_PROMETHEUS");
+    if (en && en[0] == '1')
+        PrometheusExporterInstance().Start();
+}

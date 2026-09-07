@@ -1,0 +1,30 @@
+﻿P1_UI_WINDOW_OWNERSHIP_001 — FORCE elimination attempt
+TIMESTAMP_UTC=2026-08-30T14:30:32Z
+STATUS=INCOMPLETE — FORCE still required
+
+## What landed (kept)
+- Win32IDE.cpp: RawrXD_EnableSeLockMemoryPrivilege / MapModelView2MB → extern only (ASM model_streamer)
+- unlinked_symbols_batch_004.cpp: removed from Win32IDE (ASM hotpatch/snapshot)
+- unlinked_symbols_batch_002.cpp: asm_pyre_* gated behind !RAWRXD_HAS_ASM_PYRE
+- win32ide_watchdog_init.cpp: sole C provider (RawrXD_Watchdog.asm is empty END)
+- Deep2 test/main/bench TUs removed from WIN32IDE graph (partial ODR purge)
+- /FORCE:MULTIPLE restored; EXE recovered
+
+## What failed
+- Full FORCE removal: after ASM fixes, remaining LNK2005 spanned ssot↔auto_feature,
+  batch_021 stubs↔real TUs, omega C↔batch, v280↔batch_001, CursorParity↔SemanticIndex,
+  plus many Deep2 mains (now purged).
+- Aggressive TU deletion of batch_021/ssot/LSP/CursorParity → LNK1120×334 unresolved.
+- Conclusion: FORCE elimination needs symbol-level dedupe inside stub TUs, not wholesale TU removal.
+
+## Recovered EXE
+PATH=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe
+SHA256=9EA5E2BD9A1EF862C2914225DEB63E78974B8FB81E46D07FFF5F3EFDF2FD66F6
+BYTES=324024832
+MTIME=2026-08-30T10:30:12.2832724-04:00
+FORCE_MULTIPLE_IN_LINK=YES
+DUPLICATE_WINDOW_IMPL_COMPILED=NO (unchanged)
+
+## Artifacts
+relink_no_force.log / attempt2/3/4.log
+LNK2005_inventory.txt

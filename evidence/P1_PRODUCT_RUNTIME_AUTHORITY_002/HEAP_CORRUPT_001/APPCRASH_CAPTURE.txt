@@ -1,0 +1,59 @@
+APPCRASH capture — attach E2E model-load session
+Captured: 2026-09-01 ~19:10 local (no rebuild, no harness rerun)
+
+=== Disposition ===
+PowerShell execution policy: resolved
+Attach discovery: resolved (pid=10880 attached)
+RawrXD process lifetime: FAILED — fatal APPCRASH during/after Load posted
+Exception in WER: 0xC0000005 (ACCESS_VIOLATION) — NOT 0xC0000374 (heap corruption)
+P1PRA causality: UTC witness path utc_stage=63 aligns with crash; load worker_fail (RAM) precedes DHI re-init
+
+=== Harness context ===
+attached pid=10880 (0x2A80)
+posted Load selected index=13 (Phi-3-mini)
+harness reported: IDE process exited during model load
+
+=== Application Error (Event 1000) — pid 10880 match ===
+TimeCreated: 2026-09-01 19:05:57
+Faulting application: RawrXD-Win32IDE.exe (7.4.0.0, stamp 0x6a975a42)
+Faulting module: ntdll.dll (10.0.26100.8972)
+Exception code: 0xC0000005
+Fault offset: 0x000000000000b1eb
+Faulting process id: 0x2A80 (10880 decimal)
+EXE path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+Report Id: dbb9eac5-2925-433b-a4e9-c14b174b0e6d
+
+=== Additional APPCRASH cluster (same signature) ===
+19:06:06 pid=0x5DD4 (24020) — dump RawrXD-Win32IDE.exe.24020.dmp
+19:06:35 pid=0x6598 (26008) — dump RawrXD-Win32IDE.exe.26008.dmp
+19:08:58 pid=0x1688 (5768)  — dump RawrXD-Win32IDE.exe.5768.dmp
+
+All share: P7=c0000005, P8=000000000000b1eb, P4=ntdll.dll, hashed bucket 6e7b083a5d89dcb1968dcce777ca484f
+
+=== WITNESS correlation (pid 10880 window) ===
+19:06:05 P1PRA_LOAD=worker_fail — insufficient RAM headroom (20% reserve)
+19:06:05 UTC cf_shadow_rsp_pre_exit → P1PRA_FAULT utc_stage=63
+  rip=00007FF930CEB1EB (ntdll+0xB1EB) read AV target=FFFFFFFFFFFFFFFF
+  tid=2144 deferred_heavy_init / telemetry_stage=7
+19:08:58 new deferred_heavy_init after crash/restart cycle
+
+=== Minidump inventory (primary) ===
+%TEMP%\RawrXD_Dumps\RawrXD-Win32IDE.exe.10880.dmp  542156041 bytes  2026-09-01 19:06:04
+%TEMP%\RawrXD_Dumps\RawrXD-Win32IDE.exe.24020.dmp  542292041 bytes  2026-09-01 19:06:10
+%TEMP%\RawrXD_Dumps\RawrXD-Win32IDE.exe.26008.dmp  542553737 bytes  2026-09-01 19:06:39
+%TEMP%\RawrXD_Dumps\RawrXD-Win32IDE.exe.5768.dmp   509449991 bytes  2026-09-01 19:09:01
+C:\Windows\Minidump: (no files)
+
+=== Heap corruption (0xC0000374) ===
+No Application/WER events with 0xc0000374 in last 30m filter window.
+Prior CRT dialog (block #534381) remains a separate detection path from this APPCRASH.
+This crash is AV-in-ntdll during P1PRA UTC init witness (stage 63), not CRT heap fence dialog.
+
+=== Next analysis (no rebuild) ===
+Open RawrXD-Win32IDE.exe.10880.dmp in WinDbg/VS:
+  !analyze -v
+  .ecxr / k — confirm ntdll+0xB1EB caller frame in RawrXD-Win32IDE
+  Correlate with UTC_InitTelemetry / P1PRA_UtcWitness at stage 63 (cf_shadow_rsp_pre)
+
+Full event log: HEAP_CORRUPT_001/WIN_EVENT_APPLICATION_30m.txt
+Dump list: HEAP_CORRUPT_001/DUMP_INVENTORY.txt

@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_ffn_out_3
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=e6596a04d48e43ce
+l2=0.50506085834652237
+seq=3760
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\O_PROJ_MULMAT_PARITY_002\llama_TENS_ffn_out_3_pos0_layer0_full_n2048_seq3760.bin

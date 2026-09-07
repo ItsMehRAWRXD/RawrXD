@@ -1,0 +1,4 @@
+﻿tag=full_no_bisect
+bisect=
+exit=
+trace=F:\~dev\rawrxd\build-win32ide-fresh\bin\win32ide_trace.log

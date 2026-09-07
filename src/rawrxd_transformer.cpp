@@ -31,6 +31,7 @@ using rawrxd::attention::TensorView;
 #include <condition_variable>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <deque>
 #include <fstream>
 #include <iostream>
@@ -1326,13 +1327,13 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
             m_weightResidencyPool->release(tensorName);
         }
 
-        // B015-B: Miss — materialize dequantized tensor and commit to pool
-        if (loader)
+        // B015-B: Miss — materialize only on prefill / cold paths.
+        // Warm DecodeCarry: miss falls through to direct (no rematerialize tax).
+        if (!m_b015CarryWarm && loader)
         {
             loader->B015SetPool(m_weightResidencyPool.get());
-        }
-        if (loader && loader->B015MaterializeDequantizedTensor(tensorName))
-        {
+            if (loader->B015MaterializeDequantizedTensor(tensorName))
+            {
             // Retry acquire after materialization
             if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
             {
@@ -1360,6 +1361,7 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
                     return true;
                 }
                 m_weightResidencyPool->release(tensorName);
+            }
             }
         }
         ++m_weightResidencyMisses;
@@ -2305,13 +2307,31 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     maybeSampleMoEReuseFromHeatmap();
     processPendingMoEPrepackResults_();
 
-    // B015-P1: Residency gate — ALWAYS use residency pool if available.
-    // Previous decode bypass (T==1) caused repeated 637MB mappings per layer.
-    // Now: residency pool is active for both prefill (T>1) and decode (T==1).
-    m_b015DecodeBypass = false;
-    if (m_weightResidencyPool)
-    {
-        printf("[B015-P1] Residency pool ACTIVE: T=%d, using pool for this forward\n", T);
+    // B015-P1: Prefill (T>1) uses residency; decode (T==1) bypasses unless
+    // DecodeCarry is warm (token N already paid / pinned for N+1).
+    m_b015CarryWarm = false;
+    if (T > 1) {
+        InvalidateDecodeCarry();
+        m_b015DecodeBypass = false;
+        if (m_weightResidencyPool) {
+            printf("[B015-P1] Prefill T=%d residency ON (B015)\n", T);
+            std::fflush(stdout);
+        }
+    } else {
+        const char* carryEnv = std::getenv("RAWRXD_DECODE_CARRY");
+        const bool carryOn = !carryEnv || carryEnv[0] != '0';
+        if (carryOn && m_decodeCarry.valid && m_weightResidencyPool) {
+            m_b015DecodeBypass = false;
+            m_b015CarryWarm = true;
+            ++m_decodeCarryHits;
+            printf("[DECODE_CARRY] T=1 warm gen=%llu pins=%zu seq=%zu\n",
+                   (unsigned long long)m_decodeCarry.generation,
+                   m_decodeCarry.pinned_names.size(),
+                   m_decodeCarry.sequence_length);
+        } else {
+            m_b015DecodeBypass = true;
+            printf("[B015-P1] Decode T=1 residency BYPASS (direct)\n");
+        }
         std::fflush(stdout);
     }
 
@@ -3523,6 +3543,25 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     // Negative Space Profiler: Emit bottleneck analysis after forward completes
     rawrxd::Profiler_AnalyzeBottlenecks();
+
+    // DecodeCarry: after successful T==1, pin resident B015 weights for N+1.
+    if (T == 1 && !logits.empty() && m_weightResidencyPool) {
+        const char* carryEnv = std::getenv("RAWRXD_DECODE_CARRY");
+        const bool carryOn = !carryEnv || carryEnv[0] != '0';
+        if (carryOn) {
+            const size_t seq = static_cast<size_t>(std::max(0, start_pos) + T);
+            if (m_decodeCarry.prepare(m_weightResidencyPool.get(), seq,
+                                      ++m_decodeCarryGeneration)) {
+                ++m_decodeCarryPrepares;
+                printf("[DECODE_CARRY] prepared gen=%llu pins=%zu seq=%zu resident_MB=%zu\n",
+                       (unsigned long long)m_decodeCarry.generation,
+                       m_decodeCarry.pinned_names.size(),
+                       m_decodeCarry.sequence_length,
+                       m_weightResidencyPool->resident_bytes() >> 20);
+                std::fflush(stdout);
+            }
+        }
+    }
 
     return logits;
 }

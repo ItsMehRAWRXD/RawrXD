@@ -1,0 +1,62 @@
+{
+  "schema": "rawrxd.screenpilot.tps-loss.v1",
+  "mode": "reverse_engineering",
+  "target": {
+    "targetTps": 50.0000,
+    "targetMsPerToken": 20.0000,
+    "powerIncreaseAllowed": false
+  },
+  "baseline": {
+    "measuredTps": 35.4600,
+    "measuredMsPerToken": 28.2008,
+    "tokenTimeDebtMs": 8.2008,
+    "throughputDeficitPct": 29.0800
+  },
+  "lossModel": {
+    "equation": "max(0, measuredMsPerToken - targetMsPerToken)",
+    "criticalPathOnly": true,
+    "overlapAware": true,
+    "unattributedLossFailsClosed": true,
+    "elevenXIsPriorityOnly": true
+  },
+  "lanes": [
+    {"id": "FFN", "measuredLossMs": 1.4000, "recoverableMs": 1.1000, "criticalPath": true},
+    {"id": "NVME", "measuredLossMs": 1.1500, "recoverableMs": 0.9500, "criticalPath": true},
+    {"id": "WORK_AVOIDANCE", "measuredLossMs": 1.5000, "recoverableMs": 1.3500, "criticalPath": true},
+    {"id": "DMA", "measuredLossMs": 0.7000, "recoverableMs": 0.5500, "criticalPath": true},
+    {"id": "MULTI_GPU", "measuredLossMs": 0.6500, "recoverableMs": 0.5500, "criticalPath": true},
+    {"id": "SCHEDULER_SYNC", "measuredLossMs": 0.5500, "recoverableMs": 0.4500, "criticalPath": true},
+    {"id": "KV", "measuredLossMs": 0.5500, "recoverableMs": 0.4000, "criticalPath": true},
+    {"id": "VRAM", "measuredLossMs": 0.6000, "recoverableMs": 0.5000, "criticalPath": true},
+    {"id": "ATTENTION", "measuredLossMs": 0.3500, "recoverableMs": 0.2000, "criticalPath": true},
+    {"id": "COMPUTE", "measuredLossMs": 0.4000, "recoverableMs": 0.1500, "criticalPath": true},
+    {"id": "RAM", "measuredLossMs": 0.3500, "recoverableMs": 0.2000, "criticalPath": true}
+  ],
+  "unattributedMs": 0.0000,
+  "criticalPathLossSumMs": 8.2000,
+  "criticalPathLossBound": true,
+  "asymmetry": {
+    "gpu0BusyPct": 96.00,
+    "gpu1BusyPct": 38.00,
+    "criticalPathOwner": "gpu0",
+    "powerDeficit": false,
+    "thrustAsymmetry": true,
+    "asymmetricRecoveryPotentialMs": 2.7000
+  },
+  "reversePressure": {
+    "multiplier": 11.0,
+    "hotpatchPressure": 29.7000,
+    "note": "priority only; does not scale physical milliseconds"
+  },
+  "candidateGeneration": {
+    "predictedRemovalMs": 5.0300,
+    "predictedRemainingDebtMs": 3.1708
+  },
+  "constraints": {
+    "noAdditionalHardware": true,
+    "noClockIncreaseRequired": true,
+    "authorityMustRemainUnchanged": true,
+    "outputEquivalenceRequired": true,
+    "residencyCapsMustHold": true
+  }
+}

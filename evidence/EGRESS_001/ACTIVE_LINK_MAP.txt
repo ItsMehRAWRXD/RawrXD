@@ -1,0 +1,84 @@
+EGRESS_001 — ACTIVE_LINK map (shipping target only)
+Captured: 2026-08-30
+Authority tree: F:\~dev\rawrxd\build-ninja
+Shipping EXE: bin\RawrXD-Win32IDE.exe
+CERTIFIED_BINARY_SHA (STREAMER paint freeze; still current for this probe):
+  AB009150CF9B335996B31F15B6B380A6BF3BEFE87992309C0882BD0ED658BA9C
+
+Method
+  1. Parse build.ninja linker rule: build bin\RawrXD-Win32IDE.exe:
+  2. Filter CMakeFiles\RawrXD-Win32IDE.dir\*.obj for egress-relevant names
+  3. ASCII string scan of shipping EXE (not yet STATIC_DEP_001 formal gate)
+
+===============================================================================
+A. OLLAMA / :11434 — PROVEN ACTIVE_LINK (default binary)
+===============================================================================
+  src\agentic\AgentOllamaClient.cpp.obj
+  src\agentic\OllamaProvider.cpp.obj
+  src\agentic\RobustOllamaParser.cpp.obj
+  src\win32app\Win32IDE_ChatPanel_Ollama.cpp.obj
+  src\win32app\HeadlessIDE.cpp.obj
+
+Also compiles into shared InferenceEngine.lib (linked by Win32IDE):
+  src\inference\ollama_blob_parser.cpp.obj
+  src\agentic\AgentOllamaClient.cpp.obj   (InferenceEngine target)
+
+CMake: no RAWRXD_OPTIONAL_OLLAMA flag exists; AgentOllamaClient appears in
+  multiple unconditional target_sources lists (CMakeLists.txt).
+
+===============================================================================
+B. CLOUD / MARKETPLACE / UPDATE — PROVEN ACTIVE_LINK
+===============================================================================
+  src\cloud_api_client.cpp.obj
+  src\core\auto_update_system.cpp.obj
+  src\marketplace\extension_marketplace.cpp.obj
+  src\win32app\VSCodeMarketplaceAPI.cpp.obj
+  src\win32app\Win32IDE_MarketplacePanel.cpp.obj
+  src\sovereign\bus\BeaconBus.cpp.obj
+
+===============================================================================
+C. TELEMETRY — PROVEN ACTIVE_LINK (runtime egress NOT yet classified)
+===============================================================================
+  NOTE: “telemetry” here means linked objects. Some may be local-only counters;
+  EGRESS_001 still requires proof they cannot leave the machine by default.
+
+  src\telemetry\telemetry_export.cpp.obj
+  src\telemetry\UnifiedTelemetryCore.cpp.obj
+  src\agent\telemetry_collector.cpp.obj
+  src\core\enterprise_telemetry_compliance.cpp.obj
+  src\core\perf_telemetry.cpp.obj
+  src\asm\RawrXD_Telemetry_Kernel.asm.obj
+  src\runtime\Deep2ExecutionTelemetry.cpp.obj
+  src\win32app\Win32IDE_Telemetry.cpp.obj
+  src\win32app\Win32IDE_TelemetryDashboard.cpp.obj
+  src\win32app\Win32IDE_TelemetryExport.cpp.obj
+  src\win32app\Win32IDE_TelemetryPanel.cpp.obj
+  src\win32app\Win32IDE_UnifiedTelemetry.cpp.obj
+  src\win32app\Win32IDE_PerfTelemetry.cpp.obj
+  src\win32ide\StatusBarTelemetry.cpp.obj
+
+===============================================================================
+D. SHIPPING EXE STRING RESIDUE (pre-STATIC_DEP_001)
+===============================================================================
+  STRING 11434                                    count=10
+  STRING localhost:11434                          count=2
+  STRING 127.0.0.1:11434                          count=5
+  STRING api.openai.com                           count=4
+  STRING api.anthropic.com                        count=3
+  STRING generativelanguage.googleapis.com        count=2
+  STRING huggingface.co                           count=9
+  STRING api.github.com                           count=1
+  STRING ollama                                   count=43
+  STRING AgentOllama                              count=15
+
+Verdict from this map alone
+  Whole-product Ollama absence = FAIL (link + strings)
+  Default-deny :11434 / cloud / update presence in binary = FAIL (strings)
+  Default-deny *runtime* use of those paths              = NOT YET PROVEN
+  “No-dependency product” claim                          = NOT CERTIFIABLE
+
+Next authorized steps (repair still requires explicit authorization)
+  1. Classify each ACTIVE_LINK object: ALWAYS_ON / OPT_IN / DEAD / LOCAL_ONLY
+  2. Choose REMOVE vs QUARANTINE (RAWRXD_OPTIONAL_OLLAMA=OFF default)
+  3. Runtime egress harness (cold start + Copilot local; Ollama up/down identical)
+  4. STATIC_DEP_001 formal strings/symbols gate on shipping EXE

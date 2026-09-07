@@ -1,0 +1,4 @@
+﻿tag=bisect_D_after_config_scope
+bisect=after_config_scope
+exit=TIMEOUT_KILLED
+trace=F:\~dev\rawrxd\build-win32ide-fresh\bin\win32ide_trace.log

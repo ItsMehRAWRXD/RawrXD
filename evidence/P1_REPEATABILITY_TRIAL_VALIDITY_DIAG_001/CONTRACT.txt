@@ -1,0 +1,48 @@
+GATE=P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+DEPENDS_ON=P1_REAL_SPEEDUP_REPEATABILITY_001 (FAIL @ ALL_SESSION_CORRECTNESS)
+
+Purpose
+-------
+Explain why MeasuredGenerate returns ok=false with empty trial arrays.
+Non-promotional. Does NOT reopen P1_REAL_SPEEDUP_001 or measure speedup.
+
+Frozen references (must not edit)
+---------------------------------
+P1_REAL_SPEEDUP_001/GATE.txt           GATE_SHA=04451DB1…
+Frozen speedup EXE (inference path)    7DFDA62A55A092B59EA223D0604F27DAEB19417FA86681BEFDB164DDEF7DBD1
+MODEL_SHA256                           DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+
+Rules
+-----
+1. Do not rebuild or alter frozen speedup EXE 7DFDA62A…
+2. No InferenceEngine / runtime performance edits
+3. Diagnostic harness may log acceptance predicates only
+4. One baseline + one candidate measured trial (mirrors MeasuredGenerate)
+5. Record each predicate independently; FIRST_FALSE stops interpretation
+6. Capture raw tokens/text/hash BEFORE rejection
+7. ninja/cl contention = metadata only unless proven causal
+
+Acceptance predicates (MeasuredGenerate order)
+----------------------------------------------
+LOAD_OK
+INIT_OK
+GENERATE_RETURNED
+TOKEN_COUNT_VALID          tokensGenerated > 0
+OUTPUT_NONEMPTY            !text.empty()
+GENERATE_OUTPUT_OK         TOKEN_COUNT_VALID OR OUTPUT_NONEMPTY
+WALL_NS_NONZERO
+POLICY_SHA_STABLE          PolicySha256(after) == PolicySha256(at_seam)
+MEASURED_GENERATE_OK       all above
+
+Evidence
+--------
+evidence/P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001/
+  CONTRACT.txt GATE.txt TRIALS.txt run.log ENVIRONMENT.txt
+
+Disposition
+-----------
+Identifies FIRST_FALSE predicate for repair planning.
+Does NOT change repeatability PASS/FAIL until harness acceptance fixed
+and repeatability re-run on frozen EXE.

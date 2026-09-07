@@ -1,0 +1,3 @@
+SHA256 hash of master_test_suite.exe:
+87f22bd6503033d54136499fd628b9b8821c89f392d372bcbeeb60523428cbf7
+CertUtil: -hashfile command completed successfully.

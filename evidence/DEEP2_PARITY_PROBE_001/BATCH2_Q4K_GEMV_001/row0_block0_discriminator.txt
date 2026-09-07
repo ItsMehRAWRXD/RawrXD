@@ -1,0 +1,27 @@
+rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+rms_norm_epsilon=9.999999747e-06
+ATTN_NORM_0 l2=8.105917814e-01 fnv=d316184aaf1350a3 cert=DIFF
+=== ROW0_BLOCK0_DISCRIMINATOR ===
+raw_bytes_hex=28043310ddadeda8dc5df7d8137dff0a5776645086764886586ff7785ad847667a374c6799448868088638a8ac4648694a8c3fcb5a590b5a2b285f5b3a7a54a959ea9a3a894c6c0b7d8b5a5b5a1d58304a5967766c388b4846485846086767368869004648783b481f49587438f76b8499a9a898baa68908bc6a5480d9d8b9c997867699b9b8f8cfd9baa978d8778884
+d_fp16=0x0428 d=6.341934204e-05
+dmin_fp16=0x1033 dmin=5.125999451e-04
+scales12=dd ad ed a8 dc 5d f7 d8 13 7d ff 0a
+group0 deep2_sc=29 deep2_min=28 ggml_sc=29 ggml_min=28 MATCH
+group1 deep2_sc=45 deep2_min=29 ggml_sc=45 ggml_min=29 MATCH
+group2 deep2_sc=45 deep2_min=55 ggml_sc=45 ggml_min=55 MATCH
+group3 deep2_sc=40 deep2_min=24 ggml_sc=40 ggml_min=24 MATCH
+group4 deep2_sc=51 deep2_min=49 ggml_sc=51 ggml_min=49 MATCH
+group5 deep2_sc=45 deep2_min=23 ggml_sc=45 ggml_min=23 MATCH
+group6 deep2_sc=63 deep2_min=63 ggml_sc=63 ggml_min=63 MATCH
+group7 deep2_sc=42 deep2_min=48 ggml_sc=42 ggml_min=48 MATCH
+scale_unpack=MATCH
+dequant_32x8_groups max_abs=0.000000000e+00 first_bad=-1 MATCH
+group_dot[0] ggml=0.00076489292363128829 deep2=0.00076489292363128829 delta=0.000000000e+00
+group_dot[1] ggml=0.0040928597627746324 deep2=0.0040928597627746324 delta=0.000000000e+00
+group_dot[2] ggml=-0.0014870106423270401 deep2=-0.0014870106423270401 delta=0.000000000e+00
+group_dot[3] ggml=-0.001392293200851713 deep2=-0.001392293200851713 delta=0.000000000e+00
+group_dot[4] ggml=-8.7132656567269484e-05 deep2=-8.7132656567269484e-05 delta=0.000000000e+00
+group_dot[5] ggml=-9.4471739844111807e-05 deep2=-9.4471739844111807e-05 delta=0.000000000e+00
+group_dot[6] ggml=0.0018138553759889826 deep2=0.0018138553759889826 delta=0.000000000e+00
+group_dot[7] ggml=0.00013265052314627435 deep2=0.00013265052314627435 delta=0.000000000e+00
+block_dot ggml=0.0037433503459510433 deep2=0.0037433503459510433 delta=0.000000000e+00 MATCH

@@ -1,0 +1,15 @@
+RKC_MINIMAL_SOURCE_001=PASS
+
+Query: "fix GPU fallback"
+
+SOURCE_REQUIRED (4 files, 95,182 bytes):
+  DispatchGemvDevice          include/vulkan_compute.h
+  caller_contract             src/deep2/Deep2Engine_GpuForward.cpp
+  fallback_state              src/deep2/Deep2Engine.h
+  LivePath_BeginGenerate      src/deep2/Deep2LivePath.cpp
+
+Naive GPU-name dump: 278 files / 3,778,459 bytes
+RATIO context_bytes_rkc/old = 0.025 (<25% gate)
+irrelevant_source_supplied = 278
+
+Next: RKC_NEGATIVE_KNOWLEDGE_001 → model inventory world state

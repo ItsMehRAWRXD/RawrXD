@@ -1,0 +1,3 @@
+# RKC_MODEL_INVENTORY_001
+# Ingest F:\OllamaModels with separate MODEL_SOURCE=RAW_GGUF | OLLAMA_MANIFEST.
+# Never merge by name resemblance. Kimi Q4_K_M RAW facts + manifest namespace PASS.

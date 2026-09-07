@@ -1,0 +1,41 @@
+GATE_ROADMAP_002 — runtime gates batch of 15
+============================================
+Generated: 2026-09-06
+
+Sealed prior (do not reopen):
+  STREAMER_GPU_SOLO_001/002, TOPOLOGY, MULTI_GPU_LAYER, HYBRID_ALL_HW,
+  FORWARD_OPS, RESIDENT_DECODE, WEIGHT_WINDOW, NUMERIC_PARITY,
+  WEIGHT_PREFETCH, Q4K_GEMV, Q6K_GEMV, VRAM_APERTURE,
+  STREAMER_GPU_COMPLETE_001 (kids), GATE_ROADMAP_001 (15/15)
+
+Batch 1 — DEEP2_RUNTIME_BATCH1_001 (15 gates)
+  1. DEEP2_MODEL_LOADER_001
+  2. DEEP2_ARCH_MATRIX_001
+  3. DEEP2_TOKENIZER_MATRIX_001
+  4. DEEP2_SAMPLER_001
+  5. DEEP2_CONTEXT_001
+  6. DEEP2_PREFILL_DECODE_001
+  7. DEEP2_STREAMING_OUTPUT_001
+  8. DEEP2_CANCEL_001
+  9. DEEP2_CONCURRENCY_001
+ 10. DEEP2_MODEL_LIFECYCLE_001
+ 11. DEEP2_OOM_RECOVERY_001
+ 12. DEEP2_CPU_GPU_POLICY_001
+ 13. DEEP2_PACKED_SURFACE_001      (F32 expands=0 + packed ops)
+ 14. DEEP2_RESIDENT_FORWARD_001    (live resident decode)
+ 15. DEEP2_WEIGHT_WINDOW_RUNTIME_001
+
+Batch 2 — umbrellas + optional models
+  DEEP2_LARGE_MODEL_001
+  DEEP2_SOAK_001
+  DEEP2_K2_001          (SKIP until DEEP2_K2_SHARD_DIR set)
+  DEEP2_DEEPSEEK_001    (SKIP until DEEP2_DEEPSEEK_MODEL set)
+  STREAMER_GPU_COMPLETE_001  (15 streamer kids)
+  DEEP2_RUNTIME_COMPLETE_001 (15 required + optionals)
+
+Run
+----
+  ninja -C build-ninja deep2_runtime_batch1_cert deep2_runtime_batch2_cert
+  build-ninja\bin\deep2_runtime_batch1_cert.exe
+  set DEEP2_SOAK_SECONDS=10
+  build-ninja\bin\deep2_runtime_batch2_cert.exe

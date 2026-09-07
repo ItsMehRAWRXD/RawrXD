@@ -1,0 +1,43 @@
+VWA_001 LAW
+===========
+DATE=2026-09-07
+SOURCE=G:\~dev\rawrxd\src\deep2\VirtualTensorRange.hpp
+
+1. RMV owns mount identity.
+2. VirtualTensorDesc is the mounted tensor authority.
+3. VWA never mounts or rediscovers tensors by name.
+4. VWA resolves execution requirements into physical ranges.
+5. Physical ranges are quant-block aligned.
+6. ExpertId is a slice coordinate, not a synthetic tensor identity.
+7. IOCP/NVMe/bunnyhop are fulfillment transports, not address authorities.
+8. Elastic/Residency owns lifecycle and placement.
+9. No second residency FSM.
+10. Transport may change; tensor identity and requested physical bytes may not.
+
+NO public RequestBlocks / AcquireBlocks yet.
+NO VwaManager / VirtualWeightLoader / second mount API.
+
+Canonical API
+-------------
+GetQuantBlockGeometry(ggmlType, geo)
+ResolveQuantBlockRange(desc, QuantBlockRange, PhysicalTensorRange&)
+
+K2 shard root (confirmed on this host)
+--------------------------------------
+F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+(note: user text said G:\… — actual tree is F:\…)
+
+Revised ladder
+--------------
+B0 VWA_RANGE_CONTRACT_001
+B1 VWA_POC_1_001
+B2 VWA_COALESCE_001
+B3 VWA_IOCP_RANGE_001
+B4 VWA_ELASTIC_RANGE_001
+B5 VWA_EXPERT_SLICE_001
+B6 VWA_MOE_PREFETCH_001
+B7 VWA_GPU_STAGE_001
+B8 VWA_BOUNDED_K2_001
+
+Program order remains:
+A0 → B0 → B1 → C1 → A1 → …

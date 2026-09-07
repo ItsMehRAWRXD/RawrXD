@@ -1,0 +1,11 @@
+[TOOL_SCHEMA] ACCEPT tool=run_command dispatched=1 ok=1
+[TOOL_SCHEMA] ACCEPT tool=run_command dispatched=1 ok=0
+[TOOL_SCHEMA] ACCEPT tool=run_command dispatched=1 ok=1
+RUN_COMMAND_SEMANTICS_001
+LANE_EVIDENCE_FIELDS=PASS
+lane_evidence_ok=1 exit=0
+LANE_MISSING_BUILD_FAIL_CLOSED=PASS
+LANE_BUILD_DISCOVERY=PASS
+lane_build_ok=1 exit=0
+failures=0
+RUN_COMMAND_SEMANTICS_001=PASS

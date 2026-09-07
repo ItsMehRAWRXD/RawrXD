@@ -1,0 +1,87 @@
+# P1_IDE_EXEC_POLICY_LIVE_GGUF_001 — frozen gate (additive)
+
+## Relationship to APPLY_001
+
+```text
+P1_IDE_EXEC_POLICY_APPLY_001
+  = certified Elastic enforcement seam
+  = DOES NOT certify live GGUF product path
+
+P1_IDE_EXEC_POLICY_LIVE_GGUF_001
+  = additive: real GGUF → real tensors → enforce → MARS → generate
+```
+
+Do **not** reopen APPLY_001. Do **not** claim:
+
+> Every live GGUF loaded by the IDE is placed according to policy.
+
+until this gate PASSes.
+
+## Claim under test
+
+```text
+USER POLICY
+→ REAL GGUF
+→ REAL TENSORS
+→ REAL RESIDENCY
+→ REAL GENERATION
+→ OBSERVED == INTENDED
+```
+
+## Predicates (all required PASS)
+
+| Predicate                       | Requirement |
+| ------------------------------- | ----------- |
+| GGUF_OPEN                       | PASS        |
+| GGUF_PARSE                      | PASS        |
+| REAL_TENSOR_SET_NONZERO         | PASS (≥ model header tensor count) |
+| POLICY_LOADED_BEFORE_REGISTER   | PASS        |
+| ENFORCE_SEAM_CALLED             | PASS        |
+| MARS_PLACEMENT_COMPLETED        | PASS (or Elastic stamps for all tensors) |
+| OBSERVED_PLACEMENT_MATCHES_PLAN | PASS (all real tensors) |
+| MODEL_READY                     | PASS        |
+| GENERATE_COMPLETES              | PASS (≥1 token) |
+| POLICY_SHA_UNCHANGED            | PASS (pre-load sha == post-gen sha) |
+
+## Required census emit
+
+```text
+TOTAL_TENSORS       = N
+GPU0_PLANNED        = ...
+GPU1_PLANNED        = ...
+RAM_PLANNED         = ...
+NVME_PLANNED        = ...
+PLACEMENT_MATCH     = N
+PLACEMENT_MISMATCH  = 0
+```
+
+Synthetic 4-tensor runs are **out of scope** for this gate.
+
+## Evidence
+
+- Harness: `src/deep2/p1_ide_exec_policy_live_gguf_001.cpp`
+- Output: `evidence/P1_IDE_EXEC_POLICY_LIVE_GGUF_001/GATE.txt`
+- Census: `evidence/P1_IDE_EXEC_POLICY_LIVE_GGUF_001/CENSUS.txt`
+- Mismatches: `evidence/P1_IDE_EXEC_POLICY_LIVE_GGUF_001/MISMATCHES.txt`
+
+## Run
+
+```text
+p1_ide_exec_policy_live_gguf_001.exe <path-to.gguf>
+# or
+set RAWRXD_TEST_GGUF=<path>
+p1_ide_exec_policy_live_gguf_001.exe
+```
+
+## Status
+
+```text
+LIVE_GGUF_PRODUCT_PATH = NOT YET CERTIFIED
+GATE                   = FAIL
+FIRST_FALSE_TRANSITION = GGUF_OPEN
+SEH                    = 0xE06D7363  (C++ exception during Deep2ModelLoader::Load)
+MODEL                  = F:\~dev\tinyllama_fresh.gguf
+evidence               = evidence/P1_IDE_EXEC_POLICY_LIVE_GGUF_001/GATE.txt
+```
+
+APPLY_001 remains PASS and is not reopened.

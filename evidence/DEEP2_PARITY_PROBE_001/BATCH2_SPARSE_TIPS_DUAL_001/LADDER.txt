@@ -1,0 +1,15 @@
+BATCH2_SPARSE_TIPS_DUAL_001
+authority=SPARSE_CLEAN EXPAND_V + post-SwiGLU-fix
+prereq=BATCH2_L2_OUT_LOC (SiLU CLOSED; L2 abs-fail = GATE ULP amp)
+dual: PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6); INSPECT if abs<=1e-4 AND rel<=5e-6
+stop: first dual=FAIL (INSPECT continues)
+
+L2_OUT       abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.136694e-06 first=14 largest=624
+L4_OUT       abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.136694e-06 first=14 largest=624
+L8_OUT       abs=FAIL    dual=INSPECT max_abs=4.577637e-05 max_rel=3.151596e-06 first=14 largest=624
+L12_OUT      abs=FAIL    dual=FAIL    max_abs=4.634857e-04 max_rel=4.547238e-04 first=0 largest=1454
+STOP at L12_OUT (dual FAIL) — expand only this band
+
+FIRST_ABS_FAIL=L2_OUT
+FIRST_DUAL_FAIL=L12_OUT
+DISPOSITION: expand L12_OUT under EXPAND_V; do not reopen <=L2 SiLU/wo

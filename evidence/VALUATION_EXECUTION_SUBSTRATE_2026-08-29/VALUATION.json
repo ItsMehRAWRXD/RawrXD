@@ -1,0 +1,76 @@
+{
+  "type": "pre_money_financing_mark",
+  "frame": "execution_substrate",
+  "asOf": "2026-08-29",
+  "centralUsd": 35000000,
+  "technicalIpUsd": { "low": 10000000, "high": 18000000 },
+  "fundableUsd": { "low": 25000000, "high": 45000000 },
+  "strategicAcquisitionUsd": { "low": 30000000, "high": 60000000 },
+  "notTodayUsd": { "above": 75000000, "reason": "encoding_fail_live_gguf_fail_no_real_speedup_no_traction" },
+  "nextProofBandUsd": { "low": 40000000, "high": 75000000 },
+  "nextProofGates": [
+    "P1_UI_ENCODING_PASS",
+    "P1_LIVE_GGUF_PASS",
+    "RAWRXD_ACCELERATION_REAL_SPEEDUP_GT_1",
+    "REAL_TENSOR_CENSUS_PASS",
+    "OUTPUT_CORRECTNESS_PASS"
+  ],
+  "unstaticBandsUsd": {
+    "firstCertifiedDiscovery": { "low": 60000000, "high": 100000000 },
+    "repeatedCompounding": { "low": 100000000, "high": 200000000 },
+    "enterprisePilots": { "low": 150000000, "high": 300000000 },
+    "meaningfulRevenue": { "low": 250000000 }
+  },
+  "uplifts": [
+    "execution_policy_authority",
+    "plan_to_observed_residency_APPLY_001",
+    "observation_learning",
+    "telemetry_integrity_triad",
+    "physical_attribution",
+    "reverse_quant",
+    "work_avoidance_difference_engine",
+    "hexmag_architecture_potential"
+  ],
+  "discounts": [
+    "P1_UI_ENCODING_002_FAIL",
+    "LIVE_GGUF_NOT_CERTIFIED",
+    "REAL_SPEEDUP_UNPROVEN",
+    "no_users_revenue_enterprise"
+  ],
+  "supersedes": [
+    "AUTHORITY_center_7_10M",
+    "VALUATION_TECHNICAL_2026-08-29_not_transferable_while_product_gates_fail"
+  ],
+  "freezeId": "VALUATION_AUTHORITY_2026-08-29",
+  "authority": "FROZEN_MARK_NOT_CERTIFICATION",
+  "unstaticPremium": "NOT_YET_EARNED",
+  "historicalNonTransferable": [
+    "VALUATION_TECHNICAL_2026-08-29 AGENT-E2E $90M-$145M"
+  ],
+  "promotionLadder": [
+    "35M_current_mark",
+    "encoding_PASS",
+    "live_GGUF_PASS",
+    "REAL_SPEEDUP_GT_1",
+    "40M_75M_proof_band",
+    "certified_unknown_runtime_discovery",
+    "reproduced_generalized",
+    "second_compounded_discovery",
+    "unstatic_premium_defensible"
+  ],
+  "practicalRule": "NO_NEW_VALUATION_PREMIUM_UNLESS_PROMOTION_LADDER_EVIDENCE",
+  "promotionEvidenceOnly": [
+    "product_gate_PASS",
+    "external_REAL_SPEEDUP_GT_1",
+    "certified_runtime_discovery",
+    "reproducible_generalized_discovery",
+    "compounded_verified_improvement",
+    "commercial_traction"
+  ],
+  "technicalConfidenceNotMark": [
+    "architecture",
+    "class_stubs",
+    "design_completeness",
+    "research_hypotheses"
+  ]
+}

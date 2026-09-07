@@ -1,0 +1,9 @@
+[1/3] Building CXX object CMakeFiles\test_generate_one_token.dir\src\tokenizer\gguf_embedded_tokenizer.cpp.obj
+[2/3] Building CXX object CMakeFiles\test_generate_one_token.dir\src\deep2\test_generate_one_token.cpp.obj
+D:\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+D:\rawrxd\src\deep2\Tokenizer.hpp(57): warning C4100: 'token': unreferenced parameter
+D:\rawrxd\src\deep2\NVMeStream.h(32): warning C4005: 'NOMINMAX': macro redefinition
+D:\rawrxd\src\deep2\NVMeStream.h(32): note: 'NOMINMAX' previously declared on the command line
+D:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(77): warning C4458: declaration of 'expertId' hides class member
+D:\rawrxd\src\deep2\K2GlobalTensorIndex.hpp(46): note: see declaration of 'Deep2::GlobalTensorRef::expertId'
+[3/3] Linking CXX executable bin\test_generate_one_token.exe

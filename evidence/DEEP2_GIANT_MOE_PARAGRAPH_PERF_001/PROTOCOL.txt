@@ -1,0 +1,55 @@
+DEEP2_GIANT_MOE_PARAGRAPH_PERF_001 — frozen protocol
+====================================================
+Generated: 2026-09-06
+Outside GATE_ROADMAP_002. Does NOT inherit ~85.4 or 14.38 historical TPS.
+
+WHY SAME "hello!" DOES NOT EQUALIZE TPS
+---------------------------------------
+"hello!" equalizes only the prompt tokens (prefill / TTFT), not per-token
+decode cost. Steady-state TPS tracks active weight traffic, GEMV, attention/KV,
+MoE routing, and transfers — not prompt length.
+
+Historical confusion:
+  ~85.4 TPS  = K2.5 2.5B Q8_0 sweep (NOT 13-shard Kimi-K2 ~578 GB)
+  ~14.38 TPS = SOVEREIGN_ASYNC_RING_E2E_001 Run C (NOT today's DeepSeek-COMPLETE)
+
+Giant MoE models with similar active params/token CAN land near each other
+(e.g. both ~10–20 DECODE_TPS). 578 GB Kimi-K2 at ~85 TPS vs DeepSeek at ~14
+without an architectural reason would be suspicious.
+
+FROZEN BENCHMARK
+----------------
+PROMPT =
+  Write exactly one coherent paragraph of approximately 120 words explaining
+  how a local AI coding assistant can help a software developer. Discuss code
+  generation, debugging, codebase understanding, privacy, and offline
+  operation. Do not use bullet points, headings, lists, or markdown. Write
+  only the paragraph.
+
+MAX_NEW_TOKENS = 160
+TEMPERATURE    = 0
+TOP_P          = 1.0
+SEED           = 42
+RUNS           = 3
+WARMUP         = 1 (discarded)
+CONTEXT / GPU_POLICY / Deep2 executable = identical for both legs
+
+MODELS
+------
+KIMI_K2  = F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M   (13/13)
+DEEPSEEK = F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE         (11/11)
+
+PRIMARY METRIC
+--------------
+DECODE_TPS = (generated_tokens - 1) / decode_seconds
+  where decode_seconds starts after the first token callback (excludes TTFT).
+Do NOT use total wall-clock / tokens as the seal metric.
+
+Also record: load_seconds, ttft_ms, prompt_tokens, prefill_tps,
+generated_tokens, decode_seconds, total_seconds, path/backend notes.
+
+RUN
+---
+  ninja -C build-ninja deep2_giant_moe_paragraph_perf_cert
+  build-ninja\bin\deep2_giant_moe_paragraph_perf_cert.exe
+  optional: --k2-only | --deepseek-only

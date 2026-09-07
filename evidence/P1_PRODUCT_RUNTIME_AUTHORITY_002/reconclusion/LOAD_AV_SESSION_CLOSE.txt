@@ -1,0 +1,17 @@
+LOAD AV DEBUG SESSION CLOSE — 1ed348
+====================================
+Verified: 2026-09-01 19:54:48 (user confirmed reproduction)
+
+Fixes proven by runtime logs:
+  H3 UTC fatal AV     -> RAWRXD_SKIP_UTC_MASM=1 (NDJSON UTC_skip_env; witness skipped=...)
+  H6 reject_busy      -> m_inferenceRunning(false) in Win32IDE constructor (entry d0=0)
+
+E2E contract satisfied (E2E.log):
+  P1PRA_STAGE_CHAIN=COMPLETE, FINALIZE=0, physical FORWARD/SAMPLE/DECODE/UI > 0
+  P1PRA_002_E2E_PRODUCT_AUTHORITY=PASS
+
+Instrumentation: retained in source (P1PRA_AgentDbg, P1PRA_DebugLog, P1PRA_Witness).
+Remove on explicit request after MASM UTC root fix is witnessed.
+
+Open defect: UTC_InitTelemetry CreateFileA AV at cf_shadow_rsp_pre (ntdll rip ~B1EB)
+  File: src/asm/RawrXD_Telemetry_Kernel.asm UTC_InitTelemetry PROC

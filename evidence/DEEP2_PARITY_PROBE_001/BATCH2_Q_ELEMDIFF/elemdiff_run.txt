@@ -1,0 +1,16 @@
+n=2048
+deep2_fnv=ced1abe971861249 l2=1.938516985e+00
+llama_fnv=8d53927ede5ddb3f l2=1.938517021e+00
+max_abs_error=1.4901161193847656e-07
+mean_abs_error=5.8347495723864995e-09
+rms_error=1.011874752607872e-08
+number_exact_equal=309
+number_bitwise_different=1739
+first_different_index=0
+largest_error_index=1264
+first_diff deep2=-1.628620550e-02 llama=-1.628620923e-02 abs=3.725290298e-09 bits_d=0xbc856aa6 bits_l=0xbc856aa8
+largest_diff deep2=1.843456179e-01 llama=1.843457669e-01 abs=1.490116119e-07 bits_d=0x3e3cc519 bits_l=0x3e3cc523
+error_buckets exact=309 lt1e-10=0 lt1e-8=1435 lt1e-6=304 lt1e-4=0 ge1e-4=0
+diff_mod32: 54 54 57 49 53 56 53 53 52 57 53 53 50 56 55 54 57 50 58 55 54 52 58 56 57 55 57 55 54 58 51 53
+ulp_buckets ulp1=361 ulp2_8=998 ulp9plus=380
+pattern_guess=many_tiny_fp_diffs

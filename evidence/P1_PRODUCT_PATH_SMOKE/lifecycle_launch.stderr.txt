@@ -1,0 +1,7 @@
+[Prometheus] Listening on port 9090 for /metrics...
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: F:\~dev\rawrxd\build-win32ide-p1\bin\rawrxd.config.json — using defaults.
+[Win32IDE] Using config fallback: http://localhost:11434

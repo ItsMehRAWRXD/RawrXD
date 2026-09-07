@@ -1,0 +1,40 @@
+LOAD AV CAPTURE RUN 2 — 2026-09-01 19:46 (session 1ed348)
+==========================================================
+
+Harness: run_load_av_capture.ps1 -> run_e2e_product_authority.ps1
+Binary: build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+Exit:   -1073741819 (0xC0000005 ACCESS_VIOLATION)
+
+Hypothesis verdicts (WITNESS.log lines 5913-6037)
+-------------------------------------------------
+H1 cmd_load_worker LoadModel AV     REJECTED — P1PRA_LOAD=worker_ok @ 19:46:22
+H2 enterprise_license corrupts load  REJECTED (non-fatal) — fault @ stage=3 rip=0x22D1E23
+                                     but enterprise_license_exit + load completed
+H3 UTC_InitTelemetry fatal AV        CONFIRMED — last witness before process death:
+                                     telemetry_enter -> masm_kernel_init ->
+                                     cf_shadow_rsp_pre_exit ->
+                                     P1PRA_FAULT stage=33 utc_stage=63
+                                     rip=00007FFA0E74B1EB target=FFFFFFFFFFFFFFFF
+H4 unhandled AV outside VEH          CONFIRMED as mechanism — VEH logged fault then
+                                     process exited 0xC0000005 during DHI thread
+H5 UI onCommandModelLoadWorkerDone   INCONCLUSIVE — load reached model_ready;
+                                     IDE died before Send (no P1PRA_SEND witness)
+
+Timeline isolation
+------------------
+- Load worker (tid=11452) overlaps DHI load_apply_settings (tid=5968) — both complete
+- Fatal fault on DHI thread during telemetry masm_kernel_init, not load worker
+- export=0 match=0 is expected (UTC_InitTelemetry not PE-exported); not root cause
+
+NDJSON gap
+----------
+debug-1ed348.log missing — instrumentation used session 5daacc paths; fixed to 1ed348
+under RAWRXD_EVIDENCE_ROOT and F:\~dev\debug-1ed348.log
+
+Next verification (post-fix instrumentation, keep logs)
+-------------------------------------------------------
+Set RAWRXD_SKIP_UTC_MASM=1 to bypass UTC_InitTelemetry MASM path; rerun capture.
+Success criteria: no 0xC0000005, harness reaches Send, debug-1ed348.log contains
+UTC_skip_env, optional E2E.log with stage chain witnesses.
+
+RC1 remains HOLD until preserved E2E path completes with physical stream counters.

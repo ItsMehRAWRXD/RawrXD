@@ -1,0 +1,13 @@
+side=deep2
+stage=LAYER_OUT_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=7e2bac36ce4a37c5
+l2=0.9897615154680196
+seq=15
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V3\deep2_LAYER_OUT_0_pos0_layer0_full_n2048_seq015.bin

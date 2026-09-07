@@ -1,0 +1,74 @@
+HEXMAG_CLIENT_MASM_001 — client → MASM control-plane path
+=========================================================
+date=2026-08-29
+status=PASS
+
+RUNTIME IDENTITY
+----------------
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_CLIENT_PATH=MASM
+
+AUTHORITY
+---------
+DOC CLAIMS DO NOT SET STATE.
+Cert exe + evidence traces = state.
+UI is OUT OF SCOPE for this gate.
+
+CALL CHAIN (required)
+---------------------
+HexMagClient::ask / runMasmChain
+  → HexMag_Init
+  → HexMag_SubmitGoal
+  → HexMag_RunToSatisfied
+  → HexMag_PollEvent
+  → decoded client events
+  → FINAL only via allowFinal + isAllowedFinalClaim (control plane)
+
+INVARIANT (frozen)
+------------------
+client_success != final_authority
+
+hexmag_client MAY: transport / decode / expose status
+hexmag_client MUST NOT:
+  invent FINAL
+  downgrade NEED_INPUT → success
+  bypass allowFinal / isAllowedFinalClaim
+  treat candidate as verified evidence
+
+CERT CASES
+----------
+Normal actionable goal     PASS  MASM invoked; FINAL after gates
+NEED_INPUT goal            PASS  HX_EVT_NEED_INPUT reaches client; no FINAL auth
+Candidate produced         PASS  events/candidates observed on actionable path
+FINAL allowed              PASS  HelloWorld verified → finalAuthority=1
+FINAL denied               PASS  oracle candidate + verifier=false → no fabricate
+Backend unavailable        PASS  forceUnavailable fail-closed + diagnostic
+Repeat tuner               PASS  generation/attempt/feedback observable
+Multiple events            PASS  poll order preserved in ClientTrace.events
+Empty/no-action goal       PASS  no fake success
+Native fallback            PASS  default off; dual env opt-in documented
+hexmag_connect_stub        PASS  MASM: prints DISABLED (no service fiction)
+
+ARTIFACTS
+---------
+CLIENT_TRACE.txt
+EVENT_TRACE.txt
+BACKEND_TRACE.txt
+FINAL_DENY.txt
+NEED_INPUT.txt
+TUNER_TRACE.txt
+GATE.txt (this file)
+
+HARNESS
+-------
+tests/hexmag_client_masm_cert.cpp
+scripts/Cert-HexMagClientMasm.ps1
+src/agent/hexmag_client.{hpp,cpp}  (MASM path; JIT demo is non-authority)
+
+NOT CERTIFIED (next)
+--------------------
+HEXMAG_RUNTIME_CONTROLLER_001   NO
+HEXMAG_FINALIZE_POLICY_001      NO   (gates exercised here; dedicated negative lane next)
+HEXMAG_IDE_UI_ROUTE_001         NO   (UI deliberately excluded)
+HEXMAG_IDE_E2E_001              NOT_CERTIFIED

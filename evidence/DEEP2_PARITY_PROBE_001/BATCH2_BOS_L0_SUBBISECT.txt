@@ -1,0 +1,56 @@
+BATCH2_BOS_L0_SUBBISECT — 2026-08-29
+
+AUTHORITY
+  workspace_cert = F:\~dev\rawrxd
+  model = F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  sha256 = 9FECC3B3CD76BBA89D504F29B616EEDF7DA85B96540E490CA5824D3F7D2776A0
+  ids = [1, 21521, 9312]
+  oracle = CPU-only llama (ggml-cpu-zen4); Vulkan / FA-auto contaminated
+
+HEXMAG
+  HEXMAG_SWARM_CONTROL_PLANE = CERTIFIED
+  HEXMAG_WEIGHTED_MODEL      = FALSE
+  HEXMAG_GENERATOR           = TRUE
+  (weightless orchestration generator; not on this chase)
+
+L0 LADDER (BOS pos=0)
+
+  1) EMBED  — PASS (bit-exact)
+     Deep2 PROMPT_EMBED  l2=1.008737855e-01 fnv=13123758da8b244a
+     llama  embd         l2=1.008737855e-01 fnv=13123758da8b244a
+     Artifact: evidence/DEEP2_PARITY_PROBE_001/ref_l0_embd_capture.txt
+
+  2) ATTN_NORM — FIRST EXACT MISMATCH when normEps wrong
+     Broken (default 1e-6):
+       Deep2 ATTN_NORM_0  l2=1.283684860e+00 fnv=76a0b6ed96c72826
+       llama  attn_norm-0 l2=8.105918780e-01 fnv=b4ca919612be6c51
+     Root cause:
+       GGUF key llama.attention.layer_norm_rms_epsilon = 1.0e-05
+       Deep2 fell through to default 1e-6 when loader matched only
+       "layer_norm_eps" (NOT a substring of layer_norm_rms_epsilon).
+     Fixed (eps=1e-5, F tree + port to g:\rawrxd GGUFLoader.cpp):
+       Deep2 ATTN_NORM_0  fnv=b4ca919612be6c51  ← MATCH llama
+       NORM_EPS=9.999999747e-06
+     Artifacts: bos_eps_fix_stdout.txt, deep2_attn_norm_stdout.txt (pre-fix)
+
+  3) POST-ATTN (attn_out / ffn_inp) — NEXT FAIL (after eps fix)
+     Deep2 ATTN_OUT_0  l2=1.210775931e-01 fnv=2f30233b2f5fa62e
+     llama  attn_out-0 l2=1.208299099e-01 fnv=5fe8f56aa443709d
+     Deep2 FFN_INP_0   l2=1.570575134e-01 fnv=8f9c8b41b36645f2
+     llama  ffn_inp-0  l2=1.568282561e-01 fnv=2386a5737e9b94b7
+     → near-miss magnitude, FNV mismatch — isolate Q/K/V → RoPE → scores → O
+
+  4) POST-FFN / LAYER_OUT_0 — still diverges (follows attn miss)
+     Deep2 LAYER_OUT_0 l2=9.823241189e-01 fnv=b9982250dbd541e1
+     llama  l_out-0    l2=9.900394931e-01 fnv=d1a7d1749916f1b8
+
+DECISIVE TARGET HIT
+  first_exact_matching_state = PROMPT_EMBED / embd (pos=0)
+  first_exact_mismatch       = ATTN_NORM under wrong eps (math/metadata bug)
+  after_eps_fix_next_fail   = ATTN_OUT_0 (attention kernel path)
+
+NEXT
+  Sub-bisect L0 attention with eps locked at 1e-5:
+    pre-RoPE Q/K/V → post-RoPE Q/K → scores → softmax → O proj
+  Do not reopen tokenizer/specials or HexMag.
+  Soft tip gate remains CPU llama greedy-1 id=13 (not Vulkan 29892).

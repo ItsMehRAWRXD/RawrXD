@@ -1,0 +1,13 @@
+side=llama
+stage=POST_FFN_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=0fdb8cbb210c97de
+l2=0.98976156470754917
+seq=130
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_CLEAN_FFN_ORACLE\llama_POST_FFN_0_pos0_layer0_full_n2048_seq130.bin

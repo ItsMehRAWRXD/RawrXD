@@ -1,0 +1,39 @@
+[build_discovery]
+action=configure_then_build
+reason=build_dir_missing_or_unconfigured
+requested_build_dir=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\work\build
+configure_command=cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+[configure_phase]
+[run_command_evidence]
+requested_cwd=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\work
+effective_cwd=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\work
+command_requested=cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+command_line_resolved=cmd.exe /d /s /c "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release"
+resolved_executable=cmd.exe
+timed_out=false
+exit_code=0
+--- stdout ---
+-- The C compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Configuring done (0.6s)
+-- Generating done (0.0s)
+-- Build files have been written to: F:/~dev/rawrxd/evidence/RUN_COMMAND_SEMANTICS_001/work/build
+--- stderr ---
+[build_phase]
+[run_command_evidence]
+requested_cwd=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\work
+effective_cwd=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\work
+command_requested=cmake --build build
+command_line_resolved=cmd.exe /d /s /c "cmake --build build"
+resolved_executable=cmd.exe
+timed_out=false
+exit_code=0
+--- stdout ---
+[1/2] Building C object CMakeFiles\rcert.dir\main.c.obj
+[2/2] Linking C executable rcert.exe
+--- stderr ---
+CLAIM_COMPILE_SUCCESS=allowed_by_tool_evidence

@@ -1,0 +1,4 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[Prometheus] Listening on port 9090 for /metrics...

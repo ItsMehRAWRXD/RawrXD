@@ -1,0 +1,13 @@
+side=llama
+stage=ATTN_NORM_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=c2b9fa1639a8fa77
+l2=21.702128116913197
+seq=1633
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_ATTN_NORM_1_pos1_layer0_full_n2048_seq1633.bin

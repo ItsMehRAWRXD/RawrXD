@@ -1,0 +1,107 @@
+LOCAL_ONLY_001 — Static Ollama dependency inventory
+Captured: 2026-08-30
+Scope: shipping / agent / IDE paths under F:\~dev\rawrxd\src (not Ship dumps, not archive)
+
+CLASSIFICATION
+  SHIPPING_CRITICAL = linked into Win32IDE / agent loop / headless chat
+  LEGACY_HTTP       = WinHTTP or default :11434 still present
+  NATIVE_MISNOMER   = type named *Ollama* but routes BackendOrchestrator (still fails
+                      OLLAMA_CLIENT_PRESENT=NO until removed from production construct path)
+  BENCH_ONLY        = benchmarks / optional tools (out of gate binary, noted)
+
+-------------------------------------------------------------------------------
+SHIPPING_CRITICAL + LEGACY_HTTP (must fail-closed for LOCAL_ONLY_001)
+-------------------------------------------------------------------------------
+src/win32app/Win32IDE.cpp
+  - m_ollamaBaseUrl default "http://localhost:11434"
+  - chat path calls trySendToOllama before local engines
+  - error copy still advises Ollama/backend switcher
+
+src/win32app/Win32IDE_Core.cpp
+  - config fallback ollama.baseUrl -> localhost:11434
+  - trySendToOllama -> ModelConnection HTTP (empty URL -> :11436)
+
+src/win32app/Win32IDE_AgentOllamaClient.cpp
+  - DEFAULT_OLLAMA_ENDPOINT http://localhost:11434
+  - WinHTTP connect defaults port 11434
+
+src/win32app/Win32IDE_AgentPanel.cpp
+  - config.ollamaBaseUrl empty -> http://localhost:11434
+
+src/win32app/Win32IDE_AIBackend.cpp
+  - endpoint empty -> localhost:11434; WinHTTP probe
+
+src/win32app/Win32IDE_AIFeatures.cpp / Win32IDE_AIFeatures_Real.cpp
+  - g_ollamaUrl localhost:11434; soft error strings (response-like)
+
+src/win32app/Win32IDE_ChatPanel_Ollama.cpp
+  - WinHttpConnect localhost:11434; /api/tags
+
+src/win32app/Win32IDE_ChatWindow.cpp
+  - NativeClient("http://localhost:11434")
+
+src/win32app/Win32IDE_Commands.cpp
+  - local.endpoint http://127.0.0.1:11434
+
+src/win32app/Win32IDE_BackendSwitcher.cpp
+  - ollama.endpoint + AgentOllamaClient probe :11434
+
+src/win32app/Win32IDE_AgentCommands.cpp
+  - AgentOllamaClient probe; user text requires Ollama at :11434
+
+src/win32app/Win32IDE_AIReverseEngineering.cpp
+  - AgentOllamaClient cfg.port = 11434
+
+src/win32app/Win32IDE_AuditDashboard.cpp
+  - AgentOllamaClient health vs 127.0.0.1:11434
+
+src/win32app/HeadlessIDE.cpp / HeadlessIDE.h
+  - multiple AgentOllamaClient constructions; default ollamaPort=11434
+  - soft fallback text referencing port 11434
+
+src/win32app/ModelConnection.h
+  - default endpoint http://localhost:11434; WinHttpConnect :11434
+
+src/win32app/main_win32.cpp
+  - WinHttpConnect 127.0.0.1:11434
+
+src/agentic/BoundedAgentLoop.h / .cpp
+  - ollamaBaseUrl default http://localhost:11434
+  - NativeChat parses URL; port fallback 11434; constructs AgentOllamaClient
+
+src/agentic/AgentOrchestrator.cpp
+  - std::make_unique<AgentOllamaClient>(...)
+
+src/agentic/AgentRun.hpp
+  - ollamaBaseUrl default http://localhost:11434
+
+src/agentic/AgentOllamaClient.h
+  - OllamaConfig.host/port defaults 127.0.0.1 / 11434
+  - Class retained (NATIVE_MISNOMER for ChatSync body in .cpp)
+
+-------------------------------------------------------------------------------
+NATIVE_MISNOMER (HTTP removed in ChatSync body; still inventory FAIL for name/construct)
+-------------------------------------------------------------------------------
+src/agentic/AgentOllamaClient.cpp
+  - ChatSync/ChatStream enqueue BackendOrchestrator (no WinHTTP in this TU)
+  - Still constructed widely; defaults advertise :11434
+
+src/agentic/Deep2SovereignInferenceGateway.hpp
+  - AUTHORITATIVE Deep2/GGUF path for this gate (load/generate/unload; no Ollama)
+
+-------------------------------------------------------------------------------
+BENCH_ONLY / NON-SHIP (documented, not gate binary)
+-------------------------------------------------------------------------------
+benchmarks/sovereign_vs_ollama/**
+gateway/RawrXDGateway*.cpp
+certification/CertificationHarness.* (ollama_host default)
+Full Source/** mirrors (non-canonical vs src/)
+compilers/native_toolchain/unified_model_streamer.c
+
+-------------------------------------------------------------------------------
+INVENTORY VERDICT (post-cert 2026-08-30)
+-------------------------------------------------------------------------------
+OLLAMA_HTTP_DEFAULTS_PRESENT     = PARTIAL (residual files remain; shipping entry points fail-closed)
+AGENTOLLAMACLIENT_CONSTRUCTED    = NO on LOCAL_ONLY_001 cert path
+DEEP2_GATEWAY_AVAILABLE          = YES
+GATE_READY_WITHOUT_CODE_CHANGE   = N/A — GATE = PASS / CERTIFIED (see GATE.txt)

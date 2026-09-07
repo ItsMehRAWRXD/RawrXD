@@ -1,0 +1,40 @@
+Q4K-GEMV-001
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+out=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_Q4K_GEMV_001
+attn_q rows=2048 cols=2048 type=12 bpr=8 eps=9.99999975e-06
+ATTN_NORM_0 l2=8.105917814e-01 fnv=d316184aaf1350a3
+rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+rms_norm_epsilon=9.999999747e-06
+ATTN_NORM_0_vs_batch2_cert=DIFF (expect_fnv=b4ca919612be6c51)
+scale_unpack_match=1
+[row0_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.288583181e-01 l2b=1.288583181e-01
+[row0_legacy] n=256 max_abs=5.993127823e-02 first_bad=16 l2a=1.636894596e-01 l2b=1.288583181e-01
+[row1_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.561137132e-01 l2b=1.561137132e-01
+[row1_legacy] n=256 max_abs=4.571676254e-02 first_bad=16 l2a=1.703396583e-01 l2b=1.561137132e-01
+[row2_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.933744051e-01 l2b=1.933744051e-01
+[row2_legacy] n=256 max_abs=7.277369499e-02 first_bad=16 l2a=3.063457301e-01 l2b=1.933744051e-01
+[row3_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.205037336e-01 l2b=1.205037336e-01
+[row3_legacy] n=256 max_abs=6.426841021e-02 first_bad=16 l2a=1.586843082e-01 l2b=1.205037336e-01
+[row4_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=9.694478729e-02 l2b=9.694478729e-02
+[row4_legacy] n=256 max_abs=4.021704197e-02 first_bad=16 l2a=1.387717742e-01 l2b=9.694478729e-02
+[row5_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.834261648e-01 l2b=1.834261648e-01
+[row5_legacy] n=256 max_abs=8.458721638e-02 first_bad=16 l2a=2.954840915e-01 l2b=1.834261648e-01
+[row6_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.237841021e-01 l2b=1.237841021e-01
+[row6_legacy] n=256 max_abs=5.472296476e-02 first_bad=16 l2a=2.003944708e-01 l2b=1.237841021e-01
+[row7_deep2] n=256 max_abs=0.000000000e+00 first_bad=-1 l2a=1.801057799e-01 l2b=1.801057799e-01
+[row7_legacy] n=256 max_abs=7.208061218e-02 first_bad=16 l2a=2.830481106e-01 l2b=1.801057799e-01
+[QuantKernelRegistry] Q4_K GEMV=00007FF64CA93C70 dequant=00007FF64CA913F0 GetGEMV(12)=00007FF64CA93C70 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[full_deep2Dequant_vs_ggml] n=2048 max_abs=0.000000000e+00 first_bad=-1 l2a=1.940769575e+00 l2b=1.940769575e+00
+[full_prodKernel_vs_ggml_fp64] n=2048 max_abs=1.941382885e-03 first_bad=0 l2a=1.938516748e+00 l2b=1.940769575e+00
+[full_legacy_vs_ggml] n=2048 max_abs=3.387511447e-01 first_bad=0 l2a=2.060373337e+00 l2b=1.940769575e+00
+[full_prodKernel_vs_ggml_q8k] n=2048 max_abs=0.000000000e+00 first_bad=-1 l2a=1.938516748e+00 l2b=1.938516748e+00
+Q_fnv ggml_fp64=701cc5c267242e9a l2=1.940769575e+00
+Q_fnv deep2_prod=bd582cbbc153cc54 l2=1.938516748e+00 batch2_deep2=DIFF
+Q_fnv ggml_q8k=bd582cbbc153cc54 l2=1.938516748e+00 batch2_llama=DIFF (expect l2~1.93852)
+[blk.0.attn_k.weight] row0 ggml=1.770061785e-02 prod=1.783476025e-02 delta=1.341424027e-04 DIFF
+[blk.0.attn_v.weight] row0 ggml=1.050424507e+06 prod=1.043304562e+06 delta=7.119944058e+03 DIFF
+Q4K-GEMV-001=PASS dequant=MATCH prod_vs_q8k=MATCH max_abs=0.000000000e+00 first_bad=-1

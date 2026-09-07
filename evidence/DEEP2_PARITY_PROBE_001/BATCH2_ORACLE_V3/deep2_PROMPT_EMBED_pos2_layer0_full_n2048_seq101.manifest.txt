@@ -1,0 +1,13 @@
+side=deep2
+stage=PROMPT_EMBED
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=4c65a249c9e0756c
+l2=0.57560862196695017
+seq=101
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V3\deep2_PROMPT_EMBED_pos2_layer0_full_n2048_seq101.bin

@@ -1,0 +1,17 @@
+ITEM: A2
+SOURCE: P1PRA_ProcessState.cpp P1PRA_ProcessStartup / appendRunLog
+WITNESS_FIELD: PROCESS_START_FINALIZE, P1PRA_FINALIZE, P1PRA_FINALIZE_NONZERO
+EXERCISE: Cold-boot RawrXD-Win32IDE (build_p1pra_win32ide), wait 8s, archive RUN.log before any Send
+ARTIFACT: evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/reconclusion/A2_STARTUP_RUN.log
+OBSERVED:
+  PROCESS_START_FINALIZE=FAIL
+  P1PRA_FINALIZE=1
+  P1PRA_FINALIZE_NONZERO=PASS
+  P1PRA_CURRENT_STAGE=NONE
+  P1PRA_REQUEST_ID=0
+RECONCILIATION:
+  Startup finalize FAIL is BY DESIGN (fail-closed empty chain at boot).
+  g_P1PRA_StartupFinalize != 0 maps to PROCESS_START_FINALIZE=FAIL per appendRunLog.
+  E2E contract FINALIZE=0 applies only after full send stage chain (USER_PROMPT..UI_EMIT).
+  These are two distinct finalize contexts — not a regression.
+STATUS: WITNESSED

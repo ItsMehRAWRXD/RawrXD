@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Kcur_2 (reshaped)
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=2afdfe306b6f0d77
+l2=14.298721726384668
+seq=272
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001\llama\llama_TENS_Kcur_2_(reshaped)_pos0_layer0_full_n64_seq272.bin

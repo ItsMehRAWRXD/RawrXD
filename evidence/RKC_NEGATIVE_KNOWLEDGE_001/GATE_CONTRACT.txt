@@ -1,0 +1,3 @@
+# RKC_NEGATIVE_KNOWLEDGE_001
+# Formalize NOT_PRESENT / NOT_REACHABLE / NOT_OBSERVED / NOT_SUPPORTED /
+# NOT_CONNECTED / NOT_ACTIVE. Absence must not become inferred success.

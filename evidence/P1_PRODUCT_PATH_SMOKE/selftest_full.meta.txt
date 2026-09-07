@@ -1,0 +1,7 @@
+﻿exe=F:\~dev\rawrxd\build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+sha_match=True
+args=--selftest
+exit=2
+stdout_bytes=823
+stderr_bytes=106

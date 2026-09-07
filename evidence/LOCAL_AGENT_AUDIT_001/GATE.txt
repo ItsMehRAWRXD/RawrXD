@@ -1,0 +1,83 @@
+LOCAL_AGENT_AUDIT_001
+=====================
+DATE=2026-09-07
+SOURCE=G:\~dev\rawrxd
+
+PRODUCT OBJECTIVE
+-----------------
+RawrXD stays alive → loads one local GGUF → real decode TPS →
+agent reads one source file → model audits that file (canary proof).
+
+PARKED (do not start until this gate PASSes)
+--------------------------------------------
+QuantKB / PCIe telemetry expansion
+More registry commands
+MASM skeleton expansion
+K2 logits cut-sweep / Q_A packed micro+
+Full VWA streaming (beyond RMV mount identity)
+
+MOUNT / UNMOUNT AUTHORITY
+-------------------------
+Use existing RMV physical identity as the mount surface:
+
+  src/deep2/VirtualTensorDesc.hpp
+    VirtualTensorDesc  = {shard, fileOffset, byteLength, type, addressed}
+    RmvMountReport     = discovered == addressed == registered
+    MakeDescFromGguf / AuditDesc
+
+Semantics (SESSION_CHECKPOINT):
+  MOUNTED ≠ RESIDENT ≠ ACTIVE ≠ PINNED ≠ EJECTED
+  VWA = Virtual Weight Address under RMV
+  Drive letter optional presentation only
+
+Do NOT invent a second mount API. Extend RMV → VWA later.
+
+GATE WITNESSES
+--------------
+P0_PROCESS_ALIVE=1
+MODEL_LOCAL_ONLY=1
+MODEL_LOAD=PASS
+PROMPT_EMBED_NONZERO=1
+PREFILL=PASS
+TOKENS_GENERATED>=32
+DECODE_TPS_REAL=>0
+FILE_READ=1
+FILE_BYTES>0
+MODEL_PROMPT_CONTAINS_FILE=1
+PROMPT_HAS_CANARY=1
+MODEL_IDENTIFIED_CANARY=1
+AUDIT_RESPONSE_NONEMPTY=1
+PROCESS_STILL_ALIVE=1
+
+LOCAL_AGENT_AUDIT_001=PASS|FAIL|BLOCKED
+
+TPS (wall-clock only)
+---------------------
+decode_tps = generated_tokens / (decode_elapsed_us / 1e6)
+Headline TPS must NOT use kernel-internal counters.
+
+PHASE ORDER
+-----------
+1. process survives (CLI / harness)
+2. known-good small GGUF loads
+3. generate >=32 tokens, seal DECODE_TPS
+4. ReadFile one fixture
+5. inject into local prompt
+6. audit response nonempty
+7. canary LOCAL_AGENT_AUDIT_CANARY_7F31 recognized
+
+MODEL POLICY
+------------
+Start smallest known-good GGUF (TinyLlama / unlock-1B class).
+K2 deferred until this product slice PASSes.
+PROMPT_EMBED norm > 0 or hard abort (no 1e-6 mask for real tokens).
+
+ENV
+---
+RAWRXD_LOCAL_GGUF=<path to .gguf>
+RAWRXD_AUDIT_FILE=<optional; default fixture>
+
+STATUS
+------
+Harness + fixture + this gate: LANDED
+Executable run: pending model path + linkable Deep2 target

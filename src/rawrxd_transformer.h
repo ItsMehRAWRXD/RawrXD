@@ -41,6 +41,7 @@
 #include "runtime/elastic/ElasticEngine.hpp"
 #include "runtime/elastic/VulkanTensorResidencyBackend.hpp"
 #include "runtime/memory/WeightResidencyPool.hpp"
+#include "runtime/memory/DecodeCarry.hpp"
 #include "runtime/StreamRouterAdapter.hpp"
 #include "Sovereign_ABI.h"
 #include "rawrxd_model_loader.h"
@@ -372,6 +373,18 @@ class RawrXDTransformer
     // Set true when T==1 (decode) to bypass pool lookup/materialization overhead.
     // Cleared when T>1 (prefill) to retain B015 acceleration.
     bool m_b015DecodeBypass = false;
+    // When true: T==1 warm carry — use pool hits, but never materialize on miss.
+    bool m_b015CarryWarm = false;
+
+    // DecodeCarry: token N pins resident B015 weights for token N+1 (T==1 only).
+    rawrxd::DecodeCarry m_decodeCarry;
+    uint64_t m_decodeCarryGeneration = 0;
+    uint64_t m_decodeCarryPrepares = 0;
+    uint64_t m_decodeCarryHits = 0;
+
+    void InvalidateDecodeCarry() noexcept { m_decodeCarry.invalidate(); }
+    bool DecodeCarryValid() const noexcept { return m_decodeCarry.valid; }
+    uint64_t DecodeCarryPrepares() const noexcept { return m_decodeCarryPrepares; }
 
     // Elastic Engine proof instrumentation (ELASTIC audit)
     mutable std::atomic<std::uint64_t> m_elasticMatMulCalls{0};

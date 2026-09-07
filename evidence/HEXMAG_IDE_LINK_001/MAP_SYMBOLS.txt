@@ -1,0 +1,11 @@
+FOUND HexMag_Init :: 0001:019d12e9       HexMag_Init                0000000001dd22e9 f   RawrXD_HexMag_Swarm.asm.obj
+FOUND HexMag_SubmitGoal :: 0001:019d1bd1       HexMag_SubmitGoal          0000000001dd2bd1 f   RawrXD_HexMag_Swarm.asm.obj
+FOUND HexMag_RunToSatisfied :: 0001:019d1e51       HexMag_RunToSatisfied      0000000001dd2e51 f   RawrXD_HexMag_Swarm.asm.obj
+FOUND HexMag_PollEvent :: 0001:019d1df6       HexMag_PollEvent           0000000001dd2df6 f   RawrXD_HexMag_Swarm.asm.obj
+FOUND HexMag_IsInitialized :: 0001:019d1eb1       HexMag_IsInitialized       0000000001dd2eb1 f   RawrXD_HexMag_Swarm.asm.obj
+FOUND HexMag_Tuner_Init :: 0001:019d236c       HexMag_Tuner_Init          0000000001dd336c f   RawrXD_HexMag_RepeatTuner.asm.obj
+FOUND HexMag_Tuner_Next :: 0001:019d2483       HexMag_Tuner_Next          0000000001dd3483 f   RawrXD_HexMag_RepeatTuner.asm.obj
+FOUND HexMag_Tuner_GenerationId :: 0001:019d256d       HexMag_Tuner_GenerationId  0000000001dd356d f   RawrXD_HexMag_RepeatTuner.asm.obj
+FOUND emitIdeLinkDiagnostic :: 0001:016798d0       ?emitIdeLinkDiagnostic@HexMag@RawrXD@@YAXXZ 0000000001a7a8d0 f   hexmag_ide_link_probe.cpp.obj
+FOUND HEXMAG_BACKEND :: 0002:001905e0       ??_C@_0DD@BICAIBBH@HEXMAG_BACKEND?$DN?$CFs?6HEXMAG_LINKED@ 00000000022e85e0     hexmag_ide_link_probe.cpp.obj
+FOUND HEXMAG_LINKED :: 0002:001905e0       ??_C@_0DD@BICAIBBH@HEXMAG_BACKEND?$DN?$CFs?6HEXMAG_LINKED@ 00000000022e85e0     hexmag_ide_link_probe.cpp.obj

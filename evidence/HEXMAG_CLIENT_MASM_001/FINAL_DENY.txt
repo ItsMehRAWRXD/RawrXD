@@ -1,0 +1,6 @@
+error=empty_candidate
+claimState=0
+selectedCandidate=
+oracleInvoked=1
+success=0
+finalAuthority=0

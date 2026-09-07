@@ -1,0 +1,51 @@
+BATCH2_L2_OUT_LOC
+deep2=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L2_CLEAN_001\deep2_swiglu_fix
+llama_ffn=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L2_CLEAN_001\llama
+llama_tip=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_SPARSE_CLEAN_001\llama
+eps_pass=1e-06 eps_inspect=1e-05
+
+=== stage ladder (Deep2 vs llama) ===
+ATTN_NORM_2  PASS    max_abs=7.152557e-07 first_bad=-1 largest=1454 exact=209/2048
+ATTN_OUT_2   PASS    max_abs=8.940697e-08 first_bad=-1 largest=411 exact=113/2048
+FFN_INP_2    PASS    max_abs=1.192093e-07 first_bad=-1 largest=411 exact=180/2048
+FFN_NORM_2   PASS    max_abs=2.980232e-07 first_bad=-1 largest=624 exact=155/2048
+FFN_GATE_2   INSPECT max_abs=1.907349e-06 first_bad=5475 largest=5475 exact=449/5632
+             @first_bad d=1.67641392e+01 l=1.67641373e+01 delta=1.90734863e-06
+FFN_UP_2     PASS    max_abs=9.536743e-07 first_bad=-1 largest=5475 exact=475/5632
+FFN_ACT_2    FAIL    max_abs=4.577637e-05 first_bad=5475 largest=5475 exact=187/5632
+             @first_bad d=1.60217300e+02 l=1.60217255e+02 delta=4.57763672e-05
+FFN_DOWN_2   FAIL    max_abs=4.577637e-05 first_bad=14 largest=624 exact=29/2048
+             @first_bad d=2.05322921e-01 l=2.05324173e-01 delta=-1.25169754e-06
+POST_FFN_2   FAIL    max_abs=4.302920e-01 first_bad=0 largest=5 exact=0/2048
+             @first_bad d=-2.60203835e-02 l=-2.83808708e-02 delta=2.36048736e-03
+L2_OUT       FAIL    max_abs=4.577637e-05 first_bad=14 largest=624 exact=30/2048
+             @first_bad d=1.78828761e-01 l=1.78830013e-01 delta=-1.25169754e-06
+
+=== Deep2 residual identities (oracle-independent) ===
+POST_FFN_2 == LAYER_OUT_2     PASS    max_abs=0.000000e+00
+FFN_INP_2 == L1_OUT+ATTN_OUT PASS    max_abs=7.450581e-09
+L2_OUT == FFN_INP+FFN_DOWN   INSPECT max_abs=5.185604e-06
+
+=== scalar SiLU (Deep2 GATE/UP) ===
+Deep2 ACT == silu(G)*U         FAIL    max_abs=1.391005e-05 first_bad=5475 largest=5475
+llama ACT == silu(Gl)*Ul       INSPECT max_abs=2.350032e-06
+Deep2 ACT vs llama ACT         FAIL    max_abs=4.577637e-05 first_bad=5475 largest=5475
+silu(Gd)*Ud vs llama ACT       FAIL    max_abs=3.186632e-05 first_bad=5475
+silu(Gd)*Ud vs silu(Gl)*Ul     FAIL    max_abs=3.421635e-05 first_bad=5475
+  worst ACT idx=5475: Gd=1.67641392e+01 Ud=9.55714417e+00 Ad=1.60217300e+02 Gl=1.67641373e+01 Ul=9.55714321e+00 Al=1.60217255e+02 ref_d=1.60217287e+02 ref_l=1.60217252e+02
+  deltas: G=1.90734863e-06 U=9.53674316e-07 ACT=4.57763672e-05 ref=3.42163472e-05
+
+=== DECISION ===
+FIRST_TENSOR_FAIL=FFN_ACT_2
+CLASS=DEEP2_SILU_STILL_WRONG
+NEXT=fix Deep2Engine::SwiGLU further; ACT != silu(G)*U
+
+=== top ACT abs deltas ===
+  idx= 5475 dACT=4.577637e-05 Gd=1.676414e+01 Gl=1.676414e+01 dG=1.907349e-06 Ud=9.557144e+00 Ul=9.557143e+00 dU=9.536743e-07
+  idx=  385 dACT=7.152557e-07 Gd=2.991358e+00 Gl=2.991357e+00 dG=4.768372e-07 Ud=-4.425407e-01 Ul=-4.425406e-01 dU=-1.490116e-07
+  idx= 4942 dACT=4.768372e-07 Gd=2.848745e+00 Gl=2.848745e+00 dG=2.384186e-07 Ud=8.519170e-01 Ul=8.519169e-01 dU=5.960464e-08
+  idx= 3950 dACT=4.768372e-07 Gd=3.022151e+00 Gl=3.022151e+00 dG=2.384186e-07 Ud=6.648970e-01 Ul=6.648968e-01 dU=1.192093e-07
+  idx= 3610 dACT=4.768372e-07 Gd=2.882200e+00 Gl=2.882200e+00 dG=2.384186e-07 Ud=-9.535782e-01 Ul=-9.535782e-01 dU=0.000000e+00
+  idx= 2726 dACT=4.768372e-07 Gd=2.429063e+00 Gl=2.429062e+00 dG=4.768372e-07 Ud=4.631388e-01 Ul=4.631387e-01 dU=8.940697e-08
+  idx= 2075 dACT=4.768372e-07 Gd=3.118387e+00 Gl=3.118387e+00 dG=4.768372e-07 Ud=7.624918e-01 Ul=7.624918e-01 dU=0.000000e+00
+  idx= 1905 dACT=4.768372e-07 Gd=2.832085e+00 Gl=2.832085e+00 dG=2.384186e-07 Ud=7.579303e-01 Ul=7.579301e-01 dU=1.788139e-07

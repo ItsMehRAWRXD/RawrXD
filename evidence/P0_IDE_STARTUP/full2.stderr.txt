@@ -1,0 +1,21 @@
+[Prometheus] Listening on port 9090 for /metrics...
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+[STARTUP] createWindow ENTER (Core)
+[STARTUP] before IDEConfig::getInstance
+[STARTUP] after IDEConfig::getInstance
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: F:\~dev\rawrxd\build-win32ide-fresh\bin\rawrxd.config.json — using defaults.
+[Win32IDE] Using config fallback: http://localhost:11434
+[STARTUP] after agenticConfig locals (before nested scope exit)
+[STARTUP] after agenticConfig nested scope exit
+[STARTUP] config complete
+[STARTUP] before config scope exit
+[STARTUP] after config scope exit
+[STARTUP] before SettingsManager
+[STARTUP] after SettingsManager Initialize OK
+[STARTUP] after GetWindowState
+[STARTUP] after windowState apply (before Settings scope exit)
+[STARTUP] after SettingsManager scope exit
+Failed to initialise snmalloc.

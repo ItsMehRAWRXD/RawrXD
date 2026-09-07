@@ -1,0 +1,16 @@
+RKC_MODEL_INVENTORY_001=PASS
+
+MODEL_ROOT=F:\OllamaModels
+RAW_GGUF entries=17  OLLAMA_MANIFEST entries=163
+RAW_CORPUS_BYTES=1801605458112 (~1.64 TiB across raw leaves)
+
+Kimi-K2-Instruct-0905-GGUF.Q4_K_M (RAW_GGUF):
+  shards=13  corpus_bytes=621245224864 (~578.58 GiB)
+  runtime_compat=1  source=RAW_GGUF
+
+Provenance:
+  inventory.merge_forbidden=1
+  namespaces inventory.raw_gguf.* vs inventory.ollama_manifest.* disjoint
+  manifest runtime_compat=0 (inventory/import only — not Deep2 loader authority)
+
+Next: Product Deep2-only model authority (selection → RKC facts → Deep2 loader/generate)

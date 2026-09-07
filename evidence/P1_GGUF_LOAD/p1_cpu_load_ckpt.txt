@@ -1,0 +1,63 @@
+P1_CPU_LOAD_CKPT begin
+
+18:05:25.515 IDE_LoadModel dispatch_worker
+18:05:25.521 IDE_LoadModel before_worker_LoadModel
+18:05:25.522 CIE_LoadModel enter
+18:05:25.524 CIE_path F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+18:05:25.525 CIE_utf16 ok
+18:05:25.526 CIE_ext_tokenizer absent_use_gguf
+18:05:25.527 CIE_before_InferenceBackend_Initialize
+18:05:25.528 CIE_backend CPU_AVX2_forced
+18:05:25.529 INF_Initialize enter
+18:05:25.531 INF_vulkan skip
+18:05:25.532 INF_vulkan cpu_null_device
+18:05:25.533 INF_loader_Load before
+18:05:25.534 LOADER_Load enter
+18:05:25.535 LOADER_gguf_reader validation_begin
+18:05:25.565 LOADER_backend gpu-only
+18:05:25.566 LOADER_sliding_window before
+18:05:25.567 LOADER_sliding_window ok
+18:05:25.568 LOADER_file_mapping ok
+18:05:25.570 LOADER_metadata parse_before
+18:05:25.574 LOADER_metadata parse_after
+18:05:25.575 LOADER_tensor_table parse_before
+18:05:25.577 LOADER_tensor_table materialize_lazy
+18:05:25.578 LOADER_tensor_table lookup_map
+18:05:25.579 LOADER_Load ok
+18:05:25.580 INF_loader_Load ok
+18:05:25.582 INF_model_config alloc
+18:05:25.583 INF_model_config dim=2048 layers=22 heads=32 kv=4 vocab=32000 hidden=5632 ctx=2048
+18:05:25.583 INF_transformer_Initialize before
+18:05:25.584 XFMR_Initialize enter
+18:05:25.585 XFMR_DetectFusedQKV before
+18:05:25.587 XFMR_DetectFusedQKV after
+18:05:25.588 XFMR_KV_ALLOC layers=22 ctx=2048 kv_dim=256 elems=11534336
+18:05:25.596 XFMR_KV_ALLOC k_ok
+18:05:25.608 XFMR_KV_ALLOC v_ok
+18:05:25.609 XFMR_KV_ALLOC pos_ok
+18:05:25.610 XFMR_moe_setup ok
+18:05:25.611 XFMR_residency_pool before
+18:05:25.611 XFMR_residency_pool ok
+18:05:25.614 XFMR_governance before
+18:05:25.615 XFMR_governance started
+18:05:25.616 XFMR_elastic enter
+18:05:25.617 XFMR_elastic index_ctor_before
+18:05:25.620 XFMR_elastic index_ctor_ex
+18:05:25.622 XFMR_Initialize done_no_elastic
+18:05:25.623 INF_transformer_Initialize after
+18:05:25.624 INF_swarm make_scheduler
+18:05:25.625 INF_swarm configure
+18:05:25.625 INF_swarm submitPlan
+18:05:25.628 INF_swarm executePlan_before
+18:05:25.629 INF_swarm executePlan_after
+18:05:25.630 INF_swarm ownership_to_transformer
+18:05:25.631 INF_tokenizer before
+18:05:25.632 INF_tokenizer SetVocabulary
+18:05:25.642 INF_tokenizer after
+18:05:25.643 INF_Initialize READY
+18:05:25.643 CIE_Initialize returned_true
+18:05:25.645 CIE_metadata vocab=32000 dim=2048 layers=22 heads=32
+18:05:25.646 CIE_titan before_LoadLibrary
+18:05:25.647 CIE_titan absent
+18:05:25.649 CIE_LoadModel success
+18:05:25.650 IDE_LoadModel ok

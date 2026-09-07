@@ -1,0 +1,31 @@
+P1PRA_002 Source Manifestation Reconclusioning — Summary
+Generated: 2026-09-01 (updated post load-AV session 1ed348)
+
+| Item | Status | Artifact |
+|------|--------|----------|
+| M1 Production bounded scan | WITNESSED | reconclusion/M1_PRODUCTION_BOUNDED_SCAN.txt |
+| M2 Stale registry (40) | CLASSIFIED | reconclusion/M2_STALE_REGISTRY_40.txt |
+| M6 Binary identity seal | SUPERSEDED by E2E hash | reconclusion/M6_BINARY_IDENTITY_SEAL.txt |
+| M12 Ship/* matrix | WITNESSED (2 TUs) | reconclusion/M12_SHIP_WIN32IDE_MATRIX.txt |
+| F:\ inventory | GENERATED | reconclusion/F_DEV_SOURCE_INVENTORY.txt |
+| A4 Binary lane | WITNESSED | reconclusion/A4_BINARY_LANE.txt |
+| A2 Startup finalize | WITNESSED (orthogonal FAIL) | reconclusion/A2_STARTUP_FINALIZE.txt |
+| A3 EXE_SHA256 | VERIFIED on E2E pass | reconclusion/A3_EXE_SHA256.txt |
+| B3 Inference worker | RECONCLUDED + code fix | reconclusion/B3_INFERENCE_WORKER.txt |
+| B2-B4 Stage chain | WITNESSED (19:54 E2E) | reconclusion/B2_B4_STAGE_CHAIN.txt |
+| C1-C2 Fault bisect | WITNESSED (86 faults) | reconclusion/C1_C2_FAULT_BISECT.txt |
+| Load AV / UTC telemetry | ISOLATED (skip env) | reconclusion/LOAD_AV_CAPTURE_RUN2-4.txt |
+| E1 Harness rerun | PASS (19:54:48) | reconclusion/E1_HARNESS_RESULT.txt |
+| Doc contradictions | RECONCILED | RECONCLUSION_REGISTER.txt |
+
+Code fixes (build_p1pra_win32ide):
+  Win32IDE_Telemetry.cpp — RAWRXD_SKIP_UTC_MASM bypass (isolation)
+  Win32IDE.cpp — m_inferenceRunning/m_inferenceStopRequested init (H6)
+  Win32IDE.cpp — busy-reject empty callback; physical stream witnesses (B3)
+  P1PRA_ProcessState.cpp — debug NDJSON session 1ed348, EXE SHA256
+
+RC1: HOLD
+  E2E_PRODUCT_AUTHORITY=PASS (19:54) with physical counters + FINALIZE=0
+  RUN_STARTUP_FINALIZE=FAIL remains by design (empty chain at boot)
+  UTC MASM kernel still faults without RAWRXD_SKIP_UTC_MASM (cf_shadow_rsp_pre)
+  Next: fix RawrXD_Telemetry_Kernel.asm CreateFile stack path; re-run E2E without skip

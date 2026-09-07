@@ -1,0 +1,12 @@
+# NU_PACK_FORMAT_001
+# CPU-only NU fused pack format gate.
+#
+# Must prove:
+#   - Stream magic 0x46554E00 ("NU") + version=1 after packTensor
+#   - Pack/unpack roundtrip RMSE bounds: Q8_0, Q4_0, Q4_K, F16
+#   - Packed size / F32 size compression ratio under format budgets
+#   - Bad magic fail-closed (unpack returns 0)
+#   - XVA magic 0x41585632 ("2VXA"), cacheLine=64, aligned payload, roundtrip
+#   - Format table: Q4_0 = 20B/32 elems / 4 bpw
+#
+# Live generate MUST NOT consume NU bytes until NU_GEMV_PARITY_001.

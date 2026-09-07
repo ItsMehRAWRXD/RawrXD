@@ -1,0 +1,10 @@
+id=cert_sess_001
+model=tinyllama
+path=
+workspace=G:\~dev\rawrxd
+autonomy=off
+plan=
+patch=
+turns=2
+user	hi
+assistant	hello

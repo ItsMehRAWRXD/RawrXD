@@ -1,0 +1,13 @@
+side=llama
+stage=LOGITS
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=32000
+nbytes=128000
+fnv=10bfdb9f7225d160
+l2=745.60223232602982
+seq=21
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_SPARSE_CLEAN_001\llama\llama_LOGITS_pos0_layer0_full_n32000_seq021.bin

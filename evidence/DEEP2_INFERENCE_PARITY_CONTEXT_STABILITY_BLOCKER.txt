@@ -1,0 +1,28 @@
+DEEP2_BLOCKER_RECLASS — 2026-08-29
+
+PREVIOUS_NAME=Deep2 numerical stability blocker
+CURRENT_NAME=Deep2 inference parity / context-stability blocker
+
+DEEP2_PONG_PROBE_001 evidence:
+  short_context_numerical_stability = PARTIAL_PASS
+    - forward completes
+    - residuals finite/bounded (peak residual l2 ~36 @ L21)
+    - no B3_FIRST_BAD
+    - logits finite (nan=0 inf=0)
+    - valid token id + decode
+  correct_logits_content = UNPROVEN
+    - greedy top-1 = 6824 "!!" for prompt PONG (not expected content)
+  long_context_stability = FAIL (prior Agentic smoke ~3e6 by L6/L7)
+  model_originated_agency / AGENT-E2E-002b = BLOCKED
+
+NEXT_CERT_TARGET=DEEP2-PARITY-PROBE-001
+  identical TinyLlama token IDs
+  → Deep2 vs reference top-logit comparison at ctx=2
+  → context-length peak-activation sweep until first divergent layer/token
+
+PROBE_MATRIX=
+  A logits vs reference (highest value)
+  B tokenizer ID parity
+  C ctx 2→8→32→128→512 activation growth
+  D repeated/simple-token synthetic contexts
+  E agent prompt prefix length sweep

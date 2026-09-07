@@ -1,0 +1,11 @@
+id=chat_repl_001
+model=tinyllama
+path=
+workspace=G:\~dev\rawrxd
+autonomy=off
+plan=
+patch=
+turns=3
+user	hello
+assistant	hi there
+user	remember me

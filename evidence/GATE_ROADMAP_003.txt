@@ -1,0 +1,29 @@
+GATE_ROADMAP_003 — next 15 runtime gates
+========================================
+
+Batch 3 — Quant family + packed fusion + dynamic window (1–15)
+ 1. STREAMER_GPU_Q5K_GEMV_001
+ 2. STREAMER_GPU_Q3K_GEMV_001
+ 3. STREAMER_GPU_Q2K_GEMV_001
+ 4. STREAMER_GPU_Q8_GEMV_001
+ 5. STREAMER_GPU_QUANT_COVERAGE_001
+ 6. STREAMER_GPU_PACKED_FORWARD_001
+ 7. STREAMER_GPU_ASYNC_PIPELINE_001
+ 8. STREAMER_GPU_TRANSFER_BATCH_001
+ 9. STREAMER_GPU_COMMAND_REUSE_001
+10. STREAMER_GPU_FUSION_001
+11. STREAMER_GPU_FUSED_QKV_001
+12. STREAMER_GPU_FUSED_FFN_001
+13. STREAMER_GPU_KERNEL_TUNE_001
+14. STREAMER_GPU_MEMORY_TUNE_001
+15. STREAMER_GPU_DYNAMIC_WINDOW_001
+
+Umbrella: DEEP2_RUNTIME_BATCH3_001
+
+Run
+----
+  ninja -C build-ninja deep2_gpu_quant_family_cert deep2_gpu_packed_forward_cert deep2_gpu_dynamic_window_cert deep2_runtime_batch3_cert
+  build-ninja\bin\deep2_gpu_quant_family_cert.exe
+  build-ninja\bin\deep2_gpu_packed_forward_cert.exe
+  build-ninja\bin\deep2_gpu_dynamic_window_cert.exe
+  build-ninja\bin\deep2_runtime_batch3_cert.exe

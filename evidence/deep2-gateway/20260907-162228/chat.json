@@ -1,0 +1,7 @@
+{
+  "test": "chat_endpoint",
+  "endpoint": "http://127.0.0.1:11435/v1/chat/completions",
+  "reachable": true,
+  "request": "{"model":"Deep2","messages":[{"role":"user","content":"test"}]}",
+  "response_preview": "{"id":"chatcmpl-mock","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"mock ok"}}]}"
+}

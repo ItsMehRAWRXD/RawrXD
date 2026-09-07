@@ -58,6 +58,13 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
     const int T = static_cast<int>(tokens.size());
     int64_t current_pos = static_cast<int64_t>(std::max(0, start_pos));
 
+    // Prefill batch owns B015; invalidate decode carry to prevent phase leak.
+    if (T > 1) {
+        InvalidateDecodeCarry();
+        m_b015DecodeBypass = false;
+        m_b015CarryWarm = false;
+    }
+
     int n_kv_heads = config.n_kv_heads > 0 ? config.n_kv_heads : n_heads;
     n_kv_heads = std::max(1, std::min(n_kv_heads, n_heads));
     while (n_heads % n_kv_heads != 0 && n_kv_heads > 1)

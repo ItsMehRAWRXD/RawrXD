@@ -1,0 +1,14 @@
+# NU_GEMV_PARITY_001
+# Tight parity: NU GEMV vs original F32 ground truth.
+#
+# Must prove (64x64 synthetic W, deterministic x):
+#   - Pack NU → NU_GemvCpu / NU_GemvGpu vs F32 GEMV within format bounds
+#   - GPU vs NU-CPU essentially bit-equal (cgMax <= 1e-4)
+#   - Formats: Q8_0, Q4_0, Q4_K, F16
+#   - On PASS: LIVE_NU_CONSUME_AUTHORIZED=1 (wiring is NU_LIVE_CONSUMER_001)
+#
+# Bounds (GEMV output vs F32):
+#   Q8_0  maxAbs<=0.05  rms<=0.02
+#   Q4_0  maxAbs<=0.35  rms<=0.12
+#   Q4_K  maxAbs<=0.25  rms<=0.08
+#   F16   maxAbs<=0.002 rms<=0.001

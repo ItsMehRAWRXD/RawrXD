@@ -1,0 +1,24 @@
+LOAD AV ISOLATION — hypotheses (session 1ed348)
+=============================================
+
+H1: cmd_load_worker LoadModel AV — crash inside AgenticBridge::LoadModel (inference init)
+H2: deferred_heavy_init enterprise_license AV — stage=3 corrupts state before/during load
+H3: UTC telemetry init AV — stage=33 / UTC_InitTelemetry races with load worker
+H4: Process exit from unhandled AV outside VEH-caught paths (fatal in worker)
+H5: UI thread crash in onCommandModelLoadWorkerDone / finishLoadModelForInferenceUI after load
+
+Instrumentation (NDJSON -> f:\~dev\debug-1ed348.log):
+  H1: cmd_load_worker LoadModel_enter / LoadModel_AV / LoadModel_exit
+  H2: P1PRA_DhiEnter enterprise_license (stageId=3)
+  H3: P1PRA_DhiEnter telemetry + initTelemetry UTC_InitTelemetry_before/after
+  H2/H3: P1PRA_Veh access_violation with rip/stage/utc_stage
+  H5: onCommandModelLoadWorkerDone ui_callback
+
+Run: evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/run_load_av_capture.ps1
+
+After capture: classify last NDJSON line before process death vs WITNESS.log P1PRA_FAULT tail.
+
+RUN 2 (19:46): H3 CONFIRMED — fatal 0xC0000005 at UTC cf_shadow_rsp_pre (utc_stage=63);
+load succeeded (worker_ok). See reconclusion/LOAD_AV_CAPTURE_RUN2.txt.
+
+Verification: RAWRXD_SKIP_UTC_MASM=1 in run_load_av_capture.ps1 bypasses MASM UTC path.

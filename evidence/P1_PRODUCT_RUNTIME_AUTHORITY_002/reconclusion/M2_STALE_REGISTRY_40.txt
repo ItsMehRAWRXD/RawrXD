@@ -1,0 +1,35 @@
+﻿ITEM: M2_STALE_REGISTRY_40
+GENERATED: 2026-09-01 19:48:57
+ROOT: f:\~dev\rawrxd
+CLASSIFICATION: PRESENT | RENAMED_OR_RELOCATED | ABSENT | GENERATED_STUB
+
+.github/workflows/build.yml	ABSENT	
+.github/workflows/ci.yml	ABSENT	
+.github/workflows/cli-regression.yml	ABSENT	
+.github/workflows/diagnostics.yml	ABSENT	
+.github/workflows/performance.yml	ABSENT	
+.github/workflows/quality.yml	ABSENT	
+.github/workflows/release.yml	ABSENT	
+.github/workflows/self_release.yml	ABSENT	
+.github/workflows/telemetry-gate.yml	ABSENT	
+.github/workflows/tests.yml	ABSENT	
+.github/workflows/throughput-gate.yml	ABSENT	
+.github/workflows/validate-copilot.yml	ABSENT	
+Build-And-Deploy-Production.ps1	ABSENT	
+include/gguf.h	RENAMED_OR_RELOCATED	3rdparty/ggml/include/gguf.h
+src/agentic_observability.h	ABSENT	
+src/codec/deflate_brutal_stub.cpp	ABSENT	
+src/core/analyzer_distiller_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/debug_engine_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/enterprise_license_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/mesh_brain_asm_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/missing_handler_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/monaco_core_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/sqlite3_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/streaming_orchestrator_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/subsystem_mode_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/core/swarm_network_stubs.cpp	GENERATED_STUB	(no exact path; stub family)
+src/ide_main.cpp	RENAMED_OR_RELOCATED	src/.archived_dead_code/ide_main.cpp
+src/ide_window.cpp	RENAMED_OR_RELOCATED	src/.archived_dead_code/ide_window.cpp
+src/modules/quickjs_node_shims.cpp	ABSENT	
+src/plugins/MemoryPlugin.hpp	ABSENT	

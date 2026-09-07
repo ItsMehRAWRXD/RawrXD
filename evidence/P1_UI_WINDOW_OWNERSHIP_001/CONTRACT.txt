@@ -1,0 +1,44 @@
+﻿P1_UI_WINDOW_OWNERSHIP_001
+STATUS=CONTRACT_FROZEN
+AUTHORITY=lifecycle / HWND ownership (NOT spatial geometry)
+PRECONDITION=instrumented RawrXD-Win32IDE with dumpUiWindowOwnership
+
+## Invariants
+MAIN_TOPLEVEL_COUNT            = 1
+MAIN_HWND_STABLE_STARTUP       = PASS (createWindow idempotent; WM_NCCREATE rejects second shell)
+MAIN_HWND_STABLE_MAXIMIZE      = PASS (m_hwndMain unchanged across SIZE_MAXIMIZED dump)
+MAIN_HWND_STABLE_RESTORE       = PASS (m_hwndMain unchanged across SIZE_RESTORED dump)
+
+EXPLORER_ROOT_EQ_MAIN          = PASS
+EDITOR_ROOT_EQ_MAIN            = PASS
+CHAT_ROOT_EQ_MAIN              = PASS
+OUTPUT_ROOT_EQ_MAIN            = PASS
+TERMINAL_ROOT_EQ_MAIN          = PASS
+STATUS_ROOT_EQ_MAIN            = PASS
+
+NO_DOCK_PANE_WS_POPUP          = PASS (docked AI Chat must be WS_CHILD|CLIP*, not WS_POPUP/OVERLAPPED)
+NO_SECOND_PRODUCT_SHELL        = PASS
+PROCESS_SURVIVES               = PASS
+
+## Diagnostic
+After onCreateChildren and on WM_SIZE SIZE_MAXIMIZED / SIZE_RESTORED, IDE emits:
+  EnumWindows DumpTopLevel for current PID
+  RAWRXD_TOPLEVEL_PRODUCT_WINDOWS=<n>
+  *_ROOT_EQ_MAIN=PASS|FAIL
+
+Expected: RAWRXD_TOPLEVEL_PRODUCT_WINDOWS = 1
+Class counted as product shell: RawrXD_IDE_MainWindow (legacy RawrXD_Win32IDE also counted)
+
+## Hard rules (product)
+1. Exactly one CreateWindowEx(...WS_OVERLAPPEDWINDOW...) product shell per process instance
+2. GetAncestor(pane, GA_ROOT) == m_hwndMain for Explorer/Editor/Chat/Output/Terminal/Status
+3. Docked Chat: WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN; never WS_POPUP while docked
+4. WM_SIZE: SIZE_MINIMIZED returns 0 without layout; no SIZE_MAXIMIZED hide/recreate dock tree
+5. Layout from GetClientRect(main); center host gets remaining center rect only
+
+## Gate order
+P1_UI_WINDOW_OWNERSHIP_001 must PASS before trusting P1_UI_SPATIAL_AUTHORITY on maximize/restore.
+idefix04 (Chat painting outside foreground RawrXD) is explained by MAIN_TOPLEVEL_COUNT>1 or CHAT_ROOT != MAIN.
+
+## Out of scope
+Editor font/geometry polish, Monaco bounds math, performance/speedup gates.

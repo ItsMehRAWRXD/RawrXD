@@ -1,0 +1,16 @@
+# LIVE_PATH_FUSED_CONTROL_002
+# A = minimal | B = independent full | C = fused with neutral-state fast bypass
+# Same model/prompt/tokens/depth/VRAM budget as 001.
+#
+# 002 adds:
+#   - FUSED_FAST_BYPASS when stall/queue/hit/budget/thermal/trailbrake healthy
+#   - decide only on signal change / pressure
+#   - TrailBrake EMERGENCY only (observe WARNING/BRAKING)
+#   - Plasma absent → zero thermal policy work
+#
+# PASS (C vs B):
+#   FUSED_FAST_BYPASS >= half of (bypass+decisions)
+#   TPS_C >= TPS_B
+#   BYTES_C <= BYTES_B (+2%)
+#   MISS_C <= MISS_B
+#   VRAM_C <= budget or <= B

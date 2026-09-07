@@ -1,0 +1,8 @@
+id=frontdoor_agent
+model=
+path=
+workspace=G:\~dev\rawrxd
+autonomy=off
+plan=frontdoor
+patch=patch_1
+turns=0

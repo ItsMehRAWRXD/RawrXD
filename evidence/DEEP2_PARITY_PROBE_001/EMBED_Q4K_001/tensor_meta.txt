@@ -1,0 +1,8 @@
+name=token_embd.weight
+type=12
+hidden=2048
+vocab=32000
+sizeBytes=36864000
+rowBytes=1152
+blocks_per_row=8
+focus_token=35

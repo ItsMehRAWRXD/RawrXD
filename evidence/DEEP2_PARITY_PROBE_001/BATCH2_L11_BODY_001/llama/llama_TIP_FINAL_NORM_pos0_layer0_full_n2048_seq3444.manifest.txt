@@ -1,0 +1,13 @@
+side=llama
+stage=TIP_FINAL_NORM
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=e90085f54e4ce51a
+l2=79.073572905171645
+seq=3444
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001\llama\llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq3444.bin

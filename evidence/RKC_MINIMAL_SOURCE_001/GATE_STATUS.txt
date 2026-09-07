@@ -1,0 +1,13 @@
+[SOURCE_REQUIRED]
+goal=fix_gpu_fallback
+DispatchGemvDevice  include/vulkan_compute.h  bytes=31027
+caller_contract  src/deep2/Deep2Engine_GpuForward.cpp  bytes=17913
+fallback_state  src/deep2/Deep2Engine.h  bytes=34592
+LivePath_BeginGenerate  src/deep2/Deep2LivePath.cpp  bytes=11650
+[SOURCE_METRICS]
+context_bytes_old=3778459
+context_bytes_rkc=95182
+files_supplied=4
+files_naive=278
+irrelevant_source_supplied=278
+RKC_MINIMAL_SOURCE_001=PASS

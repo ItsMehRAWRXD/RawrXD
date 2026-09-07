@@ -1,0 +1,45 @@
+BATCH2_Q_PRE_ROPE_0 — FROZEN NUMERICAL CLOSEOUT
+================================================
+date=2026-08-29
+authority=
+  deep2_attn_ladder_bos_q4k.txt
+  BATCH2_Q4K_BOS_REPROBE_VERDICT.txt
+  BATCH2_Q_ELEMDIFF/
+
+GATE
+----
+Q_PRE_ROPE_NUMERICAL=PASS @ abs_eps=1e-6
+Q_PRE_ROPE_BITWISE=OPEN
+
+EVIDENCE
+--------
+shape=2048
+exact_equal=309
+bitwise_diff=1739
+max_abs=1.49e-7
+mean_abs=5.83e-9
+rms=1.01e-8
+errors_ge_1e-4=0
+errors_ge_1e-6=0
+pattern=MANY_TINY_FP_DIFFS
+classification=Q4K_X_Q8K_ACCUMULATION_PARITY
+margin_vs_1e-6 ≈ 6.7× (max_abs)
+
+EXONERATED
+----------
+decode/layout/stride
+Q4_K scale/min mapping
+single-superblock corruption
+row permutation
+
+SEPARATE_TRACK
+--------------
+BITWISE-PARITY-001 = OPEN
+  (bit-identical Q4_K×Q8_K reduction / FNV match)
+  NOT blocking numerical ladder advance
+
+DO_NOT
+------
+chase Q FNV this session
+reopen RMS epsilon / BOS / tokenizer / Vulkan authority
+re-run TinyLlama AGENT-E2E-002b expecting tools

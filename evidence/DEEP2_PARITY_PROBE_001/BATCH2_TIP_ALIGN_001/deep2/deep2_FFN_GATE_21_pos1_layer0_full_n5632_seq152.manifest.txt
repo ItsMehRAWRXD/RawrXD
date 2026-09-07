@@ -1,0 +1,13 @@
+side=deep2
+stage=FFN_GATE_21
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=5632
+nbytes=22528
+fnv=5c5ce42e7b24abd8
+l2=53.846123559325115
+seq=152
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_TIP_ALIGN_001\deep2\deep2_FFN_GATE_21_pos1_layer0_full_n5632_seq152.bin

@@ -1,0 +1,37 @@
+﻿STATIC_DEP_001 FAST SCAN
+TIMESTAMP_UTC=2026-08-31T00:21:37Z
+EXE_PATH=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe
+SHA256=CB67B6B1DFF9C9ADC7FFD94B6921B86F1D5082B35DD746FC5D86039CE99C8EB7
+BYTES=323481600
+
+LITERAL_11434=5
+LITERAL_11435=4
+LITERAL_:9999=0
+LITERAL_:8005=0
+LITERAL_localhost=14
+LITERAL_ollama=41
+LITERAL_api.openai.com=0
+LITERAL_api.anthropic.com=0
+LITERAL_moonshot.ai=0
+LITERAL_huggingface.co=6
+LITERAL_deepseek.com=0
+
+DUMPBIN_IMPORTS=F:\~dev\rawrxd\evidence\STATIC_DEP_001\DUMPBIN_IMPORTS_CB67B6B1.txt
+NETWORK_IMPORT_HITS=15
+  WINHTTP.dll
+  3B WinHttpQueryHeaders
+  4F WinHttpSetTimeouts
+  31 WinHttpOpen
+  8 WinHttpCloseHandle
+  9 WinHttpConnect
+  3E WinHttpReadData
+  3A WinHttpQueryDataAvailable
+  4B WinHttpSetOption
+  32 WinHttpOpenRequest
+  48 WinHttpSendRequest
+  42 WinHttpReceiveResponse
+  18 WinHttpCrackUrl
+  4 WinHttpAddRequestHeaders
+  WS2_32.dll
+
+STATUS=INFORMATIONAL - review non-zero literals for benign strings vs live defaults

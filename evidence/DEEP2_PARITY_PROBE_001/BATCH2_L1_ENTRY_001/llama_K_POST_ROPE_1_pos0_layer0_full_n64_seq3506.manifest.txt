@@ -1,0 +1,13 @@
+side=llama
+stage=K_POST_ROPE_1
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=fee94a818353d866
+l2=12.277956862771646
+seq=3506
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_K_POST_ROPE_1_pos0_layer0_full_n64_seq3506.bin

@@ -1,0 +1,7 @@
+{
+  "test": "mcp_handshake",
+  "endpoint": "http://127.0.0.1:11435/mcp",
+  "handshake_success": true,
+  "request": "{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}",
+  "response": "{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","serverInfo":{"name":"deep2-mock"}}}"
+}

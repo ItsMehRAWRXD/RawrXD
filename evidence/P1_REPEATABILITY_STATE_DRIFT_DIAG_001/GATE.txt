@@ -1,0 +1,94 @@
+P1_REPEATABILITY_STATE_DRIFT_DIAG_001
+
+STATUS                        = DIAG COMPLETE
+CANONICAL_DISPOSITION         = FROZEN (CANONICAL_DISPOSITION.txt)
+
+PROFILE_WRITES_PERSISTENT              = CONFIRMED
+PROFILE_DIR_ISOLATION                  = BROKEN
+AUTHORITY_DRIFT                        = NOT OBSERVED
+CORRECTNESS_DRIFT                      = NOT OBSERVED
+PERFORMANCE_STATE_DRIFT                = CONFIRMED
+PROFILE_CAUSES_FULL_S01/S02_DELTA      = NOT PROVEN
+MULTI_FACTOR_REPEATABILITY_FAILURE     = CONFIRMED
+
+P1_REAL_SPEEDUP_REPEATABILITY_001      = FAIL / UNCHANGED
+SESSION_02_COUNTEREXAMPLE              = VALID / UNCHANGED
+P1_REAL_SPEEDUP_001                    = PASS / CLOSED / UNCHANGED
+P1_PRODUCTION_TAIL_LATENCY_001         = BLOCKED
+
+FROZEN_GATES_TOUCHED          = NONE
+SUCCESSOR_CERT                = P1_REAL_SPEEDUP_REPEATABILITY_002 (CONTRACT_FROZEN)
+
+Prior session context
+---------------------
+SESSION_01 (_001)             = 2.53× sample only
+SESSION_02 (_001)             = 0.59× valid counterexample
+
+Experiment results (A/B/D/E)
+----------------------------
+PHASE A  BASELINE_WALL_S ≈ 1.92   PROFILE mutated on first generate
+PHASE B  workload complete        PROFILE_CONTENT_SHA changed (mutation)
+PHASE D  BASELINE_WALL_S ≈ 2.98   retained profile (same workspace)
+PHASE E  BASELINE_WALL_S ≈ 1.67   empty workspace restored
+
+Decisive pattern A≈10s, D≈1.8s, E≈10s  = NOT REPRODUCED
+All diagnostic baselines clustered ~1.5–3.0 s (not SESSION_01 median scale).
+
+Supplement (production profiles absent vs present)
+--------------------------------------------------
+NO_PROFILE   BASELINE_WALL_S ≈ 2.98   (profiles dir moved away)
+WITH_PROFILE BASELINE_WALL_S ≈ 1.52   (heavy learned profile restored)
+Direction opposite naive "profile slows baseline" hypothesis in this test.
+
+Confirmed findings
+------------------
+PERSISTENT_PROFILE_WRITES       = CONFIRMED
+  Path: F:\~dev\rawrxd\profiles\g0_gpu0_12884901888_ram_42949672960__name_tinyllama_fresh.gguf.yaml
+  runs: 40 → 55 → 56 across repeatability + diagnostics
+  recordSuccess() in Generate() epilogue (post provenance fix)
+
+PROFILE_ISOLATION_BROKEN        = CONFIRMED
+  EnsurePolicyLoaded() always calls LearnedProfileStore::setDir("profiles")
+  → --profiles-dir workspace ineffective; writes land in cwd rawrxd/profiles
+
+AUTHORITY_STABLE_WALL_VARIES    = CONFIRMED
+  EXE_SHA F6999662… unchanged
+  POLICY_SHA policy:aabe7bdb… unchanged across A/B/D/E
+  BASELINE_WALL_S varies ~1.5–3.0 s without authority drift
+
+Key diagnostic result
+---------------------
+Benchmark environment was NOT performance-state isolated, but profile
+mutation does NOT explain the full failure. Disabling profile writes alone
+would prematurely declare repeatability solved.
+
+Classification
+--------------
+| Claim | Verdict |
+| Cross-session profile contamination exists | CONFIRMED |
+| Profile alone explains S01≈10s vs S02≈1.8s | NOT PROVEN |
+| Decisive A/D/E isolation | INCONCLUSIVE (pattern not reproduced) |
+| Performance-state repeatability failure | CONFIRMED (multi-factor) |
+
+Interpretation
+--------------
+SESSION_01 baseline median (~10.0 s) includes large within-session outliers
+(e.g. 35.8 s trial in SESSION_01_POSTFIX). SESSION_02 baseline median (~1.8 s)
+reflects a faster cluster. Same EXE + stable POLICY_SHA + varying wall time
+=> performance-state drift, not correctness/authority failure.
+
+Repair direction (P1_REAL_SPEEDUP_REPEATABILITY_002 — CONTRACT_FROZEN)
+----------------------------------------------------------------------
+1. Isolation preconditions as gate predicates (RUN INVALID vs SPEEDUP_FAIL)
+2. Ephemeral profiles dir OR disable recordSuccess during bench
+3. Stop EnsurePolicyLoaded from clobbering LearnedProfileStore dir
+4. Per-session trial distribution (MIN/MAX/P25/P75) + median authority
+5. Do NOT rewrite _001 failure or SESSION_02 counterexample
+
+Evidence
+--------
+EXPERIMENT.txt phase_*.txt supplement_*.txt run_experiment.log
+CONTRACT.txt CANONICAL_DISPOSITION.txt
+Production profile: rawrxd/profiles/g0_gpu0_*tinyllama*.yaml
+
+FIRST_FALSE (diagnostic)        = N/A (diagnostic gate; no pass/fail promotion)

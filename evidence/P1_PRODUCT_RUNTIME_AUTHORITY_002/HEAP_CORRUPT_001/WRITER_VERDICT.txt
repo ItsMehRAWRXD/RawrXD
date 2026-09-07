@@ -1,0 +1,25 @@
+HEAP_CORRUPT_001 — writer verdict (Phase C seal)
+
+Writer function: utf8w() — Win32IDE_CommandSurface.cpp
+Call chain: generateResponseAsync callback -> appendCommandConversationStream -> appendCommandConversation -> utf8w
+
+Root cause:
+  std::wstring sized to (n - 1) WCHAR elements but MultiByteToWideChar called with cchWideChar = n
+  (n includes terminating null from sizing pass). Writes one WCHAR past heap allocation end per call.
+
+Boundary:
+  One WCHAR (2 bytes) past std::wstring heap buffer per non-empty UTF-8 conversion.
+
+Why block #534381 / chat repro:
+  Work Mode "test" triggers streaming tokens; each appendCommandConversationStream converts via utf8w.
+  Process lifetime alloc count ~534k (DHI + witness + STL); CRT detects fence corruption on later heap op.
+
+Fix (single file):
+  Win32IDE_CommandSurface.cpp — size wstring to `len` and pass `len` to both MultiByteToWideChar calls
+  using explicit source byte count (no -1 oversize write).
+
+Not the writer (ruled out for this CRT symptom):
+  UTC_LogEvent ring slot (static .data g_EventBuffer, not CRT heap)
+  P1PRA_Witness fopen (alloc churn only; bounded fprintf)
+
+Rebuild: required after fix (see HEAP_CORRUPT_001/REBUILD_E2E.txt)

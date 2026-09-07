@@ -1,0 +1,2 @@
+seconds=10 cycles=6 gens=24 alive=1
+DEEP2_SOAK_001=PASS

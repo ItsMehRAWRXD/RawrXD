@@ -1,0 +1,69 @@
+# NUCOLD_HOTPATCH_001 — SPEC (cert harness: P1_NUCOLD_HOTPATCH_001)
+
+## Contract
+
+```text
+COLD_RELOAD                = FORBIDDEN (hot path)
+MODEL_UNLOAD               = FORBIDDEN
+PROCESS_RESTART            = FORBIDDEN
+ACTIVE_GENERATION_MUTATION = FORBIDDEN
+
+PATCH_BUILD                = PRIVATE
+PATCH_VALIDATE             = REQUIRED
+PATCH_HASH                 = REQUIRED
+GENERATION_ADVANCE         = REQUIRED
+ATOMIC_SWAP                = REQUIRED
+IN_FLIGHT_READERS_PIN_OLD  = REQUIRED
+ROLLBACK_ON_FAILURE        = REQUIRED
+```
+
+## Classifier
+
+```text
+requires_weight_reparse | tensor_shape | backend_recreation | image_abi
+    → COLD_PATH_REQUIRED (explicit; not silent reload)
+
+else → NUCOLD_HOTPATCH via RealtimeEngine::CommitRealtimeState
+```
+
+## Generation invariant
+
+```text
+token started on N  → finishes entirely on N
+new token after swap → observes N+1
+```
+
+## Load classes (reversed lifecycle)
+
+```text
+L0 TRUE_COLD   first materialization only
+L1 HOT_COLD    partial partition rebuild
+L2 WARM        persistent image rebind
+L3 HOT         policy/generation swap (normal selection)
+```
+
+## Predicates
+
+```text
+HOTPATCH_APPLIED
+GENERATION_ADVANCE_N_TO_N1
+PATCH_HASH_PRESENT
+IN_FLIGHT_READERS_PIN_OLD
+SUBSEQUENT_TOKEN_SEES_N1
+COLD_RELOAD_FORBIDDEN
+MODEL_UNLOAD_FORBIDDEN
+PROCESS_RESTART_FORBIDDEN
+ROLLBACK_ON_FAILURE
+COLD_PATH_EXPLICIT
+ACTIVE_GENERATION_MUTATION_FORBIDDEN
+ACQUIRE_L0_ONCE
+ACQUIRE_L3_HOT_REUSE
+ACQUIRE_L1_HOT_COLD_PARTIAL
+```
+
+Contracts:
+- `src/deep2/execution_policy/NuColdHotpatch.hpp`
+- `src/deep2/execution_policy/ReverseLoadLifecycle.hpp`
+- RCU: `RealtimeKernel.hpp` AcquireState / CommitRealtimeState
+
+Status: run `P1_NUCOLD_HOTPATCH_001` via `build_p1_policy_certs.bat`

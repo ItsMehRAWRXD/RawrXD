@@ -1,0 +1,28 @@
+DEEP2_NVME_REVERSE_BUNNYHOP_HTML_E2E_001
+========================================
+Date: 2026-09-06
+
+UI (standalone chat)
+  gui/ide_chatbot_standalone.html
+  sites/screenpilot.tech/gui/ide_chatbot_standalone.html
+  Panel: // NVMe Reverse Bunnyhop (next to Tensor Bunny Hop / Safe Decode / Model Bridge)
+  State.gen.nvmeBunnyHop → generate extras.nvme_bunnyhop / options.nvme_bunnyhop
+  Engine Explorer: Deep2 / NVMe Reverse Bunnyhop
+
+API
+  GET  /api/nvme/bunnyhop/status
+  POST /api/nvme/bunnyhop/arm
+  POST /api/nvme/bunnyhop/disarm
+  GET  /api/engine/capabilities → engine.nvme_reverse_bunnyhop
+  POST /api/generate|/ask → ApplyFromGenerateBody sets:
+       RAWRXD_NVME_REVERSE_BUNNYHOP=1
+       RAWRXD_UNREVERSE_HOTPATCH=1
+
+Deep2 runtime
+  NVMeStream mmap fail OR env force → initializeReverseBunnyHop
+  Mode: UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+  Files: NVMeReverseBunnyHop.*, NvmeBunnyHopApi.hpp, NVMeStream.*, Deep2Engine.cpp
+
+Servers wired
+  src/tool_server.cpp
+  src/win32app/Win32IDE_LocalServer.cpp

@@ -1,0 +1,8 @@
+id=sess_1788810821
+model=tinyllama
+path=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+workspace=G:\~dev\rawrxd
+autonomy=build
+plan=agent default
+patch=
+turns=0

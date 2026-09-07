@@ -1,0 +1,36 @@
+/*
+ * QUANT-COVERAGE-001
+ * ==================
+ * P0 ABI+geometry: PASS (2026-08-29)
+ *
+ * Closed
+ * ------
+ * - Canonical ggml IDs (COUNT=43); Q8_K=15 not 9
+ * - static_assert drift fence in QuantTypeTable.hpp
+ * - Q8_K blockBytes 29 → 292
+ * - IQ1_S 50/256; IQ4_NL 18/32 (was 34 and 132/256)
+ * - Single authoritative table: src/deep2/QuantTypeTable.hpp
+ * - Loader + registry geometry consume the table
+ * - Unknown / removed types fail-closed (no silent {4,1})
+ * - TinyLlama Q4_K same-operand smoke still PASS after ABI fix
+ *
+ * Honest coverage claim
+ * ---------------------
+ * kernel_ready = 21  (legacy K/IQ set)
+ * missing_kernels = 14 persisted types without Deep2 GEMV/dequant yet
+ *   HIGH: IQ1_M, BF16, MXFP4, NVFP4
+ *   MED:  TQ1_0, TQ2_0, Q1_0, Q2_0, Q8_1
+ *   LOW:  I8/I16/I32/I64/F64 (storage; not typical weight GEMV)
+ *
+ * DO NOT claim "all GGUF quants" until P2 kernels land.
+ *
+ * Next
+ * ----
+ * P1: cert existing 21 dequant + GEMV vs scalar/reference vectors
+ * P2: implement IQ1_M / BF16 / MXFP4 / NVFP4 (+ TQ/Q1/Q2/Q8_1)
+ * P3: whole-GGUF load + same-weight GEMV + one/multi-token + llama compare
+ *
+ * Artifacts: REPORT.txt  GATE.txt  run.stdout.txt
+ * Harness:   src/deep2/test_quant_coverage_001.cpp
+ * Table:     src/deep2/QuantTypeTable.hpp
+ */

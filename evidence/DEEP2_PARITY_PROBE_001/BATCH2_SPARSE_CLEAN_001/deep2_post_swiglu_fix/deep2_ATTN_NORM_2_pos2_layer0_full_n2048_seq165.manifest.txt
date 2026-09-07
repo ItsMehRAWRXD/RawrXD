@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_2
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=a1863b99cf7b63f5
+l2=7.4503836409446693
+seq=165
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_SPARSE_CLEAN_001\deep2_post_swiglu_fix\deep2_ATTN_NORM_2_pos2_layer0_full_n2048_seq165.bin

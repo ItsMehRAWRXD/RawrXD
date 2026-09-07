@@ -1,0 +1,8 @@
+row=0 deep2_max_abs=0.000000000e+00 legacy_max_abs=5.993127823e-02
+row=1 deep2_max_abs=0.000000000e+00 legacy_max_abs=4.571676254e-02
+row=2 deep2_max_abs=0.000000000e+00 legacy_max_abs=7.277369499e-02
+row=3 deep2_max_abs=0.000000000e+00 legacy_max_abs=6.426841021e-02
+row=4 deep2_max_abs=0.000000000e+00 legacy_max_abs=4.021704197e-02
+row=5 deep2_max_abs=0.000000000e+00 legacy_max_abs=8.458721638e-02
+row=6 deep2_max_abs=0.000000000e+00 legacy_max_abs=5.472296476e-02
+row=7 deep2_max_abs=0.000000000e+00 legacy_max_abs=7.208061218e-02

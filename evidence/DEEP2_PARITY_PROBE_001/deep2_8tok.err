@@ -1,0 +1,68 @@
+[EMBED_RAW] token=21521 row=0000023D18F94C80 rowBytes=1152 first32=A8 9B 3D F4 8B 79 3A 64 A8 08 B0 6D 2C 8A CC 76 31 C8 98 9D 3A 08 C9 89 0A 8C 3C 66 8B 85 7A 48 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=21521 all_finite hiddenDim=2048
+[EMBED_DIAG] token=21521 rowBytes=1152 first8= -0.049 -0.011 -0.015 -0.056 -0.041 -0.030 -0.034 -0.026
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[EMBED_RAW] token=9312 row=0000023D1822B000 rowBytes=1152 first32=98 1C A2 96 98 68 A5 C8 FC 37 6C 6A DC 8A B8 A8 40 6A D8 1B 52 AA 83 B0 90 85 B2 77 6A A8 8A 35 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=9312 all_finite hiddenDim=2048
+[EMBED_DIAG] token=9312 rowBytes=1152 first8= 0.009 0.045 0.027 0.040 0.036 0.040 0.036 0.027
+[EMBED_RAW] token=6824 row=0000023D17F6F400 rowBytes=1152 first32=18 9A 5A 76 90 99 B9 74 53 2F 86 9B C4 67 9B 79 6B 64 58 9A 4A 9F C8 A5 6C 78 D5 64 CC 68 7C 89 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=6824 all_finite hiddenDim=2048
+[EMBED_DIAG] token=6824 rowBytes=1152 first8= -0.030 -0.015 -0.018 -0.021 -0.000 -0.027 -0.027 -0.027
+[EMBED_RAW] token=29991 row=0000023D198E2F80 rowBytes=1152 first32=C0 17 93 75 4A A2 89 5B 58 90 5B 48 46 6C 38 79 9C B7 58 97 B7 AB 96 E0 A2 16 70 A2 DC AD CF 35 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=29991 all_finite hiddenDim=2048
+[EMBED_DIAG] token=29991 rowBytes=1152 first8= 0.006 0.017 0.009 0.013 0.019 0.008 0.004 0.019
+[EMBED_RAW] token=29991 row=0000023D198E2F80 rowBytes=1152 first32=C0 17 93 75 4A A2 89 5B 58 90 5B 48 46 6C 38 79 9C B7 58 97 B7 AB 96 E0 A2 16 70 A2 DC AD CF 35 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=29991 all_finite hiddenDim=2048
+[EMBED_DIAG] token=29991 rowBytes=1152 first8= 0.006 0.017 0.009 0.013 0.019 0.008 0.004 0.019
+[EMBED_RAW] token=29871 row=0000023D198C1380 rowBytes=1152 first32=50 95 07 3A B3 28 78 86 36 6F 47 68 73 C8 98 A8 74 C4 28 96 AC C8 2B 65 AA 75 A4 87 6A 99 30 63 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=29871 all_finite hiddenDim=2048
+[EMBED_DIAG] token=29871 rowBytes=1152 first8= -0.009 -0.000 -0.013 -0.004 -0.004 -0.014 -0.010 -0.003
+[EMBED_RAW] token=4350 row=0000023D17CB7700 rowBytes=1152 first32=88 1D 69 87 57 A4 C0 97 85 78 76 57 A4 C9 67 76 B9 77 28 1C 16 A3 A5 3F 67 86 AD 18 5C 86 AB 8A 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=4350 all_finite hiddenDim=2048
+[EMBED_DIAG] token=4350 rowBytes=1152 first8= 0.049 0.032 0.038 0.043 0.038 0.027 0.022 0.054
+[EMBED_RAW] token=5793 row=0000023D17E4D480 rowBytes=1152 first32=20 9B AF 1F 75 56 4A D9 D9 8A 8B 40 BF 77 87 5E 4B BA D0 9C 4C A7 94 84 CA B7 85 AD A8 8A D4 E8 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=5793 all_finite hiddenDim=2048
+[EMBED_DIAG] token=5793 rowBytes=1152 first8= -0.052 -0.035 -0.052 -0.003 -0.017 -0.024 -0.021 -0.017
+[EMBED_RAW] token=5793 row=0000023D17E4D480 rowBytes=1152 first32=20 9B AF 1F 75 56 4A D9 D9 8A 8B 40 BF 77 87 5E 4B BA D0 9C 4C A7 94 84 CA B7 85 AD A8 8A D4 E8 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=5793 all_finite hiddenDim=2048
+[EMBED_DIAG] token=5793 rowBytes=1152 first8= -0.052 -0.035 -0.052 -0.003 -0.017 -0.024 -0.021 -0.017
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END

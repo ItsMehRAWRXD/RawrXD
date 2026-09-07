@@ -1,0 +1,33 @@
+HEAP_CORRUPT_001 — witness correlation (read-only, ±window around CRT repro)
+
+CRT dialog time: ~2026-09-01 18:41 (user report)
+Nearest WITNESS session: 2026-09-01 18:38:34–18:39:34
+
+Timeline (18:38:34 run, pid implied by HWND log 28176 in prior run; same binary):
+  18:38:34 P1PRA_THREAD_START owner=deferred_heavy_init tid=10580
+  18:38:35 P1PRA_DHI telemetry_enter .. masm_kernel_init_enter
+  18:38:35 UTC CreateFile path succeeds (handle=0xf0)
+  18:38:35 counter_reset_metrics_enter/exit rsp_align=0 tid=10580
+  18:38:35 P1PRA_FAULT tid=10580 utc_stage=67 rip=ntdll read -1  [UTC ring_idx enter path]
+  18:38:35 P1PRA_THREAD_STOP deferred_heavy_init
+  18:38:43 P1PRA_SEND prompt_read_ok -> accepted -> stream_ok (chat "test" class repro)
+  18:39:08 P1PRA_FAULT tid=23996 write AV low addresses (inference/UI worker)
+  18:39:34 P1PRA_FAULT tid=23996 read AV -1
+
+Thread alignment:
+  Heap CRT dialog: UI / chat path (Work Mode send) — NOT deferred_heavy_init tid 10580
+  Witness send at 18:38:43: UI route, no thread id logged on SEND lines
+  Post-send faults tid 23996: distinct from DHI tid 10580
+
+Address-space note:
+  CRT block ~0x21A6D760 is heap; witness RSP bands ~0x2336Exxx / ~0x151Fxxxx are stacks.
+  No conclusion from address proximity alone.
+
+Correlation verdict:
+  Chat stream path (appendCommandConversationStream) active at 18:38:43 within 25s of heap-class faults.
+  DHI UTC fault at stage 67 is a separate SEH-logged AV on init thread; utc_stage stuck at 67 pollutes later fault lines.
+  Primary heap writer candidate: utf8w() one-wchar OOB in Win32IDE_CommandSurface.cpp (see WRITER_VERDICT.txt).
+
+P1PRA causality:
+  P1PRA witness fopen path contributes alloc churn but not the single-byte OOB pattern.
+  UTC stage 67 fault is NOT proven as heap fence writer for block #534381.

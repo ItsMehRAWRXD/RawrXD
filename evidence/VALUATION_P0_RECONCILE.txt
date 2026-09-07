@@ -1,0 +1,41 @@
+VALUATION_P0_RECONCILE — 2026-08-29 (F:\~dev\rawrxd)
+
+Audit ask order vs tree status:
+
+1. SetModel path handling
+   STATUS=DONE (prior)
+   Filesystem paths bypass sanitizeModelName; skip identical reload; SetFIMModel→SetModel.
+
+2. Duplicate tool fingerprint
+   STATUS=DONE (prior)
+   fingerprint = name + "\n" + args (not call_step_i). Scripted cert observed suppression.
+
+3. Unify command security
+   STATUS=DONE (this pass)
+   execute_command + run_shell share ValidateShellCommand:
+   - reject && || | ; newlines > < ` &
+   - default executable allowlist (cmake/ninja/git/cmd/cl/link/msbuild/pwsh/python/…)
+   - CreateProcess lpCurrentDirectory instead of prepending "cd &&"
+
+4. String-aware TOOL_CALL JSON scan
+   STATUS=DONE (this pass)
+   ScanBalancedJsonObject ignores braces inside JSON strings (sovereign-aligned).
+
+5. Strengthen ide_agent_loop_cert
+   STATUS=DONE (this pass)
+   - delete stale broken_hello.exe before seed
+   - PASS requires independent rebuild exit 0 + run exit 0 + exact stdout "Hello RawrXD"
+   - canned "SUCCESS" is NOT a PASS gate
+   - agent run step uses "cmd /c broken_hello.exe" (allowlisted)
+
+6. MLA / SSM / loader unification
+   STATUS=ACKNOWLEDGED_NOT_THIS_PASS
+   Fail-closed MLA stays. SSM remains experimental. AGENT-E2E-002 still blocked by Deep2 numerics.
+
+Valuation framing (audit): ~$125M midpoint accepted as external opinion only;
+not a certification claim. Technical gate for uplift remains:
+Deep2 short-gen bounded → PONG smoke → non-scripted AGENT-E2E-002.
+
+PRIMARY_PRODUCT_BLOCKER_FOR_AGENT_E2E_002=DEEP2_NUMERICAL_STABILITY
+AGENT-E2E-001=scripted/runtime plumbing (strengthened cert)
+AGENT-E2E-002=BLOCKED_BY_INFERENCE_CORRECTNESS

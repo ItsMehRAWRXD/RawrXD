@@ -1,0 +1,23 @@
+﻿[GOAL]
+model_executable_locally
+
+[TASK]
+Can Deep2 execute this model entirely locally?
+
+[KNOWN]
+FACT compute_backend_exists  REAL  1
+FACT live_generation_path_exists  REAL  1
+FACT no_remote_dependency  REAL  1
+
+[MISSING]
+NEED all_required_shards_exist  UNKNOWN
+
+[NEGATIVE]
+(none)
+
+[CONSTRAINT]
+- SYNTHETIC must not become REAL.
+
+[INSTRUCTION]
+Answer from KNOWN/NEGATIVE only. Resolve MISSING via observe/derive.
+Do not invent REAL facts. SYNTHETIC cannot become REAL.

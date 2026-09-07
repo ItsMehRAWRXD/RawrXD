@@ -1,0 +1,3 @@
+# RKC_CODE_WORLD_001
+# Ingest live-path symbols + call edges as REAL; derive reachability;
+# FakeRemoteInfer stays NOT_PRESENT / NOT_REACHABLE (no inferred success).

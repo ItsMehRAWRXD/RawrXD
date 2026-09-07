@@ -1,0 +1,75 @@
+GATE=P1_UI_SHELL_LAYOUT_001
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+
+Purpose
+-------
+Isolate Win32 IDE shell geometry by reconstructing visible layout left-to-right
+under a single onSize owner. Independent of P1_REAL_SPEEDUP_*, P1_POLICY_SHA_*,
+and menu/encoding gates.
+
+Control properties (required)
+-----------------------------
+single onSize owner              = YES (Win32IDE_Core.cpp)
+legacy duplicate onSize owner    = DISABLED (Win32IDE_Window.cpp #if 0)
+saved/session geometry restore   = SUPPRESSED when RAWRXD_SHELL_LAYOUT_REBUILD=1
+same binary across phases        = REQUIRED
+only phase variable changes      = REQUIRED (RAWRXD_SHELL_LAYOUT_PHASE)
+
+Authoritative ladder
+--------------------
+PHASE=0  Main frame only
+PHASE=1  + Activity bar
+PHASE=2  + Sidebar
+PHASE=3  + Editor
+PHASE=4  + Status
+PHASE=5  RESERVED / terminal stub — NOT TESTED / UNIMPLEMENTED
+PHASE=6  Full spatial restore (legacy ResolveSpatialManifest)
+
+PHASE=5 disposition
+-------------------
+PHASE_5_STATUS = NOT_TESTED
+PHASE_5_STATUS = UNIMPLEMENTED
+Do not silently skip PHASE=5 in evidence. Terminal geometry is not certified
+until an explicit HWND owner is wired into ShellLayout and a freeze record
+exists for PHASE=5.
+
+PHASE=6 discipline
+------------------
+A failure at PHASE=6 is not "the whole layout broke."
+4 → 6 introduces multiple consumers at once. If PHASE=6 fails, split:
+
+  6A  overlay A
+  6B  panel B
+  6C  restored auxiliary chrome
+  ...
+
+Preserve binary-search ownership isolation through 0–4; do not reopen a
+passed earlier phase unless that region's geometry source changes.
+
+Freeze template (per phase that is actually tested)
+---------------------------------------------------
+EXE_SHA=
+LAYOUT_PHASE=
+LAUNCH=PASS|FAIL
+RESIZE=PASS|FAIL
+MAXIMIZE=PASS|FAIL
+MINIMIZE_RESTORE=PASS|FAIL
+NO_OVERLAP=PASS|FAIL
+NO_BLANK_GUTTER=PASS|FAIL
+PROCESS_SURVIVES=PASS|FAIL
+VISUAL_DISPOSITION=PASS|FAIL
+
+First failing phase = localization boundary. Prior PASS phases remain frozen.
+
+Operator launch
+---------------
+$env:RAWRXD_SHELL_LAYOUT_REBUILD = "1"
+$env:RAWRXD_SHELL_LAYOUT_PHASE = "N"   # 0..4 or 6; 5 = reserved
+Start-Process ...\RawrXD-Win32IDE.exe -WorkingDirectory ...\bin
+
+Out of scope
+------------
+P1_REAL_SPEEDUP_001 / REPEATABILITY
+P1_POLICY_SHA_LIFECYCLE_DIAG_001
+P1_UI_ENCODING_002 / MENU_E2E / MENU_LIFETIME (separate authority)

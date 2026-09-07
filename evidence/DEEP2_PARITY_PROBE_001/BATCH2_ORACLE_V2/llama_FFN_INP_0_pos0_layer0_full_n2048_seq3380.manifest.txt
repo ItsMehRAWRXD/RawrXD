@@ -1,0 +1,13 @@
+side=llama
+stage=FFN_INP_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=519194ff62c0dacf
+l2=0.46828859566302389
+seq=3380
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\llama_FFN_INP_0_pos0_layer0_full_n2048_seq3380.bin

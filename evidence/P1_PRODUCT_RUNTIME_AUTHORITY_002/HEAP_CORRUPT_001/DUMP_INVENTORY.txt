@@ -1,0 +1,16 @@
+﻿
+FullName                                                                           Length LastWriteTime      
+--------                                                                           ------ -------------      
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.5768.dmp   509449991 9/1/2026 7:09:01 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.26008.dmp  542553737 9/1/2026 7:06:39 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.24020.dmp  542292041 9/1/2026 7:06:10 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.10880.dmp  542156041 9/1/2026 7:06:04 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.6200.dmp   527038896 9/1/2026 6:39:55 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.16960.dmp 1535243224 9/1/2026 3:27:56 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.30464.dmp 1535243686 9/1/2026 3:25:00 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.14424.dmp 1535415263 9/1/2026 3:18:50 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.31140.dmp 1535816851 9/1/2026 3:18:23 PM
+C:\Users\Garrett\AppData\Local\Temp\RawrXD_Dumps\RawrXD-Win32IDE.exe.31824.dmp 1535435295 9/1/2026 3:17:49 PM
+
+
+

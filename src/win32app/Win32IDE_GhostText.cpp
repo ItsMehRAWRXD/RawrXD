@@ -18,6 +18,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "ProductGhostBind.hpp"
 #include "../../include/ghost_text_renderer.h"
 #include "IDELogger.h"
 #include <richedit.h>
@@ -131,6 +132,10 @@ void Win32IDE::initGhostText() {
     m_ghostTextContent.clear();
     m_ghostTextLine           = -1;
     m_ghostTextColumn         = -1;
+    m_ghostTextGen            = 0;
+    m_ghostTextId             = 0;
+    m_ghostSource             = 0;
+    m_ghostLegacyRejected     = 0;
     m_ghostTextFont           = nullptr;
 
     // Wire ghost text overlay to editor so overlay can render/draw when used
@@ -170,12 +175,11 @@ void Win32IDE::shutdownGhostText() {
 void Win32IDE::triggerGhostTextCompletion() {
     if (!m_ghostTextEnabled || !m_hwndEditor) return;
 
-    // Kill any existing ghost text timer and dismiss current ghost text
     KillTimer(m_hwndMain, GHOST_TEXT_TIMER_ID);
     ++m_ghostTextRequestSeq;
+    ++m_editorDocGen;
     dismissGhostText();
 
-    // Start a new debounce timer
     SetTimer(m_hwndMain, GHOST_TEXT_TIMER_ID, GHOST_TEXT_DELAY_MS, nullptr);
 }
 
@@ -504,34 +508,37 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
 
 void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionText) {
     m_ghostTextPending = false;
+    (void)requestedCursorPos;
+    (void)completionText;
+    // Product is the only completion authority. Legacy producers cannot write.
+    ++m_ghostLegacyRejected;
+}
 
-    if (!completionText || !m_hwndEditor) return;
-
-    // Verify cursor hasn't moved since request
-    CHARRANGE sel;
-    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
-
-    if (sel.cpMin != requestedCursorPos) {
-        // Cursor moved — discard stale completion
-        return;
-    }
-
-    // ARCHITECTURE ALIGNMENT: 
-    // Directly update state and invalidate for RichEdit overlay rendering.
-    // Ensure we don't just store, but activate the 'visible' state for WM_PAINT.
-    m_ghostTextContent = completionText;
-    m_ghostTextVisible = true;
+bool Win32IDE::applyProductGhost(const char* text, uint64_t gen, uint64_t id,
+                                 int line, int col) {
+    using namespace rawr::product;
+    Win32GhostView v;
+    ProductGhostCopy c{};
+    c.text = text;
+    c.gen = gen;
+    c.id = id;
+    c.line = line;
+    c.col = col;
+    if (!BindProductGhost(v, c)) return false;
+    m_ghostTextContent = v.content;
+    m_ghostTextVisible = v.visible;
     m_ghostTextAccepted = false;
-
-    // Align with MASM Sovereign logic: trigger immediate repaint
+    m_ghostTextPending = false;
+    m_ghostTextLine = v.line;
+    m_ghostTextColumn = v.col;
+    m_ghostTextGen = v.gen;
+    m_ghostTextId = v.id;
+    m_ghostSource = v.source;
+    m_editorDocGen = gen;
     if (m_hwndEditor) {
         InvalidateRect(m_hwndEditor, nullptr, FALSE);
-        UpdateWindow(m_hwndEditor); // Force immediate paint to minimize flicker
     }
-
-    // Record event
-    recordEvent(AgentEventType::GhostTextRequested, "",
-                m_ghostTextContent.substr(0, 128), "", 0, true);
+    return true;
 }
 
 // ============================================================================
@@ -546,6 +553,9 @@ void Win32IDE::dismissGhostText() {
     m_ghostTextLine     = -1;
     m_ghostTextColumn   = -1;
     m_ghostTextAccepted = false;
+    m_ghostSource       = 0;
+    m_ghostTextGen      = 0;
+    m_ghostTextId       = 0;
 
     if (m_hwndEditor) {
         InvalidateRect(m_hwndEditor, nullptr, FALSE);
@@ -557,6 +567,7 @@ void Win32IDE::dismissGhostText() {
 // ============================================================================
 
 void Win32IDE::acceptGhostText() {
+    if (m_ghostSource != 1 || m_ghostTextGen != m_editorDocGen) return;
     if (!m_ghostTextVisible || m_ghostTextContent.empty() || !m_hwndEditor) return;
 
     std::string textToInsert = m_ghostTextContent;
@@ -580,6 +591,7 @@ void Win32IDE::acceptGhostText() {
 // ============================================================================
 
 void Win32IDE::renderGhostText(HDC hdc) {
+    if (m_ghostSource != 1 || m_ghostTextGen != m_editorDocGen) return;
     if (!m_ghostTextVisible || m_ghostTextContent.empty() || !m_hwndEditor) return;
 
     // Get current cursor position to know where to draw

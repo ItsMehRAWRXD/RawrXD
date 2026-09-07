@@ -1,0 +1,1305 @@
+[TOOL_SCHEMA] REJECT tool=read_file dispatched=0 details=2
+[ChatTemplate] family=phi3 heal=eos_token stop_bytes=4 remap_tool=1 eos_id=2
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=0000018168190000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=0000018161596D30  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=0000018161596D30  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=0000018161596D30  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=0000018161596D30  registered=201 tensors  bytes=667078656  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF7A1A636F0 dequant=00007FF7A1A60BF0 GetGEMV(12)=00007FF7A1A636F0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_SCHEMA_RETRY_001\workspace
+external inference runtime: none
+cloud API: none
+
+[SCHEMA_RETRY] FIRST_CALL_SCHEMA_VALID=0 FIRST_CALL_DISPATCHED=0 FIRST_CALL_SIDE_EFFECTS=0
+[SCHEMA_RETRY] R2_RETRY_PROMPT_CORRECT=1 (schema_err=1 strict_ex=1 malformed_prior=1 bytes=4353)
+[AGENT] MODEL_READY chat_family=phi3
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[AGENT] PREFILL_BEGIN prompt_tokens=1243
+[Deep2Engine] embedToken: type=12 vocabSize=32000 hiddenDim=2048 data=00000181648F0000 sizeBytes=36864000
+[Deep2Engine] Layer 0 weights: wq.data=00000181683D0000 type=12 wk.data=00000181611C0000 wv.data=0000018161210000 wo.data=0000018168190000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000018160FC0000 ffnNorm.data=00000181611B0000
+[AGENT] PREFILL_DONE prompt_tokens=1243
+[AGENT] DECODE_BEGIN max_out=256
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1762 logit=   13.575124 text='To'
+  [ 1] id=  797 logit=   13.573492 text='In'
+  [ 2] id= 1576 logit=   13.553506 text='The'
+  [ 3] id= 6039 logit=   13.364420 text='Ob'
+  [ 4] id=29902 logit=   13.140083 text='I'
+  [ 5] id=13555 logit=   13.045493 text='After'
+  [ 6] id= 5103 logit=   12.662975 text='Response'
+  [ 7] id= 4986 logit=   12.636434 text='TO'
+  [ 8] id= 4597 logit=   12.441336 text='Reg'
+  [ 9] id=10605 logit=   12.322340 text='Here'
+[Deep2Engine] Sampler selected token: 797
+[AGENT] TOKEN id=797 piece=In
+[Deep2Engine] Top-10 logits:
+  [ 0] id=21494 logit=   12.553911 text='spect'
+  [ 1] id=  278 logit=   12.352601 text=' the'
+  [ 2] id= 2933 logit=   12.317391 text=' response'
+  [ 3] id=  445 logit=   11.643590 text=' this'
+  [ 4] id=15997 logit=   10.871151 text=' conclusion'
+  [ 5] id=15837 logit=   10.717665 text=' summary'
+  [ 6] id= 1797 logit=   10.288192 text=' order'
+  [ 7] id=  421 logit=    9.869719 text=' `'
+  [ 8] id=15728 logit=    9.638326 text='correct'
+  [ 9] id= 1206 logit=    9.444393 text=' case'
+[Deep2Engine] Sampler selected token: 15837
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=   21.580589 text=','
+  [ 1] id=29901 logit=   16.250071 text=':'
+  [ 2] id=  310 logit=   12.100525 text=' of'
+  [ 3] id=  515 logit=   11.905160 text=' from'
+  [ 4] id=  363 logit=   11.332699 text=' for'
+  [ 5] id=  313 logit=   11.197876 text=' ('
+  [ 6] id=  304 logit=   10.967990 text=' to'
+  [ 7] id=  322 logit=   10.938461 text=' and'
+  [ 8] id=   13 logit=   10.296159 text='
+'
+  [ 9] id= 1156 logit=   10.218812 text=' after'
+[Deep2Engine] Sampler selected token: 29892
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   14.088569 text=' the'
+  [ 1] id=  263 logit=   11.469332 text=' a'
+  [ 2] id= 1156 logit=   11.174615 text=' after'
+  [ 3] id=  421 logit=   11.039553 text=' `'
+  [ 4] id=  445 logit=   10.457795 text=' this'
+  [ 5] id=  565 logit=   10.320519 text=' if'
+  [ 6] id=  304 logit=    9.739070 text=' to'
+  [ 7] id=  385 logit=    9.636762 text=' an'
+  [ 8] id= 7495 logit=    9.503999 text=' TO'
+  [ 9] id=  596 logit=    9.488295 text=' your'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id=15500 logit=   13.261806 text=' observation'
+  [ 1] id=  421 logit=   12.072080 text=' `'
+  [ 2] id= 1059 logit=   11.359476 text=' error'
+  [ 3] id= 5780 logit=   11.276453 text=' tool'
+  [ 4] id= 1246 logit=   11.174520 text=' call'
+  [ 5] id=  937 logit=   10.728552 text=' first'
+  [ 6] id= 1667 logit=   10.018264 text=' main'
+  [ 7] id=21651 logit=    9.841319 text=' Observ'
+  [ 8] id= 2228 logit=    9.668316 text=' issue'
+  [ 9] id= 7495 logit=    9.560517 text=' TO'
+[Deep2Engine] Sampler selected token: 15500
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  515 logit=   12.888713 text=' from'
+  [ 1] id=  421 logit=   12.406871 text=' `'
+  [ 2] id=14088 logit=   10.686319 text=' indicates'
+  [ 3] id= 8967 logit=   10.591366 text=' reported'
+  [ 4] id= 1178 logit=   10.432967 text=' id'
+  [ 5] id=  393 logit=    9.950943 text=' that'
+  [ 6] id= 4520 logit=    9.745567 text=' received'
+  [ 7] id= 4133 logit=    9.653667 text=' returned'
+  [ 8] id=  376 logit=    9.474451 text=' "'
+  [ 9] id=  411 logit=    9.420854 text=' with'
+[Deep2Engine] Sampler selected token: 515
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  421 logit=   18.867004 text=' `'
+  [ 1] id=  278 logit=   15.821458 text=' the'
+  [ 2] id=  376 logit=   14.088924 text=' "'
+  [ 3] id= 1303 logit=   13.239096 text=' read'
+  [ 4] id= 1246 logit=   12.897764 text=' call'
+  [ 5] id=10248 logit=   12.141892 text=' `"'
+  [ 6] id=  525 logit=   11.714463 text=' ''
+  [ 7] id=16218 logit=   11.095782 text=' `''
+  [ 8] id= 5183 logit=   10.937890 text=' reading'
+  [ 9] id=  263 logit=   10.846413 text=' a'
+[Deep2Engine] Sampler selected token: 421
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  949 logit=   24.780918 text='read'
+  [ 1] id= 4804 logit=   17.930700 text='call'
+  [ 2] id= 4986 logit=   16.649439 text='TO'
+  [ 3] id=16310 logit=   16.159407 text='READ'
+  [ 4] id= 6359 logit=   15.719954 text='Read'
+  [ 5] id= 3396 logit=   13.641380 text='main'
+  [ 6] id= 3539 logit=   13.279472 text='write'
+  [ 7] id=19715 logit=   13.200644 text='reading'
+  [ 8] id=  517 logit=   12.846172 text='to'
+  [ 9] id=10154 logit=   12.582096 text='tool'
+[Deep2Engine] Sampler selected token: 949
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29918 logit=   27.872219 text='_'
+  [ 1] id=20122 logit=   14.448357 text='\_'
+  [ 2] id=29899 logit=   13.673931 text='-'
+  [ 3] id=  934 logit=   12.128599 text=' file'
+  [ 4] id= 1445 logit=   11.310783 text='file'
+  [ 5] id=24563 logit=   11.267419 text='_*'
+  [ 6] id= 2283 logit=   11.064857 text='File'
+  [ 7] id=29952 logit=   10.666192 text='`'
+  [ 8] id=  648 logit=   10.663513 text='_{'
+  [ 9] id=29898 logit=   10.234215 text='('
+[Deep2Engine] Sampler selected token: 29918
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1445 logit=   30.607267 text='file'
+  [ 1] id= 2283 logit=   17.883629 text='File'
+  [ 2] id= 5325 logit=   17.434242 text='files'
+  [ 3] id=  934 logit=   15.734921 text=' file'
+  [ 4] id=29888 logit=   15.349905 text='f'
+  [ 5] id= 1777 logit=   15.014595 text='fil'
+  [ 6] id= 7724 logit=   14.815895 text='FILE'
+  [ 7] id= 9507 logit=   14.577897 text='filename'
+  [ 8] id= 2084 logit=   14.115871 text='path'
+  [ 9] id=  726 logit=   14.103746 text='text'
+[Deep2Engine] Sampler selected token: 1445
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29952 logit=   19.667732 text='`'
+  [ 1] id=  421 logit=   13.294466 text=' `'
+  [ 2] id= 1673 logit=   13.289796 text='`,'
+  [ 3] id=  426 logit=   13.016953 text=' {'
+  [ 4] id= 6998 logit=   12.638104 text='`:'
+  [ 5] id=20497 logit=   12.632495 text='`''
+  [ 6] id= 8853 logit=   12.512938 text=' {"'
+  [ 7] id=23230 logit=   10.659389 text=' `{'
+  [ 8] id= 6377 logit=    9.815380 text='{"'
+  [ 9] id= 2555 logit=    9.361538 text='()`'
+[Deep2Engine] Sampler selected token: 29952
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1178 logit=   12.602707 text=' id'
+  [ 1] id=14088 logit=   12.557346 text=' indicates'
+  [ 2] id=  411 logit=   12.082151 text=' with'
+  [ 3] id=  338 logit=   11.434667 text=' is'
+  [ 4] id=14661 logit=   10.984200 text=' suggests'
+  [ 5] id= 3697 logit=   10.897052 text=' shows'
+  [ 6] id=  313 logit=   10.508432 text=' ('
+  [ 7] id=  756 logit=   10.502862 text=' has'
+  [ 8] id= 2893 logit=   10.478073 text=' ident'
+  [ 9] id= 6695 logit=   10.286482 text=' (`'
+[Deep2Engine] Sampler selected token: 297
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  421 logit=   13.040298 text=' `'
+  [ 1] id=  278 logit=   12.825208 text=' the'
+  [ 2] id= 1178 logit=   11.915147 text=' id'
+  [ 3] id= 3553 logit=   11.186213 text=' ID'
+  [ 4] id= 1246 logit=   11.161173 text=' call'
+  [ 5] id= 2908 logit=   10.546775 text=' block'
+  [ 6] id= 1667 logit=   10.433882 text=' main'
+  [ 7] id= 1196 logit=   10.361005 text=' line'
+  [ 8] id= 7495 logit=   10.056274 text=' TO'
+  [ 9] id= 5780 logit=    9.484377 text=' tool'
+[Deep2Engine] Sampler selected token: 3553
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29922 logit=   16.143314 text='='
+  [ 1] id=  421 logit=   14.940268 text=' `'
+  [ 2] id=29871 logit=   13.089074 text=' '
+  [ 3] id=  396 logit=   11.565639 text=' #'
+  [ 4] id=  353 logit=   11.505684 text=' ='
+  [ 5] id= 1246 logit=   10.982790 text=' call'
+  [ 6] id=12557 logit=   10.579036 text='=`'
+  [ 7] id=  376 logit=   10.363605 text=' "'
+  [ 8] id=29899 logit=    9.730800 text='-'
+  [ 9] id= 1353 logit=    9.680802 text=' number'
+[Deep2Engine] Sampler selected token: 29922
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4804 logit=   22.305258 text='call'
+  [ 1] id=29896 logit=   16.412367 text='1'
+  [ 2] id= 5594 logit=   15.137189 text='Call'
+  [ 3] id= 1246 logit=   14.122013 text=' call'
+  [ 4] id=29952 logit=   13.122726 text='`'
+  [ 5] id=  949 logit=   12.772864 text='read'
+  [ 6] id=29900 logit=   12.630157 text='0'
+  [ 7] id=  333 logit=   12.463747 text='id'
+  [ 8] id=29929 logit=   11.897218 text='9'
+  [ 9] id=29906 logit=   11.874852 text='2'
+[Deep2Engine] Sampler selected token: 4804
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29918 logit=   23.214088 text='_'
+  [ 1] id=29899 logit=   15.293072 text='-'
+  [ 2] id=29896 logit=   13.293475 text='1'
+  [ 3] id=20122 logit=   13.053886 text='\_'
+  [ 4] id=29871 logit=   11.934347 text=' '
+  [ 5] id=  648 logit=   11.055746 text='_{'
+  [ 6] id=  903 logit=    9.016583 text=' _'
+  [ 7] id=29992 logit=    8.928361 text='@'
+  [ 8] id=29901 logit=    8.857071 text=':'
+  [ 9] id=23538 logit=    8.762703 text='_('
+[Deep2Engine] Sampler selected token: 29918
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29896 logit=   26.273113 text='1'
+  [ 1] id=29900 logit=   15.145369 text='0'
+  [ 2] id=29906 logit=   14.076085 text='2'
+  [ 3] id=29871 logit=   12.850193 text=' '
+  [ 4] id=29941 logit=   12.754781 text='3'
+  [ 5] id=29946 logit=   11.806226 text='4'
+  [ 6] id=29880 logit=   11.805685 text='l'
+  [ 7] id=29875 logit=   11.502003 text='i'
+  [ 8] id=29876 logit=   11.186768 text='n'
+  [ 9] id=29953 logit=   11.145612 text='6'
+[Deep2Engine] Sampler selected token: 29896
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  338 logit=   13.497750 text=' is'
+  [ 1] id=14088 logit=   13.102087 text=' indicates'
+  [ 2] id=  313 logit=   12.214123 text=' ('
+  [ 3] id=12388 logit=   11.655592 text=' confir'
+  [ 4] id= 3697 logit=   11.629961 text=' shows'
+  [ 5] id=14661 logit=   11.560465 text=' suggests'
+  [ 6] id=  471 logit=   11.517600 text=' was'
+  [ 7] id=13676 logit=   11.407801 text=' reports'
+  [ 8] id= 5922 logit=   11.323201 text=' states'
+  [ 9] id=  756 logit=   11.230093 text=' has'
+[Deep2Engine] Sampler selected token: 3697
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  393 logit=   17.198212 text=' that'
+  [ 1] id=  263 logit=   16.299713 text=' a'
+  [ 2] id=  385 logit=   15.406708 text=' an'
+  [ 3] id=  278 logit=   13.364731 text=' the'
+  [ 4] id= 1059 logit=   12.843646 text=' error'
+  [ 5] id=29901 logit=   11.896341 text=':'
+  [ 6] id=  727 logit=   10.954176 text=' there'
+  [ 7] id=  421 logit=   10.006413 text=' `'
+  [ 8] id= 1023 logit=    9.933440 text=' two'
+  [ 9] id=10938 logit=    9.885351 text=' schema'
+[Deep2Engine] Sampler selected token: 393
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   13.666571 text=' the'
+  [ 1] id=  263 logit=   13.633924 text=' a'
+  [ 2] id=  727 logit=   12.335403 text=' there'
+  [ 3] id=  385 logit=   11.707930 text=' an'
+  [ 4] id=10938 logit=   10.703621 text=' schema'
+  [ 5] id=  372 logit=   10.544256 text=' it'
+  [ 6] id=  421 logit=   10.460783 text=' `'
+  [ 7] id= 5780 logit=   10.037277 text=' tool'
+  [ 8] id=29901 logit=    9.484759 text=':'
+  [ 9] id=  746 logit=    9.441153 text=' when'
+[Deep2Engine] Sampler selected token: 263
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10938 logit=   14.465004 text=' schema'
+  [ 1] id= 5780 logit=   13.659899 text=' tool'
+  [ 2] id= 7495 logit=   11.830069 text=' TO'
+  [ 3] id=  421 logit=   11.811490 text=' `'
+  [ 4] id= 1246 logit=   10.852614 text=' call'
+  [ 5] id= 4663 logit=   10.393199 text=' JSON'
+  [ 6] id= 2854 logit=    9.921015 text=' valid'
+  [ 7] id= 9406 logit=    9.876555 text=' strict'
+  [ 8] id= 2009 logit=    9.801891 text=' request'
+  [ 9] id= 5229 logit=    9.727387 text=' failed'
+[Deep2Engine] Sampler selected token: 10938
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29918 logit=   19.723755 text='_'
+  [ 1] id= 8845 logit=   18.371901 text=' validation'
+  [ 2] id=29899 logit=   13.541322 text='-'
+  [ 3] id= 2854 logit=   12.992418 text=' valid'
+  [ 4] id= 1059 logit=   12.133614 text=' error'
+  [ 5] id= 5537 logit=   12.068627 text=' viol'
+  [ 6] id=20122 logit=   11.858082 text='\_'
+  [ 7] id=  903 logit=   11.467245 text=' _'
+  [ 8] id=18157 logit=   10.431864 text='validation'
+  [ 9] id= 1147 logit=   10.171844 text=' ver'
+[Deep2Engine] Sampler selected token: 29918
+[Deep2Engine] Top-10 logits:
+  [ 0] id=18157 logit=   26.143196 text='validation'
+  [ 1] id= 3084 logit=   17.747469 text='valid'
+  [ 2] id= 8845 logit=   16.228636 text=' validation'
+  [ 3] id=  791 logit=   15.020112 text='val'
+  [ 4] id=19448 logit=   14.734692 text='Validation'
+  [ 5] id=15480 logit=   14.567753 text='validate'
+  [ 6] id=20965 logit=   12.968797 text='invalid'
+  [ 7] id= 1403 logit=   12.698997 text='vi'
+  [ 8] id= 1767 logit=   12.580389 text='value'
+  [ 9] id=24671 logit=   12.428921 text='notification'
+[Deep2Engine] Sampler selected token: 18157
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1059 logit=   19.147888 text=' error'
+  [ 1] id=10672 logit=   12.031865 text=' failure'
+  [ 2] id= 2228 logit=   11.645826 text=' issue'
+  [ 3] id=  313 logit=   10.949576 text=' ('
+  [ 4] id=10761 logit=   10.880971 text=' occurred'
+  [ 5] id=  471 logit=   10.722626 text=' was'
+  [ 6] id= 5229 logit=   10.405057 text=' failed'
+  [ 7] id= 8845 logit=   10.096407 text=' validation'
+  [ 8] id= 3682 logit=    9.951555 text=' exception'
+  [ 9] id= 4829 logit=    9.938765 text=' Error'
+[Deep2Engine] Sampler selected token: 1059
+[Deep2Engine] Top-10 logits:
+  [ 0] id=10761 logit=   17.933969 text=' occurred'
+  [ 1] id=  471 logit=   15.521960 text=' was'
+  [ 2] id=  756 logit=   14.930692 text=' has'
+  [ 3] id=10008 logit=   12.886930 text=' occurs'
+  [ 4] id=  338 logit=   12.783789 text=' is'
+  [ 5] id= 2179 logit=   12.730227 text=' occ'
+  [ 6] id=  313 logit=   12.368571 text=' ('
+  [ 7] id= 8581 logit=   12.019910 text=' caused'
+  [ 8] id= 9559 logit=   11.518719 text=' happened'
+  [ 9] id= 5557 logit=   11.312422 text=' prevent'
+[Deep2Engine] Sampler selected token: 10761
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2645 logit=   16.747046 text=' during'
+  [ 1] id=29889 logit=   15.920627 text='.'
+  [ 2] id= 2861 logit=   15.862701 text=' due'
+  [ 3] id=29892 logit=   15.566389 text=','
+  [ 4] id=  746 logit=   15.365241 text=' when'
+  [ 5] id= 1550 logit=   15.184674 text=' while'
+  [ 6] id=  411 logit=   14.228847 text=' with'
+  [ 7] id=  322 logit=   13.679729 text=' and'
+  [ 8] id=  297 logit=   13.142864 text=' in'
+  [ 9] id=  363 logit=   12.983479 text=' for'
+[Deep2Engine] Sampler selected token: 2645
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   15.027742 text=' the'
+  [ 1] id= 8225 logit=   12.818574 text=' execution'
+  [ 2] id=  263 logit=   11.753256 text=' a'
+  [ 3] id= 5780 logit=   11.426136 text=' tool'
+  [ 4] id=13755 logit=   11.376914 text=' parsing'
+  [ 5] id= 9068 logit=   10.747320 text=' processing'
+  [ 6] id=17983 logit=   10.577937 text=' evaluation'
+  [ 7] id=  421 logit=   10.284382 text=' `'
+  [ 8] id=  385 logit=   10.073282 text=' an'
+  [ 9] id= 7495 logit=   10.009747 text=' TO'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 8225 logit=   13.702024 text=' execution'
+  [ 1] id= 1246 logit=   12.700016 text=' call'
+  [ 2] id= 5780 logit=   12.295860 text=' tool'
+  [ 3] id=  421 logit=   12.265427 text=' `'
+  [ 4] id=15500 logit=   12.062203 text=' observation'
+  [ 5] id=17983 logit=   11.362465 text=' evaluation'
+  [ 6] id= 1065 logit=   10.687532 text=' run'
+  [ 7] id= 7495 logit=   10.507515 text=' TO'
+  [ 8] id=  671 logit=   10.418746 text=' use'
+  [ 9] id= 1889 logit=   10.225497 text=' process'
+[Deep2Engine] Sampler selected token: 8225
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  310 logit=   20.251820 text=' of'
+  [ 1] id=29889 logit=   14.424397 text='.'
+  [ 2] id=29892 logit=   13.456301 text=','
+  [ 3] id= 8576 logit=   11.514359 text=' phase'
+  [ 4] id=  322 logit=   11.456896 text=' and'
+  [ 5] id= 1889 logit=   11.329967 text=' process'
+  [ 6] id=  313 logit=   11.091328 text=' ('
+  [ 7] id=  411 logit=   10.910512 text=' with'
+  [ 8] id=  470 logit=   10.843622 text=' or'
+  [ 9] id= 2861 logit=   10.569254 text=' due'
+[Deep2Engine] Sampler selected token: 310
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   17.086020 text=' the'
+  [ 1] id=  421 logit=   16.538675 text=' `'
+  [ 2] id=  445 logit=   13.684195 text=' this'
+  [ 3] id=  263 logit=   13.065866 text=' a'
+  [ 4] id= 5780 logit=   12.849922 text=' tool'
+  [ 5] id= 7495 logit=   12.628771 text=' TO'
+  [ 6] id=  393 logit=   11.413457 text=' that'
+  [ 7] id=  376 logit=   11.087519 text=' "'
+  [ 8] id= 1303 logit=   10.958426 text=' read'
+  [ 9] id= 1899 logit=   10.524918 text=' command'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  421 logit=   14.934135 text=' `'
+  [ 1] id= 5780 logit=   13.896874 text=' tool'
+  [ 2] id= 7495 logit=   12.087434 text=' TO'
+  [ 3] id= 1246 logit=   11.634100 text=' call'
+  [ 4] id= 1899 logit=   11.484938 text=' command'
+  [ 5] id= 2183 logit=   11.378957 text=' given'
+  [ 6] id= 6790 logit=   10.805243 text=' specified'
+  [ 7] id= 4944 logit=   10.666726 text=' provided'
+  [ 8] id=15500 logit=   10.359822 text=' observation'
+  [ 9] id=  376 logit=    9.980343 text=' "'
+[Deep2Engine] Sampler selected token: 5780
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  421 logit=   14.149964 text=' `'
+  [ 1] id=29889 logit=   13.991097 text='.'
+  [ 2] id=  411 logit=   12.828060 text=' with'
+  [ 3] id= 1246 logit=   12.653164 text=' call'
+  [ 4] id=29892 logit=   12.596426 text=','
+  [ 5] id= 2000 logit=   10.876178 text=' called'
+  [ 6] id= 6695 logit=   10.341782 text=' (`'
+  [ 7] id=  393 logit=   10.310793 text=' that'
+  [ 8] id=  313 logit=   10.225107 text=' ('
+  [ 9] id=  322 logit=   10.207846 text=' and'
+[Deep2Engine] Sampler selected token: 29889
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  450 logit=   15.429486 text=' The'
+  [ 1] id= 1763 logit=   13.326760 text=' To'
+  [ 2] id=  910 logit=   13.020237 text=' This'
+  [ 3] id=  739 logit=   11.959745 text=' It'
+  [ 4] id= 4001 logit=   11.459027 text=' Since'
+  [ 5] id=26321 logit=   11.288372 text=' Specifically'
+  [ 6] id=  887 logit=   11.053892 text=' You'
+  [ 7] id= 1094 logit=   10.958519 text=' As'
+  [ 8] id= 2398 logit=   10.903111 text=' However'
+  [ 9] id=  319 logit=   10.628391 text=' A'
+[Deep2Engine] Sampler selected token: 1763
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2329 logit=   14.338167 text=' fix'
+  [ 1] id=  620 logit=   13.855321 text=' res'
+  [ 2] id= 3211 logit=   13.258644 text=' address'
+  [ 3] id= 8814 logit=   12.768867 text=' resolve'
+  [ 4] id= 4772 logit=   12.395980 text=' avoid'
+  [ 5] id= 9801 logit=   12.386780 text=' ensure'
+  [ 6] id= 1959 logit=   12.359407 text=' correct'
+  [ 7] id= 7705 logit=   11.992810 text=' rect'
+  [ 8] id= 1380 logit=   11.843072 text=' mit'
+  [ 9] id= 5557 logit=   11.462016 text=' prevent'
+[Deep2Engine] Sampler selected token: 620
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  355 logit=   22.887043 text='end'
+  [ 1] id=  296 logit=   16.413500 text='ent'
+  [ 2] id=  431 logit=   16.126331 text='ub'
+  [ 3] id= 2017 logit=   16.075438 text='ume'
+  [ 4] id=  332 logit=   14.331798 text='ur'
+  [ 5] id=  305 logit=   14.045050 text='ch'
+  [ 6] id=11794 logit=   13.516441 text='END'
+  [ 7] id=14889 logit=   13.094632 text='upp'
+  [ 8] id= 1581 logit=   13.052701 text='ender'
+  [ 9] id= 2548 logit=   12.537596 text='ending'
+[Deep2Engine] Sampler selected token: 355
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   17.106216 text=' the'
+  [ 1] id=  445 logit=   15.409760 text=' this'
+  [ 2] id=  263 logit=   15.107310 text=' a'
+  [ 3] id=  385 logit=   11.683934 text=' an'
+  [ 4] id= 7495 logit=   11.450973 text=' TO'
+  [ 5] id=  372 logit=   11.179646 text=' it'
+  [ 6] id=  393 logit=   11.159943 text=' that'
+  [ 7] id= 1316 logit=   11.075897 text=' such'
+  [ 8] id=  421 logit=   10.983411 text=' `'
+  [ 9] id= 1790 logit=   10.893394 text=' another'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1021 logit=   15.105315 text=' same'
+  [ 1] id= 5780 logit=   14.365705 text=' tool'
+  [ 2] id=16698 logit=   12.680532 text=' SA'
+  [ 3] id= 7495 logit=   12.354485 text=' TO'
+  [ 4] id=15500 logit=   11.563135 text=' observation'
+  [ 5] id= 1959 logit=   11.416199 text=' correct'
+  [ 6] id= 2684 logit=   11.281273 text=' exact'
+  [ 7] id=  421 logit=   10.675128 text=' `'
+  [ 8] id= 2446 logit=   10.434232 text=' next'
+  [ 9] id= 5229 logit=    9.638144 text=' failed'
+[Deep2Engine] Sampler selected token: 1021
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5780 logit=   16.915060 text=' tool'
+  [ 1] id= 7495 logit=   14.024564 text=' TO'
+  [ 2] id=15500 logit=   12.994390 text=' observation'
+  [ 3] id=  421 logit=   11.267453 text=' `'
+  [ 4] id= 1246 logit=   11.024916 text=' call'
+  [ 5] id= 1899 logit=   10.252741 text=' command'
+  [ 6] id=21704 logit=    9.803329 text=' Tool'
+  [ 7] id= 2908 logit=    9.697565 text=' block'
+  [ 8] id=10154 logit=    9.508952 text='tool'
+  [ 9] id= 2684 logit=    9.503465 text=' exact'
+[Deep2Engine] Sampler selected token: 5780
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  411 logit=   16.180952 text=' with'
+  [ 1] id=29892 logit=   13.506030 text=','
+  [ 2] id=  322 logit=   11.503723 text=' and'
+  [ 3] id=  313 logit=   10.852139 text=' ('
+  [ 4] id=  773 logit=   10.826977 text=' using'
+  [ 5] id=  541 logit=   10.477551 text=' but'
+  [ 6] id= 1449 logit=   10.343630 text=' again'
+  [ 7] id=  304 logit=   10.151159 text=' to'
+  [ 8] id=  408 logit=    9.870505 text=' as'
+  [ 9] id= 3412 logit=    9.681517 text=' along'
+[Deep2Engine] Sampler selected token: 411
+[Deep2Engine] Top-10 logits:
+  [ 0] id=24114 logit=   15.490527 text=' corrected'
+  [ 1] id= 9406 logit=   14.862333 text=' strict'
+  [ 2] id= 1959 logit=   13.909079 text=' correct'
+  [ 3] id=  263 logit=   13.863420 text=' a'
+  [ 4] id=  278 logit=   13.155107 text=' the'
+  [ 5] id= 2854 logit=   12.111981 text=' valid'
+  [ 6] id= 4784 logit=   11.640913 text=' updated'
+  [ 7] id=  851 logit=   11.369531 text=' str'
+  [ 8] id= 4343 logit=   11.359820 text=' fixed'
+  [ 9] id=18719 logit=   11.352910 text=' strictly'
+[Deep2Engine] Sampler selected token: 9406
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4663 logit=   20.129782 text=' JSON'
+  [ 1] id= 4390 logit=   12.247036 text=' json'
+  [ 2] id= 3765 logit=   12.131766 text=' double'
+  [ 3] id= 7249 logit=   11.671889 text='JSON'
+  [ 4] id=29892 logit=   11.657667 text=','
+  [ 5] id= 1820 logit=   10.747048 text=' key'
+  [ 6] id= 6273 logit=   10.644686 text=' arguments'
+  [ 7] id= 6611 logit=   10.120576 text=' keys'
+  [ 8] id=29899 logit=   10.047227 text='-'
+  [ 9] id=  322 logit=    9.779525 text=' and'
+[Deep2Engine] Sampler selected token: 4663
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3765 logit=   15.733868 text=' double'
+  [ 1] id=29892 logit=   13.658432 text=','
+  [ 2] id= 4663 logit=   11.540105 text=' JSON'
+  [ 3] id= 6273 logit=   11.423427 text=' arguments'
+  [ 4] id=  408 logit=   11.151937 text=' as'
+  [ 5] id=  322 logit=   10.921705 text=' and'
+  [ 6] id=  411 logit=   10.592839 text=' with'
+  [ 7] id=  848 logit=   10.464236 text=' data'
+  [ 8] id= 1347 logit=    9.817657 text=' string'
+  [ 9] id= 1820 logit=    9.739799 text=' key'
+[Deep2Engine] Sampler selected token: 3765
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29899 logit=   24.192261 text='-'
+  [ 1] id=11839 logit=   14.004595 text=' quotes'
+  [ 2] id=23153 logit=   13.776415 text=' quoted'
+  [ 3] id=14978 logit=   13.673108 text=' quote'
+  [ 4] id=29881 logit=   12.847053 text='d'
+  [ 5] id= 1396 logit=   12.180125 text='quote'
+  [ 6] id=  339 logit=   11.771565 text='qu'
+  [ 7] id=  439 logit=   11.071462 text=' qu'
+  [ 8] id=13911 logit=   10.991722 text=' quot'
+  [ 9] id=30477 logit=   10.252058 text='‑'
+[Deep2Engine] Sampler selected token: 29899
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1396 logit=   26.033741 text='quote'
+  [ 1] id=  339 logit=   20.452179 text='qu'
+  [ 2] id=23083 logit=   17.235319 text='quot'
+  [ 3] id=14978 logit=   16.770393 text=' quote'
+  [ 4] id=11839 logit=   15.130538 text=' quotes'
+  [ 5] id= 8896 logit=   14.995402 text='double'
+  [ 6] id=23153 logit=   14.429441 text=' quoted'
+  [ 7] id= 1548 logit=   13.875521 text='quire'
+  [ 8] id= 2182 logit=   13.741483 text='Qu'
+  [ 9] id=15380 logit=   13.542133 text='qual'
+[Deep2Engine] Sampler selected token: 1396
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29881 logit=   19.083485 text='d'
+  [ 1] id= 6611 logit=   13.395071 text=' keys'
+  [ 2] id=  287 logit=   11.769085 text='ed'
+  [ 3] id=  270 logit=   11.272079 text=' d'
+  [ 4] id= 1820 logit=   11.189201 text=' key'
+  [ 5] id= 6273 logit=   10.588875 text=' arguments'
+  [ 6] id=29899 logit=   10.468039 text='-'
+  [ 7] id= 4128 logit=   10.038071 text=' parameters'
+  [ 8] id=29892 logit=    9.913357 text=','
+  [ 9] id= 1819 logit=    9.821960 text=' values'
+[Deep2Engine] Sampler selected token: 29881
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6611 logit=   20.605572 text=' keys'
+  [ 1] id= 1820 logit=   15.319614 text=' key'
+  [ 2] id= 6273 logit=   13.581313 text=' arguments'
+  [ 3] id= 1819 logit=   12.848498 text=' values'
+  [ 4] id=29361 logit=   12.020654 text=' keywords'
+  [ 5] id= 4663 logit=   11.883036 text=' JSON'
+  [ 6] id= 6389 logit=   11.016679 text=' args'
+  [ 7] id= 4128 logit=   10.858482 text=' parameters'
+  [ 8] id= 8149 logit=   10.807001 text='keys'
+  [ 9] id= 4813 logit=   10.736195 text=' Ke'
+[Deep2Engine] Sampler selected token: 6611
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=   17.084469 text=','
+  [ 1] id=  322 logit=   13.579714 text=' and'
+  [ 2] id=  313 logit=   12.986431 text=' ('
+  [ 3] id=  408 logit=   12.307405 text=' as'
+  [ 4] id=  304 logit=   12.201212 text=' to'
+  [ 5] id=  363 logit=   11.773022 text=' for'
+  [ 6] id= 6695 logit=   11.100706 text=' (`'
+  [ 7] id=  297 logit=   11.033719 text=' in'
+  [ 8] id= 1728 logit=   10.971564 text=' without'
+  [ 9] id=  393 logit=   10.844502 text=' that'
+[Deep2Engine] Sampler selected token: 29892
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  671 logit=   12.630144 text=' use'
+  [ 1] id=  278 logit=   11.875415 text=' the'
+  [ 2] id=  321 logit=   11.822692 text=' e'
+  [ 3] id=  366 logit=   11.314582 text=' you'
+  [ 4] id=  437 logit=   10.391147 text=' do'
+  [ 5] id=  591 logit=   10.352708 text=' we'
+  [ 6] id=  421 logit=    9.836171 text=' `'
+  [ 7] id= 5191 logit=    9.683994 text=' replace'
+  [ 8] id= 6623 logit=    9.537155 text=' modify'
+  [ 9] id= 1246 logit=    9.488854 text=' call'
+[Deep2Engine] Sampler selected token: 671
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 7495 logit=   15.738564 text=' TO'
+  [ 1] id=  278 logit=   15.638639 text=' the'
+  [ 2] id=  421 logit=   14.277269 text=' `'
+  [ 3] id= 3553 logit=   13.684239 text=' ID'
+  [ 4] id=  263 logit=   11.788133 text=' a'
+  [ 5] id=29901 logit=   11.511463 text=':'
+  [ 6] id= 5780 logit=   11.114662 text=' tool'
+  [ 7] id=  385 logit=   10.793354 text=' an'
+  [ 8] id=23230 logit=   10.394306 text=' `{'
+  [ 9] id=10248 logit=   10.010974 text=' `"'
+[Deep2Engine] Sampler selected token: 7495
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5607 logit=   22.189648 text='OL'
+  [ 1] id= 1988 logit=   15.174597 text='ML'
+  [ 2] id=13668 logit=   12.327396 text='OD'
+  [ 3] id= 2208 logit=   11.283429 text='LL'
+  [ 4] id=29949 logit=   10.910651 text='O'
+  [ 5] id=  324 logit=   10.558073 text='ol'
+  [ 6] id= 1507 logit=   10.114364 text='ool'
+  [ 7] id= 2891 logit=    9.912693 text='OT'
+  [ 8] id=29968 logit=    9.679714 text='K'
+  [ 9] id= 8789 logit=    9.521816 text='ools'
+[Deep2Engine] Sampler selected token: 5607
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29918 logit=   21.310863 text='_'
+  [ 1] id=29903 logit=   11.726055 text='S'
+  [ 2] id=20122 logit=   10.963652 text='\_'
+  [ 3] id=  315 logit=   10.743435 text=' C'
+  [ 4] id=  648 logit=    9.606016 text='_{'
+  [ 5] id=29899 logit=    9.503444 text='-'
+  [ 6] id=29898 logit=    9.028384 text='('
+  [ 7] id= 3553 logit=    8.809978 text=' ID'
+  [ 8] id=29901 logit=    8.550047 text=':'
+  [ 9] id=29907 logit=    7.954202 text='C'
+[Deep2Engine] Sampler selected token: 29918
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5454 logit=   24.714443 text='CA'
+  [ 1] id= 1525 logit=   15.077702 text='RE'
+  [ 2] id=29907 logit=   15.014373 text='C'
+  [ 3] id=22701 logit=   13.609029 text='CAA'
+  [ 4] id= 1367 logit=   12.980622 text='ID'
+  [ 5] id= 4717 logit=   12.796024 text='RA'
+  [ 6] id= 4519 logit=   12.754051 text='FA'
+  [ 7] id=29923 logit=   12.685837 text='E'
+  [ 8] id=12766 logit=   12.681616 text=' CA'
+  [ 9] id= 8132 logit=   12.303771 text='SA'
+[Deep2Engine] Sampler selected token: 5454
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2208 logit=   26.311430 text='LL'
+  [ 1] id=27624 logit=   16.650675 text=' LL'
+  [ 2] id=  645 logit=   16.204533 text='ll'
+  [ 3] id=24071 logit=   15.558223 text='ILL'
+  [ 4] id= 1799 logit=   15.280170 text='SS'
+  [ 5] id= 1988 logit=   14.628834 text='ML'
+  [ 6] id= 9818 logit=   14.337810 text='ALL'
+  [ 7] id= 5607 logit=   12.853117 text='OL'
+  [ 8] id=11148 logit=   12.687092 text=' ll'
+  [ 9] id= 7428 logit=   12.675721 text='MM'
+[Deep2Engine] Sampler selected token: 2208
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29901 logit=   17.898291 text=':'
+  [ 1] id=  411 logit=   12.393977 text=' with'
+  [ 2] id=  408 logit=   11.989687 text=' as'
+  [ 3] id= 2012 logit=   10.190314 text=' instead'
+  [ 4] id=  313 logit=   10.083532 text=' ('
+  [ 5] id=29892 logit=   10.054581 text=','
+  [ 6] id=29898 logit=   10.005085 text='('
+  [ 7] id=  322 logit=    9.656506 text=' and'
+  [ 8] id=29889 logit=    9.537181 text='.'
+  [ 9] id=29918 logit=    9.243763 text='_'
+[Deep2Engine] Sampler selected token: 29901
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1303 logit=   18.965683 text=' read'
+  [ 1] id=   13 logit=   13.672038 text='
+'
+  [ 2] id=  421 logit=   13.023920 text=' `'
+  [ 3] id= 5195 logit=   13.001682 text=' RE'
+  [ 4] id= 7495 logit=   12.982678 text=' TO'
+  [ 5] id=  376 logit=   12.041623 text=' "'
+  [ 6] id= 2436 logit=   11.793379 text=' write'
+  [ 7] id=  426 logit=   10.635747 text=' {'
+  [ 8] id= 8853 logit=   10.574392 text=' {"'
+  [ 9] id= 5191 logit=   10.526594 text=' replace'
+[Deep2Engine] Sampler selected token: 1303
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29918 logit=   25.685654 text='_'
+  [ 1] id=20122 logit=   14.851706 text='\_'
+  [ 2] id=24563 logit=   10.968889 text='_*'
+  [ 3] id=  648 logit=   10.766132 text='_{'
+  [ 4] id= 1649 logit=    9.975239 text='__'
+  [ 5] id=29899 logit=    9.791295 text='-'
+  [ 6] id=29898 logit=    9.766267 text='('
+  [ 7] id= 1445 logit=    9.400582 text='file'
+  [ 8] id=  903 logit=    9.388616 text=' _'
+  [ 9] id=  934 logit=    9.231132 text=' file'
+[Deep2Engine] Sampler selected token: 29918
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1445 logit=   28.280014 text='file'
+  [ 1] id= 2283 logit=   15.702393 text='File'
+  [ 2] id=  934 logit=   15.308357 text=' file'
+  [ 3] id= 1777 logit=   14.820634 text='fil'
+  [ 4] id= 5325 logit=   14.758505 text='files'
+  [ 5] id=29888 logit=   14.716454 text='f'
+  [ 6] id= 4804 logit=   14.195429 text='call'
+  [ 7] id= 9507 logit=   13.595362 text='filename'
+  [ 8] id= 7724 logit=   13.417679 text='FILE'
+  [ 9] id= 4572 logit=   13.377010 text='filter'
+[Deep2Engine] Sampler selected token: 1445
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 8853 logit=   15.855397 text=' {"'
+  [ 1] id=  426 logit=   14.979734 text=' {'
+  [ 2] id= 2802 logit=   12.260871 text=' {\'
+  [ 3] id=  411 logit=   12.025889 text=' with'
+  [ 4] id=29889 logit=   11.792752 text='.'
+  [ 5] id=11117 logit=   11.592053 text=' {''
+  [ 6] id=29892 logit=   10.979056 text=','
+  [ 7] id=  408 logit=   10.852554 text=' as'
+  [ 8] id=21313 logit=   10.530099 text=' ({'
+  [ 9] id= 8620 logit=   10.034696 text=' {{'
+[Deep2Engine] Sampler selected token: 8853
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2084 logit=   24.114222 text='path'
+  [ 1] id=  856 logit=   14.260268 text='...'
+  [ 2] id= 1853 logit=   14.090882 text='type'
+  [ 3] id= 2224 logit=   13.370551 text=' path'
+  [ 4] id= 2605 logit=   13.245475 text='Path'
+  [ 5] id= 3126 logit=   12.711802 text='json'
+  [ 6] id= 1989 logit=   12.566813 text='key'
+  [ 7] id=29883 logit=   12.277200 text='c'
+  [ 8] id= 5696 logit=   12.216261 text='method'
+  [ 9] id= 5085 logit=   11.980232 text='args'
+[Deep2Engine] Sampler selected token: 2084
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4710 logit=   19.945238 text='":"'
+  [ 1] id= 1115 logit=   17.952284 text='":'
+  [ 2] id=29901 logit=   12.773709 text=':'
+  [ 3] id=28819 logit=   12.199318 text='":{"'
+  [ 4] id=29908 logit=   11.912001 text='"'
+  [ 5] id= 3583 logit=   11.261419 text=':\'
+  [ 6] id= 6160 logit=   11.146316 text=':"'
+  [ 7] id= 6177 logit=   10.043785 text='}:'
+  [ 8] id= 3284 logit=    9.579867 text='","'
+  [ 9] id=16203 logit=    9.378244 text='\":'
+[Deep2Engine] Sampler selected token: 4710
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3396 logit=   23.413597 text='main'
+  [ 1] id=29966 logit=   14.324098 text='<'
+  [ 2] id= 1667 logit=   13.862439 text=' main'
+  [ 3] id=29961 logit=   13.399158 text='['
+  [ 4] id=  856 logit=   12.972191 text='...'
+  [ 5] id=29885 logit=   12.030331 text='m'
+  [ 6] id= 4773 logit=   11.702614 text='example'
+  [ 7] id= 2084 logit=   11.633326 text='path'
+  [ 8] id= 1195 logit=   11.605410 text='min'
+  [ 9] id= 5431 logit=   11.511745 text='foo'
+[Deep2Engine] Sampler selected token: 3396
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   23.475431 text='.'
+  [ 1] id=29918 logit=   12.829375 text='_'
+  [ 2] id=19423 logit=   12.277549 text='.<'
+  [ 3] id=23301 logit=   12.255083 text='\.'
+  [ 4] id=29906 logit=   11.412024 text='2'
+  [ 5] id=  636 logit=   10.849502 text='..'
+  [ 6] id=29914 logit=   10.406485 text='/'
+  [ 7] id=  856 logit=   10.143038 text='...'
+  [ 8] id=29896 logit=   10.094444 text='1'
+  [ 9] id=29892 logit=    9.993701 text=','
+[Deep2Engine] Sampler selected token: 29889
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29883 logit=   25.305313 text='c'
+  [ 1] id= 8223 logit=   15.101576 text='cpp'
+  [ 2] id= 3945 logit=   13.685357 text='txt'
+  [ 3] id=29912 logit=   13.590152 text='{'
+  [ 4] id= 3126 logit=   13.310876 text='json'
+  [ 5] id=29907 logit=   13.200562 text='C'
+  [ 6] id= 1315 logit=   12.994375 text='js'
+  [ 7] id=  617 logit=   12.348828 text='cc'
+  [ 8] id=29885 logit=   12.152909 text='m'
+  [ 9] id=29881 logit=   12.117826 text='d'
+[Deep2Engine] Sampler selected token: 29883
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29908 logit=   19.112713 text='"'
+  [ 1] id= 9092 logit=   18.803459 text='"}'
+  [ 2] id=10758 logit=   16.819918 text='"},'
+  [ 3] id= 1642 logit=   14.101154 text='".'
+  [ 4] id=  613 logit=   13.817339 text='",'
+  [ 5] id= 1213 logit=   13.481089 text='."'
+  [ 6] id= 5038 logit=   12.955073 text='}"'
+  [ 7] id= 3284 logit=   12.677320 text='","'
+  [ 8] id=17671 logit=   12.403899 text='}",'
+  [ 9] id=15945 logit=   11.778687 text='""'
+[Deep2Engine] Sampler selected token: 9092
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2012 logit=   13.929540 text=' instead'
+  [ 1] id=  408 logit=   13.681340 text=' as'
+  [ 2] id=  322 logit=   13.470867 text=' and'
+  [ 3] id=  297 logit=   13.086417 text=' in'
+  [ 4] id=  411 logit=   12.755872 text=' with'
+  [ 5] id=  304 logit=   12.528992 text=' to'
+  [ 6] id=    2 logit=   12.270237 text='</s>'
+  [ 7] id=  470 logit=   11.260037 text=' or'
+  [ 8] id=  313 logit=   11.096995 text=' ('
+  [ 9] id= 1728 logit=   10.981410 text=' without'
+[Deep2Engine] Sampler selected token: 408
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   14.826797 text=' the'
+  [ 1] id= 1881 logit=   11.155034 text=' input'
+  [ 2] id=  263 logit=   11.144879 text=' a'
+  [ 3] id=  596 logit=   11.080337 text=' your'
+  [ 4] id=  372 logit=   11.050632 text=' it'
+  [ 5] id=  385 logit=   10.807252 text=' an'
+  [ 6] id=  967 logit=   10.744828 text=' its'
+  [ 7] id= 5439 logit=   10.621296 text=' described'
+  [ 8] id= 4318 logit=   10.584603 text=' shown'
+  [ 9] id=  639 logit=   10.312730 text=' per'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2446 logit=   13.221767 text=' next'
+  [ 1] id= 1881 logit=   12.340198 text=' input'
+  [ 2] id= 5780 logit=   11.964872 text=' tool'
+  [ 3] id=  937 logit=   11.037773 text=' first'
+  [ 4] id= 7495 logit=   10.764822 text=' TO'
+  [ 5] id= 1899 logit=   10.575951 text=' command'
+  [ 6] id= 2980 logit=   10.455921 text=' argument'
+  [ 7] id=  716 logit=   10.273493 text=' new'
+  [ 8] id= 2009 logit=   10.262126 text=' request'
+  [ 9] id= 1246 logit=    9.936503 text=' call'
+[Deep2Engine] Sampler selected token: 2446
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5780 logit=   12.969760 text=' tool'
+  [ 1] id=15500 logit=   12.942862 text=' observation'
+  [ 2] id= 1246 logit=   12.371870 text=' call'
+  [ 3] id= 1899 logit=   12.249758 text=' command'
+  [ 4] id= 7495 logit=   12.248719 text=' TO'
+  [ 5] id= 2908 logit=   11.442112 text=' block'
+  [ 6] id= 2009 logit=   11.440842 text=' request'
+  [ 7] id= 1881 logit=   10.938904 text=' input'
+  [ 8] id= 4331 logit=   10.888413 text=' step'
+  [ 9] id= 3553 logit=   10.302561 text=' ID'
+[Deep2Engine] Sampler selected token: 1899
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   15.553671 text='.'
+  [ 1] id=  304 logit=   14.124149 text=' to'
+  [ 2] id=29892 logit=   12.590648 text=','
+  [ 3] id=  297 logit=   12.451183 text=' in'
+  [ 4] id=  322 logit=   11.157038 text=' and'
+  [ 5] id= 1156 logit=   11.115301 text=' after'
+  [ 6] id=  411 logit=   10.984021 text=' with'
+  [ 7] id= 3553 logit=   10.737793 text=' ID'
+  [ 8] id=  363 logit=   10.606442 text=' for'
+  [ 9] id=  313 logit=   10.592793 text=' ('
+[Deep2Engine] Sampler selected token: 304
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  367 logit=   14.391375 text=' be'
+  [ 1] id= 6222 logit=   13.582065 text=' execute'
+  [ 2] id= 3638 logit=   12.595804 text=' send'
+  [ 3] id=12312 logit=   11.939398 text=' repeat'
+  [ 4] id= 2228 logit=   11.568695 text=' issue'
+  [ 5] id= 1065 logit=   10.989660 text=' run'
+  [ 6] id=  278 logit=   10.804767 text=' the'
+  [ 7] id= 2189 logit=   10.739178 text=' perform'
+  [ 8] id= 9801 logit=   10.713675 text=' ensure'
+  [ 9] id=  671 logit=   10.699873 text=' use'
+[Deep2Engine] Sampler selected token: 6222
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   18.001125 text='.'
+  [ 1] id=29892 logit=   14.547485 text=','
+  [ 2] id= 1156 logit=   13.852356 text=' after'
+  [ 3] id=  297 logit=   12.904301 text=' in'
+  [ 4] id=  278 logit=   12.856904 text=' the'
+  [ 5] id=  411 logit=   12.590401 text=' with'
+  [ 6] id=  373 logit=   12.574796 text=' on'
+  [ 7] id=  363 logit=   12.405623 text=' for'
+  [ 8] id=  322 logit=   12.256604 text=' and'
+  [ 9] id=  313 logit=   12.020058 text=' ('
+[Deep2Engine] Sampler selected token: 29889
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   14.231104 text='</s>'
+  [ 1] id=  450 logit=   13.497969 text=' The'
+  [ 2] id= 1938 logit=   12.864092 text=' Do'
+  [ 3] id=  382 logit=   12.531146 text=' E'
+  [ 4] id=  960 logit=   12.309509 text=' If'
+  [ 5] id=  910 logit=   12.058107 text=' This'
+  [ 6] id=  739 logit=   11.500652 text=' It'
+  [ 7] id= 3940 logit=   11.334019 text=' Note'
+  [ 8] id= 2398 logit=   11.313877 text=' However'
+  [ 9] id=  887 logit=   11.020233 text=' You'
+[Deep2Engine] Sampler selected token: 450
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 5780 logit=   11.781690 text=' tool'
+  [ 1] id=15500 logit=   11.380391 text=' observation'
+  [ 2] id=  421 logit=   11.366425 text=' `'
+  [ 3] id= 1059 logit=   11.076145 text=' error'
+  [ 4] id= 4902 logit=   10.837790 text=' details'
+  [ 5] id= 2446 logit=   10.066001 text=' next'
+  [ 6] id= 1962 logit=    9.843435 text=' output'
+  [ 7] id= 7495 logit=    9.548970 text=' TO'
+  [ 8] id=  937 logit=    9.499821 text=' first'
+  [ 9] id= 4663 logit=    9.278950 text=' JSON'
+[Deep2Engine] Sampler selected token: 15500
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  884 logit=   12.036638 text=' also'
+  [ 1] id=  515 logit=   11.387959 text=' from'
+  [ 2] id=  947 logit=   11.330006 text=' does'
+  [ 3] id=  881 logit=   11.267293 text=' should'
+  [ 4] id= 4902 logit=   10.796642 text=' details'
+  [ 5] id=  674 logit=   10.496105 text=' will'
+  [ 6] id=  338 logit=   10.422692 text=' is'
+  [ 7] id=  322 logit=   10.108652 text=' and'
+  [ 8] id= 1818 logit=    9.914041 text=' must'
+  [ 9] id= 7805 logit=    9.843450 text=' includes'
+[Deep2Engine] Sampler selected token: 3743
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4902 logit=   14.336536 text=' details'
+  [ 1] id=  278 logit=   14.265116 text=' the'
+  [ 2] id=  263 logit=   13.084014 text=' a'
+  [ 3] id=13173 logit=   12.714737 text=' detailed'
+  [ 4] id= 1059 logit=   12.387161 text=' error'
+  [ 5] id=  694 logit=   12.332911 text=' no'
+  [ 6] id= 5684 logit=   12.057229 text=' additional'
+  [ 7] id=  901 logit=   12.056746 text=' more'
+  [ 8] id=  385 logit=   12.029476 text=' an'
+  [ 9] id= 2472 logit=   11.715020 text=' information'
+[Deep2Engine] Sampler selected token: 4902
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1048 logit=   15.871048 text=' about'
+  [ 1] id=  373 logit=   15.314156 text=' on'
+  [ 2] id=  310 logit=   14.657259 text=' of'
+  [ 3] id=24232 logit=   14.040545 text=' explaining'
+  [ 4] id= 1316 logit=   13.875014 text=' such'
+  [ 5] id=11211 logit=   13.810684 text=' regarding'
+  [ 6] id=  322 logit=   13.607359 text=' and'
+  [ 7] id=  393 logit=   13.355038 text=' that'
+  [ 8] id=29892 logit=   12.974491 text=','
+  [ 9] id=23941 logit=   12.699727 text=' indicating'
+[Deep2Engine] Sampler selected token: 373
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   17.925488 text=' the'
+  [ 1] id=  920 logit=   16.645912 text=' how'
+  [ 2] id=  825 logit=   15.541344 text=' what'
+  [ 3] id= 2020 logit=   15.123786 text=' why'
+  [ 4] id=  607 logit=   13.614738 text=' which'
+  [ 5] id=  988 logit=   12.139256 text=' where'
+  [ 6] id=  445 logit=   11.894043 text=' this'
+  [ 7] id= 1059 logit=   11.420253 text=' error'
+  [ 8] id=  263 logit=   10.663797 text=' a'
+  [ 9] id= 2702 logit=   10.209549 text=' specific'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1059 logit=   14.498777 text=' error'
+  [ 1] id= 2702 logit=   13.118073 text=' specific'
+  [ 2] id=10938 logit=   12.582369 text=' schema'
+  [ 3] id= 2228 logit=   12.122087 text=' issue'
+  [ 4] id= 5229 logit=   11.353598 text=' failed'
+  [ 5] id= 4556 logit=   11.352245 text=' cause'
+  [ 6] id= 5780 logit=   11.266644 text=' tool'
+  [ 7] id= 8340 logit=   10.940624 text=' invalid'
+  [ 8] id= 1108 logit=   10.636694 text=' problem'
+  [ 9] id= 2769 logit=   10.545006 text=' reason'
+[Deep2Engine] Sampler selected token: 1059
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29892 logit=   14.034728 text=','
+  [ 1] id=  322 logit=   13.313198 text=' and'
+  [ 2] id= 2643 logit=   13.114588 text=' message'
+  [ 3] id=  393 logit=   12.564809 text=' that'
+  [ 4] id=  313 logit=   11.595219 text=' ('
+  [ 5] id= 8581 logit=   11.289172 text=' caused'
+  [ 6] id=18169 logit=   10.934039 text=' encountered'
+  [ 7] id= 4195 logit=   10.022020 text=' condition'
+  [ 8] id= 6695 logit=    9.961054 text=' (`'
+  [ 9] id=  408 logit=    9.877953 text=' as'
+[Deep2Engine] Sampler selected token: 322
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   13.792860 text=' the'
+  [ 1] id=  920 logit=   13.114088 text=' how'
+  [ 2] id=14661 logit=   12.758608 text=' suggests'
+  [ 3] id=10529 logit=   12.621113 text=' suggestions'
+  [ 4] id=  263 logit=   12.459601 text=' a'
+  [ 5] id=  738 logit=   11.755106 text=' any'
+  [ 6] id= 2702 logit=   11.606168 text=' specific'
+  [ 7] id=13622 logit=   11.575750 text=' recommended'
+  [ 8] id= 7829 logit=   11.485754 text=' suggested'
+  [ 9] id= 9848 logit=   11.360042 text=' advice'
+[Deep2Engine] Sampler selected token: 920
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  304 logit=   16.281368 text=' to'
+  [ 1] id=  278 logit=   14.237264 text=' the'
+  [ 2] id=  372 logit=   13.384472 text=' it'
+  [ 3] id=  366 logit=   10.043105 text=' you'
+  [ 4] id= 5780 logit=    9.652427 text=' tool'
+  [ 5] id=  896 logit=    9.318007 text=' they'
+  [ 6] id=  445 logit=    9.226654 text=' this'
+  [ 7] id= 3765 logit=    9.223389 text=' double'
+  [ 8] id= 1900 logit=    9.216121 text=' best'
+  [ 9] id= 2702 logit=    9.204655 text=' specific'
+[Deep2Engine] Sampler selected token: 304
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 2329 logit=   16.835594 text=' fix'
+  [ 1] id= 3211 logit=   14.111617 text=' address'
+  [ 2] id= 8814 logit=   13.895921 text=' resolve'
+  [ 3] id= 1959 logit=   13.692776 text=' correct'
+  [ 4] id= 6623 logit=   12.452666 text=' modify'
+  [ 5] id= 4505 logit=   12.292965 text=' solve'
+  [ 6] id=18532 logit=   12.040911 text=' reproduce'
+  [ 7] id=  337 logit=   12.013262 text=' re'
+  [ 8] id=18835 logit=   11.870690 text=' troubles'
+  [ 9] id= 1083 logit=   11.821470 text=' rem'
+[Deep2Engine] Sampler selected token: 2329
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   17.131807 text=' the'
+  [ 1] id=  372 logit=   16.229191 text=' it'
+  [ 2] id=  963 logit=   12.272892 text=' them'
+  [ 3] id= 4663 logit=   11.146134 text=' JSON'
+  [ 4] id=  738 logit=   11.045440 text=' any'
+  [ 5] id= 1438 logit=   10.753020 text=' these'
+  [ 6] id=  445 logit=   10.729258 text=' this'
+  [ 7] id= 1906 logit=   10.537906 text=' those'
+  [ 8] id= 6273 logit=   10.498037 text=' arguments'
+  [ 9] id=  967 logit=   10.406423 text=' its'
+[Deep2Engine] Sampler selected token: 278
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 4663 logit=   13.669421 text=' JSON'
+  [ 1] id= 6273 logit=   12.700776 text=' arguments'
+  [ 2] id= 1108 logit=   12.313473 text=' problem'
+  [ 3] id= 8340 logit=   12.300984 text=' invalid'
+  [ 4] id=10938 logit=   12.211758 text=' schema'
+  [ 5] id= 2228 logit=   12.211068 text=' issue'
+  [ 6] id= 1881 logit=   12.104169 text=' input'
+  [ 7] id= 5780 logit=   12.019771 text=' tool'
+  [ 8] id= 8845 logit=   11.324064 text=' validation'
+  [ 9] id= 5626 logit=   10.910511 text=' issues'
+[Deep2Engine] Sampler selected token: 2228
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   16.673422 text='.'
+  [ 1] id=29892 logit=   14.956720 text=','
+  [ 2] id=  773 logit=   14.190347 text=' using'
+  [ 3] id=  411 logit=   14.068600 text=' with'
+  [ 4] id=  304 logit=   13.742342 text=' to'
+  [ 5] id=  491 logit=   13.696793 text=' by'
+  [ 6] id=  297 logit=   11.969093 text=' in'
+  [ 7] id=  313 logit=   11.624885 text=' ('
+  [ 8] id=  363 logit=   11.525491 text=' for'
+  [ 9] id= 1434 logit=   11.051967 text=' before'
+[Deep2Engine] Sampler selected token: 491
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  773 logit=   15.403928 text=' using'
+  [ 1] id= 6480 logit=   12.879785 text=' changing'
+  [ 2] id=23815 logit=   12.478759 text=' modifying'
+  [ 3] id=15270 logit=   12.006668 text=' replacing'
+  [ 4] id=10365 logit=   11.630653 text=' adjust'
+  [ 5] id= 3765 logit=   11.488807 text=' double'
+  [ 6] id=22146 logit=   11.217075 text=' specifying'
+  [ 7] id=13138 logit=   11.086734 text=' providing'
+  [ 8] id=13271 logit=   11.022900 text=' updating'
+  [ 9] id=  337 logit=   10.857150 text=' re'
+[Deep2Engine] Sampler selected token: 773
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 3765 logit=   16.443089 text=' double'
+  [ 1] id= 4663 logit=   12.981148 text=' JSON'
+  [ 2] id=  278 logit=   12.695578 text=' the'
+  [ 3] id= 9406 logit=   12.241193 text=' strict'
+  [ 4] id=23153 logit=   12.107922 text=' quoted'
+  [ 5] id= 2854 logit=   12.021000 text=' valid'
+  [ 6] id= 1959 logit=   11.456038 text=' correct'
+  [ 7] id=  439 logit=   11.100683 text=' qu'
+  [ 8] id=  263 logit=   11.001587 text=' a'
+  [ 9] id= 1347 logit=   10.982738 text=' string'
+[Deep2Engine] Sampler selected token: 3765
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29899 logit=   22.636044 text='-'
+  [ 1] id=23153 logit=   13.683992 text=' quoted'
+  [ 2] id=14978 logit=   13.593053 text=' quote'
+  [ 3] id=11839 logit=   12.779055 text=' quotes'
+  [ 4] id=13911 logit=   11.933986 text=' quot'
+  [ 5] id=29881 logit=   11.820913 text='d'
+  [ 6] id=  439 logit=   11.719204 text=' qu'
+  [ 7] id= 3765 logit=   11.275394 text=' double'
+  [ 8] id= 1396 logit=   11.129285 text='quote'
+  [ 9] id=  339 logit=   10.466121 text='qu'
+[Deep2Engine] Sampler selected token: 29899
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1396 logit=   23.624699 text='quote'
+  [ 1] id=  339 logit=   19.213478 text='qu'
+  [ 2] id=23083 logit=   16.243862 text='quot'
+  [ 3] id=14978 logit=   15.047895 text=' quote'
+  [ 4] id= 8896 logit=   14.920177 text='double'
+  [ 5] id= 1972 logit=   13.302659 text='query'
+  [ 6] id=23153 logit=   13.072413 text=' quoted'
+  [ 7] id=12150 logit=   12.920814 text='quant'
+  [ 8] id= 1989 logit=   12.605666 text='key'
+  [ 9] id= 1548 logit=   12.589590 text='quire'
+[Deep2Engine] Sampler selected token: 1396
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29881 logit=   19.489347 text='d'
+  [ 1] id=  287 logit=   12.631387 text='ed'
+  [ 2] id= 6611 logit=   11.888871 text=' keys'
+  [ 3] id=  270 logit=   11.046612 text=' d'
+  [ 4] id=29899 logit=   10.533075 text='-'
+  [ 5] id= 1819 logit=   10.023397 text=' values'
+  [ 6] id= 1820 logit=    9.855611 text=' key'
+  [ 7] id=29915 logit=    9.830201 text='''
+  [ 8] id=  322 logit=    9.639308 text=' and'
+  [ 9] id=29926 logit=    9.612088 text='j'
+[Deep2Engine] Sampler selected token: 29881
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 6611 logit=   19.230629 text=' keys'
+  [ 1] id= 4663 logit=   16.041807 text=' JSON'
+  [ 2] id= 1820 logit=   14.913883 text=' key'
+  [ 3] id= 1819 logit=   13.579283 text=' values'
+  [ 4] id=  322 logit=   12.878688 text=' and'
+  [ 5] id= 1347 logit=   11.898632 text=' string'
+  [ 6] id= 6031 logit=   11.589598 text=' strings'
+  [ 7] id= 6273 logit=   11.530806 text=' arguments'
+  [ 8] id=29361 logit=   11.248223 text=' keywords'
+  [ 9] id= 4390 logit=   11.218563 text=' json'
+[Deep2Engine] Sampler selected token: 6611
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  322 logit=   19.245378 text=' and'
+  [ 1] id=29889 logit=   16.259241 text='.'
+  [ 2] id=  411 logit=   14.407768 text=' with'
+  [ 3] id=  297 logit=   14.086060 text=' in'
+  [ 4] id=29892 logit=   13.469251 text=','
+  [ 5] id=  304 logit=   13.121470 text=' to'
+  [ 6] id=  363 logit=   12.995741 text=' for'
+  [ 7] id= 2012 logit=   12.873090 text=' instead'
+  [ 8] id=  408 logit=   12.675141 text=' as'
+  [ 9] id=29914 logit=   11.517722 text='/'
+[Deep2Engine] Sampler selected token: 322
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1347 logit=   17.783829 text=' string'
+  [ 1] id= 6031 logit=   12.500893 text=' strings'
+  [ 2] id= 1819 logit=   12.227667 text=' values'
+  [ 3] id=  773 logit=   11.468025 text=' using'
+  [ 4] id= 2854 logit=   11.326509 text=' valid'
+  [ 5] id= 3765 logit=   10.580065 text=' double'
+  [ 6] id=22146 logit=   10.528625 text=' specifying'
+  [ 7] id= 9686 logit=   10.156013 text=' matching'
+  [ 8] id= 1661 logit=   10.155742 text=' non'
+  [ 9] id=15270 logit=   10.043795 text=' replacing'
+[Deep2Engine] Sampler selected token: 1347
+[Deep2Engine] Top-10 logits:
+  [ 0] id= 1819 logit=   21.471422 text=' values'
+  [ 1] id=29899 logit=   13.475593 text='-'
+  [ 2] id=  995 logit=   13.381773 text=' value'
+  [ 3] id=  659 logit=   11.203276 text=' val'
+  [ 4] id= 3651 logit=   11.190722 text=' variables'
+  [ 5] id= 4128 logit=   11.162098 text=' parameters'
+  [ 6] id= 2630 logit=   11.087819 text=' Val'
+  [ 7] id= 5975 logit=   10.940066 text='values'
+  [ 8] id=  287 logit=   10.750517 text='ed'
+  [ 9] id= 6273 logit=   10.492925 text=' arguments'
+[Deep2Engine] Sampler selected token: 1819
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   17.916296 text='.'
+  [ 1] id=  297 logit=   15.257463 text=' in'
+  [ 2] id=29892 logit=   14.821440 text=','
+  [ 3] id= 2012 logit=   14.523530 text=' instead'
+  [ 4] id=  408 logit=   13.982556 text=' as'
+  [ 5] id=  304 logit=   13.609133 text=' to'
+  [ 6] id=  363 logit=   13.580691 text=' for'
+  [ 7] id= 2629 logit=   12.236308 text=' within'
+  [ 8] id=  393 logit=   11.695239 text=' that'
+  [ 9] id=  313 logit=   11.485079 text=' ('
+[Deep2Engine] Sampler selected token: 297
+[Deep2Engine] Top-10 logits:
+  [ 0] id=  278 logit=   13.906969 text=' the'
+  [ 1] id= 4663 logit=   12.421837 text=' JSON'
+  [ 2] id= 7495 logit=   12.055607 text=' TO'
+  [ 3] id= 6273 logit=   11.632509 text=' arguments'
+  [ 4] id= 9406 logit=   10.925609 text=' strict'
+  [ 5] id=  596 logit=    9.885485 text=' your'
+  [ 6] id= 5780 logit=    9.831234 text=' tool'
+  [ 7] id=  263 logit=    9.312143 text=' a'
+  [ 8] id= 2980 logit=    9.282261 text=' argument'
+  [ 9] id= 1797 logit=    8.895555 text=' order'
+[Deep2Engine] Sampler selected token: 11839
+[Deep2Engine] Top-10 logits:
+  [ 0] id=29889 logit=   17.803698 text='.'
+  [ 1] id=29892 logit=   14.366060 text=','
+  [ 2] id= 2012 logit=   13.825870 text=' instead'
+  [ 3] id=  304 logit=   13.707646 text=' to'
+  [ 4] id=  363 logit=   13.322462 text=' for'
+  [ 5] id=  408 logit=   13.219514 text=' as'
+  [ 6] id=  297 logit=   12.626589 text=' in'
+  [ 7] id=  746 logit=   12.011565 text=' when'
+  [ 8] id=  313 logit=   11.848429 text=' ('
+  [ 9] id= 2629 logit=   11.805805 text=' within'
+[Deep2Engine] Sampler selected token: 29889
+[Deep2Engine] Top-10 logits:
+  [ 0] id=    2 logit=   16.559000 text='</s>'
+  [ 1] id=  450 logit=   14.073568 text=' The'
+  [ 2] id=  739 logit=   12.549848 text=' It'
+  [ 3] id=  382 logit=   12.372228 text=' E'
+  [ 4] id=  960 logit=   11.855145 text=' If'
+  [ 5] id= 1938 logit=   11.771089 text=' Do'
+  [ 6] id=  910 logit=   11.532934 text=' This'
+  [ 7] id= 3940 logit=   11.505197 text=' Note'
+  [ 8] id=  887 logit=   11.181574 text=' You'
+  [ 9] id= 3529 logit=   11.084249 text=' Please'
+[Deep2Engine] Sampler selected token: 2
+[Deep2Engine] Generation complete: 98 tokens in 117822.68 ms (0.83 TPS)
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[TOOL_SCHEMA] ACCEPT tool=read_file dispatched=1 ok=1
+[SCHEMA_RETRY] SECOND_CALL_SCHEMA_VALID=1 SECOND_CALL_DISPATCHED=1 corrected_different=1 handler_executions=1
+SCHEMA_RETRY_BOUNDARY_FREEZE
+ROOT_DOMAIN=MODEL_SCHEMA_RETRY
+MODEL=TinyLlama
+HEXMAG=NOT_IMPLICATED
+COPILOT_ROUTE=NOT_IMPLICATED
+
+R0_raw_first_model_output=written
+R1_schema_validation_error=written
+R2_retry_prompt_correct=1
+R2_has_schema_error=1
+R2_has_strict_example=1
+R2_has_malformed_prior=1
+R2_rendered_bytes=4353
+R3_raw_second_written=1
+R3_bare_key_class=0
+R4_second_schema_valid=1
+R4_second_dispatched=1
+
+MODEL_REPEATS_INVALID=0
+DISPOSITION=RETRY_PROMPT_CORRECT + MODEL_CORRECTED → PASS
+
+WORKING_NOTE=Retry infrastructure presents observation + strict example; TinyLlama second generation remains schema-invalid under unconstrained NL. Architectural fix if R2 correct: deterministic schema repair / constrained decode between model output and tool dispatch (not another free gen).
+Do not reopen HexMag/Copilot.
+AGENT_SCHEMA_RETRY_001
+lane=MODEL_RETRY (RAWRXD_TOOL_ARGS_STRICT=1; bare-key repair OFF)
+FIRST_CALL_SCHEMA_VALID=0
+FIRST_CALL_DISPATCHED=0
+FIRST_CALL_SIDE_EFFECTS=0
+SECOND_CALL_SCHEMA_VALID=1
+SECOND_CALL_DISPATCHED=1
+TOTAL_HANDLER_EXECUTIONS=1
+CORRECTION_REQUIRED_NEW_INFERENCE=1
+malformed_rejected=PASS
+malformed_side_effect_free=PASS
+new_inference_observed=PASS
+corrected_call_different=PASS
+corrected_call_dispatched=PASS
+handler_execution_count=1
+first_args={path:main.c}
+second_args={"path":"main.c"}
+second_response=
+In summary, the observation from `read_file` in ID=call_1 shows that a schema_validation error occurred during the execution of the tool. To resend the same tool with strict JSON double-quoted keys, use TOOL_CALL: read_file {"path":"main.c"} as the next command to execute. The observation contains details on the error and how to fix the issue by using double-quoted keys and string values in quotes.
+first_result={"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
+second_result={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = DOES_NOT_EXIST;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}
+RETRY_PROMPT_CORRECT=1
+DISPOSITION=RETRY_PROMPT_CORRECT + MODEL_CORRECTED → PASS
+AGENT_SCHEMA_RETRY_001=PASS
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

@@ -1,0 +1,46 @@
+#version 450
+// gemv_q2k.comp — ggml dequantize_row_q2_K (on-disk: scales, qs, d, dmin)
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = (pc.cols + 255u) / 256u;
+  uint rowOff = row * nblk * 84u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint blk = rowOff + b * 84u;
+    float d = f16(u8(blk + 80u) | (u8(blk + 81u) << 8));
+    float dmin = f16(u8(blk + 82u) | (u8(blk + 83u) << 8));
+    uint q = blk + 16u, is = 0u, elem = b * 256u;
+    for (uint n = 0u; n < 2u; ++n) {
+      uint shift = 0u;
+      for (uint j = 0u; j < 4u; ++j) {
+        uint sc = u8(blk + is); is += 1u;
+        float dl = d * float(sc & 15u), ml = dmin * float(sc >> 4);
+        for (uint l = 0u; l < 16u; ++l) {
+          uint a = elem + l;
+          if (a < pc.cols) sum += (dl * float((u8(q + l) >> shift) & 3u) - ml) * x[a];
+        }
+        elem += 16u;
+        sc = u8(blk + is); is += 1u;
+        dl = d * float(sc & 15u); ml = dmin * float(sc >> 4);
+        for (uint l = 0u; l < 16u; ++l) {
+          uint a = elem + l;
+          if (a < pc.cols) sum += (dl * float((u8(q + l + 16u) >> shift) & 3u) - ml) * x[a];
+        }
+        elem += 16u; shift += 2u;
+      }
+      q += 32u;
+    }
+  }
+  y[row] = sum;
+}

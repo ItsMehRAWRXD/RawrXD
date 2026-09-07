@@ -1,0 +1,13 @@
+side=llama
+stage=FFN_INP_6
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=b386e9cd11574b11
+l2=2.7699512257874179
+seq=914
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001\llama\llama_FFN_INP_6_pos1_layer0_full_n2048_seq914.bin

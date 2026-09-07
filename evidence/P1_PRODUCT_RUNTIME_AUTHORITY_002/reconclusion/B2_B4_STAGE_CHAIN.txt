@@ -1,0 +1,16 @@
+ITEM: B2-B4
+SOURCE: Win32IDE_CommandSurface.cpp p1praAdvanceRequestProductPath, appendCommandConversationStream, Win32IDE.cpp generateResponseAsync
+WITNESS_FIELD: P1PRA_FORWARD_COUNT, P1PRA_SAMPLE_COUNT, P1PRA_DECODE_BYTES, P1PRA_UI_BYTES, P1PRA_STAGE_CHAIN
+EXERCISE: Post-fix E2E harness (Load -> WM_APP+209 Send -> E2E.log)
+ARTIFACT: reconclusion/archive/20260901_195444_E2E.log, E2E.log (19:54:48)
+
+OBSERVED (19:54:48, RAWRXD_SKIP_UTC_MASM=1, m_inferenceRunning init fix):
+  P1PRA_STAGE_CHAIN=COMPLETE, CURRENT_STAGE=UI_EMIT
+  P1PRA_FORWARD_COUNT=1, P1PRA_SAMPLE_COUNT=1
+  P1PRA_DECODE_BYTES=78, P1PRA_UI_BYTES=78
+  P1PRA_STREAM_PHYS=witnessed, stream_ok, P1PRA_FINALIZE_RC=0
+  WITNESS: worker_spawn -> inference_worker_enter -> FORWARD|SAMPLE|DECODE|UI_EMIT adv=1
+
+PRIOR FAIL (19:52:32, UTC skip only): reject_busy at WEIGHT_ACCESS — H6 uninitialized m_inferenceRunning.
+
+STATUS: WITNESSED (single E2E pass 19:54:48; harness env includes RAWRXD_SKIP_UTC_MASM=1)

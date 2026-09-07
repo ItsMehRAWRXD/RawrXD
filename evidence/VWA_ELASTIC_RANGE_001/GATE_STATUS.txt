@@ -1,0 +1,26 @@
+VWA_ELASTIC_RANGE_001
+LAW=Elastic stages from PhysicalTensorRange; VWA does not place
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=64 MB, warmStaged=512 MB, hot=64 MB, lookahead=2
+SOURCE_DATA_MEMCPY_PATH=0
+ZERO_FILL=0
+PHYSICAL_BACKEND_READ=1
+BYTES_REQUESTED=432
+BYTES_COMPLETED=432
+BYTES_EQ=1
+HOST_STAGE_BYTES=432
+SOURCE_BYTE_PARITY=1
+ELASTIC_STATE=2
+WARM_COMPRESSED_AFTER_READ=1
+SECOND_RESIDENCY_FSM=0
+RESIDENCY_DECISION_IN_VWA=0
+DEVICE_SELECTION_IN_VWA=0
+REGISTERED_OFFSET=4384
+REGISTERED_BYTES=432
+[ElasticResidencyManager] Scheduler thread started
+[ElasticResidencyManager] Scheduler thread exiting
+[ElasticResidencyManager] Shutdown complete
+VWA_ELASTIC_RANGE_001=PASS
+
+VWA_ELASTIC_RANGE_001=PASS
+

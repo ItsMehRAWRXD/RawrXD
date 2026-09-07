@@ -1,0 +1,13 @@
+side=llama
+stage=LAYER10_OUT
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=16479cfa440c2b59
+l2=168.16428529303545
+seq=10
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L8_L12_EXPAND_001\llama\llama_LAYER10_OUT_pos0_layer0_full_n2048_seq010.bin

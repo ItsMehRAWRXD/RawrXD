@@ -1,0 +1,13 @@
+side=deep2
+stage=ATTN_NORM_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=eb6a3ebc675caa97
+l2=8.0094430313535572
+seq=66
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V3\deep2_ATTN_NORM_1_pos1_layer0_full_n2048_seq066.bin

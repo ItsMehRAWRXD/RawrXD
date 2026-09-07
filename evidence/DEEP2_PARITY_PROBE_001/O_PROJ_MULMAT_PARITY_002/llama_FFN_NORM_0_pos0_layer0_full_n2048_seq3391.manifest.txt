@@ -1,0 +1,13 @@
+side=llama
+stage=FFN_NORM_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=747512eee0fe00da
+l2=4.7429448070541209
+seq=3391
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\O_PROJ_MULMAT_PARITY_002\llama_FFN_NORM_0_pos0_layer0_full_n2048_seq3391.bin

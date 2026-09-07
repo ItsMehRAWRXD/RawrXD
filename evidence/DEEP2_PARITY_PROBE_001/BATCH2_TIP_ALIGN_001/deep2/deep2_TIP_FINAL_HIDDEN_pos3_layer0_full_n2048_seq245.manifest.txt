@@ -1,0 +1,13 @@
+side=deep2
+stage=TIP_FINAL_HIDDEN
+pos=3
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=7ded489cb801515e
+l2=77.294675154368306
+seq=245
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_TIP_ALIGN_001\deep2\deep2_TIP_FINAL_HIDDEN_pos3_layer0_full_n2048_seq245.bin

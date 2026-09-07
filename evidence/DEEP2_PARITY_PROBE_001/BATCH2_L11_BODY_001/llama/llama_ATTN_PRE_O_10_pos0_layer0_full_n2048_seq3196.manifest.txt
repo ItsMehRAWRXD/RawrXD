@@ -1,0 +1,13 @@
+side=llama
+stage=ATTN_PRE_O_10
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=67b8b08ee8181425
+l2=1.1060113029208494
+seq=3196
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L11_BODY_001\llama\llama_ATTN_PRE_O_10_pos0_layer0_full_n2048_seq3196.bin

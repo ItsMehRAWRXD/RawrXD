@@ -1,0 +1,5 @@
+[build_discovery]
+action=fail
+reason=missing_build_dir_and_no_CMakeLists
+requested_build_dir=F:\~dev\rawrxd\evidence\RUN_COMMAND_SEMANTICS_001\empty_work\build
+CLAIM_COMPILE_SUCCESS=forbidden

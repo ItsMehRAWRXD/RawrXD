@@ -1,0 +1,4 @@
+WAVE_4_VERDICT=HOLD
+REASON=Error mapping + smoke/freeze APIs present in Product100 overlay. Smoke matrix and freeze manifest not executed; PRODUCT_100 remains HOLD until P1PRA E2E FINALIZE=0 and waves PASS.
+DATE=2026-08-31
+FROZEN_LANES_UNTOUCHED=1

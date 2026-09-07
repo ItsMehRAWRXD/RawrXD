@@ -1,0 +1,30 @@
+IDE_PRODUCT_FINISH_BATCH_085 — WAVE_2_VERDICT
+==============================================
+Date: 2026-08-31
+
+## 04 Agent tool execution — WIRED
+
+delete_file tool added (sandbox + backup).
+DispatchModelToolCalls enforces CapEdit / CapDestructive / CapExecute
+via CommandBroker::checkCap + requestApproval.
+Build path calls DispatchModelToolCalls after stream complete.
+
+## 05 Build edit transaction — WIRED
+
+write_file routes through SetStageEditHandler → stageCommandBuildEdit
+(AgentEditSession ProposeFullReplace / diff).
+Command Allow → agentAcceptAll; Deny → agentRejectAll.
+rollbackLastAIEditTransaction restores .pre_agent_bak for open tabs.
+
+## 06 Plan state machine — WIRED
+
+onPlanStepDone mirrors pending/running/pass/fail/skipped into
+Command conversation (survives async PostMessage callbacks).
+
+## 07 Terminal integration — WIRED
+
+execute_command prefers IDE terminal pane (SetIdeTerminalRunner):
+streamed stdout/stderr, exit code callback, Stop/Cancel stops pane.
+
+WAVE_2=PASS (implementation)
+NEXT=WAVE_3 backlog (Git / search / persistence / approval / settings)

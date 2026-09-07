@@ -1,0 +1,41 @@
+AGENT_TOOL_SCHEMA_002 — pre-dispatch schema gate
+================================================
+date=2026-08-29
+authority=F:\~dev\rawrxd\src\agentic\rawrxd_agentic_runtime_all.cpp
+evidence=F:\~dev\rawrxd\evidence\AGENT_TOOL_SCHEMA_002\AGENT_TOOL_SCHEMA_002_DIRECT.txt
+
+INVARIANT
+---------
+SCHEMA_VALID=false  ⇒  DISPATCHED=false  (fail-closed)
+Bare-key TinyLlama dialect may REPAIR → strict JSON when RAWRXD_TOOL_ARGS_STRICT!=1
+
+LANES (DIRECT cert)
+-------------------
+LANE_A_MALFORMED_REJECT     PASS  (strict: bare keys rejected, dispatched=0)
+LANE_R_BAREKEY_REPAIR       PASS  (repair on → accept + dispatch)
+LANE_B_VALID_ACCEPT         PASS  (already-strict JSON)
+AGENT-TOOL-SCHEMA-002       PASS
+
+PRIOR FAIL (AGENT_TOOL_LADDER_001 / SCHEMA lock text)
+-----------------------------------------------------
+INVALID_ARGS_DISPATCHED=True was the old path (handler threw
+"missing string argument" AFTER entry). Fixed by validateToolArguments
+before handler; ToolResult::schemaFailure sets dispatched=false.
+
+STATUS
+------
+agent.schema_pre_dispatch   CLOSED
+agent.schema_retry          OPEN (model correction loop still FAIL in SCHEMA lock:
+                            VALIDATION_ERROR_TO_MODEL / RETRY_SCHEMA_VALID)
+agent.edit_e2e              BLOCKED on retry + real file mutate
+
+NEXT
+----
+1) SCHEMA_RETRY: on schema_validation observation, model must emit strict JSON retry
+2) Edit E2E: replace_in_file mutates bytes → build → expected stdout
+
+Artifacts
+---------
+AGENT_TOOL_SCHEMA_002_DIRECT.txt
+AGENT_TOOL_SCHEMA_002.txt (model loop — still FAIL)
+GATE.txt (this file)

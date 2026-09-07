@@ -1,0 +1,146 @@
+GATE=P1_REAL_SPEEDUP_REPEATABILITY_002
+STATUS=CONTRACT_FROZEN
+EFFECTIVE=2026-08-29
+SUPERSEDES_ATTEMPT=P1_REAL_SPEEDUP_REPEATABILITY_001 (FAIL — do not rewrite)
+DEPENDS_ON=P1_REAL_SPEEDUP_001 (PASS CLOSED — GATE_SHA=04451DB1…)
+INFORMED_BY=P1_REPEATABILITY_STATE_DRIFT_DIAG_001 (DIAG COMPLETE)
+
+Purpose
+-------
+Answer: Does median acceleration repeat across independent, explicitly
+performance-state-isolated process launches?
+
+P1_REAL_SPEEDUP_REPEATABILITY_001 could not establish this because the
+benchmark environment was not performance-state isolated (profile writes
+persistent; profile dir clobbered by EnsurePolicyLoaded).
+
+This cert does NOT reopen P1_REAL_SPEEDUP_001 (1.48× CLOSED).
+This cert does NOT rewrite P1_REAL_SPEEDUP_REPEATABILITY_001 or SESSION_02.
+
+Question
+--------
+Does the acceleration direction (>1.00× median) repeat when isolation
+preconditions hold? Not: does every session reproduce 1.48× or 2.53× exactly.
+
+Preconditions (ALL required before session timing counts)
+---------------------------------------------------------
+EXE_SHA_STABLE                  = harness EXE SHA256 verified before each session
+POLICY_SHA_STABLE               = session Expert profiles unchanged vs declared
+WORKLOAD_SHA_STABLE             = same model/prompt/token count as P1_REAL_SPEEDUP_001
+PROFILE_DIR_EXPLICIT            = absolute profiles dir declared and recorded
+PROFILE_DIR_NOT_CLOBBERED       = LearnedProfileStore dir unchanged by EnsurePolicyLoaded
+PROFILE_STATE_PRISTINE_AT_START = no pre-existing learned profile for hw×model
+                                  OR profile SHA recorded and unchanged if writes disabled
+
+Profile write policy (one branch required)
+------------------------------------------
+PROFILE_WRITES_DISABLED           = recordSuccess suppressed for bench runs
+    OR
+PROFILE_SHA_UNCHANGED_DURING_RUN  = profile content SHA at end == at start
+
+If any precondition fails for a session:
+  classify RUN INVALID — not SPEEDUP_FAIL, not SPEEDUP_PASS
+
+Failure class distinction (frozen)
+----------------------------------
+BENCH_ISOLATION_FAIL  !=  SPEEDUP_FAIL
+
+BENCH_ISOLATION_FAIL:
+  profiles leak across declared dir
+  execution state changes outside declared invariants
+  EXE/model/prompt/workload authority drift
+  profile dir clobbered mid-run
+  → RUN INVALID (result excluded from repeatability statistics)
+
+SPEEDUP_FAIL:
+  isolation contract satisfied
+  correctness held
+  valid trials admitted
+  session median REAL_SPEEDUP <= 1.00×
+  → genuine repeatability failure (valid counterexample)
+
+Sessions
+--------
+SESSIONS >= 3 independent process launches
+Per session (after preconditions PASS):
+  warmup B+C excluded
+  >= 5 measured baseline trials
+  >= 5 measured candidate trials
+  interleaved order: B1 C1 C2 B2 B3 C3 C4 B4 B5 C5
+
+Per-session reporting (authority + distribution)
+------------------------------------------------
+CORRECTNESS_ALL                 = PASS
+BASELINE_TRIALS                 >= 5 (raw array recorded)
+CANDIDATE_TRIALS                >= 5 (raw array recorded)
+
+BASELINE_MEDIAN                 (authority input to REAL_SPEEDUP)
+BASELINE_MIN                    (non-authority — instability evidence)
+BASELINE_MAX                    (non-authority — e.g. 35.8s outlier visible)
+BASELINE_P25
+BASELINE_P75
+
+CANDIDATE_MEDIAN
+CANDIDATE_MIN
+CANDIDATE_MAX
+CANDIDATE_P25
+CANDIDATE_P75
+
+REAL_SPEEDUP                    = BASELINE_MEDIAN / CANDIDATE_MEDIAN
+
+Large within-session outliers (e.g. baseline 35.8s among ~2s trials) remain
+visible in MIN/MAX/P25/P75/trial arrays as environment/runtime instability
+evidence even though median remains the speedup authority.
+
+Session authority predicates
+----------------------------
+SESSION_N_PRECONDITIONS         = PASS
+SESSION_N_CORRECTNESS_ALL       = PASS
+SESSION_N_REAL_SPEEDUP > 1.00    (median)
+
+Gate authority (after all sessions)
+-----------------------------------
+ALL_SESSIONS_RUN_VALID          = PASS (no RUN INVALID)
+SESSION_1_SPEEDUP > 1.00        = PASS
+SESSION_2_SPEEDUP > 1.00        = PASS
+SESSION_3_SPEEDUP > 1.00        = PASS
+POOLED_BASELINE_MEDIAN          (all valid baseline trials)
+POOLED_CANDIDATE_MEDIAN         (all valid candidate trials)
+POOLED_REAL_SPEEDUP > 1.00      = PASS
+FIRST_FALSE_TRANSITION          = NONE
+STATUS                          = PASS
+
+Failure disposition
+-------------------
+any session RUN INVALID         → repeatability inconclusive; fix isolation
+any valid session speedup <= 1.00× → REPEATABILITY FAIL (like SESSION_02)
+all valid sessions > 1.00× + pooled > 1.00× → REPEATABILITY PASS
+
+Implementation notes (not yet executed)
+---------------------------------------
+1. Fix EnsurePolicyLoaded profile-dir clobber OR re-bind dir after every load
+2. RAWRXD_BENCH_PROFILES_DIR env + RAWRXD_BENCH_DISABLE_PROFILE_WRITES=1
+   OR ephemeral temp dir per session with SHA guard
+3. Extend harness or new p1_real_speedup_repeatability_002.exe with:
+   precondition checks, distribution stats, RUN INVALID vs SPEEDUP_FAIL labels
+4. Post-fix EXE baseline: F6999662… (provenance fix) unless rebuilt for _002
+
+Evidence outputs (future)
+-------------------------
+evidence/P1_REAL_SPEEDUP_REPEATABILITY_002/
+  CONTRACT.txt (this file)
+  GATE.txt
+  SESSION_01/ … SESSION_03/
+  POOLED.txt
+  HASHES.txt
+
+Valuation
+---------
+PASS strengthens technical claim; does not move ≈$35M internal mark alone.
+FAIL with valid isolation is genuine evidence — not rewritten by _001 failure.
+
+Prior artifacts (immutable)
+---------------------------
+P1_REAL_SPEEDUP_001/              1.48× PASS CLOSED
+P1_REAL_SPEEDUP_REPEATABILITY_001/ FAIL; SESSION_02 0.59× valid counterexample
+P1_REPEATABILITY_STATE_DRIFT_DIAG_001/ DIAG COMPLETE

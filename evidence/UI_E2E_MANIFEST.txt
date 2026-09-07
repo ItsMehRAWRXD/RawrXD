@@ -1,0 +1,70 @@
+UI_E2E_MANIFEST
+===============
+date=2026-08-29
+branch_tip_context=104d39726 (Deep2) / IDE HexMag freeze fc409ae9cb
+authority=F:\~dev\rawrxd
+predicate=
+  E2E            = UI entry → control-plane → effect → user-visible close (all pieces present)
+  END_WITHOUT_ONE = UI entry or init reaches an effect with a missing gate/piece
+                    (e.g. glass on launch without transparency toggle)
+
+------------------------------------------------------------------------
+A. WINDOW / SURFACE (opacity)
+------------------------------------------------------------------------
+| Path                         | Class            | Notes |
+|------------------------------|------------------|-------|
+| Launch → opaque main/editor  | E2E (fixed)      | TransparentRenderer no longer auto-calls enableGlassEffect; clear alpha=1.0 |
+| View/Transparency menu → alpha | E2E            | setWindowTransparency + renderer SetTransparency / SetGlassEnabled |
+| Session restore alpha only   | END_WITHOUT_ONE→E2E | Was restoring alpha without transparency flag → see-thru on launch; now requires theme.transparency=true |
+| TransparentRenderer init glass | was END_WITHOUT_ONE | Auto DWM blur + WS_EX_LAYERED on editor at Initialize — FIXED |
+
+------------------------------------------------------------------------
+B. COPILOT / HEXMAG (control-plane)
+------------------------------------------------------------------------
+| Path | Class | Notes |
+|------|-------|-------|
+| Copilot Send → HexMagRuntimeController → Finalize → chat | E2E CLOSED | tryHexMagControllerCopilotSend; HEXMAG_IDE_E2E_001 PASS |
+| NEED_INPUT underspec → latch (no FINAL) | E2E CLOSED | RUNTIME_ROUTE_SMOKE B1/B2 |
+| Unavailable → fail-closed | E2E CLOSED | SMOKE C |
+| HandleCopilotSend_Ollama private stub | END_WITHOUT_ONE (quarantined) | Win32IDE_private_stubs.cpp #if 0 — must not link |
+| HexMag IDE UI polish beyond scripted cert | END_WITHOUT_ONE | Route CLOSED; full visual polish not in freeze |
+
+------------------------------------------------------------------------
+C. AGENT / PRODUCT LADDERS (independent of Deep2)
+------------------------------------------------------------------------
+| Path | Class | Notes |
+|------|-------|-------|
+| AGENT-E2E-002b compile/logic suites | partial E2E | Harness present; schema-retry native still FAIL on TinyLlama |
+| GBS / P1 GGUF streaming | INDEPENDENT | Not altered by Deep2 or HexMag freezes |
+| Feature menu IDs 11500–11600 subrouter | E2E (routing) | verifyFeatureRoutingCoverageAtStartup |
+| Enterprise features without backing | END_WITHOUT_ONE | docs/ENTERPRISE_FEATURES_WITHOUT_BACKING.md — menu/gate without impl |
+
+------------------------------------------------------------------------
+D. DEBUG / STUB SURFACES
+------------------------------------------------------------------------
+| Path | Class | Notes |
+|------|-------|-------|
+| Audit → Detect Stubs | E2E (audit) | cmdAuditDetectStubs → FeatureRegistry |
+| Debug toggleBreakpoint / callstack / vars / watch | END_WITHOUT_ONE | Win32IDE_Core.cpp commented stubs |
+| TabManager GPU sovereign claims | END_WITHOUT_ONE (disabled) | Fraudulent path explicitly DISABLED |
+
+------------------------------------------------------------------------
+E. DEEP2 PARITY (not UI chrome; tip authority)
+------------------------------------------------------------------------
+| Path | Class | Notes |
+|------|-------|-------|
+| L10 / L11 / tip ARGMAX | CLOSED | e4e71e277 tip; a1d27e372 L11; 104d397 growth map |
+| UI launch smoke | E2E | WIN32IDE_LAUNCH_SMOKE_001 PASS (process alive) — does not assert opacity |
+
+------------------------------------------------------------------------
+VERDICT (UI opacity)
+------------------------------------------------------------------------
+BEFORE: editor GPU init = glass ON → launch see-thru without toggle = END_WITHOUT_ONE
+AFTER:  launch opaque; glass only via transparency toggle / session.transparency=true = E2E
+
+UI_OPAQUE_LAUNCH_001 status=PASS (2026-08-29T18:08 exe)
+  main WS_EX_LAYERED=False; child_layered overlays OK (alpha>=250)
+  fail-closed: restoreWindowOpacityIfNeeded + setWindowTransparency rejects alpha=0
+  PowerShell panel: RichEdit codepage literal 1200 (fixes CP_UNICODE build break → ??? terminal)
+
+Rebuild RawrXD-Win32IDE to pick up Core/Themes/Session/PowerShellPanel.

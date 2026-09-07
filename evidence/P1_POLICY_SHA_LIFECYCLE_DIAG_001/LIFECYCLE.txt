@@ -1,0 +1,66 @@
+POLICY_SHA_PRE_GENERATE sha=policy:de356ffb4453a556 ver=2 mode=2 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_PRE_LOAD sha=policy:de356ffb4453a556 ver=2 mode=2 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_POST_LOAD sha=policy:91e0284cd64eeff5 ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,9]=0;[10,17]=1;[18,-1]=2;
+POLICY_SHA_AT_CERTIFIED_SEAM sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_GENERATE_ENTRY sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_FIRST_TOKEN sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_AT_CERTIFIED_SEAM_RELOAD sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_GENERATE_ENTRY_RELOAD sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_GENERATE_EXIT sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_AFTER sha=policy:aabe7bdbf3b795bf ver=2 mode=1 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+POLICY_SHA_POST_ENSURE sha=policy:9ea709bb4453a556 ver=2 mode=2 mfp=sha256:REPLACE_WITH_MODEL_SHA stream=1 layers=[0,10]=0;[11,-1]=2;
+TRANSITION POLICY_SHA_PRE_GENERATE -> POLICY_SHA_PRE_LOAD
+  SHA policy:de356ffb4453a556 -> policy:de356ffb4453a556
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_PRE_LOAD -> POLICY_SHA_POST_LOAD
+  SHA policy:de356ffb4453a556 -> policy:91e0284cd64eeff5
+  VERSION 2 -> 2
+  FIELDS_CHANGED=mode,placement.layerRanges
+
+TRANSITION POLICY_SHA_POST_LOAD -> POLICY_SHA_AT_CERTIFIED_SEAM
+  SHA policy:91e0284cd64eeff5 -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=vramBudget,vramParts.sum,placement.layerRanges
+
+TRANSITION POLICY_SHA_AT_CERTIFIED_SEAM -> POLICY_SHA_GENERATE_ENTRY
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_GENERATE_ENTRY -> POLICY_SHA_FIRST_TOKEN
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_FIRST_TOKEN -> POLICY_SHA_AT_CERTIFIED_SEAM_RELOAD
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_AT_CERTIFIED_SEAM_RELOAD -> POLICY_SHA_GENERATE_ENTRY_RELOAD
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_GENERATE_ENTRY_RELOAD -> POLICY_SHA_GENERATE_EXIT
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_GENERATE_EXIT -> POLICY_SHA_AFTER
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+
+TRANSITION POLICY_SHA_AFTER -> POLICY_SHA_POST_ENSURE
+  SHA policy:aabe7bdbf3b795bf -> policy:9ea709bb4453a556
+  VERSION 2 -> 2
+  FIELDS_CHANGED=mode
+
+TRANSITION POLICY_SHA_AT_CERTIFIED_SEAM_RELOAD -> POLICY_SHA_AFTER
+  SHA policy:aabe7bdbf3b795bf -> policy:aabe7bdbf3b795bf
+  VERSION 2 -> 2
+  FIELDS_CHANGED=
+

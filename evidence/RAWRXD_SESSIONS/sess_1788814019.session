@@ -1,0 +1,8 @@
+id=sess_1788814019
+model=tinyllama
+path=
+workspace=G:\~dev\rawrxd
+autonomy=build
+plan=patch fixture and build
+patch=patch_1
+turns=0

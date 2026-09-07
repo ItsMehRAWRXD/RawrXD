@@ -1,0 +1,16 @@
+NU_GEMV_PARITY_001=PASS
+
+Device: AMD Radeon AI PRO R9700
+Matrix: 64x64 vs original F32 GEMV
+
+  Q8_0  cpuMax=0.00197  gpuMax=0.00197  OK
+  Q4_0  cpuMax=0.0248   gpuMax=0.0248   OK
+  Q4_K  cpuMax=0.00330  gpuMax=0.00330  OK
+  F16   cpuMax=0.00017  gpuMax=0.00017  OK
+
+LIVE_NU_CONSUME_AUTHORIZED=1
+
+Fix closed here: F16 pack/unpack → IEEE floatToFP16/fp16ToFloat
+Helper: NU_GemvF32Cpu (shared F32 reference)
+
+Next: NU_LIVE_CONSUMER_001 (wire live path to NU bytes under auth)

@@ -1,0 +1,40 @@
+# P1_IDE_EXEC_POLICY_APPLY_001 — frozen gate (SEAM)
+
+## Certified claim
+
+```text
+IDE load enforces the user-owned ExecutionPolicy onto Elastic residency;
+observed placement stamps match the derived plan.
+```
+
+## Explicit non-claim
+
+```text
+LIVE_GGUF_PRODUCT_PATH = NOT YET CERTIFIED
+```
+
+Do **not** promote APPLY_001 to:
+
+> Every live GGUF loaded by the IDE is placed according to policy.
+
+That is `P1_IDE_EXEC_POLICY_LIVE_GGUF_001`.
+
+## Predicates certified here
+
+| Predicate                         | Result |
+| --------------------------------- | ------ |
+| policy validity / fail-closed     | PASS   |
+| lock authority                    | PASS   |
+| load-before-residency             | PASS   |
+| context / KV / stream / VRAM / RAM policy apply | PASS |
+| placement enforcement seam        | PASS   |
+| observed == planned (seam)        | PASS   |
+
+## Evidence
+
+- `evidence/P1_IDE_EXEC_POLICY_APPLY_001/GATE.txt`
+- Harness: `p1_ide_exec_policy_apply_001.exe` (Elastic seam; may use synthetic tensors)
+
+## Next (additive only)
+
+`P1_IDE_EXEC_POLICY_LIVE_GGUF_001` — real GGUF tensor population + generation.

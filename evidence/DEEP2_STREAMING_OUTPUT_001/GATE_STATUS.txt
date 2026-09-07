@@ -1,0 +1,2 @@
+pieces=6 gen=6 text_len=6
+DEEP2_STREAMING_OUTPUT_001=PASS

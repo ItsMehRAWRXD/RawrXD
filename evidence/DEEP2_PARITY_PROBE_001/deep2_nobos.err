@@ -1,0 +1,40 @@
+[EMBED_RAW] token=21521 row=000001961D304C80 rowBytes=1152 first32=A8 9B 3D F4 8B 79 3A 64 A8 08 B0 6D 2C 8A CC 76 31 C8 98 9D 3A 08 C9 89 0A 8C 3C 66 8B 85 7A 48 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=21521 all_finite hiddenDim=2048
+[EMBED_DIAG] token=21521 rowBytes=1152 first8= -0.049 -0.011 -0.015 -0.056 -0.041 -0.030 -0.034 -0.026
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_q.weight rows=128 cols=2048 rowBytes=1152 kernel=Q4_0_REFERENCE
+[EMBED_RAW] token=9312 row=000001961C59B000 rowBytes=1152 first32=98 1C A2 96 98 68 A5 C8 FC 37 6C 6A DC 8A B8 A8 40 6A D8 1B 52 AA 83 B0 90 85 B2 77 6A A8 8A 35 
+[EMBED_DIAG] dequant=00007FF7E24B75B0 type=2
+[EMBED_DIAG] token=9312 all_finite hiddenDim=2048
+[EMBED_DIAG] token=9312 rowBytes=1152 first8= 0.009 0.045 0.027 0.040 0.036 0.040 0.036 0.027
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=22
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+[LIFE] release MoE
+[LIFE] disableMARS
+[LIFE] stop telemetryController
+[LIFE] release residency/elastic/cache
+[LIFE] reset elasticResidency
+[LIFE] reset residencyManager
+[LIFE] reset residencyCache
+[LIFE] reset globalIndex
+[LIFE] residency/elastic/cache done
+[LIFE] release KV / compressedKV / toroidalKV
+[LIFE] stop threadPool
+[LIFE] release satellite engines
+[LIFE] deallocateBuffers
+[LIFE] remove temp Ollama GGUF
+[LIFE] ~Deep2Engine END

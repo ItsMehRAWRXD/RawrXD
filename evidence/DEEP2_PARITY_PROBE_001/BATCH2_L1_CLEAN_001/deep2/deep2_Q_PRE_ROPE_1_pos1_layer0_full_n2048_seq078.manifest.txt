@@ -1,0 +1,13 @@
+side=deep2
+stage=Q_PRE_ROPE_1
+pos=1
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=1c9ea7d9d2bfb1ec
+l2=35.932138085979354
+seq=78
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_CLEAN_001\deep2\deep2_Q_PRE_ROPE_1_pos1_layer0_full_n2048_seq078.bin

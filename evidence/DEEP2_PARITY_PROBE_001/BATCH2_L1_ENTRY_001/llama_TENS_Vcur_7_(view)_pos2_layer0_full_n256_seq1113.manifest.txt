@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Vcur_7 (view)
+pos=2
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=256
+nbytes=1024
+fnv=32508edc1844b990
+l2=3.0471445316711323
+seq=1113
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_TENS_Vcur_7_(view)_pos2_layer0_full_n256_seq1113.bin

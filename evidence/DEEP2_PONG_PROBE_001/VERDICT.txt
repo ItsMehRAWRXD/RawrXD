@@ -1,0 +1,17 @@
+DEEP2_PONG_PROBE_001 (fresh process)
+MODEL=tinyllama_fresh.gguf
+PROMPT=PONG (2 tokens)
+MAX_TOKENS=1 GREEDY=1 LAYER_PROBE=1
+
+RESULT=PARTIAL
+ACTIVATION_EXPLOSION=NOT_OBSERVED_ON_THIS_SHORT_PROMPT
+B3_FIRST_BAD=none
+GENERATED=1 token id=6824 text='!!'
+EXPECTED_FOR_VALUATION=PONG (or deterministic expected sequence)
+CONTENT_MATCH=FAIL
+
+NOTE=Unlike Agentic long-prompt smoke (norm ~3e6 by L6/L7), this short
+prefill completed with finite activations and produced a token.
+Next: (1) confirm max residual l2 across all 22 layers; (2) fix
+prompting/sampling so greedy decode yields expected PONG; (3) re-run
+agent-length prompts to see if explosion is context-dependent.

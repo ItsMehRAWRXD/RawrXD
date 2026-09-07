@@ -1,0 +1,41 @@
+STATIC_DEP_001 GATE — screenpilot.tech static deploy
+====================================================
+Status: OPEN — do not close until HTTPS live + scan PASS
+
+Authority
+---------
+Domain: screenpilot.tech (Porkbun, through 2028-08-31)
+Deploy source: f:\~dev\rawrxd\sites\screenpilot.tech\
+SSL dashboard: Porkbun → screenpilot.tech → SSL (must show Active, not "Nothing Yet")
+
+Upload set (Porkbun Static trial root)
+--------------------------------------
+[x] index.html
+[x] gui/index.html
+[x] gui/ide_chatbot_standalone.html
+[x] gui/ide_chatbot.html
+[x] gui/rawrxd-nav.js
+UPLOAD_UTC=2026-08-31 (FTP pixie-ss1-ftp.porkbun.com — verified LIST on server)
+
+Close checklist (operator)
+--------------------------
+[x] Porkbun Static hosting trial activated — Site Status: Live (pixie-ss1-sh)
+[x] All files uploaded to static root (FTP 2026-08-31 — 5 files, DEPLOY_COMPLETE)
+[x] DNS propagated — https://screenpilot.tech 200 OK (9667 bytes, 2026-08-31)
+[ ] Porkbun SSL status: Active in dashboard (HTTPS works; may still show pending)
+[x] https://screenpilot.tech loads landing — RawrXD ScreenPilot index live
+[ ] Frozen binary / string scan on deployed HTML (no false egress claims)
+[ ] Link COMMAND_HOME_001 pending URL item to this PASS
+
+Does NOT close
+--------------
+- EGRESS_001 (marketing egress claims still withheld)
+- REMOTE_CONTROL_001 (public relay / phone steering)
+- P1_UI_* weighted ledger (~72% — frozen separately)
+
+Notes
+-----
+- Hosted HTTPS UI cannot fetch http://127.0.0.1:11435 (browser mixed-content).
+  Live PC attach: http://127.0.0.1:11435/gui while Win32IDE serves LocalServer,
+  or future paired relay (REMOTE_CONTROL_001).
+- 106 GB DeepSeek on dedicated SSD: memory-map path valid; not USB-throttled.

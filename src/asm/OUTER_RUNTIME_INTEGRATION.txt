@@ -1,0 +1,14 @@
+Deep2 outer runtime (MASM) — shard/env/header only
+==================================================
+
+Owns: env path, split-GGUF scan (-NNNNN-of-NNNNN.gguf), 11/11 or 13/13
+completeness, duplicate/missing index, GGUF magic+version, QPC, evidence.
+Does not own: tokenizer, tensor index, MLA/MoE, GEMV, Vulkan, generation.
+
+Smoke (kernel32 only, no CRT):
+  Deep2OuterSmoke.exe 1   ; DEEP2_K2_SHARD_DIR or F:\...\Q4_K_M     expect 13
+  Deep2OuterSmoke.exe 2   ; DEEP2_DEEPSEEK_MODEL or F:\...\COMPLETE expect 11
+Exit 0 = PATH+DIR+COMPLETE+NO_DUP+NO_MISS+HEADERS. GENERATION_CLAIMED=0.
+
+Engine boundary: Deep2OuterEngineApi { open, generate, close } — optional;
+smoke passes a null vtable and never treats generate as success.

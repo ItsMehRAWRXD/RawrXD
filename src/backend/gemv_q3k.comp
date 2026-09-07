@@ -1,0 +1,60 @@
+#version 450
+// gemv_q3k.comp — ggml dequantize_row_q3_K fused dot
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; } pc;
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+uint u32(uint off) {
+  return u8(off) | (u8(off + 1u) << 8) | (u8(off + 2u) << 16) | (u8(off + 3u) << 24);
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+int i8b(uint b) { return int(b) - ((b >= 128u) ? 256 : 0); }
+void main() {
+  uint row = gl_GlobalInvocationID.x;
+  if (row >= pc.rows) return;
+  uint nblk = (pc.cols + 255u) / 256u;
+  uint rowOff = row * nblk * 110u;
+  float sum = 0.0;
+  for (uint b = 0u; b < nblk; ++b) {
+    uint blk = rowOff + b * 110u;
+    float dall = f16(u8(blk + 108u) | (u8(blk + 109u) << 8));
+    uint a0 = u32(blk + 96u), a1 = u32(blk + 100u), tmp = u32(blk + 104u);
+    uint k1 = 0x03030303u, k2 = 0x0f0f0f0fu;
+    uint s2 = ((a0 >> 4) & k2) | (((tmp >> 4) & k1) << 4);
+    uint s3 = ((a1 >> 4) & k2) | (((tmp >> 6) & k1) << 4);
+    uint s0 = (a0 & k2) | (((tmp >> 0) & k1) << 4);
+    uint s1 = (a1 & k2) | (((tmp >> 2) & k1) << 4);
+    int sc[16];
+    sc[0]=i8b(s0&255u); sc[1]=i8b((s0>>8)&255u); sc[2]=i8b((s0>>16)&255u); sc[3]=i8b(s0>>24);
+    sc[4]=i8b(s1&255u); sc[5]=i8b((s1>>8)&255u); sc[6]=i8b((s1>>16)&255u); sc[7]=i8b(s1>>24);
+    sc[8]=i8b(s2&255u); sc[9]=i8b((s2>>8)&255u); sc[10]=i8b((s2>>16)&255u); sc[11]=i8b(s2>>24);
+    sc[12]=i8b(s3&255u); sc[13]=i8b((s3>>8)&255u); sc[14]=i8b((s3>>16)&255u); sc[15]=i8b(s3>>24);
+    uint q = blk + 32u, hm = blk, isv = 0u, m = 1u, elem = b * 256u;
+    for (uint n = 0u; n < 2u; ++n) {
+      uint shift = 0u;
+      for (uint j = 0u; j < 4u; ++j) {
+        float dl = dall * float(sc[isv] - 32); isv += 1u;
+        for (uint l = 0u; l < 16u; ++l) {
+          uint a = elem + l; int qq = int((u8(q + l) >> shift) & 3u);
+          qq -= ((u8(hm + l) & m) != 0u) ? 0 : 4;
+          if (a < pc.cols) sum += dl * float(qq) * x[a];
+        }
+        elem += 16u;
+        dl = dall * float(sc[isv] - 32); isv += 1u;
+        for (uint l = 0u; l < 16u; ++l) {
+          uint a = elem + l; int qq = int((u8(q + l + 16u) >> shift) & 3u);
+          qq -= ((u8(hm + l + 16u) & m) != 0u) ? 0 : 4;
+          if (a < pc.cols) sum += dl * float(qq) * x[a];
+        }
+        elem += 16u; shift += 2u; m <<= 1;
+      }
+      q += 32u;
+    }
+  }
+  y[row] = sum;
+}

@@ -1,0 +1,22 @@
+# LIVE_PATH_FUSED_CONTROL_001
+# A = minimal (enhancements off)
+# B = independent full enhancements (Fused off) — Pinball+Reversal may stack
+# C = FusedLiveController sole owner of lookahead/warmup/speculative/brake
+# Same model/prompt/seed/tokens/depth/VRAM budget.
+#
+# Ownership invariant:
+#   ONE SIGNAL → ONE POLICY DECISION → ONE ACTUATOR
+#
+# First proof (C vs B):
+#   stall cycles <= B
+#   queue peak <= B or bounded
+#   bytes/token <= B (+5% noise)
+#   VRAM peak within budget or <= B
+#   TPS_C >= ~0.98 * TPS_B
+#   fused prefetch depth max <= 1 (no independent stack)
+# Stronger later: TPS_C > TPS_A after threshold tune.
+#
+# Counters: FUSED_DECISIONS, FUSED_PREFETCH_DEPTH, FUSED_URGENT_ACQUIRES,
+# FUSED_SPECULATIVE_SUPPRESSED, FUSED_EVICTIONS, FUSED_WARMUP_ENABLES,
+# FUSED_BRAKES, FUSED_CONFLICTS_AVOIDED, FUSED_PREFETCH_REQUESTS_DROPPED,
+# FUSED_DUPLICATE_PREFETCHES, FUSED_QUEUE_PEAK

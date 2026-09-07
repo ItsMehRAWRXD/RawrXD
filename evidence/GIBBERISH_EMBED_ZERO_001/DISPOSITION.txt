@@ -1,0 +1,46 @@
+GIBBERISH / PROMPT_EMBED norm=0 — root cause + fix
+====================================================
+Date: 2026-09-07
+Evidence: src/deep2/__gen_out.txt (unlock-1B-Q4_K_M, prompt "Hello", token 9906)
+
+Symptom
+-------
+PROMPT_EMBED and all LAYER*_INPUT/POST_* norms = 0.0 → decode gibberish.
+
+Causal chain (fail-open "retard mode")
+--------------------------------------
+1. ElasticResidency ExecuteNvmeToRam: when sourceData==nullptr, silently
+   memset zeros into WarmCompressed and returned Ready.
+2. embedToken / LinearW: AcquireTensor replaced live mapped wt.data with that
+   zero buffer (even when GGUF mmap pointer was valid).
+3. Zero-embed policy then "tolerated" all zero norms with output[0]=1e-6 and
+   continued generate → near-zero activations forever → gibberish tokens.
+4. Secondary: ggmlTypeToTensorFormat mis-mapped Q2_K/Q4_K/Q5_K/Q6_K IDs
+   (poisoned elastic format metadata).
+5. Late enableElasticResidency(after load) registered ZERO tensors → Acquire
+   path unusable / inconsistent with load-time registration.
+6. Multi-shard elastic RegisterTensor always passed sourceData=nullptr
+   (same zero-fill poison when Acquire hit).
+
+Refuse-shard angle
+------------------
+"Refuse silent zero residency" is the correct fail-closed behavior for missing
+shard source pointers. Prior code refused to refuse — it zero-filled — which
+is what made inference look "retarded" instead of aborting.
+
+Fixes landed
+------------
+- Deep2Engine.cpp embedToken: never replace mapped data with elastic; hard
+  FATAL_EMBED refuse on zero norm for non byte-fallback tokens (dump raw row).
+- Deep2Engine.cpp LinearW: elastic only when !(data && mapped).
+- ElasticResidencyManager.cpp ExecuteNvmeToRam: no memset; FATAL + Cold +
+  ReleaseWarmCompressed.
+- ggmlTypeToTensorFormat: canonical QuantTypeTable IDs.
+- enableElasticResidency: late-register mapped WeightTensors with sourceData.
+- Multi-shard elastic: pass tokenEmbed/lmHead/finalNorm data when present.
+
+Validation (pending local GGUF)
+-------------------------------
+Re-run Deep2_Elastic_Generation_Test on unlock-1B (or TinyLlama):
+  expect PROMPT_EMBED norm != 0, or hard [FATAL_EMBED]/[B3_ABORT] if poisoned.
+Model path from prior log (G:\Franken\...) not present on this host today.

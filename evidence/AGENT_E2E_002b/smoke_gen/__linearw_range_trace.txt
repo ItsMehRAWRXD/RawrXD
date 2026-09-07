@@ -1,0 +1,4 @@
+[LR_ENTER] name=blk.0.attn_q.weight type=Q4_K(12) rows=2048 cols=2048 startRow=0 endRow=2048
+[LR_VALIDATE] byte bounds OK: req=2359296 <= total=2359296
+[LR_SOURCE] wt.data=0000026C9E9E0000 mapped=1 input=0000026C977E7940 output=0000026CBFD71040 sizeBytes=2359296 rowBytes=1152
+[LR_VALIDATE] result=PASS

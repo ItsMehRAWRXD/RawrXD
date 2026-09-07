@@ -1,0 +1,185 @@
+"double __cdecl GetTimeMs(void)" (?GetTimeMs@@YANXZ) || moe_microbench.cpp.obj
+"int __cdecl RawrXD::AppendANSIToRichEdit(struct HWND__ *,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?AppendANSIToRichEdit@RawrXD@@YAHPEAUHWND__@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z) || unlinked_symbols_batch_021.cpp.obj
+"private: void __cdecl Win32IDE::initSemanticIndex(void)" (?initSemanticIndex@Win32IDE@@AEAAXXZ) || Win32IDE_SemanticIndex.cpp.obj
+"public: __cdecl CRDTBuffer::~CRDTBuffer(void)" (??1CRDTBuffer@@QEAA@XZ) || unlinked_symbols_batch_021.cpp.obj
+"public: static struct Deep2::DiscoveredBackend __cdecl Deep2::Deep2Discovery::GetPreferredBackend(void)" (?GetPreferredBackend@Deep2Discovery@Deep2@@SA?AUDiscoveredBackend@2@XZ) || unlinked_symbols_batch_021.cpp.obj
+"public: static struct Deep2::GGUFLoadResult __cdecl Deep2::GGUFLoader::LoadHardened(char const *,struct Deep2::GGUFLoadOptions const &)" (?LoadHardened@GGUFLoader@Deep2@@SA?AUGGUFLoadResult@2@PEBDAEBUGGUFLoadOptions@2@@Z) || GGUFLoader.cpp.obj
+"struct CommandResult __cdecl handleAuditCheckMenus(struct CommandContext const &)" (?handleAuditCheckMenus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAuditDetectStubs(struct CommandContext const &)" (?handleAuditDetectStubs@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAuditExportReport(struct CommandContext const &)" (?handleAuditExportReport@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAuditQuickStats(struct CommandContext const &)" (?handleAuditQuickStats@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAuditRunFull(struct CommandContext const &)" (?handleAuditRunFull@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAuditRunTests(struct CommandContext const &)" (?handleAuditRunTests@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAutonomyMemory(struct CommandContext const &)" (?handleAutonomyMemory@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleAutonomyStatus(struct CommandContext const &)" (?handleAutonomyStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleDecompGotoAddr(struct CommandContext const &)" (?handleDecompGotoAddr@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleDecompGotoDef(struct CommandContext const &)" (?handleDecompGotoDef@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleDecompRenameVar(struct CommandContext const &)" (?handleDecompRenameVar@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditCopyFormat(struct CommandContext const &)" (?handleEditCopyFormat@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditFindNext(struct CommandContext const &)" (?handleEditFindNext@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditFindPrev(struct CommandContext const &)" (?handleEditFindPrev@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditGotoLine(struct CommandContext const &)" (?handleEditGotoLine@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditMulticursorAdd(struct CommandContext const &)" (?handleEditMulticursorAdd@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditMulticursorRemove(struct CommandContext const &)" (?handleEditMulticursorRemove@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditPastePlain(struct CommandContext const &)" (?handleEditPastePlain@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleEditSnippet(struct CommandContext const &)" (?handleEditSnippet@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileCloseFolder(struct CommandContext const &)" (?handleFileCloseFolder@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileCloseTab(struct CommandContext const &)" (?handleFileCloseTab@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileExit(struct CommandContext const &)" (?handleFileExit@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileNewWindow(struct CommandContext const &)" (?handleFileNewWindow@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileOpenFolder(struct CommandContext const &)" (?handleFileOpenFolder@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleFileRecentClear(struct CommandContext const &)" (?handleFileRecentClear@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleGauntletExport(struct CommandContext const &)" (?handleGauntletExport@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleGauntletRun(struct CommandContext const &)" (?handleGauntletRun@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHelpSearch(struct CommandContext const &)" (?handleHelpSearch@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchByteSearch(struct CommandContext const &)" (?handleHotpatchByteSearch@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchPresetLoad(struct CommandContext const &)" (?handleHotpatchPresetLoad@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchPresetSave(struct CommandContext const &)" (?handleHotpatchPresetSave@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchProxyBias(struct CommandContext const &)" (?handleHotpatchProxyBias@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchProxyRewrite(struct CommandContext const &)" (?handleHotpatchProxyRewrite@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchProxyTerminate(struct CommandContext const &)" (?handleHotpatchProxyTerminate@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchProxyValidate(struct CommandContext const &)" (?handleHotpatchProxyValidate@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchResetStats(struct CommandContext const &)" (?handleHotpatchResetStats@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchServerRemove(struct CommandContext const &)" (?handleHotpatchServerRemove@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleHotpatchToggleAll(struct CommandContext const &)" (?handleHotpatchToggleAll@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbCacheClear(struct CommandContext const &)" (?handlePdbCacheClear@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbEnable(struct CommandContext const &)" (?handlePdbEnable@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbExports(struct CommandContext const &)" (?handlePdbExports@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbFetch(struct CommandContext const &)" (?handlePdbFetch@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbIatStatus(struct CommandContext const &)" (?handlePdbIatStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbImports(struct CommandContext const &)" (?handlePdbImports@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbLoad(struct CommandContext const &)" (?handlePdbLoad@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbResolve(struct CommandContext const &)" (?handlePdbResolve@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handlePdbStatus(struct CommandContext const &)" (?handlePdbStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwAlertResourceStatus(struct CommandContext const &)" (?handleQwAlertResourceStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwBackupAutoToggle(struct CommandContext const &)" (?handleQwBackupAutoToggle@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwBackupCreate(struct CommandContext const &)" (?handleQwBackupCreate@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwBackupList(struct CommandContext const &)" (?handleQwBackupList@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwBackupPrune(struct CommandContext const &)" (?handleQwBackupPrune@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwBackupRestore(struct CommandContext const &)" (?handleQwBackupRestore@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwShortcutEditor(struct CommandContext const &)" (?handleQwShortcutEditor@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwShortcutReset(struct CommandContext const &)" (?handleQwShortcutReset@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleQwSloDashboard(struct CommandContext const &)" (?handleQwSloDashboard@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmBuildCmake(struct CommandContext const &)" (?handleSwarmBuildCmake@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmBuildSources(struct CommandContext const &)" (?handleSwarmBuildSources@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmCacheClear(struct CommandContext const &)" (?handleSwarmCacheClear@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmCacheStatus(struct CommandContext const &)" (?handleSwarmCacheStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmCancelBuild(struct CommandContext const &)" (?handleSwarmCancelBuild@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmRemoveNode(struct CommandContext const &)" (?handleSwarmRemoveNode@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmResetStats(struct CommandContext const &)" (?handleSwarmResetStats@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmStartBuild(struct CommandContext const &)" (?handleSwarmStartBuild@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmStartHybrid(struct CommandContext const &)" (?handleSwarmStartHybrid@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmStartLeader(struct CommandContext const &)" (?handleSwarmStartLeader@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmStartWorker(struct CommandContext const &)" (?handleSwarmStartWorker@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmWorkerConnect(struct CommandContext const &)" (?handleSwarmWorkerConnect@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmWorkerDisconnect(struct CommandContext const &)" (?handleSwarmWorkerDisconnect@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleSwarmWorkerStatus(struct CommandContext const &)" (?handleSwarmWorkerStatus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTelemetryClear(struct CommandContext const &)" (?handleTelemetryClear@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTelemetryExportCsv(struct CommandContext const &)" (?handleTelemetryExportCsv@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTelemetryExportJson(struct CommandContext const &)" (?handleTelemetryExportJson@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTelemetrySnapshot(struct CommandContext const &)" (?handleTelemetrySnapshot@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTelemetryToggle(struct CommandContext const &)" (?handleTelemetryToggle@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleTerminalSplitCode(struct CommandContext const &)" (?handleTerminalSplitCode@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeAbyss(struct CommandContext const &)" (?handleThemeAbyss@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeDracula(struct CommandContext const &)" (?handleThemeDracula@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeHighContrast(struct CommandContext const &)" (?handleThemeHighContrast@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeLightPlus(struct CommandContext const &)" (?handleThemeLightPlus@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeMonokai(struct CommandContext const &)" (?handleThemeMonokai@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleThemeNord(struct CommandContext const &)" (?handleThemeNord@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsBuild(struct CommandContext const &)" (?handleToolsBuild@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsCommandPalette(struct CommandContext const &)" (?handleToolsCommandPalette@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsDebug(struct CommandContext const &)" (?handleToolsDebug@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsExtensions(struct CommandContext const &)" (?handleToolsExtensions@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsSettings(struct CommandContext const &)" (?handleToolsSettings@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleToolsTerminal(struct CommandContext const &)" (?handleToolsTerminal@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewFloatingPanel(struct CommandContext const &)" (?handleViewFloatingPanel@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewMinimap(struct CommandContext const &)" (?handleViewMinimap@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewModuleBrowser(struct CommandContext const &)" (?handleViewModuleBrowser@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewOutputPanel(struct CommandContext const &)" (?handleViewOutputPanel@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewOutputTabs(struct CommandContext const &)" (?handleViewOutputTabs@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewSidebar(struct CommandContext const &)" (?handleViewSidebar@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewTerminal(struct CommandContext const &)" (?handleViewTerminal@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewThemeEditor(struct CommandContext const &)" (?handleViewThemeEditor@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewToggleFullscreen(struct CommandContext const &)" (?handleViewToggleFullscreen@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewToggleOutput(struct CommandContext const &)" (?handleViewToggleOutput@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewToggleSidebar(struct CommandContext const &)" (?handleViewToggleSidebar@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewToggleTerminal(struct CommandContext const &)" (?handleViewToggleTerminal@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewZoomIn(struct CommandContext const &)" (?handleViewZoomIn@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewZoomOut(struct CommandContext const &)" (?handleViewZoomOut@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleViewZoomReset(struct CommandContext const &)" (?handleViewZoomReset@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoNextVoice(struct CommandContext const &)" (?handleVoiceAutoNextVoice@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoPrevVoice(struct CommandContext const &)" (?handleVoiceAutoPrevVoice@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoRateDown(struct CommandContext const &)" (?handleVoiceAutoRateDown@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoRateUp(struct CommandContext const &)" (?handleVoiceAutoRateUp@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoSettings(struct CommandContext const &)" (?handleVoiceAutoSettings@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoStop(struct CommandContext const &)" (?handleVoiceAutoStop@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceAutoToggle(struct CommandContext const &)" (?handleVoiceAutoToggle@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceJoinRoom(struct CommandContext const &)" (?handleVoiceJoinRoom@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceModeContinuous(struct CommandContext const &)" (?handleVoiceModeContinuous@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"struct CommandResult __cdecl handleVoiceModeDisabled(struct CommandContext const &)" (?handleVoiceModeDisabled@@YA?AUCommandResult@@AEBUCommandContext@@@Z) || auto_feature_registry.cpp.obj
+"void __cdecl BenchmarkExpert(int)" (?BenchmarkExpert@@YAXH@Z) || moe_microbench.cpp.obj
+"void __cdecl BenchmarkFullMoE(int)" (?BenchmarkFullMoE@@YAXH@Z) || moe_microbench.cpp.obj
+"void __cdecl BenchmarkRouter(int)" (?BenchmarkRouter@@YAXH@Z) || moe_microbench.cpp.obj
+"void __cdecl printUsage(char const *)" (?printUsage@@YAXPEBD@Z) || VAL063_Deep2Certification.cpp.obj
+AD_ProcessGGUF || unlinked_symbols_batch_011.cpp.obj
+AgenticMode || unlinked_symbols_batch_010.cpp.obj
+AgentTraceMode || unlinked_symbols_batch_009.cpp.obj
+asm_omega_agent_spawn || unlinked_symbols_batch_006.cpp.obj
+asm_omega_agent_step || unlinked_symbols_batch_006.cpp.obj
+asm_omega_architect_select || unlinked_symbols_batch_005.cpp.obj
+asm_omega_deploy_distribute || unlinked_symbols_batch_005.cpp.obj
+asm_omega_evolve_improve || unlinked_symbols_batch_005.cpp.obj
+asm_omega_execute_pipeline || unlinked_symbols_batch_006.cpp.obj
+asm_omega_get_stats || unlinked_symbols_batch_006.cpp.obj
+asm_omega_implement_generate || unlinked_symbols_batch_005.cpp.obj
+asm_omega_ingest_requirement || unlinked_symbols_batch_005.cpp.obj
+asm_omega_init || unlinked_symbols_batch_005.cpp.obj
+asm_omega_observe_monitor || unlinked_symbols_batch_005.cpp.obj
+asm_omega_plan_decompose || unlinked_symbols_batch_005.cpp.obj
+asm_omega_shutdown || unlinked_symbols_batch_001.cpp.obj
+asm_omega_verify_test || unlinked_symbols_batch_005.cpp.obj
+asm_omega_world_model_update || unlinked_symbols_batch_006.cpp.obj
+asm_quadbuf_shutdown || unlinked_symbols_batch_001.cpp.obj
+asm_spengine_cpu_optimize || unlinked_symbols_batch_012.cpp.obj
+asm_spengine_shutdown || unlinked_symbols_batch_001.cpp.obj
+AVScanMode || unlinked_symbols_batch_010.cpp.obj
+BasicBlockCovMode || unlinked_symbols_batch_009.cpp.obj
+CompileMode || unlinked_symbols_batch_010.cpp.obj
+CovFusionMode || unlinked_symbols_batch_009.cpp.obj
+Deep2_HasAVX2 || Deep2Engine.cpp.obj
+Deep2_HasAVX512 || Deep2Engine.cpp.obj
+Deep2_RMSNorm || unlinked_symbols_batch_021.cpp.obj
+Deep2_SwiGLU || unlinked_symbols_batch_021.cpp.obj
+Deep2_VecDotProduct || Deep2Engine.cpp.obj
+DiffCovMode || unlinked_symbols_batch_009.cpp.obj
+DynTraceMode || unlinked_symbols_batch_009.cpp.obj
+EncryptMode || unlinked_symbols_batch_010.cpp.obj
+EntropyMode || unlinked_symbols_batch_010.cpp.obj
+GapFuzzMode || unlinked_symbols_batch_010.cpp.obj
+ggml_gemm_q4_0 || unlinked_symbols_batch_002.cpp.obj
+InjectMode || unlinked_symbols_batch_009.cpp.obj
+IntelPTMode || unlinked_symbols_batch_009.cpp.obj
+main || RawrXD_LSPServer.cpp.obj
+PersistenceMode || unlinked_symbols_batch_009.cpp.obj
+Profiler_AnalyzeBottlenecks || NegativeSpaceProfiler.cpp.obj
+Profiler_Initialize || NegativeSpaceProfiler.cpp.obj
+Profiler_ReadTsc || NegativeSpaceProfiler.cpp.obj
+Profiler_SetBatchContext || NegativeSpaceProfiler.cpp.obj
+Profiler_TrackCall || NegativeSpaceProfiler.cpp.obj
+SideloadMode || unlinked_symbols_batch_009.cpp.obj
+SO_CreateComputePipelines || unlinked_symbols_batch_010.cpp.obj
+SO_CreateMemoryArena || unlinked_symbols_batch_010.cpp.obj
+SO_CreateThreadPool || unlinked_symbols_batch_010.cpp.obj
+SO_InitializePrefetchQueue || unlinked_symbols_batch_010.cpp.obj
+SO_InitializeStreaming || unlinked_symbols_batch_010.cpp.obj
+SO_InitializeVulkan || unlinked_symbols_batch_010.cpp.obj
+SO_LoadExecFile || unlinked_symbols_batch_011.cpp.obj
+SO_PrintMetrics || unlinked_symbols_batch_011.cpp.obj
+SO_PrintStatistics || unlinked_symbols_batch_011.cpp.obj
+SO_StartDEFLATEThreads || unlinked_symbols_batch_011.cpp.obj
+StubGenMode || unlinked_symbols_batch_010.cpp.obj
+TraceEngineMode || unlinked_symbols_batch_010.cpp.obj
+UACBypassMode || unlinked_symbols_batch_010.cpp.obj
+V280_UI_GetGhostText || unlinked_symbols_batch_003.cpp.obj
+V280_UI_IsGhostActive || unlinked_symbols_batch_003.cpp.obj
+V280_UI_WndProc_Hook || unlinked_symbols_batch_003.cpp.obj

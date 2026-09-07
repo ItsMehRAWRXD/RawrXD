@@ -1,0 +1,4 @@
+atoms=9 kinds=6
+NP=3 NR=1 NO=2 NS=1 NC=1 NA=1
+proof_neg=9 known=4 missing=5
+RKC_NEGATIVE_KNOWLEDGE_001=PASS

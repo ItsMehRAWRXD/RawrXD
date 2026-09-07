@@ -1,0 +1,2 @@
+greedy=4 sampled=4 minP=0.05 repeat=1.15
+DEEP2_SAMPLER_001=PASS

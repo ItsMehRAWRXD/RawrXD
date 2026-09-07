@@ -1,0 +1,13 @@
+side=llama
+stage=TENS_Qcur_14
+pos=12
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=64
+nbytes=256
+fnv=fb28143aad70d6fe
+l2=4.4460397599916179
+seq=5075
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\llama_TENS_Qcur_14_pos12_layer0_full_n64_seq5075.bin

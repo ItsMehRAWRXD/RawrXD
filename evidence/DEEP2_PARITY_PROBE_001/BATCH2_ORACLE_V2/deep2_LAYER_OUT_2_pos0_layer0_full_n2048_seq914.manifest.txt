@@ -1,0 +1,14 @@
+side=deep2
+stage=LAYER_OUT_2
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=2048
+nbytes=8192
+fnv=b5481fc2c3d431f0
+l2=169.63819198130568
+seq=914
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ORACLE_V2\deep2_LAYER_OUT_2_pos0_layer0_full_n2048_seq914.bin
+source=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_Q_ELEMDIFF\deep2_LAYER_OUT_2_pos0.bin

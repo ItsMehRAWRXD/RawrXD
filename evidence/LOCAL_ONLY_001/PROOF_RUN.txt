@@ -1,0 +1,31 @@
+LOCAL_ONLY_001 PROOF_RUN
+Date: 2026-08-30
+
+PRECONDITIONS
+  ollama app + ollama.exe serve terminated for proof window
+  127.0.0.1:11434 closed (verified before cert)
+  Host Ollama app restarted after proof (operator convenience; not part of PASS)
+
+COMMAND
+  D:\rawrxd\build-ninja\bin\local_only_001_cert.exe F:\~dev\tinyllama_fresh.gguf
+
+HASHES
+  cert_exe_sha256  = 33F6F1A1A88DC188946912F4B06EE6CA2FBB26FF6E355205A13C18A2EACCF824
+  model_sha256     = DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+  model            = F:\~dev\tinyllama_fresh.gguf
+
+RESULTS
+  POLICY_ENABLED            PASS
+  SANITIZE_11434            PASS
+  ALLOW_OLLAMA_HTTP         PASS
+  OLLAMA_EXE_ABSENT         PASS
+  PORT_11434_UNREACHABLE    PASS
+  FAIL_CLOSED_DIAGNOSTIC    PASS
+  DEEP2_GENERATE            PASS (52 chars; E2E ~7.32 tok/s)
+  EXIT                      0
+  VERDICT                   PASS
+
+NOTES
+  First attempt FAIL (2): ollama.exe running + :11434 listening — expected host state.
+  Second attempt PASS after stopping "ollama app" parent + serve.
+  Cert does not construct AgentOllamaClient; Deep2Engine only.

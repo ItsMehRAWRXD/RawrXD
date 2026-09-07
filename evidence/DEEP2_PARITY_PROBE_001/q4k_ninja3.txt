@@ -1,0 +1,5 @@
+[1/4] Building CXX object CMakeFiles\test_q4k_gemv_parity.dir\src\deep2\test_q4k_gemv_parity.cpp.obj
+F:\~dev\rawrxd\src\deep2\GGUFLoader.hpp(111): warning C4189: 'blockSize': local variable is initialized but not referenced
+[2/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[3/4] Linking CXX static library InferenceEngine.lib
+[4/4] Linking CXX executable bin\test_q4k_gemv_parity.exe

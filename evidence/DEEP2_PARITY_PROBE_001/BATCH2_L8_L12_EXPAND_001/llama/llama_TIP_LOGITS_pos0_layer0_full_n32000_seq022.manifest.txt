@@ -1,0 +1,13 @@
+side=llama
+stage=TIP_LOGITS
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=32000
+nbytes=128000
+fnv=10bfdb9f7225d160
+l2=745.60223232602982
+seq=22
+path=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L8_L12_EXPAND_001\llama\llama_TIP_LOGITS_pos0_layer0_full_n32000_seq022.bin

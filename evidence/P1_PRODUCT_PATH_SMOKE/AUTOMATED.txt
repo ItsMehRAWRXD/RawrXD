@@ -1,0 +1,32 @@
+﻿=== P1_PRODUCT_PATH_SMOKE automatable ===
+exe=F:\~dev\rawrxd\build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=0C621350800531C82ED76CA43DC6B90960FAB8CD013777EF62ADE9A81826DC6B
+1_launch_process_alive=True pid=11324 exit=running
+1_launch_stopped=1
+binary_gate=PASS (evidence/P1_WIN32IDE_BINARY.txt)
+hexmag_linked=PASS
+rawrengine_isolated=PASS
+runtime_route_smoke_gate:
+  HEXMAG_RUNTIME_ROUTE_SMOKE
+  date=2026-08-29
+  status=PASS
+  binary=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+  entry=ideHexMagSendPath (== tryHexMagControllerCopilotSend body)
+  HEXMAG_BACKEND=MASM
+  HEXMAG_LINKED=1
+  HEXMAG_CLIENT_PATH=MASM
+  BUILD_WIRED=PASS
+  RUNTIME_ROUTE=PASS
+  FINAL_EXCLUSIVITY=PASS
+  FAIL_CLOSED=PASS
+  FULL_CERT_STACK=NOT_RUN
+  failures=0
+
+OPERATOR_REQUIRED (docs/P1_PRODUCT_PATH_SMOKE.md interactive):
+  2 Load GGUF
+  3 Normal Copilot send
+  4 HexMag FINAL UI status
+  5 NEED_INPUT then continue
+  6 Denied FINAL
+  7 GGUF fallback
+  8 Lifecycle close/reopen
