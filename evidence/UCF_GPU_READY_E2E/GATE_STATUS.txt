@@ -1,0 +1,18 @@
+UCF_GPU_READY_E2E=PASS
+GPU_READY_E2E=PASS
+
+LAW=Execution location may change; object history may not
+MOBILITY_LAW=Failed destination disables migration, not execution
+AUTHORITY=src/deep2/rawr_uncoherent_object_fabric.hpp
+PROVES=SEMANTICS+MOBILITY+FAILURE
+HOST_ROLE=immutable_weight_source_only
+
+ARM_BOTH: GEN 1→9 R9700=4 RX7800XT=4 BOUNCE=7
+ARM_PEER_SUPPRESS: PEER_SUPPRESS=4 OFFLOAD_CANCEL=4 LOCAL_CONTINUE=8 R9700=8 RX7800XT=0
+ARM_NO_EXECUTABLE_GPU=1
+
+HOST_COMPUTE_CALLS=0
+HOST_ACTIVATION_BYTES=0
+HOST_KV_BYTES=0
+
+bounce-house++ sits below fabric; may not invent/repair/publish generations.

@@ -1,0 +1,19 @@
+UCF_AUTHORITY_LOCK_001=PASS
+
+AUTHORITY=src/deep2/rawr_uncoherent_object_fabric.hpp
+MASM=non-landed/non-authoritative
+ZIPLINE=non-authority mechanics only
+
+SEALED:
+  Header defines legality; Object implements legality; Object never defines legality
+  Generation = authority receipt (scratch ticket), not bare counter
+  READ:  requested/acquired preserved; stale converges
+  WRITE: reserve current+1; publish only on success
+  STRICT acquireExpected still fails stale (certs / BounceChain)
+
+GATES:
+  UCF_BOUNCE_SMOKE=PASS
+  UCF_NO_STALE_DISPATCH_001=PASS
+  UCF_LOGITS_RANGE_BOUNCE_001=PASS
+  UCF_SEMANTIC_ABI_V1=PASS
+  UCF_GENERATION_TICKET_001=PASS

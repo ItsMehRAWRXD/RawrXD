@@ -1,0 +1,18 @@
+UCF_GENERATION_TICKET_001=PASS
+
+LAW=generation is authority receipt / scratch ticket
+AUTHORITY=src/deep2/rawr_uncoherent_object_fabric.hpp
+MANIFEST=UcfGenerationTicket.hpp SemanticManifestV1
+
+READ_TICKET:  requested=776 acquired=777 candidate=0 published=0
+WRITE_TICKET: requested=776 acquired=777 candidate=778 published=778
+
+TRUTH_DRIFT=0
+GENERATION_DRIFT=0
+PUBLICATION_DRIFT=0
+ABI_DRIFT=0
+BACKEND_DRIFT=0
+
+CHAIN:
+  Semantic Header → Reverse Manifest → Generation Ticket → BounceChain.obj
+  Object never defines legality

@@ -12,12 +12,16 @@
 #include "deep2_ucf_bouncehouse_trace.hpp"
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
 using namespace rawr::fabric;
 using namespace rawrxd::zipline;
-using namespace rawrxd::ucftrace;
+using UcfTrace = rawrxd::ucftrace::Trace;
+using rawrxd::ucftrace::MobilityDecision;
+using rawrxd::ucftrace::MobilityReceipt;
+using rawrxd::ucftrace::trace_mobility;
 
 namespace {
 struct Store {
@@ -82,7 +86,7 @@ CaseResult RunCase(
     bool readyA,
     bool readyB,
     bool transferFaultOnBounce,
-    Trace& tr,
+    UcfTrace& tr,
     u64 token)
 {
     CaseResult cr;
@@ -158,6 +162,8 @@ CaseResult RunCase(
             cr.ok = false;
             return cr;
         }
+        GpuSlot discarded = cur;
+        zip.abort_mid_flight(cur, discarded);
         // Re-plan: freeze on current if still ready.
         GpuSlot out = cur;
         cr.zip = zip.choose_next(cur, desired, out);
@@ -240,7 +246,7 @@ int main() {
     std::printf("LAW=%s\n", kLaw);
     std::printf("AUTHORITY=%s\n", kSemanticAuthority);
 
-    Trace tr;
+    UcfTrace tr;
     // Observational only — null sinks OK if open fails; still bump counters.
     (void)tr.open(nullptr, nullptr);
 

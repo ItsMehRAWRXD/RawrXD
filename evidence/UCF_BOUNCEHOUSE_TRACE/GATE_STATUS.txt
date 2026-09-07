@@ -1,0 +1,21 @@
+UCF_BOUNCEHOUSE_TRACE_001=PASS
+
+AUTHORITY=src/deep2/rawr_uncoherent_object_fabric.hpp
+ROLE=observational_only
+MOBILITY=bounce_house_pp / ZipPlanner sibling
+
+ARM_BOUNCE: bounce=8 pub=8 gen→9 r9700=4 rx=4
+ARM_FREEZE: suppressed=1 freeze=1 gen→10 (still publish)
+ARM_NO_EXECUTABLE_GPU=1 (no fabricated publish)
+
+HOST_COMPUTE=0
+HOST_ACTIVATION_BYTES=0
+HOST_KV_BYTES=0
+TRUTH_DRIFT=0
+GENERATION_DRIFT=0
+PUBLICATION_DRIFT=0
+
+Artifacts:
+  ucf_bouncehouse.jsonl
+  ucf_bouncehouse.log
+  RUN_LOG.txt
