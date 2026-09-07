@@ -1,0 +1,2 @@
+q_b_cols=12288 expect=12288 qbOk=1 vocabOk=1 mlaOk=1 tokOk=1 chatOk=1
+K2_SEMANTIC_SEAL_001=PASS

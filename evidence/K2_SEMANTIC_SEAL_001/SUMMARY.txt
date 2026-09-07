@@ -1,0 +1,6 @@
+K2_SEMANTIC_SEAL_001=PASS
+LAW=independent correctness (not wall ownership)
+q_b tensor=[1536,12288] expect=12288 (=64*(128+64))
+vocab=163840 token_embd axis=163840
+chat=deepseek format_bytes=117
+NOTE: engine MLA_ALLOC still prints q_b=8192 buffer — tensor authority is 12288

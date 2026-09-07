@@ -5,77 +5,34 @@ Spine separates **elimination evidence**, **semantic correctness**, and
 
 ## Continuation chain
 ```text
-K2_LIVE_DECODE_SUSTAINED_001          ← elimination (USED pins / MoE BLANK)
+K2_LIVE_DECODE_SUSTAINED_001
         ↓
-K2_WALL_ATTRIBUTION_001               ← OWNER measurement only
-        ↓ OWNER=LOGITS
-K2_LOGITS_Q6K_RESIDENT_001            ← packed Q6_K reuse (not F32 warehouse)
+K2_WALL_ATTRIBUTION_001               OWNER=MLA (pre-semantic)
         ↓
-semantic seals ───────── independent correctness authority
-        ↓                  (tiktoken / q_b=12288 / chat template)
-latency buckets
+K2_LOGITS_Q6K_RESIDENT_001            packed Q6_K (not F32 warehouse)
         ↓
-K2_WALL_ATTRIBUTION_002
+K2_SEMANTIC_SEAL_001                  q_b=12288 / vocab / chat  ← PASS
         ↓
-if OWNER=GEMV/MLA → MLA_FUSED_Q4KT
-else              → attack measured owner
+K2_SERVERLESS_STREAM_LATENCY_001      TTFT/DECODE buckets     ← PASS
+        ↓
+K2_WALL_ATTRIBUTION_002               OWNER=MLA; stage=KV_EXPAND ← PASS
+        ↓
+attack measured owner (KV_EXPAND) — MLA_FUSED_Q4KT only if GEMV owns stage
 ```
 
 ## Closed
 | Gate | Status | Authority class |
 |------|--------|-----------------|
-| `K2_MLA_REUSE_PROMOTE_001` | PASS | elimination / MLA reuse |
-| `K2_LIVE_DECODE_MLA_001` | PASS | authority MLA_Gemv |
-| `K2_MLA_FUSED_Q4KT_001` | PASS | fused vs compat (frozen until OWNER=MLA) |
-| `K2_LIVE_DECODE_SUSTAINED_001` | PASS | elimination residency |
-| `K2_TPS_RAINBOW_001` | PASS | stream-norm (not wall) |
-| `K2_SHARD_ATTN_RESIDENCY_001` | PASS | SHARD_IO=0 borrow |
-| `K2_WALL_ATTRIBUTION_001` | PASS OWNER=MLA | performance ownership |
-| `K2_LOGITS_Q6K_RESIDENT_001` | PASS | packed Q6_K resident |
+| `K2_SHARD_ATTN_RESIDENCY_001` | PASS | SHARD_IO=0 |
+| `K2_LOGITS_Q6K_RESIDENT_001` | PASS | packed Q6_K |
+| `K2_SEMANTIC_SEAL_001` | PASS | q_b=12288, vocab, deepseek chat |
+| `K2_SERVERLESS_STREAM_LATENCY_001` | PASS | sticky TTFT/DECODE |
+| `K2_WALL_ATTRIBUTION_002` | PASS OWNER=MLA | stage OWNER=KV_EXPAND |
 
-## After WALL_001 (honest buckets)
-```text
-SHARD_IO = 0
-LOGITS   ≈ 40–45% of named wall (climb ~150ms/tok @16 thr)
-MLA      ≈ OWNER (~55%)
-OTHER    small (serial parity removed from hot path)
-```
-Next still: **semantic seals → latency → WALL_ATTRIBUTION_002**.
-Do not treat OWNER=MLA as a ticket to retune fused MLA until 002.
-
-## Law
-```text
-REQUESTLESS ≠ STATELESS MODEL
-live MLA → MLA_Gemv only (TRYGPU_ENTRY=0)
-ResolveWeight → BorrowSpan (≠ memcpy ≠ upload ≠ remap)
-USED pins stay; BLANK tensors never acquired
-MLA frozen unless post-logits attribution makes GEMV the owner again
-```
-
-## Sustained elimination (sealed)
-| Set | Action |
-|-----|--------|
-| **USED** | MLA dense pins — 366 keys, ~3.6 GiB |
-| **BLANK** | MoE experts (`MOE_USED=0`) |
-
-U→0 fixes: pin key TLS→atomic; sticky budget floor; no `Fused_Reset` between windows.
-```text
-U32=U64=U128=0  H/tok=366  EVICT=0  CACHE_N=366
-```
-
-## LOGITS hard invariants (`K2_LOGITS_Q6K_RESIDENT_001`)
-```text
-Q6 packed resident          (output.weight bytes ≈ packed, ≪ F32 warehouse)
-hot uploads = 0
-full vocab dequant = 0
-full logits materialization = 0   (greedy argmax)
-argmax parity                 (best beats probe set)
-SHARD_ATTN / HOST_CACHE_COPY = 0 on timed arm
-```
-`resident` must **not** silently become an F32 vocab warehouse.
+## Semantic note
+Tensor `attn_q_b` is **[1536,12288]**. Engine scratch still logs `q_b=8192`
+(=64×128). Correctness authority is the tensor (12288=64×(128+64)).
 
 ## Do not
-- Predetermine `MLA_FUSED_Q4KT` as destination before OWNER re-measure
-- Pin MoE “just in case”
-- Replace MLA_Gemv with MLA_TryGpuGemv
-- Conflate semantic seals with wall ownership
+- Predetermine `MLA_FUSED_Q4KT` when stage owner is KV_EXPAND
+- Conflate semantic q_b seal with wall ownership

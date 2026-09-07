@@ -340,6 +340,7 @@ public:
     bool openK2ShardDirectory(const std::string& shardDirPath);
     bool isK2ShardIndexOpen() const { return k2ShardIndexOpen_; }
     const GlobalTensorIndex* k2TensorIndex() const { return globalIndex_.get(); }
+    const Deep2::KimiK2Config& k2ShardConfig() const { return k2ShardConfig_; }
     K2NativeStreamGate::Result runK2NativeStreamPartial(const K2NativeStreamGate::Config& cfg);
     
     // Get engine info

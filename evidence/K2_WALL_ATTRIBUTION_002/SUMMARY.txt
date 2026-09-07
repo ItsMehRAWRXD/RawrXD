@@ -1,0 +1,6 @@
+K2_WALL_ATTRIBUTION_002=PASS (same harness as 001 post semantic+latency)
+OWNER=MLA OWNER_TOTAL_MS≈80274
+MLA_STAGE_OWNER=KV_EXPAND (dominant stage)
+NEXT=attack measured MLA stage (KV_EXPAND) — not predetermined MLA_FUSED_Q4KT
+FREEZE_OK=1 ACCT_OK=1 OPS_OK=1
+EVIDENCE=RUN_LOG.txt
