@@ -73,12 +73,79 @@ inline float fp16ToFloat(uint16_t h) {
     return f;
 }
 
-// Exact parity with K2NativeStreamGate::q6kDotBlockFull (+ multi-acc).
+// Exact parity with K2NativeStreamGate::q6kDotBlockFull.
+// AVX-512 path: 16-wide FMA accumulators (unpack still scalar; MACs vectorized).
 float q6kDotBlockFull(const Q6_K_Block* block, const float* x) {
     const float d = fp16ToFloat(block->d);
     const uint8_t* ql = block->ql;
     const uint8_t* qh = block->qh;
     const int8_t* sc = block->scales;
+#if defined(__AVX512F__) || (defined(_MSC_VER) && defined(__AVX512F__)) || defined(_M_AVX512)
+#define DEEP2_Q6K_AVX512 1
+#else
+#if defined(_MSC_VER)
+// InferenceEngine is built with /arch:AVX512 — enable on MSVC x64.
+#define DEEP2_Q6K_AVX512 1
+#else
+#define DEEP2_Q6K_AVX512 0
+#endif
+#endif
+
+#if DEEP2_Q6K_AVX512
+    __m512 acc = _mm512_setzero_ps();
+    for (int half = 0; half < 2; ++half) {
+        const float* xb = x + half * 128;
+        alignas(64) int q1[16], q2[16], q3[16], q4[16];
+        for (int l = 0; l < 16; ++l) {
+            q1[l] = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
+            q2[l] = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+            q3[l] = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+            q4[l] = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+        }
+        const __m512 s0 = _mm512_set1_ps(d * (float)sc[0]);
+        const __m512 s2 = _mm512_set1_ps(d * (float)sc[2]);
+        const __m512 s4 = _mm512_set1_ps(d * (float)sc[4]);
+        const __m512 s6 = _mm512_set1_ps(d * (float)sc[6]);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s0, _mm512_cvtepi32_ps(_mm512_load_si512(q1))),
+            _mm512_loadu_ps(xb + 0), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s2, _mm512_cvtepi32_ps(_mm512_load_si512(q2))),
+            _mm512_loadu_ps(xb + 32), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s4, _mm512_cvtepi32_ps(_mm512_load_si512(q3))),
+            _mm512_loadu_ps(xb + 64), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s6, _mm512_cvtepi32_ps(_mm512_load_si512(q4))),
+            _mm512_loadu_ps(xb + 96), acc);
+
+        for (int l = 0; l < 16; ++l) {
+            const int li = l + 16;
+            q1[l] = (int)((ql[li] & 0xF) | ((qh[li] & 3) << 4)) - 32;
+            q2[l] = (int)((ql[li + 32] & 0xF) | (((qh[li] >> 2) & 3) << 4)) - 32;
+            q3[l] = (int)((ql[li] >> 4) | (((qh[li] >> 4) & 3) << 4)) - 32;
+            q4[l] = (int)((ql[li + 32] >> 4) | (((qh[li] >> 6) & 3) << 4)) - 32;
+        }
+        const __m512 s1 = _mm512_set1_ps(d * (float)sc[1]);
+        const __m512 s3 = _mm512_set1_ps(d * (float)sc[3]);
+        const __m512 s5 = _mm512_set1_ps(d * (float)sc[5]);
+        const __m512 s7 = _mm512_set1_ps(d * (float)sc[7]);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s1, _mm512_cvtepi32_ps(_mm512_load_si512(q1))),
+            _mm512_loadu_ps(xb + 16), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s3, _mm512_cvtepi32_ps(_mm512_load_si512(q2))),
+            _mm512_loadu_ps(xb + 48), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s5, _mm512_cvtepi32_ps(_mm512_load_si512(q3))),
+            _mm512_loadu_ps(xb + 80), acc);
+        acc = _mm512_fmadd_ps(
+            _mm512_mul_ps(s7, _mm512_cvtepi32_ps(_mm512_load_si512(q4))),
+            _mm512_loadu_ps(xb + 112), acc);
+        ql += 64; qh += 32; sc += 8;
+    }
+    return _mm512_reduce_add_ps(acc);
+#else
     float sum0 = 0.f, sum1 = 0.f, sum2 = 0.f, sum3 = 0.f;
     for (int half = 0; half < 2; ++half) {
         const float* xb = x + half * 128;
@@ -86,50 +153,6 @@ float q6kDotBlockFull(const Q6_K_Block* block, const float* x) {
         const float s2 = d * (float)sc[2], s3 = d * (float)sc[3];
         const float s4 = d * (float)sc[4], s5 = d * (float)sc[5];
         const float s6 = d * (float)sc[6], s7 = d * (float)sc[7];
-#if DEEP2_LOGITS_AVX2
-        auto mac8 = [](float& acc, float scale, const float* xv,
-                       const int* qv) {
-            alignas(32) float w[8];
-            for (int i = 0; i < 8; ++i) w[i] = scale * (float)qv[i];
-            const __m256 vw = _mm256_load_ps(w);
-            const __m256 vx = _mm256_loadu_ps(xv);
-            __m256 t = _mm256_mul_ps(vw, vx);
-            __m128 lo = _mm256_castps256_ps128(t);
-            __m128 hi = _mm256_extractf128_ps(t, 1);
-            lo = _mm_add_ps(lo, hi);
-            lo = _mm_hadd_ps(lo, lo);
-            lo = _mm_hadd_ps(lo, lo);
-            acc += _mm_cvtss_f32(lo);
-        };
-        for (int l0 = 0; l0 < 16; l0 += 8) {
-            int q1[8], q2[8], q3[8], q4[8];
-            for (int i = 0; i < 8; ++i) {
-                const int l = l0 + i;
-                q1[i] = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
-                q2[i] = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
-                q3[i] = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
-                q4[i] = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
-            }
-            mac8(sum0, s0, xb + l0, q1);
-            mac8(sum1, s2, xb + l0 + 32, q2);
-            mac8(sum2, s4, xb + l0 + 64, q3);
-            mac8(sum3, s6, xb + l0 + 96, q4);
-        }
-        for (int l0 = 16; l0 < 32; l0 += 8) {
-            int q1[8], q2[8], q3[8], q4[8];
-            for (int i = 0; i < 8; ++i) {
-                const int l = l0 + i;
-                q1[i] = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
-                q2[i] = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
-                q3[i] = (int)((ql[l] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
-                q4[i] = (int)((ql[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
-            }
-            mac8(sum0, s1, xb + l0, q1);
-            mac8(sum1, s3, xb + l0 + 32, q2);
-            mac8(sum2, s5, xb + l0 + 64, q3);
-            mac8(sum3, s7, xb + l0 + 96, q4);
-        }
-#else
         for (int l = 0; l < 16; ++l) {
             const int q1 = (int)((ql[l] & 0xF) | ((qh[l] & 3) << 4)) - 32;
             const int q2 = (int)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
@@ -150,10 +173,10 @@ float q6kDotBlockFull(const Q6_K_Block* block, const float* x) {
             sum2 += s5 * (float)q3 * xb[l + 64];
             sum3 += s7 * (float)q4 * xb[l + 96];
         }
-#endif
         ql += 64; qh += 32; sc += 8;
     }
     return sum0 + sum1 + sum2 + sum3;
+#endif
 }
 
 float q6kDotBlockPartial(const Q6_K_Block* block, const float* x, size_t n) {
@@ -240,11 +263,14 @@ struct Pool {
             size_t br = begin;
             for (size_t r = begin; r < end; ++r) {
                 if (r + 1 < end) {
-#if defined(_MSC_VER) || defined(__SSE__)
                     _mm_prefetch(reinterpret_cast<const char*>(
                                      base + (r + 1) * rowBytes),
                                  _MM_HINT_T0);
-#endif
+                }
+                if (r + 2 < end) {
+                    _mm_prefetch(reinterpret_cast<const char*>(
+                                     base + (r + 2) * rowBytes),
+                                 _MM_HINT_T1);
                 }
                 const float sc = LogitsClimb_DotQ6KRow(
                     base + r * rowBytes, blocksPerRow, cols, hidden);
@@ -421,8 +447,8 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
 
     unsigned hw = std::thread::hardware_concurrency();
     if (hw == 0) hw = 8;
-    // Cap at 8 to avoid fighting MLA/GPU submit threads (legacy winner).
-    unsigned nThreads = (std::min)(8u, (std::max)(1u, hw));
+    // Prefer more workers once AVX-512 MACs are on (still capped vs MLA).
+    unsigned nThreads = (std::min)(20u, (std::max)(1u, hw));
     if (const char* e = std::getenv("DEEP2_LOGITS_THREADS")) {
         const unsigned v = static_cast<unsigned>(std::strtoul(e, nullptr, 10));
         if (v >= 1 && v <= 64) nThreads = v;

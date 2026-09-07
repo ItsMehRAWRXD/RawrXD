@@ -134,6 +134,7 @@ int main() {
     Sync("DEEP2_CERT_STEP_LOG", "1");
     Sync("DEEP2_MLA_GPU_Q4_ONLY", "0");
     Sync("DEEP2_LOGITS_LEGACY", "0");
+    Sync("DEEP2_LOGITS_PARITY", "1"); // one serial check on first logits call
     CreateDirectoryA("G:\\~dev\\rawrxd\\evidence\\K2_LOGITS_CLIMB_001", nullptr);
 #endif
     std::string dir =

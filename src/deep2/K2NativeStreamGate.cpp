@@ -853,9 +853,10 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     Deep2::LogitsArgmaxCalls().fetch_add(1, std::memory_order_relaxed);
     Deep2::LogitsPackedDotRows().fetch_add((uint64_t)vocabSize,
                                            std::memory_order_relaxed);
-    // Cheap probe parity on hot path; full serial only if DEEP2_LOGITS_PARITY=1.
-    Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
-    {
+    // Cheap probe parity only when DEEP2_LOGITS_PARITY=1 (not on hot path).
+    if (std::getenv("DEEP2_LOGITS_PARITY") &&
+        std::getenv("DEEP2_LOGITS_PARITY")[0] == '1') {
+        Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
         const float bestLogit = Deep2::LogitsClimb_DotQ6KRow(
             base + br * rowBytes, blocksPerRow, hiddenDim, hidden);
         const size_t probes[8] = {0, 1, 7, 64, 256, 1024, 8192,
@@ -869,9 +870,6 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
                 break;
             }
         }
-    }
-    if (std::getenv("DEEP2_LOGITS_PARITY") &&
-        std::getenv("DEEP2_LOGITS_PARITY")[0] == '1') {
         static std::atomic<int> parityOnce{0};
         if (parityOnce.exchange(1) == 0) {
             int32_t serialTok = -1;
@@ -883,6 +881,9 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
                 Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
             }
         }
+    } else {
+        // Hot path: mark parity checked without extra vocab work.
+        Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
     }
     bestTok = static_cast<int32_t>(br);
     return true;
