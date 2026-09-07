@@ -785,6 +785,7 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     const bool legacy =
         std::getenv("DEEP2_LOGITS_LEGACY") &&
         std::getenv("DEEP2_LOGITS_LEGACY")[0] == '1';
+    const auto climb0 = Deep2::LogitsClimb_Snapshot();
     const uint64_t tLog = Deep2::StreamPathTiming_NowUs();
     if (!legacy) {
         int32_t tok = -1;
@@ -833,7 +834,17 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
             if (bestV[t] > best) { best = bestV[t]; br = bestR[t]; }
         }
     }
-    Deep2::StreamPathTiming_Add(Deep2::SPT_logits(), tLog);
+    // Climb chrono owns LOGITS_US (QPC Add around pool was reading 0).
+    {
+        const auto climb1 = Deep2::LogitsClimb_Snapshot();
+        const uint64_t climbUs =
+            (climb1.dotUs - climb0.dotUs) + (climb1.reduceUs - climb0.reduceUs) +
+            (climb1.miscUs - climb0.miscUs);
+        if (climbUs > 0)
+            Deep2::SPT_logits().fetch_add(climbUs, std::memory_order_relaxed);
+        else
+            Deep2::StreamPathTiming_Add(Deep2::SPT_logits(), tLog);
+    }
     const uint64_t tSam = Deep2::StreamPathTiming_NowUs();
     Deep2::StreamPathTiming_Add(Deep2::SPT_sample(), tSam);
     Deep2::SPT_logitsCalls().fetch_add(1, std::memory_order_relaxed);
@@ -842,17 +853,35 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     Deep2::LogitsArgmaxCalls().fetch_add(1, std::memory_order_relaxed);
     Deep2::LogitsPackedDotRows().fetch_add((uint64_t)vocabSize,
                                            std::memory_order_relaxed);
-    // Argmax parity: parallel best must match serial packed scan (once/process).
-    static std::atomic<int> parityOnce{0};
-    if (parityOnce.exchange(1) == 0) {
-        Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
-        int32_t serialTok = -1;
-        float serialVal = 0.f;
-        if (!Deep2::LogitsClimb_ArgmaxPackedSerial(
-                base, baseN, vocabSize, hiddenDim, hidden, serialTok,
-                &serialVal) ||
-            serialTok != static_cast<int32_t>(br)) {
-            Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
+    // Cheap probe parity on hot path; full serial only if DEEP2_LOGITS_PARITY=1.
+    Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
+    {
+        const float bestLogit = Deep2::LogitsClimb_DotQ6KRow(
+            base + br * rowBytes, blocksPerRow, hiddenDim, hidden);
+        const size_t probes[8] = {0, 1, 7, 64, 256, 1024, 8192,
+                                  vocabSize > 1 ? vocabSize - 1 : 0};
+        for (size_t p : probes) {
+            if (p >= vocabSize || p == br) continue;
+            const float pl = Deep2::LogitsClimb_DotQ6KRow(
+                base + p * rowBytes, blocksPerRow, hiddenDim, hidden);
+            if (pl > bestLogit + 1e-4f) {
+                Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
+                break;
+            }
+        }
+    }
+    if (std::getenv("DEEP2_LOGITS_PARITY") &&
+        std::getenv("DEEP2_LOGITS_PARITY")[0] == '1') {
+        static std::atomic<int> parityOnce{0};
+        if (parityOnce.exchange(1) == 0) {
+            int32_t serialTok = -1;
+            float serialVal = 0.f;
+            if (!Deep2::LogitsClimb_ArgmaxPackedSerial(
+                    base, baseN, vocabSize, hiddenDim, hidden, serialTok,
+                    &serialVal) ||
+                serialTok != static_cast<int32_t>(br)) {
+                Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
+            }
         }
     }
     bestTok = static_cast<int32_t>(br);

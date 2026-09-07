@@ -13,10 +13,10 @@
 
 #if defined(_MSC_VER) || defined(__AVX2__)
 #include <immintrin.h>
-#define DEEP2_LOGITS_AVX2 1
-#else
-#define DEEP2_LOGITS_AVX2 0
 #endif
+// Keep scalar multi-acc parity with K2NativeStreamGate::q6kDotBlockFull.
+// Naive AVX unpack→stack→hadd was measured slower (~1s/tok vs ~0.4s).
+#define DEEP2_LOGITS_AVX2 0
 
 namespace Deep2 {
 namespace {
@@ -421,7 +421,8 @@ bool LogitsClimb_ArgmaxPacked(const uint8_t* base, size_t baseBytes,
 
     unsigned hw = std::thread::hardware_concurrency();
     if (hw == 0) hw = 8;
-    unsigned nThreads = (std::min)(16u, (std::max)(1u, hw));
+    // Cap at 8 to avoid fighting MLA/GPU submit threads (legacy winner).
+    unsigned nThreads = (std::min)(8u, (std::max)(1u, hw));
     if (const char* e = std::getenv("DEEP2_LOGITS_THREADS")) {
         const unsigned v = static_cast<unsigned>(std::strtoul(e, nullptr, 10));
         if (v >= 1 && v <= 64) nThreads = v;

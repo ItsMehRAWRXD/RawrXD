@@ -30,8 +30,18 @@ else              → attack measured owner
 | `K2_LIVE_DECODE_SUSTAINED_001` | PASS | elimination residency |
 | `K2_TPS_RAINBOW_001` | PASS | stream-norm (not wall) |
 | `K2_SHARD_ATTN_RESIDENCY_001` | PASS | SHARD_IO=0 borrow |
-| `K2_WALL_ATTRIBUTION_001` | run → OWNER | performance ownership |
-| `K2_LOGITS_Q6K_RESIDENT_001` | NEXT | packed Q6_K resident |
+| `K2_WALL_ATTRIBUTION_001` | PASS OWNER=MLA | performance ownership |
+| `K2_LOGITS_Q6K_RESIDENT_001` | PASS | packed Q6_K resident |
+
+## After WALL_001 (honest buckets)
+```text
+SHARD_IO = 0
+LOGITS   ≈ 40–45% of named wall (climb ~150ms/tok @16 thr)
+MLA      ≈ OWNER (~55%)
+OTHER    small (serial parity removed from hot path)
+```
+Next still: **semantic seals → latency → WALL_ATTRIBUTION_002**.
+Do not treat OWNER=MLA as a ticket to retune fused MLA until 002.
 
 ## Law
 ```text

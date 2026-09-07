@@ -1,0 +1,22 @@
+# K2_WALL_ATTRIBUTION_001 — post SHARD=0 / packed logits
+
+## Seal
+`K2_WALL_ATTRIBUTION_001=PASS` (2026-09-07)
+Evidence: `RUN_LOG_FUSED2.txt`
+
+## Timed totals (W32+W64+W128)
+```text
+OWNER=MLA            OWNER_TOTAL_MS≈42652
+LOGITS               substantial (~19.4s on W128 alone) but not max
+SHARD_IO             0
+OTHER                collapsed after probe parity (serial scan off hot path)
+```
+
+## Instrumentation fix
+`LOGITS_US` now sourced from `LogitsClimb` chrono (QPC Add around pool was 0).
+Full serial argmax parity is opt-in (`DEEP2_LOGITS_PARITY=1`); hot path uses probe set.
+
+## Spine discipline
+OWNER=MLA here is **performance ownership only**.
+Do **not** jump to `MLA_FUSED_Q4KT` yet — chain still requires:
+semantic seals → latency buckets → `K2_WALL_ATTRIBUTION_002` → then if OWNER=MLA, retune.
