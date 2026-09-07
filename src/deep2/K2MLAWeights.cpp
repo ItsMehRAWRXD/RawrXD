@@ -531,6 +531,34 @@ static bool gemvDispatchT(const RawrXD::TensorView& weightView,
     return false;
 }
 
+// Host-only T GEMV — skips MLA_Gemv so Q path can own the VkQueue in parallel.
+static bool gemvDispatchT_Host(const RawrXD::TensorView& weightView,
+                               const float* input, float* output,
+                               size_t rows, size_t cols,
+                               std::string& error) {
+    if (!weightView.data()) {
+        error = "gemvDispatchT_Host: weightView has no data";
+        return false;
+    }
+    auto qt = weightView.quantType();
+    if (qt == RawrXD::QuantType::F32) {
+        const float* w = weightView.asF32();
+        if (!w) { error = "gemvDispatchT_Host: F32 null"; return false; }
+        gemvF32Transposed(w, input, output, rows, cols);
+        return true;
+    }
+    if (qt == RawrXD::QuantType::Q4_K) {
+        gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
+        return true;
+    }
+    if (qt == RawrXD::QuantType::Q8_0) {
+        gemvQ80Transposed(weightView.data(), input, output, rows, cols);
+        return true;
+    }
+    error = "gemvDispatchT_Host: unsupported quant";
+    return false;
+}
+
 // Orient when dims decide; Transposed call sites keep forced-T authority.
 static bool gemvDispatch(const RawrXD::TensorView& weightView,
                          const float* input, float* output,
@@ -1039,28 +1067,78 @@ bool MLAForward::Execute(const float* hidden, float* output,
     };
     auto runQ = [&]() {
         pin(1);
+        uint64_t t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
                                     qLoraRank, hiddenDim, qErr)) return;
+        StreamPathTiming_Add(MlaStage_QaUs(), t);
         if (weights.attnQ_a_norm.data())
             rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
         pin(2);
+        t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
                                     qBCols, qLoraRank, qErr)) return;
+        StreamPathTiming_Add(MlaStage_QbUs(), t);
+        qOk = true;
+    };
+    auto runQHost = [&]() {
+        uint64_t t = StreamPathTiming_NowUs();
+        if (!gemvDispatchT_Host(weights.attnQ_a, hidden, q_a,
+                                qLoraRank, hiddenDim, qErr)) return;
+        StreamPathTiming_Add(MlaStage_QaUs(), t);
+        if (weights.attnQ_a_norm.data())
+            rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
+        t = StreamPathTiming_NowUs();
+        if (!gemvDispatchT_Host(weights.attnQ_b, q_a, q_b,
+                                qBCols, qLoraRank, qErr)) return;
+        StreamPathTiming_Add(MlaStage_QbUs(), t);
         qOk = true;
     };
     auto runKv = [&]() {
         pin(3);
+        uint64_t t = StreamPathTiming_NowUs();
         if (!gemvDispatchTransposed(weights.attnKV_a_mqa, hidden, kv_a,
                                     kvACols, hiddenDim, kvErr)) return;
+        StreamPathTiming_Add(MlaStage_KvaUs(), t);
         if (weights.attnKV_a_norm.data())
             rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV,
                               kvLoraRank, config.normRmsEps);
         kvOk = true;
     };
+    auto runKvHost = [&]() {
+        uint64_t t = StreamPathTiming_NowUs();
+        if (!gemvDispatchT_Host(weights.attnKV_a_mqa, hidden, kv_a,
+                                kvACols, hiddenDim, kvErr)) return;
+        StreamPathTiming_Add(MlaStage_KvaUs(), t);
+        if (weights.attnKV_a_norm.data())
+            rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV,
+                              kvLoraRank, config.normRmsEps);
+        kvOk = true;
+    };
+    // DEEP2_MLA_QKV_SPLIT (opt-in; host side is slower than GPU — default OFF):
+    //   1/kv → GPU Q ∥ host KV_A
+    //   q    → host Q ∥ GPU KV_A
+    //   0/unset → serial GPU Q then GPU KV (default)
     const char* ser = std::getenv("DEEP2_MLA_SERIAL");
-    const bool serial = MLA_GpuGemvWanted() || (ser && ser[0] == '1');
+    const char* splitEnv = std::getenv("DEEP2_MLA_QKV_SPLIT");
+    const bool splitOn =
+        splitEnv && splitEnv[0] && splitEnv[0] != '0';
+    const bool hostQ =
+        splitOn && (splitEnv[0] == 'q' || splitEnv[0] == 'Q');
+    const bool qkvSplit = MLA_GpuGemvWanted() && splitOn;
+    const bool serial =
+        !qkvSplit && (MLA_GpuGemvWanted() || (ser && ser[0] == '1'));
     tQkv = StreamPathTiming_NowUs();
-    if (serial) {
+    if (qkvSplit) {
+        if (hostQ) {
+            std::thread qTh(runQHost);
+            runKv();
+            qTh.join();
+        } else {
+            std::thread kvTh(runKvHost);
+            runQ();
+            kvTh.join();
+        }
+    } else if (serial) {
         runQ();
         runKv();
     } else {
