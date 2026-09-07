@@ -2728,6 +2728,40 @@ set(SOURCES
     src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
     src/deep2/ElasticResidencyManager.cpp
+    src/deep2/ElasticDynamicBudget.cpp
+    src/deep2/CycloneScheduler.cpp
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
     src/deep2/ProductionProfiler.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
@@ -2743,6 +2777,7 @@ set(SOURCES
     src/deep2/ReverseHotpatchEngine.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/TensorHop.cpp
@@ -4779,6 +4814,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/SsmCertProbe.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/TensorHop.cpp
@@ -4792,6 +4828,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/RuntimePlanner.cpp
     src/deep2/WarmupScheduler.cpp
     src/deep2/NUFusedPacker.cpp
+    src/deep2/NUGemv.cpp
+    src/deep2/NULiveConsumer.cpp
+    src/deep2/TpsScaleHotpatch.cpp
+    src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
     src/deep2/SlidingWindowEngine.cpp
@@ -4803,6 +4843,16 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLAAttention.cpp
     src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
+    src/deep2/K2GpuStreamCopy.cpp
+    src/deep2/K2GpuStreamCopy_Overlap.cpp
+    src/deep2/K2MLA_GpuGemv.cpp
+    src/deep2/K2MLA_FusedQ4KT.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/K2WeightResolve.cpp
+    src/deep2/K2ShardIo.cpp
+        src/deep2/K2LivePathTensorCache.cpp
+        src/deep2/K2LivePathTensorCache_Prefetch.cpp
+    src/deep2/K2LivePathTensorCache_Emit.cpp
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
     src/deep2/Deep2DeviceManager.cpp
@@ -4811,6 +4861,20 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2Engine_GpuForward.cpp
     src/deep2/Deep2Engine_GpuToken.cpp
     src/vulkan_fwd_resident.cpp
+    src/vulkan_fwd_fused.cpp
+    src/vulkan_weight_window.cpp
+    src/vulkan_weight_policy.cpp
+    src/vulkan_weight_prefetch.cpp
+    src/vulkan_fwd_q4k.cpp
+    src/vulkan_fwd_q4k_host.cpp
+    src/vulkan_fwd_q4k_fused.cpp
+    src/vulkan_fwd_q6k.cpp
+    src/vulkan_fwd_q6k_host.cpp
+    src/vulkan_fwd_quant_pipe.cpp
+    src/vulkan_fwd_quant.cpp
+    src/vulkan_fwd_quant_host.cpp
+    src/vulkan_fwd_cmdpool.cpp
+    src/vulkan_fwd_tune.cpp
     src/vulkan_fwd_hostops.cpp
     src/vulkan_fwd_stubs.cpp
     src/deep2/K2MoEWeights.cpp
@@ -4849,6 +4913,41 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/BP16Streamer.cpp
     src/deep2/ResidencyManager.cpp
     src/deep2/ElasticResidencyManager.cpp
+    src/deep2/ElasticDynamicBudget.cpp
+    src/deep2/CycloneScheduler.cpp
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    # Reverse Knowledge Compiler (RKC) — proof-state before LLM
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
     src/deep2/RouterPrefetchTelemetry.cpp
     src/deep2/mars/VRAMManager.cpp
     src/deep2/mars/TensorHotpatch.cpp
@@ -4980,6 +5079,9 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
 endif()
 
 set(INFERENCE_ENGINE_LIBRARY_SOURCES ${INFERENCE_ENGINE_SOURCES})
+list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
+    src/deep2/K2LivePathTensorCache_Emit.cpp)
+list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
     src/inference/inference_standalone_main.cpp
 )
@@ -5064,6 +5166,7 @@ target_compile_definitions(RawrXD-InferenceEngine PRIVATE
 
 target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
     ${CMAKE_CURRENT_SOURCE_DIR}/src/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
@@ -5114,6 +5217,32 @@ endif()
             src/deep2/QuantKB.asm
             src/asm/Deep2Device_Score.asm
             src/asm/Deep2Device_Pick.asm
+            src/asm/Deep2R1_StrEq.asm
+            src/asm/Deep2R1_IsArch.asm
+            src/asm/Deep2R1_GlobData.asm
+            src/asm/Deep2R1_MlaData.asm
+            src/asm/Deep2R1_MoeData.asm
+            src/asm/Deep2R1_Scan.asm
+            src/asm/Deep2R1_Decode.asm
+            src/asm/Deep2R1_Validate.asm
+            src/asm/Deep2R1_LayerKind.asm
+            src/asm/Deep2R1_SplitKVB.asm
+            src/asm/Deep2ThreadAffinity.asm
+            src/asm/Deep2OuterStr.asm
+            src/asm/Deep2OuterEnv.asm
+            src/asm/Deep2OuterParse.asm
+            src/asm/Deep2OuterParseIdx.asm
+            src/asm/Deep2OuterGGUF.asm
+            src/asm/Deep2OuterPath.asm
+            src/asm/Deep2OuterShardApply.asm
+            src/asm/Deep2OuterShardScan.asm
+            src/asm/Deep2OuterShardCheck.asm
+            src/asm/Deep2OuterPrintIO.asm
+            src/asm/Deep2OuterPrint.asm
+            src/asm/Deep2OuterEvidence.asm
+            src/asm/Deep2OuterResolve.asm
+            src/asm/Deep2OuterCallEngine.asm
+            src/asm/Deep2OuterHost.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -6578,6 +6707,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/GpuDecodeEfficiency.cpp
         src/core/AmdGpuPowerBackend.cpp
         src/deep2/K2NativeStreamGate.cpp
+    src/deep2/K2GpuStreamCopy.cpp
+        src/deep2/K2LivePathTensorCache.cpp
+        src/deep2/K2WeightResolve.cpp
+        src/deep2/K2LivePathTensorCache_Prefetch.cpp
+    src/deep2/K2LivePathTensorCache_Emit.cpp
         src/deep2/K2MLAAttention.cpp
         src/deep2/K2TokenEmbedding.cpp
         src/win32app/ScreenPilotModelHub.cpp
@@ -6695,6 +6829,41 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/memory/TensorPlacementManager.cpp
         B014/build/b014_profiler.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/CycloneScheduler.cpp
+        src/deep2/Deep2LivePath.cpp
+        src/deep2/Deep2LivePath_Gate.cpp
+        src/deep2/Deep2LivePath_Pinball.cpp
+        src/deep2/Deep2LivePath_Mech.cpp
+        src/deep2/Deep2LivePath_Emit.cpp
+        src/deep2/GpuTransfer_Emit.cpp
+        src/deep2/LivePathEffect.cpp
+        src/deep2/K2LivePolicy.cpp
+        src/deep2/K2LivePolicy_Apply.cpp
+        src/deep2/K2LivePolicy_Hysteresis.cpp
+        src/deep2/FusedLiveController.cpp
+        src/deep2/FusedLiveController_Decide.cpp
+        src/deep2/FusedLiveController_Cheap.cpp
+        src/deep2/FusedLiveController_Law.cpp
+        src/deep2/FusedLiveController_Emit.cpp
+        src/deep2/LivePath_FusedTick.cpp
+        src/deep2/Deep2LivePath_MechEnd.cpp
+        src/deep2/Deep2LivePath_Thermal.cpp
+        src/deep2/PlasmaGovernor.cpp
+        src/deep2/ElasticResidencyManager.cpp
+        src/rkc/RKCValidator.cpp
+        src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+        src/rkc/RKCCompiler.cpp
+        src/rkc/RKCRecipes.cpp
+        src/rkc/RKCGapEngine.cpp
+        src/rkc/RKCEmit.cpp
+        src/rkc/RKCSession.cpp
+        src/rkc/RKCProductContext.cpp
+        src/rkc/RKC_C_ABI.cpp
         src/deep2/KimiK2Config.cpp
         src/deep2/K2MLAWeights.cpp
         src/deep2/K2MoEWeights.cpp
@@ -6710,6 +6879,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GGUFLoader.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/MedusaDecoder.cpp
         src/deep2/NUFusedPacker.cpp
@@ -7311,6 +7481,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         InferenceEngine
         rguf
     )
+
+    # Native E2E web bridge (HTML prepare/receipt + MASM policy/receipt)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/native_e2e/CMakeLists.native_e2e.txt")
+        include("${CMAKE_CURRENT_SOURCE_DIR}/native_e2e/CMakeLists.native_e2e.txt")
+        target_link_libraries(RawrXD-Win32IDE PRIVATE RawrNativeWebBridge)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_NATIVE_E2E=1)
+        target_include_directories(RawrXD-Win32IDE PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/native_e2e")
+        message(STATUS "[Win32IDE] RawrNativeWebBridge linked (native E2E)")
+    endif()
 
     # Explicit nlohmann/json include for multi-header FetchContent layout
     target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -8050,6 +8230,1495 @@ if(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT)
     message(STATUS "[Deep2] GPU resident decode cert: deep2_gpu_resident_decode_cert")
 endif()
 
+option(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT "Build STREAMER_GPU_WEIGHT_WINDOW_001 cert" ON)
+if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
+    add_executable(deep2_gpu_transfer_counter_cert
+        src/deep2/deep2_gpu_transfer_counter_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_transfer_counter_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_transfer_counter_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_transfer_counter_cert PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    set_target_properties(deep2_gpu_transfer_counter_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        OUTPUT_NAME deep2_gpu_transfer_counter_cert
+    )
+    message(STATUS "[Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert")
+
+    add_executable(deep2_gpu_transfer_overlap_cert
+        src/deep2/deep2_gpu_transfer_overlap_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_transfer_overlap_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_transfer_overlap_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_transfer_overlap_cert PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    set_target_properties(deep2_gpu_transfer_overlap_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        OUTPUT_NAME deep2_gpu_transfer_overlap_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert")
+
+    add_executable(deep2_gpu_weight_window_cert
+        src/deep2/deep2_gpu_weight_window_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_weight_window_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_weight_window_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_weight_window_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_weight_window_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_weight_window_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU weight window cert: deep2_gpu_weight_window_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT "Build STREAMER_GPU_WEIGHT_PREFETCH_001 cert" ON)
+if(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT)
+    add_executable(deep2_gpu_weight_prefetch_cert
+        src/deep2/deep2_gpu_weight_prefetch_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_weight_prefetch_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_weight_prefetch_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_weight_prefetch_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_weight_prefetch_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_weight_prefetch_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU weight prefetch cert: deep2_gpu_weight_prefetch_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT "Build STREAMER_GPU_NUMERIC_PARITY_001 cert" ON)
+if(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT)
+    add_executable(deep2_gpu_numeric_parity_cert
+        src/deep2/deep2_gpu_numeric_parity_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_numeric_parity_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_numeric_parity_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_numeric_parity_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_numeric_parity_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_numeric_parity_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU numeric parity cert: deep2_gpu_numeric_parity_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" ON)
+if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
+    add_executable(deep2_gpu_q4k_gemv_cert
+        src/deep2/deep2_gpu_q4k_gemv_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_q4k_gemv_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_q4k_gemv_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_q4k_gemv_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_q4k_gemv_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU Q4_K GEMV cert: deep2_gpu_q4k_gemv_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_Q6K_GEMV_CERT "Build STREAMER_GPU_Q6K_GEMV_001 cert" ON)
+if(BUILD_DEEP2_GPU_Q6K_GEMV_CERT)
+    add_executable(deep2_gpu_q6k_gemv_cert
+        src/deep2/deep2_gpu_q6k_gemv_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_q6k_gemv_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_q6k_gemv_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_q6k_gemv_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_q6k_gemv_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_q6k_gemv_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU Q6_K GEMV cert: deep2_gpu_q6k_gemv_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV cert" ON)
+if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
+    add_executable(deep2_gpu_quant_family_cert
+        src/deep2/deep2_gpu_quant_family_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_quant_family_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_quant_family_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_quant_family_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_quant_family_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU quant family cert: deep2_gpu_quant_family_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward gates 6-15" ON)
+if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
+    add_executable(deep2_gpu_packed_forward_cert
+        src/deep2/deep2_gpu_packed_forward_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_packed_forward_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_packed_forward_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_packed_forward_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_packed_forward_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU packed-forward cert: deep2_gpu_packed_forward_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" ON)
+if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
+    add_executable(deep2_gpu_dynamic_window_cert
+        src/deep2/deep2_gpu_dynamic_window_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_dynamic_window_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_dynamic_window_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_dynamic_window_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_dynamic_window_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_dynamic_window_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU dynamic-window cert: deep2_gpu_dynamic_window_cert")
+endif()
+
+option(BUILD_DEEP2_RUNTIME_BATCH1_CERT "Build DEEP2_RUNTIME batch-1 cert (loader..policy)" ON)
+if(BUILD_DEEP2_RUNTIME_BATCH1_CERT)
+    add_executable(deep2_runtime_batch1_cert
+        src/deep2/deep2_runtime_batch1_cert.cpp
+    )
+    target_link_libraries(deep2_runtime_batch1_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_runtime_batch1_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_runtime_batch1_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_runtime_batch1_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_runtime_batch1_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Runtime batch-1 cert: deep2_runtime_batch1_cert")
+endif()
+
+option(BUILD_DEEP2_RUNTIME_BATCH2_CERT "Build DEEP2_RUNTIME batch-2 cert (large/k2/ds/soak)" ON)
+if(BUILD_DEEP2_RUNTIME_BATCH2_CERT)
+    add_executable(deep2_runtime_batch2_cert
+        src/deep2/deep2_runtime_batch2_cert.cpp
+    )
+    target_link_libraries(deep2_runtime_batch2_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_runtime_batch2_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_runtime_batch2_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_runtime_batch2_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_runtime_batch2_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Runtime batch-2 cert: deep2_runtime_batch2_cert")
+endif()
+
+option(BUILD_DEEP2_RUNTIME_BATCH3_CERT "Build DEEP2_RUNTIME batch-3 cert (quant/fusion/window)" ON)
+if(BUILD_DEEP2_RUNTIME_BATCH3_CERT)
+    add_executable(deep2_runtime_batch3_cert
+        src/deep2/deep2_runtime_batch3_cert.cpp
+    )
+    if(MSVC)
+        target_compile_options(deep2_runtime_batch3_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(deep2_runtime_batch3_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_runtime_batch3_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Runtime batch-3 cert: deep2_runtime_batch3_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT "Build DEEP2_K2_LIVE_GEN_PERF_001 cert" ON)
+if(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT)
+    add_executable(deep2_k2_live_gen_perf_cert
+        src/deep2/deep2_k2_live_gen_perf_cert.cpp
+    )
+    target_link_libraries(deep2_k2_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_gen_perf_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_gen_perf_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_live_gen_perf_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_gen_perf_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT "Build K2_LIVE_POLICY_CROSSOVER_001" ON)
+if(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT)
+    add_executable(deep2_k2_live_policy_crossover_cert
+        src/deep2/deep2_k2_live_policy_crossover_cert.cpp
+    )
+    target_link_libraries(deep2_k2_live_policy_crossover_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_policy_crossover_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_policy_crossover_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_live_policy_crossover_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_policy_crossover_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 live policy crossover: deep2_k2_live_policy_crossover_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT "Build K2_LIVE_POLICY_E2E_001" ON)
+if(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT)
+    add_executable(deep2_k2_live_policy_e2e_cert
+        src/deep2/deep2_k2_live_policy_e2e_cert.cpp
+    )
+    target_link_libraries(deep2_k2_live_policy_e2e_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_policy_e2e_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_policy_e2e_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_live_policy_e2e_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_policy_e2e_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 live policy E2E: deep2_k2_live_policy_e2e_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT "Build K2_GPU_STREAM_COPY_001" ON)
+if(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT)
+    add_executable(deep2_k2_gpu_stream_copy_cert
+        src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_stream_copy_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_stream_copy_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_stream_copy_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_stream_copy_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_stream_copy_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU stream copy: deep2_k2_gpu_stream_copy_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT "Build K2_GPU_COPY_COMPUTE_OVERLAP_001" ON)
+if(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT)
+    add_executable(deep2_k2_gpu_copy_compute_overlap_cert
+        src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_copy_compute_overlap_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_copy_compute_overlap_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU copy/compute overlap: deep2_k2_gpu_copy_compute_overlap_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT "Build K2_LIVE_GPU_STREAM_E2E_001" ON)
+if(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT)
+    add_executable(deep2_k2_live_gpu_stream_e2e_cert
+        src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
+    )
+    target_link_libraries(deep2_k2_live_gpu_stream_e2e_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_gpu_stream_e2e_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_gpu_stream_e2e_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_live_gpu_stream_e2e_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_gpu_stream_e2e_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 live GPU stream E2E: deep2_k2_live_gpu_stream_e2e_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT "Build K2_GPU_STREAM_COMPUTE_001" ON)
+if(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT)
+    add_executable(deep2_k2_gpu_stream_compute_cert
+        src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_stream_compute_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_stream_compute_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_stream_compute_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_stream_compute_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_stream_compute_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU stream compute: deep2_k2_gpu_stream_compute_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT "Build K2_GPU_STREAM_MLA_001" ON)
+if(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT)
+    add_executable(deep2_k2_gpu_stream_mla_cert
+        src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_stream_mla_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_stream_mla_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_stream_mla_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_stream_mla_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_stream_mla_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU stream MLA: deep2_k2_gpu_stream_mla_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT "Build K2_GPU_MLA_FULL_001" ON)
+if(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT)
+    add_executable(deep2_k2_gpu_mla_full_cert
+        src/deep2/deep2_k2_gpu_mla_full_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_mla_full_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_mla_full_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_mla_full_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_mla_full_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_mla_full_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU MLA full: deep2_k2_gpu_mla_full_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT "Build K2_GPU_MLA_FULL_DEPTH_001" ON)
+if(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT)
+    add_executable(deep2_k2_gpu_mla_full_depth_cert
+        src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_mla_full_depth_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_mla_full_depth_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_mla_full_depth_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_mla_full_depth_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_mla_full_depth_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU MLA full-depth: deep2_k2_gpu_mla_full_depth_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_MLA_RE_CERT "Build K2_GPU_MLA_RE_001" ON)
+if(BUILD_DEEP2_K2_GPU_MLA_RE_CERT)
+    add_executable(deep2_k2_gpu_mla_re_cert
+        src/deep2/deep2_k2_gpu_mla_re_cert.cpp
+    )
+    target_link_libraries(deep2_k2_gpu_mla_re_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_mla_re_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_mla_re_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_gpu_mla_re_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_mla_re_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 GPU MLA RE: deep2_k2_gpu_mla_re_cert")
+endif()
+
+option(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT "Build K2_STREAM_MISS_REALITY_001" ON)
+if(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT)
+    add_executable(deep2_k2_stream_miss_reality_cert
+        src/deep2/deep2_k2_stream_miss_reality_cert.cpp
+    )
+    target_link_libraries(deep2_k2_stream_miss_reality_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_stream_miss_reality_cert PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_stream_miss_reality_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_k2_stream_miss_reality_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_stream_miss_reality_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 STREAM_MISS reality: deep2_k2_stream_miss_reality_cert")
+endif()
+
+option(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT "Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert" ON)
+if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
+    add_executable(deep2_deepseek_live_gen_perf_cert
+        src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
+    )
+    target_link_libraries(deep2_deepseek_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_deepseek_live_gen_perf_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_deepseek_live_gen_perf_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_deepseek_live_gen_perf_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_deepseek_live_gen_perf_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+set(DEEP2_R1_DECODE_ASM
+    src/asm/Deep2R1_StrEq.asm
+    src/asm/Deep2R1_IsArch.asm
+    src/asm/Deep2R1_GlobData.asm
+    src/asm/Deep2R1_MlaData.asm
+    src/asm/Deep2R1_MoeData.asm
+    src/asm/Deep2R1_Scan.asm
+    src/asm/Deep2R1_Decode.asm
+    src/asm/Deep2R1_Validate.asm
+    src/asm/Deep2R1_LayerKind.asm
+    src/asm/Deep2R1_SplitKVB.asm
+)
+set(DEEP2_OUTER_RUNTIME_ASM
+    src/asm/Deep2OuterStr.asm
+    src/asm/Deep2OuterEnv.asm
+    src/asm/Deep2OuterParse.asm
+    src/asm/Deep2OuterParseIdx.asm
+    src/asm/Deep2OuterGGUF.asm
+    src/asm/Deep2OuterPath.asm
+    src/asm/Deep2OuterShardApply.asm
+    src/asm/Deep2OuterShardScan.asm
+    src/asm/Deep2OuterShardCheck.asm
+    src/asm/Deep2OuterPrintIO.asm
+    src/asm/Deep2OuterPrint.asm
+    src/asm/Deep2OuterEvidence.asm
+    src/asm/Deep2OuterResolve.asm
+    src/asm/Deep2OuterCallEngine.asm
+    src/asm/Deep2OuterHost.asm
+)
+set_source_files_properties(${DEEP2_R1_DECODE_ASM} ${DEEP2_OUTER_RUNTIME_ASM}
+    src/asm/Deep2R1_Smoke.asm src/asm/Deep2OuterSmoke.asm
+    PROPERTIES LANGUAGE ASM_MASM)
+
+option(BUILD_DEEP2_R1_DECODE_SMOKE "Build Deep2R1TensorDecode no-CRT smoke" ON)
+if(BUILD_DEEP2_R1_DECODE_SMOKE)
+    add_executable(deep2_r1_decode_smoke ${DEEP2_R1_DECODE_ASM} src/asm/Deep2R1_Smoke.asm)
+    target_link_libraries(deep2_r1_decode_smoke PRIVATE kernel32)
+    set_target_properties(deep2_r1_decode_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME Deep2R1TensorDecodeSmoke
+        LINKER_LANGUAGE ASM_MASM
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_OUTER_SMOKE "Build Deep2 outer shard-probe smoke" ON)
+if(BUILD_DEEP2_OUTER_SMOKE)
+    add_executable(deep2_outer_smoke ${DEEP2_OUTER_RUNTIME_ASM} src/asm/Deep2OuterSmoke.asm)
+    target_link_libraries(deep2_outer_smoke PRIVATE kernel32)
+    set_target_properties(deep2_outer_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME Deep2OuterSmoke
+        LINKER_LANGUAGE ASM_MASM
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup /NODEFAULTLIB"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT "Build DEEP2_OUTER_ENGINE_BRIDGE_001" ON)
+if(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT)
+    add_executable(deep2_outer_engine_bridge_cert
+        src/deep2/deep2_outer_engine_bridge_cert.cpp
+        src/deep2/Deep2OuterEngineBridge.cpp
+        ${DEEP2_OUTER_RUNTIME_ASM}
+    )
+    target_link_libraries(deep2_outer_engine_bridge_cert PRIVATE InferenceEngine dxgi kernel32)
+    if(MSVC)
+        target_compile_options(deep2_outer_engine_bridge_cert PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:/O2 /arch:AVX512 /EHsc /W4 /std:c++20>)
+    endif()
+    target_include_directories(deep2_outer_engine_bridge_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/asm
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_source_files_properties(${DEEP2_OUTER_RUNTIME_ASM} PROPERTIES LANGUAGE ASM_MASM)
+    set_target_properties(deep2_outer_engine_bridge_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_outer_engine_bridge_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT "Build LIVE_PATH_EFFECTIVENESS_001" ON)
+if(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT)
+    add_executable(deep2_live_path_effectiveness_cert
+        src/deep2/deep2_live_path_effectiveness_cert.cpp)
+    target_link_libraries(deep2_live_path_effectiveness_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_live_path_effectiveness_cert PRIVATE
+            /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_live_path_effectiveness_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_live_path_effectiveness_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_live_path_effectiveness_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT "Build LIVE_PATH_FUSED_CONTROL_001" ON)
+if(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT)
+    add_executable(deep2_live_path_fused_control_cert
+        src/deep2/deep2_live_path_fused_control_cert.cpp
+        src/deep2/LivePathFusedCert_Arm.cpp
+        src/deep2/K2LivePathTensorCache_Emit.cpp)
+    target_link_libraries(deep2_live_path_fused_control_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_live_path_fused_control_cert PRIVATE
+            /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_live_path_fused_control_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_live_path_fused_control_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_live_path_fused_control_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+option(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT "Build LIVE_PATH_INTERACTION_BOUNDS_001" ON)
+if(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT)
+    add_executable(deep2_live_path_interaction_bounds_cert
+        src/deep2/deep2_live_path_interaction_bounds_cert.cpp)
+    target_link_libraries(deep2_live_path_interaction_bounds_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_live_path_interaction_bounds_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_live_path_interaction_bounds_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_live_path_interaction_bounds_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_live_path_interaction_bounds_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT "Build K2_FULL_DEPTH_EFFECTIVENESS_001" ON)
+if(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT)
+    add_executable(deep2_k2_full_depth_effectiveness_cert
+        src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp)
+    target_link_libraries(deep2_k2_full_depth_effectiveness_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_full_depth_effectiveness_cert PRIVATE
+            /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_full_depth_effectiveness_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_full_depth_effectiveness_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_full_depth_effectiveness_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT "Build K2_FULL_DEPTH_COMBINED_POLICY_001" ON)
+if(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT)
+    add_executable(deep2_k2_full_depth_combined_policy_cert
+        src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
+        src/deep2/K2FullDepthCombined_Arm.cpp
+        src/deep2/K2FullDepthCombined_Proof.cpp)
+    target_link_libraries(deep2_k2_full_depth_combined_policy_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_full_depth_combined_policy_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_full_depth_combined_policy_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_full_depth_combined_policy_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_full_depth_combined_policy_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT
+       "Build K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001" ON)
+if(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT)
+    add_executable(deep2_k2_full_depth_trampoline_promotion_cert
+        src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
+        src/deep2/K2FullDepthCombined_Arm.cpp)
+    target_link_libraries(deep2_k2_full_depth_trampoline_promotion_cert
+        PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_full_depth_trampoline_promotion_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_full_depth_trampoline_promotion_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_full_depth_trampoline_promotion_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_full_depth_trampoline_promotion_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT
+       "Build K2_FULL_DEPTH_FUSED_REBENCH_001" ON)
+if(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT)
+    add_executable(deep2_k2_full_depth_fused_rebench_cert
+        src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
+        src/deep2/K2FullDepthCombined_Arm.cpp)
+    target_link_libraries(deep2_k2_full_depth_fused_rebench_cert
+        PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_full_depth_fused_rebench_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_full_depth_fused_rebench_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_full_depth_fused_rebench_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_full_depth_fused_rebench_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT "Build K2_TRAMPOLINE_FULL_DEPTH_OPT_001" ON)
+if(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT)
+    add_executable(deep2_k2_trampoline_full_depth_opt_cert
+        src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp)
+    target_link_libraries(deep2_k2_trampoline_full_depth_opt_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_trampoline_full_depth_opt_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_trampoline_full_depth_opt_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_trampoline_full_depth_opt_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_trampoline_full_depth_opt_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+
+option(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT "Build K2_AUTO_WORKLOAD_POLICY_001" ON)
+if(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT)
+    add_executable(deep2_k2_auto_workload_policy_cert
+        src/deep2/deep2_k2_auto_workload_policy_cert.cpp)
+    target_link_libraries(deep2_k2_auto_workload_policy_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_auto_workload_policy_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_auto_workload_policy_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_auto_workload_policy_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_auto_workload_policy_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+
+
+option(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT "Build K2_E2E_MODEL_SIZE_MATRIX_001" ON)
+if(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT)
+    add_executable(deep2_k2_e2e_model_size_matrix_cert
+        src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp)
+    target_link_libraries(deep2_k2_e2e_model_size_matrix_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_e2e_model_size_matrix_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_e2e_model_size_matrix_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_e2e_model_size_matrix_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_e2e_model_size_matrix_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT "Build K2_LIVE_GENERATE_POLICY_001" ON)
+if(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT)
+    add_executable(deep2_k2_live_generate_policy_cert
+        src/deep2/deep2_k2_live_generate_policy_cert.cpp)
+    target_link_libraries(deep2_k2_live_generate_policy_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_generate_policy_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_generate_policy_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_live_generate_policy_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_generate_policy_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT "Build K2_LIVE_POLICY_SPLIT_001" ON)
+if(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT)
+    add_executable(deep2_k2_live_policy_split_cert
+        src/deep2/deep2_k2_live_policy_split_cert.cpp)
+    target_link_libraries(deep2_k2_live_policy_split_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_policy_split_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_policy_split_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_live_policy_split_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_policy_split_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT "Build K2_POLICY_HYSTERESIS_001" ON)
+if(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT)
+    add_executable(deep2_k2_policy_hysteresis_cert
+        src/deep2/deep2_k2_policy_hysteresis_cert.cpp)
+    target_link_libraries(deep2_k2_policy_hysteresis_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_k2_policy_hysteresis_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_policy_hysteresis_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_policy_hysteresis_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_policy_hysteresis_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+
+
+
+
+option(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT "Build K2_MLA_REBENCH_PROMOTE_001" ON)
+if(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT)
+    add_executable(deep2_k2_mla_rebench_promote_cert
+        src/deep2/deep2_k2_mla_rebench_promote_cert.cpp)
+    target_link_libraries(deep2_k2_mla_rebench_promote_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_rebench_promote_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_rebench_promote_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_rebench_promote_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_rebench_promote_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT "Build K2_MLA_REUSE_PROMOTE_001" ON)
+if(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT)
+    add_executable(deep2_k2_mla_reuse_promote_cert
+        src/deep2/deep2_k2_mla_reuse_promote_cert.cpp)
+    target_link_libraries(deep2_k2_mla_reuse_promote_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_reuse_promote_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_reuse_promote_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_reuse_promote_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_reuse_promote_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT "Build K2_MLA_FULL_DEPTH_SOAK_001" ON)
+if(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT)
+    add_executable(deep2_k2_mla_full_depth_soak_cert
+        src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp)
+    target_link_libraries(deep2_k2_mla_full_depth_soak_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_full_depth_soak_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_full_depth_soak_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_full_depth_soak_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_full_depth_soak_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 MLA full-depth soak: deep2_k2_mla_full_depth_soak_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT "Build K2_LIVE_DECODE_MLA_001" ON)
+if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
+    add_executable(deep2_k2_live_decode_mla_cert
+        src/deep2/deep2_k2_live_decode_mla_cert.cpp)
+    target_link_libraries(deep2_k2_live_decode_mla_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_decode_mla_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_decode_mla_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_live_decode_mla_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_decode_mla_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 live decode MLA: deep2_k2_live_decode_mla_cert")
+endif()
+
+option(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT "Build K2_MLA_FUSED_Q4KT_001" ON)
+if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
+    add_executable(deep2_k2_mla_fused_q4kt_cert
+        src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp)
+    target_link_libraries(deep2_k2_mla_fused_q4kt_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_mla_fused_q4kt_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_mla_fused_q4kt_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_mla_fused_q4kt_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_mla_fused_q4kt_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 MLA fused Q4KT: deep2_k2_mla_fused_q4kt_cert")
+endif()
+
+option(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT "Build K2_SHARD_ATTN_RESIDENCY_001" ON)
+if(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT)
+    add_executable(deep2_k2_shard_attn_residency_cert
+        src/deep2/deep2_k2_shard_attn_residency_cert.cpp)
+    target_link_libraries(deep2_k2_shard_attn_residency_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_shard_attn_residency_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_shard_attn_residency_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_shard_attn_residency_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_shard_attn_residency_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 SHARD_ATTN residency: deep2_k2_shard_attn_residency_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT "Build K2_LOGITS_Q6K_RESIDENT_001" ON)
+if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
+    add_executable(deep2_k2_logits_q6k_resident_cert
+        src/deep2/deep2_k2_logits_q6k_resident_cert.cpp)
+    target_link_libraries(deep2_k2_logits_q6k_resident_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_logits_q6k_resident_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_logits_q6k_resident_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_logits_q6k_resident_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_logits_q6k_resident_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 LOGITS Q6K resident: deep2_k2_logits_q6k_resident_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT "Build K2_LIVE_DECODE_SUSTAINED_001" ON)
+if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
+    add_executable(deep2_k2_live_decode_sustained_cert
+        src/deep2/deep2_k2_live_decode_sustained_cert.cpp)
+    target_link_libraries(deep2_k2_live_decode_sustained_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_live_decode_sustained_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_live_decode_sustained_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_live_decode_sustained_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_live_decode_sustained_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 live decode sustained: deep2_k2_live_decode_sustained_cert")
+endif()
+
+option(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT "Build K2_WALL_ATTRIBUTION_001" ON)
+if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
+    add_executable(deep2_k2_wall_attribution_cert
+        src/deep2/deep2_k2_wall_attribution_cert.cpp)
+    target_link_libraries(deep2_k2_wall_attribution_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_wall_attribution_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_wall_attribution_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_wall_attribution_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_wall_attribution_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 wall attribution: deep2_k2_wall_attribution_cert")
+endif()
+
+option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" ON)
+if(BUILD_DEEP2_K2_TPS_RAINBOW_CERT)
+    add_executable(deep2_k2_tps_rainbow_cert
+        src/deep2/deep2_k2_tps_rainbow_cert.cpp)
+    target_link_libraries(deep2_k2_tps_rainbow_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_tps_rainbow_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_tps_rainbow_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_tps_rainbow_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_tps_rainbow_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 TPS byteless rainbow: deep2_k2_tps_rainbow_cert")
+endif()
+
+option(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT "Build K2_GPU_MLA_SLOT_REUSE_001" ON)
+if(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT)
+    add_executable(deep2_k2_gpu_mla_slot_reuse_cert
+        src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp)
+    target_link_libraries(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_k2_gpu_mla_slot_reuse_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_mla_slot_reuse_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT "Build NU_LIVE_CONSUMER_001" ON)
+if(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT)
+    add_executable(deep2_nu_live_consumer_cert
+        src/deep2/deep2_nu_live_consumer_cert.cpp)
+    target_link_libraries(deep2_nu_live_consumer_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_nu_live_consumer_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_nu_live_consumer_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_nu_live_consumer_cert PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_nu_live_consumer_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_nu_live_consumer_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_nu_live_consumer_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT "Build K2_GPU_MLA_NU_BRIDGE_001" ON)
+if(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT)
+    add_executable(deep2_k2_gpu_mla_nu_bridge_cert
+        src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp)
+    target_link_libraries(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE
+            /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_k2_gpu_mla_nu_bridge_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_gpu_mla_nu_bridge_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_NU_PERF_CERT "Build NU_PERF_001" ON)
+if(BUILD_DEEP2_NU_PERF_CERT)
+    add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
+    target_link_libraries(deep2_nu_perf_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_nu_perf_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_nu_perf_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_nu_perf_cert PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_nu_perf_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_nu_perf_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_nu_perf_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+option(BUILD_DEEP2_NU_GEMV_PARITY_CERT "Build NU_GEMV_PARITY_001" ON)
+if(BUILD_DEEP2_NU_GEMV_PARITY_CERT)
+    add_executable(deep2_nu_gemv_parity_cert
+        src/deep2/deep2_nu_gemv_parity_cert.cpp)
+    target_link_libraries(deep2_nu_gemv_parity_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_nu_gemv_parity_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_nu_gemv_parity_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_nu_gemv_parity_cert PRIVATE
+            "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_nu_gemv_parity_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_nu_gemv_parity_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_nu_gemv_parity_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] NU GEMV parity cert: deep2_nu_gemv_parity_cert")
+endif()
+
+option(BUILD_DEEP2_NU_GPU_GEMV_CERT "Build NU_GPU_GEMV_001" ON)
+if(BUILD_DEEP2_NU_GPU_GEMV_CERT)
+    add_executable(deep2_nu_gpu_gemv_cert
+        src/deep2/deep2_nu_gpu_gemv_cert.cpp)
+    target_link_libraries(deep2_nu_gpu_gemv_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_nu_gpu_gemv_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_nu_gpu_gemv_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(DEFINED RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_nu_gpu_gemv_cert PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_nu_gpu_gemv_cert PRIVATE
+            RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(deep2_nu_gpu_gemv_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_nu_gpu_gemv_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] NU GPU GEMV cert: deep2_nu_gpu_gemv_cert")
+endif()
+
+option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" ON)
+if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
+    add_executable(deep2_nu_pack_format_cert
+        src/deep2/deep2_nu_pack_format_cert.cpp
+        src/deep2/NUFusedPacker.cpp)
+    if(MSVC)
+        target_compile_options(deep2_nu_pack_format_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_nu_pack_format_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_nu_pack_format_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_nu_pack_format_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] NU pack format cert: deep2_nu_pack_format_cert")
+endif()
+
+option(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT "Build RKC_DEEP2_MODEL_AUTHORITY_001" ON)
+if(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT)
+    add_executable(rkc_deep2_model_authority_cert
+        src/rkc/rkc_deep2_model_authority_cert.cpp)
+    target_link_libraries(rkc_deep2_model_authority_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_deep2_model_authority_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_deep2_model_authority_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/agentic ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rkc_deep2_model_authority_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_deep2_model_authority_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_RKC_MODEL_INVENTORY_CERT "Build RKC_MODEL_INVENTORY_001" ON)
+if(BUILD_RKC_MODEL_INVENTORY_CERT)
+    add_executable(rkc_model_inventory_cert src/rkc/rkc_model_inventory_cert.cpp)
+    target_link_libraries(rkc_model_inventory_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_model_inventory_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_model_inventory_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rkc_model_inventory_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_model_inventory_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT "Build RKC_NEGATIVE_KNOWLEDGE_001" ON)
+if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
+    add_executable(rkc_negative_knowledge_cert src/rkc/rkc_negative_knowledge_cert.cpp)
+    target_link_libraries(rkc_negative_knowledge_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_negative_knowledge_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_negative_knowledge_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rkc_negative_knowledge_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_negative_knowledge_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_RKC_MINIMAL_SOURCE_CERT "Build RKC_MINIMAL_SOURCE_001" ON)
+if(BUILD_RKC_MINIMAL_SOURCE_CERT)
+    add_executable(rkc_minimal_source_cert src/rkc/rkc_minimal_source_cert.cpp)
+    target_link_libraries(rkc_minimal_source_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_minimal_source_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_minimal_source_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rkc_minimal_source_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_minimal_source_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_RKC_CODE_WORLD_CERT "Build RKC_CODE_WORLD_001" ON)
+if(BUILD_RKC_CODE_WORLD_CERT)
+    add_executable(rkc_code_world_cert src/rkc/rkc_code_world_cert.cpp)
+    target_link_libraries(rkc_code_world_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_code_world_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_code_world_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(rkc_code_world_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_code_world_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+option(BUILD_RKC_SMOKE "Build Reverse Knowledge Compiler smoke" ON)
+if(BUILD_RKC_SMOKE)
+    add_executable(rkc_smoke src/rkc/rkc_smoke.cpp)
+    target_link_libraries(rkc_smoke PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_smoke PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(rkc_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_smoke
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    add_executable(rkc_product_context_smoke src/rkc/rkc_product_context_smoke.cpp)
+    target_link_libraries(rkc_product_context_smoke PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(rkc_product_context_smoke PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(rkc_product_context_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(rkc_product_context_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rkc_product_context_smoke
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[RKC] smoke: rkc_smoke + rkc_product_context_smoke")
+endif()
+
+option(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT "Build DEEP2_GIANT_MOE_PARAGRAPH_PERF_001" ON)
+if(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT)
+    add_executable(deep2_giant_moe_paragraph_perf_cert
+        src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
+    )
+    target_link_libraries(deep2_giant_moe_paragraph_perf_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_giant_moe_paragraph_perf_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_giant_moe_paragraph_perf_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_giant_moe_paragraph_perf_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_giant_moe_paragraph_perf_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Giant MoE paragraph perf: deep2_giant_moe_paragraph_perf_cert")
+endif()
+
+option(BUILD_AGENT_RUNTIME_BATCH1_CERT "Build AGENT_RUNTIME batch-1 tool cert" ON)
+if(BUILD_AGENT_RUNTIME_BATCH1_CERT)
+    add_executable(agent_runtime_batch1_cert
+        src/agentic/agent_runtime_batch1_cert.cpp
+    )
+    target_link_libraries(agent_runtime_batch1_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(agent_runtime_batch1_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(agent_runtime_batch1_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(agent_runtime_batch1_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME agent_runtime_batch1_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Agent] Runtime batch-1 cert: agent_runtime_batch1_cert")
+endif()
+
 option(BUILD_DEEP2_PLACEMENT_COST_CERT "Build STREAMER_PLACEMENT_COST_001 cert" ON)
 if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     add_executable(deep2_placement_cost_cert
@@ -8697,6 +10366,7 @@ if(BUILD_VAL_051_5_DIAG)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -8776,6 +10446,7 @@ if(BUILD_VAL_BP16_INT)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -8897,6 +10568,7 @@ if(BUILD_VAL_051_5_BP16_E2E)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -8972,6 +10644,7 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9054,6 +10727,7 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9158,6 +10832,7 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9233,6 +10908,7 @@ if(BUILD_VAL_051_6_BP16_PERF)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9308,6 +10984,7 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9383,6 +11060,7 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9457,6 +11135,7 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9531,6 +11210,7 @@ if(BUILD_QUICK_1LAYER_PROFILER)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9650,6 +11330,7 @@ if(BUILD_VAL_051_5_BP16_DIAG)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9726,6 +11407,7 @@ if(BUILD_VAL_051_5_BP16_BENCH)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -9961,6 +11643,7 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -10036,6 +11719,7 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
@@ -10455,6 +12139,7 @@ if(WIN32)
         src/deep2/ReverseHotpatchEngine.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/MoEArchitectureParser.cpp
         src/deep2/RouterPrefetchTelemetry.cpp
@@ -12070,6 +13755,7 @@ add_executable(test_llama_native tests/test_llama_native.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -12125,6 +13811,7 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -12196,6 +13883,7 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -12244,6 +13932,7 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -12290,6 +13979,7 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -12362,6 +14052,7 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
     src/deep2/MedusaDecoder.cpp
@@ -13856,6 +15547,7 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/DeepSeekMoELoader.cpp
     src/deep2/TensorHop.cpp

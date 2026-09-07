@@ -1,0 +1,3 @@
+TIMED shardB=0 calls=0 reopen=0 mapfault=0
+keyMiss=0 cache=4392 total=4392 hostCopyUs=0
+K2_SHARD_ATTN_RESIDENCY_001=PASS

@@ -1,0 +1,16 @@
+K2_SHARD_ATTN_RESIDENCY_001=PASS
+
+TIMED (D=61 T=8 after warm):
+  ATTN_RESOLVE_TOTAL=4392 CACHE=4392 SHARD=0
+  ATTN_SHARD_BYTES=0 CALLS=0 REOPEN=0 MAPFAULT=0
+  SHARD_ATTN_US=0 HOST_CACHE_COPY_US=0
+  MLA_UP/tok=0 HIT=2928 TRY_EXT=0 FB=0
+  cacheN=551 PARTITION_OK=1
+  NEXT_BEST_MOVE=LOGITS_Q6K
+
+Root cause closed:
+  MayCache-gated TryGet bypassed retained sticky MLA → ResolveWeight authority
+  generateStream no longer Reset/Close shard handles or wipe sticky cache when hot
+  output_norm borrows retained span (no HOST_CACHE_COPY)
+
+Next: K2_LOGITS_Q6K_RESIDENT_001
