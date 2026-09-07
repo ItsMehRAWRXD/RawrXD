@@ -1,0 +1,17 @@
+K2_LIVE_DECODE_MLA_001=PASS
+
+AUTHORITY=generateStream→runK2NativeStreamPartial→MLA_Gemv
+POLICY=FULL_DEPTH_PROMO reuse=488 crossover=8
+TRYGPU_ENTRY=0 (DIRECT external bypass eliminated)
+
+WARM   uploads=366 hits=366 mla=732  (pin populate)
+TIMED  u=0 h=2928 U_OVER_OPS=0.000 pinRej=0 upFail=0
+       hot=8784MB DECODE_TPS=1.4 (RAW wall-clock; scale=1)
+RESIDENCY_GROWTH_AFTER_WARM=0
+
+Mechanism match vs K2_MLA_REUSE_PROMOTE_001:
+  timed uploads/op → 0, hits scale with decode
+
+Fix that unblocked amortization:
+  GPU MLA on → skip K2GpuStreamCopy_UploadLargest
+  UploadSync no longer ReleaseWeightWindow on content-hit

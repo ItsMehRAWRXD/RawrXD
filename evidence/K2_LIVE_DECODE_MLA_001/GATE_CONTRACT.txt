@@ -1,0 +1,12 @@
+# K2_LIVE_DECODE_MLA_001
+# Live K2 generateStream consumes PROMOTE_GPU_MLA_REUSE steady-state.
+#
+# Require:
+#   DEEP2_REAL_K2_GENERATE=1, DEPTH=61, TOKENS>=4
+#   DEEP2_LIVE_POLICY=PROMO, REUSE_STEPS>=8, CROSSOVER>=8
+#   LIVE_MLA_DISPATCH=MLA_Gemv (TRYGPU_ENTRY=0)
+#   warm uploads>0; timed: hits>0 and (u==0 or u/mla<0.35)
+#   MLA fail=0, uploadFail=0, pinRej=0, pta=0, non-empty detok text
+#   peak residency growth bounded vs warm
+#   DECODE_TPS = raw wall-clock (DEEP2_TPS_DISPLAY_SCALE=1)
+# Soft: ops may exceed 3*D*T when prefill+decode both execute MLA

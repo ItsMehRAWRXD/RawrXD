@@ -1,0 +1,136 @@
+K2_LIVE_DECODE_SUSTAINED_001
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M DEPTH=61 WARM=8 WINDOWS=32/64/128 SAME_ENGINE
+ROLE=SUSTAINED_RAW_TPS generateStream Q4+Q8 (no MLA retune)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 128
+  Max Seq Len: 512
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Allocating: layers=61 seq=512 kv_heads=1 headDim=128
+[KVCache] Initializing: layers=61 maxSeqLen=512 numHeads=1 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 61 * 512 * 1 * 128 * 2 * 4
+[KVCache]        = 31981568 bytes (K=15990784 + V=15990784)
+[KVCache] Total cache size: 30.50 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF63FD1BE80 dequant=00007FF63FD1E870 GetGEMV(12)=00007FF63FD1BE80 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=8784MB la=3 ramAvail=42500MB vram=32476MB L=61 pressure=0
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=8784 MB, lookahead=3
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=8784 la=3
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[ElasticResidencyManager] Scheduler thread started
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[MARS] Initializing controller...
+[VRAMManager] Initialized: GPU0=32.00 GB, GPU1=16.00 GB
+[DualGPUBackend] Initializing dual-GPU queues...
+[DualGPUBackend] Queues ready
+[MARS] Controller ready: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] MARS enabled: GPU0=32.00 GB, GPU1=16.00 GB
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[DualGPUBackend] Worker 1 started
+[DualGPUBackend] Worker 0 started
+[CompressedKVCache] Initialized: 8 MB compressed (vs 30 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] defer: empty path (await shard dir)
+[Deep2Engine] NVMe defer until openK2ShardDirectory
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=0 mars=1 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=0 plasma=1 sov=1 prefetch=1 devices=0
+[Deep2Engine] Initialization complete
+[NVMeStream] SHARD_IO bridge path=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M warmed=13 (RANDOM_ACCESS)
+[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=13)
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=8784MB la=3 ramAvail=42506MB vram=32476MB L=61 pressure=0
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=8784MB la=3 ramAvail=42506MB vram=32476MB L=61 pressure=0
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=8784MB la=3 ramAvail=42506MB vram=32476MB L=61 pressure=0
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_COMPUTE_BACKEND=GPU
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_EXEC_MODE=1
+DEEP2_GPU_POLICY=2
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:00000000000188D7
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:00000000000188D7
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001E776
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=1
+DEEP2_DEVICE_1_DUTY=DETECTED/UNUSED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:000000000001B80D
+DEEP2_DEVICE_2_VRAM_BYTES=16963137536
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=DETECTED/UNUSED
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=1 AMD Radeon(TM) Graphics
+[VulkanCompute] DETECTED phys[2] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[Deep2Engine] Vulkan single-GPU open: AMD Radeon AI PRO R9700 (needle=AMD Radeon AI PRO R9700)
+
+--- WARM 8 (establish residency; not timed for TPS gate) ---
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream→runK2NativeStreamPartial
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=FULL_DEPTH_PROMO
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=force_promo
+K2_LIVE_POLICY_REUSE_STEPS=488
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=8
+CACHE_BUDGET=3221225472 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=0 LAYER_VETO=1
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[LivePath] GENERATE_ALG_MASK=0x0000000E random=0
+[Deep2Engine] LIVE_SETUP ok active=1

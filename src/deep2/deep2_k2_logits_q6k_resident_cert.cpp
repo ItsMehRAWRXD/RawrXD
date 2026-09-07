@@ -12,6 +12,7 @@
 #include "MoEEliminate.hpp"
 #include "StreamPathTiming.hpp"
 #include "StreamTransferCounters.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>

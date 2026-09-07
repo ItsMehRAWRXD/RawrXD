@@ -178,27 +178,7 @@ float q6kDotBlock(const Q6_K_Block* block, const float* x, size_t n) {
 
 float DotQ6KRow(const uint8_t* rowPtr, size_t blocksPerRow, size_t cols,
                 const float* hidden) {
-    constexpr size_t kBlockElems = 256;
-    constexpr size_t kBlockBytes = 210;
-    float dot = 0.f;
-    size_t col = 0;
-    if ((cols % kBlockElems) == 0) {
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            dot += q6kDotBlockFull(
-                reinterpret_cast<const Q6_K_Block*>(rowPtr + b * kBlockBytes),
-                hidden + col);
-            col += kBlockElems;
-        }
-        return dot;
-    }
-    for (size_t b = 0; b < blocksPerRow && col < cols; ++b) {
-        const size_t n = (std::min)(kBlockElems, cols - col);
-        dot += q6kDotBlock(
-            reinterpret_cast<const Q6_K_Block*>(rowPtr + b * kBlockBytes),
-            hidden + col, n);
-        col += n;
-    }
-    return dot;
+    return Deep2::LogitsClimb_DotQ6KRow(rowPtr, blocksPerRow, cols, hidden);
 }
 
 int32_t argmaxFirst(const float* logits, size_t vocabSize) {
@@ -788,91 +768,91 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     }
     if (span.borrowed) {
         Deep2::StreamPathTiming_Add(Deep2::SPT_cacheHit(), t0);
+        Deep2::StreamTransfer_RecordRead(rowBytes * vocabSize, /*cacheHit=*/true);
+        Deep2::K2LiveCache_NoteTrampOutHit(rowBytes * vocabSize);
         Deep2::LogitsPackedResidentHits().fetch_add(1, std::memory_order_relaxed);
     } else {
         Deep2::StreamPathTiming_Add(Deep2::SPT_outW(), t0);
+        Deep2::LogitsShardBytes().fetch_add(span.bytes, std::memory_order_relaxed);
+        Deep2::LogitsShardRowReads().fetch_add(1, std::memory_order_relaxed);
+        Deep2::LogitsHotAlloc().fetch_add(1, std::memory_order_relaxed);
     }
     const uint8_t* base = span.data;
     const size_t baseN = span.bytes;
-    (void)baseN;
 
-        const uint64_t tLog = Deep2::StreamPathTiming_NowUs();
-        float best = -std::numeric_limits<float>::infinity();
-        size_t br = 0;
-        const bool legacy =
-            std::getenv("DEEP2_LOGITS_LEGACY") &&
-            std::getenv("DEEP2_LOGITS_LEGACY")[0] == '1';
-        if (!legacy) {
-            int32_t tok = -1;
-            float bv = 0.f;
-            if (!Deep2::LogitsClimb_ArgmaxPacked(base, baseN, vocabSize,
-                                                hiddenDim, hidden, tok, &bv)) {
-                error = "LogitsClimb_ArgmaxPacked failed";
-                return false;
-            }
-            best = bv;
-            br = static_cast<size_t>(tok);
-        } else {
-            // Legacy: per-token thread create/join (parity baseline only).
-            unsigned nt = std::thread::hardware_concurrency();
-            if (nt < 2u) nt = 2u;
-            if (nt > 8u) nt = 8u;
-            if (vocabSize < nt) nt = (unsigned)vocabSize;
-            std::vector<float> bestV(nt, -std::numeric_limits<float>::infinity());
-            std::vector<size_t> bestR(nt, 0);
-            std::vector<std::thread> pool;
-            pool.reserve(nt);
-            for (unsigned t = 0; t < nt; ++t) {
-                const size_t begin = (vocabSize * t) / nt;
-                const size_t end = (vocabSize * (t + 1u)) / nt;
-                pool.emplace_back([&, t, begin, end]() {
-                    float lb = -std::numeric_limits<float>::infinity();
-                    size_t lr = begin;
-                    for (size_t row = begin; row < end; ++row) {
-                        if (row + 1 < end)
-                            _mm_prefetch(reinterpret_cast<const char*>(
-                                base + (row + 1) * rowBytes), _MM_HINT_T0);
-                        const float logit = DotQ6KRow(
-                            base + row * rowBytes, blocksPerRow, hiddenDim,
-                            hidden);
-                        if (logit > lb) { lb = logit; lr = row; }
-                    }
-                    bestV[t] = lb;
-                    bestR[t] = lr;
-                });
-            }
-            for (auto& th : pool) th.join();
-            best = bestV[0];
-            br = bestR[0];
-            for (unsigned t = 1; t < nt; ++t) {
-                if (bestV[t] > best) { best = bestV[t]; br = bestR[t]; }
-            }
+    float best = -std::numeric_limits<float>::infinity();
+    size_t br = 0;
+    const bool legacy =
+        std::getenv("DEEP2_LOGITS_LEGACY") &&
+        std::getenv("DEEP2_LOGITS_LEGACY")[0] == '1';
+    const uint64_t tLog = Deep2::StreamPathTiming_NowUs();
+    if (!legacy) {
+        int32_t tok = -1;
+        float bv = 0.f;
+        if (!Deep2::LogitsClimb_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
+                                            hidden, tok, &bv)) {
+            error = "LogitsClimb_ArgmaxPacked failed";
+            return false;
         }
-        Deep2::StreamPathTiming_Add(Deep2::SPT_logits(), tLog);
-        const uint64_t tSam = Deep2::StreamPathTiming_NowUs();
-        Deep2::StreamPathTiming_Add(Deep2::SPT_sample(), tSam);
+        best = bv;
+        br = static_cast<size_t>(tok);
+    } else {
+        // Legacy: per-token thread create/join (parity baseline only).
+        unsigned nt = std::thread::hardware_concurrency();
+        if (nt < 2u) nt = 2u;
+        if (nt > 8u) nt = 8u;
+        if (vocabSize < nt) nt = (unsigned)vocabSize;
+        std::vector<float> bestV(nt, -std::numeric_limits<float>::infinity());
+        std::vector<size_t> bestR(nt, 0);
+        std::vector<std::thread> pool;
+        pool.reserve(nt);
+        Deep2::LogitsHotAlloc().fetch_add(1, std::memory_order_relaxed);
+        for (unsigned t = 0; t < nt; ++t) {
+            const size_t begin = (vocabSize * t) / nt;
+            const size_t end = (vocabSize * (t + 1u)) / nt;
+            pool.emplace_back([&, t, begin, end]() {
+                float lb = -std::numeric_limits<float>::infinity();
+                size_t lr = begin;
+                for (size_t row = begin; row < end; ++row) {
+                    if (row + 1 < end)
+                        _mm_prefetch(reinterpret_cast<const char*>(
+                            base + (row + 1) * rowBytes), _MM_HINT_T0);
+                    const float logit = DotQ6KRow(
+                        base + row * rowBytes, blocksPerRow, hiddenDim,
+                        hidden);
+                    if (logit > lb) { lb = logit; lr = row; }
+                }
+                bestV[t] = lb;
+                bestR[t] = lr;
+            });
+        }
+        for (auto& th : pool) th.join();
+        best = bestV[0];
+        br = bestR[0];
+        for (unsigned t = 1; t < nt; ++t) {
+            if (bestV[t] > best) { best = bestV[t]; br = bestR[t]; }
+        }
+    }
+    Deep2::StreamPathTiming_Add(Deep2::SPT_logits(), tLog);
+    const uint64_t tSam = Deep2::StreamPathTiming_NowUs();
+    Deep2::StreamPathTiming_Add(Deep2::SPT_sample(), tSam);
     Deep2::SPT_logitsCalls().fetch_add(1, std::memory_order_relaxed);
     Deep2::SPT_logitsRows().fetch_add((uint64_t)vocabSize,
                                       std::memory_order_relaxed);
     Deep2::LogitsArgmaxCalls().fetch_add(1, std::memory_order_relaxed);
     Deep2::LogitsPackedDotRows().fetch_add((uint64_t)vocabSize,
                                            std::memory_order_relaxed);
-    // Packed fused dots — no full-vocab F32 dequant / warehouse.
-    // Argmax parity: best row must beat a fixed probe set (same DotQ6K).
-    {
+    // Argmax parity: parallel best must match serial packed scan (once/process).
+    static std::atomic<int> parityOnce{0};
+    if (parityOnce.exchange(1) == 0) {
         Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
-        const float bestLogit =
-            DotQ6KRow(base + br * rowBytes, blocksPerRow, hiddenDim, hidden);
-        const size_t probes[8] = {0, 1, 7, 64, 256, 1024, 8192,
-                                  vocabSize > 1 ? vocabSize - 1 : 0};
-        for (size_t p : probes) {
-            if (p >= vocabSize || p == br) continue;
-            const float pl = DotQ6KRow(base + p * rowBytes, blocksPerRow,
-                                       hiddenDim, hidden);
-            if (pl > bestLogit + 1e-4f) {
-                Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
-                break;
-            }
+        int32_t serialTok = -1;
+        float serialVal = 0.f;
+        if (!Deep2::LogitsClimb_ArgmaxPackedSerial(
+                base, baseN, vocabSize, hiddenDim, hidden, serialTok,
+                &serialVal) ||
+            serialTok != static_cast<int32_t>(br)) {
+            Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
         }
     }
     bestTok = static_cast<int32_t>(br);
@@ -919,6 +899,8 @@ Result Run(const fs::path& shardDir,
     Deep2::GpuTransfer_Reset();
     Deep2::StreamPathTiming_Reset();
     Deep2::WeightResolve_Reset();
+    Deep2::LogitsResidency_Reset();
+    Deep2::LogitsClimb_Reset();
     // Preserve sticky MLA host cache + open shard HANDLEs across warm→timed.
     // Full K2ShardIo_Reset() closed handles every request → reopen/mapfault.
     Deep2::K2ShardIo_ResetCounters();
@@ -1135,6 +1117,8 @@ Result Run(const fs::path& shardDir,
     Deep2::K2LiveCache_Emit(stdout);
     Deep2::StreamPathTiming_Emit(stdout);
     Deep2::WeightResolve_Emit(stdout);
+    Deep2::LogitsResidency_Emit(stdout);
+    Deep2::LogitsClimb_Emit(stdout);
     Deep2::K2ShardIo_Emit(stdout);
     Deep2::K2LiveCache_Clear(); // sticky MLA retained (see Clear impl)
     // Keep SHARD_IO handles across warm→timed when GPU MLA is production policy.

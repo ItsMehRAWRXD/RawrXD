@@ -4843,6 +4843,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLAAttention.cpp
     src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
+    src/deep2/K2LogitsClimb.cpp
     src/deep2/K2GpuStreamCopy.cpp
     src/deep2/K2GpuStreamCopy_Overlap.cpp
     src/deep2/K2MLA_GpuGemv.cpp
@@ -6710,6 +6711,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     src/deep2/K2GpuStreamCopy.cpp
         src/deep2/K2LivePathTensorCache.cpp
         src/deep2/K2WeightResolve.cpp
+        src/deep2/K2LogitsClimb.cpp
         src/deep2/K2LivePathTensorCache_Prefetch.cpp
     src/deep2/K2LivePathTensorCache_Emit.cpp
         src/deep2/K2MLAAttention.cpp
@@ -9370,6 +9372,26 @@ if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] K2 wall attribution: deep2_k2_wall_attribution_cert")
+endif()
+
+option(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT "Build K2_LOGITS_CLIMB_001" ON)
+if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
+    add_executable(deep2_k2_logits_climb_cert
+        src/deep2/deep2_k2_logits_climb_cert.cpp)
+    target_link_libraries(deep2_k2_logits_climb_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_k2_logits_climb_cert PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_k2_logits_climb_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(deep2_k2_logits_climb_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_k2_logits_climb_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] K2 logits climb: deep2_k2_logits_climb_cert")
 endif()
 
 option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" ON)

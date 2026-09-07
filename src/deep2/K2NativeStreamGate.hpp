@@ -39,6 +39,16 @@ struct Result {
     bool kvCacheWrite = false;
     bool kvCacheRead = false;
     uint32_t kvLength = 0;
+    // TRANSFER_COUNTER_001 — cumulative movement this Run
+    uint64_t streamBytesRead = 0;
+    uint64_t streamBytesToGpu = 0;
+    uint64_t streamBytesReconstructed = 0;
+    uint64_t streamReadOps = 0;
+    uint64_t streamGpuUploadOps = 0;
+    uint64_t streamCacheHits = 0;
+    uint64_t streamCacheMisses = 0;
+    double streamBytesPerToken = 0.0;
+    double streamBytesPerLayer = 0.0;
 };
 
 Result Run(const std::filesystem::path& shardDir,
@@ -46,6 +56,13 @@ Result Run(const std::filesystem::path& shardDir,
            const Deep2::KimiK2Config& k2cfg,
            const std::vector<std::filesystem::path>& shards,
            const Config& cfg);
+
+// One-token MLA stack over shard tensors (MLA_Gemv authority). Used by
+// Deep2Engine::forwardTokenAllLayers when K2 shards are the live source.
+bool ForwardHiddenMla(const Deep2::GlobalTensorIndex& index,
+                      const Deep2::KimiK2Config& k2cfg,
+                      float* hidden, uint32_t layerDepth, bool mlaComplete,
+                      std::string& error);
 
 void PrintCertificationContract(const Result& result, bool generationRequested);
 

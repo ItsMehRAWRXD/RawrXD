@@ -1,0 +1,11 @@
+K2_LIVE_DECODE_SUSTAINED_001 — LOCK
+====================================
+Owner path: G:\~dev\rawrxd\build-ninja\bin\deep2_k2_live_decode_sustained_cert.exe
+Do NOT run a parallel sustained cert from build-fd (GPU contention killed W128).
+
+Authority:
+  MLA_Gemv → Q4+Q8 GPU | GetGEMV
+  DEEP2_MLA_GPU_Q4_ONLY must be 0 / unset (Q8 ON)
+  unique ops = 6×D×T
+
+Prior near-PASS (ninja): WARM/W32/W64 ops exact, UP=0, PINREJ=0; W128 died under contention.

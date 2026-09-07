@@ -1,0 +1,26 @@
+# ROADMAP_BATCH15 — post-NU / live-MLA spine (ordered by leverage)
+
+01 K2_GPU_MLA_SLOT_REUSE_001     - PASS
+02 K2_MLA_REBENCH_PROMOTE_001    - PASS (cold HOLD) / REUSE_PROMOTE PASS
+03 K2_LIVE_DECODE_MLA_001        - PASS (u->0; MLA_Gemv authority)
+04 K2_MLA_FUSED_Q4KT_001         - PASS (fusedUs < compatUs; F32_EXP=0)
+05 K2_SHARD_ATTN_RESIDENCY_001   - PASS (timed SHARD_ATTN=0; borrow authority)
+06 K2_LOGITS_Q6K_RESIDENT_001    - NOW (NEXT_BEST_MOVE=LOGITS_Q6K after #05)
+07 MLA_ATTN_KV_EXPAND            - remaining MLA wall post-fused
+08 STREAM_BYTES_CORPUS_SPLIT_001 - witness corpus GiB != stream transfer
+09 LIVE_PATH_NU_E2E_001          - generate() with DEEP2_LIVE_NU
+10 RKC_NU_CONSUME_FACT_001       - RKC fact: live_nu_consume_proven
+11 GPU_TRANSFER_NU_COUNTER_001   - NU unpack/upload in GpuTransfer
+12 K2_POLICY_NU_AWARE_001        - AUTO policy NU residency budget
+13 DEEP2_PARITY_Q_PRE_ROPE_001   - Q_PRE_ROPE mismatch
+14 WEIGHT_PIN_REJECT_BOUNDS_001  - pin-reject -> skip not fail
+15 SOVEREIGN_FREEZE_001          - freeze contracts into evidence index
+
+AUTHORITY LOCK:
+  live MLA -> MLA_Gemv only (TRYGPU_ENTRY=0)
+  MLA_Gemv -> MLA_FusedQ4KT (default ON) | DispatchGEMVPacked | GetGEMV
+  weights -> ResolveWeight (retained cache BorrowSpan; no MayCache gate on TryGet)
+
+REVERSE (live D=61 T=8 fused ON, after #05):
+  NEXT_BEST_MOVE=LOGITS_Q6K
+  SHARD_ATTN=0 COPY=0 MLA u/tok=0
