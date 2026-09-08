@@ -1,0 +1,27 @@
+STREAM_ABORT_NE_TEARDOWN_FAILURE=1
+
+ACCEPTANCE:
+  IF stream exits before normal generation completion:
+    ABORT_DURING_STREAM=1
+    TEARDOWN_WITNESS=0
+  IF BENCHMARK_CERT_END=1 AND teardown entered AND TD11=0:
+    TEARDOWN_FAILURE=1
+  IF BENCHMARK_CERT_END=1 AND TD11=1 AND EXIT=0:
+    CLEAN_TEARDOWN_WITNESS=1
+
+SEALS:
+  K2_COMPLETED_RUN_TEARDOWN_064=VALID
+  K2_COMPLETED_RUN_TEARDOWN_256=VALID
+  teardown2048_20260907-193552=ABORT_DURING_STREAM (TEARDOWN_WITNESS=0)
+  U13_CLEAN_TEARDOWN_001=OPEN
+
+1(PROCESSION):
+  FIRST_DELTA=STREAM_SURVIVAL_TO_TERMINAL
+  NOT=teardown|remount|wall_attribution
+
+NOTE_PRIOR_U13:
+  capacity_20260907-182602 already CERT_STEP tok=2048/2048 + BENCHMARK_CERT_END
+  under same looping greedy IDs — decode can reach terminal when not interrupted.
+NOTE_ABORT_608:
+  teardown2048 runtime≈177s ≈608 toks @~3.4tps; no STREAM_ABORT owner line;
+  no TD markers; EXIT=1 — classify ABORT_DURING_STREAM, do not invalidate 064/256.

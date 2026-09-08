@@ -77,18 +77,24 @@ int main(int argc, char** argv) {
         const char* evidDir;
     };
     // Prior seals — require disk evidence; never hardcode PASS.
+    // U08 sealed: do not re-execute second_model exe if GATE_STATUS=PASS.
     const PriorSeal priors[] = {
         {"U01_STDOUT_CLEAN", "RAWRXD_STDOUT_CLEAN_001",
          "RAWRXD_STDOUT_CLEAN_001"},
         {"U02_CHAT_REPL", "RAWRXD_CHAT_REPL_001", "RAWRXD_CHAT_REPL_001"},
         {"U07_AUTO_LADDER", "RAWRXD_AUTO_LADDER_001",
          "RAWRXD_PRODUCT_UNLOCK_15"},
+        {"U08_SECOND_MODEL_SEALED", "RAWRXD_SECOND_MODEL_001",
+         "RAWRXD_SECOND_MODEL_001"},
         {"U09_EMBED_NORM_GUARD", "RAWRXD_EMBED_NORM_GUARD_001",
          "RAWRXD_EMBED_NORM_GUARD_001"},
         {"U10_NO_OLLAMA_CONTRACT", "RAWRXD_NO_OLLAMA_CONTRACT_001",
          "RAWRXD_NO_OLLAMA_CONTRACT_001"},
+        {"U12_VWA_BOUNDED", "VWA_BOUNDED_K2_001", "VWA_BOUNDED_K2_001"},
         {"U15_PRODUCT_FRONTDOOR", "RAWRXD_PRODUCT_FRONTDOOR_001",
          "RAWRXD_PRODUCT_FRONTDOOR_001"},
+        {"INTERSTELLAR_DEEP2", "RAWRXD_INTERSTELLAR_DEEP2_E2E_001",
+         "RAWRXD_INTERSTELLAR_DEEP2_E2E_001"},
     };
 
     bool priorOk = true;
@@ -108,7 +114,7 @@ int main(int argc, char** argv) {
         {"U04_AGENT_BUILD_LIVE", "rawrxd_agent_workspace_live_001.exe", true},
         {"U05_STEER_LIVE", "rawrxd_agent_steer_resume_001.exe", true},
         {"U06_RESUME_CHAT", "rawrxd_agent_steer_resume_001.exe", true},
-        {"U08_SECOND_MODEL", "rawrxd_second_model_001.exe", true},
+        // U08 consumed via PriorSeal (RAWRXD_SECOND_MODEL_001) — do not reopen.
         {"U16_PRODUCT_LAYER", "rawrxd_product_layer_001.exe", true},
         {"U17_WIN32_SURFACE", "rawrxd_win32_editor_surface_001.exe", true},
         {"U18_RAWR_PIPE", "rawrxd_rawr_pipe_001.exe", true},

@@ -1,0 +1,39 @@
+CRASH_DUMP_ANALYZED=1
+CDB=C:\Program Files\WindowsApps\Microsoft.WinDbg_1.2606.22001.0_x64__8wekyb3d8bbwe\amd64\cdb.exe
+PDB_AVAILABLE=0
+
+DUMP_A=deep2_benchmark.exe.16776.dmp
+DUMP_A_TIME=2026-09-07 20:02:55
+EXCEPTION_CODE_A=0xC0000374
+FAULT_MODULE_A=ntdll (RtlReportFatalFailure / RtlFreeHeap)
+FAULT_SYMBOL_A=deep2_benchmark+0x13543c -> RtlFreeHeap (heap corruption MultipleEntries)
+FAULT_THREAD_A=1114
+FAULT_PHASE_A=FREE_PATH (corruption detected on free; earlier overwrite likely)
+FAILURE_BUCKET_A=HEAP_CORRUPTION_ACTIONABLE_MultipleEntriesCorruption_c0000374
+
+DUMP_B=deep2_benchmark.exe.17576.dmp
+DUMP_B_TIME=2026-09-07 20:01:58
+EXCEPTION_CODE_B=0xC0000409
+FAULT_MODULE_B=deep2_benchmark.exe
+FAULT_SYMBOL_B=deep2_benchmark+0x12cef1 (fail-fast; near RtlAllocateHeap caller)
+FAULT_THREAD_B=4754
+FAULT_PHASE_B=ALLOC_PATH / fail-fast (stack cookie or fatal app exit)
+FAILURE_BUCKET_B=FAIL_FAST_FATAL_APP_EXIT_c0000409
+
+LAST_STREAM_STEP=96
+SAME_SIGNATURE_ACROSS_DUMPS=0
+ROOT_OWNER=MEMORY_CORRUPTION_CLASS (heap/stack integrity; not harness; not teardown)
+NEXT_ACTION=instrument earlier than fault site (ASan/pageheap OR bounded alloc/free owners around stream step); rebuild with PDB; do NOT another bare 2048 until owner named
+
+LADDER:
+STREAM_START=PASS
+MID_STREAM_PROGRESS=PASS
+HARNESS_CLEAN=PASS
+PROCESS_SURVIVAL=FAIL
+CLEAN_TEARDOWN=UNREACHED
+PRODUCT_E2E=OPEN
+
+FIRST_DELTA=MEMORY_CORRUPTION_OWNER
+NOTE=Divergent codes (C0000374 vs C0000409) ⇒ treat as corruption/race; patching final RtlFreeHeap site alone is wrong.
+LOG_A=evidence/K2_USEFUL_TPS_001/cdb_deep2_benchmark.exe.16776.txt
+LOG_B=evidence/K2_USEFUL_TPS_001/cdb_deep2_benchmark.exe.17576.txt

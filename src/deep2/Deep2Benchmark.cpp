@@ -1065,10 +1065,7 @@ std::string BenchmarkHarness::generateCertTelemetry(const CertificationReport& r
     t << "TPS_DERIVED_ONLY=1\n";
     t << "DECODE_TPS_REAL=" << s.decode_tps << "\n";
     {
-        const uint64_t budget =
-            s.generated_tokens * s.capacity_target_ns_token;
-        rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns,
-                                        budget, 1);
+        rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns, 1);
     }
     t << "TOKEN_PLUS_ONE=0\n";
     t << "TPS_DISPLAY_SCALE=1\n";

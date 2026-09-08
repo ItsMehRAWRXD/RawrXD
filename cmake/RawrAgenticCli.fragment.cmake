@@ -236,6 +236,21 @@ set_target_properties(rawrxd_kernel_tune_001 PROPERTIES
 
 rawr_agent_cert(rawrxd_streamer_vocab_ext_001 certs/rawrxd_streamer_vocab_ext_001.cpp)
 
+# Actual E2E generation — InferenceEngine linked; PASS only on model text.
+add_executable(rawrxd_actual_e2e_generation_001
+  certs/rawrxd_actual_e2e_generation_001.cpp)
+target_include_directories(rawrxd_actual_e2e_generation_001 PRIVATE
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/src/deep2)
+if(MSVC)
+  target_compile_options(rawrxd_actual_e2e_generation_001 PRIVATE /EHsc /W3 /std:c++20)
+endif()
+target_link_libraries(rawrxd_actual_e2e_generation_001 PRIVATE InferenceEngine
+  dxgi pdh psapi)
+set_target_properties(rawrxd_actual_e2e_generation_001 PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 target_sources(rawrxd_ge_probe_001 PRIVATE ${RAWR_LEGAL_ASM_OBJ})
 add_dependencies(rawrxd_ge_probe_001 rawr_shape_legal_asm)
 if(MSVC)

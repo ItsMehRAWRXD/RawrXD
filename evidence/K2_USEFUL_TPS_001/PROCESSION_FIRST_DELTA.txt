@@ -1,0 +1,19 @@
+1(PROCESSION)
+FIRST_DELTA=STREAM_SURVIVAL_TO_TERMINAL
+
+NOT:
+  teardown
+  remount
+  wall_attribution
+  KVA/QB/decode_opt from harness-contaminated samples
+
+HARNESS_ORPHAN_REAPER=0
+OWNERSHIP=GEN_PID_WaitForExit
+LIVE=witness2048_20260907-201539 GEN_PID=22776
+
+LADDER:
+  U13_CLEAN_TEARDOWN
+          ^
+  completed long stream
+          ^
+  STREAM_SURVIVAL_TO_TERMINAL   <- HERE (harness fixed; await terminal)

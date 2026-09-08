@@ -29,16 +29,25 @@ public:
     {
         if (numLayers == 0 || maxSeqLen == 0 || kvDim == 0)
             throw std::invalid_argument("K2KVCache: invalid dimensions");
-
         numLayers_ = numLayers;
         maxSeqLen_ = maxSeqLen;
         kvDim_ = kvDim;
         currentLength_ = 0;
+        allocatedSeq_ = (std::min)(kPageTok_, maxSeqLen_);
+        keys_.assign(numLayers_ * allocatedSeq_ * kvDim_, 0.0f);
+        values_.assign(numLayers_ * allocatedSeq_ * kvDim_, 0.0f);
+    }
 
-        const std::size_t layerSize = maxSeqLen_ * kvDim_;
+    std::size_t liveBytes() const noexcept {
+        return (keys_.size() + values_.size()) * sizeof(float);
+    }
 
-        keys_.assign(numLayers_ * layerSize, 0.0f);
-        values_.assign(numLayers_ * layerSize, 0.0f);
+    std::size_t evictColdPages() {
+        const std::size_t keep = (std::max)(kPageTok_, currentLength_);
+        if (keep >= allocatedSeq_) return 0;
+        const std::size_t before = liveBytes();
+        GrowAllocated(keep);
+        return before > liveBytes() ? before - liveBytes() : 0;
     }
 
     void Clear()
@@ -92,6 +101,7 @@ public:
 
         if (!CanAppend())
             throw std::out_of_range("K2KVCache: sequence length exceeded");
+        EnsureHot(currentLength_);
 
         float* dstK = MutableAt(keys_, layer, currentLength_);
         float* dstV = MutableAt(values_, layer, currentLength_);
@@ -113,12 +123,11 @@ private:
                      std::size_t layer,
                      std::size_t position)
     {
-        if (layer >= numLayers_ || position >= maxSeqLen_)
+        if (layer >= numLayers_ || position >= allocatedSeq_)
             throw std::out_of_range("K2KVCache: index");
 
         const std::size_t offset =
-            ((layer * maxSeqLen_) + position) * kvDim_;
-
+            ((layer * allocatedSeq_) + position) * kvDim_;
         return storage.data() + offset;
     }
 
@@ -126,20 +135,49 @@ private:
                     std::size_t layer,
                     std::size_t position) const
     {
-        if (layer >= numLayers_ || position >= maxSeqLen_)
+        if (layer >= numLayers_ || position >= allocatedSeq_)
             throw std::out_of_range("K2KVCache: index");
-
         const std::size_t offset =
-            ((layer * maxSeqLen_) + position) * kvDim_;
-
+            ((layer * allocatedSeq_) + position) * kvDim_;
         return storage.data() + offset;
     }
 
+    void EnsureHot(std::size_t pos) {
+        if (pos < allocatedSeq_) return;
+        std::size_t neu = allocatedSeq_ + kPageTok_;
+        if (neu > maxSeqLen_) neu = maxSeqLen_;
+        if (neu <= allocatedSeq_)
+            throw std::out_of_range("K2KVCache: sequence length exceeded");
+        GrowAllocated(neu);
+    }
+
+    void GrowAllocated(std::size_t neu) {
+        std::vector<float> nk(numLayers_ * neu * kvDim_, 0.0f);
+        std::vector<float> nv(numLayers_ * neu * kvDim_, 0.0f);
+        const std::size_t copyPos = (std::min)(currentLength_, allocatedSeq_);
+        for (std::size_t L = 0; L < numLayers_; ++L) {
+            for (std::size_t p = 0; p < copyPos && p < neu; ++p) {
+                std::memcpy(nk.data() + (L * neu + p) * kvDim_,
+                            keys_.data() + (L * allocatedSeq_ + p) * kvDim_,
+                            kvDim_ * sizeof(float));
+                std::memcpy(nv.data() + (L * neu + p) * kvDim_,
+                            values_.data() + (L * allocatedSeq_ + p) * kvDim_,
+                            kvDim_ * sizeof(float));
+            }
+        }
+        keys_.swap(nk);
+        values_.swap(nv);
+        allocatedSeq_ = neu;
+    }
+
 private:
+    static constexpr std::size_t kPageTok_ = 128; // was 8 — cut O(n²) grow thrash on long decode
+
     std::size_t numLayers_ = 0;
     std::size_t maxSeqLen_ = 0;
     std::size_t kvDim_ = 0;
     std::size_t currentLength_ = 0;
+    std::size_t allocatedSeq_ = 0;
 
     std::vector<float> keys_;
     std::vector<float> values_;
