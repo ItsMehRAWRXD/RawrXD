@@ -1,0 +1,17 @@
+RAWRXD_COPILOT_MARKOV_001=PASS
+SEALED_AT=3e2ad5bca
+KIND=PRODUCT_PRIMITIVE
+RELATION_TO_DEEP2=PARALLEL_NOT_CHILD
+DEEP2_HOTPATH=0
+DEEP2_CERT_INDEPENDENT=1
+
+PATH=tools/rawr_copilot/rawr_copilot_markov.cpp
+BINARY=tools/rawr_copilot/rawr_copilot.exe
+PROTOCOL=COMPLETE/RESULT/SCORE/END
+TRAIN=.rmc out-of-band
+COMPLETE=resident transition lookup
+
+SMOKE_PROVES=continuation material via standalone protocol
+  (std::vec → tor < int > values;)
+
+FUTURE_AUTOCOMPLETE_CHANGE_REOPENS_DEEP2=0

@@ -1,20 +1,33 @@
 RAWRXD_COPILOT_MARKOV_001
 ========================
+SEALED_PRODUCT_PRIMITIVE=1 (parallel to Deep2, not below it)
 PATH=tools/rawr_copilot/rawr_copilot_markov.cpp
 BINARY=tools/rawr_copilot/rawr_copilot.exe
 DEEP2_HOTPATH=0
-PRODUCT_SURFACE=IDE_AUTOCOMPLETE
+COMMIT_LAND=3e2ad5bca
+
+                 RawrXD IDE
+                    |
+        +-----------+-----------+
+        |                       |
+ RawrCopilotMarkov             Deep2
+ instant local                 generative
+ ghost completion             model execution
+        |                       |
+ resident .rmc               GGUF/runtime
+ lookup                      decode/hotpath
+        |                       |
+ DEEP2_HOTPATH=0          DEEP2_HOTPATH=1
 
 LAW=RawrCopilotMarkovLaw.hpp
-LAW_TXT=LAW.txt
 BOUNDARY=BOUNDARY.txt
+SEAL=SEAL.txt
 
 COMMANDS=train|complete|repl|stdio|stats
 PROTOCOL=COMPLETE top tokens bytes + RESULT/SCORE/END
-LOGICAL_SLOTS=1000000000000
+LOGICAL_SLOTS=1000000000000 (addressable space, not allocated storage)
 PHYSICAL=observed transitions only (.rmc)
 
 INTEGRATION=Win32IDE persistent stdio child → ghost text
 NOT_WIRED=lavapath,QKV,KVA,BgBmLaw,generateStream
-
-SMOKE=_smoke/smoke.rmc trained from _smoke/sample.cpp
+SMOKE=_smoke/sample.cpp → smoke.rmc → COMPLETE protocol

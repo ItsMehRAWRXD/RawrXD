@@ -1,8 +1,15 @@
 RAWRXD_COPILOT_MARKOV_001 BOUNDARY
 =================================
+SEALED_PRODUCT_PRIMITIVE=1
 PRODUCT_SURFACE=IDE_AUTOCOMPLETE
 PATH=tools/rawr_copilot/
 DEEP2_HOTPATH=0
+PARALLEL_TO_DEEP2=1
+NOT_BELOW_DEEP2=1
+
+SPLIT:
+  RawrCopilotMarkov = predictive IDE vocabulary / ghost completion
+  Deep2             = generative model execution / decode hotpath
 
 NOT_WIRED:
   src/deep2/lavapath/
@@ -12,9 +19,19 @@ NOT_WIRED:
 COMMON_ABSTRACTION_ONLY:
   LOGICAL_ADDRESS_SPACE != PHYSICAL_WORKING_SET
 
-IDE_PATH:
-  EDITOR BUFFER → cursor context → persistent stdio → COMPLETE
-  → Markov sparse lookup/backoff → RESULT → ghost text
+COST_LAW:
+  TRAIN_COST      = OUT_OF_BAND
+  MODEL_LOAD_COST = 0 per completion
+  DECODE_LAYERS   = 0
+  QKV_WORK        = 0
+  KVA_WORK        = 0
+  TOKEN_LOOKUP    = RESIDENT_OBSERVED_TRANSITIONS
 
-TRAIN=out_of_band (.rmc)
-COMPLETE=resident lookup only (no per-keystroke train)
+IDE_PATH:
+  EDITOR → cursor → persistent stdio COMPLETE → RESULT/SCORE/END → ghost
+
+PROTOCOL:
+  COMPLETE <top> <tokens> <bytes>
+  RESULT ... / SCORE ... / END
+
+REPLACE_WITHOUT_REOPENING_DEEP2_CERT=1
