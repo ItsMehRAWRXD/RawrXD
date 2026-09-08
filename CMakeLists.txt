@@ -4844,6 +4844,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLAAttention.cpp
     src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
+    src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
     src/deep2/K2LogitsSplit.cpp
     src/deep2/K2LogitsLineage.cpp
@@ -4852,6 +4853,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLA_GpuGemv.cpp
     src/deep2/K2BraidExecutionPolicy.cpp
     src/deep2/K2MLA_FusedQ4KT.cpp
+    src/deep2/K2MLA_QPathDevice.cpp
     src/deep2/K2MLA_QaCritical.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/K2WeightResolve.cpp
@@ -4862,6 +4864,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
     src/deep2/Deep2DeviceManager.cpp
+    src/deep2/DualLaneChoreographer.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
     src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
@@ -4874,6 +4877,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/vulkan_fwd_q4k.cpp
     src/vulkan_fwd_q4k_host.cpp
     src/vulkan_fwd_q4k_fused.cpp
+    src/vulkan_fwd_q4k_climb.cpp
+    src/vulkan_fwd_q4k_act.cpp
     src/vulkan_fwd_q6k.cpp
     src/vulkan_fwd_q6k_host.cpp
     src/vulkan_fwd_quant_pipe.cpp
@@ -8071,6 +8076,7 @@ if(BUILD_DEEP2_GPU_SOLO_CERT)
         src/deep2/StreamerGpuSoloGate.cpp
         src/deep2/StreamerGpuSoloVk.cpp
         src/deep2/Deep2DeviceManager.cpp
+    src/deep2/DualLaneChoreographer.cpp
         src/asm/Deep2Device_Score.asm
         src/asm/Deep2Device_Pick.asm
     )
@@ -9415,6 +9421,25 @@ if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
     message(STATUS "[Deep2] K2 live decode MLA: deep2_k2_live_decode_mla_cert")
 endif()
 
+option(BUILD_MLA_CERT_001 "Build MLA-CERT-001 production seal" ON)
+if(BUILD_MLA_CERT_001)
+    add_executable(mla_cert_001 certs/mla_cert_001.cpp)
+    target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(mla_cert_001 PRIVATE
+            $<$<NOT:$<CONFIG:Debug>>:/O2> /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(mla_cert_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(mla_cert_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME mla_cert_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] MLA-CERT-001: mla_cert_001")
+endif()
+
 option(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT "Build K2_MLA_FUSED_Q4KT_001" ON)
 if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
     add_executable(deep2_k2_mla_fused_q4kt_cert
@@ -10076,10 +10101,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
 # Deep2 Gateway cert island — Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Deep2ProductLavapath.fragment.cmake)
 # Background terminals (host/termctl) + remaining ChatGPT/Codex/Cursor style layer
 include(${CMAKE_SOURCE_DIR}/cmake/RawrBackgroundTerminals.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/RawrRemainingStyleCli.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/RawrProductLayer.fragment.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Interstellar.fragment.cmake)
 
 if(TARGET deep2_vwa_file_coalesce_001 AND TARGET deep2_vwa_range_core)
     target_link_libraries(deep2_vwa_file_coalesce_001 PRIVATE deep2_vwa_range_core)

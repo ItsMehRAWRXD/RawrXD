@@ -26,26 +26,40 @@ uint64_t ONowUs() {
     return 0;
 #endif
 }
+uint32_t SxIdx(uint32_t rows) {
+    return rows == 32u ? 0u : rows == 64u ? 1u : rows == 128u ? 2u
+                       : rows == 256u     ? 3u
+                                         : 0xffffffffu;
+}
 } // namespace
 
 void VulkanCompute::GemvReuseInputNext() { gemv_reuse_in_next_ = true; }
-
 void VulkanCompute::GemvFuseResidualNext(const float* residual) {
     gemv_residual_add_ = residual;
 }
-
-uint64_t VulkanCompute::GemvInputReuseHits() const { return gemv_in_reuse_hits_; }
+uint64_t VulkanCompute::GemvInputReuseHits() const {
+    return gemv_in_reuse_hits_;
+}
 
 bool VulkanCompute::EnsureQ4kFusedPipeline() {
     return CreateGemvPipe("gemv_q4k_fused.spv", q4k_fused_pipe_);
 }
-
 bool VulkanCompute::EnsureQ4kOprojPipeline() {
     return CreateGemvPipe("gemv_q4k_oproj.spv", q4k_oproj_pipe_);
 }
-
 bool VulkanCompute::EnsureQ4kKvaPipeline() {
     return CreateGemvPipe("gemv_q4k_kva.spv", q4k_kva_pipe_);
+}
+bool VulkanCompute::EnsureQ4kQkvSxPipeline(uint32_t rows, VkPipeline& out) {
+    const uint32_t i = SxIdx(rows);
+    if (i > 3u) return false;
+    /* 64-row oproj SPV is the live shared-x binary; other row SPVs optional. */
+    static const char* n[] = {"gemv_q4k_qkv_sx_32.spv", "gemv_q4k_oproj.spv",
+                              "gemv_q4k_qkv_sx_128.spv",
+                              "gemv_q4k_qkv_sx_256.spv"};
+    if (!CreateGemvPipe(n[i], q4k_qkv_sx_pipes_[i])) return false;
+    out = q4k_qkv_sx_pipes_[i];
+    return out != nullptr;
 }
 
 bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
@@ -56,32 +70,48 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
     const bool isOproj = (tag == 6u);
     const bool isQShared =
         (tag == 1u || tag == 2u) && (cols % 256u) == 0u;
-    const bool isKva =
-        (tag == 3u) && (cols % 256u) == 0u && rows > 0u;
+    const bool isKva = (tag == 3u) && (cols % 256u) == 0u && rows > 0u;
     const bool useSharedX = isOproj || isQShared;
     const bool isQkv = (tag >= 1u && tag <= 5u);
+    if (!packed || !input || !output || !bytes) return false;
+
+    uint32_t sxRows = 64u;
+    if (isQShared) {
+        const int w = rawr::live::QkvWinnerRows().load();
+        if (w > 0) sxRows = (uint32_t)w;
+    }
+    VkPipeline pipe = nullptr;
     if (isKva) {
         if (!EnsureQ4kKvaPipeline()) return false;
-    } else if (useSharedX) {
+        pipe = q4k_kva_pipe_;
+    } else if (isQShared) {
+        if (!EnsureQ4kQkvSxPipeline(sxRows, pipe)) {
+            if (!EnsureQ4kOprojPipeline()) return false;
+            pipe = q4k_oproj_pipe_;
+            sxRows = 64u;
+        }
+    } else if (isOproj) {
         if (!EnsureQ4kOprojPipeline()) return false;
+        pipe = q4k_oproj_pipe_;
     } else if (!EnsureQ4kFusedPipeline()) {
         return false;
+    } else {
+        pipe = q4k_fused_pipe_;
     }
-    if (!packed || !input || !output || !bytes) return false;
+
     ++gemv_attempts_;
     const size_t inB = (size_t)cols * 4;
     const uint32_t nblk = cols >> 8;
-    const uint32_t colTileBlocks = 4u; // 1024 cols
+    const uint32_t colTileBlocks = 4u;
     const uint32_t nColTiles =
         isKva ? ((nblk + colTileBlocks - 1u) / colTileBlocks) : 1u;
-    const size_t outB = isKva ? (size_t)rows * nColTiles * 4u
-                              : (size_t)rows * 4u;
+    const size_t outB =
+        isKva ? (size_t)rows * nColTiles * 4u : (size_t)rows * 4u;
     if (!EnsureHostIo(inB, outB)) return false;
 
     uint64_t uploadUs = 0, readbackUs = 0, kernelUs = 0;
     uint64_t inUpB = 0;
     const bool timeIo = isOproj || isQkv;
-
     const bool reuseIn =
         gemv_reuse_in_next_ && gemv_in_live_cols_ == cols && gemv_in_buf_;
     gemv_reuse_in_next_ = false;
@@ -97,6 +127,7 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
         inUpB = inB;
         if (timeIo) uploadUs = ONowUs() - tu0;
     }
+
     VkBuffer wbuf = nullptr;
     if (WantWeightPin()) {
         if (!EnsurePinnedPackedWeight(packed, bytes, rows, cols, wbuf, pinKey))
@@ -119,9 +150,13 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
         if (!StreamWeightToSlot(packed, bytes, wbuf)) return false;
     }
 
-    VkPipeline pipe = isKva ? q4k_kva_pipe_
-                    : (useSharedX ? q4k_oproj_pipe_ : q4k_fused_pipe_);
-    const uint32_t rowTile = isKva ? 16u : (useSharedX ? 64u : 4u);
+    if (isQShared &&
+        ClimbQkvSharedXOnce(wbuf, bytes, inB, outB, rows, cols, tag, output,
+                            uploadUs, pipe, sxRows, kernelUs))
+        return true;
+
+    const uint32_t rowTile =
+        isKva ? 16u : (useSharedX ? (isOproj ? 64u : sxRows) : 4u);
     const uint32_t rowTiles = (rows + rowTile - 1u) / rowTile;
     const uint32_t groups = isKva ? (rowTiles * nColTiles) : rowTiles;
     const uint64_t tk0 = timeIo ? ONowUs() : 0;
@@ -169,13 +204,14 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
                                 (size_t)rows * 4u);
         if (isQShared || isKva)
             Deep2::Qkv_NoteSharedX(tag, rows, cols, groups, kernelUs);
-        if (isKva) Deep2::Qkv_NoteKvaColSplit(nColTiles, groups, kernelUs);
+        if (isKva) {
+            Deep2::Qkv_NoteKvaColSplit(nColTiles, groups, kernelUs);
+            rawr::live::NoteKvaLiveTune(16u, true, kernelUs);
+        } else if (isQShared) {
+            rawr::live::NoteQkvLiveTune(rowTile, true, kernelUs);
+        }
         ++q4k_fused_ops_;
         if (isQShared || isKva) ++q4k_oproj_ops_;
-        if (isQShared)
-            rawr::live::NoteQkvLiveTune(rowTile, true, kernelUs);
-        if (isKva)
-            rawr::live::NoteKvaLiveTune(rowTile, true, kernelUs);
     } else {
         ++q4k_fused_ops_;
     }

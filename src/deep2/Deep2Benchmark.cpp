@@ -402,6 +402,10 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         std::fprintf(stderr, "--- GENERATED_TEXT ---\n%s\n--- END_GENERATED_TEXT ---\n",
                      generatedText.c_str());
     }
+    {
+        const int td = (generated > 0) ? 1 : 0;
+        rawr::live::EmitActualE2EFooter(generated, wallNs, td);
+    }
 
     const auto gpuResult = gpuEff.Finalize(generated);
     bench.gpu_power_valid = gpuResult.power_valid;

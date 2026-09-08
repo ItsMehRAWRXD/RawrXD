@@ -16,6 +16,13 @@ bool VulkanCompute::DispatchGEMVQuant(int, const void*, size_t, const float*, fl
 bool VulkanCompute::EnsureQ4kPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kFusedPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kOprojPipeline() { return false; }
+bool VulkanCompute::EnsureQ4kKvaPipeline() { return false; }
+bool VulkanCompute::EnsureQ4kQkvSxPipeline(uint32_t, VkPipeline&) { return false; }
+bool VulkanCompute::ClimbQkvSharedXOnce(VkBuffer, size_t, size_t, size_t, uint32_t,
+                                        uint32_t, uint8_t, float*, uint64_t,
+                                        VkPipeline&, uint32_t&, uint64_t&) {
+    return false;
+}
 bool VulkanCompute::DispatchGEMVFusedQ4KT(const void*, size_t, const float*, float*,
                                           uint32_t, uint32_t, uint64_t) {
     return false;

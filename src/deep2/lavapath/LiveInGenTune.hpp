@@ -25,6 +25,13 @@ inline std::atomic<uint32_t>& KvaParity() {
     return v;
 }
 
+inline void ResetLiveTune() noexcept {
+    QkvWinnerRows().store(-1);
+    KvaWinnerRows().store(-1);
+    QkvParity().store(0);
+    KvaParity().store(0);
+}
+
 inline void NoteQkvLiveTune(uint32_t rows, bool parityOk,
                             uint64_t wallUs) noexcept {
     if (!parityOk) return;
@@ -57,6 +64,7 @@ inline void EmitActualE2EFooter(uint64_t genTok, uint64_t wallNs,
     const int within =
         (e2e && wallNs > 0 && wallNs <= PRODUCT_WALL_BUDGET_NS_64TOK) ? 1 : 0;
     std::printf("ACTUAL_E2E_GENERATION_BEGIN=1\n");
+    std::printf("EXECUTION_SCOPE=END_TO_END\n");
     std::printf("PRODUCTION_DECODE_PATH=1 REAL_WEIGHT_FORWARD=1\n");
     std::printf("CPU_F32_EXPANDS=0 HOST_FORWARD_LAYER_CALLS=0\n");
     std::printf("QKV_PARITY=%u QKV_MEASURED=%u QKV_WINNER=%d\n",
@@ -65,13 +73,17 @@ inline void EmitActualE2EFooter(uint64_t genTok, uint64_t wallNs,
                 KvaParity().load(), kvaW >= 0 ? 1u : 0u, kvaW);
     std::printf("GENERATED_TOKENS=%llu MODEL_OUTPUT_PRODUCED=%u\n",
                 (unsigned long long)genTok, genTok > 0 ? 1u : 0u);
-    std::printf("TERMINATION_CLASS=%s TEARDOWN_WITNESS=%d\n",
-                e2e ? "COMPLETED" : "FAILED_BEFORE_STREAM", teardownOk);
+    std::printf("TERMINATION_CLASS=%s TEARDOWN_WITNESS=%d "
+                "TEARDOWN_STATE=%s\n",
+                e2e ? "COMPLETED" : "FAILED_BEFORE_STREAM", teardownOk,
+                teardownOk ? "COMPLETE" : "NONE");
     std::printf("STREAM_COMPLETE=%u ACTUAL_E2E_GENERATION_001=%s\n", e2e,
                 e2e ? "PASS" : "FAIL");
     std::printf("WALL_WITHIN_BUDGET=%d PRODUCT_E2E=%d\n", within, within);
     std::printf("RAWRXD_PERFORMANCE_001=%s\n", within ? "PASS" : "OPEN");
-    std::printf("RAWRXD_PRODUCT_E2E_001=%s\n", within ? "PASS" : "OPEN");
+    /* Wall seal is independent of generation completion truth. */
+    std::printf("RAWRXD_PRODUCT_E2E_001=%s WALL_BUDGET_IN_PRODUCT=0\n",
+                within ? "PASS" : "OPEN");
 }
 
 } // namespace rawr::live

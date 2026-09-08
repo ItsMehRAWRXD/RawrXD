@@ -509,6 +509,7 @@ private:
     VkPipeline q4k_fused_pipe_ = nullptr;
     VkPipeline q4k_oproj_pipe_ = nullptr;
     VkPipeline q4k_kva_pipe_ = nullptr;
+    VkPipeline q4k_qkv_sx_pipes_[4] = {}; /* 32,64,128,256 */
     uint64_t q4k_fused_ops_ = 0;
     uint64_t q4k_oproj_ops_ = 0;
     VkPipeline q6k_pipe_ = nullptr;
@@ -526,6 +527,12 @@ private:
     bool EnsureQ4kFusedPipeline();
     bool EnsureQ4kOprojPipeline();
     bool EnsureQ4kKvaPipeline();
+    bool EnsureQ4kQkvSxPipeline(uint32_t rows, VkPipeline& out);
+    bool ClimbQkvSharedXOnce(VkBuffer wbuf, size_t bytes, size_t inB,
+                             size_t outB, uint32_t rows, uint32_t cols,
+                             uint8_t tag, float* output, uint64_t uploadUs,
+                             VkPipeline& pipeOut, uint32_t& sxRowsOut,
+                             uint64_t& kernelUsOut);
     bool EnsureQ6kPipeline();
     bool EnsureQ5kPipeline();
     bool EnsureQ3kPipeline();

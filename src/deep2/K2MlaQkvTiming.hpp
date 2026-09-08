@@ -74,6 +74,10 @@ inline void Qkv_Reset() {
     Qkv_SharedXKernelUs().store(0);
 }
 
+inline void Qkv_ResetLive() {
+    Qkv_Reset();
+}
+
 inline void Qkv_NoteWall(uint64_t wallUs) {
     Qkv_WallUs().fetch_add(wallUs, std::memory_order_relaxed);
 }
