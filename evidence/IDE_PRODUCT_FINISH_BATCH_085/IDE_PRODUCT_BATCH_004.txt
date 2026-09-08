@@ -21,18 +21,25 @@ ACTIVATED_FALSE_SUCCESS_REMAINING=0
 PRODUCT_PATH_COUNT=1
 IDE_COMPLETE=0
 
-LANDING:
-46 generateResponseAsync → ProductOpenSession + ProductDeep2InferStream (no orch/CPU fallback)
-47 AgenticBridge LoadModel → ProductOpenSession; model turns → ProductRun
-48 Async tokens → IDE callback from ProductRun onPiece
-49 stopInference → ProductRequestCancel
-50 Failures emit FAILED_STAGE/FAILED_OWNER (no generic success)
-51 DynamicModelLoader → ProductOpenSession only
-52 Session reuse via keepOpen Product session
-53 unload → ProductCloseSession
-54-57 IDM_DEBUG_* → NativeDebuggerEngine or UNAVAILABLE=
-58-59 Debug menu stubs + loader GPU false-success removed
-60 This receipt
+NINJA_DISCOVERY_REQUIRED_FOR_PRODUCT=0
+DISCOVERY_PROBE_STATUS=INTERRUPTED_NONBLOCKING
+PRODUCT_STATUS_UNCHANGED=1
 
-WITNESS: run ProductDeep2InferStream after ProductOpenSession(model) for ASYNC_FIRST_TOKEN.
-Next: Batch 005 live debugger behavior, command surfaces, P1PRA product witness.
+LANDING:
+46 generateResponseAsync → ProductOpenSession + ProductDeep2InferStream
+47 AgenticBridge → ProductOpenSession adapter; model turns ProductRun
+48 Async tokens → IDE callback via ProductRun onPiece
+49 stopInference → ProductRequestCancel
+50 FAILED_STAGE/FAILED_OWNER preserved on fail
+51 DynamicModelLoader → ProductOpenSession only
+52–53 session reuse / ProductCloseSession teardown
+54–57 IDM_DEBUG_* real or UNAVAILABLE
+58–59 false-success removed on those surfaces
+60 this receipt
+
+ASYNC_FIRST_TOKEN_WITNESS:
+  same entrypoint as async adapter (ProductDeep2InferStream → ProductRun)
+  evidence/RAWR_RUN_WALK/product_run_phi3_smoke.stderr.txt FIRST_TOKEN=1
+  (path authority; not a rebuilt ninja discovery)
+
+See also: NINJA_DISCOVERY_PROBE.txt (interrupted, nonblocking, non-product).
