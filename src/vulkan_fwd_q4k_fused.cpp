@@ -251,7 +251,7 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
             Deep2::Qkv_NoteSharedX(tag, rows, cols, groups, kernelUs);
         if (isKva) {
             Deep2::Qkv_NoteKvaColSplit(nColTiles, groups, kernelUs);
-            rawr::live::NoteKvaLiveTune(16u, true, kernelUs);
+            /* Do not seal KVA winner here — Q8 climb owns NoteKvaLiveTune. */
         } else if (isQShared) {
             rawr::live::NoteQkvLiveTune(rowTile, true, kernelUs);
         }

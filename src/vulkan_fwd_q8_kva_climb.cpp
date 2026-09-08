@@ -50,12 +50,21 @@ bool VulkanCompute::ClimbQ8KvaOnce(VkBuffer wbuf, size_t bytes, size_t inB,
     uint32_t pc[4] = {rows, cols, nColTiles, colTileBlocks};
     for (uint32_t rpw : cands) {
         VkPipeline p = nullptr;
-        if (!EnsureQ8KvaSxPipeline(rpw, p)) continue;
+        if (!EnsureQ8KvaSxPipeline(rpw, p)) {
+            std::printf("KVA_CLIMB_CAND ROWS=%u LEGAL=0 PARITY=0 "
+                        "GPU_TIME_US=0 KEEP_GOING=1\n",
+                        rpw);
+            continue;
+        }
         const uint32_t g = ((rows + rpw - 1u) / rpw) * nColTiles;
         const uint64_t t0 = KvaNowUs();
         if (!BindGemvStoragePc(wbuf, bytes, gemv_in_buf_, inB, gemv_out_buf_,
-                               outB, p, pc, 4u, g))
+                               outB, p, pc, 4u, g)) {
+            std::printf("KVA_CLIMB_CAND ROWS=%u LEGAL=0 PARITY=0 "
+                        "GPU_TIME_US=0 BIND=0 KEEP_GOING=1\n",
+                        rpw);
             continue;
+        }
         const uint64_t ku = KvaNowUs() - t0;
         void* m = nullptr;
         vkMapMemory(device_, gemv_out_mem_, 0, outB, 0, &m);
@@ -77,6 +86,7 @@ bool VulkanCompute::ClimbQ8KvaOnce(VkBuffer wbuf, size_t bytes, size_t inB,
         std::printf("KVA_CLIMB_CAND ROWS=%u LEGAL=1 PARITY=%u "
                     "GPU_TIME_US=%llu KEEP_GOING=1\n",
                     rpw, parity ? 1u : 0u, (unsigned long long)ku);
+        std::fflush(stdout);
         if (parity && ku < bestUs) {
             bestUs = ku;
             bestRows = rpw;
