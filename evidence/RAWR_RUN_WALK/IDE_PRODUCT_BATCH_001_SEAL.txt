@@ -1,0 +1,9 @@
+IDE_PRODUCT_BATCH_001=PARTIAL_LAND
+PRODUCT_RUN_SMOKE=PASS
+MODEL=phi3
+PATH=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+GENERATED_TOKENS=4
+PRODUCT_PASS=1
+EXIT_REASON=COMPLETE
+NOTE=Batch 001 closed on CLI ProductRun. IDE source wired; binary target rebuild next batch.
+NEXT=IDE_PRODUCT_BATCH_002

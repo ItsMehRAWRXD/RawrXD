@@ -1,0 +1,37 @@
+﻿RAWR_RUN_RESOLVE_001=PASS
+================================
+ALIAS=nemotron-3-nano:4b
+HARNESS=resolve-only (kill after authority; not CmdRun wait)
+
+RESOLVED=1
+TOKEN_WITNESS=0
+PROBE_EXIT=HARNESS_STOP_AFTER_RESOLVE
+HARNESS_STOP_AFTER_RESOLVE=allowed
+HARNESS_STOP_AFTER_RESOLVE_NE_PRODUCT_FAILURE=1
+
+PRODUCT_PASS=not_evaluated
+TPS=not_evaluated
+256_TOKEN_COMPLETION=not_required
+
+MODEL_AUTHORITY:
+  MODEL=nemotron-3-nano:4b
+  PATH=F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+  ARCH=nemotron_h
+  LAYERS=42
+  MODEL_INDEXED=1
+  NEMOTRON_H_TENSOR_MAP_001=PASS
+
+PROMPT_SETUP_WITNESS:
+  STREAM_STATUS=READY
+  GENERATE_STREAM_ENTER=1
+  PREFILL_BEGIN prompt_tokens=20
+  CHAT_TEMPLATE_SOURCE=not_captured_before_harness_stop (optional for resolve)
+
+SEPARATE_RUNTIME_IF_CONTINUED (not resolve blockers):
+  HOST_Q8_GEMV_SAFE=1
+  SSM_SCAFFOLD IDENTITY=1 PRODUCTION_DECODE_PATH=0
+  NEXT_RUNTIME_OWNER_IF_DECODE_FAILS=SSM_SCAFFOLD|SSM_ATTN_NUMERICS (evaluate on full decode only)
+
+LOGS:
+  evidence/RAWR_RUN_WALK/run_nemotron-3-nano_4b.stdout.txt
+  evidence/RAWR_RUN_WALK/run_nemotron-3-nano_4b.stderr.txt

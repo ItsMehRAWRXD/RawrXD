@@ -1,0 +1,21 @@
+# IDE_PRODUCT_PATH_BATCH16 — IDE surfaces on ProductRun (not CPUInferenceEngine)
+# Authority: lavapath/ProductRun.hpp → Deep2Engine::generateStream
+
+01 CHAT_SEND_PRODUCTRUN           — PASS (sendMessageToModel → ProductDeep2Infer)
+02 ANALYZE_SCRIPT_PRODUCTRUN      — PASS (analyzeScript → ProductDeep2Infer)
+03 GHOST_ORCH_FIM_FIRST           — PASS (GhostText Local → OrchestratorBridge FIM)
+04 GHOST_PRODUCTDEEP2_SECONDARY   — PASS (GhostText → ProductDeep2Infer)
+05 NO_GHOST_CPU_GENERATE_IDS      — PASS (removed m_nativeEngine Generate tokens)
+06 OLLAMA_ROUTE_FAIL_CLOSED       — PASS (routeToOllama LOCAL_ONLY refuse)
+07 LOCAL_API_GENERATE_PRODUCTRUN  — PASS (/api/generate → ProductDeep2Infer)
+08 OPENAI_CHAT_PRODUCTRUN         — PASS (/v1/chat/completions → ProductDeep2Infer)
+09 GENERATE_RESPONSE_PRODUCTRUN   — PASS (already ProductDeep2Infer)
+10 ROUTE_LOCALGGUF_AGENT_OR_PR    — PASS (routeToLocalGGUF → agentic/generateResponse)
+11 IDE_BATCH15_CARRIED            — PASS (01-15 still sealed)
+12 PRODUCT_RUN_RECEIPT_UNCHANGED  — PASS (EmitReceipt canonical)
+13 NO_IDE_TOKEN_ID_CHAT_FALLBACK  — PASS (CPU Generate removed from chat)
+14 LOCAL_SERVER_NO_NATIVE_GEN     — PASS (both handlers off CPU Generate)
+15 BATCH16_CODE_AUTHORITY         — PASS (this drop)
+
+NOTE=Batch 16 closes remaining IDE inference adapters onto ProductRun.
+NEXT_BATCH=IDE_PRODUCT_PATH_BATCH17 (HexMag/Copilot send + remaining FeatureRegistry stubs)

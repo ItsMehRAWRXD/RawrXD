@@ -1,0 +1,199 @@
+[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 — 21 approximate SSM layers enabled
+SSM_STATE_DIM=96 SSM_CONV_KERNEL=4
+NEMOTRON_H_TENSOR_MAP_001=PASS
+ARCH=nemotron_h
+SSM_HYBRID_LAYERS=21
+SSM_TENSOR_MAP_COMPLETE=1
+SSM_IN_MISSING=0
+SSM_D_MISSING=0
+SSM_CONV_BIAS_MISSING=0
+ATTN_Q_NULL_LAYER0=1
+HYBRID_LAYER_ROUTE=1
+LAYER_00_KIND=SSM
+LAYER_00_ATTN_READY=0
+LAYER_00_SSM_READY=1
+LAYER_01_KIND=FFN
+LAYER_01_ATTN_READY=0
+LAYER_01_SSM_READY=0
+LAYER_02_KIND=SSM
+LAYER_02_ATTN_READY=0
+LAYER_02_SSM_READY=1
+LAYER_03_KIND=FFN
+LAYER_03_ATTN_READY=0
+LAYER_03_SSM_READY=0
+LAYER_04_KIND=SSM
+LAYER_04_ATTN_READY=0
+LAYER_04_SSM_READY=1
+LAYER_05_KIND=FFN
+LAYER_05_ATTN_READY=0
+LAYER_05_SSM_READY=0
+LAYER_06_KIND=SSM
+LAYER_06_ATTN_READY=0
+LAYER_06_SSM_READY=1
+LAYER_07_KIND=SSM
+LAYER_07_ATTN_READY=0
+LAYER_07_SSM_READY=1
+HOST_Q8_GEMV_FFN=1
+HOST_Q8_GEMV_ATTN=1
+HOST_Q8_GEMV_SSM_IN=1
+HOST_Q8_GEMV_NUMERIC_FINITE=1
+HOST_Q8_GEMV_BOUNDS_SAFE=1
+HOST_Q8_GEMV_REFERENCE_PARITY=1
+HOST_Q8_GEMV_SAFE=1
+KV_HEADS_INFERRED=8 HEAD_DIM=128 Q_HEADS=40
+FFN_INTER_INFERRED=12544
+[BUF] hidden=3136 heads=40 headDim=128 qOut=5120 headScratch=5120 kvDim=1024 ffn=12544
+[Deep2Engine] Loading model from: F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Detected Ollama blob, scanning for GGUF data...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 layers=42 heads=40 kvHeads=0 inter=0 vocab=131072
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=9728x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=9728x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=17504x3136 type=8)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x960 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=3136x7680 type=8)
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000002160CCB6D10  Registered 'output.weight': shard=0 offset=7885696 bytes=436731904  |  registry_size=1  registeredBytes=436731904  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000002160CCB6D10  Registered 'blk.15.ffn_down.weight': shard=0 offset=2097181824 bytes=41796608  |  registry_size=100  registeredBytes=2131092736  zeroOffset=0  maxResidentBytes=536870912
+[ResidencyManager] this=000002160CCB6D10  Registered 'blk.31.ssm_norm.weight': shard=0 offset=3411917952 bytes=30720  |  registry_size=200  registeredBytes=3404062976  zeroOffset=0  maxResidentBytes=536870912
+RMV_MOUNT_001
+TENSORS_DISCOVERED=263
+TENSORS_ADDRESSED=263
+TENSORS_REGISTERED=263
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=000002160CCB6D10  registered=263 tensors  bytes=4225792256  max=536870912
+[RMV_MOUNT_001]=PASS
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF64CF1E230 dequant=00007FF64CF1B970 GetGEMV(12)=00007FF64CF1E230 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=42 page=8 virtualMax=2048 heads=8 dim=128
+[KVCache] HOT_BYTES=2752512 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (263 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 3136
+  Num Layers: 42
+  Num Heads: 40
+  Num KV Heads: 8
+  Head Dim: 128
+  Max Seq Len: 512
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Addressable: layers=42 virtualSeq=512 kv_heads[BUF] hidden=3136 heads=40 headDim=128 qOut=5120 headScratch=5120 kvDim=1024 ffn=12544
+MODEL=nemotron-3-nano:4b
+PATH=F:\OllamaModels\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+OLLAMA_USED=0
+NETWORK_USED=0
+REVERSE_COMPLETION_BEGIN
+GOAL=NEMOTRON_NANO_POEM_001
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=nemotron_h LAYERS=42 KV_HEADS=8 HEAD_DIM=128
+HOST_DECODE_SANITIZE=1 elastic=0 cyclone=0 ckv=0 mars=0 medusa=0 livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1
+=8 headDim=128 (hot pages only)
+[KVCache] Lazy pages: layers=42 page=8 virtualMax=512 heads=8 dim=128
+[KVCache] HOT_BYTES=2752512 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF64CF1E230 dequant=00007FF64CF1B970 GetGEMV(12)=00007FF64CF1E230 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: SEMANTIC_SAFE (no vulkan/speed features)
+[Deep2Engine] Initialization complete
+[ChatTemplate] Detected 'chatml' from template string
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'chatml' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=20
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=MIN
+K2_LIVE_POLICY_MODE=1
+K2_LIVE_POLICY_REASON=force_min
+K2_LIVE_POLICY_REUSE_STEPS=10752
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=42 TOKENS=256
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=2322600000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=none WANTED=1
+HOST_DECODE_SKIP_LIVEPATH=1 MEANS_SKIP_ENHANCEMENTS_ONLY=1 BASE_FORWARD_STILL_REQUIRED=1
+[EMBED_NORM] pos=0 token=1060 l2=7.115366e-01
+[SSM_SCAFFOLD] layer=0 IDENTITY=1 inRows=17504 outCols=7680 stateDim=96 PRODUCTION_DECODE_PATH=0
+[FFN_ONLY] layer=1 up=000002164A830000 down=0000021648050000 inter=12544
+[FFN_ONLY] layer=1 norm_ok
+[FFN] layer=1 hasGate=0 inter=12544 hidden=3136 up=000002164A830000 rows=12544 cols=3136 type=8 gateBuf=000002160C984040 upBuf=00000216FFB8D040
+[SSM_SCAFFOLD] layer=2 IDENTITY=1 inRows=17504 outCols=7680 stateDim=96 PRODUCTION_DECODE_PATH=0
+[FFN_ONLY] layer=3 up=00000216548A0000 down=00000216520C0000 inter=12544
+[FFN_ONLY] layer=3 norm_ok
+[FFN] layer=3 hasGate=0 inter=12544 hidden=3136 up=00000216548A0000 rows=12544 cols=3136 type=8 gateBuf=000002160C984040 upBuf=00000216FFB8D040
+[SSM_SCAFFOLD] layer=4 IDENTITY=1 inRows=17504 outCols=7680 stateDim=96 PRODUCTION_DECODE_PATH=0
+[FFN_ONLY] layer=5 up=000002165E910000 down=000002165C130000 inter=12544
+[FFN_ONLY] layer=5 norm_ok
+[FFN] layer=5 hasGate=0 inter=12544 hidden=3136 up=000002165E910000 rows=12544 cols=3136 type=8 gateBuf=000002160C984040 upBuf=00000216FFB8D040

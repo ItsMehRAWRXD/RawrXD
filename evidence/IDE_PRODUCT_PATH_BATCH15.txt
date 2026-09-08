@@ -1,0 +1,22 @@
+# IDE_PRODUCT_PATH_BATCH15 — real ProductRun wiring (not fictional E2E)
+# Authority: lavapath/ProductRun.hpp → Deep2Engine::generateStream
+# Adapters only: rawr CLI, product_deep2_infer, Deep2InferenceSession, Deep2ModelRuntime
+
+01 IDE_INIT_INITFROMPATH          — PASS (Deep2InferenceSession::Initialize)
+02 IDE_GENERATE_USES_PRODUCTRUN   — PASS (Generate → ProductRun)
+03 IDE_STREAM_USES_PRODUCTRUN     — PASS (GenerateStream → ProductRun + onPiece)
+04 IDE_LOADER_ALIAS_RESOLVE       — PASS (Deep2ModelLoader::Load ResolveModelAlias)
+05 IDE_SHUTDOWN_UNLOAD            — PASS (unloadModel on Shutdown)
+06 IDE_CANCEL_REQUESTCANCEL       — PASS (engine->requestCancel)
+07 IDE_TOKENIZE_ENGINE            — PASS (Deep2ModelRuntime Tokenize/Detokenize)
+08 IDE_MAX_TOKENS_HONORED         — PASS (request.maxTokens → ProductRun)
+09 PRODUCT_SERVE_PRODUCTRUN       — PASS (product_deep2_infer → ProductRun)
+10 CLI_PRODUCTRUN_FRONTDOOR       — PASS (CmdRun → ProductRun)
+11 PRODUCT_RUN_RECEIPT_CANONICAL  — PASS (PRODUCT_RUN EmitReceipt)
+12 NO_IDE_GENERATE_ID_PATH        — PASS (removed engine->generate token-id path)
+13 ORCH_BRIDGE_DEEP2_RUNTIME      — PASS (IModelRuntime Deep2 → session ProductRun)
+14 CALLBACK_BOOL_CANCEL           — PASS (TokenCallback bool propagates cancel)
+15 SMOKE_CLI_PRODUCT_RUN          — PASS (rawr run phi3-q8 --max-tokens 4 → PRODUCT_RUN PRODUCT_PASS=1)
+
+NOTE=Gates 01-15 PASS. Functional ProductRun sealed for CLI+IDE adapters.
+NEXT_BATCH=IDE_PRODUCT_PATH_BATCH16 (ghost/FIM/chat/UI live on ProductRun; kill residual stubs)

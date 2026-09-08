@@ -1,0 +1,45 @@
+IDE_PRODUCT_BATCH_001 — first 15 real product-path closures
+===========================================================
+LAW: one ProductRun pipeline; adapters only; no fiction seals.
+
+PIPELINE:
+  Resolve → Load → Runtime → GenerateStream → Token → Completion → Product
+
+BATCH_001 items (this land):
+  01 ProductRun.hpp sole entry                         DONE
+  02 PRODUCT_RUN canonical receipt                     DONE
+  03 CmdRun → ProductRun                               DONE
+  04 CmdChat → ProductRun (keepOpen engine)            DONE
+  05 ProductDeep2Infer → ProductRun (raw prompt)       DONE
+  06 Win32IDE::generateResponse → ProductDeep2Infer    DONE
+  07 K2 generateStream early-return → ProductPathSeal  DONE
+  08 Dedup champion seal (engine owns; gate does not)  DONE
+  09 RAWR_RUN_RESOLVE_001 front of pipeline            PASS (prior)
+  10 generateStream owns chat template (blocker 94)    prior
+  11 Batch007 emit on product stream                   prior
+  12 Fiction Omega/Mesh/etc stay NOT_PRODUCT_PATH      prior
+  13 CPUInferenceEngine removed from IDE sync path     DONE
+  14 PRODUCT_PATH=CLI|IDE|Bridge→generateStream        ProductPathSeal
+  15 Evidence this file                                DONE
+
+NEXT_BATCH_002 (IDE remaining — not claimed):
+  16 generateResponseAsync → ProductRun (not CPU/router fiction)
+  17 routeWithIntelligence must not bypass ProductRun
+  18 AgenticBridge GetEngine → Deep2 not CPUInference
+  19 IDE model load sets RAWRXD_PRODUCT_MODEL + OpenSession
+  20 Autocomplete ghost → ProductRun complete path
+  21 Serve pipe COMPLETE → ProductRun only
+  22 Teardown/unload single owner
+  23 PRODUCT_PASS criteria on IDE chat send
+  24 Fail-closed when ProductRun returns 0 tokens
+  25 Remove dual QuietStdout / harness theater from IDE
+  26 Win32 menu "Run model" → ProductRun
+  27 Session resume re-enters ProductRun
+  28 Agent loop generation → ProductRun
+  29 HTTP/MCP if any → ProductRun
+  30 Clean install smoke: rawr run + IDE same PATH
+
+DO_NOT:
+  reopen KVA climb / Batch007
+  invent parallel cert ladders
+  treat HARNESS_STOP_AFTER_RESOLVE as product failure
