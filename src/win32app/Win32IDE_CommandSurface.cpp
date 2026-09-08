@@ -1083,6 +1083,14 @@ void Win32IDE::handleCommandSend(HWND cmdHostHint) {
         product100Wave3Smoke();
         return;
     }
+    if (msg == "/p100 wave4" || msg == "/wave4-smoke") {
+        product100Wave4Smoke();
+        return;
+    }
+    if (msg == "/p100 freeze" || msg == "/freeze") {
+        product100WriteFreeze();
+        return;
+    }
 #endif
     if (msg == "/approve" || msg == "/approve-test") {
         if (m_currentPlan.status == PlanStatus::AwaitingApproval &&

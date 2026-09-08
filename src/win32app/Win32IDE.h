@@ -2216,6 +2216,8 @@ class Win32IDE
     void product100ShowSettings();
     void product100ListApprovals();
     void product100Wave3Smoke();
+    void product100Wave4Smoke();
+    void product100WriteFreeze();
     std::string product100DescribeError(int code, const std::string& detail);
     static void __stdcall product100TextSink(const wchar_t* channel, const wchar_t* text, void* user);
 #endif
@@ -2486,7 +2488,6 @@ class Win32IDE
     // ========================================================================
     // AI CHAT PANEL IMPLEMENTATION
     // ========================================================================
-    void createChatPanel();
     // P1_UI_WINDOW_OWNERSHIP_001 — EnumWindows + dock-root asserts (debug + stderr)
     void dumpUiWindowOwnership(const char* phaseTag);
     void HandleCopilotSend();
@@ -2503,6 +2504,8 @@ class Win32IDE
     void initializeChatPanelOllama();
 
   public:
+    // AI Chat Panel — public for HandleChatPanel free-function adapter
+    void createChatPanel();
     // HexMag control-plane dependency (not HexMag UI):
     // HandleCopilotSend → RuntimeController → FinalizePolicy → Copilot chat
     bool tryHexMagControllerCopilotSend(const std::string& userMessage);

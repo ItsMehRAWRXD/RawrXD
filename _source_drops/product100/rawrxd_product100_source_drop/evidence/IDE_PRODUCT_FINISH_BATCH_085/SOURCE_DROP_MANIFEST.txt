@@ -1,0 +1,32 @@
+PROGRAM=IDE_PRODUCT_FINISH_BATCH_085
+OVERLAY=RawrXD_Product100
+CLAIM=remaining Wave 3-4 source, no third-party dependencies, x64 MASM linked
+STATUS=SOURCE_PROVIDED_ONLY
+CERTIFICATION=HOLD_UNTIL_APPLIED_BUILT_AND_WITNESSED
+
+FILES=
+include/RawrXD_Product100.hpp
+include/RawrXD_Product100_x64.hpp
+src/win32app/RawrXD_Product100.cpp
+src/asm/RawrXD_Product100_x64.asm
+src/asm/RawrXD_Product100_x64.inc
+cmake/RawrXD_Product100.cmake
+README_PRODUCT100_SOURCE_DROP.md
+
+GATES=
+P1PRA_E2E_FINALIZE_0_REQUIRED=1
+WAVE_1_PASS_REQUIRED=1
+WAVE_2_PASS_REQUIRED=1
+WAVE_3_PASS_REQUIRED=1
+WAVE_4_PASS_REQUIRED=1
+SYNTHETIC_PASS_ALLOWED=0
+
+FROZEN_LANES_NOT_REOPENED=
+STREAMER_VRAM_APERTURE_001
+AGENTIC_AUTONOMOUS_TEMPLATE_001
+COMMAND_HOME_SMOKE_001
+Deep2/K2 certification
+MASM kernel certification
+synthetic-fallback removal
+CommandBroker(message, mode) contract
+

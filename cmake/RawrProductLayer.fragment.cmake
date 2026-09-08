@@ -118,6 +118,7 @@ if(TARGET rawr)
   # CmdRun/product_serve need framed-pipe + token/FNV ABI (MASM).
   target_sources(rawr PRIVATE ${RAWR_PRODUCT_ASM_OBJS})
   add_dependencies(rawr rawr_product_x64_asm rawr_product_pipe_x64_asm)
+  target_link_libraries(rawr PRIVATE ws2_32)
 endif()
 
 message(STATUS "[Deep2] RAWRXD_PRODUCT_LAYER wired")

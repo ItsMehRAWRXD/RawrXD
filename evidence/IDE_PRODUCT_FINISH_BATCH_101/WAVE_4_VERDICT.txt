@@ -1,0 +1,5 @@
+WAVE=4
+VERDICT=HOLD
+SOURCE=Win32IDE_Product100Wave4.cpp wired; awaiting EXE smoke + P1PRA FINALIZE=0
+DATE=2026-09-07
+NOTE=Host callbacks filled for smoke matrix; okStep is fail-closed only when model loaded for LOAD_GGUF.

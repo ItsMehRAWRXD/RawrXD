@@ -1,0 +1,135 @@
+This is an integration patch template, not a blind patch. Apply at the
+current ExecuteNvmeToRam / ExecuteRamToVram stubs after mapping the real
+field names from the current tree.
+
+===============================================================================
+ExecuteNvmeToRam replacement law
+===============================================================================
+
+FORBID:
+
+    if (t.sourceData) {
+        memcpy(t.compressedData, t.sourceData, t.compressedBytes);
+    } else {
+        memset(t.compressedData, 0, t.compressedBytes);
+    }
+
+REPLACE WITH:
+
+    if (t.sourceData) {
+        // Existing already-mapped source remains valid only as a mapped backing.
+        // It is not a second resolver.
+        memcpy(t.compressedData, t.sourceData, t.compressedBytes);
+    } else {
+        VwaMountedPhysical mounted{};
+        // Populate from registered RMV facts already attached to this tensor:
+        //   absolute data offset
+        //   physical tensor bytes
+        //   block bytes from existing quant geometry
+        //   shard/source id
+        //   mount generation, or zero
+        //   hasFileBacking
+        unsigned long vs = VwaPopulateMountedPhysicalFromRmvFacts(
+            t.absoluteFileOffset,
+            t.compressedBytes,
+            t.blockBytes,
+            t.shardId,
+            t.mountGeneration,
+            t.hasFileBacking,
+            mounted);
+        if (vs != VWA_OK) {
+            ReleaseWarmCompressed(allocSize);
+            FreeCompressedAllocation(t);
+            t.state.store(ResidencyState::Failed);
+            t.inFlightOps.fetch_sub(1);
+            return;
+        }
+
+        VwaBlockRange ask{};
+        ask.firstBlock = 0;
+        ask.blockCount = t.compressedBytes / t.blockBytes;
+
+        VwaPhysicalRange span{};
+        vs = VwaResolveBlocks(&mounted, &ask, &span);
+        if (vs != VWA_OK) {
+            ReleaseWarmCompressed(allocSize);
+            FreeCompressedAllocation(t);
+            t.state.store(ResidencyState::Failed);
+            t.inFlightOps.fetch_sub(1);
+            return;
+        }
+
+        VwaIoBuffer io{};
+        io.data = t.compressedData;
+        io.capacity = t.compressedAllocated;
+
+        // Preferred production path:
+        //   existing IOCPGGUFLoader absolute-offset ReadAsync
+        //
+        // Transitional transport:
+        //   VwaIocpRangeTransport::ReadExact(existingOverlappedHandle, span, io)
+        //
+        // POC-only fallback:
+        //   VwaFulfillExactSync(existingDedicatedShardHandle, &span, &io)
+
+        vs = currentVwaRangeTransport.ReadExact(span, io, INFINITE);
+        if (vs != VWA_OK || io.bytesWritten != span.byteCount) {
+            ReleaseWarmCompressed(allocSize);
+            FreeCompressedAllocation(t);
+            t.state.store(ResidencyState::Failed);
+            t.inFlightOps.fetch_sub(1);
+            return;
+        }
+    }
+
+===============================================================================
+ExecuteRamToVram replacement law
+===============================================================================
+
+FORBID:
+
+    t.gpuData = nullptr;
+    t.gpuBytes = uploadBytes;
+    t.state.store(ResidencyState::Hot);
+
+REPLACE WITH:
+
+    const void* src = config_.useQuantizedGpuPath
+        ? t.compressedData
+        : t.stagedData;
+
+    if (!src || uploadBytes == 0) {
+        ReleaseHot(uploadBytes);
+        t.state.store(srcState);
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
+
+    void* deviceObject = nullptr;
+    bool uploaded = existingVulkanTransferUploadExact(
+        src,
+        uploadBytes,
+        t.plannedGpu,
+        &deviceObject);
+
+    if (!uploaded || !deviceObject) {
+        ReleaseHot(uploadBytes);
+        t.state.store(srcState);
+        t.inFlightOps.fetch_sub(1);
+        return;
+    }
+
+    t.gpuData = deviceObject;
+    t.gpuBytes = uploadBytes;
+    t.state.store(ResidencyState::Hot);
+
+===============================================================================
+Required witnesses
+===============================================================================
+
+VWA_ELASTIC_ZERO_FILL=0
+VWA_ELASTIC_SHORT_READ=0
+VWA_ELASTIC_READ_BYTES==VWA_ELASTIC_REQUEST_BYTES
+VWA_HOT_WITH_NULL_GPU=0
+VWA_GPU_DEVICE_OBJECT_NON_NULL=1
+VWA_SECOND_RESIDENCY_FSM=0
