@@ -5,6 +5,7 @@
 #include "K2MlaQBranchTiming.hpp"
 #include "K2MlaOProjTiming.hpp"
 #include "K2MlaQkvTiming.hpp"
+#include "lavapath/LiveInGenTune.hpp"
 #include "StreamPathTiming.hpp"
 #include <algorithm>
 #include <atomic>
@@ -67,6 +68,7 @@ inline void MlaStage_Reset() {
     QBr_Reset();
     OProj_Reset();
     Qkv_Reset();
+    rawr::live::ResetLiveTune();
 }
 
 inline void MlaStage_NoteSplitTopology(uint64_t wallUs, uint64_t qBranchUs,
