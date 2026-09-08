@@ -1,0 +1,37 @@
+IDE_PRODUCT_FINISH_BATCH_101
+============================
+Purpose: continue IDE finish after Batch 100 ProductRun + Wave3 APIs.
+Date: 2026-09-07
+
+## Law (unchanged)
+```
+ONE ProductRun path. Adapters only. ONE receipt. First owner owns fail.
+```
+
+## Batch of 15
+
+| #  | Item | Status | Notes |
+| -- | ---- | ------ | ----- |
+| 01 | Link Product100 into Release Win32IDE | OPEN | RAWRXD_PRODUCT100=1 cmake; EXE rebuild in flight |
+| 02 | Map confirms P100_* symbols | OPEN | post-link |
+| 03 | Command slash /git status live | OPEN | needs EXE |
+| 04 | Command slash /git diff live | OPEN | needs EXE |
+| 05 | Command slash /search live | OPEN | needs EXE |
+| 06 | /p100 session persist live | OPEN | needs EXE |
+| 07 | /p100 settings live | OPEN | needs EXE |
+| 08 | /p100 approvals live | OPEN | needs EXE |
+| 09 | /p100 wave3 smoke on EXE | OPEN | needs EXE |
+| 10 | IDE Ask → ProductRun (not batch generate) | WIRED | Deep2InferenceSession::GenerateStream |
+| 11 | AgenticBridge Ask uses generateStream path | OPEN | verify no generate() fork |
+| 12 | P1PRA Finalize=0 live witness | OPEN | Load GGUF → Send |
+| 13 | WAVE_4 error/recovery UX describe | OPEN | P100_DescribeError wired |
+| 14 | WAVE_4 smoke matrix host callbacks | OPEN | fill remaining SmokeHost fns |
+| 15 | PRODUCT_100 freeze manifest attempt | OPEN | after 01–14 |
+
+## Done upstream (Batch 100 — do not reopen)
+ProductRun/Receipt, CmdRun adapter, Wave3 API headless PASS,
+GitCapture safe.directory, Product100 cmake include.
+
+## Frozen
+STREAMER_VRAM, AGENTIC_TEMPLATE, COMMAND_HOME_SMOKE, KVA climb,
+Batch 007, CommandBroker(message,mode)

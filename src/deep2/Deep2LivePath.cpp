@@ -308,6 +308,9 @@ const LivePathCounters& LivePath_Counters() { return g_ctr; }
 bool LivePath_Active() { return g_active; }
 CycloneScheduler* LivePath_ActiveCyclone() { return g_cyclone; }
 bool LivePath_ShouldBrake() {
+    const char* lim = std::getenv("TRAILBRAKE_TPS_LIMIT");
+    if (!lim || lim[0] == '0' || std::strcmp(lim, "OFF") == 0)
+        return false;
     if (Fused_Enabled())
         return Fused_Last().brake && LivePath_MechOn(LP_MECH_TRAILBRAKE);
     return g_brake && LivePath_MechOn(LP_MECH_TRAILBRAKE);

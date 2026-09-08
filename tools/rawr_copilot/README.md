@@ -26,6 +26,11 @@ EDITOR BUFFER → cursor context → rawr_copilot stdio <model.rmc>
 
 Do not train per keystroke. Load model once; complete = resident lookup.
 
-## Law
+## Law / provenance
 
-`RawrCopilotMarkovLaw.hpp` · `BOUNDARY.txt` · `evidence/RAWRXD_COPILOT_MARKOV_001/`
+`evidence/RAWRXD_COPILOT_MARKOV_001/` — `LAW.txt`, `PROVENANCE.txt`, `SMOKE.txt`
+
+- Disk recovery: **none** (no older Markov on disk to merge).
+- Origin: prior chat paste → this tree.
+- SSOT going forward: **`tools/rawr_copilot/` + git history**.
+- Boundary: `DEEP2_HOTPATH=0` (standalone IDE completion).

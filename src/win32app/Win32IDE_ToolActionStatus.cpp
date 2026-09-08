@@ -1,19 +1,16 @@
 #include "Win32IDE.h"
+#include "../ui/tool_action_status.h"
 #include <windows.h>
+#include <string>
 
-// Handler for Tool Action Status feature
 void HandleToolActionStatus(void* idePtr) {
     Win32IDE* ide = static_cast<Win32IDE*>(idePtr);
     if (!ide) return;
-
-    // Show tool status UI
-    std::string status = "Tool Action Status Active\n\n";
-    status += "Monitoring:\n";
-    status += "- Real-time execution progress\n";
-    status += "- Tool output streaming\n";
-    status += "- Error detection\n";
-    status += "- Performance metrics\n";
-    status += "- Status notifications\n";
-
-    MessageBoxA(NULL, status.c_str(), "Tool Action Status", MB_ICONINFORMATION | MB_OK);
+    RawrXD::UI::ToolActionAccumulator acc;
+    acc.addAction(
+        RawrXD::UI::ToolActionStatus::RunTerminalAction("cmake --build .", 120));
+    acc.addAction(RawrXD::UI::ToolActionStatus::FinishedAction(0));
+    const std::string text = acc.renderPlainText();
+    ide->appendToOutput(std::string("[ToolActionStatus]\n") + text + "\n",
+                        "Tools", Win32IDE::OutputSeverity::Info);
 }

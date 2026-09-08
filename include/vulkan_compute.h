@@ -294,6 +294,8 @@ public:
     bool EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                                   uint32_t rows, uint32_t cols, VkBuffer& outDev,
                                   uint64_t pinKey = 0);
+    // INV_04: drop one pin after KVA dispatch (intentional residency worsen).
+    void ReleasePinnedPackedWeight(uint64_t pinKey);
     // Resident F32 vectors (MLA Q_A RMS scales) — upload once per pinKey.
     bool EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& outDev,
                          uint64_t pinKey);

@@ -27,6 +27,7 @@
 #include "../ANSIParser.h"
 #include "../deep2/Deep2IDEIntegration.hpp"
 #include "../deep2/execution_policy/ExecutionPolicyBridge.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 #include "Win32IDE_MainMenuAuthority.hpp"
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
 #include "P1PRA_ProcessState.hpp"
@@ -3517,27 +3518,24 @@ void Win32IDE::analyzeScript()
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             if (_guard.cancelled)
                 return;
-            if (m_nativeEngine)
-            {
-                std::string prompt =
-                    "Analyze the following script and report potential bugs, security issues, and improvements:\n\n" +
-                    script;
-                // Assuming CPUInferenceEngine has an 'infer' or 'generate' method that takes a string
-                // Based on cpu_inference_engine.cpp read earlier: std::string infer(const std::string& prompt);
-
-                auto* engine = m_nativeEngine.get();
-                auto tokens = engine->Tokenize(prompt);
-                auto output_tokens = engine->Generate(tokens, 512);
-                std::string result = engine->Detokenize(output_tokens);
-
-                // Post result back to UI thread or just append (if appendToOutput is thread-safe or we lock)
-                // appendToOutput uses SendMessage which is generally thread-safe for simple text
-                this->appendToOutput("\n=== AI Analysis Result ===\n" + result + "\n==========================\n",
-                                     "Output", OutputSeverity::Info);
+            // ProductRun only — no CPUInferenceEngine token-id path.
+            std::string prompt =
+                "Analyze the following script and report potential bugs, security issues, and improvements:\n\n" +
+                script;
+            if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+                _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
             }
-            else
-            {
-                this->appendToOutput("Error: Inference Engine not available.\n", "Errors", OutputSeverity::Error);
+            char buf[16384];
+            if (rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf)) && buf[0]) {
+                this->appendToOutput("\n=== AI Analysis Result ===\n" + std::string(buf) +
+                                         "\n==========================\n",
+                                     "Output", OutputSeverity::Info);
+            } else {
+                this->appendToOutput(
+                    "Error: ProductRun/Deep2 not ready (load a local GGUF).\n",
+                    "Errors", OutputSeverity::Error);
             }
         })
         .detach();
@@ -5785,16 +5783,16 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
 
     // LOCAL_ONLY_001: Ollama/HTTP path removed (NETWORK_FALLBACK=FORBIDDEN)
 
-    // Fallback: Local CPU Inference (Real Logic)
-    if (m_ggufLoader)
+    // ProductRun path (same as rawr run) — never CPUInferenceEngine Generate(ids).
+    if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+    }
     {
-        // Use the native fallback engine if available
-        if (m_nativeEngine)
-        {
-            auto* engine = m_nativeEngine.get();
-            auto tokens = engine->Tokenize(message);
-            auto output_tokens = engine->Generate(tokens, 512);
-            std::string response = engine->Detokenize(output_tokens);
+        char buf[8192];
+        if (rawr::ProductDeep2Infer(message.c_str(), buf, sizeof(buf)) && buf[0]) {
+            std::string response(buf);
             m_chatHistory.push_back({message, response});
             return response;
         }
@@ -5822,33 +5820,37 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
 
 void Win32IDE::toggleChatMode()
 {
-    m_chatMode = !m_chatMode;
-
-    if (m_chatMode)
+    if (!m_chatMode)
     {
-        // Entering chat mode
-        std::string status = "🤖 Chat Mode ON - Model: ";
-        status +=
-            m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
-
+        const bool modelOk = !m_loadedModelPath.empty() ||
+                             (m_nativeEngine && m_nativeEngine->IsModelLoaded());
+        if (!modelOk)
+        {
+            appendToOutput(
+                "NOT_PRODUCT_PATH=1 Chat mode refused: no GGUF loaded (ProductRun requires model).\n",
+                "Output", OutputSeverity::Warning);
+            appendChatMessage("System",
+                              "NOT_PRODUCT_PATH=1 Chat mode refused — load a GGUF first.");
+            return;
+        }
+        m_chatMode = true;
+        std::string status = "Chat Mode ON - Model: ";
+        status += m_loadedModelPath.empty()
+                      ? "(native)"
+                      : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
         appendToOutput(status, "Output", OutputSeverity::Info);
-        appendToOutput("Type your messages in the command input. Use /exit-chat to return to terminal mode.", "Output",
+        appendToOutput("Type messages in command input. /exit-chat returns to terminal.", "Output",
                        OutputSeverity::Info);
-
-        // Update status bar
         SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Chat Mode");
-
-        // Clear existing chat display and show instructions
-        appendChatMessage("System", "Chat mode activated! You can now talk with the loaded model.");
+        appendChatMessage("System", "Chat mode ON — ProductRun path (loaded model).");
         appendChatMessage("System", "Commands: /exit-chat to return to terminal mode");
+        return;
     }
-    else
-    {
-        // Exiting chat mode
-        appendToOutput("🔧 Chat Mode OFF - Returned to terminal mode", "Output", OutputSeverity::Info);
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Terminal Mode");
-        appendChatMessage("System", "Chat mode deactivated. Returned to terminal mode.");
-    }
+
+    m_chatMode = false;
+    appendToOutput("Chat Mode OFF - Returned to terminal mode", "Output", OutputSeverity::Info);
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Terminal Mode");
+    appendChatMessage("System", "Chat mode OFF — terminal mode.");
 }
 
 void Win32IDE::appendChatMessage(const std::string& user, const std::string& message)
@@ -6313,7 +6315,11 @@ bool Win32IDE::finishLoadModelForInferenceUI(const std::string& filepath, bool b
         setLoadedModelPath(filepath);
         METRICS.gauge("model.loaded", 1.0);
         METRICS.increment("model.load_success");
+        // Deep2/GGUF loaded: default Copilot send through HexMag when available.
+        m_settings.hexmagRouteCopilotPanel = true;
+        m_hexmagRouteCopilotPanel = true;
         appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
+        appendToOutput("HexMag Copilot route ON (Deep2 model loaded).\n", "System", OutputSeverity::Info);
         RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "PASS", "AgenticBridge.LoadModel");
         wireLayerProgressToOutputPanel();
         {
@@ -6530,34 +6536,22 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         return routeWithIntelligence(prompt);
     }
 
-    // LOCAL_ONLY_001: Ollama/HTTP path removed — never soft-stub on network miss
-    (void)0;
+    // Product path: Deep2 ProductRun (same as rawr run) — not CPUInferenceEngine.
+    {
+        if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+        }
+        char buf[8192];
+        if (rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf)) && buf[0])
+            return std::string(buf);
+    }
 
     std::string modelName =
         m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
 
-    // Local CPU Inference Engine
-    if (m_nativeEngine && m_nativeEngineLoaded)
-    {
-        RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine.get());
-        if (!engine->IsModelLoaded() && !m_loadedModelPath.empty())
-        {
-            engine->LoadModel(m_loadedModelPath);
-        }
-
-        if (engine->IsModelLoaded())
-        {
-            std::vector<int32_t> tokens = engine->Tokenize(prompt);
-            std::vector<int32_t> output = engine->Generate(tokens, 100);
-            return engine->Detokenize(output);
-        }
-        else
-        {
-            return "LOCAL_ONLY_001: FAIL_CLOSED — No model loaded in Native CPU Engine.";
-        }
-    }
-
-    return std::string("LOCAL_ONLY_001: FAIL_CLOSED — Deep2/GGUF backend not ready.\nModel: ") + modelName;
+    return std::string("LOCAL_ONLY_001: FAIL_CLOSED — ProductRun/Deep2 not ready.\nModel: ") + modelName;
 }
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
@@ -6599,7 +6593,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     P1PRA_Witness("P1PRA_INFERENCE", "worker_spawn");
 #endif
 
-    // Launch dedicated inference thread using Native Agentic Bridge
+    // Batch 004: ProductRun only — AgenticBridge is not an alternate generator.
     m_inferenceThread = std::thread(
         [this, prompt]()
         {
@@ -6612,136 +6606,86 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 }
             } runningGuard(this);
 
-            OutputDebugStringA("[AUDIT] Inference worker thread started\n");
+            OutputDebugStringA("[AUDIT] Inference worker: ProductRun path\n");
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             if (_guard.cancelled)
             {
-                OutputDebugStringA("[AUDIT] Inference thread cancelled (shutdown)\n");
                 m_inferenceRunning = false;
                 return;
             }
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
             P1PRA_ThreadWitness("inference_worker_enter");
 #endif
-            if (!m_agenticBridge)
-            {
-                OutputDebugStringA("[AUDIT] Agentic bridge missing - attempting to create\n");
-                if (!m_loadedModelPath.empty())
-                    ensureAgenticBridgeHasModel(m_loadedModelPath);
-                if (!m_agenticBridge)
-                {
-                    OutputDebugStringA("[AUDIT] FAILED to create agentic bridge\n");
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-                    P1PRA_Witness("P1PRA_INFERENCE", "bridge_missing");
-#endif
-                    if (m_inferenceCallback)
-                        m_inferenceCallback("", true);
-                    m_inferenceRunning = false;
-                    return;
+            if (m_loadedModelPath.empty()) {
+                if (m_inferenceCallback) {
+                    m_inferenceCallback(
+                        "FAILED_STAGE=RESOLVE FAILED_OWNER=MODEL_ALIAS "
+                        "Load a .gguf before async generate.",
+                        false);
+                    m_inferenceCallback("", true);
                 }
-                OutputDebugStringA("[AUDIT] Agentic bridge created successfully\n");
+                return;
             }
-            if (m_agenticBridge && !m_loadedModelPath.empty() &&
-                m_agenticBridge->GetCurrentModel() != m_loadedModelPath)
-                m_agenticBridge->LoadModel(m_loadedModelPath);
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+            (void)rawr::ProductOpenSession(m_loadedModelPath.c_str());
 
-            // Set callback to route NativeAgent stream to the UI
-            OutputDebugStringA("[AUDIT] Setting up output callback for streaming\n");
+            // Slash agent commands: bridge adapts tools; model turns still ProductRun.
+            if (!prompt.empty() && prompt[0] == '/' && m_agenticBridge) {
+                auto streamed = std::make_shared<std::atomic<bool>>(false);
+                m_agenticBridge->SetOutputCallback(
+                    [this, streamed](const std::string&, const std::string& msg) {
+                        if (m_inferenceStopRequested || isShuttingDown()) return;
+                        if (m_inferenceCallback && !msg.empty()) {
+                            streamed->store(true, std::memory_order_relaxed);
+                            m_inferenceCallback(msg, false);
+                        }
+                    });
+                const AgentResponse resp = m_agenticBridge->ExecuteAgentCommand(prompt);
+                m_currentInferenceResponse = resp.content;
+                if (m_inferenceCallback && !isShuttingDown()) {
+                    if (!streamed->load(std::memory_order_relaxed) && !resp.content.empty())
+                        m_inferenceCallback(resp.content, false);
+                    m_inferenceCallback("", true);
+                }
+                return;
+            }
+
             auto streamed = std::make_shared<std::atomic<bool>>(false);
-            m_agenticBridge->SetOutputCallback(
-                [this, streamed](const std::string& type, const std::string& msg)
-                {
+            std::string acc;
+            const char* failStage = "NONE";
+            const char* failOwner = "NONE";
+            const char* exitReason = "INCOMPLETE";
+            int firstTok = 0;
+            const bool ok = rawr::ProductDeep2InferStream(
+                prompt.c_str(), 256,
+                [this, streamed](const std::string& piece) -> bool {
                     if (m_inferenceStopRequested || isShuttingDown())
-                        return;
-                    if (m_inferenceCallback && !msg.empty())
-                    {
+                        return false;
+                    if (m_inferenceCallback && !piece.empty()) {
                         streamed->store(true, std::memory_order_relaxed);
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-                        if (P1PRA_RequestActive()) {
-                            rawrxd::GpuDecodeEfficiencyAuthority::Instance()
-                                .SampleDuringDecode();
-                        }
-#endif
-                        static int tokenCount = 0;
-                        tokenCount++;
-                        if (tokenCount <= 5 || tokenCount % 50 == 0)
-                        {
-                            char buf[128];
-                            snprintf(buf, sizeof(buf), "[AUDIT] Streaming token %d (len=%zu)\n", tokenCount,
-                                     msg.length());
-                            OutputDebugStringA(buf);
-                        }
-                        m_inferenceCallback(msg, false);
+                        m_inferenceCallback(piece, false);
                     }
-                });
-
-            // Execute via agent bridge (supports /edit, /think, etc.)
-            OutputDebugStringA("[AUDIT] Executing agent command\n");
-            const AgentResponse resp = m_agenticBridge->ExecuteAgentCommand(prompt);
-            OutputDebugStringA("[AUDIT] Agent command completed\n");
-            m_currentInferenceResponse = resp.content;
-
-            // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
-            // Note: For streaming responses, the full output was already sent via callback.
-            // We hook here for failure detection on the completed inference cycle.
-            // The response content was streamed — we check the accumulated result if available.
-            if (!m_inferenceStopRequested)
-            {
-                std::string accumulatedResponse = m_currentInferenceResponse;
-                if (!accumulatedResponse.empty())
-                {
-                    FailureClassification inferenceFailure = hookPostGeneration(accumulatedResponse, prompt);
-                    if (inferenceFailure.reason != AgentFailureType::None)
-                    {
-                        LOG_WARNING(
-                            "[Phase4B] Inference failure detected: " + failureTypeString(inferenceFailure.reason) +
-                            " (confidence=" + std::to_string(inferenceFailure.confidence) + ")");
-                        // For streaming responses, we log the failure and record it
-                        // but don't auto-retry (the user sees output in real-time)
-                        recordSimpleEvent(AgentEventType::FailureDetected,
-                                          "Inference failure: " + failureTypeString(inferenceFailure.reason) + " | " +
-                                              inferenceFailure.evidence);
-                    }
+                    return true;
+                },
+                &acc, &failStage, &failOwner, &exitReason, &firstTok);
+            m_currentInferenceResponse = acc;
+            if (m_inferenceCallback && !isShuttingDown()) {
+                if (!ok && acc.empty()) {
+                    std::string err = "FAILED_STAGE=";
+                    err += failStage ? failStage : "GENERATE_STREAM";
+                    err += " FAILED_OWNER=";
+                    err += failOwner ? failOwner : "FIRST_OWNER_RUNTIME";
+                    err += " EXIT_REASON=";
+                    err += exitReason ? exitReason : "FAIL";
+                    m_inferenceCallback(err, false);
+                } else if (!streamed->load(std::memory_order_relaxed) && !acc.empty()) {
+                    m_inferenceCallback(acc, false);
                 }
+                (void)firstTok;
+                m_inferenceCallback("", true);
             }
-
-            m_inferenceRunning = false;
-            OutputDebugStringA("[AUDIT] Inference thread completing\n");
-            if (m_inferenceCallback)
-            {
-                const bool shuttingDown = isShuttingDown();
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-                if (shuttingDown)
-                    P1PRA_Witness("P1PRA_CALLBACK_SUPPRESSED", "shutdown");
-#endif
-                if (!shuttingDown)
-                {
-                    if (!streamed->load(std::memory_order_relaxed))
-                    {
-                        if (!resp.content.empty())
-                            m_inferenceCallback(resp.content, false);
-                        else
-                        {
-                            const std::string err =
-                                (resp.type == AgentResponseType::AGENT_ERROR)
-                                    ? (resp.content.empty() ? "Agent error (no detail)." : resp.content)
-                                    : "No response from local model. Load a .gguf under Engine control, then retry.";
-                            m_inferenceCallback(err, false);
-                        }
-                    }
-                    OutputDebugStringA("[AUDIT] Calling final callback (complete=true)\n");
-                    m_inferenceCallback("", true);  // Finalize
-                }
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-                else if (P1PRA_RequestActive())
-                {
-                    p1praCompleteProductRequest("Build",
-                                                P1PRA_RealProductRequestPass(
-                                                    streamed->load(std::memory_order_relaxed)));
-                }
-#endif
-            }
-            OutputDebugStringA("[AUDIT] Inference thread finished\n");
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
             P1PRA_ThreadWitness("inference_worker_exit");
 #endif
@@ -6753,6 +6697,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 void Win32IDE::stopInference()
 {
     m_inferenceStopRequested = true;
+    rawr::ProductRequestCancel();
     m_inferenceRunning = false;
 }
 
@@ -7500,7 +7445,12 @@ void Win32IDE::HandleCopilotSend()
 
     OutputDebugStringA(("[HandleCopilotSend] sending len=" + std::to_string(userMessage.size()) + "\n").c_str());
 
-    // Prefer local/Ollama chat path by default when HexMag route is off or declines.
+    // Prefer local Deep2 / native path before Ollama when a GGUF is loaded.
+    if (m_nativeEngineLoaded && m_nativeEngine)
+    {
+        HandleCopilotSend_Ollama(); // local branch first inside
+        return;
+    }
     if (m_settings.hexmagRouteCopilotPanel && tryHexMagControllerCopilotSend(userMessage))
     {
         const std::string displayText = "\n[User]: " + userMessage + "\n\n[AI]: ";

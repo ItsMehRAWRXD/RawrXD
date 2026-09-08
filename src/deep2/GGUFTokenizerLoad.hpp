@@ -101,7 +101,14 @@ inline bool readStringArray(FILE* fp, std::vector<std::string>& out) {
         }
         return false;
     }
-    if (count > 500000) return false;
+    // Gemma3 merges ≈514k; cap was 500k and returned false WITHOUT skipping →
+    // misaligned KV parse (garbage type=94) and tokenizer load FAIL.
+    if (count > 2000000ull) {
+        for (uint64_t i = 0; i < count; ++i) {
+            if (!skipValue(fp, elemType)) return false;
+        }
+        return false;
+    }
     out.clear();
     out.reserve(static_cast<size_t>(count));
     for (uint64_t i = 0; i < count; ++i) {
@@ -202,7 +209,19 @@ inline GGUFTokenizerBundle LoadTokenizerFromGGUF(const char* filepath) {
         }
         if (key == "tokenizer.ggml.merges" && vtype == 9) {
             if (!detail::readStringArray(fp, bundle.merges)) {
-                // Non-fatal for SPM models without merges
+                std::snprintf(bundle.error, sizeof(bundle.error),
+                              "merges array failed");
+                std::fclose(fp);
+                return bundle;
+            }
+            continue;
+        }
+        if (key == "tokenizer.ggml.token_type" && vtype == 9) {
+            if (!detail::skipValue(fp, vtype)) {
+                std::snprintf(bundle.error, sizeof(bundle.error),
+                              "token_type skip failed");
+                std::fclose(fp);
+                return bundle;
             }
             continue;
         }

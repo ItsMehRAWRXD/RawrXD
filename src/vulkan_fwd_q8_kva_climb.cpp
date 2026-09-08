@@ -63,6 +63,7 @@ bool VulkanCompute::ClimbQ8KvaOnce(VkBuffer wbuf, size_t bytes, size_t inB,
             std::printf("KVA_CLIMB_CAND ROWS=%u LEGAL=0 PARITY=0 "
                         "GPU_TIME_US=0 BIND=0 KEEP_GOING=1\n",
                         rpw);
+            rawr::live::NoteKvaClimbCandLine();
             continue;
         }
         const uint64_t ku = KvaNowUs() - t0;
@@ -87,6 +88,7 @@ bool VulkanCompute::ClimbQ8KvaOnce(VkBuffer wbuf, size_t bytes, size_t inB,
                     "GPU_TIME_US=%llu KEEP_GOING=1\n",
                     rpw, parity ? 1u : 0u, (unsigned long long)ku);
         std::fflush(stdout);
+        rawr::live::NoteKvaClimbCandLine();
         if (parity && ku < bestUs) {
             bestUs = ku;
             bestRows = rpw;

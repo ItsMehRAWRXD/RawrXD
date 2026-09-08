@@ -22,6 +22,7 @@
 #include "../core/model_name_util.h"
 #include "../core/unified_hotpatch_manager.hpp"
 #include "../deep2/NvmeBunnyHopApi.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 #define RAWR_HAS_NATIVE_E2E 1
 #include "../../native_e2e/RawrNativeServerDispatch.hpp"
 #include "../../native_e2e/rawr_native_engine_hooks.h"
@@ -1912,18 +1913,27 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
         return;
     }
 
-    // ── LocalGGUF path (original behavior preserved) ─────────────────────
-    if (!m_nativeEngine || !m_nativeEngine->IsModelLoaded())
+    // ── LocalGGUF — ProductRun only (same authority as rawr run) ─────────
+    if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+    }
+    char outBuf[65536];
+    outBuf[0] = 0;
+    if (!rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf)) || !outBuf[0])
     {
-        std::string resp = LocalServerUtil::buildHttpResponse(400, "{\"error\":\"no model loaded\"}");
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            400, "{\"error\":\"ProductRun/Deep2 not ready — load a local GGUF\"}");
         LocalServerUtil::sendAll(client, resp);
         return;
     }
+    const std::string fullResponse(outBuf);
+    const size_t genTokApprox = (std::max)((size_t)1, fullResponse.size() / 4);
 
     uint64_t nativeReqId = 0;
 #if defined(RAWR_HAS_NATIVE_E2E)
     {
-        // HTML prepare → generate carries rawr_native_request_id
         std::string idStr;
         if (LocalServerUtil::extractJsonString(body, "rawr_native_request_id", idStr) && !idStr.empty())
             nativeReqId = (uint64_t)_strtoui64(idStr.c_str(), nullptr, 10);
@@ -1935,56 +1945,42 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
         if (nativeReqId)
             RAWR_NATIVE_ENGINE_ENTER(nativeReqId, /*LocalGGUF*/1u,
                 RN_ENGINE_MODE_SAFEDECODE | RN_ENGINE_MODE_TENSORHOP);
+        if (nativeReqId)
+            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
     }
 #endif
-
-    auto tokens = m_nativeEngine->Tokenize(prompt);
-    auto generated = m_nativeEngine->Generate(tokens, maxTokens);
-
-#if defined(RAWR_HAS_NATIVE_E2E)
-    if (nativeReqId && !generated.empty())
-        RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
-#endif
+    (void)maxTokens;
+    (void)temperature;
 
     if (stream)
     {
         LocalServerUtil::sendSSEHeaders(client);
-
-        for (const auto& tok : generated)
+        m_localServerStats.totalTokens += (int)genTokApprox;
+        std::string event =
+            "{\"model\":\"rawrxd\",\"response\":\"" + LocalServerUtil::escapeJson(fullResponse) +
+            "\",\"done\":false}\n";
+        if (!LocalServerUtil::sendAll(client, event))
         {
-            std::string text = m_nativeEngine->Detokenize({tok});
-            m_localServerStats.totalTokens++;
-
-            std::string event =
-                "{\"model\":\"rawrxd\",\"response\":\"" + LocalServerUtil::escapeJson(text) + "\",\"done\":false}\n";
-            bool r = LocalServerUtil::sendAll(client, event);
-            if (!r)
-            {
 #if defined(RAWR_HAS_NATIVE_E2E)
-                if (nativeReqId)
-                    RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), -1);
+            if (nativeReqId)
+                RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)genTokApprox, -1);
 #endif
-                return;
-            }
+            return;
         }
-
-        std::string doneEvent = "{\"model\":\"rawrxd\",\"response\":\"\",\"done\":true}\n";
-        LocalServerUtil::sendAll(client, doneEvent);
+        LocalServerUtil::sendAll(client, "{\"model\":\"rawrxd\",\"response\":\"\",\"done\":true}\n");
     }
     else
     {
-        std::string fullResponse = m_nativeEngine->Detokenize(generated);
-        m_localServerStats.totalTokens += (int)generated.size();
-
+        m_localServerStats.totalTokens += (int)genTokApprox;
         std::string json =
-            "{\"model\":\"rawrxd\",\"response\":\"" + LocalServerUtil::escapeJson(fullResponse) + "\",\"done\":true}";
-        std::string resp = LocalServerUtil::buildHttpResponse(200, json);
-        LocalServerUtil::sendAll(client, resp);
+            "{\"model\":\"rawrxd\",\"response\":\"" + LocalServerUtil::escapeJson(fullResponse) +
+            "\",\"done\":true}";
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(200, json));
     }
 
 #if defined(RAWR_HAS_NATIVE_E2E)
     if (nativeReqId)
-        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), 0);
+        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)genTokApprox, 0);
 #endif
 }
 
@@ -2050,13 +2046,24 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
         return;
     }
 
-    // ── LocalGGUF path (original behavior preserved) ─────────────────────
-    if (!m_nativeEngine || !m_nativeEngine->IsModelLoaded())
+    // ── LocalGGUF — ProductRun only (OpenAI-compat surface) ───────────────
+    if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+    }
+    char outBuf[65536];
+    outBuf[0] = 0;
+    if (!rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf)) || !outBuf[0])
     {
-        std::string resp = LocalServerUtil::buildHttpResponse(400, "{\"error\":{\"message\":\"No model loaded\"}}");
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            400, "{\"error\":{\"message\":\"ProductRun/Deep2 not ready — load a local GGUF\"}}");
         LocalServerUtil::sendAll(client, resp);
         return;
     }
+    const std::string fullResponse(outBuf);
+    const size_t genTokApprox = (std::max)((size_t)1, fullResponse.size() / 4);
+    const size_t promptTokApprox = (std::max)((size_t)1, prompt.size() / 4);
 
     uint64_t nativeReqId = 0;
 #if defined(RAWR_HAS_NATIVE_E2E)
@@ -2072,65 +2079,47 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
         if (nativeReqId)
             RAWR_NATIVE_ENGINE_ENTER(nativeReqId, 1u,
                 RN_ENGINE_MODE_SAFEDECODE | RN_ENGINE_MODE_TENSORHOP);
+        if (nativeReqId)
+            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
     }
 #endif
-
-    auto tokens = m_nativeEngine->Tokenize(prompt);
-    auto generated = m_nativeEngine->Generate(tokens, maxTokens);
-
-#if defined(RAWR_HAS_NATIVE_E2E)
-    if (nativeReqId && !generated.empty())
-        RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
-#endif
+    (void)maxTokens;
+    (void)temperature;
 
     if (stream)
     {
         LocalServerUtil::sendSSEHeaders(client);
-
-        for (const auto& tok : generated)
+        m_localServerStats.totalTokens += (int)genTokApprox;
+        std::ostringstream event;
+        event << "data: {\"id\":\"" << requestId << "\",\"object\":\"chat.completion.chunk\""
+              << ",\"choices\":[{\"index\":0,\"delta\":{\"content\":\""
+              << LocalServerUtil::escapeJson(fullResponse) << "\"}}]}\n\n";
+        if (!LocalServerUtil::sendAll(client, event.str()))
         {
-            std::string text = m_nativeEngine->Detokenize({tok});
-            m_localServerStats.totalTokens++;
-
-            std::ostringstream event;
-            event << "data: {\"id\":\"" << requestId << "\",\"object\":\"chat.completion.chunk\""
-                  << ",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"" << LocalServerUtil::escapeJson(text)
-                  << "\"}}]}\n\n";
-
-            std::string eventStr = event.str();
-            bool r = LocalServerUtil::sendAll(client, eventStr);
-            if (!r)
-            {
 #if defined(RAWR_HAS_NATIVE_E2E)
-                if (nativeReqId)
-                    RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), -1);
+            if (nativeReqId)
+                RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)genTokApprox, -1);
 #endif
-                return;
-            }
+            return;
         }
-
-        std::string doneStr = "data: [DONE]\n\n";
-        LocalServerUtil::sendAll(client, doneStr);
+        LocalServerUtil::sendAll(client, "data: [DONE]\n\n");
     }
     else
     {
-        std::string fullResponse = m_nativeEngine->Detokenize(generated);
-        m_localServerStats.totalTokens += (int)generated.size();
-
+        m_localServerStats.totalTokens += (int)genTokApprox;
         std::ostringstream j;
         j << "{\"id\":\"" << requestId << "\",\"object\":\"chat.completion\""
           << ",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\""
           << LocalServerUtil::escapeJson(fullResponse) << "\"},\"finish_reason\":\"stop\"}]"
-          << ",\"usage\":{\"prompt_tokens\":" << tokens.size() << ",\"completion_tokens\":" << generated.size()
-          << ",\"total_tokens\":" << (tokens.size() + generated.size()) << "}}";
-
-        std::string resp = LocalServerUtil::buildHttpResponse(200, j.str());
-        LocalServerUtil::sendAll(client, resp);
+          << ",\"usage\":{\"prompt_tokens\":" << promptTokApprox
+          << ",\"completion_tokens\":" << genTokApprox
+          << ",\"total_tokens\":" << (promptTokApprox + genTokApprox) << "}}";
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(200, j.str()));
     }
 
 #if defined(RAWR_HAS_NATIVE_E2E)
     if (nativeReqId)
-        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)generated.size(), 0);
+        RAWR_NATIVE_COMPLETE(nativeReqId, (uint64_t)genTokApprox, 0);
 #endif
 }
 

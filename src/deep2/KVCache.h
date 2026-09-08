@@ -65,14 +65,18 @@ public:
     // Grow maxSeqLen, preserving written prefix positions
     bool grow(size_t newMaxSeqLen);
     
-    // Memory usage
+    // Memory usage — live allocated pages, not virtual maxSeq
     size_t memoryUsed() const;
+    size_t liveBytes() const { return memoryUsed(); }
+    size_t evictColdPages();
     
 private:
     KVCacheConfig config;
-    float* kCache;  // [layers][seq][heads][head_dim]
-    float* vCache;  // [layers][seq][heads][head_dim]
+    float* kCache;  // [layers][allocatedSeq][heads][head_dim]
+    float* vCache;
     size_t currentPos;
+    size_t allocatedSeq;
+    size_t virtualMaxSeq;
     bool initialized;
     
     // Calculate offsets

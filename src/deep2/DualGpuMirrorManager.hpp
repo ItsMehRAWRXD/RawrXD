@@ -1,4 +1,8 @@
 #pragma once
+// SUPERSEDED anti-pattern: mirrors/copies weights across GPUs.
+// Use Deep2::dual_lane::DualLaneChoreographer instead:
+//   WEIGHTS DO NOT CROSS LANES — only activations/receipts move.
+// DistributeWeightsToDevices is incompatible with DualSovereign policy.
 
 #include <windows.h>
 #include <cstdint>

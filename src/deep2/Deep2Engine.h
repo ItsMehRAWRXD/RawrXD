@@ -28,6 +28,7 @@
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
 #include "VirtualTensorDesc.hpp"
+#include <cstdio>
 #include "ElasticResidencyManager.hpp"
 #include "CycloneScheduler.hpp"
 #include "Deep2LivePath.hpp"
@@ -49,6 +50,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <atomic>
+#include <cstdint>
 
 namespace Deep2 {
 
@@ -124,10 +126,13 @@ struct LayerWeights {
     WeightTensor ssmA;          // [ssmStateDim] — SSM state transition parameters (F32)
     WeightTensor ssmAlpha;      // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
     WeightTensor ssmBeta;       // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
-    WeightTensor ssmConv1d;     // [convKernelSize, hiddenDim*2] — causal conv1d weights (F32)
+    WeightTensor ssmIn;         // Nemotron-H: blk.N.ssm_in.weight
+    WeightTensor ssmD;          // Nemotron-H: blk.N.ssm_d skip scale
+    WeightTensor ssmConv1d;     // [convKernelSize, channels] — causal conv1d weights
+    WeightTensor ssmConv1dBias; // Nemotron-H: blk.N.ssm_conv1d.bias
     WeightTensor ssmDtBias;     // [ssmStateDim] — delta_t bias (F32)
-    WeightTensor ssmNorm;       // [ssmStateDim] — RMSNorm weights for SSM path (F32)
-    WeightTensor ssmOut;        // [hiddenDim, hiddenDim] — SSM output projection (Q4_K)
+    WeightTensor ssmNorm;       // SSM path RMSNorm
+    WeightTensor ssmOut;        // SSM output projection
     bool         hasSSM = false; // true when SSM tensors are populated
 };
 
@@ -268,6 +273,13 @@ struct GenerationResult {
     bool completed = false;
 };
 
+enum class ModelState : uint8_t {
+    Closed = 0,
+    Indexed = 1,
+    Choreographable = 2,
+    Generating = 3
+};
+
 using TokenCallback =
     std::function<bool(int32_t tokenId, const std::string& token)>;
 
@@ -352,6 +364,18 @@ public:
     // Get engine info
     bool isInitialized() const { return initialized; }
     bool isModelLoaded() const { return modelWeights.loaded; }
+    ModelState modelState() const { return modelState_; }
+    bool hostQ8GemvSafe() const { return hostQ8GemvSafe_; }
+    void emitHostQ8GemvReceipts(FILE* f) const {
+        if (!f) return;
+        std::fprintf(f,
+            "HOST_Q8_GEMV_FFN=%d\nHOST_Q8_GEMV_ATTN=%d\nHOST_Q8_GEMV_SSM_IN=%d\n"
+            "HOST_Q8_GEMV_NUMERIC_FINITE=%d\nHOST_Q8_GEMV_BOUNDS_SAFE=%d\n"
+            "HOST_Q8_GEMV_REFERENCE_PARITY=%d\nHOST_Q8_GEMV_SAFE=%d\n",
+            hostQ8Ffn_, hostQ8Attn_, hostQ8SsmIn_, hostQ8Finite_,
+            hostQ8Bounds_, hostQ8Parity_, hostQ8GemvSafe_ ? 1 : 0);
+        std::fflush(f);
+    }
     const EngineConfig& getConfig() const { return config; }
     const ModelWeights& getModelWeights() const { return modelWeights; }
     
@@ -745,6 +769,7 @@ private:
     float* gateBuf = nullptr;
     float* upBuf = nullptr;
     float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
+    float* attnHeadScratch_ = nullptr; // [numHeads*headDim] pre-O concat
 
     // MLA (K2) buffers
     float* mlaQ_a = nullptr;      // [qLoraRank]
@@ -763,6 +788,15 @@ private:
     size_t ssmConvKernel = 4;       // Conv1d kernel size (from tensor dims)
 
     bool initialized = false;
+    ModelState modelState_ = ModelState::Closed;
+    bool hostQ8GemvSafe_ = true;
+    bool hostDecodeSanitize_ = false;
+    int hostQ8Ffn_ = 1;
+    int hostQ8Attn_ = 1;
+    int hostQ8SsmIn_ = 1;
+    int hostQ8Finite_ = 1;
+    int hostQ8Bounds_ = 1;
+    int hostQ8Parity_ = 1;
     
     // Internal methods
     bool allocateBuffers();

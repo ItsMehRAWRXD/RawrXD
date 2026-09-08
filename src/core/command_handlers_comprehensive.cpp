@@ -26,66 +26,80 @@ struct CommandResult {
     const char* error;
 };
 
-// Model management handlers
+// Model management handlers — fiction stubs (not ProductRun)
 CommandResult handleModelList(const CommandContext& ctx) {
-    return {0, "Models listed", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelList", nullptr};
 }
 
 CommandResult handleModelLoad(const CommandContext& ctx) {
-    return {0, "Model loaded", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelLoad", nullptr};
 }
 
 CommandResult handleModelUnload(const CommandContext& ctx) {
-    return {0, "Model unloaded", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelUnload", nullptr};
 }
 
 CommandResult handleModelQuantize(const CommandContext& ctx) {
-    return {0, "Model quantized", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelQuantize", nullptr};
 }
 
 CommandResult handleModelFinetune(const CommandContext& ctx) {
-    return {0, "Model finetuned", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ModelFinetune", nullptr};
 }
 
 // Disk management handlers
 CommandResult handleDiskListDrives(const CommandContext& ctx) {
-    return {0, "Drives listed", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskListDrives", nullptr};
 }
 
 CommandResult handleDiskScanPartitions(const CommandContext& ctx) {
-    return {0, "Partitions scanned", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DiskScanPartitions", nullptr};
 }
 
 // Governor handlers
 CommandResult handleGovernorStatus(const CommandContext& ctx) {
-    return {0, "Governor status: active", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorStatus", nullptr};
 }
 
 CommandResult handleGovernorSetPowerLevel(const CommandContext& ctx) {
-    return {0, "Power level set", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 GovernorSetPowerLevel", nullptr};
 }
 
 // Marketplace handlers
 CommandResult handleMarketplaceList(const CommandContext& ctx) {
-    return {0, "Marketplace items listed", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceList", nullptr};
 }
 
 CommandResult handleMarketplaceInstall(const CommandContext& ctx) {
-    return {0, "Marketplace item installed", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MarketplaceInstall", nullptr};
 }
 
 // Reverse engineering handlers
 CommandResult handleRevengFindVulnerabilities(const CommandContext& ctx) {
-    return {0, "Vulnerability scan complete", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 RevengFindVulnerabilities", nullptr};
 }
 
 // Hybrid handlers
 CommandResult handleHybridSemanticPrefetch(const CommandContext& ctx) {
-    return {0, "Semantic prefetch complete", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridSemanticPrefetch", nullptr};
 }
 
 CommandResult handleHybridCorrectionLoop(const CommandContext& ctx) {
-    return {0, "Correction loop complete", nullptr};
+    (void)ctx;
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HybridCorrectionLoop", nullptr};
 }
 
 // Multi-response handlers
@@ -1024,16 +1038,6 @@ CommandResult handleAIStopGeneration(const CommandContext& ctx) {
     return {0, "Generation stopped", nullptr};
 }
 
-// Autonomous Agent handler
-CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
-    return {0, "Autonomous agent activated", nullptr};
-}
-
-// Chat Message Renderer handler
-CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
-    return {0, "Chat message renderer activated", nullptr};
-}
-
 // Chat Panel handler
 CommandResult HandleChatPanel(const CommandContext& ctx) {
     return {0, "Chat panel opened", nullptr};
@@ -1046,67 +1050,58 @@ CommandResult HandleConsentPrompt(const CommandContext& ctx) {
 
 // Cursor Parity Bridge handler
 CommandResult HandleCursorParityBridge(const CommandContext& ctx) {
-    return {0, "Cursor parity bridge activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 CursorParityBridge", nullptr};
 }
 
 // Hardware Synthesizer handler
 CommandResult HandleHardwareSynthesizer(const CommandContext& ctx) {
-    return {0, "Hardware synthesizer activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HardwareSynthesizer", nullptr};
+}
+CommandResult HandleMeshBrain(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MeshBrain", nullptr};
+}
+CommandResult HandleNeuralBridge(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NeuralBridge", nullptr};
+}
+CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OmegaOrchestrator", nullptr};
+}
+CommandResult HandleSelfHostEngine(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SelfHostEngine", nullptr};
+}
+CommandResult HandleSpeciatorEngine(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SpeciatorEngine", nullptr};
 }
 
 // IDE Diagnostic Auto Healer handler
 CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) {
-    return {0, "IDE diagnostic auto-healer activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer", nullptr};
 }
-
-// IOCP File Watcher handler
 CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) {
-    return {0, "IOCP file watcher activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher", nullptr};
 }
-
-// MCP Hooks handler
 CommandResult HandleMCPHooks(const CommandContext& ctx) {
-    return {0, "MCP hooks activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks", nullptr};
 }
-
-// Mesh Brain handler
-CommandResult HandleMeshBrain(const CommandContext& ctx) {
-    return {0, "Mesh brain activated", nullptr};
-}
-
-// Neural Bridge handler
-CommandResult HandleNeuralBridge(const CommandContext& ctx) {
-    return {0, "Neural bridge activated", nullptr};
-}
-
-// Omega Orchestrator handler
-CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) {
-    return {0, "Omega orchestrator activated", nullptr};
-}
-
-// OS Explorer Interceptor handler
 CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) {
-    return {0, "OS explorer interceptor activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor", nullptr};
 }
-
-// Perf Telemetry handler
 CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
-    return {0, "Performance telemetry activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry", nullptr};
+}
+CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer", nullptr};
+}
+CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent", nullptr};
+}
+CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer", nullptr};
 }
 
 // Plugin Signature handler
 CommandResult HandlePluginSignature(const CommandContext& ctx) {
     return {0, "Plugin signature verified", nullptr};
-}
-
-// Self Host Engine handler
-CommandResult HandleSelfHostEngine(const CommandContext& ctx) {
-    return {0, "Self-host engine activated", nullptr};
-}
-
-// Speciator Engine handler
-CommandResult HandleSpeciatorEngine(const CommandContext& ctx) {
-    return {0, "Speciator engine activated", nullptr};
 }
 
 // Tier1 additional handlers
@@ -1141,7 +1136,8 @@ CommandResult HandleToolActionStatus(const CommandContext& ctx) {
 
 // Transcendence Coordinator handler
 CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
-    return {0, "Transcendence coordinator activated", nullptr};
+    return {1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator",
+            nullptr};
 }
 
 // Update Signature handler
@@ -1188,11 +1184,6 @@ CommandResult handleVscExtStats(const CommandContext& ctx) {
 
 CommandResult handleVscExtStatus(const CommandContext& ctx) {
     return {0, "VSCode extension status displayed", nullptr};
-}
-
-// Vulkan Renderer handler
-CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
-    return {0, "Vulkan renderer activated", nullptr};
 }
 
 // Direct read/search functions (C ABI)

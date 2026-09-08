@@ -39,7 +39,9 @@ static void alignedFree(float* ptr) {
 // KVCache Implementation
 // ============================================================================
 
-KVCache::KVCache() : kCache(nullptr), vCache(nullptr), currentPos(0), initialized(false) {}
+KVCache::KVCache()
+    : kCache(nullptr), vCache(nullptr), currentPos(0), allocatedSeq(0),
+      virtualMaxSeq(0), initialized(false) {}
 
 KVCache::~KVCache() {
     if (kCache) alignedFree(kCache);
@@ -48,20 +50,19 @@ KVCache::~KVCache() {
 
 bool KVCache::initialize(const KVCacheConfig& cfg) {
     config = cfg;
-    
-    size_t cacheSize = config.numLayers * config.maxSeqLen * 
+    virtualMaxSeq = cfg.maxSeqLen ? cfg.maxSeqLen : 1;
+    allocatedSeq = virtualMaxSeq < 8 ? virtualMaxSeq : 8;
+
+    size_t cacheSize = config.numLayers * allocatedSeq *
                        config.numHeads * config.headDim;
-    
+
     size_t kBytes = cacheSize * sizeof(float);
     size_t vBytes = cacheSize * sizeof(float);
     size_t totalBytes = kBytes + vBytes;
-    printf("[KVCache] Initializing: layers=%zu maxSeqLen=%zu numHeads=%zu headDim=%zu\n",
-           config.numLayers, config.maxSeqLen, config.numHeads, config.headDim);
-    printf("[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)\n");
-    printf("[KVCache]        = %zu * %zu * %zu * %zu * 2 * %zu\n",
-           config.numLayers, config.maxSeqLen, config.numHeads, config.headDim, sizeof(float));
-    printf("[KVCache]        = %zu bytes (K=%zu + V=%zu)\n", totalBytes, kBytes, vBytes);
-    printf("[KVCache] Total cache size: %.2f MB\n", totalBytes / (1024.0 * 1024.0));
+    printf("[KVCache] Lazy pages: layers=%zu page=%zu virtualMax=%zu heads=%zu dim=%zu\n",
+           config.numLayers, allocatedSeq, virtualMaxSeq, config.numHeads,
+           config.headDim);
+    printf("[KVCache] HOT_BYTES=%zu (not layers*maxSeq*heads)\n", totalBytes);
     
     // Allocate K and V caches
     kCache = alignedAlloc(cacheSize);
@@ -100,6 +101,8 @@ void KVCache::getKVPointers(size_t layer, size_t head, float** kPtr, float** vPt
         *vPtr = nullptr;
         return;
     }
+    if (currentPos >= allocatedSeq && currentPos < virtualMaxSeq)
+        grow(currentPos + 8 < virtualMaxSeq ? currentPos + 8 : virtualMaxSeq);
     
     size_t offset = getHeadOffset(layer, head, currentPos);
     *kPtr = kCache + offset;
@@ -117,15 +120,17 @@ const float* KVCache::getV(size_t layer, size_t head, size_t pos) const {
 }
 
 void KVCache::advance() {
-    if (currentPos < config.maxSeqLen) {
+    if (currentPos + 1 > allocatedSeq && currentPos + 1 <= virtualMaxSeq)
+        grow(currentPos + 8 < virtualMaxSeq ? currentPos + 8 : virtualMaxSeq);
+    if (currentPos < virtualMaxSeq)
         currentPos++;
-    }
 }
 
 bool KVCache::grow(size_t newMaxSeqLen) {
     if (!initialized || !kCache || !vCache) return false;
-    if (newMaxSeqLen <= config.maxSeqLen) return true;
-    const size_t oldMax = config.maxSeqLen;
+    if (newMaxSeqLen > virtualMaxSeq) virtualMaxSeq = newMaxSeqLen;
+    if (newMaxSeqLen <= allocatedSeq) return true;
+    const size_t oldMax = allocatedSeq;
     const size_t heads = config.numHeads;
     const size_t dim = config.headDim;
     const size_t layers = config.numLayers;
@@ -154,18 +159,59 @@ bool KVCache::grow(size_t newMaxSeqLen) {
     alignedFree(vCache);
     kCache = nk;
     vCache = nv;
-    config.maxSeqLen = newMaxSeqLen;
-    printf("[KVCache] grow maxSeqLen %zu -> %zu (pos=%zu)\n", oldMax, newMaxSeqLen, currentPos);
+    allocatedSeq = newMaxSeqLen;
+    config.maxSeqLen = virtualMaxSeq;
+    printf("[KVCache] page grow %zu -> %zu hot (virtualMax=%zu pos=%zu)\n",
+           oldMax, newMaxSeqLen, virtualMaxSeq, currentPos);
     return true;
 }
 
 size_t KVCache::memoryUsed() const {
     if (!initialized) return 0;
-    return config.totalSize();
+    return config.numLayers * allocatedSeq * config.numHeads * config.headDim *
+           sizeof(float) * 2;
+}
+
+size_t KVCache::evictColdPages() {
+    if (!initialized || allocatedSeq <= 8) return 0;
+    const size_t keep = currentPos < 8 ? 8 : currentPos;
+    if (keep >= allocatedSeq) return 0;
+    const size_t before = memoryUsed();
+    // Keep hot prefix; drop unused tail by shrinking allocation.
+    const size_t oldMax = allocatedSeq;
+    const size_t heads = config.numHeads;
+    const size_t dim = config.headDim;
+    const size_t layers = config.numLayers;
+    const size_t newElems = layers * keep * heads * dim;
+    float* nk = alignedAlloc(newElems);
+    float* nv = alignedAlloc(newElems);
+    if (!nk || !nv) {
+        if (nk) alignedFree(nk);
+        if (nv) alignedFree(nv);
+        return 0;
+    }
+    memset(nk, 0, newElems * sizeof(float));
+    memset(nv, 0, newElems * sizeof(float));
+    for (size_t L = 0; L < layers; ++L) {
+        for (size_t p = 0; p < currentPos && p < keep; ++p) {
+            for (size_t h = 0; h < heads; ++h) {
+                const size_t oldOff = L * oldMax * heads * dim + p * heads * dim + h * dim;
+                const size_t newOff = L * keep * heads * dim + p * heads * dim + h * dim;
+                memcpy(nk + newOff, kCache + oldOff, dim * sizeof(float));
+                memcpy(nv + newOff, vCache + oldOff, dim * sizeof(float));
+            }
+        }
+    }
+    alignedFree(kCache);
+    alignedFree(vCache);
+    kCache = nk;
+    vCache = nv;
+    allocatedSeq = keep;
+    return before > memoryUsed() ? before - memoryUsed() : 0;
 }
 
 size_t KVCache::getLayerOffset(size_t layer) const {
-    return layer * config.maxSeqLen * config.numHeads * config.headDim;
+    return layer * allocatedSeq * config.numHeads * config.headDim;
 }
 
 size_t KVCache::getHeadOffset(size_t layer, size_t head, size_t pos) const {

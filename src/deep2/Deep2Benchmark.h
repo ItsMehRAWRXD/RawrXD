@@ -27,8 +27,16 @@ enum BenchmarkFailReason : uint32_t {
     BENCH_FAIL_NONE = 0,
     BENCH_FAIL_NON_PRODUCTION_DECODE_PATH = 1,
     BENCH_FAIL_DECODE_UNSTABLE = 2,
-    BENCH_FAIL_ZERO_TOKENS = 3,
+    BENCH_FAIL_ZERO_TOKENS = 3,          // symptom; prefer owner codes below
     BENCH_FAIL_INSUFFICIENT_WINDOWS = 4,
+    BENCH_FAIL_LOAD_FAILED = 5,
+    BENCH_FAIL_PREFILL_FAILED = 6,
+    BENCH_FAIL_DECODE_NOT_ENTERED = 7,
+    BENCH_FAIL_SAMPLER_FAILED = 8,
+    BENCH_FAIL_EOS_BEFORE_FIRST_TOKEN = 9,
+    BENCH_FAIL_TOKEN_CALLBACK_NOT_FIRED = 10,
+    BENCH_FAIL_RUN_VOID = 11,
+    BENCH_FAIL_COMPLETION_BLOCKED = 12,
 };
 
 // Full 512-token windows required before endurance / certify stream lock.
@@ -41,6 +49,7 @@ struct DecodeWindow {
     uint64_t tokenEnd = 0;
     double   seconds = 0.0;
     double   tps = 0.0;
+    uint64_t ns_per_token = 0; // authority: (last-first)/(count-1)
     uint64_t vramBytes = 0;
     uint64_t kvBytes = 0;
 };
@@ -78,6 +87,9 @@ struct StreamBenchmark {
     double      decode_tps_start;               // first window TPS
     double      decode_tps_min_window;          // lowest window TPS
     double      max_stable_streaming_tps;       // certified stream capacity
+    uint64_t    capacity_ns_token;              // authority: max full-window NS/token
+    uint64_t    capacity_target_ns_token;       // 200000000 → 5.0 tok/s
+    uint64_t    decode_ns_token_avg;            // steady commit span / (N-1)
     
     // Latency percentiles (per-token decode, ms)
     double      decode_p50_ms;

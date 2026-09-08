@@ -117,7 +117,11 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
         return ChatTemplateType::QWEN2;
     }
 
-    // Gemma family
+    // Gemma family (4 → 3 → 2)
+    if (arch.find("gemma4") != std::string::npos || name.find("gemma4") != std::string::npos ||
+        arch.find("gemma-4") != std::string::npos || name.find("gemma-4") != std::string::npos) {
+        return ChatTemplateType::GEMMA3;
+    }
     if (arch.find("gemma3") != std::string::npos || name.find("gemma3") != std::string::npos ||
         arch.find("gemma-3") != std::string::npos || name.find("gemma-3") != std::string::npos) {
         return ChatTemplateType::GEMMA3;
@@ -128,10 +132,17 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
         return ChatTemplateType::GEMMA2;
     }
 
-    // DeepSeek family
-    if (arch.find("deepseek") != std::string::npos || name.find("deepseek") != std::string::npos) {
+    // DeepSeek / R1 / MiniMax → ChatML-family
+    if (arch.find("deepseek") != std::string::npos || name.find("deepseek") != std::string::npos ||
+        name.find("minimax") != std::string::npos || arch.find("minimax") != std::string::npos) {
         if (name.find("coder") != std::string::npos) return ChatTemplateType::DEEPSEEK_CODER;
         return ChatTemplateType::DEEPSEEK;
+    }
+
+    // GLM / ChatGLM
+    if (arch.find("glm") != std::string::npos || name.find("glm") != std::string::npos ||
+        arch.find("chatglm") != std::string::npos) {
+        return ChatTemplateType::CHATML;
     }
 
     // Codestral
@@ -139,9 +150,16 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
         return ChatTemplateType::CODESTRAL;
     }
 
-    // Nemo
-    if (arch.find("nemo") != std::string::npos || name.find("nemo") != std::string::npos) {
+    // Nemo / Nemotron
+    if (arch.find("nemo") != std::string::npos || name.find("nemo") != std::string::npos ||
+        arch.find("nemotron") != std::string::npos || name.find("nemotron") != std::string::npos) {
         return ChatTemplateType::NEMO;
+    }
+
+    // Kimi / Moonshot
+    if (name.find("kimi") != std::string::npos || arch.find("kimi") != std::string::npos ||
+        arch.find("moonshot") != std::string::npos) {
+        return ChatTemplateType::CHATML;
     }
 
     // BigDaddyG
@@ -149,6 +167,8 @@ ChatTemplateType ChatTemplate::detectFromModel(const std::string& architecture,
         return ChatTemplateType::BIGDADDYG;
     }
 
+    // Last-resort ChatML for unknown instruct GGUFs that still carry a template
+    // (handled in initFromMetadata). Bare UNKNOWN only when nothing else fits.
     return ChatTemplateType::UNKNOWN;
 }
 

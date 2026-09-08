@@ -15,13 +15,18 @@ struct LogitsSplitSnap {
     uint64_t gpuBranchUs = 0;
     uint64_t splitWallUs = 0;
     uint64_t serialBaseUs = 0;
+    uint64_t joinUs = 0;
+    uint64_t cpuOnlyEstUs = 0;
+    uint64_t bailHits = 0;
     int32_t cpuTok = -1;
     int32_t gpuTok = -1;
     int32_t finalTok = -1;
     float cpuVal = 0.f;
     float gpuVal = 0.f;
     float finalVal = 0.f;
-    uint32_t modeSplit = 0; // 1 = CPU||GPU
+    uint32_t modeSplit = 0; // pathSelected: 1=SPLIT 0=CPU_ONLY
+    uint32_t splitProfitable = 0;
+    uint32_t pathSelected = 0;
     uint64_t gpuArgmaxBytes = 0;
     uint64_t gpuRangeOutBytes = 0;
     uint64_t fullReadback = 0;

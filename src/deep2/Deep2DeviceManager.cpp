@@ -70,8 +70,12 @@ GpuPolicy ParsePolicy() noexcept {
     if (!p || !*p) return GpuPolicy::Auto;
     if (HasI(p, "CPU")) return GpuPolicy::CpuOnly;
     if (HasI(p, "SINGLE") || HasI(p, "SOLO")) return GpuPolicy::Single;
+    if (HasI(p, "DUAL_LANE") || HasI(p, "DUAL_SOVEREIGN") ||
+        HasI(p, "SOVEREIGN_DUAL"))
+        return GpuPolicy::DualLane;
     if (HasI(p, "HYBRID")) return GpuPolicy::Hybrid;
-    if (HasI(p, "MULTI") || HasI(p, "ALL")) return GpuPolicy::Multi;
+    if (HasI(p, "MULTI") || HasI(p, "ALL") || HasI(p, "DUAL"))
+        return GpuPolicy::Multi;
     if (HasI(p, "LIST") || HasI(p, "USER")) return GpuPolicy::UserList;
     return GpuPolicy::Auto;
 }
@@ -187,6 +191,52 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     if (!needle || !*needle) needle = std::getenv("RAWRXD_GPU_SELECT");
     if (!needle || !*needle) needle = std::getenv("RAWRXD_GPU_NAME");
 
+    // DUAL_LANE before needle: two sovereign loaders; select is lane-hint only.
+    if (plan.policy == GpuPolicy::DualLane) {
+        int best[2] = {-1, -1};
+        unsigned bestScore[2] = {0, 0};
+        int needleIdx = -1;
+        for (unsigned i = 0; i < snap.deviceCount; ++i) {
+            const DeviceIdentity& d = snap.devices[i];
+            if (d.integrated || d.score < 10) continue;
+            if (needle && *needle &&
+                (HasI(d.name, needle) || HasI(d.stableId, needle)))
+                needleIdx = (int)i;
+            if (best[0] < 0 || d.score > bestScore[0] ||
+                (d.score == bestScore[0] &&
+                 d.dedicatedVram > snap.devices[best[0]].dedicatedVram)) {
+                best[1] = best[0];
+                bestScore[1] = bestScore[0];
+                best[0] = (int)i;
+                bestScore[0] = d.score;
+            } else if (best[1] < 0 || d.score > bestScore[1]) {
+                best[1] = (int)i;
+                bestScore[1] = d.score;
+            }
+        }
+        if (needleIdx >= 0 && best[0] != needleIdx) {
+            best[1] = best[0];
+            bestScore[1] = bestScore[0];
+            best[0] = needleIdx;
+            bestScore[0] = snap.devices[needleIdx].score;
+        }
+        if (best[0] < 0 || best[1] < 0 || best[0] == best[1]) {
+            plan.reason = "dual_lane_needs_two_discrete";
+            return false;
+        }
+        plan.openIndexes[0] = snap.devices[best[0]].index;
+        plan.openIndexes[1] = snap.devices[best[1]].index;
+        plan.openCount = 2;
+        plan.opened = 2;
+        SetPrimary(plan, snap.devices[best[0]]);
+        plan.mode = ExecMode::DualSovereign;
+        plan.backend = "DUAL_SOVEREIGN";
+        plan.reason = "dual_lane_sovereign_loaders";
+        snap.devices[best[0]].duty = DeviceDuty::ComputePrimary;
+        snap.devices[best[1]].duty = DeviceDuty::ComputeSecondary;
+        return true;
+    }
+
     if (needle && *needle) {
         for (unsigned i = 0; i < snap.deviceCount; ++i) {
             const DeviceIdentity& d = snap.devices[i];
@@ -241,7 +291,9 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         return true;
     }
 
+        // Prefer RAWRXD_GPU_POLICY=DUAL_LANE over MULTI for dual-model (no shared weights).
     // HYBRID / MULTI (no explicit list): open all discrete; planner places layers.
+    // NOTE: MultiGpuShard shares residency — prefer DUAL_LANE for dual-model.
     if (plan.policy == GpuPolicy::Hybrid || plan.policy == GpuPolicy::Multi) {
         for (unsigned i = 0; i < snap.deviceCount && plan.openCount < 8; ++i) {
             if (!snap.devices[i].integrated && snap.devices[i].score >= 10)
@@ -306,7 +358,13 @@ void Deep2Device_EmitWitnesses(FILE* f, const DeviceManagerSnapshot& snap) noexc
         else if (p.mode == ExecMode::MultiGpuShard) execPath = "MULTIGPU";
         else if (p.mode == ExecMode::Hybrid) execPath = "HYBRID";
         else if (p.mode == ExecMode::Speculative) execPath = "SPECULATIVE";
+        else if (p.mode == ExecMode::DualSovereign) execPath = "DUAL_SOVEREIGN";
         fprintf(o, "DEEP2_EXEC_PATH=%s\n", execPath);
+        if (p.mode == ExecMode::DualSovereign) {
+            fprintf(o, "SHARED_WEIGHT_ARENA=0\n");
+            fprintf(o, "CROSS_GPU_WEIGHT_COPY=0\n");
+            fprintf(o, "CROSS_LANE_SYNC=DEPENDENCIES_ONLY\n");
+        }
         fprintf(o, "DEEP2_EXEC_MODE=%u\n", (unsigned)p.mode);
         fprintf(o, "DEEP2_GPU_POLICY=%u\n", (unsigned)p.policy);
         fprintf(o, "DEEP2_PLAN_REASON=%s\n", p.reason);

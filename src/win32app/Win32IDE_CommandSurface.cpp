@@ -1067,6 +1067,22 @@ void Win32IDE::handleCommandSend(HWND cmdHostHint) {
         product100SearchLiteral(msg.substr(8));
         return;
     }
+    if (msg == "/p100 session" || msg == "/session-save") {
+        product100SaveSessionNow();
+        return;
+    }
+    if (msg == "/p100 settings" || msg == "/settings-show") {
+        product100ShowSettings();
+        return;
+    }
+    if (msg == "/p100 approvals" || msg == "/approvals") {
+        product100ListApprovals();
+        return;
+    }
+    if (msg == "/p100 wave3" || msg == "/wave3-smoke") {
+        product100Wave3Smoke();
+        return;
+    }
 #endif
     if (msg == "/approve" || msg == "/approve-test") {
         if (m_currentPlan.status == PlanStatus::AwaitingApproval &&

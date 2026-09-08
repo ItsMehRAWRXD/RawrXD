@@ -17,6 +17,7 @@
 #include "../agent/local_reasoning_integration.hpp"
 #include "../agentic/AgentOllamaClient.h"
 #include "../modules/vsix_loader.h"
+#include "../product/gateway/product_deep2_infer.hpp"
 #include "Win32IDE.h"
 #include "rawrxd/ide/inference_facade.hpp"
 #include <algorithm>
@@ -737,6 +738,16 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
     logInfo(std::string("[InferenceFacade] ") + rawrxd::ide::inferenceFacadeLaneField(backendTypeString(active)) +
             " op=routeInferenceRequest");
 
+    // LOCAL_ONLY_001: cloud/HTTP backends are not product path.
+    if (active != AIBackendType::LocalGGUF &&
+        active != AIBackendType::ReasoningEngine)
+    {
+        return "[BackendSwitcher] NOT_PRODUCT_PATH=1 LOCAL_ONLY_001 "
+               "backend=" +
+               std::string(backendTypeString(active)) +
+               " — load Local GGUF / Deep2 ProductRun only.";
+    }
+
     std::string result;
     auto startTime = std::chrono::steady_clock::now();
     bool success = false;
@@ -746,29 +757,11 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
         case AIBackendType::LocalGGUF:
             result = routeToLocalGGUF(prompt);
             break;
-        case AIBackendType::Ollama:
-            result = routeToOllama(prompt);
-            break;
-        case AIBackendType::OpenAI:
-            result = routeToOpenAI(prompt);
-            break;
-        case AIBackendType::Claude:
-            result = routeToClaude(prompt);
-            break;
-        case AIBackendType::Gemini:
-            result = routeToGemini(prompt);
-            break;
         case AIBackendType::ReasoningEngine:
             result = this->routeToReasoningEngine(prompt);
             break;
-        case AIBackendType::GitHubCopilot:
-            result = routeToGitHubCopilot(prompt);
-            break;
-        case AIBackendType::AmazonQ:
-            result = routeToAmazonQ(prompt);
-            break;
         default:
-            result = "[BackendSwitcher] Unknown active backend";
+            result = "[BackendSwitcher] NOT_PRODUCT_PATH=1";
             break;
     }
 
@@ -821,49 +814,25 @@ void Win32IDE::routeInferenceRequestAsync(const std::string& prompt,
 
 std::string Win32IDE::routeToLocalGGUF(const std::string& prompt)
 {
-    // Use the existing native engine path
-    if (!m_nativeEngine || !m_nativeEngine->IsModelLoaded())
-    {
-        return "[BackendSwitcher] Error: No local GGUF model loaded. Use File > Load Model first.";
+    // Batch 004: ProductRun only — never AgenticBridge as alternate generator.
+    if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+        (void)rawr::ProductOpenSession(m_loadedModelPath.c_str());
+        char buf[8192];
+        if (rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf)) && buf[0])
+            return std::string(buf);
+        return "[BackendSwitcher] FAILED_STAGE=GENERATE_STREAM FAILED_OWNER=ProductRun";
     }
-    // Delegate to existing generateResponse (which uses m_nativeEngine)
-    return generateResponse(prompt);
+    return "[BackendSwitcher] Error: No local GGUF model loaded. Use File > Load Model first.";
 }
 
 std::string Win32IDE::routeToOllama(const std::string& prompt)
 {
-    const auto& cfg = m_backendConfigs[(size_t)AIBackendType::Ollama];
-    if (cfg.endpoint.empty())
-    {
-        return "[BackendSwitcher] Error: Ollama endpoint not configured";
-    }
-
-    // Build Ollama /api/generate request body
-    nlohmann::json reqBody;
-    reqBody["model"] = cfg.model;
-    reqBody["prompt"] = prompt;
-    reqBody["stream"] = false;
-    reqBody["options"] = {{"temperature", cfg.temperature}, {"num_predict", cfg.maxTokens}};
-
-    try
-    {
-        std::string resp =
-            httpPost(cfg.endpoint + "/api/generate", reqBody.dump(), {"Content-Type: application/json"}, cfg.timeoutMs);
-        nlohmann::json rj = nlohmann::json::parse(resp);
-        if (rj.contains("response"))
-        {
-            return rj["response"].get<std::string>();
-        }
-        if (rj.contains("error"))
-        {
-            return "[BackendSwitcher] Error (Ollama): " + rj["error"].get<std::string>();
-        }
-        return "[BackendSwitcher] Error (Ollama): Unexpected response format";
-    }
-    catch (const std::exception& e)
-    {
-        return std::string("[BackendSwitcher] Error (Ollama): ") + e.what();
-    }
+    (void)prompt;
+    // LOCAL_ONLY_001: never HTTP — ProductRun/Deep2 only.
+    return "[BackendSwitcher] LOCAL_ONLY: Ollama forbidden. Use LocalGGUF / ProductRun.";
 }
 
 std::string Win32IDE::routeToOpenAI(const std::string& prompt)

@@ -4,6 +4,8 @@
 #include "rawr_agent_step.hpp"
 #include "rawr_steering_bus.hpp"
 #include "rawr_session_store.hpp"
+#include "rawr_parallel_supervisor.hpp"
+#include "rawr_ecosystem_protocol.hpp"
 namespace rawr {
 
 struct SteerResumeWitness {
@@ -23,6 +25,22 @@ inline int RunAgentLoop(AgentState& a, AutonomyLevel autoLevel,
     AgentExecutor ex(autoLevel);
     ex.wit.sessionCreated = a.session.id.empty() ? 0 : 1;
     ex.wit.planCreated = a.planSteps.empty() ? 0 : 1;
+    // Opt-in: advertise MCP/ACP/extension/skill host surfaces (external agents).
+    if (EcosystemProtocolWanted() && !a.session.workspace.empty()) {
+        EcoProtocolWitness ew{};
+        (void)AcpInitializeBanner(a.session.workspace, ew);
+        if (ew.capsListed > 0) ex.wit.modelDecision = 1;
+    }
+    // Opt-in parallel lanes (implement/test/review/investigate) before serial loop.
+    if (ParallelLanesWanted() && !a.session.workspace.empty()) {
+        ParallelSupervisorWitness pw{};
+        const int pr = RunParallelSupervisor(a.session.workspace,
+                                             a.session.lastPlan, pw);
+        if (pr == 0 && pw.mergeApplied) {
+            ex.wit.planCreated = 1;
+            ex.wit.modelDecision = 1;
+        }
+    }
     for (int i = 0; i < maxIters && !a.done && !a.blocked; ++i) {
         // Named-pipe accept blocks — only poll while paused (or explicit wait).
         if (a.session.paused) {

@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <chrono>
 #include <thread>
+#include <utility>
+#include <algorithm>
 
 namespace rawr {
 
@@ -241,7 +243,95 @@ bool Deep2Bridge::Generate(const char* prompt, TokenCallback onToken, ErrorCallb
 }
 
 bool Deep2Bridge::GenerateStream(const char* prompt, TokenCallback onToken, ErrorCallback onError) {
-    return Generate(prompt, onToken, onError);
+    return GenerateStream(prompt,
+                          256u,
+                          m_config.temperature,
+                          m_config.topK,
+                          m_config.topP,
+                          std::move(onToken),
+                          std::move(onError));
+}
+
+bool Deep2Bridge::GenerateStream(const char* prompt,
+                                 uint32_t maxTokens,
+                                 float temperature,
+                                 uint32_t topK,
+                                 float topP,
+                                 TokenCallback onToken,
+                                 ErrorCallback onError) {
+    if (!prompt || !prompt[0]) {
+        if (onError) onError("prompt required");
+        return false;
+    }
+    if (!m_modelLoaded) {
+        if (onError) onError("model not loaded");
+        return false;
+    }
+    if (m_generating) {
+        if (onError) onError("generation already active");
+        return false;
+    }
+
+    // Native token streaming requires Deep2Engine — LlamaNative is whole-result.
+    if (m_backend != InferenceBackend::Deep2Engine) {
+        if (onError) onError("native token streaming requires Deep2Engine backend");
+        return false;
+    }
+    if (!m_engine) {
+        if (onError) onError("Deep2Engine not initialized");
+        return false;
+    }
+
+    m_generating = true;
+    m_status = EngineStatus::Generating;
+    m_engine->clearCancel();
+
+    Deep2::GenerationOptions opts{};
+    opts.maxTokens = maxTokens ? maxTokens : 1u;
+    opts.temperature = temperature;
+    opts.topK = topK ? topK : 1u;
+    opts.topP = topP;
+
+    uint32_t streamIndex = 0;
+    const auto start = std::chrono::high_resolution_clock::now();
+    const Deep2::GenerationResult result = m_engine->generateStream(
+        prompt,
+        opts,
+        [&](int32_t, const std::string& piece) -> bool {
+            if (!m_generating) return false;
+            const uint32_t index = streamIndex++;
+            if (onToken && !piece.empty()) {
+                onToken(piece.c_str(), index);
+            }
+            return true;
+        });
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto elapsed =
+        std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    m_metrics.totalTokens += result.generatedTokens;
+    m_metrics.totalTimeUs += static_cast<uint64_t>(elapsed.count());
+    if (elapsed.count() > 0) {
+        const double seconds = static_cast<double>(elapsed.count()) / 1000000.0;
+        m_metrics.tokensPerSecond =
+            static_cast<double>(result.generatedTokens) / seconds;
+        m_metrics.avgLatencyMs =
+            static_cast<double>(elapsed.count()) / 1000.0 /
+            static_cast<double>(std::max<uint64_t>(result.generatedTokens, 1u));
+    }
+
+    m_generating = false;
+    m_status = EngineStatus::Ready;
+
+    if (result.generatedTokens == 0) {
+        if (onError) {
+            onError(result.cancelled
+                        ? "Deep2 generation cancelled before first token"
+                        : "Deep2 generateStream produced zero tokens");
+        }
+        return false;
+    }
+    return true;
 }
 
 void Deep2Bridge::CancelGeneration() {

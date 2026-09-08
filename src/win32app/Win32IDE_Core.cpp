@@ -5401,16 +5401,20 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             stepOut();
             return;
         case IDM_DEBUG_TOGGLE_BREAKPOINT:
-            // Stub: toggleBreakpointAtCurrentLine();
+            if (!m_currentFile.empty() && m_currentLine > 0)
+                toggleBreakpoint(m_currentFile, m_currentLine);
+            else
+                appendToOutput("NOT_PRODUCT_PATH=0 DEBUG: open a file and place cursor to toggle BP",
+                               "Output", OutputSeverity::Info);
             return;
         case IDM_DEBUG_SHOW_CALLSTACK:
-            // Stub: showCallStack();
+            updateCallStack();
             return;
         case IDM_DEBUG_SHOW_VARIABLES:
-            // Stub: showVariables();
+            updateVariables();
             return;
         case IDM_DEBUG_SHOW_WATCH:
-            // Stub: showWatch();
+            updateWatchList();
             return;
         case IDM_DEBUG_ATTACH:
             attachDebugger();

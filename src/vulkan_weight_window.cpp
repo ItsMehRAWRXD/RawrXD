@@ -289,6 +289,29 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
     return true;
 }
 
+void VulkanCompute::ReleasePinnedPackedWeight(uint64_t pinKey) {
+    if (!device_ || !pinKey) return;
+    auto it = gemv_weight_cache_.find(pinKey);
+    if (it == gemv_weight_cache_.end()) return;
+    if (it->second.buffer)
+        vkDestroyBuffer(device_, it->second.buffer, nullptr);
+    if (it->second.memory)
+        vkFreeMemory(device_, it->second.memory, nullptr);
+    if (gemv_resident_bytes_ >= it->second.bytes)
+        gemv_resident_bytes_ -= it->second.bytes;
+    else
+        gemv_resident_bytes_ = 0;
+    gemv_weight_cache_.erase(it);
+    ++gemv_pin_evicts_;
+}
+
+bool VulkanCompute::EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& outDev,
+                                    uint64_t pinKey) {
+    if (!device_ || !data || !n || !pinKey) return false;
+    const size_t bytes = (size_t)n * 4u;
+    return EnsurePinnedPackedWeight(data, bytes, n, 1u, outDev, pinKey);
+}
+
 bool VulkanCompute::StreamWeightToSlot(const void* weights, size_t bytes, VkBuffer& outDev) {
     if (!ww_active_ || !weights || bytes == 0 || bytes > ww_slot_bytes_) return false;
     const uintptr_t key = WeightContentFingerprint(weights, bytes);

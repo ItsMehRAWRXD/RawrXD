@@ -32,3 +32,10 @@ K2 HOTPATH ASSESSMENT — DISPOSITION (2026-09-07)
 §5 Next measurement
   Rebuild InferenceEngine + rawrxd_actual_e2e / deep2_benchmark 64-tok
   Expect: KVA_CLIMB_CAND ROWS=16/64, KVA_WINNER=16|64, KVA_ROWS_PER_WG=winner
+
+§6 TARGET_150_TPS (law landed; seal OPEN)
+  See TARGET_150_TPS.txt + lavapath/{CausalSpinLaw,BgBmLaw,CausalSpinMeasure}.hpp
+  Equation: TPS = BW / EFFECTIVE_BYTES  →  150 = 640 / ~4.27 GB/tok
+  HARDWARE_REQUIREMENTS_DISREGARDED=1 (naive 100TB/s is not a veto)
+  Receipt emits EOM_SPIN_001 / MEASURED_DECODE_TPS / RAWRXD_TARGET_150_TPS_001=OPEN|PASS
+  Do not promote 150 until MEAN_SPIN_NS ≤ TOKEN_BUDGET_NS_150 on live generateStream.

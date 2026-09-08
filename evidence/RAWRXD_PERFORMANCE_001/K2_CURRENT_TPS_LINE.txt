@@ -1,9 +1,10 @@
 K2 CURRENT PERFORMANCE LINE (authority)
 =======================================
 Date: 2026-09-07
-Source: hotpath64_latest_qkv.txt + product budget math
+Source: hotpath64_latest_qkv.txt + Q8_KVA_WALL_DECISION
 
 CURRENT_SEAL_TPS=3.556
+CHAMPION=hotpath64_latest_qkv generation
 PRODUCT_FLOOR_TPS=5.000
 CURRENT_64TOK_WALL_S≈17.998
 TARGET_64TOK_WALL_S=12.800
@@ -14,25 +15,46 @@ REQUIRED_TPS_GAIN_PCT≈40.6
 
 | Status | K2 wall TPS |
 |---|---:|
-| Measured now | 3.556 |
-| Near-term plausible | 3.5–4.5 |
+| Measured champion | 3.556 |
+| Q8 KVA negative probe | 2.409 — DO NOT PROMOTE |
 | Product acceptance | ≥5.0 — OPEN |
 | Historical Sovereign | ~14.2–14.38 — separate provenance |
 | SPIN/BG~BM~ 150 | physics/design envelope — unmeasured |
 
-LAW:
-  QKV-128 alone does not close the product gap.
-  Cut exposed dependency time on the generateStream spin.
+Q8_KVA_IMPROVES_WALL=0
+KVA_PROBE_REGRESSION=MEASURED (~32.3%; +≈8.6s/64 tok)
+KVA_WINNER_16=PROVISIONAL (climb-local; not wall seal)
 
-OPTIMIZATION_ORDER:
-  1. KVA exposed wall (Q8 sx 16→64 climb / remeasure)
-  2. QKV/KVA fusion / overlap
-  3. FINAL_NORM / logits exposed wall
-  4. residency / scheduling restructuring
+LAW (RAWR_TIME_001):
+  Optimize causal distance to SPIN_CLOSE.
+  Locally faster KVA GEMV that lengthens exposed depth is a regression.
+
+KVA_CLIMB_STATUS=PASS_CLIMB_MEASURED
+SECOND_KVA_REMEASURE_REQUIRED=0
+KVA_ACTIVE_BLOCKER=0
+
+OPTIMIZATION_ORDER (K2 wall only):
+  0. PASS_ATTRIBUTION — SPIN_CLOSE_WALL_ATTRIB_001 sealed
+     MEASURED_LARGEST_OWNER=LOGITS_CPU_GPU_SPLIT (8049240 US)
+  1. REMOVE_KVA_FROM_EXPOSED_CAUSAL_DEPTH  ← NEXT_RUNTIME_ACTION
+  2. QKV_KVA_TRUE_OVERLAP
+  3. LOGITS_SPLIT_CUT=DEFERRED (until order explicitly changed)
+  HARD: ranking ≠ policy; WALL_EXCESS_OWNER=O_PROJ is budget-label only
+  HARD: no KVA inversion/climb reopen; no Batch 007 reopen
+
+ACTIVE_DECODE_BLOCKER (Qwen3.5 local E2E — separate lane):
+  SSM_ATTN_NUMERICS — evidence/LOCAL_MODEL_E2E/SSM_ATTN_NUMERICS_001.txt
 
 DO_NOT_PROMOTE_INTO_K2_LINE:
+  Q8_KVA probe / climb winner for wall
   TPS_14_X (HISTORICAL_SOVEREIGN)
   TPS_150 (LAW_PHYSICS_ENVELOPE)
 
 K2_PRODUCT_5TPS=OPEN
-NEXT=KVA_64TOK_REMEASURE from live generateStream
+SPIN_CLOSE_BLOCKER=LOGITS
+SPIN_CLOSE_BLOCKER_OWNER=LOGITS_CPU_GPU_SPLIT
+SPIN_CLOSE_BLOCKER_US=8049240
+NEXT_RUNTIME_ACTION=REMOVE_KVA_FROM_EXPOSED_CAUSAL_DEPTH
+LOGITS_SPLIT_CUT=DEFERRED
+DECISION=evidence/RAWRXD_PERFORMANCE_001/Q8_KVA_WALL_DECISION.txt
+ATTRIB=evidence/RAWRXD_PERFORMANCE_001/SPIN_CLOSE_WALL_ATTRIB_001.txt

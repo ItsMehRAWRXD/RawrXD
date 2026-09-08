@@ -36,11 +36,11 @@ bool ExecGenerate(void*) {
     opts.topK = 1;
     opts.seed = 42;
     g_eng->clearCancel();
-    const std::string prompt = Deep2::rawr_run::FormatChatPrompt(
-        *g_eng, "Say hi in one word.", &g_wit);
+    // generateStream owns chat template — pass raw user text once.
+    (void)Deep2::rawr_run::FormatChatPrompt(*g_eng, "Say hi in one word.", &g_wit);
     uint64_t n = 0;
     auto gr = g_eng->generateStream(
-        prompt, opts, [&](int32_t, const std::string&) -> bool {
+        "Say hi in one word.", opts, [&](int32_t, const std::string&) -> bool {
             ++n;
             ++g_rt.outputCommitted; // callback only
             return true;

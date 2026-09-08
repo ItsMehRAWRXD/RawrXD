@@ -9,6 +9,7 @@
 #include "NsTokenRate.hpp"
 #include "lavapath/ActualE2ELaw.hpp"
 #include "lavapath/LiveInGenTune.hpp"
+#include "lavapath/CausalSpinMeasure.hpp"
 #include "Tokenizer.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "ElasticDynamicBudget.hpp"
@@ -82,7 +83,7 @@ public:
     bool initialized = false;
     std::string modelPath;
     std::vector<DecodeWindow> lastWindows;
-
+    
 #ifdef _WIN32
     PDH_HQUERY gpuQuery = nullptr;
     PDH_HCOUNTER gpuUtilCounter = nullptr;
@@ -90,7 +91,7 @@ public:
     PDH_HCOUNTER gpuTempCounter = nullptr;
     PDH_HCOUNTER gpuPowerCounter = nullptr;
 #endif
-
+    
     bool initGpuTelemetry() {
 #ifdef _WIN32
         if (PdhOpenQuery(nullptr, 0, &gpuQuery) != ERROR_SUCCESS) return false;
@@ -103,8 +104,8 @@ public:
         return false;
 #endif
     }
-
-    void sampleGpuTelemetry(uint32_t& gpuUtil, uint32_t& vramUtil,
+    
+    void sampleGpuTelemetry(uint32_t& gpuUtil, uint32_t& vramUtil, 
                             uint32_t& temp, uint32_t& power) {
 #ifdef _WIN32
         if (!gpuQuery) return;
@@ -130,9 +131,9 @@ public:
         (void)gpuUtil; (void)vramUtil; (void)temp; (void)power;
 #endif
     }
-
+    
     uint64_t getPeakVRAM() { return 0; }
-
+    
     uint64_t getPeakSystemRAM() {
         const uint64_t ws = processWorkingSetBytes();
         if (ws) return ws;
@@ -201,7 +202,7 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
         }
     }
     const bool k2Shards = ggufCount >= 13;
-
+    
     EngineConfig config;
     strncpy(config.modelPath, modelPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
@@ -248,6 +249,8 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
         def("DEEP2_LIVE_MECH", "trampoline,cyclone,elastic");
         def("DEEP2_GEN_ALG", "standard");
         def("DEEP2_LOGITS_THREADS", "16");
+        /* Opt-in split; LOGITS_SPLIT_AUTO_BAIL_001 drops it when unprofitable. */
+        def("DEEP2_LOGITS_GPU_SPLIT", "1");
         SetEnvironmentVariableA("RAWRXD_SEMANTIC_SAFE", nullptr);
         _putenv_s("RAWRXD_SEMANTIC_SAFE", "");
         SetEnvironmentVariableA("RAWRXD_GPU_DEVICES", nullptr);
@@ -265,7 +268,7 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
             fprintf(stderr,
                     "[Deep2Benchmark] FATAL: K2 certify requires Vulkan SOLO; "
                     "GPU open failed\n");
-            return false;
+        return false;
         }
         pImpl->engine->disableMARS();
         if (auto* vc = pImpl->engine->getVulkanComputeSlot(0)) {
@@ -300,7 +303,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.target_tokens = maxTokens;
     bench.context_length = ctxSize;
     pImpl->lastWindows.clear();
-
+    
     if (!pImpl->initialized || !pImpl->engine) {
         bench.stream_stable = false;
         bench.used_production_decode_path = false;
@@ -309,7 +312,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         emitBenchmarkTelemetry(bench, BenchmarkPhase::STREAM);
         return bench;
     }
-
+    
     if (ctxSize > 0 && ctxSize > pImpl->engine->getConfig().maxSeqLen)
         (void)pImpl->engine->growContext(ctxSize);
 
@@ -334,10 +337,10 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
 
     uint64_t peakRam = processWorkingSetBytes();
     uint64_t peakVram = pImpl->getPeakVRAM();
-
+    
     rawrxd::GpuDecodeEfficiencySession gpuEff;
     gpuEff.BeginDecodeWindow();
-
+    
     auto onEmit = [&]() {
         emitNs.push_back(nowNs());
         peakRam = (std::max)(peakRam, processWorkingSetBytes());
@@ -350,6 +353,8 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     std::string generatedText;
     // Prefer generateStream for all models — captures pieces for poem probes.
     {
+        rawr::spin::Reset();
+        rawr::spin::Open(nowNs());
         auto gr = pImpl->engine->generateStream(
             prompt, opts,
             [&](int32_t, const std::string& piece) -> bool {
@@ -388,6 +393,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     }
 
     const uint64_t tEnd = nowNs();
+    (void)rawr::spin::Close(tEnd);
     const uint64_t wallNs = (tEnd > tSubmit) ? (tEnd - tSubmit) : 0;
     bench.duration_sec = wallNs / 1e9;
     // Always emit generation wall — even when GENERATED_TOKENS=0.
@@ -406,6 +412,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         const int td = (generated > 0) ? 1 : 0;
         rawr::live::EmitActualE2EFooter(generated, wallNs, td,
                                         (uint64_t)generatedText.size());
+        rawr::spin::EmitReceipt(generated, wallNs);
     }
 
     const auto gpuResult = gpuEff.Finalize(generated);
@@ -422,7 +429,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         bench.power_watts = 0;
     }
     rawrxd::PublishGpuDecodeEfficiency(gpuResult);
-
+    
     // Hard rule: harness measures only — never invents decode tokens.
     const bool productionPath =
         generated > 0 &&
@@ -627,7 +634,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.gpu_util_percent = gpuUtil;
     bench.vram_util_percent = vramUtil;
     bench.temperature_c = temp;
-
+    
     // decodeStable: windows + degradation only (short run: requiredWindows=0).
     const uint32_t requiredWindows = (fullWindowCount == 0) ? 0u : 1u;
     const bool degradeOk = bench.degradation_ratio >= kDegradationThreshold;
@@ -665,16 +672,16 @@ std::vector<EnduranceResult> BenchmarkHarness::runEnduranceMatrix(
     std::vector<EnduranceResult> results;
     results.reserve(contextSizes.size());
     double baselineTps = 0.0;
-
+    
     for (size_t i = 0; i < contextSizes.size(); ++i) {
         const uint32_t ctx = contextSizes[i];
         std::string syntheticPrompt;
         syntheticPrompt.reserve(static_cast<size_t>(ctx) * 4ull);
         while (pImpl->tokenizer->Encode(syntheticPrompt).size() < ctx / 2)
             syntheticPrompt += "The quick brown fox jumps over the lazy dog. ";
-
+        
         auto bench = runSingleStreamTest(syntheticPrompt, tokensPerTest, ctx);
-
+        
         EnduranceResult result;
         result.context_size = ctx;
         result.prefill_tps = bench.prefill_tps;
@@ -682,7 +689,7 @@ std::vector<EnduranceResult> BenchmarkHarness::runEnduranceMatrix(
         result.sustained_tps = bench.max_stable_streaming_tps;
         result.kv_bytes_per_token = bench.kv_bytes_per_token;
         result.peak_vram_bytes = bench.peak_vram_bytes;
-
+        
         if (i == 0) {
             baselineTps = bench.decode_tps_start > 0.0
                 ? bench.decode_tps_start
@@ -772,22 +779,22 @@ ThermalResult BenchmarkHarness::runThermalTest(
 ) {
     ThermalResult result{};
     result.duration_seconds = durationSeconds;
-
+    
     std::string testPrompt = "Thermal stability test prompt. ";
     auto benchStart = runSingleStreamTest(testPrompt, 256, 4096);
     result.tps_start = benchStart.decode_tps;
-
+    
     uint32_t peakTemp = 0;
     uint32_t throttleEvents = 0;
     double powerSum = 0.0;
     uint32_t sampleCount = 0;
     auto startTime = std::chrono::steady_clock::now();
-
+    
     while (true) {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
         if (elapsed >= durationSeconds) break;
-
+        
         uint32_t gpuUtil = 0, vramUtil = 0, temp = 0, power = 0;
         pImpl->sampleGpuTelemetry(gpuUtil, vramUtil, temp, power);
         peakTemp = (std::max)(peakTemp, temp);
@@ -796,7 +803,7 @@ ThermalResult BenchmarkHarness::runThermalTest(
         if (temp > 85) throttleEvents++;
         std::this_thread::sleep_for(std::chrono::seconds(sampleIntervalSeconds));
     }
-
+    
     auto benchEnd = runSingleStreamTest(testPrompt, 256, 4096);
     result.tps_end = benchEnd.decode_tps;
     result.peak_temp_c = peakTemp;
@@ -819,12 +826,12 @@ CertificationReport BenchmarkHarness::runFullCertification(const BenchmarkConfig
     report.target_decode_tps = 180.0;
     report.target_sustained_tps = 175.0;
     report.target_max_context = 32768;
-
+    
     if (config.verbose) {
         std::cout << "\n[Deep2 Benchmark] Starting certification suite...\n";
         std::cout << "Model: " << report.model_info << "\n\n";
     }
-
+    
     if (config.verbose) std::cout << "[1/5] Single-stream maximum throughput...\n";
     report.single_stream = runSingleStreamTest(
         config.prompt_text.empty()
@@ -877,22 +884,22 @@ CertificationReport BenchmarkHarness::runFullCertification(const BenchmarkConfig
     for (const auto& e : report.endurance_matrix) {
         if (!e.stable) report.endurance_pass = false;
     }
-
+    
     if (config.verbose) std::cout << "[3/5] Multi-stream saturation...\n";
     report.saturation = runSaturationTest(
         config.saturation_streams,
         config.saturation_tokens_per_stream,
         config.saturation_ctx_per_stream);
     report.saturation_pass = report.saturation.all_streams_stable;
-
+    
     if (config.verbose) std::cout << "[4/5] Thermal soak...\n";
     report.thermal = runThermalTest(
         config.thermal_duration_seconds,
         config.thermal_sample_interval_seconds);
     report.thermal_pass =
         (report.thermal.throttle_events == 0) &&
-        (report.thermal.tps_degradation_percent < 10.0);
-
+                          (report.thermal.tps_degradation_percent < 10.0);
+    
     report.overall_certified =
         report.production_decode_pass &&
         report.single_stream.decode_stable &&
@@ -900,9 +907,9 @@ CertificationReport BenchmarkHarness::runFullCertification(const BenchmarkConfig
         report.single_stream.kv_stable &&
         report.single_stream.endurance_certifiable &&
         report.prefill_pass && report.decode_pass &&
-        report.stream_pass && report.endurance_pass &&
-        report.saturation_pass && report.thermal_pass;
-
+                               report.stream_pass && report.endurance_pass && 
+                               report.saturation_pass && report.thermal_pass;
+    
     if (!report.overall_certified && report.fail_reason.empty()) {
         if (!report.single_stream.used_production_decode_path)
             report.fail_reason = "NON_PRODUCTION_DECODE_PATH";
@@ -1072,6 +1079,7 @@ std::string BenchmarkHarness::generateCertTelemetry(const CertificationReport& r
     {
         rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns, 1,
                                         s.generated_tokens > 0 ? 1ull : 0ull);
+        rawr::spin::EmitReceipt(s.generated_tokens, s.total_decode_ns);
     }
     t << "TOKEN_PLUS_ONE=0\n";
     t << "TPS_DISPLAY_SCALE=1\n";
@@ -1086,7 +1094,7 @@ std::string BenchmarkHarness::generateCertTelemetry(const CertificationReport& r
 void BenchmarkHarness::saveReport(const CertificationReport& report, const std::string& path) {
     std::ofstream file(path);
     if (file.is_open()) file << generateJSONReport(report);
-
+    
     std::string mdPath = path;
     const size_t dotPos = mdPath.rfind('.');
     mdPath = (dotPos != std::string::npos) ? mdPath.substr(0, dotPos) + ".md" : mdPath + ".md";

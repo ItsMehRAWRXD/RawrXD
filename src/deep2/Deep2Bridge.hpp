@@ -104,6 +104,13 @@ public:
     // Generation
     bool Generate(const char* prompt, TokenCallback onToken, ErrorCallback onError);
     bool GenerateStream(const char* prompt, TokenCallback onToken, ErrorCallback onError);
+    bool GenerateStream(const char* prompt,
+                        uint32_t maxTokens,
+                        float temperature,
+                        uint32_t topK,
+                        float topP,
+                        TokenCallback onToken,
+                        ErrorCallback onError);
     void CancelGeneration();
     bool IsGenerating() const { return m_generating; }
 

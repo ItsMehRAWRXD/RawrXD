@@ -8,10 +8,13 @@
 #include "rawr_steering_client.hpp"
 #include "rawr_evidence_writer.hpp"
 #include "rawr_product_serve.hpp"
+#include "rawr_local_api.hpp"
 #include "terminal/rawr_terminal_commands.hpp"
 #include "../deep2/Deep2SemanticSafeMode.hpp"
 #include "../deep2/Deep2GenerateStream.hpp"
 #include "../deep2/RawrRunSession.hpp"
+#include "../deep2/lavapath/ProductRun.hpp"
+#include <cstdlib>
 #include <string>
 
 #ifdef _WIN32
@@ -38,36 +41,48 @@ namespace rawr {
 
 void PrintUsage() {
     Diag("Usage:\n");
-    Diag("  rawr run <model> [prompt]\n");
+    Diag("  rawr run <model> [prompt] [--max-tokens N]\n");
     Diag("  rawr chat <model>\n");
     Diag("  rawr agent <model> --workspace <path> [--auto=off|read|patch|build|full]\n");
     Diag("  rawr steer <command>\n");
     Diag("  rawr resume <session-id>\n");
     Diag("  rawr term start|list|tail|send|stop|killall ...\n");
-    Diag("  rawr serve [--pipe \\\\.\\pipe\\rawrxd_product]\n");
+    Diag("  rawr serve [--pipe \\\\.\\pipe\\rawrxd_product] [--http] [--port N]\n");
 }
 
 int CmdRun(const CliArgs& a) {
     if (a.model.empty()) { PrintUsage(); return ExitCode::Usage; }
     Deep2::Deep2SemanticSafeModeApply();
     std::string prompt = a.prompt.empty() ? "Hello" : a.prompt;
+    uint32_t maxTok = a.maxTokens ? a.maxTokens : 64u;
+    if (const char* e = std::getenv("RAWRXD_RUN_MAX_TOKENS")) {
+        if (e[0] && !a.maxTokens) maxTok = (uint32_t)std::atoi(e);
+    }
     std::string acc;
     {
 #ifdef _WIN32
         QuietStdout q;
 #endif
-        Deep2::Deep2Engine engine;
-        Deep2::rawr_run::RunWitness w{};
-        if (!Deep2::rawr_run::OpenSession(engine, a.model.c_str(), w)) {
-            Diag("rawr: failed to resolve/load '%s'\n", a.model.c_str());
+        rawr::product_run::Request req{};
+        req.modelAlias = a.model.c_str();
+        req.prompt = prompt.c_str();
+        req.maxTokens = maxTok;
+        auto pr = rawr::product_run::ProductRun(req);
+        acc = std::move(pr.text);
+        Diag("PRODUCT_PATH=rawr→ProductRun→generateStream "
+             "MAX_TOKENS=%u PRODUCT_PASS=%d\n",
+             maxTok, pr.productPass);
+        if (!pr.modelResolved || !pr.modelOpen) {
+            Diag("rawr: PRODUCT_PASS=0 stage=%s owner=%s\n",
+                 pr.failedStage, pr.failedOwner);
             return ExitCode::ModelLoad;
         }
-        Diag("MODEL=%s\nPATH=%s\nOLLAMA_USED=0\nNETWORK_USED=0\n",
-             w.modelName.c_str(), w.modelPath.c_str());
-        const std::string formatted =
-            Deep2::rawr_run::FormatChatPrompt(engine, prompt, &w);
-        acc = Deep2::Deep2GenerateStreamAccumulate(engine, formatted, 256);
-        engine.unloadModel();
+        if (!pr.productPass) {
+            Diag("rawr: PRODUCT_PASS=0 stage=%s owner=%s FIRST_OWNER=%s\n",
+                 pr.failedStage, pr.failedOwner, pr.failedOwner);
+            /* Resolve/Load already PASS — do not reopen; runtime owner owns fail. */
+            return ExitCode::Runtime;
+        }
     }
     OutTextLn(acc);
     return ExitCode::Ok;
@@ -97,14 +112,18 @@ int CmdChat(const CliArgs& a) {
     while (ReadReplLine(line)) {
         if (line == "/quit" || line == "/exit") break;
         s.history.push_back({"user", line});
-        std::string formatted;
         std::string acc;
         {
 #ifdef _WIN32
             QuietStdout q;
 #endif
-            formatted = Deep2::rawr_run::FormatChatPrompt(engine, line, &w);
-            acc = Deep2::Deep2GenerateStreamAccumulate(engine, formatted, 256);
+            rawr::product_run::Request req{};
+            req.modelAlias = a.model.c_str();
+            req.prompt = line.c_str();
+            req.maxTokens = 256;
+            req.engine = &engine;
+            req.keepOpen = 1;
+            acc = rawr::product_run::ProductRun(req).text;
         }
         OutTextLn(acc);
         s.history.push_back({"assistant", acc});
@@ -203,6 +222,9 @@ int CmdTerm(const CliArgs& a) {
     return rc == 0 ? ExitCode::Ok : ExitCode::BuildFail;
 }
 
-int CmdServe(const CliArgs& a) { return RunProductServe(a.pipeName); }
+int CmdServe(const CliArgs& a) {
+    if (a.httpPort) return RunProductHttpServe(a.httpPort);
+    return RunProductServe(a.pipeName);
+}
 
 } // namespace rawr

@@ -132,7 +132,7 @@ inline const QuantTypeDescriptor* QuantTypeTable() {
         {27,  "I64",     1,   8, false, false, false, true,  false },
         {28,  "F64",     1,   8, false, false, false, true,  false },
         {29,  "IQ1_M",  256, 56, true,  true,  false, true,  false }, // P2
-        {30,  "BF16",    1,   2, false, false, false, true,  false }, // P2
+        {30,  "BF16",    1,   2, false, false, false, true,  true  }, // host GEMV registered
         {31,  "Q4_0_4_4",0,   0, true,  false, false, false, false },
         {32,  "Q4_0_4_8",0,   0, true,  false, false, false, false },
         {33,  "Q4_0_8_8",0,   0, true,  false, false, false, false },

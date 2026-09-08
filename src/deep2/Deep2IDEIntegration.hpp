@@ -133,17 +133,18 @@ public:
     bool Initialize(const Deep2ModelLoader::LoadResult& model, const SessionConfig& cfg);
     void Shutdown();
 
-    // Generate text from prompt (blocking)
-    GenerationResult Generate(const std::string& prompt);
+    // Generate text from prompt (blocking) — ProductRun::Stream only.
+    GenerationResult Generate(const std::string& prompt,
+                              uint32_t maxTokens = 256);
 
-    // Generate with streaming callback
-    using TokenCallback = std::function<void(const std::string& token, bool done)>;
-    bool GenerateStream(const std::string& prompt, TokenCallback callback);
+    // Generate with streaming callback — same ProductRun path as rawr run.
+    using TokenCallback = std::function<bool(const std::string& token, bool done)>;
+    bool GenerateStream(const std::string& prompt, TokenCallback callback,
+                        uint32_t maxTokens = 256);
 
-    // Cancel ongoing generation
     void Cancel();
-
     bool IsReady() const { return m_ready; }
+    ::Deep2::Deep2Engine* Engine() { return m_engine.get(); }
 
 private:
     bool m_ready = false;

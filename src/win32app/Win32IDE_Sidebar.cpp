@@ -1992,38 +1992,73 @@ void Win32IDE::createLaunchConfiguration()
 
 void Win32IDE::startDebugging()
 {
-    m_debuggingActive = true;
-    appendToOutput("Debugging started\n", "Output", OutputSeverity::Info);
-    updateDebugVariables();
+    // Batch 004: real NativeDebuggerEngine path — never success-only.
+    attachDebugger();
+    if (m_debuggerAttached) {
+        m_debuggingActive = true;
+        appendToOutput("DEBUG_START_REAL=1 NativeDebuggerEngine attached/launched\n",
+                       "Output", OutputSeverity::Info);
+        return;
+    }
+    m_debuggingActive = false;
+    appendToOutput("UNAVAILABLE=1 DEBUG_START — no debug target (open .exe or Attach PID)\n",
+                   "Output", OutputSeverity::Warning);
 }
 
 void Win32IDE::stopDebugging()
 {
+    if (m_debuggerAttached) {
+        detachDebugger();
+        m_debuggingActive = false;
+        appendToOutput("DEBUG_STOP_REAL=1\n", "Output", OutputSeverity::Info);
+        return;
+    }
     m_debuggingActive = false;
     ListView_DeleteAllItems(m_hwndDebugVariables);
-    appendToOutput("Debugging stopped\n", "Output", OutputSeverity::Info);
+    appendToOutput("UNAVAILABLE=1 DEBUG_STOP — no active debug session\n",
+                   "Output", OutputSeverity::Warning);
 }
 
 // setBreakpoint and removeBreakpoint are implemented in Win32IDE_Debugger.cpp
 
 void Win32IDE::stepOver()
 {
-    appendToOutput("Step Over\n", "Output", OutputSeverity::Info);
+    if (!m_debuggerAttached) {
+        appendToOutput("UNAVAILABLE=1 DEBUG_STEP_OVER — no debug session\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+    stepOverExecution();
 }
 
 void Win32IDE::stepInto()
 {
-    appendToOutput("Step Into\n", "Output", OutputSeverity::Info);
+    if (!m_debuggerAttached) {
+        appendToOutput("UNAVAILABLE=1 DEBUG_STEP_INTO — no debug session\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+    stepIntoExecution();
 }
 
 void Win32IDE::stepOut()
 {
-    appendToOutput("Step Out\n", "Output", OutputSeverity::Info);
+    if (!m_debuggerAttached) {
+        appendToOutput("UNAVAILABLE=1 DEBUG_STEP_OUT — no debug session\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+    stepOutExecution();
 }
 
 void Win32IDE::continueExecution()
 {
-    appendToOutput("Continue Execution\n", "Output", OutputSeverity::Info);
+    if (!m_debuggerAttached) {
+        appendToOutput("UNAVAILABLE=1 DEBUG_CONTINUE — no debug session\n",
+                       "Output", OutputSeverity::Warning);
+        return;
+    }
+    resumeExecution();
 }
 
 void Win32IDE::showDebugConsole()

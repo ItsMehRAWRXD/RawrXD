@@ -50,6 +50,12 @@ inline bool InitFromPath(Deep2Engine& e, const std::string& path,
     cfg.vocabSize = mw.vocabSize;
     cfg.intermediateDim = mw.intermediateDim;
     cfg.maxSeqLen = maxSeq;
+    cfg.useMLA = mw.useMLA || e.getConfig().useMLA;
+    cfg.qLoraRank = e.getConfig().qLoraRank;
+    cfg.kvLoraRank = e.getConfig().kvLoraRank;
+    cfg.qkNopeHeadDim = e.getConfig().qkNopeHeadDim;
+    cfg.qkRopeHeadDim = e.getConfig().qkRopeHeadDim;
+    cfg.vHeadDim = e.getConfig().vHeadDim;
     cfg.useKVCache = true;
     cfg.useThreadPool = true;
     cfg.numThreads = 8;
@@ -83,10 +89,11 @@ inline uint32_t StreamTokens(Deep2Engine& e, const std::string& prompt,
     opts.topK = 1;
     opts.seed = 42;
     e.clearCancel();
-    const std::string usePrompt =
-        applyChat ? FormatChatPrompt(e, prompt, w) : prompt;
+    // Witness template metadata only; generateStream applies the template once.
+    if (applyChat)
+        (void)FormatChatPrompt(e, prompt, w);
     uint32_t n = 0;
-    e.generateStream(usePrompt, opts,
+    e.generateStream(prompt, opts,
                      [&](int32_t, const std::string&) -> bool {
                          ++n;
                          if (w && n == 1) w->firstTokenEmitted = 1;
@@ -111,9 +118,10 @@ inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
     w.modelAliasResolved = 1;
     w.modelName = ar.alias;
     w.modelPath = ar.path;
-    w.shardsDiscovered = ar.shards > 0 ? 1 : 0;
+    w.shardsDiscovered = (int)ar.shards;
     w.ollamaProcessUsed = 0;
     w.networkUsed = 0;
+    // Shard directories must go through loadModel(dir) so multi-shard indexing arms.
     if (!InitFromPath(e, ar.path)) return false;
     w.ggufOpened = e.isModelLoaded() ? 1 : 0;
     w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;

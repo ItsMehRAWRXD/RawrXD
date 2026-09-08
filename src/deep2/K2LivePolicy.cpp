@@ -43,7 +43,7 @@ uint64_t K2LivePolicy_CacheBudgetBytes() {
     if (const char* e = std::getenv("DEEP2_LIVE_CACHE_BUDGET_MIB")) {
         long v = std::atol(e); if (v > 0) return (uint64_t)v << 20;
     }
-    return 3072ull << 20;
+    return 12288ull << 20;
 }
 uint64_t K2LivePolicy_EstimateOutputBytes() {
     if (const char* e = std::getenv("DEEP2_LIVE_OUTPUT_WEIGHT_BYTES")) {
@@ -111,17 +111,14 @@ void K2LivePolicy_ApplyMode(K2LivePolicyMode mode, bool fullDepthPromo) {
     } else if (mode == K2LivePolicyMode::TrampolineOutput) {
         LivePath_SetEnhancementsEnabled(true);
         put("DEEP2_LIVE_PATH", "1");
-        if (fullDepthPromo) {
-            // FULL_DEPTH_PROMO + UNFREEZE_C002
-            LivePath_SetFusedEnabled(true);
-            put("DEEP2_LIVE_MECH", "trampoline,cyclone,elastic");
-            put("DEEP2_LIVE_FUSED", "1");
-        } else {
-            // short/shallow trampoline+cache
-            LivePath_SetFusedEnabled(false);
-            put("DEEP2_LIVE_MECH", "trampoline");
-            put("DEEP2_LIVE_FUSED", "0");
-        }
+        // FULL_DEPTH_PROMO = layer-cache veto → trampoline only.
+        // Do not force cyclone/elastic here: that arm is CYCLONE_ELASTIC when
+        // budget fits. Forcing elastic races the residency scheduler into long
+        // K2 streams (mid-decode abort / heap corruption on teardown).
+        LivePath_SetFusedEnabled(false);
+        put("DEEP2_LIVE_MECH", "trampoline");
+        put("DEEP2_LIVE_FUSED", "0");
+        (void)fullDepthPromo;
     } else {
         LivePath_SetEnhancementsEnabled(true);
         LivePath_SetFusedEnabled(false);

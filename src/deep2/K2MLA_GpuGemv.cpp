@@ -5,15 +5,20 @@
 #include "K2BraidExecutionPolicy.hpp"
 #include "K2LogitsLineage.hpp"
 #include "K2MLA_FusedQ4KT.hpp"
+#include "K2MLA_QPathDevice.hpp"
 #include "K2MLA_QaCritical.hpp"
 #include "K2MlaQBranchTiming.hpp"
+#include "K2MlaOProjTiming.hpp"
+#include "K2MlaQkvTiming.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "vulkan_compute.h"
 #include <atomic>
+#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 namespace Deep2 {
@@ -25,7 +30,8 @@ uint64_t g_upQ = 0, g_upK = 0, g_upV = 0, g_upO = 0;
 uint64_t g_hitQ = 0, g_hitK = 0, g_hitV = 0, g_hitO = 0;
 uint64_t g_keyNew = 0, g_keyReuse = 0;
 uint64_t g_slotEvict = 0, g_metaUp = 0, g_weightUp = 0, g_pinKeyZero = 0;
-std::atomic<uint64_t> g_pinKey{0}; // process-wide — no TLS (static-lib TLS drift)
+std::atomic<uint64_t> g_pinKey{0}; // last-writer diag only
+thread_local uint64_t g_pinKeyTls{0}; // per-lane tag (Q||KV safe)
 
 size_t PackedNeed(int ty, uint32_t rows, uint32_t cols) {
     if (!rows || !cols) return 0;
@@ -72,6 +78,7 @@ bool MLA_GpuGemvWanted() {
 }
 
 void MLA_GpuGemv_SetPinKey(uint64_t key) {
+    g_pinKeyTls = key;
     g_pinKey.store(key, std::memory_order_relaxed);
 }
 void MLA_GpuGemv_Reset() {
@@ -127,6 +134,7 @@ void MLA_GpuGemv_Emit(FILE* f) {
             (unsigned long long)g_slotEvict, (unsigned long long)g_metaUp,
             (unsigned long long)g_weightUp, (unsigned long long)g_pinKeyZero);
     MLA_FusedQ4KT_Emit(f);
+    MLA_QPathDevice_Emit(f);
     MLA_QaCrit_Emit(f);
 }
 
@@ -174,7 +182,8 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     const uint64_t up0 = vc->GemvWeightUploads();
     const uint64_t hit0 = vc->WeightContentHits();
     const uint64_t ev0 = vc->WeightPinEvicts();
-    const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
+    const uint64_t pk = g_pinKeyTls ? g_pinKeyTls
+                                    : g_pinKey.load(std::memory_order_relaxed);
     if (!pk) ++g_pinKeyZero;
     const uint8_t tag = (uint8_t)(pk & 0xffu);
     const bool isQa = (tag == 1);
@@ -185,17 +194,57 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     }
 
     bool ok = false;
+    const bool isOproj = (tag == 6);
+    const bool isKva = (tag == 3);
     const bool braidFused = !braidPlan || braidPlan->preferFusedQ4KT;
     const bool allowFused =
         isQa ? MLA_QaAllowFused(braidFused) : braidFused;
+    // O_PROJ + KVA: always fused Q4_K (shared-x / col-split). No generic branch.
     const bool wantFused =
-        isQa ? MLA_QaWantFused() : MLA_FusedQ4KT_Wanted();
+        (isOproj || isKva) ? true
+                           : (isQa ? MLA_QaWantFused() : MLA_FusedQ4KT_Wanted());
+
+    if (isKva) {
+        static std::atomic<uint32_t> kvaTryDiag{0};
+        if (kvaTryDiag.fetch_add(1, std::memory_order_relaxed) < 3u) {
+            std::printf("KVA_TRYGPU TAG=%u TY=%d ALLOW_FUSED=%d WANT_FUSED=%d "
+                        "BRAID_FUSED=%d ROWS=%u COLS=%u\n",
+                        (unsigned)tag, ty, allowFused ? 1 : 0, wantFused ? 1 : 0,
+                        braidFused ? 1 : 0, useRows, cols);
+            std::fflush(stdout);
+        }
+    }
 
     const uint64_t tBody0 = MLA_FusedQ4KT_NowUs();
-    if (ty == 12 && allowFused && wantFused) {
+    if (isKva && ty == 8 && allowFused && wantFused) {
+        const uint64_t t0 = MLA_FusedQ4KT_NowUs();
+        ok = vc->DispatchGEMVFusedQ8Kva(packed, bytes, input, outBuf, useRows,
+                                        cols, pk);
+        if (!ok)
+            OProj_GenericFallbacks().fetch_add(1, std::memory_order_relaxed);
+        if (!ok) {
+            static std::atomic<uint32_t> kvaFusedFail{0};
+            if (kvaFusedFail.fetch_add(1, std::memory_order_relaxed) < 3u) {
+                std::printf("KVA_Q8_FUSED_FALSE ROWS=%u COLS=%u\n", useRows,
+                            cols);
+                std::fflush(stdout);
+            }
+        }
+        (void)t0;
+    } else if (ty == 12 && allowFused && wantFused) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
         ok = MLA_FusedQ4KT(packed, bytes, input, outBuf, useRows, cols, pk);
         if (isQa) MLA_QaCrit_NoteFused(MLA_FusedQ4KT_NowUs() - t0, ok);
+        if ((isOproj || isKva) && !ok)
+            OProj_GenericFallbacks().fetch_add(1, std::memory_order_relaxed);
+        if (isKva && !ok) {
+            static std::atomic<uint32_t> kvaFusedFail{0};
+            if (kvaFusedFail.fetch_add(1, std::memory_order_relaxed) < 3u) {
+                std::printf("KVA_FUSED_RETURNED_FALSE ROWS=%u COLS=%u\n",
+                            useRows, cols);
+                std::fflush(stdout);
+            }
+        }
     }
     if (!ok && ty == 12) {
         const uint64_t t0 = MLA_FusedQ4KT_NowUs();
@@ -203,6 +252,15 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
                                     pk);
         if (ok) MLA_NoteGemvCompatUs(t0);
         if (isQa) MLA_QaCrit_NoteCompat(MLA_FusedQ4KT_NowUs() - t0, ok);
+        if (isOproj && ok) {
+            OProj_GenericCalls().fetch_add(1, std::memory_order_relaxed);
+            OProj_NoteTag6(useRows, cols, (useRows + 3u) / 4u,
+                           MLA_FusedQ4KT_NowUs() - t0, false);
+        }
+        if (tag >= 1 && tag <= 5 && ok) {
+            Qkv_NoteDispatch(tag, 0ull, 0ull, MLA_FusedQ4KT_NowUs() - t0,
+                             (uint64_t)useRows * 4ull);
+        }
     } else if (!ok && ty == 14) {
         // Logits Q6: stream window only — never pin (avoids MLA resident eviction).
         ok = vc->DispatchGEMVQ6kPacked(packed, bytes, input, outBuf, useRows,
@@ -217,6 +275,12 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
             MLA_QaCrit_NoteFallback();
             MLA_QaCrit_End(MLA_FusedQ4KT_NowUs() - tCall0);
         }
+        if (tag == 6)
+            OProj_NoteGemv(waitUs, 0, bodyUs, false, false);
+        if (tag >= 1 && tag <= 5) {
+            Qkv_NoteWait(waitUs);
+            Qkv_NoteOp(false, false);
+        }
         if (vc->WeightPinRejects() > rej0) ++g_skip;
         else ++g_fail;
         return false;
@@ -229,6 +293,14 @@ static bool TryGpu(int ty, const void* packed, size_t bytes,
     NoteFamily(tag, uploaded, hit);
     QBr_NoteLane(tag, waitUs, uploaded ? bodyUs : 0ull,
                  uploaded ? 0ull : bodyUs);
+    if (tag == 6) {
+        // Kernel/IO timed inside DispatchGEMVFusedQ4KT / NoteTag6.
+        OProj_NoteGemv(waitUs, 0, 0, uploaded, true);
+    } else if (tag >= 1 && tag <= 5) {
+        // Kernel/IO timed inside Dispatch when fused; wait + ops here.
+        Qkv_NoteWait(waitUs);
+        Qkv_NoteOp(true, uploaded);
+    }
     if (ty == 14) ++g_q6Ops;
     if (rangeArgmax) {
         float best = outBuf[0];
@@ -287,7 +359,8 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
     else if (ggmlType == 12) braidType = BraidGGMLType::Q4_K;
     else if (ggmlType == 0)  braidType = BraidGGMLType::F32;
     else if (ggmlType == 1)  braidType = BraidGGMLType::F16;
-    const uint64_t pk = g_pinKey.load(std::memory_order_relaxed);
+    const uint64_t pk = g_pinKeyTls ? g_pinKeyTls
+                                    : g_pinKey.load(std::memory_order_relaxed);
     const KernelRole role = PinKeyToRole(pk);
     const uint8_t laneTag = static_cast<uint8_t>(pk & 0xffu);
     K2Braid_PlanTagged(role, braidType, laneTag, plan);
@@ -298,6 +371,41 @@ bool MLA_Gemv(int ggmlType, const void* packed, size_t bytes,
         braidType != BraidGGMLType::F32 &&
         braidType != BraidGGMLType::F16) {
         K2Braid_NoteUnsupportedReinterpret();
+    }
+
+    // Large Q_B / O_PROJ hybrid is opt-in: host GetGEMV tail is often slower
+    // than GPU-only on R9700 (measured wall regression).
+    const char* hy = std::getenv("DEEP2_MLA_HYBRID_GEMV");
+    const bool hybridOk = hy && hy[0] == '1';
+    if (hybridOk && ggmlType == 12 && rows >= 8192u &&
+        (laneTag == 2 || laneTag == 6) && MLA_GpuGemvWanted() &&
+        packed && input && output) {
+        uint32_t mid = (rows / 2u) & ~255u;
+        const size_t rowB = PackedNeed(12, 1, cols);
+        if (mid >= 256u && mid < rows && rowB) {
+            const size_t needHead = rowB * (size_t)mid;
+            const uint32_t tail = rows - mid;
+            const void* packTail =
+                static_cast<const uint8_t*>(packed) + needHead;
+            std::atomic<bool> cpuOk{false};
+            std::thread th([&]() {
+                auto gemv = QuantKernelRegistry::Instance().GetGEMV(12);
+                if (!gemv) return;
+                std::memset(output + mid, 0, (size_t)tail * sizeof(float));
+                gemv(reinterpret_cast<const uint8_t*>(packTail), input,
+                     output + mid, tail, cols);
+                cpuOk.store(true, std::memory_order_release);
+            });
+            const bool gpuOk =
+                TryGpu(12, packed, needHead, input, output, mid, cols, &plan,
+                       nullptr);
+            th.join();
+            if (gpuOk && cpuOk.load(std::memory_order_acquire)) {
+                K2Braid_NotePackedExec(role);
+                K2Braid_NoteExecuted(role);
+                return true;
+            }
+        }
     }
 
     if (TryGpu(ggmlType, packed, bytes, input, output, rows, cols, &plan,

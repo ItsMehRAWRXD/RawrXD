@@ -26,3 +26,7 @@ COST:
 
 NOT_WIRED: lavapath / QKV / KVA / BgBmLaw / generateStream
 SMOKE: std::vec → tor < int > values; (standalone COMPLETE protocol)
+
+PROVENANCE: see PROVENANCE.txt
+  DISK_RECOVERY=NONE  SOURCE_ORIGIN=PRIOR_CHAT_PASTE
+  CANONICAL=tools/rawr_copilot/  (tree + commits = SSOT)

@@ -33,6 +33,7 @@
 
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
+#include "../product/gateway/product_deep2_infer.hpp"
 
 // Forward declarations from ai_completion_real.cpp (must be at global scope)
 extern "C" {
@@ -374,7 +375,8 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
         }
 
         if (provider == GhostProviderKind::Local) {
-            // ---- Primary: OrchestratorBridge FIM (uses AgentOllamaClient + FIMPromptBuilder) ----
+            // Product path: OrchestratorBridge FIM (Deep2 → ProductRun) first.
+            if (isStale()) return "";
             {
                 auto& orchBridge = RawrXD::Agent::OrchestratorBridge::Instance();
                 RawrXD::Prediction::PredictionContext bCtx;
@@ -393,69 +395,30 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 }
             }
 
-            if (isStale()) return "";
-
-            // ---- Fallback: prediction backend, then native model, then local Ollama prompt ----
-            if (!m_predictionProvider) {
-                std::string baseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
-                m_predictionProvider = std::make_unique<OllamaProvider>(baseUrl);
-
-                PredictionConfig cfg;
-                cfg.model       = getResolvedOllamaModel().empty() ? "qwen2.5-coder:14b" : getResolvedOllamaModel();
-                cfg.temperature = 0.2f;
-                cfg.maxTokens   = 256;
-                cfg.maxLines    = GHOST_TEXT_MAX_LINES;
-                cfg.useFIM      = true;
-                cfg.stopSequences = "<|endoftext|>,<|fim_pad|>,\n\n\n";
-                m_predictionProvider->Configure(cfg);
-            }
-
-            if (m_predictionProvider->IsAvailable()) {
-                PredictionContext ctx;
-                ctx.prefix       = context;
-                ctx.suffix       = suffix;
-                ctx.language     = language;
-                ctx.filePath     = filePath;
-                ctx.cursorLine   = cursorLine;
-                ctx.cursorColumn = cursorCol;
-
-                PredictionResult result = m_predictionProvider->Predict(ctx);
-                if (result.success && !result.completion.empty()) {
-                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
-                    m_ghostTextMetrics.localWins++;
-                    return trimGhostText(result.completion);
+            // Secondary: ProductDeep2Infer (same ProductRun as rawr run).
+            if (!m_loadedModelPath.empty()) {
+#ifdef _WIN32
+                _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
+#endif
+                std::string gprompt =
+                    "Complete the following " + language +
+                    " code. Output ONLY the completion, no explanation:\n\n" +
+                    context;
+                char buf[4096];
+                if (rawr::ProductDeep2Infer(gprompt.c_str(), buf, sizeof(buf)) &&
+                    buf[0]) {
+                    std::string result = trimGhostText(buf);
+                    if (!result.empty()) {
+                        std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                        m_ghostTextMetrics.localWins++;
+                        return result;
+                    }
                 }
             }
 
-            if (isStale()) return "";
-
-            if (m_nativeEngine && m_nativeEngine->IsModelLoaded()) {
-                auto tokens = m_nativeEngine->Tokenize(
-                    "Complete the following " + language + " code. Output ONLY the completion, "
-                    "no explanation, no markdown:\n\n" + context);
-
-                auto generated = m_nativeEngine->Generate(tokens, 64);
-                std::string result = trimGhostText(m_nativeEngine->Detokenize(generated));
-                if (!result.empty()) {
-                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
-                    m_ghostTextMetrics.localWins++;
-                    return result;
-                }
-            }
-
-            if (isStale()) return "";
-
-            if (!m_ollamaBaseUrl.empty()) {
-                std::string response;
-                std::string prompt = "Complete the following " + language + " code. "
-                                     "Output ONLY the completion, no explanation, no markdown. "
-                                     "Maximum 3 lines:\n\n" + context;
-                if (trySendToOllama(prompt, response)) {
-                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
-                    m_ghostTextMetrics.localWins++;
-                    return trimGhostText(response);
-                }
-            }
+            // LOCAL_ONLY_001: no Ollama HTTP / no CPUInferenceEngine fallthrough.
+            (void)suffix;
+            return "";
         }
 
         if (provider == GhostProviderKind::Snippet) {

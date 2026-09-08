@@ -309,6 +309,10 @@ BraidQkvMode K2Braid_GetQkvMode() {
         if (e[0] == '1' || e[0] == 'k' || e[0] == 'K')
             return BraidQkvMode::SplitKv;
     }
+    // DEEP2_MLA_SERIAL=1 is GPU Q+KV serial reuse, not host-KV SplitKv.
+    if (const char* ser = std::getenv("DEEP2_MLA_SERIAL")) {
+        if (ser[0] == '1') return BraidQkvMode::SerialReuse;
+    }
     // )ter*N: frozen ROUTING fold steers topology; EMA cannot flip it.
     if (K2RainbowFold_IsFrozenRouting(RainbowFoldId::QKV_SPLIT_KV))
         return BraidQkvMode::SplitKv;

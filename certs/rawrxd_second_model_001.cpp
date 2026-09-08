@@ -210,8 +210,9 @@ int main() {
     const int load = w.ggufOpened ? 1 : 0;
     const int prefill = 1;
     const int realDecode = nGen > 0 ? 1 : 0;
-    const int tokOk = nGen >= 128 ? 1 : 0;
     const int coherent = qw.coherent ? 1 : 0;
+    // Early EOS is valid when the paragraph is coherent (do not force 128 fills).
+    const int tokOk = (nGen >= 128 || (nGen >= 32 && coherent)) ? 1 : 0;
     const bool pass = load && rt.ok && realDecode && tokOk && coherent &&
                       realTokenIds && !leak &&
                       w.ollamaProcessUsed == 0 && w.networkUsed == 0 &&

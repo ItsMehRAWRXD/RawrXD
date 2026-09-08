@@ -18,6 +18,7 @@ bool VulkanCompute::CreateGemvPipe(const char* spvName, VkPipeline& pipe) {
     const char* bases[] = {
         "", "bin/", "src/backend/",
         "G:/~dev/rawrxd/src/backend/",
+        "G:/~dev/rawrxd/build-fd/bin/",
         "G:/~dev/rawrxd/build-ninja/bin/",
     };
     char path[512];

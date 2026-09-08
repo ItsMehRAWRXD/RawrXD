@@ -4,11 +4,19 @@
 // ============================================================================
 
 #include "MultiGPUScheduler.h"
+#include "../RawrNoTpResidency.hpp"
 #include <algorithm>
 #include <chrono>
 
 namespace Deep2 {
 namespace MultiGPU {
+
+static ExecutionMode ClampNoTp(ExecutionMode m) {
+    if (!RawrNoTpWanted()) return m;
+    if (m == ExecutionMode::TENSOR_PARALLEL)
+        return ExecutionMode::MODEL_PARALLEL; // whole-layer islands, never TP
+    return m;
+}
 
 // ============================================================================
 // Constructor / Destructor
@@ -31,7 +39,7 @@ bool MultiGPUScheduler::Initialize(ExecutionMode defaultMode) {
 
     printf("[MultiGPUScheduler] Initializing...\n");
 
-    defaultMode_ = defaultMode;
+    defaultMode_ = ClampNoTp(defaultMode);
 
     // Initialize device registry
     auto& registry = GPUDeviceRegistry::Instance();
@@ -173,6 +181,14 @@ ExecutionPlan MultiGPUScheduler::PlanExecution(WorkloadType type, uint64_t estim
             break;
 
         case ExecutionMode::TENSOR_PARALLEL:
+            if (RawrNoTpWanted()) {
+                // Demote TP → whole-layer primary (same as MODEL_PARALLEL path).
+                plan.mode = ExecutionMode::MODEL_PARALLEL;
+                plan.primaryDevice = SelectPrimaryDevice(type);
+                plan.secondaryDevice = SelectSecondaryDevice(type);
+                plan.numShards = 1;
+                break;
+            }
             plan.primaryDevice = SelectPrimaryDevice(type);
             plan.secondaryDevice = SelectSecondaryDevice(type);
             plan.numShards = 2;
@@ -236,6 +252,15 @@ ExecutionPlan MultiGPUScheduler::PlanLayerExecution(int layerIndex, int numLayer
 
 ExecutionPlan MultiGPUScheduler::PlanTensorExecution(uint64_t tensorSize) {
     ExecutionPlan plan;
+    // NO_TP law: one tensor → one owner → one result (never shard).
+    if (RawrNoTpWanted()) {
+        plan.mode = ExecutionMode::SINGLE_GPU;
+        plan.numShards = 1;
+        plan.tensorShard = 0;
+        plan.primaryDevice = SelectPrimaryDevice(WorkloadType::INFERENCE);
+        plan.estimatedVRAM = tensorSize;
+        return plan;
+    }
     plan.mode = ExecutionMode::TENSOR_PARALLEL;
     plan.estimatedVRAM = tensorSize;
 
@@ -413,7 +438,7 @@ SchedulerTelemetry MultiGPUScheduler::GetTelemetry() const {
 // Configuration
 // ============================================================================
 void MultiGPUScheduler::SetExecutionMode(ExecutionMode mode) {
-    defaultMode_ = mode;
+    defaultMode_ = ClampNoTp(mode);
 }
 
 ExecutionMode MultiGPUScheduler::GetExecutionMode() const {
@@ -440,8 +465,9 @@ void MultiGPUScheduler::OptimizeForLatency() {
 }
 
 void MultiGPUScheduler::OptimizeForThroughput() {
-    defaultMode_ = ExecutionMode::TENSOR_PARALLEL;
-    printf("[MultiGPUScheduler] Optimized for throughput (tensor parallel)\n");
+    // Throughput without TP: whole-layer migration / dual weight windows.
+    defaultMode_ = ClampNoTp(ExecutionMode::MODEL_PARALLEL);
+    printf("[MultiGPUScheduler] Optimized for throughput (whole-layer / no TP)\n");
 }
 
 void MultiGPUScheduler::OptimizeForMemory() {

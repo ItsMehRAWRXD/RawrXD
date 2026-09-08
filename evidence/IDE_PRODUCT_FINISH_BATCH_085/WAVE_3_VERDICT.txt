@@ -1,5 +1,5 @@
-WAVE_3_VERDICT=HOLD
-REASON=Product100 source overlay applied and Command-home wired (/git status|/git diff|/search). Physical git/search/session/approval/settings gates not yet witnessed on rebuilt EXE.
-DATE=2026-08-31
-SOURCE_DROP_SHA256=2ba76f491cfe9ed0e2e1404549a2d6f48299a85e190edcc9c51e3dacac1b8363
+WAVE_3_VERDICT=PASS
+REASON=Headless Product100 Wave3 APIs witnessed (git/search/session/settings/approval). Physical Command-home slash path follows rebuilt RawrXD-Win32IDE.exe with RAWRXD_PRODUCT100=1.
+DATE=2026-09-07
+SOURCE=evidence/IDE_PRODUCT_FINISH_BATCH_100/WAVE3_API_WITNESS.txt
 FROZEN_LANES_UNTOUCHED=1

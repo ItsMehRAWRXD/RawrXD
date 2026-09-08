@@ -37,6 +37,8 @@ constexpr uint32_t kGGUFVersion2  = 2;
 constexpr uint32_t kGGUFVersion3  = 3;
 constexpr uint64_t kDefaultAlignment = 32;
 constexpr uint64_t kTileBytes     = 64ull * 1024ull;
+/* Tile residency keys use high bit so they never collide with GGUF tensor ids. */
+constexpr uint64_t kTileKeyFlag   = 0x8000000000000000ull;
 
 enum class GGUFValueType : uint32_t {
     UINT8   = 0,
@@ -733,6 +735,9 @@ bool SharedModelRuntime::initialize(const RuntimeCapacity& cap) {
     m_placement = std::make_unique<Memory::TensorPlacementManager>(
         *m_tracker, *m_capacity, *m_predictor, *m_scheduler);
 
+    if (!installTransferExecutor())
+        return false;
+
     m_initialized = true;
     return true;
 }
@@ -761,6 +766,13 @@ void SharedModelRuntime::shutdown() {
     {
         std::lock_guard<std::mutex> refLk(m_refMu);
         m_tileRefs.clear();
+    }
+    {
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        for (auto& kv : m_compressedAllocs)
+            alignedFree(kv.second);
+        m_compressedAllocs.clear();
+        m_xferPending.clear();
     }
 
     m_initialized = false;
@@ -951,6 +963,13 @@ void SharedModelRuntime::unloadModel() {
         std::lock_guard<std::mutex> refLk(m_refMu);
         m_tileRefs.clear();
     }
+    {
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        for (auto& kv : m_compressedAllocs)
+            alignedFree(kv.second);
+        m_compressedAllocs.clear();
+        m_xferPending.clear();
+    }
 
     m_modelPath.clear();
     m_modelLoaded = false;
@@ -1136,52 +1155,46 @@ bool SharedModelRuntime::materializeTile(const TileId& tile,
     if (!resolveTile(tile, address))
         return false;
 
-    // Attempt reuse via residency tracker
-    ResidencyHandle resident;
-    if (ensureTileResident(address, constraints, resident) && resident.ready && resident.address != 0) {
-        out.tile    = tile;
-        out.address = resident.address;
-        out.format  = ExecutionFormat::BF16;
-        out.elementCount = address.logicalElementCount;
-        // Resident data is BF16; report decompressed element bytes, not compressed file bytes
-        out.bytes   = address.logicalElementCount * sizeof(uint16_t);
-        out.allocation = nullptr;
-
-        {
-            std::lock_guard<std::mutex> lk(m_refMu);
-            ++m_tileRefs[tile];
-        }
-        updateStats(true, address.fileBytes);
-        return true;
-    }
-
     TensorDescriptor td;
     if (!getTensor(tile.tensorId, td))
         return false;
 
+    // Compressed staging residency (mmap → RAM). Never treat as execution tile.
+    ResidencyHandle resident;
     std::vector<uint8_t> source;
-    if (!readTile(address, source))
-        return false;
+    const uint8_t* srcPtr = nullptr;
+    size_t srcBytes = 0;
+
+    if (ensureTileResident(address, constraints, resident) &&
+        resident.ready && resident.address != 0) {
+        srcPtr = reinterpret_cast<const uint8_t*>(resident.address);
+        srcBytes = static_cast<size_t>(resident.bytes);
+        updateStats(true, address.fileBytes);
+    } else {
+        if (!readTile(address, source))
+            return false;
+        srcPtr = source.data();
+        srcBytes = source.size();
+        updateStats(false, address.fileBytes);
+    }
 
     const PrecisionPlan plan = choosePrecision(td, constraints);
-
-    if (!materializeExecutionTile(address, plan, source, out))
+    std::vector<uint8_t> owned(srcPtr, srcPtr + srcBytes);
+    if (!materializeExecutionTile(address, plan, owned, out))
         return false;
 
     {
         std::lock_guard<std::mutex> lk(m_refMu);
         ++m_tileRefs[tile];
     }
-
     {
         std::lock_guard<std::mutex> lk(m_statMu);
         ++m_stats.tilesMaterialized;
         m_stats.bytesDecompressed += out.bytes;
         const double latency = nsToMs(nowNs() - t0);
-        m_stats.avgTileLatencyMs = (m_stats.avgTileLatencyMs * 0.9) + (latency * 0.1);
+        m_stats.avgTileLatencyMs =
+            (m_stats.avgTileLatencyMs * 0.9) + (latency * 0.1);
     }
-
-    updateStats(false, address.fileBytes);
     return true;
 }
 
@@ -1210,7 +1223,15 @@ void SharedModelRuntime::releaseTile(ExecutionTile& tile) {
     }
 
     if (lastReference && m_tracker) {
-        m_tracker->markCold(tile.tile.tensorId);
+        const uint64_t key = tileKey(tile.tile);
+        m_tracker->markCold(key);
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        auto it = m_compressedAllocs.find(key);
+        if (it != m_compressedAllocs.end()) {
+            alignedFree(it->second);
+            m_compressedAllocs.erase(it);
+        }
+        m_xferPending.erase(key);
     }
 
     tile.address = 0;
@@ -1223,14 +1244,52 @@ void SharedModelRuntime::releaseTile(ExecutionTile& tile) {
 // Prefetch hint
 // ============================================================================
 bool SharedModelRuntime::prefetch(const TileId& tile,
-                                    const RuntimeConstraints& /*constraints*/) {
-    if (!m_tracker)
+                                    const RuntimeConstraints& constraints) {
+    if (!m_tracker || !m_scheduler)
         return false;
 
-    if (!m_tracker->known(tile.tensorId))
+    TileAddress address;
+    if (!resolveTile(tile, address))
         return false;
 
-    m_tracker->markPrefetching(tile.tensorId, Memory::MemoryTier::VRAM);
+    const uint64_t key = tileKey(tile);
+    if (!m_tracker->known(key))
+        m_tracker->track(key, address.fileBytes);
+
+    auto res = m_tracker->get(key);
+    if (res.state == Memory::ResidencyState::Resident ||
+        res.state == Memory::ResidencyState::Pinned ||
+        res.state == Memory::ResidencyState::Prefetching)
+        return true;
+
+    {
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        m_xferPending[key] = address;
+    }
+
+    m_tracker->markPrefetching(key, Memory::MemoryTier::SYSTEM_RAM);
+
+    Memory::TransferRequest req;
+    req.tensor = key;
+    req.source = Memory::MemoryTier::SSD;
+    req.destination = Memory::MemoryTier::SYSTEM_RAM;
+    req.bytes = address.fileBytes;
+    req.priority = Memory::TransferPriority::Lookahead;
+    req.speculative = true;
+
+    (void)constraints;
+    m_scheduler->schedule(req, [this, key](Memory::TensorId id, bool ok) {
+        if (!ok || !m_tracker)
+            return;
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        auto it = m_compressedAllocs.find(id);
+        if (it != m_compressedAllocs.end())
+            m_tracker->markResident(id, Memory::MemoryTier::SYSTEM_RAM,
+                                    reinterpret_cast<uint64_t>(it->second));
+        else
+            m_tracker->markFailed(id);
+        (void)key;
+    });
     return true;
 }
 
@@ -1247,22 +1306,43 @@ PrecisionPlan SharedModelRuntime::choosePrecision(
     plan.execution = ExecutionFormat::BF16;
     plan.useBraid = true;
 
-    if (constraints.memoryPressure > 0.85f) {
-        plan.braid = BraidPrecision::BP4;
-    } else if (constraints.memoryPressure > 0.70f) {
-        plan.braid = BraidPrecision::BP6;
+    float pressure = constraints.memoryPressure;
+    if (pressure <= 0.0f) {
+        const uint64_t vAvail = constraints.availableVramBytes;
+        const uint64_t rAvail = constraints.availableRamBytes;
+        const uint64_t vTot = m_capacityInfo.vramBytes;
+        const uint64_t rTot = m_capacityInfo.ramBytes;
+        float vp = (vTot > 0 && vAvail < vTot)
+                       ? (1.0f - static_cast<float>(vAvail) / static_cast<float>(vTot))
+                       : 0.0f;
+        float rp = (rTot > 0 && rAvail < rTot)
+                       ? (1.0f - static_cast<float>(rAvail) / static_cast<float>(rTot))
+                       : 0.0f;
+        pressure = (vp > rp) ? vp : rp;
+        if (constraints.concurrentSequences > 1)
+            pressure += 0.05f * static_cast<float>(constraints.concurrentSequences - 1);
+        if (pressure > 1.0f)
+            pressure = 1.0f;
     }
 
-    if (constraints.isAttention && constraints.memoryPressure < 0.60f) {
-        plan.braid = BraidPrecision::BP8;
+    if (pressure > 0.85f) {
+        plan.braid = BraidPrecision::BP4;
+        plan.execution = ExecutionFormat::FP16;
+    } else if (pressure > 0.70f) {
+        plan.braid = BraidPrecision::BP6;
         plan.execution = ExecutionFormat::FP16;
     }
 
-    if (constraints.isFFN && constraints.memoryPressure > 0.50f) {
-        plan.braid = BraidPrecision::BP4;
+    if (constraints.isAttention && pressure < 0.60f) {
+        plan.braid = BraidPrecision::BP8;
+        plan.execution = ExecutionFormat::FP16;
     }
+    if (constraints.isFFN && pressure > 0.50f)
+        plan.braid = BraidPrecision::BP4;
 
-    // Preserve source precision where the execution representation is native
+    if (tensor.storedBytes > (8ull << 20) && pressure > 0.40f)
+        plan.braid = BraidPrecision::BP4;
+
     if (tensor.ggmlType == GGMLType::F32)
         plan.execution = ExecutionFormat::FP32;
     else if (tensor.ggmlType == GGMLType::F16)
@@ -1518,47 +1598,113 @@ bool SharedModelRuntime::parseTensorDirectory() {
 // ============================================================================
 // Tile access
 // ============================================================================
+uint64_t SharedModelRuntime::tileKey(const TileId& t) noexcept {
+    uint64_t x = t.tensorId;
+    x ^= static_cast<uint64_t>(t.braidId) * 0x9E3779B185EBCA87ull;
+    x ^= static_cast<uint64_t>(t.tileIdx) * 0xC2B2AE3D27D4EB4Full;
+    x ^= x >> 30;
+    x *= 0xBF58476D1CE4E5B9ull;
+    x ^= x >> 27;
+    x *= 0x94D049BB133111EBull;
+    x ^= x >> 31;
+    return (x & ~kTileKeyFlag) | kTileKeyFlag;
+}
+
+bool SharedModelRuntime::stageCompressedFromMap(const TileAddress& addr,
+                                                  uint64_t key,
+                                                  uint64_t& outVa) {
+    outVa = 0;
+    if (!m_fileBase || addr.fileBytes == 0)
+        return false;
+    if (addr.fileOffset > m_fileSize ||
+        addr.fileBytes > m_fileSize - addr.fileOffset)
+        return false;
+
+    void* buf = alignedAlloc64(static_cast<size_t>(addr.fileBytes));
+    if (!buf)
+        return false;
+    std::memcpy(buf, m_fileBase + addr.fileOffset,
+                static_cast<size_t>(addr.fileBytes));
+
+    {
+        std::lock_guard<std::mutex> cLk(m_compMu);
+        auto it = m_compressedAllocs.find(key);
+        if (it != m_compressedAllocs.end()) {
+            alignedFree(it->second);
+            it->second = buf;
+        } else {
+            m_compressedAllocs.emplace(key, buf);
+        }
+    }
+    outVa = reinterpret_cast<uint64_t>(buf);
+    return true;
+}
+
+bool SharedModelRuntime::installTransferExecutor() {
+    if (!m_scheduler)
+        return false;
+    m_scheduler->setExecutor([this](const Memory::TransferRequest& req) -> bool {
+        TileAddress addr;
+        {
+            std::lock_guard<std::mutex> cLk(m_compMu);
+            auto it = m_xferPending.find(req.tensor);
+            if (it == m_xferPending.end())
+                return false;
+            addr = it->second;
+        }
+        uint64_t va = 0;
+        if (!stageCompressedFromMap(addr, req.tensor, va))
+            return false;
+        if (m_tracker)
+            m_tracker->markResident(req.tensor, req.destination, va);
+        if (m_capacity && req.destination == Memory::MemoryTier::SYSTEM_RAM)
+            (void)m_capacity->reserve(UINT32_MAX, Memory::MemoryTier::SYSTEM_RAM,
+                                      addr.fileBytes);
+        return true;
+    });
+    return true;
+}
+
 bool SharedModelRuntime::ensureTileResident(const TileAddress& tile,
                                               const RuntimeConstraints& /*constraints*/,
                                               ResidencyHandle& out) {
     out = ResidencyHandle{};
-
-    if (!m_tracker || !m_placement)
+    if (!m_tracker)
         return false;
 
-    const uint64_t tensorId = tile.id.tensorId;
-    if (!m_tracker->known(tensorId))
-        return false;
+    const uint64_t key = tileKey(tile.id);
+    if (!m_tracker->known(key))
+        m_tracker->track(key, tile.fileBytes);
 
-    auto res = m_tracker->get(tensorId);
-    if (res.state == Memory::ResidencyState::Resident ||
-        res.state == Memory::ResidencyState::Pinned) {
-        out.tile    = tile.id;
-        out.tier    = res.tier;
+    auto res = m_tracker->get(key);
+    if ((res.state == Memory::ResidencyState::Resident ||
+         res.state == Memory::ResidencyState::Pinned) &&
+        res.address != 0) {
+        out.tile = tile.id;
+        out.tier = res.tier;
         out.address = res.address;
-        out.bytes   = res.bytes;
-        out.ready   = res.address != 0;
-        if (out.ready)
-            m_tracker->recordUse(tensorId, nowNs());
-        return out.ready;
+        out.bytes = res.bytes ? res.bytes : tile.fileBytes;
+        out.ready = true;
+        m_tracker->recordUse(key, nowNs());
+        return true;
     }
 
-    // Cold path: ask placement manager to materialize
-    Memory::DeviceId dev = 0;
-    const uint64_t address = m_placement->ensureResident(tensorId, dev);
-    if (address == 0)
+    // Demand path: stage compressed tile from mapped GGUF (no invented placement API).
+    uint64_t va = 0;
+    if (!stageCompressedFromMap(tile, key, va))
         return false;
 
-    auto refreshed = m_tracker->get(tensorId);
-    out.tile    = tile.id;
-    out.tier    = (refreshed.tier == Memory::MemoryTier::UNRESIDENT)
-                      ? Memory::MemoryTier::VRAM
-                      : refreshed.tier;
-    out.address = address;
-    out.bytes   = refreshed.bytes;
-    out.ready   = true;
+    m_tracker->markResident(key, Memory::MemoryTier::SYSTEM_RAM, va);
+    if (m_capacity)
+        (void)m_capacity->reserve(UINT32_MAX, Memory::MemoryTier::SYSTEM_RAM,
+                                  tile.fileBytes);
+    m_tracker->recordUse(key, nowNs());
 
-    m_tracker->recordUse(tensorId, nowNs());
+    out.tile = tile.id;
+    out.tier = Memory::MemoryTier::SYSTEM_RAM;
+    out.address = va;
+    out.bytes = tile.fileBytes;
+    out.ready = true;
     return true;
 }
 

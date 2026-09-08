@@ -25,7 +25,7 @@ int main() {
         f << "int add(int a, int b);\n";
     }
     SurfaceWit w = ProveSurface(dir);
-    int offline = 1; // ProductLocalInfer is in-process stub; no network path
+    int offline = 1; // Deep2 in-process; OLLAMA_HOST cleared; no network path
     const bool pass =
         offline && w.hwnd && w.ghost && w.accept && w.reject && w.pipe && w.e2e;
     std::ofstream seal(dir + "\\SEAL.txt");

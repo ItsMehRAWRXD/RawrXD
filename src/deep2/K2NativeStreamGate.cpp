@@ -20,6 +20,7 @@
 #include "K2LogitsSplit.hpp"
 #include "K2MLA_QPathDevice.hpp"
 #include "K2MlaStageTiming.hpp"
+#include "lavapath/SpinCloseAttribution.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -1408,6 +1409,7 @@ Result Run(const fs::path& shardDir,
     Deep2::LogitsSplit_Emit(stdout);
     Deep2::MLA_QPathDevice_Emit(stdout);
     Deep2::MlaStage_Emit(stdout);
+    ::rawr::spin_close::Emit(stdout);
     {
         const uint64_t rs = Deep2::SPT_reqStartUs().load();
         const uint64_t now = Deep2::StreamPathTiming_NowUs();
@@ -1460,6 +1462,7 @@ Result Run(const fs::path& shardDir,
         else if (cfg.enableMlaComplete && !result.kvCacheRead) result.error = "Gate 12: KV read missing";
         else result.error = "Stream contract not satisfied";
     }
+    /* ProductPathSeal / champion emit owned by Deep2Engine::generateStream. */
     (void)shardDir;
     return result;
 }

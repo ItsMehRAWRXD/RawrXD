@@ -13,5 +13,6 @@ enum ExitCode : int {
     SteerFail = 8,
     SafetyBlock = 9,
     QualityFail = 10,
+    Runtime = 11,
 };
 } // namespace rawr

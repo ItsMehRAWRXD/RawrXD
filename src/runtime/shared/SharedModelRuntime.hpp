@@ -361,6 +361,15 @@ private:
     mutable std::mutex m_refMu;
     std::unordered_map<TileId, uint32_t, TileIdHash> m_tileRefs;
 
+    // Compressed staging owned by runtime (tileKey → host VA). Tracker holds VA only.
+    mutable std::mutex m_compMu;
+    std::unordered_map<uint64_t, void*> m_compressedAllocs;
+    std::unordered_map<uint64_t, TileAddress> m_xferPending;
+
+    static uint64_t tileKey(const TileId& t) noexcept;
+    bool installTransferExecutor();
+    bool stageCompressedFromMap(const TileAddress& addr, uint64_t key, uint64_t& outVa);
+
     // Statistics
     mutable std::mutex m_statMu;
     RuntimeStats m_stats{};

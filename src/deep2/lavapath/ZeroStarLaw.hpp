@@ -1,5 +1,7 @@
 #pragma once
 /* 0(*) — AUTOTUNE ⊂ GENERATION. Never AUTOTUNE → EXIT → GENERATION. */
+#include "SpinTokenLaw.hpp"
+#include "BgBmLaw.hpp"
 #define RAWRXD_ZERO_STAR_CONTRACT 1
 #define SEPARATE_HARNESS 0
 #define SYNTHETIC_OPERANDS 0

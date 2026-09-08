@@ -14,8 +14,8 @@ inline double TpsScale_WallRaw(uint32_t tokens, double wallMs) {
 }
 inline double TpsScale_Display(double rawTps) {
     const char* e = std::getenv("DEEP2_TPS_DISPLAY_SCALE");
-    const double s = (e && *e) ? atof(e) : 1000.0;
-    return rawTps * ((s > 0.0) ? s : 1000.0);
+    const double s = (e && *e) ? atof(e) : 1.0;
+    return rawTps * ((s > 0.0) ? s : 1.0);
 }
 // STREAM_TOKENS_PER_BYTE_READ ≈ 2e-8 (= 1/BPT). Reverse → BPT or NORM path.
 inline double TpsScale_ReverseTpb(double tpb) {

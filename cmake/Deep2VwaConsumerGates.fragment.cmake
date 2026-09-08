@@ -115,6 +115,11 @@ rawrxd_add_c1c9_cert(deep2_vwa_moe_prefetch_001
     ${CMAKE_SOURCE_DIR}/src/deep2/deep2_vwa_moe_prefetch_001.cpp)
 rawrxd_add_c1c9_cert(deep2_vwa_bounded_k2_001
     ${CMAKE_SOURCE_DIR}/src/deep2/deep2_vwa_bounded_k2_001.cpp)
+if(TARGET deep2_vwa_bounded_k2_001 AND TARGET InferenceEngine)
+    target_link_libraries(deep2_vwa_bounded_k2_001 PRIVATE InferenceEngine dxgi)
+    target_include_directories(deep2_vwa_bounded_k2_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+endif()
 rawrxd_add_c1c9_cert(deep2_k2_logits_range_sweep_001
     ${CMAKE_SOURCE_DIR}/src/deep2/deep2_k2_logits_range_sweep_001.cpp)
 rawrxd_add_c1c9_cert(deep2_k2_logits_range_freeze_001

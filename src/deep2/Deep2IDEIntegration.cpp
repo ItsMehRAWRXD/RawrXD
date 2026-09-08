@@ -9,6 +9,9 @@
 #include "Deep2IDEIntegration.hpp"
 #include "Deep2Engine.h"
 #include "Deep2Bridge.hpp"
+#include "lavapath/ProductRun.hpp"
+#include "RawrModelAlias.hpp"
+#include "RawrRunSession.hpp"
 #include "GGUFShardRouter.hpp"
 #include "FabricTensorTable.hpp"
 #include "IOCPGGUFLoader.hpp"
@@ -139,16 +142,27 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::Load(const std::string& path) {
         return result;
     }
 
-    // Determine if sharded
-    if (IsShardedModel(path)) {
+    std::string resolved = path;
+    {
         const DWORD attr = GetFileAttributesA(path.c_str());
+        if (attr == INVALID_FILE_ATTRIBUTES) {
+            ::Deep2::rawr_run::AliasResolve ar{};
+            if (::Deep2::rawr_run::ResolveModelAlias(path.c_str(), ar) &&
+                !ar.path.empty())
+                resolved = ar.path;
+        }
+    }
+
+    // Determine if sharded
+    if (IsShardedModel(resolved)) {
+        const DWORD attr = GetFileAttributesA(resolved.c_str());
         if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
-            result = LoadShardedDirectory(path);
+            result = LoadShardedDirectory(resolved);
         } else {
-            result = LoadShardedDirectory(fs::path(path).parent_path().string());
+            result = LoadShardedDirectory(fs::path(resolved).parent_path().string());
         }
     } else {
-        result = LoadSingleFile(path);
+        result = LoadSingleFile(resolved);
     }
 
     s_lastResult = result;
@@ -451,42 +465,12 @@ bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model
     if (pol.streaming.enabled.present)
         m_config.enableStreaming = pol.streaming.enabled.value;
     
-    m_engine = std::make_unique<Deep2Engine>();
-    EngineConfig engineCfg;
-    
-    // Propagate actual K2 metadata from loader result (Gate 7 fix)
-    // If metadata was extracted from GGUF header, use it; otherwise keep defaults
-    if (model.numLayers > 0) {
-        engineCfg.numLayers = model.numLayers;
-    }
-    if (model.numExperts > 0) {
-        // K2 uses MoE; experts are handled by the MoE router, not EngineConfig directly
-        // but we can store this for validation
-    }
-    
-    // Try to get richer metadata from the router if available
-    auto* router = Deep2ModelLoader::GetRouter();
-    if (router && router->metadata().has_metadata) {
-        const auto& meta = router->metadata();
-        if (meta.hidden_size > 0)   engineCfg.hiddenDim = meta.hidden_size;
-        if (meta.head_count > 0)   engineCfg.numHeads = meta.head_count;
-        if (meta.head_count_kv > 0) engineCfg.numKVHeads = meta.head_count_kv;
-        if (meta.ffn_dim > 0)      engineCfg.intermediateDim = meta.ffn_dim;
-        if (meta.vocab_size > 0)   engineCfg.vocabSize = meta.vocab_size;
-        if (meta.context_length > 0) engineCfg.maxSeqLen = meta.context_length;
-    }
-    
-    engineCfg.useKVCache = true;
-    engineCfg.useRoPE = true;
-    engineCfg.useThreadPool = true;
-    
-    if (!m_engine->initialize(engineCfg)) {
-        return false;
-    }
-
-    // E2E: bind tokenizer + weights. Streaming open registered residency; generate
-    // still requires Deep2Engine::loadModel on the same GGUF path.
-    if (m_modelPath.empty() || !m_engine->loadModel(m_modelPath)) {
+    m_engine = std::make_unique<::Deep2::Deep2Engine>();
+    // Same load authority as rawr run / ProductRun::Open (InitFromPath).
+    const size_t maxSeq =
+        m_config.maxContextLength ? m_config.maxContextLength : 512u;
+    if (m_modelPath.empty() ||
+        !::Deep2::rawr_run::InitFromPath(*m_engine, m_modelPath, maxSeq)) {
         m_ready = false;
         return false;
     }
@@ -496,129 +480,69 @@ bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model
 }
 
 void Deep2InferenceSession::Shutdown() {
+    m_cancelled.store(true);
+    if (m_engine) {
+        m_engine->requestCancel();
+        m_engine->unloadModel();
+    }
     m_ready = false;
 }
 
 Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
-    const std::string& prompt) {
+    const std::string& prompt, uint32_t maxTokens) {
     GenerationResult result;
     if (!m_ready || !m_engine) {
         result.finishReason = "not_ready";
         return result;
     }
-
     m_cancelled.store(false);
-    auto t0 = std::chrono::high_resolution_clock::now();
-
-    if (m_engine) {
-        if (auto* mars = m_engine->getMARSController()) {
-            if (auto* vm = mars->GetVRAMManager())
-                vm->ResetRunPeaks();
-        }
-    }
-    ::Deep2::GlobalTelemetry().resetRun();
-    ::Deep2::Exec::ResetRunRamPeaks();
-
-    ::Deep2::InferenceStats stats;
-    std::string accumulated;
-    
-    std::vector<int> promptTokens = m_engine->tokenize(prompt);
-    std::vector<int> outputTokens(m_config.maxContextLength);
-    
-    size_t generated = m_engine->generate(promptTokens.data(), promptTokens.size(),
-                                          outputTokens.data(), m_config.maxContextLength,
-                                          &stats,
-                                          [&](int token) {
-                                              return !m_cancelled.load();
-                                          });
-
-    outputTokens.resize(generated);
-    accumulated = m_engine->detokenize(outputTokens);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
-    ::Deep2::Exec::SampleRunRamPeaks();
-
-    result.text = accumulated;
-    result.tokensGenerated = static_cast<uint32_t>(stats.tokensGenerated);
-    result.latencyMs = stats.latencyMs * stats.tokensGenerated;
-    result.tokensPerSecond = stats.tokensPerSecond;
-    result.finishReason = m_cancelled.load() ? "cancelled" : "stop";
-
-    // INV-3/4: observation from live telemetry ? recordSuccess (profiles only).
-    // Must NOT call EnsurePolicyLoaded() here: store.load() clears session_
-    // overlays and mutates ActivePolicy() after the certified load seam.
-    if (result.finishReason == "stop" && result.tokensPerSecond > 0.0) {
-        using namespace ::Deep2::Exec;
-        auto& hw = ActiveHardwareSnapshot();
-        if (hw.fingerprint.empty() && hw.gpus.empty()) {
-            const auto& pol = ActivePolicy();
-            if (pol.memory.vramBudget.present) {
-                GpuTopo g0;
-                g0.index = 0;
-                g0.name = "gpu0";
-                g0.vramBytes = pol.memory.vramBudget.value.n;
-                hw.gpus.push_back(g0);
-            }
-            if (pol.memory.ramBudget.present)
-                hw.ramBytes = pol.memory.ramBudget.value.n;
-            hw.fingerprint = MakeHardwareFingerprint(hw);
-        }
-        std::string mfp = ExecutionPolicyStore::Instance().modelFingerprint();
-        if (mfp.empty() && !m_modelPath.empty())
-            mfp = std::string("path:") + m_modelPath;
-
-        auto* mars = m_engine ? m_engine->getMARSController() : nullptr;
-        if (mars) {
-            PlacementApplyReport obsReport;
-            ObserveMatchesPlan(*mars, LastPlacementPlan(), obsReport);
-            LastApplyReport() = obsReport;
-        }
-
-        ExecutionObservation obs = BuildObservation(
-            hw, mfp, m_modelName, /*quant*/ "", result.tokensPerSecond,
-            stats.latencyMs, /*completed*/ true, /*outputValid*/ true,
-            ActivePolicy(), mars);
-        LearnedProfileStore::Instance().recordSuccess(obs);
-    }
-
+    rawr::product_run::Request req{};
+    req.modelAlias = m_modelName.empty() ? "loaded" : m_modelName.c_str();
+    req.prompt = prompt.c_str();
+    req.maxTokens = maxTokens ? maxTokens : 256u;
+    req.engine = m_engine.get();
+    req.keepOpen = 1;
+    req.onPiece = [&](const std::string&) -> bool {
+        return !m_cancelled.load();
+    };
+    auto pr = rawr::product_run::ProductRun(req);
+    result.text = std::move(pr.text);
+    result.tokensGenerated = pr.generatedTokens;
+    result.latencyMs = pr.wallNs / 1.0e6;
+    result.tokensPerSecond =
+        (pr.wallNs > 0 && pr.generatedTokens > 0)
+            ? (pr.generatedTokens * 1.0e9 / (double)pr.wallNs)
+            : 0.0;
+    result.finishReason =
+        m_cancelled.load() ? "cancelled"
+                           : (pr.productPass ? "stop" : "error");
     return result;
 }
 
 bool Deep2InferenceSession::GenerateStream(const std::string& prompt,
-                                           TokenCallback callback) {
+                                           TokenCallback callback,
+                                           uint32_t maxTokens) {
     if (!m_ready || !m_engine) return false;
-
     m_cancelled.store(false);
-    
-    std::vector<int> promptTokens = m_engine->tokenize(prompt);
-    std::vector<int> outputTokens(m_config.maxContextLength);
-    
-    m_engine->generate(promptTokens.data(), promptTokens.size(),
-                       outputTokens.data(), m_config.maxContextLength,
-                       nullptr,
-                       [&](int token) {
-                           if (m_cancelled.load()) return false;
-                           
-                           std::vector<int> t = {token};
-                           std::string text = m_engine->detokenize(t);
-                           
-                           if (callback) {
-                               callback(text, false);
-                           }
-                           
-                           return true;
-                       });
-                       
-    if (callback) {
-        callback("", true);
-    }
-    
-    return true;
+    rawr::product_run::Request req{};
+    req.modelAlias = m_modelName.empty() ? "loaded" : m_modelName.c_str();
+    req.prompt = prompt.c_str();
+    req.maxTokens = maxTokens ? maxTokens : 256u;
+    req.engine = m_engine.get();
+    req.keepOpen = 1;
+    req.onPiece = [&](const std::string& piece) -> bool {
+        if (m_cancelled.load()) return false;
+        if (callback && !callback(piece, false)) return false;
+        return true;
+    };
+    auto pr = rawr::product_run::ProductRun(req);
+    if (callback) (void)callback("", true);
+    return pr.productPass != 0 || pr.generatedTokens > 0;
 }
 
 void Deep2InferenceSession::Cancel() {
     m_cancelled.store(true);
+    if (m_engine) m_engine->requestCancel();
 }
 
 // ============================================================================

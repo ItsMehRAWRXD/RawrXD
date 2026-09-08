@@ -6,6 +6,8 @@
 
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "K2MLAAttention.hpp"
+#include "K2KVCache.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -19,6 +21,9 @@ struct Config {
     uint32_t layerDepth = 4;
     uint64_t budgetBytes = 256ull * 1024 * 1024;
     bool enableMlaComplete = false; // Gate 12: RoPE/softmax/KV (additive)
+    // Optional per-token hook (Deep2Benchmark window clock). Return false to stop.
+    bool (*onToken)(int32_t tokenId, void* user) = nullptr;
+    void* onTokenUser = nullptr;
 };
 
 struct Result {
@@ -63,6 +68,16 @@ bool ForwardHiddenMla(const Deep2::GlobalTensorIndex& index,
                       const Deep2::KimiK2Config& k2cfg,
                       float* hidden, uint32_t layerDepth, bool mlaComplete,
                       std::string& error);
+
+// One layer: load shard MLA tensors → MLAForward → MlaAttentionComplete.
+bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
+                     const Deep2::KimiK2Config& k2cfg, float* hiddenIn,
+                     float* hiddenOut, uint32_t layer,
+                     rawrxd::deep2::K2KVCache* kv, uint32_t position,
+                     Deep2::MlaCompleteStats* stats, std::string& error);
+rawrxd::deep2::K2KVCache* ProdKv(const Deep2::KimiK2Config& k2cfg,
+                                 size_t maxSeq);
+void ProdKvCommit();
 
 void PrintCertificationContract(const Result& result, bool generationRequested);
 

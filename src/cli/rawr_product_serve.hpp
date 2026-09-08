@@ -1,5 +1,6 @@
 #pragma once
 #include "../product/gateway/pipe_server.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 #include "../product/gateway/product_serve.hpp"
 #include "rawr_exit_codes.hpp"
 #include <cstring>
@@ -13,14 +14,9 @@
 
 namespace rawr {
 
+// Product COMPLETE authority — Deep2 only (never hardcoded completions).
 inline bool ProductLocalInfer(const char* prompt, char* out, size_t cap) {
-    const char* t = "return a + b; }";
-    if (prompt && std::strstr(prompt, "<PRE>")) t = "return a + b; }";
-    size_t n = std::strlen(t);
-    if (n >= cap) n = cap - 1;
-    std::memcpy(out, t, n);
-    out[n] = 0;
-    return true;
+    return ProductDeep2Infer(prompt, out, cap);
 }
 
 inline int RunProductServe(const std::string& pipeName) {

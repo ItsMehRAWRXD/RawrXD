@@ -1,6 +1,7 @@
 // rawr_argument_parser.hpp
 #pragma once
 #include "rawr_safety_policy.hpp"
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -19,7 +20,9 @@ struct CliArgs {
     std::string bindTerm;
     std::string styleProfile;
     std::string pipeName;
+    unsigned short httpPort = 0;
     AutonomyLevel autoLevel = AutonomyLevel::Off;
+    uint32_t maxTokens = 0; // 0 → CmdRun default
     bool help = false;
 };
 
@@ -51,6 +54,10 @@ inline CliArgs ParseArgs(int argc, char** argv) {
         for (int i = 2; i < argc; ++i) {
             if (argv[i] && !std::strcmp(argv[i], "--pipe") && i + 1 < argc)
                 a.pipeName = argv[++i];
+            else if (argv[i] && !std::strcmp(argv[i], "--http"))
+                a.httpPort = 11435;
+            else if (argv[i] && !std::strcmp(argv[i], "--port") && i + 1 < argc)
+                a.httpPort = (unsigned short)std::atoi(argv[++i]);
         }
         return a;
     }
@@ -67,6 +74,11 @@ inline CliArgs ParseArgs(int argc, char** argv) {
             a.styleProfile = s + 10;
         } else if (!std::strncmp(s, "--auto=", 7)) {
             a.autoLevel = ParseAutonomy(s + 7);
+        } else if ((!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n")) &&
+                   i + 1 < argc) {
+            a.maxTokens = (uint32_t)std::atoi(argv[++i]);
+        } else if (!std::strncmp(s, "--max-tokens=", 13)) {
+            a.maxTokens = (uint32_t)std::atoi(s + 13);
         } else if (a.cmd == "resume" && a.sessionId.empty()) {
             a.sessionId = s;
         } else if (a.cmd == "steer" && !a.model.empty() &&

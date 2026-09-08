@@ -1,0 +1,14 @@
+WAVE=3
+VERDICT=PASS
+SOURCE=WAVE3_API_WITNESS.txt
+DATE=2026-09-07
+WITNESS=p100_wave3_witness.exe
+WAVE3_GIT_STATUS=1
+WAVE3_GIT_DIFF=1
+WAVE3_SEARCH=1
+WAVE3_SETTINGS=1
+WAVE3_SESSION=1
+WAVE3_APPROVAL=1
+WAVE3_API_PASS=1
+NOTE=Headless Product100 API cert. Full IDE slash path requires rebuilt EXE with RAWRXD_PRODUCT100=1.
+GIT_FIX=GitCapture injects -c safe.directory=* for dubious-ownership worktrees.

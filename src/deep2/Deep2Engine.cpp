@@ -24,6 +24,8 @@
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
+#include "lavapath/Batch007Emit.hpp"
+#include "lavapath/ProductPathSeal.hpp"
 #include "CanonicalTokenizer.hpp"
 #include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
@@ -589,6 +591,29 @@ static thread_local size_t g_q4kBlocks    = 0;
 // For each scale pair (is, is+1): qs[0..31] lo â†’ group is, qs[0..31] hi â†’ group is+1.
 // Do NOT use per-16-byte interleaved lo/hi within one scale (pre-VAL-051 bug).
 // ============================================================================
+// Transpose Q4_K GEMV: output[cols] = W^T * input[rows]
+// Used when attn_gate is stored as [gateDim × hidden] but O needs hidden←gateDim.
+static void q4kGEMV_T(const void* weights, const float* input,
+                      float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
+    std::memset(output, 0, cols * sizeof(float));
+    std::vector<float> row(cols);
+    for (size_t r = 0; r < rows; ++r) {
+        const Q4_K_Block* rowBlocks =
+            (const Q4_K_Block*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+        for (size_t b = 0; b < numBlocks; ++b) {
+            const size_t base = b * 256;
+            const size_t n = (base + 256 <= cols) ? 256u : (cols - base);
+            if (n == 0) break;
+            dequantizeQ4KBlock(&rowBlocks[b], row.data() + base);
+        }
+        const float xr = input[r];
+        for (size_t c = 0; c < cols; ++c)
+            output[c] += row[c] * xr;
+    }
+}
+
 static void q4kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
     size_t numBlocks = (cols + 255) / 256;
@@ -1615,8 +1640,12 @@ bool Deep2Engine::allocateBuffers() {
         headDim = mlaHeadDim;
     }
 
-    // Use model's intermediateDim if available, otherwise fallback to hidden*4
+    // Use model's intermediateDim if available, otherwise fallback to hidden*4.
+    // MoE expert intermediate may exceed dense FFN; gateBuf/upBuf must cover it.
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
+    if (moeConfig_.expertDim > ffnDim) ffnDim = moeConfig_.expertDim;
+    if (moeConfig_.sharedExpertDim > ffnDim) ffnDim = moeConfig_.sharedExpertDim;
+    if (modelWeights.moeIntermediateDim > ffnDim) ffnDim = modelWeights.moeIntermediateDim;
 
     // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
     // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*hiddenSize for Qwen3.5 gated attention.
@@ -1626,6 +1655,11 @@ bool Deep2Engine::allocateBuffers() {
     size_t qProjSize = config.useMLA
         ? qOutDim
         : (std::max)(2 * hiddenSize + 2 * kvDim, qOutDim);
+    // SSM gated attn_qkv may be 2*hidden (or other) — cover max mapped rows.
+    for (const auto& lwScan : modelWeights.layers) {
+        if (lwScan.wqkv.rows > qProjSize) qProjSize = lwScan.wqkv.rows;
+        if (lwScan.wq.rows > qProjSize) qProjSize = lwScan.wq.rows;
+    }
 
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
     attentionOutput = alignedAlloc(hiddenSize); // layer ping-pong only (hiddenDim)
@@ -1841,25 +1875,87 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     std::filesystem::path shardDir;
     std::filesystem::path firstShard;
 
-    if (isDirectory) {
-        // Directory mode: find first .gguf file
-        shardDir = inputPath;
-        for (const auto& entry : std::filesystem::directory_iterator(shardDir)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".gguf") {
-                firstShard = entry.path();
-                isMultiShard = true;
-                break;
-            }
+    auto isModelGGUF = [](const std::filesystem::path& p) {
+        if (p.extension() != ".gguf") return false;
+        std::string n = p.filename().string();
+        std::transform(n.begin(), n.end(), n.begin(),
+                       [](unsigned char c) { return (char)std::tolower(c); });
+        return n.find("mmproj") == std::string::npos;
+    };
+    auto splitStem = [](const std::filesystem::path& p, std::string& prefix,
+                        std::string& suffix, size_t& ordinalWidth) -> bool {
+        const std::string n = p.filename().string();
+        const size_t of = n.find("-of-");
+        if (of == std::string::npos || of == 0) return false;
+        const size_t dash = n.rfind('-', of - 1);
+        if (dash == std::string::npos || dash + 1 >= of) return false;
+        const std::string ord = n.substr(dash + 1, of - dash - 1);
+        if (ord.empty() ||
+            !std::all_of(ord.begin(), ord.end(),
+                         [](unsigned char c) { return std::isdigit(c) != 0; })) {
+            return false;
         }
-        if (!isMultiShard) {
-            printf("[Deep2Engine] ERROR: No .gguf files found in directory: %s\n", resolvedPath.c_str());
+        prefix = n.substr(0, dash + 1);
+        suffix = n.substr(of);
+        ordinalWidth = ord.size();
+        return true;
+    };
+
+    if (isDirectory) {
+        shardDir = inputPath;
+        std::vector<std::filesystem::path> models;
+        for (const auto& entry : std::filesystem::directory_iterator(shardDir)) {
+            if (entry.is_regular_file() && isModelGGUF(entry.path()))
+                models.push_back(entry.path());
+        }
+        std::sort(models.begin(), models.end());
+        if (models.empty()) {
+            printf("[Deep2Engine] ERROR: No model GGUF files found in directory: %s\n",
+                   resolvedPath.c_str());
+            return false;
+        }
+        // Shard set only when canonical split naming exists; reject ambiguous
+        // directories of unrelated standalone GGUFs.
+        auto splitIt = std::find_if(
+            models.begin(), models.end(),
+            [&](const std::filesystem::path& p) {
+                std::string pre, suf;
+                size_t width = 0;
+                return splitStem(p, pre, suf, width);
+            });
+        if (splitIt != models.end()) {
+            std::string pre, suf;
+            size_t width = 0;
+            splitStem(*splitIt, pre, suf, width);
+            const std::string firstOrdinal(width > 1 ? width - 1 : 0, '0');
+            const std::filesystem::path canonical =
+                shardDir / (pre + firstOrdinal + "1" + suf);
+            firstShard = std::filesystem::exists(canonical) ? canonical : *splitIt;
+            isMultiShard = true;
+        } else if (models.size() == 1) {
+            firstShard = models.front();
+            isMultiShard = false;
+        } else {
+            printf("[Deep2Engine] ERROR: Ambiguous model directory contains %zu "
+                   "standalone GGUF files: %s\n",
+                   models.size(), resolvedPath.c_str());
             return false;
         }
     } else {
-        // File mode: single file path provided â€” do NOT scan parent directory
         firstShard = inputPath;
         shardDir = inputPath.parent_path();
-        isMultiShard = false;
+        // Selecting any member of a split GGUF resolves the sibling set.
+        std::string pre, suf;
+        size_t width = 0;
+        if (splitStem(inputPath, pre, suf, width)) {
+            const std::string firstOrdinal(width > 1 ? width - 1 : 0, '0');
+            const std::filesystem::path canonical =
+                shardDir / (pre + firstOrdinal + "1" + suf);
+            if (std::filesystem::exists(canonical)) firstShard = canonical;
+            isMultiShard = true;
+        } else {
+            isMultiShard = false;
+        }
     }
 
     printf("[Deep2Engine] Multi-shard detected: %s (%zu files in %s)\n",
@@ -2069,25 +2165,33 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
         modelWeights.useMLA  = false;
 
-        // â”€â”€ Qwen3.5 hybrid architecture: infer numHeads from Q tensor â”€â”€
-        // The qwen35 metadata may report numHeads=16, but the actual Q tensor
-        // has output=8192 = 32 heads Ã— 256 headDim. Infer from tensor shape.
-        if (meta.architecture == "qwen35") {
+        // Qwen3.5 / 3.6: Q may be fused Q|gate (2×gateDim). Keep meta heads then.
+        if (meta.architecture == "qwen35" || meta.architecture == "qwen35moe") {
             for (const auto& t : ggufResult.tensors) {
-                // Look for attn_q.weight on a non-SSM layer (e.g. blk.3)
-                if (t.name.find("attn_q.weight") != std::string::npos &&
-                    t.name.find("blk.3.") != std::string::npos) {
-                    // GGUF dims are [cols, rows] = [in, out]; dimensions[0]=in, dimensions[1]=out
-                    size_t qOut = t.dimensions.size() >= 2 ? t.dimensions[1] : 0;
-                    if (qOut > modelWeights.hiddenDim && modelWeights.headDim > 0) {
+                if (t.name.find("attn_q.weight") == std::string::npos) continue;
+                size_t qOut = t.dimensions.size() >= 2 ? t.dimensions[1] : 0;
+                if (qOut > modelWeights.hiddenDim && modelWeights.headDim > 0 &&
+                    modelWeights.numHeads > 0 &&
+                    (qOut % modelWeights.headDim) == 0) {
+                    const size_t gateDim =
+                        modelWeights.numHeads * modelWeights.headDim;
+                    if (qOut == 2 * gateDim) {
+                        printf("[Deep2Engine] Qwen3.5: gated Q keeps "
+                               "numHeads=%zu (qOut=%zu=2*%zu)\n",
+                               modelWeights.numHeads, qOut, gateDim);
+                    } else {
                         size_t inferredHeads = qOut / modelWeights.headDim;
                         if (inferredHeads != modelWeights.numHeads) {
-                            printf("[Deep2Engine] Qwen3.5: inferring numHeads=%zu from Q tensor (out=%zu, headDim=%zu, metadata said %zu)\n",
-                                   inferredHeads, qOut, modelWeights.headDim, modelWeights.numHeads);
+                            printf("[Deep2Engine] Qwen3.5: inferring "
+                                   "numHeads=%zu from Q (out=%zu headDim=%zu "
+                                   "meta=%zu)\n",
+                                   inferredHeads, qOut, modelWeights.headDim,
+                                   modelWeights.numHeads);
                             modelWeights.numHeads = inferredHeads;
                         }
                     }
-                    break;
+                    if (t.name.find("blk.3.") != std::string::npos)
+                        break;
                 }
             }
         }
@@ -2732,6 +2836,44 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
+    // Infer MoE expert intermediate before buffer alloc (metadata often omits it).
+    if (meta.numExperts > 0) {
+        size_t inferredExpert = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : meta.intermediateSize;
+        if (inferredExpert == 0) {
+            for (const auto& t : ggufResult.tensors) {
+                if (t.name.find("ffn_gate_exps.weight") == std::string::npos) continue;
+                // GGUF stacked: [hidden, expertDim, n_experts]
+                if (t.dimensions.size() >= 3) {
+                    inferredExpert = static_cast<size_t>(t.dimensions[1]);
+                    fprintf(stderr, "MOE_EXPERT_DIM_INFERRED=%zu from %s\n",
+                            inferredExpert, t.name.c_str());
+                    break;
+                }
+            }
+        }
+        if (inferredExpert == 0) {
+            for (const auto& lw : modelWeights.layers) {
+                if (lw.moeSharedGate.rows > 0) {
+                    inferredExpert = lw.moeSharedGate.rows;
+                    fprintf(stderr, "MOE_EXPERT_DIM_FROM_SHEXP=%zu\n", inferredExpert);
+                    break;
+                }
+            }
+        }
+        moeConfig_.expertDim = inferredExpert;
+        moeConfig_.sharedExpertDim = inferredExpert;
+        modelWeights.moeIntermediateDim = inferredExpert;
+        bool haveShexp = false;
+        for (const auto& lw : modelWeights.layers) {
+            if (lw.moeSharedGate.data && lw.moeSharedUp.data && lw.moeSharedDown.data) {
+                haveShexp = true; break;
+            }
+        }
+        moeConfig_.useSharedExpert = (meta.numSharedExperts > 0) || haveShexp;
+        if (moeConfig_.useSharedExpert && meta.numSharedExperts == 0)
+            fprintf(stderr, "MOE_SHARED_INFERRED_FROM_SHEXP=1\n");
+    }
+
     // Re-allocate buffers with correct dimensions
     deallocateBuffers();
     if (!allocateBuffers()) {
@@ -2794,8 +2936,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
                 moeConfig_.numExperts       = meta.numExperts;
                 moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
-                moeConfig_.useSharedExpert  = meta.numSharedExperts > 0;
-                moeConfig_.expertDim          = meta.moeIntermediateSize > 0 ?
+                moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
+                if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
                                                 meta.moeIntermediateSize : meta.intermediateSize;
                 moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
                 moeConfig_.hiddenDim          = meta.hiddenSize;
@@ -2914,9 +3056,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             printf("[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache\n");
             moeConfig_.numExperts       = meta.numExperts;
             moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
-            moeConfig_.useSharedExpert  = meta.numSharedExperts > 0;
-            moeConfig_.expertDim          = meta.moeIntermediateSize > 0 ?
-                                            meta.moeIntermediateSize : meta.intermediateSize;
+                moeConfig_.useSharedExpert  = moeConfig_.useSharedExpert || (meta.numSharedExperts > 0);
+                if (moeConfig_.expertDim == 0) moeConfig_.expertDim = meta.moeIntermediateSize > 0 ?
+                                                meta.moeIntermediateSize : meta.intermediateSize;
             moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
             moeConfig_.hiddenDim          = meta.hiddenSize;
 
@@ -4274,6 +4416,24 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
 
     size_t cols = wtEffective.cols;
     size_t rows = wtEffective.rows;
+
+    // Qwen3.5 attn_gate as O: stored [gateDim×hidden] but caller wants
+    // y[hidden]=W^T x[gateDim]. Detect rows>outDim && cols==outDim.
+    if (rows > outDim && cols == outDim &&
+        wtEffective.type == (int)GGMLType::GGML_TYPE_Q4_K && wtEffective.data) {
+        fprintf(stderr,
+            "[LINEARW_OT] W^T gemv in=%zu out=%zu tensor=%s\n",
+            rows, cols, wt.name.c_str());
+        fflush(stderr);
+        q4kGEMV_T(wtEffective.data, input, output, rows, cols);
+        if (bias) {
+            for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+        }
+        if (acquired && elasticResidencyEnabled_ && elasticResidency_ &&
+            !wt.name.empty())
+            elasticResidency_->ReleaseTensor(wt.name);
+        return;
+    }
 
     // Memory law: never write more than caller outDim; never read past sizeBytes.
     if (rows > outDim) {
@@ -5704,7 +5864,13 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     TokenCallback callback)
 {
     configureGeneration(options);
+    rawr::batch007::Reset();
+    rawr::batch007::A().modelAuth = modelWeights.loaded ? 1 : 0;
+    rawr::batch007::A().maxTokensReq = options.maxTokens;
+    rawr::batch007::A().ctxSize = config.maxSeqLen;
+    rawr::batch007::A().vocabExt = 1;
     choreo::ApplyLawEnv();
+    const auto productWallT0 = std::chrono::high_resolution_clock::now();
 
     // STREAM_BACKWARDS: emit receipts before any decode wait.
     {
@@ -5780,6 +5946,32 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         modelState_ == ModelState::Choreographable)
         modelState_ = ModelState::Generating;
 
+    // Blocker 94: runtime owns formatting (gguf|builtin|explicit-none). No harness.
+    std::string runtimePrompt = prompt;
+    {
+        ChatTemplate chatTmpl;
+        const ModelMetadata& meta = ggufResult.metadata;
+        const bool hasMetaTmpl = !meta.chatTemplate.empty();
+        chatTmpl.initFromMetadata(meta.architecture, "", meta.chatTemplate,
+                                  meta.bosToken, meta.eosToken);
+        const auto ty = chatTmpl.getType();
+        const bool usable =
+            (ty != ChatTemplateType::UNKNOWN && ty != ChatTemplateType::RAW_BOS);
+        if (usable) {
+            runtimePrompt = chatTmpl.formatSingle(prompt, "");
+            const char* src = hasMetaTmpl ? "gguf" : "builtin-model-rule";
+            const std::string& hs =
+                hasMetaTmpl ? meta.chatTemplate
+                            : std::string(chatTmpl.getTypeName());
+            rawr::batch007::NoteChatPolicy(1, src, "APPLY_TEMPLATE", hs.data(),
+                                           hs.size());
+        } else {
+            runtimePrompt = prompt;
+            rawr::batch007::NoteChatPolicy(0, "explicit-none", "RAW_PROMPT_ALLOWED",
+                                           "explicit-none", 13);
+        }
+    }
+
     // Ownership seam: real K2 generate consumes MLA_Gemv via native stream
     // (same control law as forwardTokenAllLayers K2 branch). Do not fall into
     // TinyLlama GPU-forward / incomplete host MLA.
@@ -5788,7 +5980,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         const bool force = !real || !real[0] || real[0] == '1';
         if (force) {
             K2NativeStreamGate::Config kc;
-            kc.prompt = prompt;
+            kc.prompt = runtimePrompt;
             kc.streamTokens = (uint32_t)std::max(1, (int)options.maxTokens);
             uint32_t depth = config.numLayers ? (uint32_t)config.numLayers : 61u;
             if (const char* el = std::getenv("RAWRXD_K2_LAYERS")) {
@@ -5804,14 +5996,20 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             struct CbState {
                 TokenCallback cb;
                 uint32_t count = 0;
+                Deep2Engine* eng = nullptr;
             } st;
             st.cb = callback;
+            st.eng = this;
             kc.onTokenUser = &st;
             kc.onToken = [](int32_t id, void* user) -> bool {
                 auto* s = static_cast<CbState*>(user);
                 if (!s || !s->cb) return true;
                 ++s->count;
-                return s->cb(id, std::string());
+                std::string piece;
+                if (s->eng)
+                    piece = s->eng->detokenize(std::vector<int>{id});
+                rawr::batch007::CommitToken(id, piece, true);
+                return s->cb(id, piece);
             };
             printf("LIVE_FORWARD=forwardTokenAllLayers\n");
             printf("LIVE_MLA_DISPATCH=MLA_Gemv\n");
@@ -5848,11 +6046,42 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 RawrEmitLiveSeal(stdout, w, s, r.ok ? 1 : 0);
             }
             modelState_ = ModelState::Choreographable;
+            rawr::batch007::A().promptTokens = out.promptTokens;
+            rawr::batch007::A().tokensCommitted = out.generatedTokens;
+            rawr::batch007::Finalize(0, config.maxSeqLen, 0,
+                                     out.cancelled ? 1 : 0, std::string());
+            if (out.cancelled) rawr::batch007::NoteCancel("K2_STREAM_ABORT");
+            rawr::batch007::Emit();
+            {
+                rawr::product_path::Facts xf{};
+                xf.model = ggufResult.metadata.architecture.empty()
+                               ? "deepseek2"
+                               : ggufResult.metadata.architecture.c_str();
+                xf.path = "generateStream";
+                xf.tokensRequested = (uint32_t)options.maxTokens;
+                xf.tokensCommitted = (uint32_t)out.generatedTokens;
+                xf.wallNs = rawr::product_path::WallNsFromSpt();
+                xf.textBytes = 0;
+                xf.candidateTokenHash = rawr::batch007::A().streamHash;
+                xf.productionDecode = out.generatedTokens > 0 ? 1 : 0;
+                xf.modelOutput = out.generatedTokens > 0 ? 1 : 0;
+                xf.streamPresent = st.count > 0 ? 1 : 0;
+                xf.receiptAtomic = 1;
+                xf.finite = 1;
+                xf.teardownOk = out.cancelled ? 0 : 1;
+                xf.measuredReal = 1;
+                rawr::product_path::Emit(stderr, xf);
+            }
             return out;
         }
     }
 
-    std::vector<int> promptTokens = tokenize(prompt);
+    std::vector<int> promptTokens = tokenize(runtimePrompt);
+    rawr::batch007::A().promptTokens = promptTokens.size();
+    if (tokenizer) {
+        const auto& sp = tokenizer->GetSpecialTokens();
+        rawr::batch007::NoteSpecials(sp.bosId, sp.eosId, sp.padId, sp.unkId, "gguf", 1);
+    }
 
     const bool agentFirstToken = []() {
         const char* e = std::getenv("RAWRXD_AGENT_FIRST_TOKEN");
@@ -5957,10 +6186,22 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             }
             std::string piece;
             if (tokenizer) {
-                piece = tokenizer->Decode(tokenId);
+                rawr::batch007::A().detokIds.push_back(tokenId);
+                std::string full = tokenizer->Decode(rawr::batch007::A().detokIds);
+                if (full.size() >= rawr::batch007::A().detokPrev.size() &&
+                    full.compare(0, rawr::batch007::A().detokPrev.size(),
+                                 rawr::batch007::A().detokPrev) == 0) {
+                    piece = full.substr(rawr::batch007::A().detokPrev.size());
+                } else {
+                    piece = tokenizer->Decode(tokenId);
+                }
+                rawr::batch007::A().detokPrev = full;
+                rawr::batch007::A().detokCarry = 1;
+                rawr::batch007::A().partialFlush = 1;
             } else {
                 piece = detokenize(std::vector<int>{tokenId});
             }
+            rawr::batch007::CommitToken(tokenId, piece, tokenizer != nullptr);
             streamed += piece;
             if (callback) {
                 bool keepGoing = callback(static_cast<int32_t>(tokenId), piece);
@@ -5992,6 +6233,36 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         vf << "RESULT=" << (generated > 0 ? "PASS" : "FAIL") << "\n";
     }
 
+    {
+        const uint64_t kvPos = kvCache ? kvCache->currentLength() : 0;
+        rawr::batch007::Finalize(kvPos, config.maxSeqLen, kvPos,
+                                 result.cancelled ? 1 : 0, streamed);
+        if (result.cancelled) rawr::batch007::NoteCancel("CALLBACK_FALSE");
+        rawr::batch007::Emit();
+        const auto productWallT1 = std::chrono::high_resolution_clock::now();
+        const uint64_t wallNs = (uint64_t)std::chrono::duration_cast<
+            std::chrono::nanoseconds>(productWallT1 - productWallT0).count();
+        uint64_t sptWall = rawr::product_path::WallNsFromSpt();
+        rawr::product_path::Facts xf{};
+        xf.model = ggufResult.metadata.architecture.empty()
+                       ? "local-gguf"
+                       : ggufResult.metadata.architecture.c_str();
+        xf.path = "generateStream";
+        xf.tokensRequested = (uint32_t)options.maxTokens;
+        xf.tokensCommitted = (uint32_t)result.generatedTokens;
+        xf.wallNs = sptWall ? sptWall : wallNs;
+        xf.textBytes = streamed.size();
+        xf.candidateTokenHash = rawr::batch007::A().streamHash;
+        xf.productionDecode =
+            (result.generatedTokens > 0 && result.completed) ? 1 : 0;
+        xf.modelOutput = result.generatedTokens > 0 ? 1 : 0;
+        xf.streamPresent = !streamed.empty() ? 1 : 0;
+        xf.receiptAtomic = rawr::batch007::A().receiptAtomic;
+        xf.finite = 1;
+        xf.teardownOk = 1;
+        xf.measuredReal = 1;
+        rawr::product_path::Emit(stderr, xf);
+    }
     return result;
 }
 
@@ -6527,30 +6798,37 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // two 4096 halves: first half is the projection, second half is the gate.
     // Output = projection * silu(gate), then attn_gate projects to hiddenDim.
     else if (lw.wqkv.data && lw.hasSSM) {
-        // Project input to 8192 via attn_qkv
-        size_t qDim = numHeads * headDim;  // 8192 = 32 Ã— 256
+        // Use tensor rows (gated often 2*hidden); do NOT force heads*headDim.
+        size_t qDim = lw.wqkv.rows > 0 ? lw.wqkv.rows : (numHeads * headDim);
         LinearW(lw.wqkv, input, nullptr, qProj, qDim);
         B3_TraceState("ATTN_Q_SSM", layer, qProj, qDim);
 
-        // Split 8192 into two 4096 halves: projection and gate
-        size_t halfDim = qDim / 2;  // 4096
-        float* proj = qProj;           // first 4096
-        float* gate = qProj + halfDim; // second 4096
-
-        // Gated projection: output = proj * silu(gate)
+        size_t halfDim = qDim / 2;
+        float* proj = qProj;
+        float* gate = qProj + halfDim;
         for (size_t i = 0; i < halfDim; ++i) {
             float g = gate[i];
-            // SiLU activation: silu(x) = x * sigmoid(x)
             float silu_g = g / (1.0f + expf(-g));
             proj[i] = proj[i] * silu_g;
         }
 
-        // Output projection via attn_gate (mapped to attnO): [4096] -> [4096]
         if (lw.attnO.data) {
             memset(output, 0, hiddenDim * sizeof(float));
-            LinearW(lw.attnO, proj, nullptr, output, hiddenDim);
+            // Stored [gateDim×hidden] but O needs y[hidden]=W^T x[gateDim].
+            if (lw.attnO.rows == halfDim && lw.attnO.cols == hiddenDim &&
+                lw.attnO.type == (int)GGMLType::GGML_TYPE_Q4_K && lw.attnO.data) {
+                fprintf(stderr,
+                    "[ATTN_GATE_OT] layer=%zu W^T gemv in=%zu out=%zu\n",
+                    layer, halfDim, hiddenDim);
+                q4kGEMV_T(lw.attnO.data, proj, output, halfDim, hiddenDim);
+            } else {
+                LinearW(lw.attnO, proj, nullptr, output, hiddenDim);
+            }
         } else {
-            memcpy(output, proj, hiddenDim * sizeof(float));
+            size_t copyN = halfDim < hiddenDim ? halfDim : hiddenDim;
+            memcpy(output, proj, copyN * sizeof(float));
+            if (copyN < hiddenDim)
+                memset(output + copyN, 0, (hiddenDim - copyN) * sizeof(float));
         }
         B3_TraceState("ATTN_O", layer, output, hiddenDim);
 
@@ -6837,8 +7115,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
 
         const size_t attend = tokenCount;
         const float scale = 1.0f / sqrtf((float)headDim);
-        alignas(32) float scores[128];
-        float* scoreBuf = (attend <= 128) ? scores : (float*)_aligned_malloc(attend * sizeof(float), 32);
+        // Always heap-allocate scores (avoid stack[128] + /GS on deep frames).
+        float* scoreBuf = (float*)_aligned_malloc((attend > 0 ? attend : 1) * sizeof(float), 32);
         if (!scoreBuf) {
             memset(headScratch, 0, headConcat * sizeof(float));
         } else if (!haveTorus || tokenCount == 0 || !torusKeys || !torusValues) {
@@ -6951,7 +7229,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 }
             }
         }
-        if (scoreBuf != scores) _aligned_free(scoreBuf);
+        if (scoreBuf) _aligned_free(scoreBuf);
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
         if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, headScratch, headConcat);
     } else {
@@ -7523,6 +7801,12 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input,
                                           float* output) {
     size_t hiddenDim = config.hiddenDim;
 
+
+    if (!moeConfig_.useSharedExpert) {
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
+
     if (!moeWeightsLoader_) {
         memset(output, 0, hiddenDim * sizeof(float));
         return;
@@ -7536,6 +7820,8 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input,
         // Use mapped weights directly (already in memory via mmap)
         size_t sharedDim = moeConfig_.sharedExpertDim;
         if (sharedDim == 0) sharedDim = moeConfig_.expertDim;
+        if (sharedDim == 0 && lw.moeSharedGate.rows > 0) sharedDim = lw.moeSharedGate.rows;
+        if (sharedDim == 0) { memset(output, 0, hiddenDim * sizeof(float)); return; }
         
         // Gate projection (use gateBuf as temp - hiddenDim*4 sized)
         float* gateOut = gateBuf;

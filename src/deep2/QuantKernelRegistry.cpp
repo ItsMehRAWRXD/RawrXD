@@ -308,6 +308,41 @@ static void gemv_f16_scalar(
     }
 }
 
+// --- BF16 GEMV (scalar; bit-cast high 16 bits of IEEE754 float) ---
+static inline float bf16_to_f32(uint16_t h) {
+    uint32_t bits = static_cast<uint32_t>(h) << 16;
+    float f;
+    std::memcpy(&f, &bits, sizeof(f));
+    return f;
+}
+
+static void gemv_bf16_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const uint16_t* weights = reinterpret_cast<const uint16_t*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const uint16_t* row = weights + r * cols;
+        for (size_t c = 0; c < cols; ++c) {
+            acc += bf16_to_f32(row[c]) * x[c];
+        }
+        y[r] += acc;
+    }
+}
+
+static void dequant_bf16(
+    const uint8_t* RESTRICT w,
+    float*        RESTRICT out,
+    size_t n
+) {
+    const uint16_t* src = reinterpret_cast<const uint16_t*>(w);
+    for (size_t i = 0; i < n; ++i)
+        out[i] = bf16_to_f32(src[i]);
+}
+
 // --- Q8_0 GEMV (scalar) ---
 // block_q8_0 defined in GGUFLoader.hpp
 
@@ -317,17 +352,24 @@ static void gemv_q8_0_scalar(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
+    // Packed ggml Q8_0 blocks are 34 bytes — walk by byte stride, not
+    // pointer arithmetic that could assume padded sizeof.
+    constexpr size_t kBlk = 34;
+    const size_t blocksPerRow = (cols + 31) / 32;
+    const size_t rowBytes = blocksPerRow * kBlk;
     for (size_t r = 0; r < rows; ++r) {
         float acc = 0.0f;
-        const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
+        const uint8_t* row = w + r * rowBytes;
         for (size_t b = 0; b < blocksPerRow; ++b) {
+            const auto* blk =
+                reinterpret_cast<const block_q8_0*>(row + b * kBlk);
+            const float d = f16_to_f32(blk->d);
+            const size_t base = b * 32;
+            const size_t n = (base + 32 <= cols) ? 32u : (cols - base);
             float blockAcc = 0.0f;
-            for (int i = 0; i < 32; ++i) {
-                blockAcc += (float)rowBlocks[b].qs[i] * x[b * 32 + i];
-            }
-            acc += f16_to_f32(rowBlocks[b].d) * blockAcc;
+            for (size_t i = 0; i < n; ++i)
+                blockAcc += (float)blk->qs[i] * x[base + i];
+            acc += d * blockAcc;
         }
         y[r] += acc;
     }
@@ -1017,27 +1059,8 @@ static void gemv_q8_0_avx512(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-
-    for (size_t r = 0; r < rows; ++r) {
-        __m512 acc = _mm512_setzero_ps();
-        const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
-
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q8_0& blk = rowBlocks[b];
-            __m512 dVec = _mm512_set1_ps(f16_to_f32(blk.d));
-
-            // Load 32 int8 weights and convert to float
-            __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
-            __m512i i32 = _mm512_cvtepi8_epi32(_mm256_castsi256_si128(qs));
-            __m512 wv = _mm512_cvtepi32_ps(i32);
-
-            __m512 xv = _mm512_loadu_ps(x + b * 32);
-            acc = _mm512_fmadd_ps(_mm512_mul_ps(wv, dVec), xv, acc);
-        }
-        y[r] += _mm512_reduce_add_ps(acc);
-    }
+    // Fall back to bounds-safe scalar until 32-wide path is re-validated.
+    gemv_q8_0_scalar(w, x, y, rows, cols);
 }
 
 // --- Q8_K GEMV (AVX-512) ---
@@ -1297,34 +1320,50 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
         }
     }
 }
+// ggml dequantize_row_q3_K — 16×6-bit scales + walking hmask bit m.
 static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
     const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
+    const size_t numBlocks = (n + 255) / 256;
+    const uint32_t kmask1 = 0x03030303u;
+    const uint32_t kmask2 = 0x0f0f0f0fu;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
         if (!std::isfinite(d)) d = 0.0f;
-        int8_t scales[16];
-        for (int j = 0; j < 8; ++j) {
-            scales[j]     = (int8_t)(blocks[b].scales[j] & 0x0F);
-            scales[j + 8] = (int8_t)((blocks[b].scales[j] >> 4) & 0x0F);
-        }
-        for (size_t i = 0; i < 256; ++i) {
-            size_t globalIdx = b * 256 + i;
-            if (globalIdx >= n) return;
-            int chunk    = (int)(i / 128);
-            int subBlock = (int)((i % 128) / 32);
-            int posInSub = (int)(i % 32);
-            int qsIdx    = chunk * 32 + posInSub;
-            int qsShift  = subBlock * 2;
-            int lo       = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
-            // hmask: 1 bit per weight, 8 weights per byte
-            int hmIdx     = (int)(i / 8);
-            int hmShift   = (int)(i % 8);
-            int hmaskBit  = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
-            int q         = lo - (hmaskBit ? 0 : 4);
-            int scaleIdx  = chunk * 4 + subBlock;
-            float dl      = d * (float)(scales[scaleIdx] - 32);
-            dst[globalIdx]  = dl * (float)q;
+        uint32_t aux[4];
+        std::memcpy(aux, blocks[b].scales, 12);
+        const uint32_t tmp = aux[2];
+        aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
+        aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
+        aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
+        aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
+        const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
+        const uint8_t* q = blocks[b].qs;
+        const uint8_t* hm = blocks[b].hmask;
+        uint8_t m = 1;
+        int is = 0;
+        float* y = dst + b * 256;
+        for (int n128 = 0; n128 < 256; n128 += 128) {
+            int shift = 0;
+            for (int j = 0; j < 4; ++j) {
+                float dl = d * (float)(scales[is++] - 32);
+                for (int l = 0; l < 16; ++l) {
+                    const size_t gi = (size_t)(b * 256 + n128 + j * 32 + l);
+                    if (gi >= n) return;
+                    y[n128 + j * 32 + l] =
+                        dl * (float)(((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4));
+                }
+                dl = d * (float)(scales[is++] - 32);
+                for (int l = 0; l < 16; ++l) {
+                    const size_t gi = (size_t)(b * 256 + n128 + j * 32 + 16 + l);
+                    if (gi >= n) return;
+                    y[n128 + j * 32 + 16 + l] =
+                        dl * (float)(((q[l + 16] >> shift) & 3) -
+                                     ((hm[l + 16] & m) ? 0 : 4));
+                }
+                shift += 2;
+                m <<= 1;
+            }
+            q += 32;
         }
     }
 }
@@ -1500,57 +1539,59 @@ static void gemv_q2_k_scalar(
     }
 }
 
-// --- Q3_K GEMV (scalar) ---
+// --- Q3_K GEMV (scalar) — ggml dequantize_row_q3_K layout ---
 static void gemv_q3_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    static int diagCount = 0;
     const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    if (diagCount < 3) {
-        const char* dq = std::getenv("RAWRXD_Q3K_GEMV_DIAG");
-        if (dq && dq[0] == '1') {
-        printf("[Q3K_GEMV_DIAG#%d] rows=%zu cols=%zu blocksPerRow=%zu sizeof(block)=%zu\n",
-               diagCount, rows, cols, blocksPerRow, sizeof(block_q3_K));
-        if (blocksPerRow > 0) {
-            float d0 = f16_to_f32(blocks[0].d);
-            printf("[Q3K_GEMV_DIAG#%d] firstBlock d=%.6e scales=[%u,%u,%u,%u] qs[0]=0x%02X hmask[0]=0x%02X\n",
-                   diagCount, d0,
-                   (unsigned)blocks[0].scales[0], (unsigned)blocks[0].scales[1],
-                   (unsigned)blocks[0].scales[2], (unsigned)blocks[0].scales[3],
-                   (unsigned)blocks[0].qs[0], (unsigned)blocks[0].hmask[0]);
-        }
-        }
-        ++diagCount;
-    }
+    const size_t blocksPerRow = (cols + 255) / 256;
+    const uint32_t kmask1 = 0x03030303u;
+    const uint32_t kmask2 = 0x0f0f0f0fu;
     for (size_t r = 0; r < rows; ++r) {
         float acc = 0.0f;
         const block_q3_K* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q3_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                int chunk    = (int)(i / 128);
-                int subBlock = (int)((i % 128) / 32);
-                int posInSub = (int)(i % 32);
-                int qsIdx    = chunk * 32 + posInSub;
-                int qsShift  = subBlock * 2;
-                int lo       = (blk.qs[qsIdx] >> qsShift) & 0x03;
-                // hmask: 1 bit per weight, 8 weights per byte
-                int hmIdx     = (int)(i / 8);
-                int hmShift   = (int)(i % 8);
-                int hmaskBit  = (blk.hmask[hmIdx] >> hmShift) & 0x01;
-                int q         = lo - (hmaskBit ? 0 : 4);
-                int scaleIdx  = chunk * 4 + subBlock;
-                int8_t sc = get_scale_q3_k(scaleIdx, blk.scales);
-                float dl = d * (float)(sc - 32);
-                acc += dl * (float)q * x[base + i];
+            if (!std::isfinite(d)) d = 0.0f;
+            uint32_t aux[4];
+            std::memcpy(aux, blk.scales, 12);
+            const uint32_t tmp = aux[2];
+            aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
+            aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
+            aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
+            aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
+            const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
+            const uint8_t* q = blk.qs;
+            const uint8_t* hm = blk.hmask;
+            const float* xb = x + b * 256;
+            const size_t base = b * 256;
+            const size_t elemsInBlock =
+                (b + 1 == blocksPerRow) ? (cols - base) : 256;
+            uint8_t m = 1;
+            int is = 0;
+            size_t written = 0;
+            for (int n128 = 0; n128 < 256 && written < elemsInBlock; n128 += 128) {
+                int shift = 0;
+                for (int j = 0; j < 4 && written < elemsInBlock; ++j) {
+                    float dl = d * (float)(scales[is++] - 32);
+                    for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
+                        acc += dl *
+                               (float)(((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4)) *
+                               xb[n128 + j * 32 + l];
+                    dl = d * (float)(scales[is++] - 32);
+                    for (int l = 0; l < 16 && written < elemsInBlock; ++l, ++written)
+                        acc += dl *
+                               (float)(((q[l + 16] >> shift) & 3) -
+                                       ((hm[l + 16] & m) ? 0 : 4)) *
+                               xb[n128 + j * 32 + 16 + l];
+                    shift += 2;
+                    m <<= 1;
+                }
+                q += 32;
             }
         }
         y[r] += acc;
@@ -1726,6 +1767,11 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterDequant((int)GGMLType::GGML_TYPE_F16, dequant_f16);
     if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_masm);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
+
+    // BF16 (ggml id 30) — common for lm_head / norms on newer GGUFs
+    RegisterGeometry((int)GGMLType::GGML_TYPE_BF16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_BF16));
+    RegisterDequant((int)GGMLType::GGML_TYPE_BF16, dequant_bf16);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_BF16, gemv_bf16_scalar);
 
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));

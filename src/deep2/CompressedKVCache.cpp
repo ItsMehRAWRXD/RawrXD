@@ -8,13 +8,28 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 namespace Deep2 {
 
+static void alignedFreeBytes(void* p) {
+    if (!p) return;
+#ifdef _WIN32
+    _aligned_free(p);
+#else
+    free(p);
+#endif
+}
+
 CompressedKVCache::CompressedKVCache() {}
 CompressedKVCache::~CompressedKVCache() {
-    if (kCacheCompressed) free(kCacheCompressed);
-    if (vCacheCompressed) free(vCacheCompressed);
+    // Must match _aligned_malloc in initialize — free() → 0xC0000374.
+    alignedFreeBytes(kCacheCompressed);
+    kCacheCompressed = nullptr;
+    alignedFreeBytes(vCacheCompressed);
+    vCacheCompressed = nullptr;
 }
 
 bool CompressedKVCache::initialize(const CompressedKVConfig& cfg) {

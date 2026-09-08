@@ -21,8 +21,11 @@
 #define DOWNVOLT_REDUCES_CAPACITY_REQUIREMENT 0
 #define POWER_CAP_ALLOWED 1
 #define HARDWARE_ENVELOPE_REDUCED 1
+#define HARDWARE_REQUIREMENTS_BLOCK_150_TPS 0
+#define EFFECTIVE_BYTES_PER_TOKEN_IS_PHYSICS 1
 /*
   Halo / DGX Spark law: bounded watt/thermal appliance.
   Capacity = bytes. Envelope = watts (+ bandwidth class).
   Downvolt/power-cap reduce envelope, never byte truth.
+  150 TPS = BANDWIDTH/EFFECTIVE_BYTES — not a VRAM-size veto.
 */

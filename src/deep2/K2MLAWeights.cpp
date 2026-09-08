@@ -4,14 +4,17 @@
 
 #include "K2MLAWeights.hpp"
 #include "K2MLA_GpuGemv.hpp"
+#include "K2MLA_QPathDevice.hpp"
 #include "K2MLA_KvExpand_Fused.hpp"
 #include "K2GpuStreamCopy.hpp"
 #include "K2BraidExecutionPolicy.hpp"
+#include "lavapath/LiveInGenTune.hpp"
 #include "vulkan_compute.h"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2KVCache.hpp"
 #include "K2MLAAttention.hpp"
 #include "K2MlaStageTiming.hpp"
+#include "K2MlaOProjTiming.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
@@ -1095,6 +1098,14 @@ bool MLAForward::Execute(const float* hidden, float* output,
         qOk = true;
     };
     auto runQ = [&]() {
+        if (MLA_QPathDeviceFused(
+                hidden, q_a, q_b, weights.attnQ_a, weights.attnQ_b,
+                weights.attnQ_a_norm, weights.attnQ_a_norm.data() != nullptr,
+                (uint32_t)hiddenDim, (uint32_t)qLoraRank, (uint32_t)qBCols,
+                config.normRmsEps, (uint32_t)layerIdx)) {
+            qOk = true;
+            return;
+        }
         runQa();
         if (!qOk) return;
         runQb();
@@ -1162,17 +1173,34 @@ bool MLAForward::Execute(const float* hidden, float* output,
             qTh.join();
             joinUs = StreamPathTiming_NowUs() - tJ0;
         } else {
-            std::thread kvTh([&]() {
-                const uint64_t t0 = StreamPathTiming_NowUs();
-                runKvHost();
-                kvBranchUs = StreamPathTiming_NowUs() - t0;
-            });
-            const uint64_t tQ0 = StreamPathTiming_NowUs();
-            runQ();
-            qBranchUs = StreamPathTiming_NowUs() - tQ0;
-            const uint64_t tJ0 = StreamPathTiming_NowUs();
-            kvTh.join();
-            joinUs = StreamPathTiming_NowUs() - tJ0;
+            // SplitKv was host-KV for overlap. 0(*): FIRST_KVA + winner need
+            // live GPU operands (kva_sx_16). Host KV ⇒ KVA_SHARED_X=0 always.
+            const int kvaW = rawr::live::KvaWinnerRows().load();
+            const bool kvaGpu =
+                (kvaW < 0) || (rawr::live::KvaParity().load() != 0);
+            if (kvaGpu) {
+                // Serial GPU Q then KV — g_pinKey is process-wide; parallel
+                // Q||KV races tag 1/2 over tag 3 and drops KVA fused path.
+                const uint64_t tQ0 = StreamPathTiming_NowUs();
+                runQ();
+                qBranchUs = StreamPathTiming_NowUs() - tQ0;
+                const uint64_t tKv0 = StreamPathTiming_NowUs();
+                runKv();
+                kvBranchUs = StreamPathTiming_NowUs() - tKv0;
+                joinUs = 0;
+            } else {
+                std::thread kvTh([&]() {
+                    const uint64_t t0 = StreamPathTiming_NowUs();
+                    runKvHost();
+                    kvBranchUs = StreamPathTiming_NowUs() - t0;
+                });
+                const uint64_t tQ0 = StreamPathTiming_NowUs();
+                runQ();
+                qBranchUs = StreamPathTiming_NowUs() - tQ0;
+                const uint64_t tJ0 = StreamPathTiming_NowUs();
+                kvTh.join();
+                joinUs = StreamPathTiming_NowUs() - tJ0;
+            }
         }
         const uint64_t wallUs = StreamPathTiming_NowUs() - tQkv;
         MlaStage_NoteSplitTopology(wallUs, qBranchUs, kvBranchUs, joinUs);
@@ -1208,6 +1236,7 @@ bool MLAForward::Execute(const float* hidden, float* output,
         kvTh.join();
     }
     StreamPathTiming_Add(MlaStage_QkvUs(), tQkv);
+    Qkv_NoteWall(StreamPathTiming_NowUs() - tQkv);
     if (MLA_GpuGemvWanted()) {
         K2Braid_ObserveQkvWindow(
             MlaStage_QaUs().load() - qa0,
@@ -1445,11 +1474,19 @@ bool MLAForward::Execute(const float* hidden, float* output,
     // Use actual tensor shape (already pre-fetched into oCols / oActualRows)
     pin(6);
     tO = StreamPathTiming_NowUs();
+    if (const float* resid = OProj_ResidualBase()) {
+        if (auto* vc = K2GpuStreamCopy_Vc())
+            vc->GemvFuseResidualNext(resid);
+    }
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
                                 oCols, oActualRows, error)) {
         goto cleanup;
     }
-    StreamPathTiming_Add(MlaStage_OProjUs(), tO);
+    {
+        const uint64_t oWall = StreamPathTiming_NowUs() - tO;
+        StreamPathTiming_Add(MlaStage_OProjUs(), tO);
+        OProj_NoteWall(oWall);
+    }
 
     // Success — TLS owns scratch; only free fusedTmp if set.
     _aligned_free(fusedTmp);

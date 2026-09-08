@@ -50,7 +50,7 @@ void K2LivePolicy_SetSticky(K2LivePolicyMode m);
 void K2LivePolicy_SetStickyArm(K2LivePolicyMode m, const char* arm);
 uint32_t K2LivePolicy_HysteresisHold();
 void K2LivePolicy_ApplyMode(K2LivePolicyMode mode);
-// fullDepthPromo: trampoline+cyclone+elastic+fused (vs trampoline-only)
+// fullDepthPromo: retained for arm naming (FULL_DEPTH_PROMO); mech is trampoline.
 void K2LivePolicy_ApplyMode(K2LivePolicyMode mode, bool fullDepthPromo);
 
 } // namespace Deep2

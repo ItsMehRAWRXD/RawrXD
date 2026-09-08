@@ -26,29 +26,33 @@ set_target_properties(deep2_benchmark PROPERTIES
   OUTPUT_NAME deep2_benchmark
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-add_executable(k2_useful_tps_001
-  ${CMAKE_SOURCE_DIR}/certs/k2_useful_tps_001.cpp
-)
-set_target_properties(k2_useful_tps_001 PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-  OUTPUT_NAME k2_useful_tps_001
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-add_executable(mla_cert_001
-  ${CMAKE_SOURCE_DIR}/certs/mla_cert_001.cpp
-)
-target_include_directories(mla_cert_001 PRIVATE
-  ${CMAKE_SOURCE_DIR}/src
-  ${CMAKE_SOURCE_DIR}/src/deep2
-  ${CMAKE_SOURCE_DIR}/include
-)
-if(MSVC)
-  target_compile_options(mla_cert_001 PRIVATE /EHsc /W3 /std:c++20)
+if(NOT TARGET k2_useful_tps_001)
+  add_executable(k2_useful_tps_001
+    ${CMAKE_SOURCE_DIR}/certs/k2_useful_tps_001.cpp
+  )
+  set_target_properties(k2_useful_tps_001 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME k2_useful_tps_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
-target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
-set_target_properties(mla_cert_001 PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-  OUTPUT_NAME mla_cert_001
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+if(NOT TARGET mla_cert_001)
+  add_executable(mla_cert_001
+    ${CMAKE_SOURCE_DIR}/certs/mla_cert_001.cpp
+  )
+  target_include_directories(mla_cert_001 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/include
+  )
+  if(MSVC)
+    target_compile_options(mla_cert_001 PRIVATE /EHsc /W3 /std:c++20)
+  endif()
+  target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
+  set_target_properties(mla_cert_001 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME mla_cert_001
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 message(STATUS "[Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001")

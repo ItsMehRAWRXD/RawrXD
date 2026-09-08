@@ -321,8 +321,11 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                     key == "n_layer" || key.find(".n_layer") != std::string::npos) {
                     metadata.numLayers = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                if (key == "attention.head_count" ||
-                    (key.size() > 22 && key.substr(key.size() - 23) == ".attention.head_count") ||
+                if ((key.size() >= 22 &&
+                     key.compare(key.size() - 22, 22, "attention.head_count") == 0 &&
+                     (key.size() < 25 ||
+                      key.compare(key.size() - 25, 25,
+                                  "attention.head_count_kv") != 0)) ||
                     key == "n_head" ||
                     (key.size() > 7 && key.substr(key.size() - 8) == ".n_head")) {
                     metadata.numHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);

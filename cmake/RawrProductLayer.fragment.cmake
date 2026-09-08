@@ -56,17 +56,23 @@ set_target_properties(rawrxd_product_layer_002 PROPERTIES
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 function(rawr_product_cert name src)
-  add_executable(${name} ${src} ${RAWR_PRODUCT_ASM_OBJS})
+  add_executable(${name} ${src}
+    ${CMAKE_SOURCE_DIR}/src/product/gateway/product_deep2_infer.cpp
+    ${RAWR_PRODUCT_ASM_OBJS})
   add_dependencies(${name} rawr_product_x64_asm rawr_product_pipe_x64_asm)
   target_include_directories(${name} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/product
     ${CMAKE_SOURCE_DIR}/src/cli
-    ${CMAKE_SOURCE_DIR}/src/cli/style)
+    ${CMAKE_SOURCE_DIR}/src/cli/style
+    ${CMAKE_SOURCE_DIR}/src/deep2)
   if(MSVC)
     target_compile_options(${name} PRIVATE /EHsc /W3 /std:c++20)
   endif()
   target_link_libraries(${name} PRIVATE user32)
+  if(TARGET InferenceEngine)
+    target_link_libraries(${name} PRIVATE InferenceEngine dxgi)
+  endif()
   set_target_properties(${name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -87,10 +93,31 @@ rawr_product_cert(rawrxd_offline_demo_001
   certs/rawrxd_offline_demo_001.cpp)
 rawr_product_cert(rawrxd_repeatable_demo_record_001
   certs/rawrxd_repeatable_demo_record_001.cpp)
+rawr_product_cert(rawrxd_product_runtime_001
+  certs/rawrxd_product_runtime_001.cpp)
+rawr_product_cert(rawrxd_local_api_compat_001
+  certs/rawrxd_local_api_compat_001.cpp)
+
+add_executable(rawrxd_product_layer_003
+  certs/rawrxd_product_layer_003.cpp
+  ${RAWR_PRODUCT_ASM_OBJS})
+add_dependencies(rawrxd_product_layer_003 rawr_product_x64_asm rawr_product_pipe_x64_asm)
+target_include_directories(rawrxd_product_layer_003 PRIVATE
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/src/product)
+if(MSVC)
+  target_compile_options(rawrxd_product_layer_003 PRIVATE /EHsc /W3 /std:c++20)
+endif()
+set_target_properties(rawrxd_product_layer_003 PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if(TARGET rawr)
   target_include_directories(rawr PRIVATE
     ${CMAKE_SOURCE_DIR}/src/product)
+  # CmdRun/product_serve need framed-pipe + token/FNV ABI (MASM).
+  target_sources(rawr PRIVATE ${RAWR_PRODUCT_ASM_OBJS})
+  add_dependencies(rawr rawr_product_x64_asm rawr_product_pipe_x64_asm)
 endif()
 
 message(STATUS "[Deep2] RAWRXD_PRODUCT_LAYER wired")

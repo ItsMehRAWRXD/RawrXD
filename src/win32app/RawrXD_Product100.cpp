@@ -318,8 +318,10 @@ int32_t GitCapture(const std::vector<std::wstring>& args, uint64_t required_cap,
     if (!g_ready) return P100_E_NOT_INITIALIZED;
     if (!HasCap(required_cap)) return P100_E_ACCESS_DENIED;
 
+    std::vector<std::wstring> cmd = { L"-c", L"safe.directory=*", L"-c", L"safe.directory=G:/~dev/rawrxd" };
+    cmd.insert(cmd.end(), args.begin(), args.end());
     std::wstring output;
-    int32_t rc = RunProcessCapture(L"git.exe", args, W(g_ctx.workspace), 60000, &output, result);
+    int32_t rc = RunProcessCapture(L"git.exe", cmd, W(g_ctx.workspace), 60000, &output, result);
     if (out_text && out_cch) CopyWide(out_text, out_cch, output.c_str());
     if (rc != P100_OK) {
         AppendUtf8File(StateFile(L"GIT_LANE.log"), NowStamp() + L" FAIL " + output + L"\n");

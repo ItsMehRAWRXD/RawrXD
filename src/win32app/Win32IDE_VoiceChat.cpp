@@ -398,6 +398,10 @@ void Win32IDE::cmdVoiceJoinRoom()
         if (g_hwndVoiceJoinBtn) SetWindowTextA(g_hwndVoiceJoinBtn, "Join");
         logInfo("Voice: Left room");
     } else {
+        // Local membership only — no ProductRun / no relay. Honest fiction mark.
+        appendToOutput(
+            "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 Voice room join is local state only (no relay).\r\n",
+            "Output", OutputSeverity::Warning);
         VoiceChatResult r = g_voiceChat->joinRoom(roomName[0] ? roomName : "general");
         if (r.success) {
             if (g_hwndVoiceJoinBtn) SetWindowTextA(g_hwndVoiceJoinBtn, "Leave");

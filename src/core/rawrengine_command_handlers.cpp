@@ -68,59 +68,46 @@ CommandResult HandleCursorParityBridge(const CommandContext& ctx) {
 }
 
 CommandResult HandleOmegaOrchestrator(const CommandContext& ctx) {
-    const auto result = rawrxd::OmegaOrchestrator::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Omega orchestrator initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OmegaOrchestrator",
+        /*code=*/1);
 }
 
 CommandResult HandleMeshBrain(const CommandContext& ctx) {
-    const auto result = MeshBrain::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Mesh brain initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MeshBrain",
+        /*code=*/1);
 }
 
 CommandResult HandleSpeciatorEngine(const CommandContext& ctx) {
-    const auto result = SpeciatorEngine::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Speciator engine initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SpeciatorEngine",
+        /*code=*/1);
 }
 
 CommandResult HandleNeuralBridge(const CommandContext& ctx) {
-    const auto result = rawrxd::NeuralBridge::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Neural bridge initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 NeuralBridge",
+        /*code=*/1);
 }
 
 CommandResult HandleSelfHostEngine(const CommandContext& ctx) {
-    const auto result = SelfHostEngine::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Self-host engine initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 SelfHostEngine",
+        /*code=*/1);
 }
 
 CommandResult HandleHardwareSynthesizer(const CommandContext& ctx) {
-    const auto result = HardwareSynthesizer::instance().initialize();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Hardware synthesizer initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 HardwareSynthesizer",
+        /*code=*/1);
 }
 
 CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
-    const auto result = rawrxd::TranscendenceCoordinator::instance().initializeAll();
-    if (!result.success) {
-        return errorResult(ctx, result.detail, result.errorCode);
-    }
-    return okResult(ctx, "Transcendence coordinator initialized");
+    return errorResult(ctx,
+        "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator; "
+        "product path=Deep2 generateStream",
+        /*code=*/1);
 }
 
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {

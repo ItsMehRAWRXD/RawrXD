@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 
 namespace Deep2 {
 
@@ -445,7 +446,13 @@ void CycloneScheduler::SchedulerLoop() {
         ProcessDemandQueue();
         ProcessPrefetchQueue();
         UpdateLaneStates();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        {
+            const char* tick = std::getenv("CYCLONE_FIXED_TICK");
+            if (tick && tick[0] == '1')
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            else
+                std::this_thread::yield();
+        }
     }
 }
 

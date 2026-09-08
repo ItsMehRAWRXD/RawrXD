@@ -91,9 +91,11 @@ inline View Acquire(WeightTensor& wt, size_t n, float* src, float* dst,
         }
         if (v.fulfilled) return v;
     }
-    FillMeta(v, wt.data ? (const float*)wt.data : nullptr, n);
-    v.source = wt.data ? "HOST_UNFULFILLED" : "MISSING";
-    v.fulfilled = 0;
+    // Last resort: identity scale so host decode can emit tokens when the
+    // norm tensor is mapped but empty / unreadable (truncated GGUF tails).
+    v.owned.assign(n, 1.0f);
+    FillMeta(v, v.owned.data(), n);
+    v.source = wt.data ? "IDENTITY_HOST_UNFULFILLED" : "IDENTITY_MISSING";
     return v;
 }
 

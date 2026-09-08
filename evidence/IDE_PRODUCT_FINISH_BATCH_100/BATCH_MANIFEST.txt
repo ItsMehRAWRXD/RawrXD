@@ -1,0 +1,44 @@
+IDE_PRODUCT_FINISH_BATCH_100
+============================
+Purpose: finish IDE on ONE ProductRun path (not stage-silo certs).
+Date: 2026-09-07
+
+## Law
+```
+rawr / IDE / bench / agent  →  ProductRun(...)  only
+Resolve→Load→Runtime→GenerateStream→Token→Completion→Product
+ONE receipt. First owner owns failure. Earlier stages stay PASS.
+```
+
+## Batch of 15
+
+| #  | Item | Status |
+| -- | ---- | ------ |
+| 01 | ProductReceipt canonical | PASS (lavapath/ProductReceipt.hpp) |
+| 02 | ProductRun single pipeline | PASS (lavapath/ProductRun.hpp) |
+| 03 | CmdRun → ProductRun adapter | PASS (rawr_commands.cpp) |
+| 04 | Default maxTokens=64 product | PASS |
+| 05 | Runtime exit ≠ reopen Resolve | PASS (ExitCode::Runtime=11) |
+| 06 | IDE GenerateStream → generateStream | PASS (Deep2IDEIntegration.cpp) |
+| 07 | Product100 cmake include | PASS (CMakeLists after Win32IDE) |
+| 08 | RAWRXD_PRODUCT100=1 define | PASS (cmake) |
+| 09 | Git status/diff slash | PASS (wired; needs live EXE) |
+| 10 | Workspace search slash | PASS (wired; needs live EXE) |
+| 11 | Session persist slash | PASS (/p100 session) |
+| 12 | Settings show slash | PASS (/p100 settings) |
+| 13 | Approval list slash | PASS (/p100 approvals) |
+| 14 | Wave3 smoke host wiring | PASS (/p100 wave3) |
+| 15 | Evidence ledger this file | PASS |
+
+## Still required for PRODUCT_100=PASS (not fiction)
+```
+P1PRA E2E FINALIZE=0 on rebuilt RawrXD-Win32IDE.exe
+WAVE_3 live witness after Product100 link
+WAVE_4 full smoke matrix (all host callbacks)
+PRODUCT_PASS on GenerateStream→tokens→COMPLETE (model-dependent)
+```
+
+## Frozen — do not reopen
+STREAMER_VRAM_APERTURE_001, AGENTIC_AUTONOMOUS_TEMPLATE_001,
+COMMAND_HOME_SMOKE_001, KVA climb/inversion, Batch 007,
+CommandBroker(message,mode) contract

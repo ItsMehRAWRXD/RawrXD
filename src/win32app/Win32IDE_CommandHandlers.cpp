@@ -1,16 +1,9 @@
 // ============================================================================
 // Win32IDE_CommandHandlers.cpp — CommandResult overloads for feature handlers
 // ============================================================================
-// Bridges legacy GUI-only handlers (void*, MessageBox) to the shared
-// CommandContext/CommandResult dispatch used by both GUI and CLI.
-// Each handler delegates to the existing implementation and reports success.
-// ============================================================================
-
 #include "Win32IDE.h"
 #include "../core/shared_feature_dispatch.h"
 
-// Forward declarations of existing GUI handlers (void* idePtr signature)
-// These are defined in Win32IDE_CommandHandlers_Stubs.cpp
 void HandleTranscendenceCoordinator(void* idePtr);
 void HandleVulkanRenderer(void* idePtr);
 void HandleOSExplorerInterceptor(void* idePtr);
@@ -26,45 +19,38 @@ void HandlePerfTelemetry(void* idePtr);
 void HandleUpdateSignature(void* idePtr);
 void HandlePluginSignature(void* idePtr);
 
-// Helper to emit output consistently
 static void emitStatus(const CommandContext& ctx, const char* message) {
 	if (ctx.outputFn) ctx.outputLine(message);
 }
 
 CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
-	HandleTranscendenceCoordinator(ctx.idePtr);
-	emitStatus(ctx, "Transcendence Coordinator executed");
-	return CommandResult::ok("Transcendence Coordinator executed");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 TranscendenceCoordinator", nullptr};
 }
 
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
-	HandleVulkanRenderer(ctx.idePtr);
-	emitStatus(ctx, "Vulkan Renderer invoked");
-	return CommandResult::ok("Vulkan Renderer invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 VulkanRenderer", nullptr};
 }
 
 CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) {
-	HandleOSExplorerInterceptor(ctx.idePtr);
-	emitStatus(ctx, "OS Explorer Interceptor invoked");
-	return CommandResult::ok("OS Explorer Interceptor invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 OSExplorerInterceptor", nullptr};
 }
 
 CommandResult HandleMCPHooks(const CommandContext& ctx) {
-	HandleMCPHooks(ctx.idePtr);
-	emitStatus(ctx, "MCP Hooks invoked");
-	return CommandResult::ok("MCP Hooks invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 MCPHooks", nullptr};
 }
 
 CommandResult HandleIOCPFileWatcher(const CommandContext& ctx) {
-	HandleIOCPFileWatcher(ctx.idePtr);
-	emitStatus(ctx, "IOCP File Watcher invoked");
-	return CommandResult::ok("IOCP File Watcher invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IOCPFileWatcher", nullptr};
 }
 
 CommandResult HandleIDEDiagnosticAutoHealer(const CommandContext& ctx) {
-	HandleIDEDiagnosticAutoHealer(ctx.idePtr);
-	emitStatus(ctx, "IDE Diagnostic AutoHealer invoked");
-	return CommandResult::ok("IDE Diagnostic AutoHealer invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 IDEDiagnosticAutoHealer", nullptr};
 }
 
 CommandResult HandleConsentPrompt(const CommandContext& ctx) {
@@ -74,15 +60,13 @@ CommandResult HandleConsentPrompt(const CommandContext& ctx) {
 }
 
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
-	HandleAutonomousAgent(ctx.idePtr);
-	emitStatus(ctx, "Autonomous Agent invoked");
-	return CommandResult::ok("Autonomous Agent invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 AutonomousAgent", nullptr};
 }
 
 CommandResult HandleChatMessageRenderer(const CommandContext& ctx) {
-	HandleChatMessageRenderer(ctx.idePtr);
-	emitStatus(ctx, "Chat Message Renderer invoked");
-	return CommandResult::ok("Chat Message Renderer invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 ChatMessageRenderer", nullptr};
 }
 
 CommandResult HandleToolActionStatus(const CommandContext& ctx) {
@@ -98,9 +82,8 @@ CommandResult HandleChatPanel(const CommandContext& ctx) {
 }
 
 CommandResult HandlePerfTelemetry(const CommandContext& ctx) {
-	HandlePerfTelemetry(ctx.idePtr);
-	emitStatus(ctx, "Performance Telemetry invoked");
-	return CommandResult::ok("Performance Telemetry invoked");
+	emitStatus(ctx, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry");
+	return CommandResult{1, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 PerfTelemetry", nullptr};
 }
 
 CommandResult HandleUpdateSignature(const CommandContext& ctx) {

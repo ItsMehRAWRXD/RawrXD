@@ -30,6 +30,21 @@
 
 using namespace Deep2;
 
+#ifdef _WIN32
+static void ClearCpuOnlyOverrides() {
+    // Preserve operator overrides when explicitly requested.
+    if (const char* keep = std::getenv("RAWRXD_KEEP_ENHANCE_SKIP")) {
+        if (keep[0] == '1') return;
+    }
+    SetEnvironmentVariableA("RAWRXD_SEMANTIC_SAFE", nullptr);
+    SetEnvironmentVariableA("RAWRXD_GPU_DEVICES", nullptr);
+    SetEnvironmentVariableA("RAWRXD_ENHANCE_SKIP", nullptr);
+    _putenv_s("RAWRXD_SEMANTIC_SAFE", "");
+    _putenv_s("RAWRXD_GPU_DEVICES", "");
+    _putenv_s("RAWRXD_ENHANCE_SKIP", "");
+}
+#endif
+
 // ============================================================================
 // Command Line Parsing
 // ============================================================================
@@ -229,6 +244,9 @@ void printProgress(const std::string& phase, int current, int total) {
 // Main Entry Point
 // ============================================================================
 int main(int argc, char** argv) {
+#ifdef _WIN32
+    ClearCpuOnlyOverrides();
+#endif
     CommandLineArgs args = parseArgs(argc, argv);
     
     if (args.help || args.modelPath.empty()) {

@@ -22,10 +22,8 @@ struct Witness {
     std::atomic<int> productionDecodePath{0};
 };
 
-inline Witness& W() {
-    static Witness w;
-    return w;
-}
+// Defined in MlaCertAuthority.cpp — one Witness per process (no ODR split).
+Witness& W();
 
 inline void Reset() {
     auto& w = W();

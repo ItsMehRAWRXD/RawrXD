@@ -12,6 +12,7 @@ enum class GpuPolicy : uint8_t {
     Multi = 3,
     UserList = 4,
     Hybrid = 5,
+    DualLane = 6, // two sovereign loaders; WEIGHTS DO NOT CROSS LANES
 };
 
 enum class ExecMode : uint8_t {
@@ -20,6 +21,7 @@ enum class ExecMode : uint8_t {
     MultiGpuShard = 2,
     Speculative = 3,
     Hybrid = 4,
+    DualSovereign = 5, // choreographer + lane A/B; no shared weight arena
 };
 
 enum class DeviceDuty : uint8_t {

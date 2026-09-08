@@ -12,6 +12,7 @@
 #include "../agentic_engine.h"
 #include "../cpu_inference_engine.h"
 #include "../deep2/Deep2IDEIntegration.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 #include "../inference/PerformanceMonitor.h"
 #include "../logging/Logger.h"
 #include "../modules/native_memory.hpp"
@@ -331,49 +332,39 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     applyAgentCapabilityHotpatches(refinedPrompt);
 
-    // Deep2-backed path: always use OrchestratorBridge tool loop (read/edit/build/run).
-    // Do not use CPU engine or Ollama when Deep2 is ready.
+    // Batch 004: model turn = ProductRun; tool loop stays outside inference.
     std::string response;
-    bool localReady = SharedCpuEngine()->IsModelLoaded();
-    if (m_deep2Ready) {
+    if (m_deep2Ready || rawr::ProductSessionOpen()) {
+        if (!m_deep2ModelPath.empty()) {
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", m_deep2ModelPath.c_str());
+#endif
+            (void)rawr::ProductOpenSession(m_deep2ModelPath.c_str());
+        }
         auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
-        if (!m_workspaceRoot.empty()) {
-            orch.SetWorkingDirectory(m_workspaceRoot);
+        if (!m_workspaceRoot.empty()) orch.SetWorkingDirectory(m_workspaceRoot);
+        // Tool-capable agent loop may call back; primary tokens from ProductRun.
+        std::string prText;
+        auto streamed = false;
+        (void)rawr::ProductDeep2InferStream(
+            refinedPrompt.c_str(), 256,
+            [this, &streamed](const std::string& piece) -> bool {
+                streamed = true;
+                if (m_outputCallback) m_outputCallback("token", piece);
+                return true;
+            },
+            &prText);
+        response = prText;
+        if (response.empty()) {
+            response = orch.RunAgent(refinedPrompt);
         }
-        if (!m_deep2ModelPath.empty() && !orch.IsInitialized()) {
-            const std::string workDir =
-                m_workspaceRoot.empty()
-                    ? std::filesystem::current_path().string()
-                    : m_workspaceRoot;
-            (void)orch.Initialize(workDir, "deep2", m_deep2ModelPath);
-        }
-        response = orch.RunAgent(refinedPrompt);
-        if (response.empty() && m_ide) {
-            response = m_ide->routeInferenceRequest(refinedPrompt);
-        }
-    } else if (!localReady)
-    {
-        // Prefer the orchestrator bridge and let it decide capability at runtime.
-        auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
-        if (!m_modelName.empty())
-        {
-            orch.SetModel(m_modelName);
-            orch.SetFIMModel(m_modelName);
-        }
-        if (!m_workspaceRoot.empty())
-        {
-            orch.SetWorkingDirectory(m_workspaceRoot);
-        }
-        response = orch.RunAgent(refinedPrompt);
-
         if (response.empty() && m_ide)
-        {
             response = m_ide->routeInferenceRequest(refinedPrompt);
-        }
-    }
-    else
-    {
-        response = g_agentEngine->chat(refinedPrompt);
+        (void)streamed;
+    } else {
+        closePerf();
+        return {AgentResponseType::AGENT_ERROR,
+                "NOT_PRODUCT_PATH=1 AgenticBridge: no ProductOpenSession"};
     }
 
     // Check for tool calls in the model's response and dispatch them
@@ -1305,129 +1296,47 @@ bool AgenticBridge::LoadModel(const std::string& path)
     P1PRA_Witness("P1PRA_LOAD", "backend_select_exit");
 #endif
 
-    // Prefer Deep2 sovereign runtime (no Ollama). Fail closed into CPU only if Deep2 cannot load.
-    if (!cpuOnlyLane)
-    {
-        const std::string workDir =
-            m_workspaceRoot.empty()
-                ? std::filesystem::current_path().string()
-                : m_workspaceRoot;
-        auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
-#endif
-        if (orch.Initialize(workDir, "deep2", path)) {
-            m_deep2Ready = true;
-            m_deep2ModelPath = path;
-            m_modelName = path;
-            m_lastModelLoadError.clear();
-            LOG_INFO("Model loaded via Deep2 OrchestratorBridge: " + path);
-            SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
-            p1praWitnessLoadBindSuccess();
-#endif
-            return true;
-        }
-        std::string deep2Err;
-        if (RawrXD::Deep2LoadModelForBridge(path, deep2Err)) {
-            if (orch.Initialize(workDir, "deep2", path)) {
-                m_deep2Ready = true;
-                m_deep2ModelPath = path;
-                m_modelName = path;
-                m_lastModelLoadError.clear();
-                LOG_INFO("Model loaded via Deep2LoadModelForBridge + Orchestrator: " + path);
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-                P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
-                p1praWitnessLoadBindSuccess();
-#endif
-                return true;
-            }
-        }
-        LOG_WARNING("Deep2 load failed for AgenticBridge (" + deep2Err +
-                    "); falling back to CPUInferenceEngine");
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-        P1PRA_Witness("P1PRA_LOAD", "backend=cpu");
-#endif
-    }
-    else
-    {
-        LOG_INFO("AgenticBridge: skipping Deep2 orchestrator (CPU-only env)");
-        const auto cpu = SharedCpuEngine();
-        auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-        P1PRA_Witness("P1PRA_LOAD", "bridge_mem_plugin_begin");
-        P1PRA_AgentDbg("H8", "AgenticBridge", "before_RegisterMemoryPlugin", 0, 0, 0);
-#endif
-        cpu->RegisterMemoryPlugin(memPlugin);
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-        P1PRA_Witness("P1PRA_LOAD", "bridge_mem_plugin_ok");
-        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
-        P1PRA_AgentDbg("H8", "AgenticBridge", "before_cpu_LoadModel", 0, 0, 0);
-#endif
-        if (cpu->LoadModel(path))
-        {
-            m_modelName = path;
-            m_lastModelLoadError.clear();
-            SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
-            p1praWitnessLoadBindSuccess();
-#endif
-            return true;
-        }
-        m_lastModelLoadError = cpu->GetLastLoadErrorMessage();
-        if (m_lastModelLoadError.empty())
-            m_lastModelLoadError = "CPU LoadModel failed in AgenticBridge";
+    // Batch 004: ProductOpenSession only — bridge is adapter, not alt loader.
+    if (cpuOnlyLane) {
+        m_lastModelLoadError = "NOT_PRODUCT_PATH=1 CPU-only lane";
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
         P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
 #endif
         return false;
     }
-
-    if (g_agentEngine)
-    {
-#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-        P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
+#ifdef _WIN32
+    _putenv_s("RAWRXD_PRODUCT_MODEL", path.c_str());
 #endif
-        bool success = g_agentEngine->loadLocalModel(path);
-        if (success)
-        {
-            m_modelName = g_agentEngine->currentModelPath();
-            m_lastModelLoadError.clear();
-            LOG_INFO("Model loaded in bridge (CPU fallback): " + m_modelName);
-            SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-            P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
-            p1praWitnessLoadBindSuccess();
+    P1PRA_Witness("P1PRA_LOAD", "gguf_load_begin");
 #endif
-        }
-        else
-        {
-            m_lastModelLoadError = SharedCpuEngine()->GetLastLoadErrorMessage();
-            if (m_lastModelLoadError.empty())
-            {
-                m_lastModelLoadError = "Model load failed in AgenticBridge";
-            }
-            if (m_modelLoadErrorCallback)
-            {
-                m_modelLoadErrorCallback(m_lastModelLoadError);
-            }
+    if (!rawr::ProductOpenSession(path.c_str())) {
+        m_lastModelLoadError = "ProductOpenSession failed";
+        if (m_modelLoadErrorCallback) m_modelLoadErrorCallback(m_lastModelLoadError);
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-            P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
+        P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
 #endif
-        }
-        return success;
+        return false;
     }
-    m_lastModelLoadError = "Model load failed: agent engine not initialized and Deep2 unavailable";
-    if (m_modelLoadErrorCallback)
+    m_deep2Ready = true;
+    m_deep2ModelPath = path;
+    m_modelName = path;
+    m_lastModelLoadError.clear();
     {
-        m_modelLoadErrorCallback(m_lastModelLoadError);
+        const std::string workDir =
+            m_workspaceRoot.empty()
+                ? std::filesystem::current_path().string()
+                : m_workspaceRoot;
+        (void)RawrXD::Agent::OrchestratorBridge::Instance().Initialize(
+            workDir, "deep2", path);
     }
+    SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
+    LOG_INFO("Model loaded via ProductOpenSession: " + path);
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
-    P1PRA_Witness("P1PRA_LOAD", "gguf_load_fail");
+    P1PRA_Witness("P1PRA_LOAD", "gguf_load_ok");
+    p1praWitnessLoadBindSuccess();
 #endif
-    return false;
+    return true;
 }
 
 // ============================================================================

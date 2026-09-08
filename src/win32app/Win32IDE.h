@@ -2212,6 +2212,10 @@ class Win32IDE
     void product100GitStatus();
     void product100GitDiff();
     void product100SearchLiteral(const std::string& query);
+    void product100SaveSessionNow();
+    void product100ShowSettings();
+    void product100ListApprovals();
+    void product100Wave3Smoke();
     std::string product100DescribeError(int code, const std::string& detail);
     static void __stdcall product100TextSink(const wchar_t* channel, const wchar_t* text, void* user);
 #endif

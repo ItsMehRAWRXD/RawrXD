@@ -87,18 +87,16 @@ public:
 
     std::vector<int32_t> Tokenize(const std::string& text) override {
         std::lock_guard<std::mutex> lock(m_mutex);
-        if (!m_session) return {};
-        // Deep2InferenceSession doesn't expose tokenize directly; use engine
-        // We need to access the underlying engine — for now, return empty
-        // TODO: expose tokenize/detokenize through Deep2InferenceSession
-        return {};
+        if (!m_session || !m_session->Engine()) return {};
+        const auto ids = m_session->Engine()->tokenize(text);
+        return std::vector<int32_t>(ids.begin(), ids.end());
     }
 
     std::string Detokenize(const std::vector<int32_t>& tokens) override {
         std::lock_guard<std::mutex> lock(m_mutex);
-        if (!m_session) return "";
-        // TODO: expose through Deep2InferenceSession
-        return "";
+        if (!m_session || !m_session->Engine()) return "";
+        std::vector<int> ids(tokens.begin(), tokens.end());
+        return m_session->Engine()->detokenize(ids);
     }
 
     // ------------------------------------------------------------------------
@@ -149,14 +147,17 @@ public:
             fullPrompt = request.systemPrompt + "\n\n" + fullPrompt;
         }
 
-        // TODO: map request.temperature, request.maxTokens, request.topP to session config
-        // For now, use Deep2InferenceSession's default streaming
-        return m_session->GenerateStream(fullPrompt, [&](const std::string& token, bool done) {
-            if (m_cancelled.load()) return;
-            if (callback) {
-                callback(token, done);
-            }
-        });
+        // Map request onto product generateStream (same path as rawr ProductRun).
+        const uint32_t maxTok =
+            request.maxTokens > 0 ? (uint32_t)request.maxTokens : 256u;
+        return m_session->GenerateStream(
+            fullPrompt,
+            [&](const std::string& token, bool done) -> bool {
+                if (m_cancelled.load()) return false;
+                if (!callback) return true;
+                return callback(token, done);
+            },
+            maxTok);
     }
 
     void CancelGeneration() override {

@@ -208,11 +208,11 @@ bool Win32IDE::stageDirectFixAgentProposal(const std::string& path,
     if (m_hwndDiffPanel) {
         SetWindowTextA(m_hwndDiffPanel, diffContent.c_str());
     }
-    
-    // Add to chat history - stub
-    // std::string chatMsg = "🤖 Agent proposed changes to " + path + ":\r\n" + reasoning;
-    // AppendChatMessage(chatMsg);
-    
+
+    appendChatMessage("System",
+                      "Agent proposed changes to " + path + ": " +
+                          (reasoning.empty() ? "(no reasoning)" : reasoning));
+
     OutputDebugStringA("[AgentProposal] Staged proposal for review\n");
     return true;
 }
@@ -483,7 +483,7 @@ public:
     
     LoadResult loadTinyModel() { 
         FMF_REAL_ENTRY("DynamicModelLoader::loadTinyModel");
-        return LoadResult{false, "Production: No model loaded"}; 
+        return LoadResult{false, "NOT_PRODUCT_PATH=1 FEATURE_FICTION=1 DynamicModelLoader"}; 
     }
     
     bool enableMedusa(const std::string&) { 

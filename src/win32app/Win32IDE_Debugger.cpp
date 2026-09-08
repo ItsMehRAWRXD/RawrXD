@@ -326,10 +326,9 @@ void Win32IDE::attachDebugger()
     DebugResult attachR = DebugResult::ok("Debugger ready — use Launch or Attach to PID");
 
     // Attempt to launch if we have a compiled binary path
+    bool launched = false;
     if (!m_currentFile.empty()) {
-        // Derive the expected .exe from the project build dir
         std::string exePath;
-        // Check if current file IS an exe
         if (m_currentFile.size() > 4 &&
             m_currentFile.substr(m_currentFile.size() - 4) == ".exe") {
             exePath = m_currentFile;
@@ -337,16 +336,23 @@ void Win32IDE::attachDebugger()
         if (!exePath.empty()) {
             attachR = engine.launchProcess(exePath);
             if (attachR.success) {
+                launched = true;
                 setCurrentBinaryForReverseEngineering(exePath);
                 appendToOutput("[RE] Binary set for analysis (Reverse Engineering menu).\n", "Output", OutputSeverity::Info);
             } else {
-                std::string warn = "⚠️ Launch failed: ";
+                std::string warn = "UNAVAILABLE=1 Launch failed: ";
                 warn += attachR.detail;
-                warn += " — attach by PID instead";
                 appendToOutput(warn, "Output", OutputSeverity::Warning);
-                // Fall through — still mark debugger as attached in ready state
             }
         }
+    }
+
+    if (!launched) {
+        appendToOutput(
+            "UNAVAILABLE=1 DEBUG_ATTACH — no launched target; use Attach to PID or open an .exe\n",
+            "Output", OutputSeverity::Warning);
+        SetWindowTextA(m_hwndDebuggerStatus, "UNAVAILABLE — no debug target");
+        return;
     }
 
     m_debuggerAttached = true;

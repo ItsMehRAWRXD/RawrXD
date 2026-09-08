@@ -7613,6 +7613,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             endif()
         endif()
     endforeach()
+
+    # Product Finish 100 — Waves 3-4 (git/search/session/approval/smoke)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RawrXD_Product100.cmake)
 endif()
 
 # =============================================================================
