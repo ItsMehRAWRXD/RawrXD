@@ -14,10 +14,13 @@ CURRENT (~3.56 TPS):
   Gap to 150 ≈ 42× on TPS; primary levers = residency + sparsity + fusion
   NOT VRAM size alone (16→32 GB unlocks capacity, not magically ×TPS)
 
-LAWS:
+LAWS (canonical):
+  TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
+  SPIN touches resident active subgraph only
   TOKEN_TIME = SPIN_CLOSE - SPIN_OPEN (measured, never written)
   AUTOTUNE ⊂ GENERATION (ZeroStarContract / 0(*))
   BG~BM~ keeps required subgraph resident before SPIN_OPEN
+Source: src/deep2/lavapath/TpsPhysicsLaw.hpp
 
 DO NOT CITE AS MEASURED:
   150 TPS, 14.2, 8259 TinyLlama, TITAN 4090 table
