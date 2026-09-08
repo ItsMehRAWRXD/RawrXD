@@ -1,0 +1,31 @@
+TITAN_SPARSE_GATHER_PASTE_DISPOSITION
+====================================
+Date: 2026-09-07
+Source: chat paste "Titan_MoE_SparseGather.asm Production" (120B / 40-50 TPS)
+
+REJECT_AS_LIVE_K2_FIX=1
+
+WHY:
+1. Live seal path is Deep2 K2 671B Q4_K_M on R9700 Vulkan, not Titan
+   AVX-512 CPU 120B int8 GEMV on 7800X3D.
+2. Deep2 already does router → top-k → MoEWeightProxy::Acquire(layer,expert)
+   (computeMoEFFN). Not "layer → all experts → matrix".
+3. Measured hotpath64_latest_qkv.txt:
+   DECODE_TPS_REAL=3.556
+   STREAM_BYTES_PER_TOKEN_MEASURED≈37.6e6 (~36 MB/tok stream)
+   PERF_OWNER=QKV_PROJ (QB>QA>KVA); KVA_SHARED_X=1 already
+4. Paste is incomplete theater: GELU skipped, int8≠Q4_K_M, broken
+   stack/VirtualAlloc ABI, Titan_Imports.inc / Telemetry_* undefined,
+   claims 40-50 TPS without generateStream receipt.
+5. Existing src/asm/Titan_MoE_SparseGather.asm already exports the
+   bridge symbols; do not overwrite with this dump.
+
+DO_NOT:
+  Promote 40-50 TPS / "15x from sparse gather alone" into E2E
+  Remap live spend from QKV owner to CPU Titan gather
+  mmap VirtualAlloc2 "fix" as substitute for BG~BM residency
+
+KEEP:
+  EFFECTIVE_BYTES ≤4.27 GB/token equation (BgBmLaw)
+  AUTOTUNE ⊂ GENERATION
+  Next spend: QKV fusion / effective bytes on GPU spin
