@@ -1,0 +1,25 @@
+NINJA_DISCOVERY_PROBE=INTERRUPTED_NONBLOCKING
+
+BUILD_TREE_PRESENT=1
+RELEVANT_TARGETS_DISCOVERED=1
+NINJA_DISCOVERY_COMPLETED=0
+NINJA_DISCOVERY_REQUIRED_FOR_PRODUCT=0
+
+PRODUCT_WORK_DEPENDED_ON_NINJA_DISCOVERY=0
+GITHUB_SYNC_DEPENDED_ON_NINJA_DISCOVERY=0
+
+DISCOVERY_PROBE_STATUS=INTERRUPTED_NONBLOCKING
+PRODUCT_STATUS_UNCHANGED=1
+
+OBSERVED_BEFORE_INTERRUPT:
+- build-fd/build.ninja present
+- rawrxd_engine.lib
+- InferenceEngine.lib
+- deep2_benchmark / rawr / k2_useful_tps_001 / mla_cert_001
+- MASM kernel objs (RawrXD_* / rawr_product_*)
+
+LAW:
+build-fd target discovery ≠ build success ≠ runtime execution ≠ product-path completion
+
+Do not rerun merely to manufacture a clean receipt.
+Reopen only if a product change hits an unresolved target/link dependency.
