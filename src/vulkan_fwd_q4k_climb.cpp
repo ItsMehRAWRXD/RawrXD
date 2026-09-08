@@ -35,11 +35,11 @@ bool VulkanCompute::ClimbQkvSharedXOnce(VkBuffer wbuf, size_t bytes,
                                         uint32_t& sxRowsOut,
                                         uint64_t& kernelUsOut) {
     if (rawr::live::QkvWinnerRows().load() >= 0) return false;
-    static const uint32_t cands[] = {32u, 64u, 128u, 256u};
-    std::vector<float> bestOut(rows), trial(rows);
+    static const uint32_t cands[] = {64u, 32u, 128u, 256u}; /* 64 first = parity ref */
+    std::vector<float> ref64(rows), trial(rows), bestOut(rows);
     uint64_t bestUs = UINT64_MAX;
     uint32_t bestRows = 0;
-    bool haveRef = false;
+    bool haveRef64 = false;
     VkPipeline bestPipe = nullptr;
     for (uint32_t rpw : cands) {
         VkPipeline p = nullptr;
@@ -55,17 +55,20 @@ bool VulkanCompute::ClimbQkvSharedXOnce(VkBuffer wbuf, size_t bytes,
         std::memcpy(trial.data(), m, (size_t)rows * 4u);
         vkUnmapMemory(device_, gemv_out_mem_);
         bool parity = true;
-        if (!haveRef) {
-            bestOut = trial;
-            haveRef = true;
-        } else {
+        if (rpw == 64u) {
+            ref64 = trial;
+            haveRef64 = true;
+            parity = true;
+        } else if (haveRef64) {
             for (uint32_t i = 0; i < rows; ++i) {
-                const float d = trial[i] - bestOut[i];
+                const float d = trial[i] - ref64[i];
                 if (d > 1e-2f || d < -1e-2f) {
                     parity = false;
                     break;
                 }
             }
+        } else {
+            parity = false; /* wait for 64 ref */
         }
         std::printf("QKV_CLIMB_CAND ROWS=%u LEGAL=1 PARITY=%u "
                     "GPU_TIME_US=%llu KEEP_GOING=1\n",

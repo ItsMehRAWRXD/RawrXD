@@ -1,0 +1,35 @@
+14.2 TPS — WHERE IT IS / WHAT IT IS NOT
+=======================================
+Recovered: 2026-09-07
+
+AUTHORITATIVE POINTERS (historical claim map only):
+  evidence/HISTORICAL_TPS_MAP.txt
+  evidence/HISTORICAL_TPS_VS_GATES_001.txt
+  evidence/PERF_CLAIM_BOUNDARY_001.txt
+
+CLAIM:
+  ~14.2 TPS = earlier single-R9700 Sovereign/671B operator baseline
+  Authority today = historical (NOT a current Deep2 DECODE_TPS_REAL seal)
+
+NEARBY RETAINED NUMBERS (do not conflate):
+  14.38 TPS = SOVEREIGN_ASYNC_RING_E2E_001 Run C (async ring / SovereignSweep)
+  14.83 TPS = no retained witness — do not cite
+  13.051 TPS = RAWRXD_NORMAL_GGUF_FINAL_001 (Llama-class hidden=2048, NOT 671B)
+  TITAN_QUICK_REFERENCE.md "14.2 tps" = RTX 4090 marketing table — wrong stack
+
+CURRENT K2 671B (F:\...\Kimi-K2-Instruct-0905-GGUF\Q4_K_M) MEASURED:
+  hotpath64_latest_qkv.txt
+    GENERATED_TOKENS=64
+    DECODE_TPS_REAL=3.556
+    GENERATION_WALL_NS≈17.88e9
+    WALL_WITHIN_BUDGET=0
+
+LIVE IN-GEN QKV CLIMB (0(*) path) already observed:
+  ACTUAL_E2E_LATEST.txt
+    QKV_CLIMB_CAND 64/32/128/256 PARITY=1 KEEP_GOING=1
+    QKV_LIVE_TUNE ROWS=128 WALL_US=319 KEEP_GOING=1
+    ACTUAL_E2E_GENERATION_001=PASS (8-tok smoke)
+
+RULE:
+  Do not promote ~14.2 into ACTUAL_E2E or PRODUCT_E2E.
+  Re-earn it only via 0(*) live generation on the same 671B path.

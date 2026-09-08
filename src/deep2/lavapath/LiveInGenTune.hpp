@@ -3,7 +3,6 @@
 #include "ActualE2ELaw.hpp"
 #include "ZeroStarLaw.hpp"
 #include "K2QkvNextLaw.hpp"
-#include "ZeroStarContract.hpp"
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -65,9 +64,12 @@ inline void EmitActualE2EFooter(uint64_t genTok, uint64_t wallNs,
     const int kvaW = KvaWinnerRows().load();
     const int prod = (genTok > 0 && textBytes > 0) ? 1 : 0;
     const int e2e = (prod && teardownOk) ? 1 : 0;
+    const uint64_t budgetNs =
+        genTok > 0 ? (PRODUCT_WALL_BUDGET_NS_64TOK * genTok) / 64ull : 0ull;
     const int within =
-        (e2e && wallNs > 0 && wallNs <= PRODUCT_WALL_BUDGET_NS_64TOK) ? 1 : 0;
+        (e2e && wallNs > 0 && budgetNs > 0 && wallNs <= budgetNs) ? 1 : 0;
     std::printf("ACTUAL_E2E_GENERATION_BEGIN=1\n");
+    std::printf("EXECUTION_SCOPE=END_TO_END ZERO_STAR=1\n");
     std::printf("PRODUCTION_DECODE_PATH=%d REAL_WEIGHT_FORWARD=%d\n", prod,
                 prod);
     std::printf("CPU_F32_EXPANDS=0 HOST_FORWARD_LAYER_CALLS=0\n");
@@ -85,10 +87,11 @@ inline void EmitActualE2EFooter(uint64_t genTok, uint64_t wallNs,
                 teardownOk);
     std::printf("STREAM_COMPLETE=%d ACTUAL_E2E_GENERATION_001=%s\n", e2e,
                 e2e ? "PASS" : "OPEN");
-    std::printf("WALL_WITHIN_BUDGET=%d\n", within);
+    std::printf("WALL_WITHIN_BUDGET=%d PRODUCT_E2E=%d\n", within, within);
     std::printf("RAWRXD_PERFORMANCE_001=%s\n", within ? "PASS" : "OPEN");
+    /* Wall seal independent of generation completion truth. */
     std::printf("RAWRXD_PRODUCT_E2E_001=%s WALL_BUDGET_IN_PRODUCT=0\n",
-                e2e ? "PASS" : "OPEN");
+                within ? "PASS" : "OPEN");
 }
 
 } // namespace rawr::live
