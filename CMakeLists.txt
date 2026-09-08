@@ -4877,8 +4877,9 @@ set(INFERENCE_ENGINE_SOURCES
     src/vulkan_fwd_q4k.cpp
     src/vulkan_fwd_q4k_host.cpp
     src/vulkan_fwd_q4k_fused.cpp
-    src/vulkan_fwd_q4k_climb.cpp
-    src/vulkan_fwd_q4k_act.cpp
+src/vulkan_fwd_q4k_climb.cpp
+src/vulkan_fwd_q8_kva_climb.cpp
+src/vulkan_fwd_q4k_act.cpp
     src/vulkan_fwd_q6k.cpp
     src/vulkan_fwd_q6k_host.cpp
     src/vulkan_fwd_quant_pipe.cpp

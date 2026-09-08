@@ -1,0 +1,46 @@
+#version 450
+// gemv_q8_kva_sx_64.comp — KVA Q8_0 shared-x, 64 rows/WG (RDNA3 wave)
+layout(local_size_x = 64) in;
+layout(binding = 0) readonly buffer W { uint packed[]; };
+layout(binding = 1) readonly buffer In { float x[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC {
+  uint rows; uint cols; uint nColTiles; uint colTileBlocks;
+} pc;
+shared float xs[32];
+uint u8(uint off) {
+  uint w = packed[off >> 2];
+  return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+int i8(uint b) { return int(b) - ((b >= 128u) ? 256 : 0); }
+void main() {
+  uint lid = gl_LocalInvocationID.x;
+  uint wg = gl_WorkGroupID.x;
+  uint nCol = pc.nColTiles;
+  uint colTile = wg % nCol;
+  uint rowTile = wg / nCol;
+  uint row = rowTile * 64u + lid;
+  bool rowOk = row < pc.rows;
+  uint nblk = (pc.cols + 31u) / 32u;
+  uint b0 = colTile * pc.colTileBlocks;
+  uint b1 = min(b0 + pc.colTileBlocks, nblk);
+  uint rowOff = rowOk ? (row * nblk * 34u) : 0u;
+  float sum = 0.0;
+  for (uint b = b0; b < b1; ++b) {
+    uint base = b * 32u;
+    if (lid < 32u) xs[lid] = x[base + lid];
+    barrier();
+    if (rowOk) {
+      uint blk = rowOff + b * 34u;
+      float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+      for (uint j = 0u; j < 32u; ++j) {
+        uint a = base + j;
+        if (a < pc.cols)
+          sum += d * float(i8(u8(blk + 2u + j))) * xs[j];
+      }
+    }
+    barrier();
+  }
+  if (rowOk) y[row * nCol + colTile] = sum;
+}

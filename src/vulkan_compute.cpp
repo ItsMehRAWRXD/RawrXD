@@ -88,6 +88,14 @@ void VulkanCompute::Cleanup() {
             vkDestroyPipeline(device_, q4k_kva_pipe_, nullptr);
             q4k_kva_pipe_ = nullptr;
         }
+        if (q8_kva_pipe_) {
+            vkDestroyPipeline(device_, q8_kva_pipe_, nullptr);
+            q8_kva_pipe_ = nullptr;
+        }
+        if (q8_kva_sx64_pipe_) {
+            vkDestroyPipeline(device_, q8_kva_sx64_pipe_, nullptr);
+            q8_kva_sx64_pipe_ = nullptr;
+        }
         for (VkPipeline& p : q4k_qkv_sx_pipes_) {
             if (p) {
                 vkDestroyPipeline(device_, p, nullptr);

@@ -244,6 +244,10 @@ public:
     bool DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
                                const float* input, float* output,
                                uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
+    // Live K2 attn_kv_a_mqa is Q8_0 — col-split shared-x (kva_sx_16).
+    bool DispatchGEMVFusedQ8Kva(const void* packed, size_t bytes,
+                                const float* input, float* output,
+                                uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
     // After a GEMV that uploaded `cols` activations, skip the next host→GPU
     // input copy when the next GEMV consumes the same device-side vector
     // (Q_A then KV_A both read hidden).
@@ -509,6 +513,8 @@ private:
     VkPipeline q4k_fused_pipe_ = nullptr;
     VkPipeline q4k_oproj_pipe_ = nullptr;
     VkPipeline q4k_kva_pipe_ = nullptr;
+    VkPipeline q8_kva_pipe_ = nullptr;
+    VkPipeline q8_kva_sx64_pipe_ = nullptr;
     VkPipeline q4k_qkv_sx_pipes_[4] = {}; /* 32,64,128,256 */
     uint64_t q4k_fused_ops_ = 0;
     uint64_t q4k_oproj_ops_ = 0;
@@ -527,6 +533,13 @@ private:
     bool EnsureQ4kFusedPipeline();
     bool EnsureQ4kOprojPipeline();
     bool EnsureQ4kKvaPipeline();
+    bool EnsureQ8KvaPipeline();
+    bool EnsureQ8KvaSxPipeline(uint32_t rows, VkPipeline& out);
+    bool ClimbQ8KvaOnce(VkBuffer wbuf, size_t bytes, size_t inB, size_t outB,
+                        uint32_t rows, uint32_t cols, uint32_t nColTiles,
+                        uint32_t colTileBlocks, uint8_t tag, float* output,
+                        uint64_t uploadUs, uint32_t& rowTileOut,
+                        uint64_t& kernelUsOut);
     bool EnsureQ4kQkvSxPipeline(uint32_t rows, VkPipeline& out);
     bool ClimbQkvSharedXOnce(VkBuffer wbuf, size_t bytes, size_t inB,
                              size_t outB, uint32_t rows, uint32_t cols,

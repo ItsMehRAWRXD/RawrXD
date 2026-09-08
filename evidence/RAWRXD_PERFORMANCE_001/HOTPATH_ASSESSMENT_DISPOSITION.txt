@@ -1,0 +1,34 @@
+K2 HOTPATH ASSESSMENT — DISPOSITION (2026-09-07)
+================================================
+
+§1 Q8 KVA compile validation — ALREADY LANDED (kva6)
+  evidence/K2_USEFUL_TPS_001/actual_e2e_8_kva6.log
+    KVA_TRYGPU ... TY=8 ...          // Q8_0 feed confirmed
+    KVA_SHARED_X=1
+    KVA_COL_SPLIT=1
+    KVA_PARTIAL_REDUCE=1
+    KVA_ROWS_PER_WG=16               // was < 64 — next lever
+    KVA_LIVE_TUNE ROWS=16 PARITY=1 KEEP_GOING=1
+    QKV_LIVE_TUNE ROWS=128 ...
+
+§1b Gap vs assessment target
+  Wanted: KVA_ROWS_PER_WG >= 64 (RDNA3 wave)
+  Had:    16 only (gemv_q8_kva.spv)
+  Now:    gemv_q8_kva_sx_64.spv + ClimbQ8KvaOnce(16|64) in-generation
+
+§2 Bandwidth math — ACCEPT AS DIRECTION, not as measured seal
+  Current DECODE_TPS_REAL≈3.56 @ 64 tok is authoritative.
+  ~14 TPS remains historical / envelope ceiling, not a receipt.
+  "126 GB/token" is an inference from TPS — do not promote to gate.
+
+§3 Path to ~5 TPS — ordered by current owner
+  1. KVA rows climb 16→64 (this patch) inside same generation
+  2. Re-measure 64-tok wall; re-rank QA/QB/KVA
+  3. Only then fused QKV→KVA / expert pin / KV downquant
+
+§4 Ignore (confirmed)
+  Ollama, TinyLlama 8k TPS, SHA-NI, TITAN 14.2 CUDA
+
+§5 Next measurement
+  Rebuild InferenceEngine + rawrxd_actual_e2e / deep2_benchmark 64-tok
+  Expect: KVA_CLIMB_CAND ROWS=16/64, KVA_WINNER=16|64, KVA_ROWS_PER_WG=winner

@@ -17,8 +17,8 @@ inline Descriptor QkvSharedXDesc() noexcept {
 }
 
 inline const Variant kKvaSharedXVariants[] = {
-    {"kva_sx_16", 16u, "gemv_q4k_kva.spv", true},
-    {"kva_sx_64", 64u, nullptr, false},
+    {"kva_sx_16", 16u, "gemv_q8_kva.spv", true}, /* live K2 kv_a = Q8_0 */
+    {"kva_sx_64", 64u, "gemv_q8_kva_sx_64.spv", true},
     {"kva_sx_128", 128u, nullptr, false},
     {"kva_sx_256", 256u, nullptr, false},
 };

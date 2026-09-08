@@ -17,6 +17,17 @@ bool VulkanCompute::EnsureQ4kPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kFusedPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kOprojPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kKvaPipeline() { return false; }
+bool VulkanCompute::EnsureQ8KvaPipeline() { return false; }
+bool VulkanCompute::EnsureQ8KvaSxPipeline(uint32_t, VkPipeline&) { return false; }
+bool VulkanCompute::ClimbQ8KvaOnce(VkBuffer, size_t, size_t, size_t, uint32_t,
+                                   uint32_t, uint32_t, uint32_t, uint8_t, float*,
+                                   uint64_t, uint32_t&, uint64_t&) {
+    return false;
+}
+bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void*, size_t, const float*, float*,
+                                          uint32_t, uint32_t, uint64_t) {
+    return false;
+}
 bool VulkanCompute::EnsureQ4kQkvSxPipeline(uint32_t, VkPipeline&) { return false; }
 bool VulkanCompute::ClimbQkvSharedXOnce(VkBuffer, size_t, size_t, size_t, uint32_t,
                                         uint32_t, uint8_t, float*, uint64_t,
@@ -25,6 +36,10 @@ bool VulkanCompute::ClimbQkvSharedXOnce(VkBuffer, size_t, size_t, size_t, uint32
 }
 bool VulkanCompute::DispatchGEMVFusedQ4KT(const void*, size_t, const float*, float*,
                                           uint32_t, uint32_t, uint64_t) {
+    return false;
+}
+bool VulkanCompute::DispatchGEMVFusedQ8Kva(const void*, size_t, const float*, float*,
+                                           uint32_t, uint32_t, uint64_t) {
     return false;
 }
 void VulkanCompute::GemvReuseInputNext() {}
