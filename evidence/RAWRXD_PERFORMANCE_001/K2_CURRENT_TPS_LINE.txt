@@ -1,0 +1,38 @@
+K2 CURRENT PERFORMANCE LINE (authority)
+=======================================
+Date: 2026-09-07
+Source: hotpath64_latest_qkv.txt + product budget math
+
+CURRENT_SEAL_TPS=3.556
+PRODUCT_FLOOR_TPS=5.000
+CURRENT_64TOK_WALL_S≈17.998
+TARGET_64TOK_WALL_S=12.800
+
+REQUIRED_WALL_CUT_S≈5.198
+REQUIRED_WALL_CUT_PCT≈28.9
+REQUIRED_TPS_GAIN_PCT≈40.6
+
+| Status | K2 wall TPS |
+|---|---:|
+| Measured now | 3.556 |
+| Near-term plausible | 3.5–4.5 |
+| Product acceptance | ≥5.0 — OPEN |
+| Historical Sovereign | ~14.2–14.38 — separate provenance |
+| SPIN/BG~BM~ 150 | physics/design envelope — unmeasured |
+
+LAW:
+  QKV-128 alone does not close the product gap.
+  Cut exposed dependency time on the generateStream spin.
+
+OPTIMIZATION_ORDER:
+  1. KVA exposed wall (Q8 sx 16→64 climb / remeasure)
+  2. QKV/KVA fusion / overlap
+  3. FINAL_NORM / logits exposed wall
+  4. residency / scheduling restructuring
+
+DO_NOT_PROMOTE_INTO_K2_LINE:
+  TPS_14_X (HISTORICAL_SOVEREIGN)
+  TPS_150 (LAW_PHYSICS_ENVELOPE)
+
+K2_PRODUCT_5TPS=OPEN
+NEXT=KVA_64TOK_REMEASURE from live generateStream
