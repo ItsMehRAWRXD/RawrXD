@@ -1,0 +1,25 @@
+RAWR_TIME_001
+=============
+TIME_DOMAIN=CAUSAL
+TIME_SOURCE=STATE_TRANSITION
+CLOCK_SOURCE=NONE
+TIMER_REQUIRED=0
+
+SPIN_TIME  = causal progress (SpinEpoch); advances on completed deps
+WALL_TIME  = external observation only; never schedules / readiness
+TOKEN      = one closed spin
+S_N        = C_N - O_N   (causal)
+W_N        = wallClose - wallOpen (observer)
+TPS_real   = tokens / wall_seconds
+
+BOXED:
+  SPIN optimizes causal distance;
+  BG~BM~ optimizes resident traffic;
+  wall time only measures their realization.
+
+K2_LINE_UNCHANGED:
+  CURRENT_SEAL_TPS=3.556
+  PRODUCT_FLOOR_TPS=5.000 OPEN
+  14.x / 150 not promoted
+
+SOURCE=src/deep2/lavapath/RawrTimeLaw.hpp
