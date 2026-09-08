@@ -1,0 +1,29 @@
+150 TPS feasibility vs measured K2 path
+=======================================
+Date: 2026-09-07
+Authority: source laws EomSpinLaw / CausalTimeLaw / BgBmLaw
+Measured today: DECODE_TPS_REAL≈3.556 (hotpath64_latest_qkv.txt)
+
+PHYSICS (R9700 ~640 GB/s):
+  150 TPS ⇒ TOKEN_BUDGET ≈ 6.67 ms
+  EFFECTIVE_BYTES_PER_TOKEN ≲ 4.27 GB (not 37B×0.5× every token streamed)
+  Naive ~100 TB/s = full-model×TPS fiction; ignore as physical requirement
+
+CURRENT (~3.56 TPS):
+  Implies ~126 GB effective traffic/token class (order-of-magnitude)
+  Gap to 150 ≈ 42× on TPS; primary levers = residency + sparsity + fusion
+  NOT VRAM size alone (16→32 GB unlocks capacity, not magically ×TPS)
+
+LAWS:
+  TOKEN_TIME = SPIN_CLOSE - SPIN_OPEN (measured, never written)
+  AUTOTUNE ⊂ GENERATION (ZeroStarContract / 0(*))
+  BG~BM~ keeps required subgraph resident before SPIN_OPEN
+
+DO NOT CITE AS MEASURED:
+  150 TPS, 14.2, 8259 TinyLlama, TITAN 4090 table
+
+NEXT MEASURED STEPS (same generation):
+  KVA_SHARED_X on live Q8_0 kv_a
+  expert gate histogram
+  fused QKV/KVA
+  re-measure 64-tok wall
