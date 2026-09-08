@@ -2,6 +2,7 @@
 #include "Deep2Engine.h"
 #include "Deep2GpuForward.hpp"
 #include "K2NativeStreamGate.hpp"
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -38,7 +39,9 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
 
 bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     (void)seqLen;
+    if (!hidden || config.hiddenDim == 0) return false;
     ++gpuFwd_.liveDecodeTokens;
+    // F1: base forward is never skippable. Enhancements live elsewhere.
     // Ownership seam: K2 shard MLA consumes MLA_Gemv (never incomplete host MLA).
     if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA) {
         uint32_t depth = config.numLayers ? (uint32_t)config.numLayers : 61u;
@@ -46,37 +49,52 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             int n = atoi(el);
             if (n > 0) depth = (uint32_t)n;
         }
-        std::string err;
-        if (!K2NativeStreamGate::ForwardHiddenMla(
-                *globalIndex_, k2ShardConfig_, hidden, depth,
-                /*mlaComplete=*/true, err)) {
-            fprintf(stderr, "[Deep2Engine] K2 MLA forwardTokenAllLayers: %s\n",
-                    err.c_str());
-            return false;
+        (void)K2NativeStreamGate::ProdKv(k2ShardConfig_, config.maxSeqLen);
+        float* layerInput = hidden;
+        float* layerOutput = attentionOutput;
+        for (uint32_t layer = 0; layer < depth; ++layer) {
+            computeAttention(layer, layerInput, layerOutput, seqLen);
+            ++gpuFwd_.hostForwardLayerCalls;
+            float* tmp = layerInput;
+            layerInput = layerOutput;
+            layerOutput = tmp;
         }
-        ++gpuFwd_.hostForwardLayerCalls;
-        gpuFwdCommitted_ = false; // K2 stream owns residency, not TinyLlama GPU fwd
-        return true;
-    }
-    if (gpuFwdCommitted_) {
+        if (layerInput != hidden)
+            std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
+        K2NativeStreamGate::ProdKvCommit();
+        gpuFwdCommitted_ = false;
+    } else if (gpuFwdCommitted_) {
         if (!tryGpuTokenForward(hidden)) return false;
-        return true;
-    }
-    if (tryGpuTokenForward(hidden)) {
+    } else if (tryGpuTokenForward(hidden)) {
         gpuFwdCommitted_ = true;
-        return true;
+    } else {
+        float* layerInput = hidden;
+        float* layerOutput = attentionOutput;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            forwardLayer(layer, layerInput, layerOutput, seqLen);
+            ++gpuFwd_.hostForwardLayerCalls;
+            float* tmp = layerInput;
+            layerInput = layerOutput;
+            layerOutput = tmp;
+        }
+        if (layerInput != hidden)
+            std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
     }
-    float* layerInput = hidden;
-    float* layerOutput = attentionOutput;
-    for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
-        forwardLayer(layer, layerInput, layerOutput, seqLen);
-        ++gpuFwd_.hostForwardLayerCalls;
-        float* tmp = layerInput;
-        layerInput = layerOutput;
-        layerOutput = tmp;
+    // Refuse "success" that left a zero/non-finite final hidden (Codestral hole).
+    double n2 = 0.0;
+    for (size_t i = 0; i < config.hiddenDim; ++i) {
+        const float v = hidden[i];
+        if (!std::isfinite(v)) return false;
+        n2 += (double)v * (double)v;
     }
-    if (layerInput != hidden)
-        std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
+    if (!(n2 > 1.0e-24)) {
+        fprintf(stderr,
+                "BASE_FORWARD_ZERO_HIDDEN=1 layers=%zu dim=%zu "
+                "HOST_DECODE_SKIP_LIVEPATH_SKIPPED_BASE=0\n",
+                modelWeights.numLayers, config.hiddenDim);
+        fflush(stderr);
+        return false;
+    }
     return true;
 }
 

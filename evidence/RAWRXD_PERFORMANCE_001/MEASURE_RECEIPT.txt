@@ -1,0 +1,33 @@
+RAWRXD_QKV_ROWS_MEASURE_001=OPEN
+
+SEPARATION:
+  CAN_RUN          = capability/geometry LEGAL   (PASS — not a winner)
+  RUNS_CORRECTLY   = OUTPUT_PARITY               (OPEN)
+  RUNS_FASTEST     = argmin(WALL) among parity   (OPEN)
+
+FOUNDATION:
+  Capability solver = PASS
+  Geometry probe    = PASS
+  SPIR-V (oproj/64) = PASS
+
+SEARCH_SPACE (LEGAL only):
+  ROWS=32  LEGAL=1
+  ROWS=64  LEGAL=1
+  ROWS=128 LEGAL=1
+  ROWS=256 LEGAL=1
+
+MEASURE_RECEIPT:
+  WINNER_INDEX=-1
+  WINNER_ROWS=NONE
+  REASON=await_dispatch_parity_wall
+
+ACCEPTANCE (per candidate):
+  LEGAL==1 AND PARITY==1 AND MEASURE_COMPLETE==1
+  then WINNER = argmin(WALL_TIME_US) among parity=1
+
+NEXT:
+  dispatch each ROWS variant → parity → wall → seal winner
+  then same RawrTuneKernel on KVA (dominant QKV component)
+
+EXECUTABLE_SHADER_ROWS_TODAY=64 (oproj tile)
+OTHER_ROW_TILES=need matching SPV variants before measure fills

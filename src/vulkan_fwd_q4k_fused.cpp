@@ -6,6 +6,7 @@
 #if RAWR_VULKAN_AVAILABLE
 #include "K2MlaOProjTiming.hpp"
 #include "K2MlaQkvTiming.hpp"
+#include "lavapath/LiveInGenTune.hpp"
 #include <cstring>
 #include <cstdlib>
 #ifdef _WIN32
@@ -171,6 +172,10 @@ bool VulkanCompute::DispatchGEMVFusedQ4KT(const void* packed, size_t bytes,
         if (isKva) Deep2::Qkv_NoteKvaColSplit(nColTiles, groups, kernelUs);
         ++q4k_fused_ops_;
         if (isQShared || isKva) ++q4k_oproj_ops_;
+        if (isQShared)
+            rawr::live::NoteQkvLiveTune(rowTile, true, kernelUs);
+        if (isKva)
+            rawr::live::NoteKvaLiveTune(rowTile, true, kernelUs);
     } else {
         ++q4k_fused_ops_;
     }

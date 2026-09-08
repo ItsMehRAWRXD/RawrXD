@@ -805,23 +805,27 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
 
     fclose(fp);
 
-    // Infer vocabSize from tensor shapes if not present in metadata
-    // (Gemma models don't include vocab_size in metadata)
+    // Infer vocabSize from tensor shapes if not present in metadata.
+    // token_embd is [hidden, vocab] OR [vocab, hidden] — never assume dim0=vocab.
     if (result.metadata.vocabSize == 0) {
         for (const auto& t : result.tensors) {
-            // token_embd.weight shape: [vocabSize, hiddenDim]
-            if (t.name.find("token_embd") != std::string::npos ||
-                t.name.find("embed_tokens") != std::string::npos ||
-                t.name.find("tok_embeddings") != std::string::npos) {
-                if (t.dimensions.size() >= 2) {
-                    result.metadata.vocabSize = (uint32_t)t.dimensions[0];
-                    if (options.verbose) {
-                        printf("[GGUF] Inferred vocabSize=%u from tensor '%s' shape[%zu]\n",
-                               result.metadata.vocabSize, t.name.c_str(), t.dimensions.size());
-                    }
-                    break;
-                }
+            if (t.name.find("token_embd") == std::string::npos &&
+                t.name.find("embed_tokens") == std::string::npos &&
+                t.name.find("tok_embeddings") == std::string::npos)
+                continue;
+            if (t.dimensions.size() < 2) continue;
+            const uint32_t d0 = (uint32_t)t.dimensions[0];
+            const uint32_t d1 = (uint32_t)t.dimensions[1];
+            const uint32_t hid = result.metadata.hiddenSize;
+            if (hid && d0 == hid) result.metadata.vocabSize = d1;
+            else if (hid && d1 == hid) result.metadata.vocabSize = d0;
+            else result.metadata.vocabSize = (d0 > d1) ? d0 : d1;
+            if (options.verbose) {
+                printf("[GGUF] Inferred vocabSize=%u from '%s' d0=%u d1=%u "
+                       "hidden=%u (vocab independent of hidden)\n",
+                       result.metadata.vocabSize, t.name.c_str(), d0, d1, hid);
             }
+            break;
         }
     }
 

@@ -1,0 +1,28 @@
+RAWRXD_KERNEL_TUNE_001=PASS
+
+GENERIC_FRAMEWORK:
+  KernelDescriptor  = name + variants + (parity/measure fns)
+  VariantRegistry   = executable flag; skip until SPV exists
+  RunTune           = legal → dispatch → parity → wall → receipt
+  PickFastestValid  = min WALL among LEGAL∧PARITY∧MEASURE_COMPLETE
+
+RECEIPT_SCHEMA:
+  KERNEL= ROWS= LEGAL= PARITY= MEASURE_COMPLETE=
+  GPU_TIME_US= WALL_TIME_US= STATUS=
+
+REGISTRY_TODAY:
+  QKV_SHARED_X  rows=32/64/128/256  executable=64 only (oproj.spv)
+  KVA_SHARED_X  advertised; executable=0 (reuse RunTune when wired)
+  O_PROJ_TAG6   rows=64 executable=1
+
+MEASURE:
+  measure_fn=null ⇒ WINNER_INDEX=-1 (correct)
+  NEXT=attach live MeasureFn+ParityFn
+
+LAW:
+  CAN_RUN != RUNS_CORRECTLY != RUNS_FASTEST
+  NO_VENDOR_TABLE NO_GPU_NAME_TABLE NO_YEAR_TABLE
+  OS_DRIVER_REQUIRED=1 THIRD_PARTY_SDK_REQUIRED=0
+
+DATAFLOW:
+  consume → produce → measure (stage receipts; no reasoning trace)

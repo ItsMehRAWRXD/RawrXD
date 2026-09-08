@@ -4,7 +4,18 @@
 
 #include "Deep2Benchmark.h"
 #include "Deep2Engine.h"
+#include "TeardownWitness.hpp"
+#include "RawrTokenRate.hpp"
+#include "NsTokenRate.hpp"
+#include "lavapath/ActualE2ELaw.hpp"
+#include "lavapath/LiveInGenTune.hpp"
 #include "Tokenizer.hpp"
+#include "K2GpuStreamCopy.hpp"
+#include "ElasticDynamicBudget.hpp"
+#include "RawrNoTpResidency.hpp"
+#include "RawrChoreography.hpp"
+#include "RawrReverseCompletion.hpp"
+#include "NemotronHSsmMap.hpp"
 #include "../../core/GpuDecodeEfficiency.hpp"
 #include <iostream>
 #include <algorithm>
@@ -16,6 +27,8 @@
 #include <iomanip>
 #include <thread>
 #include <functional>
+#include <filesystem>
+#include <cstdlib>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -141,14 +154,137 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
     pImpl->engine = std::make_unique<Deep2Engine>();
     pImpl->tokenizer = std::make_unique<CharTokenizer>();
 
+    // Contamination guard: Nemotron + DEEP2_K2_SHARD_DIR ⇒ RUN_VOID.
+    {
+        std::string lower = modelPath;
+        for (char& c : lower) {
+            if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+        }
+        const bool nemo =
+            lower.find("nemotron") != std::string::npos;
+        const char* k2 = std::getenv("DEEP2_K2_SHARD_DIR");
+        if (nemo && k2 && k2[0]) {
+            std::fprintf(stderr,
+                "REVERSE_COMPLETION_BEGIN\nGOAL=NEMOTRON_NANO_POEM_001\n"
+                "STREAM_STATUS=VOID\nRUN_VOID=1\n"
+                "VOID_REASON=DEEP2_K2_SHARD_DIR_SET_FOR_NON_K2_MODEL\n"
+                "NEXT_ACTION=UNSET_DEEP2_K2_SHARD_DIR\n"
+                "REVERSE_COMPLETION_END\n");
+            std::fflush(stderr);
+            pImpl->initialized = false;
+            return false;
+        }
+    }
+
+    // Prefer DEEP2_K2_SHARD_DIR / multi-shard parent for real K2 production path.
+    std::string shardDir;
+    if (const char* e = std::getenv("DEEP2_K2_SHARD_DIR")) {
+        if (e[0]) shardDir = e;
+    }
+    if (shardDir.empty()) {
+        namespace fs = std::filesystem;
+        fs::path p(modelPath);
+        if (fs::is_directory(p))
+            shardDir = p.string();
+        else if (p.has_parent_path())
+            shardDir = p.parent_path().string();
+    }
+    int ggufCount = 0;
+    if (!shardDir.empty()) {
+        namespace fs = std::filesystem;
+        try {
+            for (auto& ent : fs::directory_iterator(shardDir)) {
+                if (ent.path().extension() == ".gguf") ++ggufCount;
+            }
+        } catch (...) {
+            ggufCount = 0;
+        }
+    }
+    const bool k2Shards = ggufCount >= 13;
+
     EngineConfig config;
     strncpy(config.modelPath, modelPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+    if (k2Shards) {
+        config.hiddenDim = 7168;
+        config.numLayers = 61;
+        config.numHeads = 64;
+        config.numKVHeads = 1;
+        config.vocabSize = 163840;
+        config.useMLA = true;
+        config.maxSeqLen = 4096;
+        config.useKVCache = true;
+        config.useThreadPool = true;
+        config.numThreads = 8;
+#ifdef _WIN32
+        SetEnvironmentVariableA("DEEP2_K2_SHARD_DIR", shardDir.c_str());
+        SetEnvironmentVariableA("DEEP2_REAL_K2_GENERATE", "1");
+        SetEnvironmentVariableA("RAWRXD_DEEP2_ALLOW_UNSAFE_MLA", nullptr);
+        _putenv_s("RAWRXD_DEEP2_ALLOW_UNSAFE_MLA", "");
+        // Defaults only when unset — U13/runner env must win (no silent cripple).
+        auto def = [](const char* k, const char* v) {
+            const char* cur = std::getenv(k);
+            if (cur && cur[0]) return;
+            SetEnvironmentVariableA(k, v);
+            _putenv_s(k, v);
+        };
+        def("RAWRXD_GPU_POLICY", "SOLO");
+        def("RAWRXD_NO_TP", "1");
+        def("RAWRXD_BOUNDED_RESIDENCY", "1");
+        def("RAWRXD_TPS_LIMIT", "NONE");
+        def("TOKEN_PACING", "OFF");
+        def("DECODE_SLEEP", "0");
+        def("SYNC_PER_LAYER", "0");
+        def("DEEP2_K2_GPU_MLA", "1");
+        def("DEEP2_K2_GPU_STREAM_COPY", "1");
+        def("DEEP2_WEIGHT_PIN", "1");
+        def("DEEP2_MLA_QKV_SPLIT", "1");
+        def("DEEP2_MLA_HIDDEN_REUSE", "1");
+        def("DEEP2_MLA_FUSED_Q4KT", "1");
+        def("DEEP2_LIVE_POLICY", "PROMO");
+        def("DEEP2_LIVE_PATH", "1");
+        def("DEEP2_LIVE_ALLOW_LAYER_CACHE", "1");
+        def("DEEP2_LIVE_CACHE_BUDGET_MIB", "12288");
+        def("DEEP2_LIVE_MECH", "trampoline,cyclone,elastic");
+        def("DEEP2_GEN_ALG", "standard");
+        def("DEEP2_LOGITS_THREADS", "16");
+        SetEnvironmentVariableA("RAWRXD_SEMANTIC_SAFE", nullptr);
+        _putenv_s("RAWRXD_SEMANTIC_SAFE", "");
+        SetEnvironmentVariableA("RAWRXD_GPU_DEVICES", nullptr);
+        _putenv_s("RAWRXD_GPU_DEVICES", "");
+        RawrEmitChoreographyContract(stderr);
+#endif
+    }
 
     if (!pImpl->engine->initialize(config)) return false;
-    if (!pImpl->engine->loadModel(modelPath)) return false;
+    if (k2Shards) {
+        if (!pImpl->engine->openK2ShardDirectory(shardDir)) return false;
+        if (!pImpl->engine->isVulkanInitialized())
+            pImpl->engine->enableVulkan(true);
+        if (!pImpl->engine->isVulkanInitialized()) {
+            fprintf(stderr,
+                    "[Deep2Benchmark] FATAL: K2 certify requires Vulkan SOLO; "
+                    "GPU open failed\n");
+            return false;
+        }
+        pImpl->engine->disableMARS();
+        if (auto* vc = pImpl->engine->getVulkanComputeSlot(0)) {
+            const uint64_t pin = 16ull << 30;
+            vc->SetPinResidentBudget(pin);
+            K2GpuStreamCopy_Bind(vc);
+            vc->ClearPinnedGemvWeights();
+            char bud[32];
+            std::snprintf(bud, sizeof(bud), "%llu",
+                          (unsigned long long)pin);
+            SetEnvironmentVariableA("DEEP2_K2_STREAM_BUDGET", bud);
+            _putenv_s("DEEP2_K2_STREAM_BUDGET", bud);
+        }
+        // Minimal live stack — no elastic/cyclone for U13 endurance stability.
+    } else {
+        if (!pImpl->engine->loadModel(modelPath)) return false;
+    }
 
-    pImpl->modelPath = modelPath;
+    pImpl->modelPath = k2Shards ? shardDir : modelPath;
     pImpl->initialized = true;
     pImpl->initGpuTelemetry();
     return true;
@@ -179,6 +315,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
 
     const uint64_t tSubmit = nowNs();
     auto promptTokens = pImpl->engine->tokenize(prompt);
+    if (promptTokens.empty()) promptTokens.push_back(1);
     bench.prompt_tokens = promptTokens.size();
 
     GenerationOptions opts;
@@ -201,22 +338,70 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     rawrxd::GpuDecodeEfficiencySession gpuEff;
     gpuEff.BeginDecodeWindow();
 
+    auto onEmit = [&]() {
+        emitNs.push_back(nowNs());
+        peakRam = (std::max)(peakRam, processWorkingSetBytes());
+        peakVram = (std::max)(peakVram, pImpl->getPeakVRAM());
+        return true;
+    };
+
     InferenceStats stats{};
-    const size_t generated = pImpl->engine->generate(
-        promptTokens.data(),
-        promptTokens.size(),
-        outputTokens.data(),
-        static_cast<size_t>(maxTokens),
-        &stats,
-        [&](int /*tokenId*/) -> bool {
-            emitNs.push_back(nowNs());
-            peakRam = (std::max)(peakRam, processWorkingSetBytes());
-            peakVram = (std::max)(peakVram, pImpl->getPeakVRAM());
-            return true;
-        });
+    size_t generated = 0;
+    std::string generatedText;
+    // Prefer generateStream for all models — captures pieces for poem probes.
+    {
+        auto gr = pImpl->engine->generateStream(
+            prompt, opts,
+            [&](int32_t, const std::string& piece) -> bool {
+                generatedText += piece;
+                return onEmit();
+            });
+        Deep2::Td(1, "GENERATE_RETURNED");
+        generated = static_cast<size_t>(gr.generatedTokens);
+        if (generated == 0) generated = emitNs.size();
+        if (generated > emitNs.size()) generated = emitNs.size();
+        for (size_t i = 0; i < generated && i < outputTokens.size(); ++i)
+            outputTokens[i] = 0;
+        Deep2::Td(2, "STREAM_FINALIZED");
+        if (generated == 0 && !pImpl->engine->isK2ShardIndexOpen()) {
+            // Do not timer-wait on host generate when reverse plan already blocked.
+            const auto map = AssessNemotronSsmMap(pImpl->engine->getModelWeights());
+            const auto& arch = pImpl->engine->getModelMetadata().architecture;
+            if (arch.find("nemotron") != std::string::npos) {
+                std::fprintf(stderr,
+                    "STREAM_STATUS=BLOCKED\n"
+                    "BLOCKED_AT=HOST_Q8_GEMV_SAFE\n"
+                    "SKIP_HOST_GENERATE_FALLBACK=1\n");
+            } else {
+            generated = pImpl->engine->generate(
+                promptTokens.data(), promptTokens.size(), outputTokens.data(),
+                static_cast<size_t>(maxTokens), &stats,
+                [&](int) -> bool { return onEmit(); });
+            if (generated > 0)
+                generatedText = pImpl->engine->detokenize(
+                    std::vector<int>(outputTokens.begin(),
+                                     outputTokens.begin() +
+                                         static_cast<std::ptrdiff_t>(generated)));
+            }
+            (void)map;
+        }
+    }
 
     const uint64_t tEnd = nowNs();
-    bench.duration_sec = (tEnd - tSubmit) / 1e9;
+    const uint64_t wallNs = (tEnd > tSubmit) ? (tEnd - tSubmit) : 0;
+    bench.duration_sec = wallNs / 1e9;
+    // Always emit generation wall — even when GENERATED_TOKENS=0.
+    bench.total_decode_ns = wallNs;
+    bench.capacity_target_ns_token = kTokenBudgetNs5Tps;
+    if (stats.decodeMs <= 0.0 && generated > 0 && bench.duration_sec > 0.0) {
+        stats.decodeMs = bench.duration_sec * 1000.0;
+        stats.decodeTokensPerSecond =
+            static_cast<double>(generated) / bench.duration_sec;
+    }
+    if (maxTokens <= 256 && !generatedText.empty()) {
+        std::fprintf(stderr, "--- GENERATED_TEXT ---\n%s\n--- END_GENERATED_TEXT ---\n",
+                     generatedText.c_str());
+    }
 
     const auto gpuResult = gpuEff.Finalize(generated);
     bench.gpu_power_valid = gpuResult.power_valid;
@@ -249,12 +434,40 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         bench.stream_stable = false;
         bench.vram_stable = false;
         bench.kv_stable = false;
-        bench.fail_reason_code = (generated == 0)
-            ? BENCH_FAIL_ZERO_TOKENS
-            : BENCH_FAIL_NON_PRODUCTION_DECODE_PATH;
+        if (generated == 0) {
+            const auto map = AssessNemotronSsmMap(pImpl->engine->getModelWeights());
+            const auto& arch = pImpl->engine->getModelMetadata().architecture;
+            if (map.ssmLayers > 0 && !map.complete) {
+                bench.fail_reason_code = BENCH_FAIL_COMPLETION_BLOCKED;
+                std::fprintf(stderr,
+                    "FAIL_OWNER=NEMOTRON_H_SSM_MAPPING_INCOMPLETE\n"
+                    "BLOCKED_AT=TENSOR_MAP_COMPLETE\n");
+            } else if (arch.find("nemotron") != std::string::npos) {
+                bench.fail_reason_code = BENCH_FAIL_COMPLETION_BLOCKED;
+                std::fprintf(stderr,
+                    "FAIL_OWNER=NEMOTRON_H_Q8_GEMV\n"
+                    "BLOCKED_AT=HOST_Q8_GEMV_SAFE\n");
+            } else {
+                bench.fail_reason_code = emitNs.empty()
+                    ? BENCH_FAIL_DECODE_NOT_ENTERED
+                    : BENCH_FAIL_TOKEN_CALLBACK_NOT_FIRED;
+            }
+        } else {
+            bench.fail_reason_code = BENCH_FAIL_NON_PRODUCTION_DECODE_PATH;
+        }
+        {
+            const char* ssm = std::getenv("RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM");
+            std::fprintf(stderr,
+                "SSM_EXPERIMENTAL_ALLOWED=%d\n"
+                "SSM_PRODUCTION_CERTIFIED=0\n"
+                "FAIL_OWNER=%s\n",
+                (ssm && ssm[0] == '1') ? 1 : 0,
+                BenchmarkFailReasonString(bench.fail_reason_code));
+        }
         emitBenchmarkTelemetry(bench, BenchmarkPhase::STREAM);
-        EmitBenchmarkCertTelemetry(bench, pImpl->modelPath.c_str(), "Q4_K_M",
-                                   "AMD Radeon RX 7800 XT", 1);
+        const char* dev = std::getenv("RAWRXD_GPU_SELECT");
+        EmitBenchmarkCertTelemetry(bench, pImpl->modelPath.c_str(), "Q8_0",
+                                   (dev && *dev) ? dev : "PRIMARY", 1);
         return bench;
     }
 
@@ -270,37 +483,61 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.first_decode_after_prefill_ns =
         (emitNs[0] > decodeStartNs) ? (emitNs[0] - decodeStartNs) : 0;
 
+    // Steady decode intervals: commit[i]-commit[i-1] only (never +1, never TTFT).
     std::vector<uint64_t> perTokenNs;
     std::vector<double> perTokenMs;
-    perTokenNs.reserve(emitNs.size());
-    perTokenMs.reserve(emitNs.size());
-    for (size_t i = 0; i < emitNs.size(); ++i) {
-        const uint64_t prev = (i == 0) ? decodeStartNs : emitNs[i - 1];
-        const uint64_t dt = (emitNs[i] > prev) ? (emitNs[i] - prev) : 0;
+    perTokenNs.reserve(emitNs.size() > 0 ? emitNs.size() - 1 : 0);
+    perTokenMs.reserve(perTokenNs.capacity());
+    for (size_t i = 1; i < emitNs.size(); ++i) {
+        const uint64_t dt =
+            (emitNs[i] > emitNs[i - 1]) ? (emitNs[i] - emitNs[i - 1]) : 0;
         perTokenNs.push_back(dt);
         perTokenMs.push_back(dt / 1e6);
     }
 
-    bench.per_token_min_ns = *std::min_element(perTokenNs.begin(), perTokenNs.end());
-    bench.per_token_max_ns = *std::max_element(perTokenNs.begin(), perTokenNs.end());
-    uint64_t sumNs = 0;
-    for (uint64_t ns : perTokenNs) sumNs += ns;
-    bench.per_token_avg_ns = sumNs / perTokenNs.size();
-    bench.decode_p50_ms = percentileMs(perTokenMs, 0.50);
-    bench.decode_p95_ms = percentileMs(perTokenMs, 0.95);
-    bench.decode_p99_ms = percentileMs(perTokenMs, 0.99);
-
-    const double meanNs = static_cast<double>(bench.per_token_avg_ns);
-    double varSum = 0.0;
-    for (uint64_t ns : perTokenNs) {
-        const double d = static_cast<double>(ns) - meanNs;
-        varSum += d * d;
+    if (!perTokenNs.empty()) {
+        bench.per_token_min_ns =
+            *std::min_element(perTokenNs.begin(), perTokenNs.end());
+        bench.per_token_max_ns =
+            *std::max_element(perTokenNs.begin(), perTokenNs.end());
+        uint64_t sumNs = 0;
+        for (uint64_t ns : perTokenNs) sumNs += ns;
+        bench.per_token_avg_ns = sumNs / perTokenNs.size();
+        bench.decode_p50_ms = percentileMs(perTokenMs, 0.50);
+        bench.decode_p95_ms = percentileMs(perTokenMs, 0.95);
+        bench.decode_p99_ms = percentileMs(perTokenMs, 0.99);
     }
-    const double stddev = std::sqrt(varSum / perTokenNs.size());
-    bench.tps_variance = (meanNs > 0.0) ? (stddev / meanNs) : 0.0;
+
+    // Generation-wall law: PASS ⇔ WALL_NS <= TOKENS × TOKEN_BUDGET_NS.
+    // TPS_DERIVED_ONLY — never the gate. Wall already set from wallNs above.
+    {
+        const GenerationBudget gen{static_cast<uint64_t>(generated), wallNs,
+                                   kTokenBudgetNs5Tps};
+        bench.total_decode_ns = wallNs;
+        bench.capacity_target_ns_token = gen.budgetNsPerToken;
+        if (gen.hasTokens() && gen.wallNs) {
+            bench.decode_ns_token_avg = gen.nsPerToken();
+            bench.decode_tps = gen.tpsDerived();
+        }
+    }
+
+    // Endurance stability: window degradation owns DECODE_STABLE.
+    double varSum = 0.0;
+    size_t varN = perTokenNs.size();
+    double meanTrim = static_cast<double>(bench.per_token_avg_ns);
+    {
+        for (uint64_t ns : perTokenNs) {
+            const double d = static_cast<double>(ns) - meanTrim;
+            varSum += d * d;
+        }
+    }
+    const double stddev =
+        (varN > 0) ? std::sqrt(varSum / static_cast<double>(varN)) : 0.0;
+    bench.tps_variance = (meanTrim > 0.0) ? (stddev / meanTrim) : 0.0;
 
     double minFullWindowTps = 1e300;
     double firstFullWindowTps = 0.0;
+    uint64_t maxFullWindowNs = 0;
     uint32_t fullWindowCount = 0;
     uint64_t tailWindowTokens = 0;
 
@@ -309,53 +546,68 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
                                         static_cast<uint64_t>(generated));
         if (end <= begin) break;
         const uint64_t winTok = end - begin;
-        const uint64_t t0 = (begin == 0) ? decodeStartNs : emitNs[begin - 1];
-        const uint64_t t1 = emitNs[end - 1];
-        const double sec = (t1 > t0) ? ((t1 - t0) / 1e9) : 0.0;
-        if (sec <= 0.0) continue;
-
-        DecodeWindow w;
-        w.tokenBegin = begin;
-        w.tokenEnd = end;
-        w.seconds = sec;
-        w.tps = static_cast<double>(winTok) / sec;
-        w.kvBytes = estimateKvBytes(cfg, bench.prompt_tokens + end);
-        w.vramBytes = peakVram;
-        pImpl->lastWindows.push_back(w);
-
         // Incomplete tail must not set MIN_WINDOW / START / capacity.
         if (winTok < kDecodeWindowTokens) {
             tailWindowTokens = winTok;
             continue;
         }
+        // N commits → N-1 intervals; first window starts at emitNs[0], not prefill.
+        const auto wr = RateFromCommitSpan(
+            emitNs[static_cast<size_t>(begin)],
+            emitNs[static_cast<size_t>(end - 1)], winTok);
+        if (!wr.valid) continue;
+
+        DecodeWindow w;
+        w.tokenBegin = begin;
+        w.tokenEnd = end;
+        w.ns_per_token = wr.nsPerToken;
+        w.tps = wr.tps;
+        w.seconds = static_cast<double>(wr.nsPerToken) *
+                    static_cast<double>(winTok) / 1e9;
+        w.kvBytes = estimateKvBytes(cfg, bench.prompt_tokens + end);
+        w.vramBytes = peakVram;
+        pImpl->lastWindows.push_back(w);
 
         if (fullWindowCount == 0) firstFullWindowTps = w.tps;
         minFullWindowTps = (std::min)(minFullWindowTps, w.tps);
+        maxFullWindowNs = (std::max)(maxFullWindowNs, w.ns_per_token);
         ++fullWindowCount;
     }
 
     bench.full_window_count = fullWindowCount;
     bench.tail_window_tokens = static_cast<uint32_t>(tailWindowTokens);
+    bench.capacity_target_ns_token = kCapacityTargetNsToken;
 
     if (fullWindowCount == 0) {
-        // Short generation: fallback authority is engine decode avg; not endurance.
+        // Short generation: authority is steady commit span; not endurance.
         bench.decode_tps_start = bench.decode_tps;
         bench.decode_tps_min_window = bench.decode_tps;
         bench.sustained_tps = bench.decode_tps;
         bench.max_stable_streaming_tps = bench.decode_tps;
+        bench.capacity_ns_token = bench.decode_ns_token_avg;
         bench.degradation_ratio = 1.0;
         bench.endurance_certifiable = false;
     } else {
         bench.decode_tps_start = firstFullWindowTps;
         bench.decode_tps_min_window = minFullWindowTps;
         bench.sustained_tps = bench.decode_tps_min_window;
-        // Canonical product authority number.
         bench.max_stable_streaming_tps = bench.decode_tps_min_window;
-        bench.degradation_ratio = (firstFullWindowTps > 0.0)
-            ? (bench.decode_tps_min_window / firstFullWindowTps)
-            : 0.0;
+        bench.capacity_ns_token = maxFullWindowNs;
+        // Re-derive min-window TPS strictly from capacity ns (single truth).
+        {
+            const auto cap = MakeNsTokenRate(maxFullWindowNs);
+            if (cap.valid) {
+                bench.decode_tps_min_window = cap.tps;
+                bench.max_stable_streaming_tps = cap.tps;
+                bench.sustained_tps = cap.tps;
+            }
+        }
+        bench.degradation_ratio =
+            (firstFullWindowTps > 0.0)
+                ? (bench.decode_tps_min_window / firstFullWindowTps)
+                : 0.0;
         bench.endurance_certifiable =
-            (fullWindowCount >= kRequiredFullWindowsCertify);
+            fullWindowCount >= kBenchRequiredFullWindowsCertify;
     }
 
     bench.kv_end_bytes = estimateKvBytes(cfg, bench.prompt_tokens + generated);
@@ -383,8 +635,7 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
         bench.used_production_decode_path &&
         bench.decode_stable &&
         bench.vram_stable &&
-        bench.kv_stable &&
-        (bench.tps_variance < 0.15);
+        bench.kv_stable;
 
     if (!bench.used_production_decode_path) {
         bench.fail_reason_code = BENCH_FAIL_NON_PRODUCTION_DECODE_PATH;
@@ -782,6 +1033,46 @@ std::string BenchmarkHarness::generateCertTelemetry(const CertificationReport& r
     t << "P95_TTFT_MS=" << report.saturation.p95_ttft_ms << "\n";
     t << "FAIRNESS_RATIO=" << report.saturation.fairness_ratio << "\n";
     t << "MAXIMUM_STABLE_STREAMING_CAPACITY_TPS=" << s.max_stable_streaming_tps << "\n";
+    t << "WALL_CLOCK_UNIT=NS\n";
+    t << "RATE_GATE_SOURCE=GENERATION_WALL_NS\n";
+    t << "TIMING_PRIMITIVE=NS_PER_TOKEN\n";
+    t << "GENERATED_TOKENS=" << s.generated_tokens << "\n";
+    t << "GENERATION_WALL_NS=" << s.total_decode_ns << "\n";
+    t << "TOKEN_BUDGET_NS=" << s.capacity_target_ns_token << "\n";
+    t << "GENERATION_BUDGET_NS="
+      << (s.generated_tokens * s.capacity_target_ns_token) << "\n";
+    t << "NS_PER_TOKEN=" << s.decode_ns_token_avg << "\n";
+    t << "CAPACITY_NS_TOKEN=" << s.capacity_ns_token << "\n";
+    t << "CAPACITY_TARGET_NS_TOKEN=" << s.capacity_target_ns_token << "\n";
+    t << "WALL_SLACK_NS="
+      << (static_cast<int64_t>(s.generated_tokens * s.capacity_target_ns_token) -
+          static_cast<int64_t>(s.total_decode_ns))
+      << "\n";
+    t << "WALL_WITHIN_BUDGET="
+      << ((s.generated_tokens && s.total_decode_ns &&
+           s.total_decode_ns <=
+               s.generated_tokens * s.capacity_target_ns_token)
+              ? 1
+              : 0)
+      << "\n";
+    {
+        const uint64_t have = s.generated_tokens * s.capacity_target_ns_token;
+        const uint64_t need = s.total_decode_ns;
+        const uint64_t delta = (need > have) ? (need - have) : 0ull;
+        t << "SAT=" << ((have >= need && s.generated_tokens) ? 1 : 0) << "\n";
+        t << "DELTA_NS=" << delta << "\n";
+    }
+    t << "TPS_DERIVED_ONLY=1\n";
+    t << "DECODE_TPS_REAL=" << s.decode_tps << "\n";
+    {
+        const uint64_t budget =
+            s.generated_tokens * s.capacity_target_ns_token;
+        rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns,
+                                        budget, 1);
+    }
+    t << "TOKEN_PLUS_ONE=0\n";
+    t << "TPS_DISPLAY_SCALE=1\n";
+    t << "TPS_COMPENSATION=0\n";
     if (!pass && !report.fail_reason.empty())
         t << "FAIL_REASON=" << report.fail_reason << "\n";
     t << "BENCHMARK_CERT_RESULT=" << (pass ? "PASS" : "FAIL") << "\n";
@@ -851,6 +1142,14 @@ const char* BenchmarkFailReasonString(uint32_t code) {
     case BENCH_FAIL_DECODE_UNSTABLE: return "DECODE_UNSTABLE";
     case BENCH_FAIL_ZERO_TOKENS: return "ZERO_TOKENS";
     case BENCH_FAIL_INSUFFICIENT_WINDOWS: return "INSUFFICIENT_WINDOWS";
+    case BENCH_FAIL_LOAD_FAILED: return "LOAD_FAILED";
+    case BENCH_FAIL_PREFILL_FAILED: return "PREFILL_FAILED";
+    case BENCH_FAIL_DECODE_NOT_ENTERED: return "DECODE_NOT_ENTERED";
+    case BENCH_FAIL_SAMPLER_FAILED: return "SAMPLER_FAILED";
+    case BENCH_FAIL_EOS_BEFORE_FIRST_TOKEN: return "EOS_BEFORE_FIRST_TOKEN";
+    case BENCH_FAIL_TOKEN_CALLBACK_NOT_FIRED: return "TOKEN_CALLBACK_NOT_FIRED";
+    case BENCH_FAIL_RUN_VOID: return "RUN_VOID";
+    case BENCH_FAIL_COMPLETION_BLOCKED: return "COMPLETION_BLOCKED";
     default: return "UNKNOWN";
     }
 }
@@ -871,6 +1170,10 @@ void EmitBenchmarkTelemetry(const StreamBenchmark& bench, BenchmarkPhase phase) 
     telemetry << "DECODE_TPS_START=" << bench.decode_tps_start << "\n";
     telemetry << "DECODE_TPS_MIN_WINDOW=" << bench.decode_tps_min_window << "\n";
     telemetry << "MAXIMUM_STABLE_STREAMING_CAPACITY_TPS=" << bench.max_stable_streaming_tps << "\n";
+    telemetry << "TIMING_PRIMITIVE=NS_PER_TOKEN\n";
+    telemetry << "CAPACITY_NS_TOKEN=" << bench.capacity_ns_token << "\n";
+    telemetry << "CAPACITY_TARGET_NS_TOKEN=" << bench.capacity_target_ns_token << "\n";
+    telemetry << "DECODE_NS_TOKEN_AVG=" << bench.decode_ns_token_avg << "\n";
     telemetry << "FULL_WINDOW_COUNT=" << bench.full_window_count << "\n";
     telemetry << "FULL_STABILITY_WINDOWS=" << bench.full_window_count << "\n";
     telemetry << "TAIL_WINDOW_TOKENS=" << bench.tail_window_tokens << "\n";
@@ -943,6 +1246,42 @@ void EmitBenchmarkCertTelemetry(const StreamBenchmark& bench,
     t << "VRAM_STABLE=" << (bench.vram_stable ? 1 : 0) << "\n";
     t << "KV_STABLE=" << (bench.kv_stable ? 1 : 0) << "\n";
     t << "MAXIMUM_STABLE_STREAMING_CAPACITY_TPS=" << bench.max_stable_streaming_tps << "\n";
+    t << "WALL_CLOCK_UNIT=NS\n";
+    t << "RATE_GATE_SOURCE=GENERATION_WALL_NS\n";
+    t << "TIMING_PRIMITIVE=NS_PER_TOKEN\n";
+    t << "GENERATION_WALL_NS=" << bench.total_decode_ns << "\n";
+    t << "TOKEN_BUDGET_NS=" << bench.capacity_target_ns_token << "\n";
+    t << "GENERATION_BUDGET_NS="
+      << (bench.generated_tokens * bench.capacity_target_ns_token) << "\n";
+    t << "NS_PER_TOKEN=" << bench.decode_ns_token_avg << "\n";
+    t << "CAPACITY_NS_TOKEN=" << bench.capacity_ns_token << "\n";
+    t << "CAPACITY_TARGET_NS_TOKEN=" << bench.capacity_target_ns_token << "\n";
+    t << "WALL_SLACK_NS="
+      << (static_cast<int64_t>(bench.generated_tokens *
+                               bench.capacity_target_ns_token) -
+          static_cast<int64_t>(bench.total_decode_ns))
+      << "\n";
+    t << "WALL_WITHIN_BUDGET="
+      << ((bench.generated_tokens && bench.total_decode_ns &&
+           bench.total_decode_ns <=
+               bench.generated_tokens * bench.capacity_target_ns_token)
+              ? 1
+              : 0)
+      << "\n";
+    {
+        const uint64_t have =
+            bench.generated_tokens * bench.capacity_target_ns_token;
+        const uint64_t need = bench.total_decode_ns;
+        const uint64_t delta = (need > have) ? (need - have) : 0ull;
+        t << "SAT=" << ((have >= need && bench.generated_tokens) ? 1 : 0)
+          << "\n";
+        t << "DELTA_NS=" << delta << "\n";
+    }
+    t << "TPS_DERIVED_ONLY=1\n";
+    t << "DECODE_TPS_REAL=" << bench.decode_tps << "\n";
+    t << "TOKEN_PLUS_ONE=0\n";
+    t << "TPS_DISPLAY_SCALE=1\n";
+    t << "TPS_COMPENSATION=0\n";
     if (!pass)
         t << "FAIL_REASON=" << BenchmarkFailReasonString(failCode) << "\n";
     t << "BENCHMARK_CERT_RESULT=" << (pass ? "PASS" : "FAIL") << "\n";

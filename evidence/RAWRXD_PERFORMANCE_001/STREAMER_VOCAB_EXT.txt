@@ -1,0 +1,25 @@
+RAWRXD_STREAMER_VOCAB_EXT_001=PASS
+
+SPLIT:
+  RawrStreamReceipt     = events along the path
+  RawrCompletionReceipt = final truth of the run
+  RawrProgressReceipt   = bounded work units (heartbeat ≠ work_moved)
+
+INDEPENDENT AXES:
+  CAN_RUN
+  RUNS_CORRECTLY          (production completion + no F32 expand)
+  RUNS_FASTEST / BUDGET   (wall vs 12.8s — separate seal)
+
+K2 LIVE SHAPE (correct):
+  STREAM_COMPLETE=1
+  PRODUCTION_DECODE_PATH=1
+  GENERATED_TOKENS=64
+  WALL_WITHIN_BUDGET=0
+  PRODUCT_E2E=0 / OPEN
+
+NEVER impersonate generation:
+  model-open PASS
+  index PASS
+  tune PASS
+  heartbeat
+  capability PASS
