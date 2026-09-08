@@ -1,0 +1,38 @@
+# Lavapath choreography law — blockers erased before spend
+
+HIDDEN_BLOCKER=0
+REQUIRE_ALL_FEATURES=0
+REQUIRE_ONLY_GOAL_PATH=1
+
+OPTIONAL_REQUIREMENT=ERASE
+SATISFIED_REQUIREMENT=ERASE
+NEVER_MATERIALIZED_TEARDOWN=ERASE
+FAILED_PATH_WITH_ALTERNATIVE=SUBSTITUTE
+DEFERRABLE_REQUIREMENT=DEFER
+NO_PROGRESS_ACTION=EXCLUDE
+
+SOURCE=
+  src/deep2/lavapath/Lavapath.hpp
+  src/deep2/lavapath/Choreograph.hpp
+  src/deep2/lavapath/ProductStreamer.hpp
+  src/deep2/lavapath/LavapathRun.hpp
+  src/deep2/lavapath/StreamGenEnd.hpp
+  src/deep2/lavapath/LavapathProductLaw.hpp
+  certs/rawrxd_product_lavapath_001.cpp
+
+FLOW=
+  TERMINAL INTENT
+    → ObserveReality
+    → ChoreographOut
+    → Produce1 (only irreducible)
+    → LavaPath (only spend)
+    → receipt → S' → repeat
+
+PRODUCT_TERMINAL=derived(zero required delta) — not a spendable gate
+SYNTHETIC_OUTPUT_COMMITTED=0
+SEED_PREREQS_WITHOUT_OBSERVE=0
+
+O_PROJ_TAG6_FASTPATH=PASS (frozen)
+QKV_OWNER=OPEN (next hotpath climb)
+U13_CLEAN_TEARDOWN=OPEN (never-materialized for lavapath observe when no TD11 run)
+K2_USEFUL_WALL_BUDGET=FAIL → FIRST_DELTA when generate+wallBudget goal

@@ -70,27 +70,59 @@ bool VulkanCompute::BindGemvStorage(VkBuffer wbuf, size_t wbytes, VkBuffer inb, 
     }
     w[0].pBufferInfo = &dbiW; w[1].pBufferInfo = &dbiI; w[2].pBufferInfo = &dbiO;
     vkUpdateDescriptorSets(device_, 3, w, 0, nullptr);
-    uint32_t pc[2] = {rows, cols};
+    uint32_t pc[4] = {rows, cols, 0u, 0u};
     return RecordCompute(pipe, gemv_pipeline_layout_, ds, pc, sizeof(pc), groups);
+}
+
+bool VulkanCompute::BindGemvStoragePc(VkBuffer wbuf, size_t wbytes, VkBuffer inb,
+                                       size_t inBytes, VkBuffer outb, size_t outBytes,
+                                       VkPipeline pipe, const uint32_t* pc, uint32_t pcN,
+                                       uint32_t groups) {
+    const VkDeviceSize wRange = (VkDeviceSize)((wbytes + 3u) & ~size_t(3));
+    VkDescriptorSet ds = fused_cmd_ ? NextGemvDs() : gemv_ds_;
+    VkDescriptorBufferInfo dbiW{wbuf, 0, wRange};
+    VkDescriptorBufferInfo dbiI{inb, 0, inBytes};
+    VkDescriptorBufferInfo dbiO{outb, 0, outBytes};
+    VkWriteDescriptorSet w[3]{};
+    for (int i = 0; i < 3; ++i) {
+        w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        w[i].dstSet = ds;
+        w[i].dstBinding = (uint32_t)i;
+        w[i].descriptorCount = 1;
+        w[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    }
+    w[0].pBufferInfo = &dbiW; w[1].pBufferInfo = &dbiI; w[2].pBufferInfo = &dbiO;
+    vkUpdateDescriptorSets(device_, 3, w, 0, nullptr);
+    const uint32_t bytes = pcN * (uint32_t)sizeof(uint32_t);
+    return RecordCompute(pipe, gemv_pipeline_layout_, ds, pc, bytes, groups);
 }
 
 bool VulkanCompute::DispatchGemvPacked(const void* packed, size_t bytes,
                                        DeviceBuf& in, DeviceBuf& out,
-                                       uint32_t rows, uint32_t cols) {
+                                       uint32_t rows, uint32_t cols,
+                                       uint64_t pinKey) {
     if (!EnsureQ4kPipeline() || !packed || !in.buffer || !out.buffer || bytes == 0)
         return false;
     ++gemv_attempts_;
     VkBuffer wbuf = nullptr;
-    if (!ww_active_ || bytes > ww_slot_bytes_) {
-        size_t budget = ww_budget_bytes_ ? ww_budget_bytes_ : ((size_t)512 << 20);
-        uint32_t nSlots = ww_slot_count_ ? ww_slot_count_ : 8;
-        size_t slotB = bytes > ww_slot_bytes_ ? bytes
-                       : (ww_slot_bytes_ ? ww_slot_bytes_ : bytes);
-        if (!EnsureWeightWindow(slotB, nSlots, budget)) return false;
+    // pinKey!=0 → MLA resident pins; pinKey==0 keeps stream-slot path (GpuForward).
+    if (pinKey && WantWeightPin()) {
+        if (!EnsurePinnedPackedWeight(packed, bytes, rows, cols, wbuf, pinKey))
+            return false;
+    } else {
+        if (!ww_active_ || bytes > ww_slot_bytes_) {
+            size_t budget = ww_budget_bytes_ ? ww_budget_bytes_
+                                            : ((size_t)512 << 20);
+            uint32_t nSlots = ww_slot_count_ ? ww_slot_count_ : 8;
+            size_t slotB = bytes > ww_slot_bytes_ ? bytes
+                           : (ww_slot_bytes_ ? ww_slot_bytes_ : bytes);
+            if (!EnsureWeightWindow(slotB, nSlots, budget)) return false;
+        }
+        if (!StreamWeightToSlot(packed, bytes, wbuf)) return false;
     }
-    if (!StreamWeightToSlot(packed, bytes, wbuf)) return false;
     if (!BindGemvStorage(wbuf, bytes, in.buffer, (size_t)cols * 4, out.buffer,
-                         (size_t)rows * 4, q4k_pipe_, rows, cols, (rows + 63u) / 64u))
+                         (size_t)rows * 4, q4k_pipe_, rows, cols,
+                         (rows + 63u) / 64u))
         return false;
     ++q4k_packed_ops_;
     ++gemv_success_;

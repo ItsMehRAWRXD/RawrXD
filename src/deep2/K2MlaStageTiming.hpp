@@ -3,6 +3,8 @@
 #pragma once
 #include "K2MLA_GpuGemv.hpp"
 #include "K2MlaQBranchTiming.hpp"
+#include "K2MlaOProjTiming.hpp"
+#include "K2MlaQkvTiming.hpp"
 #include "StreamPathTiming.hpp"
 #include <algorithm>
 #include <atomic>
@@ -63,6 +65,8 @@ inline void MlaStage_Reset() {
     MlaStage_QkvOverlapUs().store(0);
     MlaStage_QkvBubbleUs().store(0);
     QBr_Reset();
+    OProj_Reset();
+    Qkv_Reset();
 }
 
 inline void MlaStage_NoteSplitTopology(uint64_t wallUs, uint64_t qBranchUs,
@@ -138,6 +142,8 @@ inline void MlaStage_Emit(FILE* f) {
             (unsigned long long)join,
             (unsigned long long)ov, (unsigned long long)bub, wallVsMax);
     QBr_Emit(f);
+    Qkv_Emit(f);
+    OProj_Emit(f);
     fflush(f);
 }
 

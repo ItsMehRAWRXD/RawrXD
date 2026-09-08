@@ -2,6 +2,7 @@
 // Extracted from certified K2-008 Gate 13 logic; K2-008 source remains frozen.
 
 #include "K2NativeStreamGate.hpp"
+#include "RawrScoreboard.hpp"
 #include "K2MLAWeights.hpp"
 #include "K2MLAAttention.hpp"
 #include "K2MLA_GpuGemv.hpp"
@@ -17,15 +18,18 @@
 #include "K2LogitsResidency.hpp"
 #include "K2LogitsClimb.hpp"
 #include "K2LogitsSplit.hpp"
+#include "K2MLA_QPathDevice.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
+#include "K2MlaOProjTiming.hpp"
 #include "VirtualTensorDesc.hpp"
 #include "VirtualTensorRange.hpp"
 #include "vulkan_compute.h"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
+#include "FinalNormProduce.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -33,6 +37,7 @@
 #include <cstring>
 #include <fstream>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <thread>
 #include <unordered_map>
@@ -548,23 +553,29 @@ bool RunMlaOnPayloads(uint32_t layerIdx, const Deep2::GlobalTensorIndex& index,
     memset(mlaOut, 0, hiddenDim * sizeof(float));
     Deep2::MLAForward mlaFwd;
     const uint64_t tMla = Deep2::StreamPathTiming_NowUs();
-    bool ok = mlaFwd.Execute(scratch, mlaOut, mla, k2cfg, error,
+    const uint64_t rf0 = Deep2::OProj_ResidualFused().load();
+    Deep2::OProj_SetResidualBase(hiddenIn);
+    bool ok = mlaFwd.Execute(scratch, hiddenOut, mla, k2cfg, error,
                              kvCache, layerIdx, position, stats);
+    Deep2::OProj_SetResidualBase(nullptr);
     Deep2::StreamPathTiming_Add(Deep2::SPT_mla(), tMla);
-    size_t i = 0;
+    if (Deep2::OProj_ResidualFused().load() == rf0) {
+        // No GPU residual fuse — hiddenOut holds O_PROJ only; add residual.
+        size_t i = 0;
 #if defined(__AVX512F__)
-    for (; i + 16 <= hiddenDim; i += 16) {
-        __m512 a = _mm512_loadu_ps(hiddenIn + i);
-        __m512 b = _mm512_loadu_ps(mlaOut + i);
-        _mm512_storeu_ps(hiddenOut + i, _mm512_add_ps(a, b));
-    }
+        for (; i + 16 <= hiddenDim; i += 16) {
+            __m512 a = _mm512_loadu_ps(hiddenIn + i);
+            __m512 b = _mm512_loadu_ps(hiddenOut + i);
+            _mm512_storeu_ps(hiddenOut + i, _mm512_add_ps(a, b));
+        }
 #endif
-    for (; i + 8 <= hiddenDim; i += 8) {
-        __m256 a = _mm256_loadu_ps(hiddenIn + i);
-        __m256 b = _mm256_loadu_ps(mlaOut + i);
-        _mm256_storeu_ps(hiddenOut + i, _mm256_add_ps(a, b));
+        for (; i + 8 <= hiddenDim; i += 8) {
+            __m256 a = _mm256_loadu_ps(hiddenIn + i);
+            __m256 b = _mm256_loadu_ps(hiddenOut + i);
+            _mm256_storeu_ps(hiddenOut + i, _mm256_add_ps(a, b));
+        }
+        for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + hiddenOut[i];
     }
-    for (; i < hiddenDim; ++i) hiddenOut[i] = hiddenIn[i] + mlaOut[i];
     for (size_t p = 0; p < 9; ++p) { TrackFree(payloads[p].size()); payloads[p].clear(); }
     return ok;
 }
@@ -602,14 +613,19 @@ bool LookupRealTokenEmbed(Deep2::K2TokenEmbedding& embed,
 bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index,
     const Deep2::KimiK2Config& k2cfg, float* hidden, bool enableMlaComplete,
     Deep2::MlaCompleteStats* aggStats, std::string& error) {
+    if (enableMlaComplete) {
+        Deep2::MlaCertAuthority::NoteRequired();
+        Deep2::MlaCertAuthority::NoteForwardEntered();
+    }
     size_t hiddenDim = k2cfg.hiddenDim;
     std::vector<float> scratch(hiddenDim);
     std::vector<float> tempHidden(hiddenDim);
     std::vector<float> mlaOut(hiddenDim);
     memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
 
-    rawrxd::deep2::K2KVCache kvCache;
     rawrxd::deep2::K2KVCache* kvPtr = nullptr;
+    // Reuse per-thread KV — allocating ~48MiB every decode token thrash-crashes.
+    static thread_local rawrxd::deep2::K2KVCache tlsKv;
     if (enableMlaComplete) {
         const size_t H = k2cfg.numHeads ? k2cfg.numHeads : 64;
         size_t nope = k2cfg.qkNopeHeadDim ? k2cfg.qkNopeHeadDim : 128;
@@ -621,19 +637,23 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
         const size_t kvDim = (std::max)(H * (nope + rope), H * vDim);
         try {
-            kvCache.Reset(testLayers, 8, kvDim);
+            if (tlsKv.numLayers() != testLayers || tlsKv.kvDim() != kvDim ||
+                tlsKv.maxSeqLen() < 8) {
+                tlsKv.Reset(testLayers, 8, kvDim);
+            } else {
+                tlsKv.Clear();
+            }
         } catch (const std::exception& ex) {
             error = std::string("K2KVCache reset: ") + ex.what();
             return false;
         }
-        kvPtr = &kvCache;
-        TrackAlloc(2ull * testLayers * 8 * kvDim * sizeof(float));
+        kvPtr = &tlsKv;
+        TrackAlloc(tlsKv.liveBytes());
     }
 
     auto releaseKvTrack = [&]() {
-        if (kvPtr) {
-            TrackFree(2ull * testLayers * 8 * kvCache.kvDim() * sizeof(float));
-        }
+        if (kvPtr)
+            TrackFree(kvPtr->liveBytes());
     };
 
     // Overlap trampoline output.weight pin with MLA layers (hides ~0.5–0.7s).
@@ -651,58 +671,80 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         });
     }
 
-    // Double-buffer: load L+1 while computing L.
+    // Scoreboard: await required operand only. No per-layer join barrier.
     struct LayerSlot {
         char names[9][64]{};
         bool fusedKv = false;
         std::vector<uint8_t> payloads[9];
         const uint8_t* borrow[9] = {};
         uint64_t bytes = 0;
-        bool ready = false;
         std::string err;
+        Deep2::TensorReady gate;
+        Deep2::TensorLife life;
+        std::thread worker;
+        uint32_t owner = ~0u;
     };
-    LayerSlot slots[2];
-    auto loadSlot = [&](LayerSlot& s, uint32_t layer) -> bool {
+    LayerSlot slots[4];
+    auto loadSlot = [&](LayerSlot& s, uint32_t layer) {
         ResolveMlaNames(layer, index, s.names, s.fusedKv);
         for (size_t i = 0; i < 9; ++i) s.borrow[i] = nullptr;
-        s.ready = LoadMlaPayloads(index, s.names, s.fusedKv, s.payloads, s.borrow,
-                                  layer, s.bytes, s.err);
-        return s.ready;
+        const bool ok = LoadMlaPayloads(index, s.names, s.fusedKv, s.payloads,
+                                        s.borrow, layer, s.bytes, s.err);
+        s.life.consumersRemaining.store(1, std::memory_order_relaxed);
+        s.life.lease.bytes = ok ? (const void*)s.payloads[0].data() : nullptr;
+        s.gate.failed.store(!ok, std::memory_order_release);
+        s.gate.ready.store(ok, std::memory_order_release);
     };
-
+    auto awaitSlot = [&](LayerSlot& s) {
+        if (s.worker.joinable()) s.worker.join();
+    };
+    auto retireSlot = [&](LayerSlot& s) {
+        awaitSlot(s);
+        Deep2::completeConsumer(s.life);
+        for (auto& p : s.payloads) std::vector<uint8_t>().swap(p);
+        s.gate.ready.store(false, std::memory_order_relaxed);
+        s.bytes = 0;
+        s.owner = ~0u;
+    };
+    auto issueLayer = [&](uint32_t layer) {
+        if (layer >= testLayers) return;
+        LayerSlot& s = slots[layer & 3u];
+        if (s.owner == layer) return;
+        awaitSlot(s);
+        s.owner = layer;
+        s.gate.ready.store(false, std::memory_order_relaxed);
+        s.worker = std::thread([&, layer] { loadSlot(s, layer); });
+    };
     auto joinOutPrefetch = [&]() {
         if (outPrefetch.joinable()) outPrefetch.join();
     };
-
-    if (!loadSlot(slots[0], 0)) {
+    auto joinAll = [&]() {
+        for (auto& sl : slots) awaitSlot(sl);
         joinOutPrefetch();
-        error = slots[0].err;
-        releaseKvTrack();
-        return false;
-    }
+    };
+    uint32_t issued = 0;
+    auto issueUpTo = [&](uint32_t last) {
+        while (issued <= last && issued < testLayers) {
+            issueLayer(issued);
+            ++issued;
+        }
+    };
 
+    issueUpTo(0);
     for (uint32_t layer = 0; layer < testLayers; ++layer) {
-        const int cur = (int)(layer & 1u);
-        const int nxt = 1 - cur;
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
         Deep2::MlaCompleteStats layerStats;
-        if (Deep2::LivePath_Active()) {
+        if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerStart(Deep2::LivePath_ActiveCyclone(), layer, 0);
-        }
 
-        std::thread prefetch;
-        const bool doPrefetch = (layer + 1 < testLayers);
-        if (doPrefetch) {
-            prefetch = std::thread([&]() {
-                (void)loadSlot(slots[nxt], layer + 1);
-            });
-        }
-
-        LayerSlot& s = slots[cur];
-        if (!s.ready) {
-            if (doPrefetch && prefetch.joinable()) prefetch.join();
-            joinOutPrefetch();
+        issueUpTo(layer + 1);
+        LayerSlot& s = slots[layer & 3u];
+        if (!s.gate.ready.load(std::memory_order_acquire))
+            awaitSlot(s);
+        if (!s.gate.ready.load(std::memory_order_acquire) ||
+            s.gate.failed.load(std::memory_order_acquire)) {
+            joinAll();
             error = s.err.empty() ? "layer slot not ready" : s.err;
             releaseKvTrack();
             return false;
@@ -711,25 +753,16 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                               s.borrow, s.bytes, in, out, scratch.data(),
                               mlaOut.data(), kvPtr, 0,
                               enableMlaComplete ? &layerStats : nullptr, error)) {
-            if (doPrefetch && prefetch.joinable()) prefetch.join();
-            joinOutPrefetch();
+            joinAll();
             releaseKvTrack();
             return false;
         }
-        s.ready = false;
+        Deep2::RawrScoreboardNoteExecute();
+        issueUpTo(layer + 2);
+        if (layer >= 1) retireSlot(slots[(layer - 1u) & 3u]);
 
-        if (doPrefetch && prefetch.joinable()) prefetch.join();
-        if (doPrefetch && !slots[nxt].ready) {
-            joinOutPrefetch();
-            error = slots[nxt].err.empty() ? "prefetch failed" : slots[nxt].err;
-            releaseKvTrack();
-            return false;
-        }
-
-        if (Deep2::LivePath_Active()) {
+        if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);
-            // Host double-buffer already covers L+1; skip live-cache prefetch.
-        }
         if (aggStats && enableMlaComplete) {
             aggStats->ropeApplied = aggStats->ropeApplied || layerStats.ropeApplied;
             aggStats->softmaxFinite = aggStats->softmaxFinite || layerStats.softmaxFinite;
@@ -743,8 +776,8 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
                     layerStats, out, hiddenDim);
             }
         }
-        }
     }
+    for (auto& sl : slots) retireSlot(sl);
     if (kvPtr) {
         try { kvPtr->CommitPosition(); }
         catch (const std::exception& ex) {
@@ -964,6 +997,50 @@ uint32_t ResolveLayerDepth(const K2NativeStreamGate::Config& cfg, const Deep2::K
 
 namespace K2NativeStreamGate {
 
+thread_local rawrxd::deep2::K2KVCache* g_prodKvLast = nullptr;
+
+bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
+                     const Deep2::KimiK2Config& k2cfg, float* hiddenIn,
+                     float* hiddenOut, uint32_t layer,
+                     rawrxd::deep2::K2KVCache* kv, uint32_t position,
+                     Deep2::MlaCompleteStats* stats, std::string& error) {
+    if (!hiddenIn || !hiddenOut || !k2cfg.hiddenDim) {
+        error = "ForwardMlaLayer: bad args";
+        return false;
+    }
+    const size_t hd = k2cfg.hiddenDim;
+    std::vector<float> scratch(hd), mlaOut(hd);
+    return ExecuteMLALayer(layer, index, k2cfg, hiddenIn, hiddenOut,
+                           scratch.data(), mlaOut.data(), kv, position, stats,
+                           error);
+}
+
+rawrxd::deep2::K2KVCache* ProdKv(const Deep2::KimiK2Config& k2cfg,
+                                 size_t maxSeq) {
+    static thread_local std::unique_ptr<rawrxd::deep2::K2KVCache> kv;
+    static thread_local rawrxd::deep2::K2KVCache* last = nullptr;
+    const size_t H = k2cfg.numHeads ? k2cfg.numHeads : 64;
+    const size_t nope = k2cfg.qkNopeHeadDim ? k2cfg.qkNopeHeadDim : 128;
+    const size_t rope = k2cfg.qkRopeHeadDim ? k2cfg.qkRopeHeadDim : 64;
+    const size_t vDim = k2cfg.vHeadDim ? k2cfg.vHeadDim : 128;
+    const size_t kvDim = (std::max)(H * (nope + rope), H * vDim);
+    const size_t nL = k2cfg.numLayers ? k2cfg.numLayers : 61;
+    const size_t seq = (std::max)(maxSeq ? maxSeq : 8, (size_t)4096);
+    if (!kv || kv->numLayers() != nL || kv->kvDim() != kvDim ||
+        kv->maxSeqLen() < seq) {
+        kv = std::make_unique<rawrxd::deep2::K2KVCache>();
+        kv->Reset(nL, seq, kvDim);
+    }
+    last = kv.get();
+    g_prodKvLast = last;
+    return last;
+}
+
+void ProdKvCommit() {
+    if (g_prodKvLast && g_prodKvLast->CanAppend())
+        g_prodKvLast->CommitPosition();
+}
+
 bool ForwardHiddenMla(const Deep2::GlobalTensorIndex& index,
                       const Deep2::KimiK2Config& k2cfg,
                       float* hidden, uint32_t layerDepth, bool mlaComplete,
@@ -1091,12 +1168,45 @@ Result Run(const fs::path& shardDir,
     const size_t outNormTrack = normSpan.borrowed ? 0 : outNormOwned.size();
     RawrXD::TensorView outNorm = MakeTensorView(normSpan.data, index,
         "output_norm.weight", RawrXD::QuantType::F32);
-    const float* normW = outNorm.asF32();
+    Deep2::FinalNorm::View fnWeight{};
+    Deep2::FinalNorm::FillMeta(fnWeight,
+        reinterpret_cast<const float*>(normSpan.data), hiddenDim);
+    fnWeight.source = normSpan.borrowed ? "RESOLVE_BORROW" : "RESOLVE_OWNED";
+    if (!fnWeight.fulfilled || !outNorm.asF32() ||
+        outNorm.numElements() < hiddenDim) {
+        result.error = "FinalNorm WeightView not acquired";
+        fprintf(stderr,
+                "STREAM_ABORT=1 OWNER=FINAL_NORM "
+                "MISSING_PREREQ=WeightView FULFILLED=%d ELEMS=%llu\n",
+                fnWeight.fulfilled,
+                (unsigned long long)outNorm.numElements());
+        fflush(stderr);
+        TrackFree(outNormTrack);
+        TrackFree(hidden.size() * sizeof(float));
+        TrackFree(preMla.size() * sizeof(float));
+        TrackFree(scratch.size() * sizeof(float));
+        result.peakResidencyBytes = g_peakResidency;
+        result.finalResidencyBytes = g_currentResidency;
+        return result;
+    }
 
     for (uint32_t step = 0; step < cfg.streamTokens; ++step) {
         std::string stepErr;
+        // Heartbeat before work — distinguishes hard kill from orderly STREAM_ABORT.
+        if ((step % 32u) == 0u) {
+            fprintf(stderr,
+                    "STREAM_HEARTBEAT STEP=%u/%u TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens);
+            fflush(stderr);
+        }
+        try {
         if (!LookupRealTokenEmbed(embed, k2cfg, curToken, hidden.data(), stepErr)) {
             result.error = stepErr;
+            fprintf(stderr,
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=TOKEN_EMBED ERR=%s "
+                    "TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens, stepErr.c_str());
+            fflush(stderr);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1109,6 +1219,11 @@ Result Run(const fs::path& shardDir,
         if (!ForwardMLALayers(layerDepth, index, k2cfg, hidden.data(),
                               cfg.enableMlaComplete, &g12Stats, stepErr)) {
             result.error = stepErr;
+            fprintf(stderr,
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=MLA_FORWARD ERR=%s "
+                    "TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens, stepErr.c_str());
+            fflush(stderr);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1130,13 +1245,41 @@ Result Run(const fs::path& shardDir,
                 (float)std::sqrt((std::max)(inE, 1e-12)));
             (void)Deep2::LivePath_PrefetchBoost();
         }
-        if (normW) rmsNorm(hidden.data(), normW, scratch.data(), hiddenDim, 1e-5f);
-        else memcpy(scratch.data(), hidden.data(), hiddenDim * sizeof(float));
+        fnWeight.srcPtr = hidden.data();
+        fnWeight.dstPtr = scratch.data();
+        {
+            auto art = Deep2::FinalNorm::ProduceFinalHidden(
+                scratch.data(), hidden.data(), fnWeight, hiddenDim, 1e-5f);
+            if (!art.valid) {
+                Deep2::Proof::EmitFail("FinalNorm", art);
+                result.error = stepErr = art.missingPrereq
+                    ? art.missingPrereq
+                    : "FinalHidden produce failed";
+                fprintf(stderr,
+                        "STREAM_ABORT=1 STEP=%u/%u OWNER=FINAL_NORM "
+                        "MISSING_PREREQ=%s TEARDOWN_WITNESS=0\n",
+                        step, cfg.streamTokens,
+                        art.missingPrereq ? art.missingPrereq : "UNKNOWN");
+                fflush(stderr);
+                TrackFree(outNormTrack);
+                TrackFree(hidden.size() * sizeof(float));
+                TrackFree(preMla.size() * sizeof(float));
+                TrackFree(scratch.size() * sizeof(float));
+                result.peakResidencyBytes = g_peakResidency;
+                result.finalResidencyBytes = g_currentResidency;
+                return result;
+            }
+        }
         memcpy(hidden.data(), scratch.data(), hiddenDim * sizeof(float));
 
         if (!ProjectLogitsArgmax(index, outRef, hiddenDim, vocabSize, hidden.data(),
                                  curToken, stepErr)) {
             result.error = stepErr;
+            fprintf(stderr,
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=LOGITS ERR=%s "
+                    "TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens, stepErr.c_str());
+            fflush(stderr);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1147,6 +1290,23 @@ Result Run(const fs::path& shardDir,
         }
         ghostTok.push_back(curToken);
         callbackFired = true;
+        if (cfg.onToken) {
+            if (!cfg.onToken(curToken, cfg.onTokenUser)) {
+                result.error = "token callback aborted";
+                fprintf(stderr,
+                        "STREAM_ABORT=1 STEP=%u/%u OWNER=TOKEN_CALLBACK "
+                        "TEARDOWN_WITNESS=0\n",
+                        step, cfg.streamTokens);
+                fflush(stderr);
+                TrackFree(outNormTrack);
+                TrackFree(hidden.size() * sizeof(float));
+                TrackFree(preMla.size() * sizeof(float));
+                TrackFree(scratch.size() * sizeof(float));
+                result.peakResidencyBytes = g_peakResidency;
+                result.finalResidencyBytes = g_currentResidency;
+                return result;
+            }
+        }
         {
             const uint64_t tSt = Deep2::StreamPathTiming_NowUs();
             Deep2::StreamTransfer_RecordToken();
@@ -1170,6 +1330,35 @@ Result Run(const fs::path& shardDir,
                        cfg.streamTokens, (int)curToken);
                 fflush(stdout);
             }
+        }
+        } catch (const std::exception& ex) {
+            result.error = std::string("step_exception: ") + ex.what();
+            fprintf(stderr,
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=STEP_EXCEPTION ERR=%s "
+                    "TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens, ex.what());
+            fflush(stderr);
+            TrackFree(outNormTrack);
+            TrackFree(hidden.size() * sizeof(float));
+            TrackFree(preMla.size() * sizeof(float));
+            TrackFree(scratch.size() * sizeof(float));
+            result.peakResidencyBytes = g_peakResidency;
+            result.finalResidencyBytes = g_currentResidency;
+            return result;
+        } catch (...) {
+            result.error = "step_exception: unknown";
+            fprintf(stderr,
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=STEP_EXCEPTION "
+                    "ERR=unknown TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens);
+            fflush(stderr);
+            TrackFree(outNormTrack);
+            TrackFree(hidden.size() * sizeof(float));
+            TrackFree(preMla.size() * sizeof(float));
+            TrackFree(scratch.size() * sizeof(float));
+            result.peakResidencyBytes = g_peakResidency;
+            result.finalResidencyBytes = g_currentResidency;
+            return result;
         }
     }
     TrackFree(outNormTrack);
@@ -1216,7 +1405,17 @@ Result Run(const fs::path& shardDir,
     Deep2::WeightResolve_Emit(stdout);
     Deep2::LogitsResidency_Emit(stdout);
     Deep2::LogitsClimb_Emit(stdout);
+    Deep2::LogitsSplit_Emit(stdout);
+    Deep2::MLA_QPathDevice_Emit(stdout);
     Deep2::MlaStage_Emit(stdout);
+    {
+        const uint64_t rs = Deep2::SPT_reqStartUs().load();
+        const uint64_t now = Deep2::StreamPathTiming_NowUs();
+        const uint64_t wallNs =
+            (rs && now > rs) ? (now - rs) * 1000ull : 0ull;
+        Deep2::OProj_EmitWallBudget(stdout, wallNs,
+                                    (uint32_t)ghostTok.size());
+    }
     Deep2::K2ShardIo_Emit(stdout);
     Deep2::K2LiveCache_Clear(); // sticky MLA retained (see Clear impl)
     // Keep SHARD_IO handles across warm→timed when GPU MLA is production policy.

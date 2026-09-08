@@ -8,17 +8,21 @@ bool VulkanCompute::UploadHidden(const float*, uint32_t) { return false; }
 bool VulkanCompute::DownloadHidden(float*, uint32_t) { return false; }
 bool VulkanCompute::CopyArenaHiddenTo(VulkanCompute&, uint32_t) { return false; }
 bool VulkanCompute::DispatchGemvDevice(const float*, uint64_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
-bool VulkanCompute::DispatchGemvPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
+bool VulkanCompute::DispatchGemvPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::DispatchGemvQ6kPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchGEMVQ6kPacked(const void*, size_t, const float*, float*, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchGemvQuant(int, const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchGEMVQuant(int, const void*, size_t, const float*, float*, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::EnsureQ4kPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kFusedPipeline() { return false; }
+bool VulkanCompute::EnsureQ4kOprojPipeline() { return false; }
 bool VulkanCompute::DispatchGEMVFusedQ4KT(const void*, size_t, const float*, float*,
                                           uint32_t, uint32_t, uint64_t) {
     return false;
 }
+void VulkanCompute::GemvReuseInputNext() {}
+void VulkanCompute::GemvFuseResidualNext(const float*) {}
+uint64_t VulkanCompute::GemvInputReuseHits() const { return 0; }
 bool VulkanCompute::EnsureQ6kPipeline() { return false; }
 bool VulkanCompute::EnsureQ5kPipeline() { return false; }
 bool VulkanCompute::EnsureQ3kPipeline() { return false; }
@@ -26,12 +30,16 @@ bool VulkanCompute::EnsureQ2kPipeline() { return false; }
 bool VulkanCompute::EnsureQ8Pipeline() { return false; }
 bool VulkanCompute::CreateGemvPipe(const char*, VkPipeline&) { return false; }
 bool VulkanCompute::SelectPackedPipe(int, VkPipeline&, uint64_t*&) { return false; }
+bool VulkanCompute::EnsureGemvActDevice(size_t, size_t) { return false; }
+bool VulkanCompute::GemvHostWriteIn(const float*, size_t) { return false; }
+bool VulkanCompute::GemvHostReadOut(float*, size_t) { return false; }
 bool VulkanCompute::EnsureFusedPool() { return false; }
 bool VulkanCompute::SubmitFusedPool(VkCommandBuffer, uint32_t) { return false; }
 void VulkanCompute::ReleaseFusedPool() {}
 bool VulkanCompute::TuneFromDevice() { return false; }
 bool VulkanCompute::DispatchGEMVPacked(const void*, size_t, const float*, float*, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::BindGemvStorage(VkBuffer, size_t, VkBuffer, size_t, VkBuffer, size_t, VkPipeline, uint32_t, uint32_t, uint32_t) { return false; }
+bool VulkanCompute::BindGemvStoragePc(VkBuffer, size_t, VkBuffer, size_t, VkBuffer, size_t, VkPipeline, const uint32_t*, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchRmsNorm(DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t, float) { return false; }
 bool VulkanCompute::DispatchResidualAdd(DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t) { return false; }
 bool VulkanCompute::DispatchRope(DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint32_t, uint32_t, float) { return false; }
@@ -80,6 +88,9 @@ bool VulkanCompute::UploadBuf(DeviceBuf&, const float*, uint32_t) { return false
 bool VulkanCompute::StreamWeightToSlot(const void*, size_t, VkBuffer&) { return false; }
 bool VulkanCompute::EnsurePinnedPackedWeight(const void*, size_t, uint32_t, uint32_t,
                                              VkBuffer&, uint64_t) {
+    return false;
+}
+bool VulkanCompute::EnsurePinnedF32(const float*, uint32_t, VkBuffer&, uint64_t) {
     return false;
 }
 bool VulkanCompute::HasPinnedGemvWeight(uint64_t, size_t, uint32_t, uint32_t) const {

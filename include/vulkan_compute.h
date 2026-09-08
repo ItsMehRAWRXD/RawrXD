@@ -233,7 +233,7 @@ public:
                             uint32_t rows, uint32_t cols);
     bool DispatchGemvPacked(const void* packed, size_t bytes,
                             DeviceBuf& in, DeviceBuf& out,
-                            uint32_t rows, uint32_t cols);
+                            uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
     bool DispatchGemvQ6kPacked(const void* packed, size_t bytes,
                                DeviceBuf& in, DeviceBuf& out,
                                uint32_t rows, uint32_t cols);
@@ -248,8 +248,11 @@ public:
     // input copy when the next GEMV consumes the same device-side vector
     // (Q_A then KV_A both read hidden).
     void GemvReuseInputNext();
+    // O_PROJ: next host readback does dst[i] = residual[i] + gemv[i] (one pass).
+    void GemvFuseResidualNext(const float* residual);
     uint64_t GemvInputReuseHits() const;
     uint64_t Q4kFusedOps() const { return q4k_fused_ops_; }
+    uint64_t Q4kOprojOps() const { return q4k_oproj_ops_; }
     bool DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
                                const float* input, float* output,
                                uint32_t rows, uint32_t cols);
@@ -284,6 +287,12 @@ public:
     uint64_t WeightPinResidentBytes() const;
     bool HasPinnedGemvWeight(uint64_t pinKey, size_t bytes, uint32_t rows,
                              uint32_t cols) const;
+    bool EnsurePinnedPackedWeight(const void* packed, size_t bytes,
+                                  uint32_t rows, uint32_t cols, VkBuffer& outDev,
+                                  uint64_t pinKey = 0);
+    // Resident F32 vectors (MLA Q_A RMS scales) — upload once per pinKey.
+    bool EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& outDev,
+                         uint64_t pinKey);
     size_t WeightUsableBudget() const { return ww_usable_budget_; }
     size_t WeightArenaReserve() const { return ww_arena_reserve_; }
     size_t WeightDeviceHeap() const { return ww_device_heap_; }
@@ -364,6 +373,16 @@ public:
     bool UploadNormWeight(DeviceBuf& dst, const float* w, uint32_t n);
     bool DownloadBuf(DeviceBuf& b, float* host, uint32_t n);
     bool UploadBuf(DeviceBuf& b, const float* host, uint32_t n);
+    bool EnsureHostIo(size_t inBytes, size_t outBytes);
+    bool EnsureGemvActDevice(size_t inBytes, size_t outBytes);
+    bool GemvHostWriteIn(const float* src, size_t bytes);
+    bool GemvHostReadOut(float* dst, size_t bytes);
+    DeviceBuf& GemvActIn() { return gemv_act_in_; }
+    DeviceBuf& GemvActOut() { return gemv_act_out_; }
+    VkBuffer GemvHostInBuffer() const { return gemv_in_buf_; }
+    VkBuffer GemvHostOutBuffer() const { return gemv_out_buf_; }
+    bool RecordCopy(VkBuffer src, VkBuffer dst, VkDeviceSize srcOff,
+                    VkDeviceSize dstOff, VkDeviceSize bytes);
     bool BeginFusedLayer();
     bool EndFusedLayer();
     uint32_t WeightOversize() const { return ww_oversize_ ? 1u : 0u; }
@@ -488,7 +507,10 @@ private:
     bool gemv_pipeline_created_ = false;
     VkPipeline q4k_pipe_ = nullptr;
     VkPipeline q4k_fused_pipe_ = nullptr;
+    VkPipeline q4k_oproj_pipe_ = nullptr;
+    VkPipeline q4k_kva_pipe_ = nullptr;
     uint64_t q4k_fused_ops_ = 0;
+    uint64_t q4k_oproj_ops_ = 0;
     VkPipeline q6k_pipe_ = nullptr;
     VkPipeline q5k_pipe_ = nullptr;
     VkPipeline q3k_pipe_ = nullptr;
@@ -502,6 +524,8 @@ private:
     uint64_t q8_packed_ops_ = 0;
     bool EnsureQ4kPipeline();
     bool EnsureQ4kFusedPipeline();
+    bool EnsureQ4kOprojPipeline();
+    bool EnsureQ4kKvaPipeline();
     bool EnsureQ6kPipeline();
     bool EnsureQ5kPipeline();
     bool EnsureQ3kPipeline();
@@ -512,6 +536,9 @@ private:
     bool BindGemvStorage(VkBuffer wbuf, size_t wbytes, VkBuffer inb, size_t inBytes,
                          VkBuffer outb, size_t outBytes, VkPipeline pipe,
                          uint32_t rows, uint32_t cols, uint32_t groups);
+    bool BindGemvStoragePc(VkBuffer wbuf, size_t wbytes, VkBuffer inb, size_t inBytes,
+                           VkBuffer outb, size_t outBytes, VkPipeline pipe,
+                           const uint32_t* pc, uint32_t pcN, uint32_t groups);
     uint64_t gemv_desc_allocs_ = 0;
     uint64_t gemv_desc_reuses_ = 0;
     uint64_t gemv_attempts_ = 0;
@@ -532,9 +559,6 @@ private:
     };
     std::unordered_map<uint64_t, GemvResidentWeight> gemv_weight_cache_;
     uint64_t gemv_pin_clock_ = 0;
-    bool EnsurePinnedPackedWeight(const void* packed, size_t bytes,
-                                  uint32_t rows, uint32_t cols, VkBuffer& outDev,
-                                  uint64_t pinKey = 0);
 
     // Bounded weight window (STREAMER_GPU_WEIGHT_WINDOW_001)
     static constexpr uint32_t kWwMaxSlots = 128;
@@ -596,10 +620,13 @@ private:
     size_t gemv_in_cap_ = 0;
     uint32_t gemv_in_live_cols_ = 0;
     bool gemv_reuse_in_next_ = false;
+    const float* gemv_residual_add_ = nullptr; // O_PROJ fused residual
     uint64_t gemv_in_reuse_hits_ = 0;
     VkBuffer gemv_out_buf_ = nullptr;
     VkDeviceMemory gemv_out_mem_ = nullptr;
     size_t gemv_out_cap_ = 0;
+    DeviceBuf gemv_act_in_{};   // DEVICE_LOCAL act for fused Q4KT
+    DeviceBuf gemv_act_out_{};
     // Dedicated Q6 logits weight staging — must NOT touch ww slots / MLA pins.
     VkBuffer q6k_logits_w_buf_ = nullptr;
     VkDeviceMemory q6k_logits_w_mem_ = nullptr;
@@ -609,7 +636,6 @@ private:
     bool CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);
     bool CreateHostVisibleBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);
     bool UploadToDeviceLocal(const void* src, size_t size, VkBuffer dst);
-    bool EnsureHostIo(size_t inBytes, size_t outBytes);
     void ReleaseGemvResidents();
     void ReleaseForwardArena();
     bool LoadComputePipeline(const char* spvName, uint32_t nBind, uint32_t pcBytes,
@@ -624,8 +650,6 @@ private:
     bool FusedBarrier();
     bool FlushFusedRestart();
     VkDescriptorSet NextGemvDs();
-    bool RecordCopy(VkBuffer src, VkBuffer dst, VkDeviceSize srcOff, VkDeviceSize dstOff,
-                    VkDeviceSize bytes);
 
     // Forward-resident arena + pipelines
     DeviceBuf fwd_hidden_{}, fwd_residual_{}, fwd_normed_{};

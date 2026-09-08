@@ -80,6 +80,14 @@ void VulkanCompute::Cleanup() {
             vkDestroyPipeline(device_, q4k_fused_pipe_, nullptr);
             q4k_fused_pipe_ = nullptr;
         }
+        if (q4k_oproj_pipe_) {
+            vkDestroyPipeline(device_, q4k_oproj_pipe_, nullptr);
+            q4k_oproj_pipe_ = nullptr;
+        }
+        if (q4k_kva_pipe_) {
+            vkDestroyPipeline(device_, q4k_kva_pipe_, nullptr);
+            q4k_kva_pipe_ = nullptr;
+        }
         if (q4k_pipe_) {
             vkDestroyPipeline(device_, q4k_pipe_, nullptr);
             q4k_pipe_ = nullptr;
@@ -226,6 +234,24 @@ void VulkanCompute::ReleaseGemvResidents() {
     if (gemv_out_buf_) { vkDestroyBuffer(device_, gemv_out_buf_, nullptr); gemv_out_buf_ = nullptr; }
     if (gemv_out_mem_) { vkFreeMemory(device_, gemv_out_mem_, nullptr); gemv_out_mem_ = nullptr; }
     gemv_out_cap_ = 0;
+    if (gemv_act_in_.buffer) {
+        vkDestroyBuffer(device_, gemv_act_in_.buffer, nullptr);
+        gemv_act_in_.buffer = nullptr;
+    }
+    if (gemv_act_in_.memory) {
+        vkFreeMemory(device_, gemv_act_in_.memory, nullptr);
+        gemv_act_in_.memory = nullptr;
+    }
+    gemv_act_in_.bytes = 0;
+    if (gemv_act_out_.buffer) {
+        vkDestroyBuffer(device_, gemv_act_out_.buffer, nullptr);
+        gemv_act_out_.buffer = nullptr;
+    }
+    if (gemv_act_out_.memory) {
+        vkFreeMemory(device_, gemv_act_out_.memory, nullptr);
+        gemv_act_out_.memory = nullptr;
+    }
+    gemv_act_out_.bytes = 0;
     if (q6k_logits_w_buf_) {
         vkDestroyBuffer(device_, q6k_logits_w_buf_, nullptr);
         q6k_logits_w_buf_ = nullptr;
@@ -424,7 +450,7 @@ bool VulkanCompute::EnsureGemvPipeline() {
     VkPushConstantRange pcRange{};
     pcRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pcRange.offset = 0;
-    pcRange.size = sizeof(uint32_t) * 2;
+    pcRange.size = sizeof(uint32_t) * 4;
     VkPipelineLayoutCreateInfo plInfo{};
     plInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     plInfo.setLayoutCount = 1;

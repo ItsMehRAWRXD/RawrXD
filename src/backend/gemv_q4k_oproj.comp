@@ -1,11 +1,12 @@
 #version 450
-// gemv_q4k_fused.comp — Q4_K GEMV: 4 rows/WG × 16 lane column-split
+// gemv_q4k_oproj.comp — O_PROJ pin-tag6: 64 rows/WG, shared x[256]
+// Assumes cols % 256 == 0 (PackedNeed Q4_K). No temp F32 materialize.
 layout(local_size_x = 64) in;
 layout(binding = 0) readonly buffer W { uint packed[]; };
 layout(binding = 1) readonly buffer In { float x[]; };
 layout(binding = 2) writeonly buffer Out { float y[]; };
 layout(push_constant) uniform PC { uint rows; uint cols; } pc;
-shared float partial[64];
+shared float xs[256];
 
 uint u8(uint off) {
   uint w = packed[off >> 2];
@@ -28,54 +29,39 @@ void scmin(uint base, uint j, out uint sc, out uint m) {
 
 void main() {
   uint lid = gl_LocalInvocationID.x;
-  uint rowLocal = lid >> 4;
-  uint lane = lid & 15u;
-  uint row = gl_WorkGroupID.x * 4u + rowLocal;
+  uint row = gl_WorkGroupID.x * 64u + lid;
   bool rowOk = row < pc.rows;
-  uint nblk = (pc.cols + 255u) / 256u;
+  uint nblk = pc.cols >> 8;
   uint rowOff = rowOk ? (row * nblk * 144u) : 0u;
   float sum = 0.0;
-  if (rowOk) {
-    for (uint b = lane; b < nblk; b += 16u) {
+  for (uint b = 0u; b < nblk; ++b) {
+    uint base = b * 256u;
+    xs[lid] = x[base + lid];
+    xs[lid + 64u] = x[base + lid + 64u];
+    xs[lid + 128u] = x[base + lid + 128u];
+    xs[lid + 192u] = x[base + lid + 192u];
+    barrier();
+    if (rowOk) {
       uint blk = rowOff + b * 144u;
       float d = f16(u8(blk) | (u8(blk + 1u) << 8));
       float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
       uint scb = blk + 4u;
       uint qbase = blk + 16u;
-      uint elem = b * 256u;
       for (uint s = 0u; s < 8u; ++s) {
         uint sc, m;
         scmin(scb, s, sc, m);
         float scale = d * float(sc);
         float minv = dmin * float(m);
         uint qo = qbase + s * 16u;
-        uint baseIdx = elem + s * 32u;
+        uint bi = s * 32u;
         for (uint k = 0u; k < 16u; ++k) {
           uint byte = u8(qo + k);
-          uint lo = baseIdx + k;
-          uint hi = lo + 16u;
-          if (lo < pc.cols)
-            sum += (scale * float(byte & 15u) - minv) * x[lo];
-          if (hi < pc.cols)
-            sum += (scale * float((byte >> 4) & 15u) - minv) * x[hi];
+          sum += (scale * float(byte & 15u) - minv) * xs[bi + k];
+          sum += (scale * float((byte >> 4) & 15u) - minv) * xs[bi + k + 16u];
         }
       }
     }
+    barrier();
   }
-  partial[lid] = sum;
-  barrier();
-  uint base = rowLocal << 4;
-  if (lane < 8u)
-    partial[base + lane] += partial[base + lane + 8u];
-  barrier();
-  if (lane < 4u)
-    partial[base + lane] += partial[base + lane + 4u];
-  barrier();
-  if (lane < 2u)
-    partial[base + lane] += partial[base + lane + 2u];
-  barrier();
-  if (lane == 0u) {
-    float v = partial[base] + partial[base + 1u];
-    if (rowOk) y[row] = v;
-  }
+  if (rowOk) y[row] = sum;
 }
