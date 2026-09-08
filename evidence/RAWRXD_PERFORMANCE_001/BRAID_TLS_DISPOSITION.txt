@@ -1,0 +1,32 @@
+BRAID_TLS_REGEN_TPS — DISPOSITION
+=================================
+Source: conversation compaction + braid + MASM slingshot regen TPS + !TLS kill dump
+
+VERDICT: DO NOT LAND as Deep2 / IDE product authority.
+
+MAP WHAT'S REAL (same physics as BgBmLaw / SlingshotLaw):
+  Conversation compaction ≈ cut EFFECTIVE_BYTES of context
+    Spine ≤ budget, ribs on-demand, forward/back/reset handoff
+    = LOGICAL_ADDRESS_SPACE ≠ PHYSICAL_WORKING_SET for chat tokens
+  Swarm/chain/tree = orchestration topology, not decode TPS
+  Ring buffer of compacted tokens = residency window for dialogue
+
+REJECT AS THEATER:
+  Regenerative TPS from unconsumed deadlines (^1.5 multiplier → ∞)
+    Missed work does not increase decode bandwidth on R9700
+    TOKEN_TIME = SPIN_CLOSE − SPIN_OPEN (CausalSpinLaw) — measured, not assigned
+  Pinball / IDE-killer / "files don't exist" religion
+  !TLS IMMEDIATE/POISON/STARVE/OVERLOAD/FORK_BOMB/DEADLOCK as product APIs
+    Legitimate: stop/cancel agent job, free buffers, drop from queue
+    Illegitimate: fork-bomb, poison, overload as "features" — do not implement
+
+AUTHORITY UNCHANGED:
+  DECODE_TPS_REAL ≈ 3.556 (hotpath64_latest_qkv.txt)
+  TARGET_150 OPEN equation only
+  Ollama / slingshot_bench pinball ≠ seals
+
+IF LANDING COMPACTION (IDE surface only, not Deep2 hotpath):
+  tools/ or product/win32 — Spine+Ribs + handoff tokens
+  Cap per-agent context ≤ window
+  Cancel agent = ReleaseJob (refcount→0, free alloc) — not !TLS theater
+  Never wire into lavapath QKV/KVA / generateStream

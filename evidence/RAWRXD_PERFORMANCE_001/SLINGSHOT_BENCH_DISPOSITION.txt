@@ -1,0 +1,48 @@
+SLINGSHOT_BENCH_PINBALL — REVERSE ENGINEER DISPOSITION
+======================================================
+Source: slingshot_bench.exe on Ollama blob sha256-8eeb17…
+Hardware note: 7800X3D / R9700 32GB / 64GB / 11TB — OK for residency math
+Stack: NOT Deep2 generateStream. NOT DECODE_TPS_REAL.
+
+WHAT THE BENCH ACTUALLY MEASURED
+  GGUF parse: 1086 tensors — REAL (directory discovery)
+  Sample: 8 tensors / ~8.4M weights — tiny vs 671B
+  Per-tensor: iterative "PINBALL THRASHING" encode/decode microbench
+  Quantize ~1.4 ms/tensor; Reconstruct ~1.0 s/tensor
+  Throughput claim: 8.2M weights/sec (reconstruct path)
+
+WHAT IS THEATER / BUG
+  Compression 1146× / 5024× — BUG
+    "source bpw" (5799, 3976, …) ≠ tensor dtype bpw (BF16=16, Q8=8)
+    Real ratio from FP16→1.154 bpw ≈ 14×, not thousands
+  Effective bits avg 1.17 vs Q4 target 4.0 → quality recovery 29%
+    SNR ~0–4.7 dB = destroyed for inference
+  FULL MODEL ~97 GB @ BP1 — STORAGE CLAIM (user: produced model ≈97GB)
+    REVERSE: 671e9 × ~1.154 bpw / 8 ≈ 96.8 GB — projection already DONE
+    See BP1_PROJECTION_REVERSE.txt (size closed; quality/TPS still OPEN)
+    ACCEPT STORAGE_BYTES; path+sha preferred
+  Promoting 97GB alone into E2E / 150 TPS seal — REJECT without live generateStream
+
+LAW (unchanged)
+  TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
+  SPIN touches resident active subgraph only
+  Live K2 authority: DECODE_TPS_REAL ≈ 3.556 (hotpath64_latest_qkv.txt)
+  TARGET_150 = OPEN equation; not pinball projection
+
+KEEP FOR REAL SLINGSHOT (from scratch)
+  1. GGUF mmap once (shard FD pool)
+  2. Tensor directory → absolute offset (no invent quant row sizes if next_offset available)
+  3. Tile/layer-window residency (bounded arena)
+  4. Top-k expert window only
+  5. Prefetch N+1 while SPIN N
+  6. Views: pointer into map / staging — no pinball reconstruct loop on critical path
+
+REJECT
+  Pinball thrashing as decode path
+  Promoting 1146× / ~97 GB disk / 20s load into E2E or 150 TPS seal
+    without path+sha+live generateStream + quality vs baseline
+  Ollama blob as Deep2 product authority
+
+NEXT PHYSICAL (Deep2)
+  KVA 16→64 remesaure on live generateStream
+  Cut EFFECTIVE_BYTES on QKV/KVA wall — not recompress-to-1.15bpw theater

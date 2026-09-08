@@ -1,0 +1,26 @@
+KVA_LIVE_CLIMB_PASTE — DISPOSITION
+==================================
+Paste proposed: shaders/kva_q8_sx_64.comp + src/KvaLiveTuner.cpp
+
+VERDICT: REJECT paste as new artifact. Real climb already landed.
+
+AUTHORITATIVE ARTIFACTS:
+  src/backend/gemv_q8_kva_sx_64.comp     (Q8_0 packed GGUF block layout)
+  src/vulkan_fwd_q8_kva_climb.cpp        ClimbQ8KvaOnce({16,64})
+  src/vulkan_fwd_q4k_fused.cpp           live DispatchGEMVFusedQ8Kva wire
+  lavapath/KernelRegistry.hpp            kva_sx_64 → gemv_q8_kva_sx_64.spv
+
+WHY PASTE IS WRONG SHAPE:
+  - Separate int8_t W + ScaleBuffer ≠ live Q8_0 packed (34 B/block) feed
+  - Hardcoded DeepSeek dims 512/8192 ≠ live K2 MLA kv_a dims from receipt
+  - KvaLiveTuner.cpp / SovereignTelemetry / CausalSpinMeasure::OpenSpin fiction
+  - Candidates {16,32,48,64} — live climb is {16,64} (parity vs 16-ref)
+  - Do not wrap SPIN open/close around a single vkCmdDispatch microbench;
+    SPIN = full token dependency cell (BgBmLaw / SpinTokenLaw)
+
+HONEST LEVER (accepted):
+  KVA 16→64 = occupancy/dispatch step; not 3.56→150 alone
+  Next = live 64-tok remesaure → KVA_64TOK_REMEASURE.txt
+  Fused QKV→KVA deferred until remesaure receipted
+
+RECEIPT TEMPLATE: evidence/RAWRXD_PERFORMANCE_001/KVA_64TOK_REMEASURE.txt (OPEN)

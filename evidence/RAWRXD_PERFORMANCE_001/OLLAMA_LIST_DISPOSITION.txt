@@ -1,0 +1,33 @@
+OLLAMA_LIST_TPS_VALUATION — DISPOSITION
+=======================================
+Source: PowerShell `ollama list` + F:\OllamaModels tree + chat TPS/valuation theater
+
+VERDICT: DO NOT IMPORT into Deep2 seals or RAWRXD_PERFORMANCE_001.
+
+HARDWARE (this machine):
+  Radeon AI PRO R9700 32GB — NOT W7900, NOT W7800
+  Prior chat “W7800 576 GB/s → 15–25 tok/s” tables are wrong-GPU theater
+
+AUTHORITATIVE DECODE (Deep2 generateStream):
+  evidence/K2_USEFUL_TPS_001/hotpath64_latest_qkv.txt
+    DECODE_TPS_REAL ≈ 3.556
+    MODEL = Kimi-K2 13-shard Q4_K_M
+  PRODUCT ≥5 TPS = OPEN
+  TARGET 150 TPS = OPEN equation only (BgBmLaw / TARGET_150_TPS.txt)
+  HISTORICAL ~14.2 = claim map, not live receipt
+
+OLLAMA SURFACE ≠ DEEP2:
+  deepseek-v3.1:671b (404 GB) in ollama list = Ollama registry path
+  *-cloud entries = network, not local Vulkan hotpath
+  BigDaddyG / cheetah / agentic Modelfiles = off-path
+  Valuation tables ($2.8k–$4.5k) = chat estimate, not a seal
+
+LAW:
+  0(*) AUTOTUNE ⊂ GENERATION on Deep2 only
+  TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
+  SPIN_TOUCHES_RESIDENT_ACTIVE_SUBGRAPH_ONLY=1
+  OLLAMA_TPS_NE_DECODE_TPS_REAL=1
+
+NEXT (unchanged):
+  KVA 64-tok remesaure → cut EFFECTIVE_BYTES on Vulkan path
+  Do not run ollama list numbers into hotpath64 / ACTUAL_E2E

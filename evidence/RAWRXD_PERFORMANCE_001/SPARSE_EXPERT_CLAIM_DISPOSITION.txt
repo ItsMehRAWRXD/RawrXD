@@ -1,0 +1,26 @@
+SPARSE_EXPERT_CLAIM_VS_MEASURED
+================================
+CLAIM (external): 3.5 TPS = loading inactive experts (120B/tok); fix=AVX-512 Titan gather
+
+MEASURED (hotpath64_latest_qkv.txt):
+  MLA_STAGE_OWNER=QKV_PROJ OWNER_US=3634603
+  WALL_EXCESS_OWNER=O_PROJ OWNER_EXPOSED_NS=2424397000
+  ATTN_BORROW_BYTES=242788073472 / 64 tok ≈ 3.79 GB/tok logical borrow
+  ATTN_SHARD_BYTES=3853778944 (actual shard IO)
+  DECODE_TPS_REAL≈3.556
+
+CONTROL_PATH (Deep2Engine::computeMoEFFN):
+  Route(input) → for topExperts only → moeWeightProxy_->Acquire(layer,expertId)
+  PrefetchAsync(layer+1, predictedExperts) — already sparse + BG
+  NOT layer→all_experts→matrix
+
+VERDICT:
+  SPARSE_EXPERT_CONTROL=ALREADY_PRESENT
+  DEAD_EXPERT_FULL_SWEEP=NOT_THE_MEASURED_OWNER
+  WRONG_STACK=CPU_AVX512_Titan_MoE_SparseGather (hotpath is GPU MLA/Vulkan)
+  REAL_LEVER=cut EFFECTIVE_BYTES on MLA (QKV/O_PROJ) toward ≤4.27 GB/tok
+  ALIGN=BG_BM_SPIN_150 + PERF_OWNER NEXT
+
+DO_NOT:
+  replace live path with generic int8 gather MASM soap
+  claim 35-50 TPS from Metal translation without receipt

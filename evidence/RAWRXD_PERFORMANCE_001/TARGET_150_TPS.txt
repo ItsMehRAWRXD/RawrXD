@@ -1,0 +1,24 @@
+TARGET_150_TPS — performance boundary only (not policy authority)
+=================================================================
+Policy authority: src/deep2/lavapath/BgBmLaw.hpp
+
+Canonical form (from BgBmLaw):
+  TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
+  EFFECTIVE_BYTES_PER_TOKEN
+    = bytes actually touched by the resident active subgraph
+
+  SPIN_TOUCHES_RESIDENT_ACTIVE_SUBGRAPH_ONLY=1
+  HOST_FULL_MODEL_STREAM=0
+  UNROUTED_EXPERT_TOUCH=0
+  UNRESIDENT_REQUIRED_FETCH_ON_CRITICAL_PATH=0
+
+  TOKEN_BYTES = TOP_K_RESIDENT + SHARED_REQUIRED + ACTIVE_KV + UNAVOIDABLE_OUTPUT
+  MODEL_TOTAL_BYTES != TOKEN_BYTES
+
+Boundary (open until measured):
+  150 TPS @ ~640 GB/s ⇒ EFFECTIVE_BYTES ≲ 4.27 GB/token
+  SPIN_BUDGET_NS ≈ 6,667,000
+  CURRENT DECODE_TPS_REAL ≈ 3.556 (hotpath64_latest_qkv.txt) → OPEN
+
+Mechanism (policy): residency, sparse routing, kill non-token-critical traffic.
+Not mechanism: host SIMD / Titan AVX gather claims.

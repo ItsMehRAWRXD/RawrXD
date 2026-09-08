@@ -1,0 +1,41 @@
+RAWRXD_BG_BM_001 + RAWRXD_EOM_SPIN_001 + RAWRXD_IDLE_SUPERPOSITION_001
+======================================================================
+SOURCE_ONLY=1
+SOAP_OPERA=0
+
+LAW (canonical):
+  TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
+  SPIN touches resident active subgraph only
+
+IDENTITY:
+  TPS = CLOSED_SPINS / WALL_SECOND
+  TOKEN_TIME = SPIN_CLOSE - SPIN_OPEN   (measured, never written)
+
+150_OBTAINABLE:
+  TARGET_TPS=150
+  SPIN_BUDGET_NS≈6667000
+  EFFECTIVE_BYTES_CAP≈4.27 GB/token @ ~640 GB/s critical path
+  HARDWARE_REQUIREMENTS=ENVELOPE_NOT_CAPACITY (see PowerEnvelope.hpp)
+  DISREGARD_HW_REQ_AS_TPS_GATE=1
+
+COLLAPSE:
+  NAIVE_~100TB/s = full materialization fiction
+  PHYSICAL = resident active subgraph + windowed KV + fungible hit
+  IDLE_DEVICES compound ADDRESSABLE_STATE_RATE (~32TB/s class)
+  that rate ≠ token bus traffic; it raises P(required ⊂ resident)
+
+HEADERS:
+  src/deep2/lavapath/SpinTokenLaw.hpp
+  src/deep2/lavapath/BgBmLaw.hpp
+  src/deep2/lavapath/IdleSuperpositionLaw.hpp
+  src/deep2/lavapath/CausalTimeLaw.hpp
+  src/deep2/ChoreographyResidencyLaw.hpp  (MODEL_SIZE≠RESIDENCY)
+
+CURRENT_MEASURED_K2:
+  DECODE_TPS_REAL≈3.556 (hotpath64) — EFFECTIVE_BYTES still too high
+  PRODUCT_FLOOR≥5 TPS wall — OPEN
+  PATH=shallow_dep_graph (KVA shared-x → fusion → expert residency)
+  NOT=promote historical 14.2 / TinyLlama 8k / Ollama theater
+
+0(*):
+  AUTOTUNE ⊂ GENERATION — BG prefetch must not restart generate

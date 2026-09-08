@@ -1,0 +1,13 @@
+IDE_PRODUCT_BATCH_006
+=====================
+CLOSED:
+01–12 MultiResp* false-success → FEATURE_FICTION
+13–15 AICtx4K/32K/64K false-success → FEATURE_FICTION
+16 chat_panel ProductRun maxTokens 256 + appendToken helper
+
+STILL_OPEN:
+- Remaining AICtx128K+ / no-refusal / reveng theater handlers
+- P1PRA live witness
+- Wave 4 physical slash path rebuild seal
+
+IDE_COMPLETE=0

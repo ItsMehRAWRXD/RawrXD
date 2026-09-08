@@ -1,0 +1,54 @@
+RAWRXD_Q8_KVA_WALL_DECISION_001
+================================
+DATE=2026-09-07
+DECISION=DO_NOT_PROMOTE_Q8_KVA
+CHAMPION_GENERATION=hotpath64_latest_qkv.txt
+CURRENT_K2_BASELINE_TPS=3.556
+
+NEGATIVE_PROBE=evidence/RAWRXD_PERFORMANCE_001/kva64_live_probe.log
+Q8_KVA_PROBE_TPS=2.409
+Q8_KVA_WALL_S≈26.57
+Q8_KVA_DELTA_TPS=-1.147
+Q8_KVA_SPEED_RATIO=0.677
+Q8_KVA_REGRESSION_PCT≈32.3
+Q8_KVA_EXPOSED_WALL_DELTA_S≈8.6 per 64 tok
+
+PARITY=1
+CPU_F32_EXPANDS=0
+HOST_FORWARD_LAYER_CALLS=0
+PRODUCTION_DECODE_PATH=1
+
+Q8_KVA_IMPROVES_WALL=0
+PRODUCT_5TPS=OPEN
+
+CERTIFICATION:
+  KVA_CLIMB_STATUS=PASS_CLIMB_MEASURED
+  KVA_CLIMB_CANDIDATES_PRESENT=1
+  KVA_WINNER=16
+  KVA_64_WIN=0
+  SECOND_KVA_REMEASURE_REQUIRED=0
+  KVA_ACTIVE_BLOCKER=0
+  KVA_PROBE_REGRESSION=MEASURED (wall only; climb closed)
+  NOTE=Climb sealed. Do not reopen. Qwen3.5 active = SSM_ATTN_NUMERICS.
+
+RAWR_TIME_001:
+  Question is not "is KVA GEMV faster?"
+  Question is "did KVA shorten causal path / SPIN_CLOSE?"
+  Answer: NO — more residency/sync/exposed work → later SPIN_CLOSE.
+
+OPT_TARGET:
+  remove KVA from exposed causal depth
+  NOT make KVA GEMV faster
+
+NEXT_DELTA=CAUSAL_EXPOSURE_ATTRIBUTION_001
+  1. Restore exact 3.556 configuration
+  2. Reconfirm 64-token baseline
+  3. Emit both KVA 16/64 candidates (audit climb only; do not promote)
+  4. Attribute KVA_COMPUTE/AWAIT/RESIDENCY/EXPOSED/OVERLAPPED_US
+  5. Identify first dependency preventing SPIN_CLOSE
+  6. Optimize/fuse that dependency only
+
+DO_NOT:
+  promote KVA rows=16 or 64 for wall
+  retune KVA GEMV as next lever
+  confuse climb GPU_TIME winner with DECODE_TPS_REAL

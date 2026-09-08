@@ -1,0 +1,49 @@
+BP1 FULL-MODEL PROJECTION — REVERSE ENGINEER
+============================================
+Ask: reverse BP1 projection → project it was already done
+Noise discarded: Port0003 / Φ-mass / 62-file / sound-11mi / CAN% essays
+
+PROJECTION MATH (what slingshot_bench printed as 96.8 GB)
+  INPUTS (bench sample, not full-model encode):
+    N_PARAMS ≈ 671e9          (DeepSeek/Kimi-class cite)
+    bpw_eff  ≈ 1.154 .. 1.17  (sample "effective bits")
+  FORMULA:
+    STORAGE_BYTES = N_PARAMS × bpw_eff / 8
+    STORAGE_GB    = STORAGE_BYTES / 1e9
+  CHECK:
+    671e9 × 1.154 / 8 = 9.6789e10 B ≈ 96.79 GB  → printed "96.8 GB @ BP1"
+  USER ARTIFACT:
+    ≈97 GB model  → matches projection within rounding
+    VERDICT: STORAGE projection COMPLETED as disk size
+             (claim accepted as STORAGE_BYTES; path+sha still preferred)
+
+WHAT "ALREADY DONE" MEANS (split authority)
+  DONE = STORAGE_SIZE_MATCH
+    projected BP1 footprint ≈ produced ≈97 GB file
+    arithmetic closed; no new compress theory needed
+  DONE = BP1 RUNTIME SKELETON (code exists)
+    src/runtime/shared/BP1BraidIndex.{hpp,cpp}
+    src/runtime/shared/BP1BraidStreamer.{hpp,cpp}
+    SharedModelRuntime: buildFromBP1Region | synthetic GGUF fallback
+    K2BraidExecutionPolicy: BP1..BP8 as execution precision enum
+      (BP1 here = how much packed info consumed — NOT disk invent)
+  NOT DONE = DECODE_TPS_REAL / quality seal
+    live K2 authority still ≈ 3.556 TPS (hotpath64_latest_qkv.txt)
+    bench SNR / ~1.17 bpw ≠ "above prior" Q4
+    97GB on disk ≠ generateStream receipt
+    SlingshotLaw: residency scheduler; PINBALL_THRASH_ON_CRITICAL_PATH=0
+
+REVERSE MAP
+  bench sample bpw ──► extrapolate N×bpw/8 ──► 96.8 GB print
+       │                                         │
+       │                                         ▼
+       │                              user ~97 GB artifact = SAME STEP
+       │                              (storage closed)
+       ▼
+  pinball reconstruct / SNR ──► quality OPEN
+  Deep2 SPIN EFFECTIVE_BYTES ──► TPS OPEN (QKV/KVA wall)
+
+PROCEED
+  Do not re-project BP1 size — already closed.
+  Next physical: live generateStream on the 97GB path OR continue
+  KVA 64-tok remesaure on Q4_K_M authority — pick one receipt, not narrative.

@@ -1,0 +1,42 @@
+PORT0003_PASTE → REAL ENGINEERING AUDIT
+=======================================
+Source: chat dump (permission inversion / 3TPDOG / 44–56 modules / hooks)
+Tree: g:\~dev\rawrxd  Date: 2026-09-07
+
+THEATER CLAIMED (NOT IN TREE — NEVER DONE HERE)
+  0 matches for 3TPDOG | Port 0003 | UNAUTHORIZED ASK | InvertRateFootprint
+  MISSING entire paste stack:
+    src/sovereign/asm/rate_reversal.asm … token_generator.asm …
+      authorization_invert.asm model_movement.asm dial_tone_void.asm
+      ping_purge.asm line_stream.asm semicolon_void.asm execution_gate.asm
+      zero_mass_intake.asm considering_transform.asm client_terminus.asm
+      inline_hook.asm low_spec_cache.asm stride_flatten.asm stream_hook.asm
+    src/sovereign/validation/*Auditor.cpp (dir MISSING)
+    PERMISSION_INVERSION_ARCHITECTURE.md MISSING
+  Actual src/sovereign/asm/ = SovereignConduit.{asm,h,def} only (+ build artifacts)
+  "44+/56+ production modules burned" = OTHER-CHAT HALLUCINATION, not this repo
+  Winsock recv hook / rate-strip / bearer auth invert / unauthorized=authorized
+    = NOT implemented (and not authorized to implement as bypass)
+
+REAL IN TREE (DONE OR SKELETON — SEPARATE FROM PASTE)
+  SharedModelRuntime.cpp + TransferScheduler + choosePrecision   DONE (hotpatched)
+  BP1BraidIndex / BP1BraidStreamer                               SKELETON present
+  SlingshotLaw.hpp                                               LAW only (residency)
+  ContextCompactLaw.hpp                                          LAW only
+  BP1_PROJECTION_REVERSE.txt                                     SIZE math closed (~97GB)
+  SLINGSHOT_BENCH_DISPOSITION.txt                                pinball REJECT
+  PERF_OWNER: QKV_PROJ / DECODE≈3.556 / TARGET_150 OPEN
+
+NOT DONE (PHYSICAL — PASTE DID NOT CLOSE THESE)
+  KVA_64TOK_REMEASURE.txt          STATUS=OPEN (fields blank; need live 64-tok)
+  97GB BP1 artifact path+sha       NOT FILED
+  97GB generateStream E2E          NOT RUN
+  DECODE_TPS ≥5 / TARGET_150       OPEN
+  Pinball quality > Q4             REJECTED by SNR/~1.17 bpw
+  Ollama as Deep2 authority        REJECT
+  Port0003 zero-mass / Φ / Ψ burn  NOT ENGINEERING
+
+NEXT REAL (ONE OF)
+  1. Fill KVA_64TOK_REMEASURE from live generateStream
+  2. File 97GB path+sha → E2E receipt
+  Do not compile Port0003 paste stack into this tree.

@@ -1,0 +1,34 @@
+TITAN_MOE_SPARSE_GATHER — DISPOSITION
+=====================================
+Source: pasted Titan_MoE_SparseGather.asm (AVX-512 / 7800X3D / Metal→CPU)
+
+VERDICT: DO NOT LAND into Deep2 K2 product path.
+
+WHY (measured, not opinion):
+  evidence/K2_USEFUL_TPS_001/hotpath64_latest_qkv.txt
+    DECODE_TPS_REAL=3.556
+    MLA_STAGE_OWNER=QKV_PROJ
+    SHARD_MOE_US=0
+    SHARD_ATTN_US dominates shard split; MoE not the wall owner here.
+
+DIRECTIONAL TRUTH (keep; already BG~BM~ / MoE law):
+  layer → router → active_experts_only → matrix
+  EFFECTIVE_BYTES_PER_TOKEN must collapse (≤~4.27 GB for 150 TPS equation)
+  Deep2 already routes top-k via MoERouter + MoEWeightProxy::Acquire
+  VWA_EXPERT_SLICE / expert residency / BG prefetch are the GPU-side form
+
+REJECT FROM PASTE:
+  Titan_Imports.inc / SovereignTelemetry.inc fiction deps
+  Incomplete ExpertCompute (GELU skipped, unroll stubbed)
+  Fake softmax (square logits) + bubble sort TopK as "production"
+  Claim 3.5→40-50 TPS on 7800X3D for "120B" — wrong stack vs R9700 Vulkan K2 671B
+  mmap/VirtualAlloc2 host theater as substitute for live generateStream wall cut
+
+LAW:
+  SPARSE_EXPERT_GATHER ⊂ BG~BM~ EFFECTIVE_BYTES (yes)
+  SPARSE_EXPERT_GATHER ≡ Titan AVX-512 host kernel for K2 seal (no)
+  0(*) = AUTOTUNE ⊂ GENERATION on Vulkan hotpath
+
+NEXT (unchanged owner):
+  KVA 16→64 remeasure → cut QKV/KVA wall → then expert residency / sparse
+  GPU dispatch bytes, not host Titan ASM drop-in

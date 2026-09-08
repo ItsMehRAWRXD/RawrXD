@@ -1,0 +1,43 @@
+KIMI_CHAT_DUMP_DISPOSITION
+==========================
+Source: pasted Kimi project list + long chat dump (R9700 / bigdaddyg / valuation / SHA-NI / PS compilers)
+
+DO_NOT_EXECUTE_FROM_DUMP:
+  Ollama template theater
+  Pure-PowerShell compiler universe
+  SHA-NI WOM commit dump as product path
+  Valuation theater
+
+PERFORMANCE_CLAIM_MAP:
+  ~14.2 TPS
+    = historical single-R9700 Sovereign/671B operator baseline
+    pointers: evidence/HISTORICAL_TPS_MAP.txt
+               evidence/RAWRXD_PERFORMANCE_001/TPS_14_2_LOCATOR.txt
+               evidence/PERF_CLAIM_BOUNDARY_001.txt
+    NOT in TITAN_QUICK_REFERENCE (that 14.2 = RTX 4090 marketing table)
+
+  14.38 TPS
+    = SOVEREIGN_ASYNC_RING_E2E_001 Run C (SovereignSweep_X64)
+    also cited in Downloads/VALUATION_DEFENSE.md
+    reopened — not current Deep2 seal
+
+  ~13.95 TPS
+    = TinyLlama CPU sovereign engine baseline (tied-embeddings era)
+    from "Inference Engine Optimization" Kimi chat — NOT 671B
+
+  8,259 / ~8k TPS
+    = TinyLlama on 7800 XT (16GB era) — small-model GPU path
+    NOT transferable to Kimi-K2 671B Q4_K_M
+
+  CURRENT K2 671B (hotpath64):
+    DECODE_TPS_REAL≈3.556
+    WALL≈17.9s / 64 tok
+    PRODUCT_BUDGET=12.8s → OPEN
+
+  CURRENT ACTUAL_E2E:
+    PASS on llama32 text path
+    WALL_WITHIN_BUDGET=0 separate
+
+0(*) STILL GOVERNS:
+  AUTOTUNE ⊂ GENERATION
+  Re-earn any 14.x only on live 671B generateStream under ZeroStarContract
