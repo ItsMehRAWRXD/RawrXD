@@ -365,35 +365,31 @@ void Win32IDE::HandleCopilotSend_Ollama()
     m_lastCopilotUserPrompt = userMessage;
 
     // PRIORITY 0 already attempted in HandleCopilotSend via tryHexMagControllerCopilotSend.
-    // Do not re-enter HexMag here (avoids double dispatch when Ollama is the fallback).
-    
-    // PRIORITY 1: Try local native inference first (fully local, no HTTP)
-    // INSTRUMENTATION: Log which branch is taken
+    // Do not re-enter HexMag here (avoids double dispatch).
+
     char logBuf[512];
-    snprintf(logBuf, sizeof(logBuf), 
-        "[AUDIT] Chat inference decision: m_nativeEngineLoaded=%s, m_nativeEngine=%s, m_loadedModelPath='%s'",
+    snprintf(logBuf, sizeof(logBuf),
+        "[AUDIT] Chat ProductRun: loaded=%s engine=%s path='%s'",
         m_nativeEngineLoaded ? "true" : "false",
         m_nativeEngine ? "non-null" : "null",
         m_loadedModelPath.c_str());
     OutputDebugStringA(logBuf);
     appendToOutput(logBuf, "Output", OutputSeverity::Info);
-    
-    if (m_nativeEngineLoaded && m_nativeEngine) {
-        appendToOutput("[AUDIT] Chat: Using LOCAL native inference engine", "Output", OutputSeverity::Info);
-        OutputDebugStringA("[AUDIT] Chat: Entering LOCAL inference branch\n");
-        
-        // Use async generation with streaming callback
+
+    // ProductRun via generateResponseAsync / ProductDeep2Infer — never Ollama HTTP.
+    if (!m_loadedModelPath.empty() || (m_nativeEngineLoaded && m_nativeEngine) ||
+        (m_agenticBridge && m_agenticBridge->IsInitialized())) {
+        appendToOutput("[AUDIT] Chat: ProductRun / Deep2 local path", "Output",
+                       OutputSeverity::Info);
         generateResponseAsync(userMessage,
             [this](const std::string& token, bool complete) {
                 if (!m_hwndCopilotChatOutput) return;
-                
                 if (!token.empty()) {
                     int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
                     SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
                     SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
                         (LPARAM)utf8ToWide(token).c_str());
                 }
-                
                 if (complete) {
                     int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
                     SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
@@ -403,28 +399,17 @@ void Win32IDE::HandleCopilotSend_Ollama()
             });
         return;
     }
-    
-    // PRIORITY 2: Fallback to Ollama (requires external service)
-    appendToOutput("[AUDIT] Chat: FALLING BACK to Ollama (local engine not ready)", "Output", OutputSeverity::Warning);
-    OutputDebugStringA("[AUDIT] Chat: Entering OLLAMA fallback branch\n");
-    sendChatMessageToOllama(userMessage, 
-        [this](const std::string& token, bool complete) {
-            if (!m_hwndCopilotChatOutput) return;
-            
-            if (!token.empty()) {
-                int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                    (LPARAM)utf8ToWide(token).c_str());
-            }
-            
-            if (complete) {
-                int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                    (LPARAM)L"\n\n");
-            }
-        });
+
+    // LOCAL_ONLY_001: fail-closed — no Ollama / HTTP.
+    appendToOutput(
+        "[AUDIT] Chat: FAIL_CLOSED — load a local GGUF (ProductRun). Ollama forbidden.",
+        "Output", OutputSeverity::Error);
+    const std::string err =
+        "LOCAL_ONLY_001: FAIL_CLOSED — No GGUF loaded. Load a local model first.\n\n";
+    int elen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, elen, elen);
+    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                 (LPARAM)utf8ToWide(err).c_str());
 }
 
 // ============================================================================
