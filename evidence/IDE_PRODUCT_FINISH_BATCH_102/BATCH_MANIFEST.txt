@@ -21,7 +21,7 @@ Date: 2026-09-07
 | 12 | file_explorer | OPEN |
 | 13 | Win32IDE ChatPanel createChatPanel public | PASS |
 | 14 | Wave4 smoke/freeze slash | PASS (wired) |
-| 15 | RawrXD-Win32IDE Release link with PRODUCT100 | OPEN (rebuild) |
+| 15 | RawrXD-Win32IDE Release link with PRODUCT100 | PASS | see EXE_LINK.txt |
 
 ## Law
 Adapters only. No second generate path.
