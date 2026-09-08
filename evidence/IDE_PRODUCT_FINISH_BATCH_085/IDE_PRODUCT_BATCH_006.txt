@@ -1,13 +1,16 @@
-IDE_PRODUCT_BATCH_006
-=====================
-CLOSED:
-01–12 MultiResp* false-success → FEATURE_FICTION
-13–15 AICtx4K/32K/64K false-success → FEATURE_FICTION
-16 chat_panel ProductRun maxTokens 256 + appendToken helper
+IDE_PRODUCT_BATCH_006=PASS
 
-STILL_OPEN:
-- Remaining AICtx128K+ / no-refusal / reveng theater handlers
-- P1PRA live witness
-- Wave 4 physical slash path rebuild seal
+CLOSED:
+01–12 MultiResp* → FEATURE_FICTION
+13–15 AICtx4K/32K/64K → FEATURE_FICTION
+16 chat_panel ProductRun maxTokens 256 + appendToken helper
+17 AICtx128K+/1M/NoRefusal + Asm*/Backend*/Debug*/LSP*/Plugin*/Reveng theater → FEATURE_FICTION
+18 command_handlers_comprehensive return{0} count → 0
+
+STILL_OPEN (Batch 007+ — retired chat-template; next is live debugger PID + P1PRA witness):
+- Live debugger attach-by-PID UX polish
+- P1PRA live product witness
+- Remaining generateStream/CPUInference callsites outside ProductRun (Batch 003 reverse)
 
 IDE_COMPLETE=0
+PRODUCT_PATH_COUNT=1
