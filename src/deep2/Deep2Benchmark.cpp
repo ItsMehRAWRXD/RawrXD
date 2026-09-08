@@ -404,7 +404,8 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     }
     {
         const int td = (generated > 0) ? 1 : 0;
-        rawr::live::EmitActualE2EFooter(generated, wallNs, td);
+        rawr::live::EmitActualE2EFooter(generated, wallNs, td,
+                                        (uint64_t)generatedText.size());
     }
 
     const auto gpuResult = gpuEff.Finalize(generated);
@@ -1069,7 +1070,8 @@ std::string BenchmarkHarness::generateCertTelemetry(const CertificationReport& r
     t << "TPS_DERIVED_ONLY=1\n";
     t << "DECODE_TPS_REAL=" << s.decode_tps << "\n";
     {
-        rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns, 1);
+        rawr::live::EmitActualE2EFooter(s.generated_tokens, s.total_decode_ns, 1,
+                                        s.generated_tokens > 0 ? 1ull : 0ull);
     }
     t << "TOKEN_PLUS_ONE=0\n";
     t << "TPS_DISPLAY_SCALE=1\n";
