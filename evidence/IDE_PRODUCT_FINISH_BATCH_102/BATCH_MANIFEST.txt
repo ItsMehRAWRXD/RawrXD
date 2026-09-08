@@ -1,0 +1,27 @@
+IDE_PRODUCT_FINISH_BATCH_102
+============================
+Purpose: wire product/ide adapters onto ProductRun; continue EXE finish.
+Date: 2026-09-07
+
+## Batch of 15
+
+| #  | Item | Status |
+| -- | ---- | ------ |
+| 01 | chat_panel.hpp → ProductRun | PASS |
+| 02 | ide_product_run.hpp thin adapter | PASS (exists) |
+| 03 | model_selector ProductOpenSession | OPEN |
+| 04 | session_io ↔ P100 session | OPEN |
+| 05 | settings ↔ P100 settings | OPEN |
+| 06 | search_ws ↔ P100 search | OPEN |
+| 07 | workspace_open | OPEN |
+| 08 | build_cmd terminal | OPEN |
+| 09 | cancel_gen → ProductRequestCancel | OPEN |
+| 10 | history persistence | OPEN |
+| 11 | editor_event sink | OPEN |
+| 12 | file_explorer | OPEN |
+| 13 | Win32IDE ChatPanel createChatPanel public | PASS |
+| 14 | Wave4 smoke/freeze slash | PASS (wired) |
+| 15 | RawrXD-Win32IDE Release link with PRODUCT100 | OPEN (rebuild) |
+
+## Law
+Adapters only. No second generate path.

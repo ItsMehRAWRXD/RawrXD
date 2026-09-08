@@ -1882,10 +1882,12 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
     std::string prompt, model;
     bool stream = true;
     int maxTokens = 512;
+    float temperature = 0.0f;
 
     LocalServerUtil::extractJsonString(body, "prompt", prompt);
     LocalServerUtil::extractJsonString(body, "model", model);
     LocalServerUtil::extractJsonBool(body, "stream", stream);
+    (void)LocalServerUtil::extractJsonFloat(body, "temperature", temperature);
     (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(body);
 
     int numPredict = 0;
