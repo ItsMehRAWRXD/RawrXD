@@ -12,6 +12,7 @@ if(TARGET RawrXD-Win32IDE)
     ${CMAKE_CURRENT_LIST_DIR}/../src/win32app/Win32IDE_Product100Wave3.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../src/win32app/Win32IDE_Product100Wave4.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../src/asm/RawrXD_Product100_x64.asm
+    ${CMAKE_CURRENT_LIST_DIR}/../src/product/gateway/product_deep2_infer.cpp
   )
   target_include_directories(RawrXD-Win32IDE PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../include

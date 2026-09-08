@@ -12,6 +12,8 @@ struct ChatPanel {
     std::string streamed;
     const char* modelAlias = nullptr;
 
+    void appendToken(const std::string& tok) { streamed += tok; }
+
     bool SendChat(const char* prompt) {
         streamed.clear();
         if (!prompt || !prompt[0] || !modelAlias || !modelAlias[0]) return false;
@@ -19,11 +21,11 @@ struct ChatPanel {
         product_run::Request req{};
         req.modelAlias = modelAlias;
         req.prompt = prompt;
-        req.maxTokens = 64;
+        req.maxTokens = 256;
         req.engine = engine;
         req.keepOpen = engine ? 1 : 0;
         req.onPiece = [this](const std::string& p) {
-            streamed += p;
+            appendToken(p);
             return true;
         };
         auto rc = product_run::ProductRun(req);
