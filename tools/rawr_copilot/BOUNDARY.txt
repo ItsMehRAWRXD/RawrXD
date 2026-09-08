@@ -1,0 +1,20 @@
+RAWRXD_COPILOT_MARKOV_001 BOUNDARY
+=================================
+PRODUCT_SURFACE=IDE_AUTOCOMPLETE
+PATH=tools/rawr_copilot/
+DEEP2_HOTPATH=0
+
+NOT_WIRED:
+  src/deep2/lavapath/
+  QKV / KVA climb
+  BgBmLaw / SpinTokenLaw / generateStream
+
+COMMON_ABSTRACTION_ONLY:
+  LOGICAL_ADDRESS_SPACE != PHYSICAL_WORKING_SET
+
+IDE_PATH:
+  EDITOR BUFFER → cursor context → persistent stdio → COMPLETE
+  → Markov sparse lookup/backoff → RESULT → ghost text
+
+TRAIN=out_of_band (.rmc)
+COMPLETE=resident lookup only (no per-keystroke train)
