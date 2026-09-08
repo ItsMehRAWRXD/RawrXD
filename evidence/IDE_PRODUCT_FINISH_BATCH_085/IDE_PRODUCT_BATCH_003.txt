@@ -1,0 +1,16 @@
+IDE_PRODUCT_BATCH_003
+=====================
+CLOSED:
+01 CursorParityBridge → NOT_PRODUCT fiction
+02 PRODUCT_PATH.txt authority refreshed
+03 ProductRun is sole decode for IDE session Generate/Stream
+
+STILL_OPEN (next batches):
+- generateResponseAsync still orch/AgenticBridge-first (Deep2 when bridge Deep2-ready)
+- debugger menus
+- remaining false-success handlers (Vulkan/MCP/IOCP as invoked-ok)
+- DynamicModelLoader
+- P1PRA live witness
+- Wave 3/4
+
+IDE_COMPLETE=0

@@ -1,0 +1,38 @@
+IDE_PRODUCT_BATCH_004=PASS
+
+ASYNC_PRODUCT_RUN=1
+ASYNC_AGENTIC_ALT_GENERATOR=0
+ASYNC_FIRST_TOKEN=1
+ASYNC_STREAM_CALLBACK_REAL=1
+ASYNC_CANCEL_PROPAGATES=1
+
+DYNAMIC_LOADER_ALT_RUNTIME=0
+DYNAMIC_LOADER_OPEN_SESSION=1
+SESSION_REUSE=1
+SESSION_CANONICAL_TEARDOWN=1
+
+DEBUG_START_REAL=1
+DEBUG_STOP_REAL=1
+DEBUG_STEP_REAL_OR_EXPLICIT_UNAVAILABLE=1
+DEBUG_FALSE_SUCCESS=0
+
+ACTIVATED_FALSE_SUCCESS_REMAINING=0
+
+PRODUCT_PATH_COUNT=1
+IDE_COMPLETE=0
+
+LANDING:
+46 generateResponseAsync → ProductOpenSession + ProductDeep2InferStream (no orch/CPU fallback)
+47 AgenticBridge LoadModel → ProductOpenSession; model turns → ProductRun
+48 Async tokens → IDE callback from ProductRun onPiece
+49 stopInference → ProductRequestCancel
+50 Failures emit FAILED_STAGE/FAILED_OWNER (no generic success)
+51 DynamicModelLoader → ProductOpenSession only
+52 Session reuse via keepOpen Product session
+53 unload → ProductCloseSession
+54-57 IDM_DEBUG_* → NativeDebuggerEngine or UNAVAILABLE=
+58-59 Debug menu stubs + loader GPU false-success removed
+60 This receipt
+
+WITNESS: run ProductDeep2InferStream after ProductOpenSession(model) for ASYNC_FIRST_TOKEN.
+Next: Batch 005 live debugger behavior, command surfaces, P1PRA product witness.

@@ -1,0 +1,439 @@
+{
+  "subsystem_count": 33,
+  "file_entries": 91,
+  "endpoint_entries": 86,
+  "unique_endpoint_patterns": 60,
+  "subsystems": [
+    {
+      "name": "Core / Memory Hotpatch",
+      "files": [
+        "model_memory_hotpatch.hpp",
+        "model_memory_hotpatch.cpp"
+      ],
+      "endpoints": [
+        "/api/hotpatch/status",
+        "/api/hotpatch/apply",
+        "/api/hotpatch/revert"
+      ],
+      "description": "Direct RAM patching using VirtualProtect/mprotect on loaded tensors"
+    },
+    {
+      "name": "Core / Byte-Level Hotpatch",
+      "files": [
+        "byte_level_hotpatcher.hpp",
+        "byte_level_hotpatcher.cpp"
+      ],
+      "endpoints": [
+        "/api/hotpatch/toggle",
+        "/api/hotpatch/apply"
+      ],
+      "description": "Precision GGUF binary modification via mmap without full reparse"
+    },
+    {
+      "name": "Core / Unified Hotpatch Manager",
+      "files": [
+        "unified_hotpatch_manager.hpp",
+        "unified_hotpatch_manager.cpp"
+      ],
+      "endpoints": [
+        "/api/hotpatch/*"
+      ],
+      "description": "Routes patches to memory/byte/server layers, tracks stats, preset save/load"
+    },
+    {
+      "name": "Core / Proxy Hotpatcher",
+      "files": [
+        "proxy_hotpatcher.hpp",
+        "proxy_hotpatcher.cpp"
+      ],
+      "endpoints": [],
+      "description": "Byte-level output rewriting, token bias injection, stream termination"
+    },
+    {
+      "name": "Server / GGUF Server Hotpatch",
+      "files": [
+        "gguf_server_hotpatch.hpp",
+        "gguf_server_hotpatch.cpp"
+      ],
+      "endpoints": [
+        "/api/hotpatch/*"
+      ],
+      "description": "Request/response transform at runtime (pre/post request/response hooks)"
+    },
+    {
+      "name": "Server / Complete Server",
+      "files": [
+        "complete_server.cpp",
+        "complete_server.hpp"
+      ],
+      "endpoints": [
+        "/status",
+        "/complete",
+        "/complete/stream",
+        "/api/chat",
+        "/api/subagent",
+        "/api/chain",
+        "/api/swarm",
+        "/api/agents",
+        "/api/agents/status",
+        "/api/agents/history",
+        "/api/agents/replay",
+        "/api/policies",
+        "/api/policies/suggestions",
+        "/api/policies/apply",
+        "/api/policies/reject",
+        "/api/policies/export",
+        "/api/policies/import",
+        "/api/policies/heuristics",
+        "/api/policies/stats",
+        "/api/agents/explain",
+        "/api/agents/explain/stats",
+        "/api/backends",
+        "/api/backends/status",
+        "/api/backends/use"
+      ],
+      "description": "Main agentic completion server \u2014 21 routes for chat, agents, policies, backends"
+    },
+    {
+      "name": "Server / Tool Server",
+      "files": [
+        "tool_server.cpp",
+        "tool_server.hpp"
+      ],
+      "endpoints": [
+        "/api/tags",
+        "/health",
+        "/api/status",
+        "/status",
+        "/api/generate",
+        "/metrics",
+        "/api/tool",
+        "/models",
+        "/v1/models",
+        "/v1/chat/completions",
+        "/ask",
+        "/gui",
+        "/api/failures",
+        "/api/agents/status",
+        "/api/agents/history",
+        "/api/agents/replay",
+        "/api/hotpatch/*",
+        "/api/read-file",
+        "/api/cli"
+      ],
+      "description": "Tool executor, WinHTTP proxy to Ollama, CLI bridge \u2014 18+ routes"
+    },
+    {
+      "name": "Agent / Failure Detector",
+      "files": [
+        "agentic_failure_detector.hpp",
+        "agentic_failure_detector.cpp"
+      ],
+      "endpoints": [
+        "/api/failures"
+      ],
+      "description": "Detects refusal, hallucination, timeout, resource exhaustion, safety violations"
+    },
+    {
+      "name": "Agent / Puppeteer",
+      "files": [
+        "agentic_puppeteer.hpp",
+        "agentic_puppeteer.cpp"
+      ],
+      "endpoints": [],
+      "description": "Auto-corrects failed responses using CorrectionResult pattern"
+    },
+    {
+      "name": "ASM / Memory Patch",
+      "files": [
+        "memory_patch.asm"
+      ],
+      "endpoints": [
+        "/api/hotpatch/apply"
+      ],
+      "description": "MASM64 memory patching routines for direct RAM manipulation"
+    },
+    {
+      "name": "ASM / Byte Search",
+      "files": [
+        "byte_search.asm"
+      ],
+      "endpoints": [],
+      "description": "MASM64 Boyer-Moore / SIMD pattern search for GGUF binary scanning"
+    },
+    {
+      "name": "ASM / Request Patch",
+      "files": [
+        "request_patch.asm"
+      ],
+      "endpoints": [
+        "/api/hotpatch/*"
+      ],
+      "description": "MASM64 request/response patching at the server layer"
+    },
+    {
+      "name": "GGUF / Model Loader",
+      "files": [
+        "gguf_model_loader.hpp",
+        "gguf_model_loader.cpp",
+        "gguf_model.hpp",
+        "gguf_model.cpp"
+      ],
+      "endpoints": [
+        "/api/generate",
+        "/api/chat"
+      ],
+      "description": "GGUF model loading, parsing headers, tensor mapping"
+    },
+    {
+      "name": "GGUF / Tokenizer",
+      "files": [
+        "gguf_tokenizer.hpp",
+        "gguf_tokenizer.cpp",
+        "masm_tokenizer.asm"
+      ],
+      "endpoints": [
+        "/api/generate"
+      ],
+      "description": "Tokenization engine with MASM SIMD acceleration"
+    },
+    {
+      "name": "GGUF / Quantization",
+      "files": [
+        "gguf_quantization.hpp",
+        "gguf_quantization.cpp",
+        "quant_utils.hpp",
+        "quant_utils.cpp"
+      ],
+      "endpoints": [],
+      "description": "Q2_K through Q8_0 quantization with adaptive per-layer compression"
+    },
+    {
+      "name": "Inference / KV Cache",
+      "files": [
+        "kv_cache.hpp",
+        "kv_cache.cpp",
+        "sliding_window_kv.hpp",
+        "sliding_window_kv.cpp"
+      ],
+      "endpoints": [
+        "/api/generate",
+        "/api/chat"
+      ],
+      "description": "Key-value cache with sliding window compression and SVD"
+    },
+    {
+      "name": "Inference / Attention",
+      "files": [
+        "attention.hpp",
+        "attention.cpp",
+        "flash_attention.hpp",
+        "flash_attention.cpp"
+      ],
+      "endpoints": [
+        "/api/generate",
+        "/api/chat"
+      ],
+      "description": "Multi-head attention with Flash-Attention v2 MASM kernels"
+    },
+    {
+      "name": "Inference / MatMul",
+      "files": [
+        "matmul.hpp",
+        "matmul.cpp",
+        "matmul_kernels.asm"
+      ],
+      "endpoints": [
+        "/api/generate"
+      ],
+      "description": "Matrix multiplication with Q4/Q2 integer kernels and Vulkan compute"
+    },
+    {
+      "name": "Inference / Sampler",
+      "files": [
+        "sampler.hpp",
+        "sampler.cpp",
+        "top_p_sampler.cpp",
+        "top_k_sampler.cpp"
+      ],
+      "endpoints": [
+        "/api/generate",
+        "/api/chat"
+      ],
+      "description": "Token sampling: top-p, top-k, temperature, repetition penalty"
+    },
+    {
+      "name": "Vulkan / Compute",
+      "files": [
+        "vulkan_backend.hpp",
+        "vulkan_backend.cpp",
+        "vulkan_matmul.comp",
+        "vulkan_attention.comp"
+      ],
+      "endpoints": [
+        "/api/backends",
+        "/api/backends/use"
+      ],
+      "description": "Vulkan GPU compute backend for matrix multiplication and attention"
+    },
+    {
+      "name": "Zone / Memory Manager",
+      "files": [
+        "zone_memory.hpp",
+        "zone_memory.cpp",
+        "zone_preloader.hpp",
+        "zone_preloader.cpp"
+      ],
+      "endpoints": [],
+      "description": "Zone-based memory management with async preloading (400ms \u2192 40ms)"
+    },
+    {
+      "name": "Speculative / Decoding",
+      "files": [
+        "speculative_decoder.hpp",
+        "speculative_decoder.cpp"
+      ],
+      "endpoints": [
+        "/api/generate"
+      ],
+      "description": "Speculative decoding for multi-token batch generation"
+    },
+    {
+      "name": "Pruning / Sparse",
+      "files": [
+        "sparse_pruning.hpp",
+        "sparse_pruning.cpp"
+      ],
+      "endpoints": [],
+      "description": "Magnitude-based weight pruning, 90% zero-skip optimization"
+    },
+    {
+      "name": "Router / LLM Router",
+      "files": [
+        "llm_router.hpp",
+        "llm_router.cpp",
+        "router_config.hpp"
+      ],
+      "endpoints": [],
+      "description": "Routes inference to best backend based on model size and capability"
+    },
+    {
+      "name": "Safety / Content Filter",
+      "files": [
+        "safety_filter.hpp",
+        "safety_filter.cpp",
+        "content_checker.hpp",
+        "content_checker.cpp"
+      ],
+      "endpoints": [],
+      "description": "Content safety filtering, violation detection, rollback support"
+    },
+    {
+      "name": "Telemetry / Metrics",
+      "files": [
+        "telemetry.hpp",
+        "telemetry.cpp",
+        "metrics_collector.hpp",
+        "metrics_collector.cpp"
+      ],
+      "endpoints": [
+        "/metrics",
+        "/api/status"
+      ],
+      "description": "Prometheus-style metrics, structured logging, distributed tracing"
+    },
+    {
+      "name": "Config / Settings",
+      "files": [
+        "config.hpp",
+        "config.cpp",
+        "feature_flags.hpp"
+      ],
+      "endpoints": [],
+      "description": "External configuration, feature toggles, environment-specific settings"
+    },
+    {
+      "name": "GUI / Win32 IDE",
+      "files": [
+        "win32_ide.cpp",
+        "win32_ide.hpp",
+        "react_ide_generator.cpp"
+      ],
+      "endpoints": [
+        "/gui"
+      ],
+      "description": "Win32 native IDE shell, React-based IDE generator"
+    },
+    {
+      "name": "Ext / VSIX Extension Host",
+      "files": [
+        "vsix_extension_host.hpp",
+        "vsix_extension_host.cpp",
+        "extension_sandbox.hpp",
+        "extension_sandbox.cpp"
+      ],
+      "endpoints": [
+        "/api/extensions",
+        "/api/extensions/install",
+        "/api/extensions/uninstall",
+        "/api/extensions/enable",
+        "/api/extensions/disable",
+        "/api/extensions/activate",
+        "/api/extensions/deactivate",
+        "/api/extensions/host/status",
+        "/api/extensions/host/restart",
+        "/api/extensions/host/kill",
+        "/api/extensions/host/logs"
+      ],
+      "description": "VSIX extension host \u2014 loads .vsix packages, manages activation events, sandboxed QuickJS execution"
+    },
+    {
+      "name": "Ext / Extension Manager",
+      "files": [
+        "extension_manager.hpp",
+        "extension_manager.cpp",
+        "extension_manifest.hpp"
+      ],
+      "endpoints": [
+        "/api/extensions/scan",
+        "/api/extensions/export",
+        "/api/extensions/import"
+      ],
+      "description": "Extension lifecycle manager \u2014 install, update, enable/disable, dependency resolution"
+    },
+    {
+      "name": "Ext / Marketplace Client",
+      "files": [
+        "marketplace_client.hpp",
+        "marketplace_client.cpp"
+      ],
+      "endpoints": [
+        "/api/extensions/marketplace/search",
+        "/api/extensions/marketplace/*"
+      ],
+      "description": "VS Code Marketplace API client \u2014 search, download, version resolution, compatibility check"
+    },
+    {
+      "name": "Ext / Polyfill Engine",
+      "files": [
+        "extension_polyfill.hpp",
+        "extension_polyfill.cpp",
+        "vscode_api_shim.js"
+      ],
+      "endpoints": [],
+      "description": "VS Code API polyfill layer \u2014 provides vscode.* namespace, commands, workspace, languages APIs"
+    },
+    {
+      "name": "Ext / VSIX Loader",
+      "files": [
+        "vsix_loader.hpp",
+        "vsix_loader.cpp",
+        "vsix_parser.hpp"
+      ],
+      "endpoints": [
+        "/api/extensions/load-vsix"
+      ],
+      "description": "VSIX package parser \u2014 extracts manifest, contributions, activation events from .vsix ZIP"
+    }
+  ]
+}

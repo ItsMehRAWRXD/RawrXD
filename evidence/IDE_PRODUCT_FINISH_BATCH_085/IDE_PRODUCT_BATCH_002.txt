@@ -1,0 +1,25 @@
+IDE_PRODUCT_BATCH_002
+=====================
+CLOSED_THIS_BATCH:
+01 CmdChat → ProductRun keepOpen (already on ProductRun)
+02 GhostText Local → GGUF first, no Ollama HTTP fallthrough
+03 routeInferenceRequest LOCAL_ONLY → reject cloud backends
+04 routeToLocalGGUF prefers AgenticBridge then generateResponse
+05 Copilot native-before-Ollama (batch 1)
+06–15 fiction handlers honest NOT_PRODUCT (batch 1 carry)
+
+PRODUCT_PATH_AUTHORITY:
+  lavapath/ProductRun.hpp
+  lavapath/ProductReceipt.hpp
+  adapters: rawr CmdRun/CmdChat, Deep2InferenceSession, Deep2ModelRuntime
+
+REMAINING:
+- generateResponseAsync worker → Deep2 ProductRun (still orch-first)
+- debugger IDM_DEBUG_* 
+- DynamicModelLoader always-fail
+- remaining false-success comprehensive handlers (CursorParity, Vulkan, etc.)
+- P1PRA live witness
+- Wave 3/4 finish items
+- HexMag default on for Copilot when Deep2 loaded
+
+STATUS=IDE_NOT_COMPLETE batches_done=2

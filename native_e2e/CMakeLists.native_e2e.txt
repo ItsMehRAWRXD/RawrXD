@@ -1,0 +1,20 @@
+# Add to the existing RawrXD CMake tree.
+enable_language(ASM_MASM)
+
+set(_RN_E2E_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
+add_library(RawrNativeWebBridge STATIC
+    "${_RN_E2E_DIR}/model_bridge_web_x64.asm"
+    "${_RN_E2E_DIR}/rawr_native_policy_x64.asm"
+    "${_RN_E2E_DIR}/rawr_native_receipt_x64.asm"
+    "${_RN_E2E_DIR}/rawr_native_http_adapter.cpp"
+)
+
+set_source_files_properties(
+    "${_RN_E2E_DIR}/model_bridge_web_x64.asm"
+    "${_RN_E2E_DIR}/rawr_native_policy_x64.asm"
+    "${_RN_E2E_DIR}/rawr_native_receipt_x64.asm"
+    PROPERTIES LANGUAGE ASM_MASM)
+
+target_include_directories(RawrNativeWebBridge PUBLIC "${_RN_E2E_DIR}")
+target_link_libraries(RawrNativeWebBridge PUBLIC kernel32)

@@ -1,0 +1,34 @@
+IDE_PRODUCT_BATCH_001
+=====================
+LAW=one ProductRun pipeline; adapters only
+PRODUCT_PATH=CLI|IDE|Bridge→ProductRun→Deep2Engine::generateStream→receipt
+
+CLOSED_THIS_BATCH (15):
+01 Deep2InferenceSession::Generate → ProductRun (not generate())
+02 Deep2InferenceSession::GenerateStream → ProductRun
+03 Deep2ModelRuntime::GenerateStream maps maxTokens onto ProductRun
+04 Cancel() requests engine cancel
+05 rawr CmdRun → ProductRun only
+06 ProductRun.hpp single Resolve→Load→Stream→PRODUCT_RUN receipt
+07 ProductReceipt.hpp FunctionalComplete criteria
+08 Copilot prefers native GGUF before Ollama when loaded
+09 HandleHardwareSynthesizer fiction (no false PASS)
+10 HandleMeshBrain fiction
+11 HandleNeuralBridge fiction
+12 HandleOmegaOrchestrator fiction
+13 HandleSelfHostEngine fiction
+14 HandleSpeciatorEngine fiction
+15 HandleTranscendenceCoordinator fiction (comprehensive + Win32IDE_CommandHandlers)
+
+REMAINING_NEXT_BATCH (preview):
+- generateResponseAsync → ProductRun/Deep2 session (not orch-only)
+- GhostText LOCAL_ONLY without Ollama fallthrough
+- routeInferenceRequest cloud backends → NOT_PRODUCT under LOCAL_ONLY
+- CmdChat → ProductRun keepOpen session
+- debugger IDM_DEBUG_* stubs
+- DynamicModelLoader always-fail
+- dual fiction paths in remaining comprehensive handlers
+- P1PRA live witness Load→Send
+- Wave 3/4 IDE finish items
+
+DO_NOT_REOPEN=KvaInversion,Batch007,KVA_climb

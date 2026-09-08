@@ -1,29 +1,35 @@
 #pragma once
-#include "../../deep2/lavapath/ProductRuntime.hpp"
+/* Chat panel adapter — ProductRun only. ≤99 lines. */
+#include "../../deep2/lavapath/ProductRun.hpp"
 #include "history.hpp"
 #include <string>
+
 namespace rawr::product {
 
 struct ChatPanel {
-    product_run::ProductRuntime* rt = nullptr;
+    Deep2::Deep2Engine* engine = nullptr;
     ConversationHistory hist;
     std::string streamed;
-    void appendToken(const std::string& tok) { streamed += tok; }
+    const char* modelAlias = nullptr;
+
     bool SendChat(const char* prompt) {
         streamed.clear();
-        if (!rt || !prompt || !prompt[0]) return false;
+        if (!prompt || !prompt[0] || !modelAlias || !modelAlias[0]) return false;
         hist.append("user", prompt);
-        Deep2::GenerationOptions opts{};
-        opts.maxTokens = 256;
-        opts.temperature = 0.0f;
-        std::string acc;
-        rt->engine.generateStream(prompt, opts, [&](int32_t, const std::string& p) {
-            appendToken(p);
-            acc += p;
-            return (uint32_t)acc.size() < 1024u;
-        });
+        product_run::Request req{};
+        req.modelAlias = modelAlias;
+        req.prompt = prompt;
+        req.maxTokens = 64;
+        req.engine = engine;
+        req.keepOpen = engine ? 1 : 0;
+        req.onPiece = [this](const std::string& p) {
+            streamed += p;
+            return true;
+        };
+        auto rc = product_run::ProductRun(req);
+        if (streamed.empty()) streamed = rc.text;
         hist.append("assistant", streamed);
-        return !streamed.empty();
+        return rc.productPass != 0 && !streamed.empty();
     }
 };
 

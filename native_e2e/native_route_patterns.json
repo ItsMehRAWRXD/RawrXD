@@ -1,0 +1,242 @@
+[
+  {
+    "path": "/api/agents",
+    "method": "GET"
+  },
+  {
+    "path": "/api/agents/explain",
+    "method": "GET"
+  },
+  {
+    "path": "/api/agents/explain/stats",
+    "method": "GET"
+  },
+  {
+    "path": "/api/agents/history",
+    "method": "GET"
+  },
+  {
+    "path": "/api/agents/replay",
+    "method": "POST"
+  },
+  {
+    "path": "/api/agents/status",
+    "method": "GET"
+  },
+  {
+    "path": "/api/backends",
+    "method": "GET"
+  },
+  {
+    "path": "/api/backends/status",
+    "method": "GET"
+  },
+  {
+    "path": "/api/backends/use",
+    "method": "POST"
+  },
+  {
+    "path": "/api/chain",
+    "method": "POST"
+  },
+  {
+    "path": "/api/chat",
+    "method": "POST"
+  },
+  {
+    "path": "/api/cli",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions",
+    "method": "GET"
+  },
+  {
+    "path": "/api/extensions/activate",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/deactivate",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/disable",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/enable",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/export",
+    "method": "GET"
+  },
+  {
+    "path": "/api/extensions/host/kill",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/host/logs",
+    "method": "GET"
+  },
+  {
+    "path": "/api/extensions/host/restart",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/host/status",
+    "method": "GET"
+  },
+  {
+    "path": "/api/extensions/import",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/install",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/load-vsix",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/marketplace/*",
+    "method": "ANY"
+  },
+  {
+    "path": "/api/extensions/marketplace/search",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/scan",
+    "method": "POST"
+  },
+  {
+    "path": "/api/extensions/uninstall",
+    "method": "POST"
+  },
+  {
+    "path": "/api/failures",
+    "method": "GET"
+  },
+  {
+    "path": "/api/generate",
+    "method": "POST"
+  },
+  {
+    "path": "/api/hotpatch/*",
+    "method": "ANY"
+  },
+  {
+    "path": "/api/hotpatch/apply",
+    "method": "POST"
+  },
+  {
+    "path": "/api/hotpatch/revert",
+    "method": "POST"
+  },
+  {
+    "path": "/api/hotpatch/status",
+    "method": "GET"
+  },
+  {
+    "path": "/api/hotpatch/toggle",
+    "method": "POST"
+  },
+  {
+    "path": "/api/policies",
+    "method": "GET"
+  },
+  {
+    "path": "/api/policies/apply",
+    "method": "POST"
+  },
+  {
+    "path": "/api/policies/export",
+    "method": "GET"
+  },
+  {
+    "path": "/api/policies/heuristics",
+    "method": "GET"
+  },
+  {
+    "path": "/api/policies/import",
+    "method": "POST"
+  },
+  {
+    "path": "/api/policies/reject",
+    "method": "POST"
+  },
+  {
+    "path": "/api/policies/stats",
+    "method": "GET"
+  },
+  {
+    "path": "/api/policies/suggestions",
+    "method": "GET"
+  },
+  {
+    "path": "/api/read-file",
+    "method": "POST"
+  },
+  {
+    "path": "/api/status",
+    "method": "GET"
+  },
+  {
+    "path": "/api/subagent",
+    "method": "POST"
+  },
+  {
+    "path": "/api/swarm",
+    "method": "POST"
+  },
+  {
+    "path": "/api/tags",
+    "method": "GET"
+  },
+  {
+    "path": "/api/tool",
+    "method": "POST"
+  },
+  {
+    "path": "/ask",
+    "method": "POST"
+  },
+  {
+    "path": "/complete",
+    "method": "POST"
+  },
+  {
+    "path": "/complete/stream",
+    "method": "POST"
+  },
+  {
+    "path": "/gui",
+    "method": "GET"
+  },
+  {
+    "path": "/health",
+    "method": "GET"
+  },
+  {
+    "path": "/metrics",
+    "method": "GET"
+  },
+  {
+    "path": "/models",
+    "method": "GET"
+  },
+  {
+    "path": "/status",
+    "method": "GET"
+  },
+  {
+    "path": "/v1/chat/completions",
+    "method": "POST"
+  },
+  {
+    "path": "/v1/models",
+    "method": "GET"
+  }
+]

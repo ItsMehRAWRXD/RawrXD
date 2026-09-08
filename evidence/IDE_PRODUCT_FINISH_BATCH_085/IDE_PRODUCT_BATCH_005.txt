@@ -1,0 +1,22 @@
+IDE_PRODUCT_BATCH_005
+=====================
+CLOSED:
+01 toggleChatMode refuses without GGUF (no false "activated")
+02 HexMag Copilot route ON on successful Deep2/Agentic model load
+03 stageDirectFixAgentProposal → appendChatMessage (stub removed)
+04 Voice joinRoom UI marks FEATURE_FICTION (local state only)
+05–15 comprehensive false-success → fiction:
+    ModelList/Load/Unload/Quantize/Finetune
+    DiskListDrives/DiskScanPartitions
+    GovernorStatus/GovernorSetPowerLevel
+    MarketplaceList/MarketplaceInstall
+    RevengFindVulnerabilities
+    HybridSemanticPrefetch/HybridCorrectionLoop
+
+STILL_OPEN:
+- Remaining comprehensive MultiResp/context theater handlers
+- P1PRA live witness
+- Wave 3/4
+- VSCode ext theater depth (native DLL path is real LoadLibrary — leave)
+
+IDE_COMPLETE=0
