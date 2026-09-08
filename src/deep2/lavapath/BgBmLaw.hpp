@@ -7,6 +7,7 @@
 #define RAWRXD_BG_BM_001 1
 #define NAIVE_BANDWIDTH_NE_PHYSICAL_BANDWIDTH 1
 #define TOKEN_WORK_EQ_RESIDENT_ACTIVE_SUBGRAPH 1
+#define SPIN_TOUCHES_RESIDENT_ACTIVE_SUBGRAPH_ONLY 1
 #define MISSING_EXPERT_NE_TOKEN_STALL 1
 #define PREFETCH_AFFECTS_RESIDENCY_ONLY 1
 #define GLOBAL_MODEL_MATERIALIZATION 0
@@ -28,10 +29,10 @@
 #define EFFECTIVE_BYTES_CAP_150 4270000000ull /* ~4.27 GB @ ~640 GB/s */
 
 /*
-  LAW (canonical):
+  Correct translation (canonical):
     TPS = BANDWIDTH / EFFECTIVE_BYTES_PER_TOKEN
     SPIN touches resident active subgraph only
 
-  671B = address space, not spin traffic.
-  150 @ ~640 GB/s ⇒ EFFECTIVE_BYTES ≲ 4.27 GB/token (measurement target).
+  150 @ ~640 GB/s ⇒ EFFECTIVE_BYTES ≲ 4.27 GB/token
+  671B = address space. Titan host gather ≡ wrong stack; same law on GPU.
 */
