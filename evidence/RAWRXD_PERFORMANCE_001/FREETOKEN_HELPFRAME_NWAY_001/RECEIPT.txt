@@ -1,0 +1,29 @@
+﻿FREETOKEN_HELPFRAME_NWAY_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+B+_FINDING (eat >2-way freak)
+  Public PreScope/SP-MoE: dual buffer COMPUTE|HELP1 (~2% of opening).
+  We ship 4-way HelpFrame: COMPUTE | HELP1 | HELP2 | FILL
+    across dual GPU sticks (RoleToStick) — never realloc.
+  Zones = VirtualAlloc (page/sector aligned) for DirectIO-ready addresses.
+  MoEWeightsLoader: FILE_FLAG_OVERLAPPED + SEQUENTIAL_SCAN + GetOverlappedResult
+    (1>0 vs buffered sync ReadFile; mmap still used when ≤4GB).
+
+PUBLIC_GAPS_STACKED
+  amd_xfer_waw (#25195) + prescope_dual_only + soft-name keys
+  → address_id + waw_ready_gate + helpframe_nway=4 + fetch_not_fit
+
+WIRED
+  FreeTokenHelpFrame.hpp
+  MoEWeightProxy Prefetch / PrefetchAsync → ScheduleHelp + EmitHelpWitness
+  FreeToken Init sticks=4 default
+  IE.lib patched; streamer relinked
+
+WITNESS_LINES
+  FREETOKEN_HELPFRAME layer=… help1=1 help2=1 nway=4 eat_gt2=1
+  FREETOKEN_MICROZONE … helpframe_nway=4 eat_gt2=1
+
+METRIC_STILL
+  B011 hit/fetch cost — not GB fit. Models 20→671+ via stream.

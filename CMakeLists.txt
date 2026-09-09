@@ -8104,6 +8104,34 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
+# OLLAMA_PARITY_STREAMER_001 — Deep2 owns stream surface; zero Ollama HTTP
+option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" ON)
+if(BUILD_DEEP2_STREAMER_PARITY)
+    add_executable(deep2_streamer_parity
+        src/deep2/deep2_streamer_parity.cpp
+        src/deep2/StreamerParity_Harness.cpp
+        src/deep2/Deep2StreamApi.cpp
+        src/deep2/lavapath/DualStickStreamWindow.cpp
+        src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    )
+    target_link_libraries(deep2_streamer_parity PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_streamer_parity PRIVATE /O2 /arch:AVX512 /EHsc /W0 /std:c++20)
+    endif()
+    target_include_directories(deep2_streamer_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/lavapath
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_streamer_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_streamer_parity
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Ollama-parity streamer: deep2_streamer_parity")
+endif()
+
 # STREAMER_GPU_SOLO_001 — SingleGpu plan: enum all, open one primary (no GGUF claim yet)
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" ON)
 if(BUILD_DEEP2_GPU_SOLO_CERT)

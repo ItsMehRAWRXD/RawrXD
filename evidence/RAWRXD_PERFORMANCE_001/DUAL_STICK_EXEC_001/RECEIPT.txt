@@ -1,0 +1,37 @@
+DUAL_STICK_EXEC_001=PASS_ARM (generate still crashes AV after GPU open slot1 — known)
+
+# 1. Needle / DISCRETE
+GPU_DEVICE_CLASS=DISCRETE
+GPU_ENUM_COUNT=3
+GPU_ELIGIBLE_COUNT=2
+GPU_SELECTED_COUNT=2
+IGPU_SELECTED=0
+DEVICE_CLASS_TRUNCATED=0
+NOTE=Deep2DeviceManager uses getenv pointers; no char[8] strncpy of DISCRETE.
+
+# 2. DualStick owns work (not config-only)
+DUAL_STICK_ARMED=1
+DUAL_STICK_EXEC=1
+DUAL_STICK_ACQUIRES=2
+DUAL_STICK_CONSUMERS=2
+DUAL_STICK_OWNERSHIP_ADVANCES=2
+DUAL_STICK_BYTES_WORKED=134217728
+STICK0_NAME=AMD Radeon AI PRO R9700
+STICK1_NAME=AMD Radeon RX 7800 XT
+STICK0_WINDOW_BYTES=34100143820
+STICK1_WINDOW_BYTES=28361431348
+PATH=GpuForward DualStickResolve -> FreeToken page -> Register/AdvanceOwnership
+
+# 3. Smoke gates
+WEIGHT_BUDGET_PARSE=PASS
+PHYSICAL_PAGES=8
+PHYSICAL_PAGE_POOL_GROWS=0
+HOST_DECODE=0
+OLLAMA_HTTP=0
+IMPORT_SPACE_68=PASS
+
+# 4. Build
+IE_PATCH=lib.exe selective (GpuForward/DeviceManager/Elastic + DualStick/FreeToken/FutureConsumer)
+STREAMER_LINK=manual OPT:NOREF + transitive (IE, vulkan-1, deep2_c1_c9, deep2_vwa_range_core, ResidencyTrace, QuantKB, quickjs, dxgi, pdh, psapi, ...)
+NINJA_FULL_IE=blocked by K2MLA_PathB.cpp compile errors — do not use ninja InferenceEngine until PathB fixed
+EXE=build-fd/bin/deep2_streamer_parity.exe

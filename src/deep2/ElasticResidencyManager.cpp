@@ -4,6 +4,9 @@
 // ============================================================================
 
 #include "ElasticResidencyManager.hpp"
+#include "lavapath/BatchD_UnifiedAsyncMove.hpp"
+#include "lavapath/FreeTokenMicroZone.hpp"
+#include "lavapath/FutureConsumerSpace.hpp"
 #include "vwa/VwaPhysical.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "ResidencyTrace.hpp"
@@ -82,6 +85,21 @@ bool ElasticResidencyManager::Initialize(const ElasticResidencyConfig& config) {
     // Start scheduler thread
     schedulerThread_ = std::thread(&ElasticResidencyManager::SchedulerThreadBody, this);
 
+    /* FreeToken micro-zones: fixed Hot sticks for 120B+ stream (never realloc). */
+    {
+        const char* ft = std::getenv("FREETOKEN_MICROZONE");
+        if (!ft || ft[0] != '0') {
+            size_t zb = FREETOKEN_ZONE_BYTES;
+            if (config_.maxHotBytes && config_.maxHotBytes < zb * FREETOKEN_ZONE_COUNT)
+                zb = config_.maxHotBytes / FREETOKEN_ZONE_COUNT;
+            if (zb < (1ull << 20)) zb = (1ull << 20);
+            freetoken::Init(zb, /*sticks=*/4); /* N-way >2 sticks rubbed */
+            future::InitFromPhysicalPool();
+            freetoken::EmitWitness(stderr);
+            future::EmitLaw(stderr);
+        }
+    }
+
     printf("[ElasticResidencyManager] Initialized: warmCompressed=%zu MB, warmStaged=%zu MB, hot=%zu MB, lookahead=%u\n",
            config_.maxWarmCompressedBytes / (1024*1024),
            config_.maxWarmStagedBytes / (1024*1024),
@@ -150,6 +168,7 @@ void ElasticResidencyManager::Shutdown() {
     warmCompressedUsed_ = 0;
     warmStagedUsed_ = 0;
     hotUsed_ = 0;
+    freetoken::Shutdown();
     initialized_.store(false);
 
     printf("[ElasticResidencyManager] Shutdown complete\n");
@@ -429,14 +448,8 @@ ElasticResidencyManager::AcquireStatus ElasticResidencyManager::AcquireTensor(
         return AcquireStatus::Failed;
     }
 
-    // Non-urgent: enqueue async transfer
-    if (current == ResidencyState::Cold) {
-        EnqueueRequest(TransferRequest::Type::NvmeToRam, name, priority);
-    }
-    if (!config_.useQuantizedGpuPath) {
-        EnqueueRequest(TransferRequest::Type::DequantStage, name, priority);
-    }
-    EnqueueRequest(TransferRequest::Type::RamToVram, name, priority);
+    // Non-urgent: BATCH_D one async movement (not Nvme+Dequant+Ram as three).
+    EnqueueUnifiedAsyncMove(name, priority);
 
     outHandle.ready = false;
     outHandle.state = ResidencyState::Cold;
@@ -478,22 +491,8 @@ void ElasticResidencyManager::PrefetchToGpu(const std::string& name, uint32_t ta
 
     telemetry_.prefetchMiss.fetch_add(1);
 
-    // Determine path: if useQuantizedGpuPath is true and backend supports it,
-    // we can upload compressed directly. Otherwise we need staging.
-    if (config_.useQuantizedGpuPath) {
-        // Path: Cold → WarmCompressed → Uploading → Hot
-        if (current == ResidencyState::Cold) {
-            EnqueueRequest(TransferRequest::Type::NvmeToRam, name, targetLayer);
-        }
-        EnqueueRequest(TransferRequest::Type::RamToVram, name, targetLayer);
-    } else {
-        // Path: Cold → WarmCompressed → WarmStaged → Uploading → Hot
-        if (current == ResidencyState::Cold) {
-            EnqueueRequest(TransferRequest::Type::NvmeToRam, name, targetLayer);
-        }
-        EnqueueRequest(TransferRequest::Type::DequantStage, name, targetLayer);
-        EnqueueRequest(TransferRequest::Type::RamToVram, name, targetLayer);
-    }
+    /* BATCH_D: single async path — Router/Expert priority rides on `targetLayer`. */
+    EnqueueUnifiedAsyncMove(name, targetLayer);
 }
 
 // ============================================================================
@@ -571,6 +570,43 @@ void ElasticResidencyManager::SetExpertPredictor(std::shared_ptr<IExpertPredicto
     expertPredictor_ = predictor;
 }
 
+void ElasticResidencyManager::PrefetchExperts(uint32_t layer,
+                                              const uint32_t* expertIds,
+                                              size_t expertCount) {
+    if (!expertIds || expertCount == 0) return;
+    /* B011 frame: router told us the working set — pay fetch only on miss.
+     * Priority 0 = highest; UnifiedAsyncMove = one Cold→Hot path. */
+    future::InitFromPhysicalPool();
+    std::vector<std::string> toMove;
+    {
+        std::lock_guard<std::mutex> lock(tensorsMutex_);
+        for (size_t i = 0; i < expertCount; ++i) {
+            const uint32_t expertId = expertIds[i];
+            future::Register(static_cast<uint16_t>(layer), /*op=*/2,
+                             static_cast<uint8_t>(layer & 1u),
+                             /*logicalBytes=*/1ull << 20,
+                             static_cast<uint32_t>(layer + 1));
+            for (auto& kv : tensors_) {
+                auto& t = *kv.second;
+                if (t.layerIndex != layer || t.expertIndex != expertId) continue;
+                ResidencyState st = t.state.load();
+                if (st == ResidencyState::Hot || st == ResidencyState::Uploading) {
+                    telemetry_.prefetchHit.fetch_add(1);
+                    future::NotePrefetchHit();
+                    future::NoteConsumerHit();
+                    continue;
+                }
+                telemetry_.prefetchMiss.fetch_add(1);
+                future::NotePrefetchLate();
+                future::NoteConsumerMiss();
+                toMove.push_back(t.name);
+            }
+        }
+    }
+    for (const auto& name : toMove)
+        EnqueueUnifiedAsyncMove(name, /*priority=*/0);
+}
+
 void ElasticResidencyManager::PredictLayerNeeds(uint32_t nextLayer,
                                                  const void* routerHiddenState,
                                                  size_t hiddenDim) {
@@ -579,22 +615,38 @@ void ElasticResidencyManager::PredictLayerNeeds(uint32_t nextLayer,
         std::lock_guard<std::mutex> lock(predictorMutex_);
         predictor = expertPredictor_;
     }
-    if (!predictor || !routerHiddenState) return;
+    if (!predictor || !routerHiddenState) {
+        /* Dense / ownership handoff: raise priority for next layer tensors. */
+        future::InitFromPhysicalPool();
+        future::Register(static_cast<uint16_t>(nextLayer), /*op=*/3,
+                         static_cast<uint8_t>(nextLayer & 1u),
+                         1ull << 20, nextLayer + 1);
+        std::vector<std::string> toMove;
+        {
+            std::lock_guard<std::mutex> lock(tensorsMutex_);
+            for (auto& kv : tensors_) {
+                auto& t = *kv.second;
+                if (t.layerIndex != nextLayer) continue;
+                ResidencyState st = t.state.load();
+                if (st == ResidencyState::Hot || st == ResidencyState::Uploading) {
+                    telemetry_.prefetchHit.fetch_add(1);
+                    future::NotePrefetchHit();
+                    continue;
+                }
+                telemetry_.prefetchMiss.fetch_add(1);
+                future::NotePrefetchLate();
+                toMove.push_back(t.name);
+            }
+        }
+        for (const auto& name : toMove)
+            EnqueueUnifiedAsyncMove(name, /*priority=*/0);
+        return;
+    }
 
     auto experts = predictor->PredictNextExperts(nextLayer, routerHiddenState, hiddenDim,
                                                    config_.moeHotExpertCount);
-
-    // Prefetch predicted experts with high priority
-    for (uint32_t expertId : experts) {
-        // Find tensors belonging to this layer+expert
-        std::lock_guard<std::mutex> lock(tensorsMutex_);
-        for (auto& kv : tensors_) {
-            auto& t = *kv.second;
-            if (t.layerIndex == nextLayer && t.expertIndex == expertId) {
-                EnqueueRequest(TransferRequest::Type::RamToVram, t.name, 0);  // priority 0 = highest
-            }
-        }
-    }
+    if (!experts.empty())
+        PrefetchExperts(nextLayer, experts.data(), experts.size());
 }
 
 // ============================================================================
@@ -722,6 +774,9 @@ void ElasticResidencyManager::SchedulerThreadBody() {
                 break;
             case TransferRequest::Type::FreeStaged:
                 ExecuteFreeStaged(*t);
+                break;
+            case TransferRequest::Type::UnifiedAsyncMove:
+                ExecuteUnifiedAsyncMove(*t);
                 break;
         }
 
@@ -1130,10 +1185,63 @@ void ElasticResidencyManager::EnqueueRequest(TransferRequest::Type type,
     queueCv_.notify_one();
 }
 
+void ElasticResidencyManager::EnqueueUnifiedAsyncMove(const std::string& name,
+                                                      uint32_t priority) {
+    EnqueueRequest(TransferRequest::Type::UnifiedAsyncMove, name, priority);
+}
+
+void ElasticResidencyManager::ExecuteUnifiedAsyncMove(ElasticResidentTensor& t) {
+    /* One scheduler hop: fuse Nvme→[Dequant]→RamToVram. VRAM size is not a
+     * placement gate — readiness is what ownership transfer waits on. */
+    ResidencyState st = t.state.load();
+    if (st == ResidencyState::Hot || st == ResidencyState::Uploading) return;
+    if (st == ResidencyState::Cold)
+        ExecuteNvmeToRam(t);
+    st = t.state.load();
+    if (!config_.useQuantizedGpuPath && st == ResidencyState::WarmCompressed)
+        ExecuteDequantStage(t);
+    ExecuteRamToVram(t);
+    /* PAST→FUTURE rebinding on the fixed FreeToken stick for this layer. */
+    const uint32_t z = freetoken::PickZone(t.layerIndex & 1u);
+    future::AdvanceOwnership(z, 0);
+}
+
+bool ElasticResidencyManager::WaitHotReady(const std::string& name,
+                                           uint32_t timeoutMs) {
+    auto t = FindTensor(name);
+    if (!t) return false;
+    if (t->state.load() == ResidencyState::Hot) return true;
+    const auto t0 = std::chrono::steady_clock::now();
+    const auto deadline = t0 + std::chrono::milliseconds(timeoutMs);
+    std::unique_lock<std::mutex> lock(tensorsMutex_);
+    while (t->state.load() != ResidencyState::Hot) {
+        if (stateCv_.wait_until(lock, deadline) == std::cv_status::timeout) {
+            const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() - t0)
+                                .count();
+            future::NoteStallNs((uint64_t)ns);
+            return t->state.load() == ResidencyState::Hot;
+        }
+    }
+    const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - t0)
+                        .count();
+    if (ns > 0) future::NoteStallNs((uint64_t)ns);
+    return true;
+}
+
 // ============================================================================
 // Telemetry Output
 // ============================================================================
+double ElasticResidencyManager::PrefetchHitRatePct() const {
+    const uint64_t h = telemetry_.prefetchHit.load();
+    const uint64_t m = telemetry_.prefetchMiss.load();
+    const uint64_t t = h + m;
+    return t ? (100.0 * (double)h / (double)t) : 0.0;
+}
+
 void ElasticResidencyManager::PrintTelemetry() const {
+    const double hitPct = PrefetchHitRatePct();
     printf("\n=== ElasticResidencyManager Telemetry ===\n");
     printf("NVMe read time:        %llu us\n", (unsigned long long)telemetry_.nvmeReadUs.load());
     printf("RAM stage time:        %llu us\n", (unsigned long long)telemetry_.ramStageUs.load());
@@ -1142,10 +1250,18 @@ void ElasticResidencyManager::PrintTelemetry() const {
     printf("GPU compute time:      %llu us\n", (unsigned long long)telemetry_.gpuComputeUs.load());
     printf("Prefetch hits:         %llu\n", (unsigned long long)telemetry_.prefetchHit.load());
     printf("Prefetch misses:       %llu\n", (unsigned long long)telemetry_.prefetchMiss.load());
+    printf("Prefetch hit rate:     %.2f%%  (B011 ref ~%.2f%%)\n",
+           hitPct, (double)BATCH_D_B011_HIT_RATE_REF_PCT);
     printf("VRAM eviction time:    %llu us\n", (unsigned long long)telemetry_.vramEvictionUs.load());
     printf("CPU fallback time:     %llu us\n", (unsigned long long)telemetry_.cpuFallbackUs.load());
     printf("State race blocks:     %llu\n", (unsigned long long)telemetry_.stateRaceBlocked.load());
     printf("Compute efficiency:    %.4f\n", telemetry_.ComputeEfficiency());
+    printf("B011_FETCH_COST_FRAME  hit=%.2f%%  io_ref~%.1f%%  map_ref~%.1f%%  "
+           "metric=fetch_not_fit\n",
+           hitPct,
+           (double)BATCH_D_B011_IO_REDUCTION_REF_PCT,
+           (double)BATCH_D_B011_MAP_REDUCTION_REF_PCT);
+    freetoken::EmitWitness(stdout);
     printf("Memory: warmCompressed=%zu/%zu MB, warmStaged=%zu/%zu MB, hot=%zu/%zu MB\n",
            warmCompressedUsed_.load() / (1024*1024), config_.maxWarmCompressedBytes / (1024*1024),
            warmStagedUsed_.load() / (1024*1024), config_.maxWarmStagedBytes / (1024*1024),

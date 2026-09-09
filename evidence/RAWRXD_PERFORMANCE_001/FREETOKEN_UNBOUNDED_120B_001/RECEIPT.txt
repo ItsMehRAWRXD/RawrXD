@@ -1,0 +1,51 @@
+﻿FREETOKEN_UNBOUNDED_120B_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+SCOPE=custom_research_loader_RE
+
+THESIS
+  Model GB is irrelevant. Resident cap is a fixed micro-zone pool.
+  Same addresses overwritten; allocs_after_init must stay 0.
+  Dual GPU = two sticks rubbed (zone%2). Active demand window = 1.
+  Fetch→compute→cosign live pieces. Router names next experts (MoE).
+  Target ladder: 20/35/70/120/300/671+ via stream, not fit.
+
+B011_ANCHOR
+  hit~79.96%  io~77.6%  maps~99.7%  → metric=fetch_not_fit
+
+RE_VS_LLAMACPP (public surface gaps we exploit as design deltas)
+  llama.cpp: still mostly mmap/fit + --cpu-moe / -ot / experimental --moe-stream-cache
+    - streaming AUTO-DISABLES mmap; single shared cache; slot budgets in GiB
+    - expert offload still framed as "what fits in RAM+VRAM"
+  KTransformers: attention on GPU, experts in DRAM — still DRAM-sized
+  ZeroDP / ping-pong: dual buffer overwrite — closest to our stick rub
+  fomoe: dual-GPU VRAM cache slots + NVMe — validates stick doubling
+
+OUR_ADVANTAGE_STACK (already + just landed)
+  ChoreographyResidencyLaw: MAX_MODEL_BYTES=UNBOUNDED_ADDRESS_SPACE
+  Batch D: Router→Expert→UnifiedAsyncMove→GPU cache
+  FreeTokenMicroZone: fixed N zones, pure memcpy overwrite, cosign gen
+  MoEWeightProxy Acquire: FindHot / Overwrite into stick-parity zone
+  Elastic init: FREETOKEN_MICROZONE default ON; EmitWitness
+  4-bit (~Q4): ~15-20% of FP16 GB → more experts per fixed zone
+
+HARDWARE_AVAILABLE_THIS_HOST
+  stick0: AMD Radeon AI PRO R9700 ~32GB
+  stick1: AMD Radeon RX 7800 XT ~16GB
+  Rub = doubled Hot expert cache without TP sharding
+
+CODE
+  lavapath/FreeTokenMicroZone.hpp|.cpp|_Query.cpp
+  MoEWeightProxy.cpp AcquireInternal cosign
+  ElasticResidencyManager Initialize/Shutdown/PrintTelemetry
+  ChoreographyResidencyLaw FREETOKEN_* env + emit
+
+NOT_SECURITY_ZERODAY
+  Research = inference architecture deltas vs public loaders.
+  No remote exploit / unauthorized access work.
+
+NEXT
+  Compile FreeToken objs into IE.lib + streamer
+  Dual open smoke: FREETOKEN_MICROZONE + B011_FETCH_COST witnesses
+  Bind WaitHotReady to zone.cosign.ready at ownership transfer

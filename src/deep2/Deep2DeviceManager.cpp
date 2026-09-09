@@ -291,16 +291,25 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         return true;
     }
 
-        // Prefer RAWRXD_GPU_POLICY=DUAL_LANE over MULTI for dual-model (no shared weights).
-    // HYBRID / MULTI (no explicit list): open all discrete; planner places layers.
     // NOTE: MultiGpuShard shares residency — prefer DUAL_LANE for dual-model.
+    // HYBRID / MULTI: DEEP2_GPU_DEVICE_CLASS=DISCRETE excludes iGPU.
+    const char* dclass = std::getenv("DEEP2_GPU_DEVICE_CLASS");
+    if (!dclass || !*dclass) dclass = std::getenv("RAWRXD_GPU_DEVICE_CLASS");
+    const bool discreteOnly =
+        !dclass || !*dclass || HasI(dclass, "DISCRETE") || HasI(dclass, "DGPU");
+
     if (plan.policy == GpuPolicy::Hybrid || plan.policy == GpuPolicy::Multi) {
         for (unsigned i = 0; i < snap.deviceCount && plan.openCount < 8; ++i) {
-            if (!snap.devices[i].integrated && snap.devices[i].score >= 10)
-                plan.openIndexes[plan.openCount++] = snap.devices[i].index;
+            DeviceIdentity& d = snap.devices[i];
+            if (discreteOnly && d.integrated) {
+                d.duty = DeviceDuty::Excluded;
+                continue;
+            }
+            if (d.score >= 10)
+                plan.openIndexes[plan.openCount++] = d.index;
         }
         if (plan.openCount == 0) {
-            plan.reason = "no_discrete_gpu";
+            plan.reason = discreteOnly ? "no_discrete_gpu" : "no_eligible_gpu";
             return false;
         }
         SetPrimary(plan, snap.devices[plan.openIndexes[0]]);
@@ -309,8 +318,9 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
                     : (plan.opened > 1 ? ExecMode::MultiGpuShard : ExecMode::SingleGpu);
         plan.backend = (plan.policy == GpuPolicy::Hybrid) ? "HYBRID"
                        : (plan.opened > 1 ? "MULTIGPU" : "GPU");
-        plan.reason = (plan.policy == GpuPolicy::Hybrid) ? "auto_hybrid_all_discrete"
-                                                        : "auto_multi_all_discrete";
+        plan.reason = (plan.policy == GpuPolicy::Hybrid)
+                          ? "auto_hybrid_device_class"
+                          : "auto_multi_device_class";
         for (unsigned i = 0; i < plan.openCount; ++i) {
             const int di = plan.openIndexes[i];
             snap.devices[di].duty = (di == plan.primaryIndex)

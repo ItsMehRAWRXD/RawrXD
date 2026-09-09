@@ -1,0 +1,33 @@
+﻿FREETOKEN_ADDRESS_KEY_001
+DATE=2026-09-09
+TIP_CLIMB=HOLD
+PROMOTE=0
+
+UNPUBLISHED_WIN_VS_PUBLIC (~2% public / 1>0 close)
+  llama.cpp AMD Vulkan MoE stream: transfer-queue WAW on reused expert buffers
+    (#25195 / #25229) — public pays crash/disable; we pay ready=0→memcpy→ready=1
+  Public keys soft tensor names; we key GGUF address:
+    ExpertIdKey(layer,expert) | OffsetKey(fileOffset)
+  FluxMoE/ferrox: logical expert ≠ physical residency — we already ship that as
+    FreeToken fixed micro-zones (never realloc, allocs_after_init=0)
+
+HARDWARE_THIS_HOST
+  stick0 R9700 ~32GB + stick1 7800XT ~16GB = dual rub Hot capacity
+  transfer_queue available on Vulkan device when nQ>=2
+
+LANDED
+  FreeTokenAddressKey.hpp — address per Id via key
+  FreeToken WAW-safe Overwrite + stick0_rpm/stick1_rpm witness
+  MoEWeightProxy Acquire: OffsetKey from Gate fileOffset+expert*bytes
+  IE.lib: FreeToken objs + MoEWeightProxy + ElasticResidencyManager replaced
+  streamer relinked: build-fd/bin/deep2_streamer_parity.exe
+  vulkan_compute FREETOKEN_STICK_RUB printf is SOURCE-only until full vulkan rebuild
+    (do not replace vulkan_compute.obj — split TUs)
+
+METRIC
+  FREETOKEN_MICROZONE … hit_pct stick0_rpm stick1_rpm key=address_id
+  B011 fetch_not_fit still governs (not GB fit)
+
+NEXT_SMOKE
+  DEEP2_GPU_POLICY=MULTI DEEP2_GPU_DEVICES=ALL FREETOKEN_MICROZONE=1
+  open MoE GGUF; expect FREETOKEN_MICROZONE + B011_FETCH_COST lines

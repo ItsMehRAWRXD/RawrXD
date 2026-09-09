@@ -1,0 +1,17 @@
+BEHAVIOR_CHANGE=0
+LINK_RECIPE_CHANGE=0
+DUALSTICK_ARM_SEMANTICS_CHANGE=0
+RECEIPT_SCHEMA_CHANGE=0
+TU_LINE_CAP=99
+OPT_NOREF=RETAINED
+LIVE_GATE=DUALSTICK_ARM
+PROMOTE=0
+
+SPLIT=
+  FutureConsumerSpace.cpp -> Space + Register + Advance
+  FutureConsumer_Exec.cpp -> Notes + EmitExec
+  deep2_streamer_parity.cpp -> StreamerParity_Harness.cpp + thin main
+
+DELETED=
+  lavapath/FutureConsumerSpace.cpp
+  lavapath/FutureConsumer_Exec.cpp

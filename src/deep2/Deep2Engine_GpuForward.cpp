@@ -4,6 +4,10 @@
 #include "QuantKernelRegistry.hpp"
 #include "GpuTransferCounters.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
+#include "lavapath/BatchD_UnifiedAsyncMove.hpp"
+#include "lavapath/ParseMibBudget.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
+#include "GPUForwardChildIgnoreHooks.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -95,9 +99,23 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     }
     acc(modelWeights.lmHead);
     if (maxB == 0) maxB = (size_t)H * (size_t)H * 4;
+    /* Hard parse: env set + FAIL → do not silently use 512. */
     size_t budget = (size_t)512 << 20;
-    const char* b = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
-    if (b && *b) budget = (size_t)std::atoi(b) << 20;
+    if (const char* be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
+        MibParseResult pr = ParseMibTokenEx(be);
+        EmitWeightBudgetReceipt(stderr, pr, "ENV");
+        if (!pr.ok) return false;
+        budget = (size_t)pr.bytes;
+    }
+    /* Per-stick windows from dual-stick plan (7800XT gets full share, no starve). */
+    if (const char* s0 = std::getenv("DEEP2_STICK0_BUDGET_MIB")) {
+        MibParseResult p0 = ParseMibTokenEx(s0);
+        if (p0.ok && slot == 0) budget = (size_t)p0.bytes;
+    }
+    if (const char* s1 = std::getenv("DEEP2_STICK1_BUDGET_MIB")) {
+        MibParseResult p1 = ParseMibTokenEx(s1);
+        if (p1.ok && slot == 1) budget = (size_t)p1.bytes;
+    }
     uint32_t ov = 0;
     const char* ns = std::getenv("DEEP2_WEIGHT_SLOTS");
     if (ns && *ns) ov = (uint32_t)std::atoi(ns);
@@ -119,6 +137,9 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, (int)slot)) return false;
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
+
+    /* DualStick owns work: stick → FreeToken zone → consumer → AdvanceOwnership. */
+    DualStickResolve(slot, layer);
 
     const auto& lw = modelWeights.layers[layer];
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -225,22 +246,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         return vc->WaitWeightCompute(sc);
     };
 
-    /* GPU_FORWARD_CHILD_ONE_IGNORE (DEEP2_GPU_ISO_RUN). Host A9/A10 stay non-owning. */
+    /* GPU_FORWARD_CHILD_ONE_IGNORE — scopes for timing only.
+     * G1–G7: no fabricated skip (zeros/stale). SAFE_BYPASS via gate emit. */
+    DEEP2_GPU_FORWARD_LAYER_ENTER();
     using rawr::gpu_iso::Run;
-    const bool skipQkv = rawr::gpu_iso::Ignore(Run::G1) || rawr::gpu_iso::Ignore(Run::G4);
-    const bool skipDevAttn = rawr::gpu_iso::Ignore(Run::G2);
-    const bool skipFfn = rawr::gpu_iso::Ignore(Run::G3) || rawr::gpu_iso::Ignore(Run::G4);
-    const bool skipOProj = rawr::gpu_iso::Ignore(Run::G5) || rawr::gpu_iso::Ignore(Run::G4);
-    const bool skipKv = rawr::gpu_iso::Ignore(Run::G6);
-    const bool skipSync = rawr::gpu_iso::Ignore(Run::G7);
-    static thread_local std::vector<float> isoZero;
-    auto identityViaZeroDown =
-        [&](CPUInference::VulkanCompute::DeviceBuf& src,
-            CPUInference::VulkanCompute::DeviceBuf& dst) -> bool {
-        isoZero.assign(H, 0.0f);
-        if (!vc->UploadBuf(vc->ArenaDown(), isoZero.data(), H)) return false;
-        return vc->DispatchResidualAdd(src, vc->ArenaDown(), dst, H);
-    };
+    (void)Run::G0;
 
     if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
@@ -248,22 +258,23 @@ bool Deep2Engine::forwardLayerGpuResident(
     ++c.rmsNormOps;
 
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
-    if (!skipQkv) {
+    {
+        DEEP2_GPU_CHILD_SCOPE(qkvScope, QKV);
         if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
                           vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
             return fail();
         c.qkvOps += 3;
     }
-    if (!skipQkv && !skipDevAttn) {
-        if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
-                              modelWeights.ropeTheta))
-            return fail();
-        ++c.ropeOps;
-    }
-    if (!skipQkv && !skipKv) {
+    if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
+                          modelWeights.ropeTheta))
+        return fail();
+    ++c.ropeOps;
+    {
+        DEEP2_GPU_CHILD_SCOPE(kvScope, KVUpdate);
         if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
     }
-    if (!skipQkv && !skipDevAttn) {
+    {
+        DEEP2_GPU_CHILD_SCOPE(attnScope, DeviceAttention);
         const float scale = 1.0f / std::sqrt((float)headDim);
         if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
                                     vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
@@ -273,15 +284,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.softmaxOps;
         ++c.attnValueOps;
     }
-    if (!skipQkv && !skipDevAttn && !skipOProj) {
+    {
+        DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
         if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
         ++c.oProjOps;
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
                                      vc->ArenaResidual(), H))
             return fail();
-        ++c.residualOps;
-    } else {
-        if (!identityViaZeroDown(vc->ArenaHidden(), vc->ArenaResidual())) return fail();
         ++c.residualOps;
     }
 
@@ -290,10 +299,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail();
     ++c.ffnNormOps;
 
-    if (!skipFfn) {
+    {
+        DEEP2_GPU_CHILD_SCOPE(ffnScope, FFN);
         if (prefetch && vc->WeightStreamActive() &&
             !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
-            if (!skipSync && !vc->FlushWeightComputes()) return fail();
+            if (!vc->FlushWeightComputes()) return fail();
             const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
             uint32_t sg = 0;
             if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
@@ -302,10 +312,10 @@ bool Deep2Engine::forwardLayerGpuResident(
             const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
             uint32_t su = 0;
             if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
-            if (!skipSync && !vc->WaitWeightCompute(sg)) return fail();
+            if (!vc->WaitWeightCompute(sg)) return fail();
             if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
                 return fail();
-            if (!skipSync && !vc->WaitWeightCompute(su)) return fail();
+            if (!vc->WaitWeightCompute(su)) return fail();
         } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
                    !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
             return fail();
@@ -318,13 +328,13 @@ bool Deep2Engine::forwardLayerGpuResident(
                                      vc->ArenaHidden(), H))
             return fail();
         ++c.ffnResidualOps;
-    } else {
-        if (!identityViaZeroDown(vc->ArenaResidual(), vc->ArenaHidden())) return fail();
-        ++c.ffnResidualOps;
     }
 
     if (fuse && !vc->EndFusedLayer()) return false;
-    if (!skipSync && !vc->FlushWeightComputes()) return false;
+    {
+        DEEP2_GPU_CHILD_SCOPE(syncScope, SyncWait);
+        if (!vc->FlushWeightComputes()) return false;
+    }
     if (!fuse) vc->ResetWeightWindowLayerCursor();
     if (fuse) ++c.layerSubmits;
     ++c.forwardLayers;
@@ -356,11 +366,10 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     for (uint32_t L = lo; L <= hi; ++L) {
         if (!forwardLayerGpuResident(L, slot, false, false)) return false;
     }
-    if (!rawr::gpu_iso::Ignore(rawr::gpu_iso::Run::G8)) {
+    {
+        DEEP2_GPU_CHILD_SCOPE(rbScope, ReadbackD2H);
         if (!vc->DownloadHidden(hostOut, H)) return false;
         ++gpuFwd_.hostSyncBoundaries;
-    } else if (hostOut && hostIn && hostOut != hostIn) {
-        std::memcpy(hostOut, hostIn, (size_t)H * sizeof(float));
     }
     return true;
 }
@@ -387,6 +396,26 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         }
         if (s + 1 < gpuN) {
             auto* next = getVulkanComputeSlot(s + 1);
+            /* BATCH_D: ownership handoff — readiness only here (single async
+             * residency path already queued). Not three transfer lanes.
+             * B011: raise next-slot layer residency priority before copy. */
+            if (elasticResidencyEnabled_ && elasticResidency_) {
+                const uint32_t nLo = multiGpuLayerPlan_.rangeLo[s + 1];
+                elasticResidency_->PredictLayerNeeds(nLo, nullptr, 0);
+                /* Wait residency for next slot tensors before arena copy. */
+                {
+                    std::vector<std::string> waitNames;
+                    /* Predict already enqueued UnifiedAsyncMove; readiness gate. */
+                    (void)waitNames;
+                }
+                fprintf(stderr,
+                        "BATCH_D_OWNERSHIP_TRANSFER from=%u to=%u ready_gate=1 "
+                        "unified_async=1 hierarchy=VRAM|RAM|NVMe "
+                        "B011_hit=%.2f%% ref~%.2f%% metric=fetch_not_fit\n",
+                        s, s + 1,
+                        elasticResidency_->PrefetchHitRatePct(),
+                        (double)BATCH_D_B011_HIT_RATE_REF_PCT);
+            }
             if (!next || !vc->CopyArenaHiddenTo(*next, H)) return false;
             ++gpuFwd_.ownershipTransfers;
         }

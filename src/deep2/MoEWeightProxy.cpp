@@ -6,8 +6,12 @@
 #include "MoEWeightProxy.hpp"
 #include "MoEEliminate.hpp"
 #include "MoEWeightsLoader.hpp"
+#include "lavapath/FreeTokenMicroZone.hpp"
+#include "lavapath/FreeTokenHelpFrame.hpp"
+#include "lavapath/FutureConsumerSpace.hpp"
 #include "vulkan_compute.h"
 #include <chrono>
+#include <cstdlib>
 
 namespace Deep2 {
 
@@ -56,6 +60,25 @@ void MoEWeightProxy::Prefetch(int layer, const std::vector<int>& expertIds) {
         const void* packed = loader->LoadExpert(layer, expertId);
         (void)packed;
     }
+
+    /* B+ HelpFrame: reserve L HELP1 + L+1 HELP2 zones (>2-way). */
+    if (!freetoken::Pool().live)
+        freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
+    future::InitFromPhysicalPool();
+    for (int expertId : ids) {
+        if (expertId < 0) continue;
+        future::Register(static_cast<uint16_t>(layer), /*op=*/1,
+                         static_cast<uint8_t>(layer & 1u),
+                         /*logicalBytes=*/1ull << 20,
+                         static_cast<uint32_t>(layer + 1));
+    }
+    uint32_t z1 = freetoken::ScheduleHelp(static_cast<uint32_t>(layer),
+                                          freetoken::FrameRole::Help1);
+    uint32_t z2 = freetoken::ScheduleHelp(static_cast<uint32_t>(layer + 1),
+                                          freetoken::FrameRole::Help2);
+    freetoken::EmitHelpWitness(stderr, static_cast<uint32_t>(layer),
+                               (z1 != ~0u) ? 1u : 0u,
+                               (z2 != ~0u) ? 1u : 0u);
 
     // Forward cache-hit accounting from the loader
     auto s = loader->GetStats();
@@ -134,6 +157,25 @@ std::vector<uint64_t> MoEWeightProxy::PrefetchAsync(int layer,
         if (!asyncSubmitted) {
             stats_.synchronousFallbacks.fetch_add(1, std::memory_order_relaxed);
         }
+    }
+
+    if (!handles.empty()) {
+        if (!freetoken::Pool().live)
+            freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
+        future::InitFromPhysicalPool();
+        for (int expertId : expertIds) {
+            if (expertId < 0) continue;
+            future::Register(static_cast<uint16_t>(layer), 1,
+                             static_cast<uint8_t>(layer & 1u), 1ull << 20,
+                             static_cast<uint32_t>(layer + 1));
+        }
+        uint32_t z1 = freetoken::ScheduleHelp(static_cast<uint32_t>(layer),
+                                              freetoken::FrameRole::Help1);
+        uint32_t z2 = freetoken::ScheduleHelp(static_cast<uint32_t>(layer + 1),
+                                              freetoken::FrameRole::Help2);
+        freetoken::EmitHelpWitness(stderr, static_cast<uint32_t>(layer),
+                                   (z1 != ~0u) ? 1u : 0u,
+                                   (z2 != ~0u) ? 1u : 0u);
     }
 
     return handles;
@@ -262,6 +304,32 @@ MoEWeightHandle MoEWeightProxy::AcquireInternal(int layer, int expert) {
     h.valid = true;
 
     stats_.bytesStreamed.fetch_add(h.expertBytes, std::memory_order_relaxed);
+
+    /* FreeToken: address-keyed cosign into fixed zone (WAW-safe overwrite). */
+    const char* ft = std::getenv("FREETOKEN_MICROZONE");
+    if (!ft || ft[0] != '0') {
+        if (!freetoken::Pool().live)
+            freetoken::Init(FREETOKEN_ZONE_BYTES, 4);
+        const uint32_t L = static_cast<uint32_t>(layer);
+        const uint32_t E = static_cast<uint32_t>(expert);
+        uint64_t off = 0;
+        for (const auto& info : projections) {
+            if (info.layerIdx == layer && info.expertIdx == -1 &&
+                info.proj == ExpertProjection::Gate) {
+                off = info.fileOffset +
+                      static_cast<uint64_t>(expert) * info.bytesPerExpert;
+                break;
+            }
+        }
+        const uint64_t key = off ? freetoken::OffsetKey(off)
+                                 : freetoken::ExpertIdKey(L, E);
+        int hot = freetoken::FindHotByKey(key);
+        if (hot < 0) {
+            uint32_t stick = L & 1u;
+            uint32_t z = freetoken::PickZone(stick);
+            freetoken::Overwrite(z, packed, h.expertBytes, off, L, E);
+        }
+    }
 
     // Forward cache-hit accounting from the loader
     auto s = loader->GetStats();

@@ -86,7 +86,10 @@ bool MoEWeightsLoader::OpenFile(const char* path) {
 #ifdef _WIN32
     fileHandle_ = CreateFileA(
         path, GENERIC_READ, FILE_SHARE_READ, nullptr,
-        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS, nullptr
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS |
+            FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_OVERLAPPED,
+        nullptr
     );
     if (fileHandle_ == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "CreateFileA failed for %s (error %lu)\n", path, GetLastError());
@@ -182,9 +185,18 @@ bool MoEWeightsLoader::ReadAt(uint64_t offset, void* buffer, size_t size) {
 
     DWORD bytesRead = 0;
     if (!ReadFile(fileHandle_, buffer, (DWORD)size, &bytesRead, &overlapped)) {
-        fprintf(stderr, "ReadFile failed at offset %llu size %zu (error %lu)\n",
-                (unsigned long long)offset, size, GetLastError());
-        return false;
+        DWORD err = GetLastError();
+        if (err == ERROR_IO_PENDING) {
+            if (!GetOverlappedResult(fileHandle_, &overlapped, &bytesRead, TRUE)) {
+                fprintf(stderr, "GetOverlappedResult failed at %llu (error %lu)\n",
+                        (unsigned long long)offset, GetLastError());
+                return false;
+            }
+        } else {
+            fprintf(stderr, "ReadFile failed at offset %llu size %zu (error %lu)\n",
+                    (unsigned long long)offset, size, err);
+            return false;
+        }
     }
     if (bytesRead != (DWORD)size) {
         fprintf(stderr, "ReadFile short read at offset %llu: got %lu expected %zu\n",

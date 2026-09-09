@@ -208,11 +208,13 @@ struct ElasticResidentTensor {
 // ============================================================================
 struct TransferRequest {
     enum class Type : uint8_t {
-        NvmeToRam,      // Cold → WarmCompressed
-        DequantStage,   // WarmCompressed → WarmStaged
-        RamToVram,      // WarmStaged or WarmCompressed → Hot
-        VramToRam,      // Hot → WarmCompressed (eviction)
-        FreeStaged,     // WarmStaged → WarmCompressed
+        NvmeToRam,         // Cold → WarmCompressed (legacy step)
+        DequantStage,      // WarmCompressed → WarmStaged (legacy step)
+        RamToVram,         // → Hot (legacy step)
+        VramToRam,         // Hot → WarmCompressed (eviction)
+        FreeStaged,        // WarmStaged → WarmCompressed
+        /* BATCH_D: one async movement — not three queue hops. */
+        UnifiedAsyncMove,  // Cold→…→Hot single scheduler job
     };
     Type type;
     std::string tensorName;
@@ -308,6 +310,10 @@ public:
     const void* AcquireForCpu(const std::string& name, TensorFormat desiredFormat);
     void ReleaseFromCpu(const std::string& name);
     void PrefetchToGpu(const std::string& name, uint32_t targetLayer);
+
+    /* BATCH_D — single async Cold→Hot; readiness wait for ownership handoff. */
+    void EnqueueUnifiedAsyncMove(const std::string& name, uint32_t priority);
+    bool WaitHotReady(const std::string& name, uint32_t timeoutMs);
     const void* BindForGpuCompute(const std::string& name);
     void UnbindFromGpuCompute(const std::string& name);
 
@@ -320,13 +326,21 @@ public:
                            const void* routerHiddenState,
                            size_t hiddenDim);
 
+    /* MoE router → expert IDs → UnifiedAsyncMove (B011 fetch-cost path). */
+    void PrefetchExperts(uint32_t layer,
+                         const uint32_t* expertIds,
+                         size_t expertCount);
+
+    /* Live hit rate: how often we avoid paying a non-resident fetch. */
+    double PrefetchHitRatePct() const;
+
     // ── Eviction / Memory Pressure ───────────────────────────────────
     void EvictLeastRecentlyUsed(size_t bytesNeeded);
     void EvictAllHot();  // Emergency: free all VRAM
 
     // ── Telemetry ────────────────────────────────────────────────────
     const ResidencyTelemetry& GetTelemetry() const { return telemetry_; }
-    void PrintTelemetry() const;
+    void PrintTelemetry() const; /* emits B011_FETCH_COST_FRAME witness */
 
     // Live re-derive: raise/lower caps without re-init (never below used).
     void ApplyDynamicCaps(const ElasticResidencyConfig& caps);
@@ -349,6 +363,7 @@ private:
     void ExecuteRamToVram(ElasticResidentTensor& tensor);
     void ExecuteVramToRam(ElasticResidentTensor& tensor);
     void ExecuteFreeStaged(ElasticResidentTensor& tensor);
+    void ExecuteUnifiedAsyncMove(ElasticResidentTensor& tensor);
 
     // ── Memory Accounting ────────────────────────────────────────────
     bool ReserveWarmCompressed(size_t bytes);

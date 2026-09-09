@@ -1,0 +1,42 @@
+OLLAMA_PARITY_STREAMER_001 / multi_model_20260909
+DATE=2026-09-09
+TREE=G:\~dev\rawrxd
+EXE=build-fd\bin\deep2_streamer_parity.exe
+OLLAMA_HTTP=0
+MAX_TOKENS=20
+PROMPT=Say hello in one short sentence.
+PROMOTE=0
+CLAIM_INHERITANCE=0
+NO_LAMBDA_INVENTED=1
+
+REJECTED_INPUTS (not loadable GGUF)
+  F:\OllamaModels\blobs\sha256-fa304d... = 91 bytes
+  F:\OllamaModels\blobs\sha256-fa6710... = 7240 bytes
+  F:\OllamaModels\blobs\sha256-fcc5a6... = 7711 bytes
+  NOTE=existence≠model; use full GGUF / known blob dde5aa3...
+
+MATRIX (Deep2 streamer; stdout redirect mixes engine spam with tokens)
+  tinyllama     STREAMER_TPS=7.475  TOK=20 DETOK_BYTES=60  FIRST_TEXT_NONEMPTY=1 DISPOSITION=PASS DECODE_OWNER=FORWARD
+  phi3          STREAMER_TPS=0.971  TOK=20 DETOK_BYTES=94  FIRST_TEXT_NONEMPTY=1 DISPOSITION=PASS DECODE_OWNER=FORWARD
+  llama32_blob  STREAMER_TPS=15.831 TOK=20 DETOK_BYTES=140 FIRST_TEXT_NONEMPTY=1 DISPOSITION=PASS DECODE_OWNER=FORWARD
+  gemma4_e4b    STREAMER_TPS=13.670 TOK=20 DETOK_BYTES=20  FIRST_TEXT_NONEMPTY=1 DISPOSITION=PASS DECODE_OWNER=LOGITS
+  nemotron_nano TOK=0 STREAMER_TPS=0 BLOCKED_AT=FFN REASON=feed_forward_length missing or zero DISPOSITION=FAIL
+
+PARITY_PASS=0 on all PASS rows
+  WHY=champion kSealTokens=64 vs max-tokens=20 → BLOCKED_AT=PROVENANCE_MISMATCH (NON_AUTHORITY for product seal)
+  RUNTIME_STREAM=PASS when TOK>=15 CLEAN_EXIT
+
+EARLY_STOP
+  nemotron_nano only (open/geometry FFN) — not mid-stream stop
+
+GARBLED
+  Gold/Ollama bigdaddy ???? = separate Ollama-HTTP Modelfile path (out of this chain)
+  Deep2 this matrix: DETOK_UTF8_ERRORS=0 FIRST_TOKEN_TEXT_NONEMPTY=1; gemma DETOK_BYTES=20/20tok is thin (watch specials)
+
+TPS_FIX_OWNER (locked; not cleared by multi-model PASS)
+  CURRENT_OWNER=LAYER_FORWARD/GPU_FORWARD
+  NEXT_GATE=GPU_FORWARD_CHILD_ONE_IGNORE START=G1_GPU_QKV
+  TIP_5.904=NOT_REACHED PROMOTE=0
+
+E2E_LUKEWARM_001
+  tok1=PASS tok64=PASS_RUNTIME TPS=3.093 PROMOTE=0 metaphor/Λ=UNOBSERVED

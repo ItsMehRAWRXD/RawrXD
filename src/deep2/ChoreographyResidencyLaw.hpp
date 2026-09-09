@@ -101,6 +101,10 @@ inline void ApplyLawEnv() {
     _putenv_s("DEEP2_TPS_DISPLAY_SCALE", "1");
     _putenv_s("RAWRXD_BOUNDED_RESIDENCY", "1");
     _putenv_s("RAWRXD_NO_TP", "1");
+    _putenv_s("FREETOKEN_MICROZONE", "1");
+    _putenv_s("FREETOKEN_DUAL_STICK", "1");
+    _putenv_s("FUTURE_CONSUMER_SPACE_GROWS", "1");
+    _putenv_s("PHYSICAL_PAGE_POOL_GROWS", "0");
     _putenv_s("CYCLONE_FIXED_TICK", "OFF");
     _putenv_s("TRAILBRAKE_TPS_LIMIT", "OFF");
     _putenv_s("RAWRXD_TPS_LIMIT", "NONE");
@@ -118,6 +122,16 @@ inline void EmitLaw(FILE* f, const ResidencyLaw& L) {
                  L.fullLayerExpand0 ? 0 : 1);
     std::fprintf(f, "MAX_MODEL_BYTES=%s\n",
                  L.maxModelUnbounded ? "UNBOUNDED_ADDRESS_SPACE" : "CAPPED");
+    std::fprintf(f, "FREETOKEN_MICROZONE=1\n");
+    std::fprintf(f, "FREETOKEN_DUAL_STICK=1\n");
+    std::fprintf(f, "FREETOKEN_NEVER_REALLOC=1\n");
+    std::fprintf(f, "FREETOKEN_ACTIVE_WINDOW=1\n");
+    std::fprintf(f, "MODEL_GB_IRRELEVANT=1\n");
+    std::fprintf(f, "FUTURE_CONSUMER_SPACE_GROWS=1\n");
+    std::fprintf(f, "LOGICAL_ADDRESS_SPACE_GROWS=1\n");
+    std::fprintf(f, "PHYSICAL_PAGE_POOL_GROWS=0\n");
+    std::fprintf(f, "FREE_REQUIRED=0\n");
+    std::fprintf(f, "REUSE_REQUIRED=1\n");
     std::fprintf(f, "QUANT_UNTIL_KERNEL=%d\n", L.quantUntilKernel);
     std::fprintf(f, "TENSOR_RANGE_READS=%d\n", L.rangeReads);
     std::fprintf(f, "ASYNC_READ_PIN_XFER_EXEC=%d\n", L.asyncPipeline);
