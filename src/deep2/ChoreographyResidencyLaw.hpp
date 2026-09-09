@@ -91,6 +91,7 @@ inline int LawHolds(const ResidencyLaw& L) {
 inline void ApplyLawEnv() {
 #ifdef _WIN32
     _putenv_s("TPS_LIMIT", "NONE");
+    /* Artificial pacing is anti-TPS — always force OFF. */
     _putenv_s("TOKEN_PACING", "OFF");
     _putenv_s("DECODE_SLEEP", "0");
     _putenv_s("SYNC_PER_LAYER", "0");
@@ -102,7 +103,6 @@ inline void ApplyLawEnv() {
     _putenv_s("RAWRXD_NO_TP", "1");
     _putenv_s("CYCLONE_FIXED_TICK", "OFF");
     _putenv_s("TRAILBRAKE_TPS_LIMIT", "OFF");
-    _putenv_s("TOKEN_PACING", "OFF");
     _putenv_s("RAWRXD_TPS_LIMIT", "NONE");
 #endif
 }

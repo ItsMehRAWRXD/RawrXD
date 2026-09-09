@@ -1,0 +1,37 @@
+DYNAMIC_PERSISTENT_MODEL_MANIFEST_DROP_001
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+PROMOTE=0
+
+ADDED
+  src/deep2/DynamicPersistentModelManifest.hpp
+  WIRED=DigestLoadedModel after ggufResult=move, before ModelOpenCompat / authority
+  CACHE_ROOT=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS
+  PERSISTENCE_KEY=path+size+mtime+tensor_name_hash
+
+ADAPTER_FIXES (required for Deep2 GGUFLoadResult)
+  tensors iterated as vector<TensorInfo> (not map)
+  projector name excludes q/k/v/o/gate/up/down_proj
+  FinalizeLayerFacts prefers SplitQKV when q/k/v present alongside proj (Gemma4 PLE)
+
+--- discovery receipt (gemma4-e4b) ---
+MODEL_DIGESTION_STREAM_BEGIN=1
+ARCH=gemma4
+SPLIT_QKV_LAYERS=42 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\gemma-4-E4B-it-Q4_K_M.gguf.*
+MODEL_DIGESTION_STREAM_END=1
+PROMOTE=0
+
+LAW
+  MODEL_LOCATION=STABLE_LOCATOR
+  ALL_OTHER_FIELDS=DERIVED_DYNAMIC
+  DISCOVERY_AUTHORITY_ONLY=1
+  RUNTIME_PASS_REQUIRES_RUNTIME_RECEIPT=1
+  NO_SCHEMA_INHERITANCE=1
+  PROMOTE=0

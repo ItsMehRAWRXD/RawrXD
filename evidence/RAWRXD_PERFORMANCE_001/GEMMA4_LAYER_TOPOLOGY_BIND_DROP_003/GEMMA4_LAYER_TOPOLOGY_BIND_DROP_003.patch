@@ -1,0 +1,75 @@
+*** GEMMA4_LAYER_TOPOLOGY_BIND_DROP_003.patch
+*** Source-only contextual patch. Apply to local G:\~dev\rawrxd tree.
+*** Scope: Gemma4 non-uniform topology only. PROMOTE=0.
+
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ #include "Gemma4SchemaBinder.hpp"
++#include "Gemma4LayerTopologyBind.hpp"
+ #include "FfnInterInferFix.hpp"
+ #include "DecodeBlockerAttribution.hpp"
+@@
+-            if (Deep2::gemma4_schema::TryBindRootTensor(modelWeights, name, wt, stderr)) {
++            if (Deep2::gemma4_schema::TryBindRootTensor(modelWeights, name, wt, stderr)) {
+                 /* Gemma/HF root alias consumed. */
+             }
+-            else if (gemmaLayerIdx >= 0 &&
+-                     gemmaLayerIdx < (int)modelWeights.layers.size() &&
+-                     Deep2::gemma4_schema::TryBindLayerTensor(
+-                         modelWeights.layers[gemmaLayerIdx], name, wt, stderr)) {
++            else if (gemmaLayerIdx >= 0 &&
++                     gemmaLayerIdx < (int)modelWeights.layers.size() &&
++                     Deep2::gemma4_topology::TryBindLayerTensor(
++                         modelWeights.layers[gemmaLayerIdx], name, wt, stderr)) {
++                /* Gemma4 non-uniform layer topology consumed.
++                   This catches blk.N.proj.weight layers before the llama-style
++                   attn_q/attn_k/attn_v authority gate runs. */
++            }
++            else if (gemmaLayerIdx >= 0 &&
++                     gemmaLayerIdx < (int)modelWeights.layers.size() &&
++                     Deep2::gemma4_schema::TryBindLayerTensor(
++                         modelWeights.layers[gemmaLayerIdx], name, wt, stderr)) {
+                 /* Gemma/HF layer alias consumed. */
+             }
+@@
+ Deep2::ffn_inter_fix::RepairIntermediate(ggufResult, modelWeights, config, stderr);
+ Deep2::phi3_fused_ffn::RepairModel(modelWeights, stderr);
+ Deep2::gemma4_schema::EmitSummary(modelWeights, stderr);
++Deep2::gemma4_topology::EmitSummary(modelWeights, stderr);
+ Deep2::gemma4_bind_fallback::TryClearBindLlamaSchemaByAliases(modelWeights, stderr);
+@@
+-        if (!WtOk(lw.wq)) {
++        if (!Deep2::gemma4_topology::LayerAttentionAuthoritySatisfied(lw)) {
+             fprintf(stderr, "[Deep2Engine] AUTHORITY_LADDER=BLOCKED\n");
+             fprintf(stderr, "BLOCKED_AT=attn_q\n");
+             fprintf(stderr, "BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY\n");
+             return false;
+         }
++
++        /* If LayerAttentionAuthoritySatisfied() returned true because this is
++           a Gemma4 projector block, do not demand split q/k/v names from the
++           same layer. The projector block owns its own layer topology. */
+@@
+ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen) {
+@@
+     const auto& lw = modelWeights.layers[layer];
+     size_t hiddenDim = config.hiddenDim;
++
++    if (Deep2::gemma4_topology::TryExecuteProjectorBlock(
++            lw, input, output, layerTemp, hiddenDim, modelWeights.normEps,
++            [&](const WeightTensor& w, const float* x, float* y, size_t n, float eps) {
++                RMSNormW(w, x, y, n, eps);
++            },
++            [&](const WeightTensor& w, const float* x, const float* b, float* y, size_t n) {
++                LinearW(w, x, b, y, n);
++            }, stderr)) {
++        if (LivePath_Active())
++            LivePath_OnLayerEnd(cycloneEnabled_ ? cyclone_.get() : nullptr,
++                                static_cast<uint32_t>(layer),
++                                kvCache ? static_cast<uint64_t>(kvCache->currentLength())
++                                        : static_cast<uint64_t>(seqLen),
++                                0);
++        return;
++    }
+*** end patch

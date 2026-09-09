@@ -1,0 +1,56 @@
+*** Begin Patch
+*** Update File: src/deep2/Deep2Engine.cpp
+@@
+ #include "Gemma4SchemaBinder.hpp"
+ #include "DecodeBlockerAttribution.hpp"
++#include "Gemma4BindLlamaFallback.hpp"
++#include "FfnInterInferFix.hpp"
++#include "DecodeBlockerAttributionWire.hpp"
+@@
+-            else if (Deep2::gemma4_schema::TryBindRootTensor(modelWeights, name, wt, stderr)) {
++            const int gemmaLayerIdx = Deep2::gemma4_schema::ParseLayerIndex(name);
++            if (Deep2::gemma4_schema::TryBindRootTensor(modelWeights, name, wt, stderr)) {
+                 /* Gemma/HF root tensor alias consumed. */
+             }
+-            else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers &&
+-                     Deep2::gemma4_schema::TryBindLayerTensor(modelWeights.layers[layerIdx], name, wt, stderr)) {
++            else if (gemmaLayerIdx >= 0 && gemmaLayerIdx < (int)modelWeights.layers.size() &&
++                     Deep2::gemma4_schema::TryBindLayerTensor(modelWeights.layers[gemmaLayerIdx], name, wt, stderr)) {
+                 /* Gemma/HF layer tensor alias consumed. */
+             }
+@@
+-    Deep2::phi3_fused_ffn::RepairModel(modelWeights, stderr);
++    Deep2::ffn_inter_fix::RepairIntermediate(ggufResult, modelWeights, config, stderr);
++    Deep2::phi3_fused_ffn::RepairModel(modelWeights, stderr);
+     Deep2::gemma4_schema::EmitSummary(modelWeights, stderr);
++    Deep2::gemma4_bind_fallback::TryClearBindLlamaSchemaByAliases(modelWeights, stderr);
+ 
+     // Guard / authority ladder emits here
+*** End Patch
+
+*** Begin Patch
+*** Update File: src/deep2/ModelOpenCompat.hpp
+@@
+-    if (n.find("ffn_up.weight") != std::string::npos ||
+-        n.find("ffn_gate.weight") != std::string::npos ||
+-        n.find("feed_forward.w1") != std::string::npos ||
+-        n.find("feed_forward.w3") != std::string::npos) {
++    if (n.find("ffn_up.weight") != std::string::npos ||
++        n.find("ffn_gate.weight") != std::string::npos ||
++        n.find("feed_forward.w1") != std::string::npos ||
++        n.find("feed_forward.w3") != std::string::npos) {
+         inter = Dim1(t); // GGUF linear dims are [input, output]
+     } else if (n.find("ffn_down.weight") != std::string::npos ||
+                n.find("feed_forward.w2") != std::string::npos) {
++        // Prefer down input width when present.  Fused gate|up models can expose
++        // ffn_up output as 2*inter; ffn_down owns the true intermediate width.
+         inter = Dim0(t);
+     }
+*** End Patch
+
+*** Begin Patch
+*** Update File: local incremental library command note
+@@
+-lib /nologo /OUT:build-fd/InferenceEngine.lib object.obj
++& $libexe /nologo /REPLACE:Deep2Engine.cpp.obj build-fd\InferenceEngine.lib build-fd\src\deep2\CMakeFiles\InferenceEngine.dir\Deep2Engine.cpp.obj
+*** End Patch

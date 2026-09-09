@@ -1,0 +1,25 @@
+PHI3_FUSED_QKV_AUTHORITY_DROP_001=SEALED
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER=src/deep2/lavapath/Phi3FusedQkvAuthority.hpp
+SCHEMA_FIX=TensorNameTypeBinding_Bind.hpp fused detect + gemma4 arch + 3H qkv rows
+OLLAMA_HTTP=0
+PROMOTE=0
+
+RESMOKE max-tokens=1
+  MODEL=phi3 F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+  AUTHORITY_LADDER=PASS schema=195 quant=195 tok=32064
+  BLOCKED_AT_attn_q=CLEARED
+  TOKENS_COMMITTED=1
+  TOKENS_DECODED=1
+  DECODE_REPLAY_FACTOR=1.000000
+  STREAMER_TPS=0.161
+  PREFILL=OBSERVED (via generate path)
+  PARITY_DISPOSITION=FAIL (tokens<15 gate only)
+  MODEL_OPEN=PASS RC=0 TOKENS_EMITTED=1
+
+VERDICT
+  PHI3_OWNER_WAS=FUSED_QKV_SCHEMA_AUTHORITY
+  PHI3_OPEN_FAILED=0
+  PROMOTE=0
+  NEXT=optional longer phi3 smoke; gemma open still separate if GEOM

@@ -4,7 +4,9 @@ int rawr_run_legacy_main_disabled = 0;
 #else
 #include "RawrRunSession.hpp"
 #include "SemanticSafe.hpp"
+#include "lavapath/UnlimitedTokenLaw.hpp"
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #ifdef _WIN32
@@ -69,7 +71,16 @@ int main(int argc, char** argv) {
                 w.modelName.c_str(), w.modelPath.c_str());
         const std::string formatted = FormatChatPrompt(engine, prompt, &w);
         GenerationOptions opts{};
-        opts.maxTokens = 256;
+        opts.maxTokens = 0; /* unlimited (stub-style); RAWR_MAX_TOKENS overrides */
+        if (const char* mt = std::getenv("RAWR_MAX_TOKENS")) {
+            const int n = std::atoi(mt);
+            if (n == 0)
+                opts.maxTokens = rawr::unlimited::kSentinel;
+            else if (n > 0)
+                opts.maxTokens = (uint32_t)n;
+        }
+        if (rawr::unlimited::EnvArmed())
+            opts.maxTokens = rawr::unlimited::kSentinel;
         opts.temperature = 0.0f;
         opts.topK = 1;
         opts.seed = 42;

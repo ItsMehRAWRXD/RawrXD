@@ -1,6 +1,7 @@
 #pragma once
 #include "Deep2Engine.h"
 #include "lavapath/ProductPathSeal.hpp"
+#include "lavapath/UnlimitedTokenLaw.hpp"
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -14,12 +15,13 @@ struct ProductStreamResult {
     uint64_t textBytes = 0;
 };
 
-/* Real product generateStream — engine seals; this is the CLI front door. */
+/* Real product generateStream — engine seals; this is the CLI front door.
+ * maxTokens=0 → unlimited (context/EOS); pass N for hard cap. */
 inline ProductStreamResult Deep2ProductGenerateStream(
-    Deep2Engine& e, const std::string& prompt, uint32_t maxTokens = 64,
+    Deep2Engine& e, const std::string& prompt, uint32_t maxTokens = 0,
     const char* /*modelName*/ = nullptr) {
     GenerationOptions opts{};
-    opts.maxTokens = maxTokens;
+    opts.maxTokens = maxTokens; /* 0 = unlimited */
     opts.temperature = 0.0f;
     opts.topK = 1;
     opts.seed = 42;
@@ -42,7 +44,7 @@ inline ProductStreamResult Deep2ProductGenerateStream(
 }
 
 inline std::string Deep2GenerateStreamAccumulate(
-    Deep2Engine& e, const std::string& prompt, uint32_t maxTokens = 256) {
+    Deep2Engine& e, const std::string& prompt, uint32_t maxTokens = 0) {
     return Deep2ProductGenerateStream(e, prompt, maxTokens, nullptr).text;
 }
 

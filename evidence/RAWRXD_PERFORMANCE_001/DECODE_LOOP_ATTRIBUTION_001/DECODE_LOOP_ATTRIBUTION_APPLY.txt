@@ -1,0 +1,23 @@
+Copy:
+  DecodeLoopAttribution.hpp
+To:
+  g:\~dev\rawrxd\src\deep2\lavapath\DecodeLoopAttribution.hpp
+
+Patch:
+  g:\~dev\rawrxd\src\deep2\Deep2Engine.cpp
+using DECODE_LOOP_ATTRIBUTION_DROP.patch.
+
+Build only parity target, not full IE:
+  cmake --build build-fd --target deep2_streamer_parity -j 1
+
+Resmoke:
+  $exe = "g:\~dev\rawrxd\build-fd\bin\deep2_streamer_parity.exe"
+  & $exe --model "g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" --prompt "Say hello in one short sentence." --max-tokens 20 1> decode_tiny.out 2> decode_tiny.err
+  & $exe --model "F:\OllamaModels\blobs\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff" --prompt "Say hello in one short sentence." --max-tokens 20 1> decode_llama32.out 2> decode_llama32.err
+
+Expected receipt lines:
+  DECODE_LOOP_ATTRIBUTION_BEGIN=1
+  TOKENS_COMMITTED=20
+  TOKENS_DECODED=20
+  TOKENIZER_SEQUENCE_CALLS=0
+  DECODE_REPLAY_FACTOR=1.000000

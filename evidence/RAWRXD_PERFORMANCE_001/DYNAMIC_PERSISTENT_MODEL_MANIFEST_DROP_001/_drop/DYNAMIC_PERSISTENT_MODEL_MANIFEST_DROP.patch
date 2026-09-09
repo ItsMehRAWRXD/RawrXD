@@ -1,0 +1,34 @@
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ #include "Gemma4LayerTopologyBind.hpp"
++#include "DynamicPersistentModelManifest.hpp"
+@@
+     // Store result for later tensor lookups
+     ggufResult = std::move(result);
++
++    // MODEL_DIGESTION_STREAM_001:
++    // Only the model path is stable/user supplied. Everything else is derived
++    // from this exact GGUF/shard fingerprint and persisted as discovery facts.
++    auto dynManifest = rawr::manifest_dyn::DigestLoadedModel(
++        firstShard.string(), ggufResult, stderr);
++
++    // Bind from manifest before legacy model-wide schema checks.
++    // Existing ModelOpenCompat/Gemma/Phi binders remain fallback/repair layers;
++    // they must not manufacture runtime PASS.
+@@
+-    // legacy BindLlamaSchema / authority ladder follows...
++    // legacy BindLlamaSchema / authority ladder follows...
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+     // Native streaming generation entry
++    // Runtime observations are overlays. They do not mutate the persisted
++    // discovery manifest; runtime PASS still requires emitted generation facts.
++    // rawr::manifest_dyn::EmitRuntimeOverlayBegin(manifest, "generateStream", stderr);
+@@
+     // before returning GenerationResult
++    // rawr::manifest_dyn::EmitRuntimeOverlayEnd(manifest, result.completed ? "PASS" : "FAIL",
++    //                                           result.generatedTokens, stderr);

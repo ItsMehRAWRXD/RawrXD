@@ -1,0 +1,73 @@
+PHI3_GEMMA4_DECODE_NEXT_DROP_001
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+PROMOTE=0
+
+INSTALLED
+  src/deep2/Phi3FusedFfnRuntime.hpp
+  src/deep2/Gemma4SchemaBinder.hpp
+  src/deep2/DecodeBlockerAttribution.hpp
+  WIRED=Deep2Engine.cpp + Deep2Engine_GpuToken.cpp (manual patch; drop .patch applied by hand)
+
+BUILD
+  Deep2Engine.cpp.obj + Deep2Engine_GpuToken.cpp.obj recompiled
+  InferenceEngine.lib member REPLACE (lib.exe objs)
+  deep2_streamer_parity.exe manual link (no full IE ninja thrash)
+  LINK=PASS
+
+--- PHI3 (runtime receipt) ---
+MODEL=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+LOG=smoke_phi3_rerun.log
+PHI3_FUSED_FFN_RUNTIME layers=32 repaired=32 authority=PASS
+PHI3_FUSED_FFN_EXEC=1 order=gate_up hidden=3072 inter=8192 fused_rows=16384
+AUTHORITY_LADDER=PASS
+TOKENS_REQUESTED=2
+TOKENS_COMMITTED=2
+TOKENS_DECODED=2
+TEARDOWN=TD=11 CLEAN_EXIT
+C0000374=0
+PARITY_DISPOSITION=FAIL (max-tokens=2 < 15; NON_AUTHORITY)
+MODEL_OPEN_RUNTIME=PASS
+PROMOTE=0
+
+--- GEMMA4 (runtime receipt) ---
+MODEL=F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+LOG=smoke_gemma4_e4b.log
+GGUF_DYNAMIC_GEOMETRY_001=PASS arch=gemma4 L=42 H=2560 FFN=10240
+AUTHORITY_LADDER=BLOCKED
+BLOCKED_AT=attn_q
+BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY (schema BindOne; not arch GEOM allowlist)
+NOTE=blk.0 lacks attn_q.weight (has proj.weight / post_* norms); odd layers have attn_q
+GEMMA4_SCHEMA_BINDER=INSTALLED
+GEMMA4_SCHEMA_BINDER_EMIT=NOT_REACHED (ladder returns before weight map)
+MODEL_OPEN=FAIL
+TOKENS_COMMITTED=0
+PROMOTE=0
+
+--- DECODE_BLOCKER (runtime receipt; tinyllama) ---
+MODEL=g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+LOG=smoke_tiny_decode.log
+DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
+TOKENS_REQUESTED=20
+TOKENS_COMMITTED=20
+TOKENS_DECODED=20
+FORWARD_MS=2312.163 LOGITS_MS=277.086 SAMPLE_MS=2.223 DETOK_MS=0.025 CALLBACK_MS=0.021 RECEIPT_MS=0.086 KV_MS=0.001
+DECODE_OWNER=FORWARD
+STREAMER_TPS=13.277
+DISPOSITION=PASS
+PROMOTE=0
+
+PRIOR_CONTEXT
+  OPEN_COMPAT_DROP=SEALED_PARTIAL_PASS
+  QUIET_WITNESS=tiny_14.812|llama3.2_4.474
+  I/O_DISTORTION_PRIMARY=0
+
+NEXT
+  GEMMA4_LAYER_TOPOLOGY_BIND (attn_q absent on even/blk.0; proj.weight path)
+  ONE_BY_ONE_IGNORE_LADDER A0/A1/A2/A6/A8/A10 (DECODE_OWNER=FORWARD already)
+  COMPARE_TPS after seal/compute isolation
+  PROMOTE=0 until model emits its own runtime PASS

@@ -1,0 +1,39 @@
+*** Begin Patch
+*** Update File: src/deep2/Deep2Engine.cpp
+@@
+ #include "GGUFLoader.hpp"
++#include "Phi3FusedFfnRuntime.hpp"
++#include "Gemma4SchemaBinder.hpp"
++#include "DecodeBlockerAttribution.hpp"
+@@
+-            else if (name.find("ffn_gate") != std::string::npos && name.find("moe") == std::string::npos)
++            else if (Deep2::gemma4_schema::TryBindRootTensor(modelWeights, name, wt, stderr)) {
++                /* Gemma/HF root tensor alias consumed. */
++            }
++            else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers &&
++                     Deep2::gemma4_schema::TryBindLayerTensor(modelWeights.layers[layerIdx], name, wt, stderr)) {
++                /* Gemma/HF layer tensor alias consumed. */
++            }
++            else if (name.find("ffn_gate") != std::string::npos && name.find("moe") == std::string::npos)
+                 lw.wGate = wt;
+@@
+-    // Guard / authority ladder emits here
++    // Source-only open/runtime compatibility repair.  This never fabricates tensor data.
++    Deep2::phi3_fused_ffn::RepairModel(modelWeights, stderr);
++    Deep2::gemma4_schema::EmitSummary(modelWeights, stderr);
++
++    // Guard / authority ladder emits here
+@@
+ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
+@@
+     const auto& lw = modelWeights.layers[layer];
+     const size_t hiddenDim = config.hiddenDim;
++
++    if (Deep2::phi3_fused_ffn::TryExecuteLayer(
++            lw, input, output, hiddenDim, modelWeights.intermediateDim,
++            [&](const WeightTensor& wt, const float* x, float* y, size_t outDim) {
++                LinearW(wt, x, nullptr, y, outDim);
++            }, stderr)) {
++        return;
++    }
+*** End Patch

@@ -1,0 +1,80 @@
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+index 0000000..0000000 100644
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ #include "lavapath/Batch007Emit.hpp"
+ #include "lavapath/ProductPathSeal.hpp"
++#include "lavapath/Phi3FusedQkvAuthority.hpp"
+
+@@
+-    // Existing authority ladder currently blocks Phi-3 at attn_q even though
+-    // blk.N.attn_qkv.weight is present.
++    // PHI3_FUSED_QKV_AUTHORITY_DROP_001:
++    // Phi-3 owns Q/K/V through blk.N.attn_qkv.weight. Do not require
++    // separate blk.N.attn_q.weight / attn_k.weight / attn_v.weight when
++    // a valid fused projection plus attn_output is present.
++    {
++        const auto auth =
++            Deep2::rawr_phi3_fused_qkv::LayerAttentionAuthority(
++                modelWeights.layers[0], modelWeights, config);
++        Deep2::rawr_phi3_fused_qkv::EmitAttentionAuthorityReceipt(
++            stderr, 0, auth);
++        if (!auth.ok) {
++            fprintf(stderr, "[Deep2Engine] AUTHORITY_LADDER=BLOCKED\n");
++            fprintf(stderr, "BLOCKED_AT=%s\n", auth.blockedAt);
++            fprintf(stderr, "BLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY\n");
++            return blocked_or_false_here;
++        }
++    }
+
+@@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* output, size_t seqLen) {
+     const auto& lw = modelWeights.layers[layer];
++
++    const auto fusedAuth =
++        Deep2::rawr_phi3_fused_qkv::LayerAttentionAuthority(lw, modelWeights, config);
++    if (fusedAuth.fused) {
++        Deep2::rawr_phi3_fused_qkv::EmitAttentionAuthorityReceipt(
++            stderr, layer, fusedAuth);
++
++        const std::size_t total =
++            fusedAuth.fusedShape.totalRows ? fusedAuth.fusedShape.totalRows
++                                           : (3 * config.hiddenDim);
++        std::vector<float> qkv(total);
++        std::vector<float> q(fusedAuth.fusedShape.qRows);
++        std::vector<float> k(fusedAuth.fusedShape.kRows);
++        std::vector<float> v(fusedAuth.fusedShape.vRows);
++
++        auto callLinearW = [&](const WeightTensor& wt,
++                               const float* in,
++                               float* out,
++                               std::size_t outDim) {
++            LinearW(wt, in, nullptr, out, outDim);
++        };
++
++        if (!Deep2::rawr_phi3_fused_qkv::ProjectFusedQKV(
++                lw, modelWeights, config, input,
++                q.data(), k.data(), v.data(),
++                qkv.data(), qkv.size(),
++                callLinearW, stderr)) {
++            memset(output, 0, config.hiddenDim * sizeof(float));
++            fprintf(stderr, "PHI3_FUSED_QKV_PROJECT=0 BLOCKED_AT=attn_qkv\n");
++            return;
++        }
++
++        /*
++           Continue into the existing attention math using q/k/v.
++           If the current function already has q/k/v arrays, replace the
++           old three LinearW calls:
++
++               LinearW(lw.wq, ...)
++               LinearW(lw.wk, ...)
++               LinearW(lw.wv, ...)
++
++           with the ProjectFusedQKV block above, then fall through to RoPE,
++           KV write, attention score/value accumulation, and output projection.
++
++           Do not fabricate lw.wq/lw.wk/lw.wv aliases. The fused tensor remains
++           the sole owner of this model's QKV authority.
++        */
++    }

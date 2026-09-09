@@ -96,10 +96,16 @@ bool GGUFLoader::ReadBool(FILE* fp) {
 // ============================================================================
 
 bool GGUFLoader::ParseHeader(FILE* fp, uint64_t& tensorCount, uint64_t& kvCount) {
+    uint32_t version = 0;
+    return ParseHeader(fp, version, tensorCount, kvCount);
+}
+
+bool GGUFLoader::ParseHeader(FILE* fp, uint32_t& version, uint64_t& tensorCount,
+                             uint64_t& kvCount) {
     uint32_t magic = ReadUint32(fp);
     if (magic != GGUF_MAGIC) return false;
 
-    uint32_t version = ReadUint32(fp);
+    version = ReadUint32(fp);
     if (version != GGUF_VERSION && version != 2 && version != 1) return false;
 
     tensorCount = ReadUint64(fp);
@@ -229,6 +235,8 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
         // Map known keys to metadata fields
         if (key == "general.architecture") {
             metadata.architecture = valueStr;
+        } else if (key == "general.name") {
+            metadata.name = valueStr;
         } else if (key == "tokenizer.ggml.model" || key == "tokenizer.model") {
             // Tokenizer model type
         } else {
@@ -771,11 +779,15 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
 
     // Parse header
     uint64_t tensorCount = 0, kvCount = 0;
-    if (!ParseHeader(fp, tensorCount, kvCount)) {
+    uint32_t version = 0;
+    if (!ParseHeader(fp, version, tensorCount, kvCount)) {
         snprintf(result.error, sizeof(result.error), "Invalid GGUF header");
         fclose(fp);
         return result;
     }
+    result.ggufVersion = version;
+    result.tensorCountHeader = tensorCount;
+    result.metadataCountHeader = kvCount;
 
     if (options.verbose) {
         printf("[GGUF] Header: tensors=%llu kv=%llu\n",
@@ -789,6 +801,7 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
         fclose(fp);
         return result;
     }
+    result.rawKv = std::move(rawMeta);
 
     // Parse tensor info
     if (!ParseTensors(fp, tensorCount, result.tensors, dataOffset, options.verbose)) {

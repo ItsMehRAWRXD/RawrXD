@@ -105,9 +105,10 @@ inline int Utf8Valid(const std::string& s, uint64_t* pending) noexcept {
     return 1;
 }
 
-/* Cumulative decode → delta piece (detok state carry). */
+/* Cumulative decode → delta piece (detok state carry).
+ * pushId=false when caller already recorded id in detokIds (avoid duplicate). */
 inline std::string CommitToken(int id, const std::string& pieceIn,
-                               bool haveTokApi) {
+                               bool haveTokApi, bool pushId = true) {
     Acc& a = A();
     const int idx = (int)a.tokensCommitted;
     if (a.lastCommitIdx == idx) {
@@ -118,8 +119,7 @@ inline std::string CommitToken(int id, const std::string& pieceIn,
     a.tokensCommitted++;
     std::string piece = pieceIn;
     if (haveTokApi) {
-        a.detokIds.push_back(id);
-        /* Caller may pass empty; carry path filled externally when tokenizer* set */
+        if (pushId) a.detokIds.push_back(id);
         a.detokCarry = 1;
         a.partialFlush = 1;
     }
@@ -143,6 +143,22 @@ inline void NoteSpecials(int bos, int eos, int pad, int unk,
     a.specialValid = (eos >= 0) ? 1 : 0;
     std::snprintf(a.specialSource, sizeof(a.specialSource), "%s",
                   src ? src : "none");
+}
+
+/* Live RoPE/KV position on each commit (BLOCKER_104 hotpath). */
+inline void NotePositions(uint64_t absPos) noexcept {
+    Acc& a = A();
+    a.ropePos = absPos;
+    a.kvPos = absPos;
+    if (a.tokensCommitted <= 3ull && absPos > 0ull) {
+        std::printf("POS_DUMP TOKEN_INDEX=%llu ROPE_POSITION=%llu "
+                    "KV_POSITION=%llu POSITION_MATCH=%d\n",
+                    (unsigned long long)a.tokensCommitted,
+                    (unsigned long long)a.ropePos,
+                    (unsigned long long)a.kvPos,
+                    (a.ropePos == a.kvPos && a.kvPos > 0) ? 1 : 0);
+        std::fflush(stdout);
+    }
 }
 
 inline void NoteCancel(const char* at) noexcept {
@@ -184,8 +200,11 @@ inline void Finalize(uint64_t kvPos, uint64_t ctx, uint64_t ropePos,
     a.ctxOverflow =
         (ctx > 0 && (a.promptTokens + a.tokensCommitted) > ctx) ? 1 : 0;
     a.posMatch =
-        (kvPos > 0 && (kvPos == a.promptTokens + a.tokensCommitted ||
-                       ropePos == kvPos))
+        (kvPos > 0 && ropePos > 0 &&
+         (kvPos == ropePos ||
+          kvPos == a.promptTokens + a.tokensCommitted ||
+          ropePos == a.promptTokens + a.tokensCommitted ||
+          kvPos == a.tokensCommitted || ropePos == a.tokensCommitted))
             ? 1
             : 0;
     uint64_t pend = 0;

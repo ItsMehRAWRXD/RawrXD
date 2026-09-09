@@ -157,6 +157,7 @@ struct TensorInfo {
 
 // Model metadata from GGUF
 struct ModelMetadata {
+    std::string name;          // general.name (empty if absent)
     std::string architecture;
     uint32_t vocabSize = 0;
     uint32_t hiddenSize = 0;
@@ -164,9 +165,9 @@ struct ModelMetadata {
     uint32_t numHeads = 0;
     uint32_t numKeyValueHeads = 0;
     uint32_t intermediateSize = 0;
-    float rmsNormEps = 1e-6f;
+    float rmsNormEps = 0.0f;   // 0 = unset (no silent default authority)
     uint32_t maxPositionEmbeddings = 0;
-    float ropeTheta = 10000.0f;
+    float ropeTheta = 0.0f;    // 0 = unset (no silent default authority)
     
     // MoE metadata (real, parsed from GGUF)
     uint32_t numExperts = 0;
@@ -232,6 +233,10 @@ struct GGUFLoadResult {
     char error[256] = {0};
     ModelMetadata metadata;
     std::vector<TensorInfo> tensors;
+    std::unordered_map<std::string, std::string> rawKv; // exact KV as parsed
+    uint32_t ggufVersion = 0;
+    uint64_t tensorCountHeader = 0;
+    uint64_t metadataCountHeader = 0;
     size_t totalSize = 0;
     double loadTimeMs = 0.0;
     uint64_t dataOffset = 0;  // Absolute byte offset to tensor data section in file
@@ -276,6 +281,8 @@ public:
 
     // Public parsing entry points for IOCP-based streaming loaders
     static bool ParseHeader(FILE* fp, uint64_t& tensorCount, uint64_t& kvCount);
+    static bool ParseHeader(FILE* fp, uint32_t& version, uint64_t& tensorCount,
+                            uint64_t& kvCount);
     static bool ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& metadata,
                                 std::unordered_map<std::string, std::string>& rawMeta);
     static bool ParseTensors(FILE* fp, uint64_t tensorCount,

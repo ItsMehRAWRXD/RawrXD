@@ -1,6 +1,8 @@
-// RawrModelAlias.hpp — local alias → GGUF/shard path (no Ollama, no network)
+// RawrModelAlias.hpp — local alias → model path (GGUF or Ollama blob; ext-agnostic)
 #pragma once
 #include "RawrModelDiscover.hpp"
+#include "GgufModelPath.hpp"
+#include "OllamaLocalBlobResolve.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -45,14 +47,16 @@ inline uint32_t CountGgufInDir(const char* dir) {
     uint32_t n = 0;
 #ifdef _WIN32
     char pat[MAX_PATH];
-    snprintf(pat, sizeof(pat), "%s\\*.gguf", dir);
+    snprintf(pat, sizeof(pat), "%s\\*", dir);
     WIN32_FIND_DATAA fd{};
     HANDLE h = FindFirstFileA(pat, &fd);
     if (h == INVALID_HANDLE_VALUE) return 0;
     do {
-        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-            _strnicmp(fd.cFileName, "mmproj", 6) != 0)
-            ++n;
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+        if (_strnicmp(fd.cFileName, "mmproj", 6) == 0) continue;
+        char full[MAX_PATH];
+        snprintf(full, sizeof(full), "%s\\%s", dir, fd.cFileName);
+        if (Deep2::GgufPath::IsLoadableModelFile(full)) ++n;
     } while (FindNextFileA(h, &fd));
     FindClose(h);
 #endif
@@ -133,14 +137,34 @@ inline bool ResolveModelAlias(const char* alias, AliasResolve& out) {
          "Phi-3-medium-128k-instruct-14B-Q4_K_M\\"
          "Phi-3-medium-128k-instruct-Q4_K_M.gguf",
          false},
-        {"llama32", "llama3.2-3b-Q3_K_S.gguf", false},
-        {"llama3.2", "llama3.2-3b-Q3_K_S.gguf", false},
+        {"llama32", "blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+         false},
+        {"llama3.2",
+         "blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+         false},
         {"llama32-q3", "llama3.2-3b-Q3_K_S.gguf", false},
         {"llama32-q2", "llama3.2-3b-Q2_K.gguf", false},
         {"gemma3", "gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf", false},
+        {"gemma3:latest", "gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf",
+         false},
+        {"gemma3:4b", "gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf", false},
         {"gemma", "gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf", false},
         {"gemma4", "gemma-4-E4B-it-GGUF\\gemma-4-E4B-it-Q4_K_M.gguf", false},
         {"gemma4-31b", "gemma-4-31B-it-GGUF\\gemma-4-31B-it-Q4_K_M.gguf", false},
+        {"llama3.2:3b",
+         "blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+         false},
+        {"llama3.2:latest",
+         "blobs\\sha256-dde5aa3fc5ffc17176b5e8bdc82f587b24b2678c6c66101bf7da77af9f7ccdff",
+         false},
+        {"qwen3", "DeepSeek-R1-0528-Qwen3-8B-GGUF\\"
+                  "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+         false},
+        {"qwen3:8b", "DeepSeek-R1-0528-Qwen3-8B-GGUF\\"
+                     "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+         false},
+        {"qwen3.8:27b", "Qwen3.8-27B-AD-Q4_K_M\\Qwen3.8-27B-AD-Q4_K_M.gguf",
+         false},
         {"codestral", "rawrxd_test_models\\Codestral-22B-v0.1-Q4_K_M.gguf",
          false},
         {"qwen-coder", "Qwen2.5-Coder-14B-Instruct-Q8_0", true},
@@ -183,7 +207,10 @@ inline bool ResolveModelAlias(const char* alias, AliasResolve& out) {
     };
 
     for (const auto& m : maps) {
-        if (_stricmp(lookup, m.name) != 0) continue;
+        /* Match bare or full ollama tag (llama3.2 / llama3.2:3b). */
+        if (_stricmp(lookup, m.name) != 0 && _stricmp(alias, m.name) != 0)
+            continue;
+        bool hitFile = false;
         for (const auto& root : roots) {
             std::string cand = root + "\\" + m.rel;
             if (!m.isDir && FileExists(cand.c_str())) {
@@ -200,6 +227,30 @@ inline bool ResolveModelAlias(const char* alias, AliasResolve& out) {
                 out.resolved = true;
                 return true;
             }
+            hitFile = true;
+        }
+        (void)hitFile;
+        /* Mapped name with missing GGUF → try ollama local blob. */
+        std::string blob;
+        if (ResolveOllamaLocalBlob(alias, blob) ||
+            ResolveOllamaLocalBlob(lookup, blob) ||
+            ResolveOllamaLocalBlob(m.name, blob)) {
+            out.path = blob;
+            out.shards = 1;
+            out.resolved = true;
+            return true;
+        }
+    }
+
+    /* ollama list → manifests → blobs\sha256-* (no daemon). */
+    {
+        std::string blob;
+        if (ResolveOllamaLocalBlob(alias, blob) ||
+            ResolveOllamaLocalBlob(lookup, blob)) {
+            out.path = blob;
+            out.shards = 1;
+            out.resolved = true;
+            return true;
         }
     }
 

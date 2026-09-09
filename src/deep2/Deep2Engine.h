@@ -11,6 +11,8 @@
 #include "ThreadPool.h"
 #include "KVCache.h"
 #include "GGUFLoader.hpp"
+#include "lavapath/GgufDynamicGeometry.hpp"
+#include "lavapath/LocalModelAuthority_Bundle.hpp"
 #include "BP16Streamer.hpp"
 #include "Tokenizer.hpp"
 #include "../sampling/advanced_sampler.hpp"
@@ -171,9 +173,9 @@ struct ModelWeights {
     size_t ropeDimensionCount = 0;
     bool   useMLA         = false;
 
-    float  ropeTheta      = 10000.0f;
-    float  ropeScaling    = 1.0f;
-    float  normEps        = 1e-6f;
+    float  ropeTheta      = 0.0f;   // unset until GGUF dynamic geometry
+    float  ropeScaling    = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
+    float  normEps        = 0.0f;   // unset until GGUF dynamic geometry
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
     bool   loaded         = false;
@@ -183,14 +185,14 @@ struct ModelWeights {
 // Engine Configuration
 // ============================================================================
 struct EngineConfig {
-    // Model architecture
-    size_t hiddenDim = 4096;
-    size_t numLayers = 32;
-    size_t numHeads = 32;
-    size_t numKVHeads = 32;
-    size_t headDim = 128;
-    size_t vocabSize = 32000;
-    size_t intermediateDim = 11008;
+    // Model architecture — zeros until GgufResolveDynamicGeometry (no static geometry)
+    size_t hiddenDim = 0;
+    size_t numLayers = 0;
+    size_t numHeads = 0;
+    size_t numKVHeads = 0;
+    size_t headDim = 0;
+    size_t vocabSize = 0;
+    size_t intermediateDim = 0;
 
     // MLA (K2) architecture fields
     size_t qLoraRank = 0;
@@ -218,7 +220,7 @@ struct EngineConfig {
 
     // RoPE
     bool useRoPE = true;
-    float ropeTheta = 10000.0f;
+    float ropeTheta = 0.0f;  // unset until dynamic geometry
     float ropeScaling = 1.0f;
     float normEps = 1e-6f;
     
@@ -249,7 +251,7 @@ struct InferenceStats {
 // ============================================================================
 
 struct GenerationOptions {
-    uint32_t maxTokens = 2048;
+    uint32_t maxTokens = 0; // 0 = unlimited (EOS/cancel); stub-generator style
 
     float temperature = 0.8f;
     float topP = 0.95f;
@@ -579,6 +581,10 @@ public:
     bool enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes);
     void disableMARS();
     bool isMARSEnabled() const { return marsEnabled_; }
+    bool isMARSStandby() const { return marsStandby_; }
+    /* HOST_RESIDENT_DENSE only; K2_STREAM_AUTHORITY → STANDBY by law. */
+    bool marsHostResidentAuthorityOk() const;
+    void standdownMARSEmptyPlacement(const char* reason);
     MARS::MARSController* getMARSController() { return marsController_.get(); }
 
     // Place a model tensor under MARS lease control
@@ -615,6 +621,10 @@ public:
     // Handle GPU failure (migrate all tensors off)
     bool handleGPUFailure(int gpu);
 
+    // ONE_LOCAL_MODEL_AUTHORITY — sealed on loadModel (SSOT for ProductRuntime).
+    const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuth_; }
+    bool sessionAuthorityPass() const { return sessionAuth_.PASS != 0; }
+
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
@@ -625,6 +635,10 @@ private:
     
     // Real model weights
     ModelWeights modelWeights;
+
+    // Immutable session geometry from GGUF metadata (ONE_LOCAL_MODEL_AUTHORITY)
+    GgufDynamicGeometry sessionGeometry_{};
+    rawr::olma::AuthorityBundle sessionAuth_{};
     
     // MoE infrastructure (real, not stubbed)
     std::vector<std::unique_ptr<MoERouter>> moeRouters_;  // per-layer router
@@ -668,6 +682,7 @@ private:
     std::unique_ptr<MARS::MARSController> marsController_;
     bool marsEnabled_ = false;
     bool marsWeightsPlaced_ = false;
+    bool marsStandby_ = false; /* CONTROLLER_ON_PLACED_0 or K2_STREAM_AUTHORITY */
     std::unordered_map<size_t, MARS::VRAMLease*> marsLayerLeases_; // layer -> lease
     uint64_t marsNextTensorId_ = 1;
     

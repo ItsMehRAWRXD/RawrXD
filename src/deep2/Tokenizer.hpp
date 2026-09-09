@@ -277,6 +277,48 @@ public:
         }
         std::string out;
         out.reserve(raw.size());
+        if (gpt2_) {
+            static const auto& c2b = []() -> const std::unordered_map<uint32_t, uint8_t>& {
+                static std::unordered_map<uint32_t, uint8_t> m;
+                if (!m.empty()) return m;
+                std::vector<uint32_t> bs, cs;
+                for (int i = 33; i <= 126; ++i) bs.push_back((uint32_t)i);
+                for (int i = 161; i <= 172; ++i) bs.push_back((uint32_t)i);
+                for (int i = 174; i <= 255; ++i) bs.push_back((uint32_t)i);
+                cs = bs;
+                uint32_t n = 0;
+                for (uint32_t b = 0; b < 256; ++b) {
+                    if (std::find(bs.begin(), bs.end(), b) != bs.end()) continue;
+                    bs.push_back(b);
+                    cs.push_back(256u + n);
+                    ++n;
+                }
+                for (size_t i = 0; i < bs.size(); ++i)
+                    m[cs[i]] = (uint8_t)bs[i];
+                return m;
+            }();
+            for (size_t i = 0; i < raw.size();) {
+                unsigned char c0 = (unsigned char)raw[i];
+                uint32_t cp = c0;
+                size_t adv = 1;
+                if ((c0 & 0xE0) == 0xC0 && i + 1 < raw.size()) {
+                    cp = ((c0 & 0x1Fu) << 6) | ((unsigned char)raw[i + 1] & 0x3Fu);
+                    adv = 2;
+                } else if ((c0 & 0xF0) == 0xE0 && i + 2 < raw.size()) {
+                    cp = ((c0 & 0x0Fu) << 12) |
+                         (((unsigned char)raw[i + 1] & 0x3Fu) << 6) |
+                         ((unsigned char)raw[i + 2] & 0x3Fu);
+                    adv = 3;
+                }
+                auto jt = c2b.find(cp);
+                if (jt != c2b.end())
+                    out.push_back((char)jt->second);
+                else
+                    out.append(raw, i, adv);
+                i += adv;
+            }
+            return out;
+        }
         for (size_t i = 0; i < raw.size();) {
             // SentencePiece metaspace U+2581 ▁
             if (i + 2 < raw.size() &&
@@ -285,12 +327,23 @@ public:
                 static_cast<unsigned char>(raw[i + 2]) == 0x81) {
                 out.push_back(' ');
                 i += 3;
-            // GPT-2 / Llama-3 space marker U+0120 Ġ
+            // GPT-2 fallback markers if gpt2_ unset: Ġ/Ċ/ĉ
             } else if (i + 1 < raw.size() &&
-                       static_cast<unsigned char>(raw[i]) == 0xC4 &&
-                       static_cast<unsigned char>(raw[i + 1]) == 0xA0) {
-                out.push_back(' ');
-                i += 2;
+                       static_cast<unsigned char>(raw[i]) == 0xC4) {
+                const unsigned char b1 = (unsigned char)raw[i + 1];
+                if (b1 == 0xA0) {
+                    out.push_back(' ');
+                    i += 2;
+                } else if (b1 == 0x8A) {
+                    out.push_back('\n');
+                    i += 2;
+                } else if (b1 == 0x89) {
+                    out.push_back('\t');
+                    i += 2;
+                } else {
+                    out.push_back(raw[i]);
+                    ++i;
+                }
             } else {
                 out.push_back(raw[i]);
                 ++i;

@@ -33,9 +33,14 @@ K2 HOTPATH ASSESSMENT — DISPOSITION (2026-09-07)
   Rebuild InferenceEngine + rawrxd_actual_e2e / deep2_benchmark 64-tok
   Expect: KVA_CLIMB_CAND ROWS=16/64, KVA_WINNER=16|64, KVA_ROWS_PER_WG=winner
 
-§6 TARGET_150_TPS (law landed; seal OPEN)
+§6 TARGET_150_TPS (law landed; seal OPEN) — NON_AUTHORITY vs GATE.txt
+  SUPERSEDED_LIVE_CLAIM=1
+  SUPERSEDED_BY=evidence/RAWRXD_PERFORMANCE_001/GATE.txt
+  REASON=B.3; TARGET_150 OPEN ≠ live spend; GATE_STOP=1 TIP_CLIMB=HOLD
+  CHAMPION=PATH_A_HOST_CACHED_OUT_INVALIDATE WALL_MEDIAN_NS=10184789000
   See TARGET_150_TPS.txt + lavapath/{CausalSpinLaw,BgBmLaw,CausalSpinMeasure}.hpp
   Equation: TPS = BW / EFFECTIVE_BYTES  →  150 = 640 / ~4.27 GB/tok
   HARDWARE_REQUIREMENTS_DISREGARDED=1 (naive 100TB/s is not a veto)
   Receipt emits EOM_SPIN_001 / MEASURED_DECODE_TPS / RAWRXD_TARGET_150_TPS_001=OPEN|PASS
   Do not promote 150 until MEAN_SPIN_NS ≤ TOKEN_BUDGET_NS_150 on live generateStream.
+  LIVE=HELD; reopen only MODE=A HOT_GATE=1 (not from this file)

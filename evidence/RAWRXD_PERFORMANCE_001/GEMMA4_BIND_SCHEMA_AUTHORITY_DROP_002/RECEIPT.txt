@@ -1,0 +1,68 @@
+GEMMA4_BIND_SCHEMA_AUTHORITY_DROP_002
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+PROMOTE=0
+
+RETAINED
+  MODEL_OPEN_COMPAT_DROP_001=RETAINED
+  PHI3_FUSED_FFN_RUNTIME=RETAINED
+  GEMMA4_SCHEMA_BINDER=RETAINED
+  lavapath/Gemma4SchemaBind.hpp=RETAINED (hybrid SWA/global observed QKV dims)
+
+ADDED
+  src/deep2/Gemma4BindLlamaFallback.hpp
+  src/deep2/FfnInterInferFix.hpp
+  src/deep2/DecodeBlockerAttributionWire.hpp
+  BIND_LLAMA_SCHEMA_ALIAS_FALLBACK=ADDED
+  FFN_INTER_INFERRED_DBL_FUSED_ROWS=FIXED
+  DECODE_BLOCKER_ATTRIBUTION_WIRE=ADDED
+
+WIRE
+  Deep2Engine.cpp: AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT until after
+    ffn_inter_fix::RepairIntermediate
+    phi3_fused_ffn::RepairModel
+    gemma4_schema::EmitSummary
+    gemma4_bind_fallback::TryClearBindLlamaSchemaByAliases
+  then SealLadderOnLoad (+ BindGemma4Schema rebind if llama-name lock)
+
+BUILD
+  Deep2Engine.cpp.obj exact-flag compile
+  InferenceEngine.lib member REPLACE via lib.exe
+  deep2_streamer_parity.exe manual full-dep link
+  LINK=PASS
+
+--- GEMMA4 runtime receipt ---
+MODEL=F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+LOG=smoke_gemma4.log / smoke_gemma4.stdout.txt
+AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=10240
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY
+AUTHORITY_LADDER=PASS schema=380 quant=380 tok=262144
+TOKENS_COMMITTED=1
+TOKENS_DECODED=1
+NEXT_CONCRETE_OWNER=PROVENANCE_MISMATCH
+MODEL_OPEN_RUNTIME=PASS (open+1 token; product parity FAIL separate)
+PROMOTE=0
+
+--- PHI3 runtime receipt ---
+MODEL=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+LOG=smoke_phi3.log
+FFN_INTER_INFERRED ok=1 why=FUSED_UP_2X_DOWN_HALF inter=8192
+PHI3_FUSED_FFN_RUNTIME layers=32 repaired=32 authority=PASS
+PHI3_FUSED_FFN_EXEC=1
+TOKENS_COMMITTED=1
+C0000374=0 (not observed)
+NEXT_CONCRETE_OWNER=PROVENANCE_MISMATCH
+PROMOTE=0
+
+CLASSIFICATION
+  BIND_LLAMA_SCHEMA_STILL_LLAMA_NAME_LOCKED cleared via alias fallback + BindGemma4Schema
+  GEOM name-lock is not the open owner anymore
+  NEXT=PROVENANCE_MISMATCH (parity/product gate; not schema)
+  Runtime full PASS remains deferred per-model beyond TOKENS_COMMITTED>=1
+  PROMOTE=0

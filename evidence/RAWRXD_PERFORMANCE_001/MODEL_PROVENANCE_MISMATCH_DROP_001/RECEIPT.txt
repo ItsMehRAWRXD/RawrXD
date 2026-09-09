@@ -1,0 +1,45 @@
+MODEL_PROVENANCE_MISMATCH_DROP_001
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+PROMOTE=0
+
+TREE=G:\~dev\rawrxd (authoritative)
+
+ADDED
+  src/deep2/ModelProvenanceSeal.hpp
+  src/deep2/ManifestRuntimeOverlay.hpp
+
+WIRE
+  After GGUF load + DigestLoadedModel: begin()+mark_manifest_loaded (same FP)
+  After schema/alias binders: mark_bind/mark_authority/mark_runtime + validate+emit
+  On MODEL_PROVENANCE_MATCH=0:
+    MODEL_OPEN=PASS (load continues)
+    AUTHORITY_LADDER=BLOCKED (promotion only; no return false)
+  On MATCH=1: SealLadderOnLoad may PASS
+  generateStream: ManifestRuntimeOverlay emit (discovery mutation=0)
+
+LAW
+  MODEL_LOCATION=STABLE_LOCATOR
+  ALL_OTHER_FIELDS=DYNAMIC_DIGESTED
+  NO_SCHEMA_INHERITANCE=1
+  RUNTIME_OVERLAY_SEPARATE=1
+  DISCOVERY_AUTHORITY_ONLY=1
+  RUNTIME_PASS_REQUIRES_RUNTIME_RECEIPT=1
+  PARITY_MAXTOK1=NON_AUTHORITY (champion kSealTokens=64 PROVENANCE_MISMATCH ≠ discovery)
+
+--- tinyllama runtime receipt ---
+LOG=smoke_tiny_prov.log
+MODEL_PROVENANCE_MATCH=1 BLOCKED_AT=NONE WHY=SAME_MODEL_FINGERPRINT
+AUTHORITY_LADDER=PASS schema=201
+MODEL_RUNTIME_OVERLAY CLEAN_EXIT=1 DISCOVERY_MUTATION=0 TOKENS_COMMITTED=1
+CHAMPION_SEAL BLOCKED_AT=PROVENANCE_MISMATCH (max-tokens=1; NON_AUTHORITY)
+PROMOTE=0
+
+NEXT
+  ONE_BY_ONE_IGNORE_LADDER_001 (DECODE_OWNER=FORWARD already observed)
+  DEEP2_ISOLATION_RUN=A0..A10
+  PROMOTE=0

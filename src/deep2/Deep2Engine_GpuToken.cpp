@@ -2,6 +2,8 @@
 #include "Deep2Engine.h"
 #include "Deep2GpuForward.hpp"
 #include "K2NativeStreamGate.hpp"
+#include "lavapath/OneByOneIgnoreLadder.hpp"
+#include "DecodeBlockerAttribution.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -41,6 +43,16 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     (void)seqLen;
     if (!hidden || config.hiddenDim == 0) return false;
     ++gpuFwd_.liveDecodeTokens;
+    auto f0 = rawr::iso_ladder::Clock::now();
+    RAWR_DECODE_SCOPE_FORWARD();
+    if (rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A8)) {
+        /* Identity pass: prove layer-forward wall ownership. Embed stays. */
+        rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
+        return true;
+    }
+    size_t layerCap = modelWeights.numLayers;
+    if (rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A11) && layerCap > 1)
+        layerCap = 1;
     // F1: base forward is never skippable. Enhancements live elsewhere.
     // Ownership seam: K2 shard MLA consumes MLA_Gemv (never incomplete host MLA).
     if (k2ShardIndexOpen_ && globalIndex_ && config.useMLA) {
@@ -49,6 +61,8 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             int n = atoi(el);
             if (n > 0) depth = (uint32_t)n;
         }
+        if (rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A11) && depth > 1)
+            depth = 1;
         (void)K2NativeStreamGate::ProdKv(k2ShardConfig_, config.maxSeqLen);
         float* layerInput = hidden;
         float* layerOutput = attentionOutput;
@@ -64,13 +78,16 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         K2NativeStreamGate::ProdKvCommit();
         gpuFwdCommitted_ = false;
     } else if (gpuFwdCommitted_) {
-        if (!tryGpuTokenForward(hidden)) return false;
+        if (!tryGpuTokenForward(hidden)) {
+            rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
+            return false;
+        }
     } else if (tryGpuTokenForward(hidden)) {
         gpuFwdCommitted_ = true;
     } else {
         float* layerInput = hidden;
         float* layerOutput = attentionOutput;
-        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+        for (size_t layer = 0; layer < layerCap; ++layer) {
             forwardLayer(layer, layerInput, layerOutput, seqLen);
             ++gpuFwd_.hostForwardLayerCalls;
             float* tmp = layerInput;
@@ -80,6 +97,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         if (layerInput != hidden)
             std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
     }
+    rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
     // Refuse "success" that left a zero/non-finite final hidden (Codestral hole).
     double n2 = 0.0;
     for (size_t i = 0; i < config.hiddenDim; ++i) {

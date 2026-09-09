@@ -3,6 +3,7 @@
 #include "Deep2GpuForward.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "GpuTransferCounters.hpp"
+#include "lavapath/OneByOneIgnoreLadder.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -224,71 +225,95 @@ bool Deep2Engine::forwardLayerGpuResident(
         return vc->WaitWeightCompute(sc);
     };
 
+    /* A9/A10: GPU-resident ignore (host computeAttention/FFN are off live path). */
+    const bool skipAttn = rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A9);
+    const bool skipFfn = rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A10);
+    static thread_local std::vector<float> isoZero;
+    auto identityViaZeroDown =
+        [&](CPUInference::VulkanCompute::DeviceBuf& src,
+            CPUInference::VulkanCompute::DeviceBuf& dst) -> bool {
+        isoZero.assign(H, 0.0f);
+        if (!vc->UploadBuf(vc->ArenaDown(), isoZero.data(), H)) return false;
+        return vc->DispatchResidualAdd(src, vc->ArenaDown(), dst, H);
+    };
+
     if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
         return fail();
     ++c.rmsNormOps;
 
-    if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
-                      vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
-        return fail();
-    c.qkvOps += 3;
+    if (!skipAttn) {
+        if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
+                          vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
+            return fail();
+        c.qkvOps += 3;
 
-    const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
-    if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
-                          modelWeights.ropeTheta))
-        return fail();
-    ++c.ropeOps;
+        const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
+        if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
+                              modelWeights.ropeTheta))
+            return fail();
+        ++c.ropeOps;
 
-    if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
-    const float scale = 1.0f / std::sqrt((float)headDim);
-    if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
-                                vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
-                                layer))
-        return fail();
-    ++c.attnScoreOps;
-    ++c.softmaxOps;
-    ++c.attnValueOps;
+        if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
+        const float scale = 1.0f / std::sqrt((float)headDim);
+        if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
+                                    vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
+                                    layer))
+            return fail();
+        ++c.attnScoreOps;
+        ++c.softmaxOps;
+        ++c.attnValueOps;
 
-    if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
-    ++c.oProjOps;
+        if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
+        ++c.oProjOps;
 
-    if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(), vc->ArenaResidual(), H))
-        return fail();
-    ++c.residualOps;
+        if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
+                                     vc->ArenaResidual(), H))
+            return fail();
+        ++c.residualOps;
+    } else {
+        if (!identityViaZeroDown(vc->ArenaHidden(), vc->ArenaResidual())) return fail();
+        ++c.residualOps;
+    }
 
     if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
         return fail();
     ++c.ffnNormOps;
 
-    if (prefetch && vc->WeightStreamActive() &&
-        !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
-        if (!vc->FlushWeightComputes()) return fail();
-        const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
-        uint32_t sg = 0;
-        if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
-        if (!vc->SubmitGemvPrefetch(sg, vc->ArenaNormed(), vc->ArenaGate(), inter, H))
+    if (!skipFfn) {
+        if (prefetch && vc->WeightStreamActive() &&
+            !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
+            if (!vc->FlushWeightComputes()) return fail();
+            const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
+            uint32_t sg = 0;
+            if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
+            if (!vc->SubmitGemvPrefetch(sg, vc->ArenaNormed(), vc->ArenaGate(), inter, H))
+                return fail();
+            const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
+            uint32_t su = 0;
+            if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
+            if (!vc->WaitWeightCompute(sg)) return fail();
+            if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
+                return fail();
+            if (!vc->WaitWeightCompute(su)) return fail();
+        } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
+                   !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
             return fail();
-        const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
-        uint32_t su = 0;
-        if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
-        if (!vc->WaitWeightCompute(sg)) return fail();
-        if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
+        c.qkvOps += 2;
+        if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
             return fail();
-        if (!vc->WaitWeightCompute(su)) return fail();
-    } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
-               !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
-        return fail();
-    c.qkvOps += 2;
-    if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
-        return fail();
-    ++c.ffnActOps;
-    if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail();
+        ++c.ffnActOps;
+        if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail();
 
-    if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(), vc->ArenaHidden(), H))
-        return fail();
-    ++c.ffnResidualOps;
+        if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(),
+                                     vc->ArenaHidden(), H))
+            return fail();
+        ++c.ffnResidualOps;
+    } else {
+        if (!identityViaZeroDown(vc->ArenaResidual(), vc->ArenaHidden())) return fail();
+        ++c.ffnResidualOps;
+    }
 
     if (fuse && !vc->EndFusedLayer()) return false;
     if (!vc->FlushWeightComputes()) return false;

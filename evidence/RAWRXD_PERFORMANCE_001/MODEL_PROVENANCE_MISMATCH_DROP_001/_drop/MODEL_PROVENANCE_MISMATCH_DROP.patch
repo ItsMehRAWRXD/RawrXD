@@ -1,0 +1,58 @@
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+index 0000000..0000001 100644
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ #include "DynamicPersistentModelManifest.hpp"
++#include "ModelProvenanceSeal.hpp"
++#include "ManifestRuntimeOverlay.hpp"
+@@
+-    // Existing: digest manifest, repair metadata, bind schema, run authority ladder.
++    // MODEL_PROVENANCE_MISMATCH_DROP_001:
++    // Build a per-model provenance fingerprint from the exact locator + tensor table.
++    // The model path is stable. All schema/shape/topology facts are dynamic and must
++    // match this fingerprint before they can feed authority.
++    std::vector<rawr::model_provenance::TensorDigestItem> provTensors;
++    provTensors.reserve(ggufResult.tensors.size());
++    for (const auto& t : ggufResult.tensors) {
++        rawr::model_provenance::TensorDigestItem it;
++        it.name = t.name;
++        it.rows = static_cast<std::uint64_t>(t.rows);
++        it.cols = static_cast<std::uint64_t>(t.cols);
++        it.sizeBytes = static_cast<std::uint64_t>(t.sizeBytes);
++        it.offset = static_cast<std::uint64_t>(t.offset);
++        it.type = static_cast<int>(t.type);
++        provTensors.push_back(std::move(it));
++    }
++
++    rawr::model_provenance::Provenance modelProv =
++        rawr::model_provenance::begin(firstShard.string(), provTensors);
+@@
+-    Deep2::gemma4_schema::EmitSummary(modelWeights, stderr);
+-    Deep2::gemma4_bind_fallback::TryClearBindLlamaSchemaByAliases(modelWeights, stderr);
++    Deep2::gemma4_schema::EmitSummary(modelWeights, stderr);
++    const bool aliasFallback =
++        Deep2::gemma4_bind_fallback::TryClearBindLlamaSchemaByAliases(modelWeights, stderr);
++
++    // Bind/authority provenance must be from this same model digest.
++    const std::uint64_t expectedModelFp =
++        rawr::model_provenance::compose_model_fingerprint(
++            modelProv.file, modelProv.tensorHash);
++    rawr::model_provenance::mark_bind(modelProv, expectedModelFp, aliasFallback);
++    rawr::model_provenance::mark_authority(modelProv, expectedModelFp, false);
++    rawr::model_provenance::mark_runtime(modelProv, expectedModelFp, "loadModel");
++    rawr::model_provenance::validate(modelProv);
++    rawr::model_provenance::emit(stderr, modelProv);
++
++    if (!modelProv.ok) {
++        fprintf(stderr,
++                "AUTHORITY_LADDER=BLOCKED\n"
++                "BLOCKED_AT=PROVENANCE_MISMATCH\n"
++                "MODEL_OPEN=PASS\n"
++                "PROMOTE=0\n");
++        return false;
++    }
+@@
+-    // Runtime receipts follow.
++    // Runtime receipts follow. They are overlay facts and must not mutate the
++    // persistent discovery manifest.

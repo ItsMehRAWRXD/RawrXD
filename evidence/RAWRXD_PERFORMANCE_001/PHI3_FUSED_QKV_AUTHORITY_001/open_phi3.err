@@ -1,0 +1,890 @@
+FORBIDDEN_LINK_SCAN_HITS=0
+OLLAMA_HTTP=0
+[BUF] hidden=3072 heads=32 headDim=96 qOut=3072 headScratch=3072 kvDim=3072 ffn=8192
+INIT_FROM_PATH=LOAD_ONLY maxSeq_req=512 live=4096
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=phi3 LAYERS=32 KV_HEADS=32 HEAD_DIM=96
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[Q4_DISPATCH] tensor=blk.0.attn_qkv.weight rows=576 cols=3072 rowBytes=1728 kernel=Q4_0_REFERENCE
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857B2060
+FINAL_NORM_DST_PTR=0000027A857B2060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4515280.28
+FINAL_NORM_MEAN_SQ=1469.8178
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0260836426
+FINAL_NORM_SRC_0=25.7454376
+FINAL_NORM_DST_0=1.05451941
+FINAL_NORM_AFTER_L2=88.3618329
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857B5060
+FINAL_NORM_DST_PTR=0000027A857B5060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4213308.58
+FINAL_NORM_MEAN_SQ=1371.51972
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0270021893
+FINAL_NORM_SRC_0=33.2693748
+FINAL_NORM_DST_0=1.41068387
+FINAL_NORM_AFTER_L2=88.38129
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857B8060
+FINAL_NORM_DST_PTR=0000027A857B8060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4317711.73
+FINAL_NORM_MEAN_SQ=1405.50512
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0266737323
+FINAL_NORM_SRC_0=31.0856819
+FINAL_NORM_DST_0=1.30205786
+FINAL_NORM_AFTER_L2=88.2624928
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857BB060
+FINAL_NORM_DST_PTR=0000027A857BB060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4171967.45
+FINAL_NORM_MEAN_SQ=1358.06232
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0271356441
+FINAL_NORM_SRC_0=31.7217522
+FINAL_NORM_DST_0=1.3517096
+FINAL_NORM_AFTER_L2=88.2035161
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857BE060
+FINAL_NORM_DST_PTR=0000027A857BE060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4177610.77
+FINAL_NORM_MEAN_SQ=1359.89934
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.027117312
+FINAL_NORM_SRC_0=32.3434715
+FINAL_NORM_DST_0=1.37727082
+FINAL_NORM_AFTER_L2=88.1473771
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857C1060
+FINAL_NORM_DST_PTR=0000027A857C1060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=4278947.43
+FINAL_NORM_MEAN_SQ=1392.88653
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0267942827
+FINAL_NORM_SRC_0=25.5859261
+FINAL_NORM_DST_0=1.07653797
+FINAL_NORM_AFTER_L2=88.0859299
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857C4060
+FINAL_NORM_DST_PTR=0000027A857C4060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3227386.93
+FINAL_NORM_MEAN_SQ=1050.58168
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.030852126
+FINAL_NORM_SRC_0=42.5462112
+FINAL_NORM_DST_0=2.06125665
+FINAL_NORM_AFTER_L2=86.7411978
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857C7060
+FINAL_NORM_DST_PTR=0000027A857C7060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=2920716.31
+FINAL_NORM_MEAN_SQ=950.754006
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0324314162
+FINAL_NORM_SRC_0=17.8078022
+FINAL_NORM_DST_0=0.906906068
+FINAL_NORM_AFTER_L2=86.7681004
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857CA060
+FINAL_NORM_DST_PTR=0000027A857CA060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3140243.5
+FINAL_NORM_MEAN_SQ=1022.21468
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0312772766
+FINAL_NORM_SRC_0=14.6953526
+FINAL_NORM_DST_0=0.72176367
+FINAL_NORM_AFTER_L2=86.4265032
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857CD060
+FINAL_NORM_DST_PTR=0000027A857CD060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3114082.07
+FINAL_NORM_MEAN_SQ=1013.69859
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0314083807
+FINAL_NORM_SRC_0=13.8495312
+FINAL_NORM_DST_0=0.683072388
+FINAL_NORM_AFTER_L2=86.3035286
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857D0060
+FINAL_NORM_DST_PTR=0000027A857D0060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3254725.2
+FINAL_NORM_MEAN_SQ=1059.48086
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.030722281
+FINAL_NORM_SRC_0=6.00156403
+FINAL_NORM_DST_0=0.289536953
+FINAL_NORM_AFTER_L2=86.4001794
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857D3060
+FINAL_NORM_DST_PTR=0000027A857D3060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3262319.98
+FINAL_NORM_MEAN_SQ=1061.95312
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0306864958
+FINAL_NORM_SRC_0=6.22265816
+FINAL_NORM_DST_0=0.299853653
+FINAL_NORM_AFTER_L2=86.3255562
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857D6060
+FINAL_NORM_DST_PTR=0000027A857D6060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3382964.56
+FINAL_NORM_MEAN_SQ=1101.22544
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0301343519
+FINAL_NORM_SRC_0=6.07001495
+FINAL_NORM_DST_0=0.28723523
+FINAL_NORM_AFTER_L2=86.0161505
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857D9060
+FINAL_NORM_DST_PTR=0000027A857D9060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3430084.28
+FINAL_NORM_MEAN_SQ=1116.56389
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0299266577
+FINAL_NORM_SRC_0=0.942483902
+FINAL_NORM_DST_0=0.0442912802
+FINAL_NORM_AFTER_L2=86.3943793
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.0.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.1.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.2.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.3.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.4.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.5.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.6.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.7.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.8.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.9.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.10.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.11.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.12.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.13.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.14.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.15.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.16.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.17.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.18.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.19.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.20.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.21.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.22.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.23.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.24.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.25.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.26.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.27.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.28.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.29.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.30.ffn_up.weight type=2
+[LINEARW_BOUNDS] clamp rows 16384 -> outDim 8192 tensor=blk.31.ffn_up.weight type=2
+FINAL_NORM_SRC_PTR=0000027A857DC060
+FINAL_NORM_DST_PTR=0000027A857DC060
+FINAL_NORM_WEIGHT_PTR=0000027A84B80000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.5703125
+FINAL_NORM_WEIGHT_1=1.59375
+FINAL_NORM_WEIGHT_2=1.609375
+FINAL_NORM_WEIGHT_3=1.578125
+FINAL_NORM_WEIGHT_L2=89.475439
+FINAL_NORM_SUMSQ=3364230.65
+FINAL_NORM_MEAN_SQ=1095.12717
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.0302181412
+FINAL_NORM_SRC_0=3.32587242
+FINAL_NORM_DST_0=0.157819048
+FINAL_NORM_AFTER_L2=86.1368892
+[AGENT] TOKEN id=363 piece= for
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→token_commit→stream→receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=phi3
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+MODEL=phi3
+PATH=generateStream
+TOKENS_REQUESTED=1
+TOKENS_COMMITTED=1
+GENERATION_WALL_NS=6218474400
+DECODE_TPS_REAL=0.160811
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=0
+FUNCTIONAL_PASS=0
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+SPIN_CLOSE_BLOCKER_US=0
+BLOCKED_AT=PROVENANCE_MISMATCH
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+DECODE_LOOP_ATTRIBUTION_BEGIN=1
+TOKENS_REQUESTED=1
+TOKENS_COMMITTED=1
+TOKENS_DECODED=1
+TOKENIZER_SINGLE_CALLS=1
+TOKENIZER_SEQUENCE_CALLS=0
+DETOK_WALL_NS=2600
+CALLBACK_WALL_NS=3000
+DETOK_RAW_BYTES=4
+DETOK_EMITTED_BYTES=4
+DETOK_UTF8_PENDING_BYTES=0
+DETOK_UTF8_ERRORS=0
+DECODE_REPLAY_FACTOR=1.000000
+DECODE_LOOP_ATTRIBUTION_END=1
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=32
+[LIFE] unloadModel FreeTensorData ggufResult (197 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+STREAMER_TPS=0.161 TTFT_MS=6216.534 TOKENS=1 PATH=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+OLLAMA_PARITY_STREAMER_001
+MODEL_PATH=F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf
+BACKEND=DEEP2
+API_SURFACE_PCT=11.11
+OLLAMA_DAEMON=0
+OLLAMA_HTTP=0
+LLAMA_CPP=0
+GGML=0
+CLOUD=0
+FALLBACK_USED=0
+TOKENIZER=OBSERVED
+PREFILL=OBSERVED
+DECODE_LOOP=OBSERVED
+LOGITS=OBSERVED
+SAMPLE=OBSERVED
+STREAM_CALLBACK=OBSERVED
+FINALIZE_STREAM=OBSERVED
+TOKENS_EMITTED=1
+FIRST_TOKEN_TEXT_NONEMPTY=1
+FINAL_TEXT_NONEMPTY=1
+TTFT_MS=6216.534
+DECODE_TPS=0.161
+RC=0
+DISPOSITION=FAIL
+EGRESS=0 LOCAL_ONLY=1
+[StreamEngine] Shutdown

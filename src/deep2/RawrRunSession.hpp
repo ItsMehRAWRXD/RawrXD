@@ -40,6 +40,16 @@ struct RunWitness {
 inline bool InitFromPath(Deep2Engine& e, const std::string& path,
                          size_t maxSeq = 512) {
     if (!e.loadModel(path)) return false;
+    /* loadModel already arms ThreadPool/KV/buffers. A second initialize()
+     * tear-down/rebuild has caused heap C0000374 (SOLO). Skip when live. */
+    if (e.isInitialized() && e.isModelLoaded()) {
+        if (maxSeq > 0 && e.getConfig().maxSeqLen != maxSeq) {
+            /* Soft note only — do not rebuild KV mid-session. */
+            fprintf(stderr, "INIT_FROM_PATH=LOAD_ONLY maxSeq_req=%zu live=%zu\n",
+                    maxSeq, e.getConfig().maxSeqLen);
+        }
+        return true;
+    }
     const auto& mw = e.getModelWeights();
     EngineConfig cfg{};
     cfg.hiddenDim = mw.hiddenDim;

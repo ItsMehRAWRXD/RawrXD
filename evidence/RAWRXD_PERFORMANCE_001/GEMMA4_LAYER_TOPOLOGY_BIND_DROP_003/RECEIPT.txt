@@ -1,0 +1,47 @@
+GEMMA4_LAYER_TOPOLOGY_BIND_DROP_003
+DATE=2026-09-09
+SOURCE_ONLY=1
+HEADER_ONLY=1
+NEW_OBJECTS=0
+CMAKE_REQUIRED=0
+OLLAMA_HTTP=0
+PROMOTE=0
+
+RETAINED
+  PHI3_GEMMA4_DECODE_NEXT_DROP_001=SEALED
+  PHI3_FUSED_FFN_RUNTIME=PASS
+  PHI3_C0000374=0
+  GEMMA4_BIND_SCHEMA_AUTHORITY_DROP_002=SEALED
+  DSR1_8B_MODEL_OPEN=PASS
+  DECODE_OWNER=FORWARD
+  PROMOTE=0
+
+ADDED
+  src/deep2/Gemma4LayerTopologyBind.hpp
+  WIRED=topology TryBindLayerTensor before llama/schema paths
+  WIRED=EmitSummary after weight map
+  WIRED=TryExecuteProjectorBlock in forwardLayer (before attn)
+
+OBSERVED_GGUF_FACT (gemma-4-E4B-it-Q4_K_M)
+  Every layer has BOTH attn_q/k/v/o AND blk.N.proj.weight (PLE).
+  Therefore projector_block-only classification does not apply to this file:
+  SPLIT_QKV_LAYERS=42 PROJECTOR_BLOCK_LAYERS=0
+  Topology binder still clears attn_q authority by accepting split OR projector.
+
+--- GEMMA4 runtime receipt ---
+MODEL=F:\OllamaModels\gemma-4-E4B-it-GGUF\gemma-4-E4B-it-Q4_K_M.gguf
+LOG=smoke_gemma4.log / smoke_gemma4.stdout.txt
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=42 split=42 projector=0 ffn=42
+GEMMA4_PROJECTOR_LAYER_EXEC=0 (no projector-only layers in this GGUF)
+AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+AUTHORITY_LADDER=PASS schema=380 quant=380 tok=262144
+TOKENS_COMMITTED=1
+TOKENS_DECODED=1
+NEXT_CONCRETE_OWNER=PROVENANCE_MISMATCH (parity/product; not attn_q)
+MODEL_OPEN_RUNTIME=PASS (open+1 token)
+PROMOTE=0
+
+NEXT
+  ignore_ladder_next.ps1 after concrete runtime owner stable
+  A0/A1/A2/A6/A8/A10 against DECODE_OWNER=FORWARD
+  PROMOTE=0

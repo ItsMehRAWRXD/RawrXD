@@ -14,8 +14,8 @@ enum class ChoreoMode : uint8_t {
 
 struct ChoreoRequest {
     const char* prompt = nullptr;
-    uint32_t maxTokensA = 256;
-    uint32_t maxTokensB = 256;
+    uint32_t maxTokensA = 0; /* 0 = unlimited (EOS/cancel/context) */
+    uint32_t maxTokensB = 0;
     int requireJoin = 0; // 0 = async receipts; 1 = join_wall = max(A,B)
 };
 

@@ -1,0 +1,62 @@
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ #include "lavapath/Batch007Emit.hpp"
++#include "lavapath/DecodeLoopAttribution.hpp"
+ #include "lavapath/ProductPathSeal.hpp"
+@@
+     const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(opts.maxTokens)));
+     std::vector<int> outputTokens(maxTokens);
+     std::string streamed;
+     bool wasCancelled = false;
++    rawr::decode_loop::Reset(maxTokens);
++    rawr::decode_loop::Utf8Carry detokCarry;
+@@
+         [&](int tokenId) -> bool {
+             if (tokenizer && tokenId == tokenizer->GetSpecialTokens().eosId) {
+                 return false; // EOS terminates generation
+             }
+             std::string piece;
+             if (tokenizer) {
+-                rawr::batch007::A().detokIds.push_back(tokenId);
+-                std::string full = tokenizer->Decode(rawr::batch007::A().detokIds);
+-                if (full.size() >= rawr::batch007::A().detokPrev.size() &&
+-                    full.compare(0, rawr::batch007::A().detokPrev.size(),
+-                                 rawr::batch007::A().detokPrev) == 0) {
+-                    piece = full.substr(rawr::batch007::A().detokPrev.size());
+-                } else {
+-                    piece = tokenizer->Decode(tokenId);
+-                }
+-                rawr::batch007::A().detokPrev = full;
++                // Decode only the new token. The old cumulative Decode(detokIds)
++                // replayed history and kept TOKENS_DECODED above TOKENS_COMMITTED.
++                piece = rawr::decode_loop::DecodeOne(tokenizer.get(), tokenId, detokCarry);
+                 rawr::batch007::A().detokCarry = 1;
+                 rawr::batch007::A().partialFlush = 1;
+             } else {
++                auto d0 = rawr::decode_loop::Clock::now();
+                 piece = detokenize(std::vector<int>{tokenId});
++                rawr::decode_loop::NoteSequenceDecode(1, rawr::decode_loop::NsSince(d0));
+             }
+             rawr::batch007::CommitToken(tokenId, piece, tokenizer != nullptr);
++            rawr::decode_loop::NoteCommit();
+             streamed += piece;
+             if (callback) {
++                auto c0 = rawr::decode_loop::Clock::now();
+                 bool keepGoing = callback(static_cast<int32_t>(tokenId), piece);
++                rawr::decode_loop::NoteCallbackNs(rawr::decode_loop::NsSince(c0));
+                 if (!keepGoing) {
+                     wasCancelled = true;
+                     return false;
+@@
+     result.cancelled = wasCancelled || isCancelRequested();
+     result.completed = generated > 0 && !result.cancelled;
+     clearCancel();
++    (void)detokCarry.flush();
+@@
+         rawr::product_path::Emit(stderr, xf);
++        rawr::decode_loop::Emit(stderr);
+     }
+     return result;
+ }
