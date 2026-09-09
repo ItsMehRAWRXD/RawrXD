@@ -3,6 +3,7 @@
 #include "Deep2GpuForward.hpp"
 #include "K2NativeStreamGate.hpp"
 #include "lavapath/OneByOneIgnoreLadder.hpp"
+#include "lavapath/GpuForwardChildLadder.hpp"
 #include "DecodeBlockerAttribution.hpp"
 #include <cmath>
 #include <cstdio>
@@ -151,6 +152,7 @@ void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
         gpuFwd_.q6kPackedOps = vc0->Q6kPackedOps();
     }
     Deep2GpuForward_Emit(f, gpuFwd_, vulkanGemvFail_);
+    rawr::gpu_iso::Emit(f ? f : stderr);
     auto emit = [&](FILE* o) {
         if (!o) return;
         fprintf(o, "LIVE_DECODE_COMMITTED=%u\n", gpuFwdCommitted_ ? 1u : 0u);

@@ -3,7 +3,7 @@
 #include "Deep2GpuForward.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "GpuTransferCounters.hpp"
-#include "lavapath/OneByOneIgnoreLadder.hpp"
+#include "lavapath/GpuForwardChildLadder.hpp"
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -225,9 +225,14 @@ bool Deep2Engine::forwardLayerGpuResident(
         return vc->WaitWeightCompute(sc);
     };
 
-    /* A9/A10: GPU-resident ignore (host computeAttention/FFN are off live path). */
-    const bool skipAttn = rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A9);
-    const bool skipFfn = rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A10);
+    /* GPU_FORWARD_CHILD_ONE_IGNORE (DEEP2_GPU_ISO_RUN). Host A9/A10 stay non-owning. */
+    using rawr::gpu_iso::Run;
+    const bool skipQkv = rawr::gpu_iso::Ignore(Run::G1) || rawr::gpu_iso::Ignore(Run::G4);
+    const bool skipDevAttn = rawr::gpu_iso::Ignore(Run::G2);
+    const bool skipFfn = rawr::gpu_iso::Ignore(Run::G3) || rawr::gpu_iso::Ignore(Run::G4);
+    const bool skipOProj = rawr::gpu_iso::Ignore(Run::G5) || rawr::gpu_iso::Ignore(Run::G4);
+    const bool skipKv = rawr::gpu_iso::Ignore(Run::G6);
+    const bool skipSync = rawr::gpu_iso::Ignore(Run::G7);
     static thread_local std::vector<float> isoZero;
     auto identityViaZeroDown =
         [&](CPUInference::VulkanCompute::DeviceBuf& src,
@@ -242,19 +247,23 @@ bool Deep2Engine::forwardLayerGpuResident(
         return fail();
     ++c.rmsNormOps;
 
-    if (!skipAttn) {
+    const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
+    if (!skipQkv) {
         if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
                           vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
             return fail();
         c.qkvOps += 3;
-
-        const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
+    }
+    if (!skipQkv && !skipDevAttn) {
         if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
                               modelWeights.ropeTheta))
             return fail();
         ++c.ropeOps;
-
+    }
+    if (!skipQkv && !skipKv) {
         if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
+    }
+    if (!skipQkv && !skipDevAttn) {
         const float scale = 1.0f / std::sqrt((float)headDim);
         if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
                                     vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
@@ -263,10 +272,10 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.attnScoreOps;
         ++c.softmaxOps;
         ++c.attnValueOps;
-
+    }
+    if (!skipQkv && !skipDevAttn && !skipOProj) {
         if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
         ++c.oProjOps;
-
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
                                      vc->ArenaResidual(), H))
             return fail();
@@ -284,7 +293,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (!skipFfn) {
         if (prefetch && vc->WeightStreamActive() &&
             !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
-            if (!vc->FlushWeightComputes()) return fail();
+            if (!skipSync && !vc->FlushWeightComputes()) return fail();
             const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
             uint32_t sg = 0;
             if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
@@ -293,10 +302,10 @@ bool Deep2Engine::forwardLayerGpuResident(
             const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
             uint32_t su = 0;
             if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
-            if (!vc->WaitWeightCompute(sg)) return fail();
+            if (!skipSync && !vc->WaitWeightCompute(sg)) return fail();
             if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
                 return fail();
-            if (!vc->WaitWeightCompute(su)) return fail();
+            if (!skipSync && !vc->WaitWeightCompute(su)) return fail();
         } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
                    !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
             return fail();
@@ -305,7 +314,6 @@ bool Deep2Engine::forwardLayerGpuResident(
             return fail();
         ++c.ffnActOps;
         if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail();
-
         if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(),
                                      vc->ArenaHidden(), H))
             return fail();
@@ -316,7 +324,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     }
 
     if (fuse && !vc->EndFusedLayer()) return false;
-    if (!vc->FlushWeightComputes()) return false;
+    if (!skipSync && !vc->FlushWeightComputes()) return false;
     if (!fuse) vc->ResetWeightWindowLayerCursor();
     if (fuse) ++c.layerSubmits;
     ++c.forwardLayers;
@@ -339,6 +347,7 @@ bool Deep2Engine::forwardLayerGpuResident(
 
 bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
                                             const float* hostIn, float* hostOut) {
+    rawr::gpu_iso::Begin();
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -347,8 +356,12 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     for (uint32_t L = lo; L <= hi; ++L) {
         if (!forwardLayerGpuResident(L, slot, false, false)) return false;
     }
-    if (!vc->DownloadHidden(hostOut, H)) return false;
-    ++gpuFwd_.hostSyncBoundaries;
+    if (!rawr::gpu_iso::Ignore(rawr::gpu_iso::Run::G8)) {
+        if (!vc->DownloadHidden(hostOut, H)) return false;
+        ++gpuFwd_.hostSyncBoundaries;
+    } else if (hostOut && hostIn && hostOut != hostIn) {
+        std::memcpy(hostOut, hostIn, (size_t)H * sizeof(float));
+    }
     return true;
 }
 
