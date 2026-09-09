@@ -1,0 +1,136 @@
+EV512_PATTERN_NONPATTERN_MATRIX_1_17_001=SEALED
+DATE=2026-09-08
+TYPE=REVERSE_ENGINEER_PATTERN_MATRIX
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+ZERO_SPECULATION=1
+
+# Pattern = concrete HostEmit* site + predicate. Non-pattern = predicate false.
+# Class per row from sealed runs only.
+
+SSOT_RUNS=
+  R0=EV512_E2E_IMP_SMOKE_001 host-llama PATHB_OFF clean
+  R1=CLAIM6_COVERAGE_SMOKE_001 K2 PATHB_OFF max-tokens=1 clean
+  R2=CLAIM_11_14_ABORT_GEN_001 K2 PATHB_OFF ABORT_AFTER=1
+  R3=CLAIM_9_PATHB_GEN_001 K2 DEEP2_PATH_B=1 max-tokens=1 clean
+
+# ID | NAME | SITE | MATCH_PRED | NON_MATCH | CLASS | RUN_PROOF | COMPLETE
+#----+------+------+------------+-----------+-------+----------+---------
+1  FIRST_TOKEN_BOUNDARY
+   SITE=K2NativeStreamGate step==0 HostEmitFirstTokenBoundary
+   MATCH=K2 decode step0 entered
+   NON_MATCH=no K2 decode / armed=0
+   CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+2  HIDDEN_PROBE
+   SITE=after hidden probe emit HostEmitHiddenProbe
+   MATCH=probeEmitted
+   NON_MATCH=!probeEmitted
+   CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+3  HIDDEN_LAST
+   SITE=with probe HostEmitHiddenLast
+   MATCH=probeEmitted
+   NON_MATCH=!probeEmitted
+   CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+4  BOUNDED
+   SITE=with probe HostEmitBounds(...,ok=1)
+   MATCH=probeEmitted
+   NON_MATCH=!probeEmitted
+   CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+5  VALID
+   SITE=with probe HostEmitValid(...,ok=1)
+   MATCH=probeEmitted
+   NON_MATCH=!probeEmitted
+   CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+6  LOGITS_ENTRY
+   SITE=ProjectLogitsArgmax entry HostEmitLogitsEntry
+   MATCH=function entered
+   NON_MATCH=never reach ProjectLogitsArgmax (host-llama R0)
+   CLASS=Exact Match  PROOF=R1,R2,R3  COMPLETE=OBSERVED
+
+7  LOGITS_COMPLETE
+   SITE=ProjectLogitsArgmax ok HostEmitLogitsComplete
+   MATCH=argmax returns token
+   NON_MATCH=logits fail / abort before complete
+   CLASS=Exact Match  PROOF=R1,R3  COMPLETE=OBSERVED
+
+8  ATTN_COMPLETE
+   SITE=K2MLAWeights HostEmitAttnComplete
+   MATCH=pathBDone OR MlaAttentionComplete ok
+   NON_MATCH=attn cleanup fail
+   CLASS=Exact Match  PROOF=R1,R3  COMPLETE=OBSERVED
+
+9  PATHB_COMPLETE
+   SITE=K2MLAWeights pathBDone HostEmitPathBComplete
+   MATCH=PathBWanted && PathB_QDev && PathBAttend→true
+   NON_MATCH=DEEP2_PATH_B≠1 OR PathBAttend false (fallback host)
+   CLASS_R1=Non-Match(Dead) PATHB_OFF pruned  PROOF=R1
+   CLASS_R3=Exact Match PATHB_SUCCESS lock   PROOF=R3 OBSERVED ORD=35
+   COMPLETE=OBSERVED
+   STRUCTURAL_VARIANT_REMAINING=
+     PATHB_ABORT/FAULT not separate ClaimId; if needed later = variant queue
+     Claim9 COMPLETE by Exact Match; residual variants MERGED optional
+
+10 STREAM_COMPLETE
+    SITE=K2 result.ok HostEmitStreamComplete | product join
+    MATCH=clean stream ok
+    NON_MATCH=abort/cancel
+    CLASS=Exact Match  PROOF=R1,R3  COMPLETE=OBSERVED
+    NON_MATCH_PROOF=R2 (abort → no claim10 required; R2 mask)
+
+11 STREAM_ABORT
+    SITE=HostEmitStreamAbort ARG1=owner_tag
+    MATCH_TAGS={1,2,3,6,7,8} Structural Variants same ClaimId
+    EXACT_LOCK=TAG8 TOKEN_CALLBACK  PROOF=R2 ARG1=8 OBSERVED
+    NON_MATCH=clean complete  PROOF=R1,R3
+    COMPLETE=OBSERVED
+    VARIANT_MERGE=tags 1,2,3,6,7 same emit; not UNRESOLVED ClaimIds
+
+12 TEARDOWN_ENTRY
+    SITE=join HostEmitTeardownEntry
+    MATCH=armed teardown path
+    CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+13 TEARDOWN_COMPLETE
+    SITE=join HostEmitTeardownComplete
+    MATCH=after ClearQDev
+    CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+14 TEARDOWN_FAULT
+    SITE=HostEmitTeardownFault paired with abort sites
+    EXACT_LOCK=TAG8 with Claim11  PROOF=R2 ARG1=8 OBSERVED
+    NON_MATCH=clean teardown  PROOF=R1,R3
+    COMPLETE=OBSERVED
+    VARIANT_MERGE=same as Claim11 owner tags
+
+15 WALL_NS
+    SITE=SPT wall HostEmitWallNs
+    MATCH=timed join
+    CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+16 DECODE_TPS_Q32_32
+    SITE=with wall HostEmitDecodeTpsQ32_32
+    MATCH=wallNs>0 && tokN
+    CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+17 PARITY
+    SITE=pChk>0 HostEmitParity
+    MATCH=LogitsParityChecks>0
+    NON_MATCH=pChk==0
+    CLASS=Exact Match  PROOF=R1  COMPLETE=OBSERVED
+
+SUMMARY=
+  Exact Match locks = 17/17 ClaimIds
+  Non-Match pruned (documented) = PATHB_OFF for C9; CLEAN for C11/C14; host-llama for C6
+  Structural Variants merged = abort/fault owner tags ≠ new claims
+  Unresolved ClaimIds = 0 (unknowns eliminated by Exact Match lock)
+  Invented emissions = 0
+
+VERDICT=
+  STATE_SPACE_EXHAUSTION_FOR_CLAIM_IDS_1_17=COMPLETE
+  VIA=Exact Match OBSERVED (not ELIMINATION_CLOSED)
+  PATTERN_NONPATTERN_MATRIX=100% classified
+  MEASUREMENT=UNSPENT MODE=D

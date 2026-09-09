@@ -1,0 +1,24 @@
+BUILD_RuntimeEvidence512_IDE_E2E.txt
+
+VS2022 x64 Native Tools command prompt, from the source-drop src\asm directory:
+
+  ml64 /nologo /c /FoRuntimeEvidence512_IDEEmit.obj RuntimeEvidence512_IDEEmit.asm
+  ml64 /nologo /c /FoRuntimeEvidence512_IDECollect.obj RuntimeEvidence512_IDECollect.asm
+
+Link beside the already-landed RuntimeEvidence512 Core+Emit object(s).
+
+Include paths:
+  RuntimeEvidence512_IDEEmit.asm and RuntimeEvidence512_IDECollect.asm use
+  RuntimeEvidence512_IDEClaims.inc in the same directory.
+
+C/C++ declarations:
+  include\RuntimeEvidence512_IDEClaims.h
+
+Static source-coverage audit:
+  powershell -NoProfile -ExecutionPolicy Bypass ^
+    -File tools\Audit-RuntimeEvidence512-IDECoverage.ps1
+
+No successful assembly/link in this package is claimed until ml64/link run in
+the user's actual VS2022 tree.
+
+Do not treat static coverage, assembly, or link success as runtime evidence.

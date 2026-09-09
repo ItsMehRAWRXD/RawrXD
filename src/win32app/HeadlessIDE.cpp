@@ -55,6 +55,9 @@
 #include <unordered_map>
 #include "gguf_loader.h"
 
+#include "../deep2/RuntimeEvidence512Surface.hpp"
+#include "../deep2/RuntimeEvidence512HostIDE.hpp"
+
 #include <winhttp.h>
 #include <bcrypt.h>
 
@@ -819,6 +822,9 @@ HeadlessResult HeadlessIDE::initialize(int argc, char* argv[]) {
 }
 
 HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
+    Deep2::Ev512::HostTryArm(0x484541444C455353ull); /* HEADLESS */
+    Deep2::Ev512::HostEmitIDEBootEntry(
+        (uint64_t)GetCurrentProcessId(), (uint64_t)GetCurrentThreadId());
     m_config = config;
     if (readEnvFlag("RAWRXD_HOSTED_MODE", false)) {
         m_config.ingressMode = HeadlessIngressMode::Hosted;
@@ -1009,6 +1015,16 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     m_conversationManager = std::make_unique<ConversationManager>();
 
     m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
+
+    {
+        char cwd[MAX_PATH];
+        DWORD n = GetCurrentDirectoryA(MAX_PATH, cwd);
+        const uint64_t wh = Deep2::Ev512::HostPathHash(n ? cwd : ".");
+        Deep2::Ev512::HostEmitWorkspaceOpen(wh, wh);
+        Deep2::Ev512::HostEmitBackendSelected(
+            (uint64_t)static_cast<int>(m_activeBackend), 1);
+        Deep2::Ev512::HostEmitCoreInitComplete(1, 1);
+    }
 
     // Breadcrumb: init complete
     {
@@ -1807,6 +1823,8 @@ bool HeadlessIDE::setActiveBackend(AIBackendType type) {
 
     AIBackendType previousBackend = m_activeBackend;
     m_activeBackend = type;
+    Deep2::Ev512::HostEmitBackendSelected((uint64_t)idx,
+                                          (uint64_t)static_cast<int>(previousBackend));
 
     char buf[256];
     snprintf(buf, sizeof(buf), "Backend switched: %s → %s",
@@ -3710,6 +3728,10 @@ void HeadlessIDE::printReplPrompt() {
 // Shutdown
 // ============================================================================
 void HeadlessIDE::shutdownAll() {
+    Deep2::Ev512::HostEmitIDEExitEntry(
+        (uint64_t)GetCurrentProcessId(), 0);
+    Deep2::Ev512::HostEmitSessionPersist(
+        Deep2::Ev512::HostPathHash(m_sessionId.c_str()), 0);
     stopServer();
 
     if (m_winsockInitialized) {
@@ -3718,6 +3740,9 @@ void HeadlessIDE::shutdownAll() {
     }
 
     m_outputSink->flush();
+    Deep2::Ev512::HostEmitIDEExitComplete(
+        (uint64_t)GetCurrentProcessId(), 0);
+    Deep2::Ev512::HostSurfaceAllClaims(stderr);
 }
 
 // ============================================================================

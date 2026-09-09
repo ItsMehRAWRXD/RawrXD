@@ -1,0 +1,46 @@
+IDE_PRODUCT_PATH_COVERAGE_002=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR_EXPANSION
+SUPERSEDES_COUNTS=IDE_PRODUCT_PATH_COVERAGE_001 (21→31+52)
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+
+NEW_WIRES=
+  32 TEMPLATE_EOG_CONTRACT (K2 tokenizer specials)
+  33 TENSOR_SCHEMA (GlobalTensorIndex count)
+  36 REQUEST_ACCEPTED / 37 REQUEST_ROUTED (generateStream)
+  43 FORWARD_COMPLETE / 55 WEIGHT_RANGE / 56 KV_HOTSET / 54 DEVICE_EXEC
+    after ForwardMLALayers success
+  44 SAMPLE_COMPLETE after LogitsComplete/argmax
+  53 DEVICE_SELECTED at K2 Run layerDepth resolve
+  52 STREAM_ERROR on TOKEN_CALLBACK abort (paired with 11/14)
+
+SMOKE_CLEAN=
+  RC=0 WALL_MS≈10007 MAX_TOKENS=1 PATHB=off
+  OBSERVED_18_96_COUNT=31
+  OBSERVED_18_96=24-46,49,53-56,91,92,96 (contiguous product core)
+  REQUIRED_PRODUCT_MISS_CLEAN=52 (Non-Match; clean complete — expected)
+
+SMOKE_ABORT_GEN=
+  DEEP2_EV512_ABORT_AFTER=1
+  CLAIM_52 STREAM_ERROR=OBSERVED Exact Match ARG0=8
+
+REQUIRED_PRODUCT_RUNTIME_CORE=
+  Exact Match locked: 24-46,49,52-56,91,92,96
+  (52 via abort generator; others via clean K2 path)
+
+STILL_NON_MATCH_EXPECTED=
+  18-23 IDE boot/window/workspace/backend (Win32)
+  47-48 UI stream append/finalize (Win32 paint)
+  50-51 cancel (optional RequiredProductE2E=0)
+  57-59 residency release/reload (optional/partial)
+  60-90 agent/tool/edit/build/test/git/mcp/ext/server
+  93-95 IDE exit/fault
+
+NEXT=
+  Win32 IDE remaining-generator for 18-23,47-48,88,93-94
+  OR MODE=A measured authority when authorized
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  coverage≠measurement≠promotion

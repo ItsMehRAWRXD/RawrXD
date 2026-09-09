@@ -1,0 +1,46 @@
+EV512_CLAIMS_18_96_CONVERGENCE_001=SEALED
+DATE=2026-09-08
+TYPE=CONVERGENCE_MATRIX
+LAW=EV512_CLAIM_CONVERGENCE_LAW_001
+EXHAUSTION=EV512_STATE_SPACE_EXHAUSTION_001
+PATTERN_MATRIX=EV512_PATTERN_NONPATTERN_MATRIX_18_96_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+
+COMPLETE_OBSERVED=79/79
+ELIMINATION_CLOSED=0/79
+UNRESOLVED=0/79
+CLAIM_COMPLETE=79/79 VIA_OBSERVED
+
+# Aggregate Exact Match across sealed remaining-gen / product-path receipts.
+# OBSERVED never invented; per-claim SSOT is the sealing receipt below.
+
+CLAIM_SSOT_MAP=
+  18-21,47-48,88,93-94 ← IDE_GUI_LIFECYCLE_SMOKE_001
+  22,58-59,95          ← IDE_REMAINING_GEN_006
+  23,60,63-66,69-74,79-80,90 ← IDE_REMAINING_GEN_004
+  24-46,49,52-56,91-92,96 ← IDE_PRODUCT_PATH_COVERAGE_002
+                         (52 via abort gen; 24-31,34-35,38-42,45-46,49,91-92,96
+                          also in COVERAGE_001)
+  50-51,57             ← IDE_REMAINING_GEN_003
+  61-62,67-68,75-78,81-87,89 ← IDE_REMAINING_GEN_005
+
+CONTIGUOUS_LOCK=
+  18..96 all CLAIM_COMPLETE=OBSERVED
+
+NOTE_PER_RUN_NO_CORRESPONDING=
+  A single binary surface may still show NO_CORRESPONDING for claims
+  whose owning path was not entered that run. Aggregate convergence
+  is across finite sealed generators, not one omniscient process.
+
+SUPERSEDES_NEXT_FROM=
+  EV512_CLAIMS_1_17_CONVERGENCE_002 NEXT "IDE claims 18-96"
+  IDE_REMAINING_GEN_006 NEXT "convergence matrix refresh 18-96"
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NO_PATH_B_PROMOTE=1
+  coverage≠measurement≠promotion
+  NEXT=MODE=A measured authority when authorized
+       OR 1..96 combined convergence rollup (optional)

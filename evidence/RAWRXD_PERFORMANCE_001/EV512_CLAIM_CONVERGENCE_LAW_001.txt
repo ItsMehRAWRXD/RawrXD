@@ -1,0 +1,35 @@
+EV512_CLAIM_CONVERGENCE_LAW_001=SEALED
+DATE=2026-09-08
+TYPE=LAW
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+
+LAW=
+  OBSERVED              = corresponding runtime emission occurred
+  ELIMINATION_CLOSED    = finite mutually-exclusive GEN exhausted;
+                          all alternatives independently eliminated;
+                          NOT a fabricated emission
+  NO_CORRESPONDING      = this run never entered the claim owning path
+  UNRESOLVED            = GEN still contains untested legal disposition
+
+AUTHORITY_HIERARCHY=
+  1 OBSERVED
+  2 ELIMINATION_CLOSED
+  3 NO_CORRESPONDING (per-run)
+  4 UNRESOLVED
+
+FORBIDDEN=
+  convert ELIMINATION_CLOSED → OBSERVED
+  invent runtime records
+  one emission satisfying multiple claim IDs (unless shared-by-definition)
+
+REMAINING_GENERATOR=
+  GEN(C) finite dispositions
+  REMAINING = GEN - OBSERVED_SET - ELIMINATED_SET
+  converge when |REMAINING|==0
+     OR |REMAINING|==1 AND all others proven impossible
+  then DISPOSITION=ELIMINATION_CLOSED DERIVATION=FINITE_GENERATOR_EXHAUSTION
+
+CLAIM_COMPLETE=
+  OBSERVED OR ELIMINATION_CLOSED
+
+OBSERVATIONS_ONLY_WHEN_RUNTIME_EMITS=1

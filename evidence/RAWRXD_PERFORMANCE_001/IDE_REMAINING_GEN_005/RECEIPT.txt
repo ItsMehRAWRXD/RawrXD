@@ -1,0 +1,57 @@
+IDE_REMAINING_GEN_005=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR_EXACT_MATCH_BATCH
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+
+HARNESS=
+  BINARY=build-fd/bin/ev512_ide_workflow_smoke.exe
+  SOURCE=tools/ev512_ide_workflow_smoke.cpp
+  ENV=DEEP2_EV512=1
+  SSOT=workflow.stderr.txt
+  RC=0 COM=16
+  OWNERS=
+    FS plan/model-return/edit/undo/settings/checkpoint
+    DEBUG_ONLY_THIS_PROCESS + WaitForDebugEvent
+    Winsock loopback JSON-RPC/HTTP (LSP/MCP/local-server)
+    LoadLibraryW(user32) / FreeLibrary (extension)
+
+EXACT_MATCH_OBSERVED=
+  61 AGENT_PLAN_READY
+  62 AGENT_MODEL_RETURN
+  67 EDIT_APPLIED
+  68 UNDO_APPLIED
+  75 DEBUG_ENTRY
+  76 DEBUG_STOP
+  77 LSP_REQUEST
+  78 LSP_RESULT
+  81 MCP_DISPATCH
+  82 MCP_COMPLETE
+  83 EXTENSION_DISPATCH
+  84 EXTENSION_COMPLETE
+  85 LOCAL_SERVER_REQUEST
+  86 LOCAL_SERVER_RESPONSE
+  87 SETTINGS_PERSIST
+  89 AGENT_RESUME
+  HIT=16/16 target workflow set
+
+WIRE_LANDED_THIS_BATCH=
+  RuntimeEvidence512HostIDE.hpp HostEmit* for 61-62,67-68,75-78,81-87,89
+  CMake target ev512_ide_workflow_smoke (+ ws2_32)
+
+NOT_IN_THIS_GEN=
+  22 SESSION_RESTORE — needs restore owner path
+  58-59 RELOAD_* — model reload owner (product/deep2)
+  95 PROCESS_FAULT — clean-exit Non-Match expected
+  Win32IDE product-site emits for these claims remain optional
+    (harness is the honest remaining-generator Exact Match)
+
+CLOSED_VS_PRIOR=
+  GEN_004 NOT_IN closed here: 61-62,67-68,75-78,81-87,89
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NEXT=reload 58-59 / session-restore 22 GEN OR MODE=A when authorized
+       OR convergence matrix refresh 18-96

@@ -1,0 +1,15 @@
+BUILD_RuntimeEvidence512_Collect.txt
+
+From a VS2022 x64 Native Tools command prompt:
+
+  ml64 /nologo /c ^
+    /FoRuntimeEvidence512_Collect.obj ^
+    src\asm\RuntimeEvidence512_Collect.asm
+
+Expected artifact:
+  RuntimeEvidence512_Collect.obj
+
+No CRT and no external symbols are required by this collector object.
+
+Link it beside the already-landed RuntimeEvidence512 Core/Emit objects.
+Do not treat successful assembly/link as runtime evidence.

@@ -17,6 +17,8 @@
 #include "RawrChoreography.hpp"
 #include "RawrReverseCompletion.hpp"
 #include "NemotronHSsmMap.hpp"
+#include "RuntimeEvidence512Host.hpp"
+#include "RuntimeEvidence512HostIDE.hpp"
 #include "../../core/GpuDecodeEfficiency.hpp"
 #include <iostream>
 #include <algorithm>
@@ -242,15 +244,18 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
         def("DEEP2_MLA_QKV_SPLIT", "1");
         def("DEEP2_MLA_HIDDEN_REUSE", "1");
         def("DEEP2_MLA_FUSED_Q4KT", "1");
+        /* Q_DEVICE default ON via K2MLA_QPathDevice (opt-out=0). Do not force off —
+           LOGITS_OWNER_RESIDUAL remesaure must match promote baseline. */
         def("DEEP2_LIVE_POLICY", "PROMO");
         def("DEEP2_LIVE_PATH", "1");
         def("DEEP2_LIVE_ALLOW_LAYER_CACHE", "1");
         def("DEEP2_LIVE_CACHE_BUDGET_MIB", "12288");
         def("DEEP2_LIVE_MECH", "trampoline,cyclone,elastic");
         def("DEEP2_GEN_ALG", "standard");
-        def("DEEP2_LOGITS_THREADS", "16");
-        /* Opt-in split; LOGITS_SPLIT_AUTO_BAIL_001 drops it when unprofitable. */
-        def("DEEP2_LOGITS_GPU_SPLIT", "1");
+        def("DEEP2_LOGITS_THREADS", "32");
+        /* LOGITS_SPLIT_CUT: GPU||CPU split measured unprofitable on K2 Q4;
+           stay CPU_ONLY climb (32-wide). Opt-in DEEP2_LOGITS_GPU_SPLIT=1. */
+        def("DEEP2_LOGITS_GPU_SPLIT", "0");
         SetEnvironmentVariableA("RAWRXD_SEMANTIC_SAFE", nullptr);
         _putenv_s("RAWRXD_SEMANTIC_SAFE", "");
         SetEnvironmentVariableA("RAWRXD_GPU_DEVICES", nullptr);
@@ -355,12 +360,28 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     {
         rawr::spin::Reset();
         rawr::spin::Open(nowNs());
+        /* Coverage generator: DEEP2_EV512_ABORT_AFTER=N → false after N tokens. */
+        const uint32_t abortAfter = []() -> uint32_t {
+            const char* e = std::getenv("DEEP2_EV512_ABORT_AFTER");
+            if (!e || !e[0]) return 0u;
+            const int n = std::atoi(e);
+            return n > 0 ? (uint32_t)n : 0u;
+        }();
+        uint32_t emitCount = 0;
         auto gr = pImpl->engine->generateStream(
             prompt, opts,
             [&](int32_t, const std::string& piece) -> bool {
                 generatedText += piece;
-                return onEmit();
+                if (!onEmit()) return false;
+                ++emitCount;
+                if (abortAfter && emitCount >= abortAfter) {
+                    Deep2::Ev512::HostEmitCancelRequest(1, (uint64_t)emitCount);
+                    return false;
+                }
+                return true;
             });
+        if (abortAfter && emitCount >= abortAfter)
+            Deep2::Ev512::HostEmitCancelComplete(1, 1);
         Deep2::Td(1, "GENERATE_RETURNED");
         generated = static_cast<size_t>(gr.generatedTokens);
         if (generated == 0) generated = emitNs.size();
@@ -398,6 +419,15 @@ StreamBenchmark BenchmarkHarness::runSingleStreamTest(
     bench.duration_sec = wallNs / 1e9;
     // Always emit generation wall — even when GENERATED_TOKENS=0.
     bench.total_decode_ns = wallNs;
+    Deep2::Ev512::HostEmitWallNs(wallNs, generated);
+    if (wallNs > 0 && generated > 0) {
+        const double tps =
+            static_cast<double>(generated) / (wallNs / 1e9);
+        const uint64_t tpsQ =
+            (uint64_t)(tps * 4294967296.0); /* Q32.32 */
+        Deep2::Ev512::HostEmitDecodeTpsQ32_32(tpsQ, generated);
+    }
+    Deep2::Ev512::HostEmitParity(generated, wallNs, 1);
     bench.capacity_target_ns_token = kTokenBudgetNs5Tps;
     if (stats.decodeMs <= 0.0 && generated > 0 && bench.duration_sec > 0.0) {
         stats.decodeMs = bench.duration_sec * 1000.0;

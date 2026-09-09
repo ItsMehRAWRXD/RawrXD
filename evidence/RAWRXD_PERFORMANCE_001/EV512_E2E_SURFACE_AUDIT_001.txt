@@ -1,0 +1,58 @@
+EV512_E2E_SURFACE_AUDIT_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_E2E_AUDIT
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+RUNTIME_OBSERVATION=NOT_CLAIMED
+
+PURPOSE=
+  Ensure every ClaimId 1..17 has a possible surfaced record path when fired.
+  Surface = RXEV_SURFACE lines (stderr) via HostSurfaceAllClaims after join.
+  Missing fire → NO_CORRESPONDING_RUNTIME_EVIDENCE (not fabricated OBSERVED).
+
+PIPELINE=
+  Emit(EvidenceEmit*) → Commit(XCHG) → FindClaim/Summarize → RXEV_SURFACE
+
+CLAIM_MATRIX=
+  ID  NAME                   EMIT_SYM  HOST_WRAP  SITE_WIRE           COLLECT  SURFACE
+  1   FIRST_TOKEN_BOUNDARY   YES       YES        StreamGate step0    YES      YES
+  2   HIDDEN_PROBE           YES       YES        WitnessFinalHidden  YES      YES
+  3   HIDDEN_LAST            YES       YES        WitnessFinalHidden  YES      YES
+  4   BOUNDED                YES       YES        with probe success  YES      YES
+  5   VALID                  YES       YES        with probe success  YES      YES
+  6   LOGITS_ENTRY           YES       YES        ProjectLogitsArgmax YES      YES
+  7   LOGITS_COMPLETE        YES       YES        LOGITS_RETURN_OK    YES      YES
+  8   ATTN_COMPLETE          YES       YES        pathBDone MLA       YES      YES
+  9   PATHB_COMPLETE         YES       YES        pathBDone MLA       YES      YES
+ 10   STREAM_COMPLETE        YES       YES        Run ok exit         YES      YES
+ 11   STREAM_ABORT           YES       YES        LOGITS fail path    YES      YES
+ 12   TEARDOWN_ENTRY         YES       YES        before ClearQDev    YES      YES
+ 13   TEARDOWN_COMPLETE      YES       YES        after ClearQDev     YES      YES
+ 14   TEARDOWN_FAULT         YES       YES        Host avail; AV gap  YES      YES
+ 15   WALL_NS                YES       YES        Deep2Benchmark wall YES      YES
+ 16   DECODE_TPS_Q32_32      YES       YES        Deep2Benchmark TPS  YES      YES
+ 17   PARITY                 YES       YES        Deep2Benchmark      YES      YES
+
+IDE=
+  SoloIDE has no EV512 claim panel.
+  Surfaced record channel = stderr RXEV_SUMMARY + RXEV_SURFACE×17
+  Arm = DEEP2_EV512=1 (soft). Unarmed → RXEV_SURFACE ARMED=0.
+
+GAPS_REMAINING=
+  TEARDOWN_FAULT site not auto-fired on SEH 0xC0000005 (needs SEH filter)
+  STREAM_ABORT not wired on every OWNER= path (TOKEN_EMBED/MLA/…)
+  SoloIDE UI dock for RXEV lines = ABSENT
+  ASSEMBLY/LINK authority still UNCLAIMED
+  no HOT_GATE remasure — audit does not produce runtime OBSERVED claims
+
+LAW=
+  source existence ≠ runtime evidence
+  fire → possible OBSERVED surface
+  no fire → NO_CORRESPONDING (still a surfaced disposition line)
+
+ATTRIBUTION_HOLD=
+  LAST_PROVEN=FINAL_NORM(step22)
+  unchanged by this SOURCE audit
+
+MODE=D NEXT_SPEND=NONE

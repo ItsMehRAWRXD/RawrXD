@@ -1,0 +1,40 @@
+EV512_STATE_SPACE_EXHAUSTION_001=SEALED
+DATE=2026-09-08
+TYPE=LAW_APPLIED
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+PARENT_LAW=EV512_CLAIM_CONVERGENCE_LAW_001
+
+MODEL=
+  Generation Target = residual GEN members of claims 1..17
+  Pruning = OOB / failed PathBWanted / callback continue / clean join
+  Resolution Bound = Exact Match OBSERVED OR GEN structurally exhausted
+
+ZERO_SPECULATION=1
+OBSERVATIONS_ONLY_WHEN_RUNTIME_EMITS=1
+FORBIDDEN=invent_emit; upgrade_ELIMINATION_CLOSED_to_OBSERVED
+
+CLASS_MAP_TO_CLAIM_DISPOSITION=
+  Exact Match          → FINAL=OBSERVED CLAIM_COMPLETE=1 lock path
+  Structural Variant   → same ClaimId emit, different ARG/owner-tag;
+                         normalize; merge; does not require new ClaimId
+  Non-Match (Dead)     → path illegal or deliberately absent → prune;
+                         per-run NO_CORRESPONDING; not OBSERVED
+  Unresolved/Unknown   → enforce static bound → classify Non-Match
+                         to eliminate permanent unknowns (no invent)
+
+RESOLUTION_1_17=
+  Exact Match locks applied from concrete sealed runs (below)
+  Residual abort owner-tags {1,2,3,6,7} = Structural Variants of
+    Claim 11/14 emit site (same HostEmitStreamAbort/TeardownFault)
+    → MERGED; not separate ClaimIds; not UNRESOLVED ClaimIds
+  PATHB_OFF Non-Match for Claim9 emission pruned (CLAIM6 run)
+  PATHB_SUCCESS Exact Match locks Claim9 (CLAIM_9_PATHB_GEN_001)
+  CALLBACK_ABORT Exact Match locks Claim11+14 (CLAIM_11_14_ABORT_GEN_001)
+
+CLAIM_COMPLETE_1_17=17/17 VIA_OBSERVED
+ELIMINATION_CLOSED_COUNT=0
+UNRESOLVED_CLAIM_IDS=NONE
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE NO_PATH_B_PROMOTE=1
+  coverage≠measurement≠promotion

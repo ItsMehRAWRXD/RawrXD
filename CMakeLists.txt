@@ -1,6 +1,7 @@
 # CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
 include(cmake/P1_ProductRuntimeAuthority.cmake)
+include(cmake/GgufDynamicGeometry.fragment.cmake)
 
 # Phase 46: Enable Vulkan for dual GPU testing
 option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)" ON)
@@ -420,6 +421,11 @@ if(RAWRXD_BUILD_CLI)
         version.lib
         ws2_32.lib
         dxgi.lib
+        InferenceEngine
+    )
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
     )
     
     # Vulkan SDK support for rawrxd
@@ -2727,6 +2733,11 @@ set(SOURCES
     src/deep2/Deep2ModelRuntime.cpp
     src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ElasticResidencyManager.cpp
     src/deep2/ElasticDynamicBudget.cpp
     src/deep2/CycloneScheduler.cpp
@@ -4800,6 +4811,11 @@ set(INFERENCE_ENGINE_SOURCES
     src/codec/gzip_brutal_inflate.cpp
     # Deep2 core ΓÇö unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ChatTemplate.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/InferenceSession.cpp
@@ -4854,6 +4870,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2BraidExecutionPolicy.cpp
     src/deep2/K2MLA_FusedQ4KT.cpp
     src/deep2/K2MLA_QPathDevice.cpp
+    src/deep2/K2MLA_QPathDevice_Emit.cpp
+    src/deep2/K2MLA_PathB.cpp
+    src/deep2/K2MLA_PathB_Attn.cpp
+    src/deep2/K2QbHostShrinkD2h.cpp
+    src/runtime/QbHostReadbackWindow.cpp
+    src/runtime/ExchangeObjectLedger.cpp
+    src/deep2/HostExchangeDiscover.cpp
     src/deep2/K2MLA_QaCritical.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/K2WeightResolve.cpp
@@ -4880,6 +4903,7 @@ set(INFERENCE_ENGINE_SOURCES
 src/vulkan_fwd_q4k_climb.cpp
 src/vulkan_fwd_q8_kva_climb.cpp
 src/vulkan_fwd_q4k_act.cpp
+    src/vulkan_fwd_attn_mla.cpp
     src/vulkan_fwd_q6k.cpp
     src/vulkan_fwd_q6k_host.cpp
     src/vulkan_fwd_quant_pipe.cpp
@@ -5255,6 +5279,11 @@ endif()
             src/asm/Deep2OuterResolve.asm
             src/asm/Deep2OuterCallEngine.asm
             src/asm/Deep2OuterHost.asm
+            src/asm/RuntimeEvidence512_Core.asm
+            src/asm/RuntimeEvidence512_Emit.asm
+            src/asm/RuntimeEvidence512_Collect.asm
+            src/asm/RuntimeEvidence512_IDEEmit.asm
+            src/asm/RuntimeEvidence512_IDECollect.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -5488,6 +5517,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_LocalServer.cpp
         src/win32app/Win32IDE_BackendSwitcher.cpp
+        src/security/ProviderKeyStore.cpp
+        src/security/ProviderKeyStore_get.cpp
+        src/security/ProviderKeyStore_misc.cpp
         src/win32app/Win32IDE_AIBackend.cpp
         src/win32app/Win32IDE_LLMRouter.cpp
         src/win32app/Win32IDE_LSPClient.cpp
@@ -16452,3 +16484,77 @@ if(BUILD_PROBE_CHAT_QUALITY AND TARGET InferenceEngine)
   set_target_properties(_probe_chat_quality PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+
+# EV512 IDE GUI lifecycle smoke (real HWND owners for claims 18-21,47-48,88,93-94)
+if(TARGET InferenceEngine)
+    add_executable(ev512_ide_gui_lifecycle_smoke
+        tools/ev512_ide_gui_lifecycle_smoke.cpp)
+    target_link_libraries(ev512_ide_gui_lifecycle_smoke PRIVATE
+        InferenceEngine user32 gdi32)
+    target_include_directories(ev512_ide_gui_lifecycle_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        target_compile_options(ev512_ide_gui_lifecycle_smoke PRIVATE /EHsc /std:c++20)
+        set_property(TARGET ev512_ide_gui_lifecycle_smoke PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(ev512_ide_gui_lifecycle_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ev512_ide_gui_lifecycle_smoke)
+endif()
+
+# EV512 ops remaining-gen smoke (real FS/CreateProcess owners 60/63-66/69-74/79-80/90)
+if(TARGET InferenceEngine)
+    add_executable(ev512_ops_remaining_smoke
+        tools/ev512_ops_remaining_smoke.cpp)
+    target_link_libraries(ev512_ops_remaining_smoke PRIVATE InferenceEngine)
+    target_include_directories(ev512_ops_remaining_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        target_compile_options(ev512_ops_remaining_smoke PRIVATE /EHsc /std:c++20)
+        set_property(TARGET ev512_ops_remaining_smoke PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(ev512_ops_remaining_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ev512_ops_remaining_smoke)
+endif()
+
+# EV512 IDE workflow remaining-gen (61-62,67-68,75-78,81-87,89)
+if(TARGET InferenceEngine)
+    add_executable(ev512_ide_workflow_smoke
+        tools/ev512_ide_workflow_smoke.cpp)
+    target_link_libraries(ev512_ide_workflow_smoke PRIVATE InferenceEngine ws2_32)
+    target_include_directories(ev512_ide_workflow_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        target_compile_options(ev512_ide_workflow_smoke PRIVATE /EHsc /std:c++20)
+        set_property(TARGET ev512_ide_workflow_smoke PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(ev512_ide_workflow_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ev512_ide_workflow_smoke)
+endif()
+
+# EV512 restore/reload/fault remaining-gen (22,58-59,95)
+if(TARGET InferenceEngine)
+    add_executable(ev512_ide_restore_reload_fault_smoke
+        tools/ev512_ide_restore_reload_fault_smoke.cpp)
+    target_link_libraries(ev512_ide_restore_reload_fault_smoke PRIVATE InferenceEngine)
+    target_include_directories(ev512_ide_restore_reload_fault_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include)
+    if(MSVC)
+        # /EHa required so C++ EH + SEH (__try) can coexist for claim 95
+        target_compile_options(ev512_ide_restore_reload_fault_smoke PRIVATE /EHa /std:c++20)
+        set_property(TARGET ev512_ide_restore_reload_fault_smoke PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+    set_target_properties(ev512_ide_restore_reload_fault_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ev512_ide_restore_reload_fault_smoke)
+endif()

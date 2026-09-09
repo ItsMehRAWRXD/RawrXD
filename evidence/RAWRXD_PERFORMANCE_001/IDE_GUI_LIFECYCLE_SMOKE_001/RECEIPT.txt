@@ -1,0 +1,41 @@
+IDE_GUI_LIFECYCLE_SMOKE_001=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR_EXACT_MATCH
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+
+HARNESS=
+  BINARY=build-fd/bin/ev512_ide_gui_lifecycle_smoke.exe
+  SOURCE=tools/ev512_ide_gui_lifecycle_smoke.cpp
+  OWNERS=real CreateWindow / EDIT EM_REPLACESEL / session file write /
+         DestroyWindow / WM_DESTROY (not synthetic records)
+
+ENV=DEEP2_EV512=1
+RC=0
+
+EXACT_MATCH_OBSERVED=
+  18 IDE_BOOT_ENTRY
+  19 IDE_WINDOW_READY
+  20 CORE_INIT_COMPLETE
+  21 WORKSPACE_OPEN
+  47 UI_STREAM_APPEND
+  48 UI_STREAM_FINALIZE
+  88 SESSION_PERSIST
+  93 IDE_EXIT_ENTRY
+  94 IDE_EXIT_COMPLETE
+  HIT=9/9 target lifecycle set
+
+NOT_IN_THIS_GEN=
+  23 BACKEND_SELECTED — no fake routing; needs real BackendSwitcher owner
+  60-90 agent/tool/build/git/mcp — separate workflows
+  95 PROCESS_FAULT — clean exit Non-Match expected
+
+NOTE=
+  Sovereign rawrxd.exe remains product CLI (not HeadlessIDE entry).
+  This harness is the honest remaining-generator path for HWND/UI claims
+  without inventing Win32IDE full app boot.
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NEXT=claim 23 real backend select OR agent/tool GEN OR MODE=A

@@ -1,0 +1,42 @@
+IDE_REMAINING_GEN_003=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+
+PRODUCT_PATH_NEW_EXACT_MATCH=
+  ABORT_GEN (deep2_benchmark DEEP2_EV512_ABORT_AFTER=1):
+    CLAIM_50 CANCEL_REQUEST=OBSERVED
+    CLAIM_51 CANCEL_COMPLETE=OBSERVED
+    CLAIM_57 RESIDENCY_RELEASE=OBSERVED (unload)
+  SSOT=abort.stderr.txt + deep2_benchmark rebuild
+
+HEADLESS_IDE_SOURCE_WIRE=
+  HeadlessIDE.cpp: Boot(18)/Workspace(21)/Backend(23)/CoreInit(20)/
+    SessionPersist(88)/Exit(93,94) + surface on shutdownAll
+  CMake: rawrxd links InferenceEngine
+  NOTE: build-fd/bin/rawrxd.exe entry is Sovereign Runtime CLI
+        (--model/--prompt), NOT HeadlessIDE initialize path.
+        Therefore 18/20/21/23/88/93/94 remain NO_CORRESPONDING
+        on Sovereign smoke (correct Non-Match for this binary path).
+
+SOVEREIGN_SMOKE=
+  rawrxd.exe --model llama3.2-3b-Q3_K_S --prompt hi --max-tokens 2
+  RC=0 DEEP2_EV512=1
+  Product claims OBSERVED (24..42,45,46,49,96 + legacy subset)
+  CLAIM_18=NO_CORRESPONDING (expected; not HeadlessIDE/Win32 boot)
+
+STILL_NON_MATCH_REQUIRES_OWNER_PATH=
+  19 IDE_WINDOW_READY — Win32 HWND (do not invent from headless)
+  47 UI_STREAM_APPEND / 48 UI_STREAM_FINALIZE — UI paint sink only
+  18/20/21/23/88/93/94 — HeadlessIDE or Win32IDE process entry
+    (wires present; need HeadlessIDE-linked entry or Win32 GUI run)
+
+ZERO_SPECULATION=
+  no UI claims emitted from stdout/headless
+  no IDE_BOOT invented on Sovereign CLI
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NEXT=headless_entry_binary OR Win32IDE ON for GUI claims
+       OR MODE=A measured when authorized

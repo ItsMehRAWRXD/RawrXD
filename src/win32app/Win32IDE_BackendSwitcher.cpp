@@ -18,8 +18,10 @@
 #include "../agentic/AgentOllamaClient.h"
 #include "../modules/vsix_loader.h"
 #include "../product/gateway/product_deep2_infer.hpp"
+#include "../security/ProviderKeyStore.hpp"
 #include "Win32IDE.h"
 #include "rawrxd/ide/inference_facade.hpp"
+#include "../deep2/RuntimeEvidence512HostIDE.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -27,6 +29,7 @@
 #include <fstream>
 #include <sstream>
 #include <winhttp.h>
+#include <cstdio>
 
 // nlohmann/json already included via Win32IDE.h
 
@@ -170,10 +173,10 @@ void Win32IDE::initBackendManager()
     auto& copilot = m_backendConfigs[(size_t)AIBackendType::GitHubCopilot];
     copilot.type = AIBackendType::GitHubCopilot;
     copilot.name = "GitHub Copilot";
-    copilot.endpoint = "extension://github.copilot";
-    copilot.model = "copilot-latest";
+    copilot.endpoint = "https://api.githubcopilot.com";
+    copilot.model = "gpt-4o";
     copilot.apiKey = "";
-    copilot.enabled = true;
+    copilot.enabled = false;  // Enabled when key present
     copilot.timeoutMs = 30000;
     copilot.maxTokens = 4096;
     copilot.temperature = 0.7f;
@@ -188,6 +191,17 @@ void Win32IDE::initBackendManager()
     amazonq.timeoutMs = 30000;
     amazonq.maxTokens = 4096;
     amazonq.temperature = 0.7f;
+
+    auto& cursor = m_backendConfigs[(size_t)AIBackendType::Cursor];
+    cursor.type = AIBackendType::Cursor;
+    cursor.name = "Cursor";
+    cursor.endpoint = "https://api.cursor.com";
+    cursor.model = "default";
+    cursor.apiKey = "";
+    cursor.enabled = false;
+    cursor.timeoutMs = 30000;
+    cursor.maxTokens = 4096;
+    cursor.temperature = 0.7f;
 
     // ---- Initialize statuses -----------------------------------------------
     for (size_t i = 0; i < (size_t)AIBackendType::Count; ++i)
@@ -209,6 +223,7 @@ void Win32IDE::initBackendManager()
 
     // ---- Load saved configs (overrides defaults) ---------------------------
     loadBackendConfigs();
+    loadProviderKeysFromStore();
 
     // ---- Auto-detect Ollama model if still empty ----------------------------
     {
@@ -315,8 +330,7 @@ void Win32IDE::loadBackendConfigs()
                     cfg.endpoint = bj["endpoint"].get<std::string>();
                 if (bj.contains("model"))
                     cfg.model = bj["model"].get<std::string>();
-                if (bj.contains("apiKey"))
-                    cfg.apiKey = bj["apiKey"].get<std::string>();
+                // apiKey: never from JSON — CredWrite store only (loadProviderKeysFromStore)
                 if (bj.contains("enabled"))
                     cfg.enabled = bj["enabled"].get<bool>();
                 if (bj.contains("timeoutMs"))
@@ -333,6 +347,31 @@ void Win32IDE::loadBackendConfigs()
     catch (const std::exception& e)
     {
         logError("loadBackendConfigs", std::string("JSON parse error: ") + e.what());
+    }
+}
+
+void Win32IDE::loadProviderKeysFromStore()
+{
+    // CREDENTIAL_RESOLUTION: Store → Env → empty. Never backends.json secrets.
+    auto apply = [this](AIBackendType t, const char* id) {
+        auto r = RawrXD::Keys::Resolve(id);
+        auto& cfg = m_backendConfigs[(size_t)t];
+        cfg.apiKey = r.value;  // in-memory cache only; Resolve() is authority at request time
+        if (r.source != RawrXD::Keys::CredentialSource::None)
+            cfg.enabled = true;
+    };
+    apply(AIBackendType::Ollama, RawrXD::Keys::kOllama);
+    apply(AIBackendType::Cursor, RawrXD::Keys::kCursor);
+    apply(AIBackendType::GitHubCopilot, RawrXD::Keys::kGitHubCopilot);
+}
+
+const char* Win32IDE::providerKeyIdForBackend(AIBackendType type) const
+{
+    switch (type) {
+        case AIBackendType::Ollama: return RawrXD::Keys::kOllama;
+        case AIBackendType::Cursor: return RawrXD::Keys::kCursor;
+        case AIBackendType::GitHubCopilot: return RawrXD::Keys::kGitHubCopilot;
+        default: return nullptr;
     }
 }
 
@@ -359,8 +398,8 @@ void Win32IDE::saveBackendConfigs()
         bj["name"] = cfg.name;
         bj["endpoint"] = cfg.endpoint;
         bj["model"] = cfg.model;
-        // NOTE: API keys are stored in plaintext — user-local config only
-        bj["apiKey"] = cfg.apiKey;
+        // Never persist API keys to disk JSON — CredWrite/DPAPI store only
+        bj["hasApiKey"] = !cfg.apiKey.empty();
         bj["enabled"] = cfg.enabled;
         bj["timeoutMs"] = cfg.timeoutMs;
         bj["maxTokens"] = cfg.maxTokens;
@@ -417,6 +456,8 @@ bool Win32IDE::setActiveBackend(AIBackendType type)
 
     AIBackendType previous = m_activeBackend;
     m_activeBackend = type;
+    Deep2::Ev512::HostEmitBackendSelected((uint64_t)(uint32_t)type,
+                                          (uint64_t)(uint32_t)previous);
 
     // Update status bar to reflect new backend
     updateStatusBarBackend();
@@ -535,11 +576,14 @@ void Win32IDE::setBackendApiKey(AIBackendType type, const std::string& apiKey)
         return;
     std::lock_guard<std::mutex> lock(m_backendMutex);
     m_backendConfigs[(size_t)type].apiKey = apiKey;
-    // Auto-enable if a key is provided for remote backends
-    if (!apiKey.empty() && type != AIBackendType::LocalGGUF)
-    {
-        m_backendConfigs[(size_t)type].enabled = true;
+    if (const char* pid = providerKeyIdForBackend(type)) {
+        if (apiKey.empty())
+            RawrXD::Keys::Clear(pid);
+        else
+            RawrXD::Keys::Set(pid, apiKey);
     }
+    if (!apiKey.empty() && type != AIBackendType::LocalGGUF)
+        m_backendConfigs[(size_t)type].enabled = true;
     logInfo("[BackendSwitcher] API key updated for " + backendTypeString(type));
 }
 
@@ -646,19 +690,18 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
         }
         case AIBackendType::GitHubCopilot:
         {
-            // Probe GitHub Copilot extension via VSIXLoader (Install from VSIX / extension registry)
-            try
-            {
-                healthy = VSIXLoader::GetInstance().IsPluginLoaded("github.copilot");
-                if (!healthy)
-                    error = "GitHub Copilot extension not loaded. Use AI menu > Install from VSIX, or switch to "
-                            "Ollama/Local.";
-            }
-            catch (...)
-            {
-                healthy = false;
-                error = "VSIXLoader unavailable or GitHub Copilot not installed.";
-            }
+            const auto& cfg = m_backendConfigs[(size_t)type];
+            healthy = !cfg.apiKey.empty() || RawrXD::Keys::Has(RawrXD::Keys::kGitHubCopilot);
+            if (!healthy)
+                error = "GitHub Copilot token not set. Use API Key Management or rawr_keys set github_copilot.";
+            break;
+        }
+        case AIBackendType::Cursor:
+        {
+            const auto& cfg = m_backendConfigs[(size_t)type];
+            healthy = !cfg.apiKey.empty() || RawrXD::Keys::Has(RawrXD::Keys::kCursor);
+            if (!healthy)
+                error = "Cursor API key not set. Use API Key Management or rawr_keys set cursor.";
             break;
         }
         case AIBackendType::AmazonQ:
@@ -668,8 +711,7 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
             {
                 healthy = VSIXLoader::GetInstance().IsPluginLoaded("amazonwebservices.aws-toolkit-vscode");
                 if (!healthy)
-                    error =
-                        "Amazon Q extension not loaded. Use AI menu > Install from VSIX, or switch to Ollama/Local.";
+                    error = "Amazon Q extension not loaded. Use AI menu > Install from VSIX.";
             }
             catch (...)
             {
@@ -738,14 +780,10 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
     logInfo(std::string("[InferenceFacade] ") + rawrxd::ide::inferenceFacadeLaneField(backendTypeString(active)) +
             " op=routeInferenceRequest");
 
-    // LOCAL_ONLY_001: cloud/HTTP backends are not product path.
-    if (active != AIBackendType::LocalGGUF &&
-        active != AIBackendType::ReasoningEngine)
+    // LOCAL_ONLY_001: Ollama blocked. Cloud key lanes (Copilot/Cursor) allowed when key set.
+    if (active == AIBackendType::Ollama)
     {
-        return "[BackendSwitcher] NOT_PRODUCT_PATH=1 LOCAL_ONLY_001 "
-               "backend=" +
-               std::string(backendTypeString(active)) +
-               " — load Local GGUF / Deep2 ProductRun only.";
+        return "[BackendSwitcher] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF, GitHubCopilot, or Cursor.";
     }
 
     std::string result;
@@ -760,8 +798,23 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
         case AIBackendType::ReasoningEngine:
             result = this->routeToReasoningEngine(prompt);
             break;
+        case AIBackendType::GitHubCopilot:
+            result = routeToGitHubCopilot(prompt);
+            break;
+        case AIBackendType::Cursor:
+            result = routeToCursor(prompt);
+            break;
+        case AIBackendType::OpenAI:
+            result = routeToOpenAI(prompt);
+            break;
+        case AIBackendType::Claude:
+            result = routeToClaude(prompt);
+            break;
+        case AIBackendType::Gemini:
+            result = routeToGemini(prompt);
+            break;
         default:
-            result = "[BackendSwitcher] NOT_PRODUCT_PATH=1";
+            result = "[BackendSwitcher] NOT_PRODUCT_PATH=1 backend=" + std::string(backendTypeString(active));
             break;
     }
 
@@ -1075,39 +1128,101 @@ std::string Win32IDE::routeToReasoningEngine(const std::string& prompt)
 
 std::string Win32IDE::routeToGitHubCopilot(const std::string& prompt)
 {
-    // Phase 29: Route to GitHub Copilot VS Code Extension
-    auto& api = vscode::VSCodeExtensionAPI::instance();
+    // Cloud HTTP only — no VSIX, no Ollama.
+    // CREDENTIAL_RESOLUTION: Store → Env → NO_CREDENTIAL (never backends.json).
+    const auto cfg = m_backendConfigs[(size_t)AIBackendType::GitHubCopilot];
+    const auto cred = RawrXD::Keys::Resolve(RawrXD::Keys::kGitHubCopilot);
+    if (cred.source == RawrXD::Keys::CredentialSource::None || cred.value.empty())
+        return "[BackendSwitcher] Error: GitHub Copilot token not set. rawr_keys set github_copilot <token>";
 
-    // Check if the extension is active
-    if (!api.isInitialized())
+    std::string base = cfg.endpoint.empty() ? "https://api.githubcopilot.com" : cfg.endpoint;
+    nlohmann::json reqBody;
+    reqBody["model"] = cfg.model.empty() ? "gpt-4o" : cfg.model;
+    reqBody["max_tokens"] = cfg.maxTokens;
+    reqBody["temperature"] = cfg.temperature;
     {
-        return "[BackendSwitcher] Error: VS Code Extension API not initialized";
+        nlohmann::json msgs = nlohmann::json::array();
+        nlohmann::json msg;
+        msg["role"] = "user";
+        msg["content"] = prompt;
+        msgs.push_back(msg);
+        reqBody["messages"] = msgs;
     }
-
-    // We use executeCommandWithArgs to send the prompt to the extension
-    // The extension must have registered a handler for "github.copilot.chat.proxy"
-    nlohmann::json args;
-    args["prompt"] = prompt;
-    args["context"] = "ide_backend_switcher";
-
-    // Route the prompt to GitHub Copilot VS Code Extension via the extension API
-    std::string result = "[BackendSwitcher] Routing to GitHub Copilot extension...\n";
-
-    auto apiResult = api.executeCommand("github.copilot.chat.proxy", args.dump().c_str());
-    if (apiResult.success)
-    {
-        // If the command returned immediately with a result string in 'detail'
-        if (apiResult.detail && strlen(apiResult.detail) > 0 && strcmp(apiResult.detail, "Success") != 0)
-        {
-            return apiResult.detail;
+    std::vector<std::string> headers = {
+        "Content-Type: application/json",
+        "Authorization: Bearer " + cred.value,
+        "Copilot-Integration-Id: vscode-chat",
+        "Editor-Version: RawrXD/1.0",
+    };
+    auto redact = [&](std::string s) {
+        const std::string needle = cred.value;
+        if (needle.size() >= 8) {
+            size_t p = 0;
+            while ((p = s.find(needle, p)) != std::string::npos) {
+                s.replace(p, needle.size(), RawrXD::Keys::Mask(needle));
+                p += 8;
+            }
         }
-        // Command was triggered successfully, extension will handle streaming
-        return result + "Extension command triggered successfully. Awaiting response stream...";
+        return s;
+    };
+    try {
+        std::string resp = httpPost(base + "/chat/completions", reqBody.dump(), headers, cfg.timeoutMs);
+        nlohmann::json rj = nlohmann::json::parse(resp);
+        if (rj.contains("choices") && rj["choices"].is_array() && !rj["choices"].empty())
+            return rj["choices"][(size_t)0]["message"]["content"].get<std::string>();
+        if (rj.contains("error"))
+            return "[BackendSwitcher] Error (Copilot): " +
+                   redact(rj["error"].value("message", "auth_failed"));
+        return "[BackendSwitcher] Error (Copilot): Unexpected response format";
+    } catch (const std::exception& e) {
+        return std::string("[BackendSwitcher] Error (Copilot): ") + redact(e.what());
     }
-    else
+}
+
+std::string Win32IDE::routeToCursor(const std::string& prompt)
+{
+    const auto cfg = m_backendConfigs[(size_t)AIBackendType::Cursor];
+    const auto cred = RawrXD::Keys::Resolve(RawrXD::Keys::kCursor);
+    if (cred.source == RawrXD::Keys::CredentialSource::None || cred.value.empty())
+        return "[BackendSwitcher] Error: Cursor API key not set. rawr_keys set cursor <key>";
+
+    std::string base = cfg.endpoint.empty() ? "https://api.cursor.com" : cfg.endpoint;
+    nlohmann::json reqBody;
+    reqBody["model"] = cfg.model.empty() ? "default" : cfg.model;
+    reqBody["max_tokens"] = cfg.maxTokens;
+    reqBody["temperature"] = cfg.temperature;
     {
-        return "[BackendSwitcher] Error: Failed to trigger GitHub Copilot extension command: " +
-               std::string(apiResult.detail ? apiResult.detail : "Unknown error");
+        nlohmann::json msgs = nlohmann::json::array();
+        nlohmann::json msg;
+        msg["role"] = "user";
+        msg["content"] = prompt;
+        msgs.push_back(msg);
+        reqBody["messages"] = msgs;
+    }
+    std::vector<std::string> headers = {"Content-Type: application/json",
+                                        "Authorization: Bearer " + cred.value};
+    auto redact = [&](std::string s) {
+        const std::string needle = cred.value;
+        if (needle.size() >= 8) {
+            size_t p = 0;
+            while ((p = s.find(needle, p)) != std::string::npos) {
+                s.replace(p, needle.size(), RawrXD::Keys::Mask(needle));
+                p += 8;
+            }
+        }
+        return s;
+    };
+    try {
+        std::string resp = httpPost(base + "/v1/chat/completions", reqBody.dump(), headers, cfg.timeoutMs);
+        nlohmann::json rj = nlohmann::json::parse(resp);
+        if (rj.contains("choices") && rj["choices"].is_array() && !rj["choices"].empty())
+            return rj["choices"][(size_t)0]["message"]["content"].get<std::string>();
+        if (rj.contains("error"))
+            return "[BackendSwitcher] Error (Cursor): " +
+                   redact(rj["error"].value("message", "auth_failed"));
+        return "[BackendSwitcher] Error (Cursor): Unexpected response format";
+    } catch (const std::exception& e) {
+        return std::string("[BackendSwitcher] Error (Cursor): ") + redact(e.what());
     }
 }
 
@@ -1289,10 +1404,129 @@ void Win32IDE::showBackendSwitcherDialog()
     appendToOutput(status, "General", OutputSeverity::Info);
     appendToOutput("[BackendSwitcher] Use Command Palette (Ctrl+Shift+P) to switch backends:\n"
                    "  'AI: Switch to Local GGUF'\n"
-                   "  'AI: Switch to Ollama'\n"
+                   "  'AI: Switch to GitHub Copilot' (cloud token — Ollama not required)\n"
+                   "  'AI: Switch to Cursor'\n"
                    "  'AI: Switch to OpenAI'\n"
                    "  'AI: Switch to Claude'\n"
-                   "  'AI: Switch to Gemini'\n",
+                   "  'AI: Switch to Gemini'\n"
+                   "  Enterprise > API Key Management for ollama/cursor/github_copilot keys\n",
+                   "General", OutputSeverity::Info);
+}
+
+void Win32IDE::showProviderApiKeyDialog()
+{
+    // Provider picker via popup (no Qt / no nlohmann in this path).
+    POINT pt{};
+    GetCursorPos(&pt);
+    HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return;
+    AppendMenuA(hMenu, MF_STRING, 1, "Ollama");
+    AppendMenuA(hMenu, MF_STRING, 2, "Cursor");
+    AppendMenuA(hMenu, MF_STRING, 3, "GitHub Copilot");
+    AppendMenuA(hMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hMenu, MF_STRING, 10, "Clear Ollama");
+    AppendMenuA(hMenu, MF_STRING, 11, "Clear Cursor");
+    AppendMenuA(hMenu, MF_STRING, 12, "Clear GitHub Copilot");
+    AppendMenuA(hMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hMenu, MF_STRING, 20, "List (masked)");
+
+    const int choice = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pt.x, pt.y, 0,
+                                      m_hwndMain, nullptr);
+    DestroyMenu(hMenu);
+    if (choice == 0)
+        return;
+
+    auto clearOne = [this](AIBackendType t, const char* id) {
+        RawrXD::Keys::Clear(id);
+        setBackendApiKey(t, "");
+        appendToOutput(std::string("[Keys] Cleared ") + id + "\n", "General", OutputSeverity::Info);
+    };
+
+    if (choice == 10) {
+        clearOne(AIBackendType::Ollama, RawrXD::Keys::kOllama);
+        return;
+    }
+    if (choice == 11) {
+        clearOne(AIBackendType::Cursor, RawrXD::Keys::kCursor);
+        return;
+    }
+    if (choice == 12) {
+        clearOne(AIBackendType::GitHubCopilot, RawrXD::Keys::kGitHubCopilot);
+        return;
+    }
+    if (choice == 20) {
+        std::size_t n = 0;
+        const char* const* ps = RawrXD::Keys::KnownProviders(&n);
+        std::ostringstream ss;
+        ss << "[Keys] Provider key status:\n";
+        for (std::size_t i = 0; i < n; ++i)
+            ss << "  " << ps[i] << "=" << RawrXD::Keys::Mask(RawrXD::Keys::Get(ps[i])) << "\n";
+        appendToOutput(ss.str(), "General", OutputSeverity::Info);
+        return;
+    }
+
+    AIBackendType backend = AIBackendType::Count;
+    const char* pid = nullptr;
+    if (choice == 1) {
+        backend = AIBackendType::Ollama;
+        pid = RawrXD::Keys::kOllama;
+    } else if (choice == 2) {
+        backend = AIBackendType::Cursor;
+        pid = RawrXD::Keys::kCursor;
+    } else if (choice == 3) {
+        backend = AIBackendType::GitHubCopilot;
+        pid = RawrXD::Keys::kGitHubCopilot;
+    } else {
+        return;
+    }
+
+    char keyBuf[2048] = {};
+    struct DlgCtx {
+        char* buf;
+        int buflen;
+        const char* title;
+        const char* label;
+    } ctx{keyBuf, (int)sizeof(keyBuf), "Set Provider API Key", pid};
+
+    const INT_PTR ok = DialogBoxParamA(
+        m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
+        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
+            DlgCtx* c = reinterpret_cast<DlgCtx*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+            switch (msg) {
+                case WM_INITDIALOG: {
+                    c = reinterpret_cast<DlgCtx*>(lp);
+                    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)c);
+                    SetWindowTextA(hwnd, c->title);
+                    char label[128];
+                    std::snprintf(label, sizeof(label), "Enter API key for %s:", c->label);
+                    SetWindowTextA(GetDlgItem(hwnd, 101), label);
+                    return TRUE;
+                }
+                case WM_COMMAND:
+                    if (LOWORD(wp) == IDOK && c) {
+                        GetDlgItemTextA(hwnd, 102, c->buf, c->buflen);
+                        EndDialog(hwnd, IDOK);
+                        return TRUE;
+                    }
+                    if (LOWORD(wp) == IDCANCEL) {
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
+                    break;
+            }
+            return FALSE;
+        },
+        (LPARAM)&ctx);
+
+    if (ok != IDOK || keyBuf[0] == '\0') {
+        appendToOutput("[Keys] Cancelled or empty key.\n", "General", OutputSeverity::Warning);
+        return;
+    }
+    setBackendApiKey(backend, keyBuf);
+    SecureZeroMemory(keyBuf, sizeof(keyBuf));
+    appendToOutput(std::string("[Keys] Stored ") + pid + "=" + RawrXD::Keys::Mask(RawrXD::Keys::Get(pid)) +
+                       " (CredWrite/DPAPI). Copilot does not require Ollama.\n",
                    "General", OutputSeverity::Info);
 }
 
@@ -1371,12 +1605,20 @@ std::string Win32IDE::backendTypeString(AIBackendType type) const
             return "Claude";
         case AIBackendType::Gemini:
             return "Gemini";
+        case AIBackendType::ReasoningEngine:
+            return "ReasoningEngine";
+        case AIBackendType::GitHubCopilot:
+            return "GitHubCopilot";
+        case AIBackendType::AmazonQ:
+            return "AmazonQ";
+        case AIBackendType::Cursor:
+            return "Cursor";
         default:
             return "Unknown";
     }
 }
 
-Win32IDE::Win32IDE::AIBackendType Win32IDE::backendTypeFromString(const std::string& name) const
+Win32IDE::AIBackendType Win32IDE::backendTypeFromString(const std::string& name) const
 {
     if (name == "LocalGGUF" || name == "local" || name == "Local GGUF")
         return AIBackendType::LocalGGUF;
@@ -1388,5 +1630,13 @@ Win32IDE::Win32IDE::AIBackendType Win32IDE::backendTypeFromString(const std::str
         return AIBackendType::Claude;
     if (name == "Gemini" || name == "gemini")
         return AIBackendType::Gemini;
-    return AIBackendType::Count;  // sentinel for "not found"
+    if (name == "ReasoningEngine" || name == "reasoning")
+        return AIBackendType::ReasoningEngine;
+    if (name == "GitHubCopilot" || name == "copilot" || name == "github_copilot")
+        return AIBackendType::GitHubCopilot;
+    if (name == "AmazonQ" || name == "amazonq")
+        return AIBackendType::AmazonQ;
+    if (name == "Cursor" || name == "cursor")
+        return AIBackendType::Cursor;
+    return AIBackendType::Count;
 }

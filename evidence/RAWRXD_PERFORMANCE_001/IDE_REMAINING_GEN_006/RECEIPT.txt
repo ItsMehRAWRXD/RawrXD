@@ -1,0 +1,48 @@
+IDE_REMAINING_GEN_006=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR_EXACT_MATCH_BATCH
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+
+HARNESS=
+  BINARY=build-fd/bin/ev512_ide_restore_reload_fault_smoke.exe
+  SOURCE=tools/ev512_ide_restore_reload_fault_smoke.cpp
+  ENV=DEEP2_EV512=1
+  ARG=llama3.2-3b-Q3_K_S.gguf
+  SSOT=rrf.stderr.txt
+  RC=0 COM=5
+  OWNERS=
+    session JSON persist→restore into live locals (22; 88 paired)
+    GGUF CreateFile/ReadFile magic / close / reopen (58-59)
+    RaiseException + SEH catch (95)
+
+EXACT_MATCH_OBSERVED=
+  22 SESSION_RESTORE
+  58 RELOAD_ENTRY
+  59 RELOAD_COMPLETE
+  95 PROCESS_FAULT
+  HIT=4/4 target set
+  BONUS_SAME_RUN=
+    88 SESSION_PERSIST (persist half of restore pair)
+
+PRODUCT_WIRES_THIS_BATCH=
+  Deep2Engine::switchModel → ReloadEntry/Complete (58-59 owner)
+  Win32IDE::restoreSession success → SessionRestore (22 owner)
+  HostIDE HostEmitSessionRestore/Reload*/ProcessFault
+
+CLOSED_VS_PRIOR=
+  GEN_005 NOT_IN closed here: 22, 58-59, 95
+
+REMAINING_18_96=
+  Coverage campaign remaining-gen sets for IDE/ops/workflow/restore
+  are now closed. Residual NO_CORRESPONDING on any single binary is
+  expected (path not entered). Aggregate Exact Match across seals
+  covers the former open list from GEN_003..005.
+  NEXT honest step = convergence matrix refresh 18-96 OR MODE=A
+  measured authority when authorized (not coverage).
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NEXT=EV512_CLAIMS_18_96_CONVERGENCE seal OR MODE=A when authorized

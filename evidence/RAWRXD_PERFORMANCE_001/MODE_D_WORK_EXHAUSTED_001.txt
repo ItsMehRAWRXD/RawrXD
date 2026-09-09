@@ -1,0 +1,47 @@
+MODE_D_WORK_EXHAUSTED_001=SEALED
+DATE=2026-09-09
+TYPE=TERMINAL_IDLE
+PARENT=RAWRXD_DUAL_TRACK_IDLE_HOLD_001
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+SPEND=0 HOT_GATE=0
+
+# Under MODE=D with both tracks COMPLETE, further "continue" without an
+# unlock phrase has no legal remaining-generator and no legal spend.
+
+EXHAUSTED=
+  EV512 ClaimId 1..96 Exact Match coverage
+  PERF finite 18-config search + endurance (SEARCH_COMPLETE / BASELINE_RETAINED)
+  Authority SSOT conflict (5.946 retain vs 4.329) closed by PERF_PROGRAM_COMPLETE_002
+  Dual-track IDLE_HOLD joined
+
+NO_LEGAL_CONTINUE_WITHOUT_AUTH=
+  invent new EV512 claims
+  reopen sealed Exact Match gens
+  tip climb / tip-bot
+  historical 5.904 chase
+  install 5.946 baseline
+  MODE=A measurement
+  new rainbow domain without measured-owner justification
+
+CANONICAL_NEXT=
+  STOP under MODE=D
+  OR user issues exact unlock from RAWRXD_DUAL_TRACK_IDLE_HOLD_001:
+    A) MODE=A HOT_GATE=1 TARGET=<…>
+    B) NEW_SEARCH_SPACE + measured-owner justification
+    C) explicit reopen of STABLE_FLOOR spend (despite SEARCH_COMPLETE)
+
+INDEX=
+  EV512_COVERAGE_CAMPAIGN_COMPLETE_001
+  EV512_CLAIMS_1_96_CONVERGENCE_001
+  PERF_PROGRAM_COMPLETE_002
+  SEARCH_BASELINE_001 (4.329)
+  ENDURANCE_EPOCH_0/RECEIPT.txt
+  SPEND_CLAIM_002
+  RAWRXD_DUAL_TRACK_IDLE_HOLD_001
+  GATE.txt (GATE_STOP=1 NEXT_SPEND=NONE)
+
+AUTHORITY=
+  MODE=D
+  VERDICT=NO_REMAINING_MODE_D_WORK
+  MEET=COMPLETE_NOT_MIDDLE

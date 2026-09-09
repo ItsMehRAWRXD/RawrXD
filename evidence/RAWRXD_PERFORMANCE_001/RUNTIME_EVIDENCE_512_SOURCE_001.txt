@@ -1,0 +1,45 @@
+RUNTIME_EVIDENCE_512_SOURCE_001=SEALED
+DATE=2026-09-08
+STATUS=SEALED_SOURCE_BUILD_ONLY
+
+CORE_OBJ=src/asm/RuntimeEvidence512_Core.obj (965 B)
+EMIT_OBJ=src/asm/RuntimeEvidence512_Emit.obj (1644 B)
+ALSO=src/deep2/evidence/RuntimeEvidence512.obj (monolith assemble; not substitute for Core+Emit authority)
+ML64=PASS
+
+SEQ_CAP=512
+GENERIC_EMIT=0
+CLAIM_ISOLATED_EXPORTS=1
+COMMIT_LAST=XCHG
+CAPACITY_FULL=Dropped++
+SYNTHETIC_RECORD=0
+
+REAL_SITE_WIRING=0
+RUNTIME_EVIDENCE=UNPRODUCED
+MEASUREMENT=UNSPENT
+
+LAW=
+  source existence ≠ runtime evidence
+  SOURCE/BUILD sealed ≠ OBSERVED claim
+  .asm/.obj prove mechanism builds only
+  claim OBSERVED ⇔ that claim's site-local emitter fired in the measured run
+
+NEXT_AUTHORITY_BEARING_STEP=
+  Mode A / HOT_GATE
+    → site-local wiring
+    → BUILD
+    → real seqCap=512 run
+    → each claim's own runtime emission
+    → MEASUREMENT
+
+NO=
+  promote runtime claim from this receipt alone
+  inherit another emitter's record
+  fabricate missing emission
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  SPEND=NONE
+  CHAMPION=PATH_A
+  SSOT=SEQ_CAP_512_POST_FT_AUDIT_CONTRACT_001 + OBSERVATION_AUTHORITY_001

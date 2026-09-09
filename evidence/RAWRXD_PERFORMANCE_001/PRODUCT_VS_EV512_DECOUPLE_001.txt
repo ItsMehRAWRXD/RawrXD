@@ -1,0 +1,41 @@
+PRODUCT_VS_EV512_DECOUPLE_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_RETAIN
+SPEND=0
+HOT_GATE=0
+
+CANONICAL=
+  product execution and evidence authority are intentionally decoupled
+
+SEPARATION=
+  Product streaming
+  ≠ EV512 runtime instrumentation
+  ≠ Measured claim authority
+
+SOURCE_SUPPORTED=
+  product path exists independent of EV512
+  rawr run → ProductRuntime → generateStream
+  B1.1 measured stream + Phi-3 smoke reported
+  EV512 authority = claim-specific emit in measured run only
+  Claims 18..96 NOT_CLAIMED under Mode D
+  Surfaces 1..17 READY_WHEN_FIRED ≠ already observed
+
+WORK_BUCKETS=
+  RUNTIME_EVIDENCE=Claim6 fire + rebuild/link + measured RXEV records
+  INSTRUMENTATION=18..96 + abort/fault owners
+  PRODUCT=CLI suite + general.alignment
+  OPT_CERT=PATH_B / TPS floor / B1.2+
+
+VALUATION=
+  speculative IP estimate only — not appraisal / not proven by impl
+  DRIVER=demos stability docs IP adoption
+  bands remain exploratory non-binding
+  SSOT=RAWRXD_THREE_LAYER_SYNTHESIS_001|RAWR_RUN_STREAM_WIRING_VALUATION_001
+
+STRONGEST_CONCLUSION=
+  product execution and evidence authority intentionally decoupled
+  stream success ≠ every EV512 claim wired/fired
+  claim authority only from own owner-site emit in measured run
+  until then implementation ≠ runtime authority
+
+CURRENT=MODE=D MODE_BATCH_STATE=0 LAST_PROVEN=FINAL_NORM(step22)

@@ -35,6 +35,9 @@
 
 #include "sovereign/ExecutionContract.hpp"
 #include "cpu_inference_engine.h"
+#include "../deep2/RuntimeEvidence512HostIDE.hpp"
+#include "../deep2/RuntimeEvidence512Surface.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -277,6 +280,8 @@ int main(int argc, char* argv[]) {
         printUsage(argv[0]);
         return 1;
     }
+
+    Deep2::Ev512::HostSurfaceGuard ev512Surface(stderr);
     
     // Print banner
     printBanner();
@@ -302,13 +307,26 @@ int main(int argc, char* argv[]) {
         req.mode = ExecutionRequest::Mode::INFERENCE;
     }
     
-    // Set backend
+    // Set backend — claim 23 owner: real CLI routing decision
+    Deep2::Ev512::HostTryArm(0x534F564552454947ull); /* SOVEREIG */
     if (args.backend == "cpu_avx2") {
         req.backend = ExecutionRequest::Backend::CPU_AVX2;
     } else if (args.backend == "cpu_avx512") {
         req.backend = ExecutionRequest::Backend::CPU_AVX512;
     } else if (args.backend == "vulkan_amd") {
         req.backend = ExecutionRequest::Backend::VULKAN_AMD;
+    }
+    Deep2::Ev512::HostEmitBackendSelected(
+        (uint64_t)(uint32_t)req.backend,
+        Deep2::Ev512::HostPathHash(args.backend.c_str()));
+
+    /* Remaining-gen: Exact Match Claim 23 without full model spend. */
+    {
+        const char* only = std::getenv("DEEP2_EV512_BACKEND_ONLY");
+        if (only && only[0] == '1') {
+            std::fprintf(stderr, "EV512_BACKEND_ONLY=1 CLAIM23_EMITTED\n");
+            return 0;
+        }
     }
     
     // Set evidence directory for validated mode

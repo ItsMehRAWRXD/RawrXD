@@ -1,0 +1,49 @@
+RUNTIME_EVIDENCE_512_E2E_SURFACE_AUDIT_002=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_E2E_AUDIT_EXTENSION
+SUPERSEDES_SCOPE=RUNTIME_EVIDENCE_512_E2E_SURFACE_AUDIT_001 (extends 1..17 → 1..96)
+PARENT=EV512_COVERAGE_CAMPAIGN_COMPLETE_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+
+PURPOSE=
+  Confirm ClaimIds 1..96 have emit + host wrap + owning site + surface Find
+  and that Exact Match OBSERVED is sealed (not merely surface-ready).
+
+PIPELINE=
+  HostTryArm (DEEP2_EV512=1)
+  → HostEmit* / EvidenceEmit*
+  → Commit
+  → HostSurfaceGuard → EvidenceSummarizeIDE512 + EvidenceFindIDEClaim512
+  → RXEV_SURFACE OBSERVED | NO_CORRESPONDING (per-run)
+
+SURFACE=
+  MAX_CLAIM_ID=96
+  CAPACITY=512 EvidenceRecord slots (not model capacity)
+  per-run NO_CORRESPONDING expected when path not entered
+
+BAND_STATUS=
+  1..17  SURFACE_READY + OBSERVED  SSOT=EV512_CLAIMS_1_17_CONVERGENCE_002
+  18..96 SURFACE_READY + OBSERVED  SSOT=EV512_CLAIMS_18_96_CONVERGENCE_001
+  1..96  ROLLUP                    SSOT=EV512_CLAIMS_1_96_CONVERGENCE_001
+
+IMPL_LANDMARKS=
+  RuntimeEvidence512Host.hpp / HostIDE.hpp
+  RuntimeEvidence512Surface.hpp (1..96)
+  Deep2Engine / K2NativeStreamGate product sites
+  remaining-gen harnesses:
+    ev512_ide_gui_lifecycle_smoke
+    ev512_ops_remaining_smoke
+    ev512_ide_workflow_smoke
+    ev512_ide_restore_reload_fault_smoke
+    deep2_benchmark abort/pathB gens
+    sovereign rawrxd BACKEND_ONLY gen
+
+VERDICT=
+  E2E_SURFACE_AND_COVERAGE_CLOSED_FOR_CLAIMS_1_96
+  MEASUREMENT still requires MODE=A HOT_GATE=1
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  coverage≠measurement

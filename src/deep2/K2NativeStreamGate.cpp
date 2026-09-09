@@ -19,6 +19,7 @@
 #include "K2LogitsClimb.hpp"
 #include "K2LogitsSplit.hpp"
 #include "K2MLA_QPathDevice.hpp"
+#include "K2MLA_PathB.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "lavapath/SpinCloseAttribution.hpp"
 #include "K2ShardIo.hpp"
@@ -31,6 +32,11 @@
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include "FinalNormProduce.hpp"
+#include "FinalHiddenWitness.hpp"
+#include "K2LogitsArgmaxContract.hpp"
+#include "RuntimeEvidence512Host.hpp"
+#include "RuntimeEvidence512Surface.hpp"
+#include <cstdint>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -613,7 +619,8 @@ bool LookupRealTokenEmbed(Deep2::K2TokenEmbedding& embed,
 
 bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index,
     const Deep2::KimiK2Config& k2cfg, float* hidden, bool enableMlaComplete,
-    Deep2::MlaCompleteStats* aggStats, std::string& error) {
+    Deep2::MlaCompleteStats* aggStats, uint32_t position, uint32_t seqNeed,
+    std::string& error) {
     if (enableMlaComplete) {
         Deep2::MlaCertAuthority::NoteRequired();
         Deep2::MlaCertAuthority::NoteForwardEntered();
@@ -625,27 +632,34 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     memcpy(tempHidden.data(), hidden, hiddenDim * sizeof(float));
 
     rawrxd::deep2::K2KVCache* kvPtr = nullptr;
-    // Reuse per-thread KV — allocating ~48MiB every decode token thrash-crashes.
+    // Persist TLS KV across decode tokens — Clear only on stream start / geom change.
     static thread_local rawrxd::deep2::K2KVCache tlsKv;
     if (enableMlaComplete) {
         const size_t H = k2cfg.numHeads ? k2cfg.numHeads : 64;
         size_t nope = k2cfg.qkNopeHeadDim ? k2cfg.qkNopeHeadDim : 128;
         size_t rope = k2cfg.qkRopeHeadDim ? k2cfg.qkRopeHeadDim : 64;
         size_t vDim = k2cfg.vHeadDim ? k2cfg.vHeadDim : 128;
-        // Prefer architectural Q head packing when config MLA dims unset
         if (!k2cfg.qkNopeHeadDim && !k2cfg.qkRopeHeadDim) {
             nope = 128; rope = 64; vDim = 128;
         }
         const size_t kvDim = (std::max)(H * (nope + rope), H * vDim);
+        /* Align host KV with PathBAttend seqCap=512 (was 128 OOM guard). */
+        size_t need = (size_t)(seqNeed ? seqNeed : 8u);
+        if (need < 8u) need = 8u;
+        if (need > 512u) need = 512u;
         try {
             if (tlsKv.numLayers() != testLayers || tlsKv.kvDim() != kvDim ||
-                tlsKv.maxSeqLen() < 8) {
-                tlsKv.Reset(testLayers, 8, kvDim);
-            } else {
-                tlsKv.Clear();
+                tlsKv.maxSeqLen() < need) {
+                tlsKv.Reset(testLayers, need, kvDim);
+            } else if (position == 0) {
+                tlsKv.Clear(); // new stream only
             }
         } catch (const std::exception& ex) {
             error = std::string("K2KVCache reset: ") + ex.what();
+            return false;
+        }
+        if (position != (uint32_t)tlsKv.currentLength()) {
+            error = "ForwardMLALayers: position!=cacheLen (post-t0 decode desync)";
             return false;
         }
         kvPtr = &tlsKv;
@@ -732,6 +746,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     };
 
     issueUpTo(0);
+    bool stepRope = false;
     for (uint32_t layer = 0; layer < testLayers; ++layer) {
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
@@ -752,7 +767,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
         if (!RunMlaOnPayloads(layer, index, k2cfg, s.names, s.fusedKv, s.payloads,
                               s.borrow, s.bytes, in, out, scratch.data(),
-                              mlaOut.data(), kvPtr, 0,
+                              mlaOut.data(), kvPtr, position,
                               enableMlaComplete ? &layerStats : nullptr, error)) {
             joinAll();
             releaseKvTrack();
@@ -765,6 +780,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         if (Deep2::LivePath_Active())
             Deep2::LivePath_OnLayerEnd(Deep2::LivePath_ActiveCyclone(), layer, 0, 0);
         if (aggStats && enableMlaComplete) {
+            stepRope = stepRope || layerStats.ropeApplied;
             aggStats->ropeApplied = aggStats->ropeApplied || layerStats.ropeApplied;
             aggStats->softmaxFinite = aggStats->softmaxFinite || layerStats.softmaxFinite;
             aggStats->kvCacheWrite = aggStats->kvCacheWrite || layerStats.kvCacheWrite;
@@ -779,6 +795,12 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
     }
     for (auto& sl : slots) retireSlot(sl);
+    if (enableMlaComplete && !stepRope) {
+        joinOutPrefetch();
+        releaseKvTrack();
+        error = "ForwardMLALayers: Gate12 ropeApplied never set this token (no stub)";
+        return false;
+    }
     if (kvPtr) {
         try { kvPtr->CommitPosition(); }
         catch (const std::exception& ex) {
@@ -812,36 +834,66 @@ bool ProjectLogitsFull(const Deep2::GlobalTensorIndex& index,
     return true;
 }
 
-// Streaming argmax — ResolveWeight borrow + parallel packed Q6_K dots.
+// Streaming argmax — first-failure invariants, then existing Q6_K climb/split.
 bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
-    const Deep2::GlobalTensorRef& outRef, size_t hiddenDim, size_t vocabSize,
-    const float* hidden, int32_t& bestTok, std::string& error) {
-    if (vocabSize == 0) { bestTok = -1; return false; }
-    constexpr size_t kBlockElems = 256;
-    constexpr size_t kBlockBytes = 210;
-    if (outRef.ggmlType != 14) {
-        error = "Unsupported GGML type: " + std::to_string(outRef.ggmlType);
+    const Deep2::GlobalTensorRef& outRef, size_t modelHidden,
+    size_t modelVocab, const float* hidden, size_t hiddenCount,
+    uint32_t logitsStep, uint32_t logitsSteps, int32_t& bestTok,
+    std::string& error) {
+    using Deep2::LogLogitsFault;
+    using Deep2::LogitsFaultName;
+
+    fprintf(stderr,
+            "LOGITS_ENTRY STEP=%u/%u HIDDEN=%p HCOUNT=%zu MODEL_HD=%zu "
+            "MODEL_VOCAB=%zu TYPE=%u BYTES=%llu\n",
+            logitsStep, logitsSteps, (const void*)hidden, hiddenCount,
+            modelHidden, modelVocab, (unsigned)outRef.ggmlType,
+            (unsigned long long)outRef.byteSize);
+    fflush(stderr);
+    Deep2::Ev512::HostEmitLogitsEntry(logitsStep, logitsSteps);
+
+    LOGITS_REQUIRE(hidden != nullptr, Deep2::LOGITS_NULL_HIDDEN);
+    LOGITS_REQUIRE(modelHidden != 0, Deep2::LOGITS_HEAD_INPUT_ZERO);
+    LOGITS_REQUIRE(modelVocab != 0, Deep2::LOGITS_VOCAB_ZERO);
+    LOGITS_REQUIRE(hiddenCount != 0, Deep2::LOGITS_HIDDEN_ZERO);
+    LOGITS_REQUIRE(hiddenCount == modelHidden,
+                   Deep2::LOGITS_HIDDEN_NE_MODEL_HIDDEN);
+    LOGITS_REQUIRE(outRef.ggmlType == 14, Deep2::LOGITS_TYPE_NOT_Q6_K);
+
+    size_t blocksPerRow = 0, rowBytes = 0, needBytes = 0;
+    if (!Deep2::detail::LogitsArgmaxContract(hidden, modelHidden, modelVocab,
+                                             outRef, blocksPerRow, rowBytes,
+                                             needBytes, error)) {
+        Deep2::LogitsBoundaryFault f = Deep2::LOGITS_HEAD_BYTES_UNDERSIZED;
+        if (error == "LOGITS_HIDDEN_ZERO") f = Deep2::LOGITS_HIDDEN_ZERO;
+        else if (error == "LOGITS_VOCAB_ZERO") f = Deep2::LOGITS_VOCAB_ZERO;
+        else if (error == "LOGITS_TYPE_NOT_Q6_K") f = Deep2::LOGITS_TYPE_NOT_Q6_K;
+        else if (error == "LOGITS_SIZE_OVERFLOW") f = Deep2::LOGITS_SIZE_OVERFLOW;
+        LogLogitsFault(logitsStep, logitsSteps, f);
+        bestTok = -1;
         return false;
-    }
-    const size_t blocksPerRow = (hiddenDim + kBlockElems - 1) / kBlockElems;
-    const size_t rowBytes = blocksPerRow * kBlockBytes;
-    if (vocabSize * rowBytes > outRef.byteSize) {
-        error = "output.weight size mismatch"; return false;
     }
 
     Deep2::WeightSpan span{};
     std::vector<uint8_t> hold;
     const uint64_t t0 = Deep2::StreamPathTiming_NowUs();
-    if (!Deep2::ResolveWeight(index, "output.weight", span, hold, error))
+    if (!Deep2::ResolveWeight(index, "output.weight", span, hold, error)) {
+        LogLogitsFault(logitsStep, logitsSteps,
+                       Deep2::LOGITS_STORAGE_NOT_RESIDENT);
+        error = LogitsFaultName(Deep2::LOGITS_STORAGE_NOT_RESIDENT);
+        bestTok = -1;
         return false;
-    if (!span.data || span.bytes < vocabSize * rowBytes) {
-        error = "output.weight resolve OOB";
-        return false;
+    }
+    LOGITS_REQUIRE(span.data != nullptr, Deep2::LOGITS_NULL_HEAD);
+    LOGITS_REQUIRE(span.bytes >= needBytes, Deep2::LOGITS_HEAD_BYTES_UNDERSIZED);
+    if (!span.borrowed) {
+        LOGITS_REQUIRE(!hold.empty() && span.data == hold.data(),
+                       Deep2::LOGITS_STORAGE_NOT_RESIDENT);
     }
     if (span.borrowed) {
         Deep2::StreamPathTiming_Add(Deep2::SPT_cacheHit(), t0);
-        Deep2::StreamTransfer_RecordRead(rowBytes * vocabSize, /*cacheHit=*/true);
-        Deep2::K2LiveCache_NoteTrampOutHit(rowBytes * vocabSize);
+        Deep2::StreamTransfer_RecordRead(needBytes, /*cacheHit=*/true);
+        Deep2::K2LiveCache_NoteTrampOutHit(needBytes);
         Deep2::LogitsPackedResidentHits().fetch_add(1, std::memory_order_relaxed);
     } else {
         Deep2::StreamPathTiming_Add(Deep2::SPT_outW(), t0);
@@ -852,7 +904,6 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     const uint8_t* base = span.data;
     const size_t baseN = span.bytes;
 
-    // RMV desc for logits — resolve once upstream of TryGpuHot (no name relookup).
     Deep2::VirtualTensorDesc logitsDesc{};
     {
         uint64_t tid = 1469598103934665603ull;
@@ -869,6 +920,17 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
         logitsDesc.addressed = outRef.byteSize > 0;
     }
 
+    fprintf(stderr,
+            "LOGITS_CONTRACT_OK STEP=%u/%u HCOUNT=%zu VOCAB=%zu ROW_B=%zu "
+            "NEED=%zu BASE=%p BORROW=%d\n",
+            logitsStep, logitsSteps, hiddenCount, modelVocab, rowBytes,
+            needBytes, (const void*)base, span.borrowed ? 1 : 0);
+    fflush(stderr);
+
+    fprintf(stderr, "LOGITS_PROJECT_BEGIN STEP=%u/%u\n",
+            logitsStep, logitsSteps);
+    fflush(stderr);
+
     float best = -std::numeric_limits<float>::infinity();
     size_t br = 0;
     const bool legacy =
@@ -880,12 +942,15 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
         int32_t tok = -1;
         float bv = 0.f;
         const bool okSplit = Deep2::LogitsSplit_Wanted()
-            ? Deep2::LogitsSplit_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
-                                             hidden, &logitsDesc, tok, &bv)
-            : Deep2::LogitsClimb_ArgmaxPacked(base, baseN, vocabSize, hiddenDim,
-                                             hidden, tok, &bv);
+            ? Deep2::LogitsSplit_ArgmaxPacked(base, baseN, modelVocab,
+                                             modelHidden, hidden, &logitsDesc,
+                                             tok, &bv)
+            : Deep2::LogitsClimb_ArgmaxPacked(base, baseN, modelVocab,
+                                             modelHidden, hidden, tok, &bv);
         if (!okSplit) {
-            error = "LogitsClimb/Split_ArgmaxPacked failed";
+            LogLogitsFault(logitsStep, logitsSteps, Deep2::LOGITS_PROJECT_FAILED);
+            error = LogitsFaultName(Deep2::LOGITS_PROJECT_FAILED);
+            bestTok = -1;
             return false;
         }
         best = bv;
@@ -895,15 +960,15 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
         unsigned nt = std::thread::hardware_concurrency();
         if (nt < 2u) nt = 2u;
         if (nt > 8u) nt = 8u;
-        if (vocabSize < nt) nt = (unsigned)vocabSize;
+        if (modelVocab < nt) nt = (unsigned)modelVocab;
         std::vector<float> bestV(nt, -std::numeric_limits<float>::infinity());
         std::vector<size_t> bestR(nt, 0);
         std::vector<std::thread> pool;
         pool.reserve(nt);
         Deep2::LogitsHotAlloc().fetch_add(1, std::memory_order_relaxed);
         for (unsigned t = 0; t < nt; ++t) {
-            const size_t begin = (vocabSize * t) / nt;
-            const size_t end = (vocabSize * (t + 1u)) / nt;
+            const size_t begin = (modelVocab * t) / nt;
+            const size_t end = (modelVocab * (t + 1u)) / nt;
             pool.emplace_back([&, t, begin, end]() {
                 float lb = -std::numeric_limits<float>::infinity();
                 size_t lr = begin;
@@ -912,7 +977,7 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
                         _mm_prefetch(reinterpret_cast<const char*>(
                             base + (row + 1) * rowBytes), _MM_HINT_T0);
                     const float logit = DotQ6KRow(
-                        base + row * rowBytes, blocksPerRow, hiddenDim,
+                        base + row * rowBytes, blocksPerRow, modelHidden,
                         hidden);
                     if (logit > lb) { lb = logit; lr = row; }
                 }
@@ -927,6 +992,9 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
             if (bestV[t] > best) { best = bestV[t]; br = bestR[t]; }
         }
     }
+    fprintf(stderr, "LOGITS_PROJECT_END STEP=%u/%u\n", logitsStep, logitsSteps);
+    fflush(stderr);
+
     // Climb chrono owns LOGITS_US (QPC Add around pool was reading 0).
     {
         const auto climb1 = Deep2::LogitsClimb_Snapshot();
@@ -941,23 +1009,23 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
     const uint64_t tSam = Deep2::StreamPathTiming_NowUs();
     Deep2::StreamPathTiming_Add(Deep2::SPT_sample(), tSam);
     Deep2::SPT_logitsCalls().fetch_add(1, std::memory_order_relaxed);
-    Deep2::SPT_logitsRows().fetch_add((uint64_t)vocabSize,
+    Deep2::SPT_logitsRows().fetch_add((uint64_t)modelVocab,
                                       std::memory_order_relaxed);
     Deep2::LogitsArgmaxCalls().fetch_add(1, std::memory_order_relaxed);
-    Deep2::LogitsPackedDotRows().fetch_add((uint64_t)vocabSize,
+    Deep2::LogitsPackedDotRows().fetch_add((uint64_t)modelVocab,
                                            std::memory_order_relaxed);
     // Cheap probe parity only when DEEP2_LOGITS_PARITY=1 (not on hot path).
     if (std::getenv("DEEP2_LOGITS_PARITY") &&
         std::getenv("DEEP2_LOGITS_PARITY")[0] == '1') {
         Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
         const float bestLogit = Deep2::LogitsClimb_DotQ6KRow(
-            base + br * rowBytes, blocksPerRow, hiddenDim, hidden);
+            base + br * rowBytes, blocksPerRow, modelHidden, hidden);
         const size_t probes[8] = {0, 1, 7, 64, 256, 1024, 8192,
-                                  vocabSize > 1 ? vocabSize - 1 : 0};
+                                  modelVocab > 1 ? modelVocab - 1 : 0};
         for (size_t p : probes) {
-            if (p >= vocabSize || p == br) continue;
+            if (p >= modelVocab || p == br) continue;
             const float pl = Deep2::LogitsClimb_DotQ6KRow(
-                base + p * rowBytes, blocksPerRow, hiddenDim, hidden);
+                base + p * rowBytes, blocksPerRow, modelHidden, hidden);
             if (pl > bestLogit + 1e-4f) {
                 Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
                 break;
@@ -968,17 +1036,25 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
             int32_t serialTok = -1;
             float serialVal = 0.f;
             if (!Deep2::LogitsClimb_ArgmaxPackedSerial(
-                    base, baseN, vocabSize, hiddenDim, hidden, serialTok,
+                    base, baseN, modelVocab, modelHidden, hidden, serialTok,
                     &serialVal) ||
                 serialTok != static_cast<int32_t>(br)) {
                 Deep2::LogitsParityFail().fetch_add(1, std::memory_order_relaxed);
             }
         }
     } else {
-        // Hot path: mark parity checked without extra vocab work.
         Deep2::LogitsParityChecks().fetch_add(1, std::memory_order_relaxed);
     }
+    if (br >= modelVocab) {
+        LogLogitsFault(logitsStep, logitsSteps, Deep2::LOGITS_ARGMAX_OOB);
+        error = LogitsFaultName(Deep2::LOGITS_ARGMAX_OOB);
+        bestTok = -1;
+        return false;
+    }
     bestTok = static_cast<int32_t>(br);
+    fprintf(stderr, "LOGITS_ARGMAX_END STEP=%u/%u TOK=%d\n",
+            logitsStep, logitsSteps, (int)bestTok);
+    fflush(stderr);
     return true;
 }
 
@@ -1054,7 +1130,8 @@ bool ForwardHiddenMla(const Deep2::GlobalTensorIndex& index,
     Deep2::MlaCertAuthority::NoteForwardEntered();
     Deep2::MlaCompleteStats agg{};
     const bool ok = ForwardMLALayers(layerDepth, index, k2cfg, hidden, mlaComplete,
-                                     mlaComplete ? &agg : nullptr, error);
+                                     mlaComplete ? &agg : nullptr, /*position=*/0,
+                                     /*seqNeed=*/8, error);
     if (ok && mlaComplete && agg.ropeApplied && agg.softmaxFinite) {
         Deep2::MlaCertAuthority::NoteCompleteSuccess(agg, hidden, k2cfg.hiddenDim);
     }
@@ -1076,6 +1153,8 @@ Result Run(const fs::path& shardDir,
     Deep2::LogitsResidency_Reset();
     Deep2::LogitsClimb_Reset();
     Deep2::MlaStage_Reset();
+    /* EV512 arm+surface owned by Deep2Engine::generateStream (decoupled). */
+    Deep2::Ev512::HostTryArm(0x50415448424E3503ull); /* PATHBN5; no-op if armed */
     // Preserve sticky MLA host cache + open shard HANDLEs across warm→timed.
     // Full K2ShardIo_Reset() closed handles every request → reopen/mapfault.
     Deep2::K2ShardIo_ResetCounters();
@@ -1102,6 +1181,9 @@ Result Run(const fs::path& shardDir,
     Deep2::SPT_reqStartUs().store(tTok);
     std::vector<int32_t> promptTokens = encoder.Encode(cfg.prompt);
     Deep2::StreamPathTiming_Add(Deep2::SPT_tokenize(), tTok);
+    Deep2::Ev512::HostEmitTokenizeComplete((uint64_t)promptTokens.size(), 0);
+    Deep2::Ev512::HostEmitPrefillEntry(1, (uint64_t)promptTokens.size());
+    Deep2::Ev512::HostEmitPrefillComplete(1, (uint64_t)promptTokens.size());
     if (promptTokens.empty()) {
         result.error = "Prompt encode failed";
         return result;
@@ -1117,6 +1199,8 @@ Result Run(const fs::path& shardDir,
 
     uint32_t layerDepth = ResolveLayerDepth(cfg, k2cfg);
     result.layerDepth = layerDepth;
+    Deep2::Ev512::HostEmitDeviceSelected(
+        Deep2::K2GpuStreamCopy_Vc() ? 1ull : 0ull, (uint64_t)layerDepth);
 
     size_t hiddenDim = k2cfg.hiddenDim;
     size_t vocabSize = k2cfg.vocabSize;
@@ -1182,6 +1266,8 @@ Result Run(const fs::path& shardDir,
                 fnWeight.fulfilled,
                 (unsigned long long)outNorm.numElements());
         fflush(stderr);
+        Deep2::Ev512::HostEmitStreamAbort(0, 3);
+        Deep2::Ev512::HostEmitTeardownFault(0, 3);
         TrackFree(outNormTrack);
         TrackFree(hidden.size() * sizeof(float));
         TrackFree(preMla.size() * sizeof(float));
@@ -1193,7 +1279,9 @@ Result Run(const fs::path& shardDir,
 
     for (uint32_t step = 0; step < cfg.streamTokens; ++step) {
         std::string stepErr;
-        // Heartbeat before work — distinguishes hard kill from orderly STREAM_ABORT.
+        Deep2::StepEnter(step, cfg.streamTokens);
+        if (step == 0u)
+            Deep2::Ev512::HostEmitFirstTokenBoundary(0, cfg.streamTokens);
         if ((step % 32u) == 0u) {
             fprintf(stderr,
                     "STREAM_HEARTBEAT STEP=%u/%u TEARDOWN_WITNESS=0\n",
@@ -1203,11 +1291,16 @@ Result Run(const fs::path& shardDir,
         try {
         if (!LookupRealTokenEmbed(embed, k2cfg, curToken, hidden.data(), stepErr)) {
             result.error = stepErr;
+            Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                          "NOT_REACHED");
+            Deep2::StepExit(step, cfg.streamTokens);
             fprintf(stderr,
                     "STREAM_ABORT=1 STEP=%u/%u OWNER=TOKEN_EMBED ERR=%s "
                     "TEARDOWN_WITNESS=0\n",
                     step, cfg.streamTokens, stepErr.c_str());
             fflush(stderr);
+            Deep2::Ev512::HostEmitStreamAbort(step, 1);
+            Deep2::Ev512::HostEmitTeardownFault(step, 1);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1218,13 +1311,19 @@ Result Run(const fs::path& shardDir,
         }
         memcpy(preMla.data(), hidden.data(), hiddenDim * sizeof(float));
         if (!ForwardMLALayers(layerDepth, index, k2cfg, hidden.data(),
-                              cfg.enableMlaComplete, &g12Stats, stepErr)) {
+                              cfg.enableMlaComplete, &g12Stats, step,
+                              cfg.streamTokens + 8u, stepErr)) {
             result.error = stepErr;
+            Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                          "NOT_REACHED");
+            Deep2::StepExit(step, cfg.streamTokens);
             fprintf(stderr,
                     "STREAM_ABORT=1 STEP=%u/%u OWNER=MLA_FORWARD ERR=%s "
                     "TEARDOWN_WITNESS=0\n",
                     step, cfg.streamTokens, stepErr.c_str());
             fflush(stderr);
+            Deep2::Ev512::HostEmitStreamAbort(step, 2);
+            Deep2::Ev512::HostEmitTeardownFault(step, 2);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1233,6 +1332,10 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
+        Deep2::Ev512::HostEmitForwardComplete(step, (uint64_t)hiddenDim);
+        Deep2::Ev512::HostEmitWeightRangeReady(step, (uint64_t)layerDepth);
+        Deep2::Ev512::HostEmitKVHotsetReady(step, (uint64_t)(step + 1u));
+        Deep2::Ev512::HostEmitDeviceExecution(1, step);
         if (Deep2::LivePath_Active() && Deep2::LivePath_MechOn(Deep2::LP_MECH_PINBALL)) {
             double resE = 0.0, inE = 0.0;
             const size_t sample = hiddenDim < 64 ? hiddenDim : 64;
@@ -1256,12 +1359,17 @@ Result Run(const fs::path& shardDir,
                 result.error = stepErr = art.missingPrereq
                     ? art.missingPrereq
                     : "FinalHidden produce failed";
+                Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                              "NOT_REACHED");
+                Deep2::StepExit(step, cfg.streamTokens);
                 fprintf(stderr,
                         "STREAM_ABORT=1 STEP=%u/%u OWNER=FINAL_NORM "
                         "MISSING_PREREQ=%s TEARDOWN_WITNESS=0\n",
                         step, cfg.streamTokens,
                         art.missingPrereq ? art.missingPrereq : "UNKNOWN");
                 fflush(stderr);
+                Deep2::Ev512::HostEmitStreamAbort(step, 3);
+                Deep2::Ev512::HostEmitTeardownFault(step, 3);
                 TrackFree(outNormTrack);
                 TrackFree(hidden.size() * sizeof(float));
                 TrackFree(preMla.size() * sizeof(float));
@@ -1271,16 +1379,14 @@ Result Run(const fs::path& shardDir,
                 return result;
             }
         }
-        memcpy(hidden.data(), scratch.data(), hiddenDim * sizeof(float));
-
-        if (!ProjectLogitsArgmax(index, outRef, hiddenDim, vocabSize, hidden.data(),
-                                 curToken, stepErr)) {
-            result.error = stepErr;
-            fprintf(stderr,
-                    "STREAM_ABORT=1 STEP=%u/%u OWNER=LOGITS ERR=%s "
-                    "TEARDOWN_WITNESS=0\n",
-                    step, cfg.streamTokens, stepErr.c_str());
-            fflush(stderr);
+        if (hidden.size() != hiddenDim || scratch.size() != hiddenDim) {
+            Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                          "NOT_REACHED");
+            Deep2::StepExit(step, cfg.streamTokens);
+            Deep2::LogLogitsFault(step, cfg.streamTokens,
+                                  Deep2::LOGITS_PRODUCER_NOT_COMPLETE);
+            result.error = Deep2::LogitsFaultName(
+                Deep2::LOGITS_PRODUCER_NOT_COMPLETE);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1289,6 +1395,71 @@ Result Run(const fs::path& shardDir,
             result.finalResidencyBytes = g_currentResidency;
             return result;
         }
+        Deep2::WitnessProducerLast(step, cfg.streamTokens, scratch.data(),
+                                   scratch.size());
+        memcpy(hidden.data(), scratch.data(), hiddenDim * sizeof(float));
+
+        /* Probe: print actuals only on fire; disposition always printed. */
+        Deep2::HiddenProbeAttempt(step, cfg.streamTokens);
+        const bool probeEmitted = Deep2::WitnessFinalHidden(
+            step, cfg.streamTokens, hidden.data(), hidden.size(), hiddenDim);
+        if (probeEmitted) {
+            Deep2::Ev512::HostEmitHiddenProbe(step, 0);
+            Deep2::Ev512::HostEmitHiddenLast(step, 0);
+            Deep2::Ev512::HostEmitBounds(step, 0, 1);
+            Deep2::Ev512::HostEmitValid(step, 0, 1);
+        }
+        Deep2::HiddenProbeDisposition(
+            step, cfg.streamTokens, probeEmitted ? 1u : 0u,
+            probeEmitted ? "OBSERVED" : "NOT_REACHED");
+
+        if (!probeEmitted) {
+            Deep2::StepExit(step, cfg.streamTokens);
+            Deep2::LogLogitsFault(step, cfg.streamTokens,
+                                  Deep2::LOGITS_PRODUCER_NOT_COMPLETE);
+            result.error = "HIDDEN_PROBE_NOT_REACHED";
+            TrackFree(outNormTrack);
+            TrackFree(hidden.size() * sizeof(float));
+            TrackFree(preMla.size() * sizeof(float));
+            TrackFree(scratch.size() * sizeof(float));
+            result.peakResidencyBytes = g_peakResidency;
+            result.finalResidencyBytes = g_currentResidency;
+            return result;
+        }
+
+        fprintf(stderr, "HIDDEN_TO_LOGITS STEP=%u/%u\n",
+                step, cfg.streamTokens);
+        fflush(stderr);
+
+        if (!ProjectLogitsArgmax(index, outRef, hiddenDim, vocabSize,
+                                 hidden.data(), hidden.size(), step,
+                                 cfg.streamTokens, curToken, stepErr)) {
+            result.error = stepErr;
+            Deep2::StepExit(step, cfg.streamTokens);
+            fprintf(stderr,
+                    "LOGITS_RETURN_FAIL STEP=%u/%u ERR=%s\n"
+                    "STREAM_ABORT=1 STEP=%u/%u OWNER=LOGITS ERR=%s "
+                    "TEARDOWN_WITNESS=0\n",
+                    step, cfg.streamTokens, stepErr.c_str(),
+                    step, cfg.streamTokens, stepErr.c_str());
+            fflush(stderr);
+            Deep2::Ev512::HostEmitStreamAbort(step, 6); /* OWNER tag LOGITS */
+            Deep2::Ev512::HostEmitTeardownFault(step, 6);
+            TrackFree(outNormTrack);
+            TrackFree(hidden.size() * sizeof(float));
+            TrackFree(preMla.size() * sizeof(float));
+            TrackFree(scratch.size() * sizeof(float));
+            result.peakResidencyBytes = g_peakResidency;
+            result.finalResidencyBytes = g_currentResidency;
+            return result;
+        }
+        fprintf(stderr,
+                "LOGITS_RETURN_OK STEP=%u/%u TOK=%d\n",
+                step, cfg.streamTokens, (int)curToken);
+        fflush(stderr);
+        Deep2::Ev512::HostEmitLogitsComplete(step, (uint32_t)curToken);
+        Deep2::Ev512::HostEmitSampleComplete((uint64_t)(uint32_t)curToken, step);
+        Deep2::StepExit(step, cfg.streamTokens);
         ghostTok.push_back(curToken);
         callbackFired = true;
         if (cfg.onToken) {
@@ -1299,6 +1470,9 @@ Result Run(const fs::path& shardDir,
                         "TEARDOWN_WITNESS=0\n",
                         step, cfg.streamTokens);
                 fflush(stderr);
+                Deep2::Ev512::HostEmitStreamAbort(step, 8); /* TOKEN_CALLBACK */
+                Deep2::Ev512::HostEmitTeardownFault(step, 8);
+                Deep2::Ev512::HostEmitStreamError(8, step);
                 TrackFree(outNormTrack);
                 TrackFree(hidden.size() * sizeof(float));
                 TrackFree(preMla.size() * sizeof(float));
@@ -1334,11 +1508,16 @@ Result Run(const fs::path& shardDir,
         }
         } catch (const std::exception& ex) {
             result.error = std::string("step_exception: ") + ex.what();
+            Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                          "INTERRUPTED");
+            Deep2::StepExit(step, cfg.streamTokens);
             fprintf(stderr,
                     "STREAM_ABORT=1 STEP=%u/%u OWNER=STEP_EXCEPTION ERR=%s "
                     "TEARDOWN_WITNESS=0\n",
                     step, cfg.streamTokens, ex.what());
             fflush(stderr);
+            Deep2::Ev512::HostEmitStreamAbort(step, 7); /* STEP_EXCEPTION */
+            Deep2::Ev512::HostEmitTeardownFault(0xE0000001ull, step);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1348,11 +1527,16 @@ Result Run(const fs::path& shardDir,
             return result;
         } catch (...) {
             result.error = "step_exception: unknown";
+            Deep2::HiddenProbeDisposition(step, cfg.streamTokens, 0,
+                                          "INTERRUPTED");
+            Deep2::StepExit(step, cfg.streamTokens);
             fprintf(stderr,
                     "STREAM_ABORT=1 STEP=%u/%u OWNER=STEP_EXCEPTION "
                     "ERR=unknown TEARDOWN_WITNESS=0\n",
                     step, cfg.streamTokens);
             fflush(stderr);
+            Deep2::Ev512::HostEmitStreamAbort(step, 7);
+            Deep2::Ev512::HostEmitTeardownFault(0xE0000002ull, step);
             TrackFree(outNormTrack);
             TrackFree(hidden.size() * sizeof(float));
             TrackFree(preMla.size() * sizeof(float));
@@ -1415,8 +1599,17 @@ Result Run(const fs::path& shardDir,
         const uint64_t now = Deep2::StreamPathTiming_NowUs();
         const uint64_t wallNs =
             (rs && now > rs) ? (now - rs) * 1000ull : 0ull;
+        const uint64_t tokN = (uint64_t)ghostTok.size();
         Deep2::OProj_EmitWallBudget(stdout, wallNs,
-                                    (uint32_t)ghostTok.size());
+                                    (uint32_t)tokN);
+        Deep2::Ev512::HostEmitWallNs(wallNs, tokN);
+        const uint64_t tpsQ32 =
+            (wallNs > 0ull) ? ((tokN << 32) * 1000000000ull / wallNs) : 0ull;
+        Deep2::Ev512::HostEmitDecodeTpsQ32_32(tpsQ32, 5ull << 32);
+        const uint64_t pFail = Deep2::LogitsParityFail().load();
+        const uint64_t pChk = Deep2::LogitsParityChecks().load();
+        if (pChk > 0ull)
+            Deep2::Ev512::HostEmitParity(pChk, pFail, pFail == 0ull ? 1u : 0u);
     }
     Deep2::K2ShardIo_Emit(stdout);
     Deep2::K2LiveCache_Clear(); // sticky MLA retained (see Clear impl)
@@ -1460,8 +1653,19 @@ Result Run(const fs::path& shardDir,
         else if (cfg.enableMlaComplete && !result.softmaxFinite) result.error = "Gate 12: softmax non-finite";
         else if (cfg.enableMlaComplete && !result.kvCacheWrite) result.error = "Gate 12: KV write missing";
         else if (cfg.enableMlaComplete && !result.kvCacheRead) result.error = "Gate 12: KV read missing";
+        else if (cfg.enableMlaComplete && result.kvLength < 1)
+            result.error = "Gate 12: KV length < 1 (pre-Commit length)";
+        else if (!callbackFired) result.error = "Stream contract: callback never fired";
+        else if (!result.outputNonempty) result.error = "Stream contract: empty output text";
         else result.error = "Stream contract not satisfied";
     }
+    if (result.ok)
+        Deep2::Ev512::HostEmitStreamComplete(
+            (uint64_t)result.generatedText.size(), 0);
+    Deep2::Ev512::HostEmitTeardownEntry();
+    Deep2::PathB_ClearQDev();
+    Deep2::Ev512::HostEmitTeardownComplete();
+    /* HostSurfaceGuard surfaces claims 1..17 on every exit (incl. abort). */
     /* ProductPathSeal / champion emit owned by Deep2Engine::generateStream. */
     (void)shardDir;
     return result;

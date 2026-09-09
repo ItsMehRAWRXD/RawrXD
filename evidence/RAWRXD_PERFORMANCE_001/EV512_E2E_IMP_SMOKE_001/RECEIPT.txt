@@ -1,0 +1,52 @@
+EV512_E2E_IMP_SMOKE_001=SEALED
+DATE=2026-09-08
+TYPE=PRODUCT_EV512_DECOUPLE_SMOKE
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+NO_AUTHORITY_TRANSITION=1
+
+LAW=
+  Product execution and evidence authority are intentionally decoupled.
+  source existence ≠ runtime evidence
+  capacity = max EvidenceRecord slots (Host=512); seqCap=512 required
+  Dropped++ on overflow; no synthetic missing records
+
+IMPL=
+  HostTryArm + HostSurfaceGuard in Deep2Engine::generateStream (all models)
+  HostTryArm idempotent (K2 re-arm does not wipe buffer)
+  HostSurfaceGuard removed from K2NativeStreamGate (parent owns surface)
+  Product-path emits: FIRST_TOKEN / STREAM_COMPLETE|ABORT / WALL / TPS / TEARDOWN
+  K2-path emits unchanged (logits/attn/pathB/hidden when fired)
+
+BUILD=
+  cmake --build build-fd --target rawr --config Release → exit 0
+  EXE=build-fd/bin/rawr.exe
+
+SMOKE0 (DEEP2_EV512 unset):
+  RC=0 PRODUCT_PASS=1
+  RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+  stream text present
+
+SMOKE1 (DEEP2_EV512=1):
+  RC=0 PRODUCT_PASS=1
+  RXEV_SUMMARY OK=1 CAP=512 COM=6 DROP=0 SEQ=512 FLAGS=0x1f
+  OBSERVED: 1 FIRST_TOKEN_BOUNDARY, 10 STREAM_COMPLETE,
+             12 TEARDOWN_ENTRY, 13 TEARDOWN_COMPLETE,
+             15 WALL_NS, 16 DECODE_TPS_Q32_32
+  NO_CORRESPONDING: 2..9,11,14,17 (host llama path; K2 sites not on this run)
+
+DECOUPLE_VERDICT=PASS
+  product succeeds with evidence OFF and ON
+  evidence lines only when armed; missing fires stay NO_CORRESPONDING
+
+NOT_CLAIMED=
+  Claim 6 LOGITS_ENTRY measured fire (needs K2 ProjectLogitsArgmax path)
+  PATH_B promote / MODE=A measurement
+  RAWR_MAX_TOKENS on agentic CLI (PRODUCT_DEFAULT still 256 this harness)
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A

@@ -1,0 +1,63 @@
+IDE_REMAINING_GEN_004=SEALED
+DATE=2026-09-08
+TYPE=REMAINING_GENERATOR_EXACT_MATCH_BATCH
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT
+ZERO_SPECULATION=1
+COMPLETE_BATCH=1
+
+HARNESS_A_CLAIM23=
+  BINARY=build-fd/bin/rawrxd.exe
+  OWNER=src/sovereign/rawrxd.cpp backend assign (--backend)
+  ENV=DEEP2_EV512=1 DEEP2_EV512_BACKEND_ONLY=1
+  CMD=rawrxd.exe --backend cpu_avx2 --model llama3.2-3b-Q3_K_S.gguf --prompt hi
+  SSOT=claim23_backend.stderr.txt
+  RC=0 COM=1
+  EXACT_MATCH_OBSERVED=
+    23 BACKEND_SELECTED
+  NOTE=BACKEND_ONLY exits after real CLI routing emit; no model spend.
+       Same owner site also wired at HeadlessIDE::setActiveBackend and
+       Win32IDE_BackendSwitcher::setActiveBackend (not exercised this gen).
+
+HARNESS_B_OPS=
+  BINARY=build-fd/bin/ev512_ops_remaining_smoke.exe
+  SOURCE=tools/ev512_ops_remaining_smoke.cpp
+  OWNERS=real ofstream/ifstream + CreateProcess (cmd/cmake/git)
+  ENV=DEEP2_EV512=1
+  SSOT=ops_remaining.stderr.txt
+  RC=0 COM=14
+  EXACT_MATCH_OBSERVED=
+    60 AGENT_LOOP_ENTRY
+    63 TOOL_DISPATCH
+    64 TOOL_COMPLETE
+    65 FILE_READ
+    66 FILE_WRITE
+    69 TERMINAL_ENTRY
+    70 TERMINAL_COMPLETE
+    71 BUILD_ENTRY
+    72 BUILD_COMPLETE
+    73 TEST_ENTRY
+    74 TEST_COMPLETE
+    79 GIT_ENTRY
+    80 GIT_COMPLETE
+    90 AGENT_COMPLETE
+  HIT=14/14 target ops set
+
+WIRE_LANDED_THIS_BATCH=
+  RuntimeEvidence512HostIDE.hpp HostEmit* for agent/tool/file/term/build/test/git
+  CMake target ev512_ops_remaining_smoke
+  sovereign rawrxd HostSurfaceGuard + Claim23 emit + BACKEND_ONLY gen
+  Win32IDE_BackendSwitcher HostIDE include (emit already present)
+
+NOT_IN_THIS_GEN=
+  61-62 agent plan/model-return — need real agent planner path
+  67-68 directory/list ops if distinct owners exist
+  75-78 MCP / debug / debugger — separate workflows
+  81-87 patch/hotpatch/MCP subset — do not invent
+  89 agent resume — need resume owner
+  91-92 / 95-96 already covered on product path or clean-exit Non-Match
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  NEXT=agent plan/MCP/hotpatch GEN OR MODE=A when authorized
+       OR residual IDE claims still NO_CORRESPONDING on product path

@@ -17,6 +17,9 @@
 #include "Win32IDE_MainMenuAuthority.hpp"
 #include "IDELogger.h"
 #include "../SettingsManager.h"
+#include "../product/gateway/product_deep2_infer.hpp"
+#include "../product/ide/session_io.hpp"
+#include "../deep2/RuntimeEvidence512HostIDE.hpp"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <shlobj.h>
@@ -63,6 +66,13 @@ void Win32IDE::saveSession() {
         // Save active model so the next launch can restore inference/chat state.
         if (!m_loadedModelPath.empty()) {
             session["loadedModelPath"] = m_loadedModelPath;
+            rawr::product::ProductSession ps{};
+            ps.id = "ide_last";
+            ps.modelPath = m_loadedModelPath;
+            ps.modelAlias = m_loadedModelPath;
+            ps.keepOpen = 1;
+            ps.maxTokens = 256;
+            (void)rawr::product::saveSession(ps);
         }
         
         // Save working directory
@@ -163,6 +173,8 @@ void Win32IDE::restoreSession() {
             // Do not GetFileAttributes here (same hang class as CWD). Record + defer.
             LOG_INFO("Session: recording model path for deferred restore: " + savedModelPath);
             setLoadedModelPath(savedModelPath);
+            /* ProductRuntime → OpenSession (no serialized engine resurrection). */
+            (void)rawr::ProductOpenSession(savedModelPath.c_str());
             m_pendingApp201ModelLoad = true;
             if (m_hwndMain && IsWindow(m_hwndMain))
                 PostMessage(m_hwndMain, WM_APP_RESTORE_MODEL, 0, 0);
@@ -171,6 +183,9 @@ void Win32IDE::restoreSession() {
         
         m_sessionRestored = true;
         LOG_INFO("Session restored successfully.");
+        Deep2::Ev512::HostEmitSessionRestore(
+            Deep2::Ev512::HostPathHash(path.c_str()),
+            (uint64_t)content.size());
 
         // v1→v2 write-once migration: if we just loaded a v1 session,
         // re-save immediately as v2 so the legacy format is retired on disk.

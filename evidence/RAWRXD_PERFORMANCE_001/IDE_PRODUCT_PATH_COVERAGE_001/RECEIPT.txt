@@ -1,0 +1,73 @@
+IDE_PRODUCT_PATH_COVERAGE_001=SEALED
+DATE=2026-09-08
+TYPE=LIVE_SITE_WIRING+REMAINING_GENERATOR
+LAW=EV512_STATE_SPACE_EXHAUSTION_001
+SPEND=0 HOT_GATE=0 MEASUREMENT=UNSPENT NO_PROMOTE=1
+
+IMPL=
+  RuntimeEvidence512HostIDE.hpp (product-path HostEmit* for 24..96 subset)
+  Surface 1..96 via EvidenceSummarizeIDE512 / EvidenceFindIDEClaim512
+  Wires:
+    loadModel + openK2ShardDirectory → 24..31,34,35
+    K2 Encode → 38,39,40
+    generateStream → 41,34,35
+    token callback → 42,45,46
+    join → 49,96
+    unloadModel → 91,92 + surface
+
+SMOKE_RUN2=
+  BINARY=deep2_benchmark.exe rebuilt
+  MODEL=Kimi-K2 Q4_K_M shard dir
+  ENV=DEEP2_EV512=1 PATHB=off MAX_TOKENS=1
+  RC=0 WALL_MS≈10004
+  RXEV MAX=96
+
+EXACT_MATCH_OBSERVED_18_96=
+  24 MODEL_DISCOVERY
+  25 MODEL_IDENTITY
+  26 MODEL_LOAD_ENTRY
+  27 MODEL_LOAD_COMPLETE
+  28 SHARD_RESOLUTION
+  29 ARCH_CONTRACT
+  30 QUANT_CONTRACT
+  31 TOKENIZER_CONTRACT
+  34 DEEP2_SESSION_CREATE
+  35 DEEP2_SESSION_READY
+  38 TOKENIZE_COMPLETE
+  39 PREFILL_ENTRY
+  40 PREFILL_COMPLETE
+  41 GENERATE_STREAM_ENTRY
+  42 DECODE_STEP_ENTRY
+  45 TOKEN_CALLBACK
+  46 TOKEN_DECODED
+  49 END_REASON
+  91 MODEL_UNLOAD_ENTRY
+  92 MODEL_UNLOAD_COMPLETE
+  96 E2E_PRODUCT_COMPLETE
+  COUNT=21
+
+NON_MATCH_THIS_RUN_EXPECTED=
+  18-23 IDE boot/window/workspace/backend (Win32 IDE not executed)
+  32-33 template/tensor schema (not wired yet)
+  36-37 request accept/route (IDE/orchestrator)
+  43-44 forward/sample (not separately wired; structural near 8/7)
+  47-48 UI stream (no UI paint sink)
+  50-52 cancel/stream_error (clean run)
+  53-59 device/residency/reload (partial/not exercised)
+  60-90 agent/tool/edit/build/test/git/mcp/ext/server (workflows absent)
+  93-95 IDE exit/fault (no IDE process)
+
+LIVE_SITE_WIRING=
+  PRODUCT_PATH_SUBSET=CLAIMED_FOR_WIRED_OWNERS
+  WIN32_IDE_OWNERS=NOT_CLAIMED
+  FULL_18_96=UNRESOLVED_REMAINING_GENERATOR
+
+NEXT_GEN=
+  Win32 IDE boot→exit for 18-23,47-48,88,93-94
+  Optional RequiredProductE2E rows still unwired: 32,33,36,37,43,44,53+
+  MODE=A measured authority still UNSPENT
+
+AUTHORITY=
+  MODE=D HOT_GATE=0 NEXT_SPEND=NONE
+  coverage≠measurement
+  OBSERVED≠ELIMINATION_CLOSED

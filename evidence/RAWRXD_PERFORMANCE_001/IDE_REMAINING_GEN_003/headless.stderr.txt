@@ -1,0 +1,3 @@
+Error: --model and --prompt are required
+
+[StreamEngine] Shutdown

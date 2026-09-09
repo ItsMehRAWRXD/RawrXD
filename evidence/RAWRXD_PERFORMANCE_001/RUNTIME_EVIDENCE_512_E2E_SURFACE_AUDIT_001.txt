@@ -1,0 +1,79 @@
+RUNTIME_EVIDENCE_512_E2E_SURFACE_AUDIT_001=SEALED
+DATE=2026-09-08
+TYPE=MODE_D_E2E_AUDIT
+SPEND=0
+HOT_GATE=0
+MEASUREMENT=UNSPENT
+NO_AUTHORITY_TRANSITION=1
+
+PURPOSE=
+  End-to-end IDE audit: for every ClaimId 1..17, confirm a fired claim
+  can produce a Commit record and be surfaced (FindClaim / RXEV_SURFACE).
+
+LAW=
+  source existence ≠ runtime evidence
+  DEEP2_EV512=1 required to arm Host buffer
+  SURFACE prints OBSERVED only when FindClaim returns committed record
+  missing fire → NO_CORRESPONDING_RUNTIME_EVIDENCE (not fabricated)
+
+PIPELINE=
+  HostTryArm(seqCap=512, capacity=512 records)
+  → claim-specific EvidenceEmit* (via HostEmit*)
+  → EvidenceEmitCore XCHG(Commit)
+  → HostSurfaceGuard destructor on every exit
+  → EvidenceSummarize512 + EvidenceFindClaim512(id) for id=1..17
+  → RXEV_SURFACE line per claim
+
+CAPACITY=
+  HostBuf = 512 records (≥ 17 unique claims; multi-fire OK until Dropped)
+
+MATRIX (EMIT_EXPORT / HOST_WRAP / SITE_CALL / SURFACE_FIND)=
+  ID  CLAIM                    EMIT  HOST  SITE                         SURF
+  1   FIRST_TOKEN_BOUNDARY     Y     Y     K2NativeStreamGate step0     Y
+  2   HIDDEN_PROBE             Y     Y     WitnessFinalHidden path      Y
+  3   HIDDEN_LAST              Y     Y     WitnessFinalHidden path      Y
+  4   BOUNDED                  Y     Y     with probe (soft bool)       Y
+  5   VALID                    Y     Y     with probe (soft bool)       Y
+  6   LOGITS_ENTRY             Y     Y     ProjectLogitsArgmax entry    Y
+  7   LOGITS_COMPLETE          Y     Y     ProjectLogitsArgmax ok       Y
+  8   ATTN_COMPLETE            Y     Y     K2MLAWeights PathB success   Y
+  9   PATHB_COMPLETE           Y     Y     K2MLAWeights PathB success   Y
+  10  STREAM_COMPLETE          Y     Y     result.ok join               Y
+  11  STREAM_ABORT             Y     Y     logits fail / exceptions /
+                                           token callback abort         Y
+  12  TEARDOWN_ENTRY           Y     Y     join teardown                Y
+  13  TEARDOWN_COMPLETE        Y     Y     join teardown                Y
+  14  TEARDOWN_FAULT           Y     Y     logits fail / step exception Y
+  15  WALL_NS                  Y     Y     SPT wall join                Y
+  16  DECODE_TPS_Q32_32        Y     Y     SPT wall join (floor 5<<32)  Y
+  17  PARITY                   Y     Y     if LogitsParityChecks>0      Y
+
+OBJS=
+  Core.obj Emit.obj Collect.obj present under src/asm/
+  CMake InferenceEngine lists Core+Emit+Collect
+  CollectDecl FindClaim ABI matches Collect.asm (pointer return)
+
+SURFACE_EXIT_FIX=
+  HostSurfaceGuard after HostTryArm
+  surfaces claims 1..17 on early return and normal join
+  (previously join-only HostSurfaceAllClaims missed abort paths)
+
+QUALITY_NOTES_NOT_BLOCKING_SURFACE=
+  HiddenProbe/Last soft args may be (step,0) until real bits wired
+  Bounds/Valid soft-armed with ok=1 when probe emitted
+  PARITY fires only when parity checks ran (pChk>0)
+  ATTN/PATHB fire only on PathB success path
+  RUNTIME observation still requires DEEP2_EV512=1 + rebuild + run
+  MEASUREMENT still requires MODE=A HOT_GATE=1
+
+ATTRIBUTION_UNCHANGED=
+  LAST_PROVEN=FINAL_NORM(step22)
+  FIRST_UNPROVEN_CONSUMER=ProjectLogitsArgmax(step22)
+  A/B=UNRESOLVED
+
+AUTHORITY=
+  MODE=D
+  HOT_GATE=0
+  NEXT_SPEND=NONE
+  CHAMPION=PATH_A
+  VERDICT=SURFACE_PATH_READY_FOR_ALL_17_WHEN_FIRED

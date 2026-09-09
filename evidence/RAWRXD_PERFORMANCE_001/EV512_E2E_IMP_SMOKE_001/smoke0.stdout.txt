@@ -1,0 +1,5 @@
+HelloHello!! How How can can I I assist assist you you today today?ĊĊ?ĊĊYouYou can can ask ask me me about about:Ċ:Ċ-- General General knowledge knowledge ( (historyhistory,, science science,, sports sports,, etc etc.)Ċ.)Ċ-- Language Language translation translationĊĊ-- Math Math calculations calculationsĊĊ-- Text Text summar summarizationizationĊĊ-- And And more more!ĊĊ!ĊĊWhatWhat's's on on your your mind mind?? Or Or would would you you like like me me to to suggest suggest some some conversation conversation topics topics?
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

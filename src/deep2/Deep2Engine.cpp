@@ -22,6 +22,9 @@
 #include "SemanticSafe.hpp"
 #include "FusedLiveController.hpp"
 #include "GGUFLoader.hpp"
+#include "lavapath/GgufDynamicGeometry.hpp"
+#include "lavapath/AuthorityBridge.hpp"
+#include "../asm/k2_real_attention/XR_K2_RealAttention.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
 #include "lavapath/Batch007Emit.hpp"
@@ -38,6 +41,8 @@
 #include "MlaCertAuthority.hpp"
 #include "K2MLAWeights.hpp"
 #include "K2KVCache.hpp"
+#include "RuntimeEvidence512Surface.hpp"
+#include "RuntimeEvidence512HostIDE.hpp"
 #include "MedusaDecoder.hpp"
 #include "NUFusedPacker.hpp"
 #include "WarmupScheduler.hpp"
@@ -256,18 +261,11 @@ extern "C" void Deep2_VecDotProduct(const float* a, const float* b, float* out, 
 }
 
 // SwiGLU activation: out = silu(gate) * up  (gate=y, up=x in legacy call sites)
-// MUST match Deep2Engine::SwiGLU â€” no clamp-then-unclamped multiply (L2 FFN_ACT fail).
+// MUST match Deep2Engine::SwiGLU — XR real reference.
 extern "C" void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n) {
-    if (n == 0) return;
-    auto silu1 = [](float v) -> float {
-        if (v > 20.0f) return v;
-        if (v < -20.0f) return 0.0f;
-        return v / (1.0f + expf(-v));
-    };
-    // Legacy Deep2_SwiGLU(x,y,out) = x * silu(y)  (up * silu(gate))
-    for (size_t i = 0; i < n; ++i) {
-        out[i] = x[i] * silu1(y[i]);
-    }
+    if (n == 0 || !x || !y || !out) return;
+    /* Legacy: out = x * silu(y)  ⇒ gate=y, up=x */
+    (void)XR_SwiGLU_F32(const_cast<float*>(y), x, out, static_cast<uint64_t>(n));
 }
 
 // RMSNorm - Production AVX2 implementation with two-pass algorithm
@@ -1764,6 +1762,11 @@ void Deep2Engine::deallocateBuffers() {
 // ============================================================================
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
+    Deep2::Ev512::HostTryArm(0x4D4F44454C4F4144ull); /* MODELLOAD */
+    const uint64_t pathH = Deep2::Ev512::HostPathHash(ggufPath.c_str());
+    Deep2::Ev512::HostEmitModelDiscovery(pathH, 1);
+    Deep2::Ev512::HostEmitModelIdentity(pathH, pathH);
+    Deep2::Ev512::HostEmitModelLoadEntry(pathH, (uint64_t)config.maxSeqLen);
 
     // Fail-closed: refuse load if active ExecutionPolicy is invalid.
     {
@@ -2002,8 +2005,49 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
+    // ONE_LOCAL_MODEL_AUTHORITY: fail-closed dynamic geometry (no static fill)
+    {
+        GgufDynamicGeometry dyn{};
+        if (!GgufResolveDynamicGeometry(firstShard.string().c_str(), &dyn)) {
+            printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
+            printf("BLOCKED_AT=%s\n", dyn.blockedAt);
+            printf("BLOCKED_OWNER=GGUF_METADATA\n");
+            printf("REASON=%s\n", dyn.reason);
+            printf("FIRST_DELTA=%s\n", dyn.blockedAt);
+            return false;
+        }
+        sessionGeometry_ = dyn;
+        printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=%s L=%u H=%u FFN=%u "
+               "heads=%u kv=%u hd=%u ctx=%u\n",
+               dyn.arch, dyn.layers, dyn.hidden, dyn.ffn, dyn.heads, dyn.kvHeads,
+               dyn.headDim, dyn.context);
+    }
+
     // Store result for later tensor lookups
     ggufResult = std::move(result);
+
+    // ONE_LOCAL_MODEL_AUTHORITY ladder: schema → quant → tok (fail-closed)
+    {
+        rawr::olma::AuthorityBundle auth{};
+        if (!rawr::olma::SealLadderOnLoad(ggufResult, firstShard.string().c_str(),
+                                          sessionGeometry_, auth) ||
+            !auth.PASS) {
+            const char* at = !auth.geom.PASS       ? auth.geom.BLOCKED_AT.c_str()
+                             : !auth.schema.PASS   ? auth.schema.BLOCKED_AT.c_str()
+                             : !auth.quant.PASS    ? auth.quant.BLOCKED_AT.c_str()
+                             : !auth.tok.PASS      ? auth.tok.BLOCKED_AT.c_str()
+                                                   : "AUTHORITY_LADDER";
+            printf("[Deep2Engine] AUTHORITY_LADDER=BLOCKED\n");
+            printf("BLOCKED_AT=%s\nBLOCKED_OWNER=ONE_LOCAL_MODEL_AUTHORITY\n", at);
+            printf("FIRST_DELTA=%s\n", at);
+            return false;
+        }
+        sessionAuth_ = std::move(auth);
+        printf("[Deep2Engine] AUTHORITY_LADDER=PASS schema=%u quant=%u tok=%u\n",
+               sessionAuth_.schema.TENSOR_SCHEMA_BOUND,
+               sessionAuth_.quant.BINDINGS_DISPATCHABLE,
+               sessionAuth_.tok.VOCAB_SIZE);
+    }
 
     // â”€â”€ Build GlobalTensorIndex for multi-shard models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (isMultiShard) {
@@ -2042,21 +2086,33 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     isMultiShard_ = isMultiShard;
     modelDir_ = shardDir;
 
-    // Extract architecture from metadata
+    // Extract architecture from immutable session geometry (not static defaults)
     const auto& meta = ggufResult.metadata;
+    const auto& geo = sessionGeometry_;
     printf("[Deep2Engine] GGUF architecture: '%s'  hidden=%u layers=%u heads=%u kvHeads=%u inter=%u vocab=%u\n",
-           meta.architecture.c_str(), meta.hiddenSize, meta.numLayers, meta.numHeads,
-           meta.numKeyValueHeads, meta.intermediateSize, meta.vocabSize);
-    modelWeights.hiddenDim       = meta.hiddenSize;
-    modelWeights.numLayers       = meta.numLayers;
-    modelWeights.numHeads        = meta.numHeads;
-    modelWeights.numKVHeads      = meta.numKeyValueHeads; // 0 ⇒ infer after tensor map
+           geo.arch, geo.hidden, geo.layers, geo.heads,
+           geo.kvHeads, geo.ffn, meta.vocabSize);
+    modelWeights.hiddenDim       = geo.hidden;
+    modelWeights.numLayers       = geo.layers;
+    modelWeights.numHeads        = geo.heads;
+    modelWeights.numKVHeads      = geo.kvHeads;
+    modelWeights.headDim         = geo.headDim;
     modelWeights.vocabSize       = meta.vocabSize;
-    modelWeights.intermediateDim = meta.intermediateSize;
-    modelWeights.normEps         = meta.rmsNormEps > 0 ? meta.rmsNormEps : 1e-6f;
-    modelWeights.ropeTheta       = meta.ropeTheta > 0 ? meta.ropeTheta : 10000.0f;
-    modelWeights.ropeScaling     = meta.ropeScaling;
+    modelWeights.intermediateDim = geo.ffn;
+    modelWeights.normEps         = geo.rmsEps;
+    modelWeights.ropeTheta       = geo.ropeBase;
+    modelWeights.ropeScaling     = geo.ropeScalingPresent ? geo.ropeScaling : 0.f;
+    modelWeights.ropeDimensionCount = geo.ropeDim;
     modelWeights.tieEmbeddings   = false;
+
+    config.hiddenDim       = geo.hidden;
+    config.numLayers       = geo.layers;
+    config.numHeads        = geo.heads;
+    config.numKVHeads      = geo.kvHeads;
+    config.headDim         = geo.headDim;
+    config.vocabSize       = meta.vocabSize;
+    config.intermediateDim = geo.ffn;
+    config.maxSeqLen       = geo.context;
 
     // â”€â”€ MLA / DeepSeek2 metadata translation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     bool isDeepSeek2 = (meta.architecture == "deepseek2");
@@ -2069,14 +2125,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.valueLengthMla = meta.valueLengthMla;
         modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
 
-        // Compute MLA head dimensions
+        // Compute MLA head dimensions — fail-closed (no static 128/64/128)
         if (meta.ropeDimensionCount > 0 && meta.keyLengthMla > meta.ropeDimensionCount) {
             modelWeights.qkNopeHeadDim = meta.keyLengthMla - meta.ropeDimensionCount;
         } else {
-            modelWeights.qkNopeHeadDim = 128; // DeepSeek2 default
+            printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
+            printf("BLOCKED_AT=MLA_HEAD_DIM\n");
+            printf("BLOCKED_OWNER=GGUF_METADATA\n");
+            printf("REASON=MLA nope/rope dims missing; refusing static defaults\n");
+            printf("FIRST_DELTA=MLA_HEAD_DIM\n");
+            return false;
         }
-        modelWeights.qkRopeHeadDim = meta.ropeDimensionCount > 0 ? meta.ropeDimensionCount : 64;
-        modelWeights.vHeadDim      = meta.valueLengthMla > 0 ? meta.valueLengthMla : 128;
+        if (meta.ropeDimensionCount == 0 || meta.valueLengthMla == 0) {
+            printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
+            printf("BLOCKED_AT=MLA_ROPE_OR_V\n");
+            printf("BLOCKED_OWNER=GGUF_METADATA\n");
+            printf("REASON=rope.dimension_count or value_length_mla missing\n");
+            printf("FIRST_DELTA=MLA_ROPE_OR_V\n");
+            return false;
+        }
+        modelWeights.qkRopeHeadDim = meta.ropeDimensionCount;
+        modelWeights.vHeadDim      = meta.valueLengthMla;
         modelWeights.useMLA        = true;
 
         // For MLA, headDim is the concatenated Q head dimension (nope + rope)
@@ -2150,19 +2219,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         printf("[Deep2Engine] MLA host load continuing — certified attention required "
                "in computeAttention\n");
     } else {
-        // Standard MHA / GQA: prefer attention.key_length when present
-        // (Nemotron-H: hidden/heads is not headDim — key_length=128).
-        if (modelWeights.numHeads == 0) {
-            printf("[Deep2Engine] WARNING: numHeads=0 in metadata, using heuristic hiddenDim/128\n");
-            modelWeights.numHeads = modelWeights.hiddenDim > 0 ? modelWeights.hiddenDim / 128 : 1;
-            if (modelWeights.numHeads == 0) modelWeights.numHeads = 1;
+        // Standard MHA / GQA: session geometry already authoritative — no heuristics
+        if (modelWeights.numHeads == 0 || modelWeights.headDim == 0) {
+            printf("[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=BLOCKED\n");
+            printf("BLOCKED_AT=HEADS_OR_HEAD_DIM\n");
+            printf("BLOCKED_OWNER=GGUF_METADATA\n");
+            printf("REASON=session geometry missing heads/head_dim after resolve\n");
+            printf("FIRST_DELTA=HEADS_OR_HEAD_DIM\n");
+            return false;
         }
-        if (meta.keyLength > 0)
-            modelWeights.headDim = meta.keyLength;
-        else
-            modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
-        if (meta.ropeDimensionCount > 0)
-            modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
         modelWeights.useMLA  = false;
 
         // Qwen3.5 / 3.6: Q may be fused Q|gate (2×gateDim). Keep meta heads then.
@@ -3078,6 +3143,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
     config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+    {
+        const uint64_t pathH = Deep2::Ev512::HostPathHash(ggufPath.c_str());
+        const uint64_t nTen = isMultiShard ? globalIndex_->TotalTensors()
+                                            : ggufResult.tensors.size();
+        Deep2::Ev512::HostEmitModelLoadComplete(pathH, nTen);
+        Deep2::Ev512::HostEmitShardResolution(isMultiShard ? 1ull : 1ull, 1ull);
+        Deep2::Ev512::HostEmitArchContract(
+            Deep2::Ev512::HostPathHash(
+                ggufResult.metadata.architecture.c_str()),
+            (uint64_t)modelWeights.numLayers, 1u);
+        Deep2::Ev512::HostEmitQuantContract(0, 0, 1u);
+        Deep2::Ev512::HostEmitTokenizerContract(
+            0, (uint64_t)config.vocabSize, tokenizer ? 1u : 0u);
+        Deep2::Ev512::HostEmitDeep2SessionCreate(pathH, 1);
+        Deep2::Ev512::HostEmitDeep2SessionReady(1, 0);
+    }
     return true;
 }
 
@@ -4037,33 +4118,13 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
 }
 
 // ============================================================================
-// SwiGLU: output = silu(gate) * up
-// Production AVX2 implementation with fast sigmoid approximation
+// SwiGLU: output = silu(gate) * up — XR real reference (K2_REAL_ATTENTION_001)
 // ============================================================================
 void Deep2Engine::SwiGLU(const float* gate, const float* up, float* output, size_t dim) {
-    if (dim == 0) return;
-
-    // Stable SiLU: for |x| large, sigmoid saturates. Must NOT compute
-    // x * sigmoid(clamp(x,Â±10)) â€” that under-scales when |x|>10 (L2 FFN_ACT fail).
-    auto silu1 = [](float x) -> float {
-        if (x > 20.0f) return x;
-        if (x < -20.0f) return 0.0f;
-        return x / (1.0f + expf(-x));
-    };
-
-    size_t i = 0;
-    for (; i + 8 <= dim; i += 8) {
-        alignas(32) float g_arr[8], u_arr[8], o_arr[8];
-        std::memcpy(g_arr, gate + i, 8 * sizeof(float));
-        std::memcpy(u_arr, up + i, 8 * sizeof(float));
-        for (int j = 0; j < 8; ++j) {
-            o_arr[j] = silu1(g_arr[j]) * u_arr[j];
-        }
-        std::memcpy(output + i, o_arr, 8 * sizeof(float));
-    }
-    for (; i < dim; ++i) {
-        output[i] = silu1(gate[i]) * up[i];
-    }
+    if (dim == 0 || !gate || !up || !output) return;
+    /* Asm reads gate[i] via stack temp; const_cast is read-only on gate buffer. */
+    (void)XR_SwiGLU_F32(const_cast<float*>(gate), up, output,
+                        static_cast<uint64_t>(dim));
 }
 
 // ============================================================================
@@ -4668,8 +4729,9 @@ void Deep2Engine::reset() {
 // Unload Model
 // ============================================================================
 void Deep2Engine::unloadModel() {
-    // LIFECYCLE: weight tensors alias GGUFLoader allocations (VirtualAlloc) or
-    // BP16 maps â€” never _aligned_free them. Release via FreeTensorData once.
+    Deep2::Ev512::HostEmitModelUnloadEntry(
+        1, Deep2::Ev512::HostPathHash(config.modelPath));
+    Deep2::Ev512::HostEmitResidencyRelease(1, 0);
     std::fprintf(stderr, "[LIFE] unloadModel BEGIN\n");
     std::fflush(stderr);
     printf("[Deep2Engine] Unloading model...\n");
@@ -4721,13 +4783,19 @@ void Deep2Engine::unloadModel() {
     printf("[Deep2Engine] Model unloaded.\n");
     std::fprintf(stderr, "[LIFE] unloadModel END\n");
     std::fflush(stderr);
+    Deep2::Ev512::HostEmitModelUnloadComplete(1, 0);
+    /* Surface after unload so 91/92 appear if stream guard already ran. */
+    Deep2::Ev512::HostSurfaceAllClaims(stderr);
 }
 
 bool Deep2Engine::switchModel(const std::string& ggufPath) {
     printf("[Deep2Engine] switchModel BEGIN path=%s\n", ggufPath.c_str());
+    const uint64_t pathH = Deep2::Ev512::HostPathHash(ggufPath.c_str());
+    Deep2::Ev512::HostEmitReloadEntry(pathH, 1);
     unloadModel();
     if (!loadModel(ggufPath)) {
         printf("[Deep2Engine] switchModel FAIL load\n");
+        Deep2::Ev512::HostEmitReloadComplete(pathH, 0);
         return false;
     }
     const auto& mw = modelWeights;
@@ -4743,9 +4811,11 @@ bool Deep2Engine::switchModel(const std::string& ggufPath) {
     strncpy_s(cfg.modelPath, ggufPath.c_str(), _TRUNCATE);
     if (!initialize(cfg)) {
         printf("[Deep2Engine] switchModel FAIL initialize\n");
+        Deep2::Ev512::HostEmitReloadComplete(pathH, 0);
         return false;
     }
     printf("[Deep2Engine] switchModel PASS\n");
+    Deep2::Ev512::HostEmitReloadComplete(pathH, 1);
     return true;
 }
 
@@ -5871,6 +5941,14 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     rawr::batch007::A().vocabExt = 1;
     choreo::ApplyLawEnv();
     const auto productWallT0 = std::chrono::high_resolution_clock::now();
+    /* EV512 observational only — product stream does not require DEEP2_EV512. */
+    Deep2::Ev512::HostTryArm(0x50524F44554354ull); /* PRODUCT */
+    Deep2::Ev512::HostSurfaceGuard ev512Surface(stderr);
+    Deep2::Ev512::HostEmitGenerateStreamEntry(1, (uint64_t)options.maxTokens);
+    Deep2::Ev512::HostEmitRequestAccepted(1, (uint64_t)options.maxTokens);
+    Deep2::Ev512::HostEmitRequestRouted(1, k2ShardIndexOpen_ ? 2ull : 1ull);
+    Deep2::Ev512::HostEmitDeep2SessionCreate(1, (uint64_t)options.maxTokens);
+    Deep2::Ev512::HostEmitDeep2SessionReady(1, 0);
 
     // STREAM_BACKWARDS: emit receipts before any decode wait.
     {
@@ -6008,6 +6086,12 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 std::string piece;
                 if (s->eng)
                     piece = s->eng->detokenize(std::vector<int>{id});
+                Deep2::Ev512::HostEmitTokenCallback((uint64_t)(uint32_t)id,
+                                                   (uint64_t)s->count);
+                Deep2::Ev512::HostEmitTokenDecoded((uint64_t)(uint32_t)id,
+                                                  (uint64_t)piece.size());
+                Deep2::Ev512::HostEmitDecodeStepEntry((uint64_t)s->count,
+                                                     (uint64_t)(uint32_t)id);
                 rawr::batch007::CommitToken(id, piece, true);
                 return s->cb(id, piece);
             };
@@ -6048,8 +6132,14 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             modelState_ = ModelState::Choreographable;
             rawr::batch007::A().promptTokens = out.promptTokens;
             rawr::batch007::A().tokensCommitted = out.generatedTokens;
-            rawr::batch007::Finalize(0, config.maxSeqLen, 0,
-                                     out.cancelled ? 1 : 0, std::string());
+            {
+                /* BLOCKER_104: wire real KV/RoPE positions — never Finalize(0,0). */
+                const uint64_t pos = r.kvLength
+                    ? (uint64_t)r.kvLength
+                    : (uint64_t)out.generatedTokens;
+                rawr::batch007::Finalize(pos, config.maxSeqLen, pos,
+                                         out.cancelled ? 1 : 0, std::string());
+            }
             if (out.cancelled) rawr::batch007::NoteCancel("K2_STREAM_ABORT");
             rawr::batch007::Emit();
             {
@@ -6072,11 +6162,19 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 xf.measuredReal = 1;
                 rawr::product_path::Emit(stderr, xf);
             }
+            Deep2::Ev512::HostEmitEndReason(out.completed ? 0ull : 1ull,
+                                           (uint64_t)out.generatedTokens);
+            if (out.completed)
+                Deep2::Ev512::HostEmitE2EProductComplete(
+                    (uint64_t)out.generatedTokens, 0);
             return out;
         }
     }
 
     std::vector<int> promptTokens = tokenize(runtimePrompt);
+    Deep2::Ev512::HostEmitTokenizeComplete((uint64_t)promptTokens.size(), 0);
+    Deep2::Ev512::HostEmitPrefillEntry(1, (uint64_t)promptTokens.size());
+    Deep2::Ev512::HostEmitPrefillComplete(1, (uint64_t)promptTokens.size());
     rawr::batch007::A().promptTokens = promptTokens.size();
     if (tokenizer) {
         const auto& sp = tokenizer->GetSpecialTokens();
@@ -6176,11 +6274,18 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     std::printf("[AGENT] PREFILL_BEGIN prompt_tokens=%zu\n", promptTokens.size());
     std::fflush(stdout);
 
+    size_t evTokN = 0;
     size_t generated = generate(
         promptTokens.data(), promptTokens.size(),
         outputTokens.data(), maxTokens,
         nullptr,
         [&](int tokenId) -> bool {
+            if (evTokN++ == 0)
+                Deep2::Ev512::HostEmitFirstTokenBoundary(0, (uint64_t)maxTokens);
+            Deep2::Ev512::HostEmitDecodeStepEntry((uint64_t)evTokN,
+                                                 (uint64_t)(uint32_t)tokenId);
+            Deep2::Ev512::HostEmitTokenCallback((uint64_t)(uint32_t)tokenId,
+                                               (uint64_t)evTokN);
             if (tokenizer && tokenId == tokenizer->GetSpecialTokens().eosId) {
                 return false; // EOS terminates generation
             }
@@ -6203,6 +6308,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(
             }
             rawr::batch007::CommitToken(tokenId, piece, tokenizer != nullptr);
             streamed += piece;
+            Deep2::Ev512::HostEmitTokenDecoded((uint64_t)(uint32_t)tokenId,
+                                              (uint64_t)piece.size());
             if (callback) {
                 bool keepGoing = callback(static_cast<int32_t>(tokenId), piece);
                 if (!keepGoing) {
@@ -6262,6 +6369,24 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         xf.teardownOk = 1;
         xf.measuredReal = 1;
         rawr::product_path::Emit(stderr, xf);
+        const uint64_t wallUse = sptWall ? sptWall : wallNs;
+        if (result.completed)
+            Deep2::Ev512::HostEmitStreamComplete(
+                (uint64_t)streamed.size(), (uint64_t)generated);
+        else if (result.cancelled || generated == 0)
+            Deep2::Ev512::HostEmitStreamAbort((uint64_t)generated, 9);
+        Deep2::Ev512::HostEmitWallNs(wallUse, (uint64_t)generated);
+        if (wallUse > 0ull && generated > 0ull) {
+            const uint64_t tpsQ =
+                (((uint64_t)generated) << 32) * 1000000000ull / wallUse;
+            Deep2::Ev512::HostEmitDecodeTpsQ32_32(tpsQ, 5ull << 32);
+        }
+        Deep2::Ev512::HostEmitTeardownEntry();
+        Deep2::Ev512::HostEmitTeardownComplete();
+        Deep2::Ev512::HostEmitEndReason(result.completed ? 0ull : 1ull,
+                                       (uint64_t)generated);
+        if (result.completed)
+            Deep2::Ev512::HostEmitE2EProductComplete((uint64_t)generated, 0);
     }
     return result;
 }
@@ -10303,6 +10428,11 @@ std::vector<std::filesystem::path> discoverK2Shards(const std::filesystem::path&
 
 bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
     namespace fs = std::filesystem;
+    Deep2::Ev512::HostTryArm(0x4B325348415244ull); /* K2SHARD */
+    const uint64_t pathH = Deep2::Ev512::HostPathHash(shardDirPath.c_str());
+    Deep2::Ev512::HostEmitModelDiscovery(pathH, 0);
+    Deep2::Ev512::HostEmitModelIdentity(pathH, pathH);
+    Deep2::Ev512::HostEmitModelLoadEntry(pathH, (uint64_t)config.maxSeqLen);
     fs::path shardDir(shardDirPath);
     if (!fs::is_directory(shardDir)) {
         printf("[Deep2Engine] openK2ShardDirectory: not a directory: %s\n",
@@ -10414,6 +10544,25 @@ bool Deep2Engine::openK2ShardDirectory(const std::string& shardDirPath) {
                tokenizer->VocabSize(), tokenizer->GetSpecialTokens().bosId,
                tokenizer->GetSpecialTokens().eosId);
     }
+    Deep2::Ev512::HostEmitModelLoadComplete(pathH, globalIndex_->TotalTensors());
+    Deep2::Ev512::HostEmitShardResolution((uint64_t)shards.size(),
+                                          (uint64_t)shards.size());
+    Deep2::Ev512::HostEmitArchContract(
+        Deep2::Ev512::HostPathHash(k2ShardConfig_.architecture.c_str()),
+        (uint64_t)config.numLayers, 1u);
+    Deep2::Ev512::HostEmitQuantContract(0, 0, 1u);
+    Deep2::Ev512::HostEmitTokenizerContract(
+        0, (uint64_t)tokenizer->VocabSize(), 1u);
+    {
+        const auto& sp = tokenizer->GetSpecialTokens();
+        Deep2::Ev512::HostEmitTemplateEogContract(
+            (uint64_t)(uint32_t)sp.bosId,
+            (uint64_t)(uint32_t)sp.eosId, 1u);
+        Deep2::Ev512::HostEmitTensorSchema(
+            globalIndex_->TotalTensors(), globalIndex_->TotalTensors(), 1u);
+    }
+    Deep2::Ev512::HostEmitDeep2SessionCreate(pathH, (uint64_t)shards.size());
+    Deep2::Ev512::HostEmitDeep2SessionReady(1, (uint64_t)shards.size());
     return true;
 }
 

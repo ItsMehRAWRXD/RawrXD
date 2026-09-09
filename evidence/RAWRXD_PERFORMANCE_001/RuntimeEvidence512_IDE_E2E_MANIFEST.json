@@ -1,0 +1,32 @@
+{
+  "name": "RuntimeEvidence512_IDE_E2E_Audit_SourceDrop_001",
+  "date": "2026-09-08",
+  "seqCap": 512,
+  "legacyClaimIds": [
+    1,
+    17
+  ],
+  "newClaimIds": [
+    18,
+    96
+  ],
+  "claimCount": 96,
+  "newEmitterCount": 79,
+  "genericPublicEmit": false,
+  "runtimeClaim": null,
+  "measurementClaim": null,
+  "modeChange": false,
+  "hotGateChange": false,
+  "files": [
+    "BUILD_RuntimeEvidence512_IDE_E2E.txt",
+    "evidence/RUNTIME_EVIDENCE_512_IDE_CLAIM_MAP_001.tsv",
+    "evidence/RUNTIME_EVIDENCE_512_IDE_E2E_AUDIT_001.txt",
+    "evidence/RUNTIME_EVIDENCE_512_IDE_SITE_WIRING_001.txt",
+    "evidence/RUNTIME_EVIDENCE_512_IDE_STATIC_AUDIT_001.txt",
+    "include/RuntimeEvidence512_IDEClaims.h",
+    "src/asm/RuntimeEvidence512_IDEClaims.inc",
+    "src/asm/RuntimeEvidence512_IDECollect.asm",
+    "src/asm/RuntimeEvidence512_IDEEmit.asm",
+    "tools/Audit-RuntimeEvidence512-IDECoverage.ps1"
+  ]
+}
