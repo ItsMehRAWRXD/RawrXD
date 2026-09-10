@@ -17,20 +17,27 @@ Authorizing rule: a phase that independently verifies its gate auto-un-excludes 
 | S2 | MOTD 403→read_motd 200→tool 200 | no | agentic tool ladder |
 | S3 | TinyLlama load→generate tokens>0 | no | streamer ProductRun edge |
 | S4 | unload→reload→generate | no | session lifecycle |
-| S5 | R25 TinyLlama ProductOpen + live generate tetrad | needs R25-instrumented EXE | PRODUCT_OPEN+SESSION+TOKENS+COMMIT |
-| S6 | MULTI_FAMILY (non-TinyLlama ProductOpen) | needs residency | multi-family only — independent of S5 |
+| S5 | FINAL_READY tetrad (`PromoteReady`) | needs live generate probe | PRODUCT_OPEN+SESSION+TOKENS>0+COMMIT |
+| S6 | MULTI_FAMILY (non-TinyLlama ProductOpen) | needs residency | multi-family only — independent of S5/R25 |
 
-Verification artifacts: `G3_STREAMER_AGENTIC_*` + `R25_PRODUCTOPEN_SESSION_001`.
+Verification artifacts: `G3_STREAMER_AGENTIC_*` + `R25_PRODUCTOPEN_SESSION_001` + `FINAL_READY_PROMOTE_TETRAD_001`.
 NOT_RUN ≠ PASS. HTTP_OK ≠ ProductOpen. HOST_FC ≠ IDE ProductOpen.
+TinyLlama R25 ProductOpen seal ≠ S5 FINAL_READY ≠ S6 MULTI_FAMILY.
 
 Current sealed: S0–S3 PASS on r1cap ABDEEC (see G3_STREAMER_AGENTIC_E2E_001).
 S4 partial / process-survive gaps on some parent probes.
-S5 PASS on build-fd = ProductOpen + SESSION (HEADLESS_OPEN). Final PRODUCT_PASS /
-promote readiness still requires live generate tetrad
+R25 HEADLESS_OPEN (ProductOpen+SESSION emit) is sealed separately from S5.
+S5 FINAL_READY / PRODUCT_PASS still requires live generate tetrad
 (`PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS`);
-`PROMOTE=0` until that probe. S6 MULTI_FAMILY is independent of sealed TinyLlama R25 ProductOpen.
+`PROMOTE=0` until that probe. Predicate honesty: PRODUCT_OPEN_PASS=1;
+SESSION_ENTER / GENERATED_TOKENS>0 / TOKEN_COMMIT = LIVE_GENERATE_PROBE_REQUIRED
+(experimental 8-tok ≠ this seal; ≠ SSM_CERT). S6 MULTI_FAMILY is independent of S5/R25.
 P06 honesty LIVE (KickChair; see P06_HONEST_RECEIPT). MoE async prefetch NOT_RUN (no MoE GGUF).
 
 Child live: G3_R1_GEMMA3_ROPE_UNBLOCK_001 PASS (S6 gemma3-only; multi-family still NOT_GREEN).
-E/nemotron: G3_E_SSM_EXPERIMENTAL_AUTH_001 + G3_E_SSM_EXPERIMENTAL_E2E_001
-  (ALLOW_EXPERIMENTAL_SSM=1 user-auth; GENERATED_TOKENS=8; SSM_CERT still NOT_CERTIFIED; PROMOTE=0).
+E/nemotron: G3_E_SSM_EXPERIMENTAL_AUTH_001 EXPERIMENTAL_AUTH_PASS
+  + G3_E_SSM_EXPERIMENTAL_E2E_001 EXPERIMENTAL_E2E_PASS (GENERATED_TOKENS=8 tetrad under flag;
+  SSM_CERT still NOT_CERTIFIED; PROMOTE=0; ExperimentalSsmAuth.hpp emit; IDENTITY scaffold).
+NEXT: SSM_CERTIFIED_IMPL (arm buffers / parity scan) then MULTI_FAMILY / champion.
+MOTD .mdc: parent-root resolve + rawrxd twin; tool aliases directory/dir + cmd (G3_FINISH_BATCH_15_001).
+

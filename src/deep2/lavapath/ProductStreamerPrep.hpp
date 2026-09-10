@@ -5,6 +5,7 @@
 #include "FreeTokenMicroZone.hpp"
 #include "FutureConsumerSpace.hpp"
 #include "ProcessLargeAddressAware.hpp"
+#include "ExperimentalSsmAuth.hpp"
 #include "../SemanticSafe.hpp"
 #include <atomic>
 #include <cstdlib>
@@ -89,6 +90,8 @@ inline int ProductStreamerPrep() {
                      "MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR\n"
                      "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1\n",
                      ProcessIsLargeAddressAware() ? 1 : 0);
+        if (experimental_ssm::AllowFlag())
+            experimental_ssm::EmitAuthResume(stderr, 0);
         std::fflush(stderr);
         return 1;
     }
@@ -109,6 +112,8 @@ inline int ProductStreamerPrep() {
     future::InitFromPhysicalPool();
     armed.store(1);
     std::fprintf(stderr, "PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1\n");
+    if (experimental_ssm::AllowFlag())
+        experimental_ssm::EmitAuthResume(stderr, 0);
     std::fflush(stderr);
     return 1;
 }

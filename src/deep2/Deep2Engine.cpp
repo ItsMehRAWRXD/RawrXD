@@ -16,6 +16,7 @@
 #include "RawrLiveSeal.hpp"
 #include "RawrReverseCompletion.hpp"
 #include "NemotronHSsmMap.hpp"
+#include "NemotronHSsmExperimental.hpp"
 #include "HostQ8GemvSafe.hpp"
 #include "FinalNormAcquire.hpp"
 #include "FinalNormProduce.hpp"
@@ -48,6 +49,7 @@
 #include "lavapath/Phi3FusedFfnAuthority.hpp"
 #include "lavapath/UnlimitedTokenLaw.hpp"
 #include "lavapath/ProductPathSeal.hpp"
+#include "lavapath/ExperimentalSsmAuth.hpp"
 #include "CanonicalTokenizer.hpp"
 #include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
@@ -3006,6 +3008,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return false;
         }
         if (ssmLayers > 0) {
+            Deep2::experimental_ssm::EmitAuthResume(stderr, ssmLayers);
             fprintf(stderr,
                 "[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 — "
                 "%zu approximate SSM layers enabled\n",
@@ -8133,12 +8136,29 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         throw std::runtime_error("SSM-CERT-001 experimental path blocked");
     }
 
-    // Nemotron-H scaffold: ssm_in without selective-scan. Keep residual live;
-    // PRODUCTION_DECODE_PATH stays 0 until SSM_CERT_001.
+    /* Nemotron-H: mapped tensors without legacy ssmAlpha — experimental scan.
+       Still PRODUCTION_DECODE_PATH=0 / SSM_CERT NOT_CERTIFIED. */
+    {
+        nemotron_ssm::Buf b{};
+        b.x = ssmX;
+        b.y = ssmY;
+        b.temp = ssmTemp;
+        b.state = ssmState;
+        b.conv = ssmConvState;
+        auto lin = [this](const WeightTensor& wt, const float* in, const float* bias,
+                          float* out, size_t od) { LinearW(wt, in, bias, out, od); };
+        if (nemotron_ssm::RunExperimental(layer, lw, hiddenDim, stateDim, convK,
+                                          input, output, b, lin))
+            return;
+    }
+
+    // Legacy scaffold: ssm_in without selective-scan tensors incomplete.
     if (lw.ssmIn.data && !lw.ssmAlpha.data) {
+        Deep2::experimental_ssm::EmitAuthResume(stderr, 1);
         fprintf(stderr,
             "[SSM_SCAFFOLD] layer=%zu IDENTITY=1 inRows=%zu outCols=%zu "
-            "stateDim=%zu PRODUCTION_DECODE_PATH=0\n",
+            "stateDim=%zu PRODUCTION_DECODE_PATH=0 "
+            "SSM_CERT_001_AUTHORITY=NOT_CERTIFIED\n",
             layer, lw.ssmIn.rows, lw.ssmOut.cols, stateDim);
         fflush(stderr);
         memcpy(output, input, hiddenDim * sizeof(float));
