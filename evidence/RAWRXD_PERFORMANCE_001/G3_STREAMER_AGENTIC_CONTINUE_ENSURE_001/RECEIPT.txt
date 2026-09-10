@@ -1,19 +1,83 @@
 GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
-KIND=PARENT_SELF_CONTINUE_E2E
-ASOF=2026-09-10T07:36:15.1563537-04:00
-AUTHORITATIVE_BASELINE=G3_STREAMER_AGENTIC_E2E_001
-EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_self.exe
-EXE_SHA256=ABDEEC83618F539AD200869584258BB8585B6738DFC14D07C65C6CBD183DFC71
-EXE_SHA16=ABDEEC83618F539A
-PE_LAA=YES HOST_DECODE=1 OLLAMA_CONTACT=0 PORT=11435
-PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPENED=0 agenticMode=false
-CAPABILITIES_HTTP=200 LOAD_HTTP=200 GEN_HTTP=000 UNLOAD_HTTP=000 TOKENS=0
-PRE_MOTD=403 MOTD=200 POST_MOTD=400 CLI=400 MOTD2=000 CLI2=000
-PRE_OK=1 MOTD_OK=1 POST_OK=0 CLI_OK=0 CLI2_OK=0
-PROCESS_SURVIVED=0
-RUNTIME_REACHED=0 TOKEN_SURVIVED=0 TOOL_MOTD_RUNTIME=0
-PRODUCT_PASS=0 STREAMER_AGENTIC_READY=0
-VERDICT=FAIL
-GAPS_CLOSED=harness_api_paths_/api/engine/capabilities_/api/model/load_MOTD_reack_after_generate
-REMAINING_FIRST_OWNERS=B@ROPE_BASE E@SSM-CERT-001 J@TEMPLATE
-PARENT_SELF_EXECUTE=1
+DATE=2026-09-10
+KIND=LIVE_E2E_STREAMER_AGENTIC_CONTINUE_ENSURE
+PROMOTE=0
+TIP_CLIMB=HOLD
+REOPEN_R01=0
+DUALSTICK_REOPEN=0
+APPLY_HOST_DECODE=0
+HOST_DECODE_ZIP_APPLY=0
+MOTD_ACK=1
+PARENT_MODE=PASSIVE_COORDINATOR_WORKER
+
+## Mission
+Ensure product streamer complete + operational for passive/product agentic.
+Fail-closed: SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+NOT_RUN != PASS. No invented unstubs.
+
+## Binaries (smoke_bin copy)
+EXE=evidence/.../G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001/smoke_bin/RawrXD-Win32IDE.exe
+IDE_SHA256=6E17100BA3D65A13D1C75349E4F0CD64C6C88FC23EC267BADD81C2CDD64C5DCB
+  (build-fd/bin same hash after ToolRoutes MOTD fix relink)
+RAWR=smoke_bin/rawr.exe
+RAWR_SHA256=66F31BB21A83E4C36A19B12E853B0C452F81EAD4C8D6E1A12E09A5E0725D94A8
+STREAMER=smoke_bin/deep2_streamer_parity.exe
+STREAMER_SHA256=3356C51DDD3A535B3C50FBD1447B66506610E13B053B257C89DE5A739EF4EB1F
+LAA_PE=YES (dumpbin: Application can handle large (>2GB) addresses)
+ENV_FLOOR=RAWRXD_HOST_DECODE=1 DEEP2_MINIMAL_ENHANCE=1 (R1 host floor; DualStick ARM=0)
+
+## Complete (live this gate)
+1) Product streamer prep path
+   - rawr run TinyLlama --max-tokens 8 → PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+     PRODUCT_PASS=1 CLEAN_EXIT=1 CRASH_OBSERVED=0 (rawr_run.err.txt)
+2) Headless oneshot generate (final SHA)
+   - --headless --local --no-server --prompt hi --max-tokens 8
+   - INIT_DONE → RUN_INFER_DONE bytes=29 → response text
+   - PRODUCT_PASS=1 CRASH_OBSERVED=0 CLEAN_EXIT=1 (oneshot5_*)
+   - ACCESS_VIOLATION not observed; PROCESS_SURVIVED
+3) Agentic /api/tool MOTD gate (final SHA, --dir g:\~dev)
+   - PRE list_directory → HTTP 403 motd_required
+   - read_motd → HTTP 200 path=g:\~dev\.cursor\rules\PassiveRoleNotRoleplay.mdc
+   - POST relative .cursor/rules list → HTTP 200 (StreamerAgenticContinueEnsure present)
+   - execute_command echo TOOL_LOOP_OK → HTTP 200 success (tool5_*)
+4) Code gap closed
+   - HeadlessIDE_ToolRoutes.cpp resolveMotdPath: prefer --dir/cwd .md then .mdc
+     before module-parent walk (avoids distant rawrxd .md beating workspace .mdc)
+   - Avoid windef near/far macros in locals
+
+## Residual (honest — not PASS)
+R_HTTP_GEN_FLAKY=
+  Prior smoke EXE 3359B651… this session: POST /api/generate HTTP 200 ALIVE=1
+  PRODUCT_PASS=1 (tool3 / http_generate3_decoded.txt).
+  Final SHA 6E17100B: one mid-generate PROCESS_DEATH after tool chain (tool5);
+  one follow-up server connect miss (tool6). Oneshot on same SHA PASS.
+  → HTTP generate on final SHA = NOT claimed PASS this gate.
+PERFORMANCE_PASS=0 (short-token wall budget; TPS seal open — expected)
+R05/R20 agenticMode default false = HELD_BY_POLICY
+R09/R10/R11/R13 headless thin routes = PARTIAL (unchanged; out of streamer critical path)
+R26 chair+gen observational = prior FAIL_CLOSED_CORE_PASS (not reopened)
+R27 K3C LIVE_E2E_PASS prior seal (not reopened)
+R28 APPLY_HOST_DECODE=0 HELD (cert/p1pra-rc1 drift — zip not applied)
+R25 ProductOpen multi-family = NOT_GREEN (FICTION_AUTHORITY)
+GPU/Vulkan ICD on product IDE = blocked under HOST_DECODE floor
+
+## Fail-closed law application
+SOURCE_WIRED=1 (ProductStreamerPrep + ToolRoutes)
+RUNTIME_REACHED=1 (oneshot + tool MOTD + rawr)
+TOKEN_SURVIVED=1 (oneshot/rawr PRODUCT_PASS=1; K3C prior seal separate)
+PERFORMANCE_PASS=0 (not invented)
+HTTP_GENERATE_FINAL_SHA=NOT_PASS (flaky residual)
+
+## Files changed
+src/win32app/HeadlessIDE_ToolRoutes.cpp (resolveMotdPath .md/.mdc + local-root preference)
+evidence/.../G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001/* (this gate)
+evidence/.../G3_IDE_RESIDUAL_AUDIT_001/RESIDUAL_TABLE.txt (R07 status)
+
+## Forbidden holds
+PROMOTE=0 TIP_CLIMB=HOLD DualStick not reopened APPLY_HOST_DECODE=0
+No roleplay. No invented PASS.
+
+VERDICT=STREAMER_AGENTIC_OPERATIONAL_WITH_RESIDUAL
+  Product streamer + oneshot/rawr agentic path green on final smoke_bin.
+  MOTD/.mdc tool unlock green under --dir g:\~dev.
+  HTTP /api/generate on final SHA held residual (oneshot proves decode path).

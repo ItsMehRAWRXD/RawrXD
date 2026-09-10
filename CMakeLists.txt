@@ -4956,6 +4956,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
     src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
     src/deep2/lavapath/KN_O3KKEN.asm
+    src/deep2/lavapath/r25_productopen_masm.asm
     src/deep2/lavapath/k3c_token.cpp
     src/deep2/lavapath/FreeTokenMicroZone.cpp
     src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
