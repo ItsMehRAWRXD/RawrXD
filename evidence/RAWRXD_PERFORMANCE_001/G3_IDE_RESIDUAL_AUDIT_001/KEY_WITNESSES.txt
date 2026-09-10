@@ -35,8 +35,12 @@ WITNESSES=
 SEAL_REFS_DO_NOT_REOPEN=
   G3_IDE_GENERATE_AV_LIVE_REPRO_001 / FIX_001 — GENERATE_AV=CLOSED
   G3_NATIVE_MODEL_PROFILE_001 — prior disk-register intact (superseded as OPEN_R03 spend target)
+  G3_IDE_RESIDUAL_R26_001 — FutureConsumer product decode SealDecode P01/P12 CLOSED
   DualStick · TIP_CLIMB=HOLD · PROMOTE=0
   relative_path_residual RETAIN_CLOSED (G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001)
+
+USER_BURN_ORDER_ACK=
+  R26 first DONE (LIVE SealDecode). R11/R09 held as richness; ≠ decode completion.
 
 PORTS=
   Product :11435 CLOSED canonical
@@ -45,4 +49,8 @@ PORTS=
 HELD_AFTER_ADMISSION=
   OPEN_R01 GUI policy default drift
   OPEN_R02 legacy 11434 fallback
-  OPEN_R04 headless product tool parity
+  OPEN_R04 headless product tool parity — R09 matrix CLOSED
+    (G3_IDE_RESIDUAL_R09_001); NEXT historical = R13_AGENTS_WIRE
+
+R09_SEAL=G3_IDE_RESIDUAL_R09_001 CLOSED THIN_NE_GAP=1
+R09_NEXT=R13_AGENTS_WIRE

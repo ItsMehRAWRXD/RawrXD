@@ -42,3 +42,7 @@ STALE_EVIDENCE_BAN=
 VERDICT=PASS_CLASSIFICATION_ONLY
 NEXT=R11 native prepare parity decision OR R13 agents/replay wire-vs-hold decision
   (do not implement R10; do not flip R20; do not reopen R01–R06)
+
+TABLE_ROW_SYNC=CLOSED
+ON_R09_PASS_NEXT=R13_AGENTS_WIRE
+

@@ -131,7 +131,7 @@ NOT ACTUAL_MISSING (common false friends):
   R14 Session persist E2E UNOBSERVED (not route-table parity; optional smoke owner)
 
 ## OWNER HANDOFF (post-matrix; implementation order)
-  R09 = CLASSIFIED (this gate) — matrix is the burn; no route invent here
+  R09 = CLOSED (this gate) — matrix sealed; ON_PASS_NEXT=R13_AGENTS_WIRE; no route invent here
   R10 = CLOSED_BY_R03 — remove from OPEN list (authority OPEN_IN had R10; disposition drop)
   R11 = ACTUAL_MISSING_PARITY owner (native prepare on LocalServer / link policy)
   R12 = POLICY_HELD + LOCALSERVER_ONLY authority for lsp/debug richness
