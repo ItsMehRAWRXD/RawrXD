@@ -1,4 +1,4 @@
-﻿# G3_IDE_RESIDUAL_AUDIT_001 Ã¢â‚¬â€ Residual Table
+# G3_IDE_RESIDUAL_AUDIT_001 Ã¢â‚¬â€ Residual Table
 # USER AUTHORITY RECLASS 2026-09-10T13:56Z Ã¢â‚¬â€ governing map in CLASSIFICATION.txt
 # CRASH_RESIDUAL=0 BACKEND_CONNECTIVITY_RESIDUAL=0 OLLAMA_HEADLESS_REOPEN=0
 # OPEN_R01=GUI_POLICY_DEFAULT_DRIFT
@@ -27,7 +27,7 @@ R10	/api/backends/use mismatch	SUPERSEDED by residual-R03 adapters: use->setActi
 R11	Native prepare LocalServer	Live LocalServer TryHandle prepare HTTP 200 (server=RawrXD-Win32IDE); health sendAll fall-through fixed; EARLY_LOCAL_SERVER smoke	CLOSED	HEALTH=200 IDENTITY; PREPARE=200 model_metadata; SHA16=E823725A99511F93 (rebuild after health fix)	G3_IDE_RESIDUAL_R11_001/{RECEIPT,KEY_LINES,HEALTH,PREPARE}.txt	NONE â€” do not reopen; next R13 wire-vs-hold
 R12	LSP / debugger bridges	Headless Server profile thinner; full debug is LocalServer/GUI-mode	HELD_BY_POLICY / PARTIAL	Intentional server-profile hold	HeadlessIDE.cpp initLSPClient skip	Keep hold
 R13	Agent history/replay headless	WIRE decision: HeadlessAgents::Ring + GET agents/status/history + POST replay; query reattach; no ReplayJournal	CLOSED	Live PASS SMOKE3 EXE_SHA16=96842C639D03FF08; agents{} not hollow []; filter+400/404	G3_IDE_RESIDUAL_R13_001/{WIRE_SPEC,RECEIPT,SMOKE3}.txt	NONE â€” R14 optional E2E; do not copy GUI panels
-R14	Persistence / session	Headless session history-replay E2E live: tool+generate -> history events>0 -> replay dry_run events_replayed>0 -> alive	CLOSED	PASS EVENTS=5 REPLAYED=5 ALIVE=1 smoke_bin :11501	G3_IDE_RESIDUAL_R14_001/{RECEIPT,SMOKE,HISTORY,REPLAY}.txt	NONE — R15 ops optional; R12/R20 HOLD
+R14	Persistence / session	Headless tool+generate → history schema + replay dry_run E2E live	CLOSED	EVENTS=6 events_replayed=6 GENERATE=200 TOKENS=8 AV=0; typed ToolInvoked+inference ring	G3_IDE_RESIDUAL_R14_001/{RECEIPT,SMOKE,HISTORY,REPLAY}.txt	NONE — do not reopen; R15 next
 R15	Shutdown / restart	LocalServer drain sealed; concurrent rebuild can vanish EXE	PARTIAL	Ops fragility	LocalServer stop drain L882	Use smoke_bin copy
 R16	DeepThinking / digestion stubs	TODO load/loop; digestion_engine_stub present	STUBBED / NON_BLOCKING	Not on generate critical path	RawrXD_DeepThinking_Init.cpp	Leave
 R17	Quarantined Ollama clients	fail-closed LOCAL_ONLY	CLOSED / HELD_BY_POLICY	Intentional	Win32IDE_AgentOllamaClient.cpp	No action

@@ -1,40 +1,64 @@
 GATE=G3_IDE_RESIDUAL_R14_001
-ASOF=2026-09-10T10:15:48-04:00
-KIND=SESSION_HISTORY_REPLAY_E2E
+ASOF=2026-09-10T10:17-04:00
+KIND=LIVE_SESSION_HISTORY_REPLAY_E2E
 PARENT=G3_IDE_RESIDUAL_R13_001
+ALIAS=R14_SESSION_REPLAY_E2E
 PROMOTE=0
 TIP_CLIMB=HOLD
 DUALSTICK_REOPEN=0
-R12=HOLD
-R20=HOLD
-R15=OPS_SMOKE_BIN_USED
+R12=HELD_BY_POLICY
+R20=HELD
+R13=CLOSED (do not reopen)
 R14=CLOSED
 VERDICT=PASS
 
-PASS_IF=
-  tool/generate path exercised
-  GET /api/agents/history events>0
-  POST /api/agents/replay dry_run=true events_replayed>0
-  PROCESS_ALIVE=1
+## Scope
+Headless session ring populate via tool + generate workflow, then
+GET /api/agents/history (schema + non-empty events) and
+POST /api/agents/replay dry_run (events_replayed>0, HTTP 200).
+Not GUI LocalServer panel inventory. Not ReplayJournal persistence.
 
-LIVE=
-  EXE=smoke_bin/RawrXD-Win32IDE_r14.exe
-  EXE_SHA16=96842C639D03FF08
-  PORT=11501
-  HEALTH=200 MOTD=200 CLI=200
-  LOAD=200 GEN=200
-  HISTORY=200 EVENTS_COUNT=5 TOTAL_EVENTS=5
-  REPLAY=200 EVENTS_REPLAYED=5 DRY_RUN=1
-  PROCESS_ALIVE=1
-  ELAPSED_MS=3055
-  HOST_DECODE=1 ELASTIC=0 WEIGHT_BUDGET_MIB=2048
+## Binary
+EXE=smoke_bin/RawrXD-Win32IDE_r14.exe (copy of build-fd/bin/RawrXD-Win32IDE.exe)
+EXE_SHA16=8BA1EA222502E3F9
+PORT=11493
+DIR=g:\~dev\rawrxd
+CMD=--headless --port 11493 --bind 127.0.0.1 --dir g:\~dev\rawrxd
 
-ARTIFACTS=
-  SMOKE.txt HISTORY.json REPLAY.json STATUS.json GEN.json
-  ide_r14.err.txt ide_r14.out.txt smoke_bin/
+## Wire (product path; R13 ring + R14 typed events)
+src/win32app/HeadlessAgentsRing.hpp
+src/win32app/HeadlessAgentsJson.hpp
+src/win32app/HeadlessIDE.cpp (recordSimpleEvent type codes + inference_complete;
+  query reattach for /api/agents/history filters)
+src/win32app/HeadlessIDE_ToolRoutes.cpp (tool: recordSimpleEvent)
 
-NOTE=
-  Prior attempt on :11491 raced/mis-bound; resealed via smoke_bin copy on :11501.
-  Session ring events include session_boot + tools (+ generate path HTTP 200).
+## Live path (SOURCE_WIRED + RUNTIME_REACHED + TOKEN_SURVIVED on generate)
+1. POST /api/tool read_motd → 200
+2. POST /api/tool execute_command echo R14_SESSION_REPLAY_E2E → 200
+3. POST /api/tool list_directory smoke_bin → 200
+4. POST /api/generate TinyLlama num_predict=8 stream=false → 200
+   response non-empty ("Sure, I'd be"); done=true; TOKENS_COMMITTED=8
+5. GET /api/agents/status → 200 agents{} object; totalRequests=6
+6. GET /api/agents/history?limit=50 → 200 EVENTS=6 SCHEMA_OK
+   events: session_boot, tool:read_motd, tool:execute_command,
+           tool:list_directory, inference_request, inference_complete
+   types: SessionEvent, ToolInvoked×3, AgentStarted, AgentCompleted
+   agentId=headless
+7. POST /api/agents/replay {"agent_id":"headless","dry_run":true}
+   → 200 success=true events_replayed=6
+8. Controls: missing agent_id → 400; unknown → 404
+9. Stop process → CLEAN_EXIT=1 ACCESS_VIOLATION=0
 
-NEXT=R15 ops optional | R25 params pending | R12 HOLD
+## Artifacts
+SMOKE.txt LIVE_TELEMETRY.txt HISTORY.json STATUS.json REPLAY.json
+EXE_SHA.txt ide.out.txt ide.err.txt generate.json tool_*.json
+
+## Constraints
+REPLAY_JOURNAL=0 AgentHistoryRecorder not required for this seal
+LOCAL_ONLY preserved
+PROMOTE=0 TIP_CLIMB=HOLD
+NOT_RUN != PASS — this seal is LIVE-witnessed only
+DUALSTICK_REOPEN=0 — sealed R01–R13/R26 not reopened
+
+NEXT=R15 shutdown/rebuild ops PARTIAL; or R25 router LOCAL_ONLY
+OPEN_HELD=R12,R20

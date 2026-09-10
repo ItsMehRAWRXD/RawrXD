@@ -1,0 +1,40 @@
+GATE=G3_IDE_RESIDUAL_R14_001
+ASOF=2026-09-10T10:15-04:00
+KIND=R14_SESSION_HISTORY_REPLAY_E2E
+PARENT=G3_IDE_RESIDUAL_R13_001
+PROMOTE=0 TIP_CLIMB=HOLD
+LOCKED_CLOSED=R01-R06,R09-R11,R13
+EXCLUDE=GUI LocalServer panel inventory; ReplayJournal disk persistence
+
+## Purpose
+Prove headless session ring is populated by real product work
+(tool + generate), then history schema + replay dry_run succeed.
+R13 sealed the HTTP wire; R14 seals the end-to-end session path.
+
+## Product path (ordered)
+1. Boot HeadlessIDE --dir <product> (session_boot recorded)
+2. POST /api/tool {"tool":"read_motd"}                    → 200
+3. POST /api/tool {"tool":"execute_command","command":"..."} → 200
+4. POST /api/tool {"tool":"list_directory","path":"..."}   → 200
+5. POST /api/generate {model,prompt,stream:false,options.num_predict}
+   → 200 response non-empty done=true (TOKEN_SURVIVED)
+6. GET  /api/agents/status  → 200 agents{} (not hollow [])
+7. GET  /api/agents/history?limit=50 → 200 events[] non-empty
+   SCHEMA: id,eventType,sessionId,timestampMs,durationMs,agentId,
+           parentId,description,input,output,metadata,success,errorMessage
+   MUST include: session_boot + tool:* + inference_request
+8. POST /api/agents/replay {"agent_id":"headless","dry_run":true}
+   → 200 success=true events_replayed>=1
+9. Controls: missing agent_id → 400; unknown agent_id → 404
+
+## Pass if
+  SOURCE_WIRED (ring push on tool/generate) +
+  RUNTIME_REACHED (HTTP 200 on all steps) +
+  TOKEN_SURVIVED (generate response non-empty) +
+  EVENTS_NONEMPTY + REPLAY_events_replayed>0
+  NOT_RUN != PASS
+
+## Non-goals
+  GUI<->Headless panel parity (R09/R12 held)
+  Disk JSONL / ReplayJournal (PERSIST_JSONL=0)
+  OPEN_R01/R02 policy flips; PROMOTE; TIP_CLIMB

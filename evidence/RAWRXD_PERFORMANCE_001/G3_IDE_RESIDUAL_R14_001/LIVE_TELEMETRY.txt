@@ -1,0 +1,21 @@
+﻿GATE=G3_IDE_RESIDUAL_R14_001
+PORT=11493
+EXE_SHA16=8BA1EA222502E3F9
+TOOL_MOTD=200 LEN=1558
+TOOL_CLI=200 BODY={"success":true,"command":"echo R14_SESSION_REPLAY_E2E","exitCode":0,"output":"R14_SESSION_REPLAY_E2E\r\n"}
+TOOL_LIST=200
+GENERATE=200 SNIP={"model":"rawrxd","response":"\nSure, I'd be","done":true}
+STATUS=200 BODY={"agents":{"active":1,"completed":1,"failed":0,"subagents":0},"failures":{"total":0,"totalRequests":6,"totalRetries":0,"successAfterRetry":0,"retriesDeclined":0,"byType":{},"retrySuccessRate":0.0},"intelligence":{}}
+HISTORY=200 LEN=1876
+EVENTS=6 NONEMPTY=True SCHEMA_OK=True AGENT_ID=headless
+HIST_SNIP={"events":[{"id":0,"eventType":"SessionEvent","sessionId":"headless-1789049790315","description":"session_boot"},{"id":1,"eventType":"ToolInvoked","description":"tool:read_motd"},{"id":2,"eventType":"ToolInvoked","description":"tool:execute_command"},{"id":3,"eventType":"ToolInvoked","description":"tool:list_directory"},{"id":4,"eventType":"AgentStarted","description":"inference_request"},{"id":5,"eventType":"AgentCompleted","description":"inference_complete"}]}
+REPLAY=200 BODY={"success":true,"result":"Replay of agent headless:\\n  Step 1: SessionEvent - session_boot [OK]\\n  Step 2: ToolInvoked - tool:read_motd [OK]\\n  Step 3: ToolInvoked - tool:execute_command [OK]\\n  Step 4: ToolInvoked - tool:list_directory [OK]\\n  Step 5: AgentStarted - inference_request [OK]\\n  Step 6: AgentCompleted - inference_complete [OK]\\n","events_replayed":6,"duration_ms":0,"dry_run":true}
+EVENTS_REPLAYED=6 SUCCESS=True
+REPLAY_MISSING_ID=400
+REPLAY_UNKNOWN=404
+ACCESS_VIOLATION=0
+CLEAN_EXIT=1
+TOKENS_COMMITTED=8
+PRODUCT_PASS=1
+VERDICT=PASS
+PROMOTE=0 TIP_CLIMB=HOLD

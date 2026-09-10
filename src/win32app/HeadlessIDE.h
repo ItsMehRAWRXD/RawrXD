@@ -152,6 +152,7 @@ struct ConversationSession {
 struct HostedHttpRequest {
     std::string method;
     std::string path;
+    std::string query; /* R13: raw query without '?'; path is strip-only */
     std::string headers;
     std::string body;
     std::string peer;

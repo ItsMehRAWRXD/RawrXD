@@ -2150,10 +2150,15 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
     recordSimpleEvent("inference_request");
 
     auto t0 = std::chrono::steady_clock::now();
+    auto finish = [&](const std::string& out, bool ok) -> std::string {
+        recordSimpleEvent(ok ? "inference_complete" : "inference_fail");
+        return out;
+    };
+
 
     // LOCAL_ONLY: Ollama blocked; LocalGGUF generate must match load authority.
     if (m_activeBackend == AIBackendType::Ollama) {
-        return "[error] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun.";
+        return finish("[error] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun.", false);
     }
     if (m_activeBackend == AIBackendType::LocalGGUF) {
         /* Prefer ProductDeep2 when session open; else CIE (LAA:NO large-GGUF arm). */
@@ -2161,18 +2166,18 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
             char outBuf[65536];
             outBuf[0] = 0;
             if (rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf)) && outBuf[0])
-                return std::string(outBuf);
+                return finish(std::string(outBuf), true);
         }
         if (RawrXD::HeadlessProduct::LocalOnly()) {
             std::string nativeError;
             std::string text = RawrXD::HeadlessProduct::GenerateNative(
                 prompt, m_config.maxTokens > 0 ? m_config.maxTokens : 48, nativeError);
             if (!text.empty())
-                return text;
-            return std::string("[error] ProductRun+NativeCIE failed: ") +
-                   (nativeError.empty() ? "empty" : nativeError);
+                return finish(text, true);
+            return finish(std::string("[error] ProductRun+NativeCIE failed: ") +
+                   (nativeError.empty() ? "empty" : nativeError), false);
         }
-        return "[error] ProductRun/Deep2 failed or empty";
+        return finish("[error] ProductRun/Deep2 failed or empty", false);
     } else if (m_activeBackend == AIBackendType::OpenAI) {
         // Fix #15: Cloud backend - OpenAI
         const char* apiKey = std::getenv("OPENAI_API_KEY");
@@ -2224,8 +2229,8 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
     }
 
     // Final fallback: provide actionable error
-    return "[error] Inference unavailable — ensure Ollama is running on port 11434 "
-           "or configure an alternative backend with 'backend <type>'";
+    return finish("[error] Inference unavailable — ensure Ollama is running on port 11434 "
+           "or configure an alternative backend with 'backend <type>'", false);
 }
 
 // ============================================================================
@@ -2292,7 +2297,22 @@ void HeadlessIDE::recordSimpleEvent(const std::string& description) {
     uint64_t ts = (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>(
                       now.time_since_epoch())
                       .count();
-    m_agentsRing.push(0, m_sessionId, "headless", "", description, "", 0, true, ts);
+    uint8_t type = 0;
+    bool ok = true;
+    if (description.rfind("tool:", 0) == 0)
+        type = 6;
+    else if (description == "inference_request")
+        type = 1;
+    else if (description.rfind("inference_complete", 0) == 0)
+        type = 2;
+    else if (description.rfind("inference_fail", 0) == 0) {
+        type = 3;
+        ok = false;
+    } else if (description.rfind("subagent", 0) == 0)
+        type = 4;
+    else if (description.rfind("chain", 0) == 0)
+        type = 5;
+    m_agentsRing.push(type, m_sessionId, "headless", "", description, "", 0, ok, ts);
     {
         std::lock_guard<std::mutex> lk(m_agentsRing.mu);
         m_agentEventCount = m_agentsRing.stats.totalEvents;
@@ -2707,7 +2727,12 @@ bool HeadlessIDE::readHttpRequest(SOCKET clientFd, HostedHttpRequest& parsed,
     parsed.method = parsed.headers.substr(0, firstSpace);
     parsed.path = parsed.headers.substr(firstSpace + 1, secondSpace - firstSpace - 1);
     size_t query = parsed.path.find('?');
-    if (query != std::string::npos) parsed.path.resize(query);
+    if (query != std::string::npos) {
+        parsed.query = parsed.path.substr(query + 1);
+        parsed.path.resize(query);
+    } else {
+        parsed.query.clear();
+    }
     std::string transfer = lowerAscii(requestHeader(parsed.headers, "transfer-encoding"));
     if (!transfer.empty() && transfer != "identity") { failureStatus = 400; return false; }
     std::string lengthText = requestHeader(parsed.headers, "content-length");
@@ -3206,7 +3231,9 @@ bool HeadlessIDE::routeStatusRequest(const HostedHttpRequest& request,
     } else if (path == "/api/hybrid/status") {
         response.body = "{\"status\":\"" + jsonEscape(getHybridBridgeStatusString()) + "\"}";
     } else if (path == "/api/agent/history" || path == "/api/agents/history") {
-        response.body = buildAgentsHistoryJson(path);
+        /* Query stripped in readHttpRequest — reattach for WIRE_SPEC filters. */
+        response.body = buildAgentsHistoryJson(
+            request.query.empty() ? path : (path + "?" + request.query));
     } else if (path == "/api/agents/status" || path == "/api/agents") {
         response.body = buildAgentsStatusJson();
     } else if (path == "/api/failure/stats" || path == "/api/failures") {
