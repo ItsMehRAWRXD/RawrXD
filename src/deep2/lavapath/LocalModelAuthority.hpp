@@ -84,6 +84,17 @@ inline bool ReqF32(const Deep2::GGUFLoadResult& r, const char* suf, float& dst, 
     return true;
 }
 
+/* Gemma3 dual-rope: global/local.freq_base when rope.freq_base absent. */
+inline bool ReqRopeBase(const Deep2::GGUFLoadResult& r, float& dst, GeomSeal& g) {
+    std::string k;
+    for (const char* suf :
+         {"rope.freq_base", "rope.global.freq_base", "rope.local.freq_base"}) {
+        if (ArchKey(r, suf, &k) && ParseF32(r.rawKv.at(k), dst)) return true;
+    }
+    Block(g, "ROPE_BASE", "missing rope.freq_base|global|local", "GGUF_METADATA_KV");
+    return false;
+}
+
 bool SealFromLoad(const Deep2::GGUFLoadResult& r, GeomSeal& g);
 bool SealFromPath(const char* path, GeomSeal& g);
 void Emit(FILE* f, const GeomSeal& g);

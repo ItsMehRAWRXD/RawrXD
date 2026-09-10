@@ -43,24 +43,7 @@ inline bool SealFromLoad(const Deep2::GGUFLoadResult& r, GeomSeal& g) {
         Block(g, "RMS_EPS", "missing arch rms epsilon", "GGUF_METADATA_KV");
         return false;
     }
-    /* Gemma3 dual-rope emits rope.global/local.freq_base, not rope.freq_base. */
-    {
-        std::string rk;
-        const char* ropeSufs[] = {"rope.freq_base", "rope.global.freq_base",
-                                  "rope.local.freq_base"};
-        bool ropeOk = false;
-        for (const char* suf : ropeSufs) {
-            if (ArchKey(r, suf, &rk) && ParseF32(r.rawKv.at(rk), g.ROPE_BASE)) {
-                ropeOk = true;
-                break;
-            }
-        }
-        if (!ropeOk) {
-            Block(g, "ROPE_BASE", "missing rope.freq_base|global|local",
-                  "GGUF_METADATA_KV");
-            return false;
-        }
-    }
+    if (!ReqRopeBase(r, g.ROPE_BASE, g)) return false;
     if (ArchKey(r, "rope.scaling.factor", &k)) {
         if (!ParseF32(r.rawKv.at(k), g.ROPE_SCALING)) {
             Block(g, "ROPE_SCALING", "invalid rope.scaling.factor", "GGUF_METADATA_BOUNDS");

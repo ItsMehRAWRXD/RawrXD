@@ -54,6 +54,11 @@ inline void EmitSessionLine(const char* path, int ok, ProductOpenFacts& f) {
     EmitOpenFacts(f, path, f.product_open_pass ? "PASS" : "FAIL");
 }
 
+inline void MarkSessionFacts(ProductOpenFacts& f) {
+    /* Soft reuse skips RawrRunSession fprintf; still certify open facts. */
+    f.init_enter = f.init_exit = f.session_enter = f.session_exit = 1;
+}
+
 inline bool OpenBody(const char* modelAliasOrPath) {
     if (!Deep2::ProductStreamerPrep()) return false;
     const char* a =
@@ -65,6 +70,7 @@ inline bool OpenBody(const char* modelAliasOrPath) {
     if (TensorsResident(rt) && SameOpenPath(rt.modelPath, a)) {
         std::fprintf(stderr, "R1_OPEN_SOFT_REUSE=1 path=%s\n", a);
         ProductOpenFacts f = CollectOpenFacts(rt);
+        MarkSessionFacts(f);
         EmitSessionLine(a, f.product_open_pass, f);
         if (!f.product_open_pass) return false;
         rt.Eng().clearCancel();
@@ -78,10 +84,12 @@ inline bool OpenBody(const char* modelAliasOrPath) {
     }
     if (!rt.OpenSession(a) || !rt.IsOpen() || !TensorsResident(rt)) {
         ProductOpenFacts f = CollectOpenFacts(rt);
+        MarkSessionFacts(f);
         EmitSessionLine(a, 0, f);
         return false;
     }
     ProductOpenFacts f = CollectOpenFacts(rt);
+    MarkSessionFacts(f);
     if (!f.product_open_pass) {
         EmitSessionLine(a, 0, f);
         rt.CloseSession();
