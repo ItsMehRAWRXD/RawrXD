@@ -1,15 +1,21 @@
 ﻿GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
-NOTE=Dual loci this morning — do not collapse.
+NOTE=Dual loci — do not collapse. CE8 worker re-proved sealed ABDEEC.
 AUTHORITATIVE_SEALED_AGENTIC_E2E=G3_STREAMER_AGENTIC_E2E_001 (EXE_SHA16=ABDEEC83618F539A; left intact)
+CE8_ABDEEC_SEE=CE8_RECEIPT.txt CE8_KEY_LINES.txt
+CE8_ASOF=2026-09-10T07:53:35-04:00
+CE8_EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_run.exe
+CE8_EXE_SHA16=ABDEEC83618F539A PE_LAA=YES PORT=11436
+CE8_PRODUCT_PASS=1 STREAMER_AGENTIC_READY=1 SUBAGENT=202
+CE8_ROUTES=/api/engine/capabilities + /api/model/load|unload + /api/generate + /api/tool MOTD ladder + /api/subagent
 FRESHNESS_ABDEEC_SEE=FRESHNESS_RECEIPT.txt FRESHNESS_KEY_LINES.txt
-FRESHNESS_ASOF=2026-09-10T07:43:22-04:00
-FRESHNESS_EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_run.exe
-FRESHNESS_EXE_SHA16=ABDEEC83618F539A PE_LAA=YES
-FRESHNESS_PRODUCT_PASS=1
-FRESHNESS_ROUTES=/api/engine/capabilities + /api/model/load + /api/model/unload + /api/generate + /api/tool MOTD
-R25_PARALLEL_SEE=LIVE_E2E.txt (EXE=r25laa.exe SHA16=6E17100BA3D65A13 PORT=28943)
-R25_NOTE=CAPABILITIES=404 UNLOAD=404 on that receipt are abbreviated-path harness misses (not product gaps); correct paths above
+MOTDACK_SEE=MOTDACK_LIVE_E2E.txt (C1B93C4F isMotdRead ACK)
+SUPERSEDED=RECEIPT_SUPERSEDED_22EBEA_FAIL.txt (NOT_RUN load/gen on r1cap_self; not authority)
+R25_PARALLEL_SEE=LIVE_E2E.txt (EXE=r25laa.exe SHA16=6E17100BA3D65A13)
 PROMOTE=0
 TIP_CLIMB=HOLD
 DO_NOT_REINTERPRET_LIVE_PROBE_AS_PASS=1
-R1CAP_EXE_NOW=A2063D06F55CEF8D (diverged from sealed run; prove used r1cap_run ABDEEC)
+R1CAP_EXE_NOW_DIVERGED=prove used r1cap_run ABDEEC
+TIP_TOOLROUTES=motdLeafIsCanonical+.mdc + list_dir/cli aliases present on HEAD
+RESIDUAL_ABDEEC_ALIASES=list_dir/cli unknown_tool on sealed binary; canonical names PASS
+RESIDUAL_BUILD_FD=B2B8A40BF6A86FED not re-proven this worker
+HOST_DECODE_HELD=1
