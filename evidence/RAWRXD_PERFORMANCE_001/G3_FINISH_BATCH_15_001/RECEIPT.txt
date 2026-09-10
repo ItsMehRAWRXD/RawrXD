@@ -1,0 +1,29 @@
+GATE=G3_FINISH_BATCH_15_001
+ASOF=2026-09-10
+PROMOTE=0
+TIP_CLIMB=HOLD
+PARENT=ce7 STREAMER_AGENTIC_READY + R25 ProductOpen
+DO_NOT_TOUCH=ProductRunDecode.hpp,DualStick,VK_ICD,BIND_001
+
+## Closed this batch (15)
+01 MOTD .mdc parent-root + twin-ext resolve in HeadlessIDE_ToolRoutes.cpp
+02 LIVE TOOL_MOTD_MDC=200 (port 11455; --dir rawrxd)
+03 rawrxd/.cursor/rules/PassiveRoleNotRoleplay.mdc twin of workspace .mdc
+04 list_directory accepts directory/dir aliases — LIVE POST=200
+05 execute_command accepts cmd alias — LIVE CLI=200
+06 SSM_SCAFFOLD EmitAuthResume + NOT_CERTIFIED line
+07 NemotronHSsmExperimental EmitAuthResume on success return
+08 R25 RECEIPT k3c_token honesty → SOURCE_WIRED
+09 R25 WORKER_GAP_NOTE k3c honesty
+10 CONTINUE_ENSURE WORKER_CONTINUE_STATUS k3c honesty
+11 CONTINUE_ENSURE WORKER_KEY_LINES k3c honesty
+12 ProductPathSeal_Champion tetrad Facts verified present
+13 Experimental SSM auth/E2E evidence retained
+14 Playbook note: MOTD mdc + aliases + experimental E
+15 This seal G3_FINISH_BATCH_15_001
+
+## Live probe
+PORT=11455
+TOOL_PRE=403 TOOL_MOTD_MD=200 TOOL_MOTD_MDC=200
+TOOL_POST_DIR_ALIAS=200 TOOL_CLI_CMD_ALIAS=200
+ARTIFACTS=tool_probe.txt probe_meta.txt ide.err.txt

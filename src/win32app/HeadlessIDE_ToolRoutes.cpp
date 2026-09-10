@@ -179,15 +179,44 @@ bool resolveMotdPath(const std::string& workingDir, const std::string& pathArg,
         }
     }
 
-    /* Phase A: workingDir + cwd only (.md then .mdc).
-       (Avoid identifiers near/far — windef macros.) */
+    /* Phase A: workingDir + cwd + one parent (workspace twin).
+       rawrxd --dir often only has .md; Cursor ships .mdc at g:\~dev. */
     std::vector<std::string> localRoots;
-    if (!workingDir.empty()) localRoots.push_back(workingDir);
+    if (!workingDir.empty()) {
+        localRoots.push_back(workingDir);
+        auto slash = workingDir.find_last_of("\\/");
+        if (slash != std::string::npos && slash > 0)
+            localRoots.push_back(workingDir.substr(0, slash));
+    }
     char cwd[MAX_PATH] = {};
-    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) localRoots.push_back(cwd);
+    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) {
+        localRoots.push_back(cwd);
+        std::string cwdS(cwd);
+        auto slash = cwdS.find_last_of("\\/");
+        if (slash != std::string::npos && slash > 0)
+            localRoots.push_back(cwdS.substr(0, slash));
+    }
     for (const auto& root : localRoots) {
         for (const auto& c : candidates) {
             if (existFull(root + "\\" + normalizeRel(c))) return true;
+        }
+    }
+    /* Explicit .mdc/.md: also try twin extension under the same roots. */
+    if (!pathArg.empty()) {
+        std::string twin = normalizeRel(pathArg);
+        auto dot = twin.find_last_of('.');
+        if (dot != std::string::npos) {
+            std::string ext = twin.substr(dot);
+            for (auto& ch : ext)
+                ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+            if (ext == ".mdc") twin = twin.substr(0, dot) + ".md";
+            else if (ext == ".md") twin = twin.substr(0, dot) + ".mdc";
+            else twin.clear();
+        } else twin.clear();
+        if (!twin.empty()) {
+            for (const auto& root : localRoots) {
+                if (existFull(root + "\\" + twin)) return true;
+            }
         }
     }
 
@@ -482,7 +511,9 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
         }
     }
 
-    const std::string pathArg = jsonGetString(args, "path");
+    std::string pathArg = jsonGetString(args, "path");
+    if (pathArg.empty()) pathArg = jsonGetString(args, "directory");
+    if (pathArg.empty()) pathArg = jsonGetString(args, "dir");
     const bool isMotdRead =
         (toolName == "read_motd") || (toolName == "read_file" && motdPathMatches(pathArg));
 
@@ -563,8 +594,9 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
         std::string command = (toolName == "git_status")
             ? "git status"
             : jsonGetString(args, "command");
+        if (command.empty()) command = jsonGetString(args, "cmd");
         if (command.empty()) {
-            outResult = "{\"success\":false,\"error\":\"Missing 'command' field\"}";
+            outResult = "{\"success\":false,\"error\":\"Missing 'command'/'cmd' field\"}";
             return false;
         }
         std::string output;

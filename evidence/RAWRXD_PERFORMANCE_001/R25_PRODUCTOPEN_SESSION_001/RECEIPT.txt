@@ -52,7 +52,7 @@ PERFORMANCE_PASS=0
 HOST_FC_AUTHORITY=prefetch edge only (not altered)
 ProductRunDecode.hpp=NOT_TOUCHED
 DUALSTICK_REOPENED=0
-k3c_token=NOT_IMPLEMENTED
+k3c_token=SOURCE_WIRED=src/deep2/lavapath/k3c_token.cpp
 
 ## Verdict
 PRODUCT_OPEN_PASS=1 (TinyLlama + phi3 open observed)

@@ -55,7 +55,7 @@ ProductRunDecode.hpp=NOT_TOUCHED
 ## Gaps left explicit
 TOOL_MOTD_MDC=404 on this EXE (PassiveRoleNotRoleplay.md works; .mdc leaf still 404)
 MULTI_FAMILY_PRODUCTOPEN=NOT_GREEN (gemma3 lane separate; DualStick/GPU ICD not reopened)
-k3c_token=NOT_IMPLEMENTED
+k3c_token=SOURCE_WIRED=src/deep2/lavapath/k3c_token.cpp
 INIT_ENTER/SESSION_ENTER fprintf: observed on server4/R25 probes; not re-captured on ce7 (no stderr redirect)
 RESIDUAL_prior_buildfd_mid_forward_die=CLEARED_on_C1B93C4F_ce7 (LOAD+GEN survived)
 R24_TINYLLAMA_SEAL=UNALTERED
