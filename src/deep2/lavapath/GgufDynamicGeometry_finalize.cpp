@@ -50,7 +50,8 @@ bool finalize(Scratch& s) {
     if (!s.hasRmsEps || !(s.rmsEps > 0.f))
         return block(s, "RMS_EPS", "rms epsilon missing or non-positive");
     if (!applyRopeBaseArchCompat(s))
-        return block(s, "ROPE_BASE", "rope.freq_base missing or non-positive");
+        return block(s, "ROPE_BASE",
+                     "rope.freq_base|global|local missing or non-positive");
 
     if (s.hasKeyLength && s.headDim > 0) {
         s.headDimDerived = false;

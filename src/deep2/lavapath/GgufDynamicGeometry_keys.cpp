@@ -39,9 +39,14 @@ void applyKey(Scratch& s, const std::string& key, const std::string& val) {
              key.find("layer_norm_rms_epsilon") != std::string::npos ||
              key.find("layer_norm_epsilon") != std::string::npos)
         takeF32(s.hasRmsEps, s.rmsEps, val);
-    else if (endsWith(key, "rope.freq_base"))
+    else if (endsWith(key, "rope.freq_base") ||
+             endsWith(key, "rope.global.freq_base"))
         takeF32(s.hasRopeBase, s.ropeBase, val);
-    else if (endsWith(key, "rope.dimension_count"))
+    else if (endsWith(key, "rope.local.freq_base")) {
+        /* Gemma3 dual-rope: global preferred; local only if unset. */
+        if (!s.hasRopeBase || !(s.ropeBase > 0.f))
+            takeF32(s.hasRopeBase, s.ropeBase, val);
+    } else if (endsWith(key, "rope.dimension_count"))
         takeU32(s.hasRopeDim, s.ropeDim, val);
     else if (endsWith(key, "rope.scaling.factor"))
         takeF32(s.hasRopeScaling, s.ropeScaling, val);

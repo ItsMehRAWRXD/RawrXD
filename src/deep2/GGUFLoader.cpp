@@ -263,8 +263,12 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                                subkey == "attention.layer_norm_rms_epsilon" ||
                                subkey == "attention.layer_norm_epsilon") {
                         metadata.rmsNormEps = (float)atof(valueStr.c_str());
-                    } else if (subkey == "rope.freq_base") {
+                    } else if (subkey == "rope.freq_base" ||
+                               subkey == "rope.global.freq_base") {
                         metadata.ropeTheta = (float)atof(valueStr.c_str());
+                    } else if (subkey == "rope.local.freq_base") {
+                        if (!(metadata.ropeTheta > 0.0f))
+                            metadata.ropeTheta = (float)atof(valueStr.c_str());
                     } else if (subkey == "context_length") {
                         metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "expert_count") {
@@ -352,7 +356,12 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                 if (key.find("rope.dimension_count") != std::string::npos) {
                     metadata.ropeDimensionCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                if (key.find("rope.freq_base") != std::string::npos) {
+                if (key.find("rope.global.freq_base") != std::string::npos) {
+                    metadata.ropeTheta = (float)atof(valueStr.c_str());
+                } else if (key.find("rope.local.freq_base") != std::string::npos) {
+                    if (!(metadata.ropeTheta > 0.0f))
+                        metadata.ropeTheta = (float)atof(valueStr.c_str());
+                } else if (key.find("rope.freq_base") != std::string::npos) {
                     metadata.ropeTheta = (float)atof(valueStr.c_str());
                 }
                 if (key.find("context_length") != std::string::npos || key.find("max_position_embeddings") != std::string::npos) {

@@ -44,19 +44,24 @@ inline ProductOpenFacts CollectOpenFacts(const product_run::ProductRuntime& rt) 
     FillPeFacts(f);
     const auto& mw = rt.Eng().getModelWeights();
     f.path_valid = rt.modelPath.empty() ? 0 : 1;
-    f.embed_present = mw.tokenEmbed.data ? 1 : 0;
-    f.lmhead_present = mw.lmHead.data ? 1 : 0;
-    f.output_present = mw.lmHead.data ? 1 : 0; /* output.weight maps to lmHead */
+    /* Present = pointer OR file-backing (OPEN ≠ full RAM residency). */
+    f.embed_present =
+        (mw.tokenEmbed.data || mw.tokenEmbed.hasFileBacking) ? 1 : 0;
+    f.lmhead_present =
+        (mw.lmHead.data || mw.lmHead.hasFileBacking) ? 1 : 0;
+    f.output_present = f.lmhead_present; /* output.weight maps to lmHead */
     f.tensor_count = static_cast<int>(rt.auth.geom.GGUF_TENSOR_COUNT);
     if (f.tensor_count <= 0) {
         f.tensor_count = f.embed_present + f.lmhead_present +
-                         (mw.finalNorm.data ? 1 : 0) +
+                         ((mw.finalNorm.data || mw.finalNorm.hasFileBacking)
+                              ? 1
+                              : 0) +
                          static_cast<int>(mw.layers.size());
     }
     f.deep2_index_bound = mw.loaded ? 1 : 0;
-    /* residency_bound = old material-resident fact; not the OPEN gate. */
+    /* residency_bound = material-resident fact; not the OPEN gate. */
     f.residency_bound =
-        (f.embed_present || f.lmhead_present) && mw.loaded ? 1 : 0;
+        (mw.tokenEmbed.data || mw.lmHead.data) && mw.loaded ? 1 : 0;
     f.weight_budget_valid = 1;
     f.residency_budget_valid = 1;
     Deep2::product_open::Facts so = Deep2::product_open::Evaluate(

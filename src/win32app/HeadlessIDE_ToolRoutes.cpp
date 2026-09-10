@@ -138,7 +138,8 @@ bool resolveToolPath(const std::string& input, const std::string& workingDir,
 
 bool resolveMotdPath(const std::string& workingDir, const std::string& pathArg,
                      std::string& resolved, std::string& errJson) {
-    /* Empty pathArg: try .md then .mdc (Cursor ships .mdc under g:\~dev). */
+    /* Empty pathArg: try .md then .mdc. Prefer --dir/cwd before module walk so
+       workspace .mdc (g:\~dev) wins over a distant repo .md. */
     std::vector<std::string> candidates;
     if (pathArg.empty()) {
         candidates.push_back(".cursor\\rules\\PassiveRoleNotRoleplay.md");
@@ -147,58 +148,66 @@ bool resolveMotdPath(const std::string& workingDir, const std::string& pathArg,
         candidates.push_back(pathArg);
     }
 
-    auto tryOne = [&](std::string rel) -> bool {
-        for (auto& ch : rel) {
-            if (ch == '/') ch = '\\';
-        }
-        const bool absolute = rel.size() >= 3 && rel[1] == ':' &&
+    auto normalizeRel = [](std::string rel) {
+        for (auto& ch : rel) if (ch == '/') ch = '\\';
+        return rel;
+    };
+    auto isAbs = [](const std::string& rel) {
+        return rel.size() >= 3 && rel[1] == ':' &&
             (rel[2] == '\\' || rel[2] == '/');
-        if (absolute)
-            return resolveToolPath(rel, workingDir, resolved, errJson);
-
-        if (!workingDir.empty()) {
-            std::string viaWd;
-            std::string ignore;
-            if (resolveToolPath(rel, workingDir, viaWd, ignore) &&
-                GetFileAttributesA(viaWd.c_str()) != INVALID_FILE_ATTRIBUTES) {
-                resolved = viaWd;
-                return true;
-            }
-        }
-
-        std::vector<std::string> roots;
-        if (!workingDir.empty()) roots.push_back(workingDir);
-        char cwd[MAX_PATH] = {};
-        if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) roots.push_back(cwd);
-        char modulePath[MAX_PATH * 4] = {};
-        if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
-            std::string dir(modulePath);
-            auto slash = dir.find_last_of("\\/");
-            if (slash != std::string::npos) dir.resize(slash);
-            for (int up = 0; up < 6; ++up) {
-                roots.push_back(dir);
-                auto parent = dir.find_last_of("\\/");
-                if (parent == std::string::npos) break;
-                dir.resize(parent);
-            }
-        }
-        for (const auto& root : roots) {
-            std::string cand = root + "\\" + rel;
-            if (GetFileAttributesA(cand.c_str()) != INVALID_FILE_ATTRIBUTES) {
-                char full[MAX_PATH * 4] = {};
-                DWORD n = GetFullPathNameA(cand.c_str(),
-                    static_cast<DWORD>(sizeof(full)), full, nullptr);
-                if (n > 0 && n < sizeof(full)) {
-                    resolved.assign(full);
-                    return true;
-                }
-            }
-        }
-        return false;
+    };
+    auto existFull = [&](const std::string& cand) -> bool {
+        if (GetFileAttributesA(cand.c_str()) == INVALID_FILE_ATTRIBUTES)
+            return false;
+        char full[MAX_PATH * 4] = {};
+        DWORD n = GetFullPathNameA(cand.c_str(),
+            static_cast<DWORD>(sizeof(full)), full, nullptr);
+        if (n == 0 || n >= sizeof(full)) return false;
+        resolved.assign(full);
+        return true;
     };
 
-    for (const auto& c : candidates) {
-        if (tryOne(c)) return true;
+    if (!pathArg.empty()) {
+        std::string rel = normalizeRel(pathArg);
+        if (isAbs(rel))
+            return resolveToolPath(rel, workingDir, resolved, errJson);
+        if (!workingDir.empty()) {
+            std::string viaWd, ignore;
+            if (resolveToolPath(rel, workingDir, viaWd, ignore) &&
+                existFull(viaWd))
+                return true;
+        }
+    }
+
+    /* Phase A: workingDir + cwd only (.md then .mdc). */
+    std::vector<std::string> near;
+    if (!workingDir.empty()) near.push_back(workingDir);
+    char cwd[MAX_PATH] = {};
+    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) near.push_back(cwd);
+    for (const auto& root : near) {
+        for (const auto& c : candidates) {
+            if (existFull(root + "\\" + normalizeRel(c))) return true;
+        }
+    }
+
+    /* Phase B: module-parent walk (legacy IDE smoke without --dir). */
+    std::vector<std::string> far;
+    char modulePath[MAX_PATH * 4] = {};
+    if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
+        std::string dir(modulePath);
+        auto slash = dir.find_last_of("\\/");
+        if (slash != std::string::npos) dir.resize(slash);
+        for (int up = 0; up < 6; ++up) {
+            far.push_back(dir);
+            auto parent = dir.find_last_of("\\/");
+            if (parent == std::string::npos) break;
+            dir.resize(parent);
+        }
+    }
+    for (const auto& root : far) {
+        for (const auto& c : candidates) {
+            if (existFull(root + "\\" + normalizeRel(c))) return true;
+        }
     }
     errJson = "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md/.mdc not found "
               "under workingDir/cwd/module parents\"}";
@@ -376,6 +385,9 @@ void HeadlessIDE::routeToolAndFileRequest(const HostedHttpRequest& request,
     if (path == "/api/tool" || path == "/run-tool" || path.find("/api/tool/") == 0) {
         tool = jsonGetString(body, "tool");
         if (body.contains("args") && body["args"].is_object()) args = body["args"];
+        /* Harness aliases — same ownership, not parallel tools. */
+        if (tool == "list_dir") tool = "list_directory";
+        if (tool == "cli" || tool == "command") tool = "execute_command";
     } else if (path == "/api/read-file" || path == "/api/file/read" || path == "/api/file") {
         tool = "read_file";
         args = body;
@@ -500,7 +512,11 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
             outResult = err;
             return false;
         }
-        if (motdIsExactCanonical(m_config.workingDir, resolved))
+        /* Ack on any successful PassiveRole MOTD leaf (.md/.mdc), not only the
+         * workingDir-resolved canonical twin. Cursor ships .mdc under g:\~dev;
+         * --dir may point at rawrxd — both must unlock the turn. */
+        if (toolName == "read_motd" || motdLeafIsCanonical(resolved) ||
+            motdIsExactCanonical(m_config.workingDir, resolved))
             g_headlessMotdAcked.store(true, std::memory_order_release);
         outResult = "{\"content\":\"" + toolJsonEscape(content) +
             "\",\"name\":\"" + toolJsonEscape(fileNameOf(resolved)) +
