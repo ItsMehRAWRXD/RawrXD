@@ -1,0 +1,1 @@
+﻿{"success":true,"result":"Replay of agent headless:\\n  Step 1: SessionEvent — session_boot [OK]\\n  Step 2: ToolInvoked — tool:read_motd [OK]\\n  Step 3: ToolInvoked — tool:execute_command [OK]\\n  Step 4: AgentStarted — inference_request [OK]\\n  Step 5: AgentCompleted — inference_complete [OK]\\n","events_replayed":5,"duration_ms":0,"dry_run":true}

@@ -1,0 +1,40 @@
+GATE=G3_IDE_RESIDUAL_R14_001
+ASOF=2026-09-10T10:15:48-04:00
+KIND=SESSION_HISTORY_REPLAY_E2E
+PARENT=G3_IDE_RESIDUAL_R13_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPEN=0
+R12=HOLD
+R20=HOLD
+R15=OPS_SMOKE_BIN_USED
+R14=CLOSED
+VERDICT=PASS
+
+PASS_IF=
+  tool/generate path exercised
+  GET /api/agents/history events>0
+  POST /api/agents/replay dry_run=true events_replayed>0
+  PROCESS_ALIVE=1
+
+LIVE=
+  EXE=smoke_bin/RawrXD-Win32IDE_r14.exe
+  EXE_SHA16=96842C639D03FF08
+  PORT=11501
+  HEALTH=200 MOTD=200 CLI=200
+  LOAD=200 GEN=200
+  HISTORY=200 EVENTS_COUNT=5 TOTAL_EVENTS=5
+  REPLAY=200 EVENTS_REPLAYED=5 DRY_RUN=1
+  PROCESS_ALIVE=1
+  ELAPSED_MS=3055
+  HOST_DECODE=1 ELASTIC=0 WEIGHT_BUDGET_MIB=2048
+
+ARTIFACTS=
+  SMOKE.txt HISTORY.json REPLAY.json STATUS.json GEN.json
+  ide_r14.err.txt ide_r14.out.txt smoke_bin/
+
+NOTE=
+  Prior attempt on :11491 raced/mis-bound; resealed via smoke_bin copy on :11501.
+  Session ring events include session_boot + tools (+ generate path HTTP 200).
+
+NEXT=R15 ops optional | R25 params pending | R12 HOLD
