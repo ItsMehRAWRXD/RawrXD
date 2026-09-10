@@ -32,3 +32,5 @@ promote readiness still requires live generate tetrad
 P06 honesty LIVE (KickChair; see P06_HONEST_RECEIPT). MoE async prefetch NOT_RUN (no MoE GGUF).
 
 Child live: G3_R1_GEMMA3_ROPE_UNBLOCK_001 PASS (S6 gemma3-only; multi-family still NOT_GREEN).
+E/nemotron: G3_E_SSM_EXPERIMENTAL_AUTH_001 + G3_E_SSM_EXPERIMENTAL_E2E_001
+  (ALLOW_EXPERIMENTAL_SSM=1 user-auth; GENERATED_TOKENS=8; SSM_CERT still NOT_CERTIFIED; PROMOTE=0).
