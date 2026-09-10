@@ -1,0 +1,52 @@
+ASOF=2026-09-09T19:21:54.6318597-04:00
+Microsoft PnP Utility
+
+Adding driver package:  MttVDD.inf
+Driver package added successfully.
+Published Name:         oem2.inf
+
+Total driver packages:  1
+Added driver packages:  1
+
+Device node created. Install is complete when drivers are installed...
+Updating drivers for Root\MttVDD from C:\Users\Garrett\AppData\Local\Microsoft\WinGet\Packages\VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe\SignedDrivers\x86\VDD\MttVDD.inf.
+Drivers installed successfully.
+
+
+
+Caption                     : Virtual Display Driver
+Description                 : Virtual Display Driver
+InstallDate                 : 
+Name                        : Virtual Display Driver
+Status                      : OK
+Availability                : 
+ConfigManagerErrorCode      : CM_PROB_NONE
+ConfigManagerUserConfig     : False
+CreationClassName           : Win32_PnPEntity
+DeviceID                    : ROOT\DISPLAY\0000
+ErrorCleared                : 
+ErrorDescription            : 
+LastErrorCode               : 
+PNPDeviceID                 : ROOT\DISPLAY\0000
+PowerManagementCapabilities : 
+PowerManagementSupported    : 
+StatusInfo                  : 
+SystemCreationClassName     : Win32_ComputerSystem
+SystemName                  : DESKTOP-89OE3D8
+ClassGuid                   : {4d36e968-e325-11ce-bfc1-08002be10318}
+CompatibleID                : 
+HardwareID                  : {Root\MttVDD}
+Manufacturer                : MikeTheTech
+PNPClass                    : Display
+Present                     : True
+Service                     : WUDFRd
+PSComputerName              : 
+Class                       : Display
+FriendlyName                : Virtual Display Driver
+InstanceId                  : ROOT\DISPLAY\0000
+Problem                     : CM_PROB_NONE
+ProblemDescription          : This device is working properly.
+
+
+
+

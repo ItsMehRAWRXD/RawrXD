@@ -1,0 +1,33 @@
+GATE=CONTINUE_ENSURE_WORKERS_FOLLOWUP_001
+ASOF=2026-09-10T07:43
+PROMOTE=0
+TIP_CLIMB=HOLD
+PARENT_FOLLOWUP=1
+
+## Workers consolidated
+WORKER_A=f1401a0b-19bc-4605-8809-cc24270b9912
+  tinyllama ProductOpen PASS=1 tensors=201 HEADLESS_READY=1 PE_LAA=YES (editbin/rebuild)
+
+WORKER_B=ad8550de-97c0-4a37-bfe3-c7b05bbf1c90
+  phi3 ProductOpen PASS=1 tensors=197 + rawr generate8; r1cap SESSION cross-ref PASS=0 for telemetry on sealed image
+
+WORKER_C=d12171be-3278-4a22-b928-da4caf98cbfc
+  AGENTIC_TOOL_E2E=1 on r1cap (args schema); STREAMER_AGENTIC_READY=0 CAPABILITIES=404 honesty retained
+
+## Playbook un-exclusion (auto)
+S0=PASS S1=PASS S2=PASS S3=PASS
+S4=PARTIAL
+S5=PASS (build-fd / r25laa instrumented EXE; INIT/SESSION on rawr+IDE where observed)
+S6=PARTIAL (phi3 open PASS; NOT multi-family 10/10 rollup)
+MULTI_FAMILY_PRODUCTOPEN=NOT_GREEN
+R24_TINYLLAMA_ONLY=1
+
+## Still open
+PERFORMANCE_PASS=0
+HOST_FC=prefetch edge only PRODUCT_PASS=0
+CAPABILITIES_404 on some sealed probes
+IDE Init/Session fprintf absent on some Headless soft-reuse paths
+k3c_token=NOT_IMPLEMENTED DualStick/ICD=HOLD
+
+## Law
+NOT_RUN != PASS; open PASS != lifecycle 10/10; no invented rollup green.

@@ -1,0 +1,20 @@
+
+
+Name         : AMD Radeon(TM) Graphics
+Availability : 8
+Status       : OK
+PNPDeviceID  : PCI\VEN_1002&DEV_164E&SUBSYS_364E1849&REV_CB\4&16012499&0&0041
+
+Name         : AMD Radeon AI PRO R9700
+Availability : 3
+Status       : OK
+PNPDeviceID  : PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+
+Name         : AMD Radeon RX 7800 XT
+Availability : 8
+Status       : OK
+PNPDeviceID  : PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2E27FDA8&0&0000000B
+
+
+
+

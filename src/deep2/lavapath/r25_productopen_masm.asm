@@ -428,7 +428,8 @@ R25_ProductOpenGguf PROC
     push r13
     push r14
     push r15
-    sub rsp, 48h
+    ; 7 pushes leave RSP 16-aligned; sub 40h keeps RSP 16-aligned for Win64 calls.
+    sub rsp, 40h
 
     mov r12, rcx        ; path
     mov r13, rdx        ; proof
@@ -651,7 +652,7 @@ r25_head0:
 r25_return:
     mov rax, [r13 + R25_GGUF_PROOF_status]
 r25_ret_no_proof:
-    add rsp, 48h
+    add rsp, 40h
     pop r15
     pop r14
     pop r13

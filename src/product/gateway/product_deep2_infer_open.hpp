@@ -94,19 +94,5 @@ inline bool OpenBody(const char* modelAliasOrPath) {
     return true;
 }
 
-inline bool OpenSeh(const char* modelAliasOrPath) {
-#ifdef _WIN32
-    __try {
-        return OpenBody(modelAliasOrPath);
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        std::fprintf(stderr, "PRODUCT_DEEP2_OPEN_SEH=1 CODE=0x%08lX\n",
-                     (unsigned long)GetExceptionCode());
-        return false;
-    }
-#else
-    return OpenBody(modelAliasOrPath);
-#endif
-}
-
 } // namespace product_infer_detail
 } // namespace rawr

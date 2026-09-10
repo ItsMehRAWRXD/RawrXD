@@ -12,6 +12,8 @@ void ProductRequestCancel();
 
 // Production product-serve infer: real Deep2Engine via ProductRun (no hardcoded text).
 bool ProductDeep2Infer(const char* prompt, char* out, size_t cap);
+/* Last ProductRun GENERATED_TOKENS after Infer/Stream (0 if none). */
+uint32_t ProductDeep2LastEvalCount();
 // Streaming ProductRun — same path as rawr run / IDE Copilot.
 // Returns productPass; outFailedStage/Owner filled on fail (never generic success).
 bool ProductDeep2InferStream(const char* prompt, uint32_t maxTokens,

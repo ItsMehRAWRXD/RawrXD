@@ -67,7 +67,8 @@ inline void Emit(FILE* fp, const Facts& f) {
                  "OPEN_WORKING_SET_ACQUIRABLE=%d\nOPEN_WORKING_SET_ACQUIRE_LIVE=%d\n"
                  "OPEN_MMAP_BOUND=%d\nOPEN_FILE_BACKING=%d\n"
                  "OPEN_TENSOR_COUNT=%d\nPRODUCT_OPEN_STREAMABLE=%d\n"
-                 "NOTE=OPEN_NE_WEIGHTS_RESIDENT; LAA_NOT_OPEN_GATE\n",
+                 "NOTE=OPEN_NE_FULL_RESIDENCY; GATE=LIVE_WORKING_SET+"
+                 "FUTURE_CONSUMER_READY+TOKEN_WALL; LAA_NOT_OPEN_GATE\n",
                  f.meta_indexed, f.storage_reachable, f.working_set_acquirable,
                  f.acquire_live, f.mmap_bound, f.file_backing, f.tensor_count,
                  f.open_pass);

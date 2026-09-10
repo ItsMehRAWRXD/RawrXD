@@ -1,0 +1,2 @@
+%s\amdPalSettings.cfg
+VK_ERROR_INITIALIZATION_FAILED

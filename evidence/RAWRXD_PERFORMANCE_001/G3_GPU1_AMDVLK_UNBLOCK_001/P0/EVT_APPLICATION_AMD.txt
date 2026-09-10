@@ -1,0 +1,75 @@
+---- 09/09/2026 17:25:52 Id=1001 Src=Windows Error Reporting
+Fault bucket 2272925941805458194, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:25:50 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cede | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x2F48 | Faulting application start time: 0x1DD40A1C95067BC
+
+---- 09/09/2026 17:25:15 Id=1001 Src=Windows Error Reporting
+Fault bucket 1460437789961586487, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:25:13 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1ceb9 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x2DD4 | Faulting application start time: 0x1DD40A1B3927417
+
+---- 09/09/2026 17:23:41 Id=1001 Src=Windows Error Reporting
+Fault bucket 2113541175460914534, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:23:39 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1ce5b | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0xC20 | Faulting application start time: 0x1DD40A17B9C2F9A
+
+---- 09/09/2026 17:22:46 Id=1001 Src=Windows Error Reporting
+Fault bucket 2178504812699718524, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:22:44 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1ce24 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x6A80 | Faulting application start time: 0x1DD40A15A775642
+
+---- 09/09/2026 17:22:03 Id=1001 Src=Windows Error Reporting
+Fault bucket 1565085997389696461, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:22:01 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cdf9 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x5814 | Faulting application start time: 0x1DD40A1412A11AB
+
+---- 09/09/2026 17:20:53 Id=1001 Src=Windows Error Reporting
+Fault bucket 1788886476580646731, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:20:51 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cdb3 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x5D38 | Faulting application start time: 0x1DD40A117620903
+
+---- 09/09/2026 17:20:24 Id=1001 Src=Windows Error Reporting
+Fault bucket 1501680433050576965, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:20:22 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd96 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x6544 | Faulting application start time: 0x1DD40A105D28E9E
+
+---- 09/09/2026 17:20:10 Id=1001 Src=Windows Error Reporting
+Fault bucket 1485564420910769781, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:20:07 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd87 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x6C6C | Faulting application start time: 0x1DD40A0FD0D58AD
+
+---- 09/09/2026 17:19:51 Id=1001 Src=Windows Error Reporting
+Fault bucket 1556024892286839574, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:19:49 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd75 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x14B0 | Faulting application start time: 0x1DD40A0F21F1786
+
+---- 09/09/2026 17:19:31 Id=1001 Src=Windows Error Reporting
+Fault bucket 2181710772486630009, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:19:28 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd60 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x6610 | Faulting application start time: 0x1DD40A0E5E338C3
+
+---- 09/09/2026 17:19:08 Id=1001 Src=Windows Error Reporting
+Fault bucket 1504691351313169862, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:19:06 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd4a | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x57AC | Faulting application start time: 0x1DD40A0D8D3157B
+
+---- 09/09/2026 17:18:14 Id=1001 Src=Windows Error Reporting
+Fault bucket 1627491986128536400, type 5 | Event Name: BEX64 | Response: Not available | Cab Id: 0 |  | Problem signature:
+
+---- 09/09/2026 17:18:13 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1cd14 | Faulting module name: amdvlk64.dll, version: 32.0.21045.5002, time stamp: 0x6a74d9fb | Exception code: 0xc0000409 | Fault offset: 0x0000000002eed191 | Faulting process id: 0x6F28 | Faulting application start time: 0x1DD40A0B8BC9274
+
+---- 09/09/2026 17:16:59 Id=1000 Src=Application Error
+Faulting application name: g3_masm_solo_a0.exe, version: 0.0.0.0, time stamp: 0x6aa1ccca | Faulting module name: ntdll.dll, version: 10.0.26100.9278, time stamp: 0x7e1f2ca9 | Exception code: 0xc0000005 | Fault offset: 0x000000000003ed12 | Faulting process id: 0x6DD8 | Faulting application start time: 0x1DD40A08CB08346
+

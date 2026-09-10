@@ -2,6 +2,7 @@
 /* Stream body + SEH — kept out of product_deep2_infer.cpp for ≤99-line blocks. */
 #include "product_deep2_infer_open.hpp"
 #include "../../deep2/lavapath/ProductRun.hpp"
+#include <atomic>
 #include <cstdio>
 #include <cstring>
 #include <functional>
@@ -13,6 +14,11 @@
 namespace rawr {
 namespace product_infer_detail {
 
+inline std::atomic<uint32_t>& LastEvalCount() {
+    static std::atomic<uint32_t> g{0};
+    return g;
+}
+
 inline const char* Alias() {
     if (const char* e = std::getenv("RAWRXD_PRODUCT_MODEL"))
         if (e && e[0]) return e;
@@ -20,6 +26,20 @@ inline const char* Alias() {
 }
 inline product_run::ProductRuntime& Rt() {
     return product_run::SharedProductRuntime();
+}
+
+inline bool OpenSeh(const char* modelAliasOrPath) {
+#ifdef _WIN32
+    __try {
+        return OpenBody(modelAliasOrPath);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        std::fprintf(stderr, "PRODUCT_DEEP2_OPEN_SEH=1 CODE=0x%08lX\n",
+                     (unsigned long)GetExceptionCode());
+        return false;
+    }
+#else
+    return OpenBody(modelAliasOrPath);
+#endif
 }
 
 struct StreamPack {
@@ -49,6 +69,7 @@ inline bool StreamBody(const StreamPack& p) {
     req.keepOpen = 1;
     if (p.onPiece) req.onPiece = *p.onPiece;
     auto rc = product_run::ProductRun(req);
+    LastEvalCount().store(rc.generatedTokens);
     if (p.outText) *p.outText = rc.text;
     if (p.failedStage) *p.failedStage = rc.failedStage;
     if (p.failedOwner) *p.failedOwner = rc.failedOwner;

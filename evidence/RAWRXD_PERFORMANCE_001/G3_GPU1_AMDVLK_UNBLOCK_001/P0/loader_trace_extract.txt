@@ -1,0 +1,33 @@
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] INFO | LAYER:   windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_53241849&REV_C8\6&2e27fda8&0&0000000B
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] DEBUG | DRIVER: Searching for ICD drivers named .\amdvlk64.dll
+[Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+[Vulkan Loader] DRIVER:                Using "AMD Radeon AI PRO R9700" with driver: "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll"
+[Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+[Vulkan Loader] DRIVER:                Using "AMD Radeon(TM) Graphics" with driver: "C:\WINDOWS\System32\DriverStore\FileRepository\u0203303.inf_amd64_e5876a26758f154c\B026363\amdvlk64.dll"
+[Vulkan Loader] DRIVER:         vkCreateDevice layer callstack setup to:
+[Vulkan Loader] DRIVER:                Using "AMD Radeon RX 7800 XT" with driver: "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll"
+ERROR: [Loader Message] Code 0 : terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice call
+[Vulkan Loader] ERROR | DRIVER: terminator_CreateDevice: Failed in ICD C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice call
+ERROR: [Loader Message] Code 0 : vkCreateDevice:  Failed to create device chain.
+[Vulkan Loader] ERROR:          vkCreateDevice:  Failed to create device chain.
+ERROR at C:\SDKBuild\build-X64-1.4.341.0\Vulkan-Tools\vulkaninfo\vulkaninfo.h:1771:vkCreateDevice failed with ERROR_UNKNOWN

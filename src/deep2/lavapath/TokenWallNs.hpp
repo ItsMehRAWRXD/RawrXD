@@ -36,12 +36,18 @@ inline void EmitCommitted(FILE* f, uint32_t tokenId, uint32_t decodeStep,
     const double tps =
         tokenWallNs ? (1000000000.0 / static_cast<double>(tokenWallNs)) : 0.0;
     const int pass150 = (tokenWallNs > 0 && tokenWallNs <= target) ? 1 : 0;
+    const long long margin = static_cast<long long>(target) - static_cast<long long>(tokenWallNs);
+    /* ns → wall → INSTANT_TPS → 150TPS budget margin; OWNER=TOKEN_WALL stage. */
     fprintf(f,
             "TOKEN=%u DECODE_STEP=%u STEADY=%u TOKEN_WALL_NS=%llu "
+            "TOKEN_WALL_MS=%.6f INSTANT_TPS=%.3f BUDGET_NS=%llu MARGIN_NS=%lld "
             "TARGET_NS=%llu OVER_TARGET_NS=%lld "
-            "SECONDS_PER_TOKEN=%.9f TPS=%.6f PASS_150=%d\n",
+            "SECONDS_PER_TOKEN=%.9f TPS=%.6f PASS_150=%d "
+            "GATE=LIVE_WORKING_SET+FUTURE_CONSUMER_READY+TOKEN_WALL\n",
             tokenId, decodeStep, steady ? 1u : 0u,
             static_cast<unsigned long long>(tokenWallNs),
+            tokenWallNs / 1e6, tps,
+            static_cast<unsigned long long>(target), margin,
             static_cast<unsigned long long>(target), over, seconds, tps,
             pass150);
     fflush(f);

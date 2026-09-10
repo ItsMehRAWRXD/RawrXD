@@ -1,0 +1,2 @@
+GATE=G3_KIMI_K3_IN_C_RE_MAP_001 STATUS=DEFERRED NO_ADOPT=1 NO_VENDOR=1 TIP_CLIMB=HOLD PROMOTE=0
+NOTE=kimi-k3-in-c is RE reference only; not GGUF; not RawrXD product runtime.

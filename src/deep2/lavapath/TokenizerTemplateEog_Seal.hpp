@@ -72,9 +72,11 @@ inline bool SealTokEog(const Deep2::GGUFLoadResult& r, const GeomSeal& geom,
         t.TEMPLATE_BYTES = r.metadata.chatTemplate.size();
         t.TEMPLATE_FROM_MODEL = 1;
     } else {
-        TBlock(t, "TEMPLATE", "tokenizer.chat_template", "absent", "missing",
-               "TOKENIZER_TEMPLATE_EOG");
-        return false;
+        /* Absent chat_template → explicit-none; runtime RAW_PROMPT_ALLOWED. */
+        t.TEMPLATE_BYTES = 0;
+        t.TEMPLATE_FROM_MODEL = 0;
+        std::fprintf(stderr,
+                     "CHAT_TEMPLATE_ABSENT=1 POLICY=RAW_PROMPT_ALLOWED\n");
     }
     if (r.rawKv.count("tokenizer.ggml.merges")) {
         /* value recorded as [array:N] by loader */
@@ -115,6 +117,8 @@ inline void EmitTokEog(FILE* f, const TokEogSeal& t) {
                  t.EOS_FROM_MODEL, t.EOG_FROM_MODEL);
     std::fprintf(f, "TEMPLATE_FROM_MODEL=%d\nNO_STATIC_TOKEN_IDS=%d\n", t.TEMPLATE_FROM_MODEL,
                  t.NO_STATIC_TOKEN_IDS);
+    if (!t.TEMPLATE_FROM_MODEL)
+        std::fprintf(f, "CHAT_TEMPLATE_POLICY=RAW_PROMPT_ALLOWED\n");
     std::fprintf(f, "VOCAB_MATCHES_SCHEMA=%d\nGEOMETRY_UNCHANGED=%d\n", t.VOCAB_MATCHES_SCHEMA,
                  t.GEOMETRY_UNCHANGED);
     std::fprintf(f, "ONE_LOCAL_MODEL_AUTHORITY=%d\n", t.ONE_LOCAL_MODEL_AUTHORITY);

@@ -1,14 +1,14 @@
 #pragma once
-/* RAWRXD_PRODUCT_E2E_001 — umbrella completion receipt.
-   FUNCTIONAL_PASS = product path complete (no TPS floor).
-   PRODUCT_PASS / TPS seal requires ≥5 TPS (champion owns promotion). */
+/* RAWRXD_PRODUCT_E2E_001 — args + entry. ≤99.
+   PRODUCT_PASS = LIVE_WORKING_SET+FUTURE_CONSUMER_READY+TOKEN_WALL<=6666667.
+   MODEL_SIZE/FULL_RESIDENCY are not gates. PROMOTE=0. */
+#include "Deep2ProductGate.hpp"
 #include "NoMoreBaselineStubsLaw.hpp"
+#include "ProductE2EBlocker.hpp"
 #include <cstdint>
 #include <cstdio>
 
 namespace rawr::product {
-
-constexpr double kProductFloorTps = 5.0;
 
 struct EmitArgs {
     uint64_t tokensRequested = 64;
@@ -21,6 +21,8 @@ struct EmitArgs {
     int cpuF32Expands = 0;
     int streamOutput = 0;
     int teardownOk = 0;
+    int liveWorkingSet = 0;
+    int futureConsumerReady = 0;
 };
 
 inline double DecodeTps(uint64_t tok, uint64_t wallNs) noexcept {
@@ -30,67 +32,46 @@ inline double DecodeTps(uint64_t tok, uint64_t wallNs) noexcept {
 
 inline void Emit(const EmitArgs& a) noexcept {
     const double tps = DecodeTps(a.tokensCommitted, a.wallNs);
+    const uint64_t meanWall =
+        (a.tokensCommitted && a.wallNs) ? (a.wallNs / a.tokensCommitted) : 0ull;
     const int runtime = (a.productionDecode && a.tokensCommitted > 0) ? 1 : 0;
     const int complete =
         (a.tokensCommitted > 0 && a.streamOutput && a.textBytes > 0 &&
          a.teardownOk)
             ? 1
             : 0;
-    const int floor = (tps >= kProductFloorTps) ? 1 : 0;
+    const int deadline =
+        Deep2::product_gate::MeanDeadlineOk(a.tokensCommitted, a.wallNs);
     const int noHost = (a.hostFwdCalls == 0 && a.cpuF32Expands == 0) ? 1 : 0;
     const int functional =
         (complete && noHost && a.modelAuthority && runtime) ? 1 : 0;
-    const int pass = (functional && floor) ? 1 : 0;
-
-    const char* bat = "NONE";
-    const char* bow = "NONE";
-    const char* nxt = "NONE";
-    if (!functional) {
-        if (!a.modelAuthority) {
-            bat = "MODEL_AUTHORITY";
-            bow = "Deep2Engine::loadModel";
-            nxt = "Load authoritative GGUF; re-enter generateStream";
-        } else if (!runtime || a.tokensCommitted == 0) {
-            bat = "DECODE";
-            bow = "Deep2Engine::generateStream";
-            nxt = "Enter production decode; emit tokens before seal";
-        } else if (!complete) {
-            bat = "COMPLETION";
-            bow = "token_commit/stream_output";
-            nxt = "Commit tokens + detokenized stream text";
-        } else {
-            bat = "HOST_FALLBACK";
-            bow = "HOST_FORWARD|CPU_F32";
-            nxt = "Restore GPU lavapath; HOST_FWD=0 CPU_F32=0";
-        }
-    } else if (!floor) {
-        bat = "WALL_WITHIN_BUDGET";
-        bow = "QKV_PROJ/q_b";
-        nxt = "Cut exposed SPIN; remeasure 64-tok ≥5 TPS";
-    }
-
-    std::printf("RAWRXD_PRODUCT_E2E_001\n");
-    std::printf("INPUT_ACCEPTED=1\nMODEL_AUTHORITY=%d\nRUNTIME_BACKED=%d\n",
-                a.modelAuthority, runtime);
-    std::printf("PRODUCTION_DECODE_PATH=%d\n", a.productionDecode);
-    std::printf("HOST_FORWARD_LAYER_CALLS=%d\nCPU_F32_EXPANDS=%d\n",
-                a.hostFwdCalls, a.cpuF32Expands);
-    std::printf("TOKENS_REQUESTED=%llu\nTOKENS_COMMITTED=%llu\n",
-                (unsigned long long)a.tokensRequested,
-                (unsigned long long)a.tokensCommitted);
-    std::printf("STREAM_OUTPUT_PRESENT=%d\nCOMPLETION_RECEIPT_PRESENT=1\n",
-                a.streamOutput);
-    std::printf("DECODE_TPS_REAL=%.3f\nPRODUCT_FLOOR_TPS=%.3f\n", tps,
-                kProductFloorTps);
-    std::printf("FUNCTIONAL_PASS=%d\nPRODUCT_PASS=%d\n", functional, pass);
-    std::printf("RAWRXD_PRODUCT_E2E_001=%s\n",
-                functional ? "PASS" : "OPEN");
-    std::printf("WALL_BUDGET_IN_PRODUCT=0\n");
-    std::printf("SPIN_CLOSE_BLOCKER=%s\nSPIN_CLOSE_BLOCKER_OWNER=%s\n", bat,
-                bow);
+    const int pass =
+        functional && Deep2::product_gate::PromoteReady(
+                          a.liveWorkingSet, a.futureConsumerReady, meanWall);
+    std::printf("RAWRXD_PRODUCT_E2E_001\nINPUT_ACCEPTED=1\n"
+                "MODEL_AUTHORITY=%d\nRUNTIME_BACKED=%d\n"
+                "PRODUCTION_DECODE_PATH=%d\nHOST_FORWARD_LAYER_CALLS=%d\n"
+                "CPU_F32_EXPANDS=%d\nTOKENS_REQUESTED=%llu\n"
+                "TOKENS_COMMITTED=%llu\nSTREAM_OUTPUT_PRESENT=%d\n"
+                "COMPLETION_RECEIPT_PRESENT=1\nLIVE_WORKING_SET=%d\n"
+                "FUTURE_CONSUMER_READY=%d\nMEAN_TOKEN_WALL_NS=%llu\n"
+                "TOKEN_WALL_TARGET_NS=%llu\nDEADLINE_OK=%d\n"
+                "DECODE_TPS_REAL=%.3f\nNOTE=TPS_DISPLAY_ONLY\n"
+                "FUNCTIONAL_PASS=%d\nPRODUCT_PASS=%d\nPROMOTE=0\n"
+                "RAWRXD_PRODUCT_E2E_001=%s\n"
+                "GATE=LIVE_WORKING_SET+FUTURE_CONSUMER_READY+TOKEN_WALL\n"
+                "NOTE=MODEL_SIZE_FULL_RESIDENCY_NOT_GATES\n",
+                a.modelAuthority, runtime, a.productionDecode, a.hostFwdCalls,
+                a.cpuF32Expands, (unsigned long long)a.tokensRequested,
+                (unsigned long long)a.tokensCommitted, a.streamOutput,
+                a.liveWorkingSet, a.futureConsumerReady,
+                (unsigned long long)meanWall,
+                (unsigned long long)TOKEN_WALL_TARGET_NS, deadline, tps,
+                functional, pass ? 1 : 0, functional ? "PASS" : "OPEN");
     if (!pass)
-        std::printf("BLOCKED_AT=%s\nBLOCKED_OWNER=%s\nNEXT_RUNTIME_ACTION=%s\n",
-                    bat, bow, nxt);
+        EmitBlocker(functional, a.liveWorkingSet, a.futureConsumerReady,
+                    deadline, a.modelAuthority, runtime, a.tokensCommitted,
+                    complete);
     std::printf("RAWRXD_NO_MORE_BASELINE_STUBS_001=1\n");
 }
 

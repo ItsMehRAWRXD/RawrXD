@@ -1,0 +1,10 @@
+WEIGHT_BUDGET_INPUT=2048
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=2048
+WEIGHT_BUDGET_BYTES=2147483648
+WEIGHT_BUDGET_SOURCE=ENV
+무这个 войскє войск兜 Visitation診療
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

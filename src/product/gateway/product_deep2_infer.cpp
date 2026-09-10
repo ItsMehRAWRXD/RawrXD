@@ -73,4 +73,8 @@ bool ProductDeep2Infer(const char* prompt, char* out, size_t cap) {
     return Run([&]() -> bool { return InferSeh(prompt, out, cap); });
 }
 
+uint32_t ProductDeep2LastEvalCount() {
+    return product_infer_detail::LastEvalCount().load();
+}
+
 } // namespace rawr

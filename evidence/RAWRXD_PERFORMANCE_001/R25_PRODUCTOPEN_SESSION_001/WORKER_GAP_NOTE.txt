@@ -1,0 +1,33 @@
+GATE=R25_PRODUCTOPEN_SESSION_001
+KIND=WORKER_GAP_NOTE
+ASOF=2026-09-10T07:41:00-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+DO_NOT_ALTER_SEALED_RECEIPT=1
+
+## Closed this worker turn (source only; no rebuild contention)
+SOURCE_WIRED_INIT_SESSION_FACTS=1
+  product_deep2_open_gate.hpp EmitOpenFacts now emits
+  PRODUCT_OPEN_INIT_ENTER/EXIT + PRODUCT_OPEN_SESSION_ENTER/EXIT
+  MarkSessionFacts set on ProductOpenSession OpenBody (incl soft-reuse)
+SOURCE_WIRED_ProductOpenStreamable=1
+  ProductOpenStreamable.hpp + ProductRuntime::StreamableOk present
+  product_deep2_open_gate CollectOpenFacts uses product_open::Evaluate
+
+## Still NOT_RUN (fail-closed; do not invent PASS)
+RUNTIME_REACHED_INIT_SESSION_FACTS_ON_R1CAP=NOT_RUN
+  worker2 generate: INIT_FROM_PATH=LOAD_ONLY observed; PRODUCT_OPEN INIT_ENTER=0
+  path=Deep2IDEIntegration InitFromPath bypass (no OpenSession fprintf on seal binary)
+OPEN_SEMANTIC_STREAMABLE_LIVE=NOT_RUN
+  sealed rawr PRODUCT_PATH LIVE.err and r1cap worker probes: OPEN_SEMANTIC=0
+PRODUCT_OPEN_PE_LAA_EMIT_ON_GENERATE_PATH=NOT_RUN (r1cap generate)
+MULTI_FAMILY_PRODUCTOPEN=NOT_GREEN (frozen)
+DualStick/ICD=HELD
+k3c_token=NOT_IMPLEMENTED
+PERFORMANCE_PASS=0
+
+## Authority left sealed
+R25_PRODUCTOPEN_SESSION_001 RECEIPT PASS for TinyLlama ProductOpen+LAA unchanged
+PRODUCT_PATH_INVARIANTS_* PASS sealed unchanged
+ProductRunDecode.hpp FROZEN
+R24 TinyLlama-only seal FROZEN

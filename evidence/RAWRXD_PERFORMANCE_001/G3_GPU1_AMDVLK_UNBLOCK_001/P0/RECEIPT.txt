@@ -1,0 +1,30 @@
+GATE=G3_GPU1_AMDVLK_UNBLOCK_001
+PHASE=P0_WITNESS
+ASOF=2026-09-09
+SYSTEM_MUTATION=0
+PROMOTE=0
+
+PURPOSE=capture failure before any unblock mutation
+PARENT=G3_GPU1_SOLO_CREATE_DISC_001|G3_GPU1_VDRIVER_D3D12_001|G3_GPU1_AMDVLK_DIRECT_ICD_001
+
+VULKANINFO_EXIT=1
+VULKANINFO_PATH=C:\Windows\system32\vulkaninfo.exe
+LOADER_TRACE=loader_trace.txt (229726 bytes)
+DECISIVE_LINE=terminator_CreateDevice: Failed in ICD ...\amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll vkCreateDevice
+CREATE_DRIVER_7800=amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll
+CREATE_DRIVER_R9700=same amdvlk.inf_amd64_914ba89eaaafdf60\amdvlk64.dll
+CREATE_DRIVER_IGPU=u0203303...\amdvlk64.dll (separate)
+
+SOLO_A0_7800_BASELINE=FAIL (see solo_a0_7800_baseline.txt)
+SOLO_A0_R9700_BASELINE=PASS (see solo_a0_r9700_baseline.txt)
+
+WMI_7800_Availability=8 Off_Line
+WMI_R9700_Availability=3 Running_Full_Power
+EVT_SYSTEM_AMD_MATCHES=0 (6h window)
+EVT_APPLICATION=see EVT_APPLICATION_AMD.txt
+
+PHASE0_WITNESS={VK_LOADER_TRACE,EVT_LOG,WMI_SNAPSHOT,SOLO_A0_BASELINE}
+WINDBG=SKIPPED (optional; not required to proceed to P1)
+
+NEXT=P1_UNBLOCK_PHASE1_AS_ADMIN_THEN_REBOOT
+VERIFY=tools\verify_unblock_gate.ps1 -PhaseTag POST_P1
