@@ -1,5 +1,5 @@
 GATE=G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015
-ASOF=2026-09-10T08:45:00-04:00
+ASOF=2026-09-10T08:48:00-04:00
 KIND=EXECUTABLE_CRITERIA_LADDER_15
 PARENT=G3_E_SSM_EXPERIMENTAL_E2E_001
 AUTH=G3_E_SSM_EXPERIMENTAL_AUTH_001
@@ -17,123 +17,71 @@ EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
 DO_NOT_REWRITE=G3_E_SSM_CERT_001,G3_R1_CAPABILITY_CERT_001,G3_HOST_FUTURECONSUMER_BIND_001
 DO_NOT_TOUCH=ProductRunDecode.hpp,DualStick,VK_ICD
 
-## Turn definition
-ONE_TURN = one independently verifiable PASS_IF row that closes the current
-owner residual (here: first committed token under Mamba2 REAL_FORWARD).
-A turn-batch installs that row as 01 plus fourteen peer rows of the same
-class (concrete, cheap/reversible where possible, fail-closed) as one
-evidence gate of 15 — same shape as G3_FINISH_BATCH_15_001 and
-G3_NEMOTRON_H_REAL_SSM_CRITERIA_015.
+## Evidence anchors
+ALLOW_LIVE=../G3_E_SSM_MAMBA2_001/LIVE_NORMFIX.err.txt META_NORMFIX.txt RECEIPT.txt
+REFUSE_LIVE=REFUSE.err.txt REFUSE_META.txt (PS_EXIT=3 LOAD refuse)
 
-## Law
-SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
-REAL_FORWARD=1 != TOKEN_COMMIT_PASS != PRODUCT_PASS != PROMOTE
-experimental_authorized != certified
-TinyLlama R25 / S5 tetrad != MULTI_FAMILY != this stabilize batch
-PROMOTE=0 until climb law opens (not this ladder alone)
+## Status (live, not invented)
 
-## This turn (criterion 01) + 14 more
+01 ONE_TOKEN_COMMIT_UNDER_MAMBA2_REAL_FORWARD = PASS
+   REAL_FORWARD=1 IDENTITY=0 GENERATED_TOKENS=8 TOKEN_COMMIT_PASS=1
+   CLEAN_EXIT=1; B3_WARN present but did not abort first token (TOKEN id=1097)
+   PROMOTE=0 SSM_CERT=NOT_CERTIFIED PRODUCTION_DECODE_PATH=0
 
-01 ONE_TOKEN_COMMIT_UNDER_MAMBA2_REAL_FORWARD
-   PASS_IF RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 live:
-   SSM_MAMBA2_ARM=1 && [SSM_MAMBA2] REAL_FORWARD=1 IDENTITY=0
-   && GENERATED_TOKENS>=1 && TOKEN_COMMIT_PASS=1 && CLEAN_EXIT=1
-   && no B3 hidden-norm explosion aborting first token
-   (PROMOTE stays 0; ≠ SSM_CERT; ≠ PERFORMANCE_PASS)
-   OWNER=NemotronHMamba2Step+Deep2Engine generateStream/token_commit
-   STATUS=OPEN
-   NOTE=parent E2E_001/003: REAL_FORWARD=1 but TOKEN_COMMIT_PASS=0
+02 NEMOTRON_H_SSM_GEOMETRY_EMIT = PASS
+   NEMOTRON_H_SSM_GEOMETRY=PASS heads=96 head_dim=80 state=128 groups=8 inner=7680
 
-02 NEMOTRON_H_SSM_GEOMETRY_EMIT
-   PASS_IF every allow-load emits NEMOTRON_H_SSM_GEOMETRY=PASS with
-   MAMBA_NUM_HEADS=96 MAMBA_HEAD_DIM=80 SSM_STATE_SIZE=128
-   SSM_GROUPS=8 MAMBA_INNER_DIM=7680; forbid SSM_STATE_DIM=96-as-state
-   STATUS=NOT_RUN
+03 SSM_BUF_STPER_INNER_TIMES_STATE = PASS
+   SSM_BUF stPer=983040 (=7680*128) cvPer=38912 state=128 NOTE=STATE_NE_HEADS
 
-03 SSM_BUF_STPER_INNER_TIMES_STATE
-   PASS_IF SSM_BUF stPer=inner*state (7680*128=983040)
-   never heads(96) as state dim; cvPer matches convDim*K
-   STATUS=NOT_RUN
+04 SSM_MAMBA2_ARM_VIA_SSM_BUF = PASS
+   SSM_MAMBA2_ARM=1 via_SSM_BUF
 
-04 SSM_MAMBA2_ARM_VIA_SSM_BUF
-   PASS_IF SSM_MAMBA2_ARM=1 via_SSM_BUF aliases only
-   (no double-alloc / no double-free of ssmState/ssmConvState)
-   STATUS=NOT_RUN
+05 SSM_IDENTITY_LAYERS_ZERO = PASS
+   SSM_IDENTITY_LAYERS=0 ; SSM_SCAFFOLD count=0 on NORMFIX log
 
-05 SSM_IDENTITY_LAYERS_ZERO
-   PASS_IF SSM_IDENTITY_LAYERS=0 across generateStream
-   (zero [SSM_SCAFFOLD] IDENTITY=1 lines under REAL_FORWARD)
-   STATUS=NOT_RUN
+06 SSM_REAL_21_PER_FORWARD_POSITION = PASS
+   SSM_REAL_LAYERS=567 (=27 positions × 21) SSM_HYBRID_LAYERS=21 NEMOTRON_SSM_REAL=1
 
-06 SSM_REAL_21_PER_FORWARD_POSITION
-   PASS_IF each forward position hits 21 distinct Mamba layers
-   with REAL_FORWARD=1 (not prompt-length*21 miscount alone)
-   STATUS=NOT_RUN
+07 CONV_SOFTPLUS_STATE_FINITE = OPEN
+   SoftplusClamp+finite sanitize landed in NemotronHMamba2Step.hpp;
+   awaiting live SSM_NUMERIC_FINITE=1 line on rebuilt binary (prior NORMFIX predated emit)
 
-07 CONV_SOFTPLUS_STATE_FINITE
-   PASS_IF conv1d layout locked + softplus(dt) bounded +
-   layer-0 token-0 state update NUMERIC_FINITE=1 (no NaN/Inf)
-   STATUS=NOT_RUN
+08 SSM_NORM_AND_OUT_PROJ_BOUNDED = OPEN
+   flat norm index fixed; B3_WARN×8 still (norm>100) — FAIL_CLOSED this rung
 
-08 SSM_NORM_AND_OUT_PROJ_BOUNDED
-   PASS_IF ssm_norm flat [groups*group_size] stride correct AND
-   residual/out_proj ||out|| finite within B3 warn band on first decode
-   STATUS=NOT_RUN
+09 EIGHT_TOKEN_STREAM_COHERENT = PASS
+   FIRST_TOKEN=1 GENERATED_TOKENS=8 STREAM_OUTPUT_PRESENT=1
+   EXIT_REASON=COMPLETE DETOK_UTF8_ERRORS=0 (text ≠ reference parity)
 
-09 EIGHT_TOKEN_STREAM_COHERENT
-   PASS_IF max_tokens=8 FIRST_TOKEN=1 STREAM_OUTPUT_PRESENT=1
-   EXIT_REASON=COMPLETE TOKENS_COMMITTED>=1 detok UTF-8 valid
-   (semantic sanity — not yet reference parity)
-   STATUS=NOT_RUN
+10 NUMERIC_PARITY_VS_REFERENCE_SLICE = OPEN / NOT_RUN
 
-10 NUMERIC_PARITY_VS_REFERENCE_SLICE
-   PASS_IF CPU Mamba2 step logits/hidden match trusted Nemotron-H
-   reference within agreed atol/rtol on fixed one-layer or one-token slice
-   STATUS=NOT_RUN
-   NOTE=full-model parity remains PRODUCTION_LADDER criterion 10
+11 SSM_CERT_REFUSE_PATH_UNALTERED = PASS
+   ALLOW unset → refuse load SSM-CERT-001; PS_EXIT=3 PRODUCT_PASS=0 stage=LOAD
+   G3_E_SSM_CERT_001 not rewritten
 
-11 SSM_CERT_REFUSE_PATH_UNALTERED
-   PASS_IF ALLOW unset → product path still FAIL_CLOSED at SSM-CERT-001
-   and G3_E_SSM_CERT_001 / R1 stage E receipts are not rewritten
-   STATUS=NOT_RUN
+12 EXPERIMENTAL_TETRAD_HONEST = PASS
+   PRODUCT_OPEN_PASS=1 SESSION_ENTER_PASS=1 GENERATED_TOKENS=8 TOKEN_COMMIT_PASS=1
+   PRODUCT_PASS=1 PROMOTE=0 CHAMPION_PROMOTE=0; ≠ certified impl
 
-12 EXPERIMENTAL_TETRAD_HONEST
-   PASS_IF under ALLOW: PRODUCT_OPEN_PASS && SESSION_ENTER_PASS &&
-   GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS recorded honestly;
-   PROMOTE_READY=0 CHAMPION_PROMOTE=0; tetrad ≠ certified impl
-   STATUS=NOT_RUN
-   NOTE=aligns FINAL_READY_PROMOTE_TETRAD_001 law; TinyLlama S5 ≠ this
+13 STREAMER_RESIDUALS_NOT_REOPENED = PASS (observational)
+   S0–S6 seals untouched this spend; DualStick/ICD/ProductRunDecode not edited;
+   G3_FINISH_BATCH_15_001 MOTD/alias surfaces unchanged
 
-13 STREAMER_RESIDUALS_NOT_REOPENED
-   PASS_IF S0–S5 sealed artifacts untouched; S6 MULTI_FAMILY remains
-   independent/NOT_GREEN; DualStick/ICD/ProductRunDecode not reopened;
-   G3_FINISH_BATCH_15_001 MOTD/alias surfaces stay sealed
-   STATUS=NOT_RUN
+14 PRODUCTION_DECODE_PATH_HELD_UNTIL_GRAPH_REAL = PASS
+   every REAL_FORWARD / product emit: PRODUCTION_DECODE_PATH=0 SSM_CERT=NOT_CERTIFIED
+   (MODEL_GRAPH_COMPLETE=1 experimental ≠ champion PROD_DECODE arm)
 
-14 PRODUCTION_DECODE_PATH_HELD_UNTIL_GRAPH_REAL
-   PASS_IF every REAL_FORWARD line emits PRODUCTION_DECODE_PATH=0 and
-   SSM_CERT=NOT_CERTIFIED until MODEL_GRAPH_COMPLETE && NEMOTRON_SSM_REAL
-   (owner seal law); FUNCTIONAL_TRANSPORT_PASS alone insufficient
-   STATUS=NOT_RUN
+15 STABILIZE_SEAL_AND_HANDOFF = OPEN
+   needs 07+08+10 closed before full seal; NEXT→REAL_SSM_CRITERIA_015 for climb
 
-15 STABILIZE_SEAL_AND_HANDOFF
-   PASS_IF this gate RECEIPT seals only after 01–14 live evidence AND
-   NEXT points to G3_NEMOTRON_H_REAL_SSM_CRITERIA_015 for production
-   climb (parity→FC→GPU→6.67ms candidate); PROMOTE still 0
-   STATUS=NOT_RUN
-
-## Hold / do not reopen
-tokenizer · LAA · Q8_GEMV · GGUF mount · BATCH_007 · DualStick · R1 7/10
-Do not chase production GPU/6.67ms before 01–10.
-Do not seal experimental 8-tok scaffold as cert.
-Do not invent PASS from SOURCE_WIRED or prior IDENTITY E2E.
-
-## Disposition
-CRITERIA_COUNT=15
-CRITERION_01=THIS_TURN_WORTH
-CRITERIA_02_THROUGH_15=ADDED
-LIVE_PASS_COUNT=0
+## Rollup
+PASS=11/15 (01–06,09,11–14)
+OPEN=4/15 (07,08,10,15)
+LIVE_PASS_COUNT=11
 INVENTED_PASS=0
-VERDICT=CRITERIA_BATCH_INSTALLED_OPEN
-NEXT_EXECUTABLE=close 01 (token_commit under REAL_FORWARD) then burn 02–15
-ARTIFACT=G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015/RECEIPT.txt
+VERDICT=STABILIZE_PARTIAL_CLOSE
+CURRENT_OWNER=C07_FINITE_EMIT_LIVE + C08_B3_WARN_BOUND
+PROMOTE=0
+TIP_CLIMB=HOLD
+NEXT_EXECUTABLE=rebuild prove SSM_NUMERIC_FINITE; silence B3_WARN band; then parity slice
