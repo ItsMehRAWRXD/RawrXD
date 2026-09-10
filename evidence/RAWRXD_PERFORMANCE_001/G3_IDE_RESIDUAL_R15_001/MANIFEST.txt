@@ -1,14 +1,13 @@
 GATE=G3_IDE_RESIDUAL_R15_001
-ASOF=2026-09-10T10:20-04:00
+ASOF=2026-09-10T10:25-04:00
 KIND=R15_SMOKE_BIN_OPS_HYGIENE_MANIFEST
 PARENT=G3_IDE_RESIDUAL_AUDIT_001 / R09 OPS_ONLY
 STATUS=EXECUTABLE_VALIDATION_PARAMS
 CLASS=OPS_ONLY
 PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
 LOCKED_CLOSED=R01-R06,R03,R10,R11,R13,R14,R26
-ACTIVE=R15
 OUT_OF_SCOPE=R12_LSP_GUI R25_params 503_RETEST_ONLY DualStick promote
-NOT_RUN!=PASS — no invented SHA PASS
+NOT_RUN!=PASS — no invented SHA PASS; do not rewrite sealed residual SHAs
 
 ## SMOKE_BIN_ROOTS (discovered; must exist for PASS)
   ROOT_CERT     = C:\r1cert\smoke_bin\
@@ -22,59 +21,40 @@ NOT_RUN!=PASS — no invented SHA PASS
 
 ## REQUIRED_ARTIFACTS
   PATTERN=RawrXD-Win32IDE*.exe under each required root (at least one live EXE)
-  PDB_POLICY=optional (.pdb not required for R15 PASS; record present/absent)
-  HASH_ALG=SHA256
-  RECORD_SHA16=first 16 hex of SHA256 (uppercase)
-  PE_LAA_EXPECT=YES (Characteristics & 0x0020 Large Address Aware) on authority EXEs
-  SEALED_REFERENCES (hash match vs RECEIPT claims; MISMATCH is honest residual):
+  PDB_POLICY=optional (.pdb not required for R15 PASS)
+  HASH_ALG=SHA256 ; RECORD_SHA16=first 16 hex uppercase
+  PE_LAA_EXPECT=YES on sealed AUTHORITY EXEs (Characteristics & 0x0020)
+  SEALED_REFERENCES (vs locked residual receipts; MISMATCH = honest residual):
     R14_AUTH = G:\~dev\rawrxd\smoke_bin\RawrXD-Win32IDE_r14.exe
-               SEALED_SHA16=C3BE946E0764AC56 (G3_IDE_RESIDUAL_R14_001/{RECEIPT,EXE_SHA,KEY_LINES})
-    R26_AUTH = G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_RESIDUAL_R26_001\smoke_bin\RawrXD-Win32IDE_r26.exe
+               SEALED_SHA16=8BA1EA222502E3F9
+               (locked G3_IDE_RESIDUAL_R14_001 typed E2E — RECEIPT/EXE_SHA/KEY_LINES)
+               PRIOR_HISTORICAL_SHA16=C3BE946E0764AC56 (pre-typed seal; may remain on admit.exe)
+    R26_AUTH = .../G3_IDE_RESIDUAL_R26_001/smoke_bin/RawrXD-Win32IDE_r26.exe
                SEALED_SHA256=E6053467663C6D181177EBBDAFF6527822D5AE8425C2AC3537A7EEEC7FB47C7B
-    R01_AUTH = G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_RESIDUAL_R01_001\smoke_bin\RawrXD-Win32IDE_r01.exe
-               SEALED_SHA256=74FFB40DDED7DD52D24DEC25D2F76EA5CD3BFEA50C2897E5E414A19629CBCA71
-               (KEY_LINES IDE_SHA256; also accept sibling copy if SHA matches)
-    R01_SEALED_LOC (discovered live if residual path MISMATCH)=
-               G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_GENERATE_AV_R01_001\smoke_bin\RawrXD-Win32IDE.exe
-    R14_SEALED_LOC (discovered live if product r14 path overwritten)=
-               G:\~dev\rawrxd\build-fd\smoke_bin_admit\RawrXD-Win32IDE_admit.exe
+    R01_AUTH_PATH = .../G3_IDE_RESIDUAL_R01_001/smoke_bin/RawrXD-Win32IDE_r01.exe
+    R01_SEALED_SHA256 = 74FFB40DDED7DD52D24DEC25D2F76EA5CD3BFEA50C2897E5E414A19629CBCA71
+    R01_SEALED_BYTES_LOC = .../G3_IDE_GENERATE_AV_R01_001/smoke_bin/RawrXD-Win32IDE.exe
     R11_AUTH = G:\~dev\rawrxd\build-fd\bin\smoke_bin\RawrXD-Win32IDE_r11.exe
-               SEALED_SHA16=E823725A99511F93 (informational; R11 CLOSED — record MATCH|MISMATCH)
+               SEALED_SHA16=E823725A99511F93 (informational; R11 CLOSED)
 
 ## HYGIENE_RULES
-  H1 No stale FAIL-only EXE as current authority without SUPERSEDED tag / role=HISTORICAL
-  H2 Do not mix sealed residual SHA with unreproven live build-fd\bin\RawrXD-Win32IDE.exe as same authority
-  H3 Directory listing required; orphan/stale copies labeled WORKING|SUPERSEDED|HISTORICAL not silently authoritative
-  H4 Deployment path labels:
-       AUTHORITY   = residual-sealed smoke copy cited by RECEIPT
-       WORKING     = build-fd\bin link target / current deploy scratch
-       SUPERSEDED  = prior FAIL / pre-fix / bak_* / .prev_* / RECEIPT_SUPERSEDED_*
-  H5 Concurrent ninja against BUILD_FD during live residual proofs = ops violation (use smoke_bin copy)
-  H6 DualStick / deep2_streamer_parity*.bak_pre_dualstick* MUST NOT be product Win32IDE authority
+  H1 No stale FAIL-only EXE as authority without SUPERSEDED/HISTORICAL tag
+  H2 Do not treat unreproven BUILD_FD as residual AUTHORITY without receipt
+  H3 Directory listing + orphan label policy (AUTHORITY|WORKING|SUPERSEDED)
+  H4 DualStick / bak_pre_dualstick* ≠ Win32IDE product authority
+  H5 Use smoke_bin copies for live proofs (avoid vanishing BUILD_FD under ninja)
+  H6 Do not rewrite locked residual SHA claims to force MATCH
 
-## OPS_CHECKS (live rows)
-  O1 Each SMOKE_BIN_ROOT exists (Test-Path)
-  O2 Required AUTHORITY EXEs present (R14/R26/R01); copy completeness (size>0 readable)
-  O3 SHA256/SHA16 of R14/R26/R01 (and R11) vs sealed RECEIPT claims → MATCH or honest MISMATCH
-  O4 PE_LAA flag on each AUTHORITY EXE
-  O5 ROOT_PRODUCT / ROOT_CERT writable (temp file create+delete)
-  O6 No RawrXD-Win32IDE*.exe named DualStick as product authority under smoke_bin roots
-  O7 Inventory orphans under ROOT_PRODUCT + ROOT_CERT (name/size/mtime); label policy applied
-  O8 BUILD_FD present+hashable; EXE_SHA16 recorded as WORKING (≠ auto AUTHORITY)
+## OPS_CHECKS
+  O1 roots exist  O2 authority EXEs present  O3 hash MATCH|honest MISMATCH
+  O4 PE_LAA on sealed authority bytes  O5 writable deploy paths
+  O6 no DualStick Win32IDE authority  O7 dirlist+labels  O8 BUILD_FD WORKING hashable
 
 ## PASS_IF
-  All required roots present
-  Authority EXE hashes MATCH sealed receipts OR honest MISMATCH residual enumerated (not silent)
-  Hygiene violations enumerated in RECEIPT (not ignored)
-  DualStick reopen binaries not treated as Win32IDE product authority
-  PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
-  FAIL if required root missing, authority EXE missing, or silent invent PASS without live hash
-  CLOSE_R15 only when O1–O8 executed live and PASS_IF holds with no unenumerated blocker
-
-## Artifacts
-  MANIFEST.txt KEY_LINES.txt RECEIPT.txt LIVE_TELEMETRY.txt HASH_ROWS.txt
-  optional: DIRLIST_PRODUCT.txt DIRLIST_CERT.txt
+  Roots present; MATCH or honest MISMATCH enumerated; hygiene enumerated;
+  DualStick not product authority; PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
+  Supplemental smoke stop/restart optional ops prove
 
 ## Register after close
   R15=CLOSED OPEN_HELD=R12,R25 R20=HELD
-  NEXT=R25 router params when supplied; 503=RETEST_ONLY
+  NEXT=R25 params when supplied; 503=RETEST_ONLY

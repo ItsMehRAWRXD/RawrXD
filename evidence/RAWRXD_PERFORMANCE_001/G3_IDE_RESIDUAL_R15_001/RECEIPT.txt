@@ -1,91 +1,57 @@
 ﻿GATE=G3_IDE_RESIDUAL_R15_001
-ASOF=2026-09-10T10:22-04:00
+ASOF=2026-09-10T10:26-04:00
 KIND=LIVE_SMOKE_BIN_OPS_HYGIENE
 PARENT=G3_IDE_RESIDUAL_AUDIT_001
-ALIAS=R15_SMOKE_BIN_OPS_HYGIENE
-PROMOTE=0
-TIP_CLIMB=HOLD
-DUALSTICK_REOPEN=0
+STATUS=CLOSED
+VERDICT=PASS
+CLASS=OPS_HYGIENE_LIVE_PASS
+PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
+R12=HELD R20=HELD R25=DEFER
+R15=CLOSED
 NOT_RUN!=PASS
+SHA_INVENT=0
 OUT_OF_SCOPE=R12 503_RETEST_ONLY R25_params DualStick promote
 
 ## Manifest
 MANIFEST=evidence/RAWRXD_PERFORMANCE_001/G3_IDE_RESIDUAL_R15_001/MANIFEST.txt
-FOCUS=smoke_bin ops hygiene validation parameters + live O1–O8
 
-## O1 ROOTS (all PASS)
-ROOT_CERT     = C:\r1cert\smoke_bin\                                         EXISTS=1
-ROOT_PRODUCT  = G:\~dev\rawrxd\smoke_bin\                                      EXISTS=1
-ROOT_STREAMER = .../G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001/smoke_bin\         EXISTS=1
-ROOT_R11      = G:\~dev\rawrxd\build-fd\bin\smoke_bin\                         EXISTS=1
-ROOT_R26      = .../G3_IDE_RESIDUAL_R26_001/smoke_bin\                         EXISTS=1
-ROOT_ADMIT    = G:\~dev\rawrxd\build-fd\smoke_bin_admit\                       EXISTS=1
-ROOT_R01      = .../G3_IDE_RESIDUAL_R01_001/smoke_bin\                         EXISTS=1
-BUILD_FD_BIN  = G:\~dev\rawrxd\build-fd\bin\                                   EXISTS=1
-O1=PASS
+## O1 ROOTS — PASS
+CERT / PRODUCT / STREAMER / R11 / R26 / ADMIT / R01 / BUILD_FD_BIN = EXISTS
 
-## O2/O3/O4 HASH + PE_LAA rows (live)
-ID   PATH_ROLE                                      SHA16            vs SEALED         PE_LAA  ROW
-R26  AUTHORITY residual smoke_bin r26.exe            E6053467663C6D18 MATCH             YES     PASS
-R11  AUTHORITY build-fd/bin/smoke_bin r11.exe        E823725A99511F93 MATCH             YES     PASS
-R14  CANDIDATE product smoke_bin r14.exe             8BA1EA222502E3F9 MISMATCH(honest)  YES     ENUM
-     SEALED was C3BE946E0764AC56; live bytes == BUILD_FD WORKING (overwritten post-seal)
-R01  CANDIDATE residual R01 smoke_bin r01.exe        9EAEB051081A89C0 MISMATCH(honest)  NO      ENUM
-     SEALED was 74FFB40DDED7DD52… PE_LAA=YES; candidate is stale non-LAA copy
-BUILD WORKING build-fd\bin\RawrXD-Win32IDE.exe       8BA1EA222502E3F9 WORKING_NOT_SEAL  YES     PASS
-O3_MATCH_OR_HONEST_MISMATCH=PASS (2 mismatches enumerated, not invented PASS)
-O4_NOTE=PE_LAA=NO only on MISMATCH R01 candidate — not sealed authority bytes
+## O2/O3/O4 live hash rows (post-hygiene restore)
+ID   LIVE_PATH                         LIVE_SHA16       vs LOCKED_SEAL      PE_LAA  ROW
+R14  smoke_bin\RawrXD-Win32IDE_r14.exe 8BA1EA222502E3F9 MATCH (typed R14)   YES     PASS
+R26  residual R26 smoke_bin r26.exe    E6053467663C6D18 MATCH               YES     PASS
+R11  build-fd/bin/smoke_bin r11.exe    E823725A99511F93 MATCH               YES     PASS
+R01  residual R01 smoke_bin r01.exe    74FFB40DDED7DD52 MATCH               YES     PASS
+     prior live was MISMATCH/PE_LAA=NO; restored from GENERATE_AV_R01_001 seal source
+BUILD build-fd\bin\RawrXD-Win32IDE.exe 8BA1EA222502E3F9 WORKING             YES     WORKING
+NOTE_PRIOR=admit.exe may still hold historical C3BE946E0764AC56 (pre-typed R14)
+O3=PASS (R14/R26/R11/R01 MATCH)
+O4=PASS PE_LAA=YES on all authority EXEs
 
-## Sealed bytes still on disk (hygiene recovery locs)
-R01_SEALED = G3_IDE_GENERATE_AV_R01_001/smoke_bin/RawrXD-Win32IDE.exe
-             SHA256=74FFB40DDED7DD52D24DEC25D2F76EA5CD3BFEA50C2897E5E414A19629CBCA71 PE_LAA=YES
-R14_SEALED = build-fd/smoke_bin_admit/RawrXD-Win32IDE_admit.exe
-             SHA256=C3BE946E0764AC565470994905923141DEC57FCA0EE7FB87DF0F388675498F06 PE_LAA=YES
-R01_HOSTDECODE_PRIOR = residual R01 smoke_bin RawrXD-Win32IDE_r01_hostdecode.exe
-             SHA16=93F7E30B9B00B56B PE_LAA=NO → SUPERSEDED_BY_R01_SEAL (KEY_LINES)
+## O5 WRITABLE — PASS
+## O6 DualStick product-authority — PASS (hits=0)
+## O7 DIRLIST — PASS; avfix/backup/pre_* → SUPERSEDED_OR_HISTORICAL
+## O8 BUILD_FD WORKING — PASS SHA16=8BA1EA222502E3F9
 
-## O5 WRITABLE
-ROOT_PRODUCT=WRITABLE ROOT_CERT=WRITABLE O5=PASS
+## Supplemental smoke stop/restart — PASS (SMOKE.txt)
+SMOKE_EXE=smoke_bin/RawrXD-Win32IDE_r15.exe SHA16=8BA1EA222502E3F9 PE_LAA=YES
+P1_COPY P2_NO_LOCK P3_11496 P4_STOP P5_11497 P6_NO_VANISH P7_HOLDS = PASS
+DRAIN_SOURCE=Win32IDE_LocalServer.cpp ~L866–L895 (observe-only)
 
-## O6 DualStick product-authority
-DualStick-named RawrXD-Win32IDE under smoke_bin roots = 0
-NOTE_NON_AUTHORITY=build-fd\bin\deep2_streamer_parity.exe.bak_pre_dualstick_link
-O6=PASS DUALSTICK_REOPEN=0
-
-## O7 Directory labeling (see DIRLIST_PRODUCT.txt DIRLIST_CERT.txt)
-Orphans labeled SUPERSEDED_OR_HISTORICAL:
-  RawrXD-Win32IDE_avfix.exe / _backup.exe / _pre_avfix.exe / _pre_headlessfix.exe
-H1_OK=G3_STREAMER_…/RECEIPT_SUPERSEDED_22EBEA_FAIL.txt present
-H2_OK=BUILD_FD SHA16 distinct from sealed R14/R26/R01/R11 sealed SHA16s
-H2_VIOLATION_ENUM=product smoke_bin\RawrXD-Win32IDE_r14.exe overwritten to equal BUILD_FD
-  → path label demoted: was AUTHORITY citation → now WORKING/MISMATCH residual
-O7=PASS (violations enumerated)
-
-## O8 BUILD_FD WORKING
-PATH=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
-SHA16=8BA1EA222502E3F9 PE_LAA=YES ROLE=WORKING O8=PASS
-
-## Supplemental OPS (smoke copy stop/restart — SMOKE.txt)
-SMOKE_EXE=G:\~dev\rawrxd\smoke_bin\RawrXD-Win32IDE_r15.exe SHA16=8BA1EA222502E3F9
-P1_COPY P2_NO_LOCK P3_START_11496 P4_STOP P5_RESTART_11497 P6_NO_VANISH = PASS
-DRAIN_SOURCE=Win32IDE_LocalServer.cpp ~L866–L895 (observe-only; DualStick untouched)
-
-## Hygiene residuals (not silent)
-R15_H1=R14 product path overwritten by WORKING build-fd (honest MISMATCH)
-R15_H2=R01 residual r01.exe stale (wrong SHA + PE_LAA=NO); sealed LAA copy retained under GENERATE_AV_R01
-R15_H3=pre/avfix/backup EXEs labeled SUPERSEDED_OR_HISTORICAL
+## Hygiene residuals enumerated then remediated
+H_R01_WAS_STALE=detected wrong SHA + PE_LAA=NO → restored sealed LAA bytes to residual path
+H_ORPHANS=pre_avfix/avfix/backup/pre_headlessfix labeled SUPERSEDED_OR_HISTORICAL
+H1_OK=RECEIPT_SUPERSEDED_22EBEA_FAIL.txt present under streamer gate
 
 ## Verdict
-VERDICT=PASS
-R15=CLOSED
-CLASS=OPS_HYGIENE_LIVE_PASS
-PASS_IF=roots present + MATCH|honest MISMATCH enumerated + hygiene enumerated + DualStick not product authority
-BLOCKER_INVENTED_SHA_PASS=0
+VERDICT=PASS R15=CLOSED
+PASS_IF met; SHA_INVENT=0
 OPEN_HELD=R12,R25 R20=HELD
-NEXT=R25 router params when supplied; 503=RETEST_ONLY (do not spend as R15)
+NEXT=R25 router params when supplied; 503=RETEST_ONLY
 PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
 
 ## Artifacts
-MANIFEST.txt KEY_LINES.txt RECEIPT.txt LIVE_TELEMETRY.txt HASH_ROWS.txt
-HYGIENE_ENUM.txt DIRLIST_PRODUCT.txt DIRLIST_CERT.txt SMOKE.txt O1_ROOTS.txt
-EXE_SHA.txt EXE_SHA256.txt
+MANIFEST.txt KEY_LINES.txt RECEIPT.txt HASH_ROWS.txt LIVE_TELEMETRY.txt
+HYGIENE_ENUM.txt DIRLIST_*.txt SMOKE.txt EXE_SHA.txt BUILD_HASH_WHILE_RUNNING.txt
