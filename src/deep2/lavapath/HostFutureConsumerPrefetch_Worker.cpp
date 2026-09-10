@@ -26,7 +26,9 @@ static void Worker() {
         const uint32_t layerObs = s.jobLayer;
         s.jobPending = 0;
         lk.unlock();
-        s.p07.store(DoHostMove(s, layerObs));
+        const int moved = DoHostMove(s, layerObs);
+        s.p07.store(moved);
+        if (moved) future::NotePrefetchHit();
         if (chair != CHAIR_INVALID)
             (void)future::SignalChairReady(chair, expectedGen);
         s.ready.store(1);

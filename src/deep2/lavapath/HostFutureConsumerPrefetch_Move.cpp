@@ -40,11 +40,16 @@ void KickChair(future::ChairId chair, uint32_t expectedGen, uint32_t layerObs) {
 
 uint64_t AwaitChairIfLate(future::ChairId chair, uint32_t expectedGen) {
     St& s = S();
-    if (!s.inflight.load()) {
+    auto markWake = [&]() {
         s.p08 = 1;
         s.p09 = 1;
+        s.pChairWake.store(1);
+        if (chair != CHAIR_INVALID) future::NoteConsumerHit();
+    };
+    if (!s.inflight.load()) {
         if (chair != CHAIR_INVALID)
             (void)future::TryResumeChair(chair, expectedGen);
+        markWake();
         return 0;
     }
 #ifdef _WIN32
@@ -68,9 +73,7 @@ uint64_t AwaitChairIfLate(future::ChairId chair, uint32_t expectedGen) {
 #else
     const uint64_t ns = 0;
 #endif
-    s.p08 = 1;
-    s.p09 = 1;
-    s.pChairWake.store(1);
+    markWake();
     return ns;
 }
 

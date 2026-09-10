@@ -3,27 +3,28 @@
 # CRASH_RESIDUAL=0 BACKEND_CONNECTIVITY_RESIDUAL=0 OLLAMA_HEADLESS_REOPEN=0
 # OPEN_R01=GUI_POLICY_DEFAULT_DRIFT
 # OPEN_R02=LEGACY_11434_FALLBACK_SURFACE
-# OPEN_R03=MODEL_PROFILE_ADMISSION  (NEXT_GATE spend G3_IDE_MODEL_PROFILE_ADMISSION_001)
+# OPEN_R03=MODEL_PROFILE_ADMISSION  (CLOSED G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001)
 # OPEN_R04=HEADLESS_PRODUCT_TOOL_PARITY
 # RETEST_ONLY=model_not_loaded_503 (needs current-binary repro; not blocker without miss)
 # RETAIN_CLOSED=relative_path_residual
 # GENERATE_AV=CLOSED PORT_11435=CLOSED PRODUCT_COMPLETION=PARTIAL
+# agenticMode:false · ollamaDirectUrl :11435 · SCANPORTS_11434=0 (T13:50; do not reopen)
 # PROMOTE=0 TIP_CLIMB=HOLD — sealed receipts NOT reopened
 # Historical R01-R28 rows retained; OPEN_* above supersedes for triage.
 # Columns: ID | Area | Finding | Classification | Impact | Evidence | Recommended next
 
 ID	Area	Finding	Classification	Impact	Evidence path/symbol	Recommended next
 R01	/api/generate + oneshot	ProductDeep2Infer AV residual	CLOSED / GENERATE_AV	Sealed live repro+fix; DualStick DO_NOT_REOPEN	G3_IDE_GENERATE_AV_LIVE_REPRO_001; G3_IDE_GENERATE_AV_FIX_001; G3_IDE_RESIDUAL_R01_001/R01_AUTHORITY_UPDATE.txt	NONE — pre-fix oneshot EXIT=-1 = HISTORICAL_ONLY; R01_REOPEN=0
-R02	Native E2E prepare	Disk register sealed; USER OPEN_R03=MODEL_PROFILE_ADMISSION spends GGUF-meta admission + seed removal	SUPERSEDED->OPEN_R03	G3_NATIVE_MODEL_PROFILE_001 intact; admission gate = G3_IDE_MODEL_PROFILE_ADMISSION_001	G3_NATIVE_MODEL_PROFILE_001; CLASSIFICATION.txt	Spend OPEN_R03 only
+R02	Native E2E prepare	Disk register sealed; OPEN_R03 MODEL_METADATA admission (GGUF KV → profile; seed_compat retained for qwen/rawrxd-e2e)	CLOSED / OPEN_R03_CLOSED	G3_NATIVE_MODEL_PROFILE_001 + G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001	G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001	Next note: generate-without-model 503 (RETEST_ONLY)
 R03	GUI EngineAPI vs server	Thin adapters: policies/extensions/browse/explain/backends/use/metrics/complete HTTP!=404 sealed	CLOSED	Sealed PASS FAIL_COUNT_404=0; backends/use->setActiveBackend; ollama 422 LOCAL_ONLY	G3_IDE_RESIDUAL_R03_001/RECEIPT.txt	NONE — do not reopen
 R04	Headless file ops	HTTP aliases delete/rename/copy/move/mkdir/stat/search/list-directory -> ToolRoutes	CLOSED	Sealed PASS FAIL_COUNT_404=0 live FS ops + /api/tool	G3_IDE_RESIDUAL_R04_001/RECEIPT.txt	NONE — do not reopen
 R05	agenticMode default	product agenticMode:false HELD; GUI policy default drift	OPEN_R01=GUI_POLICY_DEFAULT_DRIFT	Held for after admission	gui standalone agenticMode:false	After OPEN_R03
 R06	11434 vs 11435	:11435 canonical CLOSED; leftover 11434 fallback surface	PORT_11435=CLOSED / OPEN_R02=LEGACY_11434_FALLBACK_SURFACE	Canonical port closed; OPEN_R02 later	gui State.backend; G3_R1_TEN_GGUF_MATRIX_001	After OPEN_R03
 R07	Relative tool paths	--dir product path green	RETAIN_CLOSED=relative_path_residual	Closed with --dir	G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001	Keep --dir
 R08	model_not_loaded ship	Link CLOSED; runtime 503 only if miss returns	RETEST_ONLY=model_not_loaded_503	Not blocker without current-binary repro	G3_LINK_SUBSTRATE_HANDOFF_001	Reprobe only on live miss
-R09	Headless vs LocalServer parity	Product-surface matrix sealed (SHARED_FULL/INTENTIONAL_THIN/GUI_LOCALSERVER_OWNED/HEADLESS_PRODUCT/PRODUCT_GAP); thin!=gap	CLOSED	G3_IDE_RESIDUAL_R09_001 PASS; remaining PRODUCT_GAP = R13 agents hollow + R11 native	G3_IDE_RESIDUAL_R09_001/{MATRIX,PARITY_MATRIX,RECEIPT}.txt	NEXT=R13_AGENTS_WIRE; do not copy GUI_LOCALSERVER_OWNED into Headless
+R09	Headless vs LocalServer parity	Seven-bucket matrix sealed (SHARED_AND_LIVE|HEADLESS_ONLY|LOCALSERVER_ONLY|INTENTIONALLY_THIN|ACTUAL_MISSING_PARITY|POLICY_HELD|OPS_ONLY); thin!=stub	CLOSED / CLASSIFIED	Feeds OPEN owners R11/R13/R25; R10 dropped CLOSED_BY_R03; R20 untouched	G3_IDE_RESIDUAL_R09_001/{PARITY_MATRIX,MATRIX,RECEIPT}.txt	NONE on R09 — next R13 wire-vs-hold or R11 native LocalServer
 R10	/api/backends/use mismatch	SUPERSEDED by residual-R03 adapters: use->setActiveBackend(LocalGGUF); Ollama 422 LOCAL_ONLY	CLOSED	Sealed FAIL_COUNT_404=0 on use->deep2 200	G3_IDE_RESIDUAL_R03_001; LocalServer ~L1200	NONE — do not reopen as STUBBED
-R11	Native prepare LocalServer	LocalServer+Headless both RAWR_HAS_NATIVE_E2E TryHandle /api/native/*	PARTIAL historically; product TryHandle present	prepare via native_e2e link	HeadlessIDE.cpp; Win32IDE_LocalServer.cpp TryHandle	Keep linked; OPEN_R03 covers admission
+R11	Native prepare LocalServer	Headless+LocalServer TryHandle; live prepare TinyLlama HTTP 200	CLOSED	GET /api/native/routes 200; POST prepare 200 profile_source=model_metadata; missing model 400 (not 404); LocalServer.cpp TryHandle ~L976	G3_IDE_RESIDUAL_R11_001/RECEIPT.txt	NONE — next R13 agents wire-vs-hold
 R12	LSP / debugger bridges	Headless Server profile thinner; full debug is LocalServer/GUI-mode	HELD_BY_POLICY / PARTIAL	Intentional server-profile hold	HeadlessIDE.cpp initLSPClient skip	Keep hold
 R13	Agent history/replay headless	Headless /api/agents* empty vs LocalServer history/replay	PARTIAL	Replay/history hollow on headless	HeadlessIDE::routeStatusRequest agents	OPEN_R04 scope later
 R14	Persistence / session	FULLFIX members; GUI<->headless replay E2E not re-proven this audit	UNOBSERVED	May work; not live-witnessed here	G3_IDE_BACKEND_FULLFIX_001	Optional smoke
@@ -38,20 +39,14 @@ R22	Hotpatch / experimental flags	require RAWRXD_ENABLE_*	HELD_BY_POLICY	Experim
 R23	/ask /v1/chat/completions presence	Both servers route to generation	CLOSED	Live re-smoke PASS TinyLlama	G3_R1_TEN_GGUF_MATRIX_001/WITNESS_R23_ASK_V1.txt	NONE
 R24	Model load/unload	10-model lifecycle sealed	CLOSED	PASS_COUNT=10/10; multi-family ProductOpen separate	G3_IDE_R24_10MODEL_LIFECYCLE_001	NONE; PROMOTE=0
 R25	Router defaults	LOCAL_ONLY blocks Ollama	PARTIAL_NOT_IN_T13:50_OPEN	LocalGGUF only	HeadlessIDE initLLMRouter	Do not carry forward unless table reintroduces; Keep LOCAL_ONLY
-R26	FutureConsumer chair+gen	Product decode SealDecode live TinyLlama HOST_DECODE	CLOSED	P01_PRODUCT_OPEN=1 P12_PRODUCT_DECODE=1 FC_BIND_OK=1 PREFETCH_CPU_OK=1 GENERATED_TOKENS=8 PRODUCT_PASS=1; P11=0 CONSUMER_HITS=0; PASS_150=0 PROMOTE=0	G3_IDE_RESIDUAL_R26_001/RECEIPT.txt	NONE — burn-order R26 done; next R11/R09 or OPEN_R03
+R26	FutureConsumer product decode	Chair+gen wake + ProductRun SealDecode stream	CLOSED / PRODUCT_DECODE_STREAM_PASS	2026-09-10 Headless oneshot TinyLlama HOST_DECODE: PRODUCT_DECODE_PASS=1 P_CHAIR_WAKE=1 P_SCAN_FAIL_CLOSED=1 P01=1 P12=1 PREFETCH_HITS=441 CONSUMER_HITS=441 GENERATED_TOKENS=8 ACCESS_VIOLATION=0 (supersedes prior CONSUMER_HITS=0 observational seal)	G3_IDE_RESIDUAL_R26_001/RECEIPT.txt; oneshot.err.txt	NONE — next R13 (R09/R11 already CLOSED); PROMOTE=0 TIP_CLIMB=HOLD DUALSTICK_REOPEN=0
 R27	K3-C public loop	Live ProductRuntime bind	LIVE_E2E_PASS	TOKEN_SURVIVED=1; stub drop non-authority	G3_K3C_E2E_REAL_001	PROMOTE=0
 R28	KN_O3KKEN TOKEN<->K3-C NODEP	Witness sealed; APPLY_HOST_DECODE held	WITNESS_SEALED / APPLY_HELD	APPLY=0	RAWRXD_K3C_TOKEN_KN_O3KKEN_NODEP_001	Hold apply
 
 # --- Governing OPEN (USER reclass) ---
-# OPEN_R01 GUI_POLICY_DEFAULT_DRIFT
-# OPEN_R02 LEGACY_11434_FALLBACK_SURFACE
-# OPEN_R03 MODEL_PROFILE_ADMISSION (spending)
-# OPEN_R04 HEADLESS_PRODUCT_TOOL_PARITY
-# --- CLOSED left untouched ---
-# G3_STREAMER_AGENTIC_IDE_PARITY_001
-# G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
-# HEADLESS_/api/tool_UNSTUB
-# DUALSTICK_ARMSPEED / TIP_CLIMB
-# G3_MOTD_PER_TURN_ENFORCEMENT_001
-# G3_NATIVE_MODEL_PROFILE_001 (disk register; OPEN_R03 meta admission is NEXT_GATE)
+# OPEN_R03 MODEL_PROFILE_ADMISSION = CLOSED (G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001)
+# NEXT_NOTE (not started): generate-without-model HTTP 503 (RETEST_ONLY)
+# OPEN_R01/R02 GUI/11434 = HELD — do not reopen sealed agenticMode:false / :11435 product path
+# OPEN_R04 HEADLESS_PRODUCT_TOOL_PARITY (later)
+# G3_NATIVE_MODEL_PROFILE_001 (disk register) + MODEL_METADATA admission CLOSED
 # GENERATE_AV seals (do not reopen)
