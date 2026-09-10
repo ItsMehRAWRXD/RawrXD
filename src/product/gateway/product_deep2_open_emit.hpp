@@ -37,6 +37,8 @@ inline void EmitOpenFacts(const ProductOpenFacts& f, const char* path,
          (f.lmhead_present || f.output_present))
             ? 1
             : 0;
+    /* HEADLESS_READY = ProductOpen only. Final promote gate is the tetrad;
+     * PROMOTE stays 0 until live generate probe. MULTI_FAMILY ≠ this seal. */
     std::fprintf(stderr,
                  "PRODUCT_OPEN_INIT_ENTER=%d\n"
                  "PRODUCT_OPEN_INIT_EXIT=%d\n"
@@ -51,15 +53,22 @@ inline void EmitOpenFacts(const ProductOpenFacts& f, const char* path,
                  "PRODUCT_OPEN_OUTPUT_PRESENT=%d\n"
                  "PRODUCT_OPEN_CRITICAL_TENSORS=%s\n"
                  "PRODUCT_OPEN_PASS=%d\n"
+                 "SESSION_ENTER_PASS=%d\n"
                  "HEADLESS_READY=%d\n"
+                 "HEADLESS_READY_SCOPE=PRODUCT_OPEN_ONLY\n"
                  "PRODUCT_OPEN_LAA_FACT=%d NOTE=LAA_NOT_OPEN_GATE\n"
+                 "PROMOTE=0\n"
+                 "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                 "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
+                 "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n"
+                 "NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY\n"
                  "R25_PRODUCTOPEN path=%s verdict=%s "
                  "PRODUCT_OPEN_SESSION=%s\n",
                  f.init_enter, f.init_exit, f.session_enter, f.session_exit,
                  f.pe64, f.pe_laa, f.va_gt_2gb, f.tensor_count, f.embed_present,
                  f.lmhead_present, f.output_present, crit ? "PASS" : "FAIL",
-                 f.product_open_pass, f.product_open_pass, f.pe_laa,
-                 path ? path : "", verdict ? verdict : "FAIL",
+                 f.product_open_pass, f.session_enter, f.product_open_pass,
+                 f.pe_laa, path ? path : "", verdict ? verdict : "FAIL",
                  f.product_open_pass ? "PASS" : "FAIL");
     std::fflush(stderr);
 }

@@ -65,7 +65,7 @@ inline void Emit(const EmitArgs& a) noexcept {
                 "DECODE_TPS_REAL=%.3f\nNOTE=TPS_DISPLAY_ONLY\n"
                 "FUNCTIONAL_PASS=%d\nPRODUCT_PASS=%d\nPROMOTE=0\n"
                 "RAWRXD_PRODUCT_E2E_001=%s\n"
-                "GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
                 "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
                 "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n"
                 "NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY\n",

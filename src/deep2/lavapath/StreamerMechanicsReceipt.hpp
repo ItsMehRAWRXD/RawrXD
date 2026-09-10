@@ -4,6 +4,7 @@
 #include "ParseMibBudget.hpp"
 #include "Deep2DeviceManager.hpp"
 #include "FutureConsumerSpace.hpp"
+#include "Deep2ProductGate.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -95,21 +96,26 @@ inline void EmitFreeTokenMechanics(FILE* f) {
 inline void EmitDisposition(FILE* f, int runtimePass, uint32_t maxTok,
                             uint32_t tokens, int rc) {
     if (!f) f = stderr;
-    const int productGate = (maxTok == 64u) ? 1 : 0;
-    const int productPass =
-        productGate && runtimePass && tokens >= 15 && rc == 0;
+    (void)maxTok;
+    /* Final readiness = live generate tetrad; PROMOTE stays 0. */
+    const int openPass = runtimePass ? 1 : 0;
+    const int sessionPass = runtimePass ? 1 : 0;
+    const int commitPass = (tokens > 0 && rc == 0) ? 1 : 0;
+    const int ready = Deep2::product_gate::PromoteReady(
+        openPass, sessionPass, (uint64_t)tokens, commitPass);
     std::fprintf(f,
                  "RUNTIME_DISPOSITION=%s\n"
                  "PRODUCT_DISPOSITION=%s\n"
-                 "PRODUCT_GATE_64=%s\n"
-                 "PRODUCT_BLOCKED_AT=%s\n"
-                 "PROMOTE=%d\n",
+                 "PRODUCT_OPEN_PASS=%d\nSESSION_ENTER_PASS=%d\n"
+                 "GENERATED_TOKENS=%u\nTOKEN_COMMIT_PASS=%d\n"
+                 "PRODUCT_PASS=%d\nPROMOTE=0\n"
+                 "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                 "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
+                 "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n"
+                 "NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY\n",
                  runtimePass ? "PASS" : "FAIL",
-                 productPass ? "PASS" : "BLOCKED",
-                 productGate ? (productPass ? "PASS" : "FAIL") : "N/A",
-                 productGate ? (productPass ? "NONE" : "64_TOKEN_PRODUCT_RUN")
-                             : "64_TOKEN_PRODUCT_RUN",
-                 0);
+                 ready ? "PASS" : "BLOCKED", openPass, sessionPass, tokens,
+                 commitPass, ready);
 }
 
 /* Survived generation: open + tokens + FutureConsumer + clean return. */

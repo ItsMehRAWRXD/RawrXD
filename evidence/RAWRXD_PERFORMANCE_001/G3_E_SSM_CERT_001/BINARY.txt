@@ -1,0 +1,6 @@
+EXE=g:\~dev\rawrxd\build-fd\bin\rawr.exe
+EXE_SHA256=e7ecb15fe99e1cfab1f9489dd699ba2551d21da498728ebf357dcf672eaa62bc
+EXE_MTIME=2026-09-10T07:43:25.6607818-04:00
+EXE_BYTES=6484992
+MODEL=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+MODEL_BYTES=4233677952

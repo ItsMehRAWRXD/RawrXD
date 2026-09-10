@@ -1,0 +1,7 @@
+EXE=g:\~dev\rawrxd\build-fd\bin\rawr.exe
+EXE_SHA256=494c5722afa2ee6008f0b34b939e33087b5ea9cc90d1fb0174919840f530efaa
+EXE_MTIME=2026-09-10T07:48:14.9527251-04:00
+EXE_BYTES=6484992
+MODEL=G:\~dev\rawrxd\_r1_iso\07_codestral\Codestral-22B-v0.1-Q4_K_M.gguf
+MODEL_BYTES=12660383840
+IMPL=TokenizerTemplateEog_Seal.hpp RAW_PROMPT_ALLOWED on absent chat_template

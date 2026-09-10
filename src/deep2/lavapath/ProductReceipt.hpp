@@ -1,6 +1,6 @@
 #pragma once
 /* Canonical PRODUCT_RUN receipt — one for all adapters. ≤99 lines.
-   PRODUCT_PASS/READY tetrad; PROMOTE=0 until live generate probe;
+   PRODUCT_PASS = PromoteReady tetrad; PROMOTE=0 until climb law opens;
    MULTI_FAMILY = next independent gate (≠ TinyLlama R25 ProductOpen). */
 #include "Deep2ProductGate.hpp"
 #include <cstdint>
@@ -32,6 +32,10 @@ struct Result {
 
 inline void EmitReceipt(FILE* f, const Result& r) noexcept {
     if (!f) f = stderr;
+    const int commit =
+        (r.generatedTokens > 0 && r.streamFinished) ? 1 : 0;
+    const int ready = Deep2::product_gate::PromoteReady(
+        r.modelOpen, r.streamEnter, (uint64_t)r.generatedTokens, commit);
     std::fprintf(f, "PRODUCT_RUN\n");
     std::fprintf(f, "MODEL_RESOLVED=%d\nMODEL_OPEN=%d\n",
                  r.modelResolved, r.modelOpen);
@@ -45,13 +49,12 @@ inline void EmitReceipt(FILE* f, const Result& r) noexcept {
                  r.streamFinished, r.exitReason);
     std::fprintf(f, "PRODUCT_OPEN_PASS=%d\nSESSION_ENTER_PASS=%d\n"
                     "TOKEN_COMMIT_PASS=%d\nPRODUCT_PASS=%d\nPROMOTE=0\n"
-                    "GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                    "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
                     "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
-                    "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n",
-                 r.modelOpen, r.streamEnter,
-                 (r.generatedTokens > 0 && r.streamFinished) ? 1 : 0,
-                 r.productPass);
-    if (!r.productPass)
+                    "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n"
+                    "NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY\n",
+                 r.modelOpen, r.streamEnter, commit, ready);
+    if (!ready)
         std::fprintf(f, "FAILED_STAGE=%s\nFAILED_OWNER=%s\n",
                      r.failedStage, r.failedOwner);
     if (!r.modelPath.empty())

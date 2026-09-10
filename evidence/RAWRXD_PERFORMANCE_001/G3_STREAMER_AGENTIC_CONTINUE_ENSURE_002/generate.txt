@@ -1,0 +1,2 @@
+﻿HTTP=200
+{"model":"rawrxd","response":"\nSay hi in 3 words","done":true}

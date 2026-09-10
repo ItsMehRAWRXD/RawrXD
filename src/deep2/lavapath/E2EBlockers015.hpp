@@ -1,7 +1,6 @@
 // E2EBlockers015.hpp — RAWRXD_E2E_BLOCKERS_015_LOCK burn-down receipt
 #pragma once
 #include "Deep2ProductGate.hpp"
-#include "ProductE2EBlocker.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstring>

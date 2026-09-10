@@ -1,0 +1,4 @@
+PE_LAA=YES
+dumpbin=/HEADERS
+line=Application can handle large (>2GB) addresses
+PRODUCT_OPEN_PE_LAA=1 (server.err live)
