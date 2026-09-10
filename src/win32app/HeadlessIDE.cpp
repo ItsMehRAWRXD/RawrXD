@@ -11,7 +11,9 @@
 // ============================================================================
 
 #include "HeadlessIDE.h"
+#include "HeadlessAgentsJson.hpp"
 #include "IOutputSink.h"
+#include <nlohmann/json.hpp>
 #include "../agentic_engine.h"
 #include "../../include/chain_of_thought_engine.h"
 #include "HeadlessIDE_ProductLocalOnly.hpp"
@@ -1451,6 +1453,7 @@ HeadlessResult HeadlessIDE::initAgentHistory() {
     }
     m_agentHistoryInitialized = true;
     m_agentEventCount = 0;
+    recordSimpleEvent("session_boot");
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::steady_clock::now() - startTime).count();
     std::string msg = "Agent history initialized (headless) [" + std::to_string(elapsed) + "us]";
@@ -2272,18 +2275,113 @@ std::string HeadlessIDE::getFailureIntelligenceStatsString() const {
 // Agent History (Phase 6B)
 // ============================================================================
 std::string HeadlessIDE::getAgentHistoryStats() const {
+    const auto& st = [&]() {
+        std::lock_guard<std::mutex> lk(const_cast<HeadlessAgents::Ring&>(m_agentsRing).mu);
+        return m_agentsRing.stats;
+    }();
     std::ostringstream oss;
-    oss << "Agent history: " << (m_agentHistoryInitialized ? "Active" : "Inactive") << " (headless)\n";
+    oss << "Agent history: ring Active (headless)\n";
     oss << "Session: " << m_sessionId << "\n";
-    oss << "Events: " << m_agentEventCount;
+    oss << "Events: " << st.totalEvents;
     return oss.str();
 }
 
 void HeadlessIDE::recordSimpleEvent(const std::string& description) {
-    /* NO-OP: AgentHistoryRecorder + ReplayJournal AVs under headless oneshot
-     * (dbgcore 0xC0000005) on the generate path. Count only. */
-    m_agentEventCount++;
-    (void)description;
+    /* R13: memory ring only — AgentHistoryRecorder/ReplayJournal AVs on oneshot. */
+    auto now = std::chrono::system_clock::now();
+    uint64_t ts = (uint64_t)std::chrono::duration_cast<std::chrono::milliseconds>(
+                      now.time_since_epoch())
+                      .count();
+    m_agentsRing.push(0, m_sessionId, "headless", "", description, "", 0, true, ts);
+    {
+        std::lock_guard<std::mutex> lk(m_agentsRing.mu);
+        m_agentEventCount = m_agentsRing.stats.totalEvents;
+    }
+    m_agentHistoryInitialized = true;
+}
+
+std::string HeadlessIDE::buildAgentsHistoryJson(const std::string& path) const {
+    std::string agentId, eventType, sessionId;
+    int limit = 200;
+    auto qPos = path.find('?');
+    if (qPos != std::string::npos) {
+        std::istringstream qs(path.substr(qPos + 1));
+        std::string param;
+        while (std::getline(qs, param, '&')) {
+            auto eq = param.find('=');
+            if (eq == std::string::npos) continue;
+            auto key = param.substr(0, eq);
+            auto val = param.substr(eq + 1);
+            if (key == "agent_id") agentId = val;
+            else if (key == "event_type") eventType = val;
+            else if (key == "session_id") sessionId = val;
+            else if (key == "limit") {
+                try { limit = std::stoi(val); } catch (...) {}
+                if (limit < 0) limit = 200;
+                if (limit > 10000) limit = 10000;
+            }
+        }
+    }
+    return HeadlessAgents::buildHistoryJson(
+        m_agentsRing, m_sessionId, agentId, eventType, sessionId, limit,
+        [](const std::string& s) { return jsonEscape(s); });
+}
+
+std::string HeadlessIDE::buildAgentsStatusJson() const {
+    return HeadlessAgents::buildStatusJson(
+        m_agentsRing, m_failureDetections, m_failureRetries,
+        [](const std::string& s) { return jsonEscape(s); });
+}
+
+void HeadlessIDE::handleAgentsReplay(const HostedHttpRequest& request,
+                                     HostedHttpResponse& response) {
+    std::string agentId;
+    bool dryRun = true;
+    try {
+        auto j = nlohmann::json::parse(request.body.empty() ? "{}" : request.body);
+        agentId = j.value("agent_id", "");
+        dryRun = j.value("dry_run", true);
+    } catch (...) {
+        response.status = 400;
+        response.body = "{\"error\":\"invalid_json\"}";
+        return;
+    }
+    if (agentId.empty()) {
+        response.status = 400;
+        response.body = "{\"error\":\"agent_id is required\"}";
+        return;
+    }
+    std::vector<HeadlessAgents::Evt> matched;
+    {
+        std::lock_guard<std::mutex> lk(m_agentsRing.mu);
+        size_t start = (m_agentsRing.head + HeadlessAgents::kCap - m_agentsRing.count) %
+                       HeadlessAgents::kCap;
+        for (size_t i = 0; i < m_agentsRing.count; ++i) {
+            const auto& e = m_agentsRing.buf[(start + i) % HeadlessAgents::kCap];
+            if (agentId == e.agentId || agentId == e.parentId) matched.push_back(e);
+        }
+    }
+    if (matched.empty()) {
+        response.status = 404;
+        response.body =
+            "{\"success\":false,\"result\":\"No events found for agent: " +
+            jsonEscape(agentId) + "\",\"events_replayed\":0,\"duration_ms\":0}";
+        return;
+    }
+    std::ostringstream result;
+    result << "Replay of agent " << agentId << ":\\n";
+    int step = 0;
+    for (const auto& e : matched) {
+        ++step;
+        result << "  Step " << step << ": " << HeadlessAgents::typeName(e.typeCode);
+        if (e.prompt[0]) result << " — " << std::string(e.prompt).substr(0, 80);
+        result << (e.success ? " [OK]" : " [FAIL]") << "\\n";
+    }
+    (void)dryRun;
+    response.body =
+        "{\"success\":true,\"result\":\"" + jsonEscape(result.str()) +
+        "\",\"events_replayed\":" + std::to_string(matched.size()) +
+        ",\"duration_ms\":0,\"dry_run\":" + (dryRun ? "true" : "false") + "}";
 }
 
 // ============================================================================
@@ -3107,10 +3205,10 @@ bool HeadlessIDE::routeStatusRequest(const HostedHttpRequest& request,
         response.body = "{\"status\":\"" + jsonEscape(getLSPStatusString()) + "\"}";
     } else if (path == "/api/hybrid/status") {
         response.body = "{\"status\":\"" + jsonEscape(getHybridBridgeStatusString()) + "\"}";
-    } else if (path == "/api/agent/history" || path == "/api/agents/history" ||
-               path == "/api/agents/status" || path == "/api/agents") {
-        response.body = "{\"status\":\"ok\",\"agents\":[],\"stats\":\"" +
-            jsonEscape(getAgentHistoryStats()) + "\"}";
+    } else if (path == "/api/agent/history" || path == "/api/agents/history") {
+        response.body = buildAgentsHistoryJson(path);
+    } else if (path == "/api/agents/status" || path == "/api/agents") {
+        response.body = buildAgentsStatusJson();
     } else if (path == "/api/failure/stats" || path == "/api/failures") {
         response.body = "{\"failures\":[],\"stats\":\"" +
             jsonEscape(getFailureDetectorStats()) + "\"}";
@@ -3276,6 +3374,8 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
         return;
     } else if (path == "/api/github/webhook" && request.method == "POST") {
         routeGitHubWebhook(request, response);
+    } else if (path == "/api/agents/replay" && request.method == "POST") {
+        handleAgentsReplay(request, response);
     } else if (path.find("/api/tool") == 0 || path.find("/run-tool") == 0 ||
                path.find("/api/file") == 0 || path.find("/api/command") == 0 ||
                path == "/api/read-file" || path == "/api/write-file" ||

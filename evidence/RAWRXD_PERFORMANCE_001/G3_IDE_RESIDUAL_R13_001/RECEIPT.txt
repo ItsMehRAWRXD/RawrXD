@@ -1,0 +1,34 @@
+GATE=G3_IDE_RESIDUAL_R13_001
+ASOF=2026-09-10T10:05-04:00
+KIND=LIVE_HEADLESS_AGENTS_WIRE
+PARENT=G3_IDE_RESIDUAL_R09_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPEN=0
+LOCKED_CLOSED=R01-R06,R10
+R13=CLOSED
+VERDICT=PASS
+
+WIRE_SPEC=WIRE_SPEC.txt
+IMPL=
+  src/win32app/HeadlessAgentsRing.hpp
+  src/win32app/HeadlessAgentsJson.hpp
+  HeadlessIDE.{h,cpp} history/status/replay handlers
+  HeadlessIDE_ToolRoutes.cpp tool: recordSimpleEvent
+
+LIVE=
+  EXE_SHA16=F465B1C17CAB2775
+  PORT=11489
+  GET /api/agents/status=200 agents{} object (not hollow [])
+  GET /api/agents/history=200 events non-empty (session_boot + tools)
+  POST /api/agents/replay agent_id=headless dry_run=200 events_replayed>=1
+  POST /api/agents/replay missing agent_id=400
+  POST /api/agents/replay unknown=404
+  ARTIFACTS=SMOKE.txt SMOKE2.txt
+
+CONSTRAINTS=
+  REPLAY_JOURNAL=0 AgentHistoryRecorder not on record path
+  GUI_LOCALSERVER_OWNED panels not copied
+  LOCAL_ONLY preserved
+
+NEXT=R14_REPLAY_E2E_UNOBSERVED optional; or R11 native LocalServer

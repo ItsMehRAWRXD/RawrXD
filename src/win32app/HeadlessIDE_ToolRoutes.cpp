@@ -494,6 +494,7 @@ void HeadlessIDE::routeToolAndFileRequest(const HostedHttpRequest& request,
         response.body = out.empty() ? "{\"error\":\"tool_failed\"}" : out;
         return;
     }
+    recordSimpleEvent(std::string("tool:") + tool);
     response.status = 200;
     response.body = out;
 }

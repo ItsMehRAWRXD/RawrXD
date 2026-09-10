@@ -1,0 +1,65 @@
+GATE=G3_IDE_RESIDUAL_R13_001
+ASOF=2026-09-10T10:03-04:00
+KIND=R13_AGENTS_WIRE_SIGNATURES
+PARENT=G3_IDE_RESIDUAL_R09_001 MATRIX PRODUCT_GAP
+PROMOTE=0 TIP_CLIMB=HOLD
+LOCKED_CLOSED=R01-R06,R10
+EXCLUDE=GUI_LOCALSERVER_OWNED panels (LSP/debug/swarm/cot/...)
+
+## HTTP wire signatures (Headless product surface)
+GET  /api/agents
+GET  /api/agents/status
+GET  /api/agents/history?agent_id=&event_type=&session_id=&limit=
+GET  /api/agent/history                    # alias -> history
+POST /api/agents/replay
+     Content-Type: application/json
+     Body: {"agent_id":"<id>","dry_run":true}
+
+## Response shapes (LocalServer-compatible subset)
+HISTORY_200=
+  {"events":[{id,eventType,sessionId,timestampMs,durationMs,agentId,parentId,
+              description,input,output,metadata,success,errorMessage}],
+   "stats":{totalEvents,sessionId,successCount,failCount,eventTypes:{...}}}
+STATUS_200=
+  {"agents":{active,completed,failed,subagents},
+   "failures":{total,totalRequests,totalRetries,successAfterRetry,
+               retriesDeclined,byType:{},retrySuccessRate},
+   "intelligence":{}}
+  NOTE=Headless failures/intelligence may be zeroed if detector not live;
+       agents counters MUST reflect ring stats (not hollow agents:[]).
+REPLAY_200=
+  {"success":true,"result":"<text>","events_replayed":N,"duration_ms":Ms,"dry_run":bool}
+REPLAY_400= {"error":"agent_id is required"}
+REPLAY_404= {"success":false,"result":"No events found...","events_replayed":0}
+
+## Agent state layout (Headless ring — NO ReplayJournal / NO AgentHistoryRecorder)
+SESSION_ID= m_sessionId ("headless-<epochMs>")
+RING_CAP=256
+RING_ELEM=HeadlessAgentEvt {
+  u8   typeCode;           // maps to eventType string
+  u64  timestampMs;
+  char sessionId[48];
+  char agentId[48];
+  char parentId[48];
+  char prompt[512];
+  char result[512];
+  i32  durationMs;
+  u8   success;
+}
+STATS= totalEvents,agentStarted,agentCompleted,agentFailed,
+       subAgentSpawned,chainSteps,toolInvocations,failuresDetected
+MUTEX= std::mutex around ring+stats
+WRITE_PATH= recordSimpleEvent / recordAgentEvent -> push ring
+READ_PATH= HTTP handlers copy under lock then filter
+
+## Buffer parameters
+RING_CAP=256 PROMPT_MAX=512 RESULT_MAX=512 ID_MAX=48
+HISTORY_LIMIT_DEFAULT=200 HISTORY_LIMIT_MAX=10000
+REPLAY_DEFAULT_DRY_RUN=1 PERSIST_JSONL=0 REPLAY_JOURNAL=0
+
+## Pass if
+  GET history returns events[] from ring
+  GET status/agents reflects stats (not hard-coded agents:[])
+  POST replay dry_run returns 200/404 with events_replayed
+  No AgentHistoryRecorder/ReplayJournal on generate/record path
+  LOCAL_ONLY preserved; DualStick closed; PROMOTE=0

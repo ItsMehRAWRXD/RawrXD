@@ -26,6 +26,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
+#include "HeadlessAgentsRing.hpp"
 
 #ifdef ERROR
 #undef ERROR
@@ -240,9 +241,13 @@ public:
     std::string getFailureDetectorStats() const;
     std::string getFailureIntelligenceStatsString() const;
 
-    // ---- Agent History (Phase 6B) ----
+    // ---- Agent History (Phase 6B / R13 ring) ----
     std::string getAgentHistoryStats() const;
     void recordSimpleEvent(const std::string& description);
+    std::string buildAgentsHistoryJson(const std::string& path) const;
+    std::string buildAgentsStatusJson() const;
+    void handleAgentsReplay(const HostedHttpRequest& request,
+                            HostedHttpResponse& response);
 
     // ---- ASM Semantic (Phase 9A) ----
     void parseAsmFile(const std::string& filePath);
@@ -434,6 +439,7 @@ private:
     // Real subsystem instances (owned by HeadlessIDE)
     std::unique_ptr<MultiResponseEngine> m_multiResponse;
     std::unique_ptr<AgentHistoryRecorder, AgentHistoryDeleter> m_historyRecorder;
+    HeadlessAgents::Ring m_agentsRing; /* R13 AV-safe; no ReplayJournal */
 
     // Agentic stack. Native subagent_core is linked by the headless target.
     std::unique_ptr<AgenticEngine>     m_agenticEngine;
