@@ -1,6 +1,7 @@
 #pragma once
 /* OpenSession + SEH — ≤99-line block companion to product_deep2_infer_internal. */
 #include "product_deep2_open_gate.hpp"
+#include "product_deep2_open_emit.hpp"
 #include "../../deep2/lavapath/ProductStreamerPrep.hpp"
 #include <cctype>
 #include <cstdio>

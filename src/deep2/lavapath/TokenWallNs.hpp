@@ -43,7 +43,7 @@ inline void EmitCommitted(FILE* f, uint32_t tokenId, uint32_t decodeStep,
             "TOKEN_WALL_MS=%.6f INSTANT_TPS=%.3f BUDGET_NS=%llu MARGIN_NS=%lld "
             "TARGET_NS=%llu OVER_TARGET_NS=%lld "
             "SECONDS_PER_TOKEN=%.9f TPS=%.6f PASS_150=%d "
-            "GATE=LIVE_WORKING_SET+FUTURE_CONSUMER_READY+TOKEN_WALL\n",
+            "NOTE=TOKEN_WALL_TELEMETRY_NOT_PROMOTE_GATE\n",
             tokenId, decodeStep, steady ? 1u : 0u,
             static_cast<unsigned long long>(tokenWallNs),
             tokenWallNs / 1e6, tps,

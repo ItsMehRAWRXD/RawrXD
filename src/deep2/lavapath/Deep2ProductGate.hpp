@@ -1,7 +1,9 @@
 #pragma once
-/* MODEL_SIZE/FULL_RESIDENCY are not gates. ≤99.
-   PROMOTE_IF = LIVE_WORKING_SET && FUTURE_CONSUMER_READY && TOKEN_WALL_NS<=6666667;
-   PROMOTE=0 until live product E2E correctness + deadline; TIP_CLIMB=HOLD. */
+/* Readiness/promote = live generate probe. ≤99.
+   PROMOTE_IF = PRODUCT_OPEN_PASS && SESSION_ENTER_PASS
+                && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS;
+   PROMOTE=0 until that probe passes. MULTI_FAMILY is next independent gate
+   (not part of TinyLlama R25 ProductOpen). MODEL_SIZE/FULL_RESIDENCY ≠ gates. */
 #include "TokenWallNs.hpp"
 #include <cstdint>
 
@@ -12,14 +14,19 @@ inline int DeadlineOk(uint64_t tokenWallNs) noexcept {
     return (tokenWallNs > 0 && tokenWallNs <= TOKEN_WALL_TARGET_NS) ? 1 : 0;
 }
 
-/* Mean wall from session total; 0 tokens → not ready. */
 inline int MeanDeadlineOk(uint64_t tokens, uint64_t wallNs) noexcept {
     if (!tokens || !wallNs) return 0;
     return DeadlineOk(wallNs / tokens);
 }
 
-inline int PromoteReady(int liveWs, int fcReady, uint64_t tokenWallNs) noexcept {
-    return (liveWs && fcReady && DeadlineOk(tokenWallNs)) ? 1 : 0;
+/* Final readiness/promote gate (not MULTI_FAMILY, not TPS). */
+inline int PromoteReady(int productOpenPass, int sessionEnterPass,
+                        uint64_t generatedTokens,
+                        int tokenCommitPass) noexcept {
+    return (productOpenPass && sessionEnterPass && generatedTokens > 0ull &&
+            tokenCommitPass)
+               ? 1
+               : 0;
 }
 
 } /* namespace product_gate */

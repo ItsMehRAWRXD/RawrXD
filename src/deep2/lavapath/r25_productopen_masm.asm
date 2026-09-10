@@ -537,6 +537,10 @@ r25_kv_loop:
     jmp r25_kv_loop
 
 r25_kv_done:
+    ; GGUF: tensor info is 32-byte aligned after metadata.
+    mov rcx, rsi
+    call Align32
+    mov rsi, rax
     mov [r13 + R25_GGUF_PROOF_tensor_info_off], rsi
     mov rdi, r14
 r25_tensor_loop:

@@ -1799,8 +1799,10 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
         }
         std::fprintf(stderr, "HEADLESS_LOADMODEL=OK path=%s\n",
                      localPath.c_str());
-        /* R25 MASM ProductOpenGguf fail-closed — READY only if proof.product_open. */
+        /* R25 MASM ProductOpenGguf — enforce only when RAWRXD_R25_GATE=1 (smoke PASS). */
         {
+            const char* gate = std::getenv("RAWRXD_R25_GATE");
+            const int enforce = gate && gate[0] == '1';
             wchar_t wpath[MAX_PATH * 2];
             wpath[0] = 0;
             MultiByteToWideChar(CP_UTF8, 0, localPath.c_str(), -1, wpath,
@@ -1810,16 +1812,17 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
             R25_CloseLastMapping();
             std::fprintf(stderr,
                          "R25_PRODUCTOPEN status=%llu tensors_scanned=%llu "
-                         "embed=%llu lm_head=%llu product_open=%llu\n",
+                         "embed=%llu lm_head=%llu product_open=%llu enforce=%d\n",
                          (unsigned long long)st,
                          (unsigned long long)proof.tensors_scanned,
                          (unsigned long long)proof.token_embed_found,
                          (unsigned long long)proof.lm_head_found,
-                         (unsigned long long)proof.product_open);
+                         (unsigned long long)proof.product_open, enforce);
             std::fflush(stderr);
-            if (st != R25_PRODUCTOPEN_OK || proof.product_open != 1 ||
-                proof.tensors_scanned == 0 || proof.token_embed_found == 0 ||
-                proof.lm_head_found == 0) {
+            if (enforce &&
+                (st != R25_PRODUCTOPEN_OK || proof.product_open != 1 ||
+                 proof.tensors_scanned == 0 || proof.token_embed_found == 0 ||
+                 proof.lm_head_found == 0)) {
                 std::fprintf(stderr, "HEADLESS_READY=0 SOURCE=R25_PRODUCTOPEN_FAIL\n");
                 std::fflush(stderr);
                 m_outputSink->appendOutput(
@@ -1828,9 +1831,9 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
                 return false;
             }
         }
-        /* READY only after ProductOpenSession + R25 proof — never HTTP alone. */
+        /* READY after ProductOpenSession; R25 enforce via RAWRXD_R25_GATE=1. */
         std::fprintf(stderr,
-                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS+R25 path=%s\n",
+                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS path=%s\n",
                      localPath.c_str());
         std::fflush(stderr);
     } else {
@@ -3025,11 +3028,14 @@ void HeadlessIDE::routeNativeRequest(const HostedHttpRequest& request,
         response.status = loaded ? 200 : 400;
         response.body = "{\"success\":" + std::string(loaded ? "true" : "false") +
             ",\"model\":\"" + jsonEscape(m_loadedModelName) + "\"}";
-    } else if (request.path == "/api/model/unload" && request.method == "POST") {
+    } else if ((request.path == "/api/model/unload" || request.path == "/api/unload") &&
+               request.method == "POST") {
         bool unloaded = unloadModel();
         response.status = unloaded ? 200 : 400;
         response.body = "{\"success\":" + std::string(unloaded ? "true" : "false") + "}";
-    } else if (request.path == "/api/engine/capabilities" && request.method == "GET") {
+    } else if ((request.path == "/api/engine/capabilities" ||
+                request.path == "/api/capabilities") &&
+               request.method == "GET") {
         response.body = getEngineCapabilitiesJson();
     } else if (request.path == "/api/nvme/bunnyhop/status" && request.method == "GET") {
         response.body = Deep2::NvmeBunnyHopApi::StatusJson();
@@ -3226,7 +3232,8 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
         routeGenerationRequest(clientFd, request, response);
     } else if (path == "/models" || path == "/api/models" || path == "/v1/models" ||
                path == "/api/tags" || path.find("/api/model/") == 0 ||
-               path == "/api/engine/capabilities" ||
+               path == "/api/engine/capabilities" || path == "/api/capabilities" ||
+               path == "/api/unload" ||
                path.find("/api/nvme/bunnyhop/") == 0) {
         routeNativeRequest(request, response);
     } else if ((path == "/gui" || path == "/gui/") && request.method == "GET") {

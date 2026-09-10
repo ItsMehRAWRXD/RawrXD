@@ -1,46 +1,31 @@
 #pragma once
-/* Blocker emit for PRODUCT_E2E triad gate. ≤99. */
+/* Blocker emit for live-generate promote tetrad. ≤99. */
 #include <cstdint>
 #include <cstdio>
 
 namespace rawr::product {
 
-inline void EmitBlocker(int functional, int liveWs, int fc, int deadline,
-                        int modelAuth, int runtime, uint64_t tok,
-                        int complete) noexcept {
+inline void EmitBlocker(int openPass, int sessionEnter, uint64_t genTok,
+                        int commitPass) noexcept {
     const char* bat = "NONE";
     const char* bow = "NONE";
     const char* nxt = "NONE";
-    if (!functional) {
-        if (!modelAuth) {
-            bat = "MODEL_AUTHORITY";
-            bow = "Deep2Engine::loadModel";
-            nxt = "Load GGUF; re-enter generateStream";
-        } else if (!runtime || tok == 0) {
-            bat = "DECODE";
-            bow = "Deep2Engine::generateStream";
-            nxt = "Emit tokens before seal";
-        } else if (!complete) {
-            bat = "COMPLETION";
-            bow = "token_commit/stream_output";
-            nxt = "Commit tokens + stream text";
-        } else {
-            bat = "HOST_FALLBACK";
-            bow = "HOST_FORWARD|CPU_F32";
-            nxt = "HOST_FWD=0 CPU_F32=0";
-        }
-    } else if (!liveWs) {
-        bat = "LIVE_WORKING_SET";
-        bow = "product_open::AcquireWorkingSet";
-        nxt = "Bounded WS; OPEN≠FULL_RESIDENCY";
-    } else if (!fc) {
-        bat = "FUTURE_CONSUMER_READY";
-        bow = "HostFutureConsumerPrefetch";
-        nxt = "Kick Future1 before Current";
-    } else if (!deadline) {
-        bat = "TOKEN_WALL_NS";
-        bow = "tokenwall::EmitCommitted";
-        nxt = "TOKEN_WALL_NS<=6666667";
+    if (!openPass) {
+        bat = "PRODUCT_OPEN_PASS";
+        bow = "ProductOpenSession|OpenSession";
+        nxt = "Streamable OPEN; OPEN≠FULL_RESIDENCY";
+    } else if (!sessionEnter) {
+        bat = "SESSION_ENTER_PASS";
+        bow = "ProductRun|generateStream";
+        nxt = "Enter product decode session";
+    } else if (genTok == 0) {
+        bat = "GENERATED_TOKENS";
+        bow = "generateStream/token_emit";
+        nxt = "Emit GENERATED_TOKENS>0";
+    } else if (!commitPass) {
+        bat = "TOKEN_COMMIT_PASS";
+        bow = "token_commit/stream_output";
+        nxt = "Commit tokens + stream receipt";
     }
     std::printf("SPIN_CLOSE_BLOCKER=%s\nSPIN_CLOSE_BLOCKER_OWNER=%s\n", bat,
                 bow);

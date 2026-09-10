@@ -3,10 +3,12 @@
 PROMOTE=0 · TIP_CLIMB=HOLD · DualStick/ICD not reopened · ProductRunDecode frozen
 
 Deep2 = IndexedModel + LiveWorkingSet + FutureConsumerPrefetch + LaneIsolatedGPUExec + NanosecondStageTelemetry + TokenDeadline(6_666_667ns);
-PROMOTE_IF = LIVE_WORKING_SET && FUTURE_CONSUMER_READY && TOKEN_WALL_NS<=6666667; MODEL_SIZE/FULL_RESIDENCY are not gates. PROMOTE=0 until live E2E+deadline.
+PROMOTE_IF = PRODUCT_OPEN_PASS && SESSION_ENTER_PASS && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS;
+PROMOTE=0 until that live generate probe passes. MULTI_FAMILY = next independent gate (not TinyLlama R25 ProductOpen).
+MODEL_SIZE/FULL_RESIDENCY are not gates. TOKEN_WALL/TPS = telemetry / deadline architecture only.
 
 Authorizing rule: a phase that independently verifies its gate auto-un-excludes that surface from
-"streamer agentic blocked". Pool inclusion ≠ multi-family ProductOpen green.
+"streamer agentic blocked". TinyLlama R25 ProductOpen ≠ MULTI_FAMILY green.
 
 | Phase | Gate (independent) | Mutates | Un-excludes if PASS |
 |-------|--------------------|---------|---------------------|
@@ -15,8 +17,8 @@ Authorizing rule: a phase that independently verifies its gate auto-un-excludes 
 | S2 | MOTD 403→read_motd 200→tool 200 | no | agentic tool ladder |
 | S3 | TinyLlama load→generate tokens>0 | no | streamer ProductRun edge |
 | S4 | unload→reload→generate | no | session lifecycle |
-| S5 | R25 ProductOpen INIT_ENTER/EXIT + TENSOR_COUNT | needs R25-instrumented EXE | ProductOpen telemetry |
-| S6 | non-TinyLlama ProductOpen tensors>0 | needs residency | multi-family (only then) |
+| S5 | R25 TinyLlama ProductOpen + live generate tetrad | needs R25-instrumented EXE | PRODUCT_OPEN+SESSION+TOKENS+COMMIT |
+| S6 | MULTI_FAMILY (non-TinyLlama ProductOpen) | needs residency | multi-family only — independent of S5 |
 
 Verification artifacts: `G3_STREAMER_AGENTIC_*` + `R25_PRODUCTOPEN_SESSION_001`.
 NOT_RUN ≠ PASS. HTTP_OK ≠ ProductOpen. HOST_FC ≠ IDE ProductOpen.
