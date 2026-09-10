@@ -1,0 +1,17 @@
+GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
+KIND=FRESHNESS_REPROVE
+ASOF=2026-09-10T07:43:22-04:00
+EXE_SHA16=ABDEEC83618F539A PE_LAA=YES HOST_DECODE_ENV=1
+PORT=127.0.0.1:11435
+REPROVEN=capabilities(/api/engine/capabilities)+MOTD_tool_ladder(403→read_motd→200)+load(/api/model/load)+generate+unload
+RUNTIME_REACHED=1 TOKEN_SURVIVED=1 TOOL_MOTD_RUNTIME=1 PRODUCT_PASS=1
+GEN_SNIP={"response":"\nSure, here's a","done":true}
+agenticMode=false DUALSTICK_REOPENED=0 OLLAMA_CONTACT=0 PROMOTE=0 TIP_CLIMB=HOLD
+GAPS_CLOSED=harness_route_aliases; cleared competing r1cap_self on :11435
+NO_PRODUCT_CODE_CHANGE=1
+R1CAP_EXE_DIVERGED=A2063D06F55CEF8D (LAA=YES) — prove used sealed r1cap_run.exe ABDEEC
+SRC_AHEAD=HeadlessIDE.cpp,product_deep2_open_gate.hpp (mtime); not rebuilt this pass — sealed agentic path already green
+REMAINING_FIRST_OWNERS=B@ROPE_BASE E@SSM-CERT-001 J@TEMPLATE
+FICTION=none_new; prior misattributed freshness (wrong SHA while copy-locked) superseded
+HOST_DECODE_RUNTIME_SEEN=0 (env set; short server3 logs lacked string — not invented as log PASS)
+SEALED_BASELINE_UNTOUCHED=G3_STREAMER_AGENTIC_E2E_001

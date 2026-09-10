@@ -1,0 +1,2 @@
+{"model":"rawrxd","response":"\nSure, here are some examples","done":false}
+{"model":"rawrxd","response":"","done":true}

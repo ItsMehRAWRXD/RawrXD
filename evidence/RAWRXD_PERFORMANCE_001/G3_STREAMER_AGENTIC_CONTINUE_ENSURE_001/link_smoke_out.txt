@@ -1,0 +1,6 @@
+
+G:\~dev\rawrxd\build-fd>"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrXD-Win32IDE.rsp /out:"G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001\smoke_bin\RawrXD-Win32IDE_motdack.exe" /implib:"G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001\smoke_bin\RawrXD-Win32IDE_motdack.lib" /pdb:"G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001\smoke_bin\RawrXD-Win32IDE_motdack.pdb" /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LARGEADDRESSAWARE:NO /DEBUG:FULL /MANIFEST:NO /FORCE:MULTIPLE /STACK:4194304 
+Microsoft (R) Incremental Linker Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+LINK : fatal error LNK1104: cannot open file 'CMakeFiles\RawrXD-Win32IDE.rsp'
