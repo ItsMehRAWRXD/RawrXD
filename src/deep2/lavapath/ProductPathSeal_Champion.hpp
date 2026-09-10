@@ -28,6 +28,10 @@ struct Facts {
     int teardownOk = 1;
     int measuredReal = 1;
     int modelProvenanceMatch = 1;
+    /* Promote tetrad; MULTI_FAMILY is a separate gate. */
+    int productOpenPass = 0;
+    int sessionEnterPass = 0;
+    int tokenCommitPass = 0;
 };
 
 inline void EmitChampion(FILE* f, const Facts& xf, int cpuF32) noexcept {

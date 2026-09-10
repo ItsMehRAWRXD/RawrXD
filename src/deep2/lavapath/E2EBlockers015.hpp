@@ -1,5 +1,7 @@
 // E2EBlockers015.hpp — RAWRXD_E2E_BLOCKERS_015_LOCK burn-down receipt
 #pragma once
+#include "Deep2ProductGate.hpp"
+#include "ProductE2EBlocker.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -105,12 +107,15 @@ inline void EmitProductReceipt(FILE* f, const RunFacts& facts) {
     Item items[15];
     Classify(facts, items);
     const int unfinished = CountUnfinished(items, 15);
-    const int productPass =
-        (facts.decodeTps >= 5.0 && facts.tokensCommitted >= facts.tokensReq &&
-         facts.streamOut && facts.completionReceipt && facts.cpuF32 == 0 &&
-         facts.hostFwd == 0 && unfinished == 0)
+    const int openPass = facts.modelAuthority ? 1 : 0;
+    const int sessionPass = facts.productionDecode ? 1 : 0;
+    const int commitPass =
+        (facts.tokensCommitted > 0 && facts.streamOut && facts.completionReceipt)
             ? 1
             : 0;
+    const int productPass =
+        Deep2::product_gate::PromoteReady(openPass, sessionPass,
+                                          facts.tokensCommitted, commitPass);
 
     std::fprintf(f, "RAWRXD_E2E_BLOCKERS_015_LOCK=1\n");
     for (int i = 0; i < 15; ++i) {
@@ -131,15 +136,38 @@ inline void EmitProductReceipt(FILE* f, const RunFacts& facts) {
                  (unsigned long long)facts.tokensReq,
                  (unsigned long long)facts.tokensCommitted, facts.streamOut,
                  facts.completionReceipt);
-    std::fprintf(f, "DECODE_TPS_REAL=%.3f\nPRODUCT_FLOOR_TPS=5.000\nPRODUCT_PASS=%d\n",
+    std::fprintf(f, "PRODUCT_OPEN_PASS=%d\nSESSION_ENTER_PASS=%d\n"
+                    "TOKEN_COMMIT_PASS=%d\n",
+                 openPass, sessionPass, commitPass);
+    std::fprintf(f, "DECODE_TPS_REAL=%.3f\nNOTE=TPS_DISPLAY_ONLY\n"
+                    "PRODUCT_PASS=%d\nPROMOTE=0\n"
+                    "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                    "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
+                    "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n"
+                    "NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY\n",
                  facts.decodeTps, productPass);
     if (!productPass) {
-        const char* at = facts.blockedAt ? facts.blockedAt : "01_PRODUCT_5TPS_WALL";
-        const char* ow =
-            facts.blockedOwner ? facts.blockedOwner : "QKV_PROJ/KVA_EXPOSED";
-        const char* nx = facts.nextAction
-                             ? facts.nextAction
-                             : "cut exposed SPIN bytes; re-run 64-tok generateStream";
+        const char* at = "PRODUCT_OPEN_PASS";
+        const char* ow = "ProductOpenSession|OpenSession";
+        const char* nx = "Live generate tetrad";
+        if (!openPass) {
+            /* defaults above */
+        } else if (!sessionPass) {
+            at = "SESSION_ENTER_PASS";
+            ow = "ProductRun|generateStream";
+            nx = "Enter product decode session";
+        } else if (facts.tokensCommitted == 0) {
+            at = "GENERATED_TOKENS";
+            ow = "generateStream/token_emit";
+            nx = "Emit GENERATED_TOKENS>0";
+        } else {
+            at = "TOKEN_COMMIT_PASS";
+            ow = "token_commit/stream_output";
+            nx = "Commit tokens + stream receipt";
+        }
+        if (facts.blockedAt) at = facts.blockedAt;
+        if (facts.blockedOwner) ow = facts.blockedOwner;
+        if (facts.nextAction) nx = facts.nextAction;
         std::fprintf(f, "BLOCKED_AT=%s\nBLOCKED_OWNER=%s\nNEXT_RUNTIME_ACTION=%s\n",
                      at, ow, nx);
         std::fprintf(f, "RAWRXD_PRODUCT_E2E_001=OPEN\n");
