@@ -179,32 +179,33 @@ bool resolveMotdPath(const std::string& workingDir, const std::string& pathArg,
         }
     }
 
-    /* Phase A: workingDir + cwd only (.md then .mdc). */
-    std::vector<std::string> near;
-    if (!workingDir.empty()) near.push_back(workingDir);
+    /* Phase A: workingDir + cwd only (.md then .mdc).
+       (Avoid identifiers near/far — windef macros.) */
+    std::vector<std::string> localRoots;
+    if (!workingDir.empty()) localRoots.push_back(workingDir);
     char cwd[MAX_PATH] = {};
-    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) near.push_back(cwd);
-    for (const auto& root : near) {
+    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) localRoots.push_back(cwd);
+    for (const auto& root : localRoots) {
         for (const auto& c : candidates) {
             if (existFull(root + "\\" + normalizeRel(c))) return true;
         }
     }
 
     /* Phase B: module-parent walk (legacy IDE smoke without --dir). */
-    std::vector<std::string> far;
+    std::vector<std::string> moduleRoots;
     char modulePath[MAX_PATH * 4] = {};
     if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
         std::string dir(modulePath);
         auto slash = dir.find_last_of("\\/");
         if (slash != std::string::npos) dir.resize(slash);
         for (int up = 0; up < 6; ++up) {
-            far.push_back(dir);
+            moduleRoots.push_back(dir);
             auto parent = dir.find_last_of("\\/");
             if (parent == std::string::npos) break;
             dir.resize(parent);
         }
     }
-    for (const auto& root : far) {
+    for (const auto& root : moduleRoots) {
         for (const auto& c : candidates) {
             if (existFull(root + "\\" + normalizeRel(c))) return true;
         }
@@ -512,10 +513,8 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
             outResult = err;
             return false;
         }
-        /* Ack on any successful PassiveRole MOTD leaf (.md/.mdc), not only the
-         * workingDir-resolved canonical twin. Cursor ships .mdc under g:\~dev;
-         * --dir may point at rawrxd — both must unlock the turn. */
-        if (toolName == "read_motd" || motdLeafIsCanonical(resolved) ||
+        /* Ack on successful MOTD tool read (read_motd or MOTD leaf path). */
+        if (isMotdRead || motdLeafIsCanonical(resolved) ||
             motdIsExactCanonical(m_config.workingDir, resolved))
             g_headlessMotdAcked.store(true, std::memory_order_release);
         outResult = "{\"content\":\"" + toolJsonEscape(content) +

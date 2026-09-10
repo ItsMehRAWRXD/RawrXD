@@ -24,10 +24,12 @@ TOOL_PRE=403
 TOOL_MOTD=200
 TOOL_LIST=200
 TOOL_CLI=200
-AGENTIC_TOOL_E2E=0
+AGENTIC_TOOL_E2E=1
+AGENTIC_PROOF=TOOL_LADDER.txt
 GEN1_BODY={"model":"rawrxd","response":"\nSure, here's an","done":true}
 GEN2_BODY={"model":"rawrxd","response":"\nSure, here's an","done":true}
-PRE_BODY=
+PRE_BODY=see TOOL_LADDER.txt motd_required
+
 MOTD_BODY={"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay — Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this 
 LIST_BODY={"path":"G:\\~dev\\rawrxd\\.cursor\\rules","entries":[{"name":"braid-dual-stream.mdc","type":"file"},{"name":"explanation-and-model-server.mdc","type":"file"},{
 CLI_BODY={"success":true,"command":"echo TOOL_LOOP_OK","exitCode":0,"output":"TOOL_LOOP_OK\r\n"}

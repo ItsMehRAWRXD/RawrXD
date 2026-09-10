@@ -84,11 +84,12 @@ struct ProductRuntime {
             return false;
         }
         const uint32_t layers = static_cast<uint32_t>(mw.numLayers);
-        const uint32_t tensors =
-            static_cast<uint32_t>((mw.tokenEmbed.data ? 1u : 0u) +
-                                  (mw.lmHead.data ? 1u : 0u) +
-                                  (mw.finalNorm.data ? 1u : 0u) +
-                                  mw.layers.size());
+        /* Count indexed tensors (ptr OR file-backing); OPEN ≠ RAM-resident. */
+        const uint32_t tensors = static_cast<uint32_t>(
+            ((mw.tokenEmbed.data || mw.tokenEmbed.hasFileBacking) ? 1u : 0u) +
+            ((mw.lmHead.data || mw.lmHead.hasFileBacking) ? 1u : 0u) +
+            ((mw.finalNorm.data || mw.finalNorm.hasFileBacking) ? 1u : 0u) +
+            mw.layers.size());
         rxow::OnArmed(layers, tensors);
         if (!BuildExecutionGraph()) {
             rxow::OnPrepared(0, layers, tensors);

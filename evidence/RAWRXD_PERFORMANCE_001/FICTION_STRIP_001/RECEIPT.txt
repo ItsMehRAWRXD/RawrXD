@@ -1,0 +1,28 @@
+GATE=FICTION_STRIP_001
+ASOF=2026-09-10
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+FICTION_STRIP_001=PASS
+OVERCLAIM_DOCS_STRIPPED=1
+R24_TINYLLAMA_TRUTH_RETAINED=1
+PROMOTE_MULTI_FAMILY_PRODUCTOPEN=0
+PASS=1
+
+AUTHORITY=
+  MATRIX_SCOPE=TinyLlama_ONLY
+  TinyLlama ProductOpen/oneshot truth kept
+  MULTI_FAMILY_PRODUCTOPEN=NOT_GREEN
+
+EXPLICITLY_NOT_GREEN=
+  G3_R1_TEN_HTTP_LIFECYCLE_PASS != ProductOpen PASS
+  ROLLUP != PASS
+  HTTP_READY != IDE multi-family ProductOpen
+  EV512 coverage != IDE multi-family ProductOpen
+  capability orphan receipts != IDE multi-family ProductOpen
+  multi-model matrix = 1/10, not 10/10
+  IDE_R1_READY = 0
+
+NEXT_GATE=R24_PRODUCTOPEN_TENSORS_GT0_001
+OWNER=PRODUCTOPEN_MULTI_FAMILY_TENSORS_GT0
+LAW=Only code path with tensors>0 can close multi-family ProductOpen.
