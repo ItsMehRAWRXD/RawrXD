@@ -1,0 +1,13 @@
+STAGE=I
+ID=I_phi3_med
+ARCH=phi3
+FAMILY=Phi-3-medium-14B
+PATH=G:/~dev/rawrxd/_r1_iso/06_phi3_med/Phi-3-medium-128k-instruct-Q4_K_M.gguf
+LOAD1=200
+GEN1=200
+UNLOAD=200
+LOAD2=200
+GEN2=200
+TOKENS_EMITTED=15
+PROCESS_SURVIVED=1
+VERDICT=PASS

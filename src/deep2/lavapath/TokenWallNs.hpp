@@ -1,5 +1,6 @@
 #pragma once
 /* TOKEN_WALL_NS authority; SECONDS/TPS display-only. ≤99. */
+/* Deep2 = IndexedModel + LiveWorkingSet + FutureConsumerPrefetch + LaneIsolatedGPUExec + NanosecondStageTelemetry + TokenDeadline(6_666_667ns); */
 #include <chrono>
 #include <cstdint>
 #include <cstdio>

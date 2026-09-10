@@ -1,0 +1,14 @@
+STAGE=E
+ID=E_nemotron
+ARCH=nemotron
+FAMILY=Nemotron-4B
+PATH=G:/~dev/rawrxd/_r1_iso/03_nemotron/NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+LOAD1=400
+GEN1=503
+UNLOAD=200
+LOAD2=400
+GEN2=503
+TOKENS_EMITTED=0
+PROCESS_SURVIVED=1
+VERDICT=FAIL
+FIRST_OWNER=SSM-CERT-001 WHY=experimental_selective_scan_refuse

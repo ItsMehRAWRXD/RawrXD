@@ -1,35 +1,51 @@
 GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
-ASOF=2026-09-10T07:10
-EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_run.exe
-EXE_SHA16=ABDEEC83618F539A
-EXE_SHA256=ABDEEC83618F539AD200869584258BB8585B6738DFC14D07C65C6CBD183DFC71
+ASOF=2026-09-10T07:42
+EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r25laa.exe
+EXE_SHA16=6E17100BA3D65A13
+EXE_SHA256=6E17100BA3D65A13D1C75349E4F0CD64C6C88FC23EC267BADD81C2CDD64C5DCB
 PE_LAA=YES
 HOST_DECODE=1
+DEEP2_MARS=0
 OLLAMA_CONTACT=0
-PORT=127.0.0.1:11435
+PORT=127.0.0.1:28943
 agenticMode=false
 PROMOTE=0
 TIP_CLIMB=HOLD
 DUALSTICK_REOPENED=0
-CAPABILITIES=200
-LOAD1=200
-GEN1=200
-UNLOAD=200
-LOAD2=200
-GEN2=200
+
+## ProductOpen (R25)
+PRODUCT_OPEN_PASS=1
+HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS
+TENSOR_COUNT=201
+INIT_ENTER=1 INIT_EXIT_RC=1 SESSION_ENTER=1 SESSION_EXIT_OK=1
+
+## Live HTTP (observed)
+CAPABILITIES=404
+GEN=200
+UNLOAD=404
+TOKENS_COMMITTED=8
 PROCESS_SURVIVED=1
 RUNTIME_REACHED=1
 TOKEN_SURVIVED=1
+GEN_BODY={"model":"rawrxd","response":"\nSay hi in one short sentence","done":true}
+
+## /api/tool + MOTD
 TOOL_PRE=403
 TOOL_MOTD=200
-TOOL_LIST=200
 TOOL_CLI=200
 AGENTIC_TOOL_E2E=1
-AGENTIC_PROOF=TOOL_LADDER.txt
-GEN1_BODY={"model":"rawrxd","response":"\nSure, here's an","done":true}
-GEN2_BODY={"model":"rawrxd","response":"\nSure, here's an","done":true}
-PRE_BODY=see TOOL_LADDER.txt motd_required
 
-MOTD_BODY={"content":"---\r\ndescription: >-\r\n  PassiveRoleNotRoleplay — Multitask continue triggers + MOTD gate: models cannot\r\n  execute tools until they Read this 
-LIST_BODY={"path":"G:\\~dev\\rawrxd\\.cursor\\rules","entries":[{"name":"braid-dual-stream.mdc","type":"file"},{"name":"explanation-and-model-server.mdc","type":"file"},{
-CLI_BODY={"success":true,"command":"echo TOOL_LOOP_OK","exitCode":0,"output":"TOOL_LOOP_OK\r\n"}
+## Streamer / FC (stderr observed on generate)
+PRODUCT_STREAMER_PREP=1
+FC_BIND_ENTER=1
+FC_BIND_OK=1
+FC_CONSUMER_ID_VALID=1
+FUTURE_CONSUMERS_REGISTERED=1161
+PERFORMANCE_PASS=0
+PASS_150=0
+
+## Authority
+PRIOR_SEALED_E2E=G3_STREAMER_AGENTIC_E2E_001 (r1cap ABDEEC83618F539A) left intact
+R25_PRODUCTOPEN_SESSION_001=PASS (this worker)
+PRODUCT_PATH_INVARIANTS_ELASTIC0_001=left intact (rawr CLI lane)
+HOST_FC live ProductRunDecode edge=NOT_TOUCHED

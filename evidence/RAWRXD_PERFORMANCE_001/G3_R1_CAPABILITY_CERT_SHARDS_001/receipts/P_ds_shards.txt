@@ -1,0 +1,3 @@
+STAGE=P
+VERDICT=SKIP
+WHY=no multi-shard DeepSeek-R1 pack; 8B already covered in Phase1 G

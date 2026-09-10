@@ -91,6 +91,10 @@ inline void EmitBudgetFacts(uint64_t envMib, int parseOk, uint64_t effectiveMib,
     std::fflush(stderr);
 }
 
+inline void MarkSessionFacts(ProductOpenFacts& f) {
+    f.init_enter = f.init_exit = f.session_enter = f.session_exit = 1;
+}
+
 inline void EmitOpenFacts(const ProductOpenFacts& f, const char* path,
                           const char* verdict) {
     const int crit =

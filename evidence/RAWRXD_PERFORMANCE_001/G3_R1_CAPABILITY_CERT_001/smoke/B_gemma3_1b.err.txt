@@ -1,0 +1,17 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=0 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\gemma3-1b-Q2_K.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\gemma3-1b-Q2_K.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0

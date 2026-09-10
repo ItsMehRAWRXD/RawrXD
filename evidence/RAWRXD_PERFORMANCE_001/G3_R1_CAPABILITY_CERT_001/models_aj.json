@@ -1,0 +1,12 @@
+[
+  {"Stage":"A","Id":"A_tinyllama","Arch":"llama","Family":"TinyLlama-1.1B","Path":"G:/~dev/rawrxd/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf","SizeMB":637.8,"Found":true},
+  {"Stage":"B","Id":"B_gemma3_1b","Arch":"gemma3","Family":"Gemma3-1B","Path":"G:/~dev/rawrxd/gemma3-1b-Q2_K.gguf","SizeMB":666.7,"Found":true},
+  {"Stage":"C","Id":"C_llama32_3b","Arch":"llama","Family":"Llama-3.2-3B","Path":"G:/~dev/rawrxd/llama3.2-3b-Q3_K_S.gguf","SizeMB":1471.4,"Found":true},
+  {"Stage":"D","Id":"D_phi3_mini","Arch":"phi3","Family":"Phi-3-mini","Path":"G:/~dev/rawrxd/_r1_iso/02_phi3_mini/Phi-3-mini-4k-instruct-q8_0.gguf","SizeMB":2075.4,"Found":true},
+  {"Stage":"E","Id":"E_nemotron","Arch":"nemotron","Family":"Nemotron-4B","Path":"G:/~dev/rawrxd/_r1_iso/03_nemotron/NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf","SizeMB":4037.5,"Found":true},
+  {"Stage":"F","Id":"F_mistral","Arch":"mistral","Family":"Mistral-7B","Path":"F:/OllamaModels/models/blobs/sha256-f5074b1221da0f5a2910d33b642efa5b9eb58cfdddca1c79e16d7ad28aa2b31f","SizeMB":4170.2,"Found":true},
+  {"Stage":"G","Id":"G_ds_r1_8b","Arch":"deepseek-r1","Family":"DeepSeek-R1-8B","Path":"G:/~dev/rawrxd/_r1_iso/04_ds_r1_qwen3/DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf","SizeMB":4794.9,"Found":true},
+  {"Stage":"H","Id":"H_gemma4_e4b","Arch":"gemma4","Family":"Gemma4-E4B","Path":"G:/~dev/rawrxd/_r1_iso/05_gemma4_e4b/gemma-4-E4B-it-Q4_K_M.gguf","SizeMB":5088.1,"Found":true},
+  {"Stage":"I","Id":"I_phi3_med","Arch":"phi3","Family":"Phi-3-medium-14B","Path":"G:/~dev/rawrxd/_r1_iso/06_phi3_med/Phi-3-medium-128k-instruct-Q4_K_M.gguf","SizeMB":8170,"Found":true},
+  {"Stage":"J","Id":"J_codestral","Arch":"codestral","Family":"Codestral-22B","Path":"G:/~dev/rawrxd/_r1_iso/07_codestral/Codestral-22B-v0.1-Q4_K_M.gguf","SizeMB":12073.9,"Found":true}
+]

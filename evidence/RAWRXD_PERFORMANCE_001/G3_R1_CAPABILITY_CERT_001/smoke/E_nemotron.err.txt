@@ -1,0 +1,51 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=0 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+ROPE_BASE_ARCH_COMPAT=1 arch=nemotron_h value=10000
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+ARCH=nemotron_h
+HIDDEN=3136 LAYERS=42 HEADS=40 KV_HEADS=0 HEAD_DIM=78 VOCAB=131072 INTERMEDIATE=0
+SPLIT_QKV_LAYERS=4 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=21 MLA_LAYERS=0 BLOCKED_LAYERS=17
+SPLIT_FFN_LAYERS=0 FUSED_FFN_LAYERS=17
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf.fc58cc80.1dcd55f8b24b587.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=1
+GEMMA4_SCHEMA_BIND root=output.weight rows=131072 cols=3136 type=8
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3136 cols=1 type=0
+[Deep2Engine] ERROR: model has 21 SSM/hybrid layers using an experimental approximate selective-scan (SSM-CERT-001). Refuse production load. Set RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 only for scaffolding.
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0
+ROPE_BASE_ARCH_COMPAT=1 arch=nemotron_h value=10000
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+ARCH=nemotron_h
+HIDDEN=3136 LAYERS=42 HEADS=40 KV_HEADS=0 HEAD_DIM=78 VOCAB=131072 INTERMEDIATE=0
+SPLIT_QKV_LAYERS=4 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=21 MLA_LAYERS=0 BLOCKED_LAYERS=17
+SPLIT_FFN_LAYERS=0 FUSED_FFN_LAYERS=17
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf.fc58cc80.1dcd55f8b24b587.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=1
+GEMMA4_SCHEMA_BIND root=output.weight rows=131072 cols=3136 type=8
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3136 cols=1 type=0
+[Deep2Engine] ERROR: model has 21 SSM/hybrid layers using an experimental approximate selective-scan (SSM-CERT-001). Refuse production load. Set RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 only for scaffolding.
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0

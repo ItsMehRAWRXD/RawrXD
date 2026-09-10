@@ -1,0 +1,74 @@
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-09-10 06:45:19 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+RawrXD Headless IDE initializing...
+HTTP server listening on 127.0.0.1:11435
+Headless IDE initialized successfully.
+Headless IDE running in server mode. Press Ctrl+C to stop.
+Loading model: G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\_r1_iso\03_nemotron)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=nemotron_h L=42 H=3136 FFN=12544 heads=40 kv=8 hd=128 ctx=1048576
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 layers=42 heads=40 kvHeads=8 inter=12544 vocab=131072
+[Deep2Engine] Tokenizer loaded: vocab=131072 bos=1 eos=11 (Spm::encode)
+[SSM_MAP] blk.0.ssm_a -> ssmA (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.bias -> ssmConv1dBias (dims=9728x1 type=0)
+[SSM_MAP] blk.0.ssm_conv1d.weight -> ssmConv1d (dims=9728x4 type=0)
+[SSM_MAP] blk.0.ssm_d -> ssmD (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_dt.bias -> ssmDtBias (dims=96x1 type=0)
+[SSM_MAP] blk.0.ssm_in.weight -> ssmIn (dims=17504x3136 type=8)
+[SSM_MAP] blk.0.ssm_norm.weight -> ssmNorm (dims=8x960 type=0)
+[SSM_MAP] blk.0.ssm_out.weight -> ssmOut (dims=3136x7680 type=8)
+[ResidencyManager] Initialized: maxResidentBytes=2147483648, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=2048 MB
+[ResidencyManager] this=00000162057CED00  Registered 'output.weight': shard=0 offset=7885696 bytes=436731904  |  registry_size=1  registeredBytes=436731904  zeroOffset=0  maxResidentBytes=2147483648
+[ResidencyManager] this=00000162057CED00  Registered 'blk.15.ffn_down.weight': shard=0 offset=2097181824 bytes=41796608  |  registry_size=100  registeredBytes=2131092736  zeroOffset=0  maxResidentBytes=2147483648
+[ResidencyManager] this=00000162057CED00  Registered 'blk.31.ssm_norm.weight': shard=0 offset=3411917952 bytes=30720  |  registry_size=200  registeredBytes=3404062976  zeroOffset=0  maxResidentBytes=2147483648
+RMV_MOUNT_001
+TENSORS_DISCOVERED=263
+TENSORS_ADDRESSED=263
+TENSORS_REGISTERED=263
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000162057CED00  registered=263 tensors  bytes=4225792256  max=2147483648
+[RMV_MOUNT_001]=PASS
+Loading model: G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:91e0284cd64eeff5 mode=1
+[Deep2Engine] Policy VRAM hard=8589934592 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd\_r1_iso\03_nemotron)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=nemotron_h L=42 H=3136 FFN=12544 heads=40 kv=8 hd=128 ctx=1048576
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'nemotron_h'  hidden=3136 

@@ -54,11 +54,6 @@ inline void EmitSessionLine(const char* path, int ok, ProductOpenFacts& f) {
     EmitOpenFacts(f, path, f.product_open_pass ? "PASS" : "FAIL");
 }
 
-inline void MarkSessionFacts(ProductOpenFacts& f) {
-    /* Soft reuse skips RawrRunSession fprintf; still certify open facts. */
-    f.init_enter = f.init_exit = f.session_enter = f.session_exit = 1;
-}
-
 inline bool OpenBody(const char* modelAliasOrPath) {
     if (!Deep2::ProductStreamerPrep()) return false;
     const char* a =

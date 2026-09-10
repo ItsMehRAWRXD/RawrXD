@@ -1,0 +1,13 @@
+STAGE=D
+ID=D_phi3_mini
+ARCH=phi3
+FAMILY=Phi-3-mini
+PATH=G:/~dev/rawrxd/_r1_iso/02_phi3_mini/Phi-3-mini-4k-instruct-q8_0.gguf
+LOAD1=200
+GEN1=200
+UNLOAD=200
+LOAD2=200
+GEN2=200
+TOKENS_EMITTED=27
+PROCESS_SURVIVED=1
+VERDICT=PASS

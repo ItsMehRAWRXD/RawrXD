@@ -105,6 +105,7 @@ void ConversationManager::pruneInactive(double maxAgeSeconds) {
 #include "../deep2/RuntimeEvidence512HostIDE.hpp"
 #include "../deep2/NvmeBunnyHopApi.hpp"
 #include "../product/gateway/product_deep2_infer.hpp"
+#include "../deep2/lavapath/r25_productopen_bridge.hpp"
 
 #include <winhttp.h>
 #include <bcrypt.h>
@@ -1798,9 +1799,38 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
         }
         std::fprintf(stderr, "HEADLESS_LOADMODEL=OK path=%s\n",
                      localPath.c_str());
-        /* READY only after ProductOpenSession tensors>0 — never HTTP alone. */
+        /* R25 MASM ProductOpenGguf fail-closed — READY only if proof.product_open. */
+        {
+            wchar_t wpath[MAX_PATH * 2];
+            wpath[0] = 0;
+            MultiByteToWideChar(CP_UTF8, 0, localPath.c_str(), -1, wpath,
+                                (int)(sizeof(wpath) / sizeof(wpath[0])));
+            R25_GGUF_PROOF proof{};
+            const uint64_t st = R25_ProductOpenGguf(wpath, &proof);
+            R25_CloseLastMapping();
+            std::fprintf(stderr,
+                         "R25_PRODUCTOPEN status=%llu tensors_scanned=%llu "
+                         "embed=%llu lm_head=%llu product_open=%llu\n",
+                         (unsigned long long)st,
+                         (unsigned long long)proof.tensors_scanned,
+                         (unsigned long long)proof.token_embed_found,
+                         (unsigned long long)proof.lm_head_found,
+                         (unsigned long long)proof.product_open);
+            std::fflush(stderr);
+            if (st != R25_PRODUCTOPEN_OK || proof.product_open != 1 ||
+                proof.tensors_scanned == 0 || proof.token_embed_found == 0 ||
+                proof.lm_head_found == 0) {
+                std::fprintf(stderr, "HEADLESS_READY=0 SOURCE=R25_PRODUCTOPEN_FAIL\n");
+                std::fflush(stderr);
+                m_outputSink->appendOutput(
+                    "R25_ProductOpenGguf failed (tensors/embed/lm_head)",
+                    OutputSeverity::Error);
+                return false;
+            }
+        }
+        /* READY only after ProductOpenSession + R25 proof — never HTTP alone. */
         std::fprintf(stderr,
-                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS path=%s\n",
+                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS+R25 path=%s\n",
                      localPath.c_str());
         std::fflush(stderr);
     } else {

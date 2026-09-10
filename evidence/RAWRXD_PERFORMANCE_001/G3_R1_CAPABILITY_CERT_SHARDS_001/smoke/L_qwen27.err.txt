@@ -1,0 +1,49 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=0 HOST_DECODE=1 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf
+ARCH=qwen35
+HIDDEN=5120 LAYERS=65 HEADS=24 KV_HEADS=4 HEAD_DIM=213 VOCAB=248320 INTERMEDIATE=17408
+SPLIT_QKV_LAYERS=17 FUSED_QKV_LAYERS=48 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=65 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Qwen3.8-27B-AD-Q4_K_M.gguf.3fc7a65e0.1dd35aeb9d3cda5.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=248320 cols=5120 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=5120 cols=1 type=0
+[Deep2Engine] ERROR: model has 48 SSM/hybrid layers using an experimental approximate selective-scan (SSM-CERT-001). Refuse production load. Set RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 only for scaffolding.
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf
+ARCH=qwen35
+HIDDEN=5120 LAYERS=65 HEADS=24 KV_HEADS=4 HEAD_DIM=213 VOCAB=248320 INTERMEDIATE=17408
+SPLIT_QKV_LAYERS=17 FUSED_QKV_LAYERS=48 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=65 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Qwen3.8-27B-AD-Q4_K_M.gguf.3fc7a65e0.1dd35aeb9d3cda5.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output.weight rows=248320 cols=5120 type=14
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=5120 cols=1 type=0
+[Deep2Engine] ERROR: model has 48 SSM/hybrid layers using an experimental approximate selective-scan (SSM-CERT-001). Refuse production load. Set RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 only for scaffolding.
+PRODUCT_OPEN_SESSION=FAIL tensors=0 isOpen=0 path=G:\~dev\rawrxd\_r1_iso\03_qwen38_27b\Qwen3.8-27B-AD-Q4_K_M.gguf
+[ERROR] ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)
+GENERATE_REQ path=/api/generate body_len=79 prompt_len=22 model_field_len=0 loaded=0 local_only=1 backend=0
