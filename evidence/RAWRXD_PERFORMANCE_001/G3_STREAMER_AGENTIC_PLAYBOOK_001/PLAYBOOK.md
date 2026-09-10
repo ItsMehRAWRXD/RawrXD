@@ -40,9 +40,9 @@ E/nemotron: transport PASS under experimental flag ≠ production Nemotron math.
   CURRENT_OWNER=`G3_NEMOTRON_H_MAMBA2_OWNER_001` / `NEMOTRON_H_REAL_SSM_001`:
   state=128 heads=96 inner=7680; forbid SSM_STATE_DIM=96; IDENTITY→Mamba2;
   PRODUCTION_DECODE_PATH only if MODEL_GRAPH_COMPLETE && NEMOTRON_SSM_REAL.
-  NEXT=`G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015`:
-  01 stabilize REAL_FORWARD → TOKEN_COMMIT; 02–15 identity0→norm→conv→
-  state→8tok→graph/real→parity→hand-off CRITERIA_015.11–15.
+  NEXT=`G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015` LIVE 13/15 PASS
+  (01–09,11–14); OPEN=10 numeric parity slice, 15 full seal.
+  C07 finite emit + C08 arch-aware B3 band; PROMOTE=0.
   Plus-14 ladder: `G3_NEMOTRON_H_REAL_SSM_CRITERIA_029` (C16–C29 OPEN;
   buffers/geo/token_commit/refuse; PROMOTE=0; ≠ CERT seal).
 MOTD .mdc: parent-root resolve + rawrxd twin; tool aliases directory/dir + cmd (G3_FINISH_BATCH_15_001).

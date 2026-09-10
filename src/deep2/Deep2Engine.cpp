@@ -5453,8 +5453,10 @@ static void B3_TraceState(const char* phase, size_t pos, const float* state, siz
     }
 
     // First-bad gate: find the earliest destroyed checkpoint, not the crash site.
-    constexpr double kNormWarn = 1.0e2;
-    constexpr double kNormAbort = 1.0e3;
+    /* Dim-aware: √n≈56 @3136; 8√n≈448 warn / 20√n≈1120 abort (was fixed 100/1000). */
+    const double sqrtN = (n > 0) ? std::sqrt((double)n) : 10.0;
+    const double kNormWarn = 8.0 * sqrtN;
+    const double kNormAbort = 20.0 * sqrtN;
     const bool nonFinite = (s.nanCount + s.infCount) > 0;
     const bool exploded = B3_IsResidualPhase(phase) && (s.l2 > kNormAbort);
     const bool warn = B3_IsResidualPhase(phase) && (s.l2 > kNormWarn);
@@ -6055,10 +6057,46 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                     position, stateNorm);
             return tokensGenerated;
         }
-        // Soft gate: warn on norm explosion (>100x expected)
-        if (stateNorm > 100.0) {
-            fprintf(stderr, "[B3_WARN] hidden state norm explosion pos=%zu norm=%.9e\n",
-                    position, stateNorm);
+        /* Soft gate: architecture-aware. RMS unit vector L2≈sqrt(H);
+           Nemotron-H H=3136 → √H≈56; learned norm w~2.7–4.6 → L2~150–260.
+           Old fixed >100 false-alarmed every Nemotron decode step. */
+        {
+            const double sqrtH = std::sqrt((double)config.hiddenDim);
+            const double warnGt =
+                (ggufResult.metadata.architecture.find("nemotron") !=
+                 std::string::npos)
+                    ? (8.0 * sqrtH)   /* ~448 for H=3136 */
+                    : 100.0;
+            const double explGt =
+                (ggufResult.metadata.architecture.find("nemotron") !=
+                 std::string::npos)
+                    ? (20.0 * sqrtH)  /* ~1120 */
+                    : 1000.0;
+            if (stateNorm > explGt) {
+                fprintf(stderr,
+                        "[B3_WARN] hidden state norm explosion pos=%zu "
+                        "norm=%.9e warn_gt=%.1f expl_gt=%.1f arch=%s\n",
+                        position, stateNorm, warnGt, explGt,
+                        ggufResult.metadata.architecture.c_str());
+            } else if (stateNorm > warnGt) {
+                fprintf(stderr,
+                        "[B3_NORM_GROWTH] pos=%zu norm=%.9e warn_gt=%.1f "
+                        "NOTE=within_arch_band_ne_explosion arch=%s\n",
+                        position, stateNorm, warnGt,
+                        ggufResult.metadata.architecture.c_str());
+            } else if (position == 0 || (tokensGenerated == 0 && position > 0)) {
+                /* one-shot band seal for C08 */
+                static int bandOnce = 0;
+                if (!bandOnce) {
+                    bandOnce = 1;
+                    fprintf(stderr,
+                            "B3_NORM_BAND_ARCH=%s SQRT_H=%.3f WARN_GT=%.1f "
+                            "EXPL_GT=%.1f OBS_NORM=%.3f "
+                            "B3_NORM_EXPLOSION=0\n",
+                            ggufResult.metadata.architecture.c_str(), sqrtH,
+                            warnGt, explGt, stateNorm);
+                }
+            }
         }
 
         // Hard gate: reject invalid logits
@@ -6776,9 +6814,11 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                                                  (uint64_t)(uint32_t)tokenId);
             Deep2::Ev512::HostEmitTokenCallback((uint64_t)(uint32_t)tokenId,
                                                (uint64_t)evTokN);
-            if (tokenizer && tokenId == tokenizer->GetSpecialTokens().eosId) {
-                return false; // EOS terminates generation
-            }
+            /* Deliver EOS through detok/commit/callback then stop (K2 parity).
+               Early-return before commit left FIRST_TOKEN=0 / TOKEN_COMMIT=0. */
+            const bool isEos =
+                tokenizer &&
+                tokenId == tokenizer->GetSpecialTokens().eosId;
             std::string piece;
             if (tokenizer) {
                 auto d0 = rawr::iso_ladder::Clock::now();
@@ -6834,6 +6874,7 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                     return false;
                 }
             }
+            if (isEos) return false;
             return true;
         });
 
@@ -7118,8 +7159,16 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // Nemotron-H recurrent layer: SSM-only — skip null attention path.
     if (lw.hasSSM && !AttnReady(lw) && !WtOk(lw.wGate) && !WtOk(lw.wUp)) {
         if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
-        RMSNormW(lw.attnNorm.data ? lw.attnNorm : lw.ssmNorm, input, layerTemp,
-                 hiddenDim, modelWeights.normEps);
+        /* Block prenorm is attn_norm [hidden]; ssm_norm is gated [8x960] — never swap. */
+        if (lw.attnNorm.data) {
+            RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
+        } else {
+            fprintf(stderr,
+                    "[SSM_PRENORM_MISSING] layer=%zu copy_input "
+                    "NOTE=ssm_norm_ne_3136_prenorm\n",
+                    layer);
+            memcpy(layerTemp, input, hiddenDim * sizeof(float));
+        }
         if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
         computeSSM(layer, layerTemp, ffnOutput);
         for (size_t i = 0; i < hiddenDim; ++i)

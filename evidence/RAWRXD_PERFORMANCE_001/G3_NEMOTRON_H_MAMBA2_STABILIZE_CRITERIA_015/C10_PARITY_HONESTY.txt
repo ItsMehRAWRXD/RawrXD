@@ -1,0 +1,12 @@
+GATE=10_NUMERIC_PARITY_VS_REFERENCE_SLICE
+STATUS=NOT_RUN
+LAW=NOT_RUN_NE_PASS
+REASON=no_trusted_Nemotron-H_HF_or_mamba_ssm_reference_vector_checked_in
+PASS_IF=CPU Mamba2 step hidden/logits match trusted ref within atol/rtol
+        on fixed one-layer or one-token slice
+BLOCKED_BY=missing golden/ref dump under evidence authority
+NEXT=capture layer0 token0 SSM out under ALLOW; compare to HF/Zamba2 one-step
+NOTE=self-hash or prior LIVE dump alone ≠ trusted reference
+PROMOTE=0 TIP_CLIMB=HOLD EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
+ASOF=2026-09-10
+POINTER=G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015
