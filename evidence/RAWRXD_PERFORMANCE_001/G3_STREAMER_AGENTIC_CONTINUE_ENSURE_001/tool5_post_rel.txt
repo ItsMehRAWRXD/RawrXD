@@ -1,0 +1,2 @@
+HTTP=200
+{"path":"g:\\~dev\\.cursor\\rules","entries":[{"name":"MultitaskMode.mdc","type":"file"},{"name":"PassiveRoleNotRoleplay.mdc","type":"file"},{"name":"StreamerAgenticContinueEnsure.mdc","type":"file"}]}

@@ -1,0 +1,1 @@
+﻿CAPABILITIES_ERR=Unable to connect to the remote server

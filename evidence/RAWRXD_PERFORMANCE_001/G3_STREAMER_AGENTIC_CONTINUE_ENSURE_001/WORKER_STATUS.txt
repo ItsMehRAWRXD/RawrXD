@@ -1,0 +1,29 @@
+GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
+KIND=WORKER_STATUS
+ASOF=2026-09-10T07:41:00-04:00
+WORKER=1
+PARENT_REBUILD_AVOIDED=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## Closed
+AGENTIC_TOOL_E2E=1 on r1cap_run :11439 (PRE=403 MOTD=200 POST=200 CLI=200)
+TOKEN_SURVIVED=1 GENERATE=200 PROCESS_SURVIVED=1
+DUMPBIN_LAA=YES on authority smoke exe
+LIVE_PROBE.txt refreshed from WORKER_LIVE_PROBE2.txt
+R25 EmitOpenFacts INIT/SESSION counters SOURCE_WIRED (pending parent rebuild ingest)
+
+## Still NOT_RUN / not ready
+STREAMER_AGENTIC_READY=0 (do not invent)
+CAPABILITIES_HTTP=404 on r1cap
+OPEN_SEMANTIC_STREAMABLE live emit=NOT_RUN on r1cap/sealed product-path errs
+INIT_ENTER/SESSION_ENTER fprintf on Headless generate path=NOT_RUN (r1cap)
+PRODUCT_PASS=0 PERFORMANCE_PASS=0
+parent rebuild_ide3 stopped mid-build earlier; exe hash churned — worker did not relink
+
+## Freezes honored
+ProductRunDecode.hpp untouched
+R24 TinyLlama seal untouched
+DualStick/ICD untouched
+k3c_token untouched
+sealed RECEIPT.txt not rewritten
