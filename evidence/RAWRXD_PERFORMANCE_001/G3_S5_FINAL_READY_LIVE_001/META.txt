@@ -1,0 +1,6 @@
+EXIT=0
+ELAPSED_MS=4047
+ASOF=2026-09-10T08:23:03.7297278-04:00
+EXE=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=G:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+GATE=S5_FINAL_READY_TETRAD
