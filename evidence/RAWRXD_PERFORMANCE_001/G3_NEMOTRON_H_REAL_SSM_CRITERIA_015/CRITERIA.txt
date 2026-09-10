@@ -1,0 +1,160 @@
+GATE=G3_NEMOTRON_H_REAL_SSM_CRITERIA_015
+ASOF=2026-09-10
+KIND=CRITERIA_LADDER
+PARENT=G3_NEMOTRON_H_MAMBA2_OWNER_001
+AUTHORITY_TURN=G3_E_SSM_MAMBA2_001 (norm-fix REAL_FORWARD tetrad)
+PROMOTE=0
+TIP_CLIMB=HOLD
+PERFORMANCE_PASS=0
+CHAMPION_PROMOTE=0
+DO_NOT_REWRITE=G3_E_SSM_CERT_001 R1_7_10 DualStick VK_ICD ProductRunDecode.hpp
+FAIL_CLOSED=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+NOT_RUN!=PASS
+
+## How to read
+01 = this turn’s closable unit (geometry + Mamba2 arm + REAL_FORWARD + experimental tetrad).
+02–15 = fourteen additional independent rungs. Each must be live-proven; docs/stubs ≠ PASS.
+PRODUCTION_DECODE_PATH=1 only after 08+09. PROMOTE stays 0 until product law says otherwise.
+
+---
+
+## 01 — THIS TURN (authority spend)
+ID=C01_GEO_MAMBA2_REAL_FORWARD_TETRAD
+PASS_IF=
+  NEMOTRON_H_SSM_GEOMETRY=PASS (state=128 heads=96 inner=7680; 96≠state)
+  SSM_MAMBA2_ARM=1 via_SSM_BUF
+  [SSM_MAMBA2] REAL_FORWARD=1 IDENTITY=0
+  ssm_norm flat index (not ix%MaxRC on 8×960)
+  ALLOW=1 → PRODUCT_OPEN&&SESSION_ENTER&&GENERATED_TOKENS>0&&TOKEN_COMMIT
+  PROMOTE=0 PRODUCTION_DECODE_PATH=0 SSM_CERT=NOT_CERTIFIED
+EVIDENCE=G3_E_SSM_MAMBA2_001/RECEIPT.txt + LIVE_NORMFIX.*
+STATUS=PASS (2026-09-10)
+
+## 02 — Identity extinguished on all SSM layers
+ID=C02_SSM_IDENTITY_LAYERS_ZERO
+PASS_IF=
+  SSM_IDENTITY_LAYERS=0 on full forward
+  ssmIdentityCalls_=0 && ssmRealCalls_ covers every hasSSM layer
+  no [SSM_SCAFFOLD] IDENTITY=1 under ALLOW+armed
+STATUS=OPEN
+NEXT_ACTION=emit per-layer REAL vs IDENTITY counters; assert 21/21
+
+## 03 — State carried across tokens
+ID=C03_SSM_STATE_CARRY
+PASS_IF=
+  SSM_STATE_UPDATED=1
+  SSM_STATE_NONZERO=1 after first SSM token
+  SSM_STATE_CARRIED_TO_NEXT_TOKEN=1 (decode step N uses step N-1 state)
+  conv state advanced (no reset between tokens except session reset)
+STATUS=OPEN
+
+## 04 — Silence B3_WARN norm explosion
+ID=C04_NO_HIDDEN_NORM_EXPLOSION
+PASS_IF=
+  no [B3_WARN] hidden state norm explosion on prefill+decode
+  FINAL_NORM_MEAN_SQ in certified band (finite; no runaway growth per layer)
+  NUMERIC_FINITE=1 on hidden + logits every committed token
+STATUS=OPEN
+NOTE=LIVE_NORMFIX still WARN — C01 PASS ≠ C04
+
+## 05 — Softplus / A_log / dt parity vs reference
+ID=C05_DT_A_DISCRETIZATION_PARITY
+PASS_IF=
+  softplus(dt+bias) matches reference within tol
+  A = -exp(A_log); dA = exp(dt*A) matches HF/mamba_ssm one-step
+  no ad-hoc dt max=0.1 unless reference uses same limit
+STATUS=OPEN
+
+## 06 — Conv1d weight/layout parity
+ID=C06_CONV1D_LAYOUT_PARITY
+PASS_IF=
+  ssm_conv1d [9728×4] F32 depthwise step matches reference
+  bias applied; SiLU after conv; x/B/C split after SiLU
+  conv state layout [K][Cdim] consistent allocate↔step
+STATUS=OPEN
+
+## 07 — GroupRMSNorm + SiLU(z) gate parity
+ID=C07_GATED_GROUP_RMS_PARITY
+PASS_IF=
+  groups=8 group_size=960; weight flat [7680]
+  order: GroupRMSNorm(y)*SiLU(z) matches Zamba2RMSNormGated
+  out_proj LinearW(ssm_out 3136×7680) byte-safe Q8 path
+STATUS=OPEN
+
+## 08 — MODEL_GRAPH_COMPLETE (hybrid schedule)
+ID=C08_MODEL_GRAPH_COMPLETE
+PASS_IF=
+  SSM_REAL_LAYERS=21 ATTENTION_REAL_LAYERS=4 MLP_REAL_LAYERS=17
+  MODEL_GRAPH_COMPLETE=1
+  PRODUCT_ENTRY_PATH ≠ PRODUCTION_DECODE_PATH still honest until C09
+STATUS=OPEN
+
+## 09 — NEMOTRON_SSM_REAL → PRODUCTION_DECODE_PATH arm
+ID=C09_PRODUCTION_DECODE_PATH_ARM
+PASS_IF=
+  NEMOTRON_SSM_REAL=1 (C02–C08)
+  PRODUCTION_DECODE_PATH=1 only then
+  refuse path without ALLOW still sealed (G3_E_SSM_CERT_001 untouched)
+STATUS=OPEN
+NOTE=does not set PROMOTE=1
+
+## 10 — Semantic / poem smoke (non-EOS garbage exit)
+ID=C10_SEMANTIC_SMOKE
+PASS_IF=
+  nemotron_nano_poem_smoke or equivalent: coherent tokens, not EOS@1
+  MODEL_SEMANTIC_PASS=1 under ALLOW (still ≠ champion)
+  STREAM_OUTPUT_PRESENT=1
+STATUS=OPEN
+NOTE=C01 text "a theive the the" = FAIL this rung
+
+## 11 — FutureConsumer live weight hits on Nemotron path
+ID=C11_FUTURE_CONSUMER_HITS
+PASS_IF=
+  FUTURE_CONSUMER_EXEC=1 with CONSUMER_HITS>0 on Nemotron HOST_DECODE
+  no DOUBLE_OWNER / STALE_GENERATION_READS regressions vs seal
+  ProductRunDecode.hpp not mutated (DO_NOT_TOUCH)
+STATUS=OPEN
+
+## 12 — Host FC prefetch residual honesty (Nemotron)
+ID=C12_HOST_FC_PREFETCH_HONEST
+PASS_IF=
+  KickChair-style residual wait observed (not hardcoded P06)
+  PREFETCH path exercised; LATE/MISS attributed honestly
+  NOT_RUN ≠ PASS if MoE absent — separate from C11
+STATUS=OPEN
+
+## 13 — MULTI_FAMILY rollup includes Nemotron ProductOpen
+ID=C13_MULTI_FAMILY_NEMOTRON_EDGE
+PASS_IF=
+  S6 MULTI_FAMILY rollup sees Nemotron ProductOpen as independent edge
+  TinyLlama R25 ProductOpen ≠ this edge
+  PROMOTE=0 until law; MULTI_FAMILY green only if all declared families PASS
+STATUS=OPEN
+
+## 14 — GPU_FORWARD child (post graph-complete only)
+ID=C14_GPU_FORWARD_POST_GRAPH
+PASS_IF=
+  GPU_FORWARD_ACTIVE=1 only after C08+C09
+  DualStick/VK_ICD remain closed on HOST_DECODE floor unless separately authorized
+  layer-forward child evidence fired (not diagnostic-only ignore)
+STATUS=OPEN
+NOTE=blocked until MODEL_GRAPH_COMPLETE — do not reopen ICD early
+
+## 15 — Token wall architecture (telemetry, not climb)
+ID=C15_TOKEN_WALL_DEADLINE_ARCH
+PASS_IF=
+  TOKEN_WALL / MEAN_TOKEN_WALL_NS emitted; DEADLINE target 6_666_667ns known
+  DEADLINE_OK may FAIL — FAIL is honest telemetry, not invented PASS
+  TIP_CLIMB=HOLD; no 150 TPS claim; PERFORMANCE_PASS only if deadline met under C09 path
+STATUS=OPEN
+NOTE=telemetry/deadline architecture ≠ champion promote
+
+---
+
+## Rollup
+CLOSED=1/15 (C01)
+OPEN=14/15 (C02–C15)
+CURRENT_OWNER=C02_SSM_IDENTITY_LAYERS_ZERO then C03–C05 numeric
+PROMOTE=0
+TIP_CLIMB=HOLD
+VERDICT=CRITERIA_LADDER_INSTALLED

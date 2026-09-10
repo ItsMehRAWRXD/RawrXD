@@ -1,0 +1,139 @@
+GATE=G3_FINISH_BATCH_TURN_PLUS14_001
+ASOF=2026-09-10T08:40:00-04:00
+KIND=FINISH_BATCH_TURN_PLUS_14
+PARENT=G3_FINISH_BATCH_15_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+CHAMPION_PROMOTE=0
+DUALSTICK_REOPENED=0
+R28_APPLY=HELD
+ELASTIC_PRODUCT_REOPEN=0
+INDEPENDENT_OF=G3_NEMOTRON_H_REAL_SSM_CRITERIA_015
+DO_NOT_TOUCH=ProductRunDecode.hpp,DualStick,VK_ICD,BIND_001
+
+## What is ONE turn of criteria
+TURN_DEF=G3_FINISH_BATCH_15_001
+TURN_COUNT=15
+TURN_SHAPE=coherent finish-batch checklist of independent concrete gates
+  (HeadlessIDE MOTD/.mdc resolve + live tool HTTP + harness aliases +
+   experimental SSM emit honesty + receipt/playbook seals)
+TURN_SUMMARY=15 closed items sealed under G3_FINISH_BATCH_15_001;
+  class = runtime/checkable product+agentic finish criteria, not advice.
+CHOICE=Reuse batch-15 as the turn unit (same class/weight as FINISH_BATCH),
+  then add 14 more of that class below. Not inventing PASS; LIVE_PASS_COUNT=0
+  on the +14 unless a criterion is explicitly SOURCE_WIRED from in-tree emit.
+
+## Original turn criteria (batch-15 — already sealed; not re-run)
+T01 MOTD .mdc parent-root + twin-ext resolve (HeadlessIDE_ToolRoutes)
+T02 LIVE TOOL_MOTD_MDC=200 (port 11455; --dir rawrxd)
+T03 rawrxd/.cursor/rules/PassiveRoleNotRoleplay.mdc twin
+T04 list_directory directory/dir arg aliases — LIVE POST=200
+T05 execute_command cmd arg alias — LIVE CLI=200
+T06 SSM_SCAFFOLD EmitAuthResume + NOT_CERTIFIED line
+T07 NemotronHSsmExperimental EmitAuthResume on success
+T08 R25 RECEIPT k3c_token honesty → SOURCE_WIRED
+T09 R25 WORKER_GAP_NOTE k3c honesty
+T10 CONTINUE_ENSURE WORKER_CONTINUE_STATUS k3c honesty
+T11 CONTINUE_ENSURE WORKER_KEY_LINES k3c honesty
+T12 ProductPathSeal_Champion tetrad Facts present
+T13 Experimental SSM auth/E2E evidence retained
+T14 Playbook note MOTD mdc + aliases + experimental E
+T15 Seal G3_FINISH_BATCH_15_001
+REF=../G3_FINISH_BATCH_15_001/RECEIPT.txt
+
+## +14 more (same class/weight) — FAIL_CLOSED / NOT_RUN unless noted
+OWNER defaults to HeadlessIDE_ToolRoutes / evidence honesty / product gate.
+
+FB16_01 TOOL_NAME_list_dir_ALIAS
+  GATE=POST /api/tool tool=list_dir → list_directory LIVE HTTP=200 after MOTD
+  OWNER=HeadlessIDE_ToolRoutes harness alias
+  STATUS=NOT_RUN
+
+FB16_02 TOOL_NAME_cli_ALIAS
+  GATE=POST /api/tool tool=cli → execute_command LIVE HTTP=200 after MOTD
+  OWNER=HeadlessIDE_ToolRoutes
+  STATUS=NOT_RUN
+
+FB16_03 TOOL_NAME_command_ALIAS
+  GATE=POST /api/tool tool=command → execute_command LIVE HTTP=200 after MOTD
+  OWNER=HeadlessIDE_ToolRoutes
+  STATUS=NOT_RUN
+
+FB16_04 WRITE_FILE_AFTER_MOTD
+  GATE=write_file LIVE HTTP=200 only after MOTD ack (temp under --dir)
+  OWNER=HeadlessIDE executeToolRepl
+  STATUS=NOT_RUN
+
+FB16_05 GIT_STATUS_AFTER_MOTD
+  GATE=git_status LIVE HTTP=200 after MOTD; payload carries exitCode
+  OWNER=HeadlessIDE executeToolRepl
+  STATUS=NOT_RUN
+
+FB16_06 PRE_MOTD_WRITE_STILL_403
+  GATE=write_file before read_motd → HTTP 403 motd_required (fail-closed ladder)
+  OWNER=HeadlessIDE MOTD gate
+  STATUS=NOT_RUN
+
+FB16_07 READ_FILE_MDC_LEAF_ACK
+  GATE=read_file path=.../PassiveRoleNotRoleplay.mdc LIVE=200 and sets MOTD_ACK
+  OWNER=HeadlessIDE resolveMotdPath + motdLeaf
+  STATUS=NOT_RUN
+
+FB16_08 R04_STAT_PRE_MOTD_403
+  GATE=stat_file (or /api/stat-file) before MOTD → 403; after MOTD → 200
+  OWNER=HeadlessIDE_FileAliases + MOTD gate
+  STATUS=NOT_RUN
+  NOTE=R04 sealed PASS historically; this is honesty re-probe of MOTD retention
+
+FB16_09 S6_MULTI_FAMILY_NOT_GREEN
+  GATE=MULTI_FAMILY_PRODUCTOPEN remains NOT_GREEN (≠ TinyLlama R25 ProductOpen;
+       ≠ S5 FINAL_READY; gemma3-only ≠ rollup green)
+  OWNER=playbook S6 / R25 / G3_R1_GEMMA3_ROPE_UNBLOCK_001 honesty
+  STATUS=NOT_RUN
+
+FB16_10 PROMOTE_READY_NE_PROMOTE
+  GATE=PromoteReady may be 1 on live tetrad but product emit PROMOTE=0 /
+       CHAMPION_PROMOTE=0 / TIP_CLIMB=HOLD unchanged
+  OWNER=Deep2ProductGate.hpp::PromoteReady + FINAL_READY_PROMOTE_TETRAD_001
+  STATUS=NOT_RUN
+  NOTE=S5 LIVE_TETRAD_PASS ≠ champion promote (law already stated; re-verify emits)
+
+FB16_11 R28_APPLY_STILL_HELD
+  GATE=RAWRXD_APPLY_HOST_DECODE static_assert==0; DualStick/Elastic product
+       path not reopened; R28=WITNESS_ONLY
+  OWNER=ProductPathInvariants.hpp + G3_PRODUCT_PATH_INVARIANTS_NO_ELASTIC_001
+  STATUS=SOURCE_WIRED
+  NOTE=read static_assert this turn; LIVE product-path re-probe still NOT_RUN
+
+FB16_12 PRODUCTION_DECODE_PATH_STILL_0
+  GATE=PRODUCTION_DECODE_PATH=0 and SSM_CERTIFIED_IMPL=0 until
+       MODEL_GRAPH_COMPLETE && NEMOTRON_SSM_REAL (NEXT_OWNER=SSM_CERTIFIED_IMPL)
+  OWNER=Nemotron owner + experimental E2E receipts
+  STATUS=NOT_RUN
+  NOTE=prior E2E shows PATH=0; do not invent flip
+
+FB16_13 EXP_MAMBA2_TOKENS_GT0
+  GATE=under RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1: REAL_FORWARD=1 IDENTITY=0
+       AND GENERATED_TOKENS>0 AND TOKEN_COMMIT_PASS=1 (CLEAN_EXIT)
+  OWNER=G3_E_SSM_EXPERIMENTAL_E2E_* / SSM_CERTIFIED_IMPL
+  STATUS=NOT_RUN
+  NOTE=prior REAL_FORWARD armed but FIRST_TOKEN=0 — open gate, not PASS
+
+FB16_14 PLAYBOOK_S0_S6_HONESTY_PLUS_MOE
+  GATE=S0–S6 phase table honesty: NOT_RUN≠PASS; S5≠PROMOTE; S6 independent;
+       G3_HOST_MOE_ASYNC_PREFETCH_001 remains NOT_RUN (no MoE GGUF)
+  OWNER=G3_STREAMER_AGENTIC_PLAYBOOK_001 + MoE prefetch receipt
+  STATUS=NOT_RUN
+
+## Disposition
+TURN_CRITERIA_COUNT=15
+ADDED_CRITERIA_COUNT=14
+TOTAL_LISTED=29
+LIVE_PASS_ON_PLUS14=0
+SOURCE_WIRED_ON_PLUS14=1 (FB16_11 only)
+INVENTED_PASS=0
+PRODUCT_PROMOTE_FLIP=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+ARTIFACTS=RECEIPT.txt KEY_LINES.txt
+NEXT=live probe FB16_01..08 then honesty FB16_09..14; never seal PASS without measurement
