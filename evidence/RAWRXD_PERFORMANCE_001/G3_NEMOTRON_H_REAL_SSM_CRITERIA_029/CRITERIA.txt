@@ -1,0 +1,145 @@
+GATE=G3_NEMOTRON_H_REAL_SSM_CRITERIA_029
+ASOF=2026-09-10
+KIND=CRITERIA_LADDER_TURN_PLUS_14
+PARENT=G3_NEMOTRON_H_REAL_SSM_CRITERIA_015
+OWNER_SEAL=G3_NEMOTRON_H_MAMBA2_OWNER_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+PERFORMANCE_PASS=0
+CHAMPION_PROMOTE=0
+EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
+DO_NOT_REWRITE=G3_E_SSM_CERT_001 R1_7_10 DualStick VK_ICD ProductRunDecode.hpp
+FAIL_CLOSED=SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+NOT_RUN!=PASS
+
+## Turn definition (prior unit — not re-spent)
+TURN_UNIT=G3_NEMOTRON_H_REAL_SSM_CRITERIA_015
+TURN_SHAPE=01 closable authority spend + 14 peer rungs (C01–C15)
+TURN_SUMMARY=C01 PASS (geo+Mamba2 REAL_FORWARD+norm-fix tetrad; G3_E_SSM_MAMBA2_001);
+  C02–C15 OPEN production/numeric/graph/FC/GPU/wall ladder.
+REF=../G3_NEMOTRON_H_REAL_SSM_CRITERIA_015/CRITERIA.txt
+
+## This install
+ADDED=C16..C29 (14) — same class: concrete, independently verifiable,
+  cheap/reversible where applicable; Mamba2 arm residuals (buffers,
+  geometry, token_commit honesty, certified-path refuse) without sealing CERT.
+STATUS_DEFAULT=OPEN/NOT_RUN unless live-proven (none invented PASS here).
+
+---
+
+## 16 — In-proj split 17504 bounds
+ID=C16_IN_PROJ_SPLIT_17504
+PASS_IF=
+  ssm_in rows=17504; split exactly z=7680 xBC=9728 dt=96 (no overlap/underrun)
+  midBuf/proj write stays inside allocated span for every SSM layer
+STATUS=OPEN
+NEXT_ACTION=print split offsets once per allow-load; assert on live probe
+
+## 17 — D-skip residual present in yInner
+ID=C17_D_SKIP_RESIDUAL
+PASS_IF=
+  yInner[h,d] includes D[h]*x[h,d] skip after selective scan
+  NUMERIC_FINITE=1 on yInner before GroupRMS; no silent D=null zeroing without emit
+STATUS=OPEN
+
+## 18 — ssm_out LinearW dim / Q8 byte-safe
+ID=C18_SSM_OUT_PROJ_DIM_SAFE
+PASS_IF=
+  ssm_out maps to hidden (3136) from inner (7680); LinearW path byte-safe Q8
+  no heap overrun on out_proj; ||out|| finite on first REAL_FORWARD layer
+STATUS=OPEN
+
+## 19 — Attn head / rope dims held
+ID=C19_ATTN_ROPE_DIM_HELD
+PASS_IF=
+  ATTN_Q_HEADS=40 ATTN_KV_HEADS=8 ATTN_HEAD_DIM=128 throughout Nemotron-H load
+  ROPE_DIM ≠ ATTN_HEAD_DIM permanently; never regenerate headDim as 78/96
+STATUS=OPEN
+
+## 20 — MLP relu2 on 17 FFN-only layers
+ID=C20_MLP_RELU2_SCHEDULE
+PASS_IF=
+  17 MLP-only positions use Nemotron-H relu2 (not Phi/Gemma SwiGLU inheritance)
+  FFN_ONLY identity emit honest when applicable; PRODUCTION_DECODE_PATH still 0
+STATUS=OPEN
+
+## 21 — Session reset clears SSM conv+state
+ID=C21_SESSION_RESET_CLEARS_SSM
+PASS_IF=
+  ProductOpen/session reset zeros ssmState + ssmConvState for all hybrid layers
+  no carry leak across sessions; within-session carry still required (C03)
+STATUS=OPEN
+
+## 22 — ALLOW unset refuse; CERT unaltered
+ID=C22_ALLOW_REFUSE_CERT_HELD
+PASS_IF=
+  RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM unset → experimental Mamba2 path FAIL_CLOSED
+  G3_E_SSM_CERT_001 / R1 stage E receipts not rewritten; SSM_CERT=NOT_CERTIFIED
+STATUS=OPEN
+NOTE=≠ inventing CERT PASS; refuse-path honesty only
+
+## 23 — SSM_BUF alias; no double-alloc/free
+ID=C23_SSM_BUF_ALIAS_NO_DOUBLE_FREE
+PASS_IF=
+  SSM_MAMBA2_ARM=1 via_SSM_BUF only (ssmMamba* aliases SSM_BUF)
+  teardown frees once; no double-alloc of state/conv under re-arm
+STATUS=OPEN
+
+## 24 — Softplus dt clamp honesty (no silent 0.1 max)
+ID=C24_SOFTPLUS_DT_CLAMP_HONEST
+PASS_IF=
+  softplus(dt+bias) uses documented clamp band; no ad-hoc dt max=0.1 unless
+  reference uses same limit; emit clamp hit count or prove unused
+STATUS=OPEN
+NOTE=deepens C05; C05 may stay OPEN until full HF parity
+
+## 25 — B/C group index parity (groups=8)
+ID=C25_BC_GROUP_INDEX_PARITY
+PASS_IF=
+  B/C indexed by gi = h / (H/G) with H=96 G=8 → group_size heads=12
+  group_state = SSM_STATE_SIZE; no head-as-group mis-stride
+STATUS=OPEN
+
+## 26 — Prefill→decode state continuity
+ID=C26_PREFILL_DECODE_STATE_CONTINUITY
+PASS_IF=
+  last prefill position state is input to first decode step (no silent zero)
+  SSM_STATE_CARRIED_TO_NEXT_TOKEN=1 across prefill/decode boundary
+STATUS=OPEN
+NOTE=narrows C03 to the critical boundary
+
+## 27 — Weight map complete live (SsmNemotronComplete)
+ID=C27_WEIGHT_MAP_COMPLETE_LIVE
+PASS_IF=
+  every hasSSM layer: ssmIn/Out/Conv1d(+bias)/A/D/DtBias/Norm mapped
+  no [SSM_UNKNOWN] required tensors; incomplete map → REAL_FORWARD refused
+STATUS=OPEN
+
+## 28 — GgufDynamicGeometry forbid hidden/heads overwrite
+ID=C28_GGUF_GEO_FORBID_HIDDEN_HEADS
+PASS_IF=
+  GgufDynamicGeometry refuses nemotron hidden/heads/headDim overwrite that
+  would set SSM_STATE_DIM=96-as-state or attn headDim≠128
+  NEMOTRON_H_SSM_GEOMETRY emit remains authoritative
+STATUS=OPEN
+
+## 29 — REAL_FORWARD clean exit / no AV (token_commit residual)
+ID=C29_REAL_FORWARD_CLEAN_EXIT
+PASS_IF=
+  under ALLOW+armed: CLEAN_EXIT=1; no ACCESS_VIOLATION / HEAP_CORRUPT on probe
+  TOKEN_COMMIT_PASS may still FAIL — FAIL is honest; crash ≠ numeric fail
+  FIRST_TOKEN/GENERATED_TOKENS recorded without inventing PASS
+STATUS=OPEN
+NOTE=aligns stabilize-01 residual; does not seal CERT or PROMOTE
+
+---
+
+## Rollup
+PRIOR_TURN_CLOSED=1/15 (C01 on CRITERIA_015)
+PRIOR_TURN_OPEN=14/15 (C02–C15)
+PLUS14_CLOSED=0/14
+PLUS14_OPEN=14/14 (C16–C29)
+CURRENT_OWNER=stabilize token_commit (STABILIZE_015.01 / C29 peer) then C02–C05
+PROMOTE=0
+TIP_CLIMB=HOLD
+VERDICT=CRITERIA_PLUS14_INSTALLED_OPEN

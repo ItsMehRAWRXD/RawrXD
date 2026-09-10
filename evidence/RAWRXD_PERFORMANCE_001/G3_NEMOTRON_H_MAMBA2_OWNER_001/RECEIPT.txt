@@ -66,6 +66,11 @@ PRODUCTION_CRITERIA_LADDER=G3_NEMOTRON_H_REAL_SSM_CRITERIA_015
   PATH=evidence/RAWRXD_PERFORMANCE_001/G3_NEMOTRON_H_REAL_SSM_CRITERIA_015/CRITERIA.txt
   NOTE=production climb after stabilize; do not invent PASS on TOKEN_COMMIT
   from E2E_001 (TOKEN_COMMIT_PASS=0) — C01 claims need G3_E_SSM_MAMBA2_001 only
+PLUS14_GATE=G3_NEMOTRON_H_REAL_SSM_CRITERIA_029
+  PATH=evidence/RAWRXD_PERFORMANCE_001/G3_NEMOTRON_H_REAL_SSM_CRITERIA_029/CRITERIA.txt
+  C16–C29=OPEN (14: in-proj/D-skip/out_proj/attn-rope/relu2/reset/refuse/
+    SSM_BUF/softplus/BC-index/prefill-decode/weights/geo-forbid/clean-exit)
+  PROMOTE=0 TIP_CLIMB=HOLD EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
 
 ## Do not reopen
 tokenizer LAA Q8_GEMV GGUF mount BATCH_007 DualStick R1 7/10

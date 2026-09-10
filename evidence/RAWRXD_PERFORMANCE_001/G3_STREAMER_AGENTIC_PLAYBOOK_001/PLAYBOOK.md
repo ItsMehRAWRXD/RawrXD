@@ -43,6 +43,8 @@ E/nemotron: transport PASS under experimental flag ≠ production Nemotron math.
   NEXT=`G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015`:
   01 stabilize REAL_FORWARD → TOKEN_COMMIT; 02–15 identity0→norm→conv→
   state→8tok→graph/real→parity→hand-off CRITERIA_015.11–15.
+  Plus-14 ladder: `G3_NEMOTRON_H_REAL_SSM_CRITERIA_029` (C16–C29 OPEN;
+  buffers/geo/token_commit/refuse; PROMOTE=0; ≠ CERT seal).
 MOTD .mdc: parent-root resolve + rawrxd twin; tool aliases directory/dir + cmd (G3_FINISH_BATCH_15_001).
 Finish-batch turn+14: G3_FINISH_BATCH_TURN_PLUS14_001 (T01–T15 sealed; FB16_01–14 NOT_RUN; PROMOTE=0).
 
