@@ -1,0 +1,2 @@
+﻿G:\~dev\rawrxd\smoke_bin\ WRITABLE=1
+C:\r1cert\smoke_bin\ WRITABLE=1

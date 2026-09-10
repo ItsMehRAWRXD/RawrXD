@@ -1,0 +1,8 @@
+﻿ROOT_R26=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_RESIDUAL_R26_001\smoke_bin\ EXISTS=1
+ROOT_ADMIT=G:\~dev\rawrxd\build-fd\smoke_bin_admit\ EXISTS=1
+BUILD_FD_BIN=G:\~dev\rawrxd\build-fd\bin\ EXISTS=1
+ROOT_CERT=C:\r1cert\smoke_bin\ EXISTS=1
+ROOT_R01=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_IDE_RESIDUAL_R01_001\smoke_bin\ EXISTS=1
+ROOT_PRODUCT=G:\~dev\rawrxd\smoke_bin\ EXISTS=1
+ROOT_R11=G:\~dev\rawrxd\build-fd\bin\smoke_bin\ EXISTS=1
+ROOT_STREAMER=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001\smoke_bin\ EXISTS=1
