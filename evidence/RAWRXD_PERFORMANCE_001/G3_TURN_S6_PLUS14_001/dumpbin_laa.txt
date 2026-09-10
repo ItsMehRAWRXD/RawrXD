@@ -1,0 +1,2 @@
+﻿dumpbin /headers RawrXD-Win32IDE.exe
+Application can handle large (>2GB) addresses

@@ -29,13 +29,20 @@ S4 PASS — G3_S4_SESSION_LIFECYCLE_001 (LOAD/GEN/UNLOAD/LOAD/GEN all 200; PROCE
 R25 HEADLESS_OPEN (ProductOpen+SESSION emit) is sealed separately from S5.
 S5 PASS — G3_S5_FINAL_READY_LIVE_001 TinyLlama tetrad live
 (`PRODUCT_OPEN_PASS=1 SESSION_ENTER_PASS=1 GENERATED_TOKENS=8 TOKEN_COMMIT_PASS=1 PRODUCT_PASS=1`);
-`PROMOTE=0` (tetrad ≠ champion). S6 MULTI_FAMILY still independent / NOT_GREEN rollup.
+`PROMOTE=0` (tetrad ≠ champion).
+S6 MULTI_FAMILY ProductOpen PASS — G3_TURN_S6_PLUS14_001 (phi3+gemma3 live tetrad;
+`PRODUCT_OPEN=1 SESSION=1 COMMIT=1 TOKENS=8 PRODUCT_PASS=1` each; `PROMOTE=0`).
+R1 matrix seal UNALTERED FAIL_CLOSED 7/10 (S6 ProductOpen ≠ R1 full green ≠ champion).
 P06 honesty LIVE (KickChair; see P06_HONEST_RECEIPT). MoE async prefetch NOT_RUN (no MoE GGUF).
 
-Child live: G3_R1_GEMMA3_ROPE_UNBLOCK_001 PASS (S6 gemma3-only; multi-family still NOT_GREEN).
-E/nemotron: G3_E_SSM_EXPERIMENTAL_AUTH_001 EXPERIMENTAL_AUTH_PASS
-  + G3_E_SSM_EXPERIMENTAL_E2E_001 EXPERIMENTAL_E2E_PASS (GENERATED_TOKENS=8 tetrad under flag;
-  SSM_CERT still NOT_CERTIFIED; PROMOTE=0; ExperimentalSsmAuth.hpp emit; IDENTITY scaffold).
-NEXT: SSM_CERTIFIED_IMPL (arm buffers / parity scan) then MULTI_FAMILY rollup / champion.
+Child live: G3_R1_GEMMA3_ROPE_UNBLOCK_001 PASS; S6 rollup now multi-family ProductOpen.
+E/nemotron: transport PASS under experimental flag ≠ production Nemotron math.
+  CURRENT_OWNER=`G3_NEMOTRON_H_MAMBA2_OWNER_001` / `NEMOTRON_H_REAL_SSM_001`:
+  state=128 heads=96 inner=7680; forbid SSM_STATE_DIM=96; IDENTITY→Mamba2;
+  PRODUCTION_DECODE_PATH only if MODEL_GRAPH_COMPLETE && NEMOTRON_SSM_REAL.
+  NEXT=`G3_NEMOTRON_H_MAMBA2_STABILIZE_CRITERIA_015`:
+  01 stabilize REAL_FORWARD → TOKEN_COMMIT; 02–15 identity0→norm→conv→
+  state→8tok→graph/real→parity→hand-off CRITERIA_015.11–15.
 MOTD .mdc: parent-root resolve + rawrxd twin; tool aliases directory/dir + cmd (G3_FINISH_BATCH_15_001).
+Finish-batch turn+14: G3_FINISH_BATCH_TURN_PLUS14_001 (T01–T15 sealed; FB16_01–14 NOT_RUN; PROMOTE=0).
 
