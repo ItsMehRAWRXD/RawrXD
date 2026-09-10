@@ -1,0 +1,49 @@
+GATE=G3_IDE_GENERATE_AV_LIVE_REPRO_001
+ASOF=2026-09-10T13:05Z
+OWNER=R01_PRODUCT_GENERATE_AV
+AUTH=Chat 5bba9985 · IDE_/api/generate_AV_TRIAGE · PRODUCT_GENERATE_PATH_ONLY
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+VERDICT=PASS
+R01=CLOSED
+
+## ROOT_CAUSE (this residual reopen)
+Prior R01 seals (FIX_001/002 + RESIDUAL_R01_001) closed ProductDeep2Infer AV on
+LAA:NO via HOST_DECODE floor. Live re-smoke on current LAA:YES IDE (SHA pre-fix
+74FFB40D…) showed:
+  BEFORE_HTTP=/api/generate HTTP 200 PRODUCT_PASS=1 PROCESS_SURVIVED=1 (HOST_DECODE floor held)
+  BEFORE_ONESHOT=mode=2 died after CONFIG / "initializing…" (no INIT_DONE, EXIT empty,
+                 ~168s) — SingleShot armed LSP/Hotpatch/governor/Phase12 (defaults ON)
+                 that Server profile skips; AV/containment before ProductDeep2Infer.
+
+FIRST_AV_OWNER (original)=LAA:NO ProductOpenSession → amdvlk snmalloc (HOST_DECODE)
+ONESHOT_RESIDUAL_OWNER=HeadlessIDE initialize non-Server tryInit stack (Hotpatch/LSP/…)
+
+## FIX (GENERATE_PATH_ONLY)
+HeadlessIDE.cpp: productLean profile = Server|SingleShot|Batch
+  → skip LSP / HybridBridge / MultiResponse / Phase10 / Phase12 / Hotpatch /
+    Instructions (same lean path as Server).
+  Breadcrumbs POST_INIT_BANNER / POST_WINSOCK for init localization.
+HOST_DECODE / ProductStreamerPrep / DualStick holds unchanged.
+
+## LIVE AFTER
+EXE=build-fd/bin/RawrXD-Win32IDE.exe
+SMOKE=smoke_bin/RawrXD-Win32IDE_r01_live.exe
+SHA256=6D1BC963E709A910DD9EEDBA1C46B1FF43B9D32D932502655FBE328648C20705
+PE_LAA=YES (HOST_DECODE still forced: !RAWRXD_ALLOW_GPU)
+ONESHOT=
+  --headless --no-server --local --model tinyllama --prompt "say hi"
+  EXIT=0 MS~2814 INIT_DONE RUN_ENTER mode=2
+  GENERATED_TOKENS=8 PRODUCT_PASS=1 PROCESS_SURVIVED=1 ACCESS_VIOLATION=0
+  ARTIFACT=smoke_bin/headless_oneshot.txt BYTES=32
+HTTP=
+  --headless --server --port 11492 --model tinyllama --local
+  POST /api/generate → HTTP 200 body done=true
+  GENERATED_TOKENS=8 PRODUCT_PASS=1 PROCESS_SURVIVED=1 ACCESS_VIOLATION=0
+  BODY=http_after_body.txt
+
+## UNCHANGED
+CLI_AGENTIC KEEP_CLOSED · STREAMER_AGENTIC KEEP_SEALED · DUALSTICK DO_NOT_REOPEN
+MOTD seals untouched · PATH_B not invented · GPU/Vulkan on product floor deferred
+PROMOTE=0 TIP_CLIMB=HOLD

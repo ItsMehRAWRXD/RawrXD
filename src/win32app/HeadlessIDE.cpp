@@ -1012,10 +1012,18 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     m_outputSink->appendOutput("RawrXD Headless IDE initializing...", OutputSeverity::Info);
     m_outputSink->appendOutput(("Session: " + m_sessionId).c_str(), OutputSeverity::Debug);
     m_outputSink->appendOutput(("Version: " + std::string(VERSION)).c_str(), OutputSeverity::Debug);
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "POST_INIT_BANNER\n"); fclose(f); }
+    }
 
     // Initialize WinSock (required for HTTP server + remote backends)
     HeadlessResult wr = initWinsock();
     if (!wr.success) return wr;
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "POST_WINSOCK\n"); fclose(f); }
+    }
 
     // G4_EARLY_LISTENER: establish product transport before optional/heavy runtime init.
     // Default and --local are native-only. Ollama is permitted only when explicitly selected.
@@ -1053,13 +1061,19 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     tryInit(&HeadlessIDE::initFailureDetection, "FailureDetection");
     tryInit(&HeadlessIDE::initAgentHistory, "AgentHistory");
     tryInit(&HeadlessIDE::initAsmSemantic, "AsmSemantic");
-    if (m_config.mode != HeadlessRunMode::Server) {
+    /* R01: SingleShot/Batch share Server lean profile — LSP/Hotpatch/governor
+     * defaults AV under oneshot before ProductDeep2Infer (dbgcore 0xC0000005). */
+    const bool productLean =
+        m_config.mode == HeadlessRunMode::Server ||
+        m_config.mode == HeadlessRunMode::SingleShot ||
+        m_config.mode == HeadlessRunMode::Batch;
+    if (!productLean) {
         tryInit(&HeadlessIDE::initLSPClient, "LSPClient");
     } else {
-        m_outputSink->appendOutput("LSP client disabled in server profile",
+        m_outputSink->appendOutput("LSP client disabled in product-lean profile",
                                    OutputSeverity::Debug);
     }
-    if (m_config.mode != HeadlessRunMode::Server) {
+    if (!productLean) {
         tryInit(&HeadlessIDE::initHybridBridge, "HybridBridge");
         tryInit(&HeadlessIDE::initMultiResponse, "MultiResponse");
         if (m_expGovernorEnabled) {
@@ -1071,7 +1085,7 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
         }
     }
     tryInit(&HeadlessIDE::initPhase11, "Phase11-Swarm");
-    if (m_config.mode != HeadlessRunMode::Server) {
+    if (!productLean) {
         tryInit(&HeadlessIDE::initPhase12, "Phase12-NativeDebug");
         if (m_expHotpatchEnabled) {
             tryInit(&HeadlessIDE::initHotpatch, "Hotpatch");
@@ -1085,10 +1099,10 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
             m_outputSink->appendOutput("[EXPERIMENTAL] layer_eviction_activated=true (RAWRXD_ENABLE_LAYER_EVICTION=1)", OutputSeverity::Info);
         }
     }
-    if (m_config.mode != HeadlessRunMode::Server) {
+    if (!productLean) {
         tryInit(&HeadlessIDE::initInstructions, "Instructions");
     } else {
-        m_outputSink->appendOutput("Instructions provider disabled in server profile",
+        m_outputSink->appendOutput("Instructions provider disabled in product-lean profile",
                                    OutputSeverity::Debug);
     }
 
