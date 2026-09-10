@@ -1,7 +1,0 @@
-{
-  "main": [],
-  "dll": [],
-  "exports": [
-    "add_two_numbers"
-  ]
-}

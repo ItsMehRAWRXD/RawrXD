@@ -1,5 +1,0 @@
-**/*.ts
-**/*.map
-node_modules/**
-media/**
-README.md
