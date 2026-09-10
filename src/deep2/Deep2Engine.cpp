@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // Deep2Engine.cpp - Production Inference Engine Implementation
 // Real weight loading, real attention, real FFN, real sampling
 // NO STUBS, NO DUMMIES, NO HARDCODED VALUES
@@ -17,6 +17,8 @@
 #include "RawrReverseCompletion.hpp"
 #include "NemotronHSsmMap.hpp"
 #include "NemotronHSsmExperimental.hpp"
+#include "NemotronHGeometry.hpp"
+#include "NemotronHMamba2Step.hpp"
 #include "HostQ8GemvSafe.hpp"
 #include "FinalNormAcquire.hpp"
 #include "FinalNormProduce.hpp"
@@ -1733,19 +1735,28 @@ bool Deep2Engine::allocateBuffers() {
             numHeads * qkNopeHeadDim, numHeads * vHeadDim);
     }
 
-    // SSM / Mamba buffers â€” element counts only (alignedAlloc multiplies by sizeof(float)).
-    ssmState     = alignedAlloc(config.numLayers * ssmStateDim);
-    ssmConvState = alignedAlloc(config.numLayers * ssmConvKernel * hiddenSize);
-    ssmX         = alignedAlloc(hiddenSize);
-    ssmY         = alignedAlloc(hiddenSize);
-    ssmTemp      = alignedAlloc(hiddenSize);
-    if (ssmState) {
-        memset(ssmState, 0, config.numLayers * ssmStateDim * sizeof(float));
-    }
-    if (ssmConvState) {
-        memset(ssmConvState, 0, config.numLayers * ssmConvKernel * hiddenSize * sizeof(float));
-    }
-
+    // SSM / Mamba — Nemotron-H: [L][inner*state] + [L][convDim*K]; else legacy.
+    const size_t stPer = (nemotronGeoOk_ && ssmInner_ && ssmStateSize_)
+                             ? (ssmInner_ * ssmStateSize_)
+                             : ssmStateDim;
+    const size_t cvPer = (nemotronGeoOk_ && ssmConvDim_)
+                             ? (ssmConvDim_ * ssmConvKernel)
+                             : (ssmConvKernel * hiddenSize);
+    const size_t yN = (ssmInner_ > hiddenSize) ? ssmInner_ : hiddenSize;
+    const size_t pN = (ssmInRows_ > hiddenSize) ? ssmInRows_ : hiddenSize;
+    ssmState = alignedAlloc(config.numLayers * stPer);
+    ssmConvState = alignedAlloc(config.numLayers * cvPer);
+    ssmX = alignedAlloc(yN);
+    ssmY = alignedAlloc(yN);
+    ssmTemp = alignedAlloc(pN);
+    if (ssmState)
+        memset(ssmState, 0, config.numLayers * stPer * sizeof(float));
+    if (ssmConvState)
+        memset(ssmConvState, 0, config.numLayers * cvPer * sizeof(float));
+    fprintf(stderr,
+            "SSM_BUF stPer=%zu cvPer=%zu inner=%zu state=%zu "
+            "NOTE=STATE_NE_HEADS\n",
+            stPer, cvPer, ssmInner_, ssmStateSize_);
     const bool baseOkay =
         hiddenStates && attentionOutput && attnHeadScratch_ && ffnOutput && logits &&
         qProj && kProj && vProj && gateBuf && upBuf && layerTemp;
@@ -1761,6 +1772,34 @@ bool Deep2Engine::allocateBuffers() {
     if (!ssmState || !ssmConvState || !ssmX || !ssmY || !ssmTemp) {
         fprintf(stderr, "[Deep2Engine] ERROR: SSM scratch buffer allocation failed\n");
         return false;
+    }
+    /* Mamba2 aliases SSM_BUF when geometry OK (experimental; != CERT). */
+    ssmMambaArmed_ = (nemotronGeoOk_ && ssmTemp && ssmX && ssmState &&
+                      ssmConvState && ssmInner_ && ssmStateSize_)
+                         ? 1
+                         : 0;
+    if (ssmMambaArmed_) {
+        ssmMambaProj_ = ssmTemp;
+        ssmMambaY_ = ssmX;
+        ssmMambaState_ = ssmState;
+        ssmMambaConv_ = ssmConvState;
+        ssmMambaInRows_ = ssmInRows_;
+        ssmMambaInner_ = ssmInner_;
+        ssmMambaStateN_ = ssmStateSize_;
+        ssmMambaHeads_ = ssmHeads_;
+        ssmMambaHeadDim_ = ssmHeadDimM_;
+        ssmMambaGroups_ = ssmGroups_;
+        ssmMambaConvDim_ = ssmConvDim_;
+        ssmMambaConvK_ = ssmConvKernel;
+        ssmMambaGroupState_ =
+            (ssmConvDim_ > ssmInner_) ? (ssmConvDim_ - ssmInner_) / 2 : 0;
+        ssmMambaDtRank_ = ssmHeads_;
+        fprintf(stderr,
+                "SSM_MAMBA2_ARM=1 via_SSM_BUF inner=%zu state=%zu "
+                "PRODUCTION_DECODE_PATH=0 SSM_CERT=NOT_CERTIFIED\n",
+                ssmInner_, ssmStateSize_);
+    } else {
+        fprintf(stderr, "SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF\n");
     }
     return true;
 }
@@ -1787,6 +1826,9 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(ssmX);
     alignedFree(ssmY);
     alignedFree(ssmTemp);
+    /* ssmMamba* alias SSM_BUF — do not double-free. */
+    ssmMambaProj_ = ssmMambaY_ = ssmMambaState_ = ssmMambaConv_ = nullptr;
+    ssmMambaArmed_ = 0;
     hiddenStates = attentionOutput = attnHeadScratch_ = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
@@ -3011,22 +3053,32 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             Deep2::experimental_ssm::EmitAuthResume(stderr, ssmLayers);
             fprintf(stderr,
                 "[Deep2Engine] WARNING: RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 — "
-                "%zu approximate SSM layers enabled\n",
+                "%zu SSM layers (geometry!=scaffold; PROD_DECODE=0 until REAL=21)\n",
                 ssmLayers);
+            ssmHybridLayers_ = ssmLayers;
             for (const auto& lw : modelWeights.layers) {
                 if (!lw.hasSSM) continue;
-                size_t dim = lw.ssmA.rows > lw.ssmA.cols ? lw.ssmA.rows : lw.ssmA.cols;
-                if (dim == 0 && lw.ssmDtBias.cols) dim = lw.ssmDtBias.cols;
-                if (dim == 0 && lw.ssmDtBias.rows) dim = lw.ssmDtBias.rows;
-                if (dim > ssmStateDim) ssmStateDim = dim;
-                if (lw.ssmConv1d.cols > 1 && lw.ssmConv1d.cols <= 16)
-                    ssmConvKernel = lw.ssmConv1d.cols;
-                else if (lw.ssmConv1d.rows > 1 && lw.ssmConv1d.rows <= 16)
-                    ssmConvKernel = lw.ssmConv1d.rows;
+                const auto geo =
+                    Deep2::nemotron_h::ResolveFromLayer(lw, config.hiddenDim);
+                Deep2::nemotron_h::Emit(stderr, geo);
+                ssmHeads_ = geo.ssmHeads;
+                ssmHeadDimM_ = geo.ssmHeadDim;
+                ssmInner_ = geo.ssmInner;
+                ssmGroups_ = geo.ssmGroups;
+                ssmStateSize_ = geo.ssmState;
+                ssmConvDim_ = geo.ssmConvDim;
+                ssmInRows_ = geo.ssmInRows;
+                ssmConvKernel = geo.ssmConvK ? geo.ssmConvK : 4;
+                /* NEVER set ssmStateDim from A/dt(=96). State size is 128. */
+                ssmStateDim = geo.ssmState ? geo.ssmState : 128;
+                nemotronGeoOk_ = geo.ok;
+                fprintf(stderr,
+                        "MAMBA_NUM_HEADS=%zu MAMBA_HEAD_DIM=%zu "
+                        "SSM_STATE_SIZE=%zu SSM_CONV_KERNEL=%zu "
+                        "OLD_BUG_SSM_STATE_DIM_WAS_96=1\n",
+                        ssmHeads_, ssmHeadDimM_, ssmStateSize_, ssmConvKernel);
                 break;
             }
-            fprintf(stderr, "SSM_STATE_DIM=%zu SSM_CONV_KERNEL=%zu\n",
-                    ssmStateDim, ssmConvKernel);
             EmitNemotronTensorMap(stderr, modelWeights, meta.architecture.c_str());
             const auto map = AssessNemotronSsmMap(modelWeights);
             if (!map.complete) {
@@ -6306,6 +6358,8 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     Deep2::Ev512::HostEmitRequestRouted(1, k2ShardIndexOpen_ ? 2ull : 1ull);
     Deep2::Ev512::HostEmitDeep2SessionCreate(1, (uint64_t)options.maxTokens);
     Deep2::Ev512::HostEmitDeep2SessionReady(1, 0);
+    ssmRealCalls_ = 0;
+    ssmIdentityCalls_ = 0;
 
     // STREAM_BACKWARDS: emit receipts before any decode wait.
     {
@@ -6543,7 +6597,36 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 xf.wallNs = rawr::product_path::WallNsFromSpt();
                 xf.textBytes = 0;
                 xf.candidateTokenHash = rawr::batch007::A().streamHash;
-                xf.productionDecode = out.generatedTokens > 0 ? 1 : 0;
+                {
+                    const int graph =
+                        (ssmHybridLayers_ == 0 ||
+                         (ssmIdentityCalls_ == 0 && ssmMambaArmed_ &&
+                          ssmRealCalls_ > 0 &&
+                          ssmHybridLayers_ > 0))
+                            ? 1
+                            : 0;
+                    const int nemoReal =
+                        (ssmMambaArmed_ && ssmIdentityCalls_ == 0 &&
+                         ssmHybridLayers_ > 0 &&
+                         ssmRealCalls_ >= ssmHybridLayers_)
+                            ? 1
+                            : 0;
+                    fprintf(stderr,
+                            "PRODUCT_ENTRY_PATH=1\nSTREAM_RUNTIME_PATH=1\n"
+                            "MODEL_GRAPH_COMPLETE=%d\nNEMOTRON_SSM_REAL=%d\n"
+                            "SSM_REAL_LAYERS=%zu SSM_IDENTITY_LAYERS=%zu "
+                            "SSM_HYBRID_LAYERS=%zu SSM_MAMBA_ARMED=%d\n"
+                            "NUMERIC_PARITY=UNPROVEN\nFUNCTIONAL_MODEL_PASS=%d\n"
+                            "GATE=NEMOTRON_H_REAL_SSM_001\n"
+                            "PRODUCTION_DECODE_PATH=0\nPROMOTE=0\n"
+                            "SSM_CERT=NOT_CERTIFIED\n",
+                            graph, nemoReal, ssmRealCalls_, ssmIdentityCalls_,
+                            ssmHybridLayers_, ssmMambaArmed_, nemoReal);
+                }
+                xf.productionDecode =
+                    (ssmHybridLayers_ > 0)
+                        ? 0
+                        : (out.generatedTokens > 0 ? 1 : 0);
                 xf.modelOutput = out.generatedTokens > 0 ? 1 : 0;
                 xf.streamPresent = st.count > 0 ? 1 : 0;
                 xf.receiptAtomic = 1;
@@ -6801,8 +6884,35 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         xf.wallNs = sptWall ? sptWall : wallNs;
         xf.textBytes = streamed.size();
         xf.candidateTokenHash = rawr::batch007::A().streamHash;
+        {
+            const int graph =
+                (ssmHybridLayers_ == 0 ||
+                 (ssmIdentityCalls_ == 0 && ssmMambaArmed_ &&
+                  ssmRealCalls_ > 0 && ssmHybridLayers_ > 0))
+                    ? 1
+                    : 0;
+            const int nemoReal =
+                (ssmMambaArmed_ && ssmIdentityCalls_ == 0 &&
+                 ssmHybridLayers_ > 0 &&
+                 ssmRealCalls_ >= ssmHybridLayers_)
+                    ? 1
+                    : 0;
+            fprintf(stderr,
+                    "PRODUCT_ENTRY_PATH=1\nSTREAM_RUNTIME_PATH=1\n"
+                    "MODEL_GRAPH_COMPLETE=%d\nNEMOTRON_SSM_REAL=%d\n"
+                    "SSM_REAL_LAYERS=%zu SSM_IDENTITY_LAYERS=%zu "
+                    "SSM_HYBRID_LAYERS=%zu SSM_MAMBA_ARMED=%d\n"
+                    "NUMERIC_PARITY=UNPROVEN\nFUNCTIONAL_MODEL_PASS=%d\n"
+                    "GATE=NEMOTRON_H_REAL_SSM_001\n"
+                    "PRODUCTION_DECODE_PATH=0\nPROMOTE=0\n"
+                    "SSM_CERT=NOT_CERTIFIED\n",
+                    graph, nemoReal, ssmRealCalls_, ssmIdentityCalls_,
+                    ssmHybridLayers_, ssmMambaArmed_, nemoReal);
+        }
         xf.productionDecode =
-            (result.generatedTokens > 0 && result.completed) ? 1 : 0;
+            (ssmHybridLayers_ > 0)
+                ? 0
+                : ((result.generatedTokens > 0 && result.completed) ? 1 : 0);
         xf.modelOutput = result.generatedTokens > 0 ? 1 : 0;
         xf.streamPresent = !streamed.empty() ? 1 : 0;
         xf.receiptAtomic = rawr::batch007::A().receiptAtomic;
@@ -8136,8 +8246,44 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         throw std::runtime_error("SSM-CERT-001 experimental path blocked");
     }
 
-    /* Nemotron-H: mapped tensors without legacy ssmAlpha — experimental scan.
-       Still PRODUCTION_DECODE_PATH=0 / SSM_CERT NOT_CERTIFIED. */
+    /* Nemotron-H Mamba2 real-forward (experimental). PROD_DECODE=0 / NOT CERT. */
+    if (lw.ssmIn.data && !lw.ssmAlpha.data && ssmMambaArmed_) {
+        nemotron_h::Geo g{};
+        g.hidden = hiddenDim;
+        g.ssmHeads = ssmMambaHeads_;
+        g.ssmHeadDim = ssmMambaHeadDim_;
+        g.ssmInner = ssmMambaInner_;
+        g.ssmGroups = ssmMambaGroups_;
+        g.ssmState = ssmMambaStateN_;
+        g.ssmGroupState = ssmMambaGroupState_;
+        g.ssmDtRank = ssmMambaDtRank_;
+        g.ssmConvK = ssmMambaConvK_;
+        g.ssmConvDim = ssmMambaConvDim_;
+        g.ssmInRows = ssmMambaInRows_;
+        g.ok = 1;
+        nemotron_h::StepBuf sb{};
+        sb.proj = ssmMambaProj_;
+        sb.yInner = ssmMambaY_;
+        sb.state = ssmMambaState_;
+        sb.conv = ssmMambaConv_;
+        auto lin = [this](const WeightTensor& wt, const float* in, const float* bias,
+                          float* out, size_t od) { LinearW(wt, in, bias, out, od); };
+        if (nemotron_h::RunMamba2Token(layer, lw, g, input, output, sb, lin)) {
+            ++ssmRealCalls_;
+            static int once = 0;
+            if (!once++) {
+                fprintf(stderr,
+                    "[SSM_MAMBA2] REAL_FORWARD=1 layer=%zu IDENTITY=0 "
+                    "state=%zu heads=%zu inner=%zu PRODUCTION_DECODE_PATH=0 "
+                    "SSM_CERT=NOT_CERTIFIED\n",
+                    layer, g.ssmState, g.ssmHeads, g.ssmInner);
+                fflush(stderr);
+            }
+            return;
+        }
+    }
+
+    /* Legacy approximate experimental scan (buffers may skip -> identity). */
     {
         nemotron_ssm::Buf b{};
         b.x = ssmX;
@@ -8154,7 +8300,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 
     // Legacy scaffold: ssm_in without selective-scan tensors incomplete.
     if (lw.ssmIn.data && !lw.ssmAlpha.data) {
-        Deep2::experimental_ssm::EmitAuthResume(stderr, 1);
+        ++ssmIdentityCalls_;
         fprintf(stderr,
             "[SSM_SCAFFOLD] layer=%zu IDENTITY=1 inRows=%zu outCols=%zu "
             "stateDim=%zu PRODUCTION_DECODE_PATH=0 "

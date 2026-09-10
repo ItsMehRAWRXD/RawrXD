@@ -795,14 +795,41 @@ private:
     float* mlaK_b = nullptr;      // [numHeads * qkNopeHeadDim]
     float* mlaV_b = nullptr;      // [numHeads * vHeadDim]
 
-    // SSM / Mamba buffers
-    float* ssmState = nullptr;      // [numLayers * ssmStateDim] — per-layer SSM hidden state
-    float* ssmConvState = nullptr;  // [numLayers * ssmConvSize * hiddenDim] — causal conv1d state
-    float* ssmX = nullptr;          // [hiddenDim] — SSM input buffer
-    float* ssmY = nullptr;          // [hiddenDim] — SSM output buffer
-    float* ssmTemp = nullptr;       // [hiddenDim] — SSM temp buffer
-    size_t ssmStateDim = 32;        // SSM state dimension (from tensor dims)
-    size_t ssmConvKernel = 4;       // Conv1d kernel size (from tensor dims)
+    // SSM / Mamba buffers (Nemotron-H: state=[L,H,D,N]=inner*state_size)
+    float* ssmState = nullptr;
+    float* ssmConvState = nullptr;
+    float* ssmX = nullptr;     /* yInner scratch [ssmInner_] */
+    float* ssmY = nullptr;
+    float* ssmTemp = nullptr;  /* proj scratch [ssmInRows_] */
+    size_t ssmStateDim = 32;   /* legacy; Nemotron uses ssmStateSize_=128 */
+    size_t ssmConvKernel = 4;
+    size_t ssmInner_ = 0;
+    size_t ssmStateSize_ = 0;  /* 128 — not heads(96) */
+    size_t ssmConvDim_ = 0;
+    size_t ssmInRows_ = 0;
+    size_t ssmHeads_ = 0;
+    size_t ssmHeadDimM_ = 0;
+    size_t ssmGroups_ = 0;
+    int nemotronGeoOk_ = 0;
+    size_t ssmRealCalls_ = 0;
+    size_t ssmIdentityCalls_ = 0;
+    size_t ssmHybridLayers_ = 0;
+    /* Nemotron-H Mamba2 experimental scratch (≠ CERT). */
+    float* ssmMambaProj_ = nullptr;
+    float* ssmMambaY_ = nullptr;
+    float* ssmMambaState_ = nullptr;
+    float* ssmMambaConv_ = nullptr;
+    int ssmMambaArmed_ = 0;
+    size_t ssmMambaInRows_ = 0;
+    size_t ssmMambaInner_ = 0;
+    size_t ssmMambaStateN_ = 0;
+    size_t ssmMambaHeads_ = 0;
+    size_t ssmMambaHeadDim_ = 0;
+    size_t ssmMambaGroups_ = 0;
+    size_t ssmMambaConvDim_ = 0;
+    size_t ssmMambaConvK_ = 0;
+    size_t ssmMambaGroupState_ = 0;
+    size_t ssmMambaDtRank_ = 0;
 
     bool initialized = false;
     ModelState modelState_ = ModelState::Closed;

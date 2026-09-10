@@ -1,0 +1,69 @@
+GATE=G3_E_SSM_EXPERIMENTAL_E2E_003
+ASOF=2026-09-10
+KIND=LIVE_EXPERIMENTAL_SSM_BUFFER_ARM_E2E
+PARENT=G3_E_SSM_EXPERIMENTAL_E2E_002
+PRIOR=33b53f29dd (AUTH+E2E identity scaffold seal)
+PROMOTE=0
+TIP_CLIMB=HOLD
+PERFORMANCE_PASS=0
+CHAMPION_PROMOTE=0
+R1_CERT_REWRITE=0
+DO_NOT_REWRITE=G3_E_SSM_CERT_001
+EXPERIMENTAL_NEQ_SSM_CERTIFIED_IMPL=1
+
+## Env
+RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+RAWRXD_HOST_DECODE=1
+RAWRXD_DEEP2_ALLOW_ELASTIC=0
+DEEP2_DUALSTICK_ARM=0
+DEEP2_MINIMAL_ENHANCE=1
+RAWRXD_DEEP2_NEMOTRON_SSM_SCAN=unset (opt-in approximate scan OFF)
+
+## Binary / model
+EXE=build-fd/bin/rawr.exe (rebuilt this spend)
+MODEL=_r1_iso/03_nemotron/NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+PS_EXIT=11 (TD=11 CLEAN_EXIT; not crash)
+ARTIFACTS=LIVE.err.txt LIVE.out.txt LIVE.exit.txt META.txt BINARY.txt KEY_LINES.txt
+
+## What was armed
+SSM_BUF stPer=983040 (=inner*state=7680*128) cvPer=38912
+SSM_MAMBA2_ARM=1 via_SSM_BUF aliases:
+  ssmTemp->proj(ssmInRows=17504)
+  ssmX->yInner(7680)
+  ssmState->[L][inner*state]
+  ssmConvState->[L][convDim*K]
+NEMOTRON_H_SSM_GEOMETRY=PASS (heads=96 head_dim=80 state=128 groups=8)
+
+## Live observed
+SSM_IDENTITY_LAYERS=0 (identity scaffold NOT used)
+SSM_REAL_LAYERS=420 (=21 hybrid * 20 prompt tokens; Mamba2 real-forward)
+NEMOTRON_SSM_REAL=1 SSM_MAMBA_ARMED=1
+[SSM_MAMBA2] REAL_FORWARD=1 layer=0 IDENTITY=0
+Generation complete: 1 tokens (max-tokens=8 requested; early stop)
+PRODUCT_OPEN INIT_EXIT rc=1 SESSION_EXIT ok=1
+GENERATED_TOKENS=1 (engine) / conflicting ProductRun GENERATED_TOKENS=0 elsewhere
+TOKEN_COMMIT_PASS=0 PRODUCT_PASS=0
+PRODUCTION_DECODE_PATH=0
+CLEAN_EXIT=1 CRASH_OBSERVED=0
+
+## Ready tetrad (honest)
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+GENERATED_TOKENS>0 = PARTIAL (1 tok engine; ProductRun receipt conflict)
+TOKEN_COMMIT_PASS=0
+PROMOTE_READY=0
+PROMOTE=0
+
+## Code landed
+NemotronHGeometry.hpp / NemotronHMamba2Step.hpp
+Deep2Engine: Nemotron-sized SSM_BUF + Mamba2 alias arm; computeSSM RunMamba2Token
+NemotronHSsmExperimental.hpp: SCAN opt-in only (default OFF)
+productionDecode forced 0 while ssmHybridLayers_>0
+
+## Verdict
+VERDICT=EXPERIMENTAL_MAMBA2_ARMED_BEYOND_IDENTITY
+SSM_CERTIFIED_IMPL=0
+NUMERIC_PARITY=UNPROVEN
+NEXT_REAL_OWNER=stabilize decode/token_commit under Mamba2 + numeric parity
+  (≠ claim PERFORMANCE_PASS / CERT)
+NOTE=G3_E_SSM_CERT_001 refuse-without-flag unchanged
