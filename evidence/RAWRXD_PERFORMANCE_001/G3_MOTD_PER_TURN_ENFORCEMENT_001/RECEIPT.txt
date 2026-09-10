@@ -1,0 +1,20 @@
+﻿GATE=G3_MOTD_PER_TURN_ENFORCEMENT_001
+PURPOSE=Two-turn perfect-metric MOTD sequence (LocalServer product path)
+ASOF=2026-09-10T01:05
+PROMOTE=0 TIP_CLIMB=HOLD
+
+METRICS_INTENDED=
+  T1: MotdReset on /ask|/api/generate|/v1/chat/completions
+  T1: pre-ack sibling/tool → 403 motd_required
+  T1: read_motd relative → 200 + MOTD_ACK=1 only if canonical
+  T1: failed MOTD read → MOTD_ACK=0
+  T2: new /ask resets ack; ladder repeats
+
+PROOF_LIVE_HEADLESS_PARITY (EXE E5AFCDDF PORT=11961; Headless tool lane CLOSED-not-reopened):
+  HEALTH=200
+  PRE list_directory=403 motd_required
+  read_motd args={} =200 content contains PassiveRoleNotRoleplay + Message of the Day
+  POST list_directory=200 entries
+  SUBAGENT on this EXE=503 (source unstub pending relink)
+
+VERDICT=MOTD_ENFORCEMENT_SOURCE_READY; LIVE_LOCALSERVER_BINARY_PENDING_RELINK

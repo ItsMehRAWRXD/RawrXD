@@ -1,0 +1,33 @@
+﻿GATE=G3_IDE_PARITY_E2E_UNSTUB_001
+PURPOSE=Unblock IDE-parity agentic path (LocalServer MOTD gates + agenticMode + /api/subagent product spawn)
+ASOF=2026-09-10T01:05
+PROMOTE=0
+TIP_CLIMB=HOLD
+REOPEN_HEADLESS=0
+HEADLESS_/api/tool_LANE=CLOSED
+HEADLESS_SHA_INFO=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+DUALSTICK_REOPENED=0
+ARMSPEED_REOPENED=0
+
+FIXED_SOURCE=
+  Win32IDE_LocalServer: MOTD ack only on HTTP 200 + canonical content; relative read_motd resolve;
+    MotdReset on /ask; sibling routes gated (read/write/list/cli/...); /api/subagent|/api/chain product spawn 202
+  HeadlessIDE: /api/subagent|/api/chain product spawn when HEXMAG=0 (no stub 503 for continue-ensure)
+  gui: agenticMode default true; EngineAPI.executeTool ack only on canonical MOTD payload
+  MOTD rules files committed under .cursor/rules/
+
+ALREADY_OK=
+  Headless /api/tool MOTD→list ladder (prior G3_HEADLESS_API_TOOL_UNSTUB_001; not reopened)
+  Live smoke on EXE E5AFCDDF… PORT=11961: HEALTH=200 PRE_TOOL=403 MOTD=200 POST_TOOL=200
+
+E2E_BINARY=
+  LocalServer+Headless objs compiled (LocalServer 00:56, Headless 01:00)
+  Full EXE relink FAIL-CLOSED: ninja log reset forced partial rebuild; direct link LNK1120 (238 DualStick/FreeToken
+    unresolved from incomplete InferenceEngine objs). EXE restored to pre_parity E5AFCDDF…
+  Live /api/subagent on restored EXE still HTTP 503 hexmag_unavailable (source fixed; binary not yet carrying fix)
+
+VERDICT=SOURCE_PASS_BINARY_RELINK_BLOCKED
+STILL_VETO=
+  Product /api/subagent 202 requires successful RawrXD-Win32IDE relink (not DualStick reopen)
+  Ollama/ImportSpace68 forbids
+  TIP_CLIMB/TPS climb UNPLAN

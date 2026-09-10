@@ -1,0 +1,62 @@
+---
+description: >-
+  Response template when user says "Please continue ensuring" (streamer/agentic):
+  Multitask Mode → 3-line ack → launch background Task with max prompt → end turn.
+alwaysApply: true
+---
+
+# Streamer Agentic Continue-Ensure
+
+## When (trigger)
+
+Fire this template when the user message **starts with or contains**:
+
+- Primary: `Please continue ensuring that the streamer is complete and can run agentic`
+- Short: `Please continue ensuring` **and** context is streamer / agentic readiness
+
+Do **not** invent this trigger. Do **not** use this template for unrelated “please continue” asks.
+
+Multitask launch law: `MultitaskMode.mdc`. Max worker brief: `.cursor/skills/multitask-continue-ensure/`.
+
+## Scope (product only — not roleplay)
+
+- **Passive / product agentic only**: make the streamer binary path complete and able to run agentic product tasks.
+- **Forbidden**: character roleplay, persona improv, or treating “agentic” as fiction/RP.
+- Aligns with PassiveRoleNotRoleplay: coordinator tone, MOTD/product gates — no character play.
+
+## Required reply shape (Multitask Mode active)
+
+Exactly this cadence — concise, no fluff. Then **stop**.
+
+1. One ack line, e.g.  
+   `Continuing to ensure the streamer is fully complete and operational for agentic tasks.`
+2. One Multitask + ownership line, e.g.  
+   `Multitask Mode is active. A background subagent will handle the agentic streamer completion.`
+3. One delegation line, e.g.  
+   `Delegating streamer completeness + agentic readiness as one end-to-end worker so it can verify the binary path and close any remaining gaps.`
+4. Launch **one** async background `Task` (`run_in_background: true`) with the **max** continue-ensure prompt (skill template — full product path + metrics + no invented unstubs).
+5. **End the turn immediately** after Task launch — do not await, poll, or do the worker’s job in the foreground.
+
+If Multitask Mode is **not** active: still keep the three lines; run the work in-session only if no background Task path exists — do not fake a launch.
+
+## Worker mandate (what to delegate)
+
+Single end-to-end worker owns (max brief — not a weak sibling):
+
+- Streamer completeness + agentic readiness
+- Binary path verify + livepath metrics / real unstubs
+- Close remaining gaps; HeadlessIDE `/api/tool` 403 reverse if still open
+
+Evidence / authority (read, do not invent climb):
+
+- Lane: `evidence/RAWRXD_PERFORMANCE_001/G3_STREAMER_AGENTIC_*`
+- ArmSpeed close: `evidence/RAWRXD_PERFORMANCE_001/G3_ARMSPEED_AUTHORIZE_LANE_CLOSE_001.txt`
+- Perf law: `PROMOTE=0` · `TIP_CLIMB=HOLD` — no directional climb; no invent pinball / trailbrake / tensor_hop / host-VRAM
+
+## Anti-patterns
+
+- Long status essays before/after the three lines
+- Doing streamer gap-close in the coordinator turn after launching Task
+- Waiting on the background worker before ending
+- Under-prompting the worker (minimal ack instead of max brief)
+- Roleplay or “in-character” streamer personas

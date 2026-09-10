@@ -252,6 +252,7 @@ if(RAWRXD_BUILD_CLI)
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
         src/win32app/cli_main_headless.cpp
         src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_ToolRoutes.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
@@ -2735,6 +2736,7 @@ set(SOURCES
     src/deep2/Deep2Engine.cpp
     src/deep2/lavapath/GgufDynamicGeometry_io.cpp
     src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
     src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
     src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
@@ -4813,6 +4815,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2Engine.cpp
     src/deep2/lavapath/GgufDynamicGeometry_io.cpp
     src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
     src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
     src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
@@ -4892,6 +4895,18 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
     src/deep2/Deep2Engine_GpuToken.cpp
+    src/deep2/lavapath/DualStickStreamWindow.cpp
+    src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
+    src/deep2/lavapath/DualStickEnvSnap.cpp
+    src/deep2/lavapath/FutureConsumer_Space.cpp
+    src/deep2/lavapath/FutureConsumer_Emit.cpp
+    src/deep2/lavapath/FutureConsumer_EmitExec.cpp
+    src/deep2/lavapath/FutureConsumer_Advance.cpp
+    src/deep2/lavapath/FutureConsumer_Register.cpp
+    src/deep2/lavapath/FutureConsumer_Notes.cpp
+    src/deep2/lavapath/FreeTokenMicroZone.cpp
+    src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
     src/vulkan_fwd_resident.cpp
     src/vulkan_fwd_fused.cpp
     src/vulkan_weight_window.cpp
@@ -5358,6 +5373,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_ToolRoutes.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/agent/quantum_autonomous_todo_system.cpp
         src/agent/quantum_multi_model_agent_cycling.cpp
@@ -8110,9 +8126,8 @@ if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
         src/deep2/deep2_streamer_parity.cpp
         src/deep2/StreamerParity_Harness.cpp
+        src/deep2/StreamerParity_Post.cpp
         src/deep2/Deep2StreamApi.cpp
-        src/deep2/lavapath/DualStickStreamWindow.cpp
-        src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
     )
     target_link_libraries(deep2_streamer_parity PRIVATE InferenceEngine dxgi)
     if(MSVC)

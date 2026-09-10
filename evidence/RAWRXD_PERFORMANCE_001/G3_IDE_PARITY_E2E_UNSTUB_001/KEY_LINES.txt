@@ -1,0 +1,9 @@
+﻿KEY_LINES=
+  Win32IDE_LocalServer.cpp MotdResetForNewMessage in handleAskEndpoint
+  MOTD_ACK only after MotdContentCanonical + HTTP 200 in handleToolDispatchEndpoint
+  ResolveMotdPath / MotdFindCanonical for relative read_motd
+  sibling MOTD gates on /api/cli /api/write-file /api/list-* /api/read-file(non-motd)
+  handleProductSubagentEndpoint → HTTP 202
+  HeadlessIDE::routeHexMagRequest product spawn for /api/subagent|/api/chain when !HEXMAG
+  ide_chatbot_standalone.html agenticMode: true
+  ide_chatbot_engine.js executeTool MOTD ack requires content markers

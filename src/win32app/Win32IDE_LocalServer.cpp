@@ -46,6 +46,170 @@
 using LocalServerSocket = SOCKET;
 static const LocalServerSocket kInvalidSock = INVALID_SOCKET;
 
+// MOTD gate: each turn must Read PassiveRoleNotRoleplay.md before tools.
+// MOTD_ACK=1 iff MOTD_READ_HTTP=200 && exact canonical MOTD file was read.
+namespace {
+std::atomic<bool> g_motdAcked{false};
+
+std::string MotdNormKey(std::string path)
+{
+    for (auto& ch : path)
+        if (ch == '/')
+            ch = '\\';
+    char full[MAX_PATH * 4] = {};
+    DWORD n = GetFullPathNameA(path.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
+    if (n > 0 && n < sizeof(full))
+        path.assign(full);
+    for (auto& ch : path)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    while (!path.empty() && (path.back() == '\\' || path.back() == '/'))
+        path.pop_back();
+    return path;
+}
+
+bool MotdPathsEquivalent(const std::string& a, const std::string& b)
+{
+    if (a.empty() || b.empty())
+        return false;
+    return MotdNormKey(a) == MotdNormKey(b);
+}
+
+bool MotdLeafIsCanonical(const std::string& path)
+{
+    auto slash = path.find_last_of("\\/");
+    std::string leaf = (slash == std::string::npos) ? path : path.substr(slash + 1);
+    for (auto& ch : leaf)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    return leaf == "passiverolenotroleplay.md" || leaf == "passiverolenotroleplay.mdc";
+}
+
+bool MotdFindCanonical(const std::string& projectRoot, std::string& resolved, std::string& errJson)
+{
+    const char* rel = ".cursor\\rules\\PassiveRoleNotRoleplay.md";
+    std::vector<std::string> roots;
+    if (!projectRoot.empty())
+        roots.push_back(projectRoot);
+    char cwd[MAX_PATH] = {};
+    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0])
+        roots.push_back(cwd);
+    char modulePath[MAX_PATH * 4] = {};
+    if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
+        std::string dir(modulePath);
+        auto slash = dir.find_last_of("\\/");
+        if (slash != std::string::npos)
+            dir.resize(slash);
+        for (int up = 0; up < 8; ++up) {
+            roots.push_back(dir);
+            auto parent = dir.find_last_of("\\/");
+            if (parent == std::string::npos)
+                break;
+            dir.resize(parent);
+        }
+    }
+    for (const auto& root : roots) {
+        std::string cand = root + "\\" + rel;
+        if (GetFileAttributesA(cand.c_str()) == INVALID_FILE_ATTRIBUTES)
+            continue;
+        char full[MAX_PATH * 4] = {};
+        DWORD n = GetFullPathNameA(cand.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
+        if (n > 0 && n < sizeof(full) && MotdLeafIsCanonical(full)) {
+            resolved.assign(full);
+            return true;
+        }
+    }
+    errJson =
+        "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md not found "
+        "under projectRoot/cwd/module parents\"}";
+    return false;
+}
+
+bool ResolveMotdPath(const std::string& pathArg, const std::string& projectRoot,
+                     std::string& resolved, std::string& errJson)
+{
+    std::string canon;
+    if (!MotdFindCanonical(projectRoot, canon, errJson))
+        return false;
+    if (pathArg.empty()) {
+        resolved = canon;
+        return true;
+    }
+    std::string rel = pathArg;
+    for (auto& ch : rel) {
+        if (ch == '/')
+            ch = '\\';
+    }
+    if (rel.find("..") != std::string::npos) {
+        errJson = "{\"error\":\"forbidden\",\"message\":\"Directory traversal not allowed\"}";
+        return false;
+    }
+    std::string candidate = rel;
+    const bool absolute = rel.size() >= 3 && rel[1] == ':' &&
+        (rel[2] == '\\' || rel[2] == '/');
+    if (!absolute) {
+        std::vector<std::string> roots;
+        if (!projectRoot.empty())
+            roots.push_back(projectRoot);
+        char cwd[MAX_PATH] = {};
+        if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0])
+            roots.push_back(cwd);
+        bool found = false;
+        for (const auto& root : roots) {
+            std::string cand = root + "\\" + rel;
+            if (GetFileAttributesA(cand.c_str()) == INVALID_FILE_ATTRIBUTES)
+                continue;
+            candidate = cand;
+            found = true;
+            break;
+        }
+        if (!found) {
+            errJson = "{\"error\":\"file_not_found\",\"message\":\"MOTD relative path missing\"}";
+            return false;
+        }
+    }
+    char full[MAX_PATH * 4] = {};
+    DWORD n = GetFullPathNameA(candidate.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
+    if (n == 0 || n >= sizeof(full) || GetFileAttributesA(full) == INVALID_FILE_ATTRIBUTES) {
+        errJson = "{\"error\":\"file_not_found\",\"message\":\"MOTD path missing\"}";
+        return false;
+    }
+    if (!MotdPathsEquivalent(full, canon)) {
+        errJson = "{\"error\":\"invalid_motd\",\"message\":\"path is not PassiveRoleNotRoleplay MOTD\"}";
+        return false;
+    }
+    resolved.assign(full);
+    return true;
+}
+
+bool MotdPathMatches(const std::string& path)
+{
+    if (path.empty())
+        return false;
+    std::string resolved, err;
+    return ResolveMotdPath(path, std::string(), resolved, err);
+}
+
+bool MotdPathMatchesRoot(const std::string& path, const std::string& projectRoot)
+{
+    if (path.empty())
+        return false;
+    std::string resolved, err;
+    return ResolveMotdPath(path, projectRoot, resolved, err);
+}
+
+void MotdResetForNewMessage()
+{
+    g_motdAcked.store(false, std::memory_order_release);
+}
+
+bool MotdContentCanonical(const std::string& content)
+{
+    return content.find("PassiveRoleNotRoleplay") != std::string::npos &&
+           content.find("Message of the Day") != std::string::npos;
+}
+
+std::atomic<uint64_t> g_subagentSeq{1};
+} // namespace
+
 // ============================================================================
 // HELPERS — JSON escaping, request parsing, response building
 // ============================================================================
@@ -658,7 +822,9 @@ void Win32IDE::startLocalServer()
 
             if (bind(serverFd, (sockaddr*)&addr, sizeof(addr)) != 0)
             {
-                LOG_ERROR("Local server: failed to bind port " + std::to_string(port));
+                const int wsaErr = WSAGetLastError();
+                LOG_ERROR("Local server: failed to bind port " + std::to_string(port) +
+                          " WSA=" + std::to_string(wsaErr));
                 closesocket(serverFd);
                 m_localServerRunning.store(false);
                 WSACleanup();
@@ -667,7 +833,7 @@ void Win32IDE::startLocalServer()
 
             if (listen(serverFd, 8) != 0)
             {
-                LOG_ERROR("Local server: failed to listen");
+                LOG_ERROR("Local server: failed to listen WSA=" + std::to_string(WSAGetLastError()));
                 closesocket(serverFd);
                 m_localServerRunning.store(false);
                 WSACleanup();
@@ -675,7 +841,7 @@ void Win32IDE::startLocalServer()
             }
 
             LOG_INFO("Local GGUF server listening on port " + std::to_string(port));
-            postAgentOutputSafe("[Server] Listening on http://localhost:" + std::to_string(port));
+            postAgentOutputSafe("[Server] Listening on http://127.0.0.1:" + std::to_string(port));
 
             m_localServerStats = {};
 
@@ -689,10 +855,17 @@ void Win32IDE::startLocalServer()
 
                 m_localServerStats.totalRequests++;
 
-                // Handle client in a detached thread
+                // Handle client in a detached thread — counted so stop drains before WSACleanup
+                m_localServerClientThreads.fetch_add(1, std::memory_order_acq_rel);
                 std::thread(
                     [this, client]()
                     {
+                        struct ClientDrain
+                        {
+                            std::atomic<int>& c;
+                            ~ClientDrain() { c.fetch_sub(1, std::memory_order_acq_rel); }
+                        } drain{m_localServerClientThreads};
+
                         DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
                         if (_guard.cancelled)
                         {
@@ -705,6 +878,12 @@ void Win32IDE::startLocalServer()
             }
 
             closesocket(serverFd);
+
+            // Drain client handlers before WSACleanup — premature cleanup caused
+            // STATUS_HEAP_CORRUPTION (0xC0000374) under concurrent recv/send.
+            for (int i = 0; i < 300 && m_localServerClientThreads.load(std::memory_order_acquire) > 0; ++i)
+                Sleep(10);
+
             WSACleanup();
             LOG_INFO("Local GGUF server stopped");
         });
@@ -1515,13 +1694,44 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== File Reading: /api/read-file — read local file for chatbot attachments ==========
     else if (method == "POST" && path == "/api/read-file")
     {
-        handleReadFileEndpoint(client, body);
+        const std::string p = LocalServerUtil::extractJsonStringValue(body, "path");
+        const std::string root =
+            !m_projectRoot.empty() ? m_projectRoot : m_currentDirectory;
+        const bool isMotd = MotdPathMatchesRoot(p, root);
+        if (!isMotd && !g_motdAcked.load(std::memory_order_acquire))
+        {
+            std::string resp = LocalServerUtil::buildHttpResponse(
+                403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+            LocalServerUtil::sendAll(client, resp);
+            closesocket(client);
+            return;
+        }
+        std::string readBody = body;
+        std::string resolved;
+        std::string err;
+        if (isMotd && ResolveMotdPath(p, root, resolved, err))
+            readBody = "{\"path\":\"" + LocalServerUtil::escapeJson(resolved) + "\"}";
+        const bool ok = handleReadFileEndpoint(client, readBody);
+        if (ok && isMotd && !resolved.empty())
+            g_motdAcked.store(true, std::memory_order_release);
         closesocket(client);
         return;
     }
     // ========== File Writing: /api/write-file — write/overwrite local file ==========
     else if (method == "POST" && path == "/api/write-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire))
+        {
+            std::string resp = LocalServerUtil::buildHttpResponse(
+                403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+            LocalServerUtil::sendAll(client, resp);
+            closesocket(client);
+            return;
+        }
         handleWriteFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1529,6 +1739,16 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== List Directory: /api/list-directory — enumerate directory contents ==========
     else if (method == "POST" && path == "/api/list-directory")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire))
+        {
+            std::string resp = LocalServerUtil::buildHttpResponse(
+                403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+            LocalServerUtil::sendAll(client, resp);
+            closesocket(client);
+            return;
+        }
         handleListDirEndpoint(client, body);
         closesocket(client);
         return;
@@ -1536,6 +1756,16 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Delete File: /api/delete-file — remove a file from disk ==========
     else if (method == "POST" && path == "/api/delete-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire))
+        {
+            std::string resp = LocalServerUtil::buildHttpResponse(
+                403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+            LocalServerUtil::sendAll(client, resp);
+            closesocket(client);
+            return;
+        }
         handleDeleteFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1543,6 +1773,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Rename File: /api/rename-file — rename/move a file ==========
     else if (method == "POST" && path == "/api/rename-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleRenameFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1550,6 +1786,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Create Directory: /api/mkdir — create directories recursively ==========
     else if (method == "POST" && path == "/api/mkdir")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleMkdirEndpoint(client, body);
         closesocket(client);
         return;
@@ -1557,6 +1799,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Search Files: /api/search-files — recursive text/pattern search ==========
     else if (method == "POST" && path == "/api/search-files")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleSearchFilesEndpoint(client, body);
         closesocket(client);
         return;
@@ -1564,6 +1812,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Stat File: /api/stat-file — file metadata (size, dates, attributes) ==========
     else if (method == "POST" && path == "/api/stat-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleStatFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1571,6 +1825,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Copy File: /api/copy-file — copy file to destination ==========
     else if (method == "POST" && path == "/api/copy-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleCopyFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1578,6 +1838,12 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Move File: /api/move-file — move file to destination ==========
     else if (method == "POST" && path == "/api/move-file")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleMoveFileEndpoint(client, body);
         closesocket(client);
         return;
@@ -1589,51 +1855,35 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
         closesocket(client);
         return;
     }
-    // ========== File Writing: /api/write-file — save file from editor ==========
-    else if (method == "POST" && path == "/api/write-file")
+    // ========== Product subagent spawn (continue-ensure / Multitask) ==========
+    else if (method == "POST" && (path == "/api/subagent" || path == "/api/chain"))
     {
-        handleWriteFileEndpoint(client, body);
+        handleProductSubagentEndpoint(client, path, body);
         closesocket(client);
         return;
     }
     // ========== Directory Listing: /api/list-dir — file tree browser ==========
     else if (method == "POST" && path == "/api/list-dir")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleListDirEndpoint(client, body);
-        closesocket(client);
-        return;
-    }
-    // ========== File Delete: /api/delete-file ==========
-    else if (method == "POST" && path == "/api/delete-file")
-    {
-        handleDeleteFileEndpoint(client, body);
-        closesocket(client);
-        return;
-    }
-    // ========== File Rename/Move: /api/rename-file ==========
-    else if (method == "POST" && path == "/api/rename-file")
-    {
-        handleRenameFileEndpoint(client, body);
-        closesocket(client);
-        return;
-    }
-    // ========== Create Directory: /api/mkdir ==========
-    else if (method == "POST" && path == "/api/mkdir")
-    {
-        handleMkdirEndpoint(client, body);
-        closesocket(client);
-        return;
-    }
-    // ========== Search in Files: /api/search-files ==========
-    else if (method == "POST" && path == "/api/search-files")
-    {
-        handleSearchFilesEndpoint(client, body);
         closesocket(client);
         return;
     }
     // ========== CLI Command Execution: /api/cli — forward to tool_server pattern ==========
     else if (method == "POST" && path == "/api/cli")
     {
+        if (!g_motdAcked.load(std::memory_order_acquire)) {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(403,
+                "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+                "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}"));
+            closesocket(client); return;
+        }
         handleCliEndpoint(client, body);
         closesocket(client);
         return;
@@ -1659,19 +1909,19 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
         closesocket(client);
         return;
     }
-    if (method == "GET" && path == "/api/instructions/summary")
+    else if (method == "GET" && path == "/api/instructions/summary")
     {
         handleInstructionsEndpoint(client, "summary");
         closesocket(client);
         return;
     }
-    if (method == "GET" && path == "/api/instructions/content")
+    else if (method == "GET" && path == "/api/instructions/content")
     {
         handleInstructionsContentEndpoint(client);
         closesocket(client);
         return;
     }
-    if (method == "POST" && path == "/api/instructions/reload")
+    else if (method == "POST" && path == "/api/instructions/reload")
     {
         handleInstructionsReloadEndpoint(client);
         closesocket(client);
@@ -1680,12 +1930,13 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== 404 ==========
     else
     {
-        response = LocalServerUtil::buildHttpResponse(404, "{\"error\":\"not_found\",\"message\":\"Unknown endpoint: " +
-                                                               LocalServerUtil::escapeJson(path) + "\"}");
+        std::string notFound = LocalServerUtil::buildHttpResponse(404,
+            "{\"error\":\"not_found\",\"message\":\"Unknown endpoint: " +
+            LocalServerUtil::escapeJson(path) + "\"}");
+        LocalServerUtil::sendAll(client, notFound);
+        closesocket(client);
+        return;
     }
-
-    LocalServerUtil::sendAll(client, response);
-    closesocket(client);
 }
 
 // ============================================================================
@@ -1879,6 +2130,8 @@ void Win32IDE::handleOllamaApiTags(SOCKET client)
 
 void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
 {
+    MotdResetForNewMessage();
+
     std::string prompt, model;
     bool stream = true;
     int maxTokens = 512;
@@ -1992,6 +2245,8 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
 
 void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& body)
 {
+    MotdResetForNewMessage();
+
     // Extract messages array — simplified extraction (last "content" field)
     std::string prompt;
     bool stream = false;
@@ -2220,9 +2475,29 @@ std::vector<std::string> Win32IDE::getCandidateModelRootPaths()
     if (!programData.empty())
         addRoot(programData + "\\Ollama\\models");
 
-    // 3) Common custom locations (esp. on machines with big D: drives).
+    // 3) Common custom locations (large local GGUF roots; no Ollama client).
+    addRoot("F:\\OllamaModels");
+    addRoot("G:\\OllamaModels");
     addRoot("D:\\OllamaModels");
+    addRoot("C:\\OllamaModels");
     addRoot("D:\\models");
+    addRoot("F:\\models");
+    std::string rawrModels = getEnvA("RAWRXD_MODELS");
+    if (!rawrModels.empty())
+    {
+        size_t start = 0;
+        while (start < rawrModels.size())
+        {
+            size_t semi = rawrModels.find(';', start);
+            std::string part = (semi == std::string::npos)
+                                   ? rawrModels.substr(start)
+                                   : rawrModels.substr(start, semi - start);
+            addRoot(part);
+            if (semi == std::string::npos)
+                break;
+            start = semi + 1;
+        }
+    }
 
     // 4) Portable folder next to the executable (bin\\models).
     char exePath[MAX_PATH] = {};
@@ -2386,6 +2661,8 @@ void Win32IDE::handleV1ModelsEndpoint(SOCKET client)
 
 void Win32IDE::handleAskEndpoint(SOCKET client, const std::string& body)
 {
+    MotdResetForNewMessage();
+
     std::string question, model;
     int context = 4096;
     bool stream = false;
@@ -2503,7 +2780,7 @@ void Win32IDE::handleServeGui(SOCKET client)
 //           Rejects paths containing ".." to prevent directory traversal.
 // ============================================================================
 
-void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
+bool Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
 {
     // Parse "path" from JSON body (lightweight — no full JSON parser needed)
     std::string filePath;
@@ -2514,7 +2791,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             std::string resp = LocalServerUtil::buildHttpResponse(
                 400, "{\"error\":\"missing_path\",\"message\":\"Request body must contain 'path' field\"}");
             LocalServerUtil::sendAll(client, resp);
-            return;
+            return false;
         }
         // Find the value string after "path": "..."
         auto colonPos = body.find(':', pathKey + 6);
@@ -2523,7 +2800,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             std::string resp = LocalServerUtil::buildHttpResponse(
                 400, "{\"error\":\"malformed_json\",\"message\":\"Could not parse path value\"}");
             LocalServerUtil::sendAll(client, resp);
-            return;
+            return false;
         }
         auto quoteStart = body.find('"', colonPos + 1);
         if (quoteStart == std::string::npos)
@@ -2531,7 +2808,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             std::string resp = LocalServerUtil::buildHttpResponse(
                 400, "{\"error\":\"malformed_json\",\"message\":\"Could not find path string\"}");
             LocalServerUtil::sendAll(client, resp);
-            return;
+            return false;
         }
         // Find closing quote (handle escaped quotes)
         size_t quoteEnd = quoteStart + 1;
@@ -2551,7 +2828,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             std::string resp = LocalServerUtil::buildHttpResponse(
                 400, "{\"error\":\"malformed_json\",\"message\":\"Unterminated path string\"}");
             LocalServerUtil::sendAll(client, resp);
-            return;
+            return false;
         }
         filePath = body.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
     }
@@ -2620,7 +2897,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
         std::string resp = LocalServerUtil::buildHttpResponse(
             403, "{\"error\":\"forbidden\",\"message\":\"Directory traversal not allowed\"}");
         LocalServerUtil::sendAll(client, resp);
-        return;
+        return false;
     }
 
     // Security: must be an absolute path (drive letter)
@@ -2629,7 +2906,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
         std::string resp = LocalServerUtil::buildHttpResponse(
             400, "{\"error\":\"invalid_path\",\"message\":\"Only absolute paths are accepted\"}");
         LocalServerUtil::sendAll(client, resp);
-        return;
+        return false;
     }
 
     // Open the file
@@ -2642,7 +2919,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             404, "{\"error\":\"file_not_found\",\"message\":\"Cannot open file: " +
                      LocalServerUtil::escapeJson(filePath) + "\",\"win32_error\":" + std::to_string(err) + "}");
         LocalServerUtil::sendAll(client, resp);
-        return;
+        return false;
     }
 
     // Get file size — limit to 10MB for safety
@@ -2655,7 +2932,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
             413, "{\"error\":\"file_too_large\",\"message\":\"File exceeds 10MB limit\",\"size\":" +
                      std::to_string(fileSize == INVALID_FILE_SIZE ? 0 : fileSize) + "}");
         LocalServerUtil::sendAll(client, resp);
-        return;
+        return false;
     }
 
     // Read file content
@@ -2669,7 +2946,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
         std::string resp = LocalServerUtil::buildHttpResponse(
             500, "{\"error\":\"read_failed\",\"message\":\"Failed to read file content\"}");
         LocalServerUtil::sendAll(client, resp);
-        return;
+        return false;
     }
     content.resize(bytesRead);
 
@@ -2698,6 +2975,7 @@ void Win32IDE::handleReadFileEndpoint(SOCKET client, const std::string& body)
     LocalServerUtil::sendAll(client, resp);
 
     LOG_INFO("read-file: " + filePath + " (" + std::to_string(bytesRead) + " bytes)");
+    return true;
 }
 
 // ============================================================================
@@ -4904,8 +5182,79 @@ void Win32IDE::handleToolDispatchEndpoint(SOCKET client, const std::string& body
     if (argsBody.empty())
         argsBody = "{}";
 
+    const std::string pathArg = LocalServerUtil::extractJsonStringValue(argsBody, "path");
+    const std::string motdRoot =
+        !m_projectRoot.empty() ? m_projectRoot : m_currentDirectory;
+    const bool isMotdRead =
+        (tool == "read_motd") || (tool == "read_file" && MotdPathMatchesRoot(pathArg, motdRoot));
+
+    if (!g_motdAcked.load(std::memory_order_acquire) && !isMotdRead)
+    {
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            403,
+            "{\"error\":\"motd_required\",\"message\":\"Read Message of the Day "
+            "(PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool\"}");
+        LocalServerUtil::sendAll(client, resp);
+        LOG_INFO("tool-dispatch: BLOCKED motd_required tool=" + tool);
+        return;
+    }
+
     // Dispatch to the appropriate handler
-    if (tool == "read_file")
+    if (tool == "read_motd" || (tool == "read_file" && MotdPathMatchesRoot(pathArg, motdRoot)))
+    {
+        // Ack ONLY after HTTP-200 + exact canonical MOTD path/content.
+        std::string resolved;
+        std::string err;
+        const std::string root = motdRoot;
+        if (!ResolveMotdPath(pathArg, root, resolved, err))
+        {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(404, err));
+            return;
+        }
+        HANDLE hFile = CreateFileA(resolved.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+                404, "{\"error\":\"file_not_found\",\"message\":\"Cannot open MOTD\"}"));
+            return;
+        }
+        DWORD fileSize = GetFileSize(hFile, NULL);
+        if (fileSize == INVALID_FILE_SIZE || fileSize > 10 * 1024 * 1024)
+        {
+            CloseHandle(hFile);
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+                413, "{\"error\":\"file_too_large\",\"message\":\"MOTD exceeds 10MB\"}"));
+            return;
+        }
+        std::string content(fileSize, '\0');
+        DWORD bytesRead = 0;
+        BOOL readOk = ReadFile(hFile, fileSize ? &content[0] : nullptr, fileSize, &bytesRead, NULL);
+        CloseHandle(hFile);
+        if (!readOk || bytesRead == 0)
+        {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+                500, "{\"error\":\"read_failed\",\"message\":\"Failed to read MOTD\"}"));
+            return;
+        }
+        content.resize(bytesRead);
+        if (!MotdContentCanonical(content))
+        {
+            LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+                400, "{\"error\":\"invalid_motd\",\"message\":\"File is not canonical MOTD\"}"));
+            return;
+        }
+        g_motdAcked.store(true, std::memory_order_release);
+        std::ostringstream json;
+        json << "{\"content\":\"" << LocalServerUtil::escapeJson(content)
+             << "\",\"name\":\"PassiveRoleNotRoleplay.md\""
+             << ",\"size\":" << content.size()
+             << ",\"path\":\"" << LocalServerUtil::escapeJson(resolved) << "\"}";
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(200, json.str()));
+        LOG_INFO("tool-dispatch: MOTD_ACK tool=" + tool);
+        return;
+    }
+    else if (tool == "read_file")
     {
         handleReadFileEndpoint(client, argsBody);
     }
@@ -4951,7 +5300,6 @@ void Win32IDE::handleToolDispatchEndpoint(SOCKET client, const std::string& body
     }
     else if (tool == "git_status")
     {
-        // Execute git status command via CLI handler
         std::string gitBody = "{\"command\":\"git status\"}";
         handleCliEndpoint(client, gitBody);
     }
@@ -4959,13 +5307,67 @@ void Win32IDE::handleToolDispatchEndpoint(SOCKET client, const std::string& body
     {
         std::string resp = LocalServerUtil::buildHttpResponse(
             400, "{\"error\":\"unknown_tool\",\"message\":\"Unknown tool: " + LocalServerUtil::escapeJson(tool) +
-                     "\",\"available\":[\"read_file\",\"write_file\",\"list_directory\",\"delete_file\","
+                     "\",\"available\":[\"read_motd\",\"read_file\",\"write_file\",\"list_directory\",\"delete_file\","
                      "\"rename_file\",\"mkdir\",\"search_files\",\"stat_file\",\"copy_file\",\"move_file\","
                      "\"execute_command\",\"git_status\"]}");
         LocalServerUtil::sendAll(client, resp);
     }
 
     LOG_INFO("tool-dispatch: " + tool);
+}
+
+// ============================================================================
+// POST /api/subagent | /api/chain — product spawn (continue-ensure; no HexMag required)
+// ============================================================================
+void Win32IDE::handleProductSubagentEndpoint(SOCKET client, const std::string& path,
+                                              const std::string& body)
+{
+    std::string task;
+    LocalServerUtil::extractJsonString(body, "task", task);
+    if (task.empty()) LocalServerUtil::extractJsonString(body, "prompt", task);
+    if (task.empty()) LocalServerUtil::extractJsonString(body, "question", task);
+    if (path == "/api/chain" && task.empty() && body.find("\"steps\"") != std::string::npos)
+        task = "chain";
+    if (task.empty()) {
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+            400, "{\"error\":\"missing_task\",\"message\":\"task/prompt required\"}"));
+        return;
+    }
+    if (task.size() > 256 * 1024) {
+        LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(
+            400, "{\"error\":\"task_too_large\"}"));
+        return;
+    }
+    uint64_t seq = g_subagentSeq.fetch_add(1, std::memory_order_relaxed);
+    std::ostringstream idOss;
+    idOss << "sub-" << GetCurrentProcessId() << "-" << seq;
+    std::string agentId = idOss.str();
+    std::string dir = !m_projectRoot.empty() ? m_projectRoot :
+        (!m_currentDirectory.empty() ? m_currentDirectory : std::string());
+    if (dir.empty()) {
+        char cwd[MAX_PATH] = {};
+        if (GetCurrentDirectoryA(MAX_PATH, cwd)) dir = cwd;
+    }
+    std::ostringstream line;
+    line << "{\"agentId\":\"" << LocalServerUtil::escapeJson(agentId)
+         << "\",\"path\":\"" << LocalServerUtil::escapeJson(path)
+         << "\",\"status\":\"spawned\",\"taskChars\":" << task.size() << "}\r\n";
+    std::string jobPath = dir.empty() ? "rawrxd_subagent_jobs.jsonl" : (dir + "\\rawrxd_subagent_jobs.jsonl");
+    HANDLE h = CreateFileA(jobPath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ, nullptr,
+                           OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (h != INVALID_HANDLE_VALUE) {
+        DWORD w = 0;
+        std::string s = line.str();
+        WriteFile(h, s.data(), static_cast<DWORD>(s.size()), &w, nullptr);
+        CloseHandle(h);
+    }
+    m_historyStats.subAgentSpawned++;
+    std::ostringstream json;
+    json << "{\"success\":true,\"accepted\":true,\"status\":\"spawned\",\"agentId\":\""
+         << LocalServerUtil::escapeJson(agentId) << "\",\"path\":\""
+         << LocalServerUtil::escapeJson(path) << "\"}";
+    LocalServerUtil::sendAll(client, LocalServerUtil::buildHttpResponse(202, json.str()));
+    LOG_INFO("product-subagent: spawned " + agentId);
 }
 
 // ============================================================================

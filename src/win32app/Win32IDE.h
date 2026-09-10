@@ -2957,7 +2957,8 @@ class Win32IDE
         ReasoningEngine = 5,  // RawrXD local reasoning engine
         GitHubCopilot = 6,    // GitHub Copilot extension
         AmazonQ = 7,          // Amazon Q extension
-        Count = 8
+        Cursor = 8,           // Cursor API (OpenAI-compatible)
+        Count = 9
     };
 
     struct AIBackendConfig
@@ -3027,6 +3028,12 @@ class Win32IDE
     std::string routeToReasoningEngine(const std::string& prompt);
     std::string routeToGitHubCopilot(const std::string& prompt);
     std::string routeToAmazonQ(const std::string& prompt);
+    std::string routeToCursor(const std::string& prompt);
+
+    // Provider key store (DPAPI / RawrXD::Keys)
+    void loadProviderKeysFromStore();
+    const char* providerKeyIdForBackend(AIBackendType type) const;
+    void showProviderApiKeyDialog();
 
     // HTTP helpers for remote backends
     std::string httpPost(const std::string& url, const std::string& body, const std::vector<std::string>& headers,
@@ -3594,7 +3601,7 @@ class Win32IDE
     void handleReSetBinaryEndpoint(SOCKET client, const std::string& body);
     static std::vector<std::string> getCandidateModelRootPaths();
     void handleServeGui(SOCKET client);
-    void handleReadFileEndpoint(SOCKET client, const std::string& body);
+    bool handleReadFileEndpoint(SOCKET client, const std::string& body);
     void handleWriteFileEndpoint(SOCKET client, const std::string& body);
     void handleListDirEndpoint(SOCKET client, const std::string& body);
     void handleDeleteFileEndpoint(SOCKET client, const std::string& body);
@@ -3605,6 +3612,8 @@ class Win32IDE
     void handleCopyFileEndpoint(SOCKET client, const std::string& body);
     void handleMoveFileEndpoint(SOCKET client, const std::string& body);
     void handleToolDispatchEndpoint(SOCKET client, const std::string& body);
+    void handleProductSubagentEndpoint(SOCKET client, const std::string& path,
+                                       const std::string& body);
     void handleCliEndpoint(SOCKET client, const std::string& body);
     void handleHotpatchEndpoint(SOCKET client, const std::string& path, const std::string& body);
     void handleHotpatchTargetTpsEndpoint(SOCKET client, const std::string& method, const std::string& body);
@@ -3669,6 +3678,7 @@ class Win32IDE
 
     // Local server state
     std::atomic<bool> m_localServerRunning{false};
+    std::atomic<int> m_localServerClientThreads{0};  // drain before WSACleanup
     std::thread m_localServerThread;
     LocalServerStats m_localServerStats;
 

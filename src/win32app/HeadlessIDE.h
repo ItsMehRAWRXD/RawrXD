@@ -350,6 +350,8 @@ private:
 
     // ---- Tool execution (parity with Win32 Agent > Run Tool; used by /api/tool and /run-tool) ----
     bool executeToolRepl(const std::string& toolName, const std::string& argsJson, std::string& outResult);
+    void routeToolAndFileRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
+    void motdResetOnGenerate();
 
     // ---- HTTP server (consolidated hosted/local contract) ----
     void serverLoop();

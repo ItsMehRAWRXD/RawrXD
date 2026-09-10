@@ -57,6 +57,8 @@
 
 #include "../deep2/RuntimeEvidence512Surface.hpp"
 #include "../deep2/RuntimeEvidence512HostIDE.hpp"
+#include "../deep2/NvmeBunnyHopApi.hpp"
+#include "../product/gateway/product_deep2_infer.hpp"
 
 #include <winhttp.h>
 #include <bcrypt.h>
@@ -65,7 +67,7 @@
 #define RAWRXD_HEADLESS_NATIVE_HEXMAG 0
 #endif
 #ifndef RAWRXD_HEADLESS_NATIVE_SUBAGENT
-#define RAWRXD_HEADLESS_NATIVE_SUBAGENT 0
+#define RAWRXD_HEADLESS_NATIVE_SUBAGENT 1
 #endif
 #if RAWRXD_HEADLESS_NATIVE_HEXMAG
 #include "../core/hexmag_ide_send_path.hpp"
@@ -239,6 +241,8 @@ static bool isLoopbackAddress(const std::string& address) {
 
 static bool localOriginAllowed(const std::string& origin, int port) {
     if (origin.empty()) return true;
+    // Chromium/Edge send Origin: null for file:// pages (literal "null").
+    if (origin == "null") return true;
     std::string suffix = ":" + std::to_string(port);
     return origin == "http://127.0.0.1" + suffix ||
         origin == "http://localhost" + suffix ||
@@ -1118,6 +1122,10 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[]) {
         else if (arg == "--settings" && i + 1 < argc) {
             m_config.settingsFile = argv[++i];
         }
+        else if ((arg == "--dir" || arg == "--working-dir") && i + 1 < argc) {
+            m_config.workingDir = argv[++i];
+            SetCurrentDirectoryA(m_config.workingDir.c_str());
+        }
         else if (arg == "--backend" && i + 1 < argc) {
             m_config.backend = argv[++i];
         }
@@ -1209,7 +1217,10 @@ HeadlessResult HeadlessIDE::initBackendManager() {
         else m_activeBackend = AIBackendType::LocalGGUF;
     }
 
-    // Probe Ollama availability (primary backend)
+    // LOCAL_ONLY: keep LocalGGUF / ProductRun; never auto-promote Ollama.
+    if (m_config.backend.empty())
+        m_activeBackend = AIBackendType::LocalGGUF;
+
     RawrXD::Agent::OllamaConfig ollamaCfg;
     ollamaCfg.host = "127.0.0.1";
     ollamaCfg.port = 11434;
@@ -1221,11 +1232,8 @@ HeadlessResult HeadlessIDE::initBackendManager() {
     statusMsg << "Backend manager initialized (headless)";
     if (ollamaAvailable) {
         auto models = probeClient.ListModels();
-        statusMsg << " | Ollama: online (" << models.size() << " models)";
-        // Default to Ollama if available and no explicit backend set
-        if (m_config.backend.empty()) {
-            m_activeBackend = AIBackendType::Ollama;
-        }
+        statusMsg << " | Ollama: online (" << models.size()
+                  << " models, LOCAL_ONLY_BLOCKED)";
     } else {
         statusMsg << " | Ollama: offline";
     }
@@ -1624,10 +1632,10 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
     }
 
     RawrXD::GGUFHeader hdr = loader->GetHeader();
-    // Validate magic: 0x46475547 = "GGUF" little-endian
-    if (hdr.magic != 0x46475547) {
+    // Validate magic: 0x46554747 = "GGUF" little-endian (G=0x47 G=0x47 U=0x55 F=0x46)
+    if (hdr.magic != 0x46554747u) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46475547)", hdr.magic);
+        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46554747)", hdr.magic);
         m_outputSink->appendOutput(buf, OutputSeverity::Error);
         loader->Close();
         return false;
@@ -1710,10 +1718,13 @@ std::string HeadlessIDE::runInference(const std::string& prompt) {
 }
 
 std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, float temperature) {
-    if (!m_modelLoaded) {
+    // LocalGGUF → ProductDeep2Infer opens session via alias/env; no pre-load.
+    if (!m_modelLoaded && m_activeBackend != AIBackendType::LocalGGUF) {
         safeAppendOutput("No model loaded for inference", OutputSeverity::Error);
         return "[error: no model loaded]";
     }
+    (void)maxTokens;
+    (void)temperature;
 
     safeOnAgentStarted("inference", prompt.c_str());
 
@@ -1738,58 +1749,44 @@ std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, 
 
 void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
                                          std::function<void(const char*, size_t)> tokenCallback) {
-    if (!m_modelLoaded) {
-        safeAppendOutput("No model loaded for streaming inference", OutputSeverity::Error);
-        return;
-    }
-
     safeOnStreamStart("inference");
 
-    // Use AgentOllamaClient streaming API for real per-token delivery
-    if (m_activeBackend == AIBackendType::Ollama || m_activeBackend == AIBackendType::LocalGGUF) {
-        RawrXD::Agent::OllamaConfig cfg;
-        cfg.host = "127.0.0.1";
-        cfg.port = 11434;
-        // chat_model left empty — auto-detected from Ollama /api/tags
-        cfg.temperature = m_config.temperature;
-        cfg.max_tokens = m_config.maxTokens;
-        cfg.use_gpu = true;
-        cfg.num_gpu = 99;
-
-        RawrXD::Agent::AgentOllamaClient client(cfg);
-        std::vector<RawrXD::Agent::ChatMessage> messages;
-        messages.push_back({"system", "You are RawrXD IDE's embedded AI assistant.", "", {}});
-        messages.push_back({"user", prompt, "", {}});
-
-        bool streamOk = client.ChatStream(
-            messages, nlohmann::json::array(),
-            /* on_token */ [&](const std::string& token) {
-                if (tokenCallback) {
-                    tokenCallback(token.c_str(), token.size());
-                }
-                safeOnStreamingToken(token.c_str(), token.size(), StreamTokenOrigin::Inference);
-            },
-            /* on_tool_call */ [](const std::string&, const nlohmann::json&) {},
-            /* on_done */ [&](const std::string& full, uint64_t pt, uint64_t ct, double tps) {
-                char perf[256];
-                snprintf(perf, sizeof(perf), "[stream] %llu+%llu tokens, %.1f tok/s",
-                         (unsigned long long)pt, (unsigned long long)ct, tps);
-                safeAppendOutput(perf, OutputSeverity::Debug);
-            },
-            /* on_error */ [&](const std::string& err) {
-                safeAppendOutput(("Stream error: " + err).c_str(), OutputSeverity::Error);
-            }
-        );
-
-        safeOnStreamEnd("inference", streamOk);
+    if (m_activeBackend == AIBackendType::Ollama) {
+        safeAppendOutput("LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun",
+                         OutputSeverity::Error);
+        safeOnStreamEnd("inference", false);
         return;
     }
 
-    // Fallback: batch inference emitted as single chunk
-    std::string result = runInference(prompt);
-    if (tokenCallback && !result.empty()) {
-        tokenCallback(result.c_str(), result.size());
+    if (m_activeBackend == AIBackendType::LocalGGUF) {
+        uint32_t maxTok =
+            m_config.maxTokens > 0 ? (uint32_t)m_config.maxTokens : 48u;
+        if (const char* e = std::getenv("RAWR_MAX_TOKENS")) {
+            unsigned v = (unsigned)std::atoi(e);
+            if (v > 0u) maxTok = v;
+        }
+        if (maxTok > 256u) maxTok = 256u;
+        std::string text;
+        const bool ok = rawr::ProductDeep2InferStream(
+            prompt.c_str(), maxTok,
+            [&](const std::string& piece) {
+                if (tokenCallback && !piece.empty())
+                    tokenCallback(piece.c_str(), piece.size());
+                if (!piece.empty())
+                    safeOnStreamingToken(piece.c_str(), piece.size(),
+                                         StreamTokenOrigin::Inference);
+                return true;
+            },
+            &text);
+        if (!ok)
+            safeAppendOutput("ProductDeep2InferStream failed", OutputSeverity::Error);
+        safeOnStreamEnd("inference", ok && !text.empty());
+        return;
     }
+
+    std::string result = runInference(prompt);
+    if (tokenCallback && !result.empty())
+        tokenCallback(result.c_str(), result.size());
     safeOnStreamEnd("inference", !result.empty());
 }
 
@@ -1853,8 +1850,8 @@ std::string HeadlessIDE::getBackendStatusString() const {
 bool HeadlessIDE::probeBackendHealth(AIBackendType type) {
     switch (type) {
         case AIBackendType::LocalGGUF:
-            // Local GGUF: healthy if model is loaded
-            return m_modelLoaded;
+            // ProductRun opens session via alias/env; no pre-load required.
+            return true;
 
         case AIBackendType::Ollama: {
             // Probe Ollama server connection
@@ -1922,49 +1919,33 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
 
     auto t0 = std::chrono::steady_clock::now();
 
-    // Route based on active backend type
-    if (m_activeBackend == AIBackendType::Ollama || m_activeBackend == AIBackendType::LocalGGUF) {
-        // Use AgentOllamaClient for Ollama-backed inference
-        RawrXD::Agent::OllamaConfig cfg;
-        cfg.host = "127.0.0.1";
-        cfg.port = 11434;
-        // chat_model left empty — auto-detected from Ollama /api/tags
-        cfg.temperature = m_config.temperature;
-        cfg.max_tokens = m_config.maxTokens;
-        cfg.use_gpu = true;
-        cfg.num_gpu = 99;
-
-        RawrXD::Agent::AgentOllamaClient client(cfg);
-
-        // Build conversation with system context
-        std::vector<RawrXD::Agent::ChatMessage> messages;
-        messages.push_back({"system", "You are RawrXD IDE's embedded AI assistant. "
-            "Provide accurate, concise answers. When asked about code, give working examples.", "", {}});
-        if (m_modelLoaded) {
-            messages.push_back({"system", "Loaded model: " + m_loadedModelName, "", {}});
+    // LOCAL_ONLY: Ollama blocked; LocalGGUF = ProductDeep2Infer (ProductStreamerPrep).
+    if (m_activeBackend == AIBackendType::Ollama) {
+        return "[error] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun.";
+    }
+    if (m_activeBackend == AIBackendType::LocalGGUF) {
+        /* Prefer full path — basename alone fails ProductOpenSession resolve. */
+        const char* model =
+            !m_loadedModelPath.empty() ? m_loadedModelPath.c_str()
+            : (!m_loadedModelName.empty() ? m_loadedModelName.c_str() : nullptr);
+        if (model && model[0]) {
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", model);
+#endif
+            (void)rawr::ProductOpenSession(model);
         }
-        messages.push_back({"user", prompt, "", {}});
-
-        auto result = client.ChatSync(messages);
-
-        auto t1 = std::chrono::steady_clock::now();
-        double durationMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
-
-        if (result.success) {
-            char perf[256];
+        char buf[8192];
+        if (rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf)) && buf[0]) {
+            auto t1 = std::chrono::steady_clock::now();
+            double durationMs =
+                std::chrono::duration<double, std::milli>(t1 - t0).count();
+            char perf[128];
             snprintf(perf, sizeof(perf),
-                     "[inference] %llu prompt + %llu completion tokens, %.1f tok/s, %.0f ms",
-                     (unsigned long long)result.prompt_tokens,
-                     (unsigned long long)result.completion_tokens,
-                     result.tokens_per_sec, durationMs);
+                     "[inference] ProductDeep2Infer ok, %.0f ms", durationMs);
             m_outputSink->appendOutput(perf, OutputSeverity::Debug);
-            return result.response;
-        } else {
-            m_outputSink->appendOutput(
-                ("Ollama inference failed: " + result.error_message).c_str(),
-                OutputSeverity::Warning);
-            // Fall through to engine manager path
+            return std::string(buf);
         }
+        return "[error] ProductDeep2Infer failed — FAILED_OWNER=ProductRun";
     } else if (m_activeBackend == AIBackendType::OpenAI) {
         // Fix #15: Cloud backend - OpenAI
         const char* apiKey = std::getenv("OPENAI_API_KEY");
@@ -2535,6 +2516,14 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
         response.body = "{\"error\":\"method_not_allowed\"}";
         return;
     }
+    motdResetOnGenerate();
+    (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(request.body);
+    if (!m_modelLoaded) {
+        // Keep MOTD per-message reset; do not crash the listener without a model.
+        response.status = 503;
+        response.body = "{\"error\":\"model_not_loaded\",\"message\":\"Load a model before generate/chat\"}";
+        return;
+    }
     std::string prompt = request.body;
     bool stream = request.path == "/api/generate";
     uint64_t nativeReqId = 0;
@@ -2623,6 +2612,45 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
 void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
                                      HostedHttpResponse& response) {
 #if !RAWRXD_HEADLESS_NATIVE_HEXMAG
+    // Product continue-ensure spawn does not require HexMag MASM path.
+    if (request.path == "/api/subagent" || request.path == "/api/chain") {
+        nlohmann::json input = nlohmann::json::object();
+        try { if (!request.body.empty()) input = nlohmann::json::parse(request.body); }
+        catch (...) {
+            response.status = 400;
+            response.body = "{\"error\":\"invalid_json\"}";
+            return;
+        }
+        std::string task = input.value("task",
+            input.value("prompt", input.value("question", "")));
+        if (request.path == "/api/chain" && task.empty() &&
+            input.contains("steps") && input["steps"].is_array() &&
+            !input["steps"].empty())
+            task = "chain";
+        if (task.empty() || task.size() > 256 * 1024) {
+            response.status = 400;
+            response.body = "{\"error\":\"missing_task\"}";
+            return;
+        }
+        static std::atomic<uint64_t> seq{1};
+        std::string agentId = "hsub-" + std::to_string(GetCurrentProcessId()) + "-" +
+            std::to_string(seq.fetch_add(1, std::memory_order_relaxed));
+        std::string record = "{\"agentId\":\"" + jsonEscape(agentId) +
+            "\",\"path\":\"" + jsonEscape(request.path) +
+            "\",\"status\":\"spawned\",\"taskChars\":" +
+            std::to_string(task.size()) + "}\r\n";
+        std::string jobPath = m_config.workingDir.empty()
+            ? "rawrxd_subagent_jobs.jsonl"
+            : (m_config.workingDir + "\\rawrxd_subagent_jobs.jsonl");
+        {
+            std::lock_guard<std::mutex> lock(m_auditMutex);
+            appendBoundedFile(jobPath, record, 8ULL * 1024 * 1024);
+        }
+        response.status = 202;
+        response.body = "{\"success\":true,\"accepted\":true,\"status\":\"spawned\","
+            "\"agentId\":\"" + jsonEscape(agentId) + "\",\"nativeHexMag\":false}";
+        return;
+    }
     (void)request;
     response.status = 503;
     response.body = "{\"error\":\"hexmag_unavailable_on_platform\"}";
@@ -2707,6 +2735,12 @@ void HeadlessIDE::routeNativeRequest(const HostedHttpRequest& request,
         response.body = "{\"success\":" + std::string(unloaded ? "true" : "false") + "}";
     } else if (request.path == "/api/engine/capabilities" && request.method == "GET") {
         response.body = getEngineCapabilitiesJson();
+    } else if (request.path == "/api/nvme/bunnyhop/status" && request.method == "GET") {
+        response.body = Deep2::NvmeBunnyHopApi::StatusJson();
+    } else if (request.path == "/api/nvme/bunnyhop/arm" && request.method == "POST") {
+        response.body = Deep2::NvmeBunnyHopApi::ArmJson(true, 4);
+    } else if (request.path == "/api/nvme/bunnyhop/disarm" && request.method == "POST") {
+        response.body = Deep2::NvmeBunnyHopApi::ArmJson(false);
     } else {
         response.status = 405;
         response.body = "{\"error\":\"method_not_allowed\"}";
@@ -2718,8 +2752,16 @@ bool HeadlessIDE::routeStatusRequest(const HostedHttpRequest& request,
     const std::string& path = request.path;
     bool reload = path == "/api/instructions/reload" && request.method == "POST";
     if (request.method != "GET" && !reload) return false;
-    if (path == "/api/backend/status") {
+    if (path == "/api/backend/status" || path == "/api/backends/status") {
         response.body = "{\"status\":\"" + jsonEscape(getBackendStatusString()) + "\"}";
+    } else if (path == "/api/backends") {
+        // IDE EngineAPI.fetchBackends — honest headless inventory (no silent 404)
+        response.body =
+            "{\"backends\":[{\"name\":\"deep2\",\"type\":\"local\",\"active\":true},"
+            "{\"name\":\"cpu\",\"type\":\"local\",\"active\":false},"
+            "{\"name\":\"vulkan\",\"type\":\"local\",\"active\":false}],"
+            "\"active\":\"" + jsonEscape(getBackendStatusString()) + "\","
+            "\"status\":\"" + jsonEscape(getBackendStatusString()) + "\"}";
     } else if (path == "/api/router/status") {
         response.body = "{\"status\":\"" + jsonEscape(getRouterStatusString()) + "\"}";
     } else if (path == "/api/governor/status") {
@@ -2740,10 +2782,13 @@ bool HeadlessIDE::routeStatusRequest(const HostedHttpRequest& request,
         response.body = "{\"status\":\"" + jsonEscape(getLSPStatusString()) + "\"}";
     } else if (path == "/api/hybrid/status") {
         response.body = "{\"status\":\"" + jsonEscape(getHybridBridgeStatusString()) + "\"}";
-    } else if (path == "/api/agent/history") {
-        response.body = "{\"stats\":\"" + jsonEscape(getAgentHistoryStats()) + "\"}";
-    } else if (path == "/api/failure/stats") {
-        response.body = "{\"stats\":\"" + jsonEscape(getFailureDetectorStats()) + "\"}";
+    } else if (path == "/api/agent/history" || path == "/api/agents/history" ||
+               path == "/api/agents/status" || path == "/api/agents") {
+        response.body = "{\"status\":\"ok\",\"agents\":[],\"stats\":\"" +
+            jsonEscape(getAgentHistoryStats()) + "\"}";
+    } else if (path == "/api/failure/stats" || path == "/api/failures") {
+        response.body = "{\"failures\":[],\"stats\":\"" +
+            jsonEscape(getFailureDetectorStats()) + "\"}";
     } else if (path == "/api/metrics") {
         response.body = "{\"requests\":" + std::to_string(m_inferenceRequestCount) +
             ",\"tokensPerSec\":0,\"memUsedMB\":0,\"ollamaReachable\":" +
@@ -2866,11 +2911,13 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
         response.body = "{\"version\":\"" + jsonEscape(VERSION) + "\",\"mode\":\"" +
             (m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") + "\"}";
     } else if (path == "/api/generate" || path == "/api/generate/stream" ||
-               path == "/v1/chat/completions" || path == "/ask") {
+               path == "/v1/chat/completions" || path == "/ask" ||
+               path == "/api/chat") {
         routeGenerationRequest(clientFd, request, response);
     } else if (path == "/models" || path == "/api/models" || path == "/v1/models" ||
                path == "/api/tags" || path.find("/api/model/") == 0 ||
-               path == "/api/engine/capabilities") {
+               path == "/api/engine/capabilities" ||
+               path.find("/api/nvme/bunnyhop/") == 0) {
         routeNativeRequest(request, response);
     } else if ((path == "/gui" || path == "/gui/") && request.method == "GET") {
         response.contentType = "text/html; charset=utf-8";
@@ -2888,9 +2935,11 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
     } else if (path == "/api/github/webhook" && request.method == "POST") {
         routeGitHubWebhook(request, response);
     } else if (path.find("/api/tool") == 0 || path.find("/run-tool") == 0 ||
-               path.find("/api/file") == 0 || path.find("/api/command") == 0) {
-        response.status = 403;
-        response.body = "{\"error\":\"public_command_and_file_routes_disabled\"}";
+               path.find("/api/file") == 0 || path.find("/api/command") == 0 ||
+               path == "/api/read-file" || path == "/api/write-file" ||
+               path == "/api/list-dir" || path == "/api/cli") {
+        // G3_HEADLESS_API_TOOL_UNSTUB_001: reverse public_command_and_file_routes_disabled
+        routeToolAndFileRequest(request, response);
     } else {
         response.status = 404;
         response.body = "{\"error\":\"not_found\",\"path\":\"" + jsonEscape(path) + "\"}";
@@ -3057,7 +3106,7 @@ std::string HeadlessIDE::getEngineCapabilitiesJson() const {
         << "\"phase\":\"" << BUILD_PHASE << "\","
         << "\"backends\":[\"cpu\",\"vulkan\",\"ollama\",\"openai\",\"claude\",\"gemini\"],"
         << "\"features\":[\"moe\",\"flash_attention\",\"quantization\",\"streaming\","
-        << "\"hotpatch\",\"lsp\",\"swarm\",\"replay\""
+        << "\"hotpatch\",\"lsp\",\"swarm\",\"replay\",\"nvme_reverse_bunnyhop\""
 #if RAWRXD_HEADLESS_NATIVE_HEXMAG
         << ",\"hexmag_masm\""
 #endif
@@ -3065,6 +3114,10 @@ std::string HeadlessIDE::getEngineCapabilitiesJson() const {
         << ",\"native_subagent\""
 #endif
         << "],"
+        << "\"engine\":{"
+        << "\"nvme_reverse_bunnyhop\":"
+        << (Deep2::NvmeBunnyHopApi::ForceEnabled() ? "true" : "false")
+        << "},"
         << "\"nativeHexMag\":" << (RAWRXD_HEADLESS_NATIVE_HEXMAG ? "true" : "false") << ","
         << "\"nativeSubagent\":" << (RAWRXD_HEADLESS_NATIVE_SUBAGENT ? "true" : "false") << ","
         << "\"maxContextLength\":131072,"
@@ -3075,7 +3128,8 @@ std::string HeadlessIDE::getEngineCapabilitiesJson() const {
         << "\"chat\":\"/api/generate\","
         << "\"completions\":\"/v1/chat/completions\","
         << "\"models\":\"/api/models\","
-        << "\"agents\":\"/api/agent/dual\""
+        << "\"agents\":\"/api/agent/dual\","
+        << "\"nvme_bunnyhop\":\"/api/nvme/bunnyhop/status\""
         << "}"
         << "}";
     return oss.str();
@@ -3711,6 +3765,7 @@ Command-line flags:
   --quiet / -q                  Quiet mode (warnings/errors only)
   --json                        JSON-structured output
   --settings <file>             Load settings from file
+  --dir <path>                  Working directory for tools/MOTD resolution
 )";
     fprintf(stdout, "%s\n", help);
 }
