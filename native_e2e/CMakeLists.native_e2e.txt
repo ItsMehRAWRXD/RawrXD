@@ -9,6 +9,7 @@ add_library(RawrNativeWebBridge STATIC
     "${_RN_E2E_DIR}/rawr_native_receipt_x64.asm"
     "${_RN_E2E_DIR}/rawr_native_http_adapter.cpp"
     "${_RN_E2E_DIR}/runtime_gguf_roots.cpp"
+    "${_RN_E2E_DIR}/runtime_gguf_meta.cpp"
     "${_RN_E2E_DIR}/runtime_gguf_disk_resolve.cpp"
     "${_RN_E2E_DIR}/runtime_gguf_disk_try.cpp"
 )

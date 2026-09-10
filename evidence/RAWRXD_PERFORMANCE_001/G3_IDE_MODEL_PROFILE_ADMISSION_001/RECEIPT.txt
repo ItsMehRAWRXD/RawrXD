@@ -1,0 +1,50 @@
+GATE=G3_IDE_MODEL_PROFILE_ADMISSION_001
+PURPOSE=OPEN_R03 spend: admit arbitrary local GGUF via header KV metadata (not qwen/rawrxd seed table)
+PARENT=G3_IDE_RESIDUAL_AUDIT_001 CLASSIFICATION NEXT_GATE=MODEL_PROFILE_ADMISSION
+ASOF=2026-09-10T14:10Z
+PROMOTE=0
+TIP_CLIMB=HOLD
+LOCAL_ONLY=1
+CONFIRMED=1
+
+ROOT_CAUSE=
+  prepare admission historically depended on seed_default_runtime_models
+  (qwen2.5:1.5b / qwen / rawrxd-e2e) + static ModelBridge names.
+  Non-seeded local GGUF names hit model_profile_not_found.
+
+FIX=
+  native_e2e/runtime_gguf_meta.cpp — GGUF header KV probe (arch/block_count/context/file_type)
+  native_e2e/runtime_gguf_disk_resolve.cpp — fill_from_meta; refuse malformed (rc=3)
+  native_e2e/runtime_gguf_disk_try.cpp — propagate meta-unsupported; root scan
+  native_e2e/runtime_gguf_roots.cpp — + G:\~dev\rawrxd\models + exe..\..\models
+  native_e2e/rawr_native_http_adapter.cpp — seed table emptied; prepare path/disk -> model_metadata
+  Headless + LocalServer already TryHandle /api/native/* (RAWR_HAS_NATIVE_E2E)
+
+PROOF_SMOKE=
+  native_prepare_smoke tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf -> HTTP 200
+    profile_source=model_metadata num_layers=22
+  Phi-3-mini-4k-instruct-q8_0.gguf -> HTTP 200 num_layers=32
+  qwen2.5:1.5b (no disk) -> HTTP 404 model_profile_not_found (seed removed)
+  Witnesses: SMOKE_TINYLLAMA_NAME.txt SMOKE_PHI3_NAME.txt SMOKE_QWEN_SEED_ABSENT.txt
+
+PROOF_LIVE_PRODUCT=
+  EXE SHA256 in EXE_SHA.txt
+  Headless --server --port 11975 --dir G:\~dev (LOCAL_ONLY default)
+  POST /api/native/generation/prepare model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+    -> HTTP 200 profile_source=model_metadata num_layers=22
+  POST prepare model=Phi-3-mini-4k-instruct-q8_0.gguf path=F:\OllamaModels\...
+    -> HTTP 200 profile_source=model_metadata num_layers=32
+  POST prepare model=qwen2.5:1.5b -> HTTP 404 (no seed admission)
+  Witnesses: LIVE_PREPARE_TINYLLAMA.txt LIVE_PREPARE_PHI3.txt LIVE_PREPARE_QWEN_SEED_ABSENT.txt
+
+DO_NOT_TOUCH=
+  GENERATE_AV seals / DualStick / tool_server wholesale /
+  OPEN_R01 agenticMode / OPEN_R02 11434 / OPEN_R04 headless tool parity
+
+NOTE_RETEST_ONLY=
+  model_not_loaded_503 remains RETEST_ONLY — needs current-binary repro; not blocker here.
+
+VERDICT=OPEN_R03_CLOSED_LIVE_PREPARE_200_META
+  MODEL_PROFILE_ADMISSION=PASS for non-seeded TinyLlama + Phi-3 under LOCAL_ONLY
+  PRODUCT_COMPLETION=PARTIAL (OPEN_R01/R02/R04 remain)
+  PROMOTE=0 TIP_CLIMB=HOLD

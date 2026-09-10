@@ -41,24 +41,28 @@ extern "C" uint32_t RawrNative_TryRegisterRuntimeGgufFromDisk(
     char roots[16][MAX_PATH]{};
     int nroots = 0;
     RawrNative_CollectGgufRoots(roots, &nroots, 16);
+    uint32_t last_meta = 1;
     for (int i = 0; i < nroots; ++i) {
         char cand[MAX_PATH]{};
-        _snprintf_s(cand, sizeof(cand), _TRUNCATE, "%s\\%s",
-                    roots[i], model_name);
-        if (RawrNative_RegisterRuntimeGgufPathEx(
-                model_name, cand, out_info) == 0)
-            return 0;
-        if (!stem[0]) continue;
-        _snprintf_s(cand, sizeof(cand), _TRUNCATE, "%s\\%s.gguf",
-                    roots[i], stem);
-        if (RawrNative_RegisterRuntimeGgufPathEx(
-                model_name, cand, out_info) == 0)
-            return 0;
-        _snprintf_s(cand, sizeof(cand), _TRUNCATE, "%s\\%s",
-                    roots[i], stem);
-        if (RawrNative_RegisterRuntimeGgufPathEx(
-                model_name, cand, out_info) == 0)
-            return 0;
+        const char* tries[3];
+        char a[MAX_PATH]{}, b[MAX_PATH]{}, c[MAX_PATH]{};
+        _snprintf_s(a, sizeof(a), _TRUNCATE, "%s\\%s", roots[i], model_name);
+        tries[0] = a;
+        if (stem[0]) {
+            _snprintf_s(b, sizeof(b), _TRUNCATE, "%s\\%s.gguf",
+                        roots[i], stem);
+            _snprintf_s(c, sizeof(c), _TRUNCATE, "%s\\%s", roots[i], stem);
+            tries[1] = b; tries[2] = c;
+        } else {
+            tries[1] = tries[2] = nullptr;
+        }
+        for (int t = 0; t < 3; ++t) {
+            if (!tries[t]) continue;
+            uint32_t rc = RawrNative_RegisterRuntimeGgufPathEx(
+                model_name, tries[t], out_info);
+            if (rc == 0) return 0;
+            if (rc == 3) last_meta = 3;
+        }
     }
-    return 1;
+    return last_meta;
 }

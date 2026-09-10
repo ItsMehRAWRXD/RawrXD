@@ -35,6 +35,7 @@ void RawrNative_CollectGgufRoots(char roots[][MAX_PATH], int* n, int cap) {
     push_root(roots, n, cap, "C:\\OllamaModels");
     push_root(roots, n, cap, "D:\\models");
     push_root(roots, n, cap, "F:\\models");
+    push_root(roots, n, cap, "G:\\~dev\\rawrxd\\models");
     char exe[MAX_PATH]{};
     DWORD el = GetModuleFileNameA(nullptr, exe, MAX_PATH);
     if (el && el < MAX_PATH) {
@@ -44,6 +45,10 @@ void RawrNative_CollectGgufRoots(char roots[][MAX_PATH], int* n, int cap) {
             char mdir[MAX_PATH]{};
             _snprintf_s(mdir, sizeof(mdir), _TRUNCATE, "%s\\models", exe);
             push_root(roots, n, cap, mdir);
+            char rel[MAX_PATH]{}, full[MAX_PATH]{};
+            _snprintf_s(rel, sizeof(rel), _TRUNCATE, "%s\\..\\..\\models", exe);
+            if (GetFullPathNameA(rel, MAX_PATH, full, nullptr))
+                push_root(roots, n, cap, full);
         }
     }
 }

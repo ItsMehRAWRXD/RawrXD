@@ -9,9 +9,11 @@
 #include "rawr_native_e2e_abi.h"
 #include "runtime_gguf_disk_resolve.h"
 
-extern "C" uint32_t RawrNative_RegisterRuntimeModel(
-    const char* model_name, const RawrNativeProfileInfo* info);
+extern "C" uint32_t RawrNative_RegisterRuntimeModelSrc(
+    const char* model_name, const RawrNativeProfileInfo* info,
+    const char* source);
 
+/* Compat seeds only. Arbitrary GGUF admits from metadata, not these names. */
 static void seed_default_runtime_models(void) {
     static volatile LONG once = 0;
     if (InterlockedCompareExchange(&once, 1, 0) != 0) return;
@@ -26,9 +28,12 @@ static void seed_default_runtime_models(void) {
     p.quant_type = 1;
     p.ram_mb = 4096;
     p.vram_mb = 8192;
-    (void)RawrNative_RegisterRuntimeModel("qwen2.5:1.5b", &p);
-    (void)RawrNative_RegisterRuntimeModel("qwen", &p);
-    (void)RawrNative_RegisterRuntimeModel("rawrxd-e2e", &p);
+    (void)RawrNative_RegisterRuntimeModelSrc(
+        "qwen2.5:1.5b", &p, "seed_compat");
+    (void)RawrNative_RegisterRuntimeModelSrc(
+        "qwen", &p, "seed_compat");
+    (void)RawrNative_RegisterRuntimeModelSrc(
+        "rawrxd-e2e", &p, "seed_compat");
 }
 
 struct RouteDef {
@@ -105,18 +110,25 @@ static const uint32_t g_route_count =
 struct RuntimeModelSlot {
     volatile LONG active;
     char name[256];
+    char source[32];
     RawrNativeProfileInfo info;
 };
 static RuntimeModelSlot g_runtime_models[32]{};
 
-extern "C" uint32_t RawrNative_RegisterRuntimeModel(
-    const char* model_name,const RawrNativeProfileInfo* info)
+extern "C" uint32_t RawrNative_RegisterRuntimeModelSrc(
+    const char* model_name,const RawrNativeProfileInfo* info,
+    const char* source)
 {
     if (!model_name || !*model_name || !info) return 1;
+    const char* src =
+        (source && *source) ? source : "model_metadata";
     for (uint32_t i=0;i<32;++i) {
         if (g_runtime_models[i].active &&
             strcmp(g_runtime_models[i].name,model_name)==0) {
             g_runtime_models[i].info=*info;
+            strncpy_s(g_runtime_models[i].source,
+                      sizeof(g_runtime_models[i].source),
+                      src,_TRUNCATE);
             return 0;
         }
     }
@@ -126,11 +138,21 @@ extern "C" uint32_t RawrNative_RegisterRuntimeModel(
             strncpy_s(g_runtime_models[i].name,
                       sizeof(g_runtime_models[i].name),
                       model_name,_TRUNCATE);
+            strncpy_s(g_runtime_models[i].source,
+                      sizeof(g_runtime_models[i].source),
+                      src,_TRUNCATE);
             g_runtime_models[i].info=*info;
             return 0;
         }
     }
     return 2;
+}
+
+extern "C" uint32_t RawrNative_RegisterRuntimeModel(
+    const char* model_name,const RawrNativeProfileInfo* info)
+{
+    return RawrNative_RegisterRuntimeModelSrc(
+        model_name, info, "model_metadata");
 }
 
 extern "C" uint32_t RawrNative_UnregisterRuntimeModel(const char* model_name)
@@ -148,13 +170,20 @@ extern "C" uint32_t RawrNative_UnregisterRuntimeModel(const char* model_name)
 }
 
 static int find_runtime_model(
-    const char* model_name,RawrNativeProfileInfo* out)
+    const char* model_name,RawrNativeProfileInfo* out,
+    char* src_out,size_t src_cap)
 {
     if (!model_name || !out) return 0;
     for (uint32_t i=0;i<32;++i) {
         if (g_runtime_models[i].active &&
             strcmp(g_runtime_models[i].name,model_name)==0) {
             *out=g_runtime_models[i].info;
+            if (src_out && src_cap)
+                strncpy_s(src_out,src_cap,
+                          g_runtime_models[i].source[0]
+                              ? g_runtime_models[i].source
+                              : "model_metadata",
+                          _TRUNCATE);
             return 1;
         }
     }
@@ -394,14 +423,23 @@ extern "C" int RawrNative_HandleHttp(
         if (gguf_path[0])
             rc = RawrNative_RegisterRuntimeGgufPathEx(
                 model, gguf_path, &profile);
+        if (rc == 3)
+            return write_json(out,cap,hs,422,
+                "{\"ok\":false,\"error\":\"model_metadata_unsupported\","
+                "\"model\":\"%s\"}", model);
         if (rc != 0)
             rc = RawrNative_TryRegisterRuntimeGgufFromDisk(model, &profile);
+        if (rc == 3)
+            return write_json(out,cap,hs,422,
+                "{\"ok\":false,\"error\":\"model_metadata_unsupported\","
+                "\"model\":\"%s\"}", model);
         if (rc != 0)
             return write_json(out,cap,hs,404,
                 "{\"ok\":false,\"error\":\"model_profile_not_found\","
                 "\"model\":\"%s\"}", model);
         return write_json(out,cap,hs,200,
             "{\"ok\":true,\"model\":\"%s\",\"profile_id\":%u,"
+            "\"profile_source\":\"model_metadata\","
             "\"num_layers\":%u,\"context_max\":%u,\"ram_mb\":%u}",
             model, profile.profile_id, profile.num_layers,
             profile.context_max, profile.ram_mb);
@@ -410,6 +448,7 @@ extern "C" int RawrNative_HandleHttp(
     if (streq(method,"POST") && streq(path,"/api/native/generation/prepare")) {
         char model[256]{};
         char gguf_path[1024]{};
+        char profile_source[32] = "model_bridge";
         if (!json_string(body,"model",model,sizeof(model)))
             return write_json(out,cap,hs,400,
                 "{\"ok\":false,\"error\":\"missing_model\"}");
@@ -417,17 +456,33 @@ extern "C" int RawrNative_HandleHttp(
             (void)json_string(body,"model_path",gguf_path,sizeof(gguf_path));
 
         RawrNativeProfileInfo profile{};
-        int runtime_profile=find_runtime_model(model,&profile);
-        if (!runtime_profile && gguf_path[0] &&
-            RawrNative_RegisterRuntimeGgufPathEx(
-                model, gguf_path, &profile)==0) {
-            runtime_profile=1;
+        int runtime_profile=find_runtime_model(
+            model,&profile,profile_source,sizeof(profile_source));
+        if (!runtime_profile && gguf_path[0]) {
+            uint32_t rc = RawrNative_RegisterRuntimeGgufPathEx(
+                model, gguf_path, &profile);
+            if (rc == 3)
+                return write_json(out,cap,hs,422,
+                    "{\"ok\":false,\"error\":\"model_metadata_unsupported\","
+                    "\"model\":\"%s\"}", model);
+            if (rc == 0) {
+                runtime_profile=1;
+                strncpy_s(profile_source,sizeof(profile_source),
+                          "model_metadata",_TRUNCATE);
+            }
         }
         if (!runtime_profile &&
             RawrNative_ModelBridgeResolveProfile(model,&profile)!=0) {
-            if (RawrNative_TryRegisterRuntimeGgufFromDisk(
-                    model,&profile)==0) {
+            uint32_t rc = RawrNative_TryRegisterRuntimeGgufFromDisk(
+                model,&profile);
+            if (rc == 3)
+                return write_json(out,cap,hs,422,
+                    "{\"ok\":false,\"error\":\"model_metadata_unsupported\","
+                    "\"model\":\"%s\"}", model);
+            if (rc == 0) {
                 runtime_profile=1;
+                strncpy_s(profile_source,sizeof(profile_source),
+                          "model_metadata",_TRUNCATE);
             } else {
                 return write_json(out,cap,hs,404,
                     "{\"ok\":false,\"error\":\"model_profile_not_found\","
@@ -439,6 +494,9 @@ extern "C" int RawrNative_HandleHttp(
                     "RawrNative_RegisterRuntimeModel\"}",model);
             }
         }
+        if (!runtime_profile)
+            strncpy_s(profile_source,sizeof(profile_source),
+                      "model_bridge",_TRUNCATE);
 
         RawrNativePolicyRequest q{};
         q.context=json_u32(body,"context",8192);
@@ -484,8 +542,7 @@ extern "C" int RawrNative_HandleHttp(
             "\"stream\":%s,\"flags\":%u,\"safe_prepared\":%s,"
             "\"hop_prepared\":%s,\"hop_needs_engine\":%s,"
             "\"hop_skip_count\":%u}}",
-            (unsigned long long)id,model,
-            runtime_profile ? "runtime_gguf" : "model_bridge",
+            (unsigned long long)id,model,profile_source,
             profile.profile_id,profile.engine_mode,profile.num_layers,
             policy.context,policy.max_tokens,policy.temperature_milli,
             policy.top_p_milli,policy.top_k,

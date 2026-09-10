@@ -1,9 +1,9 @@
-﻿# G3_IDE_RESIDUAL_AUDIT_001 â€” Residual Table
+# G3_IDE_RESIDUAL_AUDIT_001 â€” Residual Table
 # USER AUTHORITY RECLASS 2026-09-10T13:56Z â€” governing map in CLASSIFICATION.txt
 # CRASH_RESIDUAL=0 BACKEND_CONNECTIVITY_RESIDUAL=0 OLLAMA_HEADLESS_REOPEN=0
 # OPEN_R01=GUI_POLICY_DEFAULT_DRIFT
 # OPEN_R02=LEGACY_11434_FALLBACK_SURFACE
-# OPEN_R03=MODEL_PROFILE_ADMISSION  (CLOSED G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001)
+# OPEN_R03=MODEL_PROFILE_ADMISSION (CLOSED G3_IDE_MODEL_PROFILE_ADMISSION_001; alias G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001)
 # OPEN_R04=HEADLESS_PRODUCT_TOOL_PARITY
 # RETEST_ONLY=model_not_loaded_503 (needs current-binary repro; not blocker without miss)
 # RETAIN_CLOSED=relative_path_residual
@@ -15,11 +15,11 @@
 
 ID	Area	Finding	Classification	Impact	Evidence path/symbol	Recommended next
 R01	/api/generate + oneshot	ProductDeep2Infer AV residual	CLOSED / GENERATE_AV	Sealed live repro+fix; DualStick DO_NOT_REOPEN	G3_IDE_GENERATE_AV_LIVE_REPRO_001; G3_IDE_GENERATE_AV_FIX_001; G3_IDE_RESIDUAL_R01_001/R01_AUTHORITY_UPDATE.txt	NONE â€” pre-fix oneshot EXIT=-1 = HISTORICAL_ONLY; R01_REOPEN=0
-R02	Native E2E prepare	Disk register sealed; OPEN_R03 MODEL_METADATA admission (GGUF KV â†’ profile; seed_compat retained for qwen/rawrxd-e2e)	CLOSED / OPEN_R03_CLOSED	G3_NATIVE_MODEL_PROFILE_001 + G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001	G3_NATIVE_ADAPTER_MODEL_PROFILE_ADMISSION_001	Next note: generate-without-model 503 (RETEST_ONLY)
+R02	Native E2E prepare	Disk register + GGUF KV meta admission; seed table emptied	CLOSED / OPEN_R03_CLOSED	G3_NATIVE_MODEL_PROFILE_001 + G3_IDE_MODEL_PROFILE_ADMISSION_001	G3_IDE_MODEL_PROFILE_ADMISSION_001	OPEN_R01 next; RETEST_ONLY 503 only with repro
 R03	GUI EngineAPI vs server	Thin adapters: policies/extensions/browse/explain/backends/use/metrics/complete HTTP!=404 sealed	CLOSED	Sealed PASS FAIL_COUNT_404=0; backends/use->setActiveBackend; ollama 422 LOCAL_ONLY	G3_IDE_RESIDUAL_R03_001/RECEIPT.txt	NONE â€” do not reopen
 R04	Headless file ops	HTTP aliases delete/rename/copy/move/mkdir/stat/search/list-directory -> ToolRoutes	CLOSED	Sealed PASS FAIL_COUNT_404=0 live FS ops + /api/tool	G3_IDE_RESIDUAL_R04_001/RECEIPT.txt	NONE â€” do not reopen
-R05	agenticMode default	product agenticMode:false HELD; GUI policy default drift	OPEN_R01=GUI_POLICY_DEFAULT_DRIFT	Held for after admission	gui standalone agenticMode:false	After OPEN_R03
-R06	11434 vs 11435	:11435 canonical CLOSED; leftover 11434 fallback surface	PORT_11435=CLOSED / OPEN_R02=LEGACY_11434_FALLBACK_SURFACE	Canonical port closed; OPEN_R02 later	gui State.backend; G3_R1_TEN_GGUF_MATRIX_001	After OPEN_R03
+R05	agenticMode default	product agenticMode:false HELD_BY_POLICY (T13:50; do not reopen)	HELD_BY_POLICY / CLOSED_RESTORE	Not this burn	gui standalone agenticMode:false	Hold false
+R06	11434 vs 11435	:11435 canonical; scanPorts exclude 11434; no live product fallback	CLOSED / PORT_11435	T13:50 authority	gui State.backend; KEY_WITNESSES	Do not reopen 11434
 R07	Relative tool paths	--dir product path green	RETAIN_CLOSED=relative_path_residual	Closed with --dir	G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001	Keep --dir
 R08	model_not_loaded ship	Link CLOSED; runtime 503 only if miss returns	RETEST_ONLY=model_not_loaded_503	Not blocker without current-binary repro	G3_LINK_SUBSTRATE_HANDOFF_001	Reprobe only on live miss
 R09	Headless vs LocalServer parity	Seven-bucket matrix sealed (SHARED_AND_LIVE|HEADLESS_ONLY|LOCALSERVER_ONLY|INTENTIONALLY_THIN|ACTUAL_MISSING_PARITY|POLICY_HELD|OPS_ONLY); thin!=stub	CLOSED / CLASSIFIED	Feeds OPEN owners R11/R13/R25; R10 dropped CLOSED_BY_R03; R20 untouched	G3_IDE_RESIDUAL_R09_001/{PARITY_MATRIX,MATRIX,RECEIPT}.txt	NONE on R09 â€” next R13 wire-vs-hold or R11 native LocalServer
