@@ -1,0 +1,44 @@
+﻿GATE=G3_IDE_RESIDUAL_R09_001
+PARENT=G3_IDE_RESIDUAL_AUDIT_001
+ASOF=2026-09-10T10:00-04:00
+KIND=CLASSIFICATION_RECEIPT
+PROMOTE=0
+TIP_CLIMB=HOLD
+R09=CLASSIFIED
+R20=UNTOUCHED
+DO_NOT_REOPEN=R01,R02,R03,R04,R05,R06
+
+AUTHORITY_IN=
+  GATE=G3_IDE_RESIDUAL_AUDIT_001
+  R02=CLOSED R03=CLOSED R05=HELD_BY_POLICY R06=CLOSED
+  AGENTIC_MODE=false OLLAMA_DIRECT_URL=:11435 SCANPORTS_11434=0
+  MODEL_PROFILE_NOT_FOUND_RESIDUAL=0 ENGINEAPI_THIN_ADAPTERS=CLOSED
+  OPEN=R09,R10,R11,R12,R13,R14,R15,R25 R20=HELD
+
+AUTHORITY_OUT=
+  R09=CLASSIFIED (PARITY_MATRIX.txt sealed)
+  R10=CLOSED_BY_R03 (SHARED_AND_LIVE — drop from OPEN)
+  OPEN=R11,R12,R13,R14,R15,R25
+  R20=HELD
+  PROMOTE=0 TIP_CLIMB=HOLD
+
+BUCKET_COUNTS (primary assignments; multi-owner notes in matrix)=
+  SHARED_AND_LIVE=product generate/model/tool/FS/R03/backends
+  HEADLESS_ONLY=github webhook, native/*, hexmag, quantum/manifest aliases
+  LOCALSERVER_ONLY=rich lsp/debug/swarm/cot/hybrid/multi-response/replay/router mutate
+  INTENTIONALLY_THIN=Headless * /status + empty agents/failures + R03 thin JSON
+  ACTUAL_MISSING_PARITY=R11 native prepare; R13 agents/replay pending decision; R25 router mutate if GUI hits Headless
+  POLICY_HELD=R12 lsp/debug full; instructions 503 server profile; LOCAL_ONLY; R20
+  OPS_ONLY=R15 smoke_bin; R14 unobserved session E2E
+
+ARTIFACTS=
+  PARITY_MATRIX.txt
+  RECEIPT.txt (this file)
+
+STALE_EVIDENCE_BAN=
+  KEY_WITNESSES ASOF=01:00 agenticMode:true / ollamaDirectUrl:11434 /
+  model_profile_not_found — NOT valid for current disposition
+
+VERDICT=PASS_CLASSIFICATION_ONLY
+NEXT=R11 native prepare parity decision OR R13 agents/replay wire-vs-hold decision
+  (do not implement R10; do not flip R20; do not reopen R01–R06)

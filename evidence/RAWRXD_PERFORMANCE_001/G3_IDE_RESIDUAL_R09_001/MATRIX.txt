@@ -1,0 +1,131 @@
+GATE=G3_IDE_RESIDUAL_R09_001
+ASOF=2026-09-10T09:58-04:00
+KIND=HEADLESS_LOCALSERVER_PRODUCT_SURFACE_MATRIX
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPEN=0
+R09=CLOSED
+NO_SEALED_ROUTE_REOPEN=1
+LOCAL_ONLY_PRESERVED=1
+
+## Pass criteria
+HEADLESS_ROUTES_ENUMERATED=1
+LOCALSERVER_ROUTES_ENUMERATED=1
+SHARED_SURFACE_CLASSIFIED=1
+HEADLESS_ONLY_CLASSIFIED=1
+LOCALSERVER_ONLY_CLASSIFIED=1
+INTENTIONAL_THIN_SURFACE_DISTINGUISHED_FROM_GAP=1
+
+## Sources
+  Headless: HeadlessIDE.cpp routeHttpRequest + routeStatusRequest +
+            HeadlessIDE_GuiRoutes.cpp + HeadlessIDE_ToolRoutes.cpp
+  LocalServer: Win32IDE_LocalServer.cpp route dispatch ~L994-1977
+  Adapters: ProductGuiRouteAdapters.hpp (R03 CLOSED — do not reopen)
+  Literal extract (noise-tolerant aid): ENUM_*_LITERALS.txt
+  NOTE: literal set != product contract; families below are authoritative
+
+## Law
+  "Headless is thinner" != failure.
+  INTENTIONAL_THIN / GUI_LOCALSERVER_OWNED = classified, not copied into Headless.
+  PRODUCT_GAP = LocalServer (or required) capability that product Headless contract needs and lacks.
+  tool_server/main rich engines stay classified OWNER=TOOL_SERVER — not duplicated.
+
+---
+
+# A. SHARED_FULL — product critical path (both; real handlers)
+CLASS=SHARED_FULL
+  GET  /health | /status
+  GET  /api/tags | /models | /api/models | /v1/models
+  POST /api/model/load | /api/model/unload
+  GET  /api/engine/capabilities
+  POST /api/generate | /ask | /v1/chat/completions
+  POST /api/tool (+ Headless tool/file aliases R04 CLOSED)
+  POST /api/read-file | /api/write-file | /api/list-directory | /api/list-dir
+  POST /api/delete-file | /api/rename-file | /api/copy-file | /api/move-file
+  POST /api/mkdir | /api/stat-file | /api/search-files | /api/cli
+  POST /api/subagent | /api/chain
+  GET  /api/nvme/bunnyhop/status ; POST arm|disarm
+  GET  /gui (both serve product HTML)
+  GET  /api/backends (inventory)
+  GET  /api/router/status | /api/governor/status | /api/swarm/status
+       /api/safety/status | /api/debug/status | /api/lsp/status
+       /api/hybrid/status | /api/asm/status  (presence shared; richness differs — see B/C)
+
+# B. SHARED_THIN_INTENTIONAL — HTTP!=404 but product_thin / status-only on Headless
+CLASS=INTENTIONAL_THIN
+OWNER_NOTE=R03 sealed adapters; status JSON not full GUI engines
+  /api/policies* /api/extensions* /api/browse* /api/agents/explain*
+  POST /api/backends/use  (alias->LocalGGUF; Ollama->422 LOCAL_ONLY) — R03/R10 CLOSED
+  GET  /metrics | POST /complete|/complete/stream -> generate alias
+  Headless status-only siblings of rich LocalServer families:
+    /api/*/status for lsp,debug,swarm,governor,safety,hybrid,asm,hotpatch,quantum
+  Headless Server-profile: /api/instructions* -> 503 instructions_unavailable (HELD R12)
+
+# C. LOCALSERVER_ONLY — GUI / rich IDE authority (intentional; not Headless copy)
+CLASS=GUI_LOCALSERVER_OWNED
+  Full LSP: /api/lsp/diagnostics (+ client enabled in GUI-mode)
+  Full debug: /api/debug/{breakpoints,registers,stack,modules,threads,events,watches,
+              memory,disasm,launch,attach,go}
+  Full swarm mutate: /api/swarm/{nodes,tasks,stats,events,config,worker,start,stop,
+              nodes/add,build,cancel,cache/clear}
+  Full governor mutate: /api/governor/{submit,kill,result}
+  Full safety mutate: /api/safety/{check,violations,rollback}
+  Full hybrid: /api/hybrid/{complete,diagnostics,rename,analyze,symbol-usage}
+  Full asm: /api/asm/{symbols,navigate,analyze}
+  CoT / multi-response / confidence / replay store / dual-agent / phase* status
+  Router mutate: /api/router/{decision,capabilities,route,why,pins,heatmap,ensemble,simulate}
+  Hotpatch mutate: /api/hotpatch/{toggle,apply,revert,target-tps}
+  /api/model/profiles | /api/backend/active | /api/backend(s)/switch
+  /api/re/set-binary
+NOTE=Do not lift these into Headless server profile without new product contract.
+
+# D. HEADLESS_ONLY / HEADLESS_STRONGER — product Headless surfaces
+CLASS=HEADLESS_PRODUCT
+  GET  /api/health | /api/status | /api/headless/status | /api/version
+  GET  /api/capabilities (alias)
+  POST /api/unload (alias of model/unload)
+  POST /api/chat | /api/generate/stream
+  GET  /api/model/info | /api/manifest | /api/features
+  POST /api/hexmag/ask | /api/github/webhook
+  Tool prefixes: /api/tool/ | /run-tool | /api/file/* | /api/command*
+  /api/native/* (when RAWR_HAS_NATIVE_E2E) — Headless-linked; LocalServer absent -> R11 OPEN
+
+# E. PRODUCT_GAP — required by Headless product contract; genuinely absent/hollow
+CLASS=PRODUCT_GAP
+NEXT_OWNER=
+  R13_AGENTS_WIRE:
+    Headless GET /api/agents|/api/agents/status|/api/agents/history|/api/agent/history
+      -> returns agents:[] hollow (route present, store not wired)
+    LocalServer GET /api/agents/history|/api/agents/status + POST /api/agents/replay
+      -> real handlers
+    PASS_IF_R13= Headless agents history/status/replay consume sealed matrix
+                 (not invent LocalServer-only rich panels into Headless)
+  R11_NATIVE_PREPARE_LOCALSERVER:
+    /api/native/generation/prepare (+ native/*) on LocalServer — PARTIAL separate ticket
+  R14_REPLAY_E2E_UNOBSERVED:
+    Full GUI<->Headless history/replay live E2E not proven this matrix (observe after R13)
+
+# F. NOT_GAP — classified elsewhere / held
+CLASS=NOT_GAP
+  R12 LSP/debug full stack — HELD_BY_POLICY on Headless Server profile
+  R05/R20 agenticMode — policy hold (default false)
+  R06 :11434 — CLOSED dead under LOCAL_ONLY
+  R15 EXE vanish — ops; use smoke_bin
+  R25 router LocalGGUF-only — keep fail-closed; not a Headless missing route
+  tool_server rich policy/extension engines — OWNER=TOOL_SERVER; R03 thin is correct
+
+## Enumeration counts (literal aid; not PASS alone)
+  HEADLESS_LITERALS~86  LOCALSERVER_LITERALS~145
+  SHARED_LITERALS~48  (undercounts GuiRoutes-only strings on Headless)
+  ENUM files: ENUM_HEADLESS_ALL_LITERALS.txt ENUM_LOCALSERVER_ALL_LITERALS.txt
+              ENUM_SHARED_LITERALS.txt ENUM_HEADLESS_ONLY_LITERALS.txt
+              ENUM_LOCALSERVER_ONLY_LITERALS.txt
+
+## Disposition
+VERDICT=PASS
+R09=CLOSED
+PRODUCT_GAP_OPEN_COUNT=2 (R13 agents hollow; R11 native on LocalServer)
+INTENTIONAL_THIN_NE_GAP=1
+NEXT=R13_AGENTS_WIRE
+LOCKED_CLOSED=R01-R06,R02,R03,R04,R10
+PROMOTE=0 TIP_CLIMB=HOLD

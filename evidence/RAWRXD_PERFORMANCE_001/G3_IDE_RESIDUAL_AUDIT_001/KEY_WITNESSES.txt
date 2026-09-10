@@ -1,0 +1,48 @@
+﻿GATE=G3_IDE_RESIDUAL_AUDIT_001
+ASOF=2026-09-10T13:56Z
+KIND=KEY_WITNESSES_RECLASS
+PROMOTE=0
+TIP_CLIMB=HOLD
+AUTHORITY=CLASSIFICATION.txt (USER reclass)
+
+CRASH_RESIDUAL=0
+BACKEND_CONNECTIVITY_RESIDUAL=0
+OLLAMA_HEADLESS_REOPEN=0
+GENERATE_AV=CLOSED
+PORT_11435=CLOSED
+RETAIN_CLOSED=relative_path_residual
+RETEST_ONLY=model_not_loaded_503
+NOTE=RETEST_ONLY needs current-binary repro — not a blocker without live miss
+PRODUCT_COMPLETION=PARTIAL
+NEXT_GATE=MODEL_PROFILE_ADMISSION
+SPEND=G3_IDE_MODEL_PROFILE_ADMISSION_001
+
+OPEN=
+  OPEN_R01=GUI_POLICY_DEFAULT_DRIFT
+  OPEN_R02=LEGACY_11434_FALLBACK_SURFACE
+  OPEN_R03=MODEL_PROFILE_ADMISSION (spending this turn)
+  OPEN_R04=HEADLESS_PRODUCT_TOOL_PARITY
+
+WITNESSES=
+  native_e2e/rawr_native_http_adapter.cpp — seed_default_runtime_models emptied;
+    prepare admits via path register + TryRegisterRuntimeGgufFromDisk (no qwen seed)
+  native_e2e/runtime_gguf_meta.cpp — GGUF header KV → block_count/context/file_type
+  native_e2e/runtime_gguf_disk_resolve.cpp — fill_profile_from_path uses meta
+  native_e2e/runtime_gguf_roots.cpp — F/G/D/C OllamaModels + G:\~dev\rawrxd\models
+  HeadlessIDE + LocalServer — RAWR_HAS_NATIVE_E2E TryHandle /api/native/*
+  gui prepareGeneration — /api/native/generation/prepare (unchanged path)
+
+SEAL_REFS_DO_NOT_REOPEN=
+  G3_IDE_GENERATE_AV_LIVE_REPRO_001 / FIX_001 — GENERATE_AV=CLOSED
+  G3_NATIVE_MODEL_PROFILE_001 — prior disk-register intact (superseded as OPEN_R03 spend target)
+  DualStick · TIP_CLIMB=HOLD · PROMOTE=0
+  relative_path_residual RETAIN_CLOSED (G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001)
+
+PORTS=
+  Product :11435 CLOSED canonical
+  :11434 = OPEN_R02 surface (not spent this turn)
+
+HELD_AFTER_ADMISSION=
+  OPEN_R01 GUI policy default drift
+  OPEN_R02 legacy 11434 fallback
+  OPEN_R04 headless product tool parity

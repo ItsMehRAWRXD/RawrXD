@@ -1,0 +1,154 @@
+﻿GATE=G3_IDE_RESIDUAL_R09_001
+PARENT=G3_IDE_RESIDUAL_AUDIT_001
+ASOF=2026-09-10T10:00-04:00
+KIND=HEADLESS_LOCALSERVER_PARITY_MATRIX
+PROMOTE=0
+TIP_CLIMB=HOLD
+R20=UNTOUCHED
+DO_NOT_REOPEN=R01,R02,R03,R04,R05,R06
+SOURCE_ASOF_NOTE=Stale KEY_WITNESSES 01:00 assertions are not evidence for this disposition
+
+AUTHORITY_ACK=
+  R02=CLOSED R03=CLOSED R05=HELD_BY_POLICY R06=CLOSED
+  AGENTIC_MODE=false OLLAMA_DIRECT_URL=:11435 SCANPORTS_11434=0
+  MODEL_PROFILE_NOT_FOUND_RESIDUAL=0 ENGINEAPI_THIN_ADAPTERS=CLOSED
+  OPEN_IN=R09,R10,R11,R12,R13,R14,R15,R25 R20=HELD
+
+METHOD=
+  Diff LocalServer route table (Win32IDE_LocalServer.cpp ~L994–1977)
+  vs HeadlessIDE::routeHttpRequest + routeStatusRequest + ToolRoutes + GuiRoutes
+  Classify each product-relevant surface into exactly one primary bucket.
+  INTENTIONALLY_THIN ≠ STUB ≠ ACTUAL_MISSING_PARITY.
+
+## PRIMARY BUCKETS
+
+### SHARED_AND_LIVE
+Both sides implement live product handlers (not status-stub inventing fullness).
+  GET  /health /status
+  POST /api/generate (/api/generate/stream on Headless; LocalServer generate path)
+  POST /ask
+  POST /v1/chat/completions
+  GET  /api/tags /api/models /v1/models
+  POST /api/model/load /api/model/unload
+  GET  /api/engine/capabilities
+  GET|POST /api/nvme/bunnyhop/{status,arm,disarm}
+  GET  /gui
+  POST /api/tool + FS: read-file write-file list-dir list-directory delete-file
+       rename-file copy-file move-file mkdir stat-file search-files cli
+  POST /api/subagent /api/chain
+  R03 adapters (both): /api/policies* /api/extensions* /api/browse*
+       /api/agents/explain* POST /api/backends/use GET /metrics|/api/metrics
+       POST /complete|/complete/stream → generate
+  GET  /api/backends (inventory)
+  LocalServer also: POST /api/backends/use|/api/backend/switch|/api/backends/switch
+  Headless: routeGuiProductRequest backends/use → setActiveBackend(LocalGGUF); Ollama 422
+  OWNER_NOTE: R10 naming miss SUPERSEDED → classify SHARED_AND_LIVE; CLOSED_BY_R03
+
+### HEADLESS_ONLY
+Present on Headless product path; absent from LocalServer route table.
+  POST /api/github/webhook
+  /api/native/* (RAWR_HAS_NATIVE_E2E TryHandle) — prepare/register/etc.
+  POST /api/hexmag/ask
+  GET  /api/headless/status /api/version /api/status
+  GET  /api/quantum/status /api/manifest /api/features
+  GET  /api/model/info /api/capabilities /api/unload (aliases)
+  POST /api/chat (generation alias)
+  OWNER→R11 for native prepare gap on LocalServer (see ACTUAL_MISSING_PARITY)
+
+### LOCALSERVER_ONLY
+Rich GUI-mode handlers with no Headless equivalent beyond thin status or 404.
+  Router mutate/query: /api/router/{decision,capabilities,route,why,pins,heatmap,ensemble,simulate}
+       (+ GET /api/backend/active)
+  LSP: /api/lsp/diagnostics (beyond status)
+  ASM: /api/asm/{symbols,navigate,analyze}
+  Multi-response: /api/multi-response/*
+  Hybrid mutate: /api/hybrid/{complete,diagnostics,rename,analyze,symbol-usage}
+  Governor mutate: /api/governor/{submit,kill,result}
+  Safety mutate: /api/safety/{check,violations,rollback}
+  Replay: /api/replay/*
+  Confidence: /api/confidence/*
+  Swarm control: /api/swarm/{nodes,tasks,stats,events,config,worker,start,stop,...}
+  Agent dual: /api/agent/dual/*
+  Debug full: /api/debug/{breakpoints,registers,stack,modules,threads,events,watches,
+       memory,disasm,launch,attach,go}
+  CoT: /api/cot/*
+  Hotpatch mutate: /api/hotpatch/{toggle,apply,revert,target-tps}
+  Phase status: /api/phase{10,11,12,41}/status
+  Agents replay POST /api/agents/replay + rich history GET
+  GET /api/model/profiles
+  OWNER_MAP: R12 (lsp/debug) R13 (agents/replay) R25 (router) — see below
+
+### INTENTIONALLY_THIN
+Headless returns status JSON / empty collections by design — NOT a stub bug.
+Do not “fix” these into LocalServer richness without a product matrix decision.
+  GET /api/router/status          → {"status":"..."}
+  GET /api/governor/status        → getGovernorStatusJson() (status, not submit/kill)
+  GET /api/swarm/status           → string status
+  GET /api/safety/status          → string status
+  GET /api/hotpatch/status        → status JSON
+  GET /api/debug/status           → string status
+  GET /api/asm/status             → string status
+  GET /api/lsp/status             → string status
+  GET /api/hybrid/status          → string status
+  GET /api/agents|/api/agents/history|/api/agents/status|/api/agent/history
+       → {"agents":[],"stats":"..."}  (hollow list intentional on server profile
+          until R13 chooses wire-vs-hold)
+  GET /api/failures|/api/failure/stats → {"failures":[],...}
+  GET /api/metrics (routeStatus + R03 thin) — adapter:"product_thin"
+  R03 policies/extensions/browse/explain — sealed thin adapters (≠ tool_server engines)
+
+### ACTUAL_MISSING_PARITY
+Product GUI or shared EngineAPI expects a working path on the server in use; gap is real.
+  R11  POST/GET /api/native/generation/prepare (+ /api/native/*)
+       Headless: only if RAWR_HAS_NATIVE_E2E linked
+       LocalServer: no /api/native/* at all
+       GUI prepareGeneration still calls this — miss on LocalServer / non-native Headless
+  R13  If product Headless GUI panels require history/replay bodies: empty agents[] +
+       missing POST /api/agents/replay is ACTUAL_MISSING vs LocalServer handlers
+       (If product decides headless never owns history → reclass INTENTIONALLY_THIN /
+        POLICY_HELD — decision pending; default residual stays PARTIAL owner R13)
+  R25  Router LocalGGUF-only smoke: Headless has status-only; LocalServer has full router
+       POST /api/router/route etc. If EngineAPI router panel hits Headless → miss.
+       Cloud/Ollama router paths remain POLICY_HELD under LOCAL_ONLY.
+
+NOT ACTUAL_MISSING (common false friends):
+  R10 /api/backends/use — CLOSED_BY_R03 SHARED_AND_LIVE (do not treat as stub)
+  Intentional thin status endpoints above
+  Full LSP/debug mutate on Headless — POLICY_HELD (LocalServer authority)
+
+### POLICY_HELD
+  R05/R20 agenticMode=false — do not flip (R20 UNTOUCHED this spend)
+  LOCAL_ONLY_NO_OLLAMA — Ollama/cloud switch 422
+  Headless Server profile: /api/instructions* → 503 instructions_unavailable_in_server_profile
+  R12 Full LSP client + debug mutate on Headless — LocalServer/GUI-mode is authority;
+       status-only on Headless is held, not an urgent unstub
+  R21/R22 background boot / hotpatch experimental env gates
+  TIP_CLIMB=HOLD DualStick ICD — out of R09 scope
+
+### OPS_ONLY
+  R15 Concurrent ninja can vanish build-fd\RawrXD-Win32IDE.exe mid-session;
+      LocalServer stop/WSACleanup drain sealed — use smoke_bin/Temp copies for proofs
+  R14 Session persist E2E UNOBSERVED (not route-table parity; optional smoke owner)
+
+## OWNER HANDOFF (post-matrix; implementation order)
+  R09 = CLASSIFIED (this gate) — matrix is the burn; no route invent here
+  R10 = CLOSED_BY_R03 — remove from OPEN list (authority OPEN_IN had R10; disposition drop)
+  R11 = ACTUAL_MISSING_PARITY owner (native prepare on LocalServer / link policy)
+  R12 = POLICY_HELD + LOCALSERVER_ONLY authority for lsp/debug richness
+  R13 = ACTUAL_MISSING_PARITY or INTENTIONALLY_THIN decision — agents/replay
+  R14 = UNOBSERVED / optional E2E (not route invent)
+  R15 = OPS_ONLY
+  R25 = router panel: INTENTIONALLY_THIN status + possible ACTUAL_MISSING mutate on Headless
+  R20 = HELD untouched
+
+## WITNESS SYMBOLS
+  Win32IDE_LocalServer.cpp L994–1977
+  HeadlessIDE.cpp routeHttpRequest ~L3210+; routeStatusRequest ~L3075–3151
+  HeadlessIDE_GuiRoutes.cpp routeGuiProductRequest (R03)
+  HeadlessIDE_ToolRoutes.cpp (R04 FS)
+  ProductGuiRouteAdapters.hpp
+
+VERDICT=R09_MATRIX_SEALED
+INVENTED_PASS=0
+LIVE_HTTP_REPROBE=0
+NOTE=Classification-only burn; no R01–R06 reopen; no TIP_CLIMB move; no R20 edit

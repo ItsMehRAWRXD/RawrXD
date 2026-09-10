@@ -1,0 +1,48 @@
+GATE=G3_IDE_RESIDUAL_AUDIT_001
+KIND=USER_AUTHORITY_RECLASSIFICATION
+ASOF=2026-09-10T13:56Z
+AUTHORITY=USER
+PROMOTE=0
+TIP_CLIMB=HOLD
+PRODUCT_COMPLETION=PARTIAL
+CONFIRMED=1
+
+# --- Reclassified residual map (does NOT reopen sealed receipts) ---
+CRASH_RESIDUAL=0
+BACKEND_CONNECTIVITY_RESIDUAL=0
+OLLAMA_HEADLESS_REOPEN=0
+GENERATE_AV=CLOSED
+PORT_11435=CLOSED
+RETAIN_CLOSED=relative_path_residual
+RETEST_ONLY=model_not_loaded_503
+NOTE_RETEST_ONLY=Requires current-binary repro; not a blocker without live miss.
+
+OPEN_R01=GUI_POLICY_DEFAULT_DRIFT
+OPEN_R02=LEGACY_11434_FALLBACK_SURFACE
+OPEN_R03=MODEL_PROFILE_ADMISSION
+OPEN_R04=HEADLESS_PRODUCT_TOOL_PARITY
+
+NEXT_GATE=MODEL_PROFILE_ADMISSION
+SPEND_GATE=G3_IDE_MODEL_PROFILE_ADMISSION_001
+
+DO_NOT_REOPEN=
+  G3_IDE_GENERATE_AV_LIVE_REPRO_001 / G3_IDE_GENERATE_AV_FIX_001 (GENERATE_AV)
+  DualStick / ArmSpeed
+  G3_STREAMER_AGENTIC_IDE_PARITY_001
+  HEADLESS_/api/tool_UNSTUB
+  Sealed R01 backend generate AV receipts as reopen
+
+HELD_FOR_LATER=
+  OPEN_R01 agenticMode / GUI policy default drift (after admission)
+  OPEN_R02 11434 fallback surface cleanup (after admission)
+  OPEN_R04 Headless product tool parity — historical R09 MATRIX CLOSED
+    (G3_IDE_RESIDUAL_R09_001); remaining PRODUCT_GAP spend = R13_AGENTS_WIRE
+    (+ R11 native on LocalServer). Thin≠gap; GUI_LOCALSERVER_OWNED not copied.
+
+MAPPING_NOTE=
+  Prior table R01–R28 remains historical detail in RESIDUAL_TABLE.txt.
+  This CLASSIFICATION is the governing open-residual map for NEXT_GATE spend.
+  Prior G3_NATIVE_MODEL_PROFILE_001 disk-register remains intact; OPEN_R03 spends
+  meta-from-GGUF admission + seed removal under G3_IDE_MODEL_PROFILE_ADMISSION_001.
+  Historical R09 Headless↔LocalServer matrix: CLOSED G3_IDE_RESIDUAL_R09_001;
+  ON_R09_PASS_NEXT=R13_AGENTS_WIRE (bounded agents wire vs architecture audit).
