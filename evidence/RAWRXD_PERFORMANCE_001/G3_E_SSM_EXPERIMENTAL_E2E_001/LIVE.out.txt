@@ -1,0 +1,10 @@
+WEIGHT_BUDGET_INPUT=4096
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=4096
+WEIGHT_BUDGET_BYTES=4294967296
+WEIGHT_BUDGET_SOURCE=ENV
+ urious值得注意的是值得注意的是值得注意的是值得注意的是值得注意的是值得注意的是
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete

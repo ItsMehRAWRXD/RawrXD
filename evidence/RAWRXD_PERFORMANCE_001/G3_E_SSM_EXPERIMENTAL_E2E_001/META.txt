@@ -1,0 +1,6 @@
+EXIT=0
+ELAPSED_MS=40627
+ASOF=2026-09-10T08:00:44.9712684-04:00
+EXE=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=G:\~dev\rawrxd\_r1_iso\03_nemotron\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
