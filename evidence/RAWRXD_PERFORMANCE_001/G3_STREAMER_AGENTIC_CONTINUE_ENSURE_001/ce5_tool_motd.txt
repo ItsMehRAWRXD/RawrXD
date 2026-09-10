@@ -1,0 +1,2 @@
+﻿HTTP=0
+Unable to connect to the remote server

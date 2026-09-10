@@ -1,5 +1,8 @@
 #pragma once
-/* Canonical PRODUCT_RUN receipt — one for all adapters. ≤99 lines. */
+/* Canonical PRODUCT_RUN receipt — one for all adapters. ≤99 lines.
+   PRODUCT_PASS/READY tetrad; PROMOTE=0 until live generate probe;
+   MULTI_FAMILY = next independent gate (≠ TinyLlama R25 ProductOpen). */
+#include "Deep2ProductGate.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -40,7 +43,14 @@ inline void EmitReceipt(FILE* f, const Result& r) noexcept {
                  r.generatedTokens, r.generatedTokens);
     std::fprintf(f, "STREAM_FINISHED=%d\nEXIT_REASON=%s\n",
                  r.streamFinished, r.exitReason);
-    std::fprintf(f, "PRODUCT_PASS=%d\n", r.productPass);
+    std::fprintf(f, "PRODUCT_OPEN_PASS=%d\nSESSION_ENTER_PASS=%d\n"
+                    "TOKEN_COMMIT_PASS=%d\nPRODUCT_PASS=%d\nPROMOTE=0\n"
+                    "GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                    "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
+                    "NEXT_INDEPENDENT_GATE=MULTI_FAMILY\n",
+                 r.modelOpen, r.streamEnter,
+                 (r.generatedTokens > 0 && r.streamFinished) ? 1 : 0,
+                 r.productPass);
     if (!r.productPass)
         std::fprintf(f, "FAILED_STAGE=%s\nFAILED_OWNER=%s\n",
                      r.failedStage, r.failedOwner);
@@ -53,11 +63,11 @@ inline void EmitReceipt(FILE* f, const Result& r) noexcept {
 
 inline int FunctionalComplete(const Result& r) noexcept {
     /* COMPLETE only — CANCELLED must not count as product pass. */
-    return (r.modelResolved && r.modelOpen && r.runtimeReady && r.streamEnter &&
-            r.firstToken && r.generatedTokens > 0 && r.streamFinished &&
-            r.exitReason && std::strcmp(r.exitReason, "COMPLETE") == 0)
-               ? 1
-               : 0;
+    if (!r.exitReason || std::strcmp(r.exitReason, "COMPLETE") != 0) return 0;
+    const int commit = (r.generatedTokens > 0 && r.streamFinished) ? 1 : 0;
+    return Deep2::product_gate::PromoteReady(r.modelOpen, r.streamEnter,
+                                             (uint64_t)r.generatedTokens,
+                                             commit);
 }
 
 } // namespace rawr::product_run

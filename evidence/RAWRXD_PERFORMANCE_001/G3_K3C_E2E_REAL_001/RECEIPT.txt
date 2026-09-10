@@ -1,0 +1,46 @@
+GATE=G3_K3C_E2E_REAL_001
+DATE=2026-09-10
+KIND=LIVE_E2E_K3C_PRODUCT_BIND
+PROMOTE=0
+TIP_CLIMB=HOLD
+REOPEN_R01=0
+DUALSTICK_REOPEN=0
+APPLY_HOST_DECODE=0
+HOST_DECODE_ZIP_APPLY=0
+CERT_P1PRA_RC1=ABSENT
+
+## Chain
+token_in → k3c (bound ProductRuntime) → Eng().generate(1) → token_out
+
+## Paths
+src/deep2/lavapath/k3c.hpp
+src/deep2/lavapath/k3c_token.cpp
+src/deep2/lavapath/k3c_token_contract.h
+src/deep2/lavapath/ProductRunDecode.hpp (k3c_bind_product on RunDecodeStream)
+CMakeLists.txt (InferenceEngine + smoke_k3c_e2e)
+
+## Smoke
+CMD=cmake --build build-fd --target smoke_k3c_e2e && bin\smoke_k3c_e2e.exe models\tinyllama.gguf
+SMOKE_COMPILE=PASS
+SMOKE=PASS
+MODEL=g:\~dev\rawrxd\models\tinyllama.gguf
+SOURCE_WIRED=1
+UNBOUND_FAIL_CLOSED=1
+RUNTIME_REACHED=1
+TOKEN_IN=7251
+TOKEN_OUT=14282
+TOKEN_SURVIVED=1
+PRODUCT_DECODE=1
+PRODUCT_DECODE_PASS=1
+VERDICT=PASS
+SMOKE_OUT=SMOKE_OUT.txt
+
+## Fail-closed law
+SOURCE_WIRED=1 RUNTIME_REACHED=1 TOKEN_SURVIVED=1 PRODUCT_DECODE_PASS=1
+(not invented; live TinyLlama one-step via k3c)
+No sub-6.67ms claim. No DualStick reopen. PROMOTE=0.
+
+## Related dispositions (not this gate)
+G3_K3C_NO_DEPS_SOURCE_DROP_001 = STUB_ONLY (not runtime authority)
+RAWRXD_K3C_TOKEN_KN_O3KKEN_NODEP_001 = WITNESS PASS_NODEP_REDUCTION APPLY_HOST_DECODE=0
+RAWRXD_KN_O3KKEN_E2E_001 = WITNESS path only (NOT product decode)

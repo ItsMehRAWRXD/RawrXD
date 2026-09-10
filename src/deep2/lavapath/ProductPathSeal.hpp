@@ -35,11 +35,14 @@ inline void Emit(FILE* f, const Facts& xf) noexcept {
     a.cpuF32Expands = cpuF32;
     a.streamOutput = xf.streamPresent;
     a.teardownOk = xf.teardownOk;
-    /* Live generate probe; MULTI_FAMILY is a separate gate. */
-    a.productOpenPass = (xf.productionDecode || xf.tokensCommitted > 0) ? 1 : 0;
-    a.sessionEnterPass = xf.productionDecode ? 1 : 0;
+    a.productOpenPass = xf.productOpenPass;
+    a.sessionEnterPass = xf.sessionEnterPass;
     a.tokenCommitPass =
-        (xf.tokensCommitted > 0 && xf.streamPresent && xf.receiptAtomic) ? 1 : 0;
+        xf.tokenCommitPass
+            ? 1
+            : ((xf.tokensCommitted > 0 && xf.streamPresent && xf.receiptAtomic)
+                   ? 1
+                   : 0);
     rawr::product::Emit(a);
     EmitChampion(f, xf, cpuF32);
 }

@@ -108,6 +108,9 @@ inline void EmitActualE2EFooter(uint64_t genTok, uint64_t wallNs,
     pe.cpuF32Expands = 0;
     pe.streamOutput = (textBytes > 0) ? 1 : 0;
     pe.teardownOk = teardownOk;
+    pe.productOpenPass = prod ? 1 : 0;
+    pe.sessionEnterPass = prod ? 1 : 0;
+    pe.tokenCommitPass = (genTok > 0 && textBytes > 0) ? 1 : 0;
     rawr::product::Emit(pe);
 }
 

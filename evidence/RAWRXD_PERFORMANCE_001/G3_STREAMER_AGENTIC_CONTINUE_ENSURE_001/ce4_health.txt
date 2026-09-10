@@ -1,0 +1,2 @@
+HTTP=200
+{"status":"ok","mode":"local","server":"RawrXD-HeadlessIDE","backend":"rawrxd-win32ide","version":"20.0.0-headless-enterprise","authConfigured":false,"uptime":54137}

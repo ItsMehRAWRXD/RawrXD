@@ -1,0 +1,63 @@
+GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
+KIND=WORKER_CONTINUE_AFTER_HANDOFF
+ASOF=2026-09-10T07:46:36-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+PARENT_EXECUTES_DELEGATED_WORK=0
+WORKER_COUNT=1
+NO_FICTION_STRIP_RESTART=1
+
+## Continued from (not restarted)
+R25_PRODUCTOPEN_SESSION_001: PRODUCT_OPEN_PASS=1 HEADLESS_READY=1 tensors=201 PE_LAA=1 (TinyLlama)
+G3_STREAMER_AGENTIC_E2E_001 / prior continue-ensure: agentic surface on r1cap
+G3_HOST_FUTURECONSUMER_BIND_001: sealed FC_BIND_OK=1 — not reopened; ProductRunDecode.hpp untouched
+PRODUCT_PATH_INVARIANTS_ELASTIC0_001: product path OK; APPLY_HOST_DECODE=0
+
+## This worker observed (ce7)
+EXE=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=C1B93C4F307F5DB1F4B458CFCF8647ED5EFE1F0897E9376934A43382939533EB
+EXE_SHA16=C1B93C4F307F5DB1
+DUMPBIN_LAA=Application can handle large (>2GB) addresses
+PE_LAA=1
+PORT=11442
+LOCAL_ONLY=1
+OLLAMA_CONTACT=0
+HOST_DECODE=1
+LOAD_HTTP=200
+GENERATE_HTTP=200
+UNLOAD_HTTP=200
+PROCESS_SURVIVED=1
+RUNTIME_REACHED=1
+TOKEN_SURVIVED=1
+TOOL_PRE_MOTD=403
+TOOL_MOTD_MD=200
+TOOL_MOTD_MDC=404
+TOOL_POST_MOTD=200
+TOOL_CLI=200
+AGENTIC_TOOL_E2E=1
+STREAMER_AGENTIC_READY=1
+PRODUCT_PASS=0
+PERFORMANCE_PASS=0
+FAIL_OWNER=
+
+## Layer honesty
+SOURCE_WIRED=1 (ProductOpenStreamable + open_gate + HeadlessIDE tool routes)
+RUNTIME_REACHED=1 (load+generate this probe; R25 ProductOpen emit on prior E47BF453 rebuild)
+TOKEN_SURVIVED=1 (generate done=true this probe)
+PERFORMANCE_PASS=0 (not claimed; TIP_CLIMB=HOLD)
+
+## Host FutureConsumer
+HOST_FC_AUTHORITY=retained
+FC_BIND=sealed_see_G3_HOST_FUTURECONSUMER_BIND_001
+REOPENED=0
+ProductRunDecode.hpp=NOT_TOUCHED
+
+## Gaps left explicit
+TOOL_MOTD_MDC=404 on this EXE (PassiveRoleNotRoleplay.md works; .mdc leaf still 404)
+MULTI_FAMILY_PRODUCTOPEN=NOT_GREEN (gemma3 lane separate; DualStick/GPU ICD not reopened)
+k3c_token=NOT_IMPLEMENTED
+INIT_ENTER/SESSION_ENTER fprintf: observed on server4/R25 probes; not re-captured on ce7 (no stderr redirect)
+RESIDUAL_prior_buildfd_mid_forward_die=CLEARED_on_C1B93C4F_ce7 (LOAD+GEN survived)
+R24_TINYLLAMA_SEAL=UNALTERED
+
+ARTIFACTS=ce7_LIVE_PROBE.txt ce7_meta.txt ce7_load.txt ce7_generate.txt ce7_tool_*.txt ce6_LIVE_PROBE.txt
