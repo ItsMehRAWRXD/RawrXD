@@ -1,1 +1,0 @@
- Assembling: d:\rawrxd\src\asm\win32ide_main.asm

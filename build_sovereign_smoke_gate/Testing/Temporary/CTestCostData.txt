@@ -1,2 +1,0 @@
-sovereign_assembler_smoke 1 0.0278766
----

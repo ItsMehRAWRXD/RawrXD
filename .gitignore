@@ -159,3 +159,23 @@ build-ninja/
 .ninja_deps
 .ninja_log
 
+# ═══════════════════════════════════════════════════════════════
+# Working-tree hygiene (Sep 2026 — keep status product-only)
+# ═══════════════════════════════════════════════════════════════
+crash_dumps/
+**/*.dmp
+_drop_*/
+_stash_*/
+audit_build/
+build3/
+scratch/
+sites/
+interstellar/
+interstellar_runtime/
+gemv.spv
+rawrxd_audit.jsonl
+# Nested accidental tree / local monolith dumps
+/rawrxd/
+rawr_dispatcher_v2.cpp
+rawr_monolith_v2.cpp
+
