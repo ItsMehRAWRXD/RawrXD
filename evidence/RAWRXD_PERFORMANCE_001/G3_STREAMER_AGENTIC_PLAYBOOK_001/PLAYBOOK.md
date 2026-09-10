@@ -18,7 +18,7 @@ Authorizing rule: a phase that independently verifies its gate auto-un-excludes 
 | S3 | TinyLlama load→generate tokens>0 | no | streamer ProductRun edge |
 | S4 | unload→reload→generate | no | session lifecycle |
 | S5 | FINAL_READY tetrad (`PromoteReady`) | needs live generate probe | PRODUCT_OPEN+SESSION+TOKENS>0+COMMIT |
-| S6 | MULTI_FAMILY (non-TinyLlama ProductOpen) | needs residency | multi-family only — independent of S5/R25 |
+| S6 | MULTI_FAMILY (non-TinyLlama ProductOpen) | needs residency | PASS ProductOpen phi3+gemma3 — G3_TURN_S6_PLUS14_001 (≠ R1/champion) |
 
 Verification artifacts: `G3_STREAMER_AGENTIC_*` + `R25_PRODUCTOPEN_SESSION_001` + `FINAL_READY_PROMOTE_TETRAD_001`.
 NOT_RUN ≠ PASS. HTTP_OK ≠ ProductOpen. HOST_FC ≠ IDE ProductOpen.
