@@ -1,0 +1,30 @@
+GATE=G3_HOST_FUTURECONSUMER_P01_P12_001
+DATE=2026-09-10
+PARENT=G3_HOST_FUTURECONSUMER_PREFETCH_001
+KIND=LIVE_PRODUCT_E2E
+PROMOTE=0
+TIP_CLIMB=HOLD
+BINARY=build-fd/bin/rawr.exe
+MODEL=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ENV=RAWRXD_HOST_DECODE=1 DEEP2_MINIMAL_ENHANCE=1
+PS_EXIT=0
+ACCESS_VIOLATION=0
+
+P01_PRODUCT_DECODE_REACHED=1
+P12_TOKEN_SURVIVED=1
+GENERATED_TOKENS=8
+PRODUCT_PASS=1
+TOKEN_WALL_NS=AUTHORITY (EmitCommitted on ProductRunDecode)
+PASS_150=0
+KN_O3_REACHED=1
+KN_O3_STATUS=-8
+KN_O3_NOTE=KN_ERR_CONSUMER no BindK3cConsumer (honest stub)
+
+HOST_DECODE_SANITIZE=elastic=0 (enableElasticResidency on HOST_DECODE reopened AV; reverted)
+
+IMPL:
+  ProductRunDecode.hpp TokenWallNs EmitCommitted
+  ElasticResidencyManager::PrefetchForCpu (API; no-op when elastic off)
+  Removed fictional WIRE.md / README_SOURCE_DROP
+
+ERR=P01_P12_LIVE.err.txt

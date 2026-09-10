@@ -1,0 +1,15 @@
+DISPOSITION=PASS_NODEP_CONTRACT_STUB_ONLY
+PROMOTE=0
+TIP_CLIMB=HOLD
+DEP_EXTERNAL=0
+PRODUCT_DECODE_PASS=0
+DEEP2ENGINE_LINK=0
+
+CLAIM:
+  source-only x64 MASM KN_O3KKEN TOKEN->TOKEN edge;
+  vendor SHA match;
+  smoke 41->42 after local ABI leaf fix.
+
+NON-CLAIM:
+  no ProductRun / HostDecode / FutureConsumer / Deep2Engine;
+  no product TPS / sub-6.67ms token-wall.

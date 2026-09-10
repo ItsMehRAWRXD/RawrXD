@@ -48,7 +48,7 @@ bool NVMeStream::initializeReverseBunnyHop(const NVMeStreamConfig& cfg) {
         bunnyHop_.reset();
         return false;
     }
-    printf("[NVMeStream] FALLBACK→FORCE %s\n", bunnyHop_->modeName());
+    printf("[NVMeStream] REVERSE_BUNNYHOP %s\n", bunnyHop_->modeName());
     return true;
 }
 
@@ -152,6 +152,26 @@ bool NVMeStream::initialize(const NVMeStreamConfig& cfg) {
            config.modelPath.c_str(), (double)fileSize / (1e9));
 #endif
     
+    return true;
+}
+
+bool NVMeStream::prefetchRange(uint64_t fileOffset, size_t sizeBytes) {
+    if (!fileBase || sizeBytes == 0) return false;
+#ifdef _WIN32
+    const uint64_t sz = (uint64_t)fileSize.QuadPart;
+#else
+    const uint64_t sz = (uint64_t)fileSize;
+#endif
+    if (fileOffset >= sz) return false;
+    size_t n = sizeBytes;
+    if (fileOffset + (uint64_t)n > sz) n = (size_t)(sz - fileOffset);
+    const uint8_t* ptr = fileBase + fileOffset;
+    const size_t page = config.pageSize ? config.pageSize : 4096;
+    const size_t pages = (n + page - 1) / page;
+    for (size_t p = 0; p < pages; ++p) {
+        volatile char c = ptr[p * page];
+        (void)c;
+    }
     return true;
 }
 
@@ -265,7 +285,8 @@ void NVMeStream::releaseExpert(int layerId, int expertId) {
 
 bool NVMeStream::prefetchExpert(int layerId, int expertId) {
     if (!config.enablePrefetch) return false;
-    
+    if (!fileBase) return false;
+
     std::lock_guard<std::mutex> lock(cacheMutex_);
     int64_t key = makeKey(layerId, expertId);
     

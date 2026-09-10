@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "rawr_native_e2e_abi.h"
+#include "runtime_gguf_disk_resolve.h"
 
 extern "C" uint32_t RawrNative_RegisterRuntimeModel(
     const char* model_name, const RawrNativeProfileInfo* info);
@@ -380,21 +381,64 @@ extern "C" int RawrNative_HandleHttp(
             "\"auto_requires_engine_planner\":true,"
             "\"execution_proof\":\"receipt_required\"}");
 
-    if (streq(method,"POST") && streq(path,"/api/native/generation/prepare")) {
+    if (streq(method,"POST") && streq(path,"/api/native/runtime/register")) {
         char model[256]{};
+        char gguf_path[1024]{};
         if (!json_string(body,"model",model,sizeof(model)))
             return write_json(out,cap,hs,400,
                 "{\"ok\":false,\"error\":\"missing_model\"}");
-
+        if (!json_string(body,"path",gguf_path,sizeof(gguf_path)))
+            (void)json_string(body,"model_path",gguf_path,sizeof(gguf_path));
         RawrNativeProfileInfo profile{};
-        const int runtime_profile=find_runtime_model(model,&profile);
-        if (!runtime_profile &&
-            RawrNative_ModelBridgeResolveProfile(model,&profile)!=0)
+        uint32_t rc = 1;
+        if (gguf_path[0])
+            rc = RawrNative_RegisterRuntimeGgufPathEx(
+                model, gguf_path, &profile);
+        if (rc != 0)
+            rc = RawrNative_TryRegisterRuntimeGgufFromDisk(model, &profile);
+        if (rc != 0)
             return write_json(out,cap,hs,404,
                 "{\"ok\":false,\"error\":\"model_profile_not_found\","
-                "\"model\":\"%s\","
-                "\"detail\":\"register exact GGUF metadata with "
-                "RawrNative_RegisterRuntimeModel\"}",model);
+                "\"model\":\"%s\"}", model);
+        return write_json(out,cap,hs,200,
+            "{\"ok\":true,\"model\":\"%s\",\"profile_id\":%u,"
+            "\"num_layers\":%u,\"context_max\":%u,\"ram_mb\":%u}",
+            model, profile.profile_id, profile.num_layers,
+            profile.context_max, profile.ram_mb);
+    }
+
+    if (streq(method,"POST") && streq(path,"/api/native/generation/prepare")) {
+        char model[256]{};
+        char gguf_path[1024]{};
+        if (!json_string(body,"model",model,sizeof(model)))
+            return write_json(out,cap,hs,400,
+                "{\"ok\":false,\"error\":\"missing_model\"}");
+        if (!json_string(body,"path",gguf_path,sizeof(gguf_path)))
+            (void)json_string(body,"model_path",gguf_path,sizeof(gguf_path));
+
+        RawrNativeProfileInfo profile{};
+        int runtime_profile=find_runtime_model(model,&profile);
+        if (!runtime_profile && gguf_path[0] &&
+            RawrNative_RegisterRuntimeGgufPathEx(
+                model, gguf_path, &profile)==0) {
+            runtime_profile=1;
+        }
+        if (!runtime_profile &&
+            RawrNative_ModelBridgeResolveProfile(model,&profile)!=0) {
+            if (RawrNative_TryRegisterRuntimeGgufFromDisk(
+                    model,&profile)==0) {
+                runtime_profile=1;
+            } else {
+                return write_json(out,cap,hs,404,
+                    "{\"ok\":false,\"error\":\"model_profile_not_found\","
+                    "\"model\":\"%s\","
+                    "\"detail\":\"GGUF not found under F:/G:/D:/C:/"
+                    "OllamaModels or exe\\\\models; place file or call "
+                    "/api/native/runtime/register with path, or "
+                    "RawrNative_RegisterRuntimeGgufPath / "
+                    "RawrNative_RegisterRuntimeModel\"}",model);
+            }
+        }
 
         RawrNativePolicyRequest q{};
         q.context=json_u32(body,"context",8192);

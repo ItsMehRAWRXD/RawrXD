@@ -5,8 +5,10 @@
 #include "ProductRuntime.hpp"
 #include "ProductRunDecode.hpp"
 #include "ProductTokenBudget.hpp"
+#include "RxRunStateHooks.hpp"
 #include "../StreamCorrupt.hpp"
 #include <cstdio>
+#include <memory>
 
 namespace rawr::product_run {
 
@@ -15,8 +17,14 @@ using Request = ProductRequest;
 inline Result ProductRun(const ProductRequest& req) {
     Result r{};
     ProductRuntime* rt = req.runtime ? req.runtime : &SharedProductRuntime();
-    ProductRuntime local;
-    if (!req.runtime && !req.keepOpen) rt = &local;
+    /* Never stack-construct an unused ProductRuntime: its Deep2Engine dtor
+     * clears process-global LivePath/K2 binds and poisons SharedProductRuntime
+     * reopen (R1 multi-model LOAD→GEN→UNLOAD→RELOAD). */
+    std::unique_ptr<ProductRuntime> localOwner;
+    if (!req.runtime && !req.keepOpen) {
+        localOwner = std::make_unique<ProductRuntime>();
+        rt = localOwner.get();
+    }
 
     if (rt->alreadyGenerating.exchange(1) != 0) {
         r.failedStage = "BUSY";
@@ -37,15 +45,17 @@ inline Result ProductRun(const ProductRequest& req) {
         return r;
     }
     TokenBudget budget = ResolveTokenBudget(req.maxTokens);
+    rxow::Reset();
     if (req.engine && !req.runtime) rt->BindExternal(req.engine, alias, nullptr);
     if (!rt->IsOpen() && !rt->OpenSession(alias)) {
-        r.failedStage = "LOAD";
+        r.failedStage = "LOAD"; 
         r.failedOwner = "GGUF_OPEN";
         r.exitReason = "FAIL";
         rt->alreadyGenerating.store(0);
         EmitReceipt(stderr, r);
         return r;
     }
+    rxow::OnProductRunRequested();
     r.modelResolved = 1;
     r.modelOpen = 1;
     r.tokenizerReady = 1;

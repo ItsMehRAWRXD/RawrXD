@@ -1,25 +1,32 @@
-/* FutureConsumer_Advance.cpp — ownership handoff + page lookup. */
+/* FutureConsumer_Advance.cpp — O(1) ownership handoff; no object scan. */
 #include "FutureConsumerSpace.hpp"
 #include "FutureConsumer_Internal.hpp"
 
 namespace Deep2 {
 namespace future {
 
+FutureConsumer* ConsumerAt(ConsumerId id) {
+    if (!detail::Live() || !id) return nullptr;
+    FutureConsumer& c =
+        detail::Consumers()[(id - 1) % FUTURE_CONSUMER_CAP];
+    return (c.consumerId == id) ? &c : nullptr;
+}
+
+Chair* ChairAt(ChairId id) {
+    if (!detail::Live() || id >= FREETOKEN_ZONE_COUNT) return nullptr;
+    return &detail::Pages()[id];
+}
+
+static void SetTier(ConsumerId id, Tier t) {
+    if (FutureConsumer* c = ConsumerAt(id)) c->tier = t;
+}
+
 bool AdvanceOwnership(uint32_t pageIdx, ConsumerId next) {
     if (!detail::Live() || pageIdx >= FREETOKEN_ZONE_COUNT) return false;
     std::lock_guard<std::mutex> lock(detail::Mu());
-    PhysicalPage& p = detail::Pages()[pageIdx];
+    Chair& p = detail::Pages()[pageIdx];
     const ConsumerId take = next ? next : p.next;
-    if (p.current) {
-        FutureConsumer* cs = detail::Consumers();
-        for (uint64_t i = 0; i < detail::ConsumerN() && i < FUTURE_CONSUMER_CAP;
-             ++i) {
-            if (cs[i].consumerId == p.current) {
-                cs[i].tier = Tier::Past;
-                break;
-            }
-        }
-    }
+    if (p.current) SetTier(p.current, Tier::Past);
     p.current = take;
     if (p.next && take == p.next) {
         p.next = 0;
@@ -28,28 +35,29 @@ bool AdvanceOwnership(uint32_t pageIdx, ConsumerId next) {
         p.next = 0;
     }
     p.generation++;
+    p.resourceId = pageIdx;
     detail::OwnershipAdvances()++;
     detail::Exec().ownershipAdvances = detail::OwnershipAdvances();
     detail::Exec().pastToFutureRebinds++;
     if (take) {
-        FutureConsumer* cs = detail::Consumers();
-        for (uint64_t i = 0; i < detail::ConsumerN() && i < FUTURE_CONSUMER_CAP;
-             ++i) {
-            if (cs[i].consumerId == take) {
-                cs[i].tier = Tier::Current;
-                break;
-            }
+        SetTier(take, Tier::Current);
+        if (FutureConsumer* c = ConsumerAt(take)) {
+            c->chairId = pageIdx;
+            c->expectedGeneration = p.generation;
         }
     }
     return true;
 }
 
+/* O(1): consumer.chairId — never for(pages) / for(consumers). */
 int PageForConsumer(ConsumerId id) {
-    if (!detail::Live() || !id) return -1;
-    PhysicalPage* pages = detail::Pages();
-    for (int i = 0; i < FREETOKEN_ZONE_COUNT; ++i)
-        if (pages[i].current == id || pages[i].next == id) return i;
-    return -1;
+    FutureConsumer* c = ConsumerAt(id);
+    if (!c || c->chairId == CHAIR_INVALID) return -1;
+    if (c->chairId >= FREETOKEN_ZONE_COUNT) return -1;
+    Chair* ch = ChairAt(c->chairId);
+    if (!ch) return -1;
+    if (ch->current != id && ch->next != id) return -1;
+    return (int)c->chairId;
 }
 
 } // namespace future

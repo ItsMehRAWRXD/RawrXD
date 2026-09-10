@@ -44,7 +44,20 @@ K2LivePolicyDecision K2LivePolicy_Apply(uint32_t layerDepth, uint32_t tokens) {
         if (!liveOff && wantTramp) {
             d.mode = K2LivePolicyMode::TrampolineOutput;
             d.arm = "TRAMPOLINE_OUTPUT_CACHE";
-            K2LivePolicy_ApplyMode(d.mode, /*fullDepthPromo=*/false);
+            d.reason = "manual_preserve_mech";
+            /* Preserve ambient DEEP2_LIVE_MECH (e.g. trampoline,cyclone).
+             * ApplyMode(TrampolineOutput) force-clobbers to trampoline-only
+             * and was vetoing product cyclone under POLICY=TRAMPOLINE/MANUAL. */
+            LivePath_SetEnhancementsEnabled(true);
+            LivePath_SetFusedEnabled(false);
+#ifdef _WIN32
+            _putenv_s("DEEP2_LIVE_PATH", "1");
+            _putenv_s("DEEP2_LIVE_FUSED", "0");
+#else
+            setenv("DEEP2_LIVE_PATH", "1", 1);
+            setenv("DEEP2_LIVE_FUSED", "0", 1);
+#endif
+            LivePath_ApplyMechEnv();
         } else if (!liveOff && mech && mech[0] && !Eq(mech, "none")) {
             // Keep Decide mode; re-apply so LIVE_PATH stays on.
             K2LivePolicy_ApplyMode(d.mode, d.layerVeto != 0);

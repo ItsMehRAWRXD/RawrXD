@@ -1,0 +1,35 @@
+GATE=G3_K3C_NO_DEPS_SOURCE_DROP_001
+DATE=2026-09-10
+DISPOSITION=PASS_NODEP_CONTRACT_STUB_ONLY
+SOURCE_DROP=1
+WIRE=1
+RECEIPT=1
+CLASSIFICATION=1
+KEY_LINES=1
+SMOKE_OUT=1
+DEP_EXTERNAL=0
+SMOKE_COMPILE=PASS
+SMOKE=PASS
+K3C_BIND=FAIL_CLOSED_STUB
+PRODUCT_DECODE_PASS=0
+NOT_RUNTIME_AUTHORITY=1
+LIVE_BIND_GATE=G3_K3C_E2E_REAL_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## Classification
+K3-C drop owns the public token boundary *shape* only.
+This drop does not own real decode.
+This drop does not call HostDecode / ProductRun / FutureConsumer.
+
+## Proven (this drop only)
+TOKEN_IN -> k3c_drive -> TOKEN_OUT (identity echo)
+FAIL_CLOSED_STUB=1
+REAL_MODEL_FORWARD=0
+
+## Claim
+source-only no-dependency K3-C token boundary shape exists;
+smoke compiles and runs; stub sealed.
+
+## Non-claim
+no ProductRun decode; no HostDecode bind; no product TPS; no sub-6.67ms.

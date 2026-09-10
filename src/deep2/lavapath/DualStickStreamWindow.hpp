@@ -20,12 +20,20 @@ struct DualStickWindowPlan {
     int noTruncateNeedle = 1;
 };
 
+/* Authority split: PLAN / ARM / RUNTIME must not contaminate. */
 struct DualStickExec {
+    int      requested = 0;          /* DEEP2_DUALSTICK_ARM not explicitly 0 */
+    int      planned = 0;            /* plan produced ≥1 stick window */
     int      armed = 0;
-    uint64_t acquires = 0;
-    uint64_t consumers = 0;
-    uint64_t ownershipAdvances = 0;
-    uint64_t bytesWorked = 0;
+    uint64_t armCount = 0;
+    uint64_t armAcquires = 0;
+    uint64_t armConsumers = 0;
+    uint64_t armOwnershipAdvances = 0;
+    uint64_t armBytesWorked = 0;
+    uint64_t forwardCallsGpu0 = 0;
+    uint64_t forwardCallsGpu1 = 0;
+    uint64_t runtimeDevices = 0;
+    uint64_t runtimeBytesWorked = 0;
 };
 
 DualStickExec& DualStickState();
@@ -34,8 +42,13 @@ DualStickWindowPlan PlanDualStickWindows(const DeviceManagerSnapshot& snap,
 void ArmDualStickNoTruncate(const DualStickWindowPlan& p);
 void EmitDualStickWindowReceipt(FILE* f, const DualStickWindowPlan& p);
 void EmitDualStickMechanics(FILE* f);
+void DualStickMarkRequested(int requested);
+void DualStickEnvSnapRequested();
+void DualStickEnvSnapAfterHarness();
+void DualStickEnvSnapAfterDualstick();
+void EmitDualStickEnvAuthority(FILE* f);
 
-/* GpuForward path: stick → FreeToken zone → consumer → retire → Advance. */
+void DualStickArmWarmup(unsigned stick, uint32_t layer);
 uint8_t* DualStickAcquire(unsigned stick, const void* src, size_t n,
                           uint64_t fileOffset, uint32_t layer, uint32_t expert);
 void DualStickResolve(unsigned stick, uint32_t layer);

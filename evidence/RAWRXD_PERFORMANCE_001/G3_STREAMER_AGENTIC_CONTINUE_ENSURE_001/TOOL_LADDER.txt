@@ -1,0 +1,7 @@
+TOOL_PRE=403
+TOOL_PRE_BODY={"error":"motd_required","message":"Read Message of the Day (PassiveRoleNotRoleplay.md) via read_file/read_motd before any other tool"}
+TOOL_MOTD=200
+TOOL_LIST=200
+TOOL_CLI=200
+TOOL_PRE_MOTD_REQUIRED=1
+AGENTIC_TOOL_E2E=1

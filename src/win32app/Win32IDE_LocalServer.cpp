@@ -28,6 +28,7 @@
 #include "../../native_e2e/rawr_native_engine_hooks.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "ProductGuiRouteAdapters.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -1020,6 +1021,57 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
         closesocket(client);
         return;
     }
+    // R03 thin: /complete → generate; /metrics → status metrics
+    else if (method == "POST" && (path == "/complete" || path == "/complete/stream"))
+    {
+        handleOllamaApiGenerate(client, body);
+        closesocket(client);
+        return;
+    }
+    else if (method == "GET" && path == "/metrics")
+    {
+        std::ostringstream j;
+        j << "{\"requests\":" << m_localServerStats.totalRequests
+          << ",\"tokens\":" << m_localServerStats.totalTokens
+          << ",\"adapter\":\"product_thin\"}";
+        std::string response = LocalServerUtil::buildHttpResponse(200, j.str());
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
+    }
+    else if (path == "/api/policies" || path.rfind("/api/policies/", 0) == 0)
+    {
+        std::string response = LocalServerUtil::buildHttpResponse(
+            200, ProductGuiRoutes::policiesJson(path));
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
+    }
+    else if (path == "/api/extensions" || path.rfind("/api/extensions/", 0) == 0)
+    {
+        std::string response = LocalServerUtil::buildHttpResponse(
+            200, ProductGuiRoutes::extensionsJson(path, method));
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
+    }
+    else if (path == "/api/browse" || path.rfind("/api/browse/", 0) == 0)
+    {
+        std::string response = LocalServerUtil::buildHttpResponse(
+            200, ProductGuiRoutes::browseJson(path));
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
+    }
+    else if (path == "/api/agents/explain" || path.rfind("/api/agents/explain?", 0) == 0 ||
+             path == "/api/agents/explain/stats")
+    {
+        std::string response = LocalServerUtil::buildHttpResponse(
+            200, ProductGuiRoutes::explainJson(path));
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
+    }
     // ========== OpenAI-compatible: /v1/chat/completions ==========
     else if (method == "POST" && path == "/v1/chat/completions")
     {
@@ -1145,7 +1197,8 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
         closesocket(client);
         return;
     }
-    if (method == "POST" && (path == "/api/backend/switch" || path == "/api/backends/switch"))
+    if (method == "POST" && (path == "/api/backend/switch" || path == "/api/backends/switch" ||
+                             path == "/api/backends/use"))
     {
         handleBackendSwitchEndpoint(client, body);
         closesocket(client);
@@ -2169,6 +2222,19 @@ void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
     }
 
     // ── LocalGGUF — ProductRun only (same authority as rawr run) ─────────
+    if (prompt.empty()) {
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            400, "{\"error\":\"invalid_prompt\"}");
+        LocalServerUtil::sendAll(client, resp);
+        return;
+    }
+    if (m_loadedModelPath.empty() && !rawr::ProductSessionOpen()) {
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            503,
+            "{\"error\":\"model_not_loaded\",\"message\":\"Load a model before generate/chat\"}");
+        LocalServerUtil::sendAll(client, resp);
+        return;
+    }
     if (!m_loadedModelPath.empty()) {
 #ifdef _WIN32
         _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());
@@ -2304,6 +2370,13 @@ void Win32IDE::handleOpenAIChatCompletions(SOCKET client, const std::string& bod
     }
 
     // ── LocalGGUF — ProductRun only (OpenAI-compat surface) ───────────────
+    if (m_loadedModelPath.empty() && !rawr::ProductSessionOpen()) {
+        std::string resp = LocalServerUtil::buildHttpResponse(
+            503,
+            "{\"error\":{\"message\":\"model_not_loaded\",\"type\":\"model_not_loaded\"}}");
+        LocalServerUtil::sendAll(client, resp);
+        return;
+    }
     if (!m_loadedModelPath.empty()) {
 #ifdef _WIN32
         _putenv_s("RAWRXD_PRODUCT_MODEL", m_loadedModelPath.c_str());

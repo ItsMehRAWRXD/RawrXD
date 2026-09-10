@@ -44,6 +44,10 @@ void LivePath_MechArm(ElasticResidencyManager* elastic) {
         return;
     auto& c = LivePath_Ctr();
     if (LivePath_MechOn(LP_MECH_ELASTIC) && elastic) c.elasticArmed = 1;
+    /* Plasma samples whenever live mech arm runs — not STREAM-only
+     * (STACK plasma=1 was live but LIVE_PATH_PLASMA_SAMPLES stayed 0). */
+    if (LivePath_SampleThermal(g_plasma)) { c.plasmaSamples++; c.plasmaAbsence = 0; }
+    else c.plasmaAbsence = 1;
     if (!LivePath_MechOn(LP_MECH_STREAM)) return;
     if (!g_streamReady && g_layers > 0) {
         StreamConfig cfg;
@@ -66,8 +70,6 @@ void LivePath_MechArm(ElasticResidencyManager* elastic) {
     } else {
         c.nvmeAbsence = g_nvmeEverActive ? 2u : 1u;
     }
-    if (LivePath_SampleThermal(g_plasma)) { c.plasmaSamples++; c.plasmaAbsence = 0; }
-    else c.plasmaAbsence = 1;
 }
 
 void LivePath_MechLayer(uint32_t layer) {

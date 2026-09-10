@@ -113,7 +113,10 @@ struct MLAForward {
                  rawrxd::deep2::K2KVCache* kvCache = nullptr,
                  uint32_t layerIdx = 0,
                  uint32_t position = 0,
-                 MlaCompleteStats* stats = nullptr);
+                 MlaCompleteStats* stats = nullptr,
+                 /* ABI retain: match sealed InferenceEngine MLAWeights.obj */
+                 void (*onPin)(void*) = nullptr,
+                 void* pinCtx = nullptr);
 
     // Standalone test: compare against deterministic reference fixture
     // Used for K2-003 validation gate

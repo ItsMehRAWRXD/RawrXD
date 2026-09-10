@@ -138,57 +138,69 @@ bool resolveToolPath(const std::string& input, const std::string& workingDir,
 
 bool resolveMotdPath(const std::string& workingDir, const std::string& pathArg,
                      std::string& resolved, std::string& errJson) {
-    std::string rel = pathArg.empty()
-        ? ".cursor\\rules\\PassiveRoleNotRoleplay.md"
-        : pathArg;
-    for (auto& ch : rel) {
-        if (ch == '/') ch = '\\';
-    }
-    const bool absolute = rel.size() >= 3 && rel[1] == ':' &&
-        (rel[2] == '\\' || rel[2] == '/');
-    if (absolute)
-        return resolveToolPath(rel, workingDir, resolved, errJson);
-
-    // Prefer workingDir join when set and file exists (product --dir path).
-    if (!workingDir.empty()) {
-        std::string viaWd;
-        std::string ignore;
-        if (resolveToolPath(rel, workingDir, viaWd, ignore) &&
-            GetFileAttributesA(viaWd.c_str()) != INVALID_FILE_ATTRIBUTES) {
-            resolved = viaWd;
-            return true;
-        }
+    /* Empty pathArg: try .md then .mdc (Cursor ships .mdc under g:\~dev). */
+    std::vector<std::string> candidates;
+    if (pathArg.empty()) {
+        candidates.push_back(".cursor\\rules\\PassiveRoleNotRoleplay.md");
+        candidates.push_back(".cursor\\rules\\PassiveRoleNotRoleplay.mdc");
+    } else {
+        candidates.push_back(pathArg);
     }
 
-    std::vector<std::string> roots;
-    if (!workingDir.empty()) roots.push_back(workingDir);
-    char cwd[MAX_PATH] = {};
-    if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) roots.push_back(cwd);
-    // Exe-relative: …/build-fd/bin/RawrXD-Win32IDE.exe → walk up looking for MOTD
-    char modulePath[MAX_PATH * 4] = {};
-    if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
-        std::string dir(modulePath);
-        auto slash = dir.find_last_of("\\/");
-        if (slash != std::string::npos) dir.resize(slash);
-        for (int up = 0; up < 6; ++up) {
-            roots.push_back(dir);
-            auto parent = dir.find_last_of("\\/");
-            if (parent == std::string::npos) break;
-            dir.resize(parent);
+    auto tryOne = [&](std::string rel) -> bool {
+        for (auto& ch : rel) {
+            if (ch == '/') ch = '\\';
         }
-    }
-    for (const auto& root : roots) {
-        std::string cand = root + "\\" + rel;
-        if (GetFileAttributesA(cand.c_str()) != INVALID_FILE_ATTRIBUTES) {
-            char full[MAX_PATH * 4] = {};
-            DWORD n = GetFullPathNameA(cand.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
-            if (n > 0 && n < sizeof(full)) {
-                resolved.assign(full);
+        const bool absolute = rel.size() >= 3 && rel[1] == ':' &&
+            (rel[2] == '\\' || rel[2] == '/');
+        if (absolute)
+            return resolveToolPath(rel, workingDir, resolved, errJson);
+
+        if (!workingDir.empty()) {
+            std::string viaWd;
+            std::string ignore;
+            if (resolveToolPath(rel, workingDir, viaWd, ignore) &&
+                GetFileAttributesA(viaWd.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                resolved = viaWd;
                 return true;
             }
         }
+
+        std::vector<std::string> roots;
+        if (!workingDir.empty()) roots.push_back(workingDir);
+        char cwd[MAX_PATH] = {};
+        if (GetCurrentDirectoryA(MAX_PATH, cwd) && cwd[0]) roots.push_back(cwd);
+        char modulePath[MAX_PATH * 4] = {};
+        if (GetModuleFileNameA(nullptr, modulePath, static_cast<DWORD>(sizeof(modulePath)))) {
+            std::string dir(modulePath);
+            auto slash = dir.find_last_of("\\/");
+            if (slash != std::string::npos) dir.resize(slash);
+            for (int up = 0; up < 6; ++up) {
+                roots.push_back(dir);
+                auto parent = dir.find_last_of("\\/");
+                if (parent == std::string::npos) break;
+                dir.resize(parent);
+            }
+        }
+        for (const auto& root : roots) {
+            std::string cand = root + "\\" + rel;
+            if (GetFileAttributesA(cand.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                char full[MAX_PATH * 4] = {};
+                DWORD n = GetFullPathNameA(cand.c_str(),
+                    static_cast<DWORD>(sizeof(full)), full, nullptr);
+                if (n > 0 && n < sizeof(full)) {
+                    resolved.assign(full);
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    for (const auto& c : candidates) {
+        if (tryOne(c)) return true;
     }
-    errJson = "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md not found "
+    errJson = "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md/.mdc not found "
               "under workingDir/cwd/module parents\"}";
     return false;
 }
@@ -376,6 +388,30 @@ void HeadlessIDE::routeToolAndFileRequest(const HostedHttpRequest& request,
     } else if (path == "/api/cli" || path == "/api/command" || path.find("/api/command/") == 0) {
         tool = "execute_command";
         args = body;
+    } else if (path == "/api/delete-file") {
+        tool = "delete_file";
+        args = body;
+    } else if (path == "/api/rename-file") {
+        tool = "rename_file";
+        args = body;
+    } else if (path == "/api/copy-file") {
+        tool = "copy_file";
+        args = body;
+    } else if (path == "/api/move-file") {
+        tool = "move_file";
+        args = body;
+    } else if (path == "/api/mkdir") {
+        tool = "mkdir";
+        args = body;
+    } else if (path == "/api/stat-file") {
+        tool = "stat_file";
+        args = body;
+    } else if (path == "/api/search-files") {
+        tool = "search_files";
+        args = body;
+    } else if (path == "/api/list-directory") {
+        tool = "list_directory";
+        args = body;
     } else if (path.find("/api/file") == 0) {
         response.status = 404;
         response.body = "{\"error\":\"not_found\",\"path\":\"" + toolJsonEscape(path) + "\"}";
@@ -531,9 +567,17 @@ bool HeadlessIDE::executeToolRepl(const std::string& toolName,
         return true;
     }
 
+    // R04 — delete/rename/copy/move/mkdir/stat/search aliases
+    if (toolName == "delete_file" || toolName == "rename_file" || toolName == "copy_file" ||
+        toolName == "move_file" || toolName == "mkdir" || toolName == "stat_file" ||
+        toolName == "search_files") {
+        return executeFileAliasTool(toolName, args, outResult);
+    }
+
     outResult =
         "{\"error\":\"unknown_tool\",\"message\":\"Unknown tool: " + toolJsonEscape(toolName) +
         "\",\"available\":[\"read_motd\",\"read_file\",\"write_file\",\"list_directory\","
-        "\"execute_command\",\"git_status\"]}";
+        "\"execute_command\",\"git_status\",\"delete_file\",\"rename_file\",\"copy_file\","
+        "\"move_file\",\"mkdir\",\"stat_file\",\"search_files\"]}";
     return false;
 }

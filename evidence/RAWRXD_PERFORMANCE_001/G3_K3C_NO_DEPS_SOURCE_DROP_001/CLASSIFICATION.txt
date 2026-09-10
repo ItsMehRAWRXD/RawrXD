@@ -1,0 +1,31 @@
+GATE=G3_K3C_NO_DEPS_SOURCE_DROP_001
+DATE=2026-09-10
+KIND=SOURCE_ONLY_NO_DEPS_DROP
+PROMOTE=0
+TIP_CLIMB=HOLD
+REOPEN_R01=0
+DUALSTICK_REOPEN=0
+DECODE_UNTARGETED=1
+TOKEN_UNTARGETED=1
+GLOBAL_OBJECT_SCAN=0
+TARGET=K3C_PUBLIC_LOOP_SHAPE
+INDEX=NONE
+WAKE=N/A_THIS_DROP
+EXEC=k3c_drive_or_finite_smoke_calls
+VERDICT=FAIL_CLOSED_STUB_ONLY
+PASS_LIVE=smoke_compile_run_stub_only
+NOT_RUNTIME_AUTHORITY=1
+
+## Unit
+Public loop *shape* is `token = k3c(token)`.
+This drop's body is identity echo — no storage/GPU/layer/expert mechanics.
+Live product bind: src/deep2/lavapath/k3c_token.cpp (G3_K3C_E2E_REAL_001).
+
+## Bind class
+FAIL_CLOSED_STUB — identity echo; DEP_EXTERNAL=0.
+Not a product decode PASS. Not kimi runtime adoption.
+
+## Observed (smoke)
+SMOKE_COMPILE=PASS SMOKE=PASS DEP_EXTERNAL=0
+K3C_BIND=FAIL_CLOSED_STUB PRODUCT_DECODE_PASS=0 TOKEN_OBSERVATIONAL=1
+PROMOTE=0 TIP_CLIMB=HOLD

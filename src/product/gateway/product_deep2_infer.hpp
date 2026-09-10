@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 namespace rawr {
-// Shared IDE/CLI session: Resolve + OpenSession residency for ProductRun.
+// Shared IDE/CLI session: Resolve + streamable OpenSession for ProductRun.
 bool ProductOpenSession(const char* modelAliasOrPath);
 void ProductCloseSession();
 bool ProductSessionOpen();

@@ -128,7 +128,7 @@ var State = {
     sessionId: 0,           // monotonic session counter
     waitingForIde: false,   // true when auto-retry polling for IDE
     autoRetryTimer: null,   // setInterval handle for auto-retry
-    scanPorts: [11435, 8080, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
+    scanPorts: [11435, 3000, 5000], // product :11435 first; :8080 ignored (SERVER_REACHABILITY)
     lastScanResults: [],    // [{port, status, backend}] from last scan
   },
   // VSIX Extension Manager state
@@ -2193,14 +2193,13 @@ function dismissRestored() {
 function addWelcomeMessage() {
   var modeNote = _isFileProtocol
     ? '\n\n\u{1F4C2} **Standalone Mode** â€” Opened directly from file system. ' +
-    'Connecting to `localhost:8080` (RawrXD server) or `localhost:11434` (Ollama).\n' +
+    'Connecting to `localhost:11435` (RawrXD Headless / Win32 IDE).\n' +
     'Drag & drop files to attach them, or paste file paths in your message.' +
     (_win32IdeDetected ? '\n\u{1F5A5} **Win32 IDE detected** â€” use the `OPEN IDE` button in the titlebar to switch.' : '')
     : '';
   addMessage('system',
     '**RawrXD Agentic Interface v3.4** â€” Standalone + Win32IDE Bridge\n\n' +
-    'This interface connects to the RawrXD backend on `localhost:8080`. ' +
-    'If the server isn\u2019t running, it will automatically fall back to Ollama directly on `localhost:11434`.' + modeNote + '\n\n' +
+    'This interface connects to the RawrXD backend on `localhost:11435` (LOCAL_ONLY_NO_OLLAMA — no :11434 fallback).' + modeNote + '\n\n' +
     '**What\'s new in v3.4:**\n' +
     '\u2022 **Standalone Mode** â€” Works fully from `file:///` with no server needed for UI\n' +
     '\u2022 **Win32 IDE Bridge** â€” Auto-detects running IDE, syncs state, hotpatch control\n' +
@@ -4492,7 +4491,7 @@ async function sendMessage() {
 
 // ======================================================================
 // RawrXD Streaming Bridge â€” Production-grade NDJSON/SSE stream client
-// Connects to server.js (localhost:8080) or direct Ollama (11434)
+// Connects to RawrXD Headless / Win32IDE (localhost:11435) — LOCAL_ONLY_NO_OLLAMA
 // Implements: AbortController, cross-chunk NDJSON buffer, token rate
 // ======================================================================
 class RawrXDStream {
@@ -5150,13 +5149,11 @@ async function sendNonStreamingLegacy(query, model, t0) {
 function getOfflineResponse(q) {
   var lower = q.toLowerCase();
   if (lower.indexOf('help') >= 0 || lower === '?') {
-    return '**Offline Mode \u2014 Help**\n\nThe backend is not running. To use AI:\n\n' +
-      '1. **Start Ollama** \u2014 the chatbot will connect directly on port 11434\n' +
-      '2. **Or start the RawrXD server** \u2014 `node server.js` on port 8080\n' +
-      '3. **Or run the start script:**\n' +
-      '```powershell\ncd D:\\rawrxd\nnode server.js\n```\n\n' +
-      'Then click the \u26A1 button to connect.\n\n' +
-      '*Note: If Ollama is running, the chatbot will automatically detect it even without the Python server.*';
+    return '**Offline Mode \u2014 Help**\n\nThe RawrXD backend is not running. To use AI:\n\n' +
+      '1. **Start RawrXD Headless** \u2014 `RawrXD-Win32IDE.exe --headless --local --port 11435`\n' +
+      '2. **Or start the Win32 IDE** \u2014 built-in server on port 11435\n' +
+      '3. Click the \u26A1 button to connect.\n\n' +
+      '*Policy: LOCAL_ONLY_NO_OLLAMA — product does not fall back to :11434.*';
   }
   if (lower.indexOf('endpoint') >= 0 || lower.indexOf('api') >= 0) {
     return '**API Endpoints** (when backend is online):\n\n' +
@@ -5617,12 +5614,13 @@ async function testAllEndpoints() {
     }
   }
 
-  // Also test direct Ollama if we're currently going through the proxy
+  // Also test configured local RawrXD (ollamaDirectUrl is LOCAL_ONLY alias for :11435 — not Ollama)
   if (!State.backend.directMode && State.backend.ollamaDirectUrl !== State.backend.url) {
-    logDebug('--- Also testing direct Ollama at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
+    var rawrLabel = 'RawrXD';
+    logDebug('--- Also testing ' + rawrLabel + ' at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
     var ollamaEps = [
-      { method: 'GET', path: '/' },
-      { method: 'GET', path: '/api/tags' },
+      { method: 'GET', path: '/health' },
+      { method: 'GET', path: '/api/engine/capabilities' },
       { method: 'GET', path: '/v1/models' },
     ];
     for (var j = 0; j < ollamaEps.length; j++) {
@@ -5633,9 +5631,9 @@ async function testAllEndpoints() {
         var olat = Math.round(performance.now() - t1);
         var otxt = await ores.text();
         var oprev = otxt.length > 80 ? otxt.substring(0, 80) + '...' : otxt;
-        logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
+        logDebug('[' + rawrLabel + '] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
       } catch (oe) {
-        logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
+        logDebug('[' + rawrLabel + '] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
       }
     }
   }
@@ -11494,8 +11492,15 @@ function resetRateLimit() {
 
 // --- Backend URL Validation ---
 function isUrlAllowed(urlStr) {
+  if (!urlStr || typeof urlStr !== 'string') return false;
+  var u = urlStr.trim();
+  // Soften partial loopback keystrokes (avoids "http://1" hard-block noise)
+  if (/^https?:\/\/(1|12|127|127\.|127\.0|127\.0\.|127\.0\.0|127\.0\.0\.|l|lo|loc|loca|local|localh|localho|localhos|localhost)/i.test(u) &&
+      !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?/i.test(u)) {
+    return true;
+  }
   for (var i = 0; i < State.security.urlAllowlist.length; i++) {
-    if (State.security.urlAllowlist[i].test(urlStr)) return true;
+    if (State.security.urlAllowlist[i].test(u)) return true;
   }
   return false;
 }

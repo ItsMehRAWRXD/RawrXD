@@ -78,6 +78,7 @@ bool ForwardMlaLayer(const Deep2::GlobalTensorIndex& index,
 rawrxd::deep2::K2KVCache* ProdKv(const Deep2::KimiK2Config& k2cfg,
                                  size_t maxSeq);
 void ProdKvCommit();
+uint32_t ModelKvCurrentLength() noexcept;
 
 void PrintCertificationContract(const Result& result, bool generationRequested);
 

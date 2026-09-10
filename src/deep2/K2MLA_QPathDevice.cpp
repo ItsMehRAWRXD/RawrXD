@@ -3,22 +3,9 @@
 #include "K2GpuStreamCopy.hpp"
 #include "K2MLA_GpuGemv.hpp"
 #include "vulkan_compute.h"
-#include <atomic>
 #include <cstdlib>
 
 namespace Deep2 {
-namespace {
-std::atomic<uint64_t> g_ops{0}, g_fail{0};
-} // namespace
-
-void MLA_QPathDevice_Reset() { g_ops = g_fail = 0; }
-uint64_t MLA_QPathDevice_Ops() { return g_ops.load(); }
-uint64_t MLA_QPathDevice_Fail() { return g_fail.load(); }
-void MLA_QPathDevice_Emit(FILE* f) {
-    if (!f) return;
-    fprintf(f, "MLA_Q_DEVICE_OPS=%llu MLA_Q_DEVICE_FAIL=%llu\n",
-            (unsigned long long)g_ops.load(), (unsigned long long)g_fail.load());
-}
 
 bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
                           const RawrXD::TensorView& wQa,
@@ -46,7 +33,7 @@ bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
     if (!vc->EnsureForwardArena(hiddenDim, hiddenDim, qBCols, 1, 1, 1, 1) ||
         !vc->EnsureHostIo(actIn, actOut) || !vc->EnsureGemvActDevice(actIn, actOut) ||
         !vc->GemvHostWriteIn(hidden, inB)) {
-        ++g_fail; return false;
+        MLA_QPathDevice_NoteFail(); return false;
     }
     const uint64_t pkA = ((uint64_t)layerIdx << 8) | 1ull;
     const uint64_t pkB = ((uint64_t)layerIdx << 8) | 2ull;
@@ -56,21 +43,21 @@ bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
                                       hiddenDim, wA, pkA) ||
         !vc->EnsurePinnedPackedWeight(wQb.data(), wQb.byteSize(), qBCols, qLora,
                                       wB, pkB)) {
-        ++g_fail; return false;
+        MLA_QPathDevice_NoteFail(); return false;
     }
     CPUInference::VulkanCompute::DeviceBuf normBuf{};
     if (haveNorm) {
         if (!vc->EnsurePinnedF32(wNorm.asF32(), qLora, wN, pkN)) {
-            ++g_fail; return false;
+            MLA_QPathDevice_NoteFail(); return false;
         }
         normBuf.buffer = wN;
         normBuf.bytes = midB;
     }
     (void)wA; (void)wB;
-    if (!vc->BeginFusedLayer()) { ++g_fail; return false; }
+    if (!vc->BeginFusedLayer()) { MLA_QPathDevice_NoteFail(); return false; }
     auto fail = [&]() -> bool {
         (void)vc->EndFusedLayer();
-        ++g_fail;
+        MLA_QPathDevice_NoteFail();
         return false;
     };
     auto& aIn = vc->GemvActIn();
@@ -92,10 +79,10 @@ bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
     const VkBuffer qOut = haveNorm ? aOut.buffer : aIn.buffer;
     if (!vc->RecordCopy(qOut, vc->GemvHostOutBuffer(), 0, 0, outB)) return fail();
     if (!vc->EndFusedLayer() || !vc->GemvHostReadOut(q_b, outB)) {
-        ++g_fail; return false;
+        MLA_QPathDevice_NoteFail(); return false;
     }
     (void)q_a;
-    ++g_ops;
+    MLA_QPathDevice_NoteOk();
     return true;
 }
 

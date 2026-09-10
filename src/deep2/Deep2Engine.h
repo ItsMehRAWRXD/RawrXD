@@ -398,6 +398,8 @@ public:
     void refreshElasticDynamicBudget();
     bool isElasticResidencyEnabled() const { return elasticResidencyEnabled_; }
     ElasticResidencyManager* getElasticResidencyManager() const { return elasticResidency_.get(); }
+    NVMeStream* HostNvme() const noexcept { return nvmeStream_.get(); }
+    int GgufMmapBound() const noexcept { return ggufResult.mmapBound; }
 
     // Cyclone temporal scheduler (live generate ownership)
     void enableCyclone(bool enable);
@@ -750,7 +752,7 @@ private:
     MultiGpuLayerPlan multiGpuLayerPlan_{};
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
-    bool vulkanStrictNoCpuFallback_ = false;
+    bool vulkanStrictNoCpuFallback_ = true;  // GPU required; CPU only if HOST_DECODE
     bool vulkanStrictViolation_ = false;
     uint64_t vulkanGemvOk_ = 0;
     uint64_t vulkanGemvFail_ = 0;

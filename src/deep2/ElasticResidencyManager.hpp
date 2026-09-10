@@ -93,6 +93,11 @@ struct ElasticResidencyConfig {
     // Whether to use quantized GEMV directly on GPU (skip staging)
     bool useQuantizedGpuPath = false;
 
+    /* Vulkan DualStick owns device weights — host VirtualAlloc "Hot" + cyclone
+     * Acquire race final-norm/logits (C0000005). Keep manager for braid/BATCH_D
+     * telemetry; suppress host→fake-VRAM moves and CPU Acquire side-effects. */
+    bool suppressHostVramMoves = false;
+
     // Whether to use Ghost Cache for reuse prediction
     bool useGhostCache = true;
 
@@ -309,6 +314,7 @@ public:
     // ── Legacy API (kept for backward compatibility) ────────────────────
     const void* AcquireForCpu(const std::string& name, TensorFormat desiredFormat);
     void ReleaseFromCpu(const std::string& name);
+    void PrefetchForCpu(const std::string& name, uint32_t targetLayer);
     void PrefetchToGpu(const std::string& name, uint32_t targetLayer);
 
     /* BATCH_D — single async Cold→Hot; readiness wait for ownership handoff. */

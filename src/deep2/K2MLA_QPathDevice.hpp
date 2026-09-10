@@ -15,6 +15,8 @@ bool MLA_QPathDeviceFused(const float* hidden, float* q_a, float* q_b,
                           uint32_t hiddenDim, uint32_t qLora, uint32_t qBCols,
                           float eps, uint32_t layerIdx);
 
+void MLA_QPathDevice_NoteOk();
+void MLA_QPathDevice_NoteFail();
 uint64_t MLA_QPathDevice_Ops();
 uint64_t MLA_QPathDevice_Fail();
 void MLA_QPathDevice_Reset();

@@ -1,0 +1,14 @@
+GATE=G3_MOTD_PER_TURN_ENFORCEMENT_001
+KEY_LINES=
+  Win32IDE_LocalServer.cpp MotdFindCanonical/ResolveMotdPath/MotdPathsEquivalent (exact path, not substring)
+  Win32IDE_LocalServer.cpp handleReadFileEndpoint -> bool; MotdAck only after ok+exact
+  Win32IDE_LocalServer.cpp handleAskEndpoint MotdResetForNewMessage at start
+  Win32IDE_LocalServer.cpp direct /api/cli|/api/write-file|… pre-MOTD 403 motd_required
+  HeadlessIDE_ToolRoutes.cpp motdLeafIsCanonical + motdIsExactCanonical ACK gate
+  HeadlessIDE.cpp /ask|/api/generate|/v1/chat/completions -> motdResetOnGenerate (unchanged wire)
+
+STILL_VETO_CLOSED=
+  1 MOTD_ACK_ON_FAILED_READ
+  2 READ_MOTD_RELATIVE_PATH_MISMATCH
+  3 ASK_TURN_DOES_NOT_RESET_ACK
+  4 DIRECT_TOOL_ROUTE_GATE_BYPASS

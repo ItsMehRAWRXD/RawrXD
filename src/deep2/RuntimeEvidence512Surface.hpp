@@ -5,6 +5,7 @@
 #include "RuntimeEvidence512HostIDE.hpp"
 #include "RuntimeEvidence512_CollectDecl.hpp"
 #include "RuntimeEvidence512Collect.hpp"
+#include "lavapath/RxRunStateHooks.hpp"
 #include <cstdio>
 
 namespace Deep2 {
@@ -22,6 +23,7 @@ inline void HostSurfaceAllClaims(FILE* out) noexcept {
     if (!HostArmed()) {
         std::fprintf(out, "RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE\n");
         std::fflush(out);
+        rxow::OnTeardownNoRunState();
         return;
     }
     EvidenceState512* st = HostState512();

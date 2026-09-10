@@ -85,8 +85,14 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
     std::lock_guard<std::mutex> loadGuard(s_loadModelMutex);
     if (m_modelLoaded)
     {
-        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "already_loaded");
-        return true;
+        if (!m_loadedModelPath.empty() && m_loadedModelPath == model_path) {
+            RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "already_loaded_same_path");
+            return true;
+        }
+        // Different path while marked loaded — soft clear so Initialize can re-arm.
+        RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "soft_unload_before_switch");
+        m_modelLoaded = false;
+        m_loadedModelPath.clear();
     }
     RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "enter");
     m_lastLoadErrorMessage.clear();
@@ -169,6 +175,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
 #endif
             RawrXD::P1LoadCkpt::emit("CIE_Initialize", "returned_true");
             m_modelLoaded = true;
+            m_loadedModelPath = model_path;
             m_lastLoadErrorMessage.clear();
 
             // Propagate metadata from backend to facade members
@@ -192,6 +199,14 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             {
                 RawrXD::P1LoadCkpt::emit("CIE_titan", "before_LoadLibrary");
                 HMODULE hDll = LoadLibraryA("RawrXD_Titan.dll");
+                if (!hDll)
+                {
+                    const DWORD le = GetLastError();
+                    printf("[CPUInferenceEngine] LoadLibraryA(RawrXD_Titan.dll) failed "
+                           "Error=%lu Flags=0 path=RawrXD_Titan.dll\n",
+                           (unsigned long)le);
+                    fflush(stdout);
+                }
                 if (hDll)
                 {
                     m_hTitanDLL = hDll;
@@ -241,6 +256,24 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
     printf("[CPUInferenceEngine] Failed to load model\n");
     RawrXD::P1LoadCkpt::emit("CIE_LoadModel", "fail");
     return false;
+}
+
+bool CPUInferenceEngine::UnloadModel()
+{
+    static std::mutex s_loadModelMutex;
+    std::lock_guard<std::mutex> loadGuard(s_loadModelMutex);
+    if (!m_modelLoaded && !InferenceBackend().IsInitialized()) {
+        RawrXD::P1LoadCkpt::emit("CIE_UnloadModel", "already_clear");
+        return true;
+    }
+    InferenceBackend().Shutdown();
+    m_modelLoaded = false;
+    m_loadedModelPath.clear();
+    m_lastLoadErrorMessage.clear();
+    RawrXD::P1LoadCkpt::emit("CIE_UnloadModel", "hard_shutdown");
+    printf("[CPUInferenceEngine] Model hard-unloaded (RawrXDInference::Shutdown)\n");
+    fflush(stdout);
+    return true;
 }
 
 bool CPUInferenceEngine::LoadWeights(const std::unordered_map<std::string, Tensor>& tensors)

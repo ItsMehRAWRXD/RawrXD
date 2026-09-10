@@ -149,7 +149,21 @@ bool Deep2Device_Enumerate(DeviceManagerSnapshot& snap) noexcept {
             id.healthy = true;
             id.duty = DeviceDuty::Unused;
             MakeStableId(id);
-            ++snap.deviceCount;
+            bool dupPci = false;
+            for (unsigned j = 0; j < snap.deviceCount; ++j) {
+                if (snap.devices[j].vendorId != id.vendorId ||
+                    snap.devices[j].deviceId != id.deviceId)
+                    continue;
+                if (id.dedicatedVram > snap.devices[j].dedicatedVram) {
+                    const int keepIdx = snap.devices[j].index;
+                    snap.devices[j] = id;
+                    snap.devices[j].index = keepIdx;
+                }
+                dupPci = true;
+                break;
+            }
+            if (!dupPci)
+                ++snap.deviceCount;
         }
         adapter->Release();
         adapter = nullptr;

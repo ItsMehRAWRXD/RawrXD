@@ -240,6 +240,8 @@ struct GGUFLoadResult {
     size_t totalSize = 0;
     double loadTimeMs = 0.0;
     uint64_t dataOffset = 0;  // Absolute byte offset to tensor data section in file
+    int mmapBound = 0;        /* 1 = tensor .data is MapView, not VirtualAlloc */
+    std::shared_ptr<void> mmapKeep; /* keeps mapping alive; Unmap on last ref */
 
     const TensorInfo* GetTensor(const char* name) const {
         for (const auto& t : tensors) {

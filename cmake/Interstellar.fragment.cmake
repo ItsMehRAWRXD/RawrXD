@@ -5,6 +5,10 @@ if(NOT BUILD_INTERSTELLAR)
 endif()
 
 set(IS_ROOT ${CMAKE_SOURCE_DIR}/interstellar)
+if(NOT EXISTS "${IS_ROOT}/src/main.cpp")
+  message(STATUS "[Interstellar] sources missing — skipping (BUILD_INTERSTELLAR gated)")
+  return()
+endif()
 
 add_executable(interstellar
   ${IS_ROOT}/src/main.cpp

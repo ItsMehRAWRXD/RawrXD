@@ -462,9 +462,9 @@ RawrXDModelLoader::RawrXDModelLoader()
 {
 }
 
-RawrXDModelLoader::~RawrXDModelLoader()
+void RawrXDModelLoader::Unload()
 {
-    B011ClearResidency();  // Free resident weight buffers before unmapping file views
+    B011ClearResidency();
     CleanupSlidingWindow();
     if (m_mappedView)
     {
@@ -481,6 +481,15 @@ RawrXDModelLoader::~RawrXDModelLoader()
         CloseHandle(m_file);
         m_file = INVALID_HANDLE_VALUE;
     }
+    m_tensors.clear();
+    m_vocabulary.clear();
+    m_modelPath.clear();
+    m_fileSize = 0;
+}
+
+RawrXDModelLoader::~RawrXDModelLoader()
+{
+    Unload();
 }
 
 // Phase 46: Vulkan support with graceful fallback for dual GPU testing
@@ -594,6 +603,33 @@ bool RawrXDModelLoader::InitializeSlidingWindow(uint64_t fileSize)
     {                                                              // > 8GB
         effectiveWindowSize = 2ULL * 1024ULL * 1024ULL * 1024ULL;  // 2GB
     }
+#ifdef _WIN32
+    /* LAA:NO IDE (R01 floor): user VA ≈2GB — a 2GB placeholder reserve starves
+     * MapWindow / tensor alloc. Cap aperture so CIE can open multi-GB GGUFs. */
+    {
+        bool laa = false; /* fail-closed: prefer 256MB cap if PE parse fails */
+        HMODULE self = GetModuleHandleW(nullptr);
+        if (self)
+        {
+            auto* dos = reinterpret_cast<PIMAGE_DOS_HEADER>(self);
+            if (dos && dos->e_magic == IMAGE_DOS_SIGNATURE)
+            {
+                auto* nt = reinterpret_cast<PIMAGE_NT_HEADERS>(
+                    reinterpret_cast<BYTE*>(self) + dos->e_lfanew);
+                if (nt && nt->Signature == IMAGE_NT_SIGNATURE)
+                    laa = (nt->FileHeader.Characteristics &
+                           IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
+            }
+        }
+        constexpr uint64_t kLaaNoCap = 256ULL * 1024ULL * 1024ULL;
+        if (!laa && effectiveWindowSize > kLaaNoCap)
+        {
+            printf("[RawrXD] LAA:NO — capping sliding window %llu MB -> 256 MB\n",
+                   (unsigned long long)(effectiveWindowSize / (1024ull * 1024ull)));
+            effectiveWindowSize = kLaaNoCap;
+        }
+    }
+#endif
 
     const SIZE_T apertureSize = static_cast<SIZE_T>(std::min<uint64_t>(fileSize, effectiveWindowSize));
 
@@ -1540,6 +1576,9 @@ struct GGUFFileHeader
 bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalDevice physDevice)
 {
     RawrXD::P1LoadCkpt::emit("LOADER_Load", "enter");
+    /* Prior Load left file mapping + sliding-window VA resident; soft CIE unload
+     * never freed them — LAA:NO then fails mid-tensor VirtualAlloc on switch. */
+    Unload();
     m_lastLoadErrorStage.clear();
     m_lastLoadErrorMessage.clear();
     const auto setLoadError = [this](const std::string& stage, const std::string& message)
@@ -1557,7 +1596,6 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     {
         m_gpuUploadEnabled = false;
     }
-    m_tensors.clear();
 
     // ============================================================================
     // [ENHANCEMENT] Initialize Sovereign Systems

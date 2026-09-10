@@ -14,11 +14,14 @@
 #include "IOutputSink.h"
 #include "../agentic_engine.h"
 #include "../../include/chain_of_thought_engine.h"
+#include "HeadlessIDE_ProductLocalOnly.hpp"
 #include "../core/instructions_provider.hpp"
 #include "../deep2/Deep2IDEIntegration.hpp"
+#include "../product/gateway/product_deep2_infer_lane.hpp"
 #define RAWR_HAS_NATIVE_E2E 1
 #include "../../native_e2e/RawrNativeServerDispatch.hpp"
 #include "../../native_e2e/rawr_native_engine_hooks.h"
+#include "../../native_e2e/runtime_gguf_disk_resolve.h"
 
 // Phase 10+ singletons — wired for real status queries
 #include "../core/execution_governor.h"
@@ -37,6 +40,49 @@
 #include "../agent_history.h"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <chrono>
+#include <thread>
+#include <algorithm>
+#include <cctype>
+
+// ConversationManager — method bodies (declared in HeadlessIDE.h)
+std::string ConversationManager::createSession() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::string id = std::to_string(nextId_.fetch_add(1));
+    ConversationSession s;
+    s.id = id;
+    s.lastActivity = std::chrono::steady_clock::now();
+    sessions_[id] = std::move(s);
+    return id;
+}
+void ConversationManager::addMessage(const std::string& sessionId,
+                                     const std::string& role,
+                                     const std::string& content) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = sessions_.find(sessionId);
+    if (it == sessions_.end()) return;
+    it->second.messages.emplace_back(role, content);
+    it->second.messageCount = it->second.messages.size();
+    it->second.lastActivity = std::chrono::steady_clock::now();
+}
+std::vector<std::pair<std::string, std::string>>
+ConversationManager::getMessages(const std::string& sessionId) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto it = sessions_.find(sessionId);
+    if (it == sessions_.end()) return {};
+    return it->second.messages;
+}
+void ConversationManager::pruneInactive(double maxAgeSeconds) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto now = std::chrono::steady_clock::now();
+    for (auto it = sessions_.begin(); it != sessions_.end();) {
+        double age = std::chrono::duration<double>(now - it->second.lastActivity).count();
+        if (age > maxAgeSeconds) it = sessions_.erase(it);
+        else ++it;
+    }
+}
 #include <fstream>
 #include <sstream>
 #include <chrono>
@@ -85,14 +131,9 @@
 #include "../agent/autonomous_orchestrator.hpp"
 #include "../agent/orchestrator_cli_handler.hpp"
 
-// ============================================================================
-// Minimal ConversationManager definition (Fix #14)
-// ============================================================================
-class HeadlessIDE::ConversationManager {
-public:
-    ConversationManager() = default;
-    ~ConversationManager() = default;
-};
+// ConversationManager methods live with the global type in HeadlessIDE.h
+// (empty nested HeadlessIDE::ConversationManager stub removed — it caused
+// incomplete-type / dual-type AV risk around unique_ptr ownership).
 
 // ============================================================================
 // Production Hardening — Batch 1 Fixes
@@ -531,10 +572,31 @@ static bool pathHasRoot(const std::string& path, const std::string& root) {
 
 static bool canonicalWorkspacePath(const std::string& input, const std::string& root,
                                    std::string& resolved) {
-    if (input.empty() || root.empty() || input.find('\0') != std::string::npos) return false;
+    if (input.empty() || input.find('\0') != std::string::npos) return false;
+    bool absolute = input.size() > 2 && input[1] == ':';
+    /* Absolute existing file: accept when under root, or when root empty/~ quirks. */
+    if (absolute) {
+        char full[MAX_PATH * 4] = {};
+        DWORD n = GetFullPathNameA(input.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
+        if (n > 0 && n < sizeof(full) &&
+            GetFileAttributesA(full) != INVALID_FILE_ATTRIBUTES) {
+            resolved.assign(full);
+            if (root.empty()) return true;
+            std::string canonicalRoot = finalExistingPath(fullPathName(root), true);
+            if (canonicalRoot.empty()) return true;
+            if (pathHasRoot(resolved, canonicalRoot)) return true;
+            /* Product /api/model/load only (this helper is not used by MOTD/file tools):
+             * accept absolute existing .gguf outside --dir (F:\OllamaModels\...). */
+            {
+                const char* ext = strrchr(full, '.');
+                if (ext && _stricmp(ext, ".gguf") == 0) return true;
+            }
+            return false;
+        }
+    }
+    if (root.empty()) return false;
     std::string canonicalRoot = finalExistingPath(fullPathName(root), true);
     if (canonicalRoot.empty()) return false;
-    bool absolute = input.size() > 2 && input[1] == ':';
     std::string candidate = absolute ? input : canonicalRoot + "\\" + input;
     resolved = finalExistingPath(fullPathName(candidate), false);
     return !resolved.empty() && pathHasRoot(resolved, canonicalRoot);
@@ -819,6 +881,31 @@ void HeadlessIDE::safeOnStatusUpdate(const char* subsystem, const char* status) 
 // ============================================================================
 // Lifecycle
 // ============================================================================
+#ifdef _WIN32
+static void headlessEv512InitEmit(int backendIdx) {
+    __try {
+        char cwd[MAX_PATH];
+        DWORD n = GetCurrentDirectoryA(MAX_PATH, cwd);
+        const uint64_t wh = Deep2::Ev512::HostPathHash(n ? cwd : ".");
+        Deep2::Ev512::HostEmitWorkspaceOpen(wh, wh);
+        Deep2::Ev512::HostEmitBackendSelected((uint64_t)backendIdx, 1);
+        Deep2::Ev512::HostEmitCoreInitComplete(1, 1);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        std::fprintf(stderr, "EV512_HOST_EMIT_SEH=1 CODE=0x%08lX\n",
+                     (unsigned long)GetExceptionCode());
+    }
+}
+#else
+static void headlessEv512InitEmit(int backendIdx) {
+    char cwd[MAX_PATH];
+    DWORD n = GetCurrentDirectoryA(MAX_PATH, cwd);
+    const uint64_t wh = Deep2::Ev512::HostPathHash(n ? cwd : ".");
+    Deep2::Ev512::HostEmitWorkspaceOpen(wh, wh);
+    Deep2::Ev512::HostEmitBackendSelected((uint64_t)backendIdx, 1);
+    Deep2::Ev512::HostEmitCoreInitComplete(1, 1);
+}
+#endif
+
 HeadlessResult HeadlessIDE::initialize(int argc, char* argv[]) {
     HeadlessResult r = parseArgs(argc, argv);
     if (!r.success) return r;
@@ -929,6 +1016,21 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
     HeadlessResult wr = initWinsock();
     if (!wr.success) return wr;
 
+    // G4_EARLY_LISTENER: establish product transport before optional/heavy runtime init.
+    // Default and --local are native-only. Ollama is permitted only when explicitly selected.
+    const bool localOnly = m_config.backend.empty() ||
+                           m_config.backend == "local" ||
+                           m_config.backend == "localgguf";
+    RawrXD::HeadlessProduct::SetLocalOnly(localOnly);
+    RawrXD::HeadlessProduct::SetRuntimeReady(false);
+    if (m_config.enableServer &&
+        (m_config.mode == HeadlessRunMode::Server || m_config.mode == HeadlessRunMode::REPL)) {
+        startServer();
+        if (!m_serverRunning.load()) {
+            return HeadlessResult::error("Failed to bind/listen headless product server", 3);
+        }
+    }
+
     // Initialize engines
     HeadlessResult er = initEngines();
     if (!er.success) {
@@ -1015,19 +1117,38 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
         loadSettings(m_config.settingsFile);
     }
 
-    // Fix #14: Initialize conversation manager
-    m_conversationManager = std::make_unique<ConversationManager>();
-
-    m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
-
     {
-        char cwd[MAX_PATH];
-        DWORD n = GetCurrentDirectoryA(MAX_PATH, cwd);
-        const uint64_t wh = Deep2::Ev512::HostPathHash(n ? cwd : ".");
-        Deep2::Ev512::HostEmitWorkspaceOpen(wh, wh);
-        Deep2::Ev512::HostEmitBackendSelected(
-            (uint64_t)static_cast<int>(m_activeBackend), 1);
-        Deep2::Ev512::HostEmitCoreInitComplete(1, 1);
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "PRE_CONVERSATION_MGR\n"); fclose(f); }
+    }
+    /* ConversationManager optional — do not block product generate on Fix #14. */
+    try {
+        m_conversationManager = std::make_unique<::ConversationManager>();
+    } catch (...) {
+        m_conversationManager.reset();
+    }
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) {
+            fprintf(f, "POST_CONVERSATION_MGR ok=%d\n",
+                    m_conversationManager ? 1 : 0);
+            fclose(f);
+        }
+    }
+
+    // G4_RUNTIME_READY: requests may now touch initialized runtime state.
+    RawrXD::HeadlessProduct::SetRuntimeReady(true);
+    m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
+    m_outputSink->flush();
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "POST_SUCCESS_MSG\n"); fclose(f); }
+    }
+
+    headlessEv512InitEmit(static_cast<int>(m_activeBackend));
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "POST_EV512_EMIT\n"); fclose(f); }
     }
 
     // Breadcrumb: init complete
@@ -1042,6 +1163,15 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
 }
 
 int HeadlessIDE::run() {
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) {
+            fprintf(f, "RUN_ENTER mode=%d\n", (int)m_config.mode);
+            fclose(f);
+        }
+    }
+    /* Vulkan/ProductRun: bind this (WinMain headless) thread as infer lane. */
+    rawr::product_infer_lane::BindCurrentThreadAsLane();
     m_running.store(true);
     m_shutdownRequested.store(false);
 
@@ -1073,6 +1203,7 @@ int HeadlessIDE::run() {
 }
 
 void HeadlessIDE::requestShutdown() noexcept {
+    RawrXD::HeadlessProduct::SetRuntimeReady(false);
     m_shutdownRequested.store(true);
     stopServer();
 }
@@ -1098,6 +1229,8 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[]) {
         }
         else if (arg == "--local") {
             m_config.ingressMode = HeadlessIngressMode::Local;
+            // Product contract: native LocalGGUF only; never probe/fall back to :11434.
+            m_config.backend = "local";
         }
         else if (arg == "--port" && i + 1 < argc) {
             m_config.port = std::atoi(argv[++i]);
@@ -1207,40 +1340,31 @@ HeadlessResult HeadlessIDE::initEngines() {
 
 HeadlessResult HeadlessIDE::initBackendManager() {
     auto startTime = std::chrono::steady_clock::now();
-
-    // Configure default backend based on config
-    if (!m_config.backend.empty()) {
-        if (m_config.backend == "ollama")  m_activeBackend = AIBackendType::Ollama;
-        else if (m_config.backend == "openai")  m_activeBackend = AIBackendType::OpenAI;
-        else if (m_config.backend == "claude")  m_activeBackend = AIBackendType::Claude;
-        else if (m_config.backend == "gemini")  m_activeBackend = AIBackendType::Gemini;
-        else m_activeBackend = AIBackendType::LocalGGUF;
-    }
-
-    // LOCAL_ONLY: keep LocalGGUF / ProductRun; never auto-promote Ollama.
-    if (m_config.backend.empty())
-        m_activeBackend = AIBackendType::LocalGGUF;
-
-    RawrXD::Agent::OllamaConfig ollamaCfg;
-    ollamaCfg.host = "127.0.0.1";
-    ollamaCfg.port = 11434;
-    ollamaCfg.timeout_ms = 3000;
-    RawrXD::Agent::AgentOllamaClient probeClient(ollamaCfg);
-    bool ollamaAvailable = probeClient.TestConnection();
-
+    const std::string requested = m_config.backend;
     std::ostringstream statusMsg;
     statusMsg << "Backend manager initialized (headless)";
-    if (ollamaAvailable) {
-        auto models = probeClient.ListModels();
-        statusMsg << " | Ollama: online (" << models.size()
-                  << " models, LOCAL_ONLY_BLOCKED)";
-    } else {
-        statusMsg << " | Ollama: offline";
+
+    if (requested == "ollama") {
+        // Explicit opt-in only. Never reached by default or --local.
+        m_activeBackend = AIBackendType::Ollama;
+        RawrXD::Agent::OllamaConfig cfg;
+        cfg.host = "127.0.0.1";
+        cfg.port = 11434;
+        cfg.timeout_ms = 3000;
+        RawrXD::Agent::AgentOllamaClient client(cfg);
+        const bool online = client.TestConnection();
+        statusMsg << " | Ollama(explicit): " << (online ? "online" : "offline");
+    }
+    else if (requested == "openai") m_activeBackend = AIBackendType::OpenAI;
+    else if (requested == "claude") m_activeBackend = AIBackendType::Claude;
+    else if (requested == "gemini") m_activeBackend = AIBackendType::Gemini;
+    else {
+        m_activeBackend = AIBackendType::LocalGGUF;
+        statusMsg << " | LOCAL_ONLY_NO_OLLAMA=1";
     }
 
     const char* backendNames[] = { "LocalGGUF", "Ollama", "OpenAI", "Claude", "Gemini" };
     statusMsg << " | Active: " << backendNames[static_cast<int>(m_activeBackend)];
-
     m_backendManagerInitialized = true;
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::steady_clock::now() - startTime).count();
@@ -1255,7 +1379,7 @@ HeadlessResult HeadlessIDE::initLLMRouter() {
     auto startTime = std::chrono::steady_clock::now();
 
     // Configure routing table with backend priorities
-    // Priority: Ollama (local, fast) > LocalGGUF > Cloud backends
+    // Priority: LocalGGUF native > explicitly selected Ollama > cloud backends
     struct RouterEntry {
         AIBackendType type;
         const char* name;
@@ -1264,8 +1388,8 @@ HeadlessResult HeadlessIDE::initLLMRouter() {
     };
 
     RouterEntry routes[] = {
-        { AIBackendType::Ollama,    "Ollama",    1, m_backendManagerInitialized },
-        { AIBackendType::LocalGGUF, "LocalGGUF",  2, m_modelLoaded },
+        { AIBackendType::Ollama,    "Ollama",    2, m_activeBackend == AIBackendType::Ollama },
+        { AIBackendType::LocalGGUF, "LocalGGUF",  1, m_modelLoaded },
         { AIBackendType::OpenAI,    "OpenAI",    10, false },
         { AIBackendType::Claude,    "Claude",    11, false },
         { AIBackendType::Gemini,    "Gemini",    12, false },
@@ -1567,126 +1691,176 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
     m_outputSink->appendOutput(("Loading model: " + filepath).c_str(), OutputSeverity::Info);
     auto t0 = std::chrono::steady_clock::now();
 
-    // Phase 1: Resolve the model source — local, Ollama, HuggingFace, URL
-    RawrXD::ModelSourceResolver resolver;
-    RawrXD::ResolvedModelPath resolved = resolver.Resolve(filepath,
-        [this](const RawrXD::ModelDownloadProgress& p) {
-            if (p.total_bytes > 0) {
-                char buf[256];
-                snprintf(buf, sizeof(buf), "[Model] Downloading %.1f%% (%llu / %llu bytes)",
-                         p.progress_percent, (unsigned long long)p.downloaded_bytes,
-                         (unsigned long long)p.total_bytes);
-                m_outputSink->appendOutput(buf, OutputSeverity::Info);
-            }
-        });
-    
-    std::string localPath = resolved.success ? resolved.local_path : filepath;
-    
-    // Phase 2: Check for multi-shard model (Kimi K2 / Moonshot)
-    // If path is a directory with shard files, use Deep2ModelLoader
-    if (RawrXD::Deep2ModelLoader::IsShardedModel(localPath)) {
-        std::string deep2Error;
-        if (RawrXD::Deep2LoadModelForIDE(localPath, deep2Error)) {
-            auto result = RawrXD::Deep2ModelLoader::Load(localPath);
-            m_loadedModelPath = localPath;
-            m_loadedModelName = result.modelName;
-            m_modelLoaded = true;
-
-            std::ostringstream info;
-            info << "Model loaded (Deep2 sharded): " << m_loadedModelName << "\n"
-                 << "  Shards: " << result.shardCount << "\n"
-                 << "  Tensors: " << result.tensorCount << "\n"
-                 << "  MoE: " << (result.isMoE ? "yes" : "no") << "\n"
-                 << "  Total size: " << (result.totalFileBytes / (1024*1024*1024)) << " GB\n"
-                 << "  Streaming: enabled\n";
-            m_outputSink->appendOutput(info.str().c_str(), OutputSeverity::Info);
-            return true;
-        } else {
-            m_outputSink->appendOutput(("Deep2 shard load failed: " + deep2Error).c_str(), OutputSeverity::Error);
-            // Fall through to standard loader
-        }
+        // Phase 1: local-only product mode never resolves through Ollama/HF/URL.
+    RawrXD::ResolvedModelPath resolved;
+    if (RawrXD::HeadlessProduct::LocalOnly()) {
+        resolved.success = true;
+        resolved.local_path = filepath;
+        resolved.source_type = GGUFConstants::ModelSourceType::LOCAL_FILE;
+        resolved.original_input = filepath;
+    } else {
+        RawrXD::ModelSourceResolver resolver;
+        resolved = resolver.Resolve(filepath,
+            [this](const RawrXD::ModelDownloadProgress& p) {
+                if (p.total_bytes > 0) {
+                    char buf[256];
+                    snprintf(buf, sizeof(buf), "[Model] Downloading %.1f%% (%llu / %llu bytes)",
+                             p.progress_percent, (unsigned long long)p.downloaded_bytes,
+                             (unsigned long long)p.total_bytes);
+                    m_outputSink->appendOutput(buf, OutputSeverity::Info);
+                }
+            });
     }
 
-    // Phase 2b: Validate single file exists on disk
+    std::string localPath = resolved.success ? resolved.local_path : filepath;
+    
+    /* Product path: arm for ProductOpenSession/ProductRun. Skip StreamingGGUFLoader
+     * pre-parse — FIRST_CRASH_OWNER class AVs under headless oneshot after resolver. */
     DWORD attr = GetFileAttributesA(localPath.c_str());
+    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+        if (RawrXD::Deep2ModelLoader::IsShardedModel(localPath)) {
+            std::string deep2Error;
+            if (RawrXD::Deep2LoadModelForIDE(localPath, deep2Error)) {
+                auto result = RawrXD::Deep2ModelLoader::Load(localPath);
+                m_loadedModelPath = localPath;
+                m_loadedModelName = result.modelName;
+                m_modelLoaded = true;
+                m_outputSink->appendOutput(
+                    ("Model loaded (Deep2 sharded): " + m_loadedModelName).c_str(),
+                    OutputSeverity::Info);
+                return true;
+            }
+            m_outputSink->appendOutput(("Deep2 shard load failed: " + deep2Error).c_str(),
+                                       OutputSeverity::Error);
+            return false;
+        }
+    }
     if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
         std::string err = "Model file not found: " + localPath;
-        if (!resolved.success && !resolved.error_message.empty()) {
+        if (!resolved.success && !resolved.error_message.empty())
             err += " (" + resolved.error_message + ")";
-        }
         m_outputSink->appendOutput(err.c_str(), OutputSeverity::Error);
         return false;
     }
 
-    // Phase 3: Open with StreamingGGUFLoader and parse header + metadata
-    auto loader = std::make_unique<RawrXD::StreamingGGUFLoader>();
-    if (!loader->Open(localPath)) {
+    FILE* gf = nullptr;
+    if (fopen_s(&gf, localPath.c_str(), "rb") != 0 || !gf) {
         m_outputSink->appendOutput("Failed to open GGUF file", OutputSeverity::Error);
         return false;
     }
-
-    if (!loader->ParseHeader()) {
-        m_outputSink->appendOutput("Invalid GGUF header — file may be corrupt", OutputSeverity::Error);
-        loader->Close();
-        return false;
-    }
-
-    RawrXD::GGUFHeader hdr = loader->GetHeader();
-    // Validate magic: 0x46554747 = "GGUF" little-endian (G=0x47 G=0x47 U=0x55 F=0x46)
-    if (hdr.magic != 0x46554747u) {
+    uint32_t magic = 0;
+    const size_t nread = fread(&magic, 1, sizeof(magic), gf);
+    fclose(gf);
+    if (nread != sizeof(magic) || magic != 0x46554747u) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46554747)", hdr.magic);
+        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46554747)", magic);
         m_outputSink->appendOutput(buf, OutputSeverity::Error);
-        loader->Close();
         return false;
     }
 
-    if (!loader->ParseMetadata()) {
-        m_outputSink->appendOutput("Failed to parse GGUF metadata", OutputSeverity::Warning);
-        // Non-fatal — we can still load with header-only info
+    // LOCAL_ONLY: ProductOpenSession only. No CIE dual-arm — dual-arm left
+    // ProductDeep2Infer empty (400) and UnloadModel+reload_gen AV on large GGUF.
+    if (RawrXD::HeadlessProduct::LocalOnly()) {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_PRODUCT_MODEL", localPath.c_str());
+        _putenv_s("RAWRXD_HOST_DECODE", "1");
+        _putenv_s("DEEP2_MINIMAL_ENHANCE", "1");
+        _putenv_s("DEEP2_DUALSTICK_ARM", "0");
+        _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "1");
+#endif
+        /* Soft-reload: session already open after soft-unload → re-arm only.
+         * OpenBody still PATH_SWITCHes when the path differs. */
+        if (rawr::ProductSessionOpen()) {
+            std::fprintf(stderr, "R1_SOFT_RELOAD=1 rearm_no_reopen path=%s\n",
+                         localPath.c_str());
+            std::fflush(stderr);
+            if (!rawr::ProductOpenSession(localPath.c_str()) ||
+                !rawr::ProductSessionOpen()) {
+                std::fprintf(stderr, "HEADLESS_LOADMODEL=FAIL path=%s\n",
+                             localPath.c_str());
+                std::fprintf(stderr, "HEADLESS_READY=0\n");
+                std::fflush(stderr);
+                m_outputSink->appendOutput(
+                    "ProductOpenSession failed (soft-reload re-arm)",
+                    OutputSeverity::Error);
+                return false;
+            }
+        } else if (!rawr::ProductOpenSession(localPath.c_str()) ||
+                   !rawr::ProductSessionOpen()) {
+            std::fprintf(stderr, "HEADLESS_LOADMODEL=FAIL path=%s\n",
+                         localPath.c_str());
+            std::fprintf(stderr, "HEADLESS_READY=0\n");
+            std::fflush(stderr);
+            m_outputSink->appendOutput(
+                "ProductOpenSession failed (LocalOnly: no CIE dual-arm fallback)",
+                OutputSeverity::Error);
+            return false;
+        }
+        std::fprintf(stderr, "HEADLESS_LOADMODEL=OK path=%s\n",
+                     localPath.c_str());
+        /* READY only after ProductOpenSession tensors>0 — never HTTP alone. */
+        std::fprintf(stderr,
+                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS path=%s\n",
+                     localPath.c_str());
+        std::fflush(stderr);
+    } else {
+        std::string nativeLoadError;
+        if (!RawrXD::HeadlessProduct::LoadNativeModel(localPath, nativeLoadError)) {
+            m_outputSink->appendOutput(("Native model load failed: " + nativeLoadError).c_str(),
+                                       OutputSeverity::Error);
+            return false;
+        }
     }
 
-    RawrXD::GGUFMetadata meta = loader->GetMetadata();
-
-    // Phase 4: Build tensor index for streaming zone loading
-    loader->BuildTensorIndex();
-
-    // Store state
     m_loadedModelPath = localPath;
     size_t lastSlash = localPath.find_last_of("/\\");
-    m_loadedModelName = (lastSlash != std::string::npos) ? localPath.substr(lastSlash + 1) : localPath;
+    m_loadedModelName = (lastSlash != std::string::npos)
+                            ? localPath.substr(lastSlash + 1) : localPath;
     m_modelLoaded = true;
+#if defined(RAWR_HAS_NATIVE_E2E)
+    (void)RawrNative_RegisterRuntimeGgufPath(m_loadedModelName.c_str(), localPath.c_str());
+    if (m_loadedModelName.size() > 5) {
+        const char* ext = m_loadedModelName.c_str() + (m_loadedModelName.size() - 5);
+        if (_stricmp(ext, ".gguf") == 0) {
+            std::string stem = m_loadedModelName.substr(0, m_loadedModelName.size() - 5);
+            (void)RawrNative_RegisterRuntimeGgufPath(stem.c_str(), localPath.c_str());
+        }
+    }
+#endif
 
     auto t1 = std::chrono::steady_clock::now();
     int loadMs = static_cast<int>(
         std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count());
-
-    // Report model info
     std::ostringstream info;
-    info << "Model loaded: " << m_loadedModelName << "\n"
-         << "  GGUF version: " << hdr.version << "\n"
-         << "  Tensors: " << hdr.tensor_count << "\n"
-         << "  Metadata KVs: " << hdr.metadata_kv_count << "\n"
-         << "  Layers: " << meta.layer_count << "\n"
-         << "  Context length: " << meta.context_length << "\n"
-         << "  Embedding dim: " << meta.embedding_dim << "\n"
-         << "  Vocab size: " << meta.vocab_size << "\n"
-         << "  File size: " << (loader->GetFileSize() / (1024*1024)) << " MB\n"
+    info << "Model armed (ProductRun and/or CIE): " << m_loadedModelName << "\n"
+         << "  Path: " << m_loadedModelPath << "\n"
+         << "  GGUF magic: OK\n"
          << "  Load latency: " << loadMs << " ms\n";
-    if (resolved.success && resolved.source_type != GGUFConstants::ModelSourceType::LOCAL_FILE) {
-        info << "  Source: " << resolved.original_input << "\n";
-    }
     m_outputSink->appendOutput(info.str().c_str(), OutputSeverity::Info);
     m_outputSink->onStatusUpdate("model", m_loadedModelName.c_str());
-
-    loader->Close();
-    recordSimpleEvent("model_loaded");
+    m_outputSink->flush();
     return true;
 }
 
 bool HeadlessIDE::unloadModel() {
-    if (!m_modelLoaded) return false;
-    m_outputSink->appendOutput(("Unloading model: " + m_loadedModelName).c_str(), OutputSeverity::Info);
+    /* Hard unload for multi-GGUF survival: CloseSession frees tensors so the
+     * next /api/model/load OpenBody is a clean open (not sticky TinyLlama).
+     * Same-path reload still works via a fresh OpenSession. */
+    if (!m_modelLoaded) {
+        if (RawrXD::HeadlessProduct::LocalOnly()) {
+            rawr::ProductCloseSession();
+        }
+        (void)RawrXD::HeadlessProduct::UnloadNativeModel();
+        return true;
+    }
+    m_outputSink->appendOutput(("Unloading model: " + m_loadedModelName).c_str(),
+                               OutputSeverity::Info);
+    std::fprintf(stderr, "R1_HARD_UNLOAD=1 ProductCloseSession=1\n");
+    std::fflush(stderr);
+    if (RawrXD::HeadlessProduct::LocalOnly()) {
+        rawr::ProductCloseSession();
+    }
+    (void)RawrXD::HeadlessProduct::UnloadNativeModel();
     m_modelLoaded = false;
     m_loadedModelPath.clear();
     m_loadedModelName.clear();
@@ -1695,6 +1869,8 @@ bool HeadlessIDE::unloadModel() {
 }
 
 bool HeadlessIDE::isModelLoaded() const {
+    /* Product LocalOnly arms SharedProductRuntime via ProductOpenSession —
+     * CIE IsModelLoaded is a parallel arm and must not veto m_modelLoaded. */
     return m_modelLoaded;
 }
 
@@ -1718,6 +1894,10 @@ std::string HeadlessIDE::runInference(const std::string& prompt) {
 }
 
 std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, float temperature) {
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "RUN_INFER_ENTER\n"); fclose(f); }
+    }
     // LocalGGUF → ProductDeep2Infer opens session via alias/env; no pre-load.
     if (!m_modelLoaded && m_activeBackend != AIBackendType::LocalGGUF) {
         safeAppendOutput("No model loaded for inference", OutputSeverity::Error);
@@ -1726,24 +1906,18 @@ std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, 
     (void)maxTokens;
     (void)temperature;
 
-    safeOnAgentStarted("inference", prompt.c_str());
-
-    auto startTime = std::chrono::steady_clock::now();
-
-    // Route through backend manager → LLM router → inference engine
-    // This delegates to the same path as Win32IDE::routeInferenceRequest
-    std::string result = routeInferenceRequest(prompt);
-
-    auto endTime = std::chrono::steady_clock::now();
-    int durationMs = static_cast<int>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
-
-    if (!result.empty()) {
-        safeOnAgentCompleted("inference", result.c_str(), durationMs);
-    } else {
-        safeOnAgentFailed("inference", "Empty result from inference engine");
+    /* Skip agent callbacks — ConsoleOutputSink::onAgentStarted AVs under oneshot. */
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "RUN_INFER_ROUTE backend=%d\n", (int)m_activeBackend); fclose(f); }
     }
-
+    auto startTime = std::chrono::steady_clock::now();
+    std::string result = routeInferenceRequest(prompt);
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) { fprintf(f, "RUN_INFER_DONE bytes=%zu\n", result.size()); fclose(f); }
+    }
+    (void)startTime;
     return result;
 }
 
@@ -1759,28 +1933,20 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
     }
 
     if (m_activeBackend == AIBackendType::LocalGGUF) {
-        uint32_t maxTok =
-            m_config.maxTokens > 0 ? (uint32_t)m_config.maxTokens : 48u;
-        if (const char* e = std::getenv("RAWR_MAX_TOKENS")) {
-            unsigned v = (unsigned)std::atoi(e);
-            if (v > 0u) maxTok = v;
+        /* Prefer ProductDeep2Infer (same ProductRun as /api/generate). */
+        char outBuf[65536];
+        outBuf[0] = 0;
+        bool ok = rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf));
+        if (ok && outBuf[0]) {
+            if (tokenCallback)
+                tokenCallback(outBuf, std::strlen(outBuf));
+            safeOnStreamEnd("inference", true);
+            return;
         }
-        if (maxTok > 256u) maxTok = 256u;
-        std::string text;
-        const bool ok = rawr::ProductDeep2InferStream(
-            prompt.c_str(), maxTok,
-            [&](const std::string& piece) {
-                if (tokenCallback && !piece.empty())
-                    tokenCallback(piece.c_str(), piece.size());
-                if (!piece.empty())
-                    safeOnStreamingToken(piece.c_str(), piece.size(),
-                                         StreamTokenOrigin::Inference);
-                return true;
-            },
-            &text);
-        if (!ok)
-            safeAppendOutput("ProductDeep2InferStream failed", OutputSeverity::Error);
-        safeOnStreamEnd("inference", ok && !text.empty());
+        safeAppendOutput(
+            "LocalGGUF ProductDeep2Infer failed — FAILED_OWNER=ProductRun",
+            OutputSeverity::Error);
+        safeOnStreamEnd("inference", false);
         return;
     }
 
@@ -1794,6 +1960,10 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
 // Backend Switcher (Phase 8B)
 // ============================================================================
 bool HeadlessIDE::setActiveBackend(AIBackendType type) {
+    if (type == AIBackendType::Ollama && RawrXD::HeadlessProduct::LocalOnly()) {
+        m_outputSink->appendOutput("Ollama switch blocked by LOCAL_ONLY_NO_OLLAMA", OutputSeverity::Warning);
+        return false;
+    }
     const char* backendNames[] = { "LocalGGUF", "Ollama", "OpenAI", "Claude", "Gemini" };
     int idx = static_cast<int>(type);
     if (idx < 0 || idx >= static_cast<int>(AIBackendType::Count)) {
@@ -1848,6 +2018,9 @@ std::string HeadlessIDE::getBackendStatusString() const {
 }
 
 bool HeadlessIDE::probeBackendHealth(AIBackendType type) {
+    if (type == AIBackendType::Ollama && RawrXD::HeadlessProduct::LocalOnly()) {
+        return false;
+    }
     switch (type) {
         case AIBackendType::LocalGGUF:
             // ProductRun opens session via alias/env; no pre-load required.
@@ -1919,33 +2092,28 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
 
     auto t0 = std::chrono::steady_clock::now();
 
-    // LOCAL_ONLY: Ollama blocked; LocalGGUF = ProductDeep2Infer (ProductStreamerPrep).
+    // LOCAL_ONLY: Ollama blocked; LocalGGUF generate must match load authority.
     if (m_activeBackend == AIBackendType::Ollama) {
         return "[error] LOCAL_ONLY_NO_OLLAMA — use LocalGGUF / ProductRun.";
     }
     if (m_activeBackend == AIBackendType::LocalGGUF) {
-        /* Prefer full path — basename alone fails ProductOpenSession resolve. */
-        const char* model =
-            !m_loadedModelPath.empty() ? m_loadedModelPath.c_str()
-            : (!m_loadedModelName.empty() ? m_loadedModelName.c_str() : nullptr);
-        if (model && model[0]) {
-#ifdef _WIN32
-            _putenv_s("RAWRXD_PRODUCT_MODEL", model);
-#endif
-            (void)rawr::ProductOpenSession(model);
+        /* Prefer ProductDeep2 when session open; else CIE (LAA:NO large-GGUF arm). */
+        if (rawr::ProductSessionOpen()) {
+            char outBuf[65536];
+            outBuf[0] = 0;
+            if (rawr::ProductDeep2Infer(prompt.c_str(), outBuf, sizeof(outBuf)) && outBuf[0])
+                return std::string(outBuf);
         }
-        char buf[8192];
-        if (rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf)) && buf[0]) {
-            auto t1 = std::chrono::steady_clock::now();
-            double durationMs =
-                std::chrono::duration<double, std::milli>(t1 - t0).count();
-            char perf[128];
-            snprintf(perf, sizeof(perf),
-                     "[inference] ProductDeep2Infer ok, %.0f ms", durationMs);
-            m_outputSink->appendOutput(perf, OutputSeverity::Debug);
-            return std::string(buf);
+        if (RawrXD::HeadlessProduct::LocalOnly()) {
+            std::string nativeError;
+            std::string text = RawrXD::HeadlessProduct::GenerateNative(
+                prompt, m_config.maxTokens > 0 ? m_config.maxTokens : 48, nativeError);
+            if (!text.empty())
+                return text;
+            return std::string("[error] ProductRun+NativeCIE failed: ") +
+                   (nativeError.empty() ? "empty" : nativeError);
         }
-        return "[error] ProductDeep2Infer failed — FAILED_OWNER=ProductRun";
+        return "[error] ProductRun/Deep2 failed or empty";
     } else if (m_activeBackend == AIBackendType::OpenAI) {
         // Fix #15: Cloud backend - OpenAI
         const char* apiKey = std::getenv("OPENAI_API_KEY");
@@ -2056,14 +2224,10 @@ std::string HeadlessIDE::getAgentHistoryStats() const {
 }
 
 void HeadlessIDE::recordSimpleEvent(const std::string& description) {
+    /* NO-OP: AgentHistoryRecorder + ReplayJournal AVs under headless oneshot
+     * (dbgcore 0xC0000005) on the generate path. Count only. */
     m_agentEventCount++;
-    if (m_historyRecorder) {
-        m_historyRecorder->record("simple_event", "headless", "", description, "", "", true);
-    }
-    if (m_phase10Initialized) {
-        ReplayJournal::instance().recordMarker(description);
-    }
-    m_outputSink->appendOutput(("Event: " + description).c_str(), OutputSeverity::Debug);
+    (void)description;
 }
 
 // ============================================================================
@@ -2340,20 +2504,20 @@ void HeadlessIDE::serverLoop() {
         SOCKET client = accept(m_serverSocket, nullptr, nullptr);
         if (client == INVALID_SOCKET) continue;
 
-        // Handle client in a thread pool (Fix #6)
-        {
-            std::lock_guard<std::mutex> lk(m_threadPoolMutex);
-            if (m_threadPool.size() < m_maxThreads) {
-                m_threadPool.emplace_back([this, client]() {
-                    handleClient(client);
-                    closesocket(client);
-                });
-            } else {
-                // Reject if thread pool is full
-                std::string busy = "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
-                send(client, busy.c_str(), static_cast<int>(busy.size()), 0);
+        /* Detach + active-count. Storing joinable threads forever filled the
+         * pool after ~64 HTTP calls (R24 10-model matrix → mid-run 503). */
+        size_t active = m_activeClientThreads.load();
+        if (active < m_maxThreads) {
+            m_activeClientThreads.fetch_add(1);
+            std::thread([this, client]() {
+                handleClient(client);
                 closesocket(client);
-            }
+                m_activeClientThreads.fetch_sub(1);
+            }).detach();
+        } else {
+            std::string busy = "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+            send(client, busy.c_str(), static_cast<int>(busy.size()), 0);
+            closesocket(client);
         }
     }
 }
@@ -2432,11 +2596,7 @@ bool HeadlessIDE::authorizeHttpRequest(const HostedHttpRequest& request,
         return false;
     }
     if (request.method == "OPTIONS") {
-        if (requestHeader(request.headers, "origin").empty()) {
-            response.status = 403;
-            response.body = "{\"error\":\"origin_required\"}";
-            return false;
-        }
+        // G4: file:// / curl preflight must get 204 even without Origin.
         response.status = 204;
         response.body.clear();
         return true;
@@ -2518,18 +2678,18 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
     }
     motdResetOnGenerate();
     (void)Deep2::NvmeBunnyHopApi::ApplyFromGenerateBody(request.body);
-    if (!m_modelLoaded) {
-        // Keep MOTD per-message reset; do not crash the listener without a model.
-        response.status = 503;
-        response.body = "{\"error\":\"model_not_loaded\",\"message\":\"Load a model before generate/chat\"}";
-        return;
-    }
     std::string prompt = request.body;
-    bool stream = request.path == "/api/generate";
+    std::string modelField;
+    /* Match Win32IDE LocalServer: /api/generate defaults stream=true for Ollama
+     * wire shape, but inference itself is ProductDeep2Infer (non-stream ProductRun).
+     * Headless ProductDeep2InferStream was FIRST_CRASH_OWNER (0xC0000005). */
+    bool stream = (request.path == "/api/generate");
     uint64_t nativeReqId = 0;
     try {
         auto json = nlohmann::json::parse(request.body);
-        prompt = json.value("prompt", json.value("message", ""));
+        prompt = json.value("prompt", json.value("message",
+                     json.value("question", "")));
+        modelField = json.value("model", json.value("modelPath", ""));
         stream = json.value("stream", stream);
         if (request.path == "/v1/chat/completions") {
             auto messages = json.value("messages", nlohmann::json::array());
@@ -2554,46 +2714,83 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
         std::string::npos) {
         stream = true;
     }
+    std::fprintf(stderr,
+                 "GENERATE_REQ path=%s body_len=%zu prompt_len=%zu model_field_len=%zu "
+                 "loaded=%d local_only=%d backend=%d\n",
+                 request.path.c_str(), request.body.size(), prompt.size(),
+                 modelField.size(), m_modelLoaded ? 1 : 0,
+                 RawrXD::HeadlessProduct::LocalOnly() ? 1 : 0,
+                 (int)m_activeBackend);
+    std::fflush(stderr);
     if (prompt.empty() || prompt.size() > 256 * 1024) {
         response.status = 400;
-        response.body = "{\"error\":\"invalid_prompt\"}";
+        response.body =
+            "{\"error\":\"invalid_prompt\",\"prompt_len\":" +
+            std::to_string(prompt.size()) + ",\"body_len\":" +
+            std::to_string(request.body.size()) + "}";
 #if defined(RAWR_HAS_NATIVE_E2E)
         if (nativeReqId) RAWR_NATIVE_COMPLETE(nativeReqId, 0, -1);
 #endif
         return;
     }
+    /* Arm ProductRun when not already loaded via /api/model/load. */
+    if (m_activeBackend == AIBackendType::LocalGGUF) {
+        const char* model =
+            !m_loadedModelPath.empty() ? m_loadedModelPath.c_str()
+            : (!modelField.empty() ? modelField.c_str()
+               : (!m_config.modelPath.empty() ? m_config.modelPath.c_str()
+                  : (!m_loadedModelName.empty() ? m_loadedModelName.c_str()
+                     : nullptr)));
+        if (model && model[0]) {
+#ifdef _WIN32
+            _putenv_s("RAWRXD_PRODUCT_MODEL", model);
+#endif
+            if (!rawr::ProductSessionOpen()) {
+                if (!rawr::ProductOpenSession(model) ||
+                    !rawr::ProductSessionOpen()) {
+                    response.status = 503;
+                    response.body =
+                        "{\"error\":\"product_open_failed\","
+                        "\"message\":\"Deep2 tensors not resident\"}";
+                    return;
+                }
+            }
+            if (!m_modelLoaded) {
+                m_loadedModelPath = model;
+                size_t slash = m_loadedModelPath.find_last_of("/\\");
+                m_loadedModelName =
+                    (slash != std::string::npos)
+                        ? m_loadedModelPath.substr(slash + 1)
+                        : m_loadedModelPath;
+                m_modelLoaded = true;
+            }
+        }
+    }
+    if (!m_modelLoaded && m_activeBackend != AIBackendType::LocalGGUF) {
+        response.status = 503;
+        response.body =
+            "{\"error\":\"model_not_loaded\",\"message\":\"Load a model before generate/chat\"}";
+        return;
+    }
+    if (m_activeBackend == AIBackendType::LocalGGUF &&
+        RawrXD::HeadlessProduct::LocalOnly() && !m_modelLoaded) {
+        response.status = 503;
+        response.body =
+            "{\"error\":\"model_not_loaded\",\"message\":\"POST /api/model/load before /api/chat\"}";
+        return;
+    }
+    if (m_activeBackend == AIBackendType::LocalGGUF && m_loadedModelPath.empty() &&
+        modelField.empty() && m_config.modelPath.empty() &&
+        !RawrXD::HeadlessProduct::LocalOnly()) {
+        response.status = 503;
+        response.body =
+            "{\"error\":\"model_not_loaded\",\"message\":\"Set model/modelPath or load a GGUF\"}";
+        return;
+    }
     ScopedCloudConsent cloudConsent(
         requestHeader(request.headers, "x-rawrxd-cloud-consent") == "1");
-    if (request.path == "/api/generate/stream") {
-        streamGenerationResponse(clientFd, request, prompt, "legacy", response);
-#if defined(RAWR_HAS_NATIVE_E2E)
-        if (nativeReqId) {
-            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
-            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
-        }
-#endif
-        return;
-    }
-    if (stream && request.path == "/api/generate") {
-        streamGenerationResponse(clientFd, request, prompt, "ollama", response);
-#if defined(RAWR_HAS_NATIVE_E2E)
-        if (nativeReqId) {
-            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
-            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
-        }
-#endif
-        return;
-    }
-    if (stream && request.path == "/v1/chat/completions") {
-        streamGenerationResponse(clientFd, request, prompt, "openai", response);
-#if defined(RAWR_HAS_NATIVE_E2E)
-        if (nativeReqId) {
-            RAWR_NATIVE_FIRST_TOKEN(nativeReqId);
-            RAWR_NATIVE_COMPLETE(nativeReqId, 1, 0);
-        }
-#endif
-        return;
-    }
+    /* Product generate: always ProductDeep2Infer (same as Win32IDE /api/generate).
+     * Stream flag only selects Ollama/OpenAI wire framing of the completed text. */
     std::string result = routeInferenceRequest(prompt);
 #if defined(RAWR_HAS_NATIVE_E2E)
     if (nativeReqId) {
@@ -2601,12 +2798,81 @@ void HeadlessIDE::routeGenerationRequest(SOCKET clientFd,
         RAWR_NATIVE_COMPLETE(nativeReqId, result.empty() ? 0 : 1, 0);
     }
 #endif
+    if (result.empty() || result.rfind("[error]", 0) == 0) {
+        const bool nativeFail =
+            result.find("NativeCIE") != std::string::npos ||
+            RawrXD::HeadlessProduct::LocalOnly();
+        response.status = 400;
+        response.body =
+            std::string("{\"error\":\"") +
+            (nativeFail ? "NativeCIE/generate failed" : "ProductRun/Deep2 failed") +
+            "\",\"detail\":\"" + jsonEscape(result) + "\",\"model\":\"" +
+            jsonEscape(m_loadedModelName) + "\",\"prompt_len\":" +
+            std::to_string(prompt.size()) + ",\"owner\":\"" +
+            (nativeFail ? "NativeCIE" : "ProductRun") + "\"}";
+        std::fprintf(stderr, "GENERATE_FAIL owner=%s model=%s detail=%s\n",
+                     nativeFail ? "NativeCIE" : "ProductRun",
+                     m_loadedModelName.c_str(), result.c_str());
+        std::fflush(stderr);
+        return;
+    }
+    if (stream && (request.path == "/api/generate" ||
+                   request.path == "/api/generate/stream")) {
+        std::ostringstream head;
+        head << "HTTP/1.1 200 OK\r\nContent-Type: application/x-ndjson\r\n"
+             << "Cache-Control: no-cache\r\nConnection: close\r\n"
+             << "X-Content-Type-Options: nosniff\r\n";
+        if (!request.origin.empty())
+            head << "Access-Control-Allow-Origin: " << request.origin
+                 << "\r\nVary: Origin\r\n";
+        head << "\r\n";
+        std::string headers = head.str();
+        sendAllBytes(clientFd, headers.data(), headers.size());
+        std::string frame =
+            "{\"model\":\"rawrxd\",\"response\":\"" + jsonEscape(result) +
+            "\",\"done\":false}\n";
+        sendAllBytes(clientFd, frame.data(), frame.size());
+        const char* done = "{\"model\":\"rawrxd\",\"response\":\"\",\"done\":true}\n";
+        sendAllBytes(clientFd, done, std::strlen(done));
+        response.alreadySent = true;
+        response.status = 200;
+        return;
+    }
+    if (stream && request.path == "/v1/chat/completions") {
+        std::ostringstream head;
+        head << "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n"
+             << "Cache-Control: no-cache\r\nConnection: close\r\n"
+             << "X-Content-Type-Options: nosniff\r\n";
+        if (!request.origin.empty())
+            head << "Access-Control-Allow-Origin: " << request.origin
+                 << "\r\nVary: Origin\r\n";
+        head << "\r\n";
+        std::string headers = head.str();
+        sendAllBytes(clientFd, headers.data(), headers.size());
+        std::string frame =
+            "data: {\"id\":\"rawrxd\",\"object\":\"chat.completion.chunk\","
+            "\"choices\":[{\"index\":0,\"delta\":{\"content\":\"" +
+            jsonEscape(result) + "\"},\"finish_reason\":null}]}\n\n";
+        sendAllBytes(clientFd, frame.data(), frame.size());
+        const char* done =
+            "data: {\"id\":\"rawrxd\",\"object\":\"chat.completion.chunk\","
+            "\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n"
+            "data: [DONE]\n\n";
+        sendAllBytes(clientFd, done, std::strlen(done));
+        response.alreadySent = true;
+        response.status = 200;
+        return;
+    }
     if (request.path == "/v1/chat/completions") {
         response.body = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" +
             jsonEscape(result) + "\"}}]}";
+    } else if (request.path == "/ask") {
+        response.body = "{\"answer\":\"" + jsonEscape(result) + "\",\"done\":true}";
     } else {
-        response.body = "{\"response\":\"" + jsonEscape(result) + "\"}";
+        response.body = "{\"model\":\"rawrxd\",\"response\":\"" + jsonEscape(result) +
+            "\",\"done\":true}";
     }
+    response.status = 200;
 }
 
 void HeadlessIDE::routeHexMagRequest(const HostedHttpRequest& request,
@@ -2717,7 +2983,7 @@ void HeadlessIDE::routeNativeRequest(const HostedHttpRequest& request,
         std::string modelPath = request.body;
         try {
             auto json = nlohmann::json::parse(request.body);
-            modelPath = json.value("modelPath", json.value("model", json.value("name", "")));
+            modelPath = json.value("modelPath", json.value("path", json.value("model", json.value("name", ""))));
         } catch (...) {}
         std::string resolved;
         if (!canonicalWorkspacePath(modelPath, m_config.workingDir, resolved)) {
@@ -2887,6 +3153,17 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
     const std::string& path = request.path;
     if (request.method == "OPTIONS") return;
 
+    if (!RawrXD::HeadlessProduct::RuntimeReady()) {
+        if (isHealthRoute(path)) {
+            response.status = 200;
+            response.body = "{\"status\":\"warming\",\"mode\":\"headless\",\"ready\":false}";
+            return;
+        }
+        response.status = 503;
+        response.body = "{\"error\":\"runtime_warming\",\"ready\":false,\"retry\":true}";
+        return;
+    }
+
 #if defined(RAWR_HAS_NATIVE_E2E)
     {
         std::string nativeJson;
@@ -2901,9 +3178,12 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
 #endif
 
     if (isHealthRoute(path)) {
+        /* Include server+version so file:// probeWin32IDE recognizes RawrXD (G4-E). */
         response.body = "{\"status\":\"ok\",\"mode\":\"" +
             std::string(m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") +
-            "\",\"authConfigured\":" + (m_config.apiKey.empty() ? "false" : "true") +
+            "\",\"server\":\"RawrXD-HeadlessIDE\",\"backend\":\"rawrxd-win32ide\","
+            "\"version\":\"" + jsonEscape(VERSION) + "\","
+            "\"authConfigured\":" + (m_config.apiKey.empty() ? "false" : "true") +
             ",\"uptime\":" + std::to_string(getUptimeMs()) + "}";
     } else if (path == "/status" || path == "/api/status" || path == "/api/headless/status") {
         response.body = getFullStatusDump();
@@ -2930,6 +3210,8 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
     } else if ((path == "/api/hexmag/ask" || path == "/api/subagent" ||
                 path == "/api/chain") && request.method == "POST") {
         routeHexMagRequest(request, response);
+    } else if (routeGuiProductRequest(clientFd, request, response)) {
+        return;
     } else if (routeStatusRequest(request, response)) {
         return;
     } else if (path == "/api/github/webhook" && request.method == "POST") {
@@ -2937,8 +3219,12 @@ void HeadlessIDE::routeHttpRequest(SOCKET clientFd, const HostedHttpRequest& req
     } else if (path.find("/api/tool") == 0 || path.find("/run-tool") == 0 ||
                path.find("/api/file") == 0 || path.find("/api/command") == 0 ||
                path == "/api/read-file" || path == "/api/write-file" ||
-               path == "/api/list-dir" || path == "/api/cli") {
-        // G3_HEADLESS_API_TOOL_UNSTUB_001: reverse public_command_and_file_routes_disabled
+               path == "/api/list-dir" || path == "/api/cli" ||
+               path == "/api/delete-file" || path == "/api/rename-file" ||
+               path == "/api/copy-file" || path == "/api/move-file" ||
+               path == "/api/mkdir" || path == "/api/stat-file" ||
+               path == "/api/search-files" || path == "/api/list-directory") {
+        // G3_HEADLESS_API_TOOL_UNSTUB_001 + R04 file aliases
         routeToolAndFileRequest(request, response);
     } else {
         response.status = 404;
@@ -2960,6 +3246,8 @@ void HeadlessIDE::sendHttpResponse(SOCKET clientFd, const HostedHttpRequest& req
             "X-Hub-Signature-256\r\n";
     if (!request.origin.empty()) {
         wire << "Access-Control-Allow-Origin: " << request.origin << "\r\nVary: Origin\r\n";
+    } else {
+        wire << "Access-Control-Allow-Origin: *\r\n";
     }
     if (response.status == 401) wire << "WWW-Authenticate: Bearer realm=\"RawrXD\"\r\n";
     wire << "Connection: close\r\n\r\n" << response.body;
@@ -3153,6 +3441,11 @@ std::string HeadlessIDE::getFullStatusDump() const {
     oss << "{\n";
     oss << "  \"mode\": \"" <<
         (m_config.ingressMode == HeadlessIngressMode::Hosted ? "hosted" : "local") << "\",\n";
+    /* Beacon fields for gui probeWin32IDE (file:// G4-E). */
+    oss << "  \"server\": \"RawrXD-HeadlessIDE\",\n";
+    oss << "  \"backend\": \"rawrxd-win32ide\",\n";
+    oss << "  \"running\": " << (m_serverRunning.load() ? "true" : "false") << ",\n";
+    oss << "  \"pid\": " << GetCurrentProcessId() << ",\n";
     oss << "  \"version\": \"" << VERSION << "\",\n";
     oss << "  \"phase\": \"" << BUILD_PHASE << "\",\n";
     oss << "  \"session\": \"" << m_sessionId << "\",\n";
@@ -3215,10 +3508,18 @@ int HeadlessIDE::runServerMode() {
     }
 
     m_outputSink->appendOutput("Headless IDE running in server mode. Press Ctrl+C to stop.", OutputSeverity::Info);
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) {
+            fprintf(f, "R01_MAIN_INFER_LANE=1\n");
+            fclose(f);
+        }
+    }
 
-    // Block until shutdown
+    /* Drain ProductDeep2Infer jobs on this main thread (amdvlk-safe). */
     while (!m_shutdownRequested.load()) {
-        Sleep(100);
+        rawr::product_infer_lane::PumpWait(50);
+        rawr::product_infer_lane::Drain(4);
     }
 
     m_outputSink->appendOutput("Shutting down headless IDE...", OutputSeverity::Info);
@@ -3245,6 +3546,13 @@ int HeadlessIDE::runReplMode() {
 }
 
 int HeadlessIDE::runSingleShotMode() {
+    {
+        FILE* f = fopen("headless_server.log", "a");
+        if (f) {
+            fprintf(f, "SINGLESHOT_ENTER prompt_len=%zu\n", m_config.prompt.size());
+            fclose(f);
+        }
+    }
     if (m_config.prompt.empty()) {
         m_outputSink->appendOutput("No prompt specified (--prompt)", OutputSeverity::Error);
         return 1;

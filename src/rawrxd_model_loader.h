@@ -128,6 +128,8 @@ class RawrXDModelLoader
     using ModelLoadErrorCallback = std::function<void(const std::string& stage, const std::string& message)>;
 
     bool Load(const wchar_t* path, VkDevice device, VkPhysicalDevice physDevice);
+    /** Tear down mappings/residency so a later Load (or process multi-model switch) can reclaim VA. */
+    void Unload();
     const std::string& GetModelPath() const { return m_modelPath; }
     virtual float* GetTensor(const std::string& name);
     virtual bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);

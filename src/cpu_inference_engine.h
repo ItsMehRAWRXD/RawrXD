@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "gguf_loader.h"
 #include <chrono>
@@ -18,7 +18,7 @@
 namespace RawrXD
 {
 
-// Tensor data types — values match ggml_type from GGUF spec
+// Tensor data types â€” values match ggml_type from GGUF spec
 enum class TensorType
 {
     F32 = 0,    // 32-bit float
@@ -100,10 +100,10 @@ class CPUInferenceEngine : public InferenceEngine
     CPUInferenceEngine();
     ~CPUInferenceEngine() override;
 
-    /// Process-wide shared engine (Win32IDE + AgenticBridge + headless). Same underlying `RawrXDInference` as all
+    /// Process-wide shared engine (Win32IDE + AgenticBridge + headless). Same underlying RawrXDInference as all
     /// instances.
     [[nodiscard]] static std::shared_ptr<CPUInferenceEngine> GetSharedInstance();
-    /// @deprecated Prefer GetSharedInstance(); returns the same object as `.get()` on the shared pointer.
+    /// @deprecated Prefer GetSharedInstance(); returns the same object as .get() on the shared pointer.
     static CPUInferenceEngine* getInstance();
 
     // Context Management
@@ -111,7 +111,7 @@ class CPUInferenceEngine : public InferenceEngine
     size_t GetContextLimit() const { return m_contextLimit; }
     void RegisterMemoryPlugin(std::shared_ptr<RawrXD::IMemoryPlugin> plugin);
 
-    /** Layer forward heartbeat lines (e.g. "[STEP] …"). May be called from inference threads. */
+    /** Layer forward heartbeat lines (e.g. "[STEP] ...\"). May be called from inference threads. */
     void SetLayerProgressCallback(std::function<void(const std::string&)> cb);
     /** Win32IDE / Output panel: throttled loader + swarm stats during GenerateStreaming (~250 ms). */
     void SetSwarmTelemetryOutputCallback(std::function<void(const std::string&)> cb);
@@ -123,10 +123,12 @@ class CPUInferenceEngine : public InferenceEngine
     std::vector<int32_t> Tokenize(const std::string& text) override;
     std::string Detokenize(const std::vector<int32_t>& tokens) override;
 
-    // Model loading
+    // Model loading — single process authority (RawrXDInference via facade)
     bool LoadModel(const std::string& model_path) override;
+    bool UnloadModel();
     bool LoadWeights(const std::unordered_map<std::string, Tensor>& tensors);
     bool IsModelLoaded() const override { return m_modelLoaded; }
+    const std::string& GetLoadedModelPath() const { return m_loadedModelPath; }
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
 
     // Inference
@@ -184,7 +186,7 @@ class CPUInferenceEngine : public InferenceEngine
                                 std::function<void()> complete_callback,
                                 std::function<void(int32_t)> token_id_callback = nullptr);
 
-    // Titan assembly engine (RawrXD_Interconnect / static ASM) — toggable
+    // Titan assembly engine (RawrXD_Interconnect / static ASM) â€” toggable
     void SetUseTitanAssembly(bool use) { m_useTitanAssembly = use; }
     bool IsTitanAssemblyEnabled() const { return m_useTitanAssembly; }
 
@@ -215,7 +217,7 @@ class CPUInferenceEngine : public InferenceEngine
     friend class ExecutionScheduler;
 
     // ============================================================================
-    // B005 — KV Cache Instrumentation Counters (public API for verification)
+    // B005 â€” KV Cache Instrumentation Counters (public API for verification)
     // ============================================================================
     struct KVCacheCounters {
         uint64_t cache_create = 0;
@@ -298,6 +300,7 @@ class CPUInferenceEngine : public InferenceEngine
 
     // Model state
     bool m_modelLoaded = false;
+    std::string m_loadedModelPath;
     std::string m_lastLoadErrorMessage;
     int m_vocabSize = 0;
     int m_embeddingDim = 0;
@@ -399,11 +402,11 @@ void SiLU(float* data, int size);
 void LayerNorm(float* data, int size, float epsilon = 1e-5f);
 void RMSNorm(float* data, int size, float epsilon = 1e-5f);
 
-// Quantization support — basic types
+// Quantization support â€” basic types
 void DequantizeQ4_0(const uint8_t* quantized, float* output, int size);
 void DequantizeQ8_0(const uint8_t* quantized, float* output, int size);
 
-// Quantization support — K-quant super-blocks (256-element blocks)
+// Quantization support â€” K-quant super-blocks (256-element blocks)
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements);
 void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements);
 void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements);

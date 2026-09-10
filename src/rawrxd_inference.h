@@ -287,6 +287,8 @@ class RawrXDInference
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
         P1PRA_Witness("P1PRA_LOAD", "inference_init_enter");
 #endif
+        /* Multi-model / unload→reload: drop prior loader VA before re-arm. */
+        Shutdown();
         m_lastLoadErrorMessage.clear();
         loader.SetLoadErrorCallback([this](const std::string& stage, const std::string& message)
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
@@ -505,6 +507,21 @@ class RawrXDInference
         m_initialized = true;
         RawrXD::P1LoadCkpt::emit("INF_Initialize", "READY");
         return true;
+    }
+
+    void Shutdown()
+    {
+        if (!m_initialized && m_lastLoadErrorMessage.empty() && loader.GetModelPath().empty())
+            return;
+        printf("[RawrXD] Inference engine Shutdown (hard unload)\n");
+        fflush(stdout);
+        m_swarmScheduler.reset();
+        loader.Unload();
+        m_lastLogits.clear();
+        m_contextLimit = 0;
+        m_initialized = false;
+        m_lastLoadErrorMessage.clear();
+        RawrXD::P1LoadCkpt::emit("INF_Shutdown", "ok");
     }
 
     bool IsInitialized() const { return m_initialized; }

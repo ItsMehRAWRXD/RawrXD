@@ -36,7 +36,12 @@ VulkanCompute::VulkanCompute()
     , staging_memory_(nullptr)
     , staging_buffer_size_(0)
 {
-    std::memset(&device_info_, 0, sizeof(VulkanDeviceInfo));
+    /* VulkanDeviceInfo holds std::string — never memset (C0000374). */
+    device_info_ = VulkanDeviceInfo{};
+    device_info_.vendor_id = 0;
+    device_info_.device_id = 0;
+    device_info_.supports_compute = false;
+    device_info_.compute_queue_family = 0;
 }
 
 VulkanCompute::~VulkanCompute() {
@@ -956,6 +961,13 @@ bool VulkanCompute::CreateLogicalDevice() {
     }
     printf("[VulkanCompute] QUEUES compute=0 transfer=%u dual=%u\n",
            dual_queue_ ? 1u : 0u, dual_queue_ ? 1u : 0u);
+    /* FreeToken dual-stick rub: transfer queue ≠ compute when available.
+     * Public AMD MoE stream races WAW on reused buffers (#25195) —
+     * our path: fixed zone + ready=0→memcpy→ready=1 (generation cosign).
+     * HelpFrame N-way (>2) eats public dual-only ping-pong. */
+    if (dual_queue_)
+        printf("[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 "
+               "waw_ready_gate=1 helpframe_nway=4\n");
     return true;
 }
 

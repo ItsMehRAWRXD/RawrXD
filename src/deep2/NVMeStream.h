@@ -88,6 +88,8 @@ public:
     
     // Prefetch expert (warm cache before use)
     bool prefetchExpert(int layerId, int expertId);
+    // Dense HOST_DECODE: touch mapped GGUF pages at fileOffset (NVMe→RAM).
+    bool prefetchRange(uint64_t fileOffset, size_t sizeBytes);
     
     // Predict and prefetch next experts based on router output
     void prefetchPredicted(const int* expertIds, const float* weights, int count);

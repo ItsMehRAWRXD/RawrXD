@@ -7,6 +7,7 @@
 #include "lavapath/BatchD_UnifiedAsyncMove.hpp"
 #include "lavapath/ParseMibBudget.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "Deep2LivePath.hpp"
 #include "GPUForwardChildIgnoreHooks.hpp"
 #include <cmath>
 #include <cstdlib>
@@ -138,9 +139,6 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
 
-    /* DualStick owns work: stick → FreeToken zone → consumer → AdvanceOwnership. */
-    DualStickResolve(slot, layer);
-
     const auto& lw = modelWeights.layers[layer];
     const uint32_t H = (uint32_t)config.hiddenDim;
     const uint32_t nHeads = (uint32_t)modelWeights.numHeads;
@@ -160,6 +158,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.hostSyncBoundaries; // entry boundary only — not a mid-layer materialization
     }
 
+    const uint64_t liveSeq =
+        kvCache ? static_cast<uint64_t>(kvCache->currentLength()) : 0ull;
+    CycloneScheduler* liveCyc = LivePath_ActiveCyclone();
+    if (!liveCyc && cycloneEnabled_) liveCyc = cyclone_.get();
+    if (LivePath_Active())
+        LivePath_OnLayerStart(liveCyc, layer, liveSeq);
+
     const bool prefetch = vc->WeightPrefetchActive() ||
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
@@ -171,6 +176,11 @@ bool Deep2Engine::forwardLayerGpuResident(
         return false;
     };
     const float* attnW = EnsureF32(*this, lw.attnNorm, vulkanWeightF32_);
+    /* DualStick owns work: real weight bytes → FreeToken Overwrite (not null Resolve). */
+    if (attnW)
+        DualStickAcquire(slot, attnW, (size_t)H * sizeof(float), 0, layer, 0);
+    else
+        DualStickResolve(slot, layer);
     if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return fail();
     const float* ffnW = EnsureF32(*this, lw.ffnNorm, vulkanWeightF32_);
     if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return fail();
@@ -352,6 +362,8 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (downloadExit) {
         ++c.hostSyncBoundaries; // exit boundary only
     }
+    if (LivePath_Active())
+        LivePath_OnLayerEnd(liveCyc, layer, liveSeq, 0);
     return true;
 }
 

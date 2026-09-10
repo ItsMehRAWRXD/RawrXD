@@ -42,7 +42,7 @@ void EmitExec(FILE* f, uint32_t tokensCommitted, int rc) {
         "STALE_GENERATION_READS=%llu\n"
         "OVERWRITE_BEFORE_RETIRE=%llu\n"
         "DOUBLE_OWNER=%llu\n"
-        "FUTURE_CONSUMER_EXEC=1\n"
+        "FUTURE_CONSUMER_EXEC=%d\n"
         "FUTURE_CONSUMER_SPACE_GROWS=1\n"
         "LOGICAL_ADDRESS_SPACE_GROWS=1\n"
         "PHYSICAL_PAGE_POOL_GROWS=0\n"
@@ -69,6 +69,10 @@ void EmitExec(FILE* f, uint32_t tokensCommitted, int rc) {
         (unsigned long long)e.staleGenerationReads,
         (unsigned long long)e.overwriteBeforeRetire,
         (unsigned long long)e.doubleOwner,
+        (e.ownershipAdvances > 0 || e.physicalOverwrites > 0 ||
+         e.consumersRegistered > 0)
+            ? 1
+            : 0,
         (unsigned long long)freetoken::Pool().allocsAfterInit,
         tokensCommitted, rc);
 }

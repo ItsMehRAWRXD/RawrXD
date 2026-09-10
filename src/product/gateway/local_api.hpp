@@ -35,9 +35,12 @@ inline std::string LocalApiHandle(const std::string& method,
          path == "/api/generate")) {
         std::string prompt = JsonString(body, "prompt");
         if (prompt.empty()) prompt = JsonString(body, "content");
-        if (prompt.empty()) prompt = "hi";
+        if (prompt.empty())
+            return "{\"error\":\"invalid_prompt\"}";
         std::string model = JsonString(body, "model");
         if (model.empty()) model = "llama32";
+        if (!::rawr::ProductSessionOpen())
+            return "{\"error\":\"model_not_loaded\",\"message\":\"Load a model before generate/chat\"}";
         char buf[2048];
         buf[0] = 0;
         bool ok = ::rawr::ProductDeep2Infer(prompt.c_str(), buf, sizeof(buf));

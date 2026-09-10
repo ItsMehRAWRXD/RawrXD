@@ -253,6 +253,8 @@ if(RAWRXD_BUILD_CLI)
         src/win32app/cli_main_headless.cpp
         src/win32app/HeadlessIDE.cpp
         src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        src/win32app/HeadlessIDE_FileAliases.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
@@ -980,6 +982,47 @@ if(WIN32)
         kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
+
+    # G3_K3C_E2E_REAL_001 — k3c → ProductRuntime one-step (PROMOTE=0)
+    add_executable(smoke_k3c_e2e
+        evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
+    )
+    target_link_libraries(smoke_k3c_e2e PRIVATE InferenceEngine)
+    set_target_properties(smoke_k3c_e2e PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(smoke_k3c_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/lavapath
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(smoke_k3c_e2e PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(smoke_k3c_e2e PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(smoke_k3c_e2e PRIVATE RAWR_HAS_VULKAN=1)
+    else()
+        target_link_libraries(smoke_k3c_e2e PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET smoke_k3c_e2e APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET smoke_k3c_e2e APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET smoke_k3c_e2e APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(smoke_k3c_e2e PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured")
 
     # =====================================================================
     # P1: Minimal CPUInferenceEngine::LoadModel harness (TinyLlama / 0xC0000409)
@@ -1800,7 +1843,7 @@ include(cmake/IntentGuardrails.cmake)
 # MinGW builds skip ASM kernels and use C++ fallbacks.
 if(MSVC)
     enable_language(ASM_MASM)
-    set(CMAKE_ASM_MASM_FLAGS "/c /Zi /Zd /I${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
+    set(CMAKE_ASM_MASM_FLAGS "/c /Zi /Zd /I${CMAKE_CURRENT_SOURCE_DIR}/src/asm /I${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/lavapath")
     set(RAWR_HAS_MASM TRUE)
     # These two ASM modules currently rely on `rawrxd_win64.inc` sovereign resolver blocks
     # that do not assemble cleanly under ml64; Win32IDE uses C++ stubs for now.
@@ -4903,8 +4946,17 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/FutureConsumer_Emit.cpp
     src/deep2/lavapath/FutureConsumer_EmitExec.cpp
     src/deep2/lavapath/FutureConsumer_Advance.cpp
+    src/deep2/lavapath/FutureConsumer_Chair.cpp
     src/deep2/lavapath/FutureConsumer_Register.cpp
     src/deep2/lavapath/FutureConsumer_Notes.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
+    src/deep2/lavapath/KN_O3KKEN.asm
+    src/deep2/lavapath/k3c_token.cpp
     src/deep2/lavapath/FreeTokenMicroZone.cpp
     src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
     src/vulkan_fwd_resident.cpp
@@ -5374,6 +5426,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/main_win32.cpp
         src/win32app/HeadlessIDE.cpp
         src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        src/win32app/HeadlessIDE_FileAliases.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/agent/quantum_autonomous_todo_system.cpp
         src/agent/quantum_multi_model_agent_cycling.cpp
@@ -7197,7 +7251,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     )
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
-    add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
+    # ADDR32 MASM objs cannot link with /LARGEADDRESSAWARE (required for amdvlk
+    # ProductOpenSession — R01). Drop them from IDE; feature flags already gate calls.
+    set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
+    list(REMOVE_ITEM _WIN32IDE_ASM
+        src/asm/RawrXD_Telemetry_Kernel.asm
+        src/asm/Code_Pattern_Reconstructor.asm)
+    add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -7280,8 +7340,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(MSVC)
         set(_IDE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.map")
         set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
+        # Telemetry/Pattern ADDR32 objs removed from IDE ASM; LAA:YES required.
+        # R25 ProductOpen: /LARGEADDRESSAWARE (VA >> 2GB for mmap streaming).
+        # HOST_DECODE still forced when GPU/ICD unsafe (ProductStreamerPrep).
         target_link_options(RawrXD-Win32IDE PRIVATE
-            /LARGEADDRESSAWARE:NO
+            /LARGEADDRESSAWARE
             /DEBUG:FULL
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
@@ -7296,6 +7359,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
             VERBATIM
         )
+        # R25: keep PE LAA:YES. Do not clear LAA � 2GB VA breaks mmap streaming.
+        # Certify after link: dumpbin /headers | findstr Large
+        # GPU/ICD remains deferred; DualStick not reopened.
     endif()
 
     # Runtime feature gates for this target's source graph.
@@ -7646,7 +7712,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_link_options(RawrXD-Win32IDE PRIVATE "-Wl,--stack,4194304")
     endif()
-    # RawrCodex.asm uses ADDR32 relocations ΓÇö /LARGEADDRESSAWARE:NO already set in MAP block above
+    # LAA:NO retained (ADDR32 via InferenceEngine.lib). ProductStreamerPrep
+    # forces HOST_DECODE when !ProcessIsLargeAddressAware (amdvlk-safe).
 
     # Final link-line hygiene: remove duplicate library/object entries that
     # otherwise trigger LNK4042 warnings for repeated prebuilt MASM objects.

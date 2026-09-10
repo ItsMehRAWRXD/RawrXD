@@ -1,0 +1,14 @@
+STATUS=200
+{
+  "mode": "local",
+  "version": "20.0.0-headless-enterprise",
+  "phase": "Phase 20 Enterprise",
+  "session": "headless-1789013654874",
+  "uptime_ms": 326463,
+  "model_loaded": false,
+  "model_name": "",
+  "server_running": true,
+  "subsystems": {
+    "winsock": true,
+    "backend_manager": true,
+ 

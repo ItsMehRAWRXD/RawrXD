@@ -48,15 +48,18 @@ DualStickWindowPlan PlanDualStickWindows(const DeviceManagerSnapshot& snap,
 
 void EmitDualStickWindowReceipt(FILE* f, const DualStickWindowPlan& p) {
     if (!f) f = stderr;
+    if (p.stickCount >= 1) DualStickState().planned = 1;
     std::fprintf(f,
         "DUAL_STICK_STREAM=1\nSTREAM_BUDGET_BYTES=%llu\nSTICK_COUNT=%u\n"
         "STICK0_WINDOW_BYTES=%llu\nSTICK1_WINDOW_BYTES=%llu\n"
         "STICK0_NAME=%s\nSTICK1_NAME=%s\nNO_TRUNCATE_NEEDLE=%d\n"
-        "WINDOW_ON_FILL=MINT_NEXT_STICK\nPHYSICAL_PAGE_POOL_GROWS=0\n",
+        "WINDOW_ON_FILL=MINT_NEXT_STICK\nPHYSICAL_PAGE_POOL_GROWS=0\n"
+        "DUALSTICK_PLANNED=%d\n",
         (unsigned long long)p.totalBudgetBytes, p.stickCount,
         (unsigned long long)p.stick0Bytes, (unsigned long long)p.stick1Bytes,
         p.stick0Name[0] ? p.stick0Name : "-",
-        p.stick1Name[0] ? p.stick1Name : "-", p.noTruncateNeedle);
+        p.stick1Name[0] ? p.stick1Name : "-", p.noTruncateNeedle,
+        DualStickState().planned);
 }
 
 void ArmDualStickNoTruncate(const DualStickWindowPlan& p) {
@@ -79,23 +82,9 @@ void ArmDualStickNoTruncate(const DualStickWindowPlan& p) {
         SetEnv("DEEP2_STICK1_BUDGET_MIB", b1);
     }
     DualStickState().armed = 1;
-    /* Prove ownership path is live: stick → FreeToken → AdvanceOwnership. */
-    DualStickResolve(0, 0);
-    if (p.stickCount > 1) DualStickResolve(1, 0);
-}
-
-void EmitDualStickMechanics(FILE* f) {
-    if (!f) f = stderr;
-    DualStickExec& e = DualStickState();
-    const int exec = (e.acquires > 0 && e.bytesWorked > 0) ? 1 : 0;
-    std::fprintf(f,
-        "DUAL_STICK_ARMED=%d\nDUAL_STICK_EXEC=%d\n"
-        "DUAL_STICK_ACQUIRES=%llu\nDUAL_STICK_CONSUMERS=%llu\n"
-        "DUAL_STICK_OWNERSHIP_ADVANCES=%llu\nDUAL_STICK_BYTES_WORKED=%llu\n",
-        e.armed, exec, (unsigned long long)e.acquires,
-        (unsigned long long)e.consumers,
-        (unsigned long long)e.ownershipAdvances,
-        (unsigned long long)e.bytesWorked);
+    /* Arm path only — does not claim DUALSTICK_RUNTIME_USED. */
+    DualStickArmWarmup(0, 0);
+    if (p.stickCount > 1) DualStickArmWarmup(1, 0);
 }
 
 } // namespace Deep2

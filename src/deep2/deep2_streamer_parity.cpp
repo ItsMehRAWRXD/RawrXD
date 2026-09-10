@@ -1,6 +1,5 @@
 /* deep2_streamer_parity.cpp — OLLAMA_PARITY_STREAMER_001 main (≤99). */
 #include "StreamerParity_Harness.hpp"
-#include "OllamaParityReceipt.hpp"
 #include "Deep2DeviceManager.hpp"
 #include "lavapath/ParseMibBudget.hpp"
 #include "lavapath/StreamerMechanicsReceipt.hpp"
@@ -42,7 +41,13 @@ int main(int argc, char** argv) {
         fprintf(stderr, "IMPORT_CERT_REQUIRED=1 PROMOTE=0\n");
         return 5;
     }
+
+    Deep2::DualStickEnvSnapRequested();
+    const char* armDs0 = std::getenv("DEEP2_DUALSTICK_ARM");
+    Deep2::DualStickMarkRequested(!(armDs0 && armDs0[0] == '0'));
+
     if (!StreamerArmSpeedEnv()) return 4;
+    Deep2::DualStickEnvSnapAfterHarness();
 
     Deep2::DeviceManagerSnapshot snap{};
     Deep2::MibParseResult bud =
@@ -51,11 +56,22 @@ int main(int argc, char** argv) {
         (void)Deep2::Deep2Device_ApplyPolicy(snap);
         Deep2::EmitGpuEnumReceipt(stderr, snap);
         Deep2::EmitGpuEnumReceipt(stdout, snap);
-        Deep2::DualStickWindowPlan wp =
-            Deep2::PlanDualStickWindows(snap, bud.bytes);
-        Deep2::ArmDualStickNoTruncate(wp);
-        Deep2::EmitDualStickWindowReceipt(stderr, wp);
-        Deep2::EmitDualStickWindowReceipt(stdout, wp);
+        const char* armDs = std::getenv("DEEP2_DUALSTICK_ARM");
+        const int skipDs = (armDs && armDs[0] == '0');
+        if (!skipDs) {
+            Deep2::DualStickWindowPlan wp =
+                Deep2::PlanDualStickWindows(snap, bud.bytes);
+            Deep2::ArmDualStickNoTruncate(wp);
+            Deep2::DualStickEnvSnapAfterDualstick();
+            Deep2::EmitDualStickWindowReceipt(stderr, wp);
+            Deep2::EmitDualStickWindowReceipt(stdout, wp);
+        } else {
+            fprintf(stderr, "DUALSTICK_ARM_SKIP=1\n");
+            fprintf(stdout, "DUALSTICK_ARM_SKIP=1\n");
+            Deep2::DualStickEnvSnapAfterDualstick();
+        }
+        Deep2::EmitDualStickEnvAuthority(stderr);
+        Deep2::EmitDualStickEnvAuthority(stdout);
         Deep2::EmitDualStickMechanics(stderr);
         Deep2::EmitDualStickMechanics(stdout);
     }
@@ -75,26 +91,6 @@ int main(int argc, char** argv) {
     fflush(stdout);
     if (obs.rc == 0 && !ok) obs.rc = 1;
 
-    Deep2::future::EmitExec(stderr, obs.tokensEmitted, obs.rc);
-    Deep2::future::EmitExec(stdout, obs.tokensEmitted, obs.rc);
-    fprintf(stderr, "STREAMER_TPS=%.3f TTFT_MS=%.3f TOKENS=%u PATH=%s\n",
-            obs.decodeTps, obs.ttftMs, obs.tokensEmitted,
-            obs.modelPath ? obs.modelPath : model);
-    fprintf(stderr, "HOST_DECODE=%s\nOLLAMA_HTTP=0\n",
-            std::getenv("RAWRXD_HOST_DECODE")
-                ? std::getenv("RAWRXD_HOST_DECODE") : "0");
-
-    Deep2::EmitFreeTokenMechanics(stderr);
-    Deep2::EmitFreeTokenMechanics(stdout);
-    Deep2::freetoken::EmitWitness(stderr);
-    Deep2::EmitDualStickMechanics(stderr);
-    Deep2::EmitDualStickMechanics(stdout);
-    Deep2::EmitOllamaParityReceipt(stderr, obs, model);
-    Deep2::EmitOllamaParityReceipt(stdout, obs, model);
-    const int runtimePass = (obs.tokensEmitted >= 15 && obs.rc == 0) ? 1 : 0;
-    Deep2::EmitDisposition(stderr, runtimePass, maxTok, obs.tokensEmitted,
-                           obs.rc);
-    Deep2::EmitDisposition(stdout, runtimePass, maxTok, obs.tokensEmitted,
-                           obs.rc);
-    return runtimePass ? 0 : 1;
+    StreamerEmitPostGenerate(obs, model, maxTok);
+    return StreamerRuntimePass(obs) ? 0 : 1;
 }

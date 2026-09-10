@@ -112,4 +112,23 @@ inline void EmitDisposition(FILE* f, int runtimePass, uint32_t maxTok,
                  0);
 }
 
+/* Survived generation: open + tokens + FutureConsumer + clean return. */
+inline void EmitGenerationSurvive(FILE* f, int modelOpen, uint32_t tokens,
+                                  int returnedNormally, int rc,
+                                  int futureConsumerExec) {
+    if (!f) f = stderr;
+    const int av = 0; /* receipt reached ⇒ process did not AV before emit */
+    const int survived = (modelOpen && tokens > 0 && returnedNormally &&
+                          rc == 0 && futureConsumerExec && av == 0)
+                             ? 1
+                             : 0;
+    std::fprintf(f,
+                 "MODEL_OPEN=%s\nTOKENS_COMMITTED=%u\n"
+                 "FUTURE_CONSUMER_EXEC=%d\n"
+                 "GENERATION_RETURNED_NORMALLY=%d\n"
+                 "GENERATION_SURVIVED=%d\nACCESS_VIOLATION=%d\nPROMOTE=0\n",
+                 modelOpen ? "PASS" : "FAIL", tokens, futureConsumerExec,
+                 returnedNormally, survived, av);
+}
+
 } // namespace Deep2

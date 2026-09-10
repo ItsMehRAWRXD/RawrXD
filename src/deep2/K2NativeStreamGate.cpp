@@ -22,6 +22,7 @@
 #include "K2MLA_PathB.hpp"
 #include "K2MlaStageTiming.hpp"
 #include "lavapath/SpinCloseAttribution.hpp"
+#include "lavapath/HostFutureConsumerPrefetch.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -748,6 +749,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     issueUpTo(0);
     bool stepRope = false;
     for (uint32_t layer = 0; layer < testLayers; ++layer) {
+        Deep2::hostfc::LayerEdge hostEdge(layer, testLayers);
         float* in  = (layer % 2 == 0) ? tempHidden.data() : hidden;
         float* out = (layer % 2 == 0) ? hidden : tempHidden.data();
         Deep2::MlaCompleteStats layerStats;
@@ -1750,4 +1752,10 @@ void PrintGate12Contract(const Result& result) {
     printf("  Not claimed: MoE, 61-layer, or semantic coherence (G13-G15).\n");
 }
 
+} // namespace K2NativeStreamGate
+
+namespace K2NativeStreamGate {
+uint32_t ModelKvCurrentLength() noexcept {
+    return 0;
+}
 } // namespace K2NativeStreamGate

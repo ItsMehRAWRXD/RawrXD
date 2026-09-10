@@ -1,6 +1,7 @@
 // FinalNormAcquire.hpp — fulfill output_norm before host RMSNorm consume.
 #pragma once
 #include "Deep2Engine.h"
+#include "lavapath/HeapWitness.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -102,6 +103,7 @@ inline View Acquire(WeightTensor& wt, size_t n, float* src, float* dst,
 inline bool Apply(float* dst, const float* src, const View& v, size_t n,
                   float eps) {
     if (!dst || !src || !v.weight || !v.fulfilled || n == 0) return false;
+    Deep2::heap::EmitOk(stderr, "FINAL_NORM_BEFORE");
     double sumSq = 0.0;
     for (size_t i = 0; i < n; ++i) sumSq += (double)src[i] * (double)src[i];
     const double meanSq = sumSq / (double)n;
@@ -123,6 +125,7 @@ inline bool Apply(float* dst, const float* src, const View& v, size_t n,
     for (size_t i = 0; i < n; ++i) after += (double)dst[i] * (double)dst[i];
     std::fprintf(stderr, "FINAL_NORM_DST_0=%.9g\nFINAL_NORM_AFTER_L2=%.9g\n",
                  (double)dst[0], std::sqrt(after));
+    Deep2::heap::EmitOk(stderr, "FINAL_NORM_AFTER");
     std::fflush(stderr);
     return std::sqrt(after) > 1e-12;
 }

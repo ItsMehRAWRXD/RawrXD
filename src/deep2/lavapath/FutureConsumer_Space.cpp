@@ -47,6 +47,11 @@ bool InitFromPhysicalPool() {
         pages[i].bytes = zp.zones[i].capacity;
         pages[i].current = pages[i].next = 0;
         pages[i].generation = 0;
+        pages[i].readyGeneration = 0;
+        pages[i].resourceId = (ResourceId)i;
+        pages[i].waitOwner = 0;
+        pages[i].continuation = nullptr;
+        pages[i].continuationCtx = nullptr;
     }
     detail::ConsumerN() = 0;
     detail::LogicalCursor() = 0;

@@ -1,0 +1,8 @@
+PROMPT=hi
+MODEL=g:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_LOADED=1
+BYTES=29
+RESPONSE_BEGIN
+
+Sure, here are some examples
+RESPONSE_END

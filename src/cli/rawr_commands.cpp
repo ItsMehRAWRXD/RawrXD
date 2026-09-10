@@ -10,10 +10,10 @@
 #include "rawr_product_serve.hpp"
 #include "rawr_local_api.hpp"
 #include "terminal/rawr_terminal_commands.hpp"
-#include "../deep2/Deep2SemanticSafeMode.hpp"
 #include "../deep2/Deep2GenerateStream.hpp"
 #include "../deep2/RawrRunSession.hpp"
 #include "../deep2/lavapath/ProductRun.hpp"
+#include "../deep2/lavapath/ProductStreamerPrep.hpp"
 #include <cstdlib>
 #include <string>
 
@@ -52,7 +52,7 @@ void PrintUsage() {
 
 int CmdRun(const CliArgs& a) {
     if (a.model.empty()) { PrintUsage(); return ExitCode::Usage; }
-    Deep2::Deep2SemanticSafeModeApply();
+    if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
     std::string prompt = a.prompt.empty() ? "Hello" : a.prompt;
     uint32_t maxTok = a.maxTokens ? a.maxTokens : 64u;
     if (const char* e = std::getenv("RAWRXD_RUN_MAX_TOKENS")) {
@@ -90,7 +90,7 @@ int CmdRun(const CliArgs& a) {
 
 int CmdChat(const CliArgs& a) {
     if (a.model.empty()) { PrintUsage(); return ExitCode::Usage; }
-    Deep2::Deep2SemanticSafeModeApply();
+    if (!Deep2::ProductStreamerPrep()) return ExitCode::Runtime;
     SessionState s{};
     s.id = NewSessionId();
     s.modelAlias = a.model;

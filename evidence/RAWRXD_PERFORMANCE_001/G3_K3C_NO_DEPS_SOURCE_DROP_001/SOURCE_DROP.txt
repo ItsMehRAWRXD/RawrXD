@@ -1,0 +1,43 @@
+G3_K3C_NO_DEPS_SOURCE_DROP_001
+================================
+
+Purpose
+-------
+Package a self-contained **source-only, no-deps STUB** artifact that preserves
+the TOKEN <-> K3-C public loop *shape*. Under this drop, k3c is identity echo
+only — no storage / memory / GPU / layer / expert mechanics execute.
+
+One-liner (shape — stub body is fail-closed echo)
+-------------------------------------------------------------------
+  for(;;) token = k3c(token);
+
+Live product bind (not this drop): src/deep2/lavapath/k3c_token.cpp
+  → ProductRuntime generate; gate G3_K3C_E2E_REAL_001.
+
+Scope
+-----
+ADD (this gate only):
+  drop/k3c.hpp
+  drop/k3c.cpp
+  tools/smoke_k3c_no_deps.cpp
+  tools/smoke_k3c_no_deps.ps1
+  SOURCE_DROP.txt  WIRE.md  RECEIPT.txt  CLASSIFICATION.txt  KEY_LINES.txt
+
+DO NOT TOUCH
+------------
+  DualStick / R01 / InferenceEngine.lib certification
+  FutureConsumer chair+gen sealed gate
+  APPLY_HOST_DECODE (remains 0)
+  Win32IDE full rebuild requirement
+  kimi-k3-in-c runtime adoption
+
+k3c bind (this drop)
+--------------------
+  K3C_BIND=FAIL_CLOSED_STUB
+  HostDecode / ProductRun / FutureConsumer: NOT linked.
+  Stub echoes token; PRODUCT_DECODE_PASS=0.
+
+Smoke
+-----
+  powershell -ExecutionPolicy Bypass -File tools\smoke_k3c_no_deps.ps1
+  Expected: SMOKE_COMPILE=PASS SMOKE=PASS PRODUCT_DECODE_PASS=0 PROMOTE=0

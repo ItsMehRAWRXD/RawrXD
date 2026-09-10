@@ -1,0 +1,4 @@
+HEXMAG_BACKEND=MASM
+HEXMAG_LINKED=1
+HEXMAG_INIT=0
+GENERATE_REQ path=/api/generate body_len=41 prompt_len=41 model_field_len=0 loaded=0 local_only=1 backend=0

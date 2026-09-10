@@ -1,0 +1,13 @@
+GATE=G3_STREAMER_AGENTIC_TOOL_001
+PURPOSE=HeadlessIDE /api/tool reverse + MOTD gate E2E (child of IDE parity)
+PARENT=G3_STREAMER_AGENTIC_IDE_PARITY_001
+ASOF=2026-09-10T00:35
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
+
+PRIOR_RESIDUAL=public_command_and_file_routes_disabled 403 — REVERSED in HeadlessIDE.cpp → routeToolAndFileRequest
+PROOF_SEE=G3_STREAMER_AGENTIC_IDE_PARITY_001/RECEIPT.txt final_*.txt
+post_motd_list.txt / post_motd_cli.txt (earlier same binary) STATUS=200
+
+VERDICT=TOOL_API_UNBLOCKED

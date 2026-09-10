@@ -162,8 +162,17 @@ inline bool HasFusedQkvAttention(const LayerWeightsT& lw) noexcept {
 
 template <typename LayerWeightsT>
 inline bool HasFfn(const LayerWeightsT& lw) noexcept {
-    return WtLive(lw.wDown) && WtLive(lw.wUp) &&
-           (WtLive(lw.wGate) || (lw.wDown.cols > 0 && lw.wUp.rows == 2 * lw.wDown.cols));
+    if (!WtLive(lw.wDown) || !WtLive(lw.wUp)) return false;
+    if (WtLive(lw.wGate)) return true;
+    /* Plain MLP (nemotron FFN layers): up+down, no gate. */
+    if (lw.wUp.rows == lw.wDown.cols || lw.wUp.cols == lw.wDown.rows)
+        return true;
+    return (lw.wDown.cols > 0 && lw.wUp.rows == 2 * lw.wDown.cols);
+}
+
+template <typename LayerWeightsT>
+inline bool HasSsm(const LayerWeightsT& lw) noexcept {
+    return lw.hasSSM;
 }
 
 template <typename LayerWeightsT>
@@ -176,7 +185,8 @@ inline const char* LayerTopology(const LayerWeightsT& lw) noexcept {
     if (HasSplitAttention(lw)) return "split_attention";
     if (HasFusedQkvAttention(lw)) return "fused_qkv_attention";
     if (IsProjectorBlock(lw)) return "projector_block";
-    if (HasFfn(lw)) return "ffn_only_or_pending_attention";
+    if (HasSsm(lw)) return "ssm";
+    if (HasFfn(lw)) return "ffn_only";
     return "unknown";
 }
 
@@ -190,22 +200,29 @@ inline bool GeometryReady(const ModelWeightsT& mw, std::string* why = nullptr) {
     if (mw.hiddenDim == 0) return fail("NO_HIDDEN");
     if (mw.layers.empty()) return fail("NO_LAYERS");
 
-    std::size_t attnOk = 0, proj = 0, ffnOk = 0, checked = 0;
+    std::size_t attnOk = 0, proj = 0, ffnOk = 0, ssmOk = 0, checked = 0;
     for (std::size_t i = 0; i < mw.layers.size(); ++i) {
         const auto& lw = mw.layers[i];
         const bool attn = LayerAttentionAuthoritySatisfied(lw);
         const bool ffn = HasFfn(lw);
+        const bool ssm = HasSsm(lw);
         if (attn) ++attnOk;
         if (IsProjectorBlock(lw)) ++proj;
         if (ffn) ++ffnOk;
+        if (ssm) ++ssmOk;
         ++checked;
-        if (!attn) return fail("NO_LAYER_ATTENTION_OR_PROJECTOR_TOPOLOGY");
-        if (!ffn) return fail("NO_LAYER_FFN_TOPOLOGY");
+        if (!(attn || ffn || ssm))
+            return fail("NO_LAYER_ATTENTION_OR_PROJECTOR_TOPOLOGY");
     }
+    if (attnOk == 0 && ssmOk == 0)
+        return fail("NO_LAYER_ATTENTION_OR_PROJECTOR_TOPOLOGY");
     if (why) {
-        *why = proj ? "GEOM_READY_NON_UNIFORM_PROJECTOR" : "GEOM_READY_UNIFORM";
+        if (ssmOk)
+            *why = "GEOM_READY_HYBRID_SSM";
+        else
+            *why = proj ? "GEOM_READY_NON_UNIFORM_PROJECTOR" : "GEOM_READY_UNIFORM";
     }
-    return checked > 0 && attnOk == checked && ffnOk == checked;
+    return checked > 0;
 }
 
 template <typename ModelWeightsT>
@@ -213,18 +230,20 @@ inline void EmitSummary(const ModelWeightsT& mw, FILE* f = stderr) {
     if (!f) return;
     std::string why;
     const bool ok = GeometryReady(mw, &why);
-    std::size_t split = 0, fused = 0, proj = 0, unknown = 0, ffn = 0;
+    std::size_t split = 0, fused = 0, proj = 0, ssm = 0, ffnOnly = 0, unknown = 0, ffn = 0;
     for (std::size_t i = 0; i < mw.layers.size(); ++i) {
         const auto& lw = mw.layers[i];
         if (HasSplitAttention(lw)) ++split;
         else if (HasFusedQkvAttention(lw)) ++fused;
         else if (IsProjectorBlock(lw)) ++proj;
+        else if (HasSsm(lw)) ++ssm;
+        else if (HasFfn(lw)) ++ffnOnly;
         else ++unknown;
         if (HasFfn(lw)) ++ffn;
     }
     std::fprintf(f,
-        "GEMMA4_LAYER_TOPOLOGY_BIND ok=%d why=%s layers=%zu split=%zu fused_qkv=%zu projector=%zu ffn=%zu unknown=%zu\n",
-        ok ? 1 : 0, why.c_str(), mw.layers.size(), split, fused, proj, ffn, unknown);
+        "GEMMA4_LAYER_TOPOLOGY_BIND ok=%d why=%s layers=%zu split=%zu fused_qkv=%zu projector=%zu ssm=%zu ffn_only=%zu ffn=%zu unknown=%zu\n",
+        ok ? 1 : 0, why.c_str(), mw.layers.size(), split, fused, proj, ssm, ffnOnly, ffn, unknown);
     std::fflush(f);
 }
 

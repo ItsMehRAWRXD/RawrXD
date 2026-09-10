@@ -32,6 +32,14 @@ inline const char* IgnoredOwner(Run r) noexcept {
     }
 }
 
+inline const char* IgnoreEnvFor(Run r) noexcept {
+    static const char* e[] = {
+        "NONE","QKV","DEVICE_ATTN","FFN","QUANT_GEMV",
+        "ATTN_OUTPUT_PROJ","KV_UPDATE","SYNC_WAIT","READBACK_D2H"};
+    int i = (int)r;
+    return (i >= 0 && i < (int)Run::N) ? e[i] : "NONE";
+}
+
 inline Run ParseRun() noexcept {
     const char* e = std::getenv("DEEP2_GPU_ISO_RUN");
     if (!e || !e[0]) return Run::G0;

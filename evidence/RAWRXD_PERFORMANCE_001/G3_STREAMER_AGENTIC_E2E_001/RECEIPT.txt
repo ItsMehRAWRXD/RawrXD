@@ -1,0 +1,59 @@
+GATE=G3_STREAMER_AGENTIC_E2E_001
+PURPOSE=Max continue-ensure E2E: streamer/headless agentic readiness on 127.0.0.1:11435
+ASOF=2026-09-10T07:09:48.8728555-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+DUALSTICK_REOPENED=0
+OLLAMA_CONTACT=0
+agenticMode=false
+NO_CODE_CHANGE=1
+
+## Binary
+EXE=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_run.exe
+SRC=C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap.exe
+EXE_SHA256=ABDEEC83618F539AD200869584258BB8585B6738DFC14D07C65C6CBD183DFC71
+EXE_SHA16=ABDEEC83618F539A
+PE_LAA=YES
+HOST_DECODE=1
+MATCHES_PHASE0_SURVIVAL=1
+
+## Live HTTP (real curl; TinyLlama)
+PORT=11435
+CAPABILITIES_HTTP=200
+LOAD_HTTP=200
+GENERATE_HTTP=200
+UNLOAD_HTTP=200
+TOKENS=15
+PROCESS_SURVIVED=1
+RUNTIME_REACHED=1
+TOKEN_SURVIVED=1
+
+## /api/tool + MOTD (schema {tool,args})
+PRE_MOTD_TOOL_HTTP=403 PRE_MOTD_OK=1 (motd_required)
+MOTD_READ_HTTP=200 MOTD_OK=1 (read_motd → PassiveRoleNotRoleplay)
+POST_MOTD_TOOL_HTTP=200 POST_OK=1 (StreamerAgenticContinueEnsure listed)
+CLI_HTTP=200 CLI_OK=1 (TOOL_LOOP_OK)
+TOOL_MOTD_RUNTIME=1
+
+## Gaps closed this worker
+- Harness-only: wrong tool JSON ({name,arguments}) → correct {tool,args}; curl for 403 body
+- No product source rebuild required; agentic surface already on sealed r1cap EXE
+
+## Fiction audit
+FICTION_AUTHORITY=FICTION_REMOVED=1 (pre-existing; not reopened)
+FICTION_STRIP_001=PASS (pre-existing)
+R25_PRODUCTOPEN_SESSION_001=left as NOT_RUN=1 PASS=0 (honesty; not rewritten)
+HOST_FC_AUTHORITY=PRODUCT_PASS=0 honesty retained (separate edge)
+
+## Remaining FIRST owners (fail-closed; not TinyLlama agentic blockers)
+B=GGUF_METADATA@ROPE_BASE
+E=SSM-CERT-001
+J=ONE_LOCAL_MODEL_AUTHORITY@TEMPLATE
+K–Q=0/4+3 SKIP (unchanged)
+kimi-k3-in-c=DEFERRED NO_ADOPT (unchanged)
+
+## Verdict
+PRODUCT_PASS=1
+VERDICT=PASS
+STREAMER_AGENTIC_READY=1 (passive product path; opt-in agenticMode untouched)
+ARTIFACTS=capabilities.json load.json generate.json unload.json pre_motd_tool.json motd_read.json post_motd_tool.json post_motd_cli.json KEY_LINES.txt

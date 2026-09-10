@@ -205,14 +205,11 @@ void LivePath_OnLayerStart(CycloneScheduler* cyclone, uint32_t layer, uint64_t s
     if (LivePath_MechOn(LP_MECH_STREAM) || LivePath_MechOn(LP_MECH_ELASTIC))
         LivePath_MechLayer(layer);
     if (!LivePath_MechOn(LP_MECH_CYCLONE) || !cyclone) return;
-    // Stream path: K2LiveCache owns prefetch. Skip Elastic queue (wrong names
-    // → 112 demands / 0 promotions = pure wall cost on B2).
-    const bool streamNative =
-        LivePath_MechOn(LP_MECH_ELASTIC) || LivePath_MechOn(LP_MECH_STREAM);
-    if (streamNative ||
-        (Fused_Enabled() && !LivePath_FusedSpeculativeEnabled())) {
-        if (Fused_Enabled() && !LivePath_FusedSpeculativeEnabled())
-            Fused_NoteDroppedPrefetch();
+    /* Fused speculative-off: drop cyclone elastic queue (wall-only demands).
+     * STREAM no longer vetoes OnLayerStart — reverse bunnyhop hops via
+     * MechArm/MechToken; DualStick PASSIVE elastic leaves cyclone.elastic_=null. */
+    if (Fused_Enabled() && !LivePath_FusedSpeculativeEnabled()) {
+        Fused_NoteDroppedPrefetch();
         g_ctr.cycloneLayerStarts++;
         (void)layer;
         (void)seq;

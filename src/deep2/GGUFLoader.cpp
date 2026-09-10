@@ -751,9 +751,59 @@ bool GGUFLoader::ValidateFile(const char* filepath, uint64_t& outFileSize, uint6
     return true;
 }
 
-// ============================================================================
-// Main Load Function
-// ============================================================================
+#ifdef _WIN32
+struct GgufMmapKeep {
+    HANDLE file = nullptr;
+    HANDLE map = nullptr;
+    void* view = nullptr;
+    ~GgufMmapKeep() {
+        if (view) UnmapViewOfFile(view);
+        if (map) CloseHandle(map);
+        if (file) CloseHandle(file);
+    }
+};
+#endif
+
+static bool BindMmapTensors(GGUFLoadResult& result, const char* filepath,
+                            uint64_t dataOffset, uint64_t fileSize) {
+#ifdef _WIN32
+    if (!filepath || !filepath[0] || !fileSize) return false;
+    HANDLE fh = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ, nullptr,
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (fh == INVALID_HANDLE_VALUE) return false;
+    HANDLE mh = CreateFileMappingA(fh, nullptr, PAGE_READONLY, 0, 0, nullptr);
+    if (!mh) { CloseHandle(fh); return false; }
+    void* view = MapViewOfFile(mh, FILE_MAP_READ, 0, 0, 0);
+    if (!view) { CloseHandle(mh); CloseHandle(fh); return false; }
+    const uint8_t* base = static_cast<const uint8_t*>(view);
+    for (const auto& t : result.tensors) {
+        if (!t.size) continue;
+        if (t.offset > (UINT64_MAX - dataOffset)) {
+            UnmapViewOfFile(view); CloseHandle(mh); CloseHandle(fh); return false;
+        }
+        const uint64_t abs = dataOffset + t.offset;
+        if (abs >= fileSize || t.size > fileSize - abs) {
+            UnmapViewOfFile(view); CloseHandle(mh); CloseHandle(fh); return false;
+        }
+    }
+    auto* keep = new GgufMmapKeep();
+    keep->file = fh; keep->map = mh; keep->view = view;
+    for (auto& t : result.tensors) {
+        if (!t.size) { t.data = nullptr; continue; }
+        t.data = const_cast<uint8_t*>(base + dataOffset + t.offset);
+    }
+    result.mmapBound = 1;
+    result.mmapKeep = std::shared_ptr<void>(keep, [](void* p) {
+        delete static_cast<GgufMmapKeep*>(p);
+    });
+    printf("[GGUF] GGUF_MMAP_BIND=1 tensors=%zu fileBytes=%llu\n",
+           result.tensors.size(), (unsigned long long)fileSize);
+    return true;
+#else
+    (void)result; (void)filepath; (void)dataOffset; (void)fileSize;
+    return false;
+#endif
+}
 
 GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& options) {
     GGUFLoadResult result;
@@ -810,9 +860,14 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
         return result;
     }
 
-    // Load tensor data with file size validation
+    // mmap compute is opt-in. Default MapView + AVX-512 aligned GEMV AVd
+    // mid-prefill on TinyLlama (G3_PRODUCT_OPEN_STREAMABLE_001 LIVE_GEN).
     if (options.loadTensors) {
-        if (!LoadTensorData(fp, result.tensors, dataOffset, fileSize)) {
+        int mapped = 0;
+        const char* want = std::getenv("RAWRXD_GGUF_MMAP");
+        if (options.mmap && want && want[0] == '1')
+            mapped = BindMmapTensors(result, filepath, dataOffset, fileSize) ? 1 : 0;
+        if (!mapped && !LoadTensorData(fp, result.tensors, dataOffset, fileSize)) {
             snprintf(result.error, sizeof(result.error), "Failed to load tensor data");
             fclose(fp);
             return result;
@@ -1151,16 +1206,16 @@ bool GGUFLoader::ValidateFile(const char* filepath, char* error) {
 // ============================================================================
 void GGUFLoader::FreeTensorData(void* data) {
     if (!data) return;
-    
 #ifdef _WIN32
-    // Try VirtualFree first (for VirtualAlloc'd memory)
-    MEMORY_BASIC_INFORMATION mbi;
-    if (VirtualQuery(data, &mbi, sizeof(mbi)) && mbi.AllocationBase == data) {
-        VirtualFree(data, 0, MEM_RELEASE);
-    } else {
-        // Fallback to _aligned_free
-        _aligned_free(data);
+    MEMORY_BASIC_INFORMATION mbi{};
+    if (VirtualQuery(data, &mbi, sizeof(mbi))) {
+        if (mbi.Type == MEM_MAPPED) return; /* mmap view — mmapKeep owns it */
+        if (mbi.AllocationBase == data) {
+            VirtualFree(data, 0, MEM_RELEASE);
+            return;
+        }
     }
+    _aligned_free(data);
 #else
     free(data);
 #endif

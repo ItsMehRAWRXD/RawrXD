@@ -37,6 +37,7 @@ void RunUiMenuE2eProbe(Win32IDE* ide);
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
 #include "../streaming_gguf_loader.h"
+#include "../product/gateway/product_deep2_infer_lane.hpp"
 #include "IDEConfig.h"
 #include "Win32IDE_HexMagMessages.h"
 #include "IDELogger.h"
@@ -2370,11 +2371,20 @@ int Win32IDE::runMessageLoop()
     static bool s_tracedFirstIdle = false;
     try
     {
-        // GetMessage returns 0 on WM_QUIT, -1 on error. Treat both as loop end
-        // so a post-destroy error cannot spin forever.
-        BOOL gm;
-        while ((gm = GetMessage(&msg, nullptr, 0, 0)) > 0)
+        /* HTTP /api/generate runs on client threads; ProductRun/Vulkan stays on this lane. */
+        rawr::product_infer_lane::BindCurrentThreadAsLane();
+        // Peek+MsgWait so Drain can run while idle (GetMessage alone starves the lane).
+        BOOL gm = 1;
+        for (;;)
         {
+            rawr::product_infer_lane::Drain(4);
+            MsgWaitForMultipleObjects(0, nullptr, FALSE, 50, QS_ALLINPUT);
+            if (!PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+                continue;
+            if (msg.message == WM_QUIT) {
+                gm = 0;
+                break;
+            }
 #ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
             if (msg.message == WM_APP + 209) {
                 // #region agent log

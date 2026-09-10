@@ -85,6 +85,11 @@ struct AgentExecutor {
                                    "\\evidence\\RAWRXD_AGENT_LOOP_E2E_001",
                                "*.txt", report);
         broker.modelDecision("inspect->patch");
+        // auto=read: complete read-only after inspect (fail-closed at patch, not FAIL loop).
+        if (!broker.policy.mayPatch()) {
+            a.phase = AgentPhase::Report;
+            return;
+        }
         a.phase = AgentPhase::Patch;
     }
 
@@ -149,11 +154,12 @@ struct AgentExecutor {
         wit.unbrokeredFs = BrokerStats().unbrokeredFs.load();
         wit.unbrokeredProc = BrokerStats().unbrokeredProc.load();
         wit.fallbackResponse = 0;
+        const bool readOnlyPass =
+            wit.filesRead && !broker.policy.mayPatch();
+        const bool fullPass =
+            wit.patchApplied && wit.buildCompleted && wit.testExecuted;
         ToolWriteEvidenceSeal("AGENT_LOOP_E2E",
-                              wit.patchApplied && wit.buildCompleted &&
-                                      wit.testExecuted
-                                  ? "PASS"
-                                  : "FAIL");
+                              (readOnlyPass || fullPass) ? "PASS" : "FAIL");
         a.phase = AgentPhase::Done;
         a.done = true;
     }

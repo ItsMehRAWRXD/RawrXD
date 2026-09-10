@@ -2,6 +2,9 @@
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
 #include <atomic>
+#include "../core/model_name_util.h"
+#define RAWR_HAS_NATIVE_E2E 1
+#include "../../native_e2e/runtime_gguf_disk_resolve.h"
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
 #include "../../include/PathResolver.h"
 #include "../../include/rawrxd_version.h"
@@ -6499,12 +6502,30 @@ void Win32IDE::setLoadedModelPath(const std::string& path)
 {
     std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
     m_loadedModelPath = path;
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (!path.empty()) {
+        std::string name = RawrXD::DeriveModelNameFromPath(path);
+        (void)RawrNative_RegisterRuntimeGgufPath(name.c_str(), path.c_str());
+        if (name.size() + 5 < 512) {
+            std::string withExt = name + ".gguf";
+            (void)RawrNative_RegisterRuntimeGgufPath(withExt.c_str(), path.c_str());
+        }
+    }
+#endif
 }
 
 void Win32IDE::setLoadedModelPath(std::string&& path)
 {
     std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
     m_loadedModelPath = std::move(path);
+#if defined(RAWR_HAS_NATIVE_E2E)
+    if (!m_loadedModelPath.empty()) {
+        const std::string& p = m_loadedModelPath;
+        std::string name = RawrXD::DeriveModelNameFromPath(p);
+        (void)RawrNative_RegisterRuntimeGgufPath(name.c_str(), p.c_str());
+        (void)RawrNative_RegisterRuntimeGgufPath((name + ".gguf").c_str(), p.c_str());
+    }
+#endif
 }
 
 std::string Win32IDE::getLoadedModelPath() const

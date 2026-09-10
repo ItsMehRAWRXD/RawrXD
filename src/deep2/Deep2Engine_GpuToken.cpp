@@ -4,6 +4,9 @@
 #include "K2NativeStreamGate.hpp"
 #include "lavapath/OneByOneIgnoreLadder.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
+#include "lavapath/GpuForwardChainGateEmit.hpp"
+#include "GPUForwardChildIgnore.hpp"
+#include "lavapath/OneByOneIgnoreLadder.hpp"
 #include "DecodeBlockerAttribution.hpp"
 #include <cmath>
 #include <cstdio>
@@ -22,6 +25,16 @@ bool Deep2Engine::gpuResidentDecodeEnabled() const {
 
 bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     if (!hidden || !gpuResidentDecodeEnabled()) return false;
+    {
+        static thread_local bool gateBegun = false;
+        if (!gateBegun) {
+            rawr::gpu_iso::Begin();
+            /* Never arm DEEP2_GPU_FORWARD_IGNORE for G1–G7 (no fabricated skip). */
+            _putenv_s("DEEP2_GPU_FORWARD_IGNORE", "NONE");
+            RawrXD::Deep2::GpuForwardIgnore::BeginRun();
+            gateBegun = true;
+        }
+    }
     const uint64_t layersBefore = gpuFwd_.forwardLayers;
     const uint64_t plannedBefore = gpuFwd_.plannedCpuLayerCalls;
     bool ok = false;
@@ -153,6 +166,13 @@ void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
     }
     Deep2GpuForward_Emit(f, gpuFwd_, vulkanGemvFail_);
     rawr::gpu_iso::Emit(f ? f : stderr);
+    RawrXD::Deep2::GpuForwardIgnore::EmitReceipt(f ? f : stderr);
+    {
+        const double fwdMs = rawr::iso_ladder::A().forwardNs / 1e6;
+        FILE* o = f ? f : stderr;
+        rawr::gpu_chain_gate::Emit(o, fwdMs, gpuFwd_.forwardLayers);
+        if (o != stdout) rawr::gpu_chain_gate::Emit(stdout, fwdMs, gpuFwd_.forwardLayers);
+    }
     auto emit = [&](FILE* o) {
         if (!o) return;
         fprintf(o, "LIVE_DECODE_COMMITTED=%u\n", gpuFwdCommitted_ ? 1u : 0u);

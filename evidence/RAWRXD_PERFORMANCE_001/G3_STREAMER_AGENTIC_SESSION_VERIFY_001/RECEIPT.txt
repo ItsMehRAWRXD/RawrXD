@@ -1,0 +1,53 @@
+GATE=G3_STREAMER_AGENTIC_SESSION_VERIFY_001
+PURPOSE=Verify-only: streamer product path + agentic/MOTD coherence after parent re-trigger
+PARENT=G3_STREAMER_AGENTIC_001
+ASOF=2026-09-09T23:47
+PROMOTE=0
+TIP_CLIMB=HOLD
+MODE=D
+NEXT_SPEND=NONE
+SPEND=0
+CONFIRMED=1
+RESTORE_EMPTY=1
+
+VERIFIED=
+  StreamerArmSpeedEnv defaults: LIVE_POLICY=MANUAL LIVE_MECH=trampoline,cyclone,elastic,stream
+    LIVE_PATH=1 GEN_ALG=lukewarm MARS=1 NVME_REVERSE_BUNNYHOP=1 ALLOW_ELASTIC=1
+  ProductStreamerPrep → ArmSpeed+DualStick+FreeToken+FutureConsumer (not SemanticSafe)
+  product_deep2_infer.cpp + rawr CmdRun/CmdChat use ProductStreamerPrep
+  deep2_streamer_parity.exe SHA256=3356C51DDD3A535B3C50FBD1447B66506610E13B053B257C89DE5A739EF4EB1F (match G3)
+  rawr.exe SHA256=B382AE17236DC1453AE1400492BA2CDA10700CCE409B090CC638769874466AD6 (match G3)
+  G3 proofs still on disk: DUALSTICK_TRUE_RUNTIME=1 FREETOKEN_EXEC=1 FUTURE_CONSUMER=1
+    NVME_HOPS=17 GENERATION_SURVIVED=1 PRODUCT_STREAMER_PREP=1
+    rawr agent auto=full → AGENT_LOOP=PASS AGENT_LOOP_E2E=PASS
+  NVMe Reverse Bunnyhop UI present in ide_chatbot_standalone.html + engine.js state helpers
+  MOTD triple gate coherent:
+    Cursor hooks g:\~dev\.cursor\hooks\motd-*.ps1 (preToolUse failClosed)
+    EngineAPI.executeTool client gate + sendMessage reset
+    Win32IDE /api/tool server gate + MotdReset on /api/generate + /v1/chat/completions
+  RawrXD-Win32IDE.exe (build-fd 2026-09-10 00:28) SHA256=E5AFCDDF45B8FD5BA00BDE61F9FFAFA381D23A6061F604F6446DFE8B4F479C0D
+    strings: motd_required + PassiveRoleNotRoleplay; public_command_and_file_routes_disabled ABSENT
+  PassiveRoleNotRoleplay.md preserved; gate keys on path needle only
+
+FIXED_THIS_SESSION=
+  HeadlessIDE /api/tool unblock sealed — G3_HEADLESS_API_TOOL_UNBLOCK_001 (live E2E on :11949)
+
+RESIDUALS=
+  HeadlessIDE /api/tool UNBLOCKED — CHILD G3_HEADLESS_API_TOOL_UNBLOCK_001 (VERDICT=HEADLESS_API_TOOL_UNBLOCKED; prior UNSTUB E2E_PASS=1)
+  Relative MOTD / IDE tool parity CLEARED — CHILD G3_IDE_PARITY_AGENTIC_E2E_001 (E2E_PASS=1; no --dir required)
+  rawr auto=read: SOURCE hardened (read-only Report); binary relink pending InferenceEngine.lib
+  TIP_CLIMB/rainbow/TPS chase UNPLAN (ArmSpeed authorize lane CLOSED)
+  PRODUCT_DISPOSITION short-token wall on 16-tok smoke — expected, not a product gap
+
+CHILD=G3_HEADLESS_API_TOOL_UNBLOCK_001
+PRIOR_CHILD=G3_HEADLESS_API_TOOL_UNSTUB_001
+CHILD2=G3_IDE_PARITY_AGENTIC_E2E_001
+
+VERDICT=STREAMER_AGENTIC_READY
+  Product streamer complete on DualStick/LIVE_MECH/reverse bunnyhop path.
+  Agentic ready via rawr agent + ProductDeep2 + HeadlessIDE /api/tool after MOTD read
+  (relative MOTD no longer requires --dir on live EXE).
+
+CHILD=G3_MOTD_PER_TURN_ENFORCEMENT_001
+MOTD_PER_TURN_ENFORCEMENT=SOURCE_COMPLETE+E2E_PASS (sealed 2026-09-10; EXE SHA256=F682234A0F3E883C5839CD1F3D911C32F10CE8733CC84E061ADAE7EB785E5AD6)
+  STILL_VETO cleared for ACK-on-fail / relative MOTD / ask reset / direct route bypass

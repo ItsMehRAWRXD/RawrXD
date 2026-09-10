@@ -10782,8 +10782,8 @@
       backend: {
         online: false,
         url: 'http://127.0.0.1:11435',
-        ollamaDirectUrl: 'http://127.0.0.1:11434',  // Fallback: talk to Ollama directly
-        directMode: false,                           // true = bypassing serve.py, talking to Ollama
+        ollamaDirectUrl: 'http://127.0.0.1:11435',  // LOCAL_ONLY_NO_OLLAMA — same as RawrXD Headless
+        directMode: false,                           // true = direct to configured local server (not Ollama)
         lastPing: 0,
         serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct'
         fileProtocol: _isFileProtocol,               // true when opened via file:///
@@ -10879,7 +10879,7 @@
         sessionId: 0,           // monotonic session counter
         waitingForIde: false,   // true when auto-retry polling for IDE
         autoRetryTimer: null,   // setInterval handle for auto-retry
-        scanPorts: [11435, 8080, 3000, 5000, 11434], // ports to scan for IDE
+        scanPorts: [11435, 8080, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
         lastScanResults: [],    // [{port, status, backend}] from last scan
       },
       // VSIX Extension Manager state
@@ -12184,7 +12184,7 @@
         if (titlebar) titlebar.classList.add('active');
         var brandSpan = document.querySelector('.header-bar .brand span:last-child');
         if (brandSpan) brandSpan.textContent = '// STANDALONE v3.4';
-        logDebug('\uD83D\uDCC2 Opened from file:// — standalone mode active. Backend at localhost:11435/11434.', 'info');
+        logDebug('\uD83D\uDCC2 Opened from file:// — standalone mode active. Backend at localhost:11435 (RawrXD).', 'info');
         // Warn if localStorage is blocked in file:// mode
         if (!_localStorageAvailable) {
           logDebug('\u26A0\uFE0F localStorage blocked by browser in file:// mode — conversations won\u2019t persist across reloads', 'warn');
@@ -12303,14 +12303,13 @@
     function addWelcomeMessage() {
       var modeNote = _isFileProtocol
         ? '\n\n\u{1F4C2} **Standalone Mode** — Opened directly from file system. ' +
-        'Connecting to `localhost:11435` (Win32 IDE) or `localhost:11434` (Ollama).\n' +
+        'Connecting to `localhost:11435` (RawrXD Headless / Win32 IDE).\n' +
         'Drag & drop files to attach them, or paste file paths in your message.' +
         (_win32IdeDetected ? '\n\u{1F5A5} **Win32 IDE detected** — use the `OPEN IDE` button in the titlebar to switch.' : '')
         : '';
       addMessage('system',
         '**RawrXD Agentic Interface v3.4** — Standalone + Win32IDE Bridge\n\n' +
-        'This interface connects to the RawrXD backend on `localhost:11435`. ' +
-        'If the Python server isn\u2019t running, it will automatically fall back to Ollama directly on `localhost:11434`.' + modeNote + '\n\n' +
+        'This interface connects to the RawrXD backend on `localhost:11435` (LOCAL_ONLY_NO_OLLAMA — no :11434 fallback).' + modeNote + '\n\n' +
         '**What\'s new in v3.4:**\n' +
         '\u2022 **Standalone Mode** — Works fully from `file:///` with no server needed for UI\n' +
         '\u2022 **Win32 IDE Bridge** — Auto-detects running IDE, syncs state, hotpatch control\n' +
@@ -13629,8 +13628,8 @@
         }
       }
 
-      // ---- Try 2: Direct Ollama fallback (default :11434) ----
-      if (State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
+      // ---- Try 2: DISABLED — LOCAL_ONLY_NO_OLLAMA (no :11434 Ollama fallback) ----
+      if (false && State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
         try {
           logDebug('Trying direct Ollama at ' + State.backend.ollamaDirectUrl + '...', 'info');
           const t0 = performance.now();
@@ -13910,7 +13909,7 @@
       }
 
       // ---- Strategy 2: Ollama direct /api/tags (even when main backend offline) ----
-      var ollamaUrl = (State.backend && State.backend.ollamaDirectUrl) || 'http://127.0.0.1:11434';
+      var ollamaUrl = (State.backend && State.backend.ollamaDirectUrl) || 'http://127.0.0.1:11435';
       try {
         var oRes = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(3000) });
         if (oRes.ok) {
@@ -13981,7 +13980,7 @@
     async function refreshModels() {
       if (!State.backend.online) {
         // Still allow refreshing local/Ollama models even when proxy backend is offline
-        var ollamaUrl = (State.backend && State.backend.ollamaDirectUrl) || 'http://127.0.0.1:11434';
+        var ollamaUrl = (State.backend && State.backend.ollamaDirectUrl) || 'http://127.0.0.1:11435';
         try {
           var oRes = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(3000) });
           if (oRes.ok) {
@@ -14769,7 +14768,7 @@
 
     // ======================================================================
     // RawrXD Streaming Bridge — Production-grade NDJSON/SSE stream client
-    // Connects to MASM serve.exe (localhost:11435) or direct Ollama (11434)
+    // Connects to RawrXD Headless / Win32IDE (localhost:11435) — LOCAL_ONLY_NO_OLLAMA
     // Implements: AbortController, cross-chunk NDJSON buffer, token rate
     // ======================================================================
     class RawrXDStream {
@@ -15713,13 +15712,11 @@
     function getOfflineResponse(q) {
       var lower = q.toLowerCase();
       if (lower.indexOf('help') >= 0 || lower === '?') {
-        return '**Offline Mode \u2014 Help**\n\nThe backend is not running. To use AI:\n\n' +
-          '1. **Start Ollama** \u2014 the chatbot will connect directly on port 11434\n' +
-          '2. **Or start the Win32 IDE** \u2014 it has a built-in server on port 11435\n' +
-          '3. **Or run the Python server:**\n' +
-          '```powershell\ncd D:\\rawrxd\npython gui/serve.py\n```\n\n' +
-          'Then click the \u26A1 button to connect.\n\n' +
-          '*Note: If Ollama is running, the chatbot will automatically detect it even without the Python server.*';
+        return '**Offline Mode \u2014 Help**\n\nThe RawrXD backend is not running. To use AI:\n\n' +
+          '1. **Start RawrXD Headless** \u2014 `RawrXD-Win32IDE.exe --headless --local --port 11435`\n' +
+          '2. **Or start the Win32 IDE** \u2014 built-in server on port 11435\n' +
+          '3. Click the \u26A1 button to connect.\n\n' +
+          '*Policy: LOCAL_ONLY_NO_OLLAMA — product does not fall back to :11434.*';
       }
       if (lower.indexOf('endpoint') >= 0 || lower.indexOf('api') >= 0) {
         return '**API Endpoints** (when backend is online):\n\n' +
@@ -23511,7 +23508,7 @@
     // --- Build client-side backend list from known state ---
     async function _buildBeaconBackendList() {
       var backends = [];
-      var ollamaUrl = State.backend.ollamaDirectUrl || 'http://localhost:11434';
+      var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11435';
       var ideUrl = State.backend.url || 'http://localhost:11435';
 
       // Probe Ollama
@@ -23628,7 +23625,7 @@
 
       if (lowerName === 'ollama' || lowerName === 'ollama-direct') {
         // Switch to Ollama direct mode
-        var ollamaUrl = State.backend.ollamaDirectUrl || 'http://localhost:11434';
+        var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11435';
         var online = await _probeBackendUrl(ollamaUrl);
         if (online) {
           State.backend.directMode = true;
@@ -28361,8 +28358,7 @@
         window.location.origin,
         'http://localhost:11435',
         'http://127.0.0.1:11435',
-        'http://localhost:11434',
-        'null'  // file:// protocol sends origin "null"
+                'null'  // file:// protocol sends origin "null"
       ];
 
       var TestAPI = {
@@ -28547,8 +28543,8 @@
 
       function getOllamaDirectUrl() {
         try {
-          return (window.State && window.State.backend && window.State.backend.ollamaDirectUrl) || 'http://localhost:11434';
-        } catch (e) { return 'http://localhost:11434'; }
+          return (window.State && window.State.backend && window.State.backend.ollamaDirectUrl) || 'http://127.0.0.1:11435';
+        } catch (e) { return 'http://127.0.0.1:11435'; }
       }
 
       function getActiveModel() {

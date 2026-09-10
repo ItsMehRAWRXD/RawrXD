@@ -109,7 +109,8 @@ inline Decision Evaluate(
         return d;
     }
 
-    if (!c.sameChampionProvenance) {
+    if (!c.sameChampionProvenance &&
+        c.tokensRequested == kSealTokens) {
         d.blockedAt = "PROVENANCE_MISMATCH";
         return d;
     }

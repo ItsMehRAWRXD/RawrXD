@@ -2,6 +2,11 @@
 Call after REAL GGUF metadata/topology has been resolved and before the model
 is exposed through /models or /api/tags.
 
+Preferred product hooks:
+  RawrNative_RegisterRuntimeGgufPath(exactName, ggufPath);
+  RawrNative_TryRegisterRuntimeGgufFromDisk(exactName, &profile);
+
+Manual metadata:
 RawrNativeProfileInfo p{};
 p.profile_id      = yourStableRuntimeModelId;
 p.engine_mode     = actualEngineModeFlags;  // SAFEDECODE/TENSORHOP only if supported

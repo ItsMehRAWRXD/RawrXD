@@ -1,0 +1,425 @@
+diff --git a/src/deep2/ElasticResidencyManager.hpp b/src/deep2/ElasticResidencyManager.hpp
+--- a/src/deep2/ElasticResidencyManager.hpp
++++ b/src/deep2/ElasticResidencyManager.hpp
+@@ -305,7 +305,8 @@
+     // ── Legacy API (kept for backward compatibility) ────────────────────
+     const void* AcquireForCpu(const std::string& name, TensorFormat desiredFormat);
+     void ReleaseFromCpu(const std::string& name);
++    void PrefetchForCpu(const std::string& name, uint32_t targetLayer);
+     void PrefetchToGpu(const std::string& name, uint32_t targetLayer);
+     const void* BindForGpuCompute(const std::string& name);
+     void UnbindFromGpuCompute(const std::string& name);
+ 
+diff --git a/src/deep2/ElasticResidencyManager.cpp b/src/deep2/ElasticResidencyManager.cpp
+--- a/src/deep2/ElasticResidencyManager.cpp
++++ b/src/deep2/ElasticResidencyManager.cpp
+@@ -452,8 +452,30 @@
+     }
+ }
+ 
++void ElasticResidencyManager::PrefetchForCpu(const std::string& name,
++                                              uint32_t targetLayer) {
++    auto t = FindTensor(name);
++    if (!t) return;
++
++    t->predictedNextLayer.store(targetLayer, std::memory_order_relaxed);
++    const ResidencyState current = t->state.load(std::memory_order_acquire);
++
++    if (current == ResidencyState::Hot ||
++        current == ResidencyState::WarmStaged ||
++        current == ResidencyState::WarmCompressed ||
++        current == ResidencyState::StreamingIn) {
++        telemetry_.prefetchHit.fetch_add(1, std::memory_order_relaxed);
++        return;
++    }
++
++    if (current != ResidencyState::Cold) return;
++
++    telemetry_.prefetchMiss.fetch_add(1, std::memory_order_relaxed);
++    EnqueueRequest(TransferRequest::Type::NvmeToRam, name, targetLayer);
++}
++
+ // ============================================================================
+ // Async Prefetch (GPU path)
+ // ============================================================================
+ void ElasticResidencyManager::PrefetchToGpu(const std::string& name, uint32_t targetLayer) {
+ 
+diff --git a/src/deep2/MoEWeightProxy.hpp b/src/deep2/MoEWeightProxy.hpp
+--- a/src/deep2/MoEWeightProxy.hpp
++++ b/src/deep2/MoEWeightProxy.hpp
+@@ -10,6 +10,11 @@
+ #include <string>
+ #include <vector>
+ #include <mutex>
+ #include <atomic>
+ #include <cstdint>
+ #include <unordered_map>
++#include <unordered_set>
++#include <condition_variable>
++#include <deque>
++#include <thread>
++#include <utility>
+@@ -55,6 +60,9 @@
+ struct MoEProxyStats {
+     std::atomic<uint64_t> totalRequests{0};
+     std::atomic<uint64_t> cacheHits{0};
+     std::atomic<uint64_t> bytesStreamed{0};
++    std::atomic<uint64_t> hostPrefetchSubmitted{0};
++    std::atomic<uint64_t> hostPrefetchCompleted{0};
++    std::atomic<uint64_t> hostPrefetchWaitNs{0};
+     std::atomic<uint64_t> asyncPrefetchSubmitted{0};
+     std::atomic<uint64_t> asyncPrefetchCompleted{0};
+@@ -76,4 +84,4 @@
+ class MoEWeightProxy {
+ public:
+     MoEWeightProxy() = default;
+-    ~MoEWeightProxy() = default;
++    ~MoEWeightProxy();
+@@ -88,4 +96,5 @@
+     // Prefetch a set of experts into the cache without returning handles.
+     // Used by the router-driven prefetch pipeline to warm experts before
+     // they are actually needed for compute.
+     void Prefetch(int layer, const std::vector<int>& expertIds);
++    void PrefetchHostAsync(int layer, const std::vector<int>& expertIds);
+@@ -126,4 +135,11 @@
+ private:
+     mutable std::mutex attachMutex_;
+     MoEWeightsLoader* loader_ = nullptr;  // not owned
+     MoEProxyStats stats_;
++
++    std::mutex hostPrefetchMutex_;
++    std::condition_variable hostPrefetchCv_;
++    std::deque<std::pair<int, int>> hostPrefetchQueue_;
++    std::unordered_set<uint64_t> hostPrefetchPending_;
++    std::thread hostPrefetchThread_;
++    bool hostPrefetchStop_ = false;
+@@ -139,6 +155,9 @@
+     std::unordered_map<uint64_t, PrefetchJob> prefetchJobs_;
+     uint64_t nextJobHandle_ = 1;
+ 
++    void StartHostPrefetchThread();
++    void StopHostPrefetchThread();
++    void HostPrefetchThreadBody();
+     MoEWeightHandle AcquireInternal(int layer, int expert);
+ };
+ 
+diff --git a/src/deep2/MoEWeightProxy.cpp b/src/deep2/MoEWeightProxy.cpp
+--- a/src/deep2/MoEWeightProxy.cpp
++++ b/src/deep2/MoEWeightProxy.cpp
+@@ -11,11 +11,29 @@
+ namespace Deep2 {
+ 
++namespace {
++uint64_t HostPrefetchKey(int layer, int expert) {
++    return (static_cast<uint64_t>(static_cast<uint32_t>(layer)) << 32) |
++           static_cast<uint32_t>(expert);
++}
++}
++
++MoEWeightProxy::~MoEWeightProxy() {
++    Detach();
++}
++
+ void MoEWeightProxy::Attach(MoEWeightsLoader* loader) {
+-    std::lock_guard<std::mutex> lock(attachMutex_);
+-    loader_ = loader;
++    StopHostPrefetchThread();
++    {
++        std::lock_guard<std::mutex> lock(attachMutex_);
++        loader_ = loader;
++    }
++    if (loader) StartHostPrefetchThread();
+ }
+ 
+ void MoEWeightProxy::Detach() {
+-    std::lock_guard<std::mutex> lock(attachMutex_);
+-    loader_ = nullptr;
++    StopHostPrefetchThread();
++    {
++        std::lock_guard<std::mutex> lock(attachMutex_);
++        loader_ = nullptr;
++    }
+ }
+@@ -48,2 +66,78 @@
+     stats_.cacheHits.store(s.cacheHits, std::memory_order_relaxed);
+ }
++
++void MoEWeightProxy::StartHostPrefetchThread() {
++    std::lock_guard<std::mutex> lock(hostPrefetchMutex_);
++    if (hostPrefetchThread_.joinable()) return;
++    hostPrefetchStop_ = false;
++    hostPrefetchThread_ = std::thread(&MoEWeightProxy::HostPrefetchThreadBody, this);
++}
++
++void MoEWeightProxy::StopHostPrefetchThread() {
++    {
++        std::lock_guard<std::mutex> lock(hostPrefetchMutex_);
++        hostPrefetchStop_ = true;
++        hostPrefetchQueue_.clear();
++    }
++    hostPrefetchCv_.notify_all();
++    if (hostPrefetchThread_.joinable()) hostPrefetchThread_.join();
++    {
++        std::lock_guard<std::mutex> lock(hostPrefetchMutex_);
++        hostPrefetchPending_.clear();
++        hostPrefetchStop_ = false;
++    }
++    hostPrefetchCv_.notify_all();
++}
++
++void MoEWeightProxy::HostPrefetchThreadBody() {
++    for (;;) {
++        std::pair<int, int> item{};
++        {
++            std::unique_lock<std::mutex> lock(hostPrefetchMutex_);
++            hostPrefetchCv_.wait(lock, [this] {
++                return hostPrefetchStop_ || !hostPrefetchQueue_.empty();
++            });
++            if (hostPrefetchStop_ && hostPrefetchQueue_.empty()) break;
++            item = hostPrefetchQueue_.front();
++            hostPrefetchQueue_.pop_front();
++        }
++
++        MoEWeightsLoader* loader = nullptr;
++        {
++            std::lock_guard<std::mutex> lock(attachMutex_);
++            loader = loader_;
++        }
++
++        const void* loaded = loader ? loader->LoadExpert(item.first, item.second) : nullptr;
++        {
++            std::lock_guard<std::mutex> lock(hostPrefetchMutex_);
++            hostPrefetchPending_.erase(HostPrefetchKey(item.first, item.second));
++        }
++        if (loaded) {
++            stats_.hostPrefetchCompleted.fetch_add(1, std::memory_order_relaxed);
++        }
++        hostPrefetchCv_.notify_all();
++    }
++}
++
++void MoEWeightProxy::PrefetchHostAsync(int layer,
++                                       const std::vector<int>& expertIds) {
++    std::vector<int> ids = expertIds;
++    MoEEliminate_FilterPrefetch(layer, ids);
++
++    uint64_t submitted = 0;
++    {
++        std::lock_guard<std::mutex> lock(hostPrefetchMutex_);
++        if (hostPrefetchStop_ || !hostPrefetchThread_.joinable()) return;
++        for (int expert : ids) {
++            const uint64_t key = HostPrefetchKey(layer, expert);
++            if (!hostPrefetchPending_.insert(key).second) continue;
++            hostPrefetchQueue_.emplace_back(layer, expert);
++            ++submitted;
++        }
++    }
++    if (submitted) {
++        stats_.hostPrefetchSubmitted.fetch_add(submitted, std::memory_order_relaxed);
++        hostPrefetchCv_.notify_one();
++    }
++}
+@@ -211,4 +305,24 @@
+     }
+     if (!loader) return h;
++
++    const uint64_t hostKey = HostPrefetchKey(layer, expert);
++    bool waited = false;
++    const auto waitT0 = std::chrono::steady_clock::now();
++    {
++        std::unique_lock<std::mutex> lock(hostPrefetchMutex_);
++        if (hostPrefetchPending_.find(hostKey) != hostPrefetchPending_.end()) {
++            waited = true;
++            hostPrefetchCv_.wait(lock, [this, hostKey] {
++                return hostPrefetchPending_.find(hostKey) == hostPrefetchPending_.end() ||
++                       hostPrefetchStop_;
++            });
++        }
++    }
++    if (waited) {
++        const uint64_t waitNs = static_cast<uint64_t>(
++            std::chrono::duration_cast<std::chrono::nanoseconds>(
++                std::chrono::steady_clock::now() - waitT0).count());
++        stats_.hostPrefetchWaitNs.fetch_add(waitNs, std::memory_order_relaxed);
++    }
+ 
+     const void* packed = loader->LoadExpert(layer, expert);
+@@ -278,7 +392,16 @@
+ void MoEWeightProxy::ResetStats() {
+     stats_.totalRequests = 0;
+     stats_.cacheHits = 0;
+     stats_.bytesStreamed = 0;
++    stats_.hostPrefetchSubmitted = 0;
++    stats_.hostPrefetchCompleted = 0;
++    stats_.hostPrefetchWaitNs = 0;
++    stats_.asyncPrefetchSubmitted = 0;
++    stats_.asyncPrefetchCompleted = 0;
++    stats_.asyncPrefetchReadyAtCompute = 0;
++    stats_.asyncPrefetchLate = 0;
++    stats_.fenceWaitUs = 0;
++    stats_.synchronousFallbacks = 0;
+     stats_.avgLatencyMs = 0.0;
+ }
+ 
+diff --git a/src/deep2/MoEWeightsLoader.cpp b/src/deep2/MoEWeightsLoader.cpp
+--- a/src/deep2/MoEWeightsLoader.cpp
++++ b/src/deep2/MoEWeightsLoader.cpp
+@@ -190,11 +190,10 @@
+ #else
+     if (mappedBase_) {
+         memcpy(buffer, (uint8_t*)mappedBase_ + offset, size);
+         return true;
+     }
+-    if (lseek(fileHandle_, (off_t)offset, SEEK_SET) < 0) return false;
+-    ssize_t n = read(fileHandle_, buffer, size);
++    ssize_t n = pread(fileHandle_, buffer, size, (off_t)offset);
+     return n == (ssize_t)size;
+ #endif
+ }
+ 
+diff --git a/src/deep2/Deep2Engine.cpp b/src/deep2/Deep2Engine.cpp
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@ -5740,5 +5740,6 @@
+     auto decodeStart = std::chrono::high_resolution_clock::now();
+     for (size_t t = 0; t < maxOutputLen; ++t) {
++        const auto tokenWallT0 = std::chrono::steady_clock::now();
+         if (isCancelRequested()) {
+             printf("[Deep2Engine] CANCEL requested at decode step %zu (gen=%zu)\n",
+                    t, tokensGenerated);
+@@ -5960,5 +5961,24 @@
+                 break;
+             }
+         }
++
++        {
++            constexpr uint64_t kTarget150Ns = 6666667ull;
++            const uint64_t tokenWallNs = static_cast<uint64_t>(
++                std::chrono::duration_cast<std::chrono::nanoseconds>(
++                    std::chrono::steady_clock::now() - tokenWallT0).count());
++            const double secondsPerToken = static_cast<double>(tokenWallNs) / 1000000000.0;
++            const double tokenTps = tokenWallNs ? 1000000000.0 / static_cast<double>(tokenWallNs) : 0.0;
++            const long long overTargetNs = static_cast<long long>(tokenWallNs) -
++                                           static_cast<long long>(kTarget150Ns);
++            fprintf(stderr,
++                    "TOKEN=%zu DECODE_STEP=%zu STEADY=%u TOKEN_WALL_NS=%llu "
++                    "SECONDS_PER_TOKEN=%.9f TPS=%.6f TARGET_NS=%llu OVER_TARGET_NS=%lld\n",
++                    tokensGenerated, t, t > 0 ? 1u : 0u,
++                    static_cast<unsigned long long>(tokenWallNs),
++                    secondsPerToken, tokenTps,
++                    static_cast<unsigned long long>(kTarget150Ns),
++                    overTargetNs);
++        }
+         // PlasmaGovernor: thermal pause only if DECODE_SLEEP explicitly allowed.
+         if (plasmaGovernorEnabled_ && plasmaGovernor_) {
+@@ -6110,3 +6130,3 @@
+-    if (elasticResidencyEnabled_ && elasticResidency_) {
++    if ((elasticResidencyEnabled_ || hostDecodeSanitize_) && elasticResidency_) {
+         elasticResidency_->PrintTelemetry();
+     }
+@@ -6250,11 +6270,9 @@
+         if (ggufResult.metadata.architecture.find("nemotron") != std::string::npos ||
+             envFlagEnabled("RAWRXD_HOST_DECODE")) {
+-            fprintf(stderr,
+-                "HOST_DECODE_SANITIZE=1 elastic=0 cyclone=0 ckv=0 mars=0 medusa=0 "
+-                "livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1\n");
+             hostDecodeSanitize_ = true;
++            enableElasticResidency(true);
+             elasticResidencyEnabled_ = false;
+-            cycloneEnabled_ = false;
++            enableCyclone(false);
+             compressedKVEnabled_ = false;
+             marsEnabled_ = false;
+             medusaEnabled_ = false;
+@@ -6262,4 +6280,8 @@
+             LivePath_SetMechanismMask(0);
+             _putenv_s("RAWRXD_LIVE_PATH", "0");
++            fprintf(stderr,
++                "HOST_DECODE_SANITIZE=1 elastic_host=%u elastic_gpu=0 cyclone=0 ckv=0 "
++                "mars=0 medusa=0 livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1\n",
++                elasticResidency_ ? 1u : 0u);
+             fflush(stderr);
+         }
+@@ -6340,6 +6362,8 @@
+             struct CbState {
+                 TokenCallback cb;
+                 uint32_t count = 0;
+                 int32_t eosId = -1;
+                 Deep2Engine* eng = nullptr;
++                std::chrono::steady_clock::time_point lastCommit{};
++                bool haveLastCommit = false;
+             } st;
+@@ -6362,5 +6386,27 @@
+                 Deep2::Ev512::HostEmitDecodeStepEntry((uint64_t)s->count,
+                                                      (uint64_t)(uint32_t)id);
+                 rawr::batch007::CommitToken(id, piece, true);
++                const auto commitNow = std::chrono::steady_clock::now();
++                if (s->haveLastCommit) {
++                    constexpr uint64_t kTarget150Ns = 6666667ull;
++                    const uint64_t tokenWallNs = static_cast<uint64_t>(
++                        std::chrono::duration_cast<std::chrono::nanoseconds>(
++                            commitNow - s->lastCommit).count());
++                    const double secondsPerToken =
++                        static_cast<double>(tokenWallNs) / 1000000000.0;
++                    const double tokenTps = tokenWallNs
++                        ? 1000000000.0 / static_cast<double>(tokenWallNs) : 0.0;
++                    fprintf(stderr,
++                            "TOKEN=%u DECODE_STEP=%u STEADY=1 TOKEN_WALL_NS=%llu "
++                            "SECONDS_PER_TOKEN=%.9f TPS=%.6f TARGET_NS=%llu OVER_TARGET_NS=%lld\n",
++                            s->count, s->count - 1,
++                            static_cast<unsigned long long>(tokenWallNs),
++                            secondsPerToken, tokenTps,
++                            static_cast<unsigned long long>(kTarget150Ns),
++                            static_cast<long long>(tokenWallNs) -
++                                static_cast<long long>(kTarget150Ns));
++                }
++                s->lastCommit = commitNow;
++                s->haveLastCommit = true;
+                 /* Positions: K2NativeStreamGate NotePositions after KV Commit. */
+                 const bool keep = s->cb(id, piece);
+@@ -6822,7 +6868,24 @@
+     if (layer >= modelWeights.layers.size()) {
+         memcpy(output, input, config.hiddenDim * sizeof(float));
+         return;
+     }
++
++    if (hostDecodeSanitize_ && elasticResidency_ &&
++        layer + 1 < modelWeights.layers.size()) {
++        const size_t nextLayer = layer + 1;
++        const auto& next = modelWeights.layers[nextLayer];
++        auto prefetch = [&](const WeightTensor& wt) {
++            if (!wt.name.empty()) {
++                elasticResidency_->PrefetchForCpu(
++                    wt.name, static_cast<uint32_t>(nextLayer));
++            }
++        };
++        prefetch(next.wq);       prefetch(next.wk);
++        prefetch(next.wv);       prefetch(next.wo);
++        prefetch(next.attnNorm); prefetch(next.ffnNorm);
++        prefetch(next.wGate);    prefetch(next.wUp);
++        prefetch(next.wDown);
++    }
+ 
+     const uint64_t liveSeq = kvCache ? static_cast<uint64_t>(kvCache->currentLength())
+                                      : static_cast<uint64_t>(seqLen);
+@@ -8230,8 +8293,8 @@
+     } else {
+-        // Synchronous fallback: warm cache without async Vulkan
+         if (layer + 1 < modelWeights.numLayers && layer + 1 < moeRouters_.size()) {
+             std::vector<int> predictedExperts = moeRouters_[layer]->GetLastRouteExpertIds();
+             if (!predictedExperts.empty() && moeWeightProxy_) {
+-                moeWeightProxy_->Prefetch(static_cast<int>(layer + 1), predictedExperts);
++                moeWeightProxy_->PrefetchHostAsync(
++                    static_cast<int>(layer + 1), predictedExperts);
+             }
+         }
+@@ -8670,4 +8733,6 @@
+-            enableCyclone(true);
+-            if (cyclone_)
+-                cyclone_->SetPrefetchLookahead(resConfig.prefetchLookahead);
++            if (!hostDecodeSanitize_) {
++                enableCyclone(true);
++                if (cyclone_)
++                    cyclone_->SetPrefetchLookahead(resConfig.prefetchLookahead);
++            }
+         }

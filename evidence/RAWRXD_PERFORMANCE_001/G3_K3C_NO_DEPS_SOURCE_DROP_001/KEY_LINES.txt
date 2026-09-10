@@ -1,0 +1,13 @@
+GATE=G3_K3C_NO_DEPS_SOURCE_DROP_001
+PROMOTE=0 TIP_CLIMB=HOLD
+K3C_PUBLIC=unsigned k3c(unsigned token);
+K3C_LOOP=for(;;) token = k3c(token);   /* shape only; stub has no internal mechanics */
+K3C_BIND=FAIL_CLOSED_STUB
+DEP_EXTERNAL=0
+PRODUCT_DECODE_PASS=0
+NOT_RUNTIME_AUTHORITY=1
+LIVE_BIND=src/deep2/lavapath/k3c_token.cpp (G3_K3C_E2E_REAL_001)
+PRIOR_ALIAS=k3c_token(token,state)
+INVARIANT=DECODE_UNTARGETED TOKEN_UNTARGETED (chair+gen sealed)
+NO_ADOPT_KIMI_RUNTIME=1
+DUALSTICK_REOPEN=0

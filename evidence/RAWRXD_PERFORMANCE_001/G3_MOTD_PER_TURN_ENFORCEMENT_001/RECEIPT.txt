@@ -1,20 +1,46 @@
 ﻿GATE=G3_MOTD_PER_TURN_ENFORCEMENT_001
-PURPOSE=Two-turn perfect-metric MOTD sequence (LocalServer product path)
-ASOF=2026-09-10T01:05
-PROMOTE=0 TIP_CLIMB=HOLD
+PURPOSE=Close MOTD_PER_TURN_ENFORCEMENT (authorization-boundary only; DualStick/TIP CLOSED)
+PARENT=G3_STREAMER_AGENTIC_SESSION_VERIFY_001
+PRIOR_CHILD=G3_HEADLESS_API_TOOL_UNSTUB_001
+ASOF=2026-09-10T01:07
+PROMOTE=0
+TIP_CLIMB=HOLD
+CONFIRMED=1
 
-METRICS_INTENDED=
-  T1: MotdReset on /ask|/api/generate|/v1/chat/completions
-  T1: pre-ack sibling/tool → 403 motd_required
-  T1: read_motd relative → 200 + MOTD_ACK=1 only if canonical
-  T1: failed MOTD read → MOTD_ACK=0
-  T2: new /ask resets ack; ladder repeats
+EXE=G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe
+EXE_SHA256=F682234A0F3E883C5839CD1F3D911C32F10CE8733CC84E061ADAE7EB785E5AD6
+EXE_MTIME=2026-09-10T01:05:00
+EXE_SIZE=329334272
+LINK=manual vs_link_exe @CMakeFiles\RawrXD-Win32IDE.rsp after LocalServer+ToolRoutes objs (ninja PDB contention C1090 bypass)
 
-PROOF_LIVE_HEADLESS_PARITY (EXE E5AFCDDF PORT=11961; Headless tool lane CLOSED-not-reopened):
-  HEALTH=200
-  PRE list_directory=403 motd_required
-  read_motd args={} =200 content contains PassiveRoleNotRoleplay + Message of the Day
-  POST list_directory=200 entries
-  SUBAGENT on this EXE=503 (source unstub pending relink)
+FIXED=
+  1 MOTD_ACK_ON_FAILED_READ — ACK only after successful exact canonical MOTD read (bool read + MotdAckIfExact / content+path)
+  2 READ_MOTD_RELATIVE_PATH_MISMATCH — ResolveMotdPath via projectRoot/cwd/module; MotdPathsEquivalent (no path.find substring)
+  3 ASK_TURN_DOES_NOT_RESET_ACK — MotdResetForNewMessage at handleAskEndpoint; Headless /ask via motdResetOnGenerate
+  4 DIRECT_TOOL_ROUTE_GATE_BYPASS — /api/cli /api/write-file /api/read-file(+MOTD allow) /list/delete/… 403 motd_required pre-ACK
 
-VERDICT=MOTD_ENFORCEMENT_SOURCE_READY; LIVE_LOCALSERVER_BINARY_PENDING_RELINK
+CODE=
+  src/win32app/Win32IDE_LocalServer.cpp
+  src/win32app/Win32IDE.h (handleReadFileEndpoint bool)
+  src/win32app/HeadlessIDE_ToolRoutes.cpp
+
+E2E=PORT=11561 Origin:null --dir G:\~dev\rawrxd FAIL_COUNT=0 (see SMOKE.txt / SMOKE.json)
+  HEALTH_HTTP=200
+  TURN1_PRE_MOTD_TOOL_HTTP=403 motd_required
+  BAD_MOTD_PATH_HTTP=404 BAD_MOTD_PATH_ACK=0
+  MOTD_EXACT_READ_HTTP=200 MOTD_EXACT_READ_ACK=1
+  POST_MOTD_EXECUTE_COMMAND_HTTP=200 EXIT=0 WITNESS=HEADLESS_TOOL_E2E_OK
+  DIRECT_CLI_PRE_MOTD_HTTP=403 DIRECT_WRITE_PRE_MOTD_HTTP=403
+  TURN2 /ask|/api/generate (503 model_not_loaded) still resets → TURN2_PRE_MOTD_TOOL_HTTP=403
+  PROCESS_SURVIVED=1 OLD_PUBLIC_VETO_PRESENT=0
+  OLLAMA_FORBIDS_CHANGED=0 IMPORTSPACE68_FORBIDS_CHANGED=0
+
+DISPOSITION=
+  MOTD_PER_TURN_ENFORCEMENT=SOURCE_COMPLETE+E2E_PASS
+  STILL_VETO=
+
+HELD=
+  DualStick CLOSED / TIP_CLIMB=HOLD / PROMOTE=0
+  LOCAL_ONLY_NO_OLLAMA / ImportSpace68 forbids unchanged
+
+VDD_POLICY=KEEP_ON_7800_DO_NOT_REBIND_TO_R9700

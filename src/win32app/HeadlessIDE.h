@@ -42,6 +42,7 @@
 #include <atomic>
 #include <functional>
 #include <condition_variable>
+#include <chrono>
 #include <climits>
 #include <deque>
 
@@ -350,7 +351,11 @@ private:
 
     // ---- Tool execution (parity with Win32 Agent > Run Tool; used by /api/tool and /run-tool) ----
     bool executeToolRepl(const std::string& toolName, const std::string& argsJson, std::string& outResult);
+    bool executeFileAliasTool(const std::string& toolName, const nlohmann::json& args,
+                              std::string& outResult);
     void routeToolAndFileRequest(const HostedHttpRequest& request, HostedHttpResponse& response);
+    bool routeGuiProductRequest(SOCKET clientFd, const HostedHttpRequest& request,
+                                HostedHttpResponse& response);
     void motdResetOnGenerate();
 
     // ---- HTTP server (consolidated hosted/local contract) ----
@@ -434,8 +439,9 @@ private:
     std::unique_ptr<AgenticEngine>     m_agenticEngine;
 
     // Fix #14: Conversation manager for HTTP endpoints
-    class ConversationManager;
-    std::unique_ptr<ConversationManager> m_conversationManager;
+    // Must be ::ConversationManager (global) — nested forward-decl shadowed
+    // the real type and left unique_ptr on an incomplete HeadlessIDE::ConversationManager.
+    std::unique_ptr<::ConversationManager> m_conversationManager;
 
     // Failure detection counters
     uint64_t                          m_failureDetections = 0;
@@ -486,6 +492,7 @@ private:
     std::vector<std::thread>          m_threadPool;
     std::mutex                        m_threadPoolMutex;
     std::mutex                        m_auditMutex;
+    std::atomic<size_t>               m_activeClientThreads{0};
     std::atomic<uint64_t>             m_cloudReservedNanodollars{0};
     size_t                            m_maxThreads = 64;
 

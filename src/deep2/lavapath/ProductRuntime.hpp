@@ -2,10 +2,13 @@
 /* ProductRuntime — session owner; OpenSession requires AuthorityBundle. <=99. */
 #include "../RawrRunSession.hpp"
 #include "LocalModelAuthority_Bundle.hpp"
+#include "ProductOpenStreamable.hpp"
 #include "ProductReceipt.hpp"
 #include "ProductRequest.hpp"
 #include "SessionControl.hpp"
+#include "RxRunStateHooks.hpp"
 #include <atomic>
+#include <cstdio>
 #include <string>
 
 namespace rawr::product_run {
@@ -38,7 +41,14 @@ struct ProductRuntime {
         if (path && path[0]) modelPath = path;
         auth = {};
         control.Clear();
-        if (path && path[0]) (void)rawr::olma::SealAuthorityBundle(path, auth);
+        /* Prefer live session authority — nullptr path must not force reload. */
+        if (e && e->sessionAuthorityPass()) {
+            auth = e->sessionAuthority();
+        } else if (path && path[0]) {
+            (void)rawr::olma::SealAuthorityBundle(path, auth);
+        } else if (alias && alias[0]) {
+            (void)rawr::olma::SealAuthorityBundle(alias, auth);
+        }
         (void)BuildExecutionGraph();
     }
 
@@ -49,28 +59,55 @@ struct ProductRuntime {
         control.Clear();
         if (engine.isModelLoaded()) engine.unloadModel();
         Deep2::rawr_run::RunWitness w{};
-        if (!Deep2::rawr_run::OpenSession(engine, aliasOrPath, w)) return false;
+        if (!Deep2::rawr_run::OpenSession(engine, aliasOrPath, w)) {
+            rxow::OnOpenFailed("RAW_RUN_OPEN_FAIL");
+            return false;
+        }
         modelAlias = w.modelName.empty() ? aliasOrPath : w.modelName;
         modelPath = w.modelPath;
+        /* OPEN = indexed + storage reachable + bounded working set. */
+        const auto& mw = engine.getModelWeights();
+        if (!Deep2::product_open::StreamableOk(engine, modelPath.c_str(), stderr)) {
+            rxow::OnOpenFailed("NOT_STREAMABLE");
+            engine.unloadModel();
+            modelPath.clear();
+            return false;
+        }
         // Prefer load-time seal (handles shard dirs); path re-seal is fallback only.
         if (engine.sessionAuthorityPass()) {
             auth = engine.sessionAuthority();
         } else if (!rawr::olma::SealAuthorityBundle(modelPath.c_str(), auth) ||
                    !auth.PASS) {
+            rxow::OnOpenFailed("AUTHORITY_SEAL_FAIL");
             engine.unloadModel();
             modelPath.clear();
             return false;
         }
-        return BuildExecutionGraph();
+        const uint32_t layers = static_cast<uint32_t>(mw.numLayers);
+        const uint32_t tensors =
+            static_cast<uint32_t>((mw.tokenEmbed.data ? 1u : 0u) +
+                                  (mw.lmHead.data ? 1u : 0u) +
+                                  (mw.finalNorm.data ? 1u : 0u) +
+                                  mw.layers.size());
+        rxow::OnArmed(layers, tensors);
+        if (!BuildExecutionGraph()) {
+            rxow::OnPrepared(0, layers, tensors);
+            return false;
+        }
+        rxow::OnPrepared(graphNodes, layers, tensors);
+        return true;
     }
 
     void CloseSession() {
-        if (alreadyGenerating.load()) return;
+        /* Always clear generate latch — sticky alreadyGenerating=1 made
+         * CloseSession a no-op and poisoned multi-GGUF reload_gen. */
+        alreadyGenerating.store(0);
         control.Clear();
         if (ext) {
             ext = nullptr;
             graphNodes = 0;
             auth = {};
+            modelPath.clear();
             return;
         }
         if (engine.isModelLoaded()) engine.unloadModel();

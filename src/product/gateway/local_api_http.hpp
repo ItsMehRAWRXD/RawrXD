@@ -56,11 +56,20 @@ inline bool LocalApiServeOne(SOCKET ls) {
     const char* hdr = strstr(req, "\r\n\r\n");
     if (hdr) body = hdr + 4;
     std::string json = LocalApiHandle(method, path, body);
+    int status = 200;
+    if (json.find("\"model_not_loaded\"") != std::string::npos) status = 503;
+    else if (json.find("\"invalid_prompt\"") != std::string::npos) status = 400;
+    else if (json.find("\"generate_failed\"") != std::string::npos) status = 400;
+    else if (json.find("\"not_found\"") != std::string::npos) status = 404;
+    const char* reason = (status == 503)   ? "Service Unavailable"
+                         : (status == 400) ? "Bad Request"
+                         : (status == 404) ? "Not Found"
+                                           : "OK";
     char hdrs[256];
     _snprintf_s(hdrs, sizeof(hdrs), _TRUNCATE,
-                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                "HTTP/1.1 %d %s\r\nContent-Type: application/json\r\n"
                 "Content-Length: %d\r\nConnection: close\r\n\r\n",
-                (int)json.size());
+                status, reason, (int)json.size());
     send(c, hdrs, (int)strlen(hdrs), 0);
     send(c, json.c_str(), (int)json.size(), 0);
     closesocket(c);

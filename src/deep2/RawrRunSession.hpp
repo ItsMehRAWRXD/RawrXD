@@ -39,16 +39,46 @@ struct RunWitness {
 
 inline bool InitFromPath(Deep2Engine& e, const std::string& path,
                          size_t maxSeq = 512) {
-    if (!e.loadModel(path)) return false;
+    std::fprintf(stderr, "PRODUCT_OPEN INIT_ENTER path=\"%s\"\n", path.c_str());
+    std::fflush(stderr);
+    long long rc = 0;
+    if (!e.loadModel(path)) {
+        rc = -1;
+        std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld reason=LOAD_MODEL\n",
+                     rc);
+        std::fflush(stderr);
+        return false;
+    }
     /* loadModel already arms ThreadPool/KV/buffers. A second initialize()
-     * tear-down/rebuild has caused heap C0000374 (SOLO). Skip when live. */
+     * tear-down/rebuild has caused heap C0000374 (SOLO). Skip when live.
+     * Still arm enhancement/Vulkan stack — loadModel alone leaves GPU cold. */
     if (e.isInitialized() && e.isModelLoaded()) {
+        e.enableAllEnhancements();
+        const char* host = std::getenv("RAWRXD_HOST_DECODE");
+        const char* min = std::getenv("DEEP2_MINIMAL_ENHANCE");
+        const char* sem = std::getenv("RAWRXD_SEMANTIC_SAFE");
+        const bool cpuOpt = (host && host[0] == '1') || (min && min[0] == '1') ||
+                            (sem && sem[0] == '1');
+        if (!cpuOpt && !e.isVulkanEnabled()) {
+            fprintf(stderr,
+                    "INIT_FROM_PATH=FAIL reason=GPU_REQUIRED vulkan=0 "
+                    "(RAWRXD_HOST_DECODE=1 for CPU opt-in)\n");
+            e.unloadModel();
+            rc = -2;
+            std::fprintf(stderr,
+                         "PRODUCT_OPEN INIT_EXIT rc=%lld reason=GPU_REQUIRED\n",
+                         rc);
+            std::fflush(stderr);
+            return false;
+        }
         if (maxSeq > 0 && e.getConfig().maxSeqLen != maxSeq) {
-            /* Soft note only — do not rebuild KV mid-session. */
             fprintf(stderr, "INIT_FROM_PATH=LOAD_ONLY maxSeq_req=%zu live=%zu\n",
                     maxSeq, e.getConfig().maxSeqLen);
         }
-        return true;
+        rc = e.isModelLoaded() ? 1 : 0;
+        std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld\n", rc);
+        std::fflush(stderr);
+        return rc == 1;
     }
     const auto& mw = e.getModelWeights();
     EngineConfig cfg{};
@@ -69,7 +99,59 @@ inline bool InitFromPath(Deep2Engine& e, const std::string& path,
     cfg.useKVCache = true;
     cfg.useThreadPool = true;
     cfg.numThreads = 8;
-    return e.initialize(cfg);
+    const bool ok = e.initialize(cfg);
+    rc = ok ? 1 : -3;
+    std::fprintf(stderr, "PRODUCT_OPEN INIT_EXIT rc=%lld reason=%s\n", rc,
+                 ok ? "INITIALIZE_OK" : "INITIALIZE_FAIL");
+    std::fflush(stderr);
+    return ok;
+}
+
+inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
+    std::fprintf(stderr, "PRODUCT_OPEN SESSION_ENTER alias=\"%s\"\n",
+                 alias ? alias : "");
+    std::fflush(stderr);
+    AliasResolve ar{};
+    if (!ResolveModelAlias(alias, ar)) {
+        std::fprintf(stderr, "RAW_RUN_OPEN=FAIL stage=ALIAS path=%s\n",
+                     alias ? alias : "");
+        std::fprintf(stderr, "PRODUCT_OPEN SESSION_EXIT ok=0 stage=ALIAS\n");
+        std::fflush(stderr);
+        return false;
+    }
+    w.modelAliasResolved = 1;
+    w.modelName = ar.alias;
+    w.modelPath = ar.path;
+    w.shardsDiscovered = (int)ar.shards;
+    w.ollamaProcessUsed = 0;
+    w.networkUsed = 0;
+    if (!InitFromPath(e, ar.path)) {
+        std::fprintf(stderr, "RAW_RUN_OPEN=FAIL stage=INIT_FROM_PATH path=%s\n",
+                     ar.path.c_str());
+        std::fprintf(stderr,
+                     "PRODUCT_OPEN SESSION_EXIT ok=0 stage=INIT_FROM_PATH\n");
+        std::fflush(stderr);
+        return false;
+    }
+    w.ggufOpened = e.isModelLoaded() ? 1 : 0;
+    w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;
+    auto ct = ChatTemplate::detectFromModel(e.getModelMetadata().architecture,
+                                            ar.alias.c_str());
+    w.chatTemplateReady = (ct != ChatTemplateType::UNKNOWN) ? 1 : 0;
+    if (e.getElasticResidencyManager()) w.elasticUsed = 1;
+    if (!(w.ggufOpened && w.tokenizerReady)) {
+        std::fprintf(stderr,
+                     "RAW_RUN_OPEN=FAIL stage=POST_LOAD gguf=%d tok=%d path=%s\n",
+                     w.ggufOpened, w.tokenizerReady, ar.path.c_str());
+        std::fprintf(stderr, "PRODUCT_OPEN SESSION_EXIT ok=0 stage=POST_LOAD\n");
+        std::fflush(stderr);
+        return false;
+    }
+    std::fprintf(stderr, "RAW_RUN_OPEN=OK path=%s gguf=1 tok=1\n",
+                 ar.path.c_str());
+    std::fprintf(stderr, "PRODUCT_OPEN SESSION_EXIT ok=1\n");
+    std::fflush(stderr);
+    return true;
 }
 
 inline std::string FormatChatPrompt(Deep2Engine& e, const std::string& user,
@@ -120,26 +202,6 @@ inline uint32_t StreamTokens(Deep2Engine& e, const std::string& prompt,
         w->nTokensEmitted = n;
     }
     return n;
-}
-
-inline bool OpenSession(Deep2Engine& e, const char* alias, RunWitness& w) {
-    AliasResolve ar{};
-    if (!ResolveModelAlias(alias, ar)) return false;
-    w.modelAliasResolved = 1;
-    w.modelName = ar.alias;
-    w.modelPath = ar.path;
-    w.shardsDiscovered = (int)ar.shards;
-    w.ollamaProcessUsed = 0;
-    w.networkUsed = 0;
-    // Shard directories must go through loadModel(dir) so multi-shard indexing arms.
-    if (!InitFromPath(e, ar.path)) return false;
-    w.ggufOpened = e.isModelLoaded() ? 1 : 0;
-    w.tokenizerReady = e.tokenize("hi").empty() ? 0 : 1;
-    auto ct = ChatTemplate::detectFromModel(e.getModelMetadata().architecture,
-                                            ar.alias.c_str());
-    w.chatTemplateReady = (ct != ChatTemplateType::UNKNOWN) ? 1 : 0;
-    if (e.getElasticResidencyManager()) w.elasticUsed = 1;
-    return w.ggufOpened && w.tokenizerReady;
 }
 
 } // namespace rawr_run

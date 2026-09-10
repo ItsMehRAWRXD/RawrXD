@@ -19,8 +19,12 @@ struct ProductSession {
     std::string workspace;
     std::string lastPrompt;
     std::string lastText;
+    std::string modelPath;   // last loaded model (IDE session restore)
+    std::string modelAlias;  // display/alias for modelPath
     uint64_t gen = 0;
     int crashRecovered = 0;
+    int keepOpen = 0;        // ProductRun residency hint
+    int maxTokens = 256;
 };
 
 inline std::string ProductSessionRoot() {
@@ -44,7 +48,9 @@ inline bool SaveProductSession(const ProductSession& s) {
     if (!out) return false;
     out << "id=" << s.id << "\nws=" << s.workspace << "\ngen=" << s.gen
         << "\ncrash=" << s.crashRecovered << "\nprompt=" << s.lastPrompt
-        << "\ntext=" << s.lastText << "\n";
+        << "\ntext=" << s.lastText
+        << "\nmodel=" << s.modelPath << "\nalias=" << s.modelAlias
+        << "\nkeep=" << s.keepOpen << "\nmaxTok=" << s.maxTokens << "\n";
     return true;
 }
 
@@ -60,6 +66,10 @@ inline bool LoadProductSession(const std::string& id, ProductSession& s) {
         else if (line.rfind("crash=", 0) == 0) s.crashRecovered = atoi(line.c_str() + 6);
         else if (line.rfind("prompt=", 0) == 0) s.lastPrompt = line.substr(7);
         else if (line.rfind("text=", 0) == 0) s.lastText = line.substr(5);
+        else if (line.rfind("model=", 0) == 0) s.modelPath = line.substr(6);
+        else if (line.rfind("alias=", 0) == 0) s.modelAlias = line.substr(6);
+        else if (line.rfind("keep=", 0) == 0) s.keepOpen = atoi(line.c_str() + 5);
+        else if (line.rfind("maxTok=", 0) == 0) s.maxTokens = atoi(line.c_str() + 7);
     }
     return true;
 }

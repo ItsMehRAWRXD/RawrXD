@@ -29,6 +29,9 @@ struct Facts {
     int finite = 1;
     int teardownOk = 1;
     int measuredReal = 1;
+    /* Model fingerprint match — NOT token-count. Non-64 runs use
+     * 64_TOKEN_PRODUCT_RUN for product seal, not PROVENANCE_MISMATCH. */
+    int modelProvenanceMatch = 1;
 };
 
 inline uint64_t WallNsFromSpt() noexcept {
@@ -47,7 +50,7 @@ inline void EmitChampion(FILE* f, const Facts& xf, int cpuF32) noexcept {
     c.generationWallNs = xf.wallNs;
     c.decodeTpsReal = rawr::product::DecodeTps(xf.tokensCommitted, xf.wallNs);
     c.measuredReal = xf.measuredReal != 0;
-    c.sameChampionProvenance = (xf.tokensRequested == champion::kSealTokens);
+    c.sameChampionProvenance = (xf.modelProvenanceMatch != 0);
     c.parity.tokensRequested = xf.tokensRequested;
     c.parity.tokensCommitted = xf.tokensCommitted;
     c.parity.productionDecodePath = xf.productionDecode != 0;

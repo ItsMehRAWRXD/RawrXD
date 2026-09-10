@@ -289,11 +289,16 @@ inline void ClassifyTensorName(DynamicManifest& m, const std::string& name) {
         lf.down = name;
     } else if (Contains(low, "kv_a") || Contains(low, "q_a") || Contains(low, "kv_b")) {
         lf.attention = AttentionTopology::MLA;
+    } else if (Contains(low, "ssm_") || Contains(low, ".ssm.")) {
+        /* Hybrid SSM layer (nemotron_h): no attn_q required. */
+        if (lf.attention == AttentionTopology::Unknown)
+            lf.attention = AttentionTopology::ProjectorBlock; /* reuse: non-attn OK */
     }
 }
 
 inline void FinalizeLayerFacts(DynamicManifest& m) {
     uint64_t ready = 0;
+    const bool hybrid = Lower(m.arch).find("nemotron") != std::string::npos;
     for (LayerFact& lf : m.layerFacts) {
         // Prefer observed split/fused attention over projector when both exist
         // (Gemma4 E4B: every layer has attn_q/k/v AND blk.N.proj.weight PLE).
@@ -307,13 +312,15 @@ inline void FinalizeLayerFacts(DynamicManifest& m) {
             lf.attention = AttentionTopology::ProjectorBlock;
         else if (lf.attention == AttentionTopology::MLA)
             ; // keep MLA
+        else if (lf.attention == AttentionTopology::ProjectorBlock)
+            ; // SSM-tagged
         else if (lf.attention == AttentionTopology::Unknown)
             lf.attention = AttentionTopology::Blocked;
 
         if (!lf.gate.empty() && !lf.up.empty() && !lf.down.empty())
             lf.ffn = FfnTopology::SplitGateUpDown;
         else if (lf.gate.empty() && !lf.up.empty() && !lf.down.empty())
-            lf.ffn = FfnTopology::FusedGateUp;
+            lf.ffn = FfnTopology::FusedGateUp; /* up+down MLP (nemotron FFN) */
         else if (!lf.gate.empty() || !lf.up.empty() || !lf.down.empty())
             lf.ffn = FfnTopology::Blocked;
         else
@@ -327,8 +334,27 @@ inline void FinalizeLayerFacts(DynamicManifest& m) {
                            lf.ffn == FfnTopology::FusedGateUp ||
                            lf.ffn == FfnTopology::FusedGateUpDown ||
                            lf.ffn == FfnTopology::GemmaStyle ||
-                           lf.ffn == FfnTopology::Unknown; // projector/SSM-only allowed to reach runtime
-        lf.ready = attnOk && ffnOk;
+                           lf.ffn == FfnTopology::Unknown;
+        /* Hybrid: FFN-only layer = no attn; SSM-only = Unknown FFN + Projector. */
+        const bool hybridOk =
+            hybrid && ((attnOk && ffnOk) ||
+                       (ffnOk && lf.attention == AttentionTopology::Blocked &&
+                        !lf.up.empty()) ||
+                       (lf.attention == AttentionTopology::ProjectorBlock));
+        lf.ready = hybrid ? (attnOk || hybridOk) && (ffnOk || hybrid) : (attnOk && ffnOk);
+        if (hybrid && !lf.up.empty() && !lf.down.empty() &&
+            lf.attention == AttentionTopology::Blocked) {
+            lf.ready = true; /* FFN-only */
+            lf.blockedAt.clear();
+            ++ready;
+            continue;
+        }
+        if (hybrid && lf.attention == AttentionTopology::ProjectorBlock) {
+            lf.ready = true;
+            lf.blockedAt.clear();
+            ++ready;
+            continue;
+        }
         if (!attnOk) lf.blockedAt = "attn_q";
         else if (!ffnOk) lf.blockedAt = "ffn";
         else ++ready;

@@ -25,6 +25,8 @@ struct Deep2StreamParityObs {
     uint32_t tokensEmitted = 0;
     int firstTokenNonempty = 0, finalTextNonempty = 0;
     int fallbackUsed = 0, rc = 1;
+    int modelOpen = 0;
+    int generationReturnedNormally = 0; /* set only after generate boundary returns */
     const char* modelPath = "";
     const char* backend = "DEEP2";
     double ttftMs = 0.0, decodeTps = 0.0;

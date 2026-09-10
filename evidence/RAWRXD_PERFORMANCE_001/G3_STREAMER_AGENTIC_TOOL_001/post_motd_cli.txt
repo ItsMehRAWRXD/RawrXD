@@ -1,0 +1,2 @@
+﻿STATUS=200
+{"success":true,"command":"echo TOOL_LOOP_OK","exitCode":0,"output":"TOOL_LOOP_OK\r\n"}

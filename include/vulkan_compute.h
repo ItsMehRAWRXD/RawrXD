@@ -146,8 +146,8 @@ struct VulkanTensor;
 
 namespace CPUInference {
 
-// GPU compute optional - CPU inference always works
-// Vulkan is enabled if system supports it, otherwise CPU fallback
+// GPU inference is the product path. CPU decode is opt-in only
+// (RAWRXD_HOST_DECODE=1). Never treat CPU as the default "always works" lane.
 
 struct VulkanDeviceInfo {
     std::string device_name;
@@ -358,6 +358,19 @@ public:
                             DeviceBuf& out, uint32_t headDim, uint32_t nHeads,
                             uint32_t nKv, uint32_t seq, float scale,
                             uint32_t layer);
+    bool EnsureMlaQBytes(size_t need);
+    bool EnsureMlaAttn(uint32_t nHeads, uint32_t qkDim, uint32_t vDim,
+                       uint32_t nope, uint32_t rope, uint32_t maxSeq,
+                       uint32_t nLayers);
+    bool DispatchAttnDecodeMLA(
+        DeviceBuf& q, DeviceBuf& kb, DeviceBuf& vb, DeviceBuf& kpe, DeviceBuf& out,
+        uint32_t qkDim, uint32_t vDim, uint32_t nope, uint32_t rope, uint32_t nHeads,
+        uint32_t pos, float theta, float scale, float ropeScale, uint32_t layer);
+    DeviceBuf& MlaQ() { return mla_q_; }
+    DeviceBuf& MlaKb() { return mla_kb_; }
+    DeviceBuf& MlaVb() { return mla_vb_; }
+    DeviceBuf& MlaKpe() { return mla_kpe_; }
+    DeviceBuf& MlaAttnOut() { return mla_out_; }
     bool DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out, uint32_t n);
     bool AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim, uint32_t pos,
                   uint32_t layer);
@@ -702,6 +715,15 @@ private:
     VkPipeline swiglu_pipe_ = nullptr; VkPipelineLayout swiglu_layout_ = nullptr;
     VkDescriptorSetLayout swiglu_dsl_ = nullptr; VkDescriptorPool swiglu_pool_ = nullptr;
     VkDescriptorSet swiglu_ds_ = nullptr;
+    DeviceBuf mla_q_{}, mla_kb_{}, mla_vb_{}, mla_kpe_{}, mla_out_{};
+    DeviceBuf mla_k_cache_{}, mla_v_cache_{};
+    VkPipeline mla_attn_pipe_ = nullptr;
+    VkPipelineLayout mla_attn_layout_ = nullptr;
+    VkDescriptorSetLayout mla_attn_dsl_ = nullptr;
+    VkDescriptorPool mla_attn_pool_ = nullptr;
+    VkDescriptorSet mla_attn_ds_ = nullptr;
+    uint32_t mla_n_heads_ = 0, mla_qk_ = 0, mla_v_ = 0;
+    uint32_t mla_max_seq_ = 0, mla_n_layers_ = 0;
 
 public:
     uint64_t GemvDescriptorAllocations() const { return gemv_desc_allocs_; }

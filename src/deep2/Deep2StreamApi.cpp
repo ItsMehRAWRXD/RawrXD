@@ -2,6 +2,7 @@
 #include "Deep2StreamApi.hpp"
 #include "Deep2Engine.h"
 #include "RawrRunSession.hpp"
+#include "lavapath/HeapWitness.hpp"
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -62,6 +63,8 @@ bool Deep2GenerateStream(const char* model_path, const char* prompt,
         cb(&ev, user);
         return false;
     }
+    o.modelOpen = 1;
+    Deep2::heap::EmitOk(stderr, "AFTER_MODEL_OPEN");
     /* Do not force HOST_DECODE here — that + FFN spam was killing STREAMER_TPS.
      * Harness Arms DECODE_SLEEP=0 / TOKEN_PACING=OFF / FFN_TRACE=0. */
 #ifdef _WIN32
@@ -131,6 +134,8 @@ bool Deep2GenerateStream(const char* model_path, const char* prompt,
         cb(&ev, user);
     }
     eng.unloadModel();
+    /* Normal return from generation boundary — not set if we AV'd mid-generate. */
+    o.generationReturnedNormally = 1;
     return o.rc == 0;
 }
 

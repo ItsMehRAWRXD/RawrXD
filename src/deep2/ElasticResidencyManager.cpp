@@ -75,20 +75,26 @@ bool ElasticResidencyManager::Initialize(const ElasticResidencyConfig& config) {
     initialized_.store(true);
     shutdownRequested_.store(false);
 
-    // Initialize Ghost Cache if enabled
-    if (config_.useGhostCache) {
-        ghostCache_ = std::make_unique<GhostCache>(config_.ghostCacheCapacity);
-        printf("[ElasticResidencyManager] GhostCache enabled: capacity=%zu entries\n",
-               config_.ghostCacheCapacity);
+    /* DualStick/Vulkan: weights already device-resident. Scheduler + GhostCache
+     * raced FreeToken/FutureConsumer and AV'd at generate (STACK elastic=1).
+     * Passiveive mode = registry + hit accounting only. */
+    if (config_.suppressHostVramMoves) {
+        ghostCache_.reset();
+        printf("[ElasticResidencyManager] PASSIVE vulkan/DualStick "
+               "(no scheduler, no GhostCache)\n");
+    } else {
+        if (config_.useGhostCache) {
+            ghostCache_ = std::make_unique<GhostCache>(config_.ghostCacheCapacity);
+            printf("[ElasticResidencyManager] GhostCache enabled: capacity=%zu entries\n",
+                   config_.ghostCacheCapacity);
+        }
+        schedulerThread_ = std::thread(&ElasticResidencyManager::SchedulerThreadBody, this);
     }
-
-    // Start scheduler thread
-    schedulerThread_ = std::thread(&ElasticResidencyManager::SchedulerThreadBody, this);
 
     /* FreeToken micro-zones: fixed Hot sticks for 120B+ stream (never realloc). */
     {
         const char* ft = std::getenv("FREETOKEN_MICROZONE");
-        if (!ft || ft[0] != '0') {
+        if ((!ft || ft[0] != '0') && !freetoken::Pool().live) {
             size_t zb = FREETOKEN_ZONE_BYTES;
             if (config_.maxHotBytes && config_.maxHotBytes < zb * FREETOKEN_ZONE_COUNT)
                 zb = config_.maxHotBytes / FREETOKEN_ZONE_COUNT;
@@ -347,6 +353,10 @@ ElasticResidencyManager::AcquireStatus ElasticResidencyManager::AcquireTensor(
     auto t = FindTensor(name);
     if (!t) return AcquireStatus::NotFound;
 
+    /* Vulkan owns compute: refuse host staging Acquire (cyclone OnTensorUsed). */
+    if (config_.suppressHostVramMoves)
+        return AcquireStatus::NotFound;
+
     ResidencyState current = t->state.load();
 
     // Fast path: already Hot
@@ -472,6 +482,23 @@ void ElasticResidencyManager::ReleaseTensor(const std::string& name) {
     }
 }
 
+void ElasticResidencyManager::PrefetchForCpu(const std::string& name,
+                                              uint32_t targetLayer) {
+    auto t = FindTensor(name);
+    if (!t) return;
+    t->predictedNextLayer.store(targetLayer, std::memory_order_relaxed);
+    const ResidencyState current = t->state.load(std::memory_order_acquire);
+    if (current == ResidencyState::Hot || current == ResidencyState::WarmStaged ||
+        current == ResidencyState::WarmCompressed ||
+        current == ResidencyState::StreamingIn) {
+        telemetry_.prefetchHit.fetch_add(1, std::memory_order_relaxed);
+        return;
+    }
+    if (current != ResidencyState::Cold) return;
+    telemetry_.prefetchMiss.fetch_add(1, std::memory_order_relaxed);
+    EnqueueRequest(TransferRequest::Type::NvmeToRam, name, targetLayer);
+}
+
 // ============================================================================
 // Async Prefetch (GPU path)
 // ============================================================================
@@ -482,11 +509,12 @@ void ElasticResidencyManager::PrefetchToGpu(const std::string& name, uint32_t ta
     t->predictedNextLayer.store(targetLayer);
 
     ResidencyState current = t->state.load();
-    if (current == ResidencyState::Hot || current == ResidencyState::Uploading) {
+    if (current == ResidencyState::Hot || current == ResidencyState::Uploading ||
+        config_.suppressHostVramMoves) {
         telemetry_.prefetchHit.fetch_add(1);
         StreamTransfer_RecordRead(t->compressedBytes ? t->compressedBytes : t->stagedBytes,
                                   /*cacheHit=*/true);
-        return;  // Already hot or on its way
+        return;  // Already hot, on its way, or Vulkan owns VRAM
     }
 
     telemetry_.prefetchMiss.fetch_add(1);
@@ -621,6 +649,16 @@ void ElasticResidencyManager::PredictLayerNeeds(uint32_t nextLayer,
         future::Register(static_cast<uint16_t>(nextLayer), /*op=*/3,
                          static_cast<uint8_t>(nextLayer & 1u),
                          1ull << 20, nextLayer + 1);
+        if (config_.suppressHostVramMoves) {
+            /* Vulkan DualStick: weights already device-resident; hit-only. */
+            std::lock_guard<std::mutex> lock(tensorsMutex_);
+            for (auto& kv : tensors_) {
+                if (kv.second->layerIndex != nextLayer) continue;
+                telemetry_.prefetchHit.fetch_add(1);
+                future::NotePrefetchHit();
+            }
+            return;
+        }
         std::vector<std::string> toMove;
         {
             std::lock_guard<std::mutex> lock(tensorsMutex_);

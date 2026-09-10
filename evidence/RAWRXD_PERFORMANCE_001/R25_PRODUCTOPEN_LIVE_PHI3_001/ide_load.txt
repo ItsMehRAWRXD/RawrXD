@@ -1,0 +1,1 @@
+{"success":true,"model":"phi3-mini-Q2_K.gguf"}

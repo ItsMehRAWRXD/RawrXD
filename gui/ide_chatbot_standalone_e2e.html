@@ -8293,9 +8293,9 @@
             <span>&#x1F996;</span> <span id="dualAgentLabel">Dual</span>
           </div>
           <div class="toolbar-item" id="agenticModeBtn" onclick="toggleAgenticMode()"
-            title="Agentic Mode: ON — AI can read/write files, run commands, use git"
-            style="opacity:1.0; color:var(--accent-green);">
-            <span>&#x1F916;</span> <span id="agenticModeLabel">Agent: ON</span>
+            title="Agentic Mode: OFF — AI responds with text only"
+            style="opacity:0.5;">
+            <span>&#x1F916;</span> <span id="agenticModeLabel">Agent: OFF</span>
           </div>
           <div class="toolbar-item" id="voiceToolbarBtn" onclick="RawrVoice.toggleTTS()"
             title="Toggle TTS: Read AI responses aloud">
@@ -8347,7 +8347,7 @@
             </div>
             <div class="debug-section">
               <div class="debug-section-title">Backend URL</div>
-              <input type="text" id="dbgBackendUrl" value="http://localhost:11435"
+              <input type="text" id="dbgBackendUrl" value="http://127.0.0.1:11435"
                 style="width:100%; padding:6px 8px; background:var(--bg-primary); border:1px solid var(--border-subtle);
                 border-radius:4px; color:var(--text-primary); font-family:var(--font-mono); font-size:11px; outline:none;"
                 onchange="State.backend.url=this.value; logDebug('Backend URL changed to '+this.value,'info')">
@@ -10884,7 +10884,7 @@
       filePendingReads: 0,        // count of FileReader ops still in progress
       debug: { open: false },
       chat: { sending: false, messageCount: 0 },
-      agenticMode: true,  // Product default ON — agentic tool-calling loop (Cursor-class parity)
+      agenticMode: false,  // HELD_BY_POLICY — default OFF; enablement is a separate policy event
       agenticMaxIterations: 10,  // Max tool-call iterations per user message
       motd: {
         needle: 'PassiveRoleNotRoleplay.md',
@@ -10953,7 +10953,7 @@
         sessionId: 0,           // monotonic session counter
         waitingForIde: false,   // true when auto-retry polling for IDE
         autoRetryTimer: null,   // setInterval handle for auto-retry
-        scanPorts: [11435, 8080, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
+        scanPorts: [11435, 3000, 5000], // ports to scan for IDE (no Ollama :11434)
         lastScanResults: [],    // [{port, status, backend}] from last scan
       },
       // VSIX Extension Manager state
@@ -13793,64 +13793,8 @@
         logDebug('Primary backend (' + State.backend.url + ') failed: ' + e.message, 'warn');
       }
 
-      // ---- Try 1.5: RawrXD server on alternate port :8080 ----
-      if (State.backend.url.indexOf(':8080') === -1) {
-        try {
-          var altUrl = 'http://127.0.0.1:8080';
-          logDebug('Trying RawrXD server at ' + altUrl + '...', 'info');
-          var t0b = performance.now();
-          var altStatusData = null;
-          var altDetectedVia = '';
-
-          // Try /status
-          try {
-            var altRes = await fetch(altUrl + '/status', { signal: AbortSignal.timeout(3000) });
-            if (altRes.ok) { altStatusData = await altRes.json(); altDetectedVia = '/status'; }
-          } catch (_) { }
-
-          // Try /health
-          if (!altStatusData) {
-            try {
-              var altRes2 = await fetch(altUrl + '/health', { signal: AbortSignal.timeout(3000) });
-              if (altRes2.ok) {
-                var altD = await altRes2.json();
-                if (altD.status === 'ok') {
-                  altStatusData = Object.assign({}, altD, { backend: 'rawrxd-ide-server', server: 'RawrXD-IDE-Server' });
-                  altDetectedVia = '/health';
-                }
-              }
-            } catch (_) { }
-          }
-
-          if (altStatusData) {
-            var altLatency = Math.round(performance.now() - t0b);
-            State.backend.online = true;
-            State.backend.directMode = false;
-            State.backend.url = altUrl;
-            State.backend.lastPing = Date.now();
-            State.backend.serverType = altStatusData.backend || altStatusData.server || 'rawrxd-ide-server';
-            _ideServerUrl = altUrl;
-
-            if (altStatusData.capabilities) {
-              State.backend.capabilities = altStatusData.capabilities;
-            }
-
-            status.className = 'status-pill online';
-            text.textContent = 'ONLINE';
-
-            updateBackendInfo(altStatusData, altLatency);
-            updateModeBadge(true);
-            syncTitlebarStatus();
-            logDebug('Connected to ' + State.backend.serverType + ' via ' + altDetectedVia + ' on :8080 (' + altLatency + 'ms)', 'info');
-
-            await fetchModels();
-            await beaconProbeCliEndpoint();
-            return;
-          }
-        } catch (e) {
-          logDebug('Alternate :8080 also failed: ' + e.message, 'warn');
-        }
-      }
+      // ---- Try 1.5: DISABLED — do not prefer dead :8080 when configured :11435 is product ----
+      // G3_IDE_SERVER_REACHABILITY_11435_001: BACKEND_URL=http://127.0.0.1:11435; 8080_FALLBACK=IGNORE
 
       // ---- Try 2: DISABLED — LOCAL_ONLY_NO_OLLAMA (no :11434 Ollama fallback) ----
       if (false && State.backend.ollamaDirectUrl && State.backend.ollamaDirectUrl !== State.backend.url) {
@@ -14233,6 +14177,15 @@
     function changeModel() {
       var name = document.getElementById('modelSelect').value;
       State.model.current = name || null;
+      State.model.currentPath = null;
+      if (name && State.model.list) {
+        for (var mi = 0; mi < State.model.list.length; mi++) {
+          if (State.model.list[mi] && State.model.list[mi].name === name) {
+            State.model.currentPath = State.model.list[mi].path || null;
+            break;
+          }
+        }
+      }
 
       var badge = document.getElementById('modelBadge');
       var badgeText = document.getElementById('modelBadgeText');
@@ -14243,6 +14196,25 @@
         badgeText.textContent = name.length > 25 ? name.substring(0, 22) + '...' : name;
         rightModel.textContent = name.length > 20 ? name.substring(0, 17) + '...' : name;
         logDebug('Model selected: ' + name, 'info');
+
+        // Bridge selected GGUF into native runtime profile registry (prepare).
+        (async function () {
+          try {
+            var base = (State.backend && State.backend.url) || 'http://127.0.0.1:11435';
+            var regBody = { model: name };
+            if (State.model.currentPath) regBody.path = State.model.currentPath;
+            var r = await fetch(base + '/api/native/runtime/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(regBody),
+              signal: AbortSignal.timeout(15000)
+            });
+            if (r.ok) logDebug('[NativeE2E] runtime profile registered for ' + name, 'info');
+            else logDebug('[NativeE2E] runtime register HTTP ' + r.status + ' for ' + name, 'warn');
+          } catch (e) {
+            logDebug('[NativeE2E] runtime register skipped: ' + (e && e.message ? e.message : e), 'warn');
+          }
+        })();
 
         // Update safe decode status for new model
         updateSafeDecodeStatus();
@@ -15067,7 +15039,7 @@
 
     // ======================================================================
     // RawrXD Streaming Bridge — Production-grade NDJSON/SSE stream client
-    // Connects to MASM serve.exe (localhost:11435) or direct Ollama (11434)
+    // Connects to RawrXD Headless / Win32IDE (localhost:11435) — LOCAL_ONLY_NO_OLLAMA
     // Implements: AbortController, cross-chunk NDJSON buffer, token rate
     // ======================================================================
     class RawrXDStream {
@@ -17172,7 +17144,7 @@
 
       // Also test direct Ollama if we're currently going through the proxy
       if (!State.backend.directMode && State.backend.ollamaDirectUrl !== State.backend.url) {
-        logDebug('--- Also testing direct Ollama at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
+        logDebug('--- Also testing RawrXD at ' + State.backend.ollamaDirectUrl + ' ---', 'info');
         var ollamaEps = [
           { method: 'GET', path: '/' },
           { method: 'GET', path: '/api/tags' },
@@ -17186,9 +17158,9 @@
             var olat = Math.round(performance.now() - t1);
             var otxt = await ores.text();
             var oprev = otxt.length > 80 ? otxt.substring(0, 80) + '...' : otxt;
-            logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
+            logDebug('[RawrXD] ' + oep.method + ' ' + oep.path + ' \u2192 ' + ores.status + ' (' + olat + 'ms) ' + oprev, ores.ok ? 'info' : 'warn');
           } catch (oe) {
-            logDebug('[Ollama Direct] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
+            logDebug('[RawrXD] ' + oep.method + ' ' + oep.path + ' \u2192 FAILED: ' + oe.message, 'error');
           }
         }
       }
@@ -23631,8 +23603,15 @@
 
     // --- Backend URL Validation ---
     function isUrlAllowed(urlStr) {
+      if (!urlStr || typeof urlStr !== 'string') return false;
+      var u = urlStr.trim();
+      // Soften partial loopback keystrokes (avoids http://1 hard-block noise)
+      if (/^https?:\/\/(1|12|127|127\.|127\.0|127\.0\.|127\.0\.0|127\.0\.0\.|l|lo|loc|loca|local|localh|localho|localhos|localhost)/i.test(u) &&
+          !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?/i.test(u)) {
+        return true;
+      }
       for (var i = 0; i < State.security.urlAllowlist.length; i++) {
-        if (State.security.urlAllowlist[i].test(urlStr)) return true;
+        if (State.security.urlAllowlist[i].test(u)) return true;
       }
       return false;
     }
@@ -30629,6 +30608,8 @@
 
       this.lastPrepare = await this.post('/api/native/generation/prepare', {
         model: State.model.current || '',
+        path: State.model.currentPath || undefined,
+        model_path: State.model.currentPath || undefined,
         context: State.gen.context >>> 0,
         max_tokens: State.gen.maxTokens >>> 0,
         temperature_milli:

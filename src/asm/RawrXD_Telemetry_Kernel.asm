@@ -549,9 +549,11 @@ ENDIF
     mov  qword ptr [rsp+0E0h], rax ; slot index (frame store, no push misalign)
 
     ; 2. Calculate destination address: g_EventBuffer + ((slot & MASK) << SHIFT)
+    ; RIP-relative base + add — avoids ADDR32 (needs LAA:NO) for multi-GGUF LAA:YES.
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rdi, [g_EventBuffer + rax]
+    lea  rdi, [g_EventBuffer]
+    add  rdi, rax
 
 IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_UtcWitnessEnterFlat szUtcLogSlotAddr, P1PRA_UtcLogSlotAddrCalc87
@@ -579,12 +581,12 @@ ENDIF
 
     ; 4. Copy message string (bounded by remaining space)
     mov  rsi, rbx               ; Source = message
-    lea  rdx, [g_EventBuffer]
-    ; Calculate end-of-slot boundary
+    ; Calculate end-of-slot boundary (RIP-rel base + offset; LAA:YES safe)
     mov  rax, qword ptr [rsp+0E0h]
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rdx, [g_EventBuffer + rax]
+    lea  rdx, [g_EventBuffer]
+    add  rdx, rax
     add  rdx, EVENT_STRUCT_SIZE
     sub  rdx, 2                 ; Leave room for CRLF terminator
 
@@ -695,7 +697,8 @@ ENDIF
     mov  rax, rsi
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rbx, [g_EventBuffer + rax]
+    lea  rbx, [g_EventBuffer]
+    add  rbx, rax
 
 IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_UtcWitnessEnter szUtcFlushStrlen, P1PRA_UtcFlushStrlenSlot

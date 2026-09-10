@@ -940,7 +940,11 @@ bool MLAForward::Execute(const float* hidden, float* output,
                          rawrxd::deep2::K2KVCache* kvCache,
                          uint32_t layerIdx,
                          uint32_t position,
-                         MlaCompleteStats* stats) {
+                         MlaCompleteStats* stats,
+                         void (*onPin)(void*),
+                         void* pinCtx) {
+    (void)onPin;
+    (void)pinCtx;
     if (!hidden || !output) {
         error = "MLAForward: null input/output pointer";
         return false;

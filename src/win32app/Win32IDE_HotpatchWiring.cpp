@@ -785,6 +785,9 @@ std::string HeadlessIDE::getInstructionsContent() const {
 // ============================================================================
 // Model Operations
 // ============================================================================
+/* R1: do not compile duplicate HeadlessIDE::load/unload/infer — FORCE:MULTIPLE
+ * previously let these Ollama-11434 stubs win and break LOCAL_ONLY ProductRun. */
+#if 0
 bool HeadlessIDE::loadModel(const std::string& filepath) {
     m_outputSink->appendOutput(("Loading model: " + filepath).c_str(), OutputSeverity::Info);
     auto t0 = std::chrono::steady_clock::now();
@@ -829,10 +832,10 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
     }
 
     CPUInference::GGUFHeader hdr = loader->GetHeader();
-    // Validate magic: 0x46475547 = "GGUF" little-endian
-    if (hdr.magic != 0x46475547) {
+    // Validate magic: 0x46554747 = "GGUF" little-endian (G=0x47 G=0x47 U=0x55 F=0x46)
+    if (hdr.magic != 0x46554747u) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46475547)", hdr.magic);
+        snprintf(buf, sizeof(buf), "Bad GGUF magic: 0x%08X (expected 0x46554747)", hdr.magic);
         m_outputSink->appendOutput(buf, OutputSeverity::Error);
         loader->Close();
         return false;
@@ -1164,6 +1167,7 @@ std::string HeadlessIDE::getRouterStatusString() const {
 std::string HeadlessIDE::getCostLatencyHeatmapString() const {
     return "Cost/Latency heatmap: (headless mode — collecting data)";
 }
+#endif /* R1: disable HotpatchWiring HeadlessIDE duplicate symbols */
 
 // ============================================================================
 // Failure Detection (Phase 4B/6)

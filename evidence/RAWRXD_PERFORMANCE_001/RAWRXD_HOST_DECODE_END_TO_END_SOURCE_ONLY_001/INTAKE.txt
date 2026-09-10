@@ -1,0 +1,22 @@
+RAWRXD_HOST_DECODE_END_TO_END_SOURCE_ONLY — INTAKE
+==================================================
+PROMOTE=0  TIP_CLIMB=HOLD
+
+Source paths (user):
+  C:\Users\Garrett\Downloads\RAWRXD_HOST_DECODE_END_TO_END_SOURCE_ONLY.zip
+  C:\Users\Garrett\Downloads\RAWRXD_HOST_DECODE_END_TO_END_SOURCE_ONLY.patch
+
+SHA-256 verify:
+  patch 3011d9cac09259c0dbca597657f91393093019569b7a8693ef8a79b5598eefd6  MATCH=True
+  zip   689f7a97db492cb52e5483cdabd1322a684e4e502eb8eb4e177916745b9ccb3e  MATCH=True
+
+Claimed base: cert/p1pra-rc1
+Local tree:   cert/p1pra-rc1 ABSENT
+Apply status: git apply --check FAILED on current G:\~dev\rawrxd (context drift)
+  FAIL ElasticResidencyManager.hpp/.cpp
+  FAIL MoEWeightProxy.hpp/.cpp
+  FAIL Deep2Engine.cpp
+  OK(offset) MoEWeightsLoader.cpp hunk only (pread)
+
+Policy: do NOT invent ProductRuntime.hpp / FutureConsumer patches.
+Disposition: HOLD apply until p1pra-rc1 checkout present OR explicit surgical port authorized.

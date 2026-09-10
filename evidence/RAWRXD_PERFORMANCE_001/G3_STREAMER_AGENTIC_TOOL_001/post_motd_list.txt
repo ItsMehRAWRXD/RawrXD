@@ -1,0 +1,2 @@
+﻿STATUS=200
+{"path":"g:\\~dev\\rawrxd\\.cursor\\rules","entries":[{"name":"braid-dual-stream.mdc","type":"file"},{"name":"explanation-and-model-server.mdc","type":"file"},{"name":"MultitaskMode.mdc","type":"file"},{"name":"norefusal-hotpatch.mdc","type":"file"},{"name":"PassiveRoleNotRoleplay.md","type":"file"},{"name":"perf-completion-contract.mdc","type":"file"},{"name":"single-drive-merge.mdc","type":"file"},{"name":"StreamerAgenticContinueEnsure.mdc","type":"file"}]}

@@ -1,4 +1,4 @@
-/* FutureConsumer_Register.cpp — logical consumer registration only. */
+/* FutureConsumer_Register.cpp — logical consumer + chair bind (no scan). */
 #include "FutureConsumerSpace.hpp"
 #include "FutureConsumer_Internal.hpp"
 
@@ -22,24 +22,33 @@ ConsumerId Register(uint16_t layer, uint8_t op, uint8_t device,
     c.op = op;
     c.preferredDevice = device;
     c.tier = Tier::Future5;
+    c.chairId = CHAIR_INVALID;
+    c.expectedGeneration = 0;
     detail::ExecCounters& e = detail::Exec();
     e.consumersRegistered = n;
     e.logicalBytes = detail::LogicalCursor();
     const uint32_t page = freetoken::PickZone(device & 3u);
     if (page < FREETOKEN_ZONE_COUNT) {
-        PhysicalPage& p = detail::Pages()[page];
+        Chair& p = detail::Pages()[page];
+        p.resourceId = page;
+        c.chairId = page;
         if (!p.current) {
             p.current = c.consumerId;
+            c.expectedGeneration = p.generation;
+            c.tier = Tier::Current;
         } else if (!p.next) {
             p.next = c.consumerId;
+            c.expectedGeneration = p.generation + 1;
             e.queueDepthNow++;
             if (e.queueDepthNow > e.maxFutureQueueDepth)
                 e.maxFutureQueueDepth = e.queueDepthNow;
+            c.tier = Tier::Future1;
         } else {
             e.doubleOwner++;
             p.next = c.consumerId;
+            c.expectedGeneration = p.generation + 1;
+            c.tier = Tier::Future2;
         }
-        c.tier = Tier::Future2;
     }
     return c.consumerId;
 }
