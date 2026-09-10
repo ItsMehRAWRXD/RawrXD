@@ -26,6 +26,8 @@ void KickChair(future::ChairId chair, uint32_t expectedGen, uint32_t layerObs) {
     s.inflight.store(1);
     s.issued.store(1);
     s.p05.store(1);
+    /* P06: async host NVMe→RAM kick — no Vulkan ICD on this edge. */
+    s.p06.store(1);
     {
         std::lock_guard<std::mutex> lk(s.mu);
         s.jobChair = chair;

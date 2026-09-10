@@ -14,7 +14,8 @@ void ArmFromProductRun(uint32_t layers) {
     s.layers = layers ? layers : 2;
     s.lastEntered = ~0u;
     s.p02 = s.p03 = s.p04 = 0;
-    s.p05.store(0); s.p06.store(1); s.p07.store(0);
+    /* P06 live only when KickChair posts host prefetch (not arm-time). */
+    s.p05.store(0); s.p06.store(0); s.p07.store(0);
     s.p08.store(0); s.p09.store(0); s.p10.store(0);
     s.pChairWake = 0; s.pScanClosed = 1;
     s.fcBindEnter = s.fcBindOk = s.fcConsumerIdValid = 0;
