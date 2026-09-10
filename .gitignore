@@ -178,4 +178,7 @@ rawrxd_audit.jsonl
 /rawrxd/
 rawr_dispatcher_v2.cpp
 rawr_monolith_v2.cpp
+# Extracted runoff / reconstructed dumps (do not re-track)
+history/runoff/
+reconstructed/
 
