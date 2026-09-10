@@ -1,0 +1,32 @@
+GATE=G3_HOST_MOE_ASYNC_PREFETCH_001
+DATE=2026-09-10
+KIND=ORDERED_NEXT_AFTER_OPEN_STREAMABLE_AND_P06
+PROMOTE=0
+TIP_CLIMB=HOLD
+PERFORMANCE_PASS=0
+CAPACITY_PROOF_REOPEN=0
+K3_RUNTIME_ADOPTION=0
+DUALSTICK_GPU_ARM_REOPEN=0
+NOT_RUN=1
+PASS=0
+
+## Why NOT_RUN (fail-closed, not fiction PASS)
+HOST_MODELS_INVENTORY=dense_only
+MODELS_PRESENT=
+  tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  phi3-mini-Q2_K.gguf
+  gemma3-1b-Q2_K.gguf
+  llama3.2-3b-Q2_K.gguf
+MOE_GGUF_ON_HOST=0
+SOURCE_WIRED_PARTIAL=1
+  NVMeStream::prefetchExpert / registerExpert exist
+  HostFutureConsumerPrefetch_Nvme Pref→prefetchExpert(L,e)
+  DoHostMove may call nvmePrefetch(layer,0) but expert path unproven without MoE GGUF
+RUNTIME_REACHED=0
+TOKEN_SURVIVED=0
+ASYNC_EXPERT_PREFETCH_BEFORE_CURRENT=UNPROVEN
+
+OWNER=NO_MOE_GGUF_ON_HOST
+NEXT_WHEN_UNBLOCKED=live ProductRunDecode on MoE GGUF with expert prefetch issued before Current compute
+NEXT_AFTER_THIS=G3_UNIFIED_HOST_MOVE_001
+DO_NOT_CLAIM_DENSE_RANGE_PREFETCH_AS_MOE=1

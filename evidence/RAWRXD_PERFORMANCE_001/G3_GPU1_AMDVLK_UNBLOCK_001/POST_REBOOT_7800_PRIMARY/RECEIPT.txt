@@ -1,0 +1,20 @@
+GATE=G3_GPU1_AMDVLK_UNBLOCK_001
+PHASE=POST_REBOOT_7800_PRIMARY
+INTENT=7800XT=display; R9700=compute untouched
+TOPOLOGY_AFTER_REBOOT=
+  7800=ADAPTER0 + DISPLAY1 physical (Availability=3) A0=PASS
+  R9700=initially headless Availability=8; ICD enum DROPPED (MATCH=0)
+INCIDENT=
+  Attempt to bind VDD to R9700 caused CM_PROB_FAILED_POST_START (43) on R9700
+  R9700 absent from DXGI; recovery remove/rescan/restart insufficient
+  VDD left DISABLED; physical 7800 display remains
+CURRENT=
+  7800_A0_exit=0
+  R9700_A0_exit=5 (expect fail while PnP Error)
+NEXT_MANDATORY=REBOOT to restore R9700 KMD start
+AFTER_REBOOT=
+  Keep physical monitor on 7800 (user intent)
+  Do NOT rebind VDD to R9700 without a proven multi-GPU IdD path
+  Prefer HDMI dummy / second cable on R9700 for headless ICD enum+create
+  Or accept R9700 headless only if post-reboot ICD still enums it (asymmetric vs 7800)
+PROMOTE=0

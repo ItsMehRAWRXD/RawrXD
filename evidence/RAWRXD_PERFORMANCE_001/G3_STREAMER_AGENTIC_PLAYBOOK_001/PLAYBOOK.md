@@ -3,6 +3,7 @@
 PROMOTE=0 · TIP_CLIMB=HOLD · DualStick/ICD not reopened · ProductRunDecode frozen
 
 Deep2 = IndexedModel + LiveWorkingSet + FutureConsumerPrefetch + LaneIsolatedGPUExec + NanosecondStageTelemetry + TokenDeadline(6_666_667ns);
+PROMOTE_IF = LIVE_WORKING_SET && FUTURE_CONSUMER_READY && TOKEN_WALL_NS<=6666667; MODEL_SIZE/FULL_RESIDENCY are not gates. PROMOTE=0 until live E2E+deadline.
 
 Authorizing rule: a phase that independently verifies its gate auto-un-excludes that surface from
 "streamer agentic blocked". Pool inclusion ≠ multi-family ProductOpen green.
@@ -25,3 +26,5 @@ S4 partial / process-survive gaps on some parent probes.
 S5 PASS on build-fd RawrXD-Win32IDE (HEADLESS_OPEN: INIT/SESSION + PRODUCT_OPEN_PASS=1; see G3_PRODUCT_OPEN_STREAMABLE_001).
 S6 PARTIAL — phi3+gemma3 ProductOpen PASS (R25_PRODUCTOPEN_*); multi-family rollup NOT 10/10; R1 matrix stays 7/10 FAIL_CLOSED.
 P06 honesty LIVE (KickChair; see P06_HONEST_RECEIPT). MoE async prefetch NOT_RUN (no MoE GGUF).
+
+Child live: G3_R1_GEMMA3_ROPE_UNBLOCK_001 PASS (S6 gemma3-only; multi-family still NOT_GREEN).

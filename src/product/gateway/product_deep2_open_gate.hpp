@@ -73,5 +73,3 @@ inline ProductOpenFacts CollectOpenFacts(const product_run::ProductRuntime& rt) 
 
 } // namespace product_infer_detail
 } // namespace rawr
-
-#include "product_deep2_open_emit.hpp"

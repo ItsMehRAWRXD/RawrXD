@@ -1,0 +1,45 @@
+GATE=G3_GPU1_AMDVLK_UNBLOCK_001
+VERIFY_PHASE=POST_REBOOT_7800_DISPLAY
+ASOF=2026-09-09T19:50
+PROMOTE=0
+POST_REBOOT=1
+LAST_BOOT=2026-09-09T19:41:08
+DISPLAY_ADAPTER=RX7800XT
+R9700_UNTOUCHED=1
+
+# --- WMI role swap vs pre-reboot ---
+WMI_RX7800XT_Availability=3
+WMI_R9700_Availability=8
+  # inverted from P0 (was 7800=8, R9700=3)
+
+# --- 7800 gate ---
+SOLO_RX7800XT_A0=PASS_5_OF_5
+VULKANINFO=PASS (retry; first parallel run EXIT=-1 spurious)
+VULKANINFO_LISTS_7800=1
+RX7800XT_POOL_STATUS=INCLUDED
+INCLUSION_MODE=NATIVE_DISPLAY_PRIMARY
+UNBLOCK_PHASE=P1_PLUS_DISPLAY_PRIMARY
+BLOCKER_A_7800=RESOLVED_VIA_DISPLAY_PRIMARY_AFTER_ULPS_REBOOT
+  # P1 resets alone were not verified pre-reboot; decisive change is
+  # 7800 as Windows display adapter (Availability=3) + reboot.
+
+# --- R9700 (now secondary) ---
+SOLO_R9700_A0=FAIL
+R9700_PNP_STATUS=Error
+R9700_CM_PROB=CM_PROB_FAILED_POST_START
+R9700_CONFIG_MANAGER_ERROR=43
+R9700_DXGI_PRESENT=0
+R9700_DIRECT_ICD_ENUM_PHYSICAL=1
+R9700_DIRECT_ICD_MATCH=0
+  # R9700 absent from DXGI and amdvlk enum (device Code 43 after display switch)
+VULKANINFO_LISTS_R9700=0
+BOTH_PASSING=0
+ENABLE_DISABLE_ATTEMPT=DID_NOT_CLEAR_CODE_43
+
+STATEMENT=
+  AMDVLK create failure tracked secondary/Availability=8; with 7800 as display primary,
+  7800 A0 PASSes 5/5. R9700 entered Code 43 (FAILED_POST_START) and dropped out of DXGI —
+  true dual blocked until R9700 device recovers without stealing display primary.
+
+NEXT=recover R9700 from Code 43 (Device Manager reset / clean AMD restart / reboot with both OK)
+PROMOTE=0

@@ -1,0 +1,16 @@
+VDD_DISABLE=OK
+R9700_ENABLE=OK
+R9700_CYCLE=OK
+VDD_ENABLE=OK
+Microsoft PnP Utility
+
+Restarting device:         PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916a45&0&00000009
+Device restarted successfully.
+
+Microsoft PnP Utility
+
+Restarting device:         ROOT\DISPLAY\0000
+Device restarted successfully.
+
+STATUS Virtual Display Driver=OK Problem=CM_PROB_NONE
+STATUS AMD Radeon AI PRO R9700=Error Problem=CM_PROB_FAILED_POST_START

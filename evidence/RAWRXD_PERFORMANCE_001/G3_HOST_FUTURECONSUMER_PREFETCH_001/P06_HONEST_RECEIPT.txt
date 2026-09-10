@@ -1,0 +1,38 @@
+GATE=G3_HOST_FUTURECONSUMER_PREFETCH_001
+KIND=P06_HONESTY_PHASE
+DATE=2026-09-10
+PROMOTE=0
+TIP_CLIMB=HOLD
+PERFORMANCE_PASS=0
+DUALSTICK_GPU_ARM_REOPEN=0
+
+## Prior claim (unchanged; not rewritten)
+PRIOR_RECEIPT_VERDICT=12/12_PREDICATES_LIVE
+PRIOR_VERIFY=VERIFY_LIVE.txt CLAIM_12_12_HONEST=0 P06_INFLATED=1
+DO_NOT_REWRITE_OLD_RECEIPT=1
+
+## Code change (cheap/reversible)
+BEFORE=ArmFromProductRun p06.store(1) HARDCODED
+AFTER_ARM=p06.store(0)
+AFTER_LIVE=KickChair sets p06.store(1) when async host NVMe→RAM job posted
+FILES=
+  src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
+  src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
+
+## Live prove
+EXE=build-fd/bin/rawr.exe
+MODEL=models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ENV=RAWRXD_HOST_DECODE=1
+LOG=P06_HONEST.err.txt
+EMIT=P02=1 P03=1 P04=1 P05=1 P06=1 P07=1 P08=1 P09=1 P10=1 P11=0
+GENERATED_TOKENS=4
+TOKEN_SURVIVED=1
+P06_LIVE_FROM_KICKCHAIR=1
+P06_HARDCODED_AT_ARM=0
+
+## Honesty rollup
+P06_INFLATED=0 (this binary+log)
+CLAIM_12_12_FULL_TABLE=STILL_NOT_RECLAIMED
+NOTE=P08/P09 remain weak (set on inflight==0 and await paths); PREFETCH_HITS counter separate
+VERDICT=P06_HONEST_LIVE_PASS
+NEXT=G3_HOST_MOE_ASYNC_PREFETCH_001

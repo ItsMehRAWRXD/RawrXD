@@ -1,0 +1,7 @@
+Microsoft PnP Utility
+
+Restarting device:         ROOT\DISPLAY\0000
+Device restarted successfully.
+
+
+DONE 2026-09-09T19:51:28.7759568-04:00

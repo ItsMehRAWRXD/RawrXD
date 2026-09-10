@@ -1,0 +1,23 @@
+VDD_DISABLED
+Microsoft PnP Utility
+
+Removing device:          PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916a45&0&00000009
+Device removed successfully.
+
+Microsoft PnP Utility
+
+Scanning for device hardware changes.
+Scan complete.
+
+R9700_AFTER_SCAN Status=Error Problem=CM_PROB_FAILED_POST_START Id=PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916A45&0&00000009
+Microsoft PnP Utility
+
+Restarting device:         PCI\VEN_1002&DEV_7551&SUBSYS_E4991DA2&REV_C0\6&8916a45&0&00000009
+Device restarted successfully.
+
+R9700_AFTER_RESTART Status=Error Problem=CM_PROB_FAILED_POST_START
+VDD_LEFT_DISABLED=1 (7800 has physical DISPLAY1)
+DISPLAY Error Virtual Display Driver
+DISPLAY OK AMD Radeon(TM) Graphics
+DISPLAY Error AMD Radeon AI PRO R9700
+DISPLAY OK AMD Radeon RX 7800 XT
