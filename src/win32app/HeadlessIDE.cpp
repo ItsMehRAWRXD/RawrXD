@@ -1799,41 +1799,50 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
         }
         std::fprintf(stderr, "HEADLESS_LOADMODEL=OK path=%s\n",
                      localPath.c_str());
-        /* R25 MASM ProductOpenGguf — enforce only when RAWRXD_R25_GATE=1 (smoke PASS). */
+        /* R25 MASM ProductOpenGguf — call ONLY when RAWRXD_R25_GATE=1.
+         * Unconditional call APPCRASH'd (0xC0000005 ntdll) after Tiny load. */
         {
             const char* gate = std::getenv("RAWRXD_R25_GATE");
             const int enforce = gate && gate[0] == '1';
-            wchar_t wpath[MAX_PATH * 2];
-            wpath[0] = 0;
-            MultiByteToWideChar(CP_UTF8, 0, localPath.c_str(), -1, wpath,
-                                (int)(sizeof(wpath) / sizeof(wpath[0])));
-            R25_GGUF_PROOF proof{};
-            const uint64_t st = R25_ProductOpenGguf(wpath, &proof);
-            R25_CloseLastMapping();
-            std::fprintf(stderr,
-                         "R25_PRODUCTOPEN status=%llu tensors_scanned=%llu "
-                         "embed=%llu lm_head=%llu product_open=%llu enforce=%d\n",
-                         (unsigned long long)st,
-                         (unsigned long long)proof.tensors_scanned,
-                         (unsigned long long)proof.token_embed_found,
-                         (unsigned long long)proof.lm_head_found,
-                         (unsigned long long)proof.product_open, enforce);
-            std::fflush(stderr);
-            if (enforce &&
-                (st != R25_PRODUCTOPEN_OK || proof.product_open != 1 ||
-                 proof.tensors_scanned == 0 || proof.token_embed_found == 0 ||
-                 proof.lm_head_found == 0)) {
-                std::fprintf(stderr, "HEADLESS_READY=0 SOURCE=R25_PRODUCTOPEN_FAIL\n");
+            if (enforce) {
+                wchar_t wpath[MAX_PATH * 2];
+                wpath[0] = 0;
+                MultiByteToWideChar(CP_UTF8, 0, localPath.c_str(), -1, wpath,
+                                    (int)(sizeof(wpath) / sizeof(wpath[0])));
+                R25_GGUF_PROOF proof{};
+                const uint64_t st = R25_ProductOpenGguf(wpath, &proof);
+                R25_CloseLastMapping();
+                std::fprintf(stderr,
+                             "R25_PRODUCTOPEN status=%llu tensors_scanned=%llu "
+                             "embed=%llu lm_head=%llu product_open=%llu enforce=1\n",
+                             (unsigned long long)st,
+                             (unsigned long long)proof.tensors_scanned,
+                             (unsigned long long)proof.token_embed_found,
+                             (unsigned long long)proof.lm_head_found,
+                             (unsigned long long)proof.product_open);
                 std::fflush(stderr);
-                m_outputSink->appendOutput(
-                    "R25_ProductOpenGguf failed (tensors/embed/lm_head)",
-                    OutputSeverity::Error);
-                return false;
+                if (st != R25_PRODUCTOPEN_OK || proof.product_open != 1 ||
+                    proof.tensors_scanned == 0 || proof.token_embed_found == 0 ||
+                    proof.lm_head_found == 0) {
+                    std::fprintf(stderr, "HEADLESS_READY=0 SOURCE=R25_PRODUCTOPEN_FAIL\n");
+                    std::fflush(stderr);
+                    m_outputSink->appendOutput(
+                        "R25_ProductOpenGguf failed (tensors/embed/lm_head)",
+                        OutputSeverity::Error);
+                    return false;
+                }
+            } else {
+                std::fprintf(stderr, "R25_PRODUCTOPEN=SKIP GATE_OFF\n");
+                std::fflush(stderr);
             }
         }
-        /* READY after ProductOpenSession; R25 enforce via RAWRXD_R25_GATE=1. */
+        /* READY after ProductOpenSession; open ≠ promote tetrad. */
         std::fprintf(stderr,
-                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS path=%s\n",
+                     "HEADLESS_READY=1 SOURCE=PRODUCT_OPEN_PASS "
+                     "SCOPE=PRODUCT_OPEN_ONLY PROMOTE=0 "
+                     "FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+                     "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS "
+                     "NEXT_INDEPENDENT_GATE=MULTI_FAMILY path=%s\n",
                      localPath.c_str());
         std::fflush(stderr);
     } else {

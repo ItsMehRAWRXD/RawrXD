@@ -6548,6 +6548,10 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                 xf.teardownOk = out.cancelled ? 0 : 1;
                 xf.measuredReal = 1;
                 xf.modelProvenanceMatch = g_modelProv.ok ? 1 : 0;
+                xf.productOpenPass = isModelLoaded() ? 1 : 0;
+                xf.sessionEnterPass = 1;
+                xf.tokenCommitPass =
+                    (out.generatedTokens > 0 && st.count > 0) ? 1 : 0;
                 rawr::product_path::Emit(stderr, xf);
             }
             Deep2::Ev512::HostEmitEndReason(out.completed ? 0ull : 1ull,
@@ -6803,6 +6807,10 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         xf.teardownOk = 1;
         xf.measuredReal = 1;
         xf.modelProvenanceMatch = g_modelProv.ok ? 1 : 0;
+        xf.productOpenPass = isModelLoaded() ? 1 : 0;
+        xf.sessionEnterPass = 1;
+        xf.tokenCommitPass =
+            (result.generatedTokens > 0 && !streamed.empty()) ? 1 : 0;
         {
             auto r0 = rawr::iso_ladder::Clock::now();
             RAWR_DECODE_SCOPE_RECEIPT();

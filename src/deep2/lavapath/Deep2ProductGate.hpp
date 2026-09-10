@@ -1,9 +1,10 @@
 #pragma once
-/* Readiness/promote = live generate probe. ≤99.
+/* Final readiness = live generate tetrad. ≤99.
    PROMOTE_IF = PRODUCT_OPEN_PASS && SESSION_ENTER_PASS
                 && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS;
-   PROMOTE=0 until that probe passes. MULTI_FAMILY is next independent gate
-   (not part of TinyLlama R25 ProductOpen). MODEL_SIZE/FULL_RESIDENCY ≠ gates. */
+   PROMOTE=0 until that probe passes (TIP_CLIMB=HOLD).
+   MULTI_FAMILY = next independent gate — not TinyLlama R25 ProductOpen.
+   MODEL_SIZE / FULL_RESIDENCY / TPS ≠ promote gates. */
 #include "TokenWallNs.hpp"
 #include <cstdint>
 
@@ -19,7 +20,7 @@ inline int MeanDeadlineOk(uint64_t tokens, uint64_t wallNs) noexcept {
     return DeadlineOk(wallNs / tokens);
 }
 
-/* Final readiness/promote gate (not MULTI_FAMILY, not TPS). */
+/* PRODUCT_PASS / readiness only. Callers must still emit PROMOTE=0. */
 inline int PromoteReady(int productOpenPass, int sessionEnterPass,
                         uint64_t generatedTokens,
                         int tokenCommitPass) noexcept {
