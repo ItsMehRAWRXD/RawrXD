@@ -1,48 +1,65 @@
 ﻿GATE=G3_IDE_RESIDUAL_R09_001
 PARENT=G3_IDE_RESIDUAL_AUDIT_001
-ASOF=2026-09-10T10:00-04:00
+ASOF=2026-09-10T10:05-04:00
 KIND=CLASSIFICATION_RECEIPT
 PROMOTE=0
 TIP_CLIMB=HOLD
-R09=CLASSIFIED
+R09=CLOSED
+R09_DETAIL=CLASSIFIED_SEVEN_BUCKET_MATRIX
 R20=UNTOUCHED
 DO_NOT_REOPEN=R01,R02,R03,R04,R05,R06
+STALE_01_00_WITNESSES=NOT_EVIDENCE
 
-AUTHORITY_IN=
+AUTHORITY_IN (user this spend)=
   GATE=G3_IDE_RESIDUAL_AUDIT_001
   R02=CLOSED R03=CLOSED R05=HELD_BY_POLICY R06=CLOSED
   AGENTIC_MODE=false OLLAMA_DIRECT_URL=:11435 SCANPORTS_11434=0
   MODEL_PROFILE_NOT_FOUND_RESIDUAL=0 ENGINEAPI_THIN_ADAPTERS=CLOSED
-  OPEN=R09,R10,R11,R12,R13,R14,R15,R25 R20=HELD
-
-AUTHORITY_OUT=
-  R09=CLASSIFIED (PARITY_MATRIX.txt sealed)
-  R10=CLOSED_BY_R03 (SHARED_AND_LIVE — drop from OPEN)
-  OPEN=R11,R12,R13,R14,R15,R25
+  OPEN=R09,R10,R11,R12,R13,R14,R15,R25
   R20=HELD
   PROMOTE=0 TIP_CLIMB=HOLD
 
-BUCKET_COUNTS (primary assignments; multi-owner notes in matrix)=
-  SHARED_AND_LIVE=product generate/model/tool/FS/R03/backends
-  HEADLESS_ONLY=github webhook, native/*, hexmag, quantum/manifest aliases
-  LOCALSERVER_ONLY=rich lsp/debug/swarm/cot/hybrid/multi-response/replay/router mutate
-  INTENTIONALLY_THIN=Headless * /status + empty agents/failures + R03 thin JSON
-  ACTUAL_MISSING_PARITY=R11 native prepare; R13 agents/replay pending decision; R25 router mutate if GUI hits Headless
-  POLICY_HELD=R12 lsp/debug full; instructions 503 server profile; LOCAL_ONLY; R20
-  OPS_ONLY=R15 smoke_bin; R14 unobserved session E2E
+BUCKET_LAW (user-required; prevents thin→stub misclass)=
+  SHARED_AND_LIVE
+  HEADLESS_ONLY
+  LOCALSERVER_ONLY
+  INTENTIONALLY_THIN
+  ACTUAL_MISSING_PARITY
+  POLICY_HELD
+  OPS_ONLY
 
 ARTIFACTS=
-  PARITY_MATRIX.txt
-  RECEIPT.txt (this file)
+  PARITY_MATRIX.txt — canonical seven-bucket map (this spend)
+  MATRIX.txt — peer enum + SHARED_FULL/INTENTIONAL_THIN/GUI_LOCALSERVER_OWNED/PRODUCT_GAP
+              (same disposition; bucket synonyms mapped below)
+  ENUM_*_LITERALS.txt — literal extract aid only (≠ contract)
 
-STALE_EVIDENCE_BAN=
-  KEY_WITNESSES ASOF=01:00 agenticMode:true / ollamaDirectUrl:11434 /
-  model_profile_not_found — NOT valid for current disposition
+BUCKET_SYNONYM_MAP=
+  SHARED_AND_LIVE      ↔ MATRIX SHARED_FULL (+ shared status presence)
+  HEADLESS_ONLY         ↔ MATRIX HEADLESS_PRODUCT
+  LOCALSERVER_ONLY      ↔ MATRIX GUI_LOCALSERVER_OWNED
+  INTENTIONALLY_THIN    ↔ MATRIX INTENTIONAL_THIN
+  ACTUAL_MISSING_PARITY ↔ MATRIX PRODUCT_GAP (R11 native LocalServer; R13 agents hollow)
+  POLICY_HELD           ↔ MATRIX NOT_GAP holds (R12 lsp/debug; R20; LOCAL_ONLY; instructions 503)
+  OPS_ONLY              ↔ R15 smoke_bin / R14 UNOBSERVED E2E
 
-VERDICT=PASS_CLASSIFICATION_ONLY
-NEXT=R11 native prepare parity decision OR R13 agents/replay wire-vs-hold decision
-  (do not implement R10; do not flip R20; do not reopen R01–R06)
+AUTHORITY_OUT=
+  R09=CLOSED (matrix sealed; classification-only — no route invent)
+  R10=CLOSED_BY_R03 (SHARED_AND_LIVE — drop from OPEN)
+  OPEN=R11,R12,R13,R14,R15,R25
+  R20=HELD untouched
+  PROMOTE=0 TIP_CLIMB=HOLD
 
-TABLE_ROW_SYNC=CLOSED
-ON_R09_PASS_NEXT=R13_AGENTS_WIRE
+NEXT_OWNERS=
+  R11 ACTUAL_MISSING_PARITY — /api/native/* on LocalServer vs Headless TryHandle
+  R12 POLICY_HELD — full lsp/debug stays LOCALSERVER_ONLY authority
+  R13 ACTUAL_MISSING_PARITY vs INTENTIONALLY_THIN decision — agents[] hollow / replay
+  R14 OPS_ONLY/UNOBSERVED — session/replay E2E optional
+  R15 OPS_ONLY — smoke_bin; no dual ninja on build-fd exe
+  R25 router — INTENTIONALLY_THIN status; mutate LOCALSERVER_ONLY; LOCAL_ONLY fail-closed
 
+VERDICT=PASS
+INVENTED_PASS=0
+THIN_NE_STUB=1
+THIN_NE_GAP=1
+LIVE_HTTP_REPROBE=0

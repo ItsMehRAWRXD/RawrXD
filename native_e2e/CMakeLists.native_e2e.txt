@@ -12,6 +12,7 @@ add_library(RawrNativeWebBridge STATIC
     "${_RN_E2E_DIR}/runtime_gguf_meta.cpp"
     "${_RN_E2E_DIR}/runtime_gguf_disk_resolve.cpp"
     "${_RN_E2E_DIR}/runtime_gguf_disk_try.cpp"
+    "${_RN_E2E_DIR}/runtime_seed_compat.cpp"
 )
 
 set_source_files_properties(

@@ -102,9 +102,13 @@ uint64_t __cdecl RawrNative_ModelBridgeCapabilities(void);
 uint32_t __cdecl RawrNative_ModelBridgeResolveProfile(
     const char* model_name, RawrNativeProfileInfo* out_info);
 
-/* Exact runtime GGUF metadata can override/fill static ModelBridge profiles. */
+/* Exact runtime GGUF metadata can override/fill static ModelBridge profiles.
+ * RegisterRuntimeModelSrc source examples: model_metadata | seed_compat */
 uint32_t RawrNative_RegisterRuntimeModel(
     const char* model_name, const RawrNativeProfileInfo* info);
+uint32_t RawrNative_RegisterRuntimeModelSrc(
+    const char* model_name, const RawrNativeProfileInfo* info,
+    const char* source);
 uint32_t RawrNative_UnregisterRuntimeModel(const char* model_name);
 
 uint32_t __cdecl RawrNative_NormalizePolicy(

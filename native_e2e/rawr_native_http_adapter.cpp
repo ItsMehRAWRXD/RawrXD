@@ -8,16 +8,15 @@
 #include <stdarg.h>
 #include "rawr_native_e2e_abi.h"
 #include "runtime_gguf_disk_resolve.h"
+#include "runtime_seed_compat.h"
 
 extern "C" uint32_t RawrNative_RegisterRuntimeModelSrc(
     const char* model_name, const RawrNativeProfileInfo* info,
     const char* source);
 
-/* G3_IDE_MODEL_PROFILE_ADMISSION_001: no name seed table.
- * Admission is GGUF header KV via runtime_gguf_meta / disk register. */
+/* Admission authority = GGUF KV meta. Compat seeds live in runtime_seed_compat.cpp. */
 static void seed_default_runtime_models(void) {
-    static volatile LONG once = 0;
-    (void)InterlockedCompareExchange(&once, 1, 0);
+    RawrNative_SeedCompatOnce();
 }
 
 struct RouteDef {

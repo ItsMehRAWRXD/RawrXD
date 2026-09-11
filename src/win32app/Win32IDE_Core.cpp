@@ -2356,6 +2356,18 @@ void Win32IDE::showWindow()
 #endif
     FLASHWINFO fwi = {sizeof(FLASHWINFO), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 3, 0};
     FlashWindowEx(&fwi);
+    /* R11: early LocalServer so /api/native/* works before deferredHeavyInit. */
+    if (const char* els = std::getenv("RAWRXD_EARLY_LOCAL_SERVER")) {
+        if (els[0] == '1' || els[0] == 'y' || els[0] == 'Y') {
+            try {
+                startLocalServer();
+                fprintf(stderr, "[R11] EARLY_LOCAL_SERVER=1 startLocalServer ok\n");
+            } catch (...) {
+                fprintf(stderr, "[R11] EARLY_LOCAL_SERVER startLocalServer failed\n");
+            }
+            fflush(stderr);
+        }
+    }
 }
 
 // ============================================================================

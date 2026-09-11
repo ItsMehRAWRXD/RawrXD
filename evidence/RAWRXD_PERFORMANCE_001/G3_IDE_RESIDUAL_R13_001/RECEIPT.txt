@@ -1,34 +1,44 @@
-GATE=G3_IDE_RESIDUAL_R13_001
-ASOF=2026-09-10T10:05-04:00
+﻿GATE=G3_IDE_RESIDUAL_R13_001
+ASOF=2026-09-10T10:15-04:00
 KIND=LIVE_HEADLESS_AGENTS_WIRE
-PARENT=G3_IDE_RESIDUAL_R09_001
+DECISION=WIRE
+PARENT=G3_IDE_RESIDUAL_R09_001 ACTUAL_MISSING_PARITY
 PROMOTE=0
 TIP_CLIMB=HOLD
 DUALSTICK_REOPEN=0
-LOCKED_CLOSED=R01-R06,R10
+LOCKED_CLOSED=R01-R06,R10,R11
+R20=UNTOUCHED
 R13=CLOSED
 VERDICT=PASS
 
 WIRE_SPEC=WIRE_SPEC.txt
 IMPL=
-  src/win32app/HeadlessAgentsRing.hpp
-  src/win32app/HeadlessAgentsJson.hpp
-  HeadlessIDE.{h,cpp} history/status/replay handlers
-  HeadlessIDE_ToolRoutes.cpp tool: recordSimpleEvent
+  src/win32app/HeadlessAgentsRing.hpp — Ring CAP=256
+  src/win32app/HeadlessAgentsJson.hpp — history/status JSON
+  HeadlessIDE.h — HostedHttpRequest.query + m_agentsRing
+  HeadlessIDE.cpp — recordSimpleEvent type map; history query reattach;
+                    handleAgentsReplay; routeStatusRequest agents/*
+  HeadlessIDE_ToolRoutes.cpp — tool: -> recordSimpleEvent
+  NO AgentHistoryRecorder / NO ReplayJournal on record path
+  NOT copying GUI LocalServer panel inventories (R09 LOCALSERVER_ONLY)
 
 LIVE=
-  EXE_SHA16=F465B1C17CAB2775
-  PORT=11489
-  GET /api/agents/status=200 agents{} object (not hollow [])
-  GET /api/agents/history=200 events non-empty (session_boot + tools)
-  POST /api/agents/replay agent_id=headless dry_run=200 events_replayed>=1
-  POST /api/agents/replay missing agent_id=400
-  POST /api/agents/replay unknown=404
-  ARTIFACTS=SMOKE.txt SMOKE2.txt
+  EXE_SHA16=96842C639D03FF08
+  PORT=11491 --headless --dir G:\~dev
+  GET /api/agents + /api/agents/status =200 agents{} object (not hollow [])
+  GET /api/agents/history =200 events non-empty (session_boot)
+  GET /api/agents/history?agent_id=headless&limit=5 =200
+  GET /api/agents/history?agent_id=no_such_agent =200 events=[]
+  POST /api/agents/replay agent_id=headless dry_run =200 events_replayed>=1
+  POST /api/agents/replay missing agent_id =400
+  POST /api/agents/replay unknown =404
+  ARTIFACTS=SMOKE3.txt ide3.out.txt ide3.err.txt
 
 CONSTRAINTS=
-  REPLAY_JOURNAL=0 AgentHistoryRecorder not on record path
+  REPLAY_JOURNAL=0 PERSIST_JSONL=0
   GUI_LOCALSERVER_OWNED panels not copied
   LOCAL_ONLY preserved
+  PROMOTE=0 TIP_CLIMB=HOLD
 
-NEXT=R14_REPLAY_E2E_UNOBSERVED optional; or R11 native LocalServer
+OPEN_POOL_OUT=R12,R14,R15,R25
+NEXT=R12 POLICY_HELD document-only OR R14 optional session E2E OR R15 OPS

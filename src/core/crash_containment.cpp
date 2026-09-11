@@ -226,11 +226,12 @@ static void writeCrashLog(const char* path, const CrashReport& report) {
         "Last Applied Patch ID: %u\r\n"
         "Patch Rollback Attempted: %s\r\n"
         "Patch Rollback Succeeded: %s\r\n\r\n"
-        "Dump File: %s\r\n",
+        "Dump Path: %s\r\n"
+        "Dump Written: %s\r\n",
         (unsigned long long)report.timestampMs,
         (unsigned)report.threadId, (unsigned)report.processId,
         (unsigned)report.exceptionCode, (unsigned long long)report.rip,
-        report.moduleName,
+        report.moduleName[0] ? report.moduleName : "<unknown>",
         (unsigned long long)report.rip,
         (unsigned long long)report.rsp,
         (unsigned long long)report.rbp,
@@ -254,7 +255,10 @@ static void writeCrashLog(const char* path, const CrashReport& report) {
         (unsigned)report.lastAppliedPatchId,
         report.patchRollbackAttempted ? "Yes" : "No",
         report.patchRollbackSucceeded ? "Yes" : "No",
-        report.dumpPath);
+        report.dumpPath[0] ? report.dumpPath : "(none)",
+        (report.dumpPath[0] && GetFileAttributesA(report.dumpPath) != INVALID_FILE_ATTRIBUTES)
+            ? "Yes"
+            : "No");
 
     WriteFile(hFile, buf, (DWORD)len, &written, nullptr);
     CloseHandle(hFile);

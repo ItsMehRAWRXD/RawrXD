@@ -25,6 +25,10 @@
     OPTIONAL → ERASE | SATISFIED → ERASE | NEVER_MATERIALIZED_TEARDOWN → ERASE
     FAILED_PATH_WITH_ALTERNATIVE → SUBSTITUTE | DEFERRABLE → DEFER
     ONLY_IRREDUCIBLE_NOW → Produce1 → LavaPath → receipt → observe
-  PRODUCT_PASS = remaining_delta==0 AND lavapath receipts AND TD iff materialized
+  LAVAPATH_COMPLETE = remaining_delta==0 AND lavapath receipts AND TD iff materialized
+  PRODUCT_PASS / PROMOTE_IF = PromoteReady tetrad only
+    (PRODUCT_OPEN_PASS && SESSION_ENTER_PASS
+     && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS); PROMOTE=0 until probe
+  MULTI_FAMILY = next independent gate (≠ TinyLlama R25 ProductOpen)
 */
 

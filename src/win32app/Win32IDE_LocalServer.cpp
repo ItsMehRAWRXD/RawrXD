@@ -34,6 +34,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -84,9 +85,25 @@ bool MotdLeafIsCanonical(const std::string& path)
     return leaf == "passiverolenotroleplay.md" || leaf == "passiverolenotroleplay.mdc";
 }
 
+bool MotdIsTwinLeaf(const std::string& a, const std::string& b)
+{
+    if (!MotdLeafIsCanonical(a) || !MotdLeafIsCanonical(b))
+        return false;
+    auto parentKey = [](std::string p) {
+        p = MotdNormKey(std::move(p));
+        auto slash = p.find_last_of('\\');
+        return (slash == std::string::npos) ? std::string() : p.substr(0, slash);
+    };
+    return !parentKey(a).empty() && parentKey(a) == parentKey(b);
+}
+
 bool MotdFindCanonical(const std::string& projectRoot, std::string& resolved, std::string& errJson)
 {
-    const char* rel = ".cursor\\rules\\PassiveRoleNotRoleplay.md";
+    // Prefer .mdc (Cursor alwaysApply twin), then .md — same authority as HeadlessIDE_ToolRoutes.
+    const char* rels[] = {
+        ".cursor\\rules\\PassiveRoleNotRoleplay.mdc",
+        ".cursor\\rules\\PassiveRoleNotRoleplay.md"
+    };
     std::vector<std::string> roots;
     if (!projectRoot.empty())
         roots.push_back(projectRoot);
@@ -108,18 +125,20 @@ bool MotdFindCanonical(const std::string& projectRoot, std::string& resolved, st
         }
     }
     for (const auto& root : roots) {
-        std::string cand = root + "\\" + rel;
-        if (GetFileAttributesA(cand.c_str()) == INVALID_FILE_ATTRIBUTES)
-            continue;
-        char full[MAX_PATH * 4] = {};
-        DWORD n = GetFullPathNameA(cand.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
-        if (n > 0 && n < sizeof(full) && MotdLeafIsCanonical(full)) {
-            resolved.assign(full);
-            return true;
+        for (const char* rel : rels) {
+            std::string cand = root + "\\" + rel;
+            if (GetFileAttributesA(cand.c_str()) == INVALID_FILE_ATTRIBUTES)
+                continue;
+            char full[MAX_PATH * 4] = {};
+            DWORD n = GetFullPathNameA(cand.c_str(), static_cast<DWORD>(sizeof(full)), full, nullptr);
+            if (n > 0 && n < sizeof(full) && MotdLeafIsCanonical(full)) {
+                resolved.assign(full);
+                return true;
+            }
         }
     }
     errJson =
-        "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md not found "
+        "{\"error\":\"file_not_found\",\"message\":\"PassiveRoleNotRoleplay.md/.mdc not found "
         "under projectRoot/cwd/module parents\"}";
     return false;
 }
@@ -173,9 +192,15 @@ bool ResolveMotdPath(const std::string& pathArg, const std::string& projectRoot,
         errJson = "{\"error\":\"file_not_found\",\"message\":\"MOTD path missing\"}";
         return false;
     }
-    if (!MotdPathsEquivalent(full, canon)) {
-        errJson = "{\"error\":\"invalid_motd\",\"message\":\"path is not PassiveRoleNotRoleplay MOTD\"}";
-        return false;
+    // Accept .md or .mdc twin under any .cursor\rules (workspace parent or rawrxd).
+    const std::string fullKey = MotdNormKey(full);
+    const bool underRules =
+        fullKey.find("\\.cursor\\rules\\passiverolenotroleplay.md") != std::string::npos;
+    if (!MotdLeafIsCanonical(full) || !underRules) {
+        if (!MotdPathsEquivalent(full, canon) && !MotdIsTwinLeaf(full, canon)) {
+            errJson = "{\"error\":\"invalid_motd\",\"message\":\"path is not PassiveRoleNotRoleplay MOTD\"}";
+            return false;
+        }
     }
     resolved.assign(full);
     return true;
@@ -786,6 +811,12 @@ void Win32IDE::startLocalServer()
     }
 
     int port = m_settings.localServerPort;
+    /* R11: allow smoke/GUI early-boot port without rewriting settings file. */
+    if (const char* ep = std::getenv("RAWRXD_LOCAL_SERVER_PORT")) {
+        const int p = std::atoi(ep);
+        if (p > 0 && p < 65536)
+            port = p;
+    }
     m_localServerRunning.store(true);
 
     m_localServerThread = std::thread(
@@ -993,7 +1024,11 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
     // ========== Health / Status ==========
     else if (method == "GET" && (path == "/health" || path == "/"))
     {
-        response = LocalServerUtil::buildHttpResponse(200, "{\"status\":\"ok\",\"server\":\"RawrXD-Win32IDE\"}");
+        std::string response = LocalServerUtil::buildHttpResponse(
+            200, "{\"status\":\"ok\",\"server\":\"RawrXD-Win32IDE\"}");
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
     }
     else if (method == "GET" && path == "/status")
     {
@@ -1005,7 +1040,10 @@ void Win32IDE::handleLocalServerClient(SOCKET clientFd)
           << ",\"backend\":\"rawrxd-win32ide\""
           << ",\"total_requests\":" << m_localServerStats.totalRequests
           << ",\"total_tokens\":" << m_localServerStats.totalTokens << "}";
-        response = LocalServerUtil::buildHttpResponse(200, j.str());
+        std::string response = LocalServerUtil::buildHttpResponse(200, j.str());
+        LocalServerUtil::sendAll(client, response);
+        closesocket(client);
+        return;
     }
     // ========== Ollama-compatible: /api/tags ==========
     else if (method == "GET" && path == "/api/tags")
