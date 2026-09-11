@@ -1,0 +1,25 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+INVERSION_LOCKED=1
+REVERSE=CONTROL_PLANE_GAP
+N1_NE_SCOREBOARD=1
+PIPELINE=OpenModelIndex→VWA→last-use→SCOREBOARD→tier→exec→RETIRE→recycle
+ANTI=loadModel→prefetch(L+1)→exec(L)→join→next
+COMPARE=O(M)params|seq+joins|layer%N|time-stalls  vs  O(W)|dep+last-use|cost|events
+WORKING_SET=W_scratch+Win_q+P_kv+B_staging
+TILE_QUANT=dequant@GEMV/MLA_only BAN_persist_F16F32_windows
+DEGRADE=vkCreateDevice_fail→inf_cost→primary/host NOT_layer%2 DualStick=HOLD
+SM=ready_dispatch+timeline/HIP_poll+retire(consumers==0)→free_ring
+MEM=Weight:O(meta+idx) KV:fixed_pages Act:lane_tile Staging:N+1/N+2 rings
+INVAR=MODEL_SIZE_NE_RESIDENCY=1 SCOREBOARD_AUTH=1 WAIT_PER_LAYER=0 TPS=NONE
+TENSOR_WORK=lavapath/TensorScoreboard.hpp
+P1_PRIME=lavapath/ProductScoreboardPrime.hpp
+INVAR_HDR=lavapath/ScoreboardInvariants.hpp
+PAGED_KV=lavapath/PagedKvController.hpp (+PagedKVManager.hpp retained)
+MULTI_GPU_COST=lavapath/MultiGpuScoreboardCost.hpp (+MultiGpuCostFunction.hpp)
+LIVE=0 SOURCE_WIRED=1 WAIT_PER_LAYER_LIVE=0 SCOREBOARD_SCHEDULER_LIVE=0
+P1_PRODUCT_PATH_LIVE=1 PRODUCT_SCOREBOARD_DECODE_PASS=1
+P3_OPEN=awaitSlot~714 joinOutPrefetch~734 joinAll~737 ready-await~761
+NEXT=P3_JOIN_DEMOTION (ReadyExec→real kernel)
+PROMOTE=0 TIP_CLIMB=HOLD R28=HELD DUALSTICK=DO_NOT_REOPEN
+SVG=NOT_IMPORTED
+SEE=p1_live/RECEIPT.txt

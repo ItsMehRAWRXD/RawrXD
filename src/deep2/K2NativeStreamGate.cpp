@@ -23,6 +23,7 @@
 #include "K2MlaStageTiming.hpp"
 #include "lavapath/SpinCloseAttribution.hpp"
 #include "lavapath/HostFutureConsumerPrefetch.hpp"
+#include "lavapath/ProductScoreboardWitness.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -622,6 +623,8 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     const Deep2::KimiK2Config& k2cfg, float* hidden, bool enableMlaComplete,
     Deep2::MlaCompleteStats* aggStats, uint32_t position, uint32_t seqNeed,
     std::string& error) {
+    /* P1 witness: real ForwardMLALayers entry ≠ scoreboard scheduler LIVE. */
+    Deep2::scoreboard::MarkRealKernelDispatch();
     if (enableMlaComplete) {
         Deep2::MlaCertAuthority::NoteRequired();
         Deep2::MlaCertAuthority::NoteForwardEntered();

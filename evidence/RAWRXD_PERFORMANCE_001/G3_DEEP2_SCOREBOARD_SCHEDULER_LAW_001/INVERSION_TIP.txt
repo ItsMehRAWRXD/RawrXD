@@ -1,0 +1,21 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+KIND=CORE_ENGINE_ARCHITECTURE_INVERSION_TIP
+ASOF=2026-09-10T14:40
+SCOREBOARD_SCHEDULER_LIVE=0
+WAIT_PER_LAYER_LIVE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+INVERSION_LOCKED=1
+SEE=LOCK_RECEIPT.txt SOURCE_WIRE_TIP.txt
+
+PROCEDURAL_ELIMINATION=target (nextRunnable / ScoreboardExecutionEngine.pumpOnce)
+NON_BLOCKING=NVMe N+2 must not stall other ready work
+MULTI_GPU=MultiGpuCostFunction — BAN layer%2
+FIXED_WINDOW=WindowPool circulating
+WEIGHT=WeightLease quant-until-tile
+KV=PagedKVManager fixed budget
+RECYCLE=onConsumerDone → free ring
+TELEMETRY_SEPARATION=TELEMETRY_NE_SCHEDULER=1 TPS_LIMIT=NONE
+OPEN_DOOR=OpenModelIndex (loadModel demoted)
+
+NOT_DONE=P1 product bind · P3 ForwardMLALayers join removal · LIVE=1

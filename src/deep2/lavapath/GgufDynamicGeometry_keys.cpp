@@ -43,7 +43,6 @@ void applyKey(Scratch& s, const std::string& key, const std::string& val) {
              endsWith(key, "rope.global.freq_base"))
         takeF32(s.hasRopeBase, s.ropeBase, val);
     else if (endsWith(key, "rope.local.freq_base")) {
-        /* Gemma3 dual-rope: global preferred; local only if unset. */
         if (!s.hasRopeBase || !(s.ropeBase > 0.f))
             takeF32(s.hasRopeBase, s.ropeBase, val);
     } else if (endsWith(key, "rope.dimension_count"))
@@ -53,6 +52,10 @@ void applyKey(Scratch& s, const std::string& key, const std::string& val) {
     else if (endsWith(key, "attention.key_length") &&
              key.find("key_length_mla") == std::string::npos)
         takeU32(s.hasKeyLength, s.headDim, val);
+    else if (endsWith(key, "attention.head_dim")) {
+        if (!s.hasKeyLength || s.headDim == 0)
+            takeU32(s.hasKeyLength, s.headDim, val);
+    }
 }
 
 } // namespace gguf_geom

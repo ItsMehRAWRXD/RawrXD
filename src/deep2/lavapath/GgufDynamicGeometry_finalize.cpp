@@ -55,6 +55,11 @@ bool finalize(Scratch& s) {
 
     if (s.hasKeyLength && s.headDim > 0) {
         s.headDimDerived = false;
+    } else if (s.arch == "nemotron_h") {
+        /* Never derive ATTN_HEAD_DIM = hidden/heads (3136/40=78). */
+        return block(s, "HEAD_DIM",
+                     "nemotron_h requires attention.key_length|head_dim; "
+                     "forbidden hidden/heads");
     } else if (s.hidden % s.heads == 0) {
         s.headDim = s.hidden / s.heads;
         s.headDimDerived = true;
@@ -76,9 +81,11 @@ bool finalize(Scratch& s) {
         return block(s, "KV_HEADS", "kv_heads > heads");
     if (s.heads % s.kvHeads != 0)
         return block(s, "KV_HEADS", "heads not divisible by kv_heads");
-    if (!s.hasKeyLength && s.hidden != s.heads * s.headDim)
+    /* Nemotron-H: hidden != heads*attn_head_dim (3136 != 40*128). */
+    if (s.arch != "nemotron_h" && !s.hasKeyLength &&
+        s.hidden != s.heads * s.headDim)
         return block(s, "HEAD_DIM", "hidden != heads*head_dim");
-    if (s.ropeDim > s.headDim)
+    if (s.arch != "nemotron_h" && s.ropeDim > s.headDim)
         return block(s, "ROPE_DIM", "rope_dim > head_dim");
 
     publish(s);

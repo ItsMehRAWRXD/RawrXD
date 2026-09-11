@@ -2,11 +2,10 @@
 /* Decode step — ProductRun orchestration only. ≤99 lines. */
 #include "ProductRuntime.hpp"
 #include "ProductPathInvariants.hpp"
+#include "ProductScoreboardBind.hpp"
 #include "RxRunStateHooks.hpp"
-#include "HostFutureConsumerPrefetch.hpp"
 #include "TokenWallNs.hpp"
 #include <chrono>
-#include <cstdlib>
 #include <string>
 
 namespace rawr::product_run {
@@ -24,33 +23,24 @@ inline void RunDecodeStream(ProductRuntime& rt, const char* prompt,
     userCancel = 0;
     rxow::OnGenerateEntered();
     rxow::OnDecodeStep0();
-    const char* hd = std::getenv("RAWRXD_HOST_DECODE");
-    const int host = hd && hd[0] == '1';
-    if (host) {
-        Deep2::hostfc::MarkProductDecode();
-        const auto& mw = rt.Eng().getModelWeights();
-        uint32_t n = mw.numLayers ? (uint32_t)mw.numLayers : rt.graphNodes;
-        /* Bind before Arm/Enter/Prefetch; elastic residency stays off. */
-        Deep2::hostfc::BindK3cConsumer(K3C_ConsumeResolved);
-        Deep2::hostfc::ArmFromProductRun(n);
-        Deep2::hostfc::BindNvme(rt.Eng().HostNvme());
-        if (n > 1 && mw.layers.size() > 1) {
-            const auto& w = mw.layers[1].wq.data ? mw.layers[1].wq
-                                                 : mw.layers[1].attnQ_a;
-            Deep2::hostfc::BindHostWeight(w.data, w.sizeBytes, w.fileOffset);
-        }
-        Deep2::hostfc::EnterLayer(0, n ? n : 2);
-    }
+    /* P1: Prime→pumpOnce then legacy generateStream (≠ scheduler LIVE). */
+    (void)Deep2::scoreboard::PumpProductDecode();
     const auto t0 = std::chrono::steady_clock::now();
     uint64_t lastCommitNs = 0;
-    rt.Eng().generateStream(prompt, opts, [&](int32_t, const std::string& piece) {
+    rt.Eng().generateStream(prompt, opts, [&](int32_t tokenId,
+                                              const std::string& piece) {
         if (IsCancelled(rt.control) || rt.Eng().isCancelRequested()) {
             userCancel = 1;
             return false;
         }
         r.text += piece;
         ++r.generatedTokens;
-        if (r.generatedTokens == 1) r.firstToken = 1;
+        if (r.generatedTokens == 1) {
+            r.firstToken = 1;
+            Deep2::scoreboard::P1Wit().tokenIn.store((uint32_t)tokenId,
+                                                    std::memory_order_release);
+        }
+        Deep2::scoreboard::MarkTokenCommit((uint32_t)tokenId);
         {
             const uint64_t now = Deep2::tokenwall::NowNs();
             if (lastCommitNs)
@@ -64,19 +54,14 @@ inline void RunDecodeStream(ProductRuntime& rt, const char* prompt,
             (void)rt.CancelGeneration();
             return false;
         }
-        if (IsCancelled(rt.control) || rt.Eng().isCancelRequested()) {
-            userCancel = 1;
-            return false;
-        }
-        return true;
+        return !(IsCancelled(rt.control) || rt.Eng().isCancelRequested());
     });
     r.wallNs = (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
                    std::chrono::steady_clock::now() - t0)
                    .count();
     r.textBytes = (uint64_t)r.text.size();
     r.streamFinished = 1;
-    if (host)
-        Deep2::hostfc::SealDecode(r.firstToken && r.generatedTokens > 0, stderr);
+    Deep2::scoreboard::SealProductScoreboardP1(stderr, r.generatedTokens);
 }
 
 } // namespace rawr::product_run

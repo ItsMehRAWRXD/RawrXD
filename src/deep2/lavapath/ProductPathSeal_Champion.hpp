@@ -1,5 +1,7 @@
 #pragma once
-/* Champion emit for product path seal. ≤99. */
+/* Champion emit for product path seal. ≤99.
+   PRODUCT_PASS via ProductPathSeal→ProductE2EEmit→PromoteReady.
+   Champion TPS / 64-tok seal ≠ promote; MULTI_FAMILY independent. */
 #include "FunctionalChampionSeal.hpp"
 #include "ProductE2EEmit.hpp"
 #include "K2MLA_FusedQ4KT.hpp"
@@ -28,7 +30,7 @@ struct Facts {
     int teardownOk = 1;
     int measuredReal = 1;
     int modelProvenanceMatch = 1;
-    /* Promote tetrad; MULTI_FAMILY is a separate gate. */
+    /* Tetrad facts for ProductE2EEmit; TPS seal is separate. */
     int productOpenPass = 0;
     int sessionEnterPass = 0;
     int tokenCommitPass = 0;

@@ -3,19 +3,17 @@
     RAWRXD_FUNCTIONAL_CHAMPION_001
     RAWRXD_TPS_KILLER_SEAL_001
 
-    Full generation decides promotion.
+    TPS / 64-token seal = performance telemetry only.
+    PRODUCT_PASS / PROMOTE_IF = PromoteReady tetrad
+      (PRODUCT_OPEN_PASS && SESSION_ENTER_PASS
+       && GENERATED_TOKENS>0 && TOKEN_COMMIT_PASS).
+    PROMOTE=0 until that live generate probe. TIP_CLIMB=HOLD.
+    TPS_PRODUCT_SEAL ≠ PRODUCT_PASS ≠ PROMOTE.
 
-    Current functional champion:
-        ~3.556 TPS
+    Current functional champion: ~3.556 TPS
+    Perf floor (not promote): >=5.000 TPS; <=12.8s / 64 tok
 
-    Product performance seal:
-        >= 5.000 TPS
-        <= 12.8 sec / 64 tokens
-
-    DO_NOT_REOPEN:
-        KvaInversion
-        KVA climb
-        Batch007
+    DO_NOT_REOPEN: KvaInversion; KVA climb; Batch007
 */
 
 #include "GenerationParity.hpp"
@@ -131,7 +129,7 @@ inline Decision Evaluate(
 
     d.functionalPass = true;
 
-    /* Champion / product TPS seals require exact 64-token product run. */
+    /* Perf champion / TPS seal needs exact 64-tok run — not PROMOTE_IF. */
     if (c.tokensRequested != kSealTokens ||
         c.tokensCommitted != kSealTokens) {
         d.candidateKilled = true;
@@ -155,10 +153,8 @@ inline Decision Evaluate(
         d.functionalChampion = true;
 
     /*
-       Product seal is stronger than "new champion".
-
-       >= 5 TPS and <= 12.8 sec must both be measured
-       in the same real 64-token generation.
+       Perf TPS seal (≥5 TPS, ≤12.8s @ 64 tok) — not PRODUCT_PASS /
+       PromoteReady. Callers must still emit PROMOTE=0.
     */
     d.productTpsSeal =
         d.functionalPass &&
@@ -254,6 +250,10 @@ inline void Emit(
     }
 
     std::fprintf(f,
+        "PROMOTE=0\n"
+        "NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;"
+        "FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
+        "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS\n"
         "RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001\n");
 }
 

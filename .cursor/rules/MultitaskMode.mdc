@@ -1,52 +1,23 @@
 ---
 description: >-
-  Multitask Mode: launch async background Task agents (run_in_background),
-  end turn, steer workers with max "Please continue ensuring" prompt.
+  Multitask Mode: launch async background workers, end turn, steer with max
+  "Please continue ensuring" prompt (Cursor Task + Deep IDE /api/subagent).
 alwaysApply: true
 ---
 
 # Multitask Mode
 
-## When active
-
-Treat Multitask Mode as **active** for this product lane when any of:
-
-- Cursor Multitask Mode is on
-- User message contains `Please continue ensuring` (short) or the full streamer-agentic phrase
-- User asks for background / async Task agents on streamer or agentic readiness
-
-Sibling trigger detail: `StreamerAgenticContinueEnsure.mdc`. Skill (max brief): `.cursor/skills/multitask-continue-ensure/`.
+Treat Multitask Mode as **active** when Cursor Multitask is on, the user says `Please continue ensuring`, or asks for background workers on streamer/agentic readiness.
 
 ## Coordinator must
 
-1. Reply with the required **3-line** ack only (see StreamerAgenticContinueEnsure).
-2. Launch **one** async `Task` with `run_in_background: true`.
-3. Put the **max** continue-ensure brief in that Task’s `prompt` (not a weak ack).
-4. **End the turn immediately** — no await, poll, or foreground-duplicate of the worker.
+1. Reply with the required **3-line** ack only.
+2. Launch **one** async worker (`Task` `run_in_background: true` in Cursor; `EngineAPI.subagent` / `POST /api/subagent` in Deep IDE).
+3. Put the **max** continue-ensure brief in that worker prompt.
+4. **End the turn immediately** — no await, poll, or foreground-duplicate.
 
-If Multitask / background Task is unavailable: keep the 3 lines; do the work in-session — do not fake a launch.
+If background spawn is unavailable: keep the 3 lines; do the work in-session — do not fake a launch.
 
-## Pick the max (how)
+## Pick the max
 
-**Max** = strongest single E2E worker prompt: full product path + perfect metrics + no invented unstubs.
-
-| Prefer | Avoid |
-|--------|--------|
-| One coherent E2E worker with full continue-ensure brief | Many weak near-duplicate siblings |
-| Full phrase + sealed-lane / metrics / gap mandate | Minimal “continue” / empty worker prompt |
-| Independent lanes → separate Tasks only if truly independent | Splitting one streamer-agentic job across parallel clones |
-
-Short user trigger still expands to the **max** worker brief in the Task prompt.
-
-## Lens (brief — workers)
-
-- Live stack **sealed** targets only; do **not** invent pinball / trailbrake / tensor_hop / host-VRAM
-- `PROMOTE=0` · `TIP_CLIMB=HOLD`
-- Product / **passive agentic only** — **no roleplay** (do not fight `PassiveRoleNotRoleplay`)
-- HeadlessIDE `/api/tool` **403 reverse** in-scope for continue-ensure workers if still open
-
-## Anti-patterns
-
-- Foreground gap-close after launching Task
-- Weak/minimal worker prompts when the max brief exists
-- Roleplay or “in-character” streamer personas
+One coherent E2E worker with full product path + perfect metrics + no invented unstubs. `PROMOTE=0` · `TIP_CLIMB=HOLD`. No roleplay.

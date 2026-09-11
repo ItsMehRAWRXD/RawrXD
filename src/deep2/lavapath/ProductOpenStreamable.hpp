@@ -68,6 +68,7 @@ inline void Emit(FILE* fp, const Facts& f) {
                  "OPEN_MMAP_BOUND=%d\nOPEN_FILE_BACKING=%d\n"
                  "OPEN_TENSOR_COUNT=%d\nPRODUCT_OPEN_STREAMABLE=%d\n"
                  "NOTE=OPEN_NE_FULL_RESIDENCY; LAA_NOT_OPEN_GATE; "
+                 "PROMOTE=0; "
                  "PROMOTE_IF=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&"
                  "GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS; "
                  "MULTI_FAMILY=NEXT_INDEPENDENT_GATE\n",

@@ -1,0 +1,36 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+KIND=P1_PRODUCT_BIND_TIP
+ASOF=2026-09-10T14:55
+PROMOTE=0
+TIP_CLIMB=HOLD
+SCOREBOARD_SCHEDULER_LIVE=0
+WAIT_PER_LAYER_LIVE=0
+SCOREBOARD_WAIT_PER_LAYER=1
+P3_JOINS_REMOVED=0
+
+## Wired (product path)
+OpenSession → BindProductOpen(path, graphNodes)
+  → OpenModelIndex + VirtualTensorDesc/layer + WindowPool + TensorScoreboard
+RunDecodeStream → PumpProductDecode → ScoreboardExecutionEngine::pumpOnce
+  → SealProductScoreboardP1(stderr) after generateStream
+
+## Acceptance flags (runtime seal; NOT invent PASS)
+PRODUCT_OPEN_USES_OPEN_INDEX  (atomic)
+PRODUCT_DECODE_USES_SCOREBOARD
+SCOREBOARD_PUMP_OBSERVED
+GENERATED_TOKENS (from ProductRun Result)
+WAIT_PER_LAYER_STILL_PRESENT=1
+
+## Explicitly held
+ForwardMLALayers awaitSlot/joinOutPrefetch NOT removed
+SCOREBOARD_SCHEDULER_LIVE remains 0 until witnessed traversal + policy flip
+DualStick/R28 APPLY held
+R1CAP_MDC_ADMIT separate (already PASS_R1CAP_MDC_ADMITTED)
+
+## Source
+lavapath/ProductScoreboardPrime.hpp (BindModel/Prime/RunUntilTokenCommit)
+lavapath/ProductScoreboardBind.hpp
+lavapath/ProductScoreboardSeal.hpp
+lavapath/ProductRuntime.hpp (BindProductOpen call)
+lavapath/ProductRunDecode.hpp (Pump + Seal)
+SEE=P1_PRIME_TIP.txt

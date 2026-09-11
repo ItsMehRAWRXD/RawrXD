@@ -1,0 +1,47 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+KIND=P1_PRIME_SOURCE_WIRE_TIP
+ASOF=2026-09-10T20:05
+P1_OWNER=PRODUCT_SCOREBOARD_PRIME
+INVERSION_LOCKED=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+APPLY_HOST_DECODE=0
+DUALSTICK_REOPENED=0
+
+## Landed (SOURCE_WIRED only — NOT measured LIVE)
+lavapath/ProductScoreboardPrime.hpp
+  BindModel / Prime / RunUntilTokenCommit
+lavapath/ProductScoreboardBind.hpp → delegates BindModel+Prime+bounded pump
+lavapath/ProductScoreboardSeal.hpp → fail-closed P1 witness fields
+lavapath/MultiGpuScoreboardCost.hpp → ChooseGpu (unavailable=inf; no layer%2)
+lavapath/PagedKvTypes.hpp + PagedKvController.hpp + PagedKvAcquire.hpp
+  KV_LOGICAL may grow; KV_PHYSICAL fixed (ProductKv)
+lavapath/ScoreboardTypes.hpp TensorWork → first/next/lastUse + needed/deadAfter
+
+## Fail-closed receipts (pre-measure)
+P1_SOURCE_WIRED=1
+OPEN_MODEL_INDEX_BOUND=1 (when BindProductOpen succeeds)
+TENSOR_WORK_BOUND=1
+SCOREBOARD_PRIME_BOUND=1 (PumpProductDecode path)
+PUMP_ON_PRODUCT_PATH=SOURCE_WIRED
+SCOREBOARD_SCHEDULER_LIVE=0
+PRODUCT_SCOREBOARD_DECODE_PASS=0
+RUNTIME_PASS=0
+PERFORMANCE_PASS=0
+SCOREBOARD_WAIT_PER_LAYER=1
+WAIT_PER_LAYER_LIVE=0
+ELASTIC_RESIDENCY_REQUIRED=0
+
+## Explicitly NOT done
+ForwardMLALayers join removal (P3)
+SCOREBOARD_SCHEDULER_LIVE=1
+WAIT_PER_LAYER_LIVE=1
+HOST_DECODE apply / R28 APPLY
+invented TOKEN_COMMIT from pump alone
+
+## Next executable gate
+TinyLlama ProductRuntime traverse:
+  OpenModelIndex → TensorScoreboard → pumpOnce → real decode → TOKEN_COMMIT
+THEN (witness only): SCOREBOARD_SCHEDULER_LIVE=1 PRODUCT_SCOREBOARD_DECODE_PASS=1
+P3 remains held until that traversal is real.

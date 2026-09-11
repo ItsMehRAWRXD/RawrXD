@@ -38,6 +38,7 @@
 #include "ManifestRuntimeOverlay.hpp"
 #include "lavapath/GgufDynamicGeometry.hpp"
 #include "lavapath/AuthorityBridge.hpp"
+#include "lavapath/ProductScoreboardWitness.hpp"
 #include "../asm/k2_real_attention/XR_K2_RealAttention.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
@@ -644,6 +645,7 @@ static void q4kGEMV_T(const void* weights, const float* input,
 
 static void q4kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
+    Deep2::scoreboard::MarkRealKernelDispatch();
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);  // 144 bytes
 
@@ -7097,6 +7099,8 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
 // Forward Layer - Real transformer layer with weight projections
 // ============================================================================
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen) {
+    /* P1: real layer forward (HOST_DECODE or GPU) — ≠ scoreboard scheduler. */
+    Deep2::scoreboard::MarkRealKernelDispatch();
     if (Deep2::hostfc::Armed() && layer + 1 < modelWeights.layers.size()) {
         const LayerWeights& nl = modelWeights.layers[layer + 1];
         const WeightTensor& w = nl.wq.data ? nl.wq

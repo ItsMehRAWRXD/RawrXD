@@ -1,0 +1,29 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+KIND=P1_BASELINE_FREEZE
+ASOF=2026-09-10T20:20
+P1_SOURCE_WIRED=1
+SCOREBOARD_SCHEDULER_LIVE=0
+PRODUCT_SCOREBOARD_DECODE_PASS=0
+P1_PRODUCT_PATH_LIVE=0
+SCOREBOARD_WAIT_PER_LAYER=1
+WAIT_PER_LAYER_LIVE=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+APPLY_HOST_DECODE=0
+DUALSTICK_REOPENED=0
+
+CLAIM_SPLIT=
+  P1_PRODUCT_PATH_LIVE = scoreboard on product decode path (measured)
+  SCOREBOARD_SCHEDULER_LIVE = scoreboard dispatches real kernels (P3 only)
+
+LANDED_BASELINE=
+  ProductScoreboardWitness.hpp
+  ProductScoreboardPrime.hpp
+  ProductScoreboardBind.hpp
+  ProductScoreboardSeal.hpp
+  MultiGpuScoreboardCost.hpp
+  PagedKvTypes/Controller/Acquire.hpp
+  ScoreboardTypes.hpp
+  ScoreboardExecutionEngine tip Io→RamReady / GpuPending→GpuReady
+  ForwardMLALayers + q4kGEMV MarkRealKernelDispatch

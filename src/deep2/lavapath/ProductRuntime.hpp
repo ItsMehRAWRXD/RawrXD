@@ -5,6 +5,7 @@
 #include "ProductOpenStreamable.hpp"
 #include "ProductReceipt.hpp"
 #include "ProductRequest.hpp"
+#include "ProductScoreboardBind.hpp"
 #include "SessionControl.hpp"
 #include "RxRunStateHooks.hpp"
 #include <atomic>
@@ -95,6 +96,8 @@ struct ProductRuntime {
             rxow::OnPrepared(0, layers, tensors);
             return false;
         }
+        /* P1: OpenModelIndex→scoreboard (metadata only). Joins still present. */
+        (void)Deep2::scoreboard::BindProductOpen(modelPath.c_str(), graphNodes);
         rxow::OnPrepared(graphNodes, layers, tensors);
         return true;
     }

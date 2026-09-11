@@ -1,0 +1,234 @@
+GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+KIND=GOVERNING_ARCHITECTURE_AUTHORITY
+ASOF=2026-09-10T18:32
+SUPERSEDES_ASOF_PRIOR=2026-09-10T14:30 (retained; adds INVERSION_LOCKED + SM + memory table)
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+INVERSION_LOCKED=1
+SCOREBOARD_SCHEDULER_LIVE=0
+DUALSTICK_REOPEN=0
+DUALSTICK_SEALS=DO_NOT_REOPEN
+NOT_RUN!=PASS
+SOURCE_WIRED!=RUNTIME_REACHED!=TOKEN_SURVIVED!=PERFORMANCE_PASS
+
+###############################################################################
+# INVERSION LOCK (user authority 2026-09-10)
+###############################################################################
+INVERSION_LOCKED=1
+MODEL addressability DECOUPLED from physical residency
+loadModel DEMOTED → OpenModelIndex (VirtualTensorDesc + dependency graphs;
+  O(1) vs param scale — parameter count is NOT a hardware admission gate;
+  no MAX_MODEL_SIZE in can_open)
+Remove prefetch.join per-layer fences → readiness-driven async data-flow
+Decoupled paged KV = fixed physical page budget
+Pure hardware telemetry: no cooling sleeps / tick pacing / min TPS in hot path
+PROMOTE=0 TIP_CLIMB=HOLD DualStick seals DO_NOT_REOPEN R28 APPLY held
+
+###############################################################################
+# COMPARISON (Procedural Legacy vs Scoreboard-Driven)
+###############################################################################
+Axis                  | Procedural Legacy              | Scoreboard-Driven
+Residency Ceiling     | O(M) total params              | O(W) fixed working windows
+Scheduling Authority  | Sequential layer + block joins | Dependency + last-use graph
+Device Elasticity     | layer % N                      | Dynamic cost scoring / tensor
+Execution Control     | Time polls / artificial stalls | Event-driven completion
+
+###############################################################################
+# ACTIVE WORKING SET (exact)
+###############################################################################
+Residency_active =
+  W_scratch + sum_i Win_active(quantized) + P_kv_fixed + B_staging
+Total params stay in metadata indices + NVMe/shard backing.
+Parameter count ≠ hardware admission gate.
+
+###############################################################################
+# TILE-LEVEL QUANTIZATION
+###############################################################################
+Storage/transport stay quantized (GGUF Q4/Q8, K2 shards).
+Dequant ONLY at arithmetic tile / register bind inside GEMV/MLA.
+BAN persistent F16/F32 expanded weight copies in physical windows
+  (recyclable tile edge only).
+DEQUANT_AT_TILE_ONLY=1
+BAN_PERSISTENT_F16_F32_WEIGHT_WINDOWS=1
+
+###############################################################################
+# DYNAMIC DEGRADATION (scoreboard routing law only)
+###############################################################################
+Secondary device fail (e.g. RX 7800 XT / vkCreateDevice) → infinite cost
+  → reroute to primary (R9700) or host lane.
+MUST NOT alter virtual tensor table or K2 shard definitions.
+DO NOT reopen DualStick ICD seals as a spend.
+DEVICE_ELASTICITY = locality-first + queue-depth scoring;
+  graceful filter if vkCreateDevice fails — NOT layer%2.
+
+###############################################################################
+# STATE MACHINE (readiness-driven; one authority)
+###############################################################################
+Readiness-driven dispatch across virtual tensor namespace
+Async completion polls (Vulkan timeline / HIP events) — NOT blocking joins
+Decoupled retirement: consumersRemaining==0 → recycle physical window → free ring
+
+ABSENT → IO_PENDING → RAM_READY → GPU_PENDING → GPU_READY
+  → EXECUTING → RETIRABLE/RETIRED → recycle → free ring
+
+generateStream asks scoreboard for work — NOT layer loader for sync next layer
+
+###############################################################################
+# MEMORY TABLE AUTHORITY
+###############################################################################
+Weight:   O(Metadata+Index); recycle on last consumer
+KV:       fixed page pool; sliding/LRU virtual token map
+Activation: lane-local tile-bounded scratch reuse
+Transfer staging: pinned N+1/N+2 double-buffer rings via completion tokens
+
+###############################################################################
+# SOURCE INVARIANTS (compile-time / documented; SOURCE_WIRED only)
+###############################################################################
+MODEL_SIZE_NE_RESIDENCY=1              SOURCE_WIRED  LIVE=n/a (static law)
+SCOREBOARD_IS_SCHEDULER_AUTHORITY=1    SOURCE_WIRED  LIVE=0 (until drives decode)
+WAIT_PER_LAYER=0                       TARGET       WAIT_PER_LAYER_LIVE=0
+TPS_LIMIT=NONE                         SOURCE_WIRED  LIVE=n/a (hot-path still may violate;
+                                                     P8 removes sleeps — not claimed this turn)
+SCOREBOARD_SCHEDULER_LIVE=0            fail-closed until measured decode
+
+###############################################################################
+# REVERSE DIAGNOSIS (retained)
+###############################################################################
+LIMITING_DEFECT = CONTROL_PLANE_ARCHITECTURE
+  NOT "can the loader address a model larger than RAM/VRAM?"
+ANY_SIZE_ADDRESSABILITY          = SUBSTANTIALLY_PRESENT
+ANY_SIZE_PRODUCT_FRONT_DOOR      = NOT_YET
+BOUNDED_WEIGHT_RESIDENCY         = PARTIAL_REAL
+BOUNDED_KV_RESIDENCY             = NOT_YET
+EXACT_RANGE_BACKING              = REAL
+CIRCULATING_PHYSICAL_WINDOWS     = REAL/PARTIAL
+LAST_USE_GRAPH                   = MISSING
+GLOBAL_READY_SCOREBOARD          = MISSING (SOURCE_WIRED stub only; LIVE=0)
+N_PLUS_2_IO_SCHEDULING           = MISSING/PARTIAL
+DUAL_GPU_EXEC_CHOREOGRAPHY       = CONTRACT_ONLY/PARTIAL
+SYNC_PER_LAYER_ZERO              = NOT_YET (P3_OPEN)
+SOFTWARE_TPS_CAP_NONE            = CONTRACT_VIOLATED
+TOKEN_PACING_OFF                 = CONTRACT_VIOLATED
+CHOREOGRAPHY_TOP_PRIMITIVE       = NOT_YET
+INTERSTELLAR_RUNTIME_REQUIRED    = 0
+NEW_ZIP_JSON_WRAPPER_REQUIRED    = 0
+
+N+1_PREFETCH != SCOREBOARD
+  N+1 still encodes: L → request L+1 → compute L → wait L+1
+  Scoreboard: READY SET from dependency/last-use; miss on 19 may still exec 21
+
+###############################################################################
+# TARGET AUTHORITY (inverted front door)
+###############################################################################
+OpenModelMetadata / OpenModelIndex
+  → VirtualTensorDesc + dependency graphs
+  → SCOREBOARD
+      READY_GPU    → execute now
+      READY_PEER   → transfer
+      READY_PINNED → DMA
+      READY_NVME   → issue exact range
+      NOT_READY    → run other ready work
+  → execute
+  → retire(last_use / consumersRemaining==0)
+  → recycle physical slot → free ring
+  ↘ SCOREBOARD
+
+loadModel = compatibility façade → OpenModelIndex (metadata/index only)
+  NOT place where model-size-dependent residency is created
+
+###############################################################################
+# TOP PRIMITIVE
+###############################################################################
+TensorWork {
+  VirtualTensorDesc tensor
+  dependencyCount / remainingConsumers / lastUseEpoch
+  ResidencyTier / WorkState
+  PhysicalSlot* / DeviceId
+}
+UNRESOLVED → NEEDED → {READY_EXEC|PEER_PENDING|DMA_PENDING|IO_PENDING|FAULT}
+READY_EXEC → EXECUTING → CONSUMED → last_use? RETIRE→RECYCLE : cache
+
+###############################################################################
+# ANTI-PATTERN (demote; must not own scheduling)
+###############################################################################
+NOT = loadModel → allocate model-shaped state → generate
+        → layer L → load L+1 → execute L → join L+1 → next
+OWNERSHIP = scoreboard is scheduler; sequential layer loop is NOT
+
+###############################################################################
+# INTERPRETATION FLIPS
+###############################################################################
+openK2ShardDirectory     → prototype universal model-open front door
+VirtualTensorDesc / VWA  → canonical tensor identity/backing
+WeightLease              → scoreboard-issued temporary physical ownership
+pin windows              → fixed circulating physical page pool
+NVMe/Elastic             → normal lowest residency tier
+N+1 prefetch             → one producer into broader dependency graph (≠ scoreboard)
+prefetch.join()          → REMOVE from layer authority (target; P3_OPEN)
+DualLane contract        → scoreboard execution resources
+DualLaneChoreographer.run→ must invoke real lane exec OR leave non-authority
+KV allocation            → independently paged bounded working set
+U13 TPS floor            → measurement only (≠ PRODUCT_FAIL)
+TPS display scale        → presentation only; DISPLAY_SCALE_AUTHORITY=0
+PlasmaGovernor/TrailBrake→ out of unrestricted inference path
+scheduler sleeps         → event/readiness waits only
+
+###############################################################################
+# NO-TPS LAW
+###############################################################################
+TPS_CAP=NONE
+TPS_LIMIT=NONE
+TOKEN_PACING=OFF
+USEFUL_TPS_FLOOR=NONE
+DISPLAY_SCALE_AUTHORITY=0
+TPS_MEASURED = generated_tokens / generation_wall_seconds
+TPS_RAW = authority; TPS_DISPLAY = presentation only
+MEASURED_TPS may be recorded; MUST NOT convert miss of software floor → PRODUCT_FAIL
+
+###############################################################################
+# SURVIVE UNCHANGED (do not rewrite)
+###############################################################################
+VirtualTensorDesc VwaResolveBlocks K2ShardIo openK2ShardDirectory
+shard metadata/index vulkan_weight_window circulating windows
+WeightLease quantized tensor backing MLA/GEMV
+Elastic/NVMe backing peer/device policy abstractions
+independently paged KV infra activation-only lane crossing
+K2 open-without-F32-expansion = MODEL_SIZE != physical residency evidence
+
+###############################################################################
+# IMPLEMENTATION ORDER (architecture-changing; P1 before sleep removal)
+###############################################################################
+P1 OPEN  Create dependency/last-use scoreboard; OWN READY/IO/DMA/EXEC/RETIRE + slot recycle
+P2 OPEN  Demote loadModel → OpenModelIndex; Open→BindModel→bounded pools→generate
+P3 OPEN  ForwardMLALayers: scoreboard-issued work; eliminate per-layer join as sync
+         JOIN_SITES (K2NativeStreamGate.cpp::ForwardMLALayers):
+           awaitSlot ~L714-716 (worker.join)
+           issueLayer awaitSlot ~L729
+           joinOutPrefetch ~L734-736
+           joinAll ~L737-740
+           ready-gate awaitSlot ~L761-762
+           error/success joinAll ~L765,L774; retireSlot→awaitSlot ~L717-718,~L799
+         SCOREBOARD_WAIT_PER_LAYER=1 fail-closed this turn (HOST_DECODE safe)
+         WAIT_PER_LAYER_LIVE=0 — do NOT claim until joins removed + verified
+P4 OPEN  Generalize openK2ShardDirectory semantics into ordinary product open
+P5 OPEN  NVMe/pinned/R9700/7800XT behind scoreboard residency states
+P6 OPEN  DualLaneChoreographer.run → real generateStream OR remove from runtime authority
+P7 OPEN  Page KV independently; bound physical pool
+P8 OPEN  Remove U13 TPS gating / PlasmaGovernor sleeps / TrailBrake stop /
+         TPS-display authority / fixed scheduler sleeps from unrestricted gen
+         (counters retained as evidence only)
+
+ORDER_LAW: installing scoreboard FIRST changes the machine;
+  removing sleeps before scoreboard only spins the sequential machine faster.
+
+###############################################################################
+# NEXT_OWNER (executable)
+###############################################################################
+PRIMARY = P1 live scoreboard authority
+  FILE = src/deep2/lavapath/TensorScoreboard.hpp + ScoreboardInvariants.hpp
+  (+ BindModel / Prime / RunUntilTokenCommit)
+  SCOREBOARD_SCHEDULER_LIVE remains 0 until product decode uses it
+SECONDARY = P3 join demotion (sites above) after P1 owns READY
+  Prefer gated SCOREBOARD_WAIT_PER_LAYER=0 only when readiness path proven
+SVG = NOT_IMPORTED (sandbox diagram not in workspace evidence/)
