@@ -1,0 +1,31 @@
+GATE=G3_STREAMER_AGENTIC_CONTINUE_ENSURE_001
+KIND=WORKER_MAX_CONTINUE_ENSURE_E2E_CE9
+ASOF=2026-09-10T11:57:39-04:00
+PROMOTE=0
+TIP_CLIMB=HOLD
+PARENT_EXECUTES_DELEGATED_WORK=0
+WORKER_COUNT=1
+NO_SEAL_REWRITE=1
+
+## Landed
+CURSOR_HOOKS=sessionStart+beforeSubmitPrompt+preToolUse(failClosed)+postToolUse(Read)
+CURSOR_BEFORE_SUBMIT=injects MOTD_ACK=0 Read mandate every turn
+CURSOR_HOOK_SMOKE=RUN deny->allow MOTD Read->ack->allow
+MOTD_ACK_STATE=fixed_valid_json (.cursor/hooks/state/motd-ack.json)
+IDE_HTML=ide_chatbot_standalone.html MOTD needle/path .mdc + continue-ensure DISPATCHED handoff
+MOTD_TWINS_SYNC= g:\~dev + rawrxd .mdc/.md SHA256=3D08B40ABB224822
+WIN32IDE_SRC=MotdFindCanonical prefers .mdc then .md; twin/.cursor/rules accept
+WIN32IDE_REBUILD=build-fd RawrXD-Win32IDE.exe SHA16=2D8DCA050FAA8461 RC=0
+
+## Verified (ce9_LIVE_PROBE.txt)
+TOOL_PRE=403 TOOL_MOTD=200 TOOL_MOTD_MDC_FIRST=200 TOOL_POST=200
+CLASSIC_LADDER_OK=1 MDC_FIRST_LADDER_OK=1
+SOURCE_WIRED=1 RUNTIME_REACHED=1 TOKEN_SURVIVED=NOT_RUN PERFORMANCE_PASS=0
+R15_SMOKE_BIN=NOT_TOUCHED
+
+## Remaining executable gate (CLOSED for TOOL_MOTD_MDC on admitted tip)
+R1CAP_MDC_ADMIT=PASS — see R1CAP_MDC_ADMIT.txt / ce9_R1CAP_LIVE_PROBE.txt
+Authority tip: C:\r1cert\smoke_bin\RawrXD-Win32IDE_r1cap_mdc.exe SHA16=2D8DCA050FAA8461
+r1cap.exe + r1cap_self.exe updated to same bytes; r1cap_run.exe sealed ABDEEC untouched; R15 untouched
+Prior KEY_LINES PRODUCT_PASS seal NOT rewritten; TOKEN_SURVIVED still NOT_RUN on ce9 tool-only probe
+SCOREBOARD_SCHEDULER_LIVE=0 · DualStick/R28 APPLY held · PROMOTE=0
