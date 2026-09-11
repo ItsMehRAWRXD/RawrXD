@@ -1,6 +1,7 @@
 #pragma once
-/* ScoreboardExecutionEngine — readiness loop (≠ layer join). LIVE=0. ≤99. */
+/* ScoreboardExecutionEngine — readiness loop. SCHEDULER_LIVE=0. ≤99. */
 #include "ScoreboardNextRunnable.hpp"
+#include "ScoreboardSubmitExec.hpp"
 #include "TimelineDispatch.hpp"
 #include "TimelineSubmit.hpp"
 #include "MultiGpuCostFunction.hpp"
@@ -23,7 +24,6 @@ struct ScoreboardExecutionEngine {
         return 1;
     }
 
-    /* Non-blocking pump: ready work then HW poll. No sleep_for / tick pace. */
     int pumpOnce(void* uploadCmds, uint32_t nUp, void* execCmds, uint32_t nEx) {
         if (!sb)
             return 0;
@@ -33,11 +33,13 @@ struct ScoreboardExecutionEngine {
             ++n;
             TimelineSignal sig{};
             if (r.kind == RunnableKind::ReadyExec) {
-                if (tl)
-                    (void)timelineSubmitExec(*tl, r.id, execCmds, nEx, 0, sig);
-                else
-                    (void)sb->transition(r.id, ResidencyState::GpuReady,
-                                         ResidencyState::Executing);
+                if (P3Hooks().submitExec)
+                    (void)DispatchReadyExec(*sb, r.id);
+                else {
+                    /* Keep GpuReady for later armed P3 dispatch; requeue. */
+                    (void)sb->readyQ.push(r.id);
+                    break;
+                }
             } else if (r.kind == RunnableKind::Upload) {
                 if (tl)
                     (void)timelineSubmitUpload(*tl, r.id, uploadCmds, nUp, sig);
@@ -45,7 +47,6 @@ struct ScoreboardExecutionEngine {
                     (void)sb->transition(r.id, ResidencyState::RamReady,
                                          ResidencyState::GpuPending);
             } else if (r.kind == RunnableKind::Io) {
-                /* Tip advance: IoPending → RamReady (≠ ElasticResidency). */
                 (void)sb->transition(r.id, ResidencyState::IoPending,
                                      ResidencyState::RamReady);
             } else if (r.kind == RunnableKind::GpuPending) {
@@ -58,14 +59,6 @@ struct ScoreboardExecutionEngine {
         if (tl)
             (void)tl->poll(32);
         return (int)n;
-    }
-
-    int runSteps(uint32_t totalSteps, void* up, uint32_t nUp, void* ex, uint32_t nEx) {
-        if (!sb || !totalSteps)
-            return 0;
-        for (step = 0; step < totalSteps; ++step)
-            (void)pumpOnce(up, nUp, ex, nEx);
-        return 1;
     }
 };
 

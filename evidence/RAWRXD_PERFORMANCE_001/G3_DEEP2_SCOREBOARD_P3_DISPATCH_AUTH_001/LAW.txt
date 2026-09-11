@@ -1,0 +1,64 @@
+GATE=G3_DEEP2_SCOREBOARD_P3_DISPATCH_AUTH_001
+KIND=DISPATCH_AUTHORITY_LAW
+ASOF=2026-09-10T20:50
+SUPERSEDES=none
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+APPLY_HOST_DECODE=0
+DUALSTICK_REOPENED=0
+
+###############################################################################
+# CLAIM SPLIT (locked)
+###############################################################################
+P1_PRODUCT_PATH_LIVE=1          # sealed: scoreboard on product path
+SCOREBOARD_SCHEDULER_LIVE=0     # until chain below is measured
+SCOREBOARD_WAIT_PER_LAYER=1
+WAIT_PER_LAYER_LIVE=0
+
+###############################################################################
+# SCOREBOARD_DISPATCH_AUTHORITY
+###############################################################################
+SCOREBOARD_DISPATCH_AUTHORITY=1 only if measured:
+  ReadyExec
+  → scoreboard submit (CAS GpuReady→Executing)
+  → real kernel (forwardLayer / MLA / GEMV)
+  → completion token (generation-matched)
+  → consumersRemaining--
+  → retire (consumersRemaining==0)
+  → recycle (generation-safe free ring)
+  → TOKEN_COMMIT
+
+NOT_SUFFICIENT=
+  pumpOnce entered
+  tip state ladder alone
+  MarkRealKernelDispatch from legacy path alone
+  P1_PRODUCT_PATH_LIVE
+
+###############################################################################
+# RECEIPT SCHEMA (required fields)
+###############################################################################
+MODEL=
+OPEN_INDEX_ENTER=
+SESSION_ENTER=
+P3_READYEXEC_OBSERVED=
+P3_SUBMIT_OBSERVED=
+P3_KERNEL_OBSERVED=
+P3_COMPLETION_OBSERVED=
+P3_CONSUMER_DEC_OBSERVED=
+P3_RETIRE_OBSERVED=
+P3_RECYCLE_OBSERVED=
+GENERATED_TOKENS=
+TOKEN_COMMIT_PASS=
+SCOREBOARD_SCHEDULER_LIVE=0|1   # 1 only if full chain
+SCOREBOARD_WAIT_PER_LAYER=
+WAIT_PER_LAYER_LIVE=
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+###############################################################################
+# FIRST EXECUTABLE EDGE
+###############################################################################
+ONE_OP=ReadyExec identity → submitExec → one forwardLayer → completion tip
+JOIN_DEMOTION=after ONE_OP measured
+ROLLBACK=on fault, fall back to legacy forwardLayer; do not flip LIVE

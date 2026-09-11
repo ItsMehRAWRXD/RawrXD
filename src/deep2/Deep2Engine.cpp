@@ -39,6 +39,7 @@
 #include "lavapath/GgufDynamicGeometry.hpp"
 #include "lavapath/AuthorityBridge.hpp"
 #include "lavapath/ProductScoreboardWitness.hpp"
+#include "lavapath/ScoreboardHostForwardBridge.hpp"
 #include "../asm/k2_real_attention/XR_K2_RealAttention.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
@@ -7101,6 +7102,19 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
 void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, size_t seqLen) {
     /* P1: real layer forward (HOST_DECODE or GPU) — ≠ scoreboard scheduler. */
     Deep2::scoreboard::MarkRealKernelDispatch();
+    /* P3 tip: if GpuReady, ReadyExec owns this call (fail closed if not). */
+    static thread_local int tls_p3_body = 0;
+    if (!tls_p3_body) {
+        auto body = [](void* eng, uint32_t ly, const float* in, float* out,
+                       size_t seq) noexcept {
+            tls_p3_body = 1;
+            static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
+            tls_p3_body = 0;
+        };
+        if (Deep2::scoreboard::TryScoreboardOwnedForwardLayer(
+                this, (uint32_t)layer, input, output, seqLen, body))
+            return;
+    }
     if (Deep2::hostfc::Armed() && layer + 1 < modelWeights.layers.size()) {
         const LayerWeights& nl = modelWeights.layers[layer + 1];
         const WeightTensor& w = nl.wq.data ? nl.wq

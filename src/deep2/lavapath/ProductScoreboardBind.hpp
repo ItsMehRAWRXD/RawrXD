@@ -2,6 +2,8 @@
 /* ProductScoreboardBind — P1 open→Prime→pump. SCHEDULER_LIVE=0. ≤99. */
 #include "ProductScoreboardPrime.hpp"
 #include "ProductScoreboardWitness.hpp"
+#include "ProductScoreboardSeal.hpp"
+#include "ProductScoreboardP3Seal.hpp"
 #include <atomic>
 
 namespace Deep2 {
@@ -24,6 +26,7 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
         return 0;
     ProductScoreboardState& s = ProductSb();
     P1ResetWitness();
+    ResetP3Hooks();
     s.index = OpenModelIndex{};
     if (!s.index.openPath(path))
         return 0;
@@ -51,7 +54,7 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
     return 1;
 }
 
-/* Prime + pumpOnce before legacy decode. Work advance required. */
+/* Prime + pump to GpuReady tip (ReadyExec held until armed). */
 inline int PumpProductDecode() {
     ProductScoreboardState& s = ProductSb();
     if (!P1Wit().bindObs.load(std::memory_order_acquire))
@@ -59,15 +62,22 @@ inline int PumpProductDecode() {
     const int primed = ProductScoreboardPrime::Prime(s.sb, 0);
     if (primed)
         P1Wit().primeObs.store(1, std::memory_order_release);
-    const int advanced = s.eng.pumpOnce(nullptr, 0, nullptr, 0);
-    P1Wit().pumpCount.fetch_add(1, std::memory_order_acq_rel);
-    if (advanced > 0)
-        P1Wit().pumpWorkCount.fetch_add((uint32_t)advanced,
-                                        std::memory_order_acq_rel);
+    int advanced = 0;
+    for (int i = 0; i < 8; ++i) {
+        const int n = s.eng.pumpOnce(nullptr, 0, nullptr, 0);
+        P1Wit().pumpCount.fetch_add(1, std::memory_order_acq_rel);
+        if (n > 0) {
+            advanced += n;
+            P1Wit().pumpWorkCount.fetch_add((uint32_t)n,
+                                            std::memory_order_acq_rel);
+        }
+        TensorScore* t0 = s.sb.get(0);
+        if (t0 && t0->state.load(std::memory_order_acquire) ==
+                      (uint32_t)ResidencyState::GpuReady)
+            break;
+    }
     return (primed && advanced > 0) ? 1 : 0;
 }
 
 } /* namespace scoreboard */
 } /* namespace Deep2 */
-
-#include "ProductScoreboardSeal.hpp"

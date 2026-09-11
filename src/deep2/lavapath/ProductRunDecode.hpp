@@ -62,6 +62,7 @@ inline void RunDecodeStream(ProductRuntime& rt, const char* prompt,
     r.textBytes = (uint64_t)r.text.size();
     r.streamFinished = 1;
     Deep2::scoreboard::SealProductScoreboardP1(stderr, r.generatedTokens);
+    Deep2::scoreboard::SealProductScoreboardP3(stderr);
 }
 
 } // namespace rawr::product_run

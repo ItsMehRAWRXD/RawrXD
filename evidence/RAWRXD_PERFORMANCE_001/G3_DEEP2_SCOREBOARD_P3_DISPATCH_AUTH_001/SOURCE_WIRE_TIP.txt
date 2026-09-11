@@ -1,0 +1,34 @@
+GATE=G3_DEEP2_SCOREBOARD_P3_DISPATCH_AUTH_001
+KIND=P3_SOURCE_WIRE_TIP
+ASOF=2026-09-10T21:00
+P3_SOURCE_WIRED=1
+SCOREBOARD_DISPATCH_AUTHORITY=1
+SCOREBOARD_SCHEDULER_LIVE=0
+SCOREBOARD_WAIT_PER_LAYER=1
+WAIT_PER_LAYER_LIVE=0
+P1_PRODUCT_PATH_LIVE=1
+PROMOTE=0
+TIP_CLIMB=HOLD
+R28_APPLY=HELD
+APPLY_HOST_DECODE=0
+DUALSTICK_REOPENED=0
+
+LANDED=
+  LAW.txt (dispatch authority + receipt schema)
+  ScoreboardOpIdentity.hpp / Gen / FreeRing / Transition
+  ScoreboardSubmitExec.hpp (CAS + submitExec + P3 obs)
+  ScoreboardHostForwardBridge.hpp (one-op host forward)
+  ProductScoreboardP3Seal.hpp
+  ScoreboardExecutionEngine ReadyExec arm path
+  Deep2Engine::forwardLayer TryScoreboardOwned tip
+  RECEIPT.txt one-op measure (DISPATCH_AUTHORITY=1)
+
+NOT_CLAIMED=
+  SCOREBOARD_SCHEDULER_LIVE=1
+  WAIT_PER_LAYER_LIVE=1
+  join removal
+  full-layer scoreboard ownership
+
+NEXT=
+  Demote first ForwardMLALayers wait
+  Multi-token / multi-layer ReadyExec expansion
