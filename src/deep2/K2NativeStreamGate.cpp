@@ -25,6 +25,7 @@
 #include "lavapath/HostFutureConsumerPrefetch.hpp"
 #include "lavapath/ProductScoreboardWitness.hpp"
 #include "lavapath/ScoreboardJoinDemote.hpp"
+#include <atomic>
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -680,6 +681,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
     std::thread outPrefetch;
     std::string outPrefetchErr;
     bool outPrefetchOk = true;
+    std::atomic<uint32_t> outPrefetchDone{0};
     const bool wantOutPrefetch = Deep2::K2LiveCache_OwnsOutput() &&
                                  !Deep2::K2LiveCache_Has("output.weight");
     if (wantOutPrefetch) {
@@ -688,7 +690,10 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             const uint64_t t0 = Deep2::StreamPathTiming_NowUs();
             outPrefetchOk = LoadTensorPayload(index, "output.weight", hold, outPrefetchErr);
             Deep2::StreamPathTiming_Add(Deep2::SPT_outW(), t0);
+            outPrefetchDone.store(1, std::memory_order_release);
         });
+    } else {
+        outPrefetchDone.store(1, std::memory_order_release);
     }
 
     // Scoreboard: await required operand only. No per-layer join barrier.
@@ -738,7 +743,12 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         s.worker = std::thread([&, layer] { loadSlot(s, layer); });
     };
     auto joinOutPrefetch = [&]() {
-        if (outPrefetch.joinable()) outPrefetch.join();
+        /* P3 fence3: done-poll + pump; fail-closed join. LIVE=0. */
+        if (!Deep2::scoreboard::TryOutPrefetchDoneTip(outPrefetch,
+                                                      outPrefetchDone)) {
+            if (outPrefetch.joinable())
+                outPrefetch.join();
+        }
     };
     auto joinAll = [&]() {
         for (auto& sl : slots) awaitSlot(sl);

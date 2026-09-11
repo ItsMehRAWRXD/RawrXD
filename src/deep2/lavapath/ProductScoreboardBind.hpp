@@ -2,24 +2,15 @@
 /* ProductScoreboardBind — P1 open→Prime→pump. SCHEDULER_LIVE=0. ≤99. */
 #include "ProductScoreboardPrime.hpp"
 #include "ProductScoreboardWitness.hpp"
+#include "ScoreboardProductState.hpp"
 #include "ProductScoreboardSeal.hpp"
 #include "ProductScoreboardP3Seal.hpp"
+#include "ScoreboardInterLayer.hpp"
+#include "ScoreboardFenceObs.hpp"
 #include <atomic>
 
 namespace Deep2 {
 namespace scoreboard {
-
-struct ProductScoreboardState {
-    OpenModelIndex index{};
-    WindowPool ramPool{};
-    TensorScoreboard sb{};
-    ScoreboardExecutionEngine eng{};
-};
-
-inline ProductScoreboardState& ProductSb() {
-    static ProductScoreboardState s;
-    return s;
-}
 
 inline int BindProductOpen(const char* path, uint32_t layers) {
     if (!path || !path[0] || !LOADMODEL_DEMOTED_TO_OPEN_INDEX)
@@ -27,6 +18,8 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
     ProductScoreboardState& s = ProductSb();
     P1ResetWitness();
     ResetP3Hooks();
+    InterLayer().reset();
+    FenceObs().reset();
     s.index = OpenModelIndex{};
     if (!s.index.openPath(path))
         return 0;
@@ -54,7 +47,6 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
     return 1;
 }
 
-/* Prime + pump to GpuReady tip (ReadyExec held until armed). */
 inline int PumpProductDecode() {
     ProductScoreboardState& s = ProductSb();
     if (!P1Wit().bindObs.load(std::memory_order_acquire))

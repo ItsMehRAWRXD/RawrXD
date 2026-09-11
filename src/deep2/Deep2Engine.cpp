@@ -5769,7 +5769,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         float* layerInput = h;
         float* layerOutput = attentionOutput;
 
-        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+                Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
                 // Batch 15 + BATCH_D: prefetch next layer into GPU cache (Vulkan path).
                 // B011: hit rate > fit — keep Hot working set warm ahead of compute.
                 if (elasticResidencyEnabled_ && elasticResidency_ &&
@@ -5942,6 +5943,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             float* layerOutput = attentionOutput;
 
             for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+                Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
                 // Batch 15 + BATCH_D: prefetch next layer into GPU cache (Vulkan path).
                 if (elasticResidencyEnabled_ && elasticResidency_ &&
                 layer + 1 < modelWeights.numLayers) {
@@ -7105,6 +7107,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     /* P3 tip: if GpuReady, ReadyExec owns this call (fail closed if not). */
     static thread_local int tls_p3_body = 0;
     if (!tls_p3_body) {
+        /* Outer call = legacy progression still issues this layer. */
+        Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
         auto body = [](void* eng, uint32_t ly, const float* in, float* out,
                        size_t seq) noexcept {
             tls_p3_body = 1;
@@ -10861,6 +10865,7 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
         float* layerInput = currentHiddenState.data();
         float* layerOutput = attentionOutput;
         for (size_t layer = 0; layer < modelWeights.numLayers; layer++) {
+            Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
             forwardLayer(layer, layerInput, layerOutput, currentPos);
             std::swap(layerInput, layerOutput);
         }

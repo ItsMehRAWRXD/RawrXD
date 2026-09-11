@@ -1,6 +1,5 @@
 #pragma once
-/* ScoreboardSubmitExec — ReadyExec → CAS claim → optional kernel submit.
-   SCOREBOARD_SCHEDULER_LIVE remains 0 until measured full path. ≤99. */
+/* ScoreboardSubmitExec — ReadyExec CAS + submitExec. LIVE=0. ≤99. */
 #include "ScoreboardOpIdentity.hpp"
 #include "ScoreboardGen.hpp"
 #include "ScoreboardTransition.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 /* ScoreboardEnsureReady — prime+pump one tensor to GpuReady. LIVE=0. ≤99. */
 #include "ProductScoreboardPrime.hpp"
-#include "ProductScoreboardBind.hpp"
+#include "ScoreboardProductState.hpp"
 
 namespace Deep2 {
 namespace scoreboard {
