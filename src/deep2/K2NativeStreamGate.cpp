@@ -24,6 +24,7 @@
 #include "lavapath/SpinCloseAttribution.hpp"
 #include "lavapath/HostFutureConsumerPrefetch.hpp"
 #include "lavapath/ProductScoreboardWitness.hpp"
+#include "lavapath/ScoreboardJoinDemote.hpp"
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
 #include "K2GpuStreamCopy.hpp"
@@ -761,7 +762,8 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
 
         issueUpTo(layer + 1);
         LayerSlot& s = slots[layer & 3u];
-        if (!s.gate.ready.load(std::memory_order_acquire))
+        /* P3 tip: ready-check + scoreboard pump; fail-closed join. LIVE=0. */
+        if (!Deep2::scoreboard::TryReadyAwaitTip(s.gate))
             awaitSlot(s);
         if (!s.gate.ready.load(std::memory_order_acquire) ||
             s.gate.failed.load(std::memory_order_acquire)) {
