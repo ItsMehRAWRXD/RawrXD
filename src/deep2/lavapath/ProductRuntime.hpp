@@ -96,8 +96,9 @@ struct ProductRuntime {
             rxow::OnPrepared(0, layers, tensors);
             return false;
         }
-        /* P1: OpenModelIndex→scoreboard (metadata only). Joins still present. */
-        (void)Deep2::scoreboard::BindProductOpen(modelPath.c_str(), graphNodes);
+        /* P1/P3: bind scoreboard slots to layer count (graphNodes may be 0). */
+        const uint32_t sbLayers = graphNodes ? graphNodes : layers;
+        (void)Deep2::scoreboard::BindProductOpen(modelPath.c_str(), sbLayers);
         rxow::OnPrepared(graphNodes, layers, tensors);
         return true;
     }

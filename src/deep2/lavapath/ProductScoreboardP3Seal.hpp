@@ -1,8 +1,10 @@
 #pragma once
-/* ProductScoreboardP3Seal — measured P3 tip; LIVE stays 0. ≤99. */
+/* ProductScoreboardP3Seal — P3 tip + multi-op counts; LIVE=0. ≤99. */
 #include "ScoreboardSubmitExec.hpp"
+#include "ScoreboardMultiOpObs.hpp"
 #include "ProductScoreboardWitness.hpp"
 #include "ScoreboardInvariants.hpp"
+#include "ScoreboardRunId.hpp"
 #include <cstdio>
 
 namespace Deep2 {
@@ -20,11 +22,18 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
     const uint32_t cd = h.consumerDecObs.load(std::memory_order_acquire);
     const uint32_t rt = h.retireObs.load(std::memory_order_acquire);
     const uint32_t rc = h.recycleObs.load(std::memory_order_acquire);
+    const uint32_t dl =
+        MultiOpObs().distinctLayers.load(std::memory_order_acquire);
     const uint32_t tok = w.generatedTokens.load(std::memory_order_acquire);
     const uint32_t commit = w.tokenCommit.load(std::memory_order_acquire);
     const int chain = (re && su && ke && co && cd && rt && rc && tok && commit)
                           ? 1
                           : 0;
+    const int multi = (re > 1 && su > 1 && ke > 1 && co > 1 && dl > 1 && rt &&
+                       rc && tok && commit)
+                          ? 1
+                          : 0;
+    EmitRunId(f);
     std::fprintf(f,
                  "GATE=G3_DEEP2_SCOREBOARD_P3_DISPATCH_AUTH_001\n"
                  "KIND=P3_DISPATCH_WITNESS\n"
@@ -37,6 +46,8 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
                  "P3_CONSUMER_DEC_OBSERVED=%u\n"
                  "P3_RETIRE_OBSERVED=%u\n"
                  "P3_RECYCLE_OBSERVED=%u\n"
+                 "P3_DISTINCT_LAYERS=%u\n"
+                 "P3_MULTI_OP_OBSERVED=%d\n"
                  "GENERATED_TOKENS=%u\n"
                  "TOKEN_COMMIT_PASS=%u\n"
                  "SCOREBOARD_DISPATCH_AUTHORITY=%d\n"
@@ -46,7 +57,7 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
                  "PROMOTE=%d\n"
                  "TIP_CLIMB=HOLD\n"
                  "R28_APPLY=HELD\n",
-                 re, su, ke, co, cd, rt, rc, tok, commit, chain,
+                 re, su, ke, co, cd, rt, rc, dl, multi, tok, commit, chain,
                  SCOREBOARD_WAIT_PER_LAYER, WAIT_PER_LAYER_LIVE, PROMOTE);
 }
 

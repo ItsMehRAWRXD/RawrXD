@@ -1,9 +1,10 @@
 #pragma once
 /* ScoreboardSubmitExec — ReadyExec → CAS claim → optional kernel submit.
-   SCOREBOARD_SCHEDULER_LIVE remains 0 until measured P3 chain. ≤99. */
+   SCOREBOARD_SCHEDULER_LIVE remains 0 until measured full path. ≤99. */
 #include "ScoreboardOpIdentity.hpp"
 #include "ScoreboardGen.hpp"
 #include "ScoreboardTransition.hpp"
+#include "ScoreboardMultiOpObs.hpp"
 #include "TensorScoreboard.hpp"
 #include <atomic>
 
@@ -40,6 +41,7 @@ inline void ResetP3Hooks() noexcept {
     h.consumerDecObs.store(0, std::memory_order_relaxed);
     h.retireObs.store(0, std::memory_order_relaxed);
     h.recycleObs.store(0, std::memory_order_relaxed);
+    MultiOpObs().reset();
 }
 
 inline int ClaimReadyExec(TensorScoreboard& sb, TensorId id,
@@ -54,6 +56,7 @@ inline int ClaimReadyExec(TensorScoreboard& sb, TensorId id,
     t->exec.fence.store(gen, std::memory_order_release);
     FillOpFromScore(*t, out);
     out.generation = gen;
+    MultiOpObs().note(out.layer);
     P3Hooks().readyExecObs.fetch_add(1, std::memory_order_acq_rel);
     return 1;
 }
@@ -80,8 +83,8 @@ inline void NoteP3Complete(TensorScoreboard& sb, TensorId id,
     TensorScore* t = sb.get(id);
     if (!t)
         return;
-    const uint64_t cur = t->exec.fence.load(std::memory_order_acquire);
-    if (!GenerationMatches(generation, cur))
+    if (!GenerationMatches(generation,
+                           t->exec.fence.load(std::memory_order_acquire)))
         return;
     t->exec.done.store(1, std::memory_order_release);
     P3Hooks().completeObs.fetch_add(1, std::memory_order_acq_rel);

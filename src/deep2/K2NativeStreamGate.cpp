@@ -730,7 +730,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         if (layer >= testLayers) return;
         LayerSlot& s = slots[layer & 3u];
         if (s.owner == layer) return;
-        awaitSlot(s);
+        /* P3 fence2: done-check + pump; fail-closed join. LIVE=0. */
+        if (!Deep2::scoreboard::TryWorkerDoneAwaitTip(s))
+            awaitSlot(s);
         s.owner = layer;
         s.gate.ready.store(false, std::memory_order_relaxed);
         s.worker = std::thread([&, layer] { loadSlot(s, layer); });

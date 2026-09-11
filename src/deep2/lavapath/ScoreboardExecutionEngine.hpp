@@ -33,6 +33,11 @@ struct ScoreboardExecutionEngine {
             ++n;
             TimelineSignal sig{};
             if (r.kind == RunnableKind::ReadyExec) {
+                TensorScore* t = sb->get(r.id);
+                const uint32_t st =
+                    t ? t->state.load(std::memory_order_acquire) : 0u;
+                if (st != (uint32_t)ResidencyState::GpuReady)
+                    continue; /* drop stale readyQ after retire/exec */
                 if (P3Hooks().submitExec)
                     (void)DispatchReadyExec(*sb, r.id);
                 else {

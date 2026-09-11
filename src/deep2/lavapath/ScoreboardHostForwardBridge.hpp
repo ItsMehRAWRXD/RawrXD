@@ -1,14 +1,15 @@
 #pragma once
-/* ScoreboardHostForwardBridge — one-op ReadyExec→forwardLayer tip.
-   LIVE=0 until measured P3 chain. ≤99. */
+/* ScoreboardHostForwardBridge — multi-op ReadyExec→forwardLayer tip.
+   LIVE=0 until full-layer measure. ≤99. */
 #include "ScoreboardSubmitExec.hpp"
+#include "ScoreboardEnsureReady.hpp"
 #include "ProductScoreboardBind.hpp"
 
 namespace Deep2 {
 namespace scoreboard {
 
 struct HostForwardBridge {
-    void* engine = nullptr; /* Deep2Engine* — opaque to avoid cycles */
+    void* engine = nullptr;
     using ForwardFn = void (*)(void* eng, uint32_t layer, const float* in,
                                float* out, size_t seq) noexcept;
     ForwardFn forward = nullptr;
@@ -64,7 +65,7 @@ inline void DisarmHostForward() noexcept {
     P3Hooks().ctx = nullptr;
 }
 
-/* One-op: if layer tensor GpuReady, scoreboard owns this forwardLayer call. */
+/* Multi-op tip: ensure GpuReady then ReadyExec owns forwardLayer. */
 inline int TryScoreboardOwnedForwardLayer(
     void* eng, uint32_t layer, const float* in, float* out, size_t seq,
     HostForwardBridge::ForwardFn body) noexcept {
@@ -72,15 +73,18 @@ inline int TryScoreboardOwnedForwardLayer(
         return 0;
     if (!P1Wit().bindObs.load(std::memory_order_acquire))
         return 0;
+    if (!EnsureTensorGpuReady(layer))
+        return 0;
     TensorScore* t = ProductSb().sb.get(layer);
     if (!t)
         return 0;
-    const uint32_t st = t->state.load(std::memory_order_acquire);
-    if (st != (uint32_t)ResidencyState::GpuReady)
+    if (t->state.load(std::memory_order_acquire) !=
+        (uint32_t)ResidencyState::GpuReady)
         return 0;
     ArmHostForward(eng, body, in, out, seq, layer);
     const int ok = DispatchReadyExec(ProductSb().sb, layer);
-    const int owned = HostFwd().ownedDispatch.load(std::memory_order_acquire) > 0;
+    const int owned =
+        HostFwd().ownedDispatch.load(std::memory_order_acquire) > 0;
     DisarmHostForward();
     return (ok && owned) ? 1 : 0;
 }

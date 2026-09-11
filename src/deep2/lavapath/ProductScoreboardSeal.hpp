@@ -1,6 +1,7 @@
 #pragma once
 /* ProductScoreboardSeal — measured P1; SCHEDULER_LIVE always 0. ≤99. */
 #include "ScoreboardInvariants.hpp"
+#include "ScoreboardRunId.hpp"
 #include <cstdio>
 
 namespace Deep2 {
@@ -11,7 +12,8 @@ inline void SealProductScoreboardP1(FILE* f, uint32_t /*generatedTokens*/) {
         return;
     ProductScoreboardWitness& w = P1Wit();
     const int pathLive = ComputeP1ProductPathLive();
-    const int decodePass = pathLive; /* survives scoreboard participation */
+    const int decodePass = pathLive;
+    EmitRunId(f);
     std::fprintf(f,
                  "GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001\n"
                  "KIND=P1_PRODUCT_PATH_WITNESS\n"
