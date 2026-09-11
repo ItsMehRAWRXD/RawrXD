@@ -1102,3 +1102,18 @@ COVERAGE
 Complete the finite authority tree. Do not wander outside it.
 
 **Terminal condition:** if all 18 configurations are covered and none produces an endurance-qualified improvement, the search is finished rather than expanding indefinitely.
+
+---
+
+# 36. Scoreboard Scheduler Law (pointer)
+
+```text
+AUTHORITY=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001
+PATH=evidence/RAWRXD_PERFORMANCE_001/G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001/
+INVERSION_LOCKED=1
+SCOREBOARD_SCHEDULER_LIVE=0
+PROMOTE=0 TIP_CLIMB=HOLD R28_APPLY=HELD
+```
+
+Scheduling ownership: READY scoreboard is authority; sequential layer `prefetch.join` is not.
+See LAW.txt / RECEIPT.txt there. Do not invent `RUNTIME_PASS` from this pointer.
