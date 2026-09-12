@@ -802,6 +802,9 @@ private:
     GpuForwardCounters gpuFwd_{};
     SsVkProductBind ssVkProductBind_{};
     D2EngineSsVkBind16 ssvkBind16_{};
+    /* DualStick concurrent speculative stick: bit N => slot N skips BIND16/Batch2
+     * host product ABI and uses device DispatchGemvQuant (overlap-safe). */
+    std::atomic<unsigned> dualStickDeviceOnlyMask_{0};
     uint64_t deviceCreateEvents_ = 0;
     uint64_t modelLoadEvents_ = 0;
     uint64_t commandRebuildEvents_ = 0;

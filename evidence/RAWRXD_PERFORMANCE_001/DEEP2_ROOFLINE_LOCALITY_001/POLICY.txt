@@ -1,0 +1,20 @@
+GATE=DEEP2_ROOFLINE_LOCALITY_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+# Independent roofline/locality ceiling — NOT derived from observed BPT.
+# Provenance: declared DualStick KV/activation staging residual budget per token.
+# One hidden activation (H*sizeof(float), H=3072 → 12288 B) plus declared
+# dual-stick KV/staging slack rounded to a fixed 256 KiB policy envelope.
+# This is a certification budget, not a measurement of the last run.
+
+MAX_NONLOCAL_BYTES_PER_TOKEN=262144
+MAX_NONLOCAL_SOURCE=ROOFLINE_POLICY
+MAX_NONLOCAL_DERIVED_FROM_OBSERVED_BPT=0
+MAX_NONLOCAL_PROVENANCE=KV_STAGING_RESIDUAL_BUDGET_256KiB
+
+# Predicate (fail-closed if MAX unset/0):
+#   threshold = MAX>0 && BYTES_NOT_ALREADY_LOCAL_PER_TOKEN <= MAX
+
+UNSET_MAX_NONLOCAL_BYTES_PER_TOKEN=FAIL_CLOSED
+OBSERVED_BPT_MUST_NOT_MINT_CEILING=1

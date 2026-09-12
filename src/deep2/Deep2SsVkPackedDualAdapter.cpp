@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <cstring>
 #include <cstdlib>
+#include "Deep2Locality64.hpp"
 
 namespace Deep2 {
 namespace {
@@ -345,6 +346,21 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
     proof->gpu0EndNs = rec.lane[0].mapped_end_ns;
     proof->gpu1StartNs = rec.lane[1].mapped_start_ns;
     proof->gpu1EndNs = rec.lane[1].mapped_end_ns;
+    /* Observe-only: BIND16 DualStick concurrent lane intervals → Locality64.
+     * Once per token (op0) — schedule is prepare/submit-both/join/merge. */
+    if (req->operatorOrdinal == 0) {
+        const uint64_t ord = Locality64_ActiveOrdinal().load(
+            std::memory_order_acquire);
+        if (Locality64_Global().armed() &&
+            ord < Locality64Collector::kTargetTokens) {
+            const uint64_t s0 = rec.lane[0].mapped_start_ns;
+            const uint64_t e0 = rec.lane[0].mapped_end_ns;
+            const uint64_t s1 = rec.lane[1].mapped_start_ns;
+            const uint64_t e1 = rec.lane[1].mapped_end_ns;
+            if (s0 && e0 > s0) Locality64_NoteGpuForwardSpan(0, ord, s0, e0);
+            if (s1 && e1 > s1) Locality64_NoteGpuForwardSpan(1, ord, s1, e1);
+        }
+    }
     proof->gpu0PackedBytes = b0 ? b0 : rec.lane[0].packed_bytes;
     proof->gpu1PackedBytes = b1 ? b1 : rec.lane[1].packed_bytes;
     proof->productLinked = 1;
@@ -366,7 +382,7 @@ int PackedDualAdapterProductRun(void* user, const D2PackedProductRequest* req,
                                 D2PackedProductProof* proof) {
     if (!req || !proof) return -1;
     /* Retry until BIND16 thresholds — do not lower 700/500. */
-    for (int attempt = 0; attempt < 12; ++attempt) {
+    for (int attempt = 0; attempt < 32; ++attempt) {
         memset(proof, 0, sizeof(*proof));
         SsVkQ2KRequest r{};
         r.packedWeights = req->packed_weights;

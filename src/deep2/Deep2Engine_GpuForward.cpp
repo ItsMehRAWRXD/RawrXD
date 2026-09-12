@@ -10,11 +10,14 @@
 #include "Deep2LivePath.hpp"
 #include "Deep2Locality64.hpp"
 #include "GPUForwardChildIgnoreHooks.hpp"
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
+#include <thread>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -23,6 +26,12 @@
 
 namespace Deep2 {
 namespace {
+
+/* BIND16 / Batch2 product ABI is process-shared — serialize across DualStick threads. */
+std::mutex& DualStickProductMu() {
+    static std::mutex m;
+    return m;
+}
 
 uint64_t WeightKey(const WeightTensor& wt) {
     uint64_t h = 14695981039346656037ull;
@@ -226,13 +235,18 @@ bool Deep2Engine::forwardLayerGpuResident(
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
                 ++c.q2kPackedOps;
-                /* BIND16_GATE: N>0 product via BIND16 first (governing ABI). */
+                /* BIND16_GATE: N>0 product via BIND16 first (governing ABI).
+                 * DualStick speculative concurrent stick may force device quant. */
+                const bool deviceOnly =
+                    (dualStickDeviceOnlyMask_.load(std::memory_order_acquire)
+                     & (1u << slot)) != 0;
                 const bool bind16Tok =
+                    !deviceOnly &&
                     ssvkBind16_.run != nullptr &&
                     ssvkBind16_.token.token_ordinal > 0 &&
                     wt.data && wt.sizeBytes;
                 const bool batch2Tok =
-                    !bind16Tok && ssVkProductBind_.bound() &&
+                    !deviceOnly && !bind16Tok && ssVkProductBind_.bound() &&
                     ssVkProductBind_.tokenProof().tokenOrdinal > 0 &&
                     wt.data && wt.sizeBytes;
                 if (bind16Tok) {
@@ -246,11 +260,14 @@ bool Deep2Engine::forwardLayerGpuResident(
                     req.cols = cols;
                     req.weight_bytes = wt.sizeBytes;
                     req.tensor_name = wt.name.c_str();
-                    if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) {
-                        std::fprintf(stderr,
-                            "BIND16_GPUFWD_Q2K_FAIL rows=%u cols=%u name=%s\n",
-                            rows, cols, wt.name.c_str());
-                        return false;
+                    {
+                        std::lock_guard<std::mutex> lk(DualStickProductMu());
+                        if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) {
+                            std::fprintf(stderr,
+                                "BIND16_GPUFWD_Q2K_FAIL rows=%u cols=%u name=%s\n",
+                                rows, cols, wt.name.c_str());
+                            return false;
+                        }
                     }
                     return vc->UploadBuf(out, yout.data(), rows);
                 }
@@ -266,8 +283,12 @@ bool Deep2Engine::forwardLayerGpuResident(
                     req.weightBytes = wt.sizeBytes;
                     req.tensorName = wt.name.c_str();
                     for (int attempt = 0; attempt < 4; ++attempt) {
-                        if (ssVkProductBind_.dispatchQ2K(req) &&
-                            vc->UploadBuf(out, yout.data(), rows))
+                        bool ok = false;
+                        {
+                            std::lock_guard<std::mutex> lk(DualStickProductMu());
+                            ok = ssVkProductBind_.dispatchQ2K(req);
+                        }
+                        if (ok && vc->UploadBuf(out, yout.data(), rows))
                             return true;
                     }
                     std::fprintf(stderr,
@@ -541,18 +562,9 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         }
         if (s + 1 < gpuN) {
             auto* next = getVulkanComputeSlot(s + 1);
-            /* BATCH_D: ownership handoff — readiness only here (single async
-             * residency path already queued). Not three transfer lanes.
-             * B011: raise next-slot layer residency priority before copy. */
             if (elasticResidencyEnabled_ && elasticResidency_) {
                 const uint32_t nLo = multiGpuLayerPlan_.rangeLo[s + 1];
                 elasticResidency_->PredictLayerNeeds(nLo, nullptr, 0);
-                /* Wait residency for next slot tensors before arena copy. */
-                {
-                    std::vector<std::string> waitNames;
-                    /* Predict already enqueued UnifiedAsyncMove; readiness gate. */
-                    (void)waitNames;
-                }
                 fprintf(stderr,
                         "BATCH_D_OWNERSHIP_TRANSFER from=%u to=%u ready_gate=1 "
                         "unified_async=1 hierarchy=VRAM|RAM|NVMe "

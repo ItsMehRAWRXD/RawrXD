@@ -33,11 +33,16 @@ PASS_CONJUNCTION=
   pin_evict_delta = 0
   accounting has no overflow/underflow/sequence error
   timing has 64 nonzero token samples and nonzero wall time
-  MAX_NONLOCAL_BYTES_PER_TOKEN is explicitly configured
+  MAX_NONLOCAL_BYTES_PER_TOKEN from POLICY.txt (ROOFLINE_POLICY)
+  MAX_NONLOCAL_DERIVED_FROM_OBSERVED_BPT=0 (never mint ceiling from BPT)
   BYTES_NOT_ALREADY_LOCAL_PER_TOKEN <= configured limit
   optional critical-host/inter-GPU limits pass if configured
   dual GPU and same-token overlap pass if required by policy
+  DualStick schedule = prepare both + submit both + join + merge
+    (NOT submit/wait/submit/wait)
 
+POLICY_FILE=evidence/RAWRXD_PERFORMANCE_001/DEEP2_ROOFLINE_LOCALITY_001/POLICY.txt
+MAX_NONLOCAL_SOURCE=ROOFLINE_POLICY
 UNSET_MAX_NONLOCAL_BYTES_PER_TOKEN=FAIL_CLOSED
 SELFTEST_ONLY!=LIVE_PRODUCT_PASS
 SOURCE_WIRED!=RUNTIME_REACHED!=LIVE_PRODUCT_RUN
