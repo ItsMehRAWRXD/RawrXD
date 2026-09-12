@@ -1,8 +1,6 @@
 /* ss_rope_kv_attn.h — DEEP2_ROPE_KV_ATTN_REAL stage receipt */
 #ifndef SS_ROPE_KV_ATTN_H
 #define SS_ROPE_KV_ATTN_H
-#include "ss_vk_api.h"
-#include "ss_model_plan.h"
 #include <stdint.h>
 typedef struct SsRopeKvAttnResult {
     uint32_t steps, rope_dim;
@@ -15,7 +13,9 @@ typedef struct SsRopeKvAttnResult {
     int pass;
     uint32_t first_fail;
 } SsRopeKvAttnResult;
+struct SsVk;
+struct SsModelPlan;
 void ss_rope_kv_print(const SsRopeKvAttnResult *r);
-int ss_vk_rope_kv_attn_real(SsVk *v, const SsModelPlan *plan, uint32_t steps,
-                            SsRopeKvAttnResult *r);
+int ss_vk_rope_kv_attn_real(struct SsVk *v, const struct SsModelPlan *plan,
+                            uint32_t steps, SsRopeKvAttnResult *r);
 #endif

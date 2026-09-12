@@ -2,6 +2,7 @@
 #include "ss_vk_api.h"
 #include "ss_vk_block0.h"
 #include "ss_rope_kv_attn.h"
+#include "ss_moe_ffn.h"
 #include <stdio.h>
 #include <string.h>
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
@@ -60,12 +61,17 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
     if (plan && plan->planReal) {
-        SsRopeKvAttnResult rk; SsPhase1Loop L;
+        SsRopeKvAttnResult rk; SsMoeFfnResult mf; SsPhase1Loop L;
         if (ss_vk_rope_kv_attn_real(&v, plan, 4, &rk) == 0 && rk.pass)
             printf("DEEP2_ROPE_KV_ATTN_REAL=PASS\n");
         else
             printf("DEEP2_ROPE_KV_ATTN_REAL=FAIL\n");
         ss_rope_kv_print(&rk);
+        if (ss_vk_moe_ffn_witness(&v, plan, &mf) == 0 && mf.pass)
+            printf("DEEP2_MOE_OR_FULL_BLOCK_FFN=PASS\n");
+        else
+            printf("DEEP2_MOE_OR_FULL_BLOCK_FFN=FAIL\n");
+        ss_moe_ffn_print(&mf);
         if (ss_vk_phase1_block_loop(&v, plan, &L) == 0 && L.pass)
             printf("PHASE_1_BLOCK_LOOP=PASS\n");
         else
@@ -75,7 +81,7 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                (L.completed >= 1 && L.first_failed != 0) ? "PASS" : "FAIL");
     } else {
         printf("DEEP2_BLOCK_FORWARD_000_001=NOT_RUN\nPHASE_1_BLOCK_LOOP=NOT_RUN\n");
-        printf("DEEP2_ROPE_KV_ATTN_REAL=NOT_RUN\n");
+        printf("DEEP2_ROPE_KV_ATTN_REAL=NOT_RUN\nDEEP2_MOE_OR_FULL_BLOCK_FFN=NOT_RUN\n");
     }
     if (!(shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op)) {
         printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");

@@ -1,0 +1,56 @@
+RECEIPT=DEEP2_MOE_OR_FULL_BLOCK_FFN_001
+STATUS=PASS
+DATE=2026-09-12
+PRODUCT_BINARY=deep2_benchmark.exe
+MODEL=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+BRANCH=cert/gpu-forward-child-ladder-20260909
+PRIOR_SEAL=986523bf62
+
+DEEP2_MOE_OR_FULL_BLOCK_FFN=PASS
+
+BLOCK_0_FULL_REAL=1
+BLOCK_0_FFN_TYPE=DENSE
+MOE_PROOF_BLOCK=3
+
+MOE_ROUTER_REAL=1
+ROUTER_LOGITS_REAL=1
+TOPK_SELECTION_REAL=1
+EXPERT_IDS_VALID=1
+EXPERT_WEIGHTS_REAL=1
+EXPERT_WEIGHT_SUM_VALID=1
+TOPK=8
+WEIGHT_SUM=1
+SELECTED=192,29,5,179,15,46,48,164
+
+FFN_GATE_REAL=1
+FFN_UP_REAL=1
+FFN_ACT_REAL=1
+FFN_DOWN_REAL=1
+
+MOE_OUT_TO_RESIDUAL=1
+BLOCK_OUTPUT_REAL=1
+
+ORDER=
+  1) blk.0 attn residual (plan-bound MLA path)
+  2) blk.0 dense FFN: ffn_norm → gate/up → SiLU* → down → residual
+  3) blk.3 MoE: ffn_norm → router → top-8 → expert gate/up/act/down
+     + shared expert → weighted accumulate → residual
+
+HONESTY=
+  Block 0 is leading-dense (not MoE); FFN_* from dense path.
+  MoE_* from first MoE block (blk.3) on post-block0 residual.
+  Expert weights loaded as per-expert Q4_K slices (not full 2GB tensor).
+  Phase-1 61-block loop still uses attention shortcuts (separate seal).
+  Does NOT mint FULL_MODEL_FORWARD / ALL_BLOCKS_COMPLETED / PROMOTE.
+
+FULL_MODEL_FORWARD=0
+ALL_BLOCKS_COMPLETED=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+FULL_MODEL_TPS_AUTHORITY=0
+
+BASE_CURRENT_PRODUCT_CHAIN_TPS=10.533285
+TPS_SCOPE=PRODUCT_CHAIN_ONLY
+
+NEXT_GATE=DEEP2_FULL_BLOCK_LOOP_REAL
+LOG=UNIVERSAL_SPLIT_STREAM.../moe_ffn_run.log

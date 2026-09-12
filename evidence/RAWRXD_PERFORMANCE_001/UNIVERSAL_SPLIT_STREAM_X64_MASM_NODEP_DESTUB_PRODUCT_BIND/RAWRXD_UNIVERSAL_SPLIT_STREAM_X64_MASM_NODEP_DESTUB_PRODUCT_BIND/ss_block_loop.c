@@ -68,6 +68,6 @@ void ss_phase1_print(const SsPhase1Loop *L)
     }
     printf("FULL_MODEL_FORWARD=0 ALL_BLOCKS_COMPLETED=0 PROMOTE=0\n");
     printf("ATTENTION_REAL=0 KV_CACHE_REAL=0 MOE_ROUTER_REAL=0\n");
-    printf("NEXT_GATE=%s\n", L->pass ? "DEEP2_MOE_OR_FULL_BLOCK_FFN"
+    printf("NEXT_GATE=%s\n", L->pass ? "DEEP2_FULL_BLOCK_LOOP_REAL"
                                      : "PHASE_1_BLOCK_LOOP");
 }
