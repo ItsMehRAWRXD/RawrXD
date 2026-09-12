@@ -48,6 +48,7 @@ int ss_product_split_phase(SSPhaseArgs *args, SSPhaseResult *out);
 int ss_d3d12_backend_init(void);
 void ss_d3d12_backend_shutdown(void);
 void ss_d3d12_set_shard(const char *path);
+void ss_d3d12_set_plan(const void *plan);
 int ss_d3d12_promote(void *ctx, const void *host, uint64_t n, uint64_t gen,
                      SSDeviceMaterialization *out);
 int ss_d3d12_release(void *ctx, void *handle, uint64_t agen);

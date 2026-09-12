@@ -118,5 +118,6 @@ void ss_vk_drop(SsVk *v);
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      uint64_t fence_val, uint32_t ttype, uint64_t dim0,
                      uint64_t dim1, uint64_t elems, uint64_t which,
-                     const char *shard, SsVkPromote2 promote2);
+                     const char *shard, SsVkPromote2 promote2,
+                     const SsModelPlan *plan);
 #endif

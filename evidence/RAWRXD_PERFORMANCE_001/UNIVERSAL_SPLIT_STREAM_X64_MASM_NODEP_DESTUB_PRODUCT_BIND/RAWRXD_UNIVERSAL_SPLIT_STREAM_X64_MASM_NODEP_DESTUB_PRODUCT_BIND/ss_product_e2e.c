@@ -38,6 +38,7 @@ int ss_product_e2e(const char *model_path, const char *prompt)
     be.release_fn = ss_d3d12_release;
     be.consume_fn = ss_d3d12_consume;
     ss_d3d12_set_shard(model_path);
+    ss_d3d12_set_plan(&plan);
     a.shard1_path = model_path;
     a.model_id = 1; a.model_generation = 1; a.op_ticket = 1; a.owner_cookie = 1;
     a.host_budget = 8ull << 30; a.gpu_budget = 8ull << 30; a.gpu_backend = &be;

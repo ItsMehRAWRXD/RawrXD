@@ -10,6 +10,7 @@ static UrGpuDevice g_dev;
 static UrDeviceVTable g_vt;
 static uint32_t g_ready;
 static const char *g_shard;
+static const void *g_plan;
 static void *g_proj_handle;
 static uint64_t g_proj_agen;
 
@@ -27,6 +28,7 @@ int ss_d3d12_backend_init(void)
 }
 
 void ss_d3d12_set_shard(const char *path) { g_shard = path; }
+void ss_d3d12_set_plan(const void *plan) { g_plan = plan; }
 
 void ss_d3d12_backend_shutdown(void)
 {
@@ -100,7 +102,8 @@ int ss_d3d12_consume(void *ctx, SSDeviceMaterialization *mat)
                             ur_gpudev_fence_nt(&g_dev), ur_gpudev_fence_val(&g_dev),
                             (uint32_t)mat->tensor_type, mat->dim0, mat->dim1,
                             mat->element_count, mat->which_name,
-                            g_shard, g_shard ? promote2 : 0);
+                            g_shard, g_shard ? promote2 : 0,
+                            (const SsModelPlan *)g_plan);
 }
 
 int ss_d3d12_release(void *ctx, void *handle, uint64_t agen)

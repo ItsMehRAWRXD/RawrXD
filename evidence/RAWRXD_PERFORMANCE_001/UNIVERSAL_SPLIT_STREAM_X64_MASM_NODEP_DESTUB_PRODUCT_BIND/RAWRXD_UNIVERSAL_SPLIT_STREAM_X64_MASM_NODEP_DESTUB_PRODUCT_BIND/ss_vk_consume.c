@@ -1,13 +1,15 @@
-/* ss_vk_consume.c — import → embd → block → onorm → lmhead → token → TPS */
+/* ss_vk_consume.c — import → embd → block0 witness → abbrev block → onorm → TPS */
 #include "ss_vk_api.h"
+#include "ss_vk_block0.h"
 #include <stdio.h>
 #include <string.h>
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      uint64_t fence_val, uint32_t ttype, uint64_t dim0,
                      uint64_t dim1, uint64_t elems, uint64_t which,
-                     const char *shard, SsVkPromote2 promote2)
+                     const char *shard, SsVkPromote2 promote2,
+                     const SsModelPlan *plan)
 {
-    SsVk v; int rc, imported_ok = 0, consume_ok = 0, st = 100;
+    SsVk v; SsBlockForwardResult b0; int rc, imported_ok = 0, consume_ok = 0, st = 100;
     memset(&v, 0, sizeof v);
     printf("HANDLE_TYPE=D3D12_RESOURCE HANDLE_LIFETIME=APP_RETAIN CLOSE_AFTER_IMPORT=0\n");
     printf("INPUT_AUTHORITY=DEEP2_VULKAN_CONSUME REIMPORT=0 HOST_WEIGHT_COPY=0\n");
@@ -56,6 +58,15 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
         return consume_ok ? 3 : (imported_ok ? 2 : 100);
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
+    if (plan && plan->planReal) {
+        if (ss_vk_block0_forward(&v, plan, &b0) == 0 && b0.completed)
+            printf("DEEP2_BLOCK_FORWARD_000_001=PASS\n");
+        else
+            printf("DEEP2_BLOCK_FORWARD_000_001=FAIL\n");
+        ss_block_fwd_print(&b0);
+    } else {
+        printf("DEEP2_BLOCK_FORWARD_000_001=NOT_RUN\n");
+    }
     if (!(shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op)) {
         printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");
         printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
