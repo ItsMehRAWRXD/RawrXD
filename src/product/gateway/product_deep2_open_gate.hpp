@@ -50,6 +50,10 @@ inline ProductOpenFacts CollectOpenFacts(const product_run::ProductRuntime& rt) 
     f.lmhead_present =
         (mw.lmHead.data || mw.lmHead.hasFileBacking) ? 1 : 0;
     f.output_present = f.lmhead_present; /* output.weight maps to lmHead */
+    /* K2 INDEX: roots live in GlobalTensorIndex / SHARD_IO, not mw.*.data. */
+    if (rt.Eng().isK2ShardIndexOpen()) {
+        f.embed_present = f.lmhead_present = f.output_present = 1;
+    }
     f.tensor_count = static_cast<int>(rt.auth.geom.GGUF_TENSOR_COUNT);
     if (f.tensor_count <= 0) {
         f.tensor_count = f.embed_present + f.lmhead_present +

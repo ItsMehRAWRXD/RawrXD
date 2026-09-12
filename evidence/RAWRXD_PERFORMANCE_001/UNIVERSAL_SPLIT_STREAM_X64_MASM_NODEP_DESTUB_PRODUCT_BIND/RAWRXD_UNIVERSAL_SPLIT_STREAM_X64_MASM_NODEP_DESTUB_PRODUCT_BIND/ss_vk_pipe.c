@@ -30,6 +30,8 @@ int ss_vk_pipe(SsVk *v)
     if (!v || !v->dev || !v->bound) return 100;
     bind_pipe_fns(v);
     if (!v->a.create_sm || !v->a.create_cp || !v->a.alloc_ds) return 100;
+    /* Second embd must not recreate/leak embd pipeline objects. */
+    if (v->pipe && v->pl && v->dset && v->dpool && v->dsl && v->sm) return 0;
     smi.codeSize = ss_vk_embd_spv_words * 4ull;
     smi.pCode = ss_vk_embd_spv;
     if (v->a.create_sm(v->dev, &smi, 0, &v->sm) != VK_SUCCESS) return 100;
@@ -51,4 +53,15 @@ int ss_vk_pipe(SsVk *v)
     dai.descriptorPool = v->dpool; dai.descriptorSetCount = 1; dai.pSetLayouts = &v->dsl;
     if (v->a.alloc_ds(v->dev, &dai, &v->dset) != VK_SUCCESS) return 100;
     return 0;
+}
+void ss_vk_embd_pipe_reset(SsVk *v)
+{
+    if (!v || !v->dev) return;
+    bind_pipe_fns(v);
+    if (v->pipe && v->a.destroy_pipe) v->a.destroy_pipe(v->dev, v->pipe, 0);
+    if (v->pl && v->a.destroy_pl) v->a.destroy_pl(v->dev, v->pl, 0);
+    if (v->dsl && v->a.destroy_dsl) v->a.destroy_dsl(v->dev, v->dsl, 0);
+    if (v->dpool && v->a.destroy_dp) v->a.destroy_dp(v->dev, v->dpool, 0);
+    if (v->sm && v->a.destroy_sm) v->a.destroy_sm(v->dev, v->sm, 0);
+    v->pipe = 0; v->pl = 0; v->dsl = 0; v->dpool = 0; v->dset = 0; v->sm = 0;
 }

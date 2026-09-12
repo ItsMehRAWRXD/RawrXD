@@ -7,6 +7,8 @@
 #include "lavapath/GpuForwardChainGateEmit.hpp"
 #include "GPUForwardChildIgnore.hpp"
 #include "lavapath/OneByOneIgnoreLadder.hpp"
+#include "lavapath/ScoreboardPumpIssue.hpp"
+#include "lavapath/ScoreboardLayerWalk.hpp"
 #include "DecodeBlockerAttribution.hpp"
 #include <cmath>
 #include <cstdio>
@@ -45,7 +47,14 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
             ? (uint32_t)modelWeights.numLayers - 1u : 0u;
         ok = forwardGpuContiguousRange(0, 0, last, hidden, hidden);
     }
-    if (!ok) return false;
+    if (!ok) {
+        std::fprintf(stderr,
+            "TRY_GPU_TOKEN_FORWARD=FAIL multi=%d slots=%u layers=%zu\n",
+            multiGpuLayerPlan_.active ? 1 : 0,
+            multiGpuLayerPlan_.gpuSlotCount,
+            modelWeights.numLayers);
+        return false;
+    }
     ++gpuFwd_.liveDecodeResidentTokens;
     gpuFwd_.gpuLayersLastToken =
         (gpuFwd_.forwardLayers - layersBefore) +
@@ -99,14 +108,31 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     } else if (tryGpuTokenForward(hidden)) {
         gpuFwdCommitted_ = true;
     } else {
+        std::fprintf(stderr, "TRY_GPU_FALLBACK_HOST=1\n");
         float* layerInput = hidden;
         float* layerOutput = attentionOutput;
-        for (size_t layer = 0; layer < layerCap; ++layer) {
-            forwardLayer(layer, layerInput, layerOutput, seqLen);
-            ++gpuFwd_.hostForwardLayerCalls;
-            float* tmp = layerInput;
-            layerInput = layerOutput;
-            layerOutput = tmp;
+        const uint32_t nLayers = (uint32_t)layerCap;
+        auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
+                         size_t seq) noexcept {
+            static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
+        };
+        forwardLayer(0, layerInput, layerOutput, seqLen);
+        ++gpuFwd_.hostForwardLayerCalls;
+        std::swap(layerInput, layerOutput);
+        if (nLayers > 1u) {
+            Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput, layerOutput,
+                                            seqLen, nLayers);
+            if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
+                Deep2::scoreboard::DisarmPumpIssue();
+                rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
+                return false;
+            }
+            layerInput = Deep2::scoreboard::PumpArm().in;
+            layerOutput = Deep2::scoreboard::PumpArm().out;
+            gpuFwd_.hostForwardLayerCalls +=
+                Deep2::scoreboard::PumpArm().pumpIssue.load(
+                    std::memory_order_acquire);
+            Deep2::scoreboard::DisarmPumpIssue();
         }
         if (layerInput != hidden)
             std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));

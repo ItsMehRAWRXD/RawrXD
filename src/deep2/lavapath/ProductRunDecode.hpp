@@ -3,6 +3,9 @@
 #include "ProductRuntime.hpp"
 #include "ProductPathInvariants.hpp"
 #include "ProductScoreboardBind.hpp"
+#include "ProductScoreboardIssuanceSeal.hpp"
+#include "ScoreboardOwnershipSeal.hpp"
+#include "ScoreboardProgressSeal.hpp"
 #include "RxRunStateHooks.hpp"
 #include "TokenWallNs.hpp"
 #include <chrono>
@@ -63,6 +66,9 @@ inline void RunDecodeStream(ProductRuntime& rt, const char* prompt,
     r.streamFinished = 1;
     Deep2::scoreboard::SealProductScoreboardP1(stderr, r.generatedTokens);
     Deep2::scoreboard::SealProductScoreboardP3(stderr);
+    Deep2::scoreboard::SealProductScoreboardIssuance(stderr);
+    Deep2::scoreboard::EmitOwnershipSeal(stderr);
+    Deep2::scoreboard::EmitProgressIndependenceSeal(stderr);
 }
 
 } // namespace rawr::product_run

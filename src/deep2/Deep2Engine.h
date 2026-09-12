@@ -45,6 +45,9 @@
 #include "vulkan_compute.h"
 #include "Deep2MultiGpuLayerPlan.hpp"
 #include "Deep2GpuForward.hpp"
+#include "Deep2SsVkProductBind.hpp"
+#include "d2_engine_ssvk_bind16.h"
+#include "d2_generators.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -461,6 +464,22 @@ public:
     uint64_t plannedGpuGemvOps() const { return plannedGpuGemvOps_; }
     const GpuForwardCounters& gpuForwardCounters() const;
     void resetGpuForwardCounters();
+    void bindSsVkPackedQ2K(SsVkPackedQ2KFn fn, void* user) {
+        ssVkProductBind_.bind(fn, user);
+    }
+    void unbindSsVkPackedQ2K() { ssVkProductBind_.unbind(); }
+    const SsVkTokenProof& ssVkProductTokenProof() const {
+        return ssVkProductBind_.tokenProof();
+    }
+    bool ssVkProductTokenAuthoritative() const {
+        return ssVkProductBind_.tokenAuthoritative();
+    }
+    void bindSsVkPackedProduct(D2PackedProductRunFn fn, void* user) {
+        d2bind16_bind(&ssvkBind16_, fn, user);
+    }
+    const D2Bind16Window* ssVkDecodeBindWindow() const {
+        return d2bind16_window(&ssvkBind16_);
+    }
     bool isRealGpuForward() const;
     bool ensureGpuForwardArena(unsigned slot);
     bool forwardLayerGpuResident(uint32_t layer, unsigned slot,
@@ -575,6 +594,13 @@ public:
 
     // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
     void computeLogits(const float* hiddenState, float* logits);
+
+    // DEEP2_ENGINE_SSVK_DECODE_BIND_001 — product decode transaction surface
+    int sampleCommittedToken(const float* logits);
+    bool advancePersistentKv();
+    size_t persistentKvLength() const;
+    const char* modelPathCStr() const { return config.modelPath; }
+    float modelNormEps() const { return modelWeights.normEps; }
 
     // ------------------------------------------------------------------------
     // MARS: Dynamic Dual-GPU VRAM Hotpatch
@@ -763,6 +789,8 @@ private:
     uint64_t plannedCpuGemvOps_ = 0;
     uint64_t plannedGpuGemvOps_ = 0;
     GpuForwardCounters gpuFwd_{};
+    SsVkProductBind ssVkProductBind_{};
+    D2EngineSsVkBind16 ssvkBind16_{};
     bool gpuFwdCommitted_ = false;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;

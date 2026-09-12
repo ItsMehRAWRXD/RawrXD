@@ -56,7 +56,7 @@ static int finf(float x) { return x == x && x <= 1e30f && x >= -1e30f; }
 
 static int load_gguf(const char *path, Ten **out, uint32_t *nout, uint32_t *align_out)
 {
-    FILE *f; uint32_t ver, i, nd, ty, align = 32, nt_u; uint64_t nt, nk, off, dims[4], base, j;
+    FILE *f; uint32_t ver, i, nd, ty, align = 32; uint64_t nt, nk, off, dims[4], base, j;
     char key[256]; Ten *e;
     *out = 0; *nout = 0;
     f = fopen(path, "rb"); if (!f) return 1;

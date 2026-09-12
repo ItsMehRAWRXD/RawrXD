@@ -15,7 +15,10 @@ int ss_vk_vis(SsVk *v)
     n = v->bytes < 512ull ? v->bytes : 512ull;
     v->vis_n = n;
     v->a.create_pool = (PFN_vkCreateCommandPool)v->a.gdpa(v->dev, "vkCreateCommandPool");
+    v->a.destroy_pool = (PFN_vkDestroyCommandPool)v->a.gdpa(v->dev, "vkDestroyCommandPool");
     v->a.alloc_cb = (PFN_vkAllocateCommandBuffers)v->a.gdpa(v->dev, "vkAllocateCommandBuffers");
+    v->a.free_cb = (PFN_vkFreeCommandBuffers)v->a.gdpa(v->dev, "vkFreeCommandBuffers");
+    v->a.reset_pool = (PFN_vkResetCommandPool)v->a.gdpa(v->dev, "vkResetCommandPool");
     v->a.begin_cb = (PFN_vkBeginCommandBuffer)v->a.gdpa(v->dev, "vkBeginCommandBuffer");
     v->a.end_cb = (PFN_vkEndCommandBuffer)v->a.gdpa(v->dev, "vkEndCommandBuffer");
     v->a.cmd_copy = (PFN_vkCmdCopyBuffer)v->a.gdpa(v->dev, "vkCmdCopyBuffer");
@@ -42,6 +45,7 @@ int ss_vk_vis(SsVk *v)
     ai.allocationSize = req.size; ai.memoryTypeIndex = ty;
     if (v->a.alloc_mem(v->dev, &ai, 0, &v->vismem) != VK_SUCCESS) return 100;
     if (v->a.bind_mem(v->dev, v->vis, v->vismem, 0) != VK_SUCCESS) return 100;
+    pci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     pci.queueFamilyIndex = v->qfam;
     if (v->a.create_pool(v->dev, &pci, 0, &v->pool) != VK_SUCCESS) return 100;
     cai.commandPool = v->pool; cai.commandBufferCount = 1;

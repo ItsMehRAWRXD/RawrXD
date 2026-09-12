@@ -16,6 +16,9 @@ struct ScoreboardFenceObs {
     std::atomic<uint32_t> fence3Demoted{0};
     std::atomic<uint32_t> fence3FallbackJoin{0};
     std::atomic<uint32_t> fence3PumpWork{0};
+    std::atomic<uint32_t> joinAllAttempts{0};
+    std::atomic<uint32_t> joinAllDemoted{0};
+    std::atomic<uint32_t> joinAllFallback{0};
 
     void reset() noexcept {
         readySkipObs.store(0, std::memory_order_relaxed);
@@ -27,6 +30,9 @@ struct ScoreboardFenceObs {
         fence3Demoted.store(0, std::memory_order_relaxed);
         fence3FallbackJoin.store(0, std::memory_order_relaxed);
         fence3PumpWork.store(0, std::memory_order_relaxed);
+        joinAllAttempts.store(0, std::memory_order_relaxed);
+        joinAllDemoted.store(0, std::memory_order_relaxed);
+        joinAllFallback.store(0, std::memory_order_relaxed);
     }
 };
 
@@ -35,7 +41,6 @@ inline ScoreboardFenceObs& FenceObs() noexcept {
     return o;
 }
 
-/* Compat alias used by JoinDemote call sites. */
 inline ScoreboardFenceObs& JoinDemote() noexcept { return FenceObs(); }
 
 } /* namespace scoreboard */

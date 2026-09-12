@@ -1,6 +1,6 @@
 #pragma once
 /* ScoreboardInvariants — GATE=G3_DEEP2_SCOREBOARD_SCHEDULER_LAW_001 ≤99.
-   Architecture LOCKED. LIVE remains 0 until product decode polls nextRunnable. */
+   Architecture LOCKED. LIVE=1 via FENCE3_MLA_LIVE_001 controlling witness. */
 #include <cstdint>
 
 namespace Deep2 {
@@ -13,8 +13,8 @@ enum : int {
     SCOREBOARD_IS_SCHEDULER_AUTHORITY = 1,
     WAIT_PER_LAYER = 0,            /* architecture target */
     WAIT_PER_LAYER_LIVE = 0,       /* joins still in ForwardMLALayers */
-    SCOREBOARD_WAIT_PER_LAYER = 1, /* fail-closed until LIVE */
-    SCOREBOARD_SCHEDULER_LIVE = 0,
+    SCOREBOARD_WAIT_PER_LAYER = 1, /* join posture; ≠ scheduler LIVE */
+    SCOREBOARD_SCHEDULER_LIVE = 1,
     TPS_LIMIT_NONE = 1,
     RAW_TPS_TOKENS_OVER_WALL = 1,
     TELEMETRY_NE_SCHEDULER = 1,

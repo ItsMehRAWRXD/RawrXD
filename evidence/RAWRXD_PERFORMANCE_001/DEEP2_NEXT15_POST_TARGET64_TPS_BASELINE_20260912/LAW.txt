@@ -8,9 +8,11 @@ FULL_MODEL_TPS_AUTHORITY=0
 
 ORDER=
   01 finish DEEP2_FULL_MODEL_TPS_AUTHORITY_001 untouched
-  02 seal baseline TPS receipt (QPC + cert SHA)
-  03 validate authority predicates
-  04 mint FULL_MODEL_TPS_AUTHORITY=1 on PASS only; PROMOTE=0
+     ATTEMPT2=SEALED_PASS FULL_MODEL_TPS_AUTHORITY=1 (20260912)
+     CERT=eac25986… LOG=cb4936cb… PROMOTE=0
+  02 seal baseline TPS receipt (QPC + cert SHA) — DONE via RECEIPT_ATTEMPT2
+  03 validate authority predicates — DONE (mint block predicates)
+  04 mint FULL_MODEL_TPS_AUTHORITY=1 on PASS only; PROMOTE=0 — DONE
   05 DEEP2_STAGE_TIMING_AUTHORITY_001
   06 DEEP2_UNIVERSAL_TILED_QUANT_001
   07 DEEP2_Q2K_DIRECT_GEMV_001
@@ -22,14 +24,18 @@ ORDER=
   13 DEEP2_LMHEAD_DEVICE_REDUCE_001
   14 DEEP2_DUAL_GPU_REAL_FORWARD_001
      bind via DEEP2_DUAL_AGGREGATE_FABRIC_NODEP_20260912
-     (max(t0,t1)+compact_merge; reject SERIAL_GPU_CHAIN)
+     NEXT_GATE=DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
+     (max(t0,t1)+compact_merge; OVERLAP_NS>0; reject SERIAL_GPU_CHAIN)
   15 DEEP2_64GB_BOUNDED_STREAMING + DEEP2_SWEEP_AB_UNIFIED_EXECUTOR
 
 CRITICAL=
   MEASURE BASELINE → SEAL → OPTIMIZE
   Link-15 / sweep amortizer NOT linked into measured path before 01–04 sealed
   TARGET64 not reinterpreted as TPS
+  Attempt2 abbreviated-overlay AUTHORITY=0 noise ≠ revoke AR mint
 
 POST_BASELINE_CAPACITY_ARCH=
   DEEP2_MODEL_SIZE_INDEPENDENCE_TOP15_20260912
+  DEEP2_POST_TPS_TOP15_ENHANCEMENTS_20260912
+  IMMEDIATE= packed(#01) → local(#04) → SsVk → partition(#03) → reduce(#11)
   (residency compiler / packed form / MoE cache / adaptive KV — after 01–04)

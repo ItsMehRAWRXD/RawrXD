@@ -1,0 +1,26 @@
+GATE=DEEP2_TOP15_MISSING_GENERATORS_NODEP_20260912
+STATUS=SOURCE_WIRED_SELFTEST_PASS
+SHA256=07fb06780db7b8ed770c5a234d8d7eb2b71556a13092ae849ff220f552f4738f
+
+LOCAL_SELFTEST:
+  DEEP2_TOP15_GENERATORS_SELFTEST=PASS
+  GENERATORS=15/15
+  STRICT_BUILD=MSVC /W4 (vcvars64)
+
+PRODUCT_LAND:
+  src/deep2/d2_generators.c
+  src/deep2/d2_generators.h
+  src/deep2/Deep2Top15Seams.hpp
+  CMake: d2_generators.c added beside GpuForward chain
+
+SEAMS (PRODUCT_BIND_MAP):
+  1 token_txn → generate N>0 (Top15ValidateTokenTxn)
+  15 authority_receipt → BIND16 commit path (Top15AuthorityFromFlags)
+  remaining 2–14: available for persistent/residency/streamer gates
+
+NOT_MINTED:
+  LIVE_PRODUCT_RUN=NOT_RUN
+  DEEP2_ENGINE_SSVK_DECODE_BIND_001=NOT_RUN (still needs 16/16 live)
+  PROMOTE=0
+
+NEXT_LIVE=DEEP2_ENGINE_SSVK_DECODE_BIND_001

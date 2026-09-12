@@ -149,8 +149,12 @@ bool Deep2Engine::forwardLayerGpuResident(
                                                     : modelWeights.intermediateDim);
     if (!lw.wq.data || !lw.wk.data || !lw.wv.data ||
         !(lw.wo.data || lw.attnO.data) ||
-        !lw.wGate.data || !lw.wUp.data || !lw.wDown.data)
+        !lw.wGate.data || !lw.wUp.data || !lw.wDown.data) {
+        std::fprintf(stderr,
+            "GPU_RESIDENT_LAYER_MISS layer=%u slot=%u wq=%p gate=%p\n",
+            layer, slot, (void*)lw.wq.data, (void*)lw.wGate.data);
         return false;
+    }
 
     auto& c = gpuFwd_;
     if (uploadEntry) {
@@ -169,8 +173,14 @@ bool Deep2Engine::forwardLayerGpuResident(
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
     const bool fuse = !prefetch;
-    if (fuse && !vc->BeginFusedLayer()) return false;
-    auto fail = [&]() -> bool {
+    if (fuse && !vc->BeginFusedLayer()) {
+        std::fprintf(stderr, "GPU_RESIDENT_BEGIN_FUSE_FAIL layer=%u slot=%u\n",
+                     layer, slot);
+        return false;
+    }
+    auto fail = [&](const char* why) -> bool {
+        std::fprintf(stderr, "GPU_RESIDENT_FAIL layer=%u slot=%u why=%s\n",
+                     layer, slot, why ? why : "?");
         if (fuse) (void)vc->EndFusedLayer();
         (void)vc->FlushWeightComputes();
         return false;
@@ -192,13 +202,57 @@ bool Deep2Engine::forwardLayerGpuResident(
         if (PackedQuant(wt)) {
             if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
+            else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+                ++c.q2kPackedOps;
+                /* Batch2 authoritative: in-process dual Q2_K (host download/upload ok). */
+                if (ssVkProductBind_.bound() && wt.data && wt.sizeBytes) {
+                    std::vector<float> xin(cols), yout(rows);
+                    if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
+                    SsVkQ2KRequest req{};
+                    req.packedWeights = wt.data;
+                    req.input = xin.data();
+                    req.output = yout.data();
+                    req.rows = rows;
+                    req.cols = cols;
+                    req.weightBytes = wt.sizeBytes;
+                    req.tensorName = wt.name.c_str();
+                    if (!ssVkProductBind_.dispatchQ2K(req)) {
+                        std::fprintf(stderr,
+                            "BATCH2_GPUFWD_Q2K_FAIL rows=%u cols=%u bytes=%zu name=%s\n",
+                            rows, cols, (size_t)wt.sizeBytes,
+                            wt.name.c_str());
+                        return false;
+                    }
+                    return vc->UploadBuf(out, yout.data(), rows);
+                }
+                if (ssvkBind16_.run != nullptr && wt.data && wt.sizeBytes) {
+                    std::vector<float> xin(cols), yout(rows);
+                    if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
+                    D2PackedProductRequest req{};
+                    req.packed_weights = wt.data;
+                    req.input = xin.data();
+                    req.output = yout.data();
+                    req.rows = rows;
+                    req.cols = cols;
+                    req.weight_bytes = wt.sizeBytes;
+                    req.tensor_name = wt.name.c_str();
+                    if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) return false;
+                    return vc->UploadBuf(out, yout.data(), rows);
+                }
+            }
             if (prefetch && vc->WeightStreamActive()) {
                 if (!vc->FlushWeightComputes()) return false;
                 uint32_t sl = 0;
                 if (!vc->PrefetchWeight(wt.data, wt.sizeBytes, sl)) return false;
                 return vc->SubmitGemvPrefetch(sl, in, out, rows, cols, wt.sizeBytes, wt.type);
             }
+            /* DualStick armed: prefer in-process 84-byte packed Q2_K (never 72-byte MASM). */
             return vc->DispatchGemvQuant(wt.type, wt.data, wt.sizeBytes, in, out, rows, cols);
+        }
+        /* Product decode: Q2_K must not host-Expand F32 / 72-byte MASM. */
+        if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+            const char* pd = std::getenv("RAWRXD_Q2K_PRODUCT_DECODE");
+            if (pd && pd[0] == '1') return false;
         }
         const float* w = EnsureF32(*this, wt, vulkanWeightF32_);
         if (!w) return false;
@@ -212,45 +266,51 @@ bool Deep2Engine::forwardLayerGpuResident(
         return vc->DispatchGemvDevice(w, WeightKey(wt), in, out, rows, cols);
     };
     // Overlapped QKV: upload next while prior GEMV runs
-    auto gemvOverlap3 = [&](const WeightTensor& a, const WeightTensor& b, const WeightTensor& c,
+    auto gemvOverlap3 = [&](const WeightTensor& wa, const WeightTensor& wb, const WeightTensor& wc,
                             CPUInference::VulkanCompute::DeviceBuf& in,
                             CPUInference::VulkanCompute::DeviceBuf& outA,
                             CPUInference::VulkanCompute::DeviceBuf& outB,
                             CPUInference::VulkanCompute::DeviceBuf& outC,
                             uint32_t rA, uint32_t rB, uint32_t rC, uint32_t cols) -> bool {
         if (!(prefetch && vc->WeightStreamActive())) {
-            return gemv(a, in, outA, rA, cols) && gemv(b, in, outB, rB, cols) &&
-                   gemv(c, in, outC, rC, cols);
+            return gemv(wa, in, outA, rA, cols) && gemv(wb, in, outB, rB, cols) &&
+                   gemv(wc, in, outC, rC, cols);
         }
-        if (PackedQuant(a) && PackedQuant(b) && PackedQuant(c)) {
+        if (PackedQuant(wa) && PackedQuant(wb) && PackedQuant(wc)) {
+            auto bumpQ = [&](const WeightTensor& wt) {
+                if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
+                else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
+                else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) ++c.q2kPackedOps;
+            };
+            bumpQ(wa); bumpQ(wb); bumpQ(wc);
             if (!vc->FlushWeightComputes()) return false;
             uint32_t sa = 0, sb = 0, sc = 0;
-            if (!vc->PrefetchWeight(a.data, a.sizeBytes, sa)) return false;
-            if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols, a.sizeBytes, a.type))
+            if (!vc->PrefetchWeight(wa.data, wa.sizeBytes, sa)) return false;
+            if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols, wa.sizeBytes, wa.type))
                 return false;
-            if (!vc->PrefetchWeight(b.data, b.sizeBytes, sb)) return false;
+            if (!vc->PrefetchWeight(wb.data, wb.sizeBytes, sb)) return false;
             if (!vc->WaitWeightCompute(sa)) return false;
-            if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols, b.sizeBytes, b.type))
+            if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols, wb.sizeBytes, wb.type))
                 return false;
-            if (!vc->PrefetchWeight(c.data, c.sizeBytes, sc)) return false;
+            if (!vc->PrefetchWeight(wc.data, wc.sizeBytes, sc)) return false;
             if (!vc->WaitWeightCompute(sb)) return false;
-            if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols, c.sizeBytes, c.type))
+            if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols, wc.sizeBytes, wc.type))
                 return false;
             return vc->WaitWeightCompute(sc);
         }
         if (!vc->FlushWeightComputes()) return false;
-        const float* wa = EnsureF32(*this, a, vulkanWeightF32_);
+        const float* fwa = EnsureF32(*this, wa, vulkanWeightF32_);
         uint32_t sa = 0;
-        if (!wa || !vc->PrefetchWeight(wa, (size_t)rA * cols * 4, sa)) return false;
+        if (!fwa || !vc->PrefetchWeight(fwa, (size_t)rA * cols * 4, sa)) return false;
         if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols)) return false;
-        const float* wb = EnsureF32(*this, b, vulkanWeightF32_);
+        const float* fwb = EnsureF32(*this, wb, vulkanWeightF32_);
         uint32_t sb = 0;
-        if (!wb || !vc->PrefetchWeight(wb, (size_t)rB * cols * 4, sb)) return false; // overlaps GEMV A
+        if (!fwb || !vc->PrefetchWeight(fwb, (size_t)rB * cols * 4, sb)) return false;
         if (!vc->WaitWeightCompute(sa)) return false;
         if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols)) return false;
-        const float* wc = EnsureF32(*this, c, vulkanWeightF32_);
+        const float* fwc = EnsureF32(*this, wc, vulkanWeightF32_);
         uint32_t sc = 0;
-        if (!wc || !vc->PrefetchWeight(wc, (size_t)rC * cols * 4, sc)) return false; // overlaps GEMV B
+        if (!fwc || !vc->PrefetchWeight(fwc, (size_t)rC * cols * 4, sc)) return false;
         if (!vc->WaitWeightCompute(sb)) return false;
         if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols)) return false;
         return vc->WaitWeightCompute(sc);

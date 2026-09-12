@@ -1,5 +1,5 @@
 #pragma once
-/* ProductScoreboardP3Seal — P3 + fence3 + interlayer tip; LIVE=0. ≤99. */
+/* ProductScoreboardP3Seal — P3 + fence3 + interlayer tip. ≤99. */
 #include "ScoreboardSubmitExec.hpp"
 #include "ScoreboardMultiOpObs.hpp"
 #include "ScoreboardInterLayer.hpp"
@@ -37,7 +37,7 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
             : 0;
     const int j3 =
         fo.fence3Demoted.load(std::memory_order_acquire) > 0 ? 1 : 0;
-    const int ilOwn = InterLayerProgressOwnedTip();
+    const int ilOwn = InterLayerDepProgressOwnedTip();
     /* Measured — never forced to 0 while loop still issues. */
     const uint32_t seqIss =
         il.sequentialNPlus1Issue.load(std::memory_order_acquire);
@@ -72,7 +72,7 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
         "GENERATED_TOKENS=%u\n"
         "TOKEN_COMMIT_PASS=%u\n"
         "SCOREBOARD_DISPATCH_AUTHORITY=%d\n"
-        "SCOREBOARD_SCHEDULER_LIVE=0\n"
+        "SCOREBOARD_SCHEDULER_LIVE=%d\n"
         "SCOREBOARD_WAIT_PER_LAYER=%d\n"
         "WAIT_PER_LAYER_LIVE=%d\n"
         "PROMOTE=%d\n"
@@ -91,7 +91,8 @@ inline void SealProductScoreboardP3(FILE* f) noexcept {
         il.nPlus1ReadyFromSbObs.load(std::memory_order_acquire),
         il.nPlus1SubmitFromSbObs.load(std::memory_order_acquire), seqIss, ilOwn,
         1u /* SEQUENTIAL_LAYER_ADVANCE_AUTHORITY held until loop demoted */, tok,
-        commit, chain, SCOREBOARD_WAIT_PER_LAYER, WAIT_PER_LAYER_LIVE, PROMOTE);
+        commit, chain, SCOREBOARD_SCHEDULER_LIVE, SCOREBOARD_WAIT_PER_LAYER,
+        WAIT_PER_LAYER_LIVE, PROMOTE);
 }
 
 } /* namespace scoreboard */

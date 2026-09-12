@@ -1,0 +1,126 @@
+--- a/src/deep2/Deep2Engine.h
++++ b/src/deep2/Deep2Engine.h
+@@
+ #include "Deep2GpuForward.hpp"
++#include "Deep2SsVkProductBind.hpp"
+@@
+     const GpuForwardCounters& gpuForwardCounters() const;
+     void resetGpuForwardCounters();
++    void bindSsVkPackedQ2K(SsVkPackedQ2KFn fn, void* user) {
++        ssVkProductBind_.bind(fn, user);
++    }
++    void unbindSsVkPackedQ2K() { ssVkProductBind_.unbind(); }
++    const SsVkTokenProof& ssVkProductTokenProof() const {
++        return ssVkProductBind_.tokenProof();
++    }
++    bool ssVkProductTokenAuthoritative() const {
++        return ssVkProductBind_.tokenAuthoritative();
++    }
+@@
+ private:
++    SsVkProductBind ssVkProductBind_;
+--- a/src/deep2/Deep2Engine.cpp
++++ b/src/deep2/Deep2Engine.cpp
+@@
+ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
+                            const float* bias, float* output, size_t outDim) {
+@@
+     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
+     memset(output, 0, outDim * sizeof(float));
++
++    // Batch2 product bind: Q2_K must use the already-certified in-process
++    // SsVk dual aggregate path. Never route this through the stale 72-byte
++    // sovereign_q2_k_gemv.asm representation.
++    if (wtEffective.type == (int)GGMLType::GGML_TYPE_Q2_K &&
++        ssVkProductBind_.bound()) {
++        SsVkQ2KRequest req{};
++        req.packedWeights = wtEffective.data;
++        req.input = input;
++        req.output = output;
++        req.rows = rows;
++        req.cols = cols;
++        req.weightBytes = wtEffective.sizeBytes;
++        req.tensorName = wt.name.c_str();
++
++        if (!ssVkProductBind_.dispatchQ2K(req)) {
++            vulkanStrictViolation_ = true;
++            throw std::runtime_error(
++                std::string("BATCH2_SSVK_Q2K_FAIL tensor=") + wt.name);
++        }
++        if (bias) {
++            for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
++        }
++        if (acquired && elasticResidencyEnabled_ && elasticResidency_ &&
++            !wt.name.empty())
++            elasticResidency_->ReleaseTensor(wt.name);
++        return;
++    }
+@@
+     for (size_t t = 0; t < maxOutputLen; ++t) {
+@@
+         } else {
++            ssVkProductBind_.beginToken(t);
+             // Step N>0: embed the previously sampled token and forward it.
+@@
+             if (!B3_StageDigestEnabled()) {
+                 try {
+                     if (!forwardTokenAllLayers(h, inputPos + 1)) {
+@@
+                     }
++                    ssVkProductBind_.noteFullModelForward(true);
++                    const auto& gf = gpuForwardCounters();
++                    ssVkProductBind_.noteHostCounters(
++                        (std::uint32_t)gf.hostForwardLayerCalls,
++                        (std::uint32_t)gf.hostMaterializations,
++                        (std::uint32_t)gf.cpuF32Expands);
+                 } catch (const std::exception& ex) {
+@@
+             {
+                 auto fn = FinalNorm::Acquire(modelWeights.finalNorm, config.hiddenDim,
+                                              h, h, config.modelPath);
+@@
+                 if (!art.valid) {
+@@
+                 }
++                ssVkProductBind_.noteFinalNorm(true);
+             }
+@@
+             if (kvCache) {
+@@
+                 if (!rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7))
+                     kvCache->advance();
++                ssVkProductBind_.noteKvAdvance(
++                    !rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7));
+                 rawr::iso_ladder::A().kvNs += rawr::iso_ladder::Ns(k0);
+             }
+@@
+             } else {
+                 computeLogits(h, logits);
++                if (t > 0) ssVkProductBind_.noteLmHead(true);
+             }
+@@
+             } else {
+                 nextToken = sampleToken(logits);
+             }
+@@
+         outputTokens[tokensGenerated] = nextToken;
++        if (t > 0) {
++            ssVkProductBind_.noteSamplerCommit(true);
++            ssVkProductBind_.noteSealedLogitsReuse(false);
++            if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT") &&
++                !ssVkProductBind_.tokenAuthoritative()) {
++                const auto& p = ssVkProductBind_.tokenProof();
++                std::fprintf(stderr,
++                    "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
++                    "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u\n",
++                    t,
++                    (unsigned long long)p.q2kOpsProduct,
++                    (unsigned long long)p.q2kOpsSeen,
++                    p.hostForwardLayerCalls,
++                    p.hostMaterializations,
++                    p.cpuF32Expands,
++                    p.criticalPathNvmeReads);
++                return tokensGenerated;
++            }
++        }
+         tokensGenerated++;

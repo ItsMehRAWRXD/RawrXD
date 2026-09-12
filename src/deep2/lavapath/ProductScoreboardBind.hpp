@@ -7,6 +7,10 @@
 #include "ProductScoreboardP3Seal.hpp"
 #include "ScoreboardInterLayer.hpp"
 #include "ScoreboardFenceObs.hpp"
+#include "ScoreboardIssuance.hpp"
+#include "ScoreboardOwnershipObs.hpp"
+#include "ScoreboardPumpIssue.hpp"
+#include "ScoreboardLayerWalk.hpp"
 #include <atomic>
 
 namespace Deep2 {
@@ -20,6 +24,12 @@ inline int BindProductOpen(const char* path, uint32_t layers) {
     ResetP3Hooks();
     InterLayer().reset();
     FenceObs().reset();
+    Issuance().reset();
+    OwnershipObs().reset();
+    PumpArm().pumpIssue.store(0, std::memory_order_relaxed);
+    PumpArm().outerLoopInit.store(0, std::memory_order_relaxed);
+    PumpArm().lastIssued.store(0xffffffffu, std::memory_order_relaxed);
+    WalkEnsureCrutch().store(0, std::memory_order_relaxed);
     s.index = OpenModelIndex{};
     if (!s.index.openPath(path))
         return 0;

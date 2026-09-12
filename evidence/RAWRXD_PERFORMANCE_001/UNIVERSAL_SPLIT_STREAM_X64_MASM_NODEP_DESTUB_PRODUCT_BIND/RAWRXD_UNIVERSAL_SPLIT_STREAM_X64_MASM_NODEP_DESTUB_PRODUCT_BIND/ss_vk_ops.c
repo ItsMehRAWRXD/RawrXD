@@ -18,7 +18,7 @@ int ss_vk_op_rms(SsVk *v, VkBuffer inb, VkBuffer wb, uint64_t wbytes, VkBuffer o
     VkCommandBufferBeginInfo bgi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     VkSubmitInfo sub = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     VkWriteDescriptorSet w[3]; VkDescriptorBufferInfo bi[3];
-    VkCommandBuffer cb; uint32_t pc[2], i; float eps = 1e-6f; int rc = 100;
+    VkCommandBuffer cb = 0; uint32_t pc[2], i; float eps = 1e-6f; int rc = 100;
     if (ss_vk_pipe3(v, ss_vk_rmsnorm_spv, ss_vk_rmsnorm_spv_words, 8,
                     &sm, &dsl, &pl, &pipe, &dp, &ds)) return 100;
     bind_cmd(v);
@@ -43,6 +43,7 @@ int ss_vk_op_rms(SsVk *v, VkBuffer inb, VkBuffer wb, uint64_t wbytes, VkBuffer o
     if (v->a.end_cb(cb) || v->a.qsubmit(v->q, 1, &sub, 0) || v->a.qidle(v->q)) goto done;
     rc = 0;
 done:
+    if (cb && v->a.free_cb) v->a.free_cb(v->dev, v->pool, 1, &cb);
     if (pipe) v->a.destroy_pipe(v->dev, pipe, 0);
     if (pl) v->a.destroy_pl(v->dev, pl, 0);
     if (dsl) v->a.destroy_dsl(v->dev, dsl, 0);
@@ -59,7 +60,7 @@ int ss_vk_op_gemv(SsVk *v, VkBuffer wb, uint64_t wbytes, VkBuffer xb, VkBuffer y
     VkCommandBufferBeginInfo bgi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     VkSubmitInfo sub = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
     VkWriteDescriptorSet w[3]; VkDescriptorBufferInfo bi[3];
-    VkCommandBuffer cb; uint32_t pc[3], i; int rc = 100;
+    VkCommandBuffer cb = 0; uint32_t pc[3], i; int rc = 100;
     if (ss_vk_pipe3(v, ss_vk_gemv_spv, ss_vk_gemv_spv_words, 12,
                     &sm, &dsl, &pl, &pipe, &dp, &ds)) return 100;
     bind_cmd(v);
@@ -84,6 +85,7 @@ int ss_vk_op_gemv(SsVk *v, VkBuffer wb, uint64_t wbytes, VkBuffer xb, VkBuffer y
     if (v->a.end_cb(cb) || v->a.qsubmit(v->q, 1, &sub, 0) || v->a.qidle(v->q)) goto done;
     rc = 0;
 done:
+    if (cb && v->a.free_cb) v->a.free_cb(v->dev, v->pool, 1, &cb);
     if (pipe) v->a.destroy_pipe(v->dev, pipe, 0);
     if (pl) v->a.destroy_pl(v->dev, pl, 0);
     if (dsl) v->a.destroy_dsl(v->dev, dsl, 0);

@@ -1,6 +1,6 @@
 #pragma once
 /* ProductScoreboardWitness — P1 measured session counters. ≤99.
-   SCOREBOARD_SCHEDULER_LIVE stays 0 until P3. */
+   SCOREBOARD_SCHEDULER_LIVE=1 (FENCE3_MLA_LIVE_001); PROMOTE held. */
 #include <atomic>
 #include <cstdint>
 

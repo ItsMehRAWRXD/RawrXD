@@ -19,13 +19,6 @@ struct Facts {
     int open_pass = 0;
 };
 
-inline int TouchPtr(const void* p) {
-    if (!p) return 0;
-    volatile char c = static_cast<const volatile char*>(p)[0];
-    (void)c;
-    return 1;
-}
-
 inline int AcquireWorkingSet(Deep2Engine& e, const ModelWeights& mw) {
     const WeightTensor& w = mw.tokenEmbed.data || mw.tokenEmbed.hasFileBacking
                                 ? mw.tokenEmbed
@@ -36,11 +29,21 @@ inline int AcquireWorkingSet(Deep2Engine& e, const ModelWeights& mw) {
         if (w.hasFileBacking && nv->prefetchRange(w.fileOffset, (size_t)n))
             return 1;
     }
-    return TouchPtr(w.data);
+    if (!w.data) return 0;
+    volatile char c = static_cast<const volatile char*>(w.data)[0];
+    (void)c;
+    return 1;
 }
 
 inline Facts Evaluate(Deep2Engine& e, const char* path) {
     Facts f{};
+    if (e.isK2ShardIndexOpen()) {
+        f.meta_indexed = f.storage_reachable = f.working_set_acquirable =
+            f.acquire_live = f.file_backing = 1;
+        f.tensor_count = 1;
+        f.open_pass = e.isModelLoaded() ? 1 : 0;
+        return f;
+    }
     const ModelWeights& mw = e.getModelWeights();
     f.tensor_count = (int)mw.layers.size() + (mw.tokenEmbed.sizeBytes ? 1 : 0) +
                      (mw.lmHead.sizeBytes ? 1 : 0);

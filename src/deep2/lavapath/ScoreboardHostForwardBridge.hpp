@@ -1,10 +1,8 @@
 #pragma once
-/* ScoreboardHostForwardBridge — multi-op ReadyExec tip. LIVE=0. ≤99. */
+/* ScoreboardHostForwardBridge — arm/submit host forward. LIVE=0. ≤99. */
 #include "ScoreboardSubmitExec.hpp"
-#include "ScoreboardEnsureReady.hpp"
-#include "ScoreboardInterLayer.hpp"
+#include "ScoreboardReleaseNext.hpp"
 #include "ScoreboardProductState.hpp"
-#include "ProductScoreboardWitness.hpp"
 
 namespace Deep2 {
 namespace scoreboard {
@@ -45,8 +43,8 @@ inline int SubmitHostForward(void* ctx, const ExecOpIdentity& op) noexcept {
     b->forward(b->engine, op.layer, b->in, b->out, b->seq);
     b->ownedDispatch.fetch_add(1, std::memory_order_acq_rel);
     NoteP3Complete(ProductSb().sb, op.tensorId, op.generation);
-    /* Publish only — pump/Ensure stay on decode/dispatch path. */
-    (void)ReleaseNextLayerFromCompletion(op.tensorId);
+    /* Completion → enqueue-only ReleaseNext. COMPLETION_IS_SCHEDULER=0. */
+    (void)ReleaseNextFromCompletion(op.tensorId);
     return 1;
 }
 
@@ -74,33 +72,6 @@ inline void DisarmHostForward() noexcept {
     b.armedLayer = 0xffffffffu;
     P3Hooks().submitExec = nullptr;
     P3Hooks().ctx = nullptr;
-}
-
-inline int TryScoreboardOwnedForwardLayer(
-    void* eng, uint32_t layer, const float* in, float* out, size_t seq,
-    HostForwardBridge::ForwardFn body) noexcept {
-    if (!eng || !body || !in || !out ||
-        !P1Wit().bindObs.load(std::memory_order_acquire))
-        return 0;
-    const int fromSb =
-        InterLayer().lastReleasedNext.load(std::memory_order_acquire) == layer
-            ? 1
-            : 0;
-    if (!LayerPreReady(layer) && !EnsureTensorGpuReady(layer))
-        return 0;
-    if (!LayerPreReady(layer))
-        return 0;
-    if (fromSb)
-        (void)NoteReadyExecFromScoreboardRelease(layer);
-    ArmHostForward(eng, body, in, out, seq, layer);
-    const int ok = DispatchReadyExec(ProductSb().sb, layer);
-    const int owned =
-        HostFwd().ownedDispatch.load(std::memory_order_acquire) > 0;
-    /* Count before ReleaseNext overwrites lastReleasedNext inside submit. */
-    if (ok && owned && fromSb)
-        InterLayer().nPlus1SubmitFromSbObs.fetch_add(1, std::memory_order_acq_rel);
-    DisarmHostForward();
-    return (ok && owned) ? 1 : 0;
 }
 
 } /* namespace scoreboard */

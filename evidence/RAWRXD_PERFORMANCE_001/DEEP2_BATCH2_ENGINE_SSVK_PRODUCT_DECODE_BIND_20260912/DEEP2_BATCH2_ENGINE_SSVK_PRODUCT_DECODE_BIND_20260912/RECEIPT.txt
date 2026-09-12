@@ -1,0 +1,25 @@
+GATE=DEEP2_ENGINE_SSVK_DECODE_BIND_001
+BATCH2=DEEP2_BATCH2_ENGINE_SSVK_PRODUCT_DECODE_BIND_20260912
+STATUS=SOURCE_WIRED
+RUNTIME_REACHED=0
+LIVE_PRODUCT_RUN=NOT_RUN
+SELFTEST=PASS
+BATCH2_PRODUCT_DECODE_BIND_PASS_LINES=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+SOURCE_WIRED=
+  src/deep2/Deep2SsVkProductBind.{hpp,cpp}
+  src/deep2/Deep2SsVkPackedDualAdapter.{hpp,cpp}  # in-process 84B dual GEMV reps=1
+  Deep2Engine.h/.cpp LinearW Q2_K intercept + generate N>0 notes + PASS log
+  Deep2Engine_GpuForward.cpp Q2_K → dispatchQ2K when bound
+  enableVulkan → PackedDualAdapterOpen + bindSsVkPackedQ2K
+  CMake: Deep2SsVkProductBind + PackedDualAdapter + d2_live_vk + d2_overlap_core
+
+RUNTIME_REACHED_REQUIRES=
+  build InferenceEngine + live binary
+  RAWRXD_DEEP2_SSVK_PRODUCT_STRICT=1
+  RAWRXD_DEEP2_GPU_RESIDENT_STRICT=1
+  ≥16 BATCH2_PRODUCT_DECODE_BIND=PASS in log
+  VERIFY_BATCH2.ps1 exit 0

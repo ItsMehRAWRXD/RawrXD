@@ -6,6 +6,28 @@
 namespace Deep2 {
 namespace scoreboard {
 
+inline void RearmTensorAbsent(TensorScore* t) noexcept {
+    if (!t)
+        return;
+    const uint32_t st = t->state.load(std::memory_order_acquire);
+    if (st == (uint32_t)ResidencyState::Absent ||
+        st == (uint32_t)ResidencyState::IoPending ||
+        st == (uint32_t)ResidencyState::RamReady ||
+        st == (uint32_t)ResidencyState::GpuPending ||
+        st == (uint32_t)ResidencyState::GpuReady)
+        return;
+    t->state.store((uint32_t)ResidencyState::Absent, std::memory_order_release);
+    t->ramWindow = nullptr;
+    t->gpuWindow = nullptr;
+    t->consumersRemaining.store(1, std::memory_order_relaxed);
+}
+
+inline void RearmAllRetiredForWalk() noexcept {
+    ProductScoreboardState& s = ProductSb();
+    for (uint32_t i = 0; i < s.sb.n && i < 64u; ++i)
+        RearmTensorAbsent(s.sb.get(i));
+}
+
 inline int EnsureTensorGpuReady(TensorId id) noexcept {
     ProductScoreboardState& s = ProductSb();
     TensorScore* t = s.sb.get(id);
@@ -14,9 +36,8 @@ inline int EnsureTensorGpuReady(TensorId id) noexcept {
     uint32_t st = t->state.load(std::memory_order_acquire);
     if (st == (uint32_t)ResidencyState::GpuReady)
         return 1;
-    if (st == (uint32_t)ResidencyState::Retired ||
-        st == (uint32_t)ResidencyState::Executing)
-        return 0;
+    RearmTensorAbsent(t);
+    st = t->state.load(std::memory_order_acquire);
     if (st == (uint32_t)ResidencyState::Absent)
         (void)ProductScoreboardPrime::Prime(s.sb, id);
     for (int i = 0; i < 12; ++i) {

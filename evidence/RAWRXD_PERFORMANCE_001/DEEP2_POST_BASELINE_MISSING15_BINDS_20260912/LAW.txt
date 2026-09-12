@@ -5,7 +5,8 @@ PROMOTE=0
 FULL_MODEL_TPS_AUTHORITY=0
 
 AFTER_BASELINE_SEAL_HIGHEST_VALUE=
-  01 live TPS mint via measured QPC only
+  01 live TPS mint via measured QPC only — DONE Attempt2 SEALED_PASS
+     FULL_MODEL_TPS_AUTHORITY=1 PROMOTE=0 (RECEIPT_ATTEMPT2)
   02 Mint-15 product bind (real gate/cert/QPC; mock cannot reach live)
   03 ResidencyGraph.load_exact → D2DeviceIo
   04 ResidencyGraph slots → SsVk memory

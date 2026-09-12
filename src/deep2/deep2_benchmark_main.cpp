@@ -18,6 +18,7 @@
 
 #include "Deep2Benchmark.h"
 #include "Deep2Engine.h"
+#include "G:/~dev/rawrxd/evidence/RAWRXD_PERFORMANCE_001/UNIVERSAL_STREAMER_RESIDENCY_001/ss_product.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -80,7 +81,7 @@ Phases:
   --phase endurance            Context scaling endurance matrix
   --phase saturation             Multi-stream saturation test
   --phase thermal              Thermal stability soak test
-  --phase certify              Full certification suite (default)
+  --phase split-stream        Split-stream residency bind (MG→WARM→D3D12 HOT)
 
 Single Stream Options:
   --prompt <text>             Test prompt (default: code generation)
@@ -260,6 +261,11 @@ int main(int argc, char** argv) {
         std::cout << "Phase: " << args.phase << "\n\n";
     }
     
+    if (args.phase == "split-stream") {
+        if (args.verbose) std::cout << "[SPLIT-STREAM] residency product bind (no full-model load)\n";
+        return ss_product_e2e(args.modelPath.c_str(), args.prompt.c_str());
+    }
+
     // Initialize benchmark harness
     BenchmarkHarness harness;
     
@@ -408,7 +414,7 @@ int main(int argc, char** argv) {
     }
     else {
         std::cerr << "[ERROR] Unknown phase: " << args.phase << "\n";
-        std::cerr << "Valid phases: single, endurance, saturation, thermal, certify\n";
+        std::cerr << "Valid phases: single, endurance, saturation, thermal, certify, split-stream\n";
         return 1;
     }
     

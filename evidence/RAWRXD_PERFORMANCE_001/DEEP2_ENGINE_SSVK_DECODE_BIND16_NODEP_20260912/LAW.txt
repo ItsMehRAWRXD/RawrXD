@@ -1,0 +1,44 @@
+GATE=DEEP2_ENGINE_SSVK_DECODE_BIND16_NODEP_20260912
+STATUS=SOURCE_DROP
+SUPERSEDES=incomplete Batch2 wiring where conflict
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+Q2K_GEOMETRY:
+BLOCK_BYTES=84
+BLOCK_ELEMENTS=256
+STALE_72_BYTE_PATH=FORBIDDEN
+
+PRODUCT_PROOF_OK:
+overlap_shorter_pm>=700
+overlap_critical_pm>=500
+dual_real_forwards=1
+product_linked=1
+packed_q2k_live=1
+material_same_token_overlap=1
+aggregate_bw_authority=1
+compact_merge_real=1
+output_parity=1
+full_dequant_buffer=0
+materialized_weight_bytes_nonzero=0
+serial_gpu_chain=0
+weight_migration=0
+synthetic_io=0
+device_lost=0
+critical_path_nvme_reads=0
+
+COMMIT_TOKEN:
+dual_slot_deltas>0
+host_deltas=0
+full_transaction_notes=1
+window_authority_only_at_16_16=1
+
+FORBIDDEN:
+CreateProcess evidence.exe
+receipt_replay
+72_byte_MASM_fallthrough
+
+EXPORT_ABI:
+d2_packed_q2k_product_run_v1 = canonical in-process
+
+NOT_RUN != PASS

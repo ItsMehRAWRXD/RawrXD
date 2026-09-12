@@ -3,11 +3,19 @@
 #include "ss_vk_api.h"
 #include "ss_model_plan.h"
 #include "ss_vk_block_util.h"
+#include "ss_vk_survive.h"
 #include <stdio.h>
 #include <string.h>
 uint64_t ss_vk_act_hash(SsVk *v, VkDeviceMemory mem, uint32_t n);
 int ss_vk_run_resolved_block(SsVk *v, const SsModelPlan *plan, uint32_t i,
                              int *was_moe, int *attn_ok, int *ffn_ok, int *bind_ok);
+static void surv_chk(SsVk *v, uint32_t i)
+{
+    char tag[32]; SsSurviveSnap s;
+    if (!(i == 0 || i == 15 || i == 30 || i == 45 || i == 60)) return;
+    sprintf(tag, "AFTER_BLOCK_%u", i);
+    ss_vk_survive_probe(v, tag, 0, &s);
+}
 int ss_vk_full_block_loop(SsVk *v, const SsModelPlan *plan, SsFullBlockLoop *L)
 {
     uint32_t i, emb; uint64_t prev = 0, cur_h; int moe, attn, ffn, bind, ok = 0;
@@ -47,6 +55,7 @@ int ss_vk_full_block_loop(SsVk *v, const SsModelPlan *plan, SsFullBlockLoop *L)
         }
         printf("FULL_BLOCK_OK i=%u moe=%d\n", i, moe);
         fflush(stdout);
+        surv_chk(v, i);
         if (bind) L->bind_ok++;
         if (attn) L->attn_ok++;
         if (ffn) L->ffn_ok++;

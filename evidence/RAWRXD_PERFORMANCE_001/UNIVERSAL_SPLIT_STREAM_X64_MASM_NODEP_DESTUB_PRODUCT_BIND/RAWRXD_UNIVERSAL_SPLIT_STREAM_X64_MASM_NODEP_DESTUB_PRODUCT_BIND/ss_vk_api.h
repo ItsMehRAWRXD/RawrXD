@@ -9,7 +9,7 @@
 #include <windows.h>
 #include <vulkan/vulkan.h>
 #include <stdint.h>
-typedef struct {
+typedef struct SsVkApi {
     HMODULE lib;
     PFN_vkGetInstanceProcAddr gipa;
     PFN_vkGetDeviceProcAddr gdpa;
@@ -32,6 +32,8 @@ typedef struct {
     PFN_vkCreateCommandPool create_pool;
     PFN_vkDestroyCommandPool destroy_pool;
     PFN_vkAllocateCommandBuffers alloc_cb;
+    PFN_vkFreeCommandBuffers free_cb;
+    PFN_vkResetCommandPool reset_pool;
     PFN_vkBeginCommandBuffer begin_cb;
     PFN_vkEndCommandBuffer end_cb;
     PFN_vkCmdCopyBuffer cmd_copy;
@@ -61,7 +63,7 @@ typedef struct {
     PFN_vkCmdPushConstants cmd_pc;
     PFN_vkCmdDispatch cmd_disp;
 } SsVkApi;
-typedef struct {
+typedef struct SsVk {
     SsVkApi a;
     VkInstance inst;
     VkPhysicalDevice phys;
@@ -95,12 +97,15 @@ typedef int (*SsVkPromote2)(const void *host, uint64_t n, void **nt_out,
                             void **fence_nt_out, uint64_t *fence_val_out);
 int ss_vk_load(SsVk *v);
 int ss_vk_dev(SsVk *v, uint64_t luid);
+int ss_vk_cmd_reclaim(SsVk *v);
+int ss_vk_pool_recreate(SsVk *v);
 int ss_vk_import(SsVk *v, void *nt, uint64_t bytes);
 int ss_vk_import2(SsVk *v, void *nt, uint64_t bytes);
 int ss_vk_import_lm(SsVk *v, void *nt, uint64_t bytes);
 int ss_vk_sync(SsVk *v, void *fence_nt, uint64_t fence_val);
 int ss_vk_vis(SsVk *v);
 int ss_vk_pipe(SsVk *v);
+void ss_vk_embd_pipe_reset(SsVk *v);
 int ss_vk_embd(SsVk *v);
 int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2);
 int ss_vk_block_exec(SsVk *v, VkBuffer nwb, uint64_t nbytes, VkBuffer nob, VkBuffer qob,

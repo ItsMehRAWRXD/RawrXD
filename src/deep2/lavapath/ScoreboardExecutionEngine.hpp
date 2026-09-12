@@ -2,6 +2,7 @@
 /* ScoreboardExecutionEngine — readiness loop. SCHEDULER_LIVE=0. ≤99. */
 #include "ScoreboardNextRunnable.hpp"
 #include "ScoreboardSubmitExec.hpp"
+#include "ScoreboardPumpHook.hpp"
 #include "TimelineDispatch.hpp"
 #include "TimelineSubmit.hpp"
 #include "MultiGpuCostFunction.hpp"
@@ -37,11 +38,10 @@ struct ScoreboardExecutionEngine {
                 const uint32_t st =
                     t ? t->state.load(std::memory_order_acquire) : 0u;
                 if (st != (uint32_t)ResidencyState::GpuReady)
-                    continue; /* drop stale readyQ after retire/exec */
+                    continue;
                 if (P3Hooks().submitExec)
                     (void)DispatchReadyExec(*sb, r.id);
                 else {
-                    /* Keep GpuReady for later armed P3 dispatch; requeue. */
                     (void)sb->readyQ.push(r.id);
                     break;
                 }
@@ -60,6 +60,10 @@ struct ScoreboardExecutionEngine {
             } else if (r.kind == RunnableKind::Retire) {
                 (void)sb->onConsumerDone(r.id);
             }
+        }
+        if (PumpIssueFnT fn = PumpIssueHook()) {
+            if (fn())
+                ++n;
         }
         if (tl)
             (void)tl->poll(32);

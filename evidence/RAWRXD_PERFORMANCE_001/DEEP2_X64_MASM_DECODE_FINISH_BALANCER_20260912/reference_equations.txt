@@ -1,0 +1,13 @@
+Completion-time model:
+  E0 = S0 + c0*w0
+  E1 = S1 + c1*(W-w0)
+
+Equal-finish solve:
+  S0 + c0*w0 = S1 + c1*(W-w0)
+  w0*(c0+c1) = (S1-S0) + c1*W
+  w0 = ((S1-S0) + c1*W)/(c0+c1)
+
+Interpretation:
+  S1>S0  => GPU1 starts later, GPU0 receives extra work.
+  c1>c0  => GPU1 is slower per effective row, GPU0 receives extra work.
+  Both effects are handled once in one equation.

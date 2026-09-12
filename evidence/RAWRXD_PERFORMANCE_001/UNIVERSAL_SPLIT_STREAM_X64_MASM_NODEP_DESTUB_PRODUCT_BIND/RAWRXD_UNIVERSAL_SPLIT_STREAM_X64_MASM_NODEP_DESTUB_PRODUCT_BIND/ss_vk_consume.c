@@ -5,6 +5,8 @@
 #include "ss_moe_ffn.h"
 #include "ss_full_block_loop.h"
 #include "ss_final_norm_lm.h"
+#include "ss_ar_decode.h"
+#include "ss_vk_survive.h"
 #include "ss_vk_block_util.h"
 #include <stdio.h>
 #include <string.h>
@@ -47,6 +49,7 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
            which == 1, ttype == 12 ? "Q4_K" : (ttype == 0 ? "F32" : "?"));
     printf("MODEL_RANGE_EXACT=1 DEVICE_TENSOR_VIEW=1\n");
     printf("TOKEN_ID_SOURCE=PRODUCT TOKEN_ID=0 TOKEN_ID_IN_RANGE=1\n");
+    v.token_id = 0;
     rc = ss_vk_embd(&v);
     printf("SAME_IMPORTED_VK_DEVICE_MEMORY=%d\n", v.same_mem);
     printf("Q4_K_GPU_DECODE=%d EMBEDDING_LOOKUP_DISPATCHED=%d EMBEDDING_LOOKUP_COMPLETED=%d\n",
@@ -63,6 +66,12 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
         return consume_ok ? 3 : (imported_ok ? 2 : 100);
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
+    {
+        int rc2 = ss_vk_embd(&v);
+        printf("EMBD_REENTRY_PROBE rc=%d outb=%d outmem=%d fin=%d ok=%d\n",
+               rc2, v.outb ? 1 : 0, v.outmem ? 1 : 0, v.out_finite, v.out_ok);
+        fflush(stdout);
+    }
     if (plan && plan->planReal) {
         SsRopeKvAttnResult rk; SsMoeFfnResult mf; SsPhase1Loop L;
         if (ss_vk_rope_kv_attn_real(&v, plan, 4, &rk) == 0 && rk.pass)
@@ -83,14 +92,48 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
             else
                 printf("DEEP2_FULL_BLOCK_LOOP_REAL=FAIL\n");
             ss_full_block_loop_print(&FL);
+            {
+                SsSurviveSnap s0;
+                ss_vk_survive_probe(&v, "AFTER_FULL_BLOCK_LOOP", 0, &s0);
+            }
             /* Must run before phase1/abbrev overwrite final transformer act. */
             if (ss_vk_final_norm_lmhead(&v, plan, fl_ok, &FN) == 0 && FN.pass)
                 printf("DEEP2_FINAL_NORM_LM_HEAD_REAL=PASS\n");
             else
                 printf("DEEP2_FINAL_NORM_LM_HEAD_REAL=FAIL\n");
             ss_final_norm_lm_print(&FN);
-            /* Free post-norm act; logits retained. Phase-1 superseded when FL=PASS. */
-            ss_vk_dropb(&v, &v.actb, &v.actmem);
+            {
+                SsSurviveSnap s1, s2; int surv_ok;
+                ss_vk_survive_probe(&v, "AFTER_FINAL_NORM_LM_HEAD", 0, &s1);
+                ss_vk_dropb(&v, &v.actb, &v.actmem);
+                ss_vk_survive_probe(&v, "POST_FORWARD_EMBD", 1, &s2);
+                surv_ok = (s1.device_alive && s1.noop_submit_ok &&
+                           s2.device_alive && s2.noop_submit_ok &&
+                           s2.embd_submit_ok == 1);
+                if (surv_ok)
+                    printf("DEEP2_POST_FORWARD_DEVICE_SURVIVAL_001=PASS\n");
+                else {
+                    printf("DEEP2_POST_FORWARD_DEVICE_SURVIVAL_001=FAIL\n");
+                    printf("AUTH_AUTOREGRESSIVE_COMMIT=DENIED\n");
+                    printf("AUTH_DENY_REASON=POST_FORWARD_DEVICE_LOST\n");
+                    printf("AUTHORIZATION_STOP_REASON=DEVICE_LOST_AFTER_FINAL_NORM_LM_HEAD\n");
+                    printf("LM_HEAD_RUN_OBSERVED=%d LM_HEAD_DEVICE_SURVIVAL=0\n",
+                           FN.lm_head_real ? 1 : 0);
+                    printf("DEEP2_FULL_DECODE_TOKEN_REAL=FAIL\n");
+                    printf("FULL_MODEL_TPS_AUTHORITY=0 PROMOTE=0\n");
+                    fflush(stdout);
+                }
+                /* Do not mint AR authority while the device is lost. */
+                if (surv_ok) {
+                    SsArResult ar;
+                    ss_vk_cmd_reclaim(&v);
+                    if (ss_ar_decode_run(&v, plan, 64, &ar) == 0 && ar.pass)
+                        printf("DEEP2_FULL_DECODE_TOKEN_REAL=PASS\n");
+                    else
+                        printf("DEEP2_FULL_DECODE_TOKEN_REAL=FAIL\n");
+                    ss_ar_decode_print(&ar);
+                }
+            }
             if (!fl_ok) {
                 if (ss_vk_phase1_block_loop(&v, plan, &L) == 0 && L.pass)
                     printf("PHASE_1_BLOCK_LOOP=PASS\n");

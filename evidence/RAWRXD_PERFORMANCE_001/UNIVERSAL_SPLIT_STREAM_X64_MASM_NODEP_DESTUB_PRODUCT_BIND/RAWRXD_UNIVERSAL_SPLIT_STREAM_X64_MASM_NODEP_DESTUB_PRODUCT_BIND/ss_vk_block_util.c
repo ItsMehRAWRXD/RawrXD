@@ -34,3 +34,26 @@ void ss_vk_dropb(SsVk *v, VkBuffer *b, VkDeviceMemory *m)
     if (*b) { v->a.destroy_buf(v->dev, *b, 0); *b = 0; }
     if (*m) { v->a.free_mem(v->dev, *m, 0); *m = 0; }
 }
+int ss_vk_cmd_reclaim(SsVk *v)
+{
+    if (!v || !v->dev || !v->pool || !v->a.reset_pool || !v->a.qidle) return 100;
+    if (v->a.qidle(v->q) != VK_SUCCESS) return 100;
+    if (v->a.reset_pool(v->dev, v->pool, 0) != VK_SUCCESS) return 100;
+    return 0;
+}
+int ss_vk_pool_recreate(SsVk *v)
+{
+    VkCommandPoolCreateInfo pci = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    if (!v || !v->dev || !v->a.create_pool || !v->a.qidle) return 100;
+    if (v->a.qidle(v->q) != VK_SUCCESS) return 100;
+    if (v->pool && v->a.destroy_pool) {
+        v->a.destroy_pool(v->dev, v->pool, 0);
+        v->pool = 0;
+    }
+    if (!v->a.destroy_pool)
+        v->a.destroy_pool = (PFN_vkDestroyCommandPool)v->a.gdpa(v->dev, "vkDestroyCommandPool");
+    pci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    pci.queueFamilyIndex = v->qfam;
+    if (v->a.create_pool(v->dev, &pci, 0, &v->pool) != VK_SUCCESS) return 100;
+    return 0;
+}

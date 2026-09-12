@@ -25,6 +25,8 @@
 #include "lavapath/HostFutureConsumerPrefetch.hpp"
 #include "lavapath/ProductScoreboardWitness.hpp"
 #include "lavapath/ScoreboardJoinDemote.hpp"
+#include "lavapath/ScoreboardJoinAllTip.hpp"
+#include "lavapath/ScoreboardIssuance.hpp"
 #include <atomic>
 #include "K2ShardIo.hpp"
 #include "GpuTransferCounters.hpp"
@@ -736,6 +738,8 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         LayerSlot& s = slots[layer & 3u];
         if (s.owner == layer) return;
         /* P3 fence2: done-check + pump; fail-closed join. LIVE=0. */
+        Deep2::scoreboard::NoteSequentialIssueAt(
+            Deep2::scoreboard::SeqIssueSite::MlaIssueLayer, layer);
         if (!Deep2::scoreboard::TryWorkerDoneAwaitTip(s))
             awaitSlot(s);
         s.owner = layer;
@@ -751,8 +755,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         }
     };
     auto joinAll = [&]() {
-        for (auto& sl : slots) awaitSlot(sl);
-        joinOutPrefetch();
+        /* P3: joinAll demotion tip; fail-closed. LIVE=0. */
+        (void)Deep2::scoreboard::TryJoinAllTip(slots, outPrefetch,
+                                               outPrefetchDone);
     };
     uint32_t issued = 0;
     auto issueUpTo = [&](uint32_t last) {

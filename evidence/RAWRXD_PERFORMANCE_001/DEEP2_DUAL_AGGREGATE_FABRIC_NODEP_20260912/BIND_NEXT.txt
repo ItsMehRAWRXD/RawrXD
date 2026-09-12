@@ -27,8 +27,15 @@ PREDICATES_FOR_LIVE_AGGREGATE_AUTHORITY=
 ORDER=
   after FULL_MODEL_TPS_AUTHORITY seal
   after packed execution form begins
+  NEXT_GATE=DEEP2_DUAL_AGGREGATE_SSVK_BIND_001
   concurrent with dual-GPU real forward (#14 NEXT15 / #13 POST_BASELINE)
   before claiming 1.264 TB/s utilization
+  before AGGREGATE_BW_AUTHORITY mint
+
+KEY_MEASURE=
+  OVERLAP_NS on same token/operator (not eventual both-GPU work)
+  AGGREGATE_EFFECTIVE_BPS = (w0+w1) / CRITICAL_PATH_SECONDS
+  mock ~2.843 GB/s proves scheduling equation only
 
 VS_LOCALITY_DROP=
   LOCALITY_STREAM = placement/residency policy smoke

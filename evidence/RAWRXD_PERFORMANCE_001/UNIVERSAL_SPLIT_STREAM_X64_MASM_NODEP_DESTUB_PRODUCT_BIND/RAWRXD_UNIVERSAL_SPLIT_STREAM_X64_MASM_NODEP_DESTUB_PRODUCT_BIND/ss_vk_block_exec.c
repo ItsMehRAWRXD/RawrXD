@@ -67,6 +67,7 @@ int ss_vk_block_exec(SsVk *v, VkBuffer nwb, uint64_t nbytes, VkBuffer nob, VkBuf
     sub.commandBufferCount = 1; sub.pCommandBuffers = &cb;
     if (v->a.qsubmit(v->q, 1, &sub, 0) != VK_SUCCESS) return 100;
     if (v->a.qidle(v->q) != VK_SUCCESS) return 100;
+    if (v->a.free_cb) v->a.free_cb(v->dev, v->pool, 1, &cb);
     v->rms_done = v->proj_done = 1;
     if (v->a.map(v->dev, qom, 0, (VkDeviceSize)rows * 4ull, 0, &map) != VK_SUCCESS) return 100;
     f = (float *)map;

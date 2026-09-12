@@ -32,6 +32,7 @@ struct GpuForwardCounters {
     uint64_t opSubmits = 0;
     uint64_t q4kPackedOps = 0;
     uint64_t q6kPackedOps = 0;
+    uint64_t q2kPackedOps = 0;
     uint64_t cpuF32Expands = 0;
 };
 
@@ -95,6 +96,8 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.q4kPackedOps);
         fprintf(o, "DEEP2_GPU_Q6K_PACKED_OPS=%llu\n",
                 (unsigned long long)c.q6kPackedOps);
+        fprintf(o, "DEEP2_GPU_Q2K_PACKED_OPS=%llu\n",
+                (unsigned long long)c.q2kPackedOps);
         fprintf(o, "DEEP2_GPU_CPU_F32_EXPANDS=%llu\n",
                 (unsigned long long)c.cpuF32Expands);
     };

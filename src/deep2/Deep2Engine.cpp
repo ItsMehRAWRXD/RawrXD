@@ -10,6 +10,10 @@
 
 #include "ChatTemplate.hpp"
 #include "Deep2Engine.h"
+#include "Deep2SsVkPackedDualAdapter.hpp"
+#include "Deep2GpuCounterSnapshot.hpp"
+#include "Deep2Top15Seams.hpp"
+#include "d2_packed_q2k_product_run_v1.h"
 #include "TeardownWitness.hpp"
 #include "RawrChoreography.hpp"
 #include "ChoreographyResidencyLaw.hpp"
@@ -40,6 +44,9 @@
 #include "lavapath/AuthorityBridge.hpp"
 #include "lavapath/ProductScoreboardWitness.hpp"
 #include "lavapath/ScoreboardHostForwardBridge.hpp"
+#include "lavapath/ScoreboardOwnedForward.hpp"
+#include "lavapath/ScoreboardPumpIssue.hpp"
+#include "lavapath/ScoreboardLayerWalk.hpp"
 #include "../asm/k2_real_attention/XR_K2_RealAttention.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
@@ -2310,6 +2317,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 modelState_ = ModelState::Indexed;
                 initialized = true;
                 choreo::ApplyLawEnv();
+                /* INDEX path returns before full ladder — seal via session geom. */
+                {
+                    rawr::olma::AuthorityBundle auth{};
+                    if (rawr::olma::SealLadderOnLoad(
+                            ggufResult, firstShard.string().c_str(),
+                            sessionGeometry_, auth) &&
+                        auth.PASS) {
+                        sessionAuth_ = std::move(auth);
+                        printf("[Deep2Engine] AUTHORITY_LADDER=PASS "
+                               "(K2_INDEX shard0)\n");
+                    } else {
+                        fprintf(stderr,
+                                "K2_INDEX_AUTHORITY_SEAL_FAIL=1 "
+                                "geom=%d schema=%d quant=%d tok=%d\n",
+                                auth.geom.PASS, auth.schema.PASS,
+                                auth.quant.PASS, auth.tok.PASS);
+                    }
+                }
                 printf("[Deep2Engine] loadModel=INDEX_AND_ADDRESS (%s) "
                        "ModelState=Indexed — weights not resident\n",
                        shardDir.c_str());
@@ -4853,6 +4878,54 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
+    // Batch2 authoritative: Q2_K via in-process packed dual (84B). No 72-byte path.
+    if (wtEffective.type == (int)GGMLType::GGML_TYPE_Q2_K &&
+        ssVkProductBind_.bound()) {
+        SsVkQ2KRequest req{};
+        req.packedWeights = wtEffective.data;
+        req.input = input;
+        req.output = output;
+        req.rows = rows;
+        req.cols = cols;
+        req.weightBytes = wtEffective.sizeBytes;
+        req.tensorName = wt.name.c_str();
+        if (!ssVkProductBind_.dispatchQ2K(req)) {
+            vulkanStrictViolation_ = true;
+            throw std::runtime_error(
+                std::string("BATCH2_SSVK_Q2K_FAIL tensor=") + wt.name);
+        }
+        if (bias) {
+            for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+        }
+        if (acquired && elasticResidencyEnabled_ && elasticResidency_ &&
+            !wt.name.empty())
+            elasticResidency_->ReleaseTensor(wt.name);
+        return;
+    }
+    if (wtEffective.type == (int)GGMLType::GGML_TYPE_Q2_K &&
+        ssvkBind16_.run != nullptr) {
+        D2PackedProductRequest req{};
+        req.packed_weights = wtEffective.data;
+        req.input = input;
+        req.output = output;
+        req.rows = rows;
+        req.cols = cols;
+        req.weight_bytes = wtEffective.sizeBytes;
+        req.tensor_name = wt.name.c_str();
+        if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) {
+            vulkanStrictViolation_ = true;
+            throw std::runtime_error(
+                std::string("BIND16_SSVK_Q2K_FAIL tensor=") + wt.name);
+        }
+        if (bias) {
+            for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+        }
+        if (acquired && elasticResidencyEnabled_ && elasticResidency_ &&
+            !wt.name.empty())
+            elasticResidency_->ReleaseTensor(wt.name);
+        return;
+    }
+
     // Planned CPU slot: intentional CPU GEMV (not fallback).
     bool plannedCpu = false;
     if (multiGpuLayerPlan_.active) {
@@ -5765,53 +5838,33 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 return 0;
             }
         } else {
-        // Forward through all layers
+        // Forward: seed L0, pump-owned N+1 (scoreboard tip).
         float* layerInput = h;
         float* layerOutput = attentionOutput;
-
-            for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
-                Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
-                // Batch 15 + BATCH_D: prefetch next layer into GPU cache (Vulkan path).
-                // B011: hit rate > fit — keep Hot working set warm ahead of compute.
-                if (elasticResidencyEnabled_ && elasticResidency_ &&
-                layer + 1 < modelWeights.numLayers) {
-                    const size_t boost = static_cast<size_t>(LivePath_PrefetchBoost());
-                    const size_t target = layer + 1 + boost;
-                    if (target < modelWeights.numLayers) {
-                        const auto& nextLw = modelWeights.layers[target];
-                        auto prefetchWt = [&](const WeightTensor& wt) {
-                            if (!wt.name.empty())
-                                elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(target));
-                        };
-                        prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
-                        prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
-                        prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
-                    }
-                }
-
-            auto layerT0 = std::chrono::high_resolution_clock::now();
-            try {
-                forwardLayer(layer, layerInput, layerOutput, t + 1);
-            } catch (const std::exception& ex) {
-                fprintf(stderr, "[B3_ABORT] prefill layer=%zu: %s\n", layer, ex.what());
-                fflush(stderr);
+        const uint32_t nLayers = (uint32_t)modelWeights.numLayers;
+        auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
+                         size_t seq) noexcept {
+            static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
+        };
+        try {
+            forwardLayer(0, layerInput, layerOutput, t + 1);
+        } catch (const std::exception& ex) {
+            fprintf(stderr, "[B3_ABORT] prefill layer=0: %s\n", ex.what());
+            fflush(stderr);
+            return 0;
+        }
+        std::swap(layerInput, layerOutput);
+        if (nLayers > 1u) {
+            Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput, layerOutput,
+                                            t + 1, nLayers);
+            if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
+                fprintf(stderr, "[B3_ABORT] prefill pump-owned walk incomplete\n");
+                Deep2::scoreboard::DisarmPumpIssue();
                 return 0;
             }
-            auto layerT1 = std::chrono::high_resolution_clock::now();
-            double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
-            ResidencyCounters::RecordLayerTime(layer, layerMs);
-
-            // Swap buffers
-            float* temp = layerInput;
-            layerInput = layerOutput;
-            layerOutput = temp;
-
-            // Batch-2 BOS bisect: per-layer residual digest (matches llama l_out)
-            if (B3_StageDigestEnabled()) {
-                char key[64];
-                std::snprintf(key, sizeof(key), "LAYER_OUT_%zu", layer);
-                B3_StageDigest(key, t, layerInput, config.hiddenDim);
-            }
+            layerInput = Deep2::scoreboard::PumpArm().in;
+            layerOutput = Deep2::scoreboard::PumpArm().out;
+            Deep2::scoreboard::DisarmPumpIssue();
         }
 
         // The final hidden state is in layerInput after the swap
@@ -5918,6 +5971,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             // Step N>0: embed the previously sampled token and forward it.
             const size_t inputPos = promptLen + (t - 1);
             h = hiddenStates + inputPos * config.hiddenDim;
+            {
+                D2GTokenTxn txn{};
+                (void)Top15ValidateTokenTxn((uint64_t)t, &txn);
+            }
+            const auto d2b16_before = D2Bind16Snapshot(gpuForwardCounters());
+            d2bind16_begin_token(&ssvkBind16_, (uint64_t)t, &d2b16_before);
+            ssVkProductBind_.beginToken(t);
+            const auto& gf0 = gpuForwardCounters();
+            const uint64_t snapHostFwd = gf0.hostForwardLayerCalls;
+            const uint64_t snapHostMat = gf0.hostMaterializations;
+            const uint64_t snapF32 = gf0.cpuF32Expands;
 
             const int inputToken = outputTokens[tokensGenerated - 1];
             DecodeFeedbackOnFeed(inputToken);
@@ -5934,6 +5998,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         fprintf(stderr, "[B3_ABORT] decode gpu/cpu forward fail\n");
                         return tokensGenerated;
                     }
+                    ssVkProductBind_.noteFullModelForward(true);
+                    const auto& gf = gpuForwardCounters();
+                    ssVkProductBind_.noteHostCounters(
+                        (std::uint32_t)(gf.hostForwardLayerCalls - snapHostFwd),
+                        (std::uint32_t)(gf.hostMaterializations - snapHostMat),
+                        (std::uint32_t)(gf.cpuF32Expands - snapF32));
+                    const auto d2b16_after = D2Bind16Snapshot(gf);
+                    d2bind16_end_forward(
+                        &ssvkBind16_, &d2b16_after,
+                        isRealGpuForward() ? 1u : 0u);
                 } catch (const std::exception& ex) {
                     fprintf(stderr, "[B3_ABORT] decode: %s\n", ex.what());
                     return tokensGenerated;
@@ -5941,40 +6015,30 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             } else {
             float* layerInput = h;
             float* layerOutput = attentionOutput;
-
-            for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
-                Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
-                // Batch 15 + BATCH_D: prefetch next layer into GPU cache (Vulkan path).
-                if (elasticResidencyEnabled_ && elasticResidency_ &&
-                layer + 1 < modelWeights.numLayers) {
-                    const size_t boost = static_cast<size_t>(LivePath_PrefetchBoost());
-                    const size_t target = layer + 1 + boost;
-                    if (target < modelWeights.numLayers) {
-                        const auto& nextLw = modelWeights.layers[target];
-                        auto prefetchWt = [&](const WeightTensor& wt) {
-                            if (!wt.name.empty())
-                                elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(target));
-                        };
-                        prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
-                        prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
-                        prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
-                    }
-                }
-
-                auto layerT0 = std::chrono::high_resolution_clock::now();
-                try {
-                    forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
-                } catch (const std::exception& ex) {
-                    fprintf(stderr, "[B3_ABORT] decode layer=%zu: %s\n", layer, ex.what());
-                    fflush(stderr);
+            const uint32_t nLayers = (uint32_t)modelWeights.numLayers;
+            auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
+                             size_t seq) noexcept {
+                static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
+            };
+            try {
+                forwardLayer(0, layerInput, layerOutput, inputPos + 1);
+            } catch (const std::exception& ex) {
+                fprintf(stderr, "[B3_ABORT] decode layer=0: %s\n", ex.what());
+                fflush(stderr);
+                return tokensGenerated;
+            }
+            std::swap(layerInput, layerOutput);
+            if (nLayers > 1u) {
+                Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput,
+                                                layerOutput, inputPos + 1, nLayers);
+                if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
+                    fprintf(stderr, "[B3_ABORT] decode pump-owned walk incomplete\n");
+                    Deep2::scoreboard::DisarmPumpIssue();
                     return tokensGenerated;
                 }
-                auto layerT1 = std::chrono::high_resolution_clock::now();
-                double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
-                ResidencyCounters::RecordLayerTime(layer, layerMs);
-                float* temp = layerInput;
-                layerInput = layerOutput;
-                layerOutput = temp;
+                layerInput = Deep2::scoreboard::PumpArm().in;
+                layerOutput = Deep2::scoreboard::PumpArm().out;
+                Deep2::scoreboard::DisarmPumpIssue();
             }
 
             if (layerInput != h) {
@@ -5993,6 +6057,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                             art.missingPrereq ? art.missingPrereq : "UNKNOWN");
                     return tokensGenerated;
                 }
+                if (t > 0) ssVkProductBind_.noteFinalNorm(true);
             }
 
             // The generated token has now entered the KV cache.
@@ -6000,6 +6065,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 auto k0 = rawr::iso_ladder::Clock::now();
                 if (!rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7))
                     kvCache->advance();
+                if (t > 0)
+                    ssVkProductBind_.noteKvAdvance(
+                        !rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7));
                 rawr::iso_ladder::A().kvNs += rawr::iso_ladder::Ns(k0);
             }
         }
@@ -6015,6 +6083,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 logits[0] = 1.0f;
             } else {
                 computeLogits(h, logits);
+                if (t > 0) ssVkProductBind_.noteLmHead(true);
             }
             rawr::iso_ladder::A().logitsNs += rawr::iso_ladder::Ns(l0);
         }
@@ -6162,6 +6231,36 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         outputTokens[tokensGenerated] = nextToken;
+        if (t > 0) {
+            ssVkProductBind_.noteSamplerCommit(true);
+            ssVkProductBind_.noteSealedLogitsReuse(false);
+            /* Batch2 authoritative PASS/FAIL (VERIFY needs ≥16 PASS lines). */
+            if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
+                if (!ssVkProductBind_.tokenAuthoritative()) {
+                    const auto& p = ssVkProductBind_.tokenProof();
+                    std::fprintf(stderr,
+                        "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
+                        "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u\n",
+                        t,
+                        (unsigned long long)p.q2kOpsProduct,
+                        (unsigned long long)p.q2kOpsSeen,
+                        p.hostForwardLayerCalls,
+                        p.hostMaterializations,
+                        p.cpuF32Expands,
+                        p.criticalPathNvmeReads);
+                    return tokensGenerated;
+                }
+                std::fprintf(stderr, "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
+            }
+            if (ssvkBind16_.run != nullptr) {
+                const int kvReal =
+                    (kvCache &&
+                     !rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7))
+                        ? 1 : 0;
+                d2bind16_note_tail(&ssvkBind16_, 1, 1, kvReal, 1, 0);
+                (void)d2bind16_commit_token(&ssvkBind16_);
+            }
+        }
         tokensGenerated++;
         LivePath_OnToken(static_cast<uint64_t>(tokensGenerated));
         if (LivePath_ShouldBrake()) {
@@ -6417,7 +6516,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(
              modelState_ == ModelState::Choreographable ||
              modelState_ == ModelState::Generating);
         rc.spaceSufficient = true;
-        rc.kvHotsetReady = (kvCache != nullptr) || !config.useKVCache;
+        /* K2 INDEX: MLA stream owns TLS K2KVCache — engine kvCache may be null. */
+        rc.kvHotsetReady =
+            (kvCache != nullptr) || !config.useKVCache || k2ShardIndexOpen_;
         rc.weightWindowReady = modelWeights.loaded;
         rc.hostQ8GemvSafe = hostQ8GemvSafe_;
         if (!hostQ8GemvSafe_) {
@@ -7107,17 +7208,28 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     /* P3 tip: if GpuReady, ReadyExec owns this call (fail closed if not). */
     static thread_local int tls_p3_body = 0;
     if (!tls_p3_body) {
-        /* Outer call = legacy progression still issues this layer. */
-        Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
         auto body = [](void* eng, uint32_t ly, const float* in, float* out,
                        size_t seq) noexcept {
             tls_p3_body = 1;
             static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
             tls_p3_body = 0;
         };
-        if (Deep2::scoreboard::TryScoreboardOwnedForwardLayer(
-                this, (uint32_t)layer, input, output, seqLen, body))
-            return;
+        /* Pump-owned body: skip outer initiation accounting. */
+        const int pumpBody =
+            Deep2::scoreboard::PumpArm().armed.load(std::memory_order_acquire) &&
+            layer > 0;
+        if (!pumpBody) {
+            if (layer > 0)
+                Deep2::scoreboard::NoteOuterLoopNPlus1Init((uint32_t)layer);
+            if (layer == 0)
+                Deep2::scoreboard::BeginWalkEpochs();
+            if (Deep2::scoreboard::TryScoreboardOwnedForwardLayer(
+                    this, (uint32_t)layer, input, output, seqLen, body))
+                return;
+            Deep2::scoreboard::NoteSequentialIssueAt(
+                Deep2::scoreboard::SeqIssueSite::ForwardLayerOuter,
+                (uint32_t)layer);
+        }
     }
     if (Deep2::hostfc::Armed() && layer + 1 < modelWeights.layers.size()) {
         const LayerWeights& nl = modelWeights.layers[layer + 1];
@@ -9974,6 +10086,23 @@ void Deep2Engine::enableVulkan(bool enable) {
             printf("[Deep2Engine] MULTI contiguous layers ACTIVE devices=%u strict=%d\n",
                    multiGpuLayerPlan_.openedCount, vulkanStrictNoCpuFallback_ ? 1 : 0);
         }
+        /* Batch2 + BIND16: in-process 84-byte packed dual Q2_K (never 72-byte MASM). */
+        static PackedDualAdapterCtx g_pdCtx{};
+        if (!g_pdCtx.ready) {
+            if (PackedDualAdapterOpen(&g_pdCtx) == 0)
+                printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1\n");
+            else
+                fprintf(stderr, "[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=FAIL\n");
+        }
+        if (g_pdCtx.ready && !ssVkProductBind_.bound()) {
+            bindSsVkPackedQ2K(&PackedDualAdapterGemv, &g_pdCtx);
+            printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1\n");
+        }
+        d2bind16_init(&ssvkBind16_);
+        if (g_pdCtx.ready && ssvkBind16_.run == nullptr) {
+            bindSsVkPackedProduct(&d2_packed_q2k_product_run_v1, &g_pdCtx);
+            printf("[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1\n");
+        }
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
     } else {
@@ -9990,6 +10119,42 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
     if (!wt.data || !input || !output || wt.rows == 0 || wt.cols == 0) {
+        ++vulkanGemvFail_;
+        return false;
+    }
+
+    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssvkBind16_.run != nullptr) {
+        D2PackedProductRequest req{};
+        req.packed_weights = wt.data;
+        req.input = input;
+        req.output = output;
+        req.rows = wt.rows > outDim ? outDim : wt.rows;
+        req.cols = wt.cols;
+        req.weight_bytes = wt.sizeBytes;
+        req.tensor_name = wt.name.c_str();
+        if (d2bind16_dispatch_q2k(&ssvkBind16_, &req)) {
+            ++vulkanGemvOk_;
+            ++gpuFwd_.q2kPackedOps;
+            return true;
+        }
+        ++vulkanGemvFail_;
+        return false;
+    }
+
+    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssVkProductBind_.bound()) {
+        SsVkQ2KRequest req{};
+        req.packedWeights = wt.data;
+        req.input = input;
+        req.output = output;
+        req.rows = wt.rows > outDim ? outDim : wt.rows;
+        req.cols = wt.cols;
+        req.weightBytes = wt.sizeBytes;
+        req.tensorName = wt.name.c_str();
+        if (ssVkProductBind_.dispatchQ2K(req)) {
+            ++vulkanGemvOk_;
+            ++gpuFwd_.q2kPackedOps;
+            return true;
+        }
         ++vulkanGemvFail_;
         return false;
     }
@@ -10865,7 +11030,6 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
         float* layerInput = currentHiddenState.data();
         float* layerOutput = attentionOutput;
         for (size_t layer = 0; layer < modelWeights.numLayers; layer++) {
-            Deep2::scoreboard::NoteSequentialNPlus1Issue((uint32_t)layer);
             forwardLayer(layer, layerInput, layerOutput, currentPos);
             std::swap(layerInput, layerOutput);
         }

@@ -1,0 +1,11 @@
+PASS material overlap candidate
+PASS per-token conjunction candidate
+PASS single token cannot mint authority
+PASS tiny overlap rejected
+PASS tiny overlap cannot become candidate
+PASS materialized weights fail closed
+PASS weight migration fail closed
+PASS bad calibration fails closed
+PASS 16/16 repeated tokens mint authority
+PASS 15/16 rejected by strict window
+CORE_SELFTEST=PASS
