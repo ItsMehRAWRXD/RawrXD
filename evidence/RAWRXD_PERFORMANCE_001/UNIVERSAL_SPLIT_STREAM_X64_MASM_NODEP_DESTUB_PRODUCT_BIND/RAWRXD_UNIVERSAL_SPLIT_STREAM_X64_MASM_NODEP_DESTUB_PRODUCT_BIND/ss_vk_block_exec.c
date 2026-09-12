@@ -2,6 +2,7 @@
 #include "ss_vk_api.h"
 #include "ss_vk_rmsnorm_spv.h"
 #include "ss_vk_gemv_spv.h"
+#include "ss_evidence.h"
 #include <string.h>
 static int finf(float x) { return x == x && x <= 1e30f && x >= -1e30f; }
 static void bind_cmd(SsVk *v)
@@ -56,6 +57,7 @@ int ss_vk_block_exec(SsVk *v, VkBuffer nwb, uint64_t nbytes, VkBuffer nob, VkBuf
     mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT; mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     v->a.cmd_bar(cb, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                  0, 1, &mb, 0, 0, 0, 0);
+    ss_barrier_note("blk0_attn_norm", "blk0_attn_q_a");
     v->a.cmd_bp(cb, VK_PIPELINE_BIND_POINT_COMPUTE, pipe_g);
     v->a.cmd_bds(cb, VK_PIPELINE_BIND_POINT_COMPUTE, pl_g, 0, 1, &ds_g, 0, 0);
     pc_g[0] = rows; pc_g[1] = cols; pc_g[2] = 12;

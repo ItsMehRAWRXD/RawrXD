@@ -41,7 +41,7 @@ typedef struct {
 extern "C" {
 #endif
 int ent_evaluate_all(EnterpriseObserved *obs, EnterpriseGateResult *out);
-int ent_print_split_stream(uint64_t bytes_ok, uint64_t phase_rc);
+int ent_print_split_stream(uint64_t bytes_ok, uint64_t phase_rc, uint64_t math_ok);
 #ifdef __cplusplus
 }
 #endif
