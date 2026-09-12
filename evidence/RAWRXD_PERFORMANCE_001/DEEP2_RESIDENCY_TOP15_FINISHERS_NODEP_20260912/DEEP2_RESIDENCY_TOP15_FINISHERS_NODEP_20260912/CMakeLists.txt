@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(deep2_residency_top15_finishers C)
+add_library(d2_residency_finishers STATIC src/d2_residency_finishers.c)
+target_include_directories(d2_residency_finishers PUBLIC include)
+add_executable(residency_finishers_selftest tests/selftest.c)
+target_link_libraries(residency_finishers_selftest PRIVATE d2_residency_finishers)
