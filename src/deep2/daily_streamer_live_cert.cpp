@@ -6,6 +6,7 @@
 #include "d2_deep2_binding.h"
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 #ifdef _WIN32
 #include <windows.h>
@@ -96,6 +97,8 @@ int main(int argc, char** argv) {
 
     Deep2Engine engine;
     Deep2StreamSession* s = d2_session_create();
+    if (s) d2_session_set_trace(s, 1);
+    _putenv_s("RAWRXD_D2_SESSION_TRACE", "1");
     if (!s || !d2_session_bind_deep2_engine_ptr(s, &engine)) {
         if (s) d2_session_destroy(s);
         WriteReceipt(receipt, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);

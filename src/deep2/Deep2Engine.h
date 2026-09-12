@@ -343,9 +343,15 @@ public:
     void forwardLayerPublic(size_t layer, const float* input, float* output, size_t seqLen) {
         forwardLayer(layer, input, output, seqLen);
     }
-    // Reset state for new conversation
+    // Soft context reset only (KV/sampler/cancel/seq). Retains weights, GPU,
+    // residency, SSVK, packed Q2K, DualStick, BIND16 linkage. PROMOTE=0.
     void reset();
-    
+    // Idempotent: reuse BIND16/packed when epochs+ready valid; rebuild gaps only.
+    bool EnsurePersistentDecodeBinding();
+    void emitContinuitySnap(FILE* f, uint32_t gen) const;
+    uint64_t modelEpoch() const { return modelLoadEvents_; }
+    uint64_t residencyEpoch() const { return residencyEpoch_; }
+
     // Unload model and free weight memory
     void unloadModel();
 
@@ -810,6 +816,7 @@ private:
     uint64_t commandRebuildEvents_ = 0;
     uint64_t sealedLogitsReuseEvents_ = 0;
     uint64_t dualStickResetEvents_ = 0;
+    uint64_t residencyEpoch_ = 0;
     PersistentContinuity persistCont_{};
     bool gpuFwdCommitted_ = false;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;

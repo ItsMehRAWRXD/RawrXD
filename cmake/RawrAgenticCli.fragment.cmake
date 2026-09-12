@@ -11,11 +11,17 @@ endif()
 set(RAWR_AGENTIC_SOURCES
   src/cli/rawr_main.cpp
   src/cli/rawr_commands.cpp
+  src/cli/rawr_commands_agent.cpp
+  src/cli/rawr_cmd_run.cpp
+  src/cli/rawr_cmd_list.cpp
   src/cli/rawr_argument_parser.cpp
   src/cli/rawr_output_router.cpp
   src/cli/rawr_safety_policy.cpp
   src/cli/rawr_session_store.cpp
   src/cli/rawr_model_registry.cpp
+  src/cli/rawr_model_registry_scan.cpp
+  src/cli/rawr_model_registry_cache.cpp
+  src/cli/rawr_model_registry_resolve.cpp
   src/cli/rawr_console_repl.cpp
   src/cli/rawr_evidence_writer.cpp
   src/cli/rawr_context_window.cpp
@@ -70,6 +76,13 @@ set(RAWR_AGENTIC_SOURCES
   src/deep2/Deep2SamplerAudit.cpp
   src/deep2/Deep2OutputProjectionAudit.cpp
   src/deep2/Deep2QuantParityAudit.cpp
+  src/deep2/daily/d2_session_deep2_adapter.cpp
+  src/deep2/daily/d2_session_deep2_gen.cpp
+  src/deep2/daily/d2_stream_session.c
+  src/deep2/daily/d2_stream_session_ops.c
+  src/deep2/daily/d2_stream_metrics.c
+  src/deep2/daily/d2_token_sink.c
+  src/deep2/daily/d2_session_mock.c
 )
 
 # Replace thin rawr_run with agentic front door if rawr already defined.
@@ -87,6 +100,7 @@ if(TARGET rawr)
     ${CMAKE_SOURCE_DIR}/src/cli/terminal
     ${CMAKE_SOURCE_DIR}/src/platform
     ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/deep2/daily
     ${CMAKE_SOURCE_DIR}/include)
   # Prefer agentic main: exclude old entry by compiling it out.
   target_compile_definitions(rawr PRIVATE RAWR_AGENTIC_CLI=1)

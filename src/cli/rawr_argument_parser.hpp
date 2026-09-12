@@ -3,13 +3,17 @@
 #include "rawr_safety_policy.hpp"
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 #include <string>
 #include <vector>
+#ifdef _WIN32
+#include <io.h>
+#endif
 
 namespace rawr {
 
 struct CliArgs {
-    std::string cmd; // run|chat|agent|steer|resume|term
+    std::string cmd;
     std::string model;
     std::string prompt;
     std::string workspace;
@@ -22,9 +26,23 @@ struct CliArgs {
     std::string pipeName;
     unsigned short httpPort = 0;
     AutonomyLevel autoLevel = AutonomyLevel::Off;
-    uint32_t maxTokens = 0; // 0 → CmdRun default
+    uint32_t maxTokens = 0;
     bool help = false;
+    bool verbose = false;
+    bool refresh = false;
 };
+
+inline void ReadStdinPrompt(std::string& prompt) {
+#ifdef _WIN32
+    if (_isatty(_fileno(stdin))) return;
+#endif
+    if (!prompt.empty()) return;
+    char buf[4096];
+    while (std::fgets(buf, sizeof(buf), stdin)) prompt += buf;
+    while (!prompt.empty() &&
+           (prompt.back() == '\n' || prompt.back() == '\r'))
+        prompt.pop_back();
+}
 
 inline CliArgs ParseArgs(int argc, char** argv) {
     CliArgs a{};
@@ -64,46 +82,38 @@ inline CliArgs ParseArgs(int argc, char** argv) {
     for (int i = 2; i < argc; ++i) {
         const char* s = argv[i];
         if (!s) continue;
-        if (!std::strcmp(s, "--help") || !std::strcmp(s, "-h")) {
-            a.help = true;
-        } else if (!std::strcmp(s, "--workspace") && i + 1 < argc) {
+        if (!std::strcmp(s, "--help") || !std::strcmp(s, "-h")) a.help = true;
+        else if (!std::strcmp(s, "--verbose") || !std::strcmp(s, "--trace") ||
+                 !std::strcmp(s, "-v"))
+            a.verbose = true;
+        else if (!std::strcmp(s, "--refresh")) a.refresh = true;
+        else if ((!std::strcmp(s, "-p") || !std::strcmp(s, "--prompt")) &&
+                 i + 1 < argc)
+            a.prompt = argv[++i];
+        else if (!std::strcmp(s, "--workspace") && i + 1 < argc)
             a.workspace = argv[++i];
-        } else if (!std::strcmp(s, "--term") && i + 1 < argc) {
+        else if (!std::strcmp(s, "--term") && i + 1 < argc)
             a.bindTerm = argv[++i];
-        } else if (!std::strncmp(s, "--profile=", 10)) {
-            a.styleProfile = s + 10;
-        } else if (!std::strncmp(s, "--auto=", 7)) {
+        else if (!std::strncmp(s, "--profile=", 10)) a.styleProfile = s + 10;
+        else if (!std::strncmp(s, "--auto=", 7))
             a.autoLevel = ParseAutonomy(s + 7);
-        } else if ((!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n")) &&
-                   i + 1 < argc) {
+        else if ((!std::strcmp(s, "--max-tokens") || !std::strcmp(s, "-n")) &&
+                 i + 1 < argc)
             a.maxTokens = (uint32_t)std::atoi(argv[++i]);
-        } else if (!std::strncmp(s, "--max-tokens=", 13)) {
+        else if (!std::strncmp(s, "--max-tokens=", 13))
             a.maxTokens = (uint32_t)std::atoi(s + 13);
-        } else if (a.cmd == "resume" && a.sessionId.empty()) {
-            a.sessionId = s;
-        } else if (a.cmd == "steer" && !a.model.empty() &&
-                   (std::strcmp(s, "pause") == 0 ||
-                    std::strcmp(s, "continue") == 0 ||
-                    std::strcmp(s, "stop") == 0 ||
-                    std::strncmp(s, "show", 4) == 0 ||
-                    std::strncmp(s, "undo", 4) == 0 ||
-                    std::strncmp(s, "run", 3) == 0 ||
-                    std::strncmp(s, "change", 6) == 0 ||
-                    std::strncmp(s, "explain", 7) == 0 ||
-                    std::strncmp(s, "approve", 7) == 0 ||
-                    std::strncmp(s, "reject", 6) == 0 ||
-                    std::strncmp(s, "tail", 4) == 0)) {
-            if (!a.prompt.empty()) a.prompt.push_back(' ');
-            a.prompt += s;
-        } else if (a.model.empty() && a.cmd != "steer") {
+        else if (a.cmd == "resume" && a.sessionId.empty()) a.sessionId = s;
+        else if (a.cmd == "show" && a.model.empty()) a.model = s;
+        else if (a.model.empty() && a.cmd != "steer" && a.cmd != "list" &&
+                 a.cmd != "paths")
             a.model = s;
-        } else if (a.cmd == "steer" && a.model.empty()) {
-            a.model = s;
-        } else {
+        else if (a.cmd == "steer" && a.model.empty()) a.model = s;
+        else {
             if (!a.prompt.empty()) a.prompt.push_back(' ');
             a.prompt += s;
         }
     }
+    if (a.cmd == "run") ReadStdinPrompt(a.prompt);
     if (a.workspace.empty()) a.workspace = "G:\\~dev\\rawrxd";
     return a;
 }

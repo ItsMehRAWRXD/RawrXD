@@ -1,0 +1,68 @@
+GATE=RAWR_CLI_PRODUCT_001
+DATE=2026-09-12
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+BUILD=PASS (ninja -C build-fd rawr)
+STATUS=LIVE_PRODUCT_PASS
+CLOSED=1
+# Do not reopen for positional/STDIN/dedupe/arch/endurance/roofline.
+# NEXT_OPTIONAL=RAWR_CLI_INVENTORY_V2
+
+PRIMARY_MODEL=PASS
+
+# List / registry
+RAWR_LIST=PASS
+MULTISHARD_COLLAPSE=PASS
+LIST_RUN_SHARED_REGISTRY=PASS
+MODEL_RESOLVE_FROM_LIST=PASS
+SHOW=PASS
+PATHS=PASS
+# list name llama3.2-3b-Q2_K → path G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+# verbose shard packs e.g. DeepSeek-R1-Q4_K_M SHARDS=3 (collapsed row)
+
+# Run (E2E) — primary
+RAWR_RUN=PASS
+CMD=rawr run llama3.2-3b-Q2_K -p "Say hi in three words." -n 16
+EXIT=0
+REAL_DEEP2_ENGINE=1
+MOCK_BACKEND=0
+OLLAMA_RUNTIME_REQUIRED=0
+OLLAMA_RUNTIME=0
+LLAMA_CPP_RUNTIME=0
+NETWORK_REQUIRED=0
+MODEL_RESOLVE=PASS
+PROMPT_PARSE=PASS
+STREAM_CALLBACK_REAL=1
+STDOUT_MODEL_TEXT_ONLY=1
+# stdout bytes=192 engine markers on stdout=0; text=model fragments only
+TOKEN_DUPLICATION=0
+PROMPT_ECHO_UNWANTED=0
+CLEAN_SHUTDOWN=1
+TOKENS_COMMITTED=16
+PRODUCT_PASS=1
+
+# Second model (E2E) — closes SECOND_MODEL HOLD
+SECOND_MODEL=PASS
+SECOND_MODEL_NAME=tinyllama
+SECOND_MODEL_FOUND_IN_LIST=1
+RESOLVED_FROM_SHARED_REGISTRY=1
+# show tinyllama → path G:\~dev\rawrxd\models\tinyllama.gguf (shared ModelRegistry)
+SECOND_MODEL_DIFFERENT_FROM_PRIMARY=1
+DIFFERENT_FROM_PRIMARY=1
+# primary=llama3.2-3b-Q2_K; second=tinyllama
+CMD_SECOND=rawr run tinyllama -p "Reply with exactly: second model pass" -n 16
+EXIT_SECOND=0
+REAL_DEEP2_ENGINE_SECOND=1
+MOCK_BACKEND_SECOND=0
+STDOUT_MODEL_TEXT_ONLY_SECOND=1
+# stdout bytes=60 engine markers on stdout=0; model text only
+GENERATED_TOKENS=16
+GENERATED_TOKENS_SECOND=16
+TOKENS_COMMITTED_SECOND=16
+PRODUCT_PASS_SECOND=1
+PRODUCTION_DECODE_PATH_SECOND=1
+
+PROMOTE=0
+TIP_CLIMB=HOLD
+DISPOSITION=LIVE_PRODUCT_PASS
+NOTE=CLI product gate CLOSED. SECOND_MODEL sealed via tinyllama. Inventory V2 (dedupe/arch) optional and separate. Do not reopen this gate.
+ARTIFACTS=list.out.txt list_sample.txt multishard_sample.txt show.out.txt paths.out.txt run.stdout.txt run.stderr.txt second_model_list.out.txt second_model_list_snippet.txt second_model_show.out.txt second_model_show.err.txt second_model_run.stdout.txt second_model_run.stderr.txt

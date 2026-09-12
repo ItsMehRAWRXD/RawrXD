@@ -9,6 +9,9 @@ int main(int argc, char** argv) {
         rawr::PrintUsage();
         return rawr::ExitCode::Usage;
     }
+    if (a.cmd == "list") return rawr::CmdList(a);
+    if (a.cmd == "show") return rawr::CmdShow(a);
+    if (a.cmd == "paths") return rawr::CmdPaths(a);
     if (a.cmd == "run") return rawr::CmdRun(a);
     if (a.cmd == "chat") return rawr::CmdChat(a);
     if (a.cmd == "agent") return rawr::CmdAgent(a);

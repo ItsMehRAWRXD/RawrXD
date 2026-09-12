@@ -3,6 +3,9 @@
 #include "rawr_exit_codes.hpp"
 namespace rawr {
 int CmdRun(const CliArgs& a);
+int CmdList(const CliArgs& a);
+int CmdShow(const CliArgs& a);
+int CmdPaths(const CliArgs& a);
 int CmdChat(const CliArgs& a);
 int CmdAgent(const CliArgs& a);
 int CmdSteer(const CliArgs& a);

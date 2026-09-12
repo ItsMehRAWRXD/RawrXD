@@ -11,6 +11,7 @@
 #include "ChatTemplate.hpp"
 #include "Deep2Engine.h"
 #include "Deep2SsVkPackedDualAdapter.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
 #include "Deep2Residency.hpp"
 #include "GpuTransferCounters.hpp"
@@ -5115,23 +5116,76 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
 // ============================================================================
 // Reset
 // ============================================================================
+namespace {
+PackedDualAdapterCtx& PdCtxSingleton() {
+    static PackedDualAdapterCtx ctx{};
+    return ctx;
+}
+} // namespace
+
+/* Soft context reset: KV/sampler/cancel/seq only.
+ * MUST RETAIN weights, GPU allocs, residency, SSVK, packed Q2K, DualStick,
+ * BIND16 linkage. Clears stale token ordinal so next-gen prefill does not
+ * reuse genN BIND16 state (was tok>0 → BIND16_DISPATCH_FAIL linked=0). */
 void Deep2Engine::reset() {
-    if (kvCache) {
-        kvCache->reset();
-    }
+    if (kvCache) kvCache->reset();
     if (compressedKV_) compressedKV_->reset();
-    gpuFwdCommitted_ = false;
-    gpuFwd_ = GpuForwardCounters{};
-    // Reset sampler state (repetition penalty history)
-    if (sampler) {
-        sampler->Reset();
-    }
+    if (sampler) sampler->Reset();
+    clearCancel();
+    /* Drop stale BIND16 token ordinal (genN leak → genN+1 prefill BIND16). */
+    d2bind16_begin_token(&ssvkBind16_, 0, nullptr);
+    ssVkProductBind_.beginToken(0);
     for (auto& router : moeRouters_) {
         if (router) {
             router->ResetStats();
             router->ResetExpertLoads();
         }
     }
+    (void)EnsurePersistentDecodeBinding();
+    emitContinuitySnap(stderr, 0);
+    std::fprintf(stderr, "CONTINUITY_POINT=AFTER_FN_RESET\n");
+}
+
+bool Deep2Engine::EnsurePersistentDecodeBinding() {
+    auto& pd = PdCtxSingleton();
+    if (!pd.ready) {
+        if (PackedDualAdapterOpen(&pd) != 0) return false;
+        std::printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1\n");
+    }
+    if (pd.ready && !ssVkProductBind_.bound()) {
+        bindSsVkPackedQ2K(&PackedDualAdapterGemv, &pd);
+        std::printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1\n");
+    }
+    if (!ssvkBind16_.initialized) d2bind16_init(&ssvkBind16_);
+    if (pd.ready && ssvkBind16_.run == nullptr) {
+        bindSsVkPackedProduct(&d2_packed_q2k_product_run_v1, &pd);
+        std::printf("[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1\n");
+    }
+    return pd.ready && ssVkProductBind_.bound() && ssvkBind16_.run != nullptr;
+}
+
+void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
+    if (!f) return;
+    const auto& pd = PdCtxSingleton();
+    const auto& ds = DualStickState();
+    const auto& gf = gpuFwd_;
+    std::fprintf(f,
+        "GEN=%u BIND16_LINKED=%u PACKED_Q2K_READY=%u SSVK_READY=%u "
+        "DUALSTICK_ARMED=%u GPU_RESIDENT=%u MODEL_LOADED=%u DEVICE_COUNT=%u "
+        "FWD_G0=%llu FWD_G1=%llu RESIDENCY_EPOCH=%llu MODEL_EPOCH=%llu\n",
+        gen,
+        ssvkBind16_.run != nullptr ? 1u : 0u,
+        pd.ready ? 1u : 0u,
+        (ssVkProductBind_.bound() && ssvkBind16_.run) ? 1u : 0u,
+        ds.armed ? 1u : 0u,
+        gpuResidentDecodeEnabled() ? 1u : 0u,
+        isModelLoaded() ? 1u : 0u,
+        vulkanDeviceCount(),
+        (unsigned long long)gf.forwardSlot[0],
+        (unsigned long long)gf.forwardSlot[1],
+        (unsigned long long)residencyEpoch_,
+        (unsigned long long)modelLoadEvents_);
+    std::fflush(f);
 }
 
 // ============================================================================
@@ -5982,6 +6036,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 (void)Top15ValidateTokenTxn((uint64_t)t, &txn);
             }
             const auto d2b16_before = D2Bind16Snapshot(gpuForwardCounters());
+            if (t == 1) {
+                emitContinuitySnap(stderr, (uint32_t)t);
+                std::fprintf(stderr,
+                    "CONTINUITY_POINT=BEFORE_FIRST_BIND16_DISPATCH\n");
+            }
             d2bind16_begin_token(&ssvkBind16_, (uint64_t)t, &d2b16_before);
             ssVkProductBind_.beginToken(t);
             const auto& gf0 = gpuForwardCounters();
@@ -10147,23 +10206,10 @@ void Deep2Engine::enableVulkan(bool enable) {
             printf("[Deep2Engine] MULTI contiguous layers ACTIVE devices=%u strict=%d\n",
                    multiGpuLayerPlan_.openedCount, vulkanStrictNoCpuFallback_ ? 1 : 0);
         }
-        /* Batch2 + BIND16: in-process 84-byte packed dual Q2_K (never 72-byte MASM). */
-        static PackedDualAdapterCtx g_pdCtx{};
-        if (!g_pdCtx.ready) {
-            if (PackedDualAdapterOpen(&g_pdCtx) == 0)
-                printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1\n");
-            else
-                fprintf(stderr, "[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=FAIL\n");
-        }
-        if (g_pdCtx.ready && !ssVkProductBind_.bound()) {
-            bindSsVkPackedQ2K(&PackedDualAdapterGemv, &g_pdCtx);
-            printf("[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1\n");
-        }
-        d2bind16_init(&ssvkBind16_);
-        if (g_pdCtx.ready && ssvkBind16_.run == nullptr) {
-            bindSsVkPackedProduct(&d2_packed_q2k_product_run_v1, &g_pdCtx);
-            printf("[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1\n");
-        }
+        ++residencyEpoch_;
+        /* Batch2 + BIND16: idempotent ensure (never 72-byte MASM). */
+        if (!EnsurePersistentDecodeBinding())
+            fprintf(stderr, "[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=FAIL\n");
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
     } else {
