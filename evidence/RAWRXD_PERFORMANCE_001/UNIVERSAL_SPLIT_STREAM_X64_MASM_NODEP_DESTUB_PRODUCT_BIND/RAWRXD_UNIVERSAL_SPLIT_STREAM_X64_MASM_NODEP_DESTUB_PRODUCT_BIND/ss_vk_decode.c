@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <windows.h>
 #define SS_ABBREV_MAX_STEPS 128
 static void bind_cmd(SsVk *v)
@@ -156,8 +157,8 @@ int ss_vk_abbrev_decode(SsVk *v, const char *shard, uint32_t steps)
     VkBuffer tmp = 0; VkDeviceMemory tmpm = 0;
     LARGE_INTEGER freq, a, b, t0, t1;
     uint64_t ns[SS_ABBREV_MAX_STEPS], sorted[SS_ABBREV_MAX_STEPS], sum = 0;
-    uint64_t step0, mn, mx, mean, p50, p95;
-    uint32_t s, tid, p50i, p95i; double sec;
+    uint64_t step0, mn, mx, mean, p50, p95, p99, f8m, l8m;
+    uint32_t s, tid, p50i, p95i, p99i; double sec, stddev, cv, drift;
     (void)shard;
     if (!v || !v->token_op || !steps || steps > SS_ABBREV_MAX_STEPS) return 100;
     if (!v->anorm_wb || !v->onorm_wb || !v->lbuf || !v->logitsb) return 100;
@@ -187,8 +188,28 @@ int ss_vk_abbrev_decode(SsVk *v, const char *shard, uint32_t steps)
     mean = sum / (uint64_t)steps;
     p50i = (steps - 1u) / 2u;
     p95i = (uint32_t)(((uint64_t)steps * 95ull) / 100ull);
+    p99i = (uint32_t)(((uint64_t)steps * 99ull) / 100ull);
     if (p95i >= steps) p95i = steps - 1u;
-    p50 = sorted[p50i]; p95 = sorted[p95i];
+    if (p99i >= steps) p99i = steps - 1u;
+    p50 = sorted[p50i]; p95 = sorted[p95i]; p99 = sorted[p99i];
+    {
+        double m = (double)mean, var = 0.0, first8 = 0.0, last8 = 0.0, tps_f, tps_l;
+        uint32_t n8 = steps >= 8u ? 8u : steps;
+        for (s = 0; s < steps; ++s) {
+            double d = (double)ns[s] - m;
+            var += d * d;
+        }
+        var /= (double)steps;
+        stddev = sqrt(var);
+        cv = (m > 0.0) ? (100.0 * stddev / m) : 0.0;
+        for (s = 0; s < n8; ++s) first8 += (double)ns[s];
+        for (s = steps - n8; s < steps; ++s) last8 += (double)ns[s];
+        first8 /= (double)n8; last8 /= (double)n8;
+        tps_f = (first8 > 0.0) ? (1e9 / first8) : 0.0;
+        tps_l = (last8 > 0.0) ? (1e9 / last8) : 0.0;
+        drift = (tps_f > 0.0) ? (100.0 * (tps_l - tps_f) / tps_f) : 0.0;
+        f8m = (uint64_t)(first8 + 0.5); l8m = (uint64_t)(last8 + 0.5);
+    }
     v->decode_steps = steps;
     v->abbrev_tps = (double)steps / sec;
     v->decode_loop = 1;
@@ -197,10 +218,14 @@ int ss_vk_abbrev_decode(SsVk *v, const char *shard, uint32_t steps)
     printf("STEP_0_NS=%llu STEP_MIN_NS=%llu STEP_MAX_NS=%llu STEP_MEAN_NS=%llu\n",
            (unsigned long long)step0, (unsigned long long)mn,
            (unsigned long long)mx, (unsigned long long)mean);
-    printf("STEP_P50_NS=%llu STEP_P95_NS=%llu\n",
-           (unsigned long long)p50, (unsigned long long)p95);
+    printf("STEP_P50_NS=%llu STEP_P95_NS=%llu STEP_P99_NS=%llu\n",
+           (unsigned long long)p50, (unsigned long long)p95, (unsigned long long)p99);
+    printf("STEP_STDDEV_NS=%.0f STEP_CV_PCT=%.4f\n", stddev, cv);
+    printf("FIRST_8_MEAN_NS=%llu LAST_8_MEAN_NS=%llu TPS_DRIFT_PCT=%.4f\n",
+           (unsigned long long)f8m, (unsigned long long)l8m, drift);
     printf("DECODE_KIND=ABBREVIATED_SPLIT_STREAM FULL_MODEL_FORWARD=0\n");
     printf("TPS_SCOPE=PRODUCT_CHAIN_ONLY DECODE_LOOP_RAN=1 PROMOTE=0\n");
+    printf("FULL_MODEL_TPS_AUTHORITY=0 NEXT_ARCH_GATE=DEEP2_FULL_MODEL_FORWARD\n");
     if (tmp) v->a.destroy_buf(v->dev, tmp, 0);
     if (tmpm) v->a.free_mem(v->dev, tmpm, 0);
     return 0;
