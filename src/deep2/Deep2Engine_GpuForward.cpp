@@ -178,7 +178,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                      layer, slot);
         return false;
     }
-    auto fail = [&](const char* why) -> bool {
+    auto fail = [&](const char* why = "?") -> bool {
         std::fprintf(stderr, "GPU_RESIDENT_FAIL layer=%u slot=%u why=%s\n",
                      layer, slot, why ? why : "?");
         if (fuse) (void)vc->EndFusedLayer();

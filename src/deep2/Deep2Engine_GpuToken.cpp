@@ -123,6 +123,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput, layerOutput,
                                             seqLen, nLayers);
             if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
+                std::fprintf(stderr, "HOST_PUMP_REMAINDER_FAIL nLayers=%u\n", nLayers);
                 Deep2::scoreboard::DisarmPumpIssue();
                 rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
                 return false;
@@ -142,7 +143,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     double n2 = 0.0;
     for (size_t i = 0; i < config.hiddenDim; ++i) {
         const float v = hidden[i];
-        if (!std::isfinite(v)) return false;
+        if (!std::isfinite(v)) {
+            std::fprintf(stderr, "BASE_FORWARD_NONFINITE i=%zu v=%g\n", i, (double)v);
+            return false;
+        }
         n2 += (double)v * (double)v;
     }
     if (!(n2 > 1.0e-24)) {
