@@ -181,6 +181,14 @@ public:
         };
         addSpecial(special_.bosId);
         addSpecial(special_.eosId);
+        // Llama-3 / ChatML control atoms: <|...|> must not BPE-fragment.
+        for (const auto& kv : reverseVocab_) {
+            const std::string& p = kv.second;
+            if (p.size() >= 5 && p.front() == '<' && p[1] == '|' &&
+                p.back() == '>' && p[p.size() - 2] == '|') {
+                addSpecial(kv.first);
+            }
+        }
         std::sort(specials.begin(), specials.end(),
                   [](const auto& a, const auto& b) {
                       if (a.first.size() != b.first.size())

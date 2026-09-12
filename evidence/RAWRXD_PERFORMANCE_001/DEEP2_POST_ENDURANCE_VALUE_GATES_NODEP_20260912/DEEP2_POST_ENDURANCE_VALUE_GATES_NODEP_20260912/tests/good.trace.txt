@@ -1,0 +1,2 @@
+token_ordinal=0 selected_token_id=1 selected_logit=1.0 selected_prob=0.5 argmax_token_id=1 argmax_logit=1.0 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=1 selected_token_id=2 selected_logit=0.9 selected_prob=0.4 argmax_token_id=2 argmax_logit=0.9 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1

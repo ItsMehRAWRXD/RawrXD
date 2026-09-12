@@ -1,0 +1,28 @@
+GATE=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+STATUS=HOLD
+PROMOTE=0
+TIP_CLIMB=HOLD
+OPEN_FINDING=LLAMA32_Q2K_REPETITION
+OWNER=UPSTREAM_LOGITS_OR_MODEL_PATH
+
+## Scope
+Decode-quality / generation coherence for MODEL=llama3.2-3b-Q2_K.
+Instrument observe-only on decode-quality seam (D2GenQualityProbe).
+Do NOT reopen sealed continuity:
+  BIND16 / PERSISTENT_DECODE / ENDURANCE / RESIDENCY / ROOFLINE / CLI_POSITIONAL.
+
+## Symptom
+rawr run llama3.2-3b-Q2_K "introduce yourself in under 99 words"
+→ repetition collapse (percentages pre-fix; rage post-tokenizer-heal).
+TinyLlama coherent with same CLI. CLI acceptance PASS.
+
+## Acceptance (fail-closed)
+MODEL=llama3.2-3b-Q2_K
+POSITIONAL_PROMPT=1 MOCK_BACKEND=0 GENERATED_TOKENS>0
+TOKENIZER_ROUNDTRIP=PASS LOGITS_FINITE=1 SAMPLER_STATE_VALID=1 CHAT_TEMPLATE_VALID=1
+MAX_IDENTICAL_TOKEN_RUN<=4 REPETITION_COLLAPSE=0 OUTPUT_COHERENT=1
+GEN_QUALITY=PASS PROMOTE=0
+
+## Authority
+NOT_RUN!=PASS. RECEIPT PASS only if conjunction true; else HOLD with exact owner.
+NEXT after PASS=DEEP2_70B_CONSTRAINED_EXTERNAL_001 (SOURCE_WIRED only until real GGUF+trials).

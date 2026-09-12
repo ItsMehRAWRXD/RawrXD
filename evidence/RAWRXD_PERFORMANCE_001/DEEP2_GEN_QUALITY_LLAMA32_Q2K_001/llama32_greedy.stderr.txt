@@ -1,0 +1,2586 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV_RAW_BEFORE_HOST_FLOOR
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="E8B0M"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=59568
+WEIGHT_BUDGET_EFFECTIVE_MIB=2048
+RESIDENCY_BUDGET_MIB=2048
+BUDGET_RELATION_VALID=1
+NOTE=MODEL_SIZE_NE_PHYSICAL_RESIDENCY; RESIDENCY_LE_PHYSICAL_BUDGET; MODEL_SIZE_LE_LOGICAL_ADDRESSABILITY_REQUIRES_LAA
+PRODUCT_LAA=1 HOST_DECODE=1 DUALSTICK_ARM=0 MINIMAL_ENHANCE=1 VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\~dev\rawrxd)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[GGUF] WARNING: Tensor 'output_norm.weight' offset not 64-byte aligned: 7837664
+[GGUF] WARNING: Tensor 'rope_freqs.weight' offset not 64-byte aligned: 7849952
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 7850208
+[GGUF] WARNING: Tensor 'blk.0.attn_k.weight' offset not 64-byte aligned: 331055328
+[GGUF] WARNING: Tensor 'blk.0.attn_norm.weight' offset not 64-byte aligned: 332087520
+[GGUF] WARNING: Tensor 'blk.0.attn_output.weight' offset not 64-byte aligned: 332099808
+[GGUF] WARNING: Tensor 'blk.0.attn_q.weight' offset not 64-byte aligned: 336154848
+[GGUF] WARNING: Tensor 'blk.0.attn_v.weight' offset not 64-byte aligned: 339251424
+[GGUF] WARNING: Tensor 'blk.0.ffn_down.weight' offset not 64-byte aligned: 340603104
+[GGUF] WARNING: Tensor 'blk.0.ffn_gate.weight' offset not 64-byte aligned: 351416544
+[GGUF] WARNING: Tensor 'blk.0.ffn_norm.weight' offset not 64-byte aligned: 359674080
+[GGUF] WARNING: Tensor 'blk.0.ffn_up.weight' offset not 64-byte aligned: 359686368
+[GGUF] WARNING: Tensor 'blk.1.attn_k.weight' offset not 64-byte aligned: 367943904
+[GGUF] WARNING: Tensor 'blk.1.attn_norm.weight' offset not 64-byte aligned: 368976096
+[GGUF] WARNING: Tensor 'blk.1.attn_output.weight' offset not 64-byte aligned: 368988384
+[GGUF] WARNING: Tensor 'blk.1.attn_q.weight' offset not 64-byte aligned: 373043424
+[GGUF] WARNING: Tensor 'blk.1.attn_v.weight' offset not 64-byte aligned: 376140000
+[GGUF] WARNING: Tensor 'blk.1.ffn_down.weight' offset not 64-byte aligned: 377491680
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate.weight' offset not 64-byte aligned: 388305120
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 396562656
+[GGUF] WARNING: Tensor 'blk.1.ffn_up.weight' offset not 64-byte aligned: 396574944
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 404832480
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 405864672
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 405876960
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 409932000
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 413028576
+[GGUF] WARNING: Tensor 'blk.2.ffn_down.weight' offset not 64-byte aligned: 414380256
+[GGUF] WARNING: Tensor 'blk.2.ffn_gate.weight' offset not 64-byte aligned: 425193696
+[GGUF] WARNING: Tensor 'blk.2.ffn_norm.weight' offset not 64-byte aligned: 433451232
+[GGUF] WARNING: Tensor 'blk.2.ffn_up.weight' offset not 64-byte aligned: 433463520
+[GGUF] WARNING: Tensor 'blk.3.attn_k.weight' offset not 64-byte aligned: 441721056
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 442753248
+[GGUF] WARNING: Tensor 'blk.3.attn_output.weight' offset not 64-byte aligned: 442765536
+[GGUF] WARNING: Tensor 'blk.3.attn_q.weight' offset not 64-byte aligned: 446820576
+[GGUF] WARNING: Tensor 'blk.3.attn_v.weight' offset not 64-byte aligned: 449917152
+[GGUF] WARNING: Tensor 'blk.3.ffn_down.weight' offset not 64-byte aligned: 451268832
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate.weight' offset not 64-byte aligned: 462082272
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 470339808
+[GGUF] WARNING: Tensor 'blk.3.ffn_up.weight' offset not 64-byte aligned: 470352096
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 478609632
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 479641824
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 479654112
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 483709152
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 486805728
+[GGUF] WARNING: Tensor 'blk.4.ffn_down.weight' offset not 64-byte aligned: 488157408
+[GGUF] WARNING: Tensor 'blk.4.ffn_gate.weight' offset not 64-byte aligned: 498970848
+[GGUF] WARNING: Tensor 'blk.4.ffn_norm.weight' offset not 64-byte aligned: 507228384
+[GGUF] WARNING: Tensor 'blk.4.ffn_up.weight' offset not 64-byte aligned: 507240672
+[GGUF] WARNING: Tensor 'blk.5.attn_k.weight' offset not 64-byte aligned: 515498208
+[GGUF] WARNING: Tensor 'blk.5.attn_norm.weight' offset not 64-byte aligned: 516530400
+[GGUF] WARNING: Tensor 'blk.5.attn_output.weight' offset not 64-byte aligned: 516542688
+[GGUF] WARNING: Tensor 'blk.5.attn_q.weight' offset not 64-byte aligned: 520597728
+[GGUF] WARNING: Tensor 'blk.5.attn_v.weight' offset not 64-byte aligned: 523694304
+[GGUF] WARNING: Tensor 'blk.5.ffn_down.weight' offset not 64-byte aligned: 525045984
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate.weight' offset not 64-byte aligned: 535859424
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 544116960
+[GGUF] WARNING: Tensor 'blk.5.ffn_up.weight' offset not 64-byte aligned: 544129248
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 552386784
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 553418976
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 553431264
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 557486304
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 560582880
+[GGUF] WARNING: Tensor 'blk.6.ffn_down.weight' offset not 64-byte aligned: 561934560
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate.weight' offset not 64-byte aligned: 572748000
+[GGUF] WARNING: Tensor 'blk.6.ffn_norm.weight' offset not 64-byte aligned: 581005536
+[GGUF] WARNING: Tensor 'blk.6.ffn_up.weight' offset not 64-byte aligned: 581017824
+[GGUF] WARNING: Tensor 'blk.7.attn_k.weight' offset not 64-byte aligned: 589275360
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 590307552
+[GGUF] WARNING: Tensor 'blk.7.attn_output.weight' offset not 64-byte aligned: 590319840
+[GGUF] WARNING: Tensor 'blk.7.attn_q.weight' offset not 64-byte aligned: 594374880
+[GGUF] WARNING: Tensor 'blk.7.attn_v.weight' offset not 64-byte aligned: 597471456
+[GGUF] WARNING: Tensor 'blk.7.ffn_down.weight' offset not 64-byte aligned: 598823136
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate.weight' offset not 64-byte aligned: 609636576
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 617894112
+[GGUF] WARNING: Tensor 'blk.7.ffn_up.weight' offset not 64-byte aligned: 617906400
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 626163936
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 627196128
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 627208416
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 631263456
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 634360032
+[GGUF] WARNING: Tensor 'blk.8.ffn_down.weight' offset not 64-byte aligned: 635711712
+[GGUF] WARNING: Tensor 'blk.8.ffn_gate.weight' offset not 64-byte aligned: 646525152
+[GGUF] WARNING: Tensor 'blk.8.ffn_norm.weight' offset not 64-byte aligned: 654782688
+[GGUF] WARNING: Tensor 'blk.8.ffn_up.weight' offset not 64-byte aligned: 654794976
+[GGUF] WARNING: Tensor 'blk.9.attn_k.weight' offset not 64-byte aligned: 663052512
+[GGUF] WARNING: Tensor 'blk.9.attn_norm.weight' offset not 64-byte aligned: 664084704
+[GGUF] WARNING: Tensor 'blk.9.attn_output.weight' offset not 64-byte aligned: 664096992
+[GGUF] WARNING: Tensor 'blk.9.attn_q.weight' offset not 64-byte aligned: 668152032
+[GGUF] WARNING: Tensor 'blk.9.attn_v.weight' offset not 64-byte aligned: 671248608
+[GGUF] WARNING: Tensor 'blk.9.ffn_down.weight' offset not 64-byte aligned: 672600288
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate.weight' offset not 64-byte aligned: 683413728
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 691671264
+[GGUF] WARNING: Tensor 'blk.9.ffn_up.weight' offset not 64-byte aligned: 691683552
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 699941088
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 700973280
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 700985568
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 705040608
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 708137184
+[GGUF] WARNING: Tensor 'blk.10.ffn_down.weight' offset not 64-byte aligned: 709488864
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate.weight' offset not 64-byte aligned: 720302304
+[GGUF] WARNING: Tensor 'blk.10.ffn_norm.weight' offset not 64-byte aligned: 728559840
+[GGUF] WARNING: Tensor 'blk.10.ffn_up.weight' offset not 64-byte aligned: 728572128
+[GGUF] WARNING: Tensor 'blk.11.attn_k.weight' offset not 64-byte aligned: 736829664
+[GGUF] WARNING: Tensor 'blk.11.attn_norm.weight' offset not 64-byte aligned: 737861856
+[GGUF] WARNING: Tensor 'blk.11.attn_output.weight' offset not 64-byte aligned: 737874144
+[GGUF] WARNING: Tensor 'blk.11.attn_q.weight' offset not 64-byte aligned: 741929184
+[GGUF] WARNING: Tensor 'blk.11.attn_v.weight' offset not 64-byte aligned: 745025760
+[GGUF] WARNING: Tensor 'blk.11.ffn_down.weight' offset not 64-byte aligned: 746377440
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate.weight' offset not 64-byte aligned: 757190880
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 765448416
+[GGUF] WARNING: Tensor 'blk.11.ffn_up.weight' offset not 64-byte aligned: 765460704
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 773718240
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 774750432
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 774762720
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 778817760
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 781914336
+[GGUF] WARNING: Tensor 'blk.12.ffn_down.weight' offset not 64-byte aligned: 783266016
+[GGUF] WARNING: Tensor 'blk.12.ffn_gate.weight' offset not 64-byte aligned: 794079456
+[GGUF] WARNING: Tensor 'blk.12.ffn_norm.weight' offset not 64-byte aligned: 802336992
+[GGUF] WARNING: Tensor 'blk.12.ffn_up.weight' offset not 64-byte aligned: 802349280
+[GGUF] WARNING: Tensor 'blk.13.attn_k.weight' offset not 64-byte aligned: 810606816
+[GGUF] WARNING: Tensor 'blk.13.attn_norm.weight' offset not 64-byte aligned: 811639008
+[GGUF] WARNING: Tensor 'blk.13.attn_output.weight' offset not 64-byte aligned: 811651296
+[GGUF] WARNING: Tensor 'blk.13.attn_q.weight' offset not 64-byte aligned: 815706336
+[GGUF] WARNING: Tensor 'blk.13.attn_v.weight' offset not 64-byte aligned: 818802912
+[GGUF] WARNING: Tensor 'blk.13.ffn_down.weight' offset not 64-byte aligned: 820154592
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate.weight' offset not 64-byte aligned: 830968032
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 839225568
+[GGUF] WARNING: Tensor 'blk.13.ffn_up.weight' offset not 64-byte aligned: 839237856
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 847495392
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 848527584
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 848539872
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 852594912
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 855691488
+[GGUF] WARNING: Tensor 'blk.14.ffn_down.weight' offset not 64-byte aligned: 857043168
+[GGUF] WARNING: Tensor 'blk.14.ffn_gate.weight' offset not 64-byte aligned: 867856608
+[GGUF] WARNING: Tensor 'blk.14.ffn_norm.weight' offset not 64-byte aligned: 876114144
+[GGUF] WARNING: Tensor 'blk.14.ffn_up.weight' offset not 64-byte aligned: 876126432
+[GGUF] WARNING: Tensor 'blk.15.attn_k.weight' offset not 64-byte aligned: 884383968
+[GGUF] WARNING: Tensor 'blk.15.attn_norm.weight' offset not 64-byte aligned: 885416160
+[GGUF] WARNING: Tensor 'blk.15.attn_output.weight' offset not 64-byte aligned: 885428448
+[GGUF] WARNING: Tensor 'blk.15.attn_q.weight' offset not 64-byte aligned: 889483488
+[GGUF] WARNING: Tensor 'blk.15.attn_v.weight' offset not 64-byte aligned: 892580064
+[GGUF] WARNING: Tensor 'blk.15.ffn_down.weight' offset not 64-byte aligned: 893931744
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate.weight' offset not 64-byte aligned: 904745184
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 913002720
+[GGUF] WARNING: Tensor 'blk.15.ffn_up.weight' offset not 64-byte aligned: 913015008
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 921272544
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 922304736
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 922317024
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 926372064
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 929468640
+[GGUF] WARNING: Tensor 'blk.16.ffn_down.weight' offset not 64-byte aligned: 930820320
+[GGUF] WARNING: Tensor 'blk.16.ffn_gate.weight' offset not 64-byte aligned: 941633760
+[GGUF] WARNING: Tensor 'blk.16.ffn_norm.weight' offset not 64-byte aligned: 949891296
+[GGUF] WARNING: Tensor 'blk.16.ffn_up.weight' offset not 64-byte aligned: 949903584
+[GGUF] WARNING: Tensor 'blk.17.attn_k.weight' offset not 64-byte aligned: 958161120
+[GGUF] WARNING: Tensor 'blk.17.attn_norm.weight' offset not 64-byte aligned: 959193312
+[GGUF] WARNING: Tensor 'blk.17.attn_output.weight' offset not 64-byte aligned: 959205600
+[GGUF] WARNING: Tensor 'blk.17.attn_q.weight' offset not 64-byte aligned: 963260640
+[GGUF] WARNING: Tensor 'blk.17.attn_v.weight' offset not 64-byte aligned: 966357216
+[GGUF] WARNING: Tensor 'blk.17.ffn_down.weight' offset not 64-byte aligned: 967708896
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate.weight' offset not 64-byte aligned: 978522336
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 986779872
+[GGUF] WARNING: Tensor 'blk.17.ffn_up.weight' offset not 64-byte aligned: 986792160
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 995049696
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 996081888
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 996094176
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 1000149216
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 1003245792
+[GGUF] WARNING: Tensor 'blk.18.ffn_down.weight' offset not 64-byte aligned: 1004597472
+[GGUF] WARNING: Tensor 'blk.18.ffn_gate.weight' offset not 64-byte aligned: 1015410912
+[GGUF] WARNING: Tensor 'blk.18.ffn_norm.weight' offset not 64-byte aligned: 1023668448
+[GGUF] WARNING: Tensor 'blk.18.ffn_up.weight' offset not 64-byte aligned: 1023680736
+[GGUF] WARNING: Tensor 'blk.19.attn_k.weight' offset not 64-byte aligned: 1031938272
+[GGUF] WARNING: Tensor 'blk.19.attn_norm.weight' offset not 64-byte aligned: 1032970464
+[GGUF] WARNING: Tensor 'blk.19.attn_output.weight' offset not 64-byte aligned: 1032982752
+[GGUF] WARNING: Tensor 'blk.19.attn_q.weight' offset not 64-byte aligned: 1037037792
+[GGUF] WARNING: Tensor 'blk.19.attn_v.weight' offset not 64-byte aligned: 1040134368
+[GGUF] WARNING: Tensor 'blk.19.ffn_down.weight' offset not 64-byte aligned: 1041486048
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate.weight' offset not 64-byte aligned: 1052299488
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 1060557024
+[GGUF] WARNING: Tensor 'blk.19.ffn_up.weight' offset not 64-byte aligned: 1060569312
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 1068826848
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 1069859040
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 1069871328
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 1073926368
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 1077022944
+[GGUF] WARNING: Tensor 'blk.20.ffn_down.weight' offset not 64-byte aligned: 1078374624
+[GGUF] WARNING: Tensor 'blk.20.ffn_gate.weight' offset not 64-byte aligned: 1089188064
+[GGUF] WARNING: Tensor 'blk.20.ffn_norm.weight' offset not 64-byte aligned: 1097445600
+[GGUF] WARNING: Tensor 'blk.20.ffn_up.weight' offset not 64-byte aligned: 1097457888
+[GGUF] WARNING: Tensor 'blk.21.attn_k.weight' offset not 64-byte aligned: 1105715424
+[GGUF] WARNING: Tensor 'blk.21.attn_norm.weight' offset not 64-byte aligned: 1106747616
+[GGUF] WARNING: Tensor 'blk.21.attn_output.weight' offset not 64-byte aligned: 1106759904
+[GGUF] WARNING: Tensor 'blk.21.attn_q.weight' offset not 64-byte aligned: 1110814944
+[GGUF] WARNING: Tensor 'blk.21.attn_v.weight' offset not 64-byte aligned: 1113911520
+[GGUF] WARNING: Tensor 'blk.21.ffn_down.weight' offset not 64-byte aligned: 1115263200
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate.weight' offset not 64-byte aligned: 1126076640
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 1134334176
+[GGUF] WARNING: Tensor 'blk.21.ffn_up.weight' offset not 64-byte aligned: 1134346464
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 1142604000
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 1143636192
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 1143648480
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 1147703520
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 1150800096
+[GGUF] WARNING: Tensor 'blk.22.ffn_down.weight' offset not 64-byte aligned: 1152151776
+[GGUF] WARNING: Tensor 'blk.22.ffn_gate.weight' offset not 64-byte aligned: 1162965216
+[GGUF] WARNING: Tensor 'blk.22.ffn_norm.weight' offset not 64-byte aligned: 1171222752
+[GGUF] WARNING: Tensor 'blk.22.ffn_up.weight' offset not 64-byte aligned: 1171235040
+[GGUF] WARNING: Tensor 'blk.23.attn_k.weight' offset not 64-byte aligned: 1179492576
+[GGUF] WARNING: Tensor 'blk.23.attn_norm.weight' offset not 64-byte aligned: 1180524768
+[GGUF] WARNING: Tensor 'blk.23.attn_output.weight' offset not 64-byte aligned: 1180537056
+[GGUF] WARNING: Tensor 'blk.23.attn_q.weight' offset not 64-byte aligned: 1184592096
+[GGUF] WARNING: Tensor 'blk.23.attn_v.weight' offset not 64-byte aligned: 1187688672
+[GGUF] WARNING: Tensor 'blk.23.ffn_down.weight' offset not 64-byte aligned: 1189040352
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate.weight' offset not 64-byte aligned: 1199853792
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 1208111328
+[GGUF] WARNING: Tensor 'blk.23.ffn_up.weight' offset not 64-byte aligned: 1208123616
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 1216381152
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 1217413344
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 1217425632
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 1221480672
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 1224577248
+[GGUF] WARNING: Tensor 'blk.24.ffn_down.weight' offset not 64-byte aligned: 1225928928
+[GGUF] WARNING: Tensor 'blk.24.ffn_gate.weight' offset not 64-byte aligned: 1236742368
+[GGUF] WARNING: Tensor 'blk.24.ffn_norm.weight' offset not 64-byte aligned: 1244999904
+[GGUF] WARNING: Tensor 'blk.24.ffn_up.weight' offset not 64-byte aligned: 1245012192
+[GGUF] WARNING: Tensor 'blk.25.attn_k.weight' offset not 64-byte aligned: 1253269728
+[GGUF] WARNING: Tensor 'blk.25.attn_norm.weight' offset not 64-byte aligned: 125MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+ARCH=llama
+HIDDEN=3072 LAYERS=28 HEADS=24 KV_HEADS=8 HEAD_DIM=128 VOCAB=128256 INTERMEDIATE=8192
+SPLIT_QKV_LAYERS=28 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=0 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=28 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\llama3.2-3b-Q2_K.gguf.514c00e0.1dcb4f40fcb8f4a.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+GEMMA4_SCHEMA_BIND root=output_norm.weight rows=3072 cols=1 type=0
+WEIGHT_BUDGET_ENV_PRESENT=1
+WEIGHT_BUDGET_ENV_RAW="2048"
+WEIGHT_BUDGET_PARSE_OK=1
+WEIGHT_BUDGET_INPUT_MIB=2048
+WEIGHT_BUDGET_EFFECTIVE_MIB=2048
+RESIDENCY_BUDGET_MIB=2048
+BUDGET_RELATION_VALID=1
+FFN_INTER_INFERRED ok=1 why=SPLIT_GATE_MATCHES_DOWN inter=8192 old_meta=8192 old_model=8192 old_config=8192
+PHI3_FUSED_FFN_RUNTIME layers=28 repaired=0 authority=UNOBSERVED
+GEMMA4_SCHEMA_BINDER ok=1 why=GEOM_READY hidden=3072 layers=28 vocab=128256 tokenEmbed=1
+GEMMA4_LAYER_TOPOLOGY_BIND ok=1 why=GEOM_READY_UNIFORM layers=28 split=28 fused_qkv=0 projector=0 ssm=0 ffn_only=0 ffn=28 unknown=0
+GEMMA4_BIND_LLAMA_FALLBACK ok=1 why=ALIAS_BOUND_GEOM_READY tokenEmbed=1 hidden=3072 vocab=128256 layers=28
+MODEL_PROVENANCE_BEGIN=1
+MODEL_LOCATION=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+MODEL_CANONICAL=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+MODEL_EXISTS=1 MODEL_IS_DIRECTORY=0 MODEL_BYTES=1363935456 MODEL_WRITE_STAMP=134181049244290890
+MODEL_LOCATOR_HASH=13890069492230924705 TENSOR_NAME_SHAPE_HASH=11603743402328447269 MODEL_EXPECTED_FP=15715361497692516295
+DIGEST_FP=15715361497692516295 MANIFEST_FP=15715361497692516295 BIND_FP=15715361497692516295 AUTHORITY_FP=15715361497692516295 RUNTIME_FP=15715361497692516295
+MANIFEST_LOADED=1 MANIFEST_THIS_RUN=1 MANIFEST_ID=llama3.2-3b-Q2_K.gguf:514c00e0:1dcb4f40fcb8f4a
+SCHEMA_ALIAS_FALLBACK_USED=1 INHERITED_SCHEMA_AUTHORITY=0 RUNTIME_OVERLAY_SEPARATE=1
+MODEL_PROVENANCE_MATCH=1 BLOCKED_AT=NONE WHY=SAME_MODEL_FINGERPRINT
+AUTHORITY_CLASS=DISCOVERY_PROVENANCE PROMOTE=0
+MODEL_PROVENANCE_END=1
+[BUF] hidden=3072 heads=24 headDim=128 qOut=3072 headScratch=3072 kvDim=1024 ffn=8192 ffnGateScratch=8192
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+4301920
+[GGUF] WARNING: Tensor 'blk.25.attn_output.weight' offset not 64-byte aligned: 1254314208
+[GGUF] WARNING: Tensor 'blk.25.attn_q.weight' offset not 64-byte aligned: 1258369248
+[GGUF] WARNING: Tensor 'blk.25.attn_v.weight' offset not 64-byte aligned: 1261465824
+[GGUF] WARNING: Tensor 'blk.25.ffn_down.weight' offset not 64-byte aligned: 1262817504
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate.weight' offset not 64-byte aligned: 1273630944
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 1281888480
+[GGUF] WARNING: Tensor 'blk.25.ffn_up.weight' offset not 64-byte aligned: 1281900768
+[GGUF] WARNING: Tensor 'blk.26.attn_k.weight' offset not 64-byte aligned: 1290158304
+[GGUF] WARNING: Tensor 'blk.26.attn_norm.weight' offset not 64-byte aligned: 1291190496
+[GGUF] WARNING: Tensor 'blk.26.attn_output.weight' offset not 64-byte aligned: 1291202784
+[GGUF] WARNING: Tensor 'blk.26.attn_q.weight' offset not 64-byte aligned: 1295257824
+[GGUF] WARNING: Tensor 'blk.26.attn_v.weight' offset not 64-byte aligned: 1298354400
+[GGUF] WARNING: Tensor 'blk.26.ffn_down.weight' offset not 64-byte aligned: 1299706080
+[GGUF] WARNING: Tensor 'blk.26.ffn_gate.weight' offset not 64-byte aligned: 1310519520
+[GGUF] WARNING: Tensor 'blk.26.ffn_norm.weight' offset not 64-byte aligned: 1318777056
+[GGUF] WARNING: Tensor 'blk.26.ffn_up.weight' offset not 64-byte aligned: 1318789344
+[GGUF] WARNING: Tensor 'blk.27.attn_k.weight' offset not 64-byte aligned: 1327046880
+[GGUF] WARNING: Tensor 'blk.27.attn_norm.weight' offset not 64-byte aligned: 1328079072
+[GGUF] WARNING: Tensor 'blk.27.attn_output.weight' offset not 64-byte aligned: 1328091360
+[GGUF] WARNING: Tensor 'blk.27.attn_q.weight' offset not 64-byte aligned: 1332146400
+[GGUF] WARNING: Tensor 'blk.27.attn_v.weight' offset not 64-byte aligned: 1335242976
+[GGUF] WARNING: Tensor 'blk.27.ffn_down.weight' offset not 64-byte aligned: 1336594656
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate.weight' offset not 64-byte aligned: 1347408096
+[GGUF] WARNING: Tensor 'blk.27.ffn_norm.weight' offset not 64-byte aligned: 1355665632
+[GGUF] WARNING: Tensor 'blk.27.ffn_up.weight' offset not 64-byte aligned: 1355677920
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=llama L=28 H=3072 FFN=8192 heads=24 kv=8 hd=128 ctx=131072
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GGUF architecture: 'llama'  hidden=3072 layers=28 heads=24 kvHeads=8 inter=8192 vocab=128256
+[Deep2Engine] Tokenizer loaded: vocab=128256 bos=128000 eos=128009 (Spm::encode)
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=2147483648, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=2048 MB
+[ResidencyManager] this=00000266C9453C40  Registered 'output_norm.weight': shard=0 offset=7837664 bytes=12288  |  registry_size=1  registeredBytes=12288  zeroOffset=0  maxResidentBytes=2147483648
+[ResidencyManager] this=00000266C9453C40  Registered 'blk.10.ffn_gate.weight': shard=0 offset=720302304 bytes=8257536  |  registry_size=100  registeredBytes=720722176  zeroOffset=0  maxResidentBytes=2147483648
+[ResidencyManager] this=00000266C9453C40  Registered 'blk.21.ffn_norm.weight': shard=0 offset=1134334176 bytes=12288  |  registry_size=200  registeredBytes=1126508800  zeroOffset=0  maxResidentBytes=2147483648
+RMV_MOUNT_001
+TENSORS_DISCOVERED=255
+TENSORS_ADDRESSED=255
+TENSORS_REGISTERED=255
+INVALID_SHARD=0
+INVALID_RANGE=0
+OVERFLOW_RANGE=0
+ZERO_SIZE=0
+UNADDRESSED=0
+RMV_MOUNT_001=PASS
+[Deep2Engine] ResidencyManager: this=00000266C9453C40  registered=255 tensors  bytes=1356097792  max=2147483648
+[RMV_MOUNT_001]=PASS
+[Deep2Engine] AUTHORITY_LADDER=PASS schema=254 quant=254 tok=128256
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF74D7BAFB0 dequant=00007FF74D7B86F0 GetGEMV(12)=00007FF74D7BAFB0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2[BUF] hidden=3072 heads=24 headDim=128 qOut=3072 headScratch=3072 kvDim=1024 ffn=12288 ffnGateScratch=12288
+SSM_BUF stPer=32 cvPer=12288 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=131072 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (255 tensors)
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 3072
+  Num Layers: 28
+  Num Heads: 24
+  Num KV Heads: 8
+  Head Dim: 128
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Shutdown complete
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Addressable: layers=28 virtualSeq=4096 kv_heads=8 headDim=128 (hot pages only)
+[KVCache] Lazy pages: layers=28 page=8 virtualMax=4096 heads=8 dim=128
+[KVCache] HOT_BYTES=1835008 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF74D7BAFB0 dequant=00007FF74D7B86F0 GetGEMV(12)=00007FF74D7BAFB0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: HOST_DECODE (CPU; skip vulkan/speed)
+[Deep2Engine] NVMe streaming: ENABLED
+[NVMeStream] Mapped G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf (1.27 GB)
+[NVMeStream] Max resident: 4.00 GB
+[Deep2Engine] GPU open failed slot 0 (AMD Radeon AI PRO R9700) — keep opened sticks (no clear-all)
+[Deep2Engine] GPU open failed slot 1 (AMD Radeon RX 7800 XT) — keep opened sticks (no clear-all)
+[Deep2Engine] Vulkan open failed — GPU inference required (RAWRXD_HOST_DECODE=1 for CPU opt-in only)
+GEN=0 BIND16_LINKED=0 PACKED_Q2K_READY=0 SSVK_READY=0 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=0 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=0 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=llama LAYERS=28 KV_HEADS=8 HEAD_DIM=128
+HOST_DECODE_SANITIZE=1 elastic=0 cyclone=0 ckv=0 mars=0 medusa=0 livepath=0 BASE_FORWARD=1 OPTIONAL_ONLY_SKIPPED=1
+[BPE_ENCODE] input_bytes=152 tokens=18
+[BPE_ENCODE] 0 id=128000
+[BPE_ENCODE] 1 id=128006
+[BPE_ENCODE] 2 id=882
+[BPE_ENCODE] 3 id=128007
+[BPE_ENCODE] 4 id=271
+[BPE_ENCODE] 5 id=396
+[BPE_ENCODE] 6 id=48945
+[BPE_ENCODE] 7 id=6261
+[BPE_ENCODE] 8 id=304
+[BPE_ENCODE] 9 id=1234
+[BPE_ENCODE] 10 id=220
+[BPE_ENCODE] 11 id=1484
+[BPE_ENCODE] 12 id=4339
+[BPE_ENCODE] 13 id=128009
+[BPE_ENCODE] 14 id=128006
+[BPE_ENCODE] 15 id=78191
+[BPE_ENCODE] 16 id=128007
+[BPE_ENCODE] 17 id=271
+[Deep2Engine] Initialization complete
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BCC7
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=1
+DEEP2_DEVICE_1_DUTY=EXCLUDED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BF1
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.130023
+DEEP2_COST_CUT=15
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-14
+DEEP2_COST_SLOT1_LAYERS=15-27
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[VulkanCompute] vkCreateInstance failed
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'llama3' from template string
+[AGENT] PREFILL_BEGIN prompt_tokens=18
+HOTPATH_GEMV=CPU
+HOTPATH_RMSNORM=CPU
+HOTPATH_ATTN=CPU
+HOTPATH_FFN=CPU
+HOTPATH_MEDUSA=0
+HOTPATH_ELASTIC=0
+HOTPATH_CYCLONE=0
+HOTPATH_CKV=0
+HOTPATH_GPU_FWD_ENABLED=0
+GEN=0 BIND16_LINKED=0 PACKED_Q2K_READY=0 SSVK_READY=0 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=0 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=0 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=OFF
+K2_LIVE_POLICY_MODE=0
+K2_LIVE_POLICY_REASON=force_off
+K2_LIVE_POLICY_REUSE_STEPS=1344
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=28 TOKENS=48
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=1548400000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=0 MECH_ENV=none WANTED=0
+TRY_GPU_FALLBACK_HOST=1
+[LinearW:FATAL] name=blk.0.attn_q.weight type=10 rows=3072 cols=3072 bad=2592/3072 firstBad[1]=-nan
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E66060
+FINAL_NORM_DST_PTR=00000266C0E66060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=7088.90153
+FINAL_NORM_MEAN_SQ=2.30758513
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.658294439
+FINAL_NORM_SRC_0=-0.015422672
+FINAL_NORM_DST_0=-0.0179257896
+FINAL_NORM_AFTER_L2=90.9126504
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E69060
+FINAL_NORM_DST_PTR=00000266C0E69060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6856.08169
+FINAL_NORM_MEAN_SQ=2.23179743
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.669378281
+FINAL_NORM_SRC_0=0.210143954
+FINAL_NORM_DST_0=0.248363048
+FINAL_NORM_AFTER_L2=90.9055297
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E6C060
+FINAL_NORM_DST_PTR=00000266C0E6C060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6725.34259
+FINAL_NORM_MEAN_SQ=2.18923912
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.675853252
+FINAL_NORM_SRC_0=0.33426401
+FINAL_NORM_DST_0=0.398878396
+FINAL_NORM_AFTER_L2=90.925401
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E6F060
+FINAL_NORM_DST_PTR=00000266C0E6F060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6626.26613
+FINAL_NORM_MEAN_SQ=2.15698767
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.680887222
+FINAL_NORM_SRC_0=0.430662215
+FINAL_NORM_DST_0=0.517738461
+FINAL_NORM_AFTER_L2=90.9072885
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E72060
+FINAL_NORM_DST_PTR=00000266C0E72060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6548.23623
+FINAL_NORM_MEAN_SQ=2.13158731
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.684931934
+FINAL_NORM_SRC_0=0.509785354
+FINAL_NORM_DST_0=0.616500199
+FINAL_NORM_AFTER_L2=90.9180094
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E75060
+FINAL_NORM_DST_PTR=00000266C0E75060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6484.36165
+FINAL_NORM_MEAN_SQ=2.11079481
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.688297093
+FINAL_NORM_SRC_0=0.577382684
+FINAL_NORM_DST_0=0.701678455
+FINAL_NORM_AFTER_L2=90.8980028
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E78060
+FINAL_NORM_DST_PTR=00000266C0E78060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6434.15441
+FINAL_NORM_MEAN_SQ=2.09445131
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.690977395
+FINAL_NORM_SRC_0=0.640978813
+FINAL_NORM_DST_0=0.781998634
+FINAL_NORM_AFTER_L2=90.8802268
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E7B060
+FINAL_NORM_DST_PTR=00000266C0E7B060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6391.12664
+FINAL_NORM_MEAN_SQ=2.08044487
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.693299472
+FINAL_NORM_SRC_0=0.681940079
+FINAL_NORM_DST_0=0.83476752
+FINAL_NORM_AFTER_L2=90.8706579
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E7E060
+FINAL_NORM_DST_PTR=00000266C0E7E060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6346.12794
+FINAL_NORM_MEAN_SQ=2.06579685
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.695753098
+FINAL_NORM_SRC_0=0.739829242
+FINAL_NORM_DST_0=0.908835173
+FINAL_NORM_AFTER_L2=90.8983147
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E81060
+FINAL_NORM_DST_PTR=00000266C0E81060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6315.66312
+FINAL_NORM_MEAN_SQ=2.05587992
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.697429121
+FINAL_NORM_SRC_0=0.76993233
+FINAL_NORM_DST_0=0.948093355
+FINAL_NORM_AFTER_L2=90.8719823
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E84060
+FINAL_NORM_DST_PTR=00000266C0E84060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6290.4143
+FINAL_NORM_MEAN_SQ=2.0476609
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.698827386
+FINAL_NORM_SRC_0=0.796135426
+FINAL_NORM_DST_0=0.982325375
+FINAL_NORM_AFTER_L2=90.902103
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E87060
+FINAL_NORM_DST_PTR=00000266C0E87060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6268.43251
+FINAL_NORM_MEAN_SQ=2.04050537
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.700051606
+FINAL_NORM_SRC_0=0.781059027
+FINAL_NORM_DST_0=0.965411246
+FINAL_NORM_AFTER_L2=90.8528985
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E8A060
+FINAL_NORM_DST_PTR=00000266C0E8A060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6249.63839
+FINAL_NORM_MEAN_SQ=2.0343875
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.701103449
+FINAL_NORM_SRC_0=0.835675061
+FINAL_NORM_DST_0=1.0344702
+FINAL_NORM_AFTER_L2=90.8279094
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E8D060
+FINAL_NORM_DST_PTR=00000266C0E8D060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6233.335
+FINAL_NORM_MEAN_SQ=2.0290804
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.702019691
+FINAL_NORM_SRC_0=0.816628695
+FINAL_NORM_DST_0=1.01221406
+FINAL_NORM_AFTER_L2=90.8095832
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E90060
+FINAL_NORM_DST_PTR=00000266C0E90060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6219.70556
+FINAL_NORM_MEAN_SQ=2.02464374
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.702788472
+FINAL_NORM_SRC_0=0.824088097
+FINAL_NORM_DST_0=1.02257872
+FINAL_NORM_AFTER_L2=90.7821183
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E93060
+FINAL_NORM_DST_PTR=00000266C0E93060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6200.50758
+FINAL_NORM_MEAN_SQ=2.0183944
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.703875542
+FINAL_NORM_SRC_0=0.858828127
+FINAL_NORM_DST_0=1.06733465
+FINAL_NORM_AFTER_L2=90.7733772
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E96060
+FINAL_NORM_DST_PTR=00000266C0E96060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6188.71322
+FINAL_NORM_MEAN_SQ=2.01455508
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.704546034
+FINAL_NORM_SRC_0=0.832814157
+FINAL_NORM_DST_0=1.03599095
+FINAL_NORM_AFTER_L2=90.7500477
+HEAP_OK_FINAL_NORM_AFTER=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E99060
+FINAL_NORM_DST_PTR=00000266C0E99060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6175.89008
+FINAL_NORM_MEAN_SQ=2.01038088
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.705277026
+FINAL_NORM_SRC_0=0.841523588
+FINAL_NORM_DST_0=1.04791117
+FINAL_NORM_AFTER_L2=90.7548909
+HEAP_OK_FINAL_NORM_AFTER=1
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=00000266EB1F0000 sizeBytes=323205120
+[Deep2Engine] Layer 0 weights: wq.data=00000266FEB10000 type=10 wk.data=00000266FE630000 wv.data=00000266FEE10000 wo.data=00000266FE730000 wqkv.data=0000000000000000 attnO.data=00000266FE730000
+[Deep2Engine] Layer 0 weights: attnNorm.data=00000266CAD80000 ffnNorm.data=00000266CAD90000
+[KVCache] page grow 8 -> 16 hot (virtualMax=4096 pos=8)
+[KVCache] page grow 16 -> 24 hot (virtualMax=4096 pos=16)
+[AGENT] PREFILL_DONE prompt_tokens=18 prefill_ms=7172.092
+HEAP_OK_AFTER_PREFILL=1
+HEAP_OK_DECODE_ENTER=1
+[AGENT] DECODE_BEGIN max_out=48
+HEAP_OK_DECODE_FEEDBACK_INIT=1
+HEAP_OK_DECODE_STEP0_ENTER=1
+DECODE_STEP0_PTRS h=00000266C0E99060 logits=00000266C054C040 lmHead=00000266EB1F0000 vocab=128256 hiddenDim=3072 promptLen=18
+HEAP_OK_DECODE_STEP0_H_READY=1
+HEAP_OK_LOGITS_BEFORE=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+HEAP_OK_LOGITS_AFTER=1
+B3_NORM_BAND_ARCH=llama SQRT_H=55.426 WARN_GT=100.0 EXPL_GT=1000.0 OBS_NORM=90.755 B3_NORM_EXPLOSION=0
+HEAP_OK_SAMPLE_BEFORE=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+HEAP_OK_SAMPLE_AFTER=1
+[AGENT] TOKEN id=34049 piece= rage
+POS_DUMP TOKEN_INDEX=1 ROPE_POSITION=19 KV_POSITION=19 POSITION_MATCH=1
+GEN=1 BIND16_LINKED=0 PACKED_Q2K_READY=0 SSVK_READY=0 DUALSTICK_ARMED=0 GPU_RESIDENT=0 MODEL_LOADED=1 DEVICE_COUNT=0 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=0 MODEL_EPOCH=1
+CONTINUITY_POINT=BEFORE_FIRST_BIND16_DISPATCH
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E9C060
+FINAL_NORM_DST_PTR=00000266C0E9C060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6177.269
+FINAL_NORM_MEAN_SQ=2.01082975
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.705198348
+FINAL_NORM_SRC_0=0.842683375
+FINAL_NORM_DST_0=1.04923832
+FINAL_NORM_AFTER_L2=90.7329945
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+POS_DUMP TOKEN_INDEX=2 ROPE_POSITION=20 KV_POSITION=20 POSITION_MATCH=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0E9F060
+FINAL_NORM_DST_PTR=00000266C0E9F060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6166.79785
+FINAL_NORM_MEAN_SQ=2.00742118
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.705796719
+FINAL_NORM_SRC_0=0.846372724
+FINAL_NORM_DST_0=1.05472624
+FINAL_NORM_AFTER_L2=90.7193994
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+POS_DUMP TOKEN_INDEX=3 ROPE_POSITION=21 KV_POSITION=21 POSITION_MATCH=1
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EA2060
+FINAL_NORM_DST_PTR=00000266C0EA2060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6157.04737
+FINAL_NORM_MEAN_SQ=2.00424719
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.706355393
+FINAL_NORM_SRC_0=0.849459827
+FINAL_NORM_DST_0=1.05941129
+FINAL_NORM_AFTER_L2=90.7068517
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EA5060
+FINAL_NORM_DST_PTR=00000266C0EA5060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6147.94294
+FINAL_NORM_MEAN_SQ=2.00128351
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.706878245
+FINAL_NORM_SRC_0=0.851906896
+FINAL_NORM_DST_0=1.06324959
+FINAL_NORM_AFTER_L2=90.6951954
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EA8060
+FINAL_NORM_DST_PTR=00000266C0EA8060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6139.42368
+FINAL_NORM_MEAN_SQ=1.99851031
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.707368493
+FINAL_NORM_SRC_0=0.853702426
+FINAL_NORM_DST_0=1.06622946
+FINAL_NORM_AFTER_L2=90.6843083
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EAB060
+FINAL_NORM_DST_PTR=00000266C0EAB060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6131.43766
+FINAL_NORM_MEAN_SQ=1.9959107
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.707829058
+FINAL_NORM_SRC_0=0.854860187
+FINAL_NORM_DST_0=1.0683707
+FINAL_NORM_AFTER_L2=90.6741103
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EAE060
+FINAL_NORM_DST_PTR=00000266C0EAE060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6123.93889
+FINAL_NORM_MEAN_SQ=1.99346969
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.708262265
+FINAL_NORM_SRC_0=0.855407715
+FINAL_NORM_DST_0=1.06970918
+FINAL_NORM_AFTER_L2=90.6645053
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EB1060
+FINAL_NORM_DST_PTR=00000266C0EB1060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6116.88918
+FINAL_NORM_MEAN_SQ=1.99117486
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.708670259
+FINAL_NORM_SRC_0=0.855371594
+FINAL_NORM_DST_0=1.07028031
+FINAL_NORM_AFTER_L2=90.6554371
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EB4060
+FINAL_NORM_DST_PTR=00000266C0EB4060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6110.25174
+FINAL_NORM_MEAN_SQ=1.98901424
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.709055066
+FINAL_NORM_SRC_0=0.8547948
+FINAL_NORM_DST_0=1.07013929
+FINAL_NORM_AFTER_L2=90.6468511
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EB7060
+FINAL_NORM_DST_PTR=00000266C0EB7060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6103.99443
+FINAL_NORM_MEAN_SQ=1.98697735
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.709418416
+FINAL_NORM_SRC_0=0.853711784
+FINAL_NORM_DST_0=1.06933117
+FINAL_NORM_AFTER_L2=90.6386998
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EBA060
+FINAL_NORM_DST_PTR=00000266C0EBA060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6098.08817
+FINAL_NORM_MEAN_SQ=1.98505474
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.709761858
+FINAL_NORM_SRC_0=0.852160513
+FINAL_NORM_DST_0=1.06790483
+FINAL_NORM_AFTER_L2=90.6309356
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EBD060
+FINAL_NORM_DST_PTR=00000266C0EBD060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6092.50772
+FINAL_NORM_MEAN_SQ=1.98323819
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.710086823
+FINAL_NORM_SRC_0=0.850184023
+FINAL_NORM_DST_0=1.0659157
+FINAL_NORM_AFTER_L2=90.6235315
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EC0060
+FINAL_NORM_DST_PTR=00000266C0EC0060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6087.22695
+FINAL_NORM_MEAN_SQ=1.98151919
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.7103948
+FINAL_NORM_SRC_0=0.847809911
+FINAL_NORM_DST_0=1.06340015
+FINAL_NORM_AFTER_L2=90.6164608
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EC3060
+FINAL_NORM_DST_PTR=00000266C0EC3060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6082.22599
+FINAL_NORM_MEAN_SQ=1.97989127
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.710686743
+FINAL_NORM_SRC_0=0.845078051
+FINAL_NORM_DST_0=1.06040919
+FINAL_NORM_AFTER_L2=90.609683
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EC6060
+FINAL_NORM_DST_PTR=00000266C0EC6060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6077.48457
+FINAL_NORM_MEAN_SQ=1.97834784
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.710963905
+FINAL_NORM_SRC_0=0.842016757
+FINAL_NORM_DST_0=1.05698001
+FINAL_NORM_AFTER_L2=90.603188
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EC9060
+FINAL_NORM_DST_PTR=00000266C0EC9060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6072.98341
+FINAL_NORM_MEAN_SQ=1.97688262
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.711227357
+FINAL_NORM_SRC_0=0.83865726
+FINAL_NORM_DST_0=1.05315292
+FINAL_NORM_AFTER_L2=90.5969578
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0ECC060
+FINAL_NORM_DST_PTR=00000266C0ECC060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6068.70663
+FINAL_NORM_MEAN_SQ=1.97549044
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.711477935
+FINAL_NORM_SRC_0=0.835029185
+FINAL_NORM_DST_0=1.04896629
+FINAL_NORM_AFTER_L2=90.590964
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0ECF060
+FINAL_NORM_DST_PTR=00000266C0ECF060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6064.63896
+FINAL_NORM_MEAN_SQ=1.97416633
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.711716473
+FINAL_NORM_SRC_0=0.831154108
+FINAL_NORM_DST_0=1.04444849
+FINAL_NORM_AFTER_L2=90.585193
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0ED2060
+FINAL_NORM_DST_PTR=00000266C0ED2060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6060.76608
+FINAL_NORM_MEAN_SQ=1.97290563
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.711943865
+FINAL_NORM_SRC_0=0.827061236
+FINAL_NORM_DST_0=1.03963733
+FINAL_NORM_AFTER_L2=90.5796377
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0ED5060
+FINAL_NORM_DST_PTR=00000266C0ED5060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6057.07453
+FINAL_NORM_MEAN_SQ=1.97170395
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.712160766
+FINAL_NORM_SRC_0=0.82276541
+FINAL_NORM_DST_0=1.03455257
+FINAL_NORM_AFTER_L2=90.5742745
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0ED8060
+FINAL_NORM_DST_PTR=00000266C0ED8060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6053.55273
+FINAL_NORM_MEAN_SQ=1.97055753
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.712367892
+FINAL_NORM_SRC_0=0.818289697
+FINAL_NORM_DST_0=1.02922392
+FINAL_NORM_AFTER_L2=90.5690986
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EDB060
+FINAL_NORM_DST_PTR=00000266C0EDB060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6050.1918
+FINAL_NORM_MEAN_SQ=1.96946348
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.71256572
+FINAL_NORM_SRC_0=0.813656509
+FINAL_NORM_DST_0=1.02368069
+FINAL_NORM_AFTER_L2=90.5640936
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EDE060
+FINAL_NORM_DST_PTR=00000266C0EDE060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6046.97813
+FINAL_NORM_MEAN_SQ=1.96841736
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.712755024
+FINAL_NORM_SRC_0=0.808874011
+FINAL_NORM_DST_0=1.01793408
+FINAL_NORM_AFTER_L2=90.5592527
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EE1060
+FINAL_NORM_DST_PTR=00000266C0EE1060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6043.90604
+FINAL_NORM_MEAN_SQ=1.96741733
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.712936163
+FINAL_NORM_SRC_0=0.803964555
+FINAL_NORM_DST_0=1.01201284
+FINAL_NORM_AFTER_L2=90.5545717
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EE4060
+FINAL_NORM_DST_PTR=00000266C0EE4060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6040.96502
+FINAL_NORM_MEAN_SQ=1.96645997
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.713109672
+FINAL_NORM_SRC_0=0.798939288
+FINAL_NORM_DST_0=1.00593197
+FINAL_NORM_AFTER_L2=90.5500336
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EE7060
+FINAL_NORM_DST_PTR=00000266C0EE7060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6038.14764
+FINAL_NORM_MEAN_SQ=1.96554285
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.713276088
+FINAL_NORM_SRC_0=0.793810189
+FINAL_NORM_DST_0=0.999707103
+FINAL_NORM_AFTER_L2=90.5456447
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EEA060
+FINAL_NORM_DST_PTR=00000266C0EEA060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6035.44666
+FINAL_NORM_MEAN_SQ=1.96466363
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.71343559
+FINAL_NORM_SRC_0=0.7885952
+FINAL_NORM_DST_0=0.993361592
+FINAL_NORM_AFTER_L2=90.5413667
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EED060
+FINAL_NORM_DST_PTR=00000266C0EED060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6032.85509
+FINAL_NORM_MEAN_SQ=1.96382002
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.713588834
+FINAL_NORM_SRC_0=0.783297062
+FINAL_NORM_DST_0=0.986899674
+FINAL_NORM_AFTER_L2=90.5372293
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EF0060
+FINAL_NORM_DST_PTR=00000266C0EF0060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6030.36571
+FINAL_NORM_MEAN_SQ=1.96300967
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.713736057
+FINAL_NORM_SRC_0=0.777927279
+FINAL_NORM_DST_0=0.980336308
+FINAL_NORM_AFTER_L2=90.5332014
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EF3060
+FINAL_NORM_DST_PTR=00000266C0EF3060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6027.97619
+FINAL_NORM_MEAN_SQ=1.96223183
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.713877559
+FINAL_NORM_SRC_0=0.772500157
+FINAL_NORM_DST_0=0.973690152
+FINAL_NORM_AFTER_L2=90.5292987
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EF6060
+FINAL_NORM_DST_PTR=00000266C0EF6060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6025.67657
+FINAL_NORM_MEAN_SQ=1.96148326
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714013755
+FINAL_NORM_SRC_0=0.767018616
+FINAL_NORM_DST_0=0.966965437
+FINAL_NORM_AFTER_L2=90.5254963
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EF9060
+FINAL_NORM_DST_PTR=00000266C0EF9060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6023.46503
+FINAL_NORM_MEAN_SQ=1.96076336
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714144826
+FINAL_NORM_SRC_0=0.761493325
+FINAL_NORM_DST_0=0.960175991
+FINAL_NORM_AFTER_L2=90.5217979
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EFC060
+FINAL_NORM_DST_PTR=00000266C0EFC060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6021.33741
+FINAL_NORM_MEAN_SQ=1.96007077
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714271009
+FINAL_NORM_SRC_0=0.755926728
+FINAL_NORM_DST_0=0.95332545
+FINAL_NORM_AFTER_L2=90.5182012
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0EFF060
+FINAL_NORM_DST_PTR=00000266C0EFF060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6019.28684
+FINAL_NORM_MEAN_SQ=1.95940327
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714392662
+FINAL_NORM_SRC_0=0.750332177
+FINAL_NORM_DST_0=0.9464311
+FINAL_NORM_AFTER_L2=90.5146934
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F02060
+FINAL_NORM_DST_PTR=00000266C0F02060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6017.30976
+FINAL_NORM_MEAN_SQ=1.95875969
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714509964
+FINAL_NORM_SRC_0=0.744708598
+FINAL_NORM_DST_0=0.939492047
+FINAL_NORM_AFTER_L2=90.51127
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F05060
+FINAL_NORM_DST_PTR=00000266C0F05060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6015.40323
+FINAL_NORM_MEAN_SQ=1.95813907
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714623213
+FINAL_NORM_SRC_0=0.739065111
+FINAL_NORM_DST_0=0.93252027
+FINAL_NORM_AFTER_L2=90.5079414
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F08060
+FINAL_NORM_DST_PTR=00000266C0F08060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6013.56308
+FINAL_NORM_MEAN_SQ=1.95754007
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714732528
+FINAL_NORM_SRC_0=0.733407378
+FINAL_NORM_DST_0=0.925523221
+FINAL_NORM_AFTER_L2=90.5046907
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F0B060
+FINAL_NORM_DST_PTR=00000266C0F0B060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6011.78787
+FINAL_NORM_MEAN_SQ=1.9569622
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714838028
+FINAL_NORM_SRC_0=0.727734804
+FINAL_NORM_DST_0=0.918500245
+FINAL_NORM_AFTER_L2=90.5015172
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F0E060
+FINAL_NORM_DST_PTR=00000266C0F0E060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6010.07135
+FINAL_NORM_MEAN_SQ=1.95640343
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.714940131
+FINAL_NORM_SRC_0=0.722055852
+FINAL_NORM_DST_0=0.911462784
+FINAL_NORM_AFTER_L2=90.4984257
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F11060
+FINAL_NORM_DST_PTR=00000266C0F11060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6008.41335
+FINAL_NORM_MEAN_SQ=1.95586372
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715038776
+FINAL_NORM_SRC_0=0.716374993
+FINAL_NORM_DST_0=0.904416502
+FINAL_NORM_AFTER_L2=90.4954027
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F14060
+FINAL_NORM_DST_PTR=00000266C0F14060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6006.81064
+FINAL_NORM_MEAN_SQ=1.955342
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715134144
+FINAL_NORM_SRC_0=0.710692346
+FINAL_NORM_DST_0=0.897361875
+FINAL_NORM_AFTER_L2=90.4924429
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F17060
+FINAL_NORM_DST_PTR=00000266C0F17060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6005.25951
+FINAL_NORM_MEAN_SQ=1.95483708
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715226531
+FINAL_NORM_SRC_0=0.705016077
+FINAL_NORM_DST_0=0.890309632
+FINAL_NORM_AFTER_L2=90.4895603
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F1A060
+FINAL_NORM_DST_PTR=00000266C0F1A060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6003.75739
+FINAL_NORM_MEAN_SQ=1.95434811
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715315998
+FINAL_NORM_SRC_0=0.699339151
+FINAL_NORM_DST_0=0.88325125
+FINAL_NORM_AFTER_L2=90.4867347
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F1D060
+FINAL_NORM_DST_PTR=00000266C0F1D060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6002.30415
+FINAL_NORM_MEAN_SQ=1.95387505
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715402544
+FINAL_NORM_SRC_0=0.693673372
+FINAL_NORM_DST_0=0.876201451
+FINAL_NORM_AFTER_L2=90.4839666
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F20060
+FINAL_NORM_DST_PTR=00000266C0F20060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=6000.89679
+FINAL_NORM_MEAN_SQ=1.95341692
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715486467
+FINAL_NORM_SRC_0=0.688018501
+FINAL_NORM_DST_0=0.869160593
+FINAL_NORM_AFTER_L2=90.4812686
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F23060
+FINAL_NORM_DST_PTR=00000266C0F23060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=5999.53134
+FINAL_NORM_MEAN_SQ=1.95297244
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715567887
+FINAL_NORM_SRC_0=0.682374656
+FINAL_NORM_DST_0=0.862128913
+FINAL_NORM_AFTER_L2=90.4786215
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+TRY_GPU_FALLBACK_HOST=1
+[PHI3_FUSED_FFN] layer=0 fused=0 logical=8192 physical=8192 schema=SEPARATE_GATE
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=00000266C0F26060
+FINAL_NORM_DST_PTR=00000266C0F26060
+FINAL_NORM_WEIGHT_PTR=00000266C9360000
+FINAL_NORM_WEIGHT_SOURCE=HOST_MAPPED
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=12288
+FINAL_NORM_WEIGHT_0=1.765625
+FINAL_NORM_WEIGHT_1=1.75
+FINAL_NORM_WEIGHT_2=1.5625
+FINAL_NORM_WEIGHT_3=1.7734375
+FINAL_NORM_WEIGHT_L2=91.4481258
+FINAL_NORM_SUMSQ=5998.20828
+FINAL_NORM_MEAN_SQ=1.95254176
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.715646803
+FINAL_NORM_SRC_0=0.676748157
+FINAL_NORM_DST_0=0.85511452
+FINAL_NORM_AFTER_L2=90.4760302
+HEAP_OK_FINAL_NORM_AFTER=1
+HEAP_OK_COMPUTE_LOGITS_ENTER=1
+HEAP_OK_LOGITS_LINEARW_BEFORE=1
+HEAP_OK_LOGITS_LINEARW_AFTER=1
+[BPE_ENCODE] input_bytes=5 tokens=1
+[BPE_ENCODE] 0 id=34049
+GPU_FORWARD_CHILD_ONE_IGNORE
+GPU_ISO_RUN=G0
+IGNORED_GPU_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+PROMOTE=0
+GPU_FORWARD_CHILD_ONE_IGNORE_END=1
+GPU_FORWARD_CHILD_IGNORE_DROP=1
+GPU_FORWARD_IGNORE_ARMED=0
+GPU_FORWARD_IGNORE_VALID=1
+GPU_FORWARD_IGNORE_CHILD=NONE
+GPU_FORWARD_ONE_IGNORE_ONLY=1
+GPU_FORWARD_LAYERS=0
+SELECTED_CHILD_EVIDENCE_FIRED=0
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+PROMOTE=0
+GATE=G0_REFERENCE
+DEEP2_GPU_ISO_RUN=1
+GPU_FORWARD_CHILD_IGNORE=NONE
+GPU_FORWARD_CALLS=0
+GPU_FORWARD_MS=26206.493
+QKV_CALLS=0
+QKV_MS=0.000
+QKV_IGNORE_REQUESTED=0
+QKV_IGNORE_APPLIED=0
+DEVICE_ATTENTION_CALLS=0
+DEVICE_ATTENTION_MS=0.000
+DEVICE_ATTENTION_IGNORE_REQUESTED=0
+DEVICE_ATTENTION_IGNORE_APPLIED=0
+FFN_CALLS=0
+FFN_MS=0.000
+FFN_IGNORE_REQUESTED=0
+FFN_IGNORE_APPLIED=0
+GEMV_CALLS=0
+GEMV_MS=0.000
+GEMV_IGNORE_REQUESTED=0
+GEMV_IGNORE_APPLIED=0
+OUTPUT_PROJECTION_CALLS=0
+OUTPUT_PROJECTION_MS=0.000
+OUTPUT_PROJECTION_IGNORE_REQUESTED=0
+OUTPUT_PROJECTION_IGNORE_APPLIED=0
+KV_CALLS=0
+KV_MS=0.000
+KV_IGNORE_REQUESTED=0
+KV_IGNORE_APPLIED=0
+SYNC_CALLS=0
+SYNC_MS=0.000
+SYNC_IGNORE_REQUESTED=0
+SYNC_IGNORE_APPLIED=0
+READBACK_CALLS=0
+READBACK_MS=0.000
+READBACK_IGNORE_REQUESTED=0
+READBACK_IGNORE_APPLIED=0
+IGNORE_REQUESTED=0
+IGNORE_APPLIED=0
+BLOCKED_AT=NONE
+GATE_BLOCKED_AT=NONE
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+RUNTIME_AUTHORITY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TOKENS_COMMITTED=48
+[KVCache] page grow 24 -> 32 hot (virtualMax=4096 pos=24)
+[KVCache] page grow 32 -> 40 hot (virtualMax=4096 pos=32)
+[KVCache] page grow 40 -> 48 hot (virtualMax=4096 pos=40)
+[KVCache] page grow 48 -> 56 hot (virtualMax=4096 pos=48)
+[KVCache] page grow 56 -> 64 hot (virtualMax=4096 pos=56)
+[KVCache] page grow 64 -> 72 hot (virtualMax=4096 pos=64)
+[Deep2Engine] Generation complete: 48 tokens in 29808.77 ms (E2E 1.61 TPS)
+[Deep2Engine] PREFILL: 18 tok in 7172.09 ms (2.51 tok/s) | DECODE: 48 tok in 22635.85 ms (2.12 tok/s)
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=0
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=65
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=1820
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=1820
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+GATE=G0_REFERENCE
+DEEP2_GPU_ISO_RUN=1
+GPU_FORWARD_CHILD_IGNORE=NONE
+GPU_FORWARD_CALLS=0
+GPU_FORWARD_MS=26206.493
+QKV_CALLS=0
+QKV_MS=0.000
+QKV_IGNORE_REQUESTED=0
+QKV_IGNORE_APPLIED=0
+DEVICE_ATTENTION_CALLS=0
+DEVICE_ATTENTION_MS=0.000
+DEVICE_ATTENTION_IGNORE_REQUESTED=0
+DEVICE_ATTENTION_IGNORE_APPLIED=0
+FFN_CALLS=0
+FFN_MS=0.000
+FFN_IGNORE_REQUESTED=0
+FFN_IGNORE_APPLIED=0
+GEMV_CALLS=0
+GEMV_MS=0.000
+GEMV_IGNORE_REQUESTED=0
+GEMV_IGNORE_APPLIED=0
+OUTPUT_PROJECTION_CALLS=0
+OUTPUT_PROJECTION_MS=0.000
+OUTPUT_PROJECTION_IGNORE_REQUESTED=0
+OUTPUT_PROJECTION_IGNORE_APPLIED=0
+KV_CALLS=0
+KV_MS=0.000
+KV_IGNORE_REQUESTED=0
+KV_IGNORE_APPLIED=0
+SYNC_CALLS=0
+SYNC_MS=0.000
+SYNC_IGNORE_REQUESTED=0
+SYNC_IGNORE_APPLIED=0
+READBACK_CALLS=0
+READBACK_MS=0.000
+READBACK_IGNORE_REQUESTED=0
+READBACK_IGNORE_APPLIED=0
+IGNORE_REQUESTED=0
+IGNORE_APPLIED=0
+BLOCKED_AT=NONE
+GATE_BLOCKED_AT=NONE
+CLAIM_AUTHORITY=OWN_RUNTIME_EMISSION_ONLY
+RUNTIME_AUTHORITY=1
+OLLAMA_HTTP=0
+PROMOTE=0
+TOKENS_COMMITTED=48
+PRODUCT_ENTRY_PATH=1
+STREAM_RUNTIME_PATH=1
+MODEL_GRAPH_COMPLETE=1
+NEMOTRON_SSM_REAL=0
+SSM_REAL_LAYERS=0 SSM_IDENTITY_LAYERS=0 SSM_HYBRID_LAYERS=0 SSM_MAMBA_ARMED=0
+NUMERIC_PARITY=UNPROVEN
+FUNCTIONAL_MODEL_PASS=0
+GATE=NEMOTRON_H_REAL_SSM_001
+PRODUCTION_DECODE_PATH=0
+PROMOTE=0
+SSM_CERT=NOT_CERTIFIED
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridgeâ†’Deep2Engine::generateStreamâ†’token_commitâ†’streamâ†’receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=llama
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+MODEL=llama
+PATH=generateStream
+TOKENS_REQUESTED=48
+TOKENS_COMMITTED=48
+GENERATION_WALL_NS=29828846100
+DECODE_TPS_REAL=1.609181
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=1
+FUNCTIONAL_PASS=1
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=NONE
+SPIN_CLOSE_BLOCKER_OWNER=NONE
+SPIN_CLOSE_BLOCKER_US=0
+BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+PROMOTE=0
+NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+DECODE_LOOP_ATTRIBUTION_BEGIN=1
+TOKENS_REQUESTED=48
+TOKENS_COMMITTED=48
+TOKENS_DECODED=48
+TOKENIZER_SINGLE_CALLS=48
+TOKENIZER_SEQUENCE_CALLS=0
+DETOK_WALL_NS=4900
+CALLBACK_WALL_NS=29340300
+DETOK_RAW_BYTES=240
+DETOK_EMITTED_BYTES=240
+DETOK_UTF8_PENDING_BYTES=0
+DETOK_UTF8_ERRORS=0
+DECODE_REPLAY_FACTOR=1.000000
+DECODE_LOOP_ATTRIBUTION_END=1
+MODEL_RUNTIME_OVERLAY_BEGIN=1
+MODEL_LOCATION=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+MODEL_FINGERPRINT=15715361497692516295 RUN_ID=generateStream
+PREFILL=OBSERVED DECODE=OBSERVED TOKENS_COMMITTED=48
+STREAMER_TPS=1.575656 FORWARD_MS=0.000 LOGITS_MS=0.000 SAMPLE_MS=0.000 DETOK_MS=0.000 CALLBACK_MS=0.000 RECEIPT_MS=0.000
+CLEAN_EXIT=1 CRASH_OBSERVED=0 BLOCKED_AT=NONE DISPOSITION=CLEAN_EXIT
+DISCOVERY_MUTATION=0 AUTHORITY_CLASS=RUNTIME_OVERLAY PROMOTE=0
+MODEL_RUNTIME_OVERLAY_END=1
+ONE_BY_ONE_IGNORE_LADDER_001
+ISOLATION_RUN=A0
+IGNORED_OWNER=NONE
+DIAGNOSTIC_ONLY=1
+PROMOTE=0
+TOKENS_REQUESTED=48
+TOKENS_COMMITTED=48
+TOKENS_DECODED=48
+TOTAL_WALL_MS=29824.192
+PREFILL_MS=7172.092
+DECODE_MS=22635.850
+FORWARD_MS=26206.493
+LOGITS_MS=2948.527
+SAMPLE_MS=459.166
+DETOK_MS=0.024
+CALLBACK_MS=29.340
+RECEIPT_MS=3.901
+KV_MS=0.004
+TPS=2.076
+DELTA_VS_BASELINE_PCT=0.000
+ONE_BY_ONE_IGNORE_LADDER_END=1
+DECODE_BLOCKER_ATTRIBUTION_BEGIN=1
+IGNORED_OWNER=NONE DIAGNOSTIC_ONLY=1 PROMOTE=0
+TOKENS_REQUESTED=48 TOKENS_COMMITTED=48 TOKENS_DECODED=48
+TOKENIZER_SINGLE_CALLS=48 TOKENIZER_SEQUENCE_CALLS=0 DECODE_REPLAY_FACTOR=1.000000
+TOTAL_WALL_MS=29828.846 PREFILL_MS=7172.092 DECODE_MS=22635.850 ACCOUNTED_MS=29647.800
+FORWARD_MS=26206.807 LOGITS_MS=2948.531 SAMPLE_MS=459.169 DETOK_MS=0.048 CALLBACK_MS=29.341 RECEIPT_MS=3.901 KV_MS=0.004 OTHER_MS=0.000
+DECODE_OWNER=FORWARD
+DECODE_BLOCKER_ATTRIBUTION_END=1
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=28
+[LIFE] unloadModel FreeTensorData ggufResult (255 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+LIVE_DECODE_COMMITTED=0
+DEEP2_CPU_FALLBACK_USED=0
+DEEP2_UNPLANNED_DEVICE_FALLBACKS=0
+
+============================================================
+RESIDENCY COUNTERS
+============================================================
+forwardCount       = 0
+layerCount         = 0
+remapCount         = 0
+remapBytes         = 0
+weightLookupCount  = 0
+matMulCount        = 0
+batchedMatMulCount = 0
+totalForwardMs     = 0.000
+totalLayerMs       = 0.000
+============================================================
+[Deep2Engine] Telemetry health: UNKNOWN
+RECEIPT_BEGIN=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_E2E_BLOCKERS_105
+BATCH_007_BEGIN=91
+BATCH_007_END=105
+VOCAB_EXT_PRESENT=1 VOCAB_EXT_RUNTIME_BACKED=1 TOKEN_ID_TO_TEXT_VALID=1
+BYTE_FALLBACK_ENABLED=1 UNKNOWN_TOKEN_COUNT=0 DROPPED_TEXT_BYTES=0
+BOS_ID=128000 EOS_ID=128009 PAD_ID=-1 UNK_ID=0 SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+CHAT_TEMPLATE_PRESENT=1 CHAT_TEMPLATE_SOURCE=gguf CHAT_TEMPLATE_RUNTIME_BACKED=1
+PROMPT_FORMATTED_BY_RUNTIME=1 CHAT_TEMPLATE_HASH=3603159173273972986 CHAT_TEMPLATE_POLICY=APPLY_TEMPLATE
+PROMPT_TOKENS=18 GENERATED_TOKENS=48 BOUNDARY_TOKEN_INDEX=18 BOUNDARY_VALID=1
+UTF8_PENDING_BYTES=0 UTF8_VALID_FINAL=1 STREAM_UTF8_ERRORS=0
+DETOK_STATE_CARRY_VALID=1 PARTIAL_TOKEN_FLUSH_VALID=1
+CHUNK_SEQ_ID=48 TOKEN_SEQ_ID=48 CHUNK_ORDER_VALID=1
+TOKEN_COMMIT_COUNT_PER_INDEX=1 DUPLICATE_TOKEN_COMMITS=0
+RETRY_COUNT=0 RETRY_STAGE=NONE RETRY_ROLLBACK_VALID=1
+CANCEL_OBSERVED_AT=NONE CANCEL_SAFE_POINT=1 PARTIAL_OUTPUT_VALID=1
+MAX_TOKENS_REQUESTED=48 TOKENS_COMMITTED=48 STOPPED_BY_MAXTOK_VALID=1
+CTX_SIZE=4096 POSITION_INDEX=66 CTX_LIMIT_REACHED=0 CTX_OVERFLOW=0
+TOKEN_INDEX=48 ROPE_POSITION=65 KV_POSITION=65 POSITION_MATCH=1
+STREAM_HASH=848029330985896629 STREAM_HASH_MATCH=1 RECEIPT_ATOMIC=1
+BLOCKER_91_STREAMER_VOCAB_EXT_RUNTIME=PASS
+BLOCKER_92_BYTE_FALLBACK_TOKENIZATION=PASS
+BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+BLOCKER_94_CHAT_TEMPLATE_RUNTIME=PASS
+BLOCKER_95_PROMPT_BOUNDARY_GUARD=PASS
+BLOCKER_96_UTF8_STREAM_INTEGRITY=PASS
+BLOCKER_97_DETOKENIZER_STATE_CARRY=PASS
+BLOCKER_98_STREAM_CHUNK_ORDERING=PASS
+BLOCKER_99_TOKEN_COMMIT_IDEMPOTENCE=PASS
+BLOCKER_100_TOKEN_RETRY_SAFETY=PASS
+BLOCKER_101_CANCEL_BOUNDARY_RUNTIME=PASS
+BLOCKER_102_MAX_TOKEN_LIMIT_AUTHORITY=PASS
+BLOCKER_103_CONTEXT_LIMIT_GUARD=PASS
+BLOCKER_104_POSITION_COUNTER_AUTHORITY=PASS
+BLOCKER_105_GENERATION_RECEIPT_ATOMICITY=PASS
+BATCH_007_PASS_COUNT=15
+BATCH_007_UNFINISHED_COUNT=0
+RECEIPT_END=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_PRODUCT_E2E_001
+INPUT_ACCEPTED=1
+MODEL_AUTHORITY=1
+RUNTIME_BACKED=1
+PRODUCTION_DECODE_PATH=1
+HOST_FORWARD_LAYER_CALLS=0
+CPU_F32_EXPANDS=0
+TOKENS_REQUESTED=48
+GENERATED_TOKENS=48
+TOKENS_COMMITTED=48
+STREAM_OUTPUT_PRESENT=1
+COMPLETION_RECEIPT_PRESENT=1
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+TOKEN_COMMIT_PASS=1
+MEAN_TOKEN_WALL_NS=621434293
+TOKEN_WALL_TARGET_NS=6666667
+DEADLINE_OK=0
+DECODE_TPS_REAL=1.609
+NOTE=TPS_DISPLAY_ONLY
+FUNCTIONAL_PASS=1
+PRODUCT_PASS=1
+PROMOTE=0
+RAWRXD_PRODUCT_E2E_001=PASS
+FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+NEXT_INDEPENDENT_GATE=MULTI_FAMILY
+NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY
+RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ResidencyManager] Shutdown complete
+[ThreadPool] Shutdown complete
+[StreamEngine] Shutdown

@@ -9,6 +9,7 @@
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
 #include "ChatTemplate.hpp"
+#include "d2_gen_quality_probe.hpp"
 #include "Deep2Engine.h"
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
@@ -1451,6 +1452,7 @@ Deep2Engine::~Deep2Engine() {
     // Cyclone/elastic threads MUST stop before any heap they touch is freed.
     std::fprintf(stderr, "[LIFE] ~Deep2Engine BEGIN\n");
     std::fflush(stderr);
+    resetGenQualityProbe();
 
     std::fprintf(stderr, "[LIFE] disableMARS\n");
     std::fflush(stderr);
@@ -6702,8 +6704,12 @@ Deep2::GenerationResult Deep2Engine::generateStream(
         modelState_ = ModelState::Generating;
 
     // Blocker 94: runtime owns formatting (gguf|builtin|explicit-none). No harness.
+    // RAWRXD_RAW_PROMPT=1: observe-only raw path (diag matrix); sealed CLI default unchanged.
     std::string runtimePrompt = prompt;
+    armGenQualityProbe();
     {
+        const char* rawEnv = std::getenv("RAWRXD_RAW_PROMPT");
+        const bool forceRaw = rawEnv && rawEnv[0] == '1';
         ChatTemplate chatTmpl;
         const ModelMetadata& meta = ggufResult.metadata;
         const bool hasMetaTmpl = !meta.chatTemplate.empty();
@@ -6711,7 +6717,9 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                                   meta.bosToken, meta.eosToken);
         const auto ty = chatTmpl.getType();
         const bool usable =
+            !forceRaw &&
             (ty != ChatTemplateType::UNKNOWN && ty != ChatTemplateType::RAW_BOS);
+        genQualityChatValid_ = usable ? 1 : (forceRaw ? 1 : 0);
         if (usable) {
             runtimePrompt = chatTmpl.formatSingle(prompt, "");
             const char* src = hasMetaTmpl ? "gguf" : "builtin-model-rule";
@@ -6722,8 +6730,10 @@ Deep2::GenerationResult Deep2Engine::generateStream(
                                            hs.size());
         } else {
             runtimePrompt = prompt;
-            rawr::batch007::NoteChatPolicy(0, "explicit-none", "RAW_PROMPT_ALLOWED",
-                                           "explicit-none", 13);
+            rawr::batch007::NoteChatPolicy(0, forceRaw ? "raw-env" : "explicit-none",
+                                           "RAW_PROMPT_ALLOWED",
+                                           forceRaw ? "raw-env" : "explicit-none",
+                                           forceRaw ? 7 : 13);
         }
     }
 
@@ -9107,84 +9117,107 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
     }
 }
 
+void Deep2Engine::resetGenQualityProbe() {
+    genQualityOrdinal_ = 0;
+    genQualityTokRoundtrip_ = 1;
+    if (genQualityProbe_) {
+        delete static_cast<D2GenQualityProbe*>(genQualityProbe_);
+        genQualityProbe_ = nullptr;
+    }
+}
+
+void Deep2Engine::armGenQualityProbe() {
+    resetGenQualityProbe();
+    const char* path = std::getenv("DEEP2_GEN_QUALITY_TRACE");
+    if (!path || !path[0]) return;
+    auto* p = new D2GenQualityProbe();
+    if (!p->open(path)) {
+        delete p;
+        return;
+    }
+    genQualityProbe_ = p;
+}
+
+void Deep2Engine::emitGenQualityProbe(int selected, const float* logits,
+                                      int argmaxId, float argmaxLogit) {
+    if (!genQualityProbe_ || !logits) return;
+    float mx = argmaxLogit;
+    double sum = 0.0;
+    for (size_t i = 0; i < config.vocabSize; ++i) {
+        if (!std::isfinite(logits[i])) continue;
+        sum += std::exp((double)logits[i] - (double)mx);
+    }
+    const float selLogit =
+        (selected >= 0 && (size_t)selected < config.vocabSize) ? logits[selected]
+                                                                : 0.f;
+    const double selProb =
+        (sum > 0.0 && selected >= 0 && (size_t)selected < config.vocabSize &&
+         std::isfinite(selLogit))
+            ? (std::exp((double)selLogit - (double)mx) / sum)
+            : 0.0;
+    bool tokRt = genQualityTokRoundtrip_ != 0;
+    if (tokenizer && selected >= 0) {
+        const std::string piece = tokenizer->Decode(selected);
+        auto again = tokenizer->Encode(piece);
+        if (again.size() == 1 && again[0] == selected) {
+            /* ok */
+        } else if (piece.empty()) {
+            tokRt = false;
+        }
+        genQualityTokRoundtrip_ = tokRt ? 1 : 0;
+    }
+    const bool samplerValid =
+        selected >= 0 && (size_t)selected < config.vocabSize &&
+        std::isfinite(selLogit) && std::isfinite(argmaxLogit);
+    auto* p = static_cast<D2GenQualityProbe*>(genQualityProbe_);
+    p->emit(genQualityOrdinal_++, selected, selLogit, selProb, argmaxId,
+            argmaxLogit, samplerValid, tokRt != 0, genQualityChatValid_ != 0);
+}
+
 // ============================================================================
-// Sample Token â€” Real sampling using ISampler + Sovereign Chamber
-// The Chamber (SM0-DSP) intercepts here: hidden state â†’ clash detection
+// Sample Token — Real sampling using ISampler + Sovereign Chamber
+// The Chamber (SM0-DSP) intercepts here: hidden state → clash detection
+// Observe-only: emitGenQualityProbe after final logits + selection.
 // ============================================================================
 int Deep2Engine::sampleToken(const float* logits) {
-    // â”€â”€ Deterministic greedy (temperature <= 0 / topK <= 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Hard argmax over finite logits. No TopK, RNG, temperature, top-p,
-    // chamber override, or stochastic sampler in this branch.
-    if (deterministicGreedy_) {
-        int bestToken = 0;
-        float bestLogit = logits[0];
-        for (size_t i = 1; i < config.vocabSize; ++i) {
-            if (std::isfinite(logits[i]) &&
-                (!std::isfinite(bestLogit) || logits[i] > bestLogit)) {
-                bestLogit = logits[i];
-                bestToken = static_cast<int>(i);
-            }
+    int argmaxId = 0;
+    float argmaxLogit = logits[0];
+    for (size_t i = 1; i < config.vocabSize; ++i) {
+        if (std::isfinite(logits[i]) &&
+            (!std::isfinite(argmaxLogit) || logits[i] > argmaxLogit)) {
+            argmaxLogit = logits[i];
+            argmaxId = static_cast<int>(i);
         }
-        const int selected = bestToken;
+    }
+
+    if (deterministicGreedy_) {
+        const int selected = argmaxId;
         if (GreedyTraceEnabled()) {
             printf("[GREEDY] enabled=1\n");
-            printf("[GREEDY] argmax=%d logit=%.6f\n", bestToken, bestLogit);
+            printf("[GREEDY] argmax=%d logit=%.6f\n", argmaxId, argmaxLogit);
             printf("[GREEDY] selected=%d\n", selected);
-            // Batch-2: TinyLlama ',' golden is id 29892 (1919 is a different piece)
-            auto probe = [&](int id, const char* tag) {
-                if (id >= 0 && static_cast<size_t>(id) < config.vocabSize) {
-                    printf("[GREEDY] probe %s id=%d logit=%.6f\n", tag, id, logits[id]);
-                }
-            };
-            probe(29892, "comma");
-            probe(13, "newline");
-            probe(4462, "UE");
-            probe(1919, "comma_alt_1919");
-            // Top-10 under greedy for BOS residual cert (near-miss vs 29892)
-            {
-                std::vector<std::pair<float, int>> scored;
-                scored.reserve(config.vocabSize);
-                for (size_t i = 0; i < config.vocabSize; ++i) {
-                    if (std::isfinite(logits[i])) scored.push_back({logits[i], (int)i});
-                }
-                const int k = (std::min)(10, (int)scored.size());
-                std::partial_sort(scored.begin(), scored.begin() + k, scored.end(),
-                                  [](const auto& a, const auto& b) { return a.first > b.first; });
-                printf("[GREEDY] top10:");
-                for (int i = 0; i < k; ++i) {
-                    printf(" %d:%.6f", scored[i].second, scored[i].first);
-                }
-                printf("\n");
-            }
         }
-        if (selected != bestToken) {
-            fprintf(stderr, "[GREEDY] ASSERT selected(%d) != argmax(%d)\n",
-                    selected, bestToken);
-            abort();
-        }
+        emitGenQualityProbe(selected, logits, argmaxId, argmaxLogit);
         return selected;
     }
 
-    // â”€â”€ Sovereign Chamber: SM0-DSP clash detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Use the pre-final-norm hidden state (attentionOutput) as the plasma
     if ((chamberEnabled_ || sovereignRuntimeEnabled_) && attentionOutput) {
         rawrxd::ChamberResult result = evaluateChamber(attentionOutput, config.hiddenDim);
         if (result == rawrxd::ChamberResult::CLASH) {
-            // Plasma impurity detected â€” force EOS or resample
-            printf("[Deep2Engine] Chamber CLASH detected â€” forcing EOS\n");
-            if (tokenizer) return tokenizer->GetSpecialTokens().eosId;
-            return 0;  // Fallback EOS
+            printf("[Deep2Engine] Chamber CLASH detected — forcing EOS\n");
+            int eos = tokenizer ? tokenizer->GetSpecialTokens().eosId : 0;
+            emitGenQualityProbe(eos, logits, argmaxId, argmaxLogit);
+            return eos;
         }
-        // Chamber PASS: proceed with deterministic routing if available
         uint64_t ctx_hash = rawrxd::TransitionState::hashHiddenState(attentionOutput, config.hiddenDim);
         rawrxd::FormulaRoute route = routePrimitive(ctx_hash);
         if (route.valid) {
-            printf("[Deep2Engine] Chamber routed to primitive: %u\n", route.primitive_output);
-            return static_cast<int>(route.primitive_output);
+            int r = static_cast<int>(route.primitive_output);
+            emitGenQualityProbe(r, logits, argmaxId, argmaxLogit);
+            return r;
         }
     }
 
-    // â”€â”€ Diagnostic: print top-10 logits before sampling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const bool topLogits =
         !SemanticSafeWanted() &&
         []() {
@@ -9194,17 +9227,18 @@ int Deep2Engine::sampleToken(const float* logits) {
     if (topLogits) {
         std::vector<std::pair<float, int>> scored;
         scored.reserve(config.vocabSize);
-        for (size_t i = 0; i < config.vocabSize; ++i) {
+        for (size_t i = 0; i < config.vocabSize; ++i)
             scored.push_back({logits[i], (int)i});
-        }
         std::partial_sort(scored.begin(), scored.begin() + 10, scored.end(),
-                          [](const auto& a, const auto& b) { return a.first > b.first; });
+                          [](const auto& a, const auto& b) {
+                              return a.first > b.first;
+                          });
         fprintf(stderr, "[Deep2Engine] Top-10 logits:\n");
         for (int i = 0; i < 10; ++i) {
             std::string tokText;
             if (tokenizer) tokText = tokenizer->Decode(scored[i].second);
-            fprintf(stderr, "  [%2d] id=%5d logit=%12.6f text='%s'\n",
-                    i, scored[i].second, scored[i].first, tokText.c_str());
+            fprintf(stderr, "  [%2d] id=%5d logit=%12.6f text='%s'\n", i,
+                    scored[i].second, scored[i].first, tokText.c_str());
         }
     }
 
@@ -9214,20 +9248,14 @@ int Deep2Engine::sampleToken(const float* logits) {
         sampler->AcceptToken(token);
         if (topLogits)
             fprintf(stderr, "[Deep2Engine] Sampler selected token: %d\n", token);
+        emitGenQualityProbe(token, logits, argmaxId, argmaxLogit);
         return token;
     }
 
-    // Fallback: argmax (greedy)
-    int maxIdx = 0;
-    float maxVal = logits[0];
-    for (size_t i = 1; i < config.vocabSize; ++i) {
-        if (logits[i] > maxVal) {
-            maxVal = logits[i];
-            maxIdx = (int)i;
-        }
-    }
-    printf("[Deep2Engine] Greedy argmax token: %d (logit=%.6f)\n", maxIdx, maxVal);
-    return maxIdx;
+    emitGenQualityProbe(argmaxId, logits, argmaxId, argmaxLogit);
+    printf("[Deep2Engine] Greedy argmax token: %d (logit=%.6f)\n", argmaxId,
+           argmaxLogit);
+    return argmaxId;
 }
 
 // ============================================================================

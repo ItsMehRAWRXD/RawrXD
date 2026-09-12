@@ -1,0 +1,1 @@
+Hello, I am a small local language model running through the Deep2 engine. I can answer questions, help with code, and generate concise explanations while staying entirely on your workstation.

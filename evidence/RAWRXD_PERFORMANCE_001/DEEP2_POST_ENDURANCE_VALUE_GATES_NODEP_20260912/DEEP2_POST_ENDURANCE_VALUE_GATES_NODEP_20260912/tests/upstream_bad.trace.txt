@@ -1,0 +1,6 @@
+token_ordinal=0 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=1 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=2 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=3 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=4 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1
+token_ordinal=5 selected_token_id=9 selected_logit=1 selected_prob=.9 argmax_token_id=9 argmax_logit=1 finite=1 sampler_valid=1 tokenizer_roundtrip=1 chat_template_valid=1

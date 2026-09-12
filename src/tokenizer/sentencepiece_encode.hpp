@@ -48,12 +48,18 @@ inline std::string normalizeMetaspace(std::string_view text) {
 
 // GPT-2 / Llama-3 BPE: space → U+0120 (Ġ). No leading dummy prefix.
 inline std::string normalizeGpt2(std::string_view text) {
-    static const char kG[] = "\xC4\xA0"; // U+0120 Ġ
+    static const char kG[] = "\xC4\xA0"; // U+0120 Ġ space
+    static const char kN[] = "\xC4\x8A"; // U+010A Ċ newline
+    static const char kT[] = "\xC4\x89"; // U+0109 ĉ tab
     std::string normalized;
     normalized.reserve(text.size() + 8);
     for (char c : text) {
         if (c == ' ') {
             normalized.append(kG, 2);
+        } else if (c == '\n') {
+            normalized.append(kN, 2);
+        } else if (c == '\t') {
+            normalized.append(kT, 2);
         } else {
             normalized.push_back(c);
         }

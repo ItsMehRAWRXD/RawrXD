@@ -926,6 +926,16 @@ private:
 
     // Sampling
     int sampleToken(const float* logits);
+    void emitGenQualityProbe(int selected, const float* logits,
+                             int argmaxId, float argmaxLogit);
+    void resetGenQualityProbe();
+    void armGenQualityProbe();
+
+    // Observe-only decode-quality seam (DEEP2_GEN_QUALITY_TRACE)
+    uint64_t genQualityOrdinal_ = 0;
+    int genQualityChatValid_ = 0;
+    int genQualityTokRoundtrip_ = 1;
+    void* genQualityProbe_ = nullptr; /* D2GenQualityProbe* opaque */
 
     // Find tensor in GGUF by name pattern
     WeightTensor* findTensor(const std::string& namePattern);

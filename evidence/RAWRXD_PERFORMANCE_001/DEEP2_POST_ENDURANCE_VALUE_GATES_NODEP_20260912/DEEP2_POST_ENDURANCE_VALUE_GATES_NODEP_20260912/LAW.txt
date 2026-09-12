@@ -1,0 +1,30 @@
+DROP=DEEP2_POST_ENDURANCE_VALUE_GATES_NODEP_20260912
+MODE=SIDE_ONLY
+SEALED_CONTINUITY_PATH_MUTATION=0
+PROMOTE=0
+
+GATE_1=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+PURPOSE=Close post-endurance generation-quality finding and produce a clean multi-model matrix.
+PASS_CONJUNCTION=
+  PROCESS_EXIT=0 && MOCK_BACKEND=0 && GENERATED_TOKENS>0 && LOGITS_FINITE=1 &&
+  TOKENIZER_ROUNDTRIP=PASS && CHAT_TEMPLATE_VALID=1 && REPETITION_COLLAPSE=0 &&
+  OUTPUT_COHERENT=1 && MODEL_MATRIX_REQUIRED_ROWS_PASS=1
+FAIL_CLOSED=1
+
+GATE_2=DEEP2_70B_CONSTRAINED_EXTERNAL_001
+PURPOSE=Externally reproducible 70B+ constrained-memory and throughput proof.
+PASS_CONJUNCTION=
+  MODEL_PARAMS_B>=70 && MODEL_SHA256_RECORDED=1 && SAME_GGUF_COMPETITOR_WHERE_SUPPORTED=1 &&
+  RAW_PROMPT_CORPUS_SHA256_RECORDED=1 && WARMUP_EXCLUDED=1 &&
+  GENERATED_TOKENS_PER_TRIAL_FIXED=1 && TRIALS>=3 && PEAK_HOST_BYTES_RECORDED=1 &&
+  PEAK_DEVICE_BYTES_RECORDED_OR_EXPLICIT_UNAVAILABLE=1 && RAW_WALL_NS_RECORDED=1 &&
+  TPS_MEDIAN_RECORDED=1 && NO_RETRY=1 && MOCK_BACKEND=0 && EXTERNAL_REPRO_BUNDLE_COMPLETE=1
+FAIL_CLOSED=1
+
+AUTHORITY_RULES=
+  GATE_1 does not mint continuity/endurance authority.
+  GATE_2 does not mint correctness authority unless GATE_1 is already PASS for the tested family.
+  Synthetic/mock/selftest results never mint product authority.
+  Missing competitor executable is NOT a PASS; report COMPETITOR=NOT_RUN.
+  Missing VRAM telemetry must be explicit; never substitute host RAM for VRAM.
+  PROMOTE remains 0 unless a separate promotion law authorizes it.

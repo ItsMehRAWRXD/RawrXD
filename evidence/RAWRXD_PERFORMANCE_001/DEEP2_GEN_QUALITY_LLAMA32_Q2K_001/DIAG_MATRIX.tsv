@@ -1,0 +1,5 @@
+"NAME"	"EXIT"	"GEN"	"TRACE"	"GEN_QUALITY"	"SUSPECT"	"BPE_HEAD"	"OUT"
+"llama32_greedy"	"0"	"48"	"48"	"FAIL"	"UPSTREAM_LOGITS_OR_MODEL_PATH"	"128000,128006,882,128007,271,396,48945,6261"	" rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage rage"
+"llama32_sampled"	"0"	"48"	"48"	"PASS"	"NONE"	""	" NEVER must knSkin impassKn flooded æ­ encodeURIComponent gland fer ')[Gu Quar deportationiliki tvrd"
+"llama32_raw"	"0"	"32"	"32"	"FAIL"	"UPSTREAM_LOGITS_OR_MODEL_PATH"	""	" intentions intentions intentions intentions intentions intentions intentions intentions intentions "
+"tinyllama_greedy"	"0"	"48"	"48"	"PASS"	"NONE"	""	"    I am a 28-year-old woman from a small town in the Midwest. I grew up in a family of five, with m"

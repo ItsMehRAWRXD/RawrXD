@@ -36,6 +36,12 @@ int d2_adapt::generate(void* engine, const D2GenerateRequest* req,
     opt.temperature = req->temperature;
     opt.topK = 1;
     opt.seed = req->seed;
+    if (const char* te = std::getenv("RAWRXD_TEMPERATURE")) {
+        const float tv = static_cast<float>(std::atof(te));
+        opt.temperature = tv;
+        opt.topK = (tv <= 0.0f) ? 1u : 40u;
+        opt.topP = 0.95f;
+    }
     auto bridge = [&](int32_t tokenId, const std::string& text) -> bool {
         if (d2_cancel_requested(ctx.cancel)) {
             ctx.eng->requestCancel();
