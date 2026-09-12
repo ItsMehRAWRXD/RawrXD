@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -284,7 +285,20 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
     gemv_resident_bytes_ += bytes;
     ww_peak_bytes_ = (std::max)(ww_peak_bytes_, gemv_resident_bytes_);
     ++gemv_weight_uploads_;
-    Deep2::GpuTransfer_NoteWeightMiss(bytes, true);
+    {
+        const bool first =
+            Deep2::GpuTransfer_MarkSeenKey((uintptr_t)key);
+        Deep2::GpuTransfer_NoteWeightMiss(bytes, first);
+        if (!first) Deep2::GpuTransfer_NoteRedundantUpload();
+        if (const char* t = std::getenv("RAWRXD_RESIDENCY_TRACE_UPLOAD")) {
+            if (t[0] == '1')
+                std::fprintf(stderr,
+                    "PIN_UPLOAD key=%llu bytes=%zu rows=%u cols=%u "
+                    "fp=%llu first=%d redundant=%d\n",
+                    (unsigned long long)key, bytes, rows, cols,
+                    (unsigned long long)fpNow, first ? 1 : 0, first ? 0 : 1);
+        }
+    }
     outDev = rw.buffer;
     return true;
 }
@@ -332,8 +346,12 @@ bool VulkanCompute::StreamWeightToSlot(const void* weights, size_t bytes, VkBuff
             if (!ww_slots_[j].hasContent) { free = j; break; }
         }
         if (free == UINT32_MAX) {
+            /* Overflow to pin-resident cache (budgeted) — do not hard-fail. */
+            if (EnsurePinnedPackedWeight(weights, bytes, 1u, 1u, outDev,
+                                         (uint64_t)key))
+                return true;
             ++ww_pin_rejects_;
-            return false; // keep residents; caller falls back to CPU
+            return false;
         }
         i = free;
     } else {

@@ -666,6 +666,7 @@ private:
     VkBuffer q6k_logits_w_buf_ = nullptr;
     VkDeviceMemory q6k_logits_w_mem_ = nullptr;
     size_t q6k_logits_w_cap_ = 0;
+    uintptr_t q6k_logits_w_key_ = 0; /* content fp; skip reupload on hit */
 
     bool EnsureGemvPipeline();
     bool CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem);

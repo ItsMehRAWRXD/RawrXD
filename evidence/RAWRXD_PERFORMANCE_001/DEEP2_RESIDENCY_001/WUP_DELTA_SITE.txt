@@ -1,0 +1,27 @@
+GATE=DEEP2_RESIDENCY_001
+RESIDENCY_SEALED=1
+RESIDENCY=PASS
+PROMOTE=0
+NOT_RUN!=PASS
+
+# Prior HOLD (superseded by re-verify)
+PRIOR_wup_d=16
+PRIOR_conj=0 PRIOR_EXIT=2
+
+# Root cause
+FAILING_OPERAND=GemvWeightUploads delta after token-1 baseline
+SITE=src/vulkan_fwd_q6k_host.cpp :: VulkanCompute::DispatchGEMVQ6kPacked
+WHY_ONCE_PER_TOKEN=
+  ROOT_LM_HEAD empty → lmHead aliases token_embd.weight
+  token_embd.weight GGML type=14 (Q6_K)
+  computeLogits → LinearW(lmHead) → tryVulkanGEMV → DispatchGEMVQ6kPacked
+  dedicated q6k_logits_w_buf_ re-uploaded every token (pre-fix)
+
+# Fix + live re-verify
+FIX=content-fp hit skip; ++gemv_weight_hits_ on hit; upload only on miss
+LIVE_REVERIFY=
+  wup_d=0 reload_d=0 conj=1 CERT_EXIT=0
+  CONJ_OPS all 1
+  VERIFY_RESIDENCY.ps1 EXIT=0
+  RECEIPT=LIVE_PRODUCT_PASS WEIGHT_UPLOAD_DELTA=0
+NEXT=DEEP2_ROOFLINE_LOCALITY_001

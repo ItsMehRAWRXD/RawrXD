@@ -23,23 +23,33 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
     vkUnmapMemory(device_, gemv_in_mem_);
 
     // Dedicated grow-only weight buffer — never StreamWeightToSlot / pin cache.
-    if (bytes > q6k_logits_w_cap_) {
-        if (q6k_logits_w_buf_) {
-            vkDestroyBuffer(device_, q6k_logits_w_buf_, nullptr);
-            q6k_logits_w_buf_ = nullptr;
+    const uintptr_t key = WeightContentFingerprint(packed, bytes);
+    const bool hit = q6k_logits_w_buf_ && bytes <= q6k_logits_w_cap_ &&
+                     q6k_logits_w_key_ == key;
+    if (!hit) {
+        if (bytes > q6k_logits_w_cap_) {
+            if (q6k_logits_w_buf_) {
+                vkDestroyBuffer(device_, q6k_logits_w_buf_, nullptr);
+                q6k_logits_w_buf_ = nullptr;
+            }
+            if (q6k_logits_w_mem_) {
+                vkFreeMemory(device_, q6k_logits_w_mem_, nullptr);
+                q6k_logits_w_mem_ = nullptr;
+            }
+            q6k_logits_w_cap_ = 0;
+            q6k_logits_w_key_ = 0;
+            if (!CreateDeviceLocalBuffer(bytes, q6k_logits_w_buf_,
+                                         q6k_logits_w_mem_))
+                return false;
+            q6k_logits_w_cap_ = bytes;
         }
-        if (q6k_logits_w_mem_) {
-            vkFreeMemory(device_, q6k_logits_w_mem_, nullptr);
-            q6k_logits_w_mem_ = nullptr;
-        }
-        q6k_logits_w_cap_ = 0;
-        if (!CreateDeviceLocalBuffer(bytes, q6k_logits_w_buf_,
-                                     q6k_logits_w_mem_))
+        if (!UploadToDeviceLocal(packed, bytes, q6k_logits_w_buf_))
             return false;
-        q6k_logits_w_cap_ = bytes;
+        q6k_logits_w_key_ = key;
+        ++gemv_weight_uploads_;
+    } else {
+        ++gemv_weight_hits_;
     }
-    if (!UploadToDeviceLocal(packed, bytes, q6k_logits_w_buf_)) return false;
-    ++gemv_weight_uploads_;
 
     if (!BindGemvStorage(q6k_logits_w_buf_, bytes, gemv_in_buf_, inB,
                          gemv_out_buf_, outB, q6k_pipe_, rows, cols,
