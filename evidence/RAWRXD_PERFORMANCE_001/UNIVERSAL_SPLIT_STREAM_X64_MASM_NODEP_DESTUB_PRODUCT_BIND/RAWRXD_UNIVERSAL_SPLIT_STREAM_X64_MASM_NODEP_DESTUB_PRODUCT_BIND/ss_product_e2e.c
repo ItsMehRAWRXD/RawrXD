@@ -22,15 +22,17 @@ int ss_product_e2e(const char *model_path, const char *prompt)
     printf("MODEL=%s\n", model_path ? model_path : "");
     printf("FULL_MODEL_INIT_BYPASSED=1 UNIVERSAL_SPLIT_STREAM_DESTUB=1\n");
     if (!model_path) { printf("TOKEN_COMMIT=NOT_RUN PROMOTE=0\n"); return 20; }
-    if (ss_model_plan_build(model_path, &plan) == 0) {
+    if (ss_model_plan_build_multi(model_path, &plan) == 0
+        || ss_model_plan_build(model_path, &plan) == 0) {
         ss_model_plan_print(&plan);
+        ss_model_plan_print_inventory(&plan);
         ss_kv_cache_alloc(&kv, plan.blockCount,
                           plan.kvLoraRank ? plan.kvLoraRank : plan.embeddingLength,
                           16384);
         (void)ss_full_model_forward(&plan, &kv, 0, 0, 0);
         ss_kv_cache_free(&kv);
     } else {
-        printf("MODEL_PLAN_REAL=0 FULL_MODEL_FORWARD=0\n");
+        printf("MODEL_PLAN_REAL=0 MULTI_SHARD_INVENTORY_PASS=0 FULL_MODEL_FORWARD=0\n");
     }
     if (ss_d3d12_backend_init()) {
         printf("D3D12_HOT=NOT_RUN PHASE_RC=BACKEND TOKEN_COMMIT=NOT_RUN PROMOTE=0\n");

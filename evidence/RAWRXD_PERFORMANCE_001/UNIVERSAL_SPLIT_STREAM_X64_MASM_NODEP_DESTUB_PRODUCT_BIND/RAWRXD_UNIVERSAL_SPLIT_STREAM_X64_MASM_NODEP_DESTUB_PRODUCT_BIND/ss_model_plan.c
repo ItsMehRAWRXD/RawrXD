@@ -1,9 +1,12 @@
-/* ss_model_plan.c — single-shard GGUF → SsModelPlan (metadata + roles) */
+/* ss_model_plan.c — GGUF metadata + multi-shard role inventory */
 #include "ss_model_plan.h"
 #include "ss_tensor_roles.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 typedef struct { char name[160]; uint64_t rel, dims[4], elems; uint32_t ty, nd; } Ent;
 static int rd(FILE *f, void *p, size_t n) { return fread(p, 1, n, f) == n ? 0 : 1; }
 static int sk(FILE *f, int64_t n) { return _fseeki64(f, n, SEEK_CUR) ? 1 : 0; }
@@ -31,10 +34,6 @@ static int skip_val_t(FILE *f, uint32_t t)
     }
     return 0;
 }
-static int skip_val(FILE *f)
-{
-    uint32_t t; if (rd(f, &t, 4)) return 1; return skip_val_t(f, t);
-}
 static uint32_t map_codec(uint32_t ty)
 {
     if (ty == 0) return SS_CODEC_F32;
@@ -44,21 +43,23 @@ static uint32_t map_codec(uint32_t ty)
     if (ty == 14) return SS_CODEC_Q6_K;
     return SS_CODEC_UNKNOWN;
 }
-static uint64_t idhash(const char *n, uint64_t abs, uint64_t bytes, uint32_t ty)
+static uint64_t idhash(const char *n, uint32_t shard, uint64_t abs, uint64_t bytes, uint32_t ty)
 {
     uint64_t h = 14695981039346656037ull; size_t i;
     for (i = 0; n[i]; ++i) { h ^= (unsigned char)n[i]; h *= 1099511628211ull; }
+    h ^= shard; h *= 1099511628211ull;
     h ^= abs; h *= 1099511628211ull; h ^= bytes; h *= 1099511628211ull; h ^= ty;
     return h;
 }
-static void fill_ref(SsTensorRef *r, const Ent *e, uint64_t base, uint64_t bytes)
+static void fill_ref(SsTensorRef *r, const Ent *e, uint32_t shard, uint64_t base, uint64_t bytes)
 {
     uint32_t i;
     memset(r, 0, sizeof *r);
-    r->present = 1; r->fileOffset = base + e->rel; r->bytes = bytes;
+    r->present = 1; r->shardId = shard;
+    r->fileOffset = base + e->rel; r->bytes = bytes;
     r->nDims = e->nd; r->codec = map_codec(e->ty);
     for (i = 0; i < e->nd && i < 4; ++i) r->dims[i] = e->dims[i];
-    r->identity = idhash(e->name, r->fileOffset, r->bytes, e->ty);
+    r->identity = idhash(e->name, shard, r->fileOffset, r->bytes, e->ty);
 }
 static SsTensorRef *role_slot(SsBlockPlan *b, SsTensorRole role)
 {
@@ -102,13 +103,27 @@ static int ends_key(const char *k, const char *suf)
     size_t a = strlen(k), b = strlen(suf);
     return a >= b && !strcmp(k + a - b, suf);
 }
-int ss_model_plan_build(const char *path, SsModelPlan *out)
+static int bind_ref(SsModelPlan *out, SsTensorRef *slot, const Ent *e, uint32_t shard,
+                    uint64_t base, uint64_t bytes)
 {
-    FILE *f; uint32_t ver, i, j, align = 32; uint64_t nt, nk, base;
-    char key[256], arch[SS_ARCH_NAME_MAX]; Ent *e = 0;
-    if (!path || !out) return 1;
-    memset(out, 0, sizeof *out); arch[0] = 0;
+    if (slot->present) {
+        if (slot->shardId != shard || slot->fileOffset != base + e->rel) {
+            out->duplicateBlockOwners++;
+            return 1;
+        }
+        out->ambiguousTensorRoles++;
+        return 1;
+    }
+    fill_ref(slot, e, shard, base, bytes);
+    return 0;
+}
+static int ingest_shard(SsModelPlan *out, const char *path, uint32_t shard, int take_meta)
+{
+    FILE *f; uint32_t ver, i, j, align = 32; uint64_t nt, nk, base, fsz;
+    char key[256]; Ent *e = 0;
     f = fopen(path, "rb"); if (!f) return 1;
+    if (_fseeki64(f, 0, SEEK_END)) { fclose(f); return 1; }
+    fsz = (uint64_t)_ftelli64(f); _fseeki64(f, 0, SEEK_SET);
     if (rd(f, key, 4) || memcmp(key, "GGUF", 4) || rd(f, &ver, 4)) goto bad;
     if (rd(f, &nt, 8) || rd(f, &nk, 8) || nt > 200000ull) goto bad;
     for (i = 0; i < (uint32_t)nk; ++i) {
@@ -117,33 +132,58 @@ int ss_model_plan_build(const char *path, SsModelPlan *out)
         if (!strcmp(key, "general.alignment") && t == 4) {
             if (rd(f, &align, 4)) goto bad; continue;
         }
-        if (!strcmp(key, "general.architecture") && t == 8) {
-            if (rstr(f, arch, sizeof arch)) goto bad; continue;
+        if (take_meta && !strcmp(key, "general.architecture") && t == 8) {
+            if (rstr(f, out->architecture, sizeof out->architecture)) goto bad; continue;
         }
-        if (ends_key(key, ".block_count")) { if (kv_u32(f, t, &out->blockCount)) goto bad; continue; }
-        if (ends_key(key, ".embedding_length")) { if (kv_u32(f, t, &out->embeddingLength)) goto bad; continue; }
-        if (ends_key(key, ".vocab_size")) { if (kv_u32(f, t, &out->vocabSize)) goto bad; continue; }
-        if (ends_key(key, ".attention.head_count")) { if (kv_u32(f, t, &out->attentionHeads)) goto bad; continue; }
-        if (ends_key(key, ".attention.head_count_kv")) { if (kv_u32(f, t, &out->kvHeads)) goto bad; continue; }
-        if (ends_key(key, ".attention.q_lora_rank")) { if (kv_u32(f, t, &out->qLoraRank)) goto bad; continue; }
-        if (ends_key(key, ".attention.kv_lora_rank")) { if (kv_u32(f, t, &out->kvLoraRank)) goto bad; continue; }
-        if (ends_key(key, ".expert_count")) { if (kv_u32(f, t, &out->expertCount)) goto bad; continue; }
-        if (ends_key(key, ".expert_used_count")) { if (kv_u32(f, t, &out->expertTopK)) goto bad; continue; }
-        if (ends_key(key, ".expert_shared_count")) { if (kv_u32(f, t, &out->expertSharedCount)) goto bad; continue; }
-        if (ends_key(key, ".leading_dense_block_count")) { if (kv_u32(f, t, &out->leadingDenseBlocks)) goto bad; continue; }
-        if (ends_key(key, ".rope.dimension_count")) { if (kv_u32(f, t, &out->ropeDim)) goto bad; continue; }
-        if (ends_key(key, ".rope.freq_base")) { if (kv_f32(f, t, &out->ropeFreqBase)) goto bad; continue; }
+        if (take_meta && ends_key(key, ".block_count")) {
+            if (kv_u32(f, t, &out->blockCount)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".embedding_length")) {
+            if (kv_u32(f, t, &out->embeddingLength)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".vocab_size")) {
+            if (kv_u32(f, t, &out->vocabSize)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".attention.head_count")) {
+            if (kv_u32(f, t, &out->attentionHeads)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".attention.head_count_kv")) {
+            if (kv_u32(f, t, &out->kvHeads)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".attention.q_lora_rank")) {
+            if (kv_u32(f, t, &out->qLoraRank)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".attention.kv_lora_rank")) {
+            if (kv_u32(f, t, &out->kvLoraRank)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".expert_count")) {
+            if (kv_u32(f, t, &out->expertCount)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".expert_used_count")) {
+            if (kv_u32(f, t, &out->expertTopK)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".expert_shared_count")) {
+            if (kv_u32(f, t, &out->expertSharedCount)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".leading_dense_block_count")) {
+            if (kv_u32(f, t, &out->leadingDenseBlocks)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".rope.dimension_count")) {
+            if (kv_u32(f, t, &out->ropeDim)) goto bad; continue;
+        }
+        if (take_meta && ends_key(key, ".rope.freq_base")) {
+            if (kv_f32(f, t, &out->ropeFreqBase)) goto bad; continue;
+        }
         if (skip_val_t(f, t)) goto bad;
     }
-    strncpy(out->architecture, arch, SS_ARCH_NAME_MAX - 1);
-    out->metaReal = (out->blockCount && out->embeddingLength && arch[0]) ? 1 : 0;
-    if (out->blockCount > SS_MAX_BLOCKS) out->blockCount = SS_MAX_BLOCKS;
     e = (Ent *)calloc((size_t)nt, sizeof(Ent));
     if (!e) goto bad;
     for (i = 0; i < (uint32_t)nt; ++i) {
         uint64_t elems = 1, off, dims[4]; uint32_t nd, ty;
         if (rstr(f, e[i].name, sizeof e[i].name) || rd(f, &nd, 4) || nd > 4) goto bad;
-        for (j = 0; j < nd; ++j) { if (rd(f, &dims[j], 8)) goto bad; elems *= dims[j]; e[i].dims[j] = dims[j]; }
+        for (j = 0; j < nd; ++j) {
+            if (rd(f, &dims[j], 8)) goto bad; elems *= dims[j]; e[i].dims[j] = dims[j];
+        }
         if (rd(f, &ty, 4) || rd(f, &off, 8)) goto bad;
         e[i].nd = nd; e[i].ty = ty; e[i].rel = off; e[i].elems = elems;
     }
@@ -153,30 +193,145 @@ int ss_model_plan_build(const char *path, SsModelPlan *out)
         uint64_t best = ~(uint64_t)0, bytes; uint32_t k; SsRoleHit hit; SsTensorRef *slot;
         for (k = 0; k < (uint32_t)nt; ++k)
             if (e[k].rel > e[i].rel && e[k].rel < best) best = e[k].rel;
-        bytes = (best != ~(uint64_t)0) ? (best - e[i].rel) : 0;
+        bytes = (best != ~(uint64_t)0) ? (best - e[i].rel) : (fsz > base + e[i].rel ? fsz - (base + e[i].rel) : 0);
         if (!bytes) continue;
         if (ss_tensor_role_parse(e[i].name, &hit)) continue;
-        if (hit.role == SS_ROLE_TOKEN_EMBD) { fill_ref(&out->tokenEmbedding, &e[i], base, bytes); continue; }
-        if (hit.role == SS_ROLE_OUTPUT_NORM) { fill_ref(&out->outputNorm, &e[i], base, bytes); continue; }
-        if (hit.role == SS_ROLE_LM_HEAD) { fill_ref(&out->outputWeight, &e[i], base, bytes); continue; }
+        if (hit.role == SS_ROLE_TOKEN_EMBD) {
+            bind_ref(out, &out->tokenEmbedding, &e[i], shard, base, bytes); continue;
+        }
+        if (hit.role == SS_ROLE_OUTPUT_NORM) {
+            bind_ref(out, &out->outputNorm, &e[i], shard, base, bytes); continue;
+        }
+        if (hit.role == SS_ROLE_LM_HEAD) {
+            bind_ref(out, &out->outputWeight, &e[i], shard, base, bytes); continue;
+        }
         if (hit.block < 0 || (uint32_t)hit.block >= SS_MAX_BLOCKS) continue;
-        if ((uint32_t)hit.block >= out->blockCount && out->blockCount)
-            continue;
+        if (out->blockCount && (uint32_t)hit.block >= out->blockCount) continue;
+        out->blocks[hit.block].blockIndex = (uint32_t)hit.block;
         slot = role_slot(&out->blocks[hit.block], hit.role);
         if (!slot) continue;
-        fill_ref(slot, &e[i], base, bytes);
-        out->blocks[hit.block].rolesBound++;
-        if (hit.role == SS_ROLE_ROUTER || hit.role == SS_ROLE_EXPERT_GATE)
-            out->blocks[hit.block].isMoe = 1;
+        if (!bind_ref(out, slot, &e[i], shard, base, bytes)) {
+            out->blocks[hit.block].rolesBound++;
+            if (hit.role == SS_ROLE_ROUTER || hit.role == SS_ROLE_EXPERT_GATE)
+                out->blocks[hit.block].isMoe = 1;
+        }
     }
-    for (i = 0; i < out->blockCount; ++i)
-        if (out->blocks[i].attnNorm.present) out->blocksPresent++;
-    out->planReal = out->metaReal && out->tokenEmbedding.present && out->outputNorm.present
-                    && out->outputWeight.present && out->blocksPresent > 0;
     free(e); fclose(f);
-    return out->planReal ? 0 : 1;
+    return 0;
 bad:
     free(e); if (f) fclose(f); return 1;
+}
+static void audit_blocks(SsModelPlan *p)
+{
+    uint32_t i, miss = 0, unresolved = 0;
+    p->inventoredBlockCount = 0; p->blocksPresent = 0;
+    for (i = 0; i < p->blockCount && i < SS_MAX_BLOCKS; ++i) {
+        SsBlockPlan *b = &p->blocks[i];
+        uint32_t req = 0, got = 0, dense, moe;
+        b->blockIndex = i;
+        req = 7;
+        if (b->attnNorm.present) got++;
+        if (b->qA.present) got++;
+        if (b->qB.present) got++;
+        if (b->kvA.present) got++;
+        if (b->kvB.present) got++;
+        if (b->attnOut.present) got++;
+        if (b->ffnNorm.present) got++;
+        dense = b->denseGate.present && b->denseUp.present && b->denseDown.present;
+        moe = b->router.present && b->expertGate.present && b->expertUp.present
+              && b->expertDown.present;
+        if (dense) { req += 3; got += 3; }
+        else if (moe) { req += 4; got += 4; }
+        else { req += 3; }
+        b->requiredTensorCount = req;
+        b->resolvedTensorCount = got;
+        b->complete = (got >= req && (dense || moe)) ? 1 : 0;
+        if (b->attnNorm.present) p->blocksPresent++;
+        if (b->complete) p->inventoredBlockCount++;
+        else {
+            miss++;
+            if (req > got) unresolved += (req - got);
+        }
+    }
+    p->missingRequiredBlocks = miss;
+    p->unresolvedRequiredTensors = unresolved;
+    p->multiShardInventoryPass =
+        p->metaReal && p->tokenEmbedding.present && p->outputNorm.present
+        && p->outputWeight.present && p->blockCount > 0
+        && p->inventoredBlockCount == p->blockCount
+        && p->missingRequiredBlocks == 0 && p->duplicateBlockOwners == 0
+        && p->ambiguousTensorRoles == 0 ? 1 : 0;
+    p->planReal = p->multiShardInventoryPass || (p->metaReal && p->blocksPresent > 0);
+    p->familyTableUsed = 0;
+}
+static int list_shards(const char *any, char paths[][SS_SHARD_PATH_MAX], uint32_t *n_out)
+{
+    char dir[SS_SHARD_PATH_MAX], pat[SS_SHARD_PATH_MAX];
+    char *slash; uint32_t n = 0;
+#ifdef _WIN32
+    WIN32_FIND_DATAA fd; HANDLE h;
+#endif
+    if (!any || !paths || !n_out) return 1;
+    strncpy(dir, any, SS_SHARD_PATH_MAX - 1); dir[SS_SHARD_PATH_MAX - 1] = 0;
+    slash = strrchr(dir, '\\'); if (!slash) slash = strrchr(dir, '/');
+    if (slash) *slash = 0; else strcpy(dir, ".");
+#ifdef _WIN32
+    _snprintf(pat, sizeof pat, "%s\\*.gguf", dir);
+    h = FindFirstFileA(pat, &fd);
+    if (h == INVALID_HANDLE_VALUE) {
+        strncpy(paths[0], any, SS_SHARD_PATH_MAX - 1); *n_out = 1; return 0;
+    }
+    do {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+        if (n >= SS_MAX_SHARDS) break;
+        _snprintf(paths[n], SS_SHARD_PATH_MAX, "%s\\%s", dir, fd.cFileName);
+        n++;
+    } while (FindNextFileA(h, &fd));
+    FindClose(h);
+    /* simple lexical sort */
+    {
+        uint32_t a, b;
+        for (a = 0; a + 1 < n; ++a)
+            for (b = a + 1; b < n; ++b)
+                if (strcmp(paths[a], paths[b]) > 0) {
+                    char tmp[SS_SHARD_PATH_MAX];
+                    memcpy(tmp, paths[a], SS_SHARD_PATH_MAX);
+                    memcpy(paths[a], paths[b], SS_SHARD_PATH_MAX);
+                    memcpy(paths[b], tmp, SS_SHARD_PATH_MAX);
+                }
+    }
+    *n_out = n ? n : 0;
+    return n ? 0 : 1;
+#else
+    (void)pat; strncpy(paths[0], any, SS_SHARD_PATH_MAX - 1); *n_out = 1; return 0;
+#endif
+}
+int ss_model_plan_build(const char *path, SsModelPlan *out)
+{
+    if (!path || !out) return 1;
+    memset(out, 0, sizeof *out);
+    strncpy(out->shardPaths[0], path, SS_SHARD_PATH_MAX - 1);
+    out->shardCount = 1;
+    if (ingest_shard(out, path, 0, 1)) return 1;
+    out->metaReal = (out->blockCount && out->embeddingLength && out->architecture[0]) ? 1 : 0;
+    if (out->blockCount > SS_MAX_BLOCKS) out->blockCount = SS_MAX_BLOCKS;
+    audit_blocks(out);
+    return out->planReal ? 0 : 1;
+}
+int ss_model_plan_build_multi(const char *any_shard_path, SsModelPlan *out)
+{
+    uint32_t i, n = 0;
+    if (!any_shard_path || !out) return 1;
+    memset(out, 0, sizeof *out);
+    if (list_shards(any_shard_path, out->shardPaths, &n)) return 1;
+    out->shardCount = n;
+    for (i = 0; i < n; ++i) {
+        if (ingest_shard(out, out->shardPaths[i], i, i == 0)) return 1;
+    }
+    out->metaReal = (out->blockCount && out->embeddingLength && out->architecture[0]) ? 1 : 0;
+    if (out->blockCount > SS_MAX_BLOCKS) out->blockCount = SS_MAX_BLOCKS;
+    audit_blocks(out);
+    return out->metaReal ? 0 : 1;
 }
 void ss_model_plan_print(const SsModelPlan *p)
 {
@@ -202,4 +357,29 @@ void ss_model_plan_print(const SsModelPlan *p)
     }
     printf("ATTENTION_LAYOUT_BOUND_SAMPLE=%u FULL_MODEL_FORWARD=0 ABBREVIATED_CHAIN=1 PROMOTE=0\n",
            attn_ok);
+}
+void ss_model_plan_print_inventory(const SsModelPlan *p)
+{
+    uint32_t i;
+    if (!p) return;
+    printf("MODEL_PLAN_SOURCE=GGUF_METADATA FAMILY_TABLE_USED=%u\n", p->familyTableUsed);
+    printf("SHARD_COUNT=%u DECLARED_BLOCK_COUNT=%u INVENTORIED_BLOCK_COUNT=%u BLOCK_PLAN_COUNT=%u\n",
+           p->shardCount, p->blockCount, p->inventoredBlockCount, p->blockCount);
+    printf("MISSING_REQUIRED_BLOCKS=%u DUPLICATE_BLOCK_OWNERS=%u AMBIGUOUS_TENSOR_ROLES=%u\n",
+           p->missingRequiredBlocks, p->duplicateBlockOwners, p->ambiguousTensorRoles);
+    printf("UNRESOLVED_REQUIRED_TENSORS=%u MULTI_SHARD_INVENTORY_PASS=%u\n",
+           p->unresolvedRequiredTensors, p->multiShardInventoryPass);
+    for (i = 0; i < p->shardCount && i < 4; ++i)
+        printf("SHARD_%u=%s\n", i, p->shardPaths[i]);
+    if (p->blockCount > 0) {
+        printf("BLOCK_0_SHARD=%u BLOCK_%u_SHARD=%u\n",
+               p->blocks[0].attnNorm.shardId,
+               p->blockCount - 1,
+               p->blocks[p->blockCount - 1].attnNorm.shardId);
+        if (p->blockCount > 9)
+            printf("BLOCK_8_SHARD=%u BLOCK_9_SHARD=%u SHARD_CROSSING_CANDIDATE=%u\n",
+                   p->blocks[8].attnNorm.shardId, p->blocks[9].attnNorm.shardId,
+                   p->blocks[8].attnNorm.shardId != p->blocks[9].attnNorm.shardId);
+    }
+    printf("FULL_MODEL_FORWARD=0 ALL_BLOCKS_COMPLETED=0 GENERATED_TOKENS=0 PROMOTE=0\n");
 }
