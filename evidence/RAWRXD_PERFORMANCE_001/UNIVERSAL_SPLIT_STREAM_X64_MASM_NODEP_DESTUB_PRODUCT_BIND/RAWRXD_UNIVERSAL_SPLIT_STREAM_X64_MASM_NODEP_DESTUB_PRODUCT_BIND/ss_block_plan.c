@@ -17,7 +17,7 @@ int ss_block_op_residency(const SsBlockPlan *b, SsBlockOp op, SsOpResidency *out
         add(out, &b->attnOut); add(out, &b->qANorm); add(out, &b->kvANorm);
         break;
     case SS_OP_FFN_NORM: add(out, &b->ffnNorm); break;
-    case SS_OP_MOE_ROUTER: add(out, &b->router); break;
+    case SS_OP_MOE_ROUTER: add(out, &b->router); add(out, &b->expProbsB); break;
     case SS_OP_MOE_EXPERTS:
         add(out, &b->expertGate); add(out, &b->expertUp); add(out, &b->expertDown);
         add(out, &b->sharedGate); add(out, &b->sharedUp); add(out, &b->sharedDown);

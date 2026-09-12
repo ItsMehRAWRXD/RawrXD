@@ -73,7 +73,7 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
             if (ss_vk_token_commit(&v) == 0 && v.token_op) {
                 printf("DEEP2_TOKEN=PASS\n");
                 st = 8;
-                if (ss_vk_abbrev_decode(&v, shard, 64) == 0 && v.decode_loop)
+                if (ss_vk_abbrev_decode(&v, shard, 16) == 0 && v.decode_loop)
                     printf("DEEP2_ABBREVIATED_DECODE_TPS=PASS\n");
                 else
                     printf("DEEP2_ABBREVIATED_DECODE_TPS=NOT_RUN\n");

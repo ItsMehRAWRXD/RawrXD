@@ -5,40 +5,33 @@
 #include "enterprise_abi.h"
 #include "ss_evidence.h"
 #include "ss_model_plan.h"
-#include "ss_full_forward.h"
-#include "ss_kv_cache.h"
 #include <stdio.h>
 #include <string.h>
 int ss_product_e2e(const char *model_path, const char *prompt)
 {
     SSGpuBackend be; SSPhaseArgs a; SSPhaseResult r;
-    static SsModelPlan plan; SsKvCache kv;
+    static SsModelPlan plan;
     const char *stop; int math_obs, model_op, block_op, onorm_op, logits_op, token_op;
     (void)prompt;
     memset(&be, 0, sizeof be); memset(&a, 0, sizeof a); memset(&r, 0, sizeof r);
-    memset(&plan, 0, sizeof plan); memset(&kv, 0, sizeof kv);
+    memset(&plan, 0, sizeof plan);
     ss_barrier_reset(); ss_copy_reset();
     printf("PRODUCT_BINARY=deep2_benchmark.exe\nPHASE=split-stream\n");
     printf("MODEL=%s\n", model_path ? model_path : "");
     printf("FULL_MODEL_INIT_BYPASSED=1 UNIVERSAL_SPLIT_STREAM_DESTUB=1\n");
     if (!model_path) { printf("TOKEN_COMMIT=NOT_RUN PROMOTE=0\n"); return 20; }
-    if (ss_model_plan_build_multi(model_path, &plan) == 0
-        || ss_model_plan_build(model_path, &plan) == 0) {
+    /* Phase-0: observe model plan only — never mints FULL_MODEL_FORWARD. */
+    if (ss_model_plan_build_split(model_path, &plan) == 0) {
         ss_model_plan_print(&plan);
         ss_model_plan_print_inventory(&plan);
-        ss_kv_cache_alloc(&kv, plan.blockCount,
-                          plan.kvLoraRank ? plan.kvLoraRank : plan.embeddingLength,
-                          16384);
-        (void)ss_full_model_forward(&plan, &kv, 0, 0, 0);
-        ss_kv_cache_free(&kv);
     } else {
         printf("MODEL_PLAN_REAL=0 MULTI_SHARD_INVENTORY_PASS=0 FULL_MODEL_FORWARD=0\n");
+        if (plan.metaReal) ss_model_plan_print(&plan);
     }
     if (ss_d3d12_backend_init()) {
         printf("D3D12_HOT=NOT_RUN PHASE_RC=BACKEND TOKEN_COMMIT=NOT_RUN PROMOTE=0\n");
         return 28;
     }
-    /* Independent of dispatch path — metadata/codec oracle only. */
     ss_geo_indep_output_weight(model_path);
     ss_q6k_row_oracle(model_path);
     be.promote_fn = ss_d3d12_promote;
@@ -81,10 +74,8 @@ int ss_product_e2e(const char *model_path, const char *prompt)
             duo_observe_interop(&dt, r.file_offset, 1, 1);
         if (r.deep2_consume_status >= SS_DEEP2_CONSUMED)
             duo_observe_consumer_ran(&dt, r.file_offset, 1);
-        if (logits_op)
-            duo_observe_logits(&dt, r.file_offset, 1);
-        if (token_op)
-            duo_observe_token(&dt, r.file_offset, 1);
+        if (logits_op) duo_observe_logits(&dt, r.file_offset, 1);
+        if (token_op) duo_observe_token(&dt, r.file_offset, 1);
         if (token_op) stop = "ABBREVIATED_DECODE_HOLD";
         else if (logits_op) stop = "TOKEN_NOT_RUN";
         else if (onorm_op) stop = "LM_HEAD_NOT_RUN";

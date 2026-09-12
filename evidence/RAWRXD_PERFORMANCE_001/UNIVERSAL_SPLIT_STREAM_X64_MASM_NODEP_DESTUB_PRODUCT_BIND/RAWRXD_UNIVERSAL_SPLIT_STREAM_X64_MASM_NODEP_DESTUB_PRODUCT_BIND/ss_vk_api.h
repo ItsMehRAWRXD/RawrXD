@@ -90,6 +90,7 @@ typedef struct {
     int chain_gpu, block_finite, block_ok, block_op;
     int onorm_op, logits_op, token_op, decode_loop;
 } SsVk;
+typedef struct SsModelPlan SsModelPlan;
 typedef int (*SsVkPromote2)(const void *host, uint64_t n, void **nt_out,
                             void **fence_nt_out, uint64_t *fence_val_out);
 int ss_vk_load(SsVk *v);
