@@ -1,0 +1,11 @@
+GATE=DEEP2_DAILY_STREAMER_LIVE_001
+STATUS=SOURCE_WIRED_ADAPTER
+ADAPTER=#1+#2 d2_session_deep2_adapter.cpp + d2_deep2_binding.h
+INSTALL=d2_session_bind_deep2_engine_ptr(session, Deep2Engine*)
+MOCK_SMOKE=PASS (build_daily_smoke only)
+RUNTIME_LIVE_PROOF=NOT_RUN
+ATTEMPT2_ISOLATION=1
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+DAILY_STREAMER_READY=0
+NOTE=valuation $150M+ reserved until this gate PASSes on real model

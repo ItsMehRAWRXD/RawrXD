@@ -113,30 +113,8 @@ set DEC=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_FULL_DECODE_TOKEN_R
 set AUTH=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_FULL_DECODE_TOKEN_REAL_001\RAWRXD_DEEP2_AUTH_ATTEMPT_GRANT_X64_MASM_NODEP
 ml64 /nologo /c /I"%DEC%" /Fodeep2_full_decode_token_real.obj "%DEC%\deep2_full_decode_token_real.asm" || exit /b 1
 ml64 /nologo /c /I"%AUTH%" /Fodeep2_auth_grant.obj "%AUTH%\deep2_auth_grant.asm" || exit /b 1
-REM #2 Endurance Top-15 — product-linked (no longer PRODUCT_LINKED_INTO_CERT=0)
-for %%F in (
-  deep2_decode_invariant
-  deep2_kv_guard
-  deep2_arena_guard
-  ss_vk_lifetime
-  ss_vk_fence_ring
-  ss_vk_descriptor_ring
-  deep2_tensor_range_guard
-  deep2_residency_backpressure
-  deep2_generation_epoch
-  deep2_device_health
-  deep2_progress_watch
-  deep2_state_digest
-  deep2_longrun_stats
-  deep2_receipt_journal
-  deep2_product_destub
-) do (
-  cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /Iendurance /c endurance\%%F.c /Fo%%F.obj || exit /b 1
-)
-cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /Iendurance /I"%VKI%" /c ss_ar_endurance.c || exit /b 1
-cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /Iendurance /c ss_ar_tps.c || exit /b 1
-cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /Iendurance /I"%VKI%" /c ss_ar_decode_fwd.c || exit /b 1
-cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /Iendurance /I"%VKI%" /c ss_ar_decode_wire.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_ar_decode_fwd.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_ar_decode_wire.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_ar_decode_print.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_tensor_id.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_barrier_seq.c || exit /b 1
@@ -169,14 +147,7 @@ link /nologo /subsystem:console smoke_phase.obj ss_d3d12_bridge.obj ss_product_p
   ss_vk_act_hash.obj ss_vk_resolved_block.obj ss_vk_full_block_loop.obj ss_full_block_loop_print.obj ^
   ss_vk_final_norm_lm.obj ss_final_norm_lm_print.obj ss_vk_survive.obj ss_vk_survive_probe.obj ^
   ss_vk_op_gemv_n.obj ss_vk_lm_row_ladder.obj ss_vk_op_gemv_tile.obj ss_vk_lm_tiled.obj ^
-  ss_ar_decode_fwd.obj ss_ar_decode_wire.obj ss_ar_decode_print.obj ss_ar_endurance.obj ss_ar_tps.obj ^
-  deep2_full_decode_token_real.obj deep2_auth_grant.obj ^
-  deep2_decode_invariant.obj deep2_kv_guard.obj deep2_arena_guard.obj ^
-  ss_vk_lifetime.obj ss_vk_fence_ring.obj ss_vk_descriptor_ring.obj ^
-  deep2_tensor_range_guard.obj deep2_residency_backpressure.obj ^
-  deep2_generation_epoch.obj deep2_device_health.obj deep2_progress_watch.obj ^
-  deep2_state_digest.obj deep2_longrun_stats.obj deep2_receipt_journal.obj ^
-  deep2_product_destub.obj ^
+  ss_ar_decode_fwd.obj ss_ar_decode_wire.obj ss_ar_decode_print.obj deep2_full_decode_token_real.obj deep2_auth_grant.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   d3d12.lib dxgi.lib kernel32.lib /out:ss_phase_smoke.exe
 if errorlevel 1 exit /b %errorlevel%
@@ -217,14 +188,7 @@ link /nologo /subsystem:console ss_product_main.obj ss_product_e2e.obj ss_d3d12_
   ss_vk_act_hash.obj ss_vk_resolved_block.obj ss_vk_full_block_loop.obj ss_full_block_loop_print.obj ^
   ss_vk_final_norm_lm.obj ss_final_norm_lm_print.obj ss_vk_survive.obj ss_vk_survive_probe.obj ^
   ss_vk_op_gemv_n.obj ss_vk_lm_row_ladder.obj ss_vk_op_gemv_tile.obj ss_vk_lm_tiled.obj ^
-  ss_ar_decode_fwd.obj ss_ar_decode_wire.obj ss_ar_decode_print.obj ss_ar_endurance.obj ss_ar_tps.obj ^
-  deep2_full_decode_token_real.obj deep2_auth_grant.obj ^
-  deep2_decode_invariant.obj deep2_kv_guard.obj deep2_arena_guard.obj ^
-  ss_vk_lifetime.obj ss_vk_fence_ring.obj ss_vk_descriptor_ring.obj ^
-  deep2_tensor_range_guard.obj deep2_residency_backpressure.obj ^
-  deep2_generation_epoch.obj deep2_device_health.obj deep2_progress_watch.obj ^
-  deep2_state_digest.obj deep2_longrun_stats.obj deep2_receipt_journal.obj ^
-  deep2_product_destub.obj ^
+  ss_ar_decode_fwd.obj ss_ar_decode_wire.obj ss_ar_decode_print.obj deep2_full_decode_token_real.obj deep2_auth_grant.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   duo_uu.obj duo_under.obj duo_layer.obj duo_over.obj duo_oo.obj duo_revoke.obj duo_emit.obj ^
   enterprise_gate.obj ent_product_bind.obj ^
@@ -239,11 +203,6 @@ link /nologo /subsystem:console ss_plan_smoke.obj ss_model_plan_io.obj ss_model_
   kernel32.lib /out:ss_plan_smoke.exe
 if errorlevel 1 exit /b %errorlevel%
 echo SSVK_TYPE_IDENTITY=TAGGED_STRUCT_SsVk
-echo ENDURANCE_TOP15_PRODUCT_LINKED=1
-echo PRODUCT_LINKED_INTO_CERT=1
 echo PRODUCT_STUB_LINKED=OPEN
 echo NOTE=residual stubs may remain off AR path; not stub-free cert yet
-echo FULL_MODEL_TPS_AUTHORITY=0
-echo NOTE_TPS=minted only by DEEP2_FULL_MODEL_TPS_AUTHORITY_001 timed observation
-echo PROMOTE=0
 exit /b 0

@@ -1,0 +1,39 @@
+GATE=DEEP2_DAILY_STREAMER_V1
+STATUS=LAW_SOURCE_SCAFFOLD
+ATTEMPT2_ISOLATION=1
+PID_19596_TOUCHED=0
+CERT_BINARY_TOUCHED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+
+ACCEPTANCE=
+  START_PROCESS
+  LOAD_MODEL
+  FIRST_TOKEN
+  STREAM_TOKENS
+  STOP_GENERATION
+  SECOND_GENERATION_SAME_PROCESS
+  UNLOAD_MODEL
+  RELOAD_MODEL
+  PROCESS_SURVIVES
+  SEALED_LOGITS_REUSE=0
+  SYNTHETIC_LOGITS=0
+  DEVICE_LOST=0
+  PER_TOKEN_PROCESS_RESTART=0
+  FULL_MODEL_EXECUTION=1
+
+TRACKS=
+  DAILY=session/streamer/API (this gate)
+  PERF=Attempt2 TPS → packed quant → residency → dual-GPU
+  FORK=daily continues even if Attempt2 timing fails
+
+SOURCE=
+  rawrxd/src/deep2/daily/*
+  wraps Deep2Engine loadModel/generateStream/requestCancel/reset/unloadModel
+
+V0_SHIP_WHEN=
+  deep2_streamer.exe --model <gguf> --interactive
+  two prompts same process, cancel works, no Ollama/llama.cpp
+
+NEXT_PROOF=
+  DEEP2_DAILY_STREAMER_ENDURANCE_001 (100 requests, 0 restarts)

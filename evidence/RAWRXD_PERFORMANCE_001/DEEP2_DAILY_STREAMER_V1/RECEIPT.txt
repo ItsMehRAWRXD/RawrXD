@@ -1,0 +1,31 @@
+GATE=DEEP2_DAILY_STREAMER_V1
+STATUS=V0_SESSION_SMOKE_PASS
+ATTEMPT2_ISOLATION=1
+PID_19596_TOUCHED=0
+CERT_BINARY_TOUCHED=0
+
+SMOKE=
+  DAILY_STREAMER_V0_SMOKE=PASS
+  SECOND_GENERATION_SAME_PROCESS=PASS
+  STOP_GENERATION=PASS
+  RELOAD_MODEL=PASS
+  PROCESS_SURVIVES=PASS
+  BACKEND=MOCK_UNTIL_ENGINE_BIND
+
+SOURCE=
+  rawrxd/src/deep2/daily/d2_stream_session.*
+  d2_cancel.h d2_token_sink.* d2_stream_metrics.*
+  d2_session_mock.c d2_streamer_main.c
+  build_daily_smoke.bat → deep2_streamer.exe
+
+NEXT=
+  1) Attempt2 seal (sole TPS mint candidate)
+  2) d2_session_bind_deep2_engine → Deep2Engine
+     (loadModel/generateStream/requestCancel/reset/unloadModel)
+  3) interactive CLI + optional SSE on port 11436
+  4) DEEP2_DAILY_STREAMER_ENDURANCE_001 (100 requests)
+  5) perf track: exact-range/SsVk, packed quant, persistent graph
+
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+DAILY_STREAMER_READY=0

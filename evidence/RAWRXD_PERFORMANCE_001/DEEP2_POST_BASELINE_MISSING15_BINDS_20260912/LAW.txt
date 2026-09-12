@@ -1,0 +1,30 @@
+GATE=DEEP2_POST_BASELINE_MISSING15_BINDS_20260912
+STATUS=LAW_ONLY
+GOVERNING_UNTIL_BASELINE=DEEP2_NEXT15_POST_TARGET64_TPS_BASELINE_20260912
+PROMOTE=0
+FULL_MODEL_TPS_AUTHORITY=0
+
+AFTER_BASELINE_SEAL_HIGHEST_VALUE=
+  01 live TPS mint via measured QPC only
+  02 Mint-15 product bind (real gate/cert/QPC; mock cannot reach live)
+  03 ResidencyGraph.load_exact → D2DeviceIo
+  04 ResidencyGraph slots → SsVk memory
+  05 direct packed Q2_K kernel MATERIALIZED_WEIGHT_BYTES=0
+  06 universal tiled quant dispatcher
+  07 persistent 61-block command graph
+  08 one-token sync model
+  09 permanent device KV
+  10 attention supernode
+  11 FFN/MoE supernode
+  12 LM-head device reduction FULL_LOGITS_HOST_READBACK=0
+  13 real dual-GPU tensor arithmetic
+  14 64GB bounded residency/streaming
+  15 unified executor + sweep A/B
+
+IMMEDIATE_POST_BASELINE_THREE=
+  D2DeviceIo.load_exact → ResidencyGraph → SsVk slot
+  Direct packed Q2_K GEMV
+  Persistent 61-block command graph
+
+SIDE_DROPS_DEFERRED_FROM_MEASURED_PATH=
+  LINK15 RESIDENCY_GRAPH AUTH_MINT15 SWEEP_AMORTIZER

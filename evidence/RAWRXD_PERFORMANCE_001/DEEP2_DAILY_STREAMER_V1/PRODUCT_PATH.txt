@@ -1,0 +1,45 @@
+GATE=DEEP2_DAILY_STREAMER_V1
+STATUS=PRODUCT_PATH_MAPPED
+MAP_SOURCE=explore_agent_add9407b
+ATTEMPT2_ISOLATION=1
+PID_19596_TOUCHED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+
+AUTHORITATIVE_DAILY_HOST=
+  G:\~dev\rawrxd\build-fd\bin\RawrXD-Win32IDE.exe (--headless --local)
+
+PRODUCT_CHAIN=
+  ProductOpenSession / ProductDeep2Infer(Stream)
+  → Deep2Engine::generateStream
+  → token_commit
+  gateway: src/product/gateway/product_deep2_infer.hpp
+  decode: src/deep2/lavapath/ProductRunDecode.hpp
+  HTTP: src/win32app/Win32IDE_LocalServer.cpp
+
+ALREADY_USABLE_HOST_DECODE=
+  model load/unload
+  generate (buffered Infer)
+  UI cancel via ProductRequestCancel
+  native GGUF tokenizer/detokenize on product path
+
+OPEN_FOR_DAILY_UX=
+  true HTTP token stream (InferStream → SSE/NDJSON, not one-shot dump)
+  POST /api/generate/cancel
+  Headless InferStream crash residual re-proof
+  endurance 100-request same-process gate
+
+V0_SESSION_SCAFFOLD=
+  rawrxd/src/deep2/daily/* (mock smoke PASS)
+  complements IDE path; engine bind next
+
+MUST_WAIT_FOR_TPS_SEAL=
+  PERFORMANCE_PASS / baseline TPS mint
+  Link15/sweep into measured path
+  PROMOTE
+
+NEXT_OFF_CERT=
+  1. LocalServer /api/generate → ProductDeep2InferStream live SSE
+  2. POST /api/generate/cancel → ProductRequestCancel
+  3. load→stream→cancel→unload→reload smoke on separate Win32IDE
+  4. DEEP2_DAILY_STREAMER_ENDURANCE_001

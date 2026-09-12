@@ -1,0 +1,14 @@
+GATE=DEEP2_RESIDENCY_GRAPH_NODEP_20260912
+STATUS=SOURCE_DROP_SMOKE_PASS
+SHA256=b1871744dc62393d6b75238bc7c79d400480441c153804134c80ba9ef7244be0
+HASH_MATCH=1
+CERT_BINARY_TOUCHED=0
+PRODUCT_LINKED_INTO_CERT=0
+MEASURED_TPS_BINARY_MUTATED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+
+NOTE=
+  persistent residency-aware token graph architecture
+  SsVk bind via load_exact/evict/dispatch/token_sync deferred until baseline TPS seals
+  synthetic selftest != production residency proof

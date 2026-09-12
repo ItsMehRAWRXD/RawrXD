@@ -1,0 +1,10 @@
+#include "deep2_endurance.h"
+#include <string.h>
+static D2ResidencyEntry *find(D2Residency *r,uint64_t k){size_t i;for(i=0;i<r->count;i++)if(r->entries[i].key==k)return &r->entries[i];return NULL;}
+static uint64_t *counter(D2Residency *r,D2ResidencyState s){return s==D2_HOT?&r->hot_bytes:s==D2_WARM?&r->warm_bytes:NULL;}
+int d2_res_init(D2Residency *r,D2ResidencyEntry *e,size_t c,uint64_t wb,uint64_t hb){if(!r||!e||!c)return D2_EINVAL;memset(r,0,sizeof *r);r->entries=e;r->capacity=c;r->warm_budget=wb;r->hot_budget=hb;memset(e,0,c*sizeof *e);return D2_OK;}
+int d2_res_admit(D2Residency *r,uint64_t k,uint64_t b,uint64_t ep,D2ResidencyState s){uint64_t *ctr,*bud;if(!r||!b||s>D2_HOT||find(r,k))return D2_EINVAL;if(r->count>=r->capacity)return D2_ECAP;ctr=counter(r,s);bud=s==D2_HOT?&r->hot_budget:s==D2_WARM?&r->warm_budget:NULL;if(ctr && (*ctr > *bud || b > *bud - *ctr)) return D2_ECAP;r->entries[r->count]=(D2ResidencyEntry){k,b,ep,0,s};r->count++;if(ctr)*ctr+=b;return D2_OK;}
+int d2_res_pin(D2Residency *r,uint64_t k,uint64_t ep){D2ResidencyEntry *e;if(!r||(e=find(r,k))==NULL||e->epoch!=ep)return D2_ESTATE;e->pin_count++;return D2_OK;}
+int d2_res_unpin(D2Residency *r,uint64_t k,uint64_t ep){D2ResidencyEntry *e;if(!r||(e=find(r,k))==NULL||e->epoch!=ep||!e->pin_count)return D2_ESTATE;e->pin_count--;return D2_OK;}
+int d2_res_evict_unpinned(D2Residency *r,D2ResidencyState s,uint64_t need){size_t i=0;uint64_t freed=0;if(!r)return D2_EINVAL;while(i<r->count&&freed<need){D2ResidencyEntry *e=&r->entries[i];if(e->state==s&&!e->pin_count){uint64_t *ctr=counter(r,s);freed+=e->bytes;if(ctr)*ctr-=e->bytes;r->entries[i]=r->entries[r->count-1];r->count--;continue;}i++;}return freed>=need?D2_OK:D2_ECAP;}
+int d2_res_check(const D2Residency *r){size_t i;uint64_t h=0,w=0;if(!r)return D2_EINVAL;for(i=0;i<r->count;i++){if(r->entries[i].state==D2_HOT)h+=r->entries[i].bytes;else if(r->entries[i].state==D2_WARM)w+=r->entries[i].bytes;}if(h!=r->hot_bytes||w!=r->warm_bytes||h>r->hot_budget||w>r->warm_budget)return D2_ECORRUPT;return D2_OK;}

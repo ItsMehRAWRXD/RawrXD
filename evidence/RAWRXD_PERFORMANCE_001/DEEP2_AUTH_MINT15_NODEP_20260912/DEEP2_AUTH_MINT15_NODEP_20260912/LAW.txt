@@ -1,0 +1,26 @@
+DEEP2_AUTH_MINT15_NODEP_20260912
+
+MINT_CAPABLE=1
+PROMOTE_CAPABLE=1
+DEPENDENCIES=0
+
+AUTHORITY_LAW:
+01 GRANT_AUTHORITY requires one-shot non-zero nonce and explicit scope.
+02 BIND_GATE fixes gate identity and target count.
+03 BIND_CERT fixes measured binary SHA-256 identity.
+04 BEGIN_OBSERVATION freezes QPC frequency and predicates.
+05 OBSERVE_TOKEN accepts only positive QPC intervals.
+06 CLOSE_OBSERVATION freezes observations.
+07 VALIDATE_CARDINALITY requires observed_tokens == target_tokens.
+08 VALIDATE_INTEGRITY requires grant + gate + cert identity.
+09 VALIDATE_QPC requires monotonic non-overlapping QPC intervals.
+10 CALCULATE_METRICS derives timing authority from observations only.
+11 VALIDATE_PREDICATES requires all correctness/integrity predicates true.
+12 SEAL_RECEIPT hashes receipt + authority nonce with SHA-256.
+13 MINT_TPS_AUTHORITY requires scope + sealed validated receipt.
+14 AUTHORIZE_PROMOTE is separate from TPS authority.
+15 COMMIT_PROMOTE requires explicit promotion scope and prior authorization.
+
+MOCK_SELFTEST_IS_LIVE_AUTHORITY=0
+SYNTHETIC_TIMING_CAN_MINT_LIVE=0
+TPS_AUTHORITY_IMPLIES_PROMOTE=0

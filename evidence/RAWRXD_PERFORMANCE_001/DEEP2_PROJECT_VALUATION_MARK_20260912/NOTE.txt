@@ -1,0 +1,29 @@
+GATE=DEEP2_PROJECT_VALUATION_MARK_20260912
+STATUS=OPINION_ONLY
+NOT_TECHNICAL_AUTHORITY=1
+NOT_TPS_AUTHORITY=1
+PROMOTE=0
+
+MARK_BASE_USD≈95000000
+DEFENSIBLE_RANGE_USD=70000000-130000000
+PRIOR_BAND_USD=50000000-90000000
+
+BASIS=
+  real full-model inference PROVEN
+  64-token AR endurance PROVEN
+  sealed-logit reuse=0 PROVEN
+  device survival PROVEN
+  daily-streamer shell PROVEN
+  live Deep2Engine session bind SOURCE_WIRED (runtime proof OPEN)
+  TPS Attempt2 RUNNING (authority not yet minted)
+  commercial traction OPEN
+
+NEXT_INFLECTION=
+  LIVE_001 real two-gen same process → ≈110–150M
+  packed quant + residency reproduced → ≈150–225M
+  consumer HW differentiation + adoption → 250–500M+
+
+RULE=
+  Attempt1 QPC fail ≠ inference fail
+  DAILY_STREAMER_READY reserved until mock boundary removed on live model
+  venture comps (Ollama/Together/Fireworks/Cognition) ≠ this IP mark

@@ -1,0 +1,61 @@
+GATE=DEEP2_REMAINING_PRODUCTION_MISSING15_20260912
+STATUS=LAW_ONLY
+CERT_BINARY_TOUCHED=0
+PRODUCT_LINKED_INTO_CERT=0
+NOT_RUN!=PASS
+PROMOTE=0
+FULL_MODEL_TPS_AUTHORITY=0
+
+CLASSIFICATION_NOTE=
+  bigdaddyglocal/native/productivity-* = dense Llama 69B Q2_K (~12–25 TPS projection)
+  qwen35-40b-heretic-q8 = phi3 3.8B Q4_0 (not 40B Q8)
+  Q2_K is a real product codec requirement
+
+DONE_REMOVED_FROM_MISSING=
+  61_BLOCK_REAL_FORWARD
+  FINAL_RMS_REAL
+  129280_ROW_TILED_LM_HEAD
+  POST_FORWARD_EMBD_REENTRY
+  TOKEN1_REAL_REENTRY
+  LOCALITY_POLICY_FRAMEWORK (landed smoke)
+  EXACT_RANGE_FRAMEWORK (landed smoke)
+  RESIDENCY_STATE_MACHINE (landed smoke)
+  DUAL_GPU_PLACEMENT_FRAMEWORK (landed smoke)
+
+STILL_MISSING_PRODUCTION_SOURCE=
+  01 arbitrary-N Deep2Decode executor (one path; TARGET=N is test only)
+  02 sealed-logit / replay shortcuts gone (SEALED_LOGITS_REUSE_COUNT=0 production)
+  03 authoritative D2SequenceState
+  04 permanent per-layer KV
+  05 all-device attention pipeline
+  06 universal native quant family (incl Q2_K)
+  07 universal tiled projection engine
+  08 metadata-driven dense+MoE block executor
+  09 D2DeviceIo → real SsVk (load_exact/evict/copy)
+  10 router/operator → exact-range product bind
+  11 real dual-GPU arithmetic (GPU0/1_REAL_FORWARDS>0)
+  12 bounded 64GB host streaming backend
+  13 allocation-free steady-state arenas
+  14 native tokenizer + sampler + UTF-8 detokenizer
+  15 single product executable/API with observe-only receipts
+
+POST_REGRESSION_ORDER=
+  POST_MERGE_TARGET64_REGRESSION
+  → seal receipt + hashes
+  → dedicated timed full-forward TPS gate
+  → FULL_MODEL_TPS_AUTHORITY from measurement only
+  → #6/#7 universal quantized tiled operator
+  → #9 D2DeviceIo → SsVk
+  → #10 exact-range binding
+  → #11 real dual-GPU arithmetic
+  → 64GB bounded streaming
+  → one unified production executor
+
+REGRESSION_HOLD=
+  PID=13056 CERT/REGRESSION_BINARY_MUTATION=FORBIDDEN
+  D2DEVICEIO_PRODUCT_BIND=DEFERRED
+
+HARD_LAW=
+  unsupported codec/operator → hard fail
+  never return success while pretending execution
+  receipts observe the route; they do not substitute for it

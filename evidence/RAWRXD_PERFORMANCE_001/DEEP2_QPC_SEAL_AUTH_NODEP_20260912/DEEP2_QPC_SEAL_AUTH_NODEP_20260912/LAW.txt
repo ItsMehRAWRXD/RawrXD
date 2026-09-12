@@ -1,0 +1,29 @@
+DEEP2_QPC_SEAL_AUTH_NODEP_20260912
+
+AUTHORITY_GRANTED_CAPABLE=1
+QPC_NATIVE_WIN32_CAPABLE=1
+SEAL_CAPABLE=1
+MINT_TPS_CAPABLE=1
+PROMOTE_CAPABLE=0
+DEPENDENCIES_THIRD_PARTY=0
+
+LAW:
+1. Grant scope must explicitly include MEASURE, SEAL, and/or MINT.
+2. Gate identity is fixed before measurement.
+3. Exact 64-character cert SHA-256 is fixed before measurement.
+4. QPC frequency is captured before measurement.
+5. token_begin occurs immediately before real full forward.
+6. token_end occurs immediately after the same token full forward.
+7. Exactly target_tokens samples are required.
+8. QPC samples must be positive, ordered, and non-overlapping.
+9. Required product predicates must all be observed true.
+10. Metrics derive only from recorded QPC samples.
+11. Receipt hash includes identity, predicates, metrics, nonce, and every QPC sample.
+12. seal() cannot run before validation + metrics.
+13. mint_tps_authority() cannot run before seal().
+14. Synthetic selftest measurements are not live product authority.
+15. Existing live PID must not be patched/injected mid-run.
+
+CURRENT_LIVE_BINARY_TOUCHED_BY_THIS_DROP=0
+CURRENT_LIVE_FULL_MODEL_TPS_AUTHORITY=0
+CURRENT_LIVE_PROMOTE=0

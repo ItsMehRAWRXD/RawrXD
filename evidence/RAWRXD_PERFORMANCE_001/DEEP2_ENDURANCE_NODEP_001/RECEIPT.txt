@@ -1,0 +1,38 @@
+GATE=DEEP2_ENDURANCE_NODEP_001
+STATUS=SOURCE_DROP_SMOKE_PASS
+CERT_BINARY_TOUCHED=0
+TARGET_64_PID=6852
+PRODUCT_LINKED_INTO_CERT=0
+MERGE_AFTER_TARGET64=1
+
+SMOKE_RC=0
+TOP5_SMOKE=PASS
+MODULES_LANDED=15
+THIRD_PARTY_DEPS=0
+VULKAN_HEADERS_REQUIRED=0
+
+LANDED:
+  1 deep2_decode_invariant
+  2 deep2_kv_guard
+  3 deep2_arena_guard
+  4 ss_vk_lifetime
+  5 ss_vk_fence_ring
+  6 ss_vk_descriptor_ring
+  7 deep2_tensor_range_guard
+  8 deep2_residency_backpressure
+  9 deep2_generation_epoch
+ 10 deep2_device_health
+ 11 deep2_progress_watch
+ 12 deep2_state_digest
+ 13 deep2_longrun_stats
+ 14 deep2_receipt_journal
+ 15 deep2_product_destub (audit only; PRODUCT_STUB_LINKED remains OPEN on product)
+
+AUTHORITY:
+  SOURCE_WIRED=1 (this drop)
+  RUNTIME_REACHED=smoke_only
+  PRODUCT_PATH_WIRED=0
+  NOT_RUN != PASS on TARGET=64 / ENDURANCE_256
+
+PROMOTE=0
+FULL_MODEL_TPS_AUTHORITY=0

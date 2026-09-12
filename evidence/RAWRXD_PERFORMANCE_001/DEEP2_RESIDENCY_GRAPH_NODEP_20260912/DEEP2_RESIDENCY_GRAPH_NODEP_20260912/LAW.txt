@@ -1,0 +1,24 @@
+DEEP2_RESIDENCY_GRAPH_NODEP_20260912
+
+STATUS=SIDE_DROP_ONLY
+PRODUCT_LINKED_INTO_CERT=0
+CERT_BINARY_TOUCHED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+
+LAW:
+1. The measured TPS binary remains untouched until baseline steps 1-4 seal.
+2. This module cannot mint or revoke live product TPS authority.
+3. Weight tensors enter execution as exact packed ranges.
+4. Packed weight execution must not require a full decoded-weight materialization.
+5. Residency decisions are explicit and tiered.
+6. Pinned tensors never evict during token execution.
+7. Transient device slots are fixed-capacity and reusable.
+8. `run_token()` performs zero heap allocation.
+9. Graph topology is compiled once and reused for every token.
+10. Dynamic per-token state is limited to TokenContext and backend-owned offsets.
+11. Queue/device synchronization is represented by one token-level callback.
+12. LM-head may reduce on device and return compact token data through backend state.
+13. GPU SDK details remain behind the backend ABI.
+14. Sweep amortization remains outside this graph until baseline TPS is sealed.
+15. Promotion remains a separate authority gate.
