@@ -4,19 +4,34 @@
 #include "duo_emit.h"
 #include "enterprise_abi.h"
 #include "ss_evidence.h"
+#include "ss_model_plan.h"
+#include "ss_full_forward.h"
+#include "ss_kv_cache.h"
 #include <stdio.h>
 #include <string.h>
 int ss_product_e2e(const char *model_path, const char *prompt)
 {
     SSGpuBackend be; SSPhaseArgs a; SSPhaseResult r;
+    static SsModelPlan plan; SsKvCache kv;
     const char *stop; int math_obs, model_op, block_op, onorm_op, logits_op, token_op;
     (void)prompt;
     memset(&be, 0, sizeof be); memset(&a, 0, sizeof a); memset(&r, 0, sizeof r);
+    memset(&plan, 0, sizeof plan); memset(&kv, 0, sizeof kv);
     ss_barrier_reset(); ss_copy_reset();
     printf("PRODUCT_BINARY=deep2_benchmark.exe\nPHASE=split-stream\n");
     printf("MODEL=%s\n", model_path ? model_path : "");
     printf("FULL_MODEL_INIT_BYPASSED=1 UNIVERSAL_SPLIT_STREAM_DESTUB=1\n");
     if (!model_path) { printf("TOKEN_COMMIT=NOT_RUN PROMOTE=0\n"); return 20; }
+    if (ss_model_plan_build(model_path, &plan) == 0) {
+        ss_model_plan_print(&plan);
+        ss_kv_cache_alloc(&kv, plan.blockCount,
+                          plan.kvLoraRank ? plan.kvLoraRank : plan.embeddingLength,
+                          16384);
+        (void)ss_full_model_forward(&plan, &kv, 0, 0, 0);
+        ss_kv_cache_free(&kv);
+    } else {
+        printf("MODEL_PLAN_REAL=0 FULL_MODEL_FORWARD=0\n");
+    }
     if (ss_d3d12_backend_init()) {
         printf("D3D12_HOT=NOT_RUN PHASE_RC=BACKEND TOKEN_COMMIT=NOT_RUN PROMOTE=0\n");
         return 28;

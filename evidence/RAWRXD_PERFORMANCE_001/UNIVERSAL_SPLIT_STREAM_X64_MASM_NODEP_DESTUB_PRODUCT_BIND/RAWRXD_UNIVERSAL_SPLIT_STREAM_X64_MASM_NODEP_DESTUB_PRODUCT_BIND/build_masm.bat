@@ -67,6 +67,12 @@ cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_lmhe
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_token.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_decode.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_gguf_find.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_tensor_roles.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_model_plan.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_block_plan.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_kv_cache.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_block_forward.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_full_forward.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_tensor_id.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_barrier_seq.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_copy_acct.c || exit /b 1
@@ -89,6 +95,7 @@ link /nologo /subsystem:console smoke_phase.obj ss_d3d12_bridge.obj ss_product_p
   ss_vk_load.obj ss_vk_dev.obj ss_vk_import.obj ss_vk_import2.obj ss_vk_sync.obj ss_vk_vis.obj ss_vk_drop.obj ss_vk_consume.obj ^
   ss_vk_pipe.obj ss_vk_pipe3.obj ss_vk_mem.obj ss_vk_embd.obj ss_vk_block.obj ss_vk_block_exec.obj ^
   ss_vk_onorm.obj ss_vk_import_lm.obj ss_vk_lmhead.obj ss_vk_token.obj ss_vk_decode.obj ss_gguf_find.obj ^
+  ss_tensor_roles.obj ss_model_plan.obj ss_block_plan.obj ss_kv_cache.obj ss_block_forward.obj ss_full_forward.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   d3d12.lib dxgi.lib kernel32.lib /out:ss_phase_smoke.exe
 if errorlevel 1 exit /b %errorlevel%
@@ -120,6 +127,7 @@ link /nologo /subsystem:console ss_product_main.obj ss_product_e2e.obj ss_d3d12_
   ss_vk_load.obj ss_vk_dev.obj ss_vk_import.obj ss_vk_import2.obj ss_vk_sync.obj ss_vk_vis.obj ss_vk_drop.obj ss_vk_consume.obj ^
   ss_vk_pipe.obj ss_vk_pipe3.obj ss_vk_mem.obj ss_vk_embd.obj ss_vk_block.obj ss_vk_block_exec.obj ^
   ss_vk_onorm.obj ss_vk_import_lm.obj ss_vk_lmhead.obj ss_vk_token.obj ss_vk_decode.obj ss_gguf_find.obj ^
+  ss_tensor_roles.obj ss_model_plan.obj ss_block_plan.obj ss_kv_cache.obj ss_block_forward.obj ss_full_forward.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   duo_uu.obj duo_under.obj duo_layer.obj duo_over.obj duo_oo.obj duo_revoke.obj duo_emit.obj ^
   enterprise_gate.obj ent_product_bind.obj ^
