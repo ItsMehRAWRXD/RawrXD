@@ -1,0 +1,70 @@
+RAWRXD_PRODUCT_AUDIT_001
+DATE=2026-09-12
+ROLE=SUBORDINATE
+AUTHORITY=0
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+TIP=93a0a7928cc5cf4b4e678dd71d9360e86721ac7b
+TIP_MOVED_PAST_93a0a7928c=0
+SEAL_ENDURANCE=0e20e73ed6
+DEEP2_ENDURANCE_001=LIVE_PRODUCT_PASS
+PROMOTE=0
+TIP_CLIMB=HOLD
+MOCK_BACKEND=0
+
+ENDURANCE=PASS_100_OF_100 (cite 0e20e73ed6; RECEIPT.txt LIVE_PRODUCT_PASS; B3 ok=100/100)
+  ENDURANCE_CERT_SOURCES=LAW+RECEIPT sealed; untracked b1/b2/b3_stdout only (no LAW/RECEIPT rewrite)
+
+CLI_POSITIONAL=PASS (refresh)
+  smoke_tiny: EXIT=0 MOCK=0 REAL_PROBE=1 MS=1674 STDOUT_CLEAN natural
+  smoke_llama32: EXIT=0 MOCK=0 REAL_PROBE=1 MS=24222
+  GENERATION_QUALITY_LLAMA=HOLD (stdout collapsed to repeated "percentages")
+  NOTE=llama quality HOLD does not fail CLI; blocks PRODUCT_AUDIT PASS
+  HARNESS_else1: no $real...else{1} under evidence/tools; LAW mandates else{0}
+
+RAWR_LIST=PASS_WITH_DUPLICATES
+  list EXIT=0 rows=328 unique_names=68 DUPLICATE_NAME_KEYS=67
+  list --verbose EXIT=0 paths resolve to GGUF locations
+  paths EXIT=0: rawrxd / models / F:\OllamaModels / .ollama\models
+  ARTIFACTS=rawr_list.stdout.txt rawr_list_verbose.stdout.txt rawr_paths.stdout.txt list_stats.txt
+  NOTE=honest duplicates across trees (_matrix_f, _r1_iso, models root); names stable
+
+MODEL_RESOLUTION=PARTIAL
+  tinyllama: DISCOVERED / RESOLVABLE / LOADABLE / GENERATION_PASS (smoke_tiny)
+  llama3.2-3b-Q2_K: DISCOVERED / RESOLVABLE / LOADABLE / GENERATION_PASS_CLI
+    QUALITY=HOLD (repetition) — sibling owns DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+  qwen2.5-coder-14b-instruct-q8_0: DISCOVERED / RESOLVABLE / LOADABLE=NOT_RUN / GENERATION=NOT_RUN
+  larger Q4/Q2: DISCOVERED / LOADABLE=NOT_RUN (cheap subordinate stop)
+  NEVER claim LOADABLE without open/generate — coder/larger NOT_RUN != PASS
+
+SMOKE_MATRIX=PARTIAL
+  tiny=PASS 3B=PASS_CLI coder=NOT_RUN larger=NOT_RUN
+  No endurance 100 rerun.
+
+RESET_CONTINUITY=PASS_CITED_SEAL
+  Cite DEEP2_ENDURANCE_001 LAW+RECEIPT + B3 seal: soft reset between gens
+  Source: Deep2Engine::reset (Deep2Engine.cpp) clears token_ordinal via
+    d2bind16_begin_token(...,0); calls EnsurePersistentDecodeBinding() idempotent
+  Retains weights/residency/BIND16/SSVK/packed/DualStick per sealed LAW
+  Optional 2-gen harness this turn: NOT_RUN (seal+source sufficient; NOT_RUN!=PASS for new run)
+
+FAILURE_PATHS=PASS
+  unknown model: EXIT=3 no crash (fail_unknown.*)
+  missing GGUF path: EXIT=3 no crash (fail_missing_gguf.*)
+  NOTE=both stderr show model open failed (resolver may fall through); nonzero EXIT OK
+  cancel=NOT_RUN unsupported_quant probe=NOT_RUN
+
+EVIDENCE_INTEGRITY=PASS_PARTIAL
+  Governing sealed gates retain LAW+RECEIPT (endurance/positional/residency/roofline)
+  STALE/SIDE: DEEP2_TOP15_RECONSTRUCTED AUTHORITY=0; BATCH_C SKIP
+  This audit: LAW+RECEIPT minted; PRODUCT_AUDIT not authority closeout
+
+GIT_SYNC=PENDING_OR_HOLD
+  Tip 93a0a7928c; seal 0e20e73ed6 ancestor; branch cert/gpu-forward-child-ladder-20260909
+  Audit commit attempted for this folder only
+
+OPEN_RUNTIME_GATES=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+PRODUCT_AUDIT=HOLD
+  REASON=GEN_QUALITY open (LLAMA32_Q2K repetition); matrix PARTIAL (coder/larger NOT_RUN)
+CURRENT_GATE=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+DISPOSITION=HOLD_SUBORDINATE
+SIBLING=owns gen-quality instrumentation; this worker did not touch sampling files

@@ -1,0 +1,29 @@
+GATE=RAWRXD_PRODUCT_AUDIT_001
+ROLE=SUBORDINATE_POST_ENDURANCE_HYGIENE
+AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+## Law
+Product audit is hygiene after endurance seal. It does NOT reopen
+BIND16 / residency / roofline / endurance feature lanes.
+
+PRODUCT_AUDIT=PASS only if conjunction:
+  ENDURANCE sealed cite + CLI_POSITIONAL preserved + RAWR_LIST ok
+  + MODEL_RESOLUTION sampled + RESET_CONTINUITY evidenced
+  + FAILURE_PATHS ok + EVIDENCE_INTEGRITY + GIT_SYNC
+  + GEN_QUALITY not open (LLAMA32_Q2K repetition closed)
+
+While DEEP2_GEN_QUALITY_LLAMA32_Q2K_001 is open:
+  PRODUCT_AUDIT=HOLD (even if list/CLI/smokes green).
+
+## Freeze (this mint)
+DEEP2_ENDURANCE_001=LIVE_PRODUCT_PASS
+SEAL=0e20e73ed6
+TIP_AT_START=93a0a7928cc5cf4b4e678dd71d9360e86721ac7b
+TIP_MOVED_PAST_93a0a7928c=0
+PROMOTE=0
+
+## Ownership
+GEN_QUALITY instrumentation = sibling DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+Do not mutate Deep2Engine sampling/decode-quality seams from this gate.
