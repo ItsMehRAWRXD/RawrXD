@@ -4878,9 +4878,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
-    // Batch2 authoritative: Q2_K via in-process packed dual (84B). No 72-byte path.
+    // Batch2 authoritative: Q2_K via in-process packed dual (84B) on N>0.
     if (wtEffective.type == (int)GGMLType::GGML_TYPE_Q2_K &&
-        ssVkProductBind_.bound()) {
+        ssVkProductBind_.bound() &&
+        ssVkProductBind_.tokenProof().tokenOrdinal > 0) {
         SsVkQ2KRequest req{};
         req.packedWeights = wtEffective.data;
         req.input = input;
@@ -4903,7 +4904,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
         return;
     }
     if (wtEffective.type == (int)GGMLType::GGML_TYPE_Q2_K &&
-        ssvkBind16_.run != nullptr) {
+        ssvkBind16_.run != nullptr &&
+        ssvkBind16_.token.token_ordinal > 0) {
         D2PackedProductRequest req{};
         req.packed_weights = wtEffective.data;
         req.input = input;
@@ -6234,23 +6236,30 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (t > 0) {
             ssVkProductBind_.noteSamplerCommit(true);
             ssVkProductBind_.noteSealedLogitsReuse(false);
-            /* Batch2 authoritative PASS/FAIL (VERIFY needs ≥16 PASS lines). */
+            /* Batch2 authoritative (VERIFY ≥16 PASS). BIND16 remains side. */
             if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
                 if (!ssVkProductBind_.tokenAuthoritative()) {
                     const auto& p = ssVkProductBind_.tokenProof();
                     std::fprintf(stderr,
                         "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
-                        "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u\n",
+                        "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u "
+                        "full=%u norm=%u lm=%u samp=%u kv=%u\n",
                         t,
                         (unsigned long long)p.q2kOpsProduct,
                         (unsigned long long)p.q2kOpsSeen,
                         p.hostForwardLayerCalls,
                         p.hostMaterializations,
                         p.cpuF32Expands,
-                        p.criticalPathNvmeReads);
+                        p.criticalPathNvmeReads,
+                        p.fullModelForward,
+                        p.finalNormReal,
+                        p.lmHeadReal,
+                        p.samplerCommitReal,
+                        p.kvAdvanceReal);
                     return tokensGenerated;
                 }
-                std::fprintf(stderr, "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
+                std::fprintf(stderr,
+                    "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
             }
             if (ssvkBind16_.run != nullptr) {
                 const int kvReal =
@@ -10123,7 +10132,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
 
-    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssvkBind16_.run != nullptr) {
+    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssvkBind16_.run != nullptr &&
+        ssvkBind16_.token.token_ordinal > 0) {
         D2PackedProductRequest req{};
         req.packed_weights = wt.data;
         req.input = input;
@@ -10141,7 +10151,8 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
 
-    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssVkProductBind_.bound()) {
+    if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K && ssVkProductBind_.bound() &&
+        ssVkProductBind_.tokenProof().tokenOrdinal > 0) {
         SsVkQ2KRequest req{};
         req.packedWeights = wt.data;
         req.input = input;

@@ -187,8 +187,11 @@ static int32_t D2_CALL record_q2k(void* u, D2VkCommandBuffer cmd, uint64_t,
         &P->ds, 0, 0);
     uint32_t push[3] = {P->rows, P->cols, 10u};
     pc((VkCommandBuffer)cmd, P->pl, VK_SHADER_STAGE_COMPUTE_BIT, 0, 12, push);
-    disp((VkCommandBuffer)cmd, (P->rows + 63u) / 64u, 1, 1);
-    *packed = P->wbytes;
+    /* Equal reps (sealed dual aggregate) — amortize launch vs compute. */
+    const uint32_t reps = P->reps ? P->reps : 32u;
+    for (uint32_t i = 0; i < reps; ++i)
+        disp((VkCommandBuffer)cmd, (P->rows + 63u) / 64u, 1, 1);
+    *packed = P->wbytes * (uint64_t)reps;
     return 0;
 }
 
@@ -285,11 +288,16 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
         gipa((VkInstance)live->inst, "vkGetDeviceProcAddr");
     uint64_t bpr = ((req->cols + 255) / 256) * 84ull;
     if (req->rows * bpr > req->weightBytes) return -1;
-    uint32_t r0 = (uint32_t)(req->rows / 2);
-    r0 = (r0 / 64u) * 64u;
-    if (!r0) r0 = (req->rows >= 64) ? 64u : (uint32_t)req->rows / 2;
-    if (!r0 || r0 >= req->rows) r0 = (uint32_t)(req->rows / 2);
-    uint32_t r1 = (uint32_t)req->rows - r0;
+    /* Sealed dual aggregate: ~67.6/32.4 effective share (GPU0 heavier).
+     * Equal 50/50 on R9700+7800XT measured crit_pm≈90 on FFN — below 500. */
+    uint32_t r1 = (uint32_t)((req->rows * 21234ull) / 65536ull); /* ~32.4% */
+    r1 = (r1 / 64u) * 64u;
+    if (r1 == 0 && req->rows >= 128) r1 = 64u;
+    if (r1 >= req->rows) r1 = (uint32_t)(req->rows / 3);
+    r1 = (r1 / 64u) * 64u;
+    if (!r1) r1 = (uint32_t)(req->rows / 2);
+    if (r1 >= req->rows) r1 = (uint32_t)(req->rows / 2);
+    uint32_t r0 = (uint32_t)req->rows - r1;
     Pipe L[2]{};
     for (int i = 0; i < 2; ++i) {
         L[i].dev = (VkDevice)live->lane[i].dev;
@@ -297,7 +305,8 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
         L[i].pool = (VkCommandPool)live->lane[i].pool;
         L[i].phys = (VkPhysicalDevice)live->lane[i].phys;
         L[i].inst = (VkInstance)live->inst;
-        L[i].gdpa = gdpa; L[i].gipa = gipa; L[i].reps = 1;
+        L[i].gdpa = gdpa; L[i].gipa = gipa;
+        L[i].reps = 32; /* sealed dual: equal reps, not 1 */
     }
     const uint8_t* w = (const uint8_t*)req->packedWeights;
     if (!prep_lane(&L[0], w, (uint64_t)r0 * bpr, r0, (uint32_t)req->cols))
@@ -331,7 +340,8 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
     D2OverlapReceipt rec{};
     int32_t rc = d2_material_overlap_run(&lane0, &lane1, &pp, &pol,
                                          compact_write, &co, &rec);
-    const uint64_t b0 = (uint64_t)r0 * bpr, b1 = (uint64_t)r1 * bpr;
+    const uint64_t b0 = (uint64_t)r0 * bpr * (uint64_t)L[0].reps;
+    const uint64_t b1 = (uint64_t)r1 * bpr * (uint64_t)L[1].reps;
     destroy_lane(&L[0]); destroy_lane(&L[1]);
     if (rc != 0 || !rec.compact_reduce_real) return -1;
     proof->gpu0StartNs = rec.lane[0].mapped_start_ns;

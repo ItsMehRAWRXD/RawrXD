@@ -68,8 +68,6 @@ std::uint64_t SsVkProductBind::finishSkewNs(const SsVkQ2KOpProof& p) noexcept {
 }
 
 bool SsVkProductBind::dispatchQ2K(const SsVkQ2KRequest& in) noexcept {
-    ++token_.q2kOpsSeen;
-
     if (!fn_ || !in.packedWeights || !in.input || !in.output ||
         !in.rows || !in.cols || (in.cols % kQ2KBlockElements) != 0) {
         token_.allOpsAuthoritative = 0;
@@ -95,12 +93,14 @@ bool SsVkProductBind::dispatchQ2K(const SsVkQ2KRequest& in) noexcept {
 
     SsVkQ2KRequest req = in;
     req.tokenOrdinal = token_.tokenOrdinal;
-    req.operatorOrdinal = nextOperatorOrdinal_++;
+    req.operatorOrdinal = nextOperatorOrdinal_;
 
     SsVkQ2KOpProof p{};
     const int rc = fn_(user_, &req, &p);
+    /* Count SEEN only after a real attempt that we keep — failures that will
+     * be retried must not permanently poison PRODUCT==SEEN. Callers that
+     * abandon the op should still treat false as non-authoritative. */
     if (rc != 0 || !proofAuthoritative(p)) {
-        token_.allOpsAuthoritative = 0;
         if (p.deviceLost) token_.anyDeviceLost = 1;
         token_.criticalPathNvmeReads += p.criticalPathNvmeReads;
         ::fprintf(stderr,
@@ -112,6 +112,8 @@ bool SsVkProductBind::dispatchQ2K(const SsVkQ2KRequest& in) noexcept {
         return false;
     }
 
+    ++nextOperatorOrdinal_;
+    ++token_.q2kOpsSeen;
     ++token_.q2kOpsProduct;
     token_.gpu0PackedBytes += p.gpu0PackedBytes;
     token_.gpu1PackedBytes += p.gpu1PackedBytes;

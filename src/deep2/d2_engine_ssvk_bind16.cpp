@@ -1,5 +1,6 @@
 /* d2_engine_ssvk_bind16.cpp — 16-token decode bind authority (PROMOTE=0) */
 #include "d2_engine_ssvk_bind16.h"
+#include <stdio.h>
 #include <string.h>
 
 static int product_proof_ok(const D2PackedProductProof* p) {
@@ -68,9 +69,23 @@ int d2bind16_dispatch_q2k(D2EngineSsVkBind16* b,
     req.operator_ordinal = b->next_operator_ordinal++;
     D2PackedProductProof p;
     memset(&p, 0, sizeof(p));
-    if (b->run(b->user, &req, &p) != 0 || !product_proof_ok(&p)) {
+    const int rc = b->run ? b->run(b->user, &req, &p) : -1;
+    if (rc != 0 || !product_proof_ok(&p)) {
         b->token.all_ops_ok = 0;
         if (p.device_lost) b->token.any_device_lost = 1;
+        fprintf(stderr,
+            "BIND16_DISPATCH_FAIL rc=%d tok=%llu op=%llu rows=%llu cols=%llu "
+            "linked=%u packed=%u overlap=%u agg=%u g0=%u g1=%u compact=%u "
+            "parity=%u short_pm=%u crit_pm=%u lost=%u name=%s\n",
+            rc, (unsigned long long)req.token_ordinal,
+            (unsigned long long)req.operator_ordinal,
+            (unsigned long long)in->rows, (unsigned long long)in->cols,
+            p.product_linked, p.packed_q2k_live, p.material_same_token_overlap,
+            p.aggregate_bw_authority, p.gpu0_real_forwards, p.gpu1_real_forwards,
+            p.compact_merge_real, p.output_parity, p.overlap_shorter_pm,
+            p.overlap_critical_pm, p.device_lost,
+            in->tensor_name ? in->tensor_name : "");
+        fflush(stderr);
         return 0;
     }
     ++b->token.q2k_ops_product;

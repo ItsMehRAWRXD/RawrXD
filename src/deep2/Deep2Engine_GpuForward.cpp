@@ -13,6 +13,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <unordered_map>
 #include <vector>
 
@@ -87,8 +90,11 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
-        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22)))
+        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22))) {
+        std::fprintf(stderr, "GPU_ARENA_ENSURE_FAIL slot=%u H=%u I=%u\n",
+                     slot, H, inter);
         return false;
+    }
     size_t maxB = 0;
     auto acc = [&](const WeightTensor& w) {
         size_t b = StreamBytes(w);
@@ -105,7 +111,10 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     if (const char* be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
         MibParseResult pr = ParseMibTokenEx(be);
         EmitWeightBudgetReceipt(stderr, pr, "ENV");
-        if (!pr.ok) return false;
+        if (!pr.ok) {
+            std::fprintf(stderr, "GPU_ARENA_BUDGET_PARSE_FAIL slot=%u\n", slot);
+            return false;
+        }
         budget = (size_t)pr.bytes;
     }
     /* Per-stick windows from dual-stick plan (7800XT gets full share, no starve). */
@@ -127,7 +136,13 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)modelWeights.headDim,
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
         (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22));
-    return vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
+    if (!vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena)) {
+        std::fprintf(stderr,
+            "GPU_ARENA_WINDOW_FAIL slot=%u maxB=%zu budget=%zu arena=%zu ov=%u\n",
+            slot, maxB, budget, arena, ov);
+        return false;
+    }
+    return true;
 }
 
 bool Deep2Engine::forwardLayerGpuResident(
@@ -191,11 +206,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         DualStickAcquire(slot, attnW, (size_t)H * sizeof(float), 0, layer, 0);
     else
         DualStickResolve(slot, layer);
-    if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return fail();
+    if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H))
+        return fail("attn_norm");
     const float* ffnW = EnsureF32(*this, lw.ffnNorm, vulkanWeightF32_);
-    if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return fail();
+    if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H))
+        return fail("ffn_norm");
     const WeightTensor* woWt = lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
-    if (!woWt) return fail();
+    if (!woWt) return fail("wo_missing");
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
                     CPUInference::VulkanCompute::DeviceBuf& out,
                     uint32_t rows, uint32_t cols) -> bool {
@@ -204,8 +221,12 @@ bool Deep2Engine::forwardLayerGpuResident(
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
                 ++c.q2kPackedOps;
-                /* Batch2 authoritative: in-process dual Q2_K (host download/upload ok). */
-                if (ssVkProductBind_.bound() && wt.data && wt.sizeBytes) {
+                /* Batch2 authoritative on N>0. Prefill uses DispatchGemvQuant. */
+                const bool batch2Tok =
+                    ssVkProductBind_.bound() &&
+                    ssVkProductBind_.tokenProof().tokenOrdinal > 0 &&
+                    wt.data && wt.sizeBytes;
+                if (batch2Tok) {
                     std::vector<float> xin(cols), yout(rows);
                     if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
                     SsVkQ2KRequest req{};
@@ -216,28 +237,18 @@ bool Deep2Engine::forwardLayerGpuResident(
                     req.cols = cols;
                     req.weightBytes = wt.sizeBytes;
                     req.tensorName = wt.name.c_str();
-                    if (!ssVkProductBind_.dispatchQ2K(req)) {
-                        std::fprintf(stderr,
-                            "BATCH2_GPUFWD_Q2K_FAIL rows=%u cols=%u bytes=%zu name=%s\n",
-                            rows, cols, (size_t)wt.sizeBytes,
-                            wt.name.c_str());
-                        return false;
+                    for (int attempt = 0; attempt < 16; ++attempt) {
+#ifdef _WIN32
+                        if (attempt) Sleep(2);
+#endif
+                        if (ssVkProductBind_.dispatchQ2K(req) &&
+                            vc->UploadBuf(out, yout.data(), rows))
+                            return true;
                     }
-                    return vc->UploadBuf(out, yout.data(), rows);
-                }
-                if (ssvkBind16_.run != nullptr && wt.data && wt.sizeBytes) {
-                    std::vector<float> xin(cols), yout(rows);
-                    if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
-                    D2PackedProductRequest req{};
-                    req.packed_weights = wt.data;
-                    req.input = xin.data();
-                    req.output = yout.data();
-                    req.rows = rows;
-                    req.cols = cols;
-                    req.weight_bytes = wt.sizeBytes;
-                    req.tensor_name = wt.name.c_str();
-                    if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) return false;
-                    return vc->UploadBuf(out, yout.data(), rows);
+                    std::fprintf(stderr,
+                        "BATCH2_GPUFWD_Q2K_FAIL rows=%u cols=%u name=%s\n",
+                        rows, cols, wt.name.c_str());
+                    return false;
                 }
             }
             if (prefetch && vc->WeightStreamActive()) {
@@ -272,7 +283,13 @@ bool Deep2Engine::forwardLayerGpuResident(
                             CPUInference::VulkanCompute::DeviceBuf& outB,
                             CPUInference::VulkanCompute::DeviceBuf& outC,
                             uint32_t rA, uint32_t rB, uint32_t rC, uint32_t cols) -> bool {
-        if (!(prefetch && vc->WeightStreamActive())) {
+        /* N>0 BIND16/Batch2: force gemv() so QKV hits product ABI. */
+        const bool forceProduct =
+            (ssvkBind16_.run != nullptr &&
+             ssvkBind16_.token.token_ordinal > 0) ||
+            (ssVkProductBind_.bound() &&
+             ssVkProductBind_.tokenProof().tokenOrdinal > 0);
+        if (!(prefetch && vc->WeightStreamActive()) || forceProduct) {
             return gemv(wa, in, outA, rA, cols) && gemv(wb, in, outB, rB, cols) &&
                    gemv(wc, in, outC, rC, cols);
         }
@@ -324,7 +341,7 @@ bool Deep2Engine::forwardLayerGpuResident(
 
     if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
-        return fail();
+        return fail("rms_attn");
     ++c.rmsNormOps;
 
     const uint32_t pos = kvCache ? (uint32_t)kvCache->currentLength() : 0;
@@ -332,16 +349,17 @@ bool Deep2Engine::forwardLayerGpuResident(
         DEEP2_GPU_CHILD_SCOPE(qkvScope, QKV);
         if (!gemvOverlap3(lw.wq, lw.wk, lw.wv, vc->ArenaNormed(),
                           vc->ArenaQ(), vc->ArenaK(), vc->ArenaV(), H, kvDim, kvDim, H))
-            return fail();
+            return fail("qkv");
         c.qkvOps += 3;
     }
     if (!vc->DispatchRope(vc->ArenaQ(), vc->ArenaK(), headDim, nHeads, nKv, pos,
                           modelWeights.ropeTheta))
-        return fail();
+        return fail("rope");
     ++c.ropeOps;
     {
         DEEP2_GPU_CHILD_SCOPE(kvScope, KVUpdate);
-        if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer)) return fail();
+        if (!vc->AppendKV(vc->ArenaK(), vc->ArenaV(), kvDim, pos, layer))
+            return fail("append_kv");
     }
     {
         DEEP2_GPU_CHILD_SCOPE(attnScope, DeviceAttention);
@@ -349,54 +367,58 @@ bool Deep2Engine::forwardLayerGpuResident(
         if (!vc->DispatchAttnDecode(vc->ArenaQ(), vc->ArenaKCache(), vc->ArenaVCache(),
                                     vc->ArenaAttn(), headDim, nHeads, nKv, pos + 1, scale,
                                     layer))
-            return fail();
+            return fail("attn");
         ++c.attnScoreOps;
         ++c.softmaxOps;
         ++c.attnValueOps;
     }
     {
         DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
-        if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H)) return fail();
+        if (!gemv(*woWt, vc->ArenaAttn(), vc->ArenaDown(), H, H))
+            return fail("o_proj");
         ++c.oProjOps;
         if (!vc->DispatchResidualAdd(vc->ArenaHidden(), vc->ArenaDown(),
                                      vc->ArenaResidual(), H))
-            return fail();
+            return fail("attn_res");
         ++c.residualOps;
     }
 
     if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
                              H, modelWeights.normEps))
-        return fail();
+        return fail("rms_ffn");
     ++c.ffnNormOps;
 
     {
         DEEP2_GPU_CHILD_SCOPE(ffnScope, FFN);
         if (prefetch && vc->WeightStreamActive() &&
             !PackedQuant(lw.wGate) && !PackedQuant(lw.wUp)) {
-            if (!vc->FlushWeightComputes()) return fail();
+            if (!vc->FlushWeightComputes()) return fail("ffn_flush");
             const float* wg = EnsureF32(*this, lw.wGate, vulkanWeightF32_);
             uint32_t sg = 0;
-            if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg)) return fail();
+            if (!wg || !vc->PrefetchWeight(wg, (size_t)inter * H * 4, sg))
+                return fail("ffn_pref_g");
             if (!vc->SubmitGemvPrefetch(sg, vc->ArenaNormed(), vc->ArenaGate(), inter, H))
-                return fail();
+                return fail("ffn_gemv_g");
             const float* wu = EnsureF32(*this, lw.wUp, vulkanWeightF32_);
             uint32_t su = 0;
-            if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su)) return fail();
-            if (!vc->WaitWeightCompute(sg)) return fail();
+            if (!wu || !vc->PrefetchWeight(wu, (size_t)inter * H * 4, su))
+                return fail("ffn_pref_u");
+            if (!vc->WaitWeightCompute(sg)) return fail("ffn_wait_g");
             if (!vc->SubmitGemvPrefetch(su, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
-                return fail();
-            if (!vc->WaitWeightCompute(su)) return fail();
+                return fail("ffn_gemv_u");
+            if (!vc->WaitWeightCompute(su)) return fail("ffn_wait_u");
         } else if (!gemv(lw.wGate, vc->ArenaNormed(), vc->ArenaGate(), inter, H) ||
                    !gemv(lw.wUp, vc->ArenaNormed(), vc->ArenaUp(), inter, H))
-            return fail();
+            return fail("ffn_gate_up");
         c.qkvOps += 2;
         if (!vc->DispatchSwiGLU(vc->ArenaGate(), vc->ArenaUp(), vc->ArenaFFNAct(), inter))
-            return fail();
+            return fail("swiglu");
         ++c.ffnActOps;
-        if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter)) return fail();
+        if (!gemv(lw.wDown, vc->ArenaFFNAct(), vc->ArenaDown(), H, inter))
+            return fail("ffn_down");
         if (!vc->DispatchResidualAdd(vc->ArenaResidual(), vc->ArenaDown(),
                                      vc->ArenaHidden(), H))
-            return fail();
+            return fail("ffn_res");
         ++c.ffnResidualOps;
     }
 
@@ -447,24 +469,41 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
 }
 
 bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
-    if (!multiGpuLayerPlan_.active || multiGpuLayerPlan_.gpuSlotCount < 1) return false;
+    if (!multiGpuLayerPlan_.active || multiGpuLayerPlan_.gpuSlotCount < 1) {
+        std::fprintf(stderr, "GPU_MULTIMAP_FAIL why=plan\n");
+        return false;
+    }
     const uint32_t H = (uint32_t)config.hiddenDim;
     const unsigned gpuN = multiGpuLayerPlan_.gpuSlotCount;
 
-    for (unsigned s = 0; s < gpuN; ++s)
-        if (!ensureGpuForwardArena(s)) return false;
+    for (unsigned s = 0; s < gpuN; ++s) {
+        if (!ensureGpuForwardArena(s)) {
+            std::fprintf(stderr, "GPU_MULTIMAP_FAIL why=arena slot=%u\n", s);
+            return false;
+        }
+    }
 
     auto* vc0 = getVulkanComputeSlot(0);
-    if (!vc0 || !vc0->UploadHidden(hostIn, H)) return false;
+    if (!vc0 || !vc0->UploadHidden(hostIn, H)) {
+        std::fprintf(stderr, "GPU_MULTIMAP_FAIL why=upload_hidden\n");
+        return false;
+    }
     ++gpuFwd_.hostSyncBoundaries;
 
     for (unsigned s = 0; s < gpuN; ++s) {
         auto* vc = getVulkanComputeSlot(s);
-        if (!vc) return false;
+        if (!vc) {
+            std::fprintf(stderr, "GPU_MULTIMAP_FAIL why=slot_null s=%u\n", s);
+            return false;
+        }
         const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
         for (uint32_t L = lo; L <= hi; ++L) {
-            if (!forwardLayerGpuResident(L, s, false, false)) return false;
+            if (!forwardLayerGpuResident(L, s, false, false)) {
+                std::fprintf(stderr,
+                    "GPU_MULTIMAP_FAIL why=layer_resident L=%u s=%u\n", L, s);
+                return false;
+            }
         }
         if (s + 1 < gpuN) {
             auto* next = getVulkanComputeSlot(s + 1);

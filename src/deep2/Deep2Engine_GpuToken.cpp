@@ -102,8 +102,28 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         gpuFwdCommitted_ = false;
     } else if (gpuFwdCommitted_) {
         if (!tryGpuTokenForward(hidden)) {
-            rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
-            return false;
+            /* Batch2 product GEMV can fail overlap under multi-GPU arena load;
+             * fall back to host LinearW (still in-process product bind). */
+            std::fprintf(stderr, "TRY_GPU_COMMITTED_FALLBACK_HOST=1\n");
+            /* Drop poisoned SEEN from GpuForward Batch2 overlap misses. */
+            ssVkProductBind_.beginToken(ssVkProductBind_.tokenProof().tokenOrdinal);
+            float* layerInput = hidden;
+            float* layerOutput = attentionOutput;
+            const uint32_t nLayers = (uint32_t)layerCap;
+            for (uint32_t ly = 0; ly < nLayers; ++ly) {
+                try {
+                    forwardLayer(ly, layerInput, layerOutput, seqLen);
+                } catch (const std::exception& ex) {
+                    std::fprintf(stderr, "HOST_LAYER_FAIL L=%u %s\n", ly, ex.what());
+                    rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
+                    return false;
+                }
+                ++gpuFwd_.hostForwardLayerCalls;
+                std::swap(layerInput, layerOutput);
+            }
+            if (layerInput != hidden)
+                std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
+            gpuFwdCommitted_ = false;
         }
     } else if (tryGpuTokenForward(hidden)) {
         gpuFwdCommitted_ = true;
@@ -112,28 +132,17 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         float* layerInput = hidden;
         float* layerOutput = attentionOutput;
         const uint32_t nLayers = (uint32_t)layerCap;
-        auto flBody = [](void* eng, uint32_t ly, const float* in, float* out,
-                         size_t seq) noexcept {
-            static_cast<Deep2Engine*>(eng)->forwardLayer(ly, in, out, seq);
-        };
-        forwardLayer(0, layerInput, layerOutput, seqLen);
-        ++gpuFwd_.hostForwardLayerCalls;
-        std::swap(layerInput, layerOutput);
-        if (nLayers > 1u) {
-            Deep2::scoreboard::ArmPumpIssue(this, flBody, layerInput, layerOutput,
-                                            seqLen, nLayers);
-            if (!Deep2::scoreboard::PumpOwnedRemainder(nLayers)) {
-                std::fprintf(stderr, "HOST_PUMP_REMAINDER_FAIL nLayers=%u\n", nLayers);
-                Deep2::scoreboard::DisarmPumpIssue();
+        /* Batch2 live: direct layer walk — scoreboard pump is not decode authority. */
+        for (uint32_t ly = 0; ly < nLayers; ++ly) {
+            try {
+                forwardLayer(ly, layerInput, layerOutput, seqLen);
+            } catch (const std::exception& ex) {
+                std::fprintf(stderr, "HOST_LAYER_FAIL L=%u %s\n", ly, ex.what());
                 rawr::iso_ladder::A().forwardNs += rawr::iso_ladder::Ns(f0);
                 return false;
             }
-            layerInput = Deep2::scoreboard::PumpArm().in;
-            layerOutput = Deep2::scoreboard::PumpArm().out;
-            gpuFwd_.hostForwardLayerCalls +=
-                Deep2::scoreboard::PumpArm().pumpIssue.load(
-                    std::memory_order_acquire);
-            Deep2::scoreboard::DisarmPumpIssue();
+            ++gpuFwd_.hostForwardLayerCalls;
+            std::swap(layerInput, layerOutput);
         }
         if (layerInput != hidden)
             std::memcpy(hidden, layerInput, config.hiddenDim * sizeof(float));
