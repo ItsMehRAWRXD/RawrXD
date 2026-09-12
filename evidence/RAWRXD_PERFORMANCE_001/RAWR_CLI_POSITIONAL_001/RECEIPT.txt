@@ -30,4 +30,18 @@ UPSTREAM_ENDURANCE=LIVE_PRODUCT_PASS ENDURANCE_SEALED=1
 UPSTREAM_CLI_PRODUCT=LIVE_PRODUCT_PASS CLOSED
 DISPOSITION=PASS
 ARTIFACTS=primary.stdout.txt primary.stderr.txt second.stdout.txt second.stderr.txt
-NOTE=Exact Ollama-style positional prompt proven after B3 endurance seal. Inventory V2 still optional.
+
+# Quality (separate from CLI acceptance)
+GENERATION_QUALITY_PRIMARY=HOLD
+NOTE_QUALITY=llama3.2-3b-Q2_K stdout collapsed to repeated "percentages"; CLI path still PASS
+  (resolve/generate/tokens/clean stdout/exit). TinyLlama natural language OK.
+  Next owner = sampling/tokenizer/decode quality — not CLI bring-up.
+
+# Harness hygiene
+HARNESS_REAL_MATCH_BUG=FIXED_IN_LAW
+NOTE_HARNESS=prior probe used else{1} for REAL_DEEP2; must else{0}. Acceptance fields
+  above independently evidenced via MOCK=0 EXIT TOKENS STDOUT_CLEAN.
+B3_OS_EXIT_CODE=NOT_CAPTURED_BY_WATCHER
+NOTE_B3_EXIT=PROCESS_GONE observed; cert minted LIVE_PRODUCT_PASS/VERIFY=PASS — do not reopen B3.
+
+NOTE=Exact Ollama-style positional prompt proven after B3 endurance seal. Inventory V2 optional.

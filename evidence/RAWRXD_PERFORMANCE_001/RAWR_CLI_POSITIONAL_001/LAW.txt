@@ -17,3 +17,9 @@ EXIT=0
 ## Authority
 Does not reopen RAWR_CLI_PRODUCT_001.
 Runs only after DEEP2_ENDURANCE_001 sealed (this batch).
+Generation-quality defects (repetition, sampling) do not invalidate CLI PASS.
+
+## Harness hygiene
+REAL_DEEP2 probe must fail-closed:
+  $real = if ($stderr -match "REAL_DEEP2|MOCK_BACKEND=0|Deep2") { 1 } else { 0 }
+Never else { 1 }.
