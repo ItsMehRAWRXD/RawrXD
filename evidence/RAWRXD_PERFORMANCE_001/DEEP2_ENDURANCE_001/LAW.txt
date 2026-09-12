@@ -1,0 +1,33 @@
+GATE=DEEP2_ENDURANCE_001
+STATUS=RUNTIME_HOLD
+SOURCE_WIRED=1
+RUNTIME_REACHED=1
+LIVE_PRODUCT_RUN=HOLD
+REQUESTS=100
+GENERATIONS_PASS=1
+STREAM_CALLBACK_TOKENS_TOTAL=17
+SAME_PROCESS=1
+PROCESS_RESTARTS=0
+MODEL_REOPEN_MIDRUN=0
+DEVICE_LOST=0
+MOCK_BACKEND=0
+BACKEND=DEEP2_ENGINE
+DUALSTICK_ARMED=1
+GPU_RESIDENCY_RETAINED=1
+ENDURANCE=HOLD
+VERIFY=HOLD
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+NOTE=
+  Product path opens DualStick+BIND16 and completes gen0 (17 toks).
+  Subsequent same-process generateStream hits BIND16_DISPATCH_FAIL
+  (linked=0 packed=0) intermittently — fail-closed HOLD.
+  Probe peaks observed earlier: GENERATIONS_PASS=2/5 then flake.
+  NOT_RUN!=PASS; do not invent ENDURANCE=PASS.
+
+HARNESS=build_ninja/bin/endurance_live_cert.exe
+LOG=endurance_live.log
+UPSTREAM_DAILY=LIVE_PRODUCT_PASS
+NEXT=stabilize multi-generate BIND16 continuity OR scoped reopen policy
+NOT_RUN!=PASS

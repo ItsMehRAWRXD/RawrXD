@@ -18,6 +18,7 @@ typedef int (*D2TokenCallback)(void *user, uint32_t token_id,
 typedef struct Deep2StreamSession Deep2StreamSession;
 Deep2StreamSession *d2_session_create(void);
 void d2_session_destroy(Deep2StreamSession *s);
+void d2_session_set_trace(Deep2StreamSession *s, int on);
 int d2_session_open_model(Deep2StreamSession *s, const char *gguf_path);
 int d2_session_generate(Deep2StreamSession *s, const D2GenerateRequest *req,
                         D2TokenCallback cb, void *user);

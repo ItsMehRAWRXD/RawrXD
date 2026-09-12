@@ -8,6 +8,7 @@
 struct Deep2StreamSession {
     int model_loaded;
     int mock_backend;
+    int trace; /* 1 → cert/diag lines on stderr */
     char model_path[512];
     D2Cancel cancel;
     D2StreamMetrics metrics;
