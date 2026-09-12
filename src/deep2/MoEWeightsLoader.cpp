@@ -592,6 +592,12 @@ const std::vector<ExpertProjectionInfo>& MoEWeightsLoader::GetExpertProjections(
     return expertProjections_;
 }
 
+bool MoEWeightsLoader::IsExpertCached(int layer, int expert) const {
+    CacheKey key{layer, expert};
+    std::lock_guard<std::mutex> lock(cacheMutex_);
+    return cache_.find(key) != cache_.end();
+}
+
 const void* MoEWeightsLoader::LoadExpert(int layer, int expert) {
     if (progress_.cancelled.load()) return nullptr;
     

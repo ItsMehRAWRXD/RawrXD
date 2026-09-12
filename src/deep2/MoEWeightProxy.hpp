@@ -88,6 +88,9 @@ public:
     // is not present in the file.
     MoEWeightHandle Acquire(int layer, int expert);
 
+    /* Residency probe for MoEExpertResidencyPlace (no load). */
+    bool IsCached(int layer, int expert) const;
+
     // Prefetch a set of experts into the cache without returning handles.
     // Used by the router-driven prefetch pipeline to warm experts before
     // they are actually needed for compute.

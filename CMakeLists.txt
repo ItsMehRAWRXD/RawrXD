@@ -2834,6 +2834,8 @@ set(SOURCES
     src/deep2/ReverseHotpatchEngine.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -4877,6 +4879,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/SsmCertProbe.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -7009,6 +7013,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GGUFLoader.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/MedusaDecoder.cpp
@@ -11424,6 +11430,8 @@ if(BUILD_VAL_051_5_DIAG)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11504,6 +11512,8 @@ if(BUILD_VAL_BP16_INT)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11626,6 +11636,8 @@ if(BUILD_VAL_051_5_BP16_E2E)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11702,6 +11714,8 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11785,6 +11799,8 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11890,6 +11906,8 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -11966,6 +11984,8 @@ if(BUILD_VAL_051_6_BP16_PERF)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12042,6 +12062,8 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12118,6 +12140,8 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12193,6 +12217,8 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12268,6 +12294,8 @@ if(BUILD_QUICK_1LAYER_PROFILER)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12388,6 +12416,8 @@ if(BUILD_VAL_051_5_BP16_DIAG)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12465,6 +12495,8 @@ if(BUILD_VAL_051_5_BP16_BENCH)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12701,6 +12733,8 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -12777,6 +12811,8 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
@@ -13198,6 +13234,8 @@ if(WIN32)
         src/deep2/ReverseHotpatchEngine.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEExpertResidencyPlace.cpp
+        src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/MoEArchitectureParser.cpp
@@ -14814,6 +14852,8 @@ add_executable(test_llama_native tests/test_llama_native.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -14871,6 +14911,8 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -14944,6 +14986,8 @@ add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -14994,6 +15038,8 @@ add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -15042,6 +15088,8 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -15118,6 +15166,8 @@ add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/deep2/DualGPUHook.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/MoEArchitectureParser.cpp
@@ -16617,6 +16667,8 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEExpertResidencyPlace.cpp
+    src/deep2/MoEExpertResidencyPlace_Place.cpp
     src/deep2/MoEEliminate.cpp
     src/deep2/MoEWeightsLoader.cpp
     src/deep2/DeepSeekMoELoader.cpp

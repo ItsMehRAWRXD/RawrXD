@@ -1,0 +1,35 @@
+GATE=DEEP2_MOE_EXPERT_RESIDENCY_PLACE_001
+PURPOSE=residency-aware MoE expert place for size-independent decode TPS
+PROMOTE=0
+TIP_CLIMB=HOLD
+FAIL_CLOSED=1
+NOT_RUN_NEQ_PASS=1
+
+DESIGN=
+  Router top-k IDs remain authoritative (no quality swap).
+  Placer classifies HIT/MISS via hot-set + MoEWeightProxy::IsCached probe.
+  Exec order = hits first (desc weight), then misses (desc weight).
+  DualStick stick affinity retained on hot; else expertId % stickCount.
+  Budget tight => thrash flag on misses (still executes full top-k).
+  Counters: expert_hits expert_misses bytes_fetched place_reuse.
+
+OWNERS=
+  PLACE=src/deep2/MoEExpertResidencyPlace.{hpp,cpp,_Place.cpp}
+  WIRE=Deep2Engine::computeMoEFFN
+  PROBE=MoEWeightsLoader::IsExpertCached / MoEWeightProxy::IsCached
+  PRIOR_NAIVE=MoERouter TopK order; Deep2MoeRouter hardcoded; RuntimePlanner bool-all-resident;
+               ExpertResidencyManager cache-only (no place order)
+
+FREEZE=
+  BIND16 continuity/soft-reset = do not touch
+  Q6K hit-skip / roofline observers = observe-only
+  GEN_QUALITY / 70B PASS = sibling lane, do not invent
+
+ENV=
+  DEEP2_MOE_PLACE_TRACE=1
+  DEEP2_MOE_PLACE_BUDGET_MIB=<MiB>
+
+ACCEPT=
+  SOURCE_WIRED=1 when product links Place + computeMoEFFN wire
+  UNIT_PLACE_PASS=1 when selftest hits-first + MarkHot reuse
+  LIVE_KIMI_TPS = only with measured decode; else HOLD

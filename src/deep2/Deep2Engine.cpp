@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // Deep2Engine.cpp - Production Inference Engine Implementation
 // Real weight loading, real attention, real FFN, real sampling
 // NO STUBS, NO DUMMIES, NO HARDCODED VALUES
@@ -13,6 +13,7 @@
 #include "Deep2Engine.h"
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "MoEExpertResidencyPlace.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
 #include "Deep2Residency.hpp"
 #include "GpuTransferCounters.hpp"
@@ -990,6 +991,8 @@ extern "C" void Deep2_ReportLinearWStats() {
 static void dequantizeQ2KBlock(const block_q2_K* block, float* out) {
     float d    = fp16ToFloat(block->d);
     float dmin = fp16ToFloat(block->dmin);
+    if (!std::isfinite(d)) d = 0.0f;
+    if (!std::isfinite(dmin)) dmin = 0.0f;
 
     for (int chunk = 0; chunk < 2; ++chunk) {
         for (int subBlock = 0; subBlock < 4; ++subBlock) {
@@ -7664,6 +7667,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         char key[64];
         std::snprintf(key, sizeof(key), "POST_FFN_%zu", layer);
         B3_StageDigest(key, tokPos, output, hiddenDim);
+        // Alias matches llama.cpp l_out naming used by parity probe.
+        std::snprintf(key, sizeof(key), "LAYER%zu_OUT", layer);
+        B3_StageDigest(key, tokPos, output, hiddenDim);
     }
 
     // Real layer execution mark: this forwardLayer completed on its planned device.
@@ -8892,65 +8898,97 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
         }
     }
 
-    // 4. Execute each selected expert for CURRENT layer
+    // 4. Residency-aware place: hits-first DualStick order (router set unchanged)
     float* expertOut = attentionOutput;
-    for (const auto& er : route.topExperts) {
-        int expertId = er.expertId;
-        float weight = er.weight;
-
-        if (expertId < 0) continue;
-
-        auto tAcquire0 = std::chrono::high_resolution_clock::now();
-
-        // Acquire expert weights via proxy (streams from disk if needed)
-        MoEWeightHandle handle = moeWeightProxy_->Acquire((int)layer, expertId);
-
-        auto tAcquire1 = std::chrono::high_resolution_clock::now();
-        uint64_t acquireUs = std::chrono::duration_cast<std::chrono::microseconds>(
-            tAcquire1 - tAcquire0).count();
-
-        if (!handle.valid) continue;
-        recordExpertAccess((int)layer, expertId, weight);
-
-        // Telemetry: record invocation and whether prefetch hit
-        bool prefetchHit = (acquireUs < 100); // < 100us suggests cache hit
-        if (telemetryEnabled_ && residencyTelemetry_) {
-            residencyTelemetry_->RecordInvocation((int)layer, expertId, prefetchHit);
+    {
+        MoEExpertResidencyPlace& place = MoEPlaceGlobal();
+        place.SetProbe(
+            [](void* ctx, int ly, int ex) -> int {
+                auto* px = static_cast<MoEWeightProxy*>(ctx);
+                return (px && px->IsCached(ly, ex)) ? 1 : 0;
+            },
+            moeWeightProxy_.get());
+        const uint32_t sticks =
+            (DualStickState().armed || DualStickState().planned ||
+             DualStickState().requested)
+                ? 2u
+                : 1u;
+        place.SetStickCount(sticks);
+        if (place.Counters().place_calls == 0) {
+            const char* b = std::getenv("DEEP2_MOE_PLACE_BUDGET_MIB");
+            uint64_t bud = b && *b ? ((uint64_t)std::atoi(b) << 20) : (512ull << 20);
+            uint64_t eb = moeConfig_.expertDim ? (uint64_t)moeConfig_.expertDim * 4096ull
+                                               : (1ull << 20);
+            place.SetBudget(bud, eb);
         }
-
-        auto tCompute0 = std::chrono::high_resolution_clock::now();
-
-        // Execute expert FFN: gate/up SwiGLU -> down projection
-        computeExpertFFN(handle, input, expertOut, hiddenDim,
-                         moeConfig_.expertDim);
-
-        auto tCompute1 = std::chrono::high_resolution_clock::now();
-        uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(
-            tCompute1 - tCompute0).count();
-
-        if (telemetryEnabled_ && residencyTelemetry_) {
-            residencyTelemetry_->RecordComputeTime((int)layer, expertId, computeUs);
+        MoEPlaceIn pin[MOE_PLACE_MAX_K];
+        uint32_t pn = 0;
+        for (const auto& er : route.topExperts) {
+            if (er.expertId < 0 || pn >= MOE_PLACE_MAX_K) continue;
+            pin[pn].expertId = er.expertId;
+            pin[pn].weight = er.weight;
+            ++pn;
         }
+        MoEPlacePlan plan = place.Place((int)layer, pin, pn);
+        for (uint32_t si = 0; si < plan.count; ++si) {
+            const MoEPlaceSlot& slot = plan.slots[si];
+            const int expertId = slot.expertId;
+            const float weight = slot.weight;
+            if (expertId < 0) continue;
+            if (slot.fetch)
+                DualStickAcquire(slot.stick, nullptr, 0, 0, (uint32_t)layer,
+                                 (uint32_t)expertId);
 
-        // Weighted accumulation into output â€” AVX2 vectorized
-        #if defined(__AVX2__) || defined(_MSC_VER)
-        if (hiddenDim >= 8) {
-            __m256 wvec = _mm256_set1_ps(weight);
-            size_t i = 0;
-            for (; i + 7 < hiddenDim; i += 8) {
-                __m256 outv = _mm256_loadu_ps(output + i);
-                __m256 exv = _mm256_loadu_ps(expertOut + i);
-                _mm256_storeu_ps(output + i, _mm256_fmadd_ps(wvec, exv, outv));
+            auto tAcquire0 = std::chrono::high_resolution_clock::now();
+            MoEWeightHandle handle =
+                moeWeightProxy_->Acquire((int)layer, expertId);
+            auto tAcquire1 = std::chrono::high_resolution_clock::now();
+            uint64_t acquireUs =
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    tAcquire1 - tAcquire0)
+                    .count();
+            if (!handle.valid) continue;
+            place.MarkHot((int)layer, expertId, slot.stick,
+                          handle.expertBytes ? (uint64_t)handle.expertBytes : 0);
+            recordExpertAccess((int)layer, expertId, weight);
+            bool prefetchHit = slot.hit || (acquireUs < 100);
+            if (telemetryEnabled_ && residencyTelemetry_) {
+                residencyTelemetry_->RecordInvocation((int)layer, expertId,
+                                                      prefetchHit);
             }
-            for (; i < hiddenDim; ++i) {
-                output[i] += weight * expertOut[i];
+            auto tCompute0 = std::chrono::high_resolution_clock::now();
+            computeExpertFFN(handle, input, expertOut, hiddenDim,
+                             moeConfig_.expertDim);
+            auto tCompute1 = std::chrono::high_resolution_clock::now();
+            uint64_t computeUs =
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    tCompute1 - tCompute0)
+                    .count();
+            if (telemetryEnabled_ && residencyTelemetry_) {
+                residencyTelemetry_->RecordComputeTime((int)layer, expertId,
+                                                       computeUs);
             }
-        } else
-        #endif
-        {
-            for (size_t i = 0; i < hiddenDim; ++i) {
-                output[i] += weight * expertOut[i];
+#if defined(__AVX2__) || defined(_MSC_VER)
+            if (hiddenDim >= 8) {
+                __m256 wvec = _mm256_set1_ps(weight);
+                size_t i = 0;
+                for (; i + 7 < hiddenDim; i += 8) {
+                    __m256 outv = _mm256_loadu_ps(output + i);
+                    __m256 exv = _mm256_loadu_ps(expertOut + i);
+                    _mm256_storeu_ps(output + i,
+                                     _mm256_fmadd_ps(wvec, exv, outv));
+                }
+                for (; i < hiddenDim; ++i)
+                    output[i] += weight * expertOut[i];
+            } else
+#endif
+            {
+                for (size_t i = 0; i < hiddenDim; ++i)
+                    output[i] += weight * expertOut[i];
             }
+        }
+        if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE")) {
+            if (t[0] == '1') place.EmitTrace(stderr);
         }
     }
     prefetchNextExperts((int)layer);

@@ -107,6 +107,9 @@ public:
     // Load a specific expert's full weights (all 3 projections: gate, up, down)
     // Returns pointer to buffer, or nullptr on failure
     const void* LoadExpert(int layer, int expert);
+
+    /* Probe only — does not load or bump cacheHits. */
+    bool IsExpertCached(int layer, int expert) const;
     
     // Load directly into caller-provided buffer
     bool LoadExpertDirect(int layer, int expert, void* buffer, size_t bufferSize);

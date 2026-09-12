@@ -30,6 +30,15 @@ bool MoEWeightProxy::IsAttached() const {
     return loader_ != nullptr;
 }
 
+bool MoEWeightProxy::IsCached(int layer, int expert) const {
+    MoEWeightsLoader* loader;
+    {
+        std::lock_guard<std::mutex> lock(attachMutex_);
+        loader = loader_;
+    }
+    return loader ? loader->IsExpertCached(layer, expert) : false;
+}
+
 MoEWeightHandle MoEWeightProxy::Acquire(int layer, int expert) {
     auto start = std::chrono::high_resolution_clock::now();
     stats_.totalRequests.fetch_add(1, std::memory_order_relaxed);
