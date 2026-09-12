@@ -1,0 +1,67 @@
+MULTIMODEL_SPLIT_STREAM_PRODUCT_E2E_001 / DESTUB PRODUCT BIND
+DATE=2026-09-11
+PROMOTE=0
+MG_REDEFINED=0
+TIP_CLIMB=HOLD
+
+ZIP=C:\Users\Garrett\Downloads\RAWRXD_UNIVERSAL_SPLIT_STREAM_X64_MASM_NODEP_DESTUB_PRODUCT_BIND_SOURCE_DROP.zip
+ZIP_SHA256=d1b7c23c49e7e21d90f2bfe08766d56534d796c730d88b195229b686e0492fc0
+ZIP_SHA_MATCH=1
+STATIC_AUDIT_RESULT=PASS
+FILES=16
+
+NATIVE_SMOKE (this machine, ml64 14.44.35228.0):
+  ss_destub_smoke.exe          PASS  (fixture token_embd.weight off=160 bytes=16)
+  ss_anchor_probe.exe          PASS  (real shard-1)
+  ss_phase_smoke.exe fixture   PASS  PHASE_RC=100
+  ss_phase_smoke.exe shard-1   PASS  PHASE_RC=100
+  deep2_benchmark.exe --phase split-stream --model <shard-1>
+                               REACHED_INTEROP  BENCH_RC=100
+
+REAL_MODEL_FILE=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+FILE_BYTES=38765709664
+ANCHOR_PRIMARY=token_embd.weight
+WHICH=1
+TYPE=Q4_K (12)
+ALIGN=32
+PROVIDER_RANGE off=765440352 len=521256960
+ELEMS=926679040
+FULL_MODEL_INIT_BYPASSED=1
+
+HOST_PHYSICALIZATION=VirtualAlloc
+MG_LOADS=1
+WARM=1
+D3D12_HOT=1
+PCI=0x7551
+UMA=0
+READBACK_PARITY=1
+HOT_HITS=1
+SECOND_HOT_TOUCH=NO_NEW_MG
+
+GPU_BACKEND_MAY_MATERIALIZE_HOT=1
+GPU_BACKEND_MAY_DEFINE_HOT_SEMANTICS=0
+DEEP2_CONSUME_D3D12_HOT=NOT_RUN
+LOGITS=NOT_RUN
+TOKEN_COMMIT=NOT_RUN
+PHASE_RC=100
+PRODUCT_GATE=FAIL_INTEROP_BOUNDARY
+
+MULTIMODEL_SPLIT_STREAM_PRODUCT_E2E_001=OPEN
+KIMI_2_5=NOT_RUN
+QWEN_385_CLASS=NOT_RUN
+
+DROP_FIXES_REQUIRED_FOR_NATIVE (not claimed by zip author):
+  ss_file_open GetFileSizeEx wrote through return address (sub rsp,30h / [rsp+38h])
+  gg_read_u32/u64 advanced cursor via volatile r11 after Win32 calls
+  PROTO parameter lists conflicted with register-ABI PROC (A2111)
+  build_masm.bat /Fo:%%F.obj produced no .obj; /Fo%%F.obj works
+  for-loop `exit /b %errorlevel%` swallowed ml64 failures
+
+PROTOCOL_NOTE:
+  Several .asm files exceed 99 lines (ss_gguf_scan=736, ss_product_phase=326,
+  ss_real_provider=244, usr_residency=218). Noted; not a native FAIL.
+
+NOT_CLAIMED:
+  SOURCE_WIRED != RUNTIME_REACHED != TOKEN_SURVIVED != PERFORMANCE_PASS
+  D3D12 DEFAULT HOT is not a Vulkan import
+  No CPU argmax labeled as a model token

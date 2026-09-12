@@ -1,0 +1,32 @@
+[
+  {
+    "file": "ENTERPRISE_TOP15.txt",
+    "bytes": 2322,
+    "sha256": "6a8d553df9cfe87fc812e4a09c4b6ed055202ea7fdcdb47fa3a39b017d098525"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 2048,
+    "sha256": "8e2abd80a1722116bd6ed30604e06f62b955237defff626ef0d23a83b9d72873"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 685,
+    "sha256": "0bf4854c25f4c9580f5442409360a71dc86ce5e9475a610303765bf86b521a73"
+  },
+  {
+    "file": "enterprise_gate.asm",
+    "bytes": 11830,
+    "sha256": "752311589cf972f9e9904a055c89086f6825da38ef31b234eda24bceeb18c718"
+  },
+  {
+    "file": "enterprise_gate.inc",
+    "bytes": 5226,
+    "sha256": "3b85a6a5dfb2c92acde74cdb7713278dd5827a507f9fa0d27f7c0a8e4452bd9e"
+  },
+  {
+    "file": "enterprise_smoke.asm",
+    "bytes": 1320,
+    "sha256": "d1b2fca9143ca1cfa7b84a47fb06d5405319e6e41377d76016587bb3ee071ccf"
+  }
+]

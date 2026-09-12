@@ -1,0 +1,25 @@
+#version 450
+layout(local_size_x = 1) in;
+layout(set = 0, binding = 0) readonly buffer Weight { uint w[]; };
+layout(set = 0, binding = 1) buffer Out { uint o[]; };
+layout(push_constant) uniform PC {
+    uint nwords;
+    uint bytes_lo;
+    uint bytes_hi;
+};
+void main()
+{
+    uint n = nwords;
+    if (n > 16u) n = 16u;
+    if (n == 0u) n = 1u;
+    uint acc = 0u;
+    uint i;
+    for (i = 0u; i < n; ++i)
+        acc ^= w[i] + i * 0x9E3779B9u;
+    o[0] = acc;
+    o[1] = n;
+    o[2] = bytes_lo;
+    o[3] = bytes_hi;
+    o[4] = w[0];
+    o[5] = w[n - 1u];
+}

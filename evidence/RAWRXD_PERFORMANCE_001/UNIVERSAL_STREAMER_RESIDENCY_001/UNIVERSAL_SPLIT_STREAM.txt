@@ -1,0 +1,42 @@
+UNIVERSAL_SPLIT_STREAM — one residency, adapters emit demand
+============================================================
+
+UNIVERSAL_SPLIT_STREAM=1
+RESIDENCY_IMPLEMENTATIONS=1
+GPU_PROMOTION_IMPLEMENTATIONS=1
+MODEL_FAMILY_BRANCHES_IN_RESIDENCY=0
+MODEL_FAMILY_BRANCHES_IN_GPU_BACKEND=0
+MG_REDEFINED=0
+
+ADAPTER owns geometry / router / expert selection / vision reachability
+RESIDENCY owns COLD/MG/WARM/HOT / generation / pin / alias / budget
+D3D12 owns alloc / copy / fence / free
+DEEP2 consumes validated HOT (Stage C; not authorized by A or B)
+
+RegionKey = {ModelId, ModelGeneration, RegionId}
+Bare RegionId is not a cross-model identity.
+
+LANES (numeric; no family names):
+  META SHARED ROUTER EXPERT KV GPU_WS
+
+ROUTER_RESULT_BEFORE_EXPERT_IO=1
+UNSELECTED_EXPERT_IO=0
+PREDICTIVE_EXPERT_PREFETCH=0
+CURRENT_OP_ONLY=1
+
+HOST_RESIDENCY_BUDGET = configured (not per-model size)
+GPU_RESIDENCY_BUDGET  = OPEN (physical VRAM minus KV/scratch reserve)
+
+qwen385 / 385 / family names: FORBIDDEN below adapter boundary.
+
+STAGE A materialize host  ≠  STAGE B device  ≠  STAGE C consume
+
+DOUBLE_UNDER_OVER=1
+UNDER_0=RANGE_AUTHORITY
+UNDER_1=PHYSICAL_RESIDENCY_AUTHORITY
+OVER_AUTHORIZE_NE_PROOF=1
+MG does not own authorization.
+
+DECODE_AUTHORITY=UNCHANGED
+SCHEDULER_AUTHORITY=UNCHANGED
+PROMOTE=0

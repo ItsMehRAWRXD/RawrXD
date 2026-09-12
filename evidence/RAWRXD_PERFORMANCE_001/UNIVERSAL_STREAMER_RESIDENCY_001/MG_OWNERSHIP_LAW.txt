@@ -1,0 +1,36 @@
+MORNING_GROUCH residency ownership law (intrinsic, not loader strategy)
+======================================================================
+
+RESIDENCY_STATE_OWNS_MORNING_GROUCH=1
+PROVIDER_OWNS_MORNING_GROUCH=0
+LOADER_OWNS_MORNING_GROUCH=0
+
+FIRST_ABSENT_CURRENT_OP_TOUCH
+  → ATOMIC_MG_CLAIM
+  → EXACTLY_ONE_PHYSICALIZATION_ATTEMPT
+SUCCESS → WARM
+FAILURE → NOT_WARM (COLD or FAILED)
+
+REUSE_WHILE_RESIDENT → MG_DELTA=0 AND PHYSICAL_READ_DELTA=0
+EVICTION → NEW_RESIDENCY_GENERATION_REQUIRED
+SPECULATIVE_REQUEST → REJECT_BEFORE_MG_CLAIM
+
+STATES:
+  COLD | MG_IN_PROGRESS | WARM | HOT | FAILED
+
+WARM guarantees: valid bytes, CPU ptr, matching generation, pin-owned
+HOT guarantees: device id + allocation generation + source residency generation
+  (device ABI optional; mark-only if no device attached)
+
+JOIN: losers wait; DUPLICATE_FIRST_TOUCH=0; one provider read
+ALIAS: full containment may hit parent; partial overlap is not a hit
+HOT_UPLOAD: separate allocation copy; reset invalidates handle
+  HOST_DEVICE_BACKEND = VirtualAlloc reference (same HOT/gen/pin/inval law)
+  GPU_DEVICE_BACKEND  = D3D12 alloc+copy+fence only
+  GPU_BACKEND_MAY_MATERIALIZE_HOT=1
+  GPU_BACKEND_MAY_DEFINE_HOT_SEMANTICS=0
+
+THESE THREE EXTEND CONCURRENCY / ALIAS / DEVICE AROUND THE FROZEN MG MACHINE.
+THEY DO NOT REDEFINE MORNING_GROUCH.
+
+PROMOTE=0

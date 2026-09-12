@@ -1,0 +1,61 @@
+#version 450
+/* Q4_K / F32 embedding row lookup on imported HOT weight — model op */
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0) readonly buffer Weight { uint w[]; };
+layout(set = 0, binding = 1) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC {
+    uint token_id;
+    uint cols;
+    uint rows;
+    uint codec; /* 0=F32, 12=Q4_K */
+} pc;
+
+uint u8(uint off) {
+    uint word = w[off >> 2];
+    return (word >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+
+void scmin(uint base, uint j, out uint sc, out uint m) {
+    if (j < 4u) {
+        sc = u8(base + j) & 63u;
+        m = u8(base + j + 4u) & 63u;
+    } else {
+        uint a = u8(base + j + 4u);
+        uint b = u8(base + j - 4u);
+        uint c = u8(base + j);
+        sc = (a & 15u) | ((b >> 6) << 4);
+        m = (a >> 4) | ((c >> 6) << 4);
+    }
+}
+
+void main() {
+    uint i = gl_GlobalInvocationID.x;
+    if (pc.token_id >= pc.rows || i >= pc.cols) return;
+    if (pc.codec == 0u) {
+        uint off = (pc.token_id * pc.cols + i) * 4u;
+        uint word = w[off >> 2];
+        y[i] = uintBitsToFloat(word);
+        return;
+    }
+    /* Q4_K row dequant */
+    uint nblk = (pc.cols + 255u) / 256u;
+    uint b = i / 256u;
+    uint within = i & 255u;
+    if (b >= nblk) return;
+    uint blk = pc.token_id * nblk * 144u + b * 144u;
+    float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+    float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
+    uint scb = blk + 4u;
+    uint qbase = blk + 16u;
+    uint s = within / 32u;
+    uint k = within & 15u;
+    uint hi = (within & 16u) != 0u ? 1u : 0u;
+    uint sc, m;
+    scmin(scb, s, sc, m);
+    float scale = d * float(sc);
+    float minv = dmin * float(m);
+    uint byte = u8(qbase + s * 16u + k);
+    float q = float(hi != 0u ? ((byte >> 4) & 15u) : (byte & 15u));
+    y[i] = scale * q - minv;
+}

@@ -1,0 +1,36 @@
+Three extension gates — observed native proof
+=============================================
+
+FROZEN (unchanged):
+  RESIDENCY_STATE_OWNS_MORNING_GROUCH=1
+  LOADING_STRATEGY_NE_RESIDENCY=1
+  REAL_REGION_LIFECYCLE_001=PASS
+  PROVIDER_EQUIVALENCE=PASS
+  ACCEPTANCE15=PASS
+  PROMOTE=0
+
+RESIDENCY_JOIN_WAIT_001=PASS
+  THREADS=8 PROVIDER_READS=1 CLAIMS=1
+  JOIN_WAITS=7 JOIN_COMMITS=7
+  SHARED_GENERATION=1 DUPLICATE_FIRST_TOUCH=0
+  MG_BYTES=DISK_BYTES=4096
+
+REGION_ALIAS_COHERENCE_001=PASS
+  parent 0..4096 resident → child 1024..1536 alias hit, disk delta 0, shared gen
+  partial 3072..5120 → NOT a hit, own MG, ALIAS_PARTIAL_REJECT=1
+  child pin holds parent (evict parent → UR_E_PIN)
+
+REAL_DEVICE_HOT_UPLOAD_001=PASS
+  DEVICE_KIND=HOST_VIRTUAL_ALLOC
+  GPU=0
+  DEVICE_ID=7 DEVICE_COPY_BYTES=4096 then 8192 after reset+reupload
+  SOURCE_GEN matches WARM generation
+  second HOT touch: disk=0 copy_delta=0
+  reset invalidates old alloc_gen; new alloc_gen=2
+
+OWNERSHIP:
+  PROVIDER = resolve + read + observed I/O
+  RESIDENCY = state, claim, generation, pin, alias, HOT lifetime
+  DECODE/SCHEDULER/PROMOTE unchanged
+
+MG_REDEFINED=0

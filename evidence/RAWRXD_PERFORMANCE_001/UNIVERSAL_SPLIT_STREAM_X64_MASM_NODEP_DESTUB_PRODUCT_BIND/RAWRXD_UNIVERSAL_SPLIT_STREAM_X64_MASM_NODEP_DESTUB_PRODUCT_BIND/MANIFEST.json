@@ -1,0 +1,77 @@
+[
+  {
+    "file": "PRODUCT_BIND_BOUNDARY.txt",
+    "bytes": 1401,
+    "sha256": "98ce320c1d245469ebf1884e0125303dc695b927fea63e98623b3a2cb3c44baf"
+  },
+  {
+    "file": "STATIC_AUDIT.py",
+    "bytes": 2225,
+    "sha256": "3ee6a3ba21dc0cb7bd6cb5383f31e345dfbc4dbae889fbc306585a7f753b6065"
+  },
+  {
+    "file": "build_masm.bat",
+    "bytes": 832,
+    "sha256": "fe4e4d63dfbfc6b6ec9ac5a49bf5d103d8cad419a46ec0b9fc9a72589ba90734"
+  },
+  {
+    "file": "smoke_destub.asm",
+    "bytes": 2736,
+    "sha256": "4a1da5d9c3ca645440606d9a9230edd6dcc5a9580551d2240471799f5f949c8f"
+  },
+  {
+    "file": "ss_anchor_adapter.asm",
+    "bytes": 496,
+    "sha256": "a2a1d1d24f2ce647f03c6bab8541d5323c7112ecc25597753ad9ca2badde181a"
+  },
+  {
+    "file": "ss_gguf_scan.asm",
+    "bytes": 15300,
+    "sha256": "5ce142daa67554c89d34a6fe43c619f7ec57948e6f55c91e61b24af4b1ad77f8"
+  },
+  {
+    "file": "ss_product_phase.asm",
+    "bytes": 9900,
+    "sha256": "f155b77fd1f85341c527f6549ff065979f8c7041a736f7e897bfe754b9816de4"
+  },
+  {
+    "file": "ss_real_provider.asm",
+    "bytes": 5020,
+    "sha256": "4b72f18ef7ef1618fd59b4507df63c2604c27413953350cd9abac56a6038e86b"
+  },
+  {
+    "file": "ss_real_provider.inc",
+    "bytes": 4080,
+    "sha256": "2f0cf5cd845a102d64169ef82a3009834305bb508284afab18eff524d15738b1"
+  },
+  {
+    "file": "usr_alias_budget.asm",
+    "bytes": 2715,
+    "sha256": "f4048ba9febe6b584396f1574c5d52881bd987c487d0f76d10ec733d35331bcb"
+  },
+  {
+    "file": "usr_batch_receipt.asm",
+    "bytes": 2029,
+    "sha256": "e84c0a4426229e845f7951c145c19e40e596b9091b3d61e9fd61a2cb531e8a7f"
+  },
+  {
+    "file": "usr_core.asm",
+    "bytes": 3973,
+    "sha256": "3573f754fc40ee795b501e572ced9c70a93d60113d900a7a311f8d4b761f57fa"
+  },
+  {
+    "file": "usr_hot.asm",
+    "bytes": 3017,
+    "sha256": "685a0dc83b0c43b2a40820cbb97d7c7d660841f5aea240b862423b6abf937d25"
+  },
+  {
+    "file": "usr_residency.asm",
+    "bytes": 4522,
+    "sha256": "31c9784c8bfa72288cc8ef13d645a178cb867c21b262820b8602e5b6fd0a707a"
+  },
+  {
+    "file": "usr_universal.inc",
+    "bytes": 4591,
+    "sha256": "bd870371c03b866d20c199e66ecc56877fafc6e54e0e5b4c6e2f9dde98670e22"
+  }
+]

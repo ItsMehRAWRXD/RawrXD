@@ -1,0 +1,29 @@
+UNIVERSAL_SPLIT_STREAM — landed substrate (not E2E token)
+=========================================================
+
+LANDED:
+  MODEL_NAMESPACE_001=PASS
+    three ModelIds, identical offset/length → three RegionIds
+    child alias stays inside one model
+  MODEL_SWITCH_INVALIDATION_001=PASS
+    invalidate model → next require is a new MG
+  CURRENT_OP_REGION_PLAN_001=PASS
+    plan begin requires live OpTicket
+  SPLIT_REGION_BATCH_001=PASS
+    shared+router batch require
+  POST_ROUTER_EXPERT_DEMAND_001=PASS
+    expert require before observe_router = UR_E_ROUTER, disk delta 0
+  HOST_WARM_BUDGET_001=PASS
+    hard host budget rejects additional MG
+
+STILL OPEN:
+  DENSE_LAYER_STREAM_001
+  GPU_HOT_BUDGET_001
+  HOT_REUSE_CROSS_OP_001 (HOT hit exists; not a cross-op product bind)
+  MULTIMODEL_SPLIT_STREAM_E2E_001 (no Deep2 consume / token)
+  Architecture adapters for any named family (core has ModelId integers only)
+
+MODEL_FAMILY_BRANCHES_IN_RESIDENCY=0
+MODEL_FAMILY_BRANCHES_IN_GPU_BACKEND=0
+MG_REDEFINED=0
+PROMOTE=0

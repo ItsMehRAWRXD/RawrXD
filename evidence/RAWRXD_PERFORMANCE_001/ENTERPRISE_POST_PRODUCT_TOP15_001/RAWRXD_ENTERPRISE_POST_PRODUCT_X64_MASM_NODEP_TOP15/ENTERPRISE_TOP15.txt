@@ -1,0 +1,75 @@
+POST-PRODUCT ENTERPRISE TOP 15
+
+This overlay is additive. It does not redefine:
+  residency / Morning Grouch
+  provider policy
+  GPU HOT semantics
+  scheduler authority
+  decode authority
+  token authority
+  PROMOTE
+
+Hard prerequisite:
+  product binary loaded
+  product entry reached
+  real model bytes observed
+  real tensor math observed
+  real logits observed
+  token commit observed
+  decode commit observed
+  product runtime rc == 0
+
+If the product prerequisite is not true, enterprise evaluation stops with ENT_E_PRODUCT.
+
+01 BUILD_IDENTITY_001
+   Build ID + source revision + binary/source revision match.
+
+02 ARTIFACT_INTEGRITY_001
+   Binary/package hash + manifest hash + zero tamper events.
+
+03 CONFIG_SEAL_001
+   Known schema, zero unknown keys, zero post-start config mutation.
+
+04 COMPATIBILITY_MATRIX_001
+   CPU/OS/GPU-path/model-format/codec compatibility all observed.
+
+05 MODEL_TRUST_VALIDATION_001
+   Zero parser-bounds, invalid-shard, metadata-overflow, path-escape faults.
+
+06 SESSION_ISOLATION_001
+   Zero cross-session state/KV contamination and zero cancellation leaks.
+
+07 RESOURCE_QUOTAS_001
+   Zero host/GPU/KV budget violations and zero file-handle leaks.
+
+08 FAULT_CONTAINMENT_001
+   Zero process corruption, double-free, UAF, stale-generation faults.
+
+09 RECOVERY_REUSE_001
+   Every recovery attempt succeeds; zero unrecovered faults;
+   if recovery occurred, runtime is reusable afterwards.
+
+10 AUDIT_JOURNAL_001
+   Nonzero observed events, zero sequence gaps, duplicate IDs, unattributed events.
+
+11 TELEMETRY_RECONCILIATION_001
+   Nonzero telemetry, zero counter mismatches and zero dropped critical events.
+
+12 SHUTDOWN_RESTART_001
+   Zero dirty shutdowns/corruption and at least one successful restart proof.
+
+13 ROLLBACK_001
+   Rollback image exists; attempts==successes; zero rollback data-loss faults.
+
+14 SOAK_CHAOS_001
+   Observed soak minutes >= configured requirement;
+   chaos cases executed >= required; zero uncontained chaos failures.
+
+15 ENTERPRISE_RELEASE_001
+   Clean-machine build/run, upgrade, downgrade, packaging and version surface PASS.
+
+Final invariant:
+  ENTERPRISE_READY=1 only when PRODUCT_PREREQ=1 and all 15 enterprise gates PASS.
+
+No source-presence-only gate can mint enterprise readiness.
+No enterprise gate can mint product/decode/token/promotion authority.

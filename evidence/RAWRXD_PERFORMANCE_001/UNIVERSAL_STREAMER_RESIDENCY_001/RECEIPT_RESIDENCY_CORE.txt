@@ -1,0 +1,31 @@
+RESIDENCY_CORE / Morning Grouch ownership — native proof
+========================================================
+
+LAW=MG_OWNERSHIP_LAW.txt
+LOADING_STRATEGY_NE_RESIDENCY=1
+RESIDENCY_STATE_OWNS_MORNING_GROUCH=1
+PROVIDER_OWNS_MORNING_GROUCH=0
+LOADER_OWNS_MORNING_GROUCH=0
+
+ACCEPTANCE15=PASS
+REAL_REGION_LIFECYCLE_001=PASS
+PROVIDER_EQUIVALENCE=PASS (FILE + MEM)
+
+MECHANICAL:
+  ATOMIC_MG_CLAIM / MG_IN_PROGRESS
+  SUCCESS→WARM FAILURE→COLD (NOT_WARM)
+  ResidencyGeneration on commit + evict
+  PinCount blocks eviction
+  HOT mark / DEMOTE HOT→WARM / EVICT→COLD
+  MG_BYTES reconciles to successful physical reads
+  Closed RequestReason; speculative rejected before claim
+  RegionId from provider+shard+offset+length (not bare offset)
+
+EXTENDED (do not redefine MG):
+  RESIDENCY_JOIN_WAIT_001=PASS
+  REGION_ALIAS_COHERENCE_001=PASS
+  REAL_DEVICE_HOT_UPLOAD_001=PASS (HOST_VIRTUAL_ALLOC; GPU=0)
+
+DECODE_AUTHORITY=UNCHANGED
+SCHEDULER_AUTHORITY=UNCHANGED
+PROMOTE=0
