@@ -9,7 +9,7 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      const char *shard, SsVkPromote2 promote2,
                      const SsModelPlan *plan)
 {
-    SsVk v; SsBlockForwardResult b0; int rc, imported_ok = 0, consume_ok = 0, st = 100;
+    SsVk v; int rc, imported_ok = 0, consume_ok = 0, st = 100;
     memset(&v, 0, sizeof v);
     printf("HANDLE_TYPE=D3D12_RESOURCE HANDLE_LIFETIME=APP_RETAIN CLOSE_AFTER_IMPORT=0\n");
     printf("INPUT_AUTHORITY=DEEP2_VULKAN_CONSUME REIMPORT=0 HOST_WEIGHT_COPY=0\n");
@@ -59,13 +59,16 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
     if (plan && plan->planReal) {
-        if (ss_vk_block0_forward(&v, plan, &b0) == 0 && b0.completed)
-            printf("DEEP2_BLOCK_FORWARD_000_001=PASS\n");
+        SsPhase1Loop L;
+        if (ss_vk_phase1_block_loop(&v, plan, &L) == 0 && L.pass)
+            printf("PHASE_1_BLOCK_LOOP=PASS\n");
         else
-            printf("DEEP2_BLOCK_FORWARD_000_001=FAIL\n");
-        ss_block_fwd_print(&b0);
+            printf("PHASE_1_BLOCK_LOOP=FAIL\n");
+        ss_phase1_print(&L);
+        printf("DEEP2_BLOCK_FORWARD_000_001=%s\n",
+               (L.completed >= 1 && L.first_failed != 0) ? "PASS" : "FAIL");
     } else {
-        printf("DEEP2_BLOCK_FORWARD_000_001=NOT_RUN\n");
+        printf("DEEP2_BLOCK_FORWARD_000_001=NOT_RUN\nPHASE_1_BLOCK_LOOP=NOT_RUN\n");
     }
     if (!(shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op)) {
         printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");
