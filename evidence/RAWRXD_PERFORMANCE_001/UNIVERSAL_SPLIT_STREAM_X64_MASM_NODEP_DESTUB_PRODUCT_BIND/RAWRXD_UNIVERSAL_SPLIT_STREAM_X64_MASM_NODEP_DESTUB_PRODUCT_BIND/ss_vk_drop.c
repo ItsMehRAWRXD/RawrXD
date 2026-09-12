@@ -31,6 +31,8 @@ void ss_vk_drop(SsVk *v)
         if (v->sm && v->a.destroy_sm) v->a.destroy_sm(v->dev, v->sm, 0);
         if (v->outb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->outb, 0);
         if (v->outmem && v->a.free_mem) v->a.free_mem(v->dev, v->outmem, 0);
+        if (v->pbuf && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->pbuf, 0);
+        if (v->pmem && v->a.free_mem) v->a.free_mem(v->dev, v->pmem, 0);
         if (v->vis && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->vis, 0);
         if (v->vismem && v->a.free_mem) v->a.free_mem(v->dev, v->vismem, 0);
         if (v->wbuf && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->wbuf, 0);

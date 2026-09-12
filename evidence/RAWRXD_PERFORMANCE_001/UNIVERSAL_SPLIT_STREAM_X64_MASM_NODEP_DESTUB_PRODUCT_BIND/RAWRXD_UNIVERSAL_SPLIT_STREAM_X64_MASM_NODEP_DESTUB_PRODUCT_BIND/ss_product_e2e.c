@@ -22,6 +22,7 @@ int ss_product_e2e(const char *model_path, const char *prompt)
     be.promote_fn = ss_d3d12_promote;
     be.release_fn = ss_d3d12_release;
     be.consume_fn = ss_d3d12_consume;
+    ss_d3d12_set_shard(model_path);
     a.shard1_path = model_path;
     a.model_id = 1; a.model_generation = 1; a.op_ticket = 1; a.owner_cookie = 1;
     a.host_budget = 8ull << 30; a.gpu_budget = 8ull << 30; a.gpu_backend = &be;
@@ -34,9 +35,10 @@ int ss_product_e2e(const char *model_path, const char *prompt)
            (unsigned long long)r.gpu, (unsigned long long)r.pci_device,
            (unsigned long long)r.readback_parity, (unsigned long long)r.mg_loads,
            (unsigned long long)r.hot_hits);
-    printf("DEEP2_CONSUME_D3D12_HOT=%s DEEP2_IMPORTED_MODEL_OP=%s PHASE_RC=%llu\n",
+    printf("DEEP2_CONSUME_D3D12_HOT=%s DEEP2_IMPORTED_MODEL_OP=%s DEEP2_IMPORTED_BLOCK_OP=%s PHASE_RC=%llu\n",
            r.deep2_consume_status >= SS_DEEP2_CONSUMED ? "PASS" : "NOT_RUN",
-           r.deep2_consume_status == SS_DEEP2_MODEL_OP ? "PASS" : "NOT_RUN",
+           r.deep2_consume_status >= SS_DEEP2_MODEL_OP ? "PASS" : "NOT_RUN",
+           r.deep2_consume_status == SS_DEEP2_BLOCK_OP ? "PASS" : "NOT_RUN",
            (unsigned long long)r.phase_rc);
     printf("TOKEN_COMMIT=NOT_RUN\n");
     {
@@ -49,7 +51,9 @@ int ss_product_e2e(const char *model_path, const char *prompt)
             duo_observe_interop(&dt, r.file_offset, 1, 1);
         if (r.deep2_consume_status >= SS_DEEP2_CONSUMED)
             duo_observe_consumer_ran(&dt, r.file_offset, 1);
-        if (r.deep2_consume_status == SS_DEEP2_MODEL_OP)
+        if (r.deep2_consume_status == SS_DEEP2_BLOCK_OP)
+            stop = "OUTPUT_NORM_NOT_RUN";
+        else if (r.deep2_consume_status == SS_DEEP2_MODEL_OP)
             stop = "LM_HEAD_NOT_RUN";
         else if (r.deep2_consume_status == SS_DEEP2_CONSUMED)
             stop = "LOGITS_NOT_RUN";

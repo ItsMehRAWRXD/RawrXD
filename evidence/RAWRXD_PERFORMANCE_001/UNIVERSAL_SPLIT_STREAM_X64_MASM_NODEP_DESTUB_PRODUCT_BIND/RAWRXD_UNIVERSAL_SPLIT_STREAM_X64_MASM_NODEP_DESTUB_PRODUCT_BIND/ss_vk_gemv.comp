@@ -1,0 +1,51 @@
+#version 450
+/* Q4_K / F32 GEMV on imported projection HOT; x is prior GPU activation */
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0) readonly buffer W { uint packed[]; };
+layout(set = 0, binding = 1) readonly buffer In { float x[]; };
+layout(set = 0, binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint rows; uint cols; uint codec; } pc;
+uint u8(uint off) {
+    uint w = packed[off >> 2];
+    return (w >> ((off & 3u) * 8u)) & 0xFFu;
+}
+float f16(uint h) { return unpackHalf2x16(h).x; }
+void scmin(uint base, uint j, out uint sc, out uint m) {
+    if (j < 4u) { sc = u8(base + j) & 63u; m = u8(base + j + 4u) & 63u; }
+    else {
+        uint a = u8(base + j + 4u), b = u8(base + j - 4u), c = u8(base + j);
+        sc = (a & 15u) | ((b >> 6) << 4); m = (a >> 4) | ((c >> 6) << 4);
+    }
+}
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= pc.rows) return;
+    if (pc.codec == 0u) {
+        float sum = 0.0;
+        for (uint i = 0u; i < pc.cols; ++i) {
+            uint off = (row * pc.cols + i) * 4u;
+            sum += uintBitsToFloat(packed[off >> 2]) * x[i];
+        }
+        y[row] = sum; return;
+    }
+    uint nblk = (pc.cols + 255u) / 256u;
+    uint rowOff = row * nblk * 144u;
+    float sum = 0.0;
+    for (uint b = 0u; b < nblk; ++b) {
+        uint blk = rowOff + b * 144u;
+        float d = f16(u8(blk) | (u8(blk + 1u) << 8));
+        float dmin = f16(u8(blk + 2u) | (u8(blk + 3u) << 8));
+        uint scb = blk + 4u, qbase = blk + 16u, elem = b * 256u;
+        for (uint s = 0u; s < 8u; ++s) {
+            uint sc, m; scmin(scb, s, sc, m);
+            float scale = d * float(sc), minv = dmin * float(m);
+            uint qo = qbase + s * 16u, baseIdx = elem + s * 32u;
+            for (uint k = 0u; k < 16u; ++k) {
+                uint byte = u8(qo + k), lo = baseIdx + k, hi = lo + 16u;
+                if (lo < pc.cols) sum += (scale * float(byte & 15u) - minv) * x[lo];
+                if (hi < pc.cols) sum += (scale * float((byte >> 4) & 15u) - minv) * x[hi];
+            }
+        }
+    }
+    y[row] = sum;
+}

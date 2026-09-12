@@ -9,6 +9,9 @@
 static UrGpuDevice g_dev;
 static UrDeviceVTable g_vt;
 static uint32_t g_ready;
+static const char *g_shard;
+static void *g_proj_handle;
+static uint64_t g_proj_agen;
 
 int ss_d3d12_backend_init(void)
 {
@@ -23,9 +26,15 @@ int ss_d3d12_backend_init(void)
     return 0;
 }
 
+void ss_d3d12_set_shard(const char *path) { g_shard = path; }
+
 void ss_d3d12_backend_shutdown(void)
 {
     if (!g_ready) return;
+    if (g_proj_handle && g_vt.release) {
+        g_vt.release(g_vt.ctx, g_proj_handle);
+        g_proj_handle = 0;
+    }
     ur_gpudev_shutdown(&g_dev);
     memset(&g_vt, 0, sizeof g_vt);
     g_ready = 0;
@@ -60,6 +69,27 @@ int ss_d3d12_promote(void *ctx, const void *host, uint64_t n, uint64_t gen,
     return out->readback_parity ? 0 : 29;
 }
 
+static int promote2(const void *host, uint64_t n, void **nt_out,
+                    void **fence_nt_out, uint64_t *fence_val_out)
+{
+    SSDeviceMaterialization m;
+    if (!nt_out) return 100;
+    *nt_out = 0;
+    if (fence_nt_out) *fence_nt_out = 0;
+    if (fence_val_out) *fence_val_out = 0;
+    if (g_proj_handle && g_vt.release) {
+        g_vt.release(g_vt.ctx, g_proj_handle);
+        g_proj_handle = 0;
+    }
+    if (ss_d3d12_promote(0, host, n, 0, &m)) return 100;
+    g_proj_handle = (void *)(uintptr_t)m.device_handle;
+    g_proj_agen = m.allocation_generation;
+    *nt_out = ur_gpu_nt(g_proj_handle);
+    if (fence_nt_out) *fence_nt_out = ur_gpudev_fence_nt(&g_dev);
+    if (fence_val_out) *fence_val_out = ur_gpudev_fence_val(&g_dev);
+    return *nt_out ? 0 : 100;
+}
+
 int ss_d3d12_consume(void *ctx, SSDeviceMaterialization *mat)
 {
     void *h;
@@ -69,7 +99,8 @@ int ss_d3d12_consume(void *ctx, SSDeviceMaterialization *mat)
     return ss_vk_import_hot(ur_gpu_nt(h), ur_gpudev_luid(&g_dev), mat->bytes,
                             ur_gpudev_fence_nt(&g_dev), ur_gpudev_fence_val(&g_dev),
                             (uint32_t)mat->tensor_type, mat->dim0, mat->dim1,
-                            mat->element_count, mat->which_name);
+                            mat->element_count, mat->which_name,
+                            g_shard, g_shard ? promote2 : 0);
 }
 
 int ss_d3d12_release(void *ctx, void *handle, uint64_t agen)

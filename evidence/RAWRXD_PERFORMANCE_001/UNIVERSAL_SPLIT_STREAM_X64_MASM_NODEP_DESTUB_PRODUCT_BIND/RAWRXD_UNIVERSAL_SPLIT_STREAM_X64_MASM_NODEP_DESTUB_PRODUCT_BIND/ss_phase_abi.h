@@ -6,9 +6,11 @@
 #define SS_E_PRIMITIVE_HOLD 102
 #define SS_E_LOGITS_HOLD 103
 #define SS_E_LMHEAD_HOLD 104
+#define SS_E_OUTPUT_NORM_HOLD 105
 #define SS_DEEP2_IMPORTED 2
 #define SS_DEEP2_CONSUMED 3
 #define SS_DEEP2_MODEL_OP 4
+#define SS_DEEP2_BLOCK_OP 5
 typedef struct {
     uint64_t completed, gpu, readback_parity, device_id;
     uint64_t allocation_generation, device_handle, bytes, pci_device;
@@ -38,6 +40,7 @@ extern "C" {
 int ss_product_split_phase(SSPhaseArgs *args, SSPhaseResult *out);
 int ss_d3d12_backend_init(void);
 void ss_d3d12_backend_shutdown(void);
+void ss_d3d12_set_shard(const char *path);
 int ss_d3d12_promote(void *ctx, const void *host, uint64_t n, uint64_t gen,
                      SSDeviceMaterialization *out);
 int ss_d3d12_release(void *ctx, void *handle, uint64_t agen);

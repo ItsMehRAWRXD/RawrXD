@@ -41,6 +41,7 @@ int main(int argc, char **argv)
     be.promote_fn = ss_d3d12_promote;
     be.release_fn = ss_d3d12_release;
     be.consume_fn = ss_d3d12_consume;
+    ss_d3d12_set_shard(path);
     a.shard1_path = path;
     a.model_id = 1; a.model_generation = 1; a.op_ticket = 1; a.owner_cookie = 1;
     a.host_budget = 8ull << 30; a.gpu_budget = 8ull << 30; a.gpu_backend = &be;
@@ -63,7 +64,8 @@ int main(int argc, char **argv)
     ss_d3d12_backend_shutdown();
     if (fixture) DeleteFileA(path);
     if ((r.phase_rc == SS_E_DEEP2_INTEROP || r.phase_rc == SS_E_PRIMITIVE_HOLD
-         || r.phase_rc == SS_E_LOGITS_HOLD || r.phase_rc == SS_E_LMHEAD_HOLD)
+         || r.phase_rc == SS_E_LOGITS_HOLD || r.phase_rc == SS_E_LMHEAD_HOLD
+         || r.phase_rc == SS_E_OUTPUT_NORM_HOLD)
         && r.warm_pass && r.hot_pass
         && r.readback_parity && r.mg_loads == 1 && r.hot_hits == 1
         && r.deep2_consume_status != 0)

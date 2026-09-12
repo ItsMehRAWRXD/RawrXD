@@ -1,4 +1,4 @@
-/* ss_vk_api.h — import + imported model op; no logits/token mint */
+/* ss_vk_api.h — import + model op + block chain; no logits/token mint */
 #ifndef SS_VK_API_H
 #define SS_VK_API_H
 #define VK_NO_PROTOTYPES
@@ -68,8 +68,8 @@ typedef struct {
     VkDevice dev;
     VkQueue q;
     uint32_t qfam;
-    VkBuffer wbuf, vis, outb;
-    VkDeviceMemory wmem, vismem, outmem;
+    VkBuffer wbuf, vis, outb, pbuf;
+    VkDeviceMemory wmem, vismem, outmem, pmem;
     VkCommandPool pool;
     VkSemaphore sem;
     VkShaderModule sm;
@@ -78,22 +78,36 @@ typedef struct {
     VkPipeline pipe;
     VkDescriptorPool dpool;
     VkDescriptorSet dset;
-    uint64_t luid, bytes, vis_n, out_acc;
+    uint64_t luid, bytes, pbytes, vis_n, out_acc;
     uint64_t dim0, dim1, element_count, which_name;
-    uint32_t tensor_type, token_id, embd_dim, embd_n;
+    uint32_t tensor_type, token_id, embd_dim, embd_n, block_n;
     int luid_ok, imported, bound, sync_ok, vis_ok, retain;
     int prim_disp, prim_done, out_ok, same_mem;
     int model_op, out_finite, geo_ok;
+    int proj_imported, proj_hot, rms_disp, rms_done, proj_disp, proj_done;
+    int chain_gpu, block_finite, block_ok, block_op;
 } SsVk;
+typedef int (*SsVkPromote2)(const void *host, uint64_t n, void **nt_out,
+                            void **fence_nt_out, uint64_t *fence_val_out);
 int ss_vk_load(SsVk *v);
 int ss_vk_dev(SsVk *v, uint64_t luid);
 int ss_vk_import(SsVk *v, void *nt, uint64_t bytes);
+int ss_vk_import2(SsVk *v, void *nt, uint64_t bytes);
 int ss_vk_sync(SsVk *v, void *fence_nt, uint64_t fence_val);
 int ss_vk_vis(SsVk *v);
 int ss_vk_pipe(SsVk *v);
 int ss_vk_embd(SsVk *v);
+int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2);
+int ss_vk_block_exec(SsVk *v, VkBuffer nwb, uint64_t nbytes, VkBuffer nob, VkBuffer qob,
+                     VkDeviceMemory qom, uint32_t rows, uint32_t cols);
+uint32_t ss_vk_host_type(SsVk *v, uint32_t bits);
+int ss_vk_mkbuf(SsVk *v, VkDeviceSize sz, VkBuffer *b, VkDeviceMemory *m, void **map);
+int ss_vk_pipe3(SsVk *v, const uint32_t *spv, uint32_t words, uint32_t pc_bytes,
+                VkShaderModule *sm, VkDescriptorSetLayout *dsl, VkPipelineLayout *pl,
+                VkPipeline *pipe, VkDescriptorPool *dpool, VkDescriptorSet *dset);
 void ss_vk_drop(SsVk *v);
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      uint64_t fence_val, uint32_t ttype, uint64_t dim0,
-                     uint64_t dim1, uint64_t elems, uint64_t which);
+                     uint64_t dim1, uint64_t elems, uint64_t which,
+                     const char *shard, SsVkPromote2 promote2);
 #endif

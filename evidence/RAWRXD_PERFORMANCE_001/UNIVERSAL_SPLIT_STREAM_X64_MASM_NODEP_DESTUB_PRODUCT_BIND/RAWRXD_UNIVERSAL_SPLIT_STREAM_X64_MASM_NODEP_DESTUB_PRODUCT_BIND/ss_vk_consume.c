@@ -1,17 +1,18 @@
-/* ss_vk_consume.c — import then TOKEN_EMBEDDING on same imported HOT */
+/* ss_vk_consume.c — import → embd model-op → optional blk.0 chain */
 #include "ss_vk_api.h"
 #include <stdio.h>
+#include <string.h>
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      uint64_t fence_val, uint32_t ttype, uint64_t dim0,
-                     uint64_t dim1, uint64_t elems, uint64_t which)
+                     uint64_t dim1, uint64_t elems, uint64_t which,
+                     const char *shard, SsVkPromote2 promote2)
 {
     SsVk v; int rc, imported_ok = 0, consume_ok = 0;
+    memset(&v, 0, sizeof v);
     printf("HANDLE_TYPE=D3D12_RESOURCE HANDLE_LIFETIME=APP_RETAIN CLOSE_AFTER_IMPORT=0\n");
     printf("INPUT_AUTHORITY=DEEP2_VULKAN_CONSUME REIMPORT=0 HOST_WEIGHT_COPY=0\n");
     printf("CPU_WEIGHT_REUPLOAD=0 FRESH_WEIGHT_ALLOCATION=0\n");
-    if (!nt || !luid || !bytes) {
-        printf("VK_EXTERNAL_IMPORT=FAIL\n"); return 100;
-    }
+    if (!nt || !luid || !bytes) { printf("VK_EXTERNAL_IMPORT=FAIL\n"); return 100; }
     if (ss_vk_load(&v)) { printf("VK_LOADER=FAIL\n"); return 100; }
     printf("VK_LOADER=PASS\n");
     rc = ss_vk_dev(&v, luid);
@@ -48,12 +49,21 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
            v.out_finite, v.out_ok);
     printf("DEEP2_CONSUME_D3D12_HOT=PASS\n");
     consume_ok = 1;
-    printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
-    ss_vk_drop(&v);
     if (rc || !v.model_op || !v.same_mem || !v.geo_ok) {
         printf("DEEP2_IMPORTED_MODEL_OP=NOT_RUN MODEL_OP_AUTHORITY=0\n");
+        printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+        ss_vk_drop(&v);
         return consume_ok ? 3 : (imported_ok ? 2 : 100);
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
+    if (shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op) {
+        printf("DEEP2_IMPORTED_BLOCK_OP=PASS BLOCK_OP_AUTHORITY=1\n");
+        printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+        ss_vk_drop(&v);
+        return 5;
+    }
+    printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");
+    printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+    ss_vk_drop(&v);
     return 4;
 }

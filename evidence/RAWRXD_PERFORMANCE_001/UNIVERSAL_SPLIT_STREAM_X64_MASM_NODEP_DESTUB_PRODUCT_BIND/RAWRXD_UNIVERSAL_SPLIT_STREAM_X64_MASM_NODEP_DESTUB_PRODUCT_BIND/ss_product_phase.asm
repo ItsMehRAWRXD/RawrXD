@@ -248,7 +248,7 @@ ss_product_split_phase PROC FRAME
     mov rax,[rsi].USRRegion.hot_hits
     mov [r13].SSPhaseResult.hot_hits,rax
 
-    ; Import+model-op while HOT live. 2=import 3=consume 4=embd model op.
+    ; Import+model-op+block while HOT live. 2=import 3=consume 4=embd 5=block.
     mov eax,dword ptr [r15].SSTensorDesc.tensor_type
     mov qword ptr [rsp+300h].SSDeviceMaterialization.tensor_type,rax
     mov rax,[r15].SSTensorDesc.dim0
@@ -265,6 +265,8 @@ ss_product_split_phase PROC FRAME
     mov rcx,[rdi].SSGpuBackend.ctx
     lea rdx,[rsp+300h]
     call rax
+    cmp eax,SS_DEEP2_BLOCK_OP
+    je ssp_block_ok
     cmp eax,SS_DEEP2_MODEL_OP
     je ssp_model_ok
     cmp eax,SS_DEEP2_CONSUMED
@@ -272,6 +274,9 @@ ss_product_split_phase PROC FRAME
     cmp eax,SS_DEEP2_IMPORTED
     jne ssp_no_consume
     mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_IMPORTED
+    jmp ssp_after_consume
+ssp_block_ok:
+    mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_BLOCK_OP
     jmp ssp_after_consume
 ssp_model_ok:
     mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_MODEL_OP
@@ -299,9 +304,14 @@ ssp_after_gpu_release:
     mov rcx,rsi
     call usr_unpin
 
-    ; Logits/token remain unreachable even after imported model op.
+    ; Logits/token remain unreachable even after imported block op.
     mov qword ptr [r13].SSPhaseResult.token_commit_status,SS_TOKEN_COMMIT_NOT_RUN
     mov eax,SS_E_DEEP2_INTEROP
+    cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_BLOCK_OP
+    jne ssp_check_model
+    mov eax,SS_E_OUTPUT_NORM_HOLD
+    jmp ssp_set_phase_rc
+ssp_check_model:
     cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_MODEL_OP
     jne ssp_check_consumed
     mov eax,SS_E_LMHEAD_HOLD

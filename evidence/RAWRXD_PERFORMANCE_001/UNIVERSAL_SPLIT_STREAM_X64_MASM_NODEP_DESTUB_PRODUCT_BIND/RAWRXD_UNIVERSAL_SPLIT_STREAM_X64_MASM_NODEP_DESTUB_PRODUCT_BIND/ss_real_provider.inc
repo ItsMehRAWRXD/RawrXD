@@ -15,9 +15,11 @@ SS_E_DEEP2_INTEROP          equ 100
 SS_E_PRIMITIVE_HOLD         equ 102
 SS_E_LOGITS_HOLD            equ 103
 SS_E_LMHEAD_HOLD            equ 104
+SS_E_OUTPUT_NORM_HOLD       equ 105
 SS_DEEP2_IMPORTED           equ 2
 SS_DEEP2_CONSUMED           equ 3
 SS_DEEP2_MODEL_OP           equ 4
+SS_DEEP2_BLOCK_OP           equ 5
 
 SS_PROVIDER_FILE            equ 1
 SS_PROVIDER_MEM             equ 2
