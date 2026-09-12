@@ -25,11 +25,12 @@ UNIT_PLACE_PASS=1
     place_reuse=3 place_calls=2 thrash_flags=0 hot_n=2
 
 LIVE_KIMI_DECODE_TPS=NOT_RUN
-  REASON=no Kimi-K2 / DeepSeek ~671B GGUF under G:\OllamaModels or RAWRXD_MODEL_ROOT
-  RAWRXD_MODEL_ROOT=(empty)
-  G:\OllamaModels=MISSING
-  models/_r1_named=empty shards
-  HOLD=cannot mint 35-50 TPS without live measurement
+  REASON=cert search used G:\OllamaModels + RAWRXD_MODEL_ROOT only (both empty/missing)
+  DISCOVERED_LOCAL_SHARDS=1
+  PATH_A=G:\~dev\rawrxd\models\_matrix_f\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+  PATH_B=G:\~dev\rawrxd\_models_f\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+  NOTE=gguf present (sample>=3); live 35-50 TPS still NOT_RUN — do not invent PERFORMANCE_PASS
+  HOLD=live decode measurement still required
   NOT_RUN != PASS
 
 INVENTORY_NAIVE_PRIOR=
@@ -40,6 +41,7 @@ INVENTORY_NAIVE_PRIOR=
   MoEWeightProxy::PrefetchAsync = CPU fallback stub note
 
 NEXT=
-  obtain Kimi-K2 Q4_K_M shards → short decode with DEEP2_MOE_PLACE_TRACE=1
+  set RAWRXD_MODEL_ROOT or rawr run against PATH_A/PATH_B Kimi-K2 Q4_K_M
+  short decode with DEEP2_MOE_PLACE_TRACE=1
   measure decode TPS vs window-miss / expert_misses
   do not invent PERFORMANCE_PASS
