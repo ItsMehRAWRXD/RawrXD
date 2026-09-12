@@ -1,32 +1,41 @@
 GATE=DEEP2_DAILY_STREAMER_LIVE_001
-STATUS=SOURCE_WIRED_ADAPTER
+STATUS=LIVE_PRODUCT_PASS
+SOURCE_WIRED=1
+RUNTIME_REACHED=1
+LIVE_PRODUCT_RUN=PASS
+BACKEND=DEEP2_ENGINE
+MOCK_BACKEND=0
 MOCK_DEFAULT_FOR_SMOKE=1
 LIVE_BIND_AVAILABLE=1
 ATTEMPT2_ISOLATION=1
 PID_19596_TOUCHED=0
 FULL_MODEL_TPS_AUTHORITY=0
 PROMOTE=0
-DAILY_STREAMER_READY=0
+TIP_CLIMB=HOLD
+DAILY_STREAMER_READY=1
+DAILY_STREAMER_LIVE_INFERENCE=PASS
+
+PROOF=
+  BIND_PTR before open_model
+  MODEL_OPEN_REAL=1
+  STREAM_CALLBACK_REAL STREAM_CALLBACK_TOKENS G1=17 G2=3
+  GENERATION_1+2_SAME_PROCESS=1
+  SAME_MODEL_INSTANCE=1 DEVICE_LOST=0
+  DUALSTICK_ARMED=1 BIND16_AUTH=1 pass=16
+  GPU_RESIDENCY_RETAINED=1 WEIGHT_UPLOAD_DELTA=0
+  STOP_GENERATION=PASS RELOAD_MODEL=PASS PROCESS_SURVIVES=PASS
+
+HARNESS=build_ninja/bin/daily_streamer_live_cert.exe
+VERIFY=tools/verify_daily_streamer_live.ps1 EXIT=0
+LOG=daily_streamer_live.log
+MODEL=llama3.2-3b-Q2_K.gguf
+ENV=MULTI DualStick STRICT SSVK+Q2K DEEP2_WEIGHT_PIN=1
 
 SOURCE=
-  d2_deep2_binding.h
-  d2_session_deep2_adapter.cpp  (#1+#2 load/generateStream/cancel/reset/unload)
-  d2_session_install_binding()
-  d2_session_bind_deep2_engine_ptr(session, Deep2Engine*)
+  src/deep2/daily_streamer_live_cert.cpp
+  src/deep2/daily/d2_session_deep2_adapter.cpp
+  src/deep2/daily/d2_stream_session.c
+  CMake target daily_streamer_live_cert
 
-PROOF_WHEN_RUN_WITH_REAL_ENGINE=
-  BACKEND=DEEP2_ENGINE MOCK_BACKEND=0
-  MODEL_OPEN_REAL PROMPT_TOKENIZE_REAL PREFILL_REAL
-  STREAM_CALLBACK_REAL STREAM_CALLBACK_TOKENS>0
-  GENERATION_1+2 SAME_PROCESS SAME_MODEL_INSTANCE
-  DEVICE_LOST=0 → DAILY_STREAMER_LIVE_INFERENCE=PASS
-
-NOTE=
-  V0 mock remains only for build_daily_smoke.bat unit smoke
-  product path must call bind_deep2_engine_ptr before open_model
-  full LIVE_001 EXE link awaits CMake Deep2Engine target (not Attempt2 cert)
-
-NEXT=
-  CMake deep2_streamer_live target linking Deep2Engine
-  then LIVE_001 on TinyLlama HOST_DECODE
-  then SECOND_PROMPT / KV / CANCEL / UNLOAD / ENDURANCE_100
+NEXT=DEEP2_ENDURANCE_001
+NOT_RUN!=PASS

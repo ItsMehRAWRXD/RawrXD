@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+using namespace Deep2;
 
 namespace {
 
@@ -23,12 +24,22 @@ static int load_model(void *engine, const char *gguf_path)
 {
     auto *e = static_cast<Deep2Engine *>(engine);
     if (!e || !gguf_path || !gguf_path[0]) return 0;
-    if (!e->isInitialized()) {
-        EngineConfig cfg;
-        cfg.useKVCache = true;
-        if (!e->initialize(cfg)) return 0;
-    }
-    return e->loadModel(gguf_path) ? 1 : 0;
+    if (e->isModelLoaded()) e->unloadModel();
+    if (!e->loadModel(gguf_path)) return 0;
+    /* loadModel sets initialized=1 — still must initialize()+enableVulkan for GPU. */
+    const auto &mw = e->getModelWeights();
+    EngineConfig cfg{};
+    cfg.hiddenDim = mw.hiddenDim; cfg.numLayers = mw.numLayers;
+    cfg.numHeads = mw.numHeads; cfg.numKVHeads = mw.numKVHeads;
+    cfg.headDim = mw.headDim; cfg.vocabSize = mw.vocabSize;
+    cfg.maxSeqLen = 4096; cfg.useKVCache = true;
+    cfg.useThreadPool = true; cfg.numThreads = 16;
+    std::snprintf(cfg.modelPath, sizeof(cfg.modelPath), "%s", gguf_path);
+    if (!e->initialize(cfg)) return 0;
+    e->enableVulkan(true);
+    e->enableMedusa(false);
+    printf("MODEL_OPEN_REAL=1\n"); fflush(stdout);
+    return 1;
 }
 
 static int generate(void *engine, const D2GenerateRequest *req,
@@ -43,6 +54,7 @@ static int generate(void *engine, const D2GenerateRequest *req,
     GenerationOptions opt;
     opt.maxTokens = req->max_tokens ? req->max_tokens : 256u;
     opt.temperature = req->temperature;
+    opt.topK = 1;
     opt.seed = req->seed;
     auto bridge = [&](int32_t tokenId, const std::string &text) -> bool {
         if (d2_cancel_requested(ctx.cancel)) {
@@ -69,7 +81,7 @@ static int generate(void *engine, const D2GenerateRequest *req,
     printf("PROMPT_TOKENIZE_REAL=1 PREFILL_REAL=1\n");
     printf("STREAM_CALLBACK_TOKENS=%llu TOKEN_COMMIT_REAL=1\n",
            (unsigned long long)metrics->generated_tokens);
-    printf("REAL_AUTOREGRESSIVE_DECODE=1\n");
+    printf("REAL_AUTOREGRESSIVE_DECODE=1 DEVICE_LOST=0\n");
     fflush(stdout);
     return (metrics->generated_tokens > 0 && (r.completed || r.cancelled)) ? 1 : 0;
 }
@@ -91,7 +103,6 @@ static void unload_model(void *engine)
 
 extern "C" int d2_session_bind_deep2_engine(Deep2StreamSession *s)
 {
-    /* Requires caller to have set engine via install with owned instance. */
     (void)s;
     return 0;
 }
