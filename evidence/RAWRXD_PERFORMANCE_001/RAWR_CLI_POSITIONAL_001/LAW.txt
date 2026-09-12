@@ -1,0 +1,19 @@
+GATE=RAWR_CLI_POSITIONAL_001
+STATUS=LIVE_PRODUCT_PASS
+PROMOTE=0
+
+## Acceptance command
+rawr run <model> "<prompt>"
+
+## Predicates
+POSITIONAL_PROMPT=1
+MODEL_RESOLVED=1
+REAL_DEEP2_ENGINE=1
+MOCK_BACKEND=0
+GENERATED_TOKENS>0
+STDOUT_MODEL_TEXT_ONLY=1
+EXIT=0
+
+## Authority
+Does not reopen RAWR_CLI_PRODUCT_001.
+Runs only after DEEP2_ENDURANCE_001 sealed (this batch).
