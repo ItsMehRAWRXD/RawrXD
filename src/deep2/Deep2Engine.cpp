@@ -6236,38 +6236,44 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (t > 0) {
             ssVkProductBind_.noteSamplerCommit(true);
             ssVkProductBind_.noteSealedLogitsReuse(false);
-            /* Batch2 authoritative (VERIFY ≥16 PASS). BIND16 remains side. */
-            if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
-                if (!ssVkProductBind_.tokenAuthoritative()) {
-                    const auto& p = ssVkProductBind_.tokenProof();
-                    std::fprintf(stderr,
-                        "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
-                        "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u "
-                        "full=%u norm=%u lm=%u samp=%u kv=%u\n",
-                        t,
-                        (unsigned long long)p.q2kOpsProduct,
-                        (unsigned long long)p.q2kOpsSeen,
-                        p.hostForwardLayerCalls,
-                        p.hostMaterializations,
-                        p.cpuF32Expands,
-                        p.criticalPathNvmeReads,
-                        p.fullModelForward,
-                        p.finalNormReal,
-                        p.lmHeadReal,
-                        p.samplerCommitReal,
-                        p.kvAdvanceReal);
-                    return tokensGenerated;
-                }
-                std::fprintf(stderr,
-                    "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
-            }
+            /* BIND16_GATE: governing commit owns PASS + WINDOW_AUTHORITY. */
             if (ssvkBind16_.run != nullptr) {
                 const int kvReal =
                     (kvCache &&
                      !rawr::iso_ladder::Ignore(rawr::iso_ladder::Run::A7))
                         ? 1 : 0;
                 d2bind16_note_tail(&ssvkBind16_, 1, 1, kvReal, 1, 0);
-                (void)d2bind16_commit_token(&ssvkBind16_);
+                const int bindOk = d2bind16_commit_token(&ssvkBind16_);
+                if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
+                    if (!bindOk) {
+                        std::fprintf(stderr,
+                            "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
+                            "reason=BIND16_COMMIT\n", t);
+                        return tokensGenerated;
+                    }
+                    std::fprintf(stderr,
+                        "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
+                    const D2Bind16Window* bw = d2bind16_window(&ssvkBind16_);
+                    if (bw && bw->authority)
+                        std::fprintf(stderr, "BIND16_WINDOW_AUTHORITY=1\n");
+                }
+            } else if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
+                if (!ssVkProductBind_.tokenAuthoritative()) {
+                    const auto& p = ssVkProductBind_.tokenProof();
+                    std::fprintf(stderr,
+                        "BATCH2_PRODUCT_DECODE_BIND=FAIL token=%zu "
+                        "q2=%llu/%llu hostFwd=%u hostMat=%u f32=%u nvme=%u\n",
+                        t,
+                        (unsigned long long)p.q2kOpsProduct,
+                        (unsigned long long)p.q2kOpsSeen,
+                        p.hostForwardLayerCalls,
+                        p.hostMaterializations,
+                        p.cpuF32Expands,
+                        p.criticalPathNvmeReads);
+                    return tokensGenerated;
+                }
+                std::fprintf(stderr,
+                    "BATCH2_PRODUCT_DECODE_BIND=PASS token=%zu\n", t);
             }
         }
         tokensGenerated++;

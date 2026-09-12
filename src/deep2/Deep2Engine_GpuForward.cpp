@@ -221,11 +221,34 @@ bool Deep2Engine::forwardLayerGpuResident(
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
             else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) {
                 ++c.q2kPackedOps;
-                /* Batch2 authoritative on N>0. Prefill uses DispatchGemvQuant. */
+                /* BIND16_GATE: N>0 product via BIND16 first (governing ABI). */
+                const bool bind16Tok =
+                    ssvkBind16_.run != nullptr &&
+                    ssvkBind16_.token.token_ordinal > 0 &&
+                    wt.data && wt.sizeBytes;
                 const bool batch2Tok =
-                    ssVkProductBind_.bound() &&
+                    !bind16Tok && ssVkProductBind_.bound() &&
                     ssVkProductBind_.tokenProof().tokenOrdinal > 0 &&
                     wt.data && wt.sizeBytes;
+                if (bind16Tok) {
+                    std::vector<float> xin(cols), yout(rows);
+                    if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
+                    D2PackedProductRequest req{};
+                    req.packed_weights = wt.data;
+                    req.input = xin.data();
+                    req.output = yout.data();
+                    req.rows = rows;
+                    req.cols = cols;
+                    req.weight_bytes = wt.sizeBytes;
+                    req.tensor_name = wt.name.c_str();
+                    if (!d2bind16_dispatch_q2k(&ssvkBind16_, &req)) {
+                        std::fprintf(stderr,
+                            "BIND16_GPUFWD_Q2K_FAIL rows=%u cols=%u name=%s\n",
+                            rows, cols, wt.name.c_str());
+                        return false;
+                    }
+                    return vc->UploadBuf(out, yout.data(), rows);
+                }
                 if (batch2Tok) {
                     std::vector<float> xin(cols), yout(rows);
                     if (!vc->DownloadBuf(in, xin.data(), cols)) return false;
@@ -237,10 +260,7 @@ bool Deep2Engine::forwardLayerGpuResident(
                     req.cols = cols;
                     req.weightBytes = wt.sizeBytes;
                     req.tensorName = wt.name.c_str();
-                    for (int attempt = 0; attempt < 16; ++attempt) {
-#ifdef _WIN32
-                        if (attempt) Sleep(2);
-#endif
+                    for (int attempt = 0; attempt < 4; ++attempt) {
                         if (ssVkProductBind_.dispatchQ2K(req) &&
                             vc->UploadBuf(out, yout.data(), rows))
                             return true;

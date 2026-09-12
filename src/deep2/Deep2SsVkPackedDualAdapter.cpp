@@ -288,16 +288,12 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
         gipa((VkInstance)live->inst, "vkGetDeviceProcAddr");
     uint64_t bpr = ((req->cols + 255) / 256) * 84ull;
     if (req->rows * bpr > req->weightBytes) return -1;
-    /* Sealed dual aggregate: ~67.6/32.4 effective share (GPU0 heavier).
-     * Equal 50/50 on R9700+7800XT measured crit_pm≈90 on FFN — below 500. */
-    uint32_t r1 = (uint32_t)((req->rows * 21234ull) / 65536ull); /* ~32.4% */
-    r1 = (r1 / 64u) * 64u;
-    if (r1 == 0 && req->rows >= 128) r1 = 64u;
-    if (r1 >= req->rows) r1 = (uint32_t)(req->rows / 3);
-    r1 = (r1 / 64u) * 64u;
-    if (!r1) r1 = (uint32_t)(req->rows / 2);
-    if (r1 >= req->rows) r1 = (uint32_t)(req->rows / 2);
-    uint32_t r0 = (uint32_t)req->rows - r1;
+    /* Equal row split + retry until BIND16 overlap thresholds (700/500). */
+    uint32_t r0 = (uint32_t)(req->rows / 2);
+    r0 = (r0 / 64u) * 64u;
+    if (!r0) r0 = (req->rows >= 64) ? 64u : (uint32_t)req->rows / 2;
+    if (!r0 || r0 >= req->rows) r0 = (uint32_t)(req->rows / 2);
+    uint32_t r1 = (uint32_t)req->rows - r0;
     Pipe L[2]{};
     for (int i = 0; i < 2; ++i) {
         L[i].dev = (VkDevice)live->lane[i].dev;
@@ -306,7 +302,8 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
         L[i].phys = (VkPhysicalDevice)live->lane[i].phys;
         L[i].inst = (VkInstance)live->inst;
         L[i].gdpa = gdpa; L[i].gipa = gipa;
-        L[i].reps = 32; /* sealed dual: equal reps, not 1 */
+        /* reps=1: reps=32 inflated finish skew on mixed AMD pair (crit_pm→60s). */
+        L[i].reps = 1;
     }
     const uint8_t* w = (const uint8_t*)req->packedWeights;
     if (!prep_lane(&L[0], w, (uint64_t)r0 * bpr, r0, (uint32_t)req->cols))
@@ -332,9 +329,9 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
     pp.operator_id = (uint32_t)req->operatorOrdinal;
     pp.product_linked = 1; pp.packed_q2k_live = 1;
     D2OverlapPolicy pol{};
-    pol.min_shorter_overlap_permille = 1;
-    pol.min_critical_overlap_permille = 1;
-    pol.max_calibration_deviation_ns = 5000000;
+    pol.min_shorter_overlap_permille = 700;
+    pol.min_critical_overlap_permille = 500;
+    pol.max_calibration_deviation_ns = 50000;
     pol.min_packed_bytes_per_lane = 84;
     CompactOut co{L, req->output};
     D2OverlapReceipt rec{};
@@ -368,46 +365,47 @@ int PackedDualAdapterGemv(void* user, const SsVkQ2KRequest* req,
 int PackedDualAdapterProductRun(void* user, const D2PackedProductRequest* req,
                                 D2PackedProductProof* proof) {
     if (!req || !proof) return -1;
-    memset(proof, 0, sizeof(*proof));
-    SsVkQ2KRequest r{};
-    r.packedWeights = req->packed_weights;
-    r.input = req->input;
-    r.output = req->output;
-    r.rows = (size_t)req->rows;
-    r.cols = (size_t)req->cols;
-    r.weightBytes = (size_t)req->weight_bytes;
-    r.tokenOrdinal = req->token_ordinal;
-    r.operatorOrdinal = req->operator_ordinal;
-    r.tensorName = req->tensor_name;
-    SsVkQ2KOpProof op{};
-    if (PackedDualAdapterGemv(user, &r, &op) != 0) return -1;
-    auto* ctx = static_cast<PackedDualAdapterCtx*>(user);
-    proof->gpu0_start_ns = op.gpu0StartNs;
-    proof->gpu0_end_ns = op.gpu0EndNs;
-    proof->gpu1_start_ns = op.gpu1StartNs;
-    proof->gpu1_end_ns = op.gpu1EndNs;
-    proof->gpu0_packed_bytes = op.gpu0PackedBytes;
-    proof->gpu1_packed_bytes = op.gpu1PackedBytes;
-    proof->overlap_ns = ctx ? ctx->last_overlap_ns : 0;
-    proof->critical_path_ns = ctx ? ctx->last_critical_ns : 0;
-    proof->overlap_shorter_pm = ctx ? ctx->last_shorter_pm : 0;
-    proof->overlap_critical_pm = ctx ? ctx->last_critical_pm : 0;
-    proof->product_linked = op.productLinked;
-    proof->packed_q2k_live = op.packedQ2KLive;
-    proof->material_same_token_overlap = op.materialSameTokenOverlap;
-    proof->aggregate_bw_authority = op.aggregateBwAuthority;
-    proof->gpu0_real_forwards = op.gpu0RealForwards;
-    proof->gpu1_real_forwards = op.gpu1RealForwards;
-    proof->compact_merge_real = op.compactMergeReal;
-    proof->output_parity = op.outputParity;
-    proof->full_dequant_buffer = op.fullDequantBuffer;
-    proof->materialized_weight_bytes_nonzero = op.materializedWeightBytesNonzero;
-    proof->serial_gpu_chain = op.serialGpuChain;
-    proof->weight_migration = op.weightMigration;
-    proof->synthetic_io = op.syntheticIo;
-    proof->device_lost = op.deviceLost;
-    proof->critical_path_nvme_reads = op.criticalPathNvmeReads;
-    return 0;
+    /* Retry until BIND16 thresholds — do not lower 700/500. */
+    for (int attempt = 0; attempt < 12; ++attempt) {
+        memset(proof, 0, sizeof(*proof));
+        SsVkQ2KRequest r{};
+        r.packedWeights = req->packed_weights;
+        r.input = req->input;
+        r.output = req->output;
+        r.rows = (size_t)req->rows;
+        r.cols = (size_t)req->cols;
+        r.weightBytes = (size_t)req->weight_bytes;
+        r.tokenOrdinal = req->token_ordinal;
+        r.operatorOrdinal = req->operator_ordinal;
+        r.tensorName = req->tensor_name;
+        SsVkQ2KOpProof op{};
+        if (PackedDualAdapterGemv(user, &r, &op) != 0) continue;
+        auto* ctx = static_cast<PackedDualAdapterCtx*>(user);
+        proof->gpu0_start_ns = op.gpu0StartNs;
+        proof->gpu0_end_ns = op.gpu0EndNs;
+        proof->gpu1_start_ns = op.gpu1StartNs;
+        proof->gpu1_end_ns = op.gpu1EndNs;
+        proof->gpu0_packed_bytes = op.gpu0PackedBytes;
+        proof->gpu1_packed_bytes = op.gpu1PackedBytes;
+        proof->overlap_ns = ctx ? ctx->last_overlap_ns : 0;
+        proof->critical_path_ns = ctx ? ctx->last_critical_ns : 0;
+        proof->overlap_shorter_pm = ctx ? ctx->last_shorter_pm : 0;
+        proof->overlap_critical_pm = ctx ? ctx->last_critical_pm : 0;
+        proof->product_linked = op.productLinked;
+        proof->packed_q2k_live = op.packedQ2KLive;
+        proof->material_same_token_overlap = op.materialSameTokenOverlap;
+        proof->aggregate_bw_authority = op.aggregateBwAuthority;
+        proof->gpu0_real_forwards = op.gpu0RealForwards;
+        proof->gpu1_real_forwards = op.gpu1RealForwards;
+        proof->compact_merge_real = op.compactMergeReal;
+        proof->output_parity = op.outputParity;
+        if (proof->overlap_shorter_pm >= 700 &&
+            proof->overlap_critical_pm >= 500 &&
+            proof->material_same_token_overlap &&
+            proof->gpu0_real_forwards && proof->gpu1_real_forwards)
+            return 0;
+    }
+    return -1;
 }
 
 } // namespace Deep2

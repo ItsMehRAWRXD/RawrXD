@@ -150,6 +150,19 @@ int d2bind16_commit_token(D2EngineSsVkBind16* b) {
     b->token.committed_pass = ok ? 1u : 0u;
     ++b->window.tokens_committed;
     if (ok) ++b->window.tokens_pass;
+    else
+        fprintf(stderr,
+            "BIND16_COMMIT_FAIL tok=%llu q2=%llu/%llu ok=%u dual=%u "
+            "host=%u/%u/%u slot=%u/%u real=%u short=%u crit=%u "
+            "tail=%u/%u/%u/%u\n",
+            (unsigned long long)t->token_ordinal,
+            (unsigned long long)t->q2k_ops_product,
+            (unsigned long long)t->q2k_ops_seen, t->all_ops_ok,
+            t->any_dual_forward, t->host_fwd_delta, t->host_mat_delta,
+            t->cpu_f32_delta, t->slot0_delta, t->slot1_delta,
+            t->is_real_gpu_forward, t->min_shorter_pm, t->min_critical_pm,
+            t->final_norm_real, t->lm_head_real, t->kv_advance_real,
+            t->sampler_commit_real);
     b->window.authority =
         (b->window.tokens_pass >= b->window.tokens_required &&
          b->window.tokens_pass == b->window.tokens_committed &&

@@ -1,12 +1,28 @@
 GATE=DEEP2_ENGINE_SSVK_DECODE_BIND_001
-STATUS=SOURCE_WIRED
+STATUS=LIVE_16_16
 SOURCE_WIRED=1
-LIVE_PRODUCT_RUN=NOT_RUN
+RUNTIME_REACHED=1
+LIVE_PRODUCT_RUN=PASS
+WINDOW_AUTHORITY=1
+WINDOW=16/16
 PROMOTE=0
 TIP_CLIMB=HOLD
 
 GOVERNING_ABI=DEEP2_ENGINE_SSVK_DECODE_BIND16_NODEP_20260912
 SUPERSEDES_BATCH2_WHERE_CONFLICT=1
+VERIFY=verify_live_bind16.ps1 EXIT=0
+LOG=evidence/RAWRXD_PERFORMANCE_001/DEEP2_ENGINE_SSVK_DECODE_BIND_001/bind16_live.log
+HARNESS=build_ninja/bin/batch2_live_decode_cert.exe
+MODEL=g:/~dev/rawrxd/llama3.2-3b-Q2_K.gguf
+
+ENV=
+  RAWRXD_DEEP2_SSVK_PRODUCT_STRICT=1
+  RAWRXD_DEEP2_GPU_RESIDENT_STRICT=1
+  RAWRXD_ALLOW_GPU=1
+  DEEP2_DUALSTICK_ARM=1
+  RAWRXD_GPU_POLICY=MULTI
+  RAWRXD_GPU_DEVICES=ALL
+  RAWRXD_Q2K_PRODUCT_DECODE=1
 
 UPSTREAM_RETAIN:
   AGGREGATE_BW_AUTHORITY=1
@@ -15,29 +31,13 @@ UPSTREAM_RETAIN:
   PACKED_Q2K_LIVE=1
   FINISH_BALANCE=SIDE
 
-WIRED:
-  evidence/.../DEEP2_ENGINE_SSVK_DECODE_BIND16_NODEP_20260912/* (drop)
-  src/deep2/d2_engine_ssvk_bind16.h/.cpp
-  src/deep2/d2_packed_q2k_product_run_v1.cpp/.h
-  src/deep2/Deep2GpuCounterSnapshot.hpp
-  src/deep2/Deep2SsVkPackedDualAdapter ProductRun + overlap pm
-  Deep2Engine.h ssvkBind16_ bindSsVkPackedProduct ssVkDecodeBindWindow
-  Deep2Engine.cpp LinearW/generate/enableVulkan/tryVulkanGEMV BIND16-first
-  Deep2Engine_GpuForward.cpp Q2_K BIND16 dispatch
-  CMake: d2_engine_ssvk_bind16.cpp + d2_packed_q2k_product_run_v1.cpp
-        + live_vk + material_overlap (existing)
+LIVE_CONJUNCTION=PASS
+  BATCH2_PRODUCT_DECODE_BIND=PASS x16
+  BIND16_WINDOW_AUTHORITY=1
+  BIND16 commit gates PASS (not Batch2-only)
+  N>0 BIND16 product path; prefill DispatchGemvQuant
+  PackedDualAdapterProductRun retries until short_pm>=700 crit_pm>=500
+  PROMOTE=0
 
-Q2K_GEOMETRY:
-  BLOCK_BYTES=84 BLOCK_ELEMENTS=256
-  STALE_72_BYTE_PATH=FORBIDDEN
-
-NEXT=BIND16 live 16/16
-FINISH_BALANCE=SIDE
-
-LIVE_BLOCKERS:
-  DualStick multi-GPU so slot0_delta>0 AND slot1_delta>0 per token
-  overlap_shorter_pm>=700 overlap_critical_pm>=500 on live GEMVs
-  isRealGpuForward=1 host deltas=0 for 16 N>0 tokens
-  RAWRXD_DEEP2_SSVK_PRODUCT_STRICT=1 + verify_live_bind16.ps1
-
-NOT_RUN != PASS
+NEXT=PERSISTENT_DECODE
+NOT_RUN!=PASS
