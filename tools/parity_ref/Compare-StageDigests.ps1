@@ -25,9 +25,13 @@ function Parse-Digests([string]$path, [string]$side) {
 $d = Parse-Digests $Deep2Log 'deep2'
 $l = Parse-Digests $LlamaLog 'llama'
 $order = @(
-  'PROMPT_EMBED','ATTN_NORM_0','Q_0','K_0','V_0','ROPE_Q_0','ROPE_K_0',
-  'ATTN_OUT_0','FFN_INP_0','FFN_NORM_0','FFN_ACT_0','FFN_DOWN_0','POST_FFN_0','LAYER_OUT_0'
+  'PROMPT_EMBED','ATTN_NORM_0','Q_PRE_ROPE_0','Q_POST_ROPE_0','K_PRE_ROPE_0','K_POST_ROPE_0','V_0',
+  'ATTN_OUT_0','FFN_INP_0','FFN_NORM_0','FFN_ACT_0','FFN_DOWN_0','POST_FFN_0','LAYER0_OUT',
+  'FINAL_NORM','TIP_FINAL_NORM','TIP_FINAL_HIDDEN','LOGITS','TIP_LOGITS'
 )
+# Deep2 POST_FFN_N == llama LAYER{N}_OUT (residual out). Alias either side.
+if ($d.ContainsKey('POST_FFN_0') -and -not $d.ContainsKey('LAYER0_OUT')) { $d['LAYER0_OUT'] = $d['POST_FFN_0'] }
+if ($l.ContainsKey('LAYER0_OUT') -and -not $l.ContainsKey('POST_FFN_0')) { $l['POST_FFN_0'] = $l['LAYER0_OUT'] }
 Write-Host "=== BISECT pos=$Pos ==="
 $first = $null
 foreach ($k in $order) {

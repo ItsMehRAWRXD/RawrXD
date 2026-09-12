@@ -1,0 +1,472 @@
+PARITY-CERT-001
+side=reference
+reference_backend=llama.cpp
+note=external_measuring_stick_only_not_a_deep2_dependency
+model=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+prompt=Hi
+max_new_tokens=1
+temperature=0
+top_k=1
+REF_LOAD=PASS
+REF_EMBEDDINGS=0
+REF_CB_EVAL=1
+REF_N_EMBD=3072
+REF_ROPE_FREQ_SCALE_TRAIN=1.000000000
+REF_PROMPT_IDS=128000,13347
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=0 layer=0 head=-1 n=3072 l2=1.143476260e+00 max_abs=3.300781250e-01 min=-1.542053223e-01 max=3.300781250e-01 sum=9.399092197e-01 fnv=6e339c61e36ed2c6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_PROMPT_EMBED_pos0_layer0_full_n3072_seq001.bin nelem=3072 head=-1 seq=001 fnv=6e339c61e36ed2c6
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=1 layer=0 head=-1 n=3072 l2=1.098252488e+00 max_abs=8.154296875e-02 min=-8.154296875e-02 max=7.763671875e-02 sum=-8.813248873e-01 fnv=85617ffef1adbebf nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_PROMPT_EMBED_pos1_layer0_full_n3072_seq002.bin nelem=3072 head=-1 seq=002 fnv=85617ffef1adbebf
+[STAGE_DIGEST] side=llama key=ATTN_NORM_0 pos=0 layer=0 head=-1 n=3072 l2=4.311392384e+00 max_abs=4.169857502e+00 min=-4.169857502e+00 max=2.142565101e-01 sum=-5.612581157e+00 fnv=c0815b03d7435029 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_NORM_0_pos0_layer0_full_n3072_seq003.bin nelem=3072 head=-1 seq=003 fnv=c0815b03d7435029
+[STAGE_DIGEST] side=llama key=ATTN_NORM_0 pos=1 layer=0 head=-1 n=3072 l2=6.707744567e+00 max_abs=1.542525768e+00 min=-1.065324187e+00 max=1.542525768e+00 sum=-8.439952233e+00 fnv=3f1d7e6a8cb36d8e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_NORM_0_pos1_layer0_full_n3072_seq004.bin nelem=3072 head=-1 seq=004 fnv=3f1d7e6a8cb36d8e
+REF_QKV_SHAPE name=Qcur-0 layer=0 hit=1 ne=[3072,2,1] key=Q_PRE_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_PRE_ROPE_0 pos=0 layer=0 head=-1 n=3072 l2=1.250171366e+01 max_abs=1.715957284e+00 min=-1.260258317e+00 max=1.715957284e+00 sum=5.362081859e+00 fnv=b1fc3f8439a1ea3d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_PRE_ROPE_0_pos0_layer0_full_n3072_seq005.bin nelem=3072 head=-1 seq=005 fnv=b1fc3f8439a1ea3d
+[STAGE_DIGEST] side=llama key=Q_PRE_ROPE_0 pos=1 layer=0 head=-1 n=3072 l2=6.495905030e+01 max_abs=1.078785706e+01 min=-1.078785706e+01 max=1.047370338e+01 sum=-7.048553152e+01 fnv=848dce3a1c65a8b6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_PRE_ROPE_0_pos1_layer0_full_n3072_seq006.bin nelem=3072 head=-1 seq=006 fnv=848dce3a1c65a8b6
+REF_QKV_SHAPE name=Qcur-0 (reshaped) layer=0 hit=2 ne=[128,24,2] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=3072 l2=1.250171366e+01 max_abs=1.715957284e+00 min=-1.260258317e+00 max=1.715957284e+00 sum=5.362081859e+00 fnv=b1fc3f8439a1ea3d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n3072_seq007.bin nelem=3072 head=-1 seq=007 fnv=b1fc3f8439a1ea3d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=3072 l2=6.495905030e+01 max_abs=1.078785706e+01 min=-1.078785706e+01 max=1.047370338e+01 sum=-7.048553152e+01 fnv=848dce3a1c65a8b6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n3072_seq008.bin nelem=3072 head=-1 seq=008 fnv=848dce3a1c65a8b6
+REF_QKV_SHAPE name=Qcur-0 layer=0 hit=3 ne=[128,24,2] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=3072 l2=1.250171366e+01 max_abs=1.715957284e+00 min=-1.260258317e+00 max=1.715957284e+00 sum=5.362081859e+00 fnv=b1fc3f8439a1ea3d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n3072_seq009.bin nelem=3072 head=-1 seq=009 fnv=b1fc3f8439a1ea3d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=3072 l2=6.495905033e+01 max_abs=1.078784657e+01 min=-1.078784657e+01 max=1.047369576e+01 sum=-5.768617494e+01 fnv=5c4995223faa44a7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n3072_seq010.bin nelem=3072 head=-1 seq=010 fnv=5c4995223faa44a7
+REF_QKV_SHAPE name=Vcur-0 layer=0 hit=1 ne=[1024,2,1] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=1024 l2=2.965914473e-01 max_abs=1.458856314e-01 min=-1.458856314e-01 max=9.879329056e-02 sum=-2.411953375e-01 fnv=7f284a3f9f70068b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n1024_seq011.bin nelem=1024 head=-1 seq=011 fnv=7f284a3f9f70068b
+[STAGE_DIGEST] side=llama key=V_0 pos=1 layer=0 head=-1 n=1024 l2=1.928187975e+00 max_abs=3.750202060e-01 min=-3.750202060e-01 max=3.368673921e-01 sum=-9.473644106e-01 fnv=dde06526777befee nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos1_layer0_full_n1024_seq012.bin nelem=1024 head=-1 seq=012 fnv=dde06526777befee
+REF_QKV_SHAPE name=Vcur-0 layer=0 hit=1 ne=[128,8,2] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=1024 l2=2.965914473e-01 max_abs=1.458856314e-01 min=-1.458856314e-01 max=9.879329056e-02 sum=-2.411953375e-01 fnv=7f284a3f9f70068b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n1024_seq013.bin nelem=1024 head=-1 seq=013 fnv=7f284a3f9f70068b
+[STAGE_DIGEST] side=llama key=V_0 pos=1 layer=0 head=-1 n=1024 l2=1.928187975e+00 max_abs=3.750202060e-01 min=-3.750202060e-01 max=3.368673921e-01 sum=-9.473644106e-01 fnv=dde06526777befee nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos1_layer0_full_n1024_seq014.bin nelem=1024 head=-1 seq=014 fnv=dde06526777befee
+REF_QKV_SHAPE name=Kcur-0 layer=0 hit=1 ne=[1024,2,1] key=K_PRE_ROPE_0
+[STAGE_DIGEST] side=llama key=K_PRE_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=2.221919531e+01 max_abs=3.979126692e+00 min=-3.979126692e+00 max=3.359115362e+00 sum=-2.643427198e+01 fnv=069fee3eb73ef656 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_PRE_ROPE_0_pos0_layer0_full_n1024_seq015.bin nelem=1024 head=-1 seq=015 fnv=069fee3eb73ef656
+[STAGE_DIGEST] side=llama key=K_PRE_ROPE_0 pos=1 layer=0 head=-1 n=1024 l2=4.044191848e+01 max_abs=1.125041199e+01 min=-1.125041199e+01 max=6.407557011e+00 sum=9.260362908e+00 fnv=b2531f1a03068cd2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_PRE_ROPE_0_pos1_layer0_full_n1024_seq016.bin nelem=1024 head=-1 seq=016 fnv=b2531f1a03068cd2
+REF_QKV_SHAPE name=Kcur-0 (reshaped) layer=0 hit=2 ne=[128,8,2] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=2.221919531e+01 max_abs=3.979126692e+00 min=-3.979126692e+00 max=3.359115362e+00 sum=-2.643427198e+01 fnv=069fee3eb73ef656 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n1024_seq017.bin nelem=1024 head=-1 seq=017 fnv=069fee3eb73ef656
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=1 layer=0 head=-1 n=1024 l2=4.044191848e+01 max_abs=1.125041199e+01 min=-1.125041199e+01 max=6.407557011e+00 sum=9.260362908e+00 fnv=b2531f1a03068cd2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos1_layer0_full_n1024_seq018.bin nelem=1024 head=-1 seq=018 fnv=b2531f1a03068cd2
+REF_QKV_SHAPE name=Kcur-0 layer=0 hit=3 ne=[128,8,2] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=2.221919531e+01 max_abs=3.979126692e+00 min=-3.979126692e+00 max=3.359115362e+00 sum=-2.643427198e+01 fnv=069fee3eb73ef656 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n1024_seq019.bin nelem=1024 head=-1 seq=019 fnv=069fee3eb73ef656
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=1 layer=0 head=-1 n=1024 l2=4.044191838e+01 max_abs=1.125042152e+01 min=-1.125042152e+01 max=6.114846230e+00 sum=1.901228520e+01 fnv=e0fe29ffac673355 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos1_layer0_full_n1024_seq020.bin nelem=1024 head=-1 seq=020 fnv=e0fe29ffac673355
+REF_QKV_SHAPE name=Kcur-0 (view) layer=0 hit=4 ne=[1024,2,1] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=2.221919531e+01 max_abs=3.979126692e+00 min=-3.979126692e+00 max=3.359115362e+00 sum=-2.643427198e+01 fnv=069fee3eb73ef656 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n1024_seq021.bin nelem=1024 head=-1 seq=021 fnv=069fee3eb73ef656
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=1 layer=0 head=-1 n=1024 l2=4.044191838e+01 max_abs=1.125042152e+01 min=-1.125042152e+01 max=6.114846230e+00 sum=1.901228520e+01 fnv=e0fe29ffac673355 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos1_layer0_full_n1024_seq022.bin nelem=1024 head=-1 seq=022 fnv=e0fe29ffac673355
+REF_QKV_SHAPE name=Vcur-0 (view) layer=0 hit=1 ne=[1024,2,1] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=1024 l2=2.965914473e-01 max_abs=1.458856314e-01 min=-1.458856314e-01 max=9.879329056e-02 sum=-2.411953375e-01 fnv=7f284a3f9f70068b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n1024_seq023.bin nelem=1024 head=-1 seq=023 fnv=7f284a3f9f70068b
+[STAGE_DIGEST] side=llama key=V_0 pos=1 layer=0 head=-1 n=1024 l2=1.928187975e+00 max_abs=3.750202060e-01 min=-3.750202060e-01 max=3.368673921e-01 sum=-9.473644106e-01 fnv=dde06526777befee nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos1_layer0_full_n1024_seq024.bin nelem=1024 head=-1 seq=024 fnv=dde06526777befee
+REF_QKV_SHAPE name=Qcur-0 (view) layer=0 hit=4 ne=[128,24,2] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=3072 l2=1.250171366e+01 max_abs=1.715957284e+00 min=-1.260258317e+00 max=1.715957284e+00 sum=5.362081859e+00 fnv=b1fc3f8439a1ea3d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n3072_seq025.bin nelem=3072 head=-1 seq=025 fnv=b1fc3f8439a1ea3d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=3072 l2=6.495905033e+01 max_abs=1.078784657e+01 min=-1.078784657e+01 max=1.047369576e+01 sum=-5.768617494e+01 fnv=5c4995223faa44a7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n3072_seq026.bin nelem=3072 head=-1 seq=026 fnv=5c4995223faa44a7
+REF_QKV_SHAPE name=Qcur-0 (view) (permuted) layer=0 hit=5 ne=[128,2,24] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=256 l2=1.379038700e+01 max_abs=6.600489616e+00 min=-6.600489616e+00 max=4.034454346e+00 sum=1.067575628e+01 fnv=4bb9631e78866dee nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n256_seq027.bin nelem=256 head=-1 seq=027 fnv=4bb9631e78866dee
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=256 l2=2.162778506e+01 max_abs=1.078784657e+01 min=-1.078784657e+01 max=6.572502613e+00 sum=-5.830459093e+00 fnv=4a41636c760d5835 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n256_seq028.bin nelem=256 head=-1 seq=028 fnv=4a41636c760d5835
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=2 layer=0 head=-1 n=256 l2=1.892173398e+01 max_abs=8.414726257e+00 min=-8.414726257e+00 max=4.464245319e+00 sum=3.512149334e+00 fnv=e1e9d01c3c0c34c2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos2_layer0_full_n256_seq029.bin nelem=256 head=-1 seq=029 fnv=e1e9d01c3c0c34c2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=3 layer=0 head=-1 n=256 l2=1.054209529e+01 max_abs=4.040766716e+00 min=-2.975069523e+00 max=4.040766716e+00 sum=1.114909384e+01 fnv=768b957a1f11adb7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos3_layer0_full_n256_seq030.bin nelem=256 head=-1 seq=030 fnv=768b957a1f11adb7
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=4 layer=0 head=-1 n=256 l2=1.213935904e+01 max_abs=5.535579205e+00 min=-5.535579205e+00 max=2.887266874e+00 sum=9.049945390e+00 fnv=ac31ce3c91539ccf nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos4_layer0_full_n256_seq031.bin nelem=256 head=-1 seq=031 fnv=ac31ce3c91539ccf
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=5 layer=0 head=-1 n=256 l2=1.239711768e+01 max_abs=4.957528114e+00 min=-4.957528114e+00 max=4.132459641e+00 sum=1.879409003e+01 fnv=5dee70425e18e304 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos5_layer0_full_n256_seq032.bin nelem=256 head=-1 seq=032 fnv=5dee70425e18e304
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=6 layer=0 head=-1 n=256 l2=1.078767647e+01 max_abs=4.312208652e+00 min=-1.839691401e+00 max=4.312208652e+00 sum=1.351844618e+00 fnv=83fa0d5bf86ef609 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos6_layer0_full_n256_seq033.bin nelem=256 head=-1 seq=033 fnv=83fa0d5bf86ef609
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=7 layer=0 head=-1 n=256 l2=1.337804319e+01 max_abs=4.903204918e+00 min=-4.108496189e+00 max=4.903204918e+00 sum=1.162807356e+01 fnv=e979dfbdca55d854 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos7_layer0_full_n256_seq034.bin nelem=256 head=-1 seq=034 fnv=e979dfbdca55d854
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=8 layer=0 head=-1 n=256 l2=1.407117593e+01 max_abs=6.009308338e+00 min=-2.742959738e+00 max=6.009308338e+00 sum=2.032621454e+00 fnv=d62d598a326ede58 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos8_layer0_full_n256_seq035.bin nelem=256 head=-1 seq=035 fnv=d62d598a326ede58
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=9 layer=0 head=-1 n=256 l2=9.250010553e+00 max_abs=3.389332294e+00 min=-3.389332294e+00 max=1.991342425e+00 sum=2.693444921e+00 fnv=f44f282367b1c1e2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos9_layer0_full_n256_seq036.bin nelem=256 head=-1 seq=036 fnv=f44f282367b1c1e2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=10 layer=0 head=-1 n=256 l2=9.540382969e+00 max_abs=2.759269476e+00 min=-2.759269476e+00 max=2.406436682e+00 sum=-1.972485851e+00 fnv=25a4ddb271f18128 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos10_layer0_full_n256_seq037.bin nelem=256 head=-1 seq=037 fnv=25a4ddb271f18128
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=11 layer=0 head=-1 n=256 l2=1.065026276e+01 max_abs=3.938033342e+00 min=-3.938033342e+00 max=2.127837420e+00 sum=-7.357428847e+00 fnv=12875daa4e650116 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos11_layer0_full_n256_seq038.bin nelem=256 head=-1 seq=038 fnv=12875daa4e650116
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=12 layer=0 head=-1 n=256 l2=1.147336558e+01 max_abs=4.243159771e+00 min=-4.243159771e+00 max=2.399557590e+00 sum=-1.041540999e+01 fnv=b4785a5e5deb132e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos12_layer0_full_n256_seq039.bin nelem=256 head=-1 seq=039 fnv=b4785a5e5deb132e
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=13 layer=0 head=-1 n=256 l2=1.383146530e+01 max_abs=6.459814072e+00 min=-6.459814072e+00 max=4.697248459e+00 sum=-2.211228648e+01 fnv=4027a046a0545f83 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos13_layer0_full_n256_seq040.bin nelem=256 head=-1 seq=040 fnv=4027a046a0545f83
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=14 layer=0 head=-1 n=256 l2=1.276527260e+01 max_abs=4.933869839e+00 min=-4.933869839e+00 max=4.145143032e+00 sum=-1.320150689e+01 fnv=1398012a2dcef24d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos14_layer0_full_n256_seq041.bin nelem=256 head=-1 seq=041 fnv=1398012a2dcef24d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=15 layer=0 head=-1 n=256 l2=1.888962093e+01 max_abs=1.047369576e+01 min=-4.439759254e+00 max=1.047369576e+01 sum=1.184924982e+01 fnv=ec7269a9f02a00db nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos15_layer0_full_n256_seq042.bin nelem=256 head=-1 seq=042 fnv=ec7269a9f02a00db
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=16 layer=0 head=-1 n=256 l2=1.016112137e+01 max_abs=3.703778744e+00 min=-3.703778744e+00 max=2.013256311e+00 sum=-1.258471752e+01 fnv=dcecefd72fcb2deb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos16_layer0_full_n256_seq043.bin nelem=256 head=-1 seq=043 fnv=dcecefd72fcb2deb
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=17 layer=0 head=-1 n=256 l2=1.252841149e+01 max_abs=5.154891014e+00 min=-3.042397022e+00 max=5.154891014e+00 sum=1.318201305e+01 fnv=23e5c2e1ef594de9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos17_layer0_full_n256_seq044.bin nelem=256 head=-1 seq=044 fnv=23e5c2e1ef594de9
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=18 layer=0 head=-1 n=256 l2=1.237406050e+01 max_abs=4.653401375e+00 min=-4.653401375e+00 max=2.400834799e+00 sum=-2.213445501e+00 fnv=bf3b9a529b511ce7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos18_layer0_full_n256_seq045.bin nelem=256 head=-1 seq=045 fnv=bf3b9a529b511ce7
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=19 layer=0 head=-1 n=256 l2=1.341210876e+01 max_abs=6.399781704e+00 min=-5.413337708e+00 max=6.399781704e+00 sum=-5.983673669e+00 fnv=73d5c77db8b67b23 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos19_layer0_full_n256_seq046.bin nelem=256 head=-1 seq=046 fnv=73d5c77db8b67b23
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=20 layer=0 head=-1 n=256 l2=1.069602413e+01 max_abs=3.320303679e+00 min=-3.320303679e+00 max=2.381252527e+00 sum=-6.441939161e-01 fnv=a3354e6dd1a30c9f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos20_layer0_full_n256_seq047.bin nelem=256 head=-1 seq=047 fnv=a3354e6dd1a30c9f
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=21 layer=0 head=-1 n=256 l2=1.279910545e+01 max_abs=2.612092972e+00 min=-2.612092972e+00 max=2.589274883e+00 sum=-1.162994403e+01 fnv=8b0f0df1192324be nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos21_layer0_full_n256_seq048.bin nelem=256 head=-1 seq=048 fnv=8b0f0df1192324be
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=22 layer=0 head=-1 n=256 l2=1.599647588e+01 max_abs=4.565740108e+00 min=-4.565740108e+00 max=3.068907261e+00 sum=-2.529553603e+01 fnv=2cb7e6eca301ad51 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos22_layer0_full_n256_seq049.bin nelem=256 head=-1 seq=049 fnv=2cb7e6eca301ad51
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=23 layer=0 head=-1 n=256 l2=1.394355948e+01 max_abs=4.600417614e+00 min=-4.600417614e+00 max=2.700201750e+00 sum=-2.900128756e+01 fnv=0439d01b0c470783 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos23_layer0_full_n256_seq050.bin nelem=256 head=-1 seq=050 fnv=0439d01b0c470783
+REF_KQV_SHAPE name=kqv_out-0 ne=[3072,2,1] nb=[4,12288,24576]
+REF_KQV_SKIP unexpected ne0=3072 (want 2048 or 3D heads)
+[STAGE_DIGEST] side=llama key=ATTN_OUT_0 pos=0 layer=0 head=-1 n=3072 l2=4.002283247e-01 max_abs=7.958430797e-02 min=-7.958430797e-02 max=7.699724287e-02 sum=4.349700106e-01 fnv=98afbb237adf40a5 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_OUT_0_pos0_layer0_full_n3072_seq051.bin nelem=3072 head=-1 seq=051 fnv=98afbb237adf40a5
+[STAGE_DIGEST] side=llama key=ATTN_OUT_0 pos=1 layer=0 head=-1 n=3072 l2=4.461189217e-01 max_abs=1.189046130e-01 min=-1.189046130e-01 max=1.152768880e-01 sum=4.760404739e-01 fnv=73713418475eef93 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_OUT_0_pos1_layer0_full_n3072_seq052.bin nelem=3072 head=-1 seq=052 fnv=73713418475eef93
+[STAGE_DIGEST] side=llama key=FFN_INP_0 pos=0 layer=0 head=-1 n=3072 l2=1.159680447e+00 max_abs=3.517509401e-01 min=-1.502652764e-01 max=3.517509401e-01 sum=1.374879270e+00 fnv=93fa8a5dea6401d3 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_INP_0_pos0_layer0_full_n3072_seq053.bin nelem=3072 head=-1 seq=053 fnv=93fa8a5dea6401d3
+[STAGE_DIGEST] side=llama key=FFN_INP_0 pos=1 layer=0 head=-1 n=3072 l2=1.130822427e+00 max_abs=1.118245348e-01 min=-1.118245348e-01 max=1.082087308e-01 sum=-4.052844016e-01 fnv=716d06284d055495 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_INP_0_pos1_layer0_full_n3072_seq054.bin nelem=3072 head=-1 seq=054 fnv=716d06284d055495
+[STAGE_DIGEST] side=llama key=FFN_NORM_0 pos=0 layer=0 head=-1 n=3072 l2=7.082828817e+00 max_abs=2.812559128e+00 min=-8.726572990e-01 max=2.812559128e+00 sum=7.190046057e+00 fnv=074a45f68e9460bb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_NORM_0_pos0_layer0_full_n3072_seq055.bin nelem=3072 head=-1 seq=055 fnv=074a45f68e9460bb
+[STAGE_DIGEST] side=llama key=FFN_NORM_0 pos=1 layer=0 head=-1 n=3072 l2=7.412769778e+00 max_abs=5.107012987e-01 min=-5.034564734e-01 max=5.107012987e-01 sum=-2.338522805e+00 fnv=f8826352d4084471 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_NORM_0_pos1_layer0_full_n3072_seq056.bin nelem=3072 head=-1 seq=056 fnv=f8826352d4084471
+[STAGE_DIGEST] side=llama key=FFN_GATE_0 pos=0 layer=0 head=-1 n=8192 l2=7.294732155e+00 max_abs=4.332720757e+00 min=-1.458922148e+00 max=4.332720757e+00 sum=-6.824138087e+01 fnv=4c57523817321585 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_GATE_0_pos0_layer0_full_n8192_seq057.bin nelem=8192 head=-1 seq=057 fnv=4c57523817321585
+[STAGE_DIGEST] side=llama key=FFN_GATE_0 pos=1 layer=0 head=-1 n=8192 l2=1.469582357e+01 max_abs=1.544713855e+00 min=-1.544713855e+00 max=1.051070333e+00 sum=-1.902937118e+02 fnv=30476f6b82e9e893 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_GATE_0_pos1_layer0_full_n8192_seq058.bin nelem=8192 head=-1 seq=058 fnv=30476f6b82e9e893
+[STAGE_DIGEST] side=llama key=FFN_UP_0 pos=0 layer=0 head=-1 n=8192 l2=5.518546553e+00 max_abs=2.758029938e+00 min=-2.758029938e+00 max=3.914732337e-01 sum=3.713775408e+00 fnv=6cac5bbdcccfa3e7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_UP_0_pos0_layer0_full_n8192_seq059.bin nelem=8192 head=-1 seq=059 fnv=6cac5bbdcccfa3e7
+[STAGE_DIGEST] side=llama key=FFN_UP_0 pos=1 layer=0 head=-1 n=8192 l2=1.329430926e+01 max_abs=1.014603615e+00 min=-1.014603615e+00 max=9.400378466e-01 sum=-2.131125801e+01 fnv=02ad2942817978df nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_UP_0_pos1_layer0_full_n8192_seq060.bin nelem=8192 head=-1 seq=060 fnv=02ad2942817978df
+[STAGE_DIGEST] side=llama key=FFN_ACT_0 pos=0 layer=0 head=-1 n=8192 l2=1.213382241e+01 max_abs=1.179488659e+01 min=-1.179488659e+01 max=4.913741350e-01 sum=-1.405811790e+01 fnv=d445d330777f1255 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_ACT_0_pos0_layer0_full_n8192_seq061.bin nelem=8192 head=-1 seq=061 fnv=d445d330777f1255
+[STAGE_DIGEST] side=llama key=FFN_ACT_0 pos=1 layer=0 head=-1 n=8192 l2=1.501317703e+00 max_abs=4.956116378e-01 min=-4.956116378e-01 max=4.029529989e-01 sum=2.271784534e-01 fnv=c588266d3066b833 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_ACT_0_pos1_layer0_full_n8192_seq062.bin nelem=8192 head=-1 seq=062 fnv=c588266d3066b833
+[STAGE_DIGEST] side=llama key=FFN_DOWN_0 pos=0 layer=0 head=-1 n=3072 l2=1.837674955e+01 max_abs=5.389222145e+00 min=-5.389222145e+00 max=4.655577660e+00 sum=1.733166291e+01 fnv=03a745b57cba8282 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_DOWN_0_pos0_layer0_full_n3072_seq063.bin nelem=3072 head=-1 seq=063 fnv=03a745b57cba8282
+[STAGE_DIGEST] side=llama key=FFN_DOWN_0 pos=1 layer=0 head=-1 n=3072 l2=1.899238688e+00 max_abs=2.190078199e-01 min=-2.190078199e-01 max=2.128191739e-01 sum=2.748790662e+00 fnv=cb1443e5ea7dfb54 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_DOWN_0_pos1_layer0_full_n3072_seq064.bin nelem=3072 head=-1 seq=064 fnv=cb1443e5ea7dfb54
+[STAGE_DIGEST] side=llama key=LAYER0_OUT pos=0 layer=0 head=-1 n=3072 l2=1.870353686e+01 max_abs=5.468806267e+00 min=-5.468806267e+00 max=5.007328510e+00 sum=1.870654270e+01 fnv=5055be4aa27c6121 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_LAYER0_OUT_pos0_layer0_full_n3072_seq065.bin nelem=3072 head=-1 seq=065 fnv=5055be4aa27c6121
+[STAGE_DIGEST] side=llama key=LAYER0_OUT pos=1 layer=0 head=-1 n=3072 l2=2.249795346e+00 max_abs=2.572551966e-01 min=-2.572551966e-01 max=2.093715221e-01 sum=2.343506237e+00 fnv=e237939f84d1db7c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_LAYER0_OUT_pos1_layer0_full_n3072_seq066.bin nelem=3072 head=-1 seq=066 fnv=e237939f84d1db7c
+[STAGE_DIGEST] side=llama key=FINAL_NORM pos=0 layer=0 head=-1 n=3072 l2=8.630046305e+01 max_abs=1.504796124e+01 min=-1.245352077e+01 max=1.504796124e+01 sum=7.626774182e+01 fnv=d850adc1ec889fa4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FINAL_NORM_pos0_layer0_full_n3072_seq067.bin nelem=3072 head=-1 seq=067 fnv=d850adc1ec889fa4
+[STAGE_DIGEST] side=llama key=TIP_FINAL_NORM pos=0 layer=0 head=-1 n=3072 l2=8.630046305e+01 max_abs=1.504796124e+01 min=-1.245352077e+01 max=1.504796124e+01 sum=7.626774182e+01 fnv=d850adc1ec889fa4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_TIP_FINAL_NORM_pos0_layer0_full_n3072_seq068.bin nelem=3072 head=-1 seq=068 fnv=d850adc1ec889fa4
+[STAGE_DIGEST] side=llama key=LOGITS pos=0 layer=0 head=-1 n=128256 l2=9.860744130e+02 max_abs=1.351601982e+01 min=-9.443191528e+00 max=1.351601982e+01 sum=-2.296758125e+05 fnv=aaa74ecedf16db35 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_LOGITS_pos0_layer0_full_n128256_seq069.bin nelem=128256 head=-1 seq=069 fnv=aaa74ecedf16db35
+[STAGE_DIGEST] side=llama key=TIP_LOGITS pos=0 layer=0 head=-1 n=128256 l2=9.860744130e+02 max_abs=1.351601982e+01 min=-9.443191528e+00 max=1.351601982e+01 sum=-2.296758125e+05 fnv=aaa74ecedf16db35 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_TIP_LOGITS_pos0_layer0_full_n128256_seq070.bin nelem=128256 head=-1 seq=070 fnv=aaa74ecedf16db35
+[STAGE_DIGEST] side=llama key=ARGMAX pos=0 id=11 logit=13.516019821
+REF_TOP10=11:13.516020:' ',5127:12.541920:' everyone',1578:11.803283:' again',1070:11.703387:' there',3638:11.536181:'   ',0:10.838901:'!',7752:10.661345:' guys',7911:10.242311:'ya',12:10.229729:'-',345:10.004117:'  '
+REF_SELECTED_ID=11
+REF_SELECTED_LOGIT=13.516020
+REF_LOGIT_13=9.323211670
+REF_LOGIT_29892=-2.779124975
+REF_DELTA_13_minus_29892=12.102336884
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=0 layer=0 head=-1 n=3072 l2=1.238893813e+00 max_abs=2.255859375e-01 min=-1.777343750e-01 max=2.255859375e-01 sum=2.489348054e-01 fnv=76c43789a51b920a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_PROMPT_EMBED_pos0_layer0_full_n3072_seq071.bin nelem=3072 head=-1 seq=071 fnv=76c43789a51b920a
+[STAGE_DIGEST] side=llama key=ATTN_NORM_0 pos=0 layer=0 head=-1 n=3072 l2=4.525407310e+00 max_abs=2.634809017e+00 min=-2.634809017e+00 max=1.093018293e+00 sum=2.263518208e-02 fnv=bb2b8149c1e91667 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_NORM_0_pos0_layer0_full_n3072_seq072.bin nelem=3072 head=-1 seq=072 fnv=bb2b8149c1e91667
+REF_QKV_SHAPE name=Qcur-0 layer=0 hit=6 ne=[3072,1,1] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=3072 l2=8.504734921e+01 max_abs=1.706905556e+01 min=-1.481725216e+01 max=1.706905556e+01 sum=-2.887085337e+01 fnv=de9e6bcda507397a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n3072_seq073.bin nelem=3072 head=-1 seq=073 fnv=de9e6bcda507397a
+REF_QKV_SHAPE name=Qcur-0 (reshaped) layer=0 hit=7 ne=[128,24,1] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.246492435e+01 max_abs=1.007275295e+01 min=-1.007275295e+01 max=8.393248558e+00 sum=1.633427861e+01 fnv=c8a509705b1b7de2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n128_seq074.bin nelem=128 head=-1 seq=074 fnv=c8a509705b1b7de2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=2.716664502e+01 max_abs=1.481725216e+01 min=-1.481725216e+01 max=9.035255432e+00 sum=-8.980780844e+00 fnv=85be2d0cfd7c9f23 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n128_seq075.bin nelem=128 head=-1 seq=075 fnv=85be2d0cfd7c9f23
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=1.379049593e+01 max_abs=5.989862442e+00 min=-5.989862442e+00 max=2.579211473e+00 sum=2.201805969e+00 fnv=d38bf496bbf56b26 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos2_layer0_full_n128_seq076.bin nelem=128 head=-1 seq=076 fnv=d38bf496bbf56b26
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.232645621e+01 max_abs=5.673705101e+00 min=-3.003665209e+00 max=5.673705101e+00 sum=1.193440072e+01 fnv=7c2606eb55d6ef1f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos3_layer0_full_n128_seq077.bin nelem=128 head=-1 seq=077 fnv=7c2606eb55d6ef1f
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.226491419e+01 max_abs=5.634866238e+00 min=-5.634866238e+00 max=3.372784138e+00 sum=1.474226522e+01 fnv=1bd8e29e8c0dbbe0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos4_layer0_full_n128_seq078.bin nelem=128 head=-1 seq=078 fnv=1bd8e29e8c0dbbe0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.898757064e+01 max_abs=8.002946854e+00 min=-8.002946854e+00 max=6.547147274e+00 sum=2.213519882e+01 fnv=77f7b0f668250c7c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos5_layer0_full_n128_seq079.bin nelem=128 head=-1 seq=079 fnv=77f7b0f668250c7c
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.441240591e+01 max_abs=6.432560921e+00 min=-3.621030331e+00 max=6.432560921e+00 sum=8.777250595e+00 fnv=27eaab3aa7814169 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos6_layer0_full_n128_seq080.bin nelem=128 head=-1 seq=080 fnv=27eaab3aa7814169
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.741765981e+01 max_abs=7.672751427e+00 min=-3.672013283e+00 max=7.672751427e+00 sum=3.115257222e+01 fnv=2d00b23194a35f6c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos7_layer0_full_n128_seq081.bin nelem=128 head=-1 seq=081 fnv=2d00b23194a35f6c
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=8 layer=0 head=-1 n=128 l2=1.840402975e+01 max_abs=8.337318420e+00 min=-3.491538763e+00 max=8.337318420e+00 sum=-7.155461490e+00 fnv=738fa38857715e31 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos8_layer0_full_n128_seq082.bin nelem=128 head=-1 seq=082 fnv=738fa38857715e31
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=9 layer=0 head=-1 n=128 l2=1.272681692e+01 max_abs=6.035017014e+00 min=-6.035017014e+00 max=2.464877605e+00 sum=5.372192156e+00 fnv=69f785318af8b3e7 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos9_layer0_full_n128_seq083.bin nelem=128 head=-1 seq=083 fnv=69f785318af8b3e7
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=10 layer=0 head=-1 n=128 l2=1.162930347e+01 max_abs=3.376657486e+00 min=-2.855188370e+00 max=3.376657486e+00 sum=1.151152886e-01 fnv=94ce27c02682fe71 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos10_layer0_full_n128_seq084.bin nelem=128 head=-1 seq=084 fnv=94ce27c02682fe71
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=11 layer=0 head=-1 n=128 l2=1.653911544e+01 max_abs=7.162450314e+00 min=-7.162450314e+00 max=3.206453085e+00 sum=-1.373007866e+01 fnv=4ac8134ff3309c8b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos11_layer0_full_n128_seq085.bin nelem=128 head=-1 seq=085 fnv=4ac8134ff3309c8b
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=12 layer=0 head=-1 n=128 l2=1.560105546e+01 max_abs=6.630791664e+00 min=-6.630791664e+00 max=2.936772346e+00 sum=-7.311034635e+00 fnv=e33d32cbdfd08ece nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos12_layer0_full_n128_seq086.bin nelem=128 head=-1 seq=086 fnv=e33d32cbdfd08ece
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=13 layer=0 head=-1 n=128 l2=1.776424962e+01 max_abs=8.809836388e+00 min=-8.809836388e+00 max=5.635278702e+00 sum=-2.783884511e+01 fnv=846ef7a68f85b0e4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos13_layer0_full_n128_seq087.bin nelem=128 head=-1 seq=087 fnv=846ef7a68f85b0e4
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=14 layer=0 head=-1 n=128 l2=1.444295209e+01 max_abs=5.753910542e+00 min=-5.753910542e+00 max=4.978749752e+00 sum=-1.525784825e+01 fnv=f9ef9bf2b7c166c1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos14_layer0_full_n128_seq088.bin nelem=128 head=-1 seq=088 fnv=f9ef9bf2b7c166c1
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=15 layer=0 head=-1 n=128 l2=2.990605054e+01 max_abs=1.706905556e+01 min=-6.894219875e+00 max=1.706905556e+01 sum=2.171420834e+01 fnv=a6b84ca65602d949 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos15_layer0_full_n128_seq089.bin nelem=128 head=-1 seq=089 fnv=a6b84ca65602d949
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=16 layer=0 head=-1 n=128 l2=1.054364403e+01 max_abs=3.537717104e+00 min=-3.537717104e+00 max=2.787572622e+00 sum=-1.266388328e+01 fnv=29690afd47ee4b95 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos16_layer0_full_n128_seq090.bin nelem=128 head=-1 seq=090 fnv=29690afd47ee4b95
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=17 layer=0 head=-1 n=128 l2=1.933792115e+01 max_abs=8.975554466e+00 min=-4.554238319e+00 max=8.975554466e+00 sum=1.682020207e+01 fnv=a7b9463053e4cffa nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos17_layer0_full_n128_seq091.bin nelem=128 head=-1 seq=091 fnv=a7b9463053e4cffa
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=18 layer=0 head=-1 n=128 l2=1.170937209e+01 max_abs=5.125534534e+00 min=-5.125534534e+00 max=2.735011101e+00 sum=1.366105027e+00 fnv=bb86b1d5d9a46ad0 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos18_layer0_full_n128_seq092.bin nelem=128 head=-1 seq=092 fnv=bb86b1d5d9a46ad0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=19 layer=0 head=-1 n=128 l2=1.258069718e+01 max_abs=5.805404663e+00 min=-4.915757179e+00 max=5.805404663e+00 sum=-5.739948420e+00 fnv=dbac19721ed4803d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos19_layer0_full_n128_seq093.bin nelem=128 head=-1 seq=093 fnv=dbac19721ed4803d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=20 layer=0 head=-1 n=128 l2=1.155093816e+01 max_abs=4.275349617e+00 min=-4.275349617e+00 max=2.962113380e+00 sum=2.026115785e+00 fnv=8b5933240f3f76fe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos20_layer0_full_n128_seq094.bin nelem=128 head=-1 seq=094 fnv=8b5933240f3f76fe
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=21 layer=0 head=-1 n=128 l2=1.115095056e+01 max_abs=7.287106991e+00 min=-7.287106991e+00 max=2.583505869e+00 sum=-9.130447925e+00 fnv=106886d797ed02e9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos21_layer0_full_n128_seq095.bin nelem=128 head=-1 seq=095 fnv=106886d797ed02e9
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=22 layer=0 head=-1 n=128 l2=2.810380355e+01 max_abs=7.860884666e+00 min=-7.860884666e+00 max=4.385417938e+00 sum=-4.266435979e+01 fnv=b4ade015dafb0056 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos22_layer0_full_n128_seq096.bin nelem=128 head=-1 seq=096 fnv=b4ade015dafb0056
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=23 layer=0 head=-1 n=128 l2=1.505624658e+01 max_abs=4.488394737e+00 min=-4.488394737e+00 max=2.754725695e+00 sum=-3.308987577e+01 fnv=2ab0d59915fd9543 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos23_layer0_full_n128_seq097.bin nelem=128 head=-1 seq=097 fnv=2ab0d59915fd9543
+REF_QKV_SHAPE name=Qcur-0 layer=0 hit=8 ne=[128,24,1] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.246492435e+01 max_abs=1.007273769e+01 min=-1.007273769e+01 max=8.393253326e+00 sum=8.133561342e+00 fnv=77b4ebff264b4a18 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n128_seq098.bin nelem=128 head=-1 seq=098 fnv=77b4ebff264b4a18
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=2.716664482e+01 max_abs=1.481722546e+01 min=-1.481722546e+01 max=9.035224915e+00 sum=-5.268065830e+00 fnv=d6c1c0db3a23860c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n128_seq099.bin nelem=128 head=-1 seq=099 fnv=d6c1c0db3a23860c
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=1.379049585e+01 max_abs=5.989850044e+00 min=-5.989850044e+00 max=2.579234123e+00 sum=1.595964049e+00 fnv=cb68d7accdefe674 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos2_layer0_full_n128_seq100.bin nelem=128 head=-1 seq=100 fnv=cb68d7accdefe674
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.232645622e+01 max_abs=5.673716068e+00 min=-3.003659487e+00 max=5.673716068e+00 sum=1.163509608e+01 fnv=a78b6158c491cd51 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos3_layer0_full_n128_seq101.bin nelem=128 head=-1 seq=101 fnv=a78b6158c491cd51
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.226491425e+01 max_abs=5.634851933e+00 min=-5.634851933e+00 max=3.372785568e+00 sum=1.612866154e+01 fnv=c155e001a2610e59 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos4_layer0_full_n128_seq102.bin nelem=128 head=-1 seq=102 fnv=c155e001a2610e59
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.898757081e+01 max_abs=8.002944946e+00 min=-8.002944946e+00 max=6.547135830e+00 sum=1.790384168e+01 fnv=e718bc0b7002e65d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos5_layer0_full_n128_seq103.bin nelem=128 head=-1 seq=103 fnv=e718bc0b7002e65d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.441240592e+01 max_abs=6.432552814e+00 min=-3.621489525e+00 max=6.432552814e+00 sum=8.799838416e+00 fnv=d16ed51b2d9d583e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos6_layer0_full_n128_seq104.bin nelem=128 head=-1 seq=104 fnv=d16ed51b2d9d583e
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.741765979e+01 max_abs=7.672759533e+00 min=-3.672989368e+00 max=7.672759533e+00 sum=3.277291766e+01 fnv=9a28c3cf682b92c1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos7_layer0_full_n128_seq105.bin nelem=128 head=-1 seq=105 fnv=9a28c3cf682b92c1
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=8 layer=0 head=-1 n=128 l2=1.840402981e+01 max_abs=8.337325096e+00 min=-4.288834572e+00 max=8.337325096e+00 sum=-1.159100978e+01 fnv=7c98d706d284e821 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos8_layer0_full_n128_seq106.bin nelem=128 head=-1 seq=106 fnv=7c98d706d284e821
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=9 layer=0 head=-1 n=128 l2=1.272681692e+01 max_abs=6.035003662e+00 min=-6.035003662e+00 max=2.600958586e+00 sum=2.789834264e+00 fnv=2880a920956b5bf2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos9_layer0_full_n128_seq107.bin nelem=128 head=-1 seq=107 fnv=2880a920956b5bf2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=10 layer=0 head=-1 n=128 l2=1.162930348e+01 max_abs=3.376659393e+00 min=-2.855177641e+00 max=3.376659393e+00 sum=-7.740870614e-01 fnv=907ea12c6e07f2f9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos10_layer0_full_n128_seq108.bin nelem=128 head=-1 seq=108 fnv=907ea12c6e07f2f9
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=11 layer=0 head=-1 n=128 l2=1.653911555e+01 max_abs=7.162434101e+00 min=-7.162434101e+00 max=3.357392073e+00 sum=-1.418406432e+01 fnv=7878111f0530aad8 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos11_layer0_full_n128_seq109.bin nelem=128 head=-1 seq=109 fnv=7878111f0530aad8
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=12 layer=0 head=-1 n=128 l2=1.560105538e+01 max_abs=6.630778790e+00 min=-6.630778790e+00 max=3.482354164e+00 sum=-2.056343142e+01 fnv=68f47951eb28e219 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos12_layer0_full_n128_seq110.bin nelem=128 head=-1 seq=110 fnv=68f47951eb28e219
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=13 layer=0 head=-1 n=128 l2=1.776424955e+01 max_abs=8.809824944e+00 min=-8.809824944e+00 max=5.635685921e+00 sum=-2.785797233e+01 fnv=cd39fcdd80dff358 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos13_layer0_full_n128_seq111.bin nelem=128 head=-1 seq=111 fnv=cd39fcdd80dff358
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=14 layer=0 head=-1 n=128 l2=1.444295202e+01 max_abs=5.753901005e+00 min=-5.753901005e+00 max=4.978734016e+00 sum=-1.476105300e+01 fnv=9d781a297248ea45 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos14_layer0_full_n128_seq112.bin nelem=128 head=-1 seq=112 fnv=9d781a297248ea45
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=15 layer=0 head=-1 n=128 l2=2.990605066e+01 max_abs=1.706901932e+01 min=-6.894198895e+00 max=1.706901932e+01 sum=2.142741809e+01 fnv=16b1902d18d0aa05 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos15_layer0_full_n128_seq113.bin nelem=128 head=-1 seq=113 fnv=16b1902d18d0aa05
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=16 layer=0 head=-1 n=128 l2=1.054364405e+01 max_abs=3.537716866e+00 min=-3.537716866e+00 max=2.787573338e+00 sum=-1.295294724e+01 fnv=6746f76e5eac8341 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos16_layer0_full_n128_seq114.bin nelem=128 head=-1 seq=114 fnv=6746f76e5eac8341
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=17 layer=0 head=-1 n=128 l2=1.933792105e+01 max_abs=8.975552559e+00 min=-4.554226875e+00 max=8.975552559e+00 sum=1.750059118e+01 fnv=7411aca9ab1195cc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos17_layer0_full_n128_seq115.bin nelem=128 head=-1 seq=115 fnv=7411aca9ab1195cc
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=18 layer=0 head=-1 n=128 l2=1.170937204e+01 max_abs=5.125524998e+00 min=-5.125524998e+00 max=2.735814333e+00 sum=3.669979119e+00 fnv=5d87cafd6d38379a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos18_layer0_full_n128_seq116.bin nelem=128 head=-1 seq=116 fnv=5d87cafd6d38379a
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=19 layer=0 head=-1 n=128 l2=1.258069718e+01 max_abs=5.805381775e+00 min=-4.915744781e+00 max=5.805381775e+00 sum=-5.300249959e+00 fnv=1f3c1fc7e315bbfe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos19_layer0_full_n128_seq117.bin nelem=128 head=-1 seq=117 fnv=1f3c1fc7e315bbfe
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=20 layer=0 head=-1 n=128 l2=1.155093823e+01 max_abs=4.275342464e+00 min=-4.275342464e+00 max=2.962955952e+00 sum=3.397643090e+00 fnv=d8ba44bd004775bb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos20_layer0_full_n128_seq118.bin nelem=128 head=-1 seq=118 fnv=d8ba44bd004775bb
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=21 layer=0 head=-1 n=128 l2=1.115095059e+01 max_abs=7.287085056e+00 min=-7.287085056e+00 max=2.584160805e+00 sum=-6.443750300e+00 fnv=12a0c6d2b2bb3f42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos21_layer0_full_n128_seq119.bin nelem=128 head=-1 seq=119 fnv=12a0c6d2b2bb3f42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=22 layer=0 head=-1 n=128 l2=2.810380356e+01 max_abs=7.860835075e+00 min=-7.860835075e+00 max=4.083800316e+00 sum=-5.172867149e+01 fnv=0c6ca4708e019b42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos22_layer0_full_n128_seq120.bin nelem=128 head=-1 seq=120 fnv=0c6ca4708e019b42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=23 layer=0 head=-1 n=128 l2=1.505624666e+01 max_abs=4.488357067e+00 min=-4.488357067e+00 max=2.754704237e+00 sum=-3.553507345e+01 fnv=a2e5d8815452f253 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos23_layer0_full_n128_seq121.bin nelem=128 head=-1 seq=121 fnv=a2e5d8815452f253
+REF_QKV_SHAPE name=Vcur-0 layer=0 hit=1 ne=[1024,1,1] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=1024 l2=8.116401778e-01 max_abs=4.297726452e-01 min=-2.322784066e-01 max=4.297726452e-01 sum=3.120600121e-01 fnv=80b883b097cd50dc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n1024_seq122.bin nelem=1024 head=-1 seq=122 fnv=80b883b097cd50dc
+REF_QKV_SHAPE name=Vcur-0 layer=0 hit=1 ne=[128,8,1] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=128 l2=1.864633194e-01 max_abs=1.387236416e-01 min=-2.927143499e-02 max=1.387236416e-01 sum=2.164341186e-01 fnv=e5eb244491537230 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n128_seq123.bin nelem=128 head=-1 seq=123 fnv=e5eb244491537230
+[STAGE_DIGEST] side=llama key=V_0 pos=1 layer=0 head=-1 n=128 l2=1.233116091e-01 max_abs=3.335625306e-02 min=-3.335625306e-02 max=2.504868805e-02 sum=-3.029389633e-02 fnv=c8c93a726b11e021 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos1_layer0_full_n128_seq124.bin nelem=128 head=-1 seq=124 fnv=c8c93a726b11e021
+[STAGE_DIGEST] side=llama key=V_0 pos=2 layer=0 head=-1 n=128 l2=5.823949476e-01 max_abs=4.297726452e-01 min=-1.777478307e-01 max=4.297726452e-01 sum=6.128961928e-01 fnv=aeab39b147a7c02f nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos2_layer0_full_n128_seq125.bin nelem=128 head=-1 seq=125 fnv=aeab39b147a7c02f
+[STAGE_DIGEST] side=llama key=V_0 pos=3 layer=0 head=-1 n=128 l2=1.142103227e-01 max_abs=3.549435362e-02 min=-2.266906202e-02 max=3.549435362e-02 sum=1.207784719e-01 fnv=1a7be6d346239650 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos3_layer0_full_n128_seq126.bin nelem=128 head=-1 seq=126 fnv=1a7be6d346239650
+[STAGE_DIGEST] side=llama key=V_0 pos=4 layer=0 head=-1 n=128 l2=1.294350891e-01 max_abs=7.418696582e-02 min=-7.418696582e-02 max=1.772953197e-02 sum=-1.641231637e-01 fnv=3d929771aa077d3a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos4_layer0_full_n128_seq127.bin nelem=128 head=-1 seq=127 fnv=3d929771aa077d3a
+[STAGE_DIGEST] side=llama key=V_0 pos=5 layer=0 head=-1 n=128 l2=3.726305957e-01 max_abs=2.198949903e-01 min=-2.198949903e-01 max=1.800157726e-01 sum=-1.059958094e-01 fnv=1f63a10cece119e6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos5_layer0_full_n128_seq128.bin nelem=128 head=-1 seq=128 fnv=1f63a10cece119e6
+[STAGE_DIGEST] side=llama key=V_0 pos=6 layer=0 head=-1 n=128 l2=2.685757670e-01 max_abs=2.322784066e-01 min=-2.322784066e-01 max=3.359530866e-02 sum=-1.899817723e-01 fnv=4ca1424fd62e07c6 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos6_layer0_full_n128_seq129.bin nelem=128 head=-1 seq=129 fnv=4ca1424fd62e07c6
+[STAGE_DIGEST] side=llama key=V_0 pos=7 layer=0 head=-1 n=128 l2=1.697575836e-01 max_abs=1.469785124e-01 min=-1.469785124e-01 max=1.701365411e-02 sum=-1.476541294e-01 fnv=1c4f1bb5ed38e05d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos7_layer0_full_n128_seq130.bin nelem=128 head=-1 seq=130 fnv=1c4f1bb5ed38e05d
+REF_QKV_SHAPE name=Kcur-0 layer=0 hit=5 ne=[1024,1,1] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=4.658431163e+01 max_abs=1.386672878e+01 min=-1.386672878e+01 max=1.006618977e+01 sum=-1.316404213e+01 fnv=350472160973c8c8 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n1024_seq131.bin nelem=1024 head=-1 seq=131 fnv=350472160973c8c8
+REF_QKV_SHAPE name=Kcur-0 (reshaped) layer=0 hit=6 ne=[128,8,1] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.006978088e+01 max_abs=7.226499081e+00 min=-5.488824844e+00 max=7.226499081e+00 sum=3.226218209e+00 fnv=f850ba99a361b1e2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n128_seq132.bin nelem=128 head=-1 seq=132 fnv=f850ba99a361b1e2
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=1.619360810e+01 max_abs=8.328103065e+00 min=-8.328103065e+00 max=2.357707977e+00 sum=-2.447831190e+01 fnv=988266a22cde50db nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos1_layer0_full_n128_seq133.bin nelem=128 head=-1 seq=133 fnv=988266a22cde50db
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=2.279755295e+01 max_abs=1.006618977e+01 min=-5.178529739e+00 max=1.006618977e+01 sum=2.585997179e+01 fnv=24a7ddc86fdb46bc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos2_layer0_full_n128_seq134.bin nelem=128 head=-1 seq=134 fnv=24a7ddc86fdb46bc
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.013350085e+01 max_abs=5.484304905e+00 min=-5.484304905e+00 max=2.311836720e+00 sum=9.602548303e-01 fnv=2bb56e1e91517f97 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos3_layer0_full_n128_seq135.bin nelem=128 head=-1 seq=135 fnv=2bb56e1e91517f97
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.019911653e+01 max_abs=4.170382977e+00 min=-2.531915903e+00 max=4.170382977e+00 sum=4.939160420e+00 fnv=716242bbbad87347 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos4_layer0_full_n128_seq136.bin nelem=128 head=-1 seq=136 fnv=716242bbbad87347
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.720271046e+01 max_abs=6.229835510e+00 min=-6.229835510e+00 max=5.883455753e+00 sum=5.272456534e+00 fnv=91249b42243e53fb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos5_layer0_full_n128_seq137.bin nelem=128 head=-1 seq=137 fnv=91249b42243e53fb
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.915103266e+01 max_abs=1.386672878e+01 min=-1.386672878e+01 max=2.842678070e+00 sum=-1.559053513e+01 fnv=babac3e3fc8ba8fe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos6_layer0_full_n128_seq138.bin nelem=128 head=-1 seq=138 fnv=babac3e3fc8ba8fe
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.076733510e+01 max_abs=4.035472393e+00 min=-4.035472393e+00 max=2.570247650e+00 sum=-1.335325689e+01 fnv=c0bb7b2447e30c29 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos7_layer0_full_n128_seq139.bin nelem=128 head=-1 seq=139 fnv=c0bb7b2447e30c29
+REF_QKV_SHAPE name=Kcur-0 layer=0 hit=7 ne=[128,8,1] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.006978082e+01 max_abs=7.226504326e+00 min=-5.488830090e+00 max=7.226504326e+00 sum=-1.563361458e+00 fnv=eda7f8a704d46565 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n128_seq140.bin nelem=128 head=-1 seq=140 fnv=eda7f8a704d46565
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=1.619360794e+01 max_abs=8.328101158e+00 min=-8.328101158e+00 max=2.253709555e+00 sum=-2.625925231e+01 fnv=6ffa258f265cf33b nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos1_layer0_full_n128_seq141.bin nelem=128 head=-1 seq=141 fnv=6ffa258f265cf33b
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=2.279755307e+01 max_abs=1.006618690e+01 min=-5.178536892e+00 max=1.006618690e+01 sum=2.937164260e+01 fnv=bec281ec2b81d54e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos2_layer0_full_n128_seq142.bin nelem=128 head=-1 seq=142 fnv=bec281ec2b81d54e
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.013350097e+01 max_abs=5.484302998e+00 min=-5.484302998e+00 max=2.311359167e+00 sum=-2.196824403e+00 fnv=db1a75444a8ea195 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos3_layer0_full_n128_seq143.bin nelem=128 head=-1 seq=143 fnv=db1a75444a8ea195
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.019911651e+01 max_abs=4.170379639e+00 min=-2.531917572e+00 max=4.170379639e+00 sum=4.097369175e+00 fnv=78841012f5cf91c1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos4_layer0_full_n128_seq144.bin nelem=128 head=-1 seq=144 fnv=78841012f5cf91c1
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.720271047e+01 max_abs=6.229841709e+00 min=-6.229841709e+00 max=5.883464336e+00 sum=3.597829461e+00 fnv=71b103af97b86ed3 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos5_layer0_full_n128_seq145.bin nelem=128 head=-1 seq=145 fnv=71b103af97b86ed3
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.915103278e+01 max_abs=1.386672974e+01 min=-1.386672974e+01 max=2.840909243e+00 sum=-1.102409949e+01 fnv=142a3b9c6854b6fa nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos6_layer0_full_n128_seq146.bin nelem=128 head=-1 seq=146 fnv=142a3b9c6854b6fa
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.076733514e+01 max_abs=4.090837002e+00 min=-4.090837002e+00 max=3.078235865e+00 sum=-8.805386424e+00 fnv=c98825f0000aa3ce nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos7_layer0_full_n128_seq147.bin nelem=128 head=-1 seq=147 fnv=c98825f0000aa3ce
+REF_QKV_SHAPE name=Kcur-0 (view) layer=0 hit=8 ne=[1024,1,1] key=K_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=K_POST_ROPE_0 pos=0 layer=0 head=-1 n=1024 l2=4.658431169e+01 max_abs=1.386672974e+01 min=-1.386672974e+01 max=1.006618690e+01 sum=-1.278208285e+01 fnv=c065a4e6b0a28da2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n1024_seq148.bin nelem=1024 head=-1 seq=148 fnv=c065a4e6b0a28da2
+REF_QKV_SHAPE name=Vcur-0 (view) layer=0 hit=1 ne=[1024,1,1] key=V_0
+[STAGE_DIGEST] side=llama key=V_0 pos=0 layer=0 head=-1 n=1024 l2=8.116401778e-01 max_abs=4.297726452e-01 min=-2.322784066e-01 max=4.297726452e-01 sum=3.120600121e-01 fnv=80b883b097cd50dc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_V_0_pos0_layer0_full_n1024_seq149.bin nelem=1024 head=-1 seq=149 fnv=80b883b097cd50dc
+REF_QKV_SHAPE name=Qcur-0 (view) layer=0 hit=9 ne=[128,24,1] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.246492435e+01 max_abs=1.007273769e+01 min=-1.007273769e+01 max=8.393253326e+00 sum=8.133561342e+00 fnv=77b4ebff264b4a18 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n128_seq150.bin nelem=128 head=-1 seq=150 fnv=77b4ebff264b4a18
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=2.716664482e+01 max_abs=1.481722546e+01 min=-1.481722546e+01 max=9.035224915e+00 sum=-5.268065830e+00 fnv=d6c1c0db3a23860c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n128_seq151.bin nelem=128 head=-1 seq=151 fnv=d6c1c0db3a23860c
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=1.379049585e+01 max_abs=5.989850044e+00 min=-5.989850044e+00 max=2.579234123e+00 sum=1.595964049e+00 fnv=cb68d7accdefe674 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos2_layer0_full_n128_seq152.bin nelem=128 head=-1 seq=152 fnv=cb68d7accdefe674
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.232645622e+01 max_abs=5.673716068e+00 min=-3.003659487e+00 max=5.673716068e+00 sum=1.163509608e+01 fnv=a78b6158c491cd51 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos3_layer0_full_n128_seq153.bin nelem=128 head=-1 seq=153 fnv=a78b6158c491cd51
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.226491425e+01 max_abs=5.634851933e+00 min=-5.634851933e+00 max=3.372785568e+00 sum=1.612866154e+01 fnv=c155e001a2610e59 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos4_layer0_full_n128_seq154.bin nelem=128 head=-1 seq=154 fnv=c155e001a2610e59
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.898757081e+01 max_abs=8.002944946e+00 min=-8.002944946e+00 max=6.547135830e+00 sum=1.790384168e+01 fnv=e718bc0b7002e65d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos5_layer0_full_n128_seq155.bin nelem=128 head=-1 seq=155 fnv=e718bc0b7002e65d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.441240592e+01 max_abs=6.432552814e+00 min=-3.621489525e+00 max=6.432552814e+00 sum=8.799838416e+00 fnv=d16ed51b2d9d583e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos6_layer0_full_n128_seq156.bin nelem=128 head=-1 seq=156 fnv=d16ed51b2d9d583e
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.741765979e+01 max_abs=7.672759533e+00 min=-3.672989368e+00 max=7.672759533e+00 sum=3.277291766e+01 fnv=9a28c3cf682b92c1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos7_layer0_full_n128_seq157.bin nelem=128 head=-1 seq=157 fnv=9a28c3cf682b92c1
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=8 layer=0 head=-1 n=128 l2=1.840402981e+01 max_abs=8.337325096e+00 min=-4.288834572e+00 max=8.337325096e+00 sum=-1.159100978e+01 fnv=7c98d706d284e821 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos8_layer0_full_n128_seq158.bin nelem=128 head=-1 seq=158 fnv=7c98d706d284e821
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=9 layer=0 head=-1 n=128 l2=1.272681692e+01 max_abs=6.035003662e+00 min=-6.035003662e+00 max=2.600958586e+00 sum=2.789834264e+00 fnv=2880a920956b5bf2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos9_layer0_full_n128_seq159.bin nelem=128 head=-1 seq=159 fnv=2880a920956b5bf2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=10 layer=0 head=-1 n=128 l2=1.162930348e+01 max_abs=3.376659393e+00 min=-2.855177641e+00 max=3.376659393e+00 sum=-7.740870614e-01 fnv=907ea12c6e07f2f9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos10_layer0_full_n128_seq160.bin nelem=128 head=-1 seq=160 fnv=907ea12c6e07f2f9
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=11 layer=0 head=-1 n=128 l2=1.653911555e+01 max_abs=7.162434101e+00 min=-7.162434101e+00 max=3.357392073e+00 sum=-1.418406432e+01 fnv=7878111f0530aad8 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos11_layer0_full_n128_seq161.bin nelem=128 head=-1 seq=161 fnv=7878111f0530aad8
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=12 layer=0 head=-1 n=128 l2=1.560105538e+01 max_abs=6.630778790e+00 min=-6.630778790e+00 max=3.482354164e+00 sum=-2.056343142e+01 fnv=68f47951eb28e219 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos12_layer0_full_n128_seq162.bin nelem=128 head=-1 seq=162 fnv=68f47951eb28e219
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=13 layer=0 head=-1 n=128 l2=1.776424955e+01 max_abs=8.809824944e+00 min=-8.809824944e+00 max=5.635685921e+00 sum=-2.785797233e+01 fnv=cd39fcdd80dff358 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos13_layer0_full_n128_seq163.bin nelem=128 head=-1 seq=163 fnv=cd39fcdd80dff358
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=14 layer=0 head=-1 n=128 l2=1.444295202e+01 max_abs=5.753901005e+00 min=-5.753901005e+00 max=4.978734016e+00 sum=-1.476105300e+01 fnv=9d781a297248ea45 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos14_layer0_full_n128_seq164.bin nelem=128 head=-1 seq=164 fnv=9d781a297248ea45
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=15 layer=0 head=-1 n=128 l2=2.990605066e+01 max_abs=1.706901932e+01 min=-6.894198895e+00 max=1.706901932e+01 sum=2.142741809e+01 fnv=16b1902d18d0aa05 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos15_layer0_full_n128_seq165.bin nelem=128 head=-1 seq=165 fnv=16b1902d18d0aa05
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=16 layer=0 head=-1 n=128 l2=1.054364405e+01 max_abs=3.537716866e+00 min=-3.537716866e+00 max=2.787573338e+00 sum=-1.295294724e+01 fnv=6746f76e5eac8341 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos16_layer0_full_n128_seq166.bin nelem=128 head=-1 seq=166 fnv=6746f76e5eac8341
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=17 layer=0 head=-1 n=128 l2=1.933792105e+01 max_abs=8.975552559e+00 min=-4.554226875e+00 max=8.975552559e+00 sum=1.750059118e+01 fnv=7411aca9ab1195cc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos17_layer0_full_n128_seq167.bin nelem=128 head=-1 seq=167 fnv=7411aca9ab1195cc
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=18 layer=0 head=-1 n=128 l2=1.170937204e+01 max_abs=5.125524998e+00 min=-5.125524998e+00 max=2.735814333e+00 sum=3.669979119e+00 fnv=5d87cafd6d38379a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos18_layer0_full_n128_seq168.bin nelem=128 head=-1 seq=168 fnv=5d87cafd6d38379a
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=19 layer=0 head=-1 n=128 l2=1.258069718e+01 max_abs=5.805381775e+00 min=-4.915744781e+00 max=5.805381775e+00 sum=-5.300249959e+00 fnv=1f3c1fc7e315bbfe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos19_layer0_full_n128_seq169.bin nelem=128 head=-1 seq=169 fnv=1f3c1fc7e315bbfe
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=20 layer=0 head=-1 n=128 l2=1.155093823e+01 max_abs=4.275342464e+00 min=-4.275342464e+00 max=2.962955952e+00 sum=3.397643090e+00 fnv=d8ba44bd004775bb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos20_layer0_full_n128_seq170.bin nelem=128 head=-1 seq=170 fnv=d8ba44bd004775bb
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=21 layer=0 head=-1 n=128 l2=1.115095059e+01 max_abs=7.287085056e+00 min=-7.287085056e+00 max=2.584160805e+00 sum=-6.443750300e+00 fnv=12a0c6d2b2bb3f42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos21_layer0_full_n128_seq171.bin nelem=128 head=-1 seq=171 fnv=12a0c6d2b2bb3f42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=22 layer=0 head=-1 n=128 l2=2.810380356e+01 max_abs=7.860835075e+00 min=-7.860835075e+00 max=4.083800316e+00 sum=-5.172867149e+01 fnv=0c6ca4708e019b42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos22_layer0_full_n128_seq172.bin nelem=128 head=-1 seq=172 fnv=0c6ca4708e019b42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=23 layer=0 head=-1 n=128 l2=1.505624666e+01 max_abs=4.488357067e+00 min=-4.488357067e+00 max=2.754704237e+00 sum=-3.553507345e+01 fnv=a2e5d8815452f253 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos23_layer0_full_n128_seq173.bin nelem=128 head=-1 seq=173 fnv=a2e5d8815452f253
+REF_QKV_SHAPE name=Qcur-0 (view) (permuted) layer=0 hit=10 ne=[128,1,24] key=Q_POST_ROPE_0
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=0 layer=0 head=-1 n=128 l2=2.246492435e+01 max_abs=1.007273769e+01 min=-1.007273769e+01 max=8.393253326e+00 sum=8.133561342e+00 fnv=77b4ebff264b4a18 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos0_layer0_full_n128_seq174.bin nelem=128 head=-1 seq=174 fnv=77b4ebff264b4a18
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=1 layer=0 head=-1 n=128 l2=2.716664482e+01 max_abs=1.481722546e+01 min=-1.481722546e+01 max=9.035224915e+00 sum=-5.268065830e+00 fnv=d6c1c0db3a23860c nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos1_layer0_full_n128_seq175.bin nelem=128 head=-1 seq=175 fnv=d6c1c0db3a23860c
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=2 layer=0 head=-1 n=128 l2=1.379049585e+01 max_abs=5.989850044e+00 min=-5.989850044e+00 max=2.579234123e+00 sum=1.595964049e+00 fnv=cb68d7accdefe674 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos2_layer0_full_n128_seq176.bin nelem=128 head=-1 seq=176 fnv=cb68d7accdefe674
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=3 layer=0 head=-1 n=128 l2=1.232645622e+01 max_abs=5.673716068e+00 min=-3.003659487e+00 max=5.673716068e+00 sum=1.163509608e+01 fnv=a78b6158c491cd51 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos3_layer0_full_n128_seq177.bin nelem=128 head=-1 seq=177 fnv=a78b6158c491cd51
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=4 layer=0 head=-1 n=128 l2=1.226491425e+01 max_abs=5.634851933e+00 min=-5.634851933e+00 max=3.372785568e+00 sum=1.612866154e+01 fnv=c155e001a2610e59 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos4_layer0_full_n128_seq178.bin nelem=128 head=-1 seq=178 fnv=c155e001a2610e59
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=5 layer=0 head=-1 n=128 l2=1.898757081e+01 max_abs=8.002944946e+00 min=-8.002944946e+00 max=6.547135830e+00 sum=1.790384168e+01 fnv=e718bc0b7002e65d nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos5_layer0_full_n128_seq179.bin nelem=128 head=-1 seq=179 fnv=e718bc0b7002e65d
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=6 layer=0 head=-1 n=128 l2=1.441240592e+01 max_abs=6.432552814e+00 min=-3.621489525e+00 max=6.432552814e+00 sum=8.799838416e+00 fnv=d16ed51b2d9d583e nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos6_layer0_full_n128_seq180.bin nelem=128 head=-1 seq=180 fnv=d16ed51b2d9d583e
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=7 layer=0 head=-1 n=128 l2=1.741765979e+01 max_abs=7.672759533e+00 min=-3.672989368e+00 max=7.672759533e+00 sum=3.277291766e+01 fnv=9a28c3cf682b92c1 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos7_layer0_full_n128_seq181.bin nelem=128 head=-1 seq=181 fnv=9a28c3cf682b92c1
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=8 layer=0 head=-1 n=128 l2=1.840402981e+01 max_abs=8.337325096e+00 min=-4.288834572e+00 max=8.337325096e+00 sum=-1.159100978e+01 fnv=7c98d706d284e821 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos8_layer0_full_n128_seq182.bin nelem=128 head=-1 seq=182 fnv=7c98d706d284e821
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=9 layer=0 head=-1 n=128 l2=1.272681692e+01 max_abs=6.035003662e+00 min=-6.035003662e+00 max=2.600958586e+00 sum=2.789834264e+00 fnv=2880a920956b5bf2 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos9_layer0_full_n128_seq183.bin nelem=128 head=-1 seq=183 fnv=2880a920956b5bf2
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=10 layer=0 head=-1 n=128 l2=1.162930348e+01 max_abs=3.376659393e+00 min=-2.855177641e+00 max=3.376659393e+00 sum=-7.740870614e-01 fnv=907ea12c6e07f2f9 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos10_layer0_full_n128_seq184.bin nelem=128 head=-1 seq=184 fnv=907ea12c6e07f2f9
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=11 layer=0 head=-1 n=128 l2=1.653911555e+01 max_abs=7.162434101e+00 min=-7.162434101e+00 max=3.357392073e+00 sum=-1.418406432e+01 fnv=7878111f0530aad8 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos11_layer0_full_n128_seq185.bin nelem=128 head=-1 seq=185 fnv=7878111f0530aad8
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=12 layer=0 head=-1 n=128 l2=1.560105538e+01 max_abs=6.630778790e+00 min=-6.630778790e+00 max=3.482354164e+00 sum=-2.056343142e+01 fnv=68f47951eb28e219 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos12_layer0_full_n128_seq186.bin nelem=128 head=-1 seq=186 fnv=68f47951eb28e219
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=13 layer=0 head=-1 n=128 l2=1.776424955e+01 max_abs=8.809824944e+00 min=-8.809824944e+00 max=5.635685921e+00 sum=-2.785797233e+01 fnv=cd39fcdd80dff358 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos13_layer0_full_n128_seq187.bin nelem=128 head=-1 seq=187 fnv=cd39fcdd80dff358
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=14 layer=0 head=-1 n=128 l2=1.444295202e+01 max_abs=5.753901005e+00 min=-5.753901005e+00 max=4.978734016e+00 sum=-1.476105300e+01 fnv=9d781a297248ea45 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos14_layer0_full_n128_seq188.bin nelem=128 head=-1 seq=188 fnv=9d781a297248ea45
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=15 layer=0 head=-1 n=128 l2=2.990605066e+01 max_abs=1.706901932e+01 min=-6.894198895e+00 max=1.706901932e+01 sum=2.142741809e+01 fnv=16b1902d18d0aa05 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos15_layer0_full_n128_seq189.bin nelem=128 head=-1 seq=189 fnv=16b1902d18d0aa05
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=16 layer=0 head=-1 n=128 l2=1.054364405e+01 max_abs=3.537716866e+00 min=-3.537716866e+00 max=2.787573338e+00 sum=-1.295294724e+01 fnv=6746f76e5eac8341 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos16_layer0_full_n128_seq190.bin nelem=128 head=-1 seq=190 fnv=6746f76e5eac8341
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=17 layer=0 head=-1 n=128 l2=1.933792105e+01 max_abs=8.975552559e+00 min=-4.554226875e+00 max=8.975552559e+00 sum=1.750059118e+01 fnv=7411aca9ab1195cc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos17_layer0_full_n128_seq191.bin nelem=128 head=-1 seq=191 fnv=7411aca9ab1195cc
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=18 layer=0 head=-1 n=128 l2=1.170937204e+01 max_abs=5.125524998e+00 min=-5.125524998e+00 max=2.735814333e+00 sum=3.669979119e+00 fnv=5d87cafd6d38379a nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos18_layer0_full_n128_seq192.bin nelem=128 head=-1 seq=192 fnv=5d87cafd6d38379a
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=19 layer=0 head=-1 n=128 l2=1.258069718e+01 max_abs=5.805381775e+00 min=-4.915744781e+00 max=5.805381775e+00 sum=-5.300249959e+00 fnv=1f3c1fc7e315bbfe nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos19_layer0_full_n128_seq193.bin nelem=128 head=-1 seq=193 fnv=1f3c1fc7e315bbfe
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=20 layer=0 head=-1 n=128 l2=1.155093823e+01 max_abs=4.275342464e+00 min=-4.275342464e+00 max=2.962955952e+00 sum=3.397643090e+00 fnv=d8ba44bd004775bb nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos20_layer0_full_n128_seq194.bin nelem=128 head=-1 seq=194 fnv=d8ba44bd004775bb
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=21 layer=0 head=-1 n=128 l2=1.115095059e+01 max_abs=7.287085056e+00 min=-7.287085056e+00 max=2.584160805e+00 sum=-6.443750300e+00 fnv=12a0c6d2b2bb3f42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos21_layer0_full_n128_seq195.bin nelem=128 head=-1 seq=195 fnv=12a0c6d2b2bb3f42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=22 layer=0 head=-1 n=128 l2=2.810380356e+01 max_abs=7.860835075e+00 min=-7.860835075e+00 max=4.083800316e+00 sum=-5.172867149e+01 fnv=0c6ca4708e019b42 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos22_layer0_full_n128_seq196.bin nelem=128 head=-1 seq=196 fnv=0c6ca4708e019b42
+[STAGE_DIGEST] side=llama key=Q_POST_ROPE_0 pos=23 layer=0 head=-1 n=128 l2=1.505624666e+01 max_abs=4.488357067e+00 min=-4.488357067e+00 max=2.754704237e+00 sum=-3.553507345e+01 fnv=a2e5d8815452f253 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_Q_POST_ROPE_0_pos23_layer0_full_n128_seq197.bin nelem=128 head=-1 seq=197 fnv=a2e5d8815452f253
+REF_KQV_SHAPE name=kqv_out-0 ne=[3072,1,1] nb=[4,12288,12288]
+REF_KQV_SKIP unexpected ne0=3072 (want 2048 or 3D heads)
+[STAGE_DIGEST] side=llama key=ATTN_OUT_0 pos=0 layer=0 head=-1 n=3072 l2=1.129346632e+00 max_abs=3.159782887e-01 min=-3.159782887e-01 max=2.913068533e-01 sum=7.626589743e-01 fnv=dc43b812d5db0362 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_OUT_0_pos0_layer0_full_n3072_seq198.bin nelem=3072 head=-1 seq=198 fnv=dc43b812d5db0362
+[STAGE_DIGEST] side=llama key=FFN_INP_0 pos=0 layer=0 head=-1 n=3072 l2=1.348013623e+00 max_abs=3.146075606e-01 min=-3.146075606e-01 max=2.913068533e-01 sum=1.011593780e+00 fnv=234ae5fc84eeb7b4 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_INP_0_pos0_layer0_full_n3072_seq199.bin nelem=3072 head=-1 seq=199 fnv=234ae5fc84eeb7b4
+[STAGE_DIGEST] side=llama key=FFN_NORM_0 pos=0 layer=0 head=-1 n=3072 l2=6.050655538e+00 max_abs=9.713100791e-01 min=-8.109942675e-01 max=9.713100791e-01 sum=3.792762558e+00 fnv=fac350a43ceb5154 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_NORM_0_pos0_layer0_full_n3072_seq200.bin nelem=3072 head=-1 seq=200 fnv=fac350a43ceb5154
+[STAGE_DIGEST] side=llama key=FFN_GATE_0 pos=0 layer=0 head=-1 n=8192 l2=1.179822740e+01 max_abs=2.631882191e+00 min=-2.631882191e+00 max=9.840750694e-01 sum=-2.894708571e+02 fnv=e7688e843c2db0fd nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_GATE_0_pos0_layer0_full_n8192_seq201.bin nelem=8192 head=-1 seq=201 fnv=e7688e843c2db0fd
+[STAGE_DIGEST] side=llama key=FFN_UP_0 pos=0 layer=0 head=-1 n=8192 l2=9.567534953e+00 max_abs=1.360701561e+00 min=-1.360701561e+00 max=1.012843370e+00 sum=-5.930842453e+00 fnv=3fc8360017422734 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_UP_0_pos0_layer0_full_n8192_seq202.bin nelem=8192 head=-1 seq=202 fnv=3fc8360017422734
+[STAGE_DIGEST] side=llama key=FFN_ACT_0 pos=0 layer=0 head=-1 n=8192 l2=9.236087883e-01 max_abs=3.503946364e-01 min=-2.310729772e-01 max=3.503946364e-01 sum=7.963740231e-01 fnv=ff607eab897d31ed nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_ACT_0_pos0_layer0_full_n8192_seq203.bin nelem=8192 head=-1 seq=203 fnv=ff607eab897d31ed
+[STAGE_DIGEST] side=llama key=FFN_DOWN_0 pos=0 layer=0 head=-1 n=3072 l2=9.551368610e-01 max_abs=1.208248287e-01 min=-1.208248287e-01 max=1.113859564e-01 sum=3.723253013e-02 fnv=03ffe9c66d87a3dd nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FFN_DOWN_0_pos0_layer0_full_n3072_seq204.bin nelem=3072 head=-1 seq=204 fnv=03ffe9c66d87a3dd
+[STAGE_DIGEST] side=llama key=LAYER0_OUT pos=0 layer=0 head=-1 n=3072 l2=1.478907445e+00 max_abs=3.403838277e-01 min=-2.565339804e-01 max=3.403838277e-01 sum=1.048826281e+00 fnv=b16f461d7fb3a6fc nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_LAYER0_OUT_pos0_layer0_full_n3072_seq205.bin nelem=3072 head=-1 seq=205 fnv=b16f461d7fb3a6fc
+[STAGE_DIGEST] side=llama key=FINAL_NORM pos=0 layer=0 head=-1 n=3072 l2=8.535166204e+01 max_abs=1.972065735e+01 min=-1.972065735e+01 max=1.022814751e+01 sum=1.191374214e+02 fnv=c3bc0d2b3c3fcf19 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_FINAL_NORM_pos0_layer0_full_n3072_seq206.bin nelem=3072 head=-1 seq=206 fnv=c3bc0d2b3c3fcf19
+[STAGE_DIGEST] side=llama key=TIP_FINAL_NORM pos=0 layer=0 head=-1 n=3072 l2=8.535166204e+01 max_abs=1.972065735e+01 min=-1.972065735e+01 max=1.022814751e+01 sum=1.191374214e+02 fnv=c3bc0d2b3c3fcf19 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_TIP_FINAL_NORM_pos0_layer0_full_n3072_seq207.bin nelem=3072 head=-1 seq=207 fnv=c3bc0d2b3c3fcf19
+[STAGE_DIGEST] side=llama key=LOGITS pos=0 layer=0 head=-1 n=128256 l2=8.315853615e+02 max_abs=1.721778870e+01 min=-7.797122478e+00 max=1.721778870e+01 sum=-1.107142675e+05 fnv=fc853ca2ea8abb94 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_LOGITS_pos0_layer0_full_n128256_seq208.bin nelem=128256 head=-1 seq=208 fnv=fc853ca2ea8abb94
+[STAGE_DIGEST] side=llama key=TIP_LOGITS pos=0 layer=0 head=-1 n=128256 l2=8.315853615e+02 max_abs=1.721778870e+01 min=-7.797122478e+00 max=1.721778870e+01 sum=-1.107142675e+05 fnv=fc853ca2ea8abb94 nf=0
+[STAGE_DUMP] G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_TIP_LOGITS_pos0_layer0_full_n128256_seq209.bin nelem=128256 head=-1 seq=209 fnv=fc853ca2ea8abb94
+[STAGE_DIGEST] side=llama key=ARGMAX pos=0 id=358 logit=17.217788696
+REF_GEN_IDS=11
+REF_GEN_COUNT=1
+REF_SIDE=DONE

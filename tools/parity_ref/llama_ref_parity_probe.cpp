@@ -31,14 +31,22 @@ static void load_ggml_backends() {
     // Prebuilt llama-direct: ggml_backend_load_* lives on ggml.dll; the
     // registry lives in ggml-base.dll. Load vulkan/llama.dll first so both
     // map as its dependencies (one registry), then call load_all on ggml.dll.
-    SetDllDirectoryA(R"(F:\~dev\llama-direct\vulkan)");
-    if (!LoadLibraryA(R"(F:\~dev\llama-direct\vulkan\llama.dll)")) {
-        std::fprintf(stderr, "REF_BACKEND=FAIL LoadLibrary vulkan/llama.dll\n");
+    // Prefer G: workspace; allow LLAMA_DIRECT_DIR override (external stick only).
+    const char* llamaDir = std::getenv("LLAMA_DIRECT_DIR");
+    if (!llamaDir || !llamaDir[0]) llamaDir = R"(G:\~dev\llama-direct\vulkan)";
+    char dllLlama[MAX_PATH], dllGgml[MAX_PATH], dllZen4[MAX_PATH], dllX64[MAX_PATH];
+    std::snprintf(dllLlama, sizeof(dllLlama), "%s\\llama.dll", llamaDir);
+    std::snprintf(dllGgml, sizeof(dllGgml), "%s\\ggml.dll", llamaDir);
+    std::snprintf(dllZen4, sizeof(dllZen4), "%s\\ggml-cpu-zen4.dll", llamaDir);
+    std::snprintf(dllX64, sizeof(dllX64), "%s\\ggml-cpu-x64.dll", llamaDir);
+    SetDllDirectoryA(llamaDir);
+    if (!LoadLibraryA(dllLlama)) {
+        std::fprintf(stderr, "REF_BACKEND=FAIL LoadLibrary %s\n", dllLlama);
         return;
     }
     HMODULE h = GetModuleHandleA("ggml.dll");
     if (!h) {
-        h = LoadLibraryA(R"(F:\~dev\llama-direct\vulkan\ggml.dll)");
+        h = LoadLibraryA(dllGgml);
     }
     if (!h) {
         std::fprintf(stderr, "REF_BACKEND=FAIL cannot resolve ggml.dll\n");
@@ -56,8 +64,8 @@ static void load_ggml_backends() {
     }
     // CPU-only measuring stick: Vulkan schedule introduces near-miss float drift.
     const char* cpuCandidates[] = {
-        R"(F:\~dev\llama-direct\vulkan\ggml-cpu-zen4.dll)",
-        R"(F:\~dev\llama-direct\vulkan\ggml-cpu-x64.dll)",
+        dllZen4,
+        dllX64,
         nullptr
     };
     bool loaded = false;
@@ -792,7 +800,7 @@ static void dumpTop10(const char* key, float* logits, int n_vocab, const llama_v
 }
 
 int main(int argc, char** argv) {
-    const char* modelPath = R"(F:\~dev\tinyllama_fresh.gguf)";
+    const char* modelPath = R"(G:\~dev\tinyllama_fresh.gguf)";
     const char* prompt = "hello";
     int nPredict = 15;
     if (argc >= 2) modelPath = argv[1];
@@ -812,9 +820,13 @@ int main(int argc, char** argv) {
 
     // Map llama.dll first so ggml.dll / ggml-base.dll resolve as ITS dependencies
     // (avoids a second ggml copy with an empty backend registry).
-    SetDllDirectoryA(R"(F:\~dev\llama-direct\vulkan)");
-    if (!LoadLibraryA(R"(F:\~dev\llama-direct\vulkan\llama.dll)")) {
-        std::fprintf(stderr, "REF_BACKEND=FAIL LoadLibrary llama.dll\n");
+    const char* llamaDirMain = std::getenv("LLAMA_DIRECT_DIR");
+    if (!llamaDirMain || !llamaDirMain[0]) llamaDirMain = R"(G:\~dev\llama-direct\vulkan)";
+    char dllLlamaMain[MAX_PATH];
+    std::snprintf(dllLlamaMain, sizeof(dllLlamaMain), "%s\\llama.dll", llamaDirMain);
+    SetDllDirectoryA(llamaDirMain);
+    if (!LoadLibraryA(dllLlamaMain)) {
+        std::fprintf(stderr, "REF_BACKEND=FAIL LoadLibrary %s\n", dllLlamaMain);
         return 2;
     }
     load_ggml_backends();

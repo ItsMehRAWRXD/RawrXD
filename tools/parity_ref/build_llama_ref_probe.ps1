@@ -7,9 +7,9 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $outDir = Join-Path $root "bin"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
-$llamaInc = "F:\~dev\llama.cpp\include"
-$ggmlInc  = "F:\~dev\llama.cpp\ggml\include"
-$llamaDll = "F:\~dev\llama-direct\vulkan\llama.dll"
+$llamaInc = if (Test-Path "G:\~dev\llama.cpp\include") { "G:\~dev\llama.cpp\include" } else { "F:\~dev\llama.cpp\include" }
+$ggmlInc  = if (Test-Path "G:\~dev\llama.cpp\ggml\include") { "G:\~dev\llama.cpp\ggml\include" } else { "F:\~dev\llama.cpp\ggml\include" }
+$llamaDll = if (Test-Path "G:\~dev\llama-direct\vulkan\llama.dll") { "G:\~dev\llama-direct\vulkan\llama.dll" } else { "F:\~dev\llama-direct\vulkan\llama.dll" }
 $src = Join-Path $root "llama_ref_parity_probe.cpp"
 $exe = Join-Path $outDir "llama_ref_parity_probe.exe"
 

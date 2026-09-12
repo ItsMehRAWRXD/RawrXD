@@ -1,0 +1,13 @@
+side=deep2
+stage=POST_FFN_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=ed1cd064d0889cbd
+l2=18.631054211194567
+seq=16
+path=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_deep2\deep2_POST_FFN_0_pos0_layer0_full_n3072_seq016.bin

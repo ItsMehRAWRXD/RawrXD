@@ -1,0 +1,61 @@
+GATE=UPSTREAM_LOGITS_DIVERGE_001
+PARENT=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
+PROMOTE=0
+TIP_CLIMB=HOLD
+TIP=~16f19770c8 (pre-fix) + this land
+
+## Measuring stick
+REF=llama_ref_parity_probe.exe (external; LLAMA_DIRECT_DIR=G:\~dev\llama-direct\vulkan)
+MODEL=G:\~dev\rawrxd\llama3.2-3b-Q2_K.gguf
+PROMPT_SHORT=Hi
+DEEP2_PROMPT_TOKENS_CHAT=11 (product template)
+REF_PROMPT_IDS=128000,13347 (add_special)
+COMPARE_POS=0 (BOS / first column) — PROMPT_EMBED matched bit-exact despite template length
+
+## Checkpoint digests (pos=0)
+PROMPT_EMBED     MATCH fnv=6e339c61e36ed2c6 (Deep2==llama)
+ATTN_NORM_0      MATCH fnv=c0815b03d7435029 (Deep2==llama)
+Q_PRE_ROPE_0     FIRST_DIVERGE (pre-fix)
+  PRE_FIX:  Deep2 l2=0 (LinearW:FATAL NaN sanitize→zeros)  llama l2=1.250171366e+01
+  POST_FIX: Deep2 l2=1.242436875e+01 fnv=78b6851d1152db54  llama l2=1.250171366e+01 fnv=b1fc3f8439a1ea3d
+  REL_L2≈0.006 (near; residual numeric ≠ collapse)
+K_PRE_ROPE_0     PRE zeros → POST near llama (22.26 vs 22.22)
+V_0              near (0.295 vs 0.297); not first diverge
+LAYER0_OUT       POST near (18.63 vs 18.70)
+FINAL_NORM/TIP_LOGITS/top-16:
+  STAGE_DIGEST=1 aborts scoreboard pump (B3_ABORT prefill pump-owned walk incomplete)
+  before tip dump — not required once live greedy coherent PASS
+
+## FIRST_DIVERGE_LAYER
+FIRST_DIVERGE_LAYER=blk.0.attn_q.weight Q2_K LinearW (Q_PRE_ROPE_0)
+OWNER=Q2_K_BLOCK_LAYOUT
+ROOT_CAUSE=Deep2 block_q2_K had d/dmin BEFORE scales/qs; ggml-common.h stores scales/qs then d/dmin at end
+SYMPTOM=LinearW:FATAL type=10 bad=2592/3072 firstBad=-nan → Q/K/FFN zeroed → greedy collapse ("rage")
+TOKEN_EMBD=type Q6_K (unaffected) — explains embed MATCH while Q2_K weights diverged
+
+## Fix landed
+FILE=src/deep2/GGUFLoader.hpp
+CHANGE=struct block_q2_K { scales[16]; qs[64]; d; dmin; } // was d,dmin,scales,qs
+ALSO=QuantKernelRegistry gemv_q2_k_scalar finite sanitize; dequantizeQ2KBlock finite sanitize
+PROBE=tools/parity_ref paths F→G / LLAMA_DIRECT_DIR (external stick only)
+ALIAS=Deep2 POST_FFN dumps LAYER{N}_OUT when STAGE_DIGEST on
+
+## Live gen (product path; STAGE_DIGEST off)
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+RAWRXD_HOST_DECODE=1
+PROMPT=introduce yourself in under 99 words
+MAX_TOKENS=48 TEMP=0
+EXIT=0 GENERATED_TOKENS=48 PRODUCT_PASS=1
+OUT=I'm an artificial intelligence designed to assist and communicate with users. I'm a large language model, trained on a massive corpus of text data, allowing me to understand and respond to a wide range of questions and topics. My purpose is to
+WORDS=42 MAX_IDENTICAL_WORD_RUN=1 UNIQUE_WORD_RATIO≈0.786
+TRACE_ROWS=48 SELECTED_TOKEN_MAX_RUN=1
+REPETITION_COLLAPSE=0 OUTPUT_COHERENT=1
+TOKENIZER_ROUNDTRIP=PASS (trace) LOGITS_FINITE=1 SAMPLER_STATE_VALID=1 CHAT_TEMPLATE_VALID=1
+
+## Disposition
+GEN_QUALITY=PASS
+OWNER=CLOSED (layout fix) ; residual Q/V near-miss ≠ collapse owner
+NEXT_GATE=DEEP2_70B_CONSTRAINED_EXTERNAL_001 (SOURCE_WIRED only)
+70B=SOURCE_WIRED_ONLY NOT_RUN
+PROMOTE=0
+NOT_RUN!=PASS

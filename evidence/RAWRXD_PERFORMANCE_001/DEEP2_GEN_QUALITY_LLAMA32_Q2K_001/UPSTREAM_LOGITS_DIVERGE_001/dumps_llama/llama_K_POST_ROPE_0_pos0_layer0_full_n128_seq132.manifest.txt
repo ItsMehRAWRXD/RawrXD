@@ -1,0 +1,13 @@
+side=llama
+stage=K_POST_ROPE_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=128
+nbytes=512
+fnv=f850ba99a361b1e2
+l2=20.069780882966739
+seq=132
+path=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_K_POST_ROPE_0_pos0_layer0_full_n128_seq132.bin

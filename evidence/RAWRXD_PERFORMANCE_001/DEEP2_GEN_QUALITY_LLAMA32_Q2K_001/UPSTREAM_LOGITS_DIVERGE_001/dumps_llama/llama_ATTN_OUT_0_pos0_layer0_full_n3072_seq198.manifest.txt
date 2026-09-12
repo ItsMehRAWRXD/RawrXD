@@ -1,0 +1,13 @@
+side=llama
+stage=ATTN_OUT_0
+pos=0
+layer=0
+head=-1
+head_tag=full
+dtype=f32
+nelem=3072
+nbytes=12288
+fnv=dc43b812d5db0362
+l2=1.1293466324555543
+seq=198
+path=G:\~dev\rawrxd\evidence\RAWRXD_PERFORMANCE_001\DEEP2_GEN_QUALITY_LLAMA32_Q2K_001\UPSTREAM_LOGITS_DIVERGE_001\dumps_llama\llama_ATTN_OUT_0_pos0_layer0_full_n3072_seq198.bin
