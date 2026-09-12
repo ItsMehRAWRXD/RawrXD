@@ -12,6 +12,8 @@
 #include "Deep2Engine.h"
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
+#include "Deep2Residency.hpp"
+#include "GpuTransferCounters.hpp"
 #include "Deep2Top15Seams.hpp"
 #include "d2_packed_q2k_product_run_v1.h"
 #include "TeardownWitness.hpp"
@@ -6261,6 +6263,30 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         ssvkBind16_.run != nullptr ? 1 : 0, bindOk ? 1 : 0,
                         0, deviceCreateEvents_, modelLoadEvents_,
                         commandRebuildEvents_, dualStickResetEvents_);
+                    {
+                        ResidencySnapshot rs{};
+                        rs.device_creates = deviceCreateEvents_;
+                        rs.model_loads = modelLoadEvents_;
+                        rs.reload_bytes =
+                            GpuTransfer_Snapshot().reloadBytes;
+                        const unsigned nd = vulkanDeviceCount();
+                        for (unsigned si = 0; si < nd; ++si) {
+                            rs.weight_uploads +=
+                                vulkanSlotWeightUploads(si);
+                            rs.weight_hits += vulkanSlotWeightHits(si);
+                            auto* vc = getVulkanComputeSlot(si);
+                            if (!vc) continue;
+                            rs.content_hits += vc->WeightContentHits();
+                            rs.pin_evicts += vc->WeightPinEvicts();
+                            rs.pin_rejects += vc->WeightPinRejects();
+                            rs.resident_bytes +=
+                                vc->WeightPinResidentBytes();
+                        }
+                        ResidencyEmitToken(
+                            stderr, (uint64_t)t, (uint64_t)kvLen, nd,
+                            isModelLoaded() ? 1 : 0,
+                            gpuResidentDecodeEnabled() ? 1 : 0, rs);
+                    }
                 }
                 if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
                     if (!bindOk) {

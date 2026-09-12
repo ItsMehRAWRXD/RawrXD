@@ -280,6 +280,7 @@ void VulkanCompute::ReleaseGemvResidents() {
         q6k_logits_w_mem_ = nullptr;
     }
     q6k_logits_w_cap_ = 0;
+    q6k_logits_w_key_ = 0;
 }
 
 bool VulkanCompute::CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDeviceMemory& mem) {
