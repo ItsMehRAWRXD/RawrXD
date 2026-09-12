@@ -4,7 +4,9 @@
 #include "ss_vk_gemv_spv.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <windows.h>
+#define SS_ABBREV_MAX_STEPS 128
 static void bind_cmd(SsVk *v)
 {
     v->a.cmd_bp = (PFN_vkCmdBindPipeline)v->a.gdpa(v->dev, "vkCmdBindPipeline");
@@ -144,33 +146,59 @@ static int argmax(SsVk *v)
     v->next_token = best;
     return 0;
 }
+static int cmp_u64(const void *a, const void *b)
+{
+    uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b;
+    return (x > y) - (x < y);
+}
 int ss_vk_abbrev_decode(SsVk *v, const char *shard, uint32_t steps)
 {
     VkBuffer tmp = 0; VkDeviceMemory tmpm = 0;
-    LARGE_INTEGER f0, t0, t1; uint32_t s, tid; double sec;
+    LARGE_INTEGER freq, a, b, t0, t1;
+    uint64_t ns[SS_ABBREV_MAX_STEPS], sorted[SS_ABBREV_MAX_STEPS], sum = 0;
+    uint64_t step0, mn, mx, mean, p50, p95;
+    uint32_t s, tid, p50i, p95i; double sec;
     (void)shard;
-    if (!v || !v->token_op || !steps || !v->anorm_wb || !v->onorm_wb || !v->lbuf || !v->logitsb)
-        return 100;
+    if (!v || !v->token_op || !steps || steps > SS_ABBREV_MAX_STEPS) return 100;
+    if (!v->anorm_wb || !v->onorm_wb || !v->lbuf || !v->logitsb) return 100;
     if (ss_vk_mkbuf(v, (VkDeviceSize)v->embd_dim * 4ull, &tmp, &tmpm, 0)) return 100;
     bind_cmd(v);
     tid = v->next_token;
-    QueryPerformanceFrequency(&f0);
+    QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&t0);
     for (s = 0; s < steps; ++s) {
+        QueryPerformanceCounter(&a);
         if (embd_tok(v, tid)) goto fail;
         if (rms_run(v, v->outb, v->anorm_wb, (uint64_t)v->embd_dim * 4ull, tmp)) goto fail;
         if (rms_run(v, tmp, v->onorm_wb, (uint64_t)v->embd_dim * 4ull, v->actb)) goto fail;
         if (gemv_lm(v)) goto fail;
         if (argmax(v)) goto fail;
         tid = v->next_token;
+        QueryPerformanceCounter(&b);
+        ns[s] = (uint64_t)(((b.QuadPart - a.QuadPart) * 1000000000ull) / (uint64_t)freq.QuadPart);
+        sum += ns[s];
     }
     QueryPerformanceCounter(&t1);
-    sec = (double)(t1.QuadPart - t0.QuadPart) / (double)f0.QuadPart;
+    sec = (double)(t1.QuadPart - t0.QuadPart) / (double)freq.QuadPart;
     if (sec <= 0.0) sec = 1e-9;
+    memcpy(sorted, ns, (size_t)steps * sizeof(uint64_t));
+    qsort(sorted, steps, sizeof(uint64_t), cmp_u64);
+    step0 = ns[0]; mn = sorted[0]; mx = sorted[steps - 1];
+    mean = sum / (uint64_t)steps;
+    p50i = (steps - 1u) / 2u;
+    p95i = (uint32_t)(((uint64_t)steps * 95ull) / 100ull);
+    if (p95i >= steps) p95i = steps - 1u;
+    p50 = sorted[p50i]; p95 = sorted[p95i];
     v->decode_steps = steps;
     v->abbrev_tps = (double)steps / sec;
     v->decode_loop = 1;
-    printf("ABBREVIATED_DECODE_STEPS=%u ABBREVIATED_TPS=%.6f\n", steps, v->abbrev_tps);
+    printf("ABBREVIATED_DECODE_STEPS=%u TOKEN_COMMIT_COUNT=%u ABBREVIATED_TPS=%.6f\n",
+           steps, steps, v->abbrev_tps);
+    printf("STEP_0_NS=%llu STEP_MIN_NS=%llu STEP_MAX_NS=%llu STEP_MEAN_NS=%llu\n",
+           (unsigned long long)step0, (unsigned long long)mn,
+           (unsigned long long)mx, (unsigned long long)mean);
+    printf("STEP_P50_NS=%llu STEP_P95_NS=%llu\n",
+           (unsigned long long)p50, (unsigned long long)p95);
     printf("DECODE_KIND=ABBREVIATED_SPLIT_STREAM FULL_MODEL_FORWARD=0\n");
     printf("TPS_SCOPE=PRODUCT_CHAIN_ONLY DECODE_LOOP_RAN=1 PROMOTE=0\n");
     if (tmp) v->a.destroy_buf(v->dev, tmp, 0);
