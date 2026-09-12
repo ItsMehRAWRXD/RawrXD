@@ -1,0 +1,80 @@
+GATE=DEEP2_DUAL_AGGREGATE_FABRIC_NODEP_20260912
+STATUS=SOURCE_DROP
+SMOKE_MOCK=PASS
+PRODUCT_LINKED_INTO_CERT=0
+PROMOTE=0
+TPS_AUTHORITY=0
+AGGREGATE_BW_AUTHORITY=0
+
+GOAL:
+Treat discrete GPU0+GPU1 as one aggregate decode fabric when the operator is partitionable.
+
+PHYSICAL_LAW:
+VRAM is not unified.
+Bandwidth is not automatically additive.
+No claim of 1.264 TB/s is valid unless both devices issue concurrent LOCAL memory traffic.
+
+TOP15_MISSING:
+
+01 LOCAL_WEIGHT_OWNERSHIP
+   Every tensor shard has a permanent owner GPU. No full-weight ping-pong per token.
+
+02 BANDWIDTH_WEIGHTED_PARTITION
+   Split rows/experts/vocab according to sustained device throughput, not 50/50 by habit.
+
+03 DUAL_INDEPENDENT_SUBMIT_LANES
+   GPU0 and GPU1 receive command streams from independent host workers.
+
+04 TOKEN_EPOCH_BARRIER_ONLY
+   Synchronize once at the smallest mathematically required boundary, not after every kernel.
+
+05 INPUT_ACTIVATION_REPLICATION
+   Broadcast the small activation vector to both devices; never broadcast weights.
+
+06 OUTPUT_ROW_SHARDING
+   Q/K/V/O, FFN projections, and LM-head are split by output rows where algebra allows.
+
+07 COLUMN_SPLIT_PLUS_SMALL_REDUCE
+   For transforms requiring partial sums, reduce activations only; reduction bytes must be tiny
+   relative to local weight bytes consumed.
+
+08 MOE_EXPERT_AFFINITY
+   Keep experts resident on one owner GPU and route tokens to owners. Avoid expert migration.
+
+09 LOCAL_KV_OWNERSHIP
+   KV pages follow the attention shard/head owner. Do not duplicate full KV unless measured cheaper.
+
+10 ASYNC_PREFETCH_PER_DEVICE
+   Each GPU has its own next-range prefetch window, driven independently by upcoming local work.
+
+11 NO_CROSS_GPU_CRITICAL_PATH_WEIGHTS
+   Any plan that requires weight bytes from the other GPU inside the token critical path is rejected.
+
+12 MICRO_REDUCTION_ENGINE
+   Concatenate/all-reduce only compact activation/logit fragments using the cheapest available path
+   (existing P2P if proven, otherwise pinned host staging). Never make P2P a correctness requirement.
+
+13 STRAGGLER_AWARE_REBALANCE
+   Measure per-lane completion and adjust future shard boundaries so token latency is max(t0,t1),
+   not t0+t1.
+
+14 OVERLAP_REDUCTION_WITH_NEXT_PREFETCH
+   While compact outputs are merged, both GPUs prepare the next local weight/activation ranges.
+
+15 AGGREGATE_BW_AUTHORITY_COUNTERS
+   Mint aggregate bandwidth only from same-token overlapping device intervals and LOCAL bytes read.
+   Reject sums of independent benchmark peaks.
+
+REQUIRED_RECEIPT_FIELDS:
+GPU0_LOCAL_WEIGHT_BYTES=
+GPU1_LOCAL_WEIGHT_BYTES=
+GPU0_ACTIVE_NS=
+GPU1_ACTIVE_NS=
+OVERLAP_NS=
+REDUCE_BYTES=
+BROADCAST_BYTES=
+WEIGHT_MIGRATION_BYTES=
+SERIAL_GPU_CHAIN=
+BOTH_LANES_WORKED=
+AGGREGATE_EFFECTIVE_BPS=
+AGGREGATE_UTILIZATION_OF_1P264TBPS=

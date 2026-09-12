@@ -34,6 +34,8 @@ STILL_MISSING_PRODUCTION_SOURCE=
   09 D2DeviceIo → real SsVk (load_exact/evict/copy)
   10 router/operator → exact-range product bind
   11 real dual-GPU arithmetic (GPU0/1_REAL_FORWARDS>0)
+     next bind=DEEP2_DUAL_AGGREGATE_FABRIC same-token parallel ownership
+     (mock smoke ≠ live; SERIAL_GPU_CHAIN must stay 0)
   12 bounded 64GB host streaming backend
   13 allocation-free steady-state arenas
   14 native tokenizer + sampler + UTF-8 detokenizer

@@ -1,0 +1,70 @@
+GATE=DEEP2_MODEL_SIZE_INDEPENDENCE_TOP15_20260912
+STATUS=LAW_ONLY
+PRODUCT_LINKED_INTO_CERT=0
+CERT_BINARY_TOUCHED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+
+HOST_ENVELOPE=
+  GPU0_R9700=32GB@640GBs
+  GPU1_7800XT=16GB@624GBs
+  HOT_VRAM=48GB  NOT_SUMMED_BANDWIDTH_POOL
+  DDR5=64GB     L2_BACKING
+  NVMe=L3       CRITICAL_PATH_FORBIDDEN
+
+ARCH_INVERSION=
+  OLD: how much of the model fits on GPU?
+  NEW: for next token, smallest exact state set, where, and how early?
+
+INVARIANTS=
+  FULL_DEQUANT_BUFFER=0
+  CRITICAL_PATH_NVME_READS_PER_TOKEN=0
+  INTER_GPU_BYTES_PER_TOKEN→MIN  (≠ balanced 50/50 VRAM)
+  FIXED_VRAM_ENVELOPE=1
+  STORAGE_FORM≠RESIDENCY_FORM≠EXECUTION_FORM
+  DENSE_PLANNER≠MOE_PLANNER
+
+TOP15=
+  01 residency_budget_solver
+  02 hot_common_tensor_pinning
+  03 exact_range_cold_tensor_fetch
+  04 direct_packed_execution
+  05 tensor_sensitive_mixed_quant
+  06 split_expert_residency
+  07 router_ahead_expert_prediction
+  08 adaptive_expert_cache
+  09 compute_transfer_overlap
+  10 asymmetric_dual_gpu_placement
+  11 quantized_paged_KV
+  12 KV_importance_eviction
+  13 scratch_space_virtualization
+  14 lifetime_aware_tensor_aliasing
+  15 NVMe_as_L3_model_memory
+
+NEXT4_IMPLEMENT_ORDER=
+  01 RESIDENCY_BUDGET_SOLVER
+  02 PACKED_EXECUTION_FORM
+  03 PREDICTIVE_EXPERT_RANGE_CACHE
+  04 ADAPTIVE_KV_RESIDENCY
+
+CONSTRAINT_METRICS=
+  ACTIVE_WEIGHT_BYTES_PER_TOKEN
+  HOT_SET_BYTES
+  KV_BYTES
+  SCRATCH_PEAK_BYTES
+  RAM_TO_VRAM_BYTES_PER_TOKEN
+  GPU_TO_GPU_BYTES_PER_TOKEN
+  PREFETCH_MISS_BYTES_PER_TOKEN
+  RESIDENT_BYTES_PER_USEFUL_MAC
+
+OPEN_QUESTIONS_AT_OPEN=
+  CAN_LOAD
+  CAN_EXECUTE
+  CAN_REMAIN_INTERACTIVE
+
+GOVERNING_UNTIL_TPS_BASELINE=
+  DEEP2_NEXT15_POST_TARGET64_TPS_BASELINE_20260912
+SIDE_DROP_HOLD=
+  do not link into Attempt2 measured path

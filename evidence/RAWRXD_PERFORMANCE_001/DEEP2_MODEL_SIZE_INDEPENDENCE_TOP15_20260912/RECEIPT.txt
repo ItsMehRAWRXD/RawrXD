@@ -1,0 +1,25 @@
+GATE=DEEP2_MODEL_SIZE_INDEPENDENCE_TOP15_20260912
+STATUS=LAND_LAW_ONLY
+RUNTIME_PROOF=NOT_RUN
+PRODUCT_LINKED=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+LANDED=
+  LAW.txt  architecture + Top15 + next4 + invariants
+  MAP.txt  crosswalk to ResidencyGraph / Missing15 / NEXT15
+  METRICS.txt constraint metric names (observe-only)
+
+HARD_HOLDS=
+  Attempt2 measured path untouched
+  Link15/ResidencyGraph/Mint15 not mid-run injected
+  NOT_RUN != PASS
+  venture/valuation marks ≠ technical authority
+
+NEXT_EXECUTABLE=
+  after FULL_MODEL_TPS_AUTHORITY seal:
+    residency budget solver skeleton (side drop)
+    packed Q2_K GEMV (no full dequant)
+  MoE predictor/cache AFTER dense packed path proves
+  adaptive KV AFTER permanent device KV exists

@@ -1,0 +1,35 @@
+GATE=DEEP2_DUAL_AGGREGATE_FABRIC_NODEP_20260912
+STATUS=BIND_PLAN_ONLY
+PRODUCT_LINKED=0
+
+NEXT_DEEP2_BIND=
+  NOT "enable dual GPU"
+  YES bind each projection/MoE/LM-head tensor range to dual-owner plan
+  YES make GPU forward path accept row/expert/vocab ranges
+  YES install SsVk submit/reduce into D2FabricBackend fnptrs
+
+BIND_SURFACE=
+  d2fabric_plan_rows(...)
+  d2fabric_execute(...)
+  D2FabricSubmitFn / D2FabricReduceFn → existing SsVk device path
+  No second runtime import
+
+PREDICATES_FOR_LIVE_AGGREGATE_AUTHORITY=
+  GPU0_LOCAL_WEIGHT_BYTES > 0
+  GPU1_LOCAL_WEIGHT_BYTES > 0
+  BOTH_LANES_WORKED=1
+  SERIAL_GPU_CHAIN=0
+  WEIGHT_MIGRATION_BYTES=0
+  OVERLAP_NS > 0
+  REDUCE_BYTES << LOCAL_WEIGHT_BYTES
+  AGGREGATE_EFFECTIVE_BPS = (w0+w1) / common-token wall
+
+ORDER=
+  after FULL_MODEL_TPS_AUTHORITY seal
+  after packed execution form begins
+  concurrent with dual-GPU real forward (#14 NEXT15 / #13 POST_BASELINE)
+  before claiming 1.264 TB/s utilization
+
+VS_LOCALITY_DROP=
+  LOCALITY_STREAM = placement/residency policy smoke
+  DUAL_AGGREGATE_FABRIC = same-token parallel ownership + lanes + aggregate counters

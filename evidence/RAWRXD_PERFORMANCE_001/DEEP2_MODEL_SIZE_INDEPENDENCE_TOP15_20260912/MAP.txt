@@ -1,0 +1,98 @@
+GATE=DEEP2_MODEL_SIZE_INDEPENDENCE_TOP15_20260912
+MAP=existing drops → Top15 (SOURCE_WIRED≠RUNTIME≠PASS)
+
+01 residency_budget_solver
+   EXISTING= partial (ResidencyGraph Tier/flags; scoreboard residency states)
+   GAP= per-tensor value/cost solver + fixed envelope + FIT class
+   STATUS=OPEN
+
+02 hot_common_tensor_pinning
+   EXISTING= TF_PINNED in d2_residency_graph.h; LAW pin never-evict
+   GAP= product bind of embd/norm/router/shared-expert pins
+   STATUS=SOURCE_SIDE
+
+03 exact_range_cold_tensor_fetch
+   EXISTING= EXACT_RANGE_FRAMEWORK smoke; TF_EXACT_RANGE; D2DeviceIo planned
+   GAP= D2DeviceIo.load_exact → SsVk product bind
+   STATUS=FRAMEWORK_SMOKE
+
+04 direct_packed_execution
+   EXISTING= TF_PACKED_NATIVE; tiled LM-head; Q2_K product requirement
+   GAP= Q2_K/Q3/Q4/Q5/Q6 direct GEMV; MATERIALIZED_WEIGHT_BYTES=0
+   STATUS=OPEN_POST_BASELINE (#05/#06 NEXT15)
+
+05 tensor_sensitive_mixed_quant
+   EXISTING= codec enum multi-Q; LM-head Q6_K observed on DeepSeek2
+   GAP= importance-matrix / role-driven per-tensor quant policy
+   STATUS=OPEN
+
+06 split_expert_residency
+   EXISTING= exact-range enables segment residency
+   GAP= expert gate/up/down tile split residency policy
+   STATUS=OPEN_MOE
+
+07 router_ahead_expert_prediction
+   EXISTING= none product
+   GAP= N→N+1 probability prefetch while N computes
+   STATUS=OPEN_MOE
+
+08 adaptive_expert_cache
+   EXISTING= none; research says measure locality not hard-code
+   GAP= measured routing locality → cache size/eviction
+   STATUS=OPEN_MOE
+
+09 compute_transfer_overlap
+   EXISTING= locality dual-GPU smoke; scoreboard async concepts
+   GAP= PCIe/RAM behind current-layer GPU; zero stall on miss path
+   STATUS=OPEN
+
+10 asymmetric_dual_gpu_placement
+   EXISTING= DUAL_GPU_PLACEMENT_FRAMEWORK smoke; LocalityStream dualGPU drop;
+            DEEP2_DUAL_AGGREGATE_FABRIC_NODEP_20260912 (same-token parallel ownership;
+            bandwidth-weighted rows; dual Win32 lanes; mock smoke PASS)
+   GAP= SsVk submit/reduce fnptr bind; permanent local-weight shards on live forward;
+        SERIAL_GPU_CHAIN=0 + OVERLAP_NS>0 on real projections
+   STATUS=SIDE_DROP_SMOKE (live aggregate BW authority OPEN)
+
+11 quantized_paged_KV
+   EXISTING= permanent device KV planned post-baseline
+   GAP= Q8/Q4/Q2 adaptive + recent high-fidelity window
+   STATUS=OPEN
+
+12 KV_importance_eviction
+   EXISTING= none
+   GAP= head/recency/importance eviction
+   STATUS=OPEN
+
+13 scratch_space_virtualization
+   EXISTING= endurance arena_guard; run_token zero-heap law
+   GAP= one reusable peak-range arena across ops
+   STATUS=PARTIAL
+
+14 lifetime_aware_tensor_aliasing
+   EXISTING= TokenContext / transient slots fixed-capacity
+   GAP= prove-dead intermediate reuse across graph nodes
+   STATUS=PARTIAL
+
+15 NVMe_as_L3_model_memory
+   EXISTING= scoreboard READY_NVMe / elastic tier law
+   GAP= async NVMe→RAM only; CRITICAL_PATH_NVME=0 enforced
+   STATUS=LAW_ONLY
+
+DENSE_VS_MOE=
+  DENSE: bandwidth-dominated once weights > VRAM
+  MoE: residency/prediction-dominated; TOTAL≠ACTIVE
+
+CAPABILITY_BANDS_HOST_48_64=OPINION_ONLY
+  dense Q4 <=~70B mostly VRAM
+  dense Q4 ~70–120B VRAM+RAM penalty
+  dense Q4 >120B heavy streaming
+  MoE 100–400B residency-engine target
+  MoE 400–700B+ if active set + prefetch hold
+  NO hard 671B ceiling
+
+NEXT4_OWNERS=
+  01 → extend ResidencyGraph + hardware restraint solver
+  02 → DEEP2_Q2K_DIRECT_GEMV + universal tiled quant
+  03 → MoE after dense packed path live
+  04 → after permanent device KV (#09 POST_BASELINE)
