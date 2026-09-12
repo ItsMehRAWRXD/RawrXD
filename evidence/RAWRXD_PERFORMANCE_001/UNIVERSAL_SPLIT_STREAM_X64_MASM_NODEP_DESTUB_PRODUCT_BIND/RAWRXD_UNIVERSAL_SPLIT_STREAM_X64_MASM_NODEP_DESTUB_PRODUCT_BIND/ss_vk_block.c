@@ -2,6 +2,7 @@
 #include "ss_vk_api.h"
 #include "ss_gguf_find.h"
 #include "ss_evidence.h"
+#include "ss_vk_block_util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,6 +52,7 @@ int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2)
     if (ss_tensor_id_check(&idq, idq.hash)) goto fail;
     if (ss_vk_mkbuf(v, (VkDeviceSize)norm.bytes, &v->anorm_wb, &v->anorm_wm, &map)) goto fail;
     memcpy(map, nw, (size_t)norm.bytes); v->a.unmap(v->dev, v->anorm_wm); map = 0;
+    ss_vk_dropb(v, &v->actb, &v->actmem);
     if (ss_vk_mkbuf(v, (VkDeviceSize)v->embd_dim * 4ull, &v->actb, &v->actmem, 0)) goto fail;
     if (ss_vk_mkbuf(v, (VkDeviceSize)rows * 4ull, &qob, &qom, 0)) goto fail;
     ss_barrier_note("token_embd", "blk0_attn_norm");

@@ -37,6 +37,7 @@ typedef struct SsBlockPlan {
     SsTensorRef expProbsB;
     uint32_t rolesBound;
     uint32_t isMoe;
+    uint32_t blockIndex;
 } SsBlockPlan;
 typedef struct SsModelPlan {
     char architecture[SS_ARCH_NAME_MAX];

@@ -3,6 +3,9 @@
 #include "ss_vk_block0.h"
 #include "ss_rope_kv_attn.h"
 #include "ss_moe_ffn.h"
+#include "ss_full_block_loop.h"
+#include "ss_final_norm_lm.h"
+#include "ss_vk_block_util.h"
 #include <stdio.h>
 #include <string.h>
 int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
@@ -72,16 +75,40 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
         else
             printf("DEEP2_MOE_OR_FULL_BLOCK_FFN=FAIL\n");
         ss_moe_ffn_print(&mf);
-        if (ss_vk_phase1_block_loop(&v, plan, &L) == 0 && L.pass)
-            printf("PHASE_1_BLOCK_LOOP=PASS\n");
-        else
-            printf("PHASE_1_BLOCK_LOOP=FAIL\n");
-        ss_phase1_print(&L);
+        {
+            SsFullBlockLoop FL; SsFinalNormLm FN; int fl_ok;
+            fl_ok = (ss_vk_full_block_loop(&v, plan, &FL) == 0 && FL.pass);
+            if (fl_ok)
+                printf("DEEP2_FULL_BLOCK_LOOP_REAL=PASS\n");
+            else
+                printf("DEEP2_FULL_BLOCK_LOOP_REAL=FAIL\n");
+            ss_full_block_loop_print(&FL);
+            /* Must run before phase1/abbrev overwrite final transformer act. */
+            if (ss_vk_final_norm_lmhead(&v, plan, fl_ok, &FN) == 0 && FN.pass)
+                printf("DEEP2_FINAL_NORM_LM_HEAD_REAL=PASS\n");
+            else
+                printf("DEEP2_FINAL_NORM_LM_HEAD_REAL=FAIL\n");
+            ss_final_norm_lm_print(&FN);
+            /* Free post-norm act; logits retained. Phase-1 superseded when FL=PASS. */
+            ss_vk_dropb(&v, &v.actb, &v.actmem);
+            if (!fl_ok) {
+                if (ss_vk_phase1_block_loop(&v, plan, &L) == 0 && L.pass)
+                    printf("PHASE_1_BLOCK_LOOP=PASS\n");
+                else
+                    printf("PHASE_1_BLOCK_LOOP=FAIL\n");
+                ss_phase1_print(&L);
+            } else {
+                printf("PHASE_1_BLOCK_LOOP=SKIP_AFTER_FULL_BLOCK_LOOP\n");
+                L.pass = 1; L.completed = plan->blockCount; L.first_failed = -1;
+            }
+        }
         printf("DEEP2_BLOCK_FORWARD_000_001=%s\n",
                (L.completed >= 1 && L.first_failed != 0) ? "PASS" : "FAIL");
     } else {
         printf("DEEP2_BLOCK_FORWARD_000_001=NOT_RUN\nPHASE_1_BLOCK_LOOP=NOT_RUN\n");
         printf("DEEP2_ROPE_KV_ATTN_REAL=NOT_RUN\nDEEP2_MOE_OR_FULL_BLOCK_FFN=NOT_RUN\n");
+        printf("DEEP2_FULL_BLOCK_LOOP_REAL=NOT_RUN\n");
+        printf("DEEP2_FINAL_NORM_LM_HEAD_REAL=NOT_RUN\n");
     }
     if (!(shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op)) {
         printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");

@@ -2,6 +2,7 @@
 #include "ss_model_plan_io.h"
 #include <stdlib.h>
 #include <string.h>
+uint64_t ss_mp_tensor_nbytes(uint32_t ty, uint64_t elems);
 static int take_slot(SsTensorRef *slot, const SsPlanEnt *e, uint64_t base, uint64_t bytes,
                      uint32_t shard_index)
 {
@@ -9,16 +10,28 @@ static int take_slot(SsTensorRef *slot, const SsPlanEnt *e, uint64_t base, uint6
     ss_mp_fill_ref(slot, e, base, bytes, shard_index);
     return 1;
 }
-int ss_mp_bind_tensors(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t base,
-                       uint32_t shard_index, int allow_meta_overwrite)
+static uint64_t ent_bytes(const SsPlanEnt *e, const SsPlanEnt *all, uint32_t nt,
+                          uint64_t base, uint64_t file_size)
 {
-    uint32_t i, k;
-    (void)allow_meta_overwrite;
+    uint64_t best = ~(uint64_t)0, k, typed, to_eof;
+    for (k = 0; k < nt; ++k)
+        if (all[k].rel > e->rel && all[k].rel < best) best = all[k].rel;
+    if (best != ~(uint64_t)0) return best - e->rel;
+    typed = ss_mp_tensor_nbytes(e->ty, e->elems);
+    if (file_size > base + e->rel) {
+        to_eof = file_size - (base + e->rel);
+        if (typed && typed <= to_eof) return typed;
+        return to_eof;
+    }
+    return typed;
+}
+int ss_mp_bind_tensors_fs(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t base,
+                          uint32_t shard_index, uint64_t file_size)
+{
+    uint32_t i;
     for (i = 0; i < nt; ++i) {
-        uint64_t best = ~(uint64_t)0, bytes; SsRoleHit hit; SsTensorRef *slot;
-        for (k = 0; k < nt; ++k)
-            if (e[k].rel > e[i].rel && e[k].rel < best) best = e[k].rel;
-        bytes = (best != ~(uint64_t)0) ? (best - e[i].rel) : 0;
+        uint64_t bytes; SsRoleHit hit; SsTensorRef *slot;
+        bytes = ent_bytes(&e[i], e, nt, base, file_size);
         if (!bytes) continue;
         if (ss_tensor_role_parse(e[i].name, &hit)) continue;
         if (hit.role == SS_ROLE_TOKEN_EMBD) {
@@ -40,6 +53,12 @@ int ss_mp_bind_tensors(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t bas
             out->blocks[hit.block].isMoe = 1;
     }
     return 0;
+}
+int ss_mp_bind_tensors(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t base,
+                       uint32_t shard_index, int allow_meta_overwrite)
+{
+    (void)allow_meta_overwrite;
+    return ss_mp_bind_tensors_fs(out, e, nt, base, shard_index, 0);
 }
 static int load_ents(FILE *f, SsPlanEnt **out_e, uint32_t nt, uint32_t align, uint64_t *base_out)
 {
@@ -64,14 +83,15 @@ static int load_ents(FILE *f, SsPlanEnt **out_e, uint32_t nt, uint32_t align, ui
 }
 int ss_model_plan_merge_shard(SsModelPlan *plan, const char *path, uint32_t shard_index)
 {
-    FILE *f; char arch[SS_ARCH_NAME_MAX]; uint32_t align = 32; uint64_t nt, base;
+    FILE *f; char arch[SS_ARCH_NAME_MAX]; uint32_t align = 32; uint64_t nt, base, fsz;
     SsPlanEnt *e = 0; int rc = 1;
     if (!plan || !path) return 1;
     f = fopen(path, "rb"); if (!f) return 1;
     arch[0] = 0;
     if (ss_mp_read_meta(f, plan, arch, &align, &nt, 0)) goto done;
     if (load_ents(f, &e, (uint32_t)nt, align, &base)) goto done;
-    if (ss_mp_bind_tensors(plan, e, (uint32_t)nt, base, shard_index, 0)) goto done;
+    _fseeki64(f, 0, SEEK_END); fsz = (uint64_t)_ftelli64(f);
+    if (ss_mp_bind_tensors_fs(plan, e, (uint32_t)nt, base, shard_index, fsz)) goto done;
     plan->shardsMerged++;
     rc = 0;
 done:
@@ -79,7 +99,7 @@ done:
 }
 int ss_mp_build_one(SsModelPlan *out, const char *path, uint32_t shard_index, int read_meta)
 {
-    FILE *f; char arch[SS_ARCH_NAME_MAX]; uint32_t align = 32; uint64_t nt, base;
+    FILE *f; char arch[SS_ARCH_NAME_MAX]; uint32_t align = 32; uint64_t nt, base, fsz;
     SsPlanEnt *e = 0; int rc = 1;
     f = fopen(path, "rb"); if (!f) return 1;
     arch[0] = 0;
@@ -90,7 +110,8 @@ int ss_mp_build_one(SsModelPlan *out, const char *path, uint32_t shard_index, in
         if (out->blockCount > SS_MAX_BLOCKS) out->blockCount = SS_MAX_BLOCKS;
     }
     if (load_ents(f, &e, (uint32_t)nt, align, &base)) goto done;
-    if (ss_mp_bind_tensors(out, e, (uint32_t)nt, base, shard_index, read_meta)) goto done;
+    _fseeki64(f, 0, SEEK_END); fsz = (uint64_t)_ftelli64(f);
+    if (ss_mp_bind_tensors_fs(out, e, (uint32_t)nt, base, shard_index, fsz)) goto done;
     out->shardsMerged = 1;
     rc = 0;
 done:

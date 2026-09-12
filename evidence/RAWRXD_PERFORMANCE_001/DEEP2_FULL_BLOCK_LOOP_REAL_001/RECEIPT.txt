@@ -1,0 +1,72 @@
+RECEIPT=DEEP2_FULL_BLOCK_LOOP_REAL_001
+STATUS=PASS
+DATE=2026-09-12
+PRODUCT_BINARY=deep2_benchmark.exe
+MODEL=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+BRANCH=cert/gpu-forward-child-ladder-20260909
+PRIOR_SEAL=c5b994a5f7
+
+DEEP2_FULL_BLOCK_LOOP_REAL=PASS
+
+DECLARED_BLOCK_COUNT=61
+BLOCK_PLAN_COUNT=61
+BLOCKS_ENTERED=61
+BLOCKS_COMPLETED=61
+BLOCK_ORDER_VALID=1
+
+FIRST_BLOCK=0
+LAST_BLOCK=60
+
+DENSE_BLOCKS_EXECUTED=3
+MOE_BLOCKS_EXECUTED=58
+FFN_TYPE_FROM_RESOLVED_TENSORS=1
+
+CHAIN_CONTINUITY_VALID=1
+PREV_OUTPUT_TO_NEXT_INPUT_MATCH=60/60
+REPEATED_BLOCK0_ACTIVATION=0
+SYNTHETIC_BLOCK_RESET_COUNT=0
+ORIGINAL_EMBEDDING_RELOAD_COUNT=0
+
+BLOCK_LOCAL_TENSOR_BINDING_VALID=61/61
+ATTENTION_REAL_BLOCKS=61/61
+FFN_REAL_BLOCKS=61/61
+RESIDUAL_REAL_BLOCKS=61/61
+
+FINAL_BLOCK_OUTPUT_REAL=1
+
+FULL_MODEL_FORWARD=1
+ALL_BLOCKS_COMPLETED=1
+
+LM_HEAD_REAL=0
+GENERATED_TOKENS=0
+FULL_MODEL_DECODE=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+
+ORDER=
+  Activation cur = embedding_output
+  for i in 0..60:
+    require blocks[i].blockIndex == i
+    RunResolvedBlock(blocks[i], cur → next)
+      attn from block-local Q/K/V/O
+      FFN type from resolved tensors (denseGate* vs router+expert*)
+      residual continuous; abort on missing/NaN/order
+    cur = next
+  final_transformer_output = cur
+
+BIND_FIX=
+  Last-on-shard GGUF tensors previously bytes=0 (skipped).
+  Fixed via typed nbytes / EOF sizing (blk.13/30/47/58 ffn_norm).
+
+HONESTY=
+  FULL_MODEL_FORWARD=1 means 61 real sequential transformer blocks only.
+  Does NOT prove final norm / LM head / token decode on that activation.
+  Attn path still uses plan-bound MLA + RoPE@0 / seq=1 V-extract per block
+  (RoPE/KV multi-pos sealed separately on blk0).
+  Abbreviated product-chain TPS remains PRODUCT_CHAIN_ONLY.
+
+BASE_CURRENT_PRODUCT_CHAIN_TPS=10.888244
+TPS_SCOPE=PRODUCT_CHAIN_ONLY
+
+NEXT_GATE=DEEP2_FINAL_NORM_LM_HEAD_REAL
+LOG=UNIVERSAL_SPLIT_STREAM.../full_block_loop_run.log

@@ -53,6 +53,16 @@ uint32_t ss_mp_map_codec(uint32_t ty)
     if (ty == 14) return SS_CODEC_Q6_K;
     return SS_CODEC_UNKNOWN;
 }
+uint64_t ss_mp_tensor_nbytes(uint32_t ty, uint64_t elems)
+{
+    uint64_t nb;
+    if (ty == 0) return elems * 4ull;
+    if (ty == 1) return elems * 2ull;
+    if (ty == 12) { nb = (elems + 255ull) / 256ull; return nb * 144ull; }
+    if (ty == 13) { nb = (elems + 255ull) / 256ull; return nb * 192ull; }
+    if (ty == 14) { nb = (elems + 255ull) / 256ull; return nb * 210ull; }
+    return 0;
+}
 void ss_mp_fill_ref(SsTensorRef *r, const SsPlanEnt *e, uint64_t base, uint64_t bytes,
                     uint32_t shard_index)
 {

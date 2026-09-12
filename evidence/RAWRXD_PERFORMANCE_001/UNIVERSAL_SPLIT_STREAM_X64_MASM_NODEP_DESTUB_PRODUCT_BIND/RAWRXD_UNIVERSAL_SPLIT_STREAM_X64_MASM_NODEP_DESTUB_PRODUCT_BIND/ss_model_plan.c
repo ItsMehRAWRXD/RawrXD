@@ -9,6 +9,8 @@ void ss_model_plan_recompute(SsModelPlan *p)
     uint32_t i;
     if (!p) return;
     p->blocksPresent = 0;
+    for (i = 0; i < SS_MAX_BLOCKS; ++i)
+        p->blocks[i].blockIndex = i;
     for (i = 0; i < p->blockCount; ++i)
         if (p->blocks[i].attnNorm.present) p->blocksPresent++;
     p->planReal = p->metaReal && p->tokenEmbedding.present && p->outputNorm.present

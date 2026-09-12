@@ -97,6 +97,12 @@ cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_dens
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_moe_expert.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_moe_block.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_moe_ffn_witness.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_act_hash.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_resolved_block.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_full_block_loop.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_full_block_loop_print.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_final_norm_lm.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_final_norm_lm_print.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_tensor_id.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_barrier_seq.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_copy_acct.c || exit /b 1
@@ -125,6 +131,8 @@ link /nologo /subsystem:console smoke_phase.obj ss_d3d12_bridge.obj ss_product_p
   ss_rope.obj ss_attn_causal.obj ss_rope_kv_attn_print.obj ss_vk_mla_qkv.obj ss_vk_rope_kv_witness.obj ^
   ss_silu_host.obj ss_topk.obj ss_plan_load_slice.obj ss_moe_ffn_print.obj ^
   ss_vk_dense_ffn.obj ss_vk_moe_expert.obj ss_vk_moe_block.obj ss_vk_moe_ffn_witness.obj ^
+  ss_vk_act_hash.obj ss_vk_resolved_block.obj ss_vk_full_block_loop.obj ss_full_block_loop_print.obj ^
+  ss_vk_final_norm_lm.obj ss_final_norm_lm_print.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   d3d12.lib dxgi.lib kernel32.lib /out:ss_phase_smoke.exe
 if errorlevel 1 exit /b %errorlevel%
@@ -162,6 +170,8 @@ link /nologo /subsystem:console ss_product_main.obj ss_product_e2e.obj ss_d3d12_
   ss_rope.obj ss_attn_causal.obj ss_rope_kv_attn_print.obj ss_vk_mla_qkv.obj ss_vk_rope_kv_witness.obj ^
   ss_silu_host.obj ss_topk.obj ss_plan_load_slice.obj ss_moe_ffn_print.obj ^
   ss_vk_dense_ffn.obj ss_vk_moe_expert.obj ss_vk_moe_block.obj ss_vk_moe_ffn_witness.obj ^
+  ss_vk_act_hash.obj ss_vk_resolved_block.obj ss_vk_full_block_loop.obj ss_full_block_loop_print.obj ^
+  ss_vk_final_norm_lm.obj ss_final_norm_lm_print.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   duo_uu.obj duo_under.obj duo_layer.obj duo_over.obj duo_oo.obj duo_revoke.obj duo_emit.obj ^
   enterprise_gate.obj ent_product_bind.obj ^

@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-int ss_vk_block_forward(SsVk *v, const SsModelPlan *plan, uint32_t block,
-                        SsBlockForwardResult *r, uint64_t *res_ns, uint64_t *op_ns)
+int ss_vk_block_forward_ex(SsVk *v, const SsModelPlan *plan, uint32_t block,
+                           SsBlockForwardResult *r, uint64_t *res_ns, uint64_t *op_ns,
+                           int chain)
 {
     SsBlkCtx c; LARGE_INTEGER li;
     memset(&c, 0, sizeof c);
@@ -14,8 +15,13 @@ int ss_vk_block_forward(SsVk *v, const SsModelPlan *plan, uint32_t block,
     QueryPerformanceFrequency(&li); c.freq = (uint64_t)li.QuadPart;
     ss_block_fwd_reset(r, block);
     c.v = v; c.plan = plan; c.b = &plan->blocks[block]; c.r = r;
-    c.xin = (block == 0) ? v->outb : v->actb;
-    c.xinm = (block == 0) ? v->outmem : v->actmem;
+    if (chain) {
+        c.xin = v->actb ? v->actb : v->outb;
+        c.xinm = v->actb ? v->actmem : v->outmem;
+    } else {
+        c.xin = (block == 0) ? v->outb : v->actb;
+        c.xinm = (block == 0) ? v->outmem : v->actmem;
+    }
     if (!c.xin || !c.xinm || !plan->planReal || !c.b->attnNorm.present || !c.b->qA.present
         || !c.b->qB.present || !c.b->kvA.present || !c.b->kvB.present || !c.b->attnOut.present) {
         r->first_failure_stage = SS_BF_PLAN; ss_block_fwd_finalize(r); return 100;
@@ -43,6 +49,11 @@ int ss_vk_block_forward(SsVk *v, const SsModelPlan *plan, uint32_t block,
     if (res_ns) *res_ns = c.res_ns; if (op_ns) *op_ns = c.op_ns;
     ss_blk_drop_temps(&c);
     return r->completed ? 0 : 100;
+}
+int ss_vk_block_forward(SsVk *v, const SsModelPlan *plan, uint32_t block,
+                        SsBlockForwardResult *r, uint64_t *res_ns, uint64_t *op_ns)
+{
+    return ss_vk_block_forward_ex(v, plan, block, r, res_ns, op_ns, 0);
 }
 int ss_vk_block0_forward(SsVk *v, const SsModelPlan *plan, SsBlockForwardResult *r)
 {

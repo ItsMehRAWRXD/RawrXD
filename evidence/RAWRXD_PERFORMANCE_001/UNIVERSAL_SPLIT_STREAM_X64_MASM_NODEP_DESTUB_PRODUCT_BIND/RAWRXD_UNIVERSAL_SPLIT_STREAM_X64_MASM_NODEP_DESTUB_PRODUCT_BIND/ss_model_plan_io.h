@@ -18,6 +18,8 @@ void ss_mp_fill_ref(SsTensorRef *r, const SsPlanEnt *e, uint64_t base, uint64_t 
 SsTensorRef *ss_mp_role_slot(SsBlockPlan *b, SsTensorRole role);
 int ss_mp_bind_tensors(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t base,
                        uint32_t shard_index, int allow_meta_overwrite);
+int ss_mp_bind_tensors_fs(SsModelPlan *out, SsPlanEnt *e, uint32_t nt, uint64_t base,
+                          uint32_t shard_index, uint64_t file_size);
 int ss_mp_read_meta(FILE *f, SsModelPlan *out, char *arch, uint32_t *align,
                     uint64_t *nt, int read_meta);
 int ss_mp_build_one(SsModelPlan *out, const char *path, uint32_t shard_index, int read_meta);
