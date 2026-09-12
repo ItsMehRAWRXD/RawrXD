@@ -160,21 +160,5 @@ void SsVkDecodeBindFillOps(D2DecodeBindOps* ops, SsVkDecodeBindUser* user) {
 }
 
 } // namespace Deep2
-
-namespace Deep2 {
-
-int Deep2Engine::sampleCommittedToken(const float* logits) {
-    return sampleToken(logits);
-}
-
-bool Deep2Engine::advancePersistentKv() {
-    if (!kvCache) return false;
-    kvCache->advance();
-    return true;
-}
-
-size_t Deep2Engine::persistentKvLength() const {
-    return kvCache ? kvCache->currentLength() : 0;
-}
-
-} // namespace Deep2
+/* sampleCommittedToken / advancePersistentKv / persistentKvLength:
+   defined in Deep2Engine_GpuToken.cpp (InferenceEngine link). */

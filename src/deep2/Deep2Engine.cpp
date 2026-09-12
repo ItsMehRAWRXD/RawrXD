@@ -1849,6 +1849,8 @@ void Deep2Engine::deallocateBuffers() {
 // Model Loading from GGUF
 // ============================================================================
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
+    ++modelLoadEvents_;
+    ++persistCont_.model_load_events;
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
     Deep2::Ev512::HostTryArm(0x4D4F44454C4F4144ull); /* MODELLOAD */
     const uint64_t pathH = Deep2::Ev512::HostPathHash(ggufPath.c_str());
@@ -6244,6 +6246,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                         ? 1 : 0;
                 d2bind16_note_tail(&ssvkBind16_, 1, 1, kvReal, 1, 0);
                 const int bindOk = d2bind16_commit_token(&ssvkBind16_);
+                {
+                    const size_t kvLen = persistentKvLength();
+                    if (persistCont_.n_gt0_tokens > 0 &&
+                        kvLen < persistCont_.kv_len_last)
+                        ++persistCont_.kv_regressions;
+                    persistCont_.kv_len_last = kvLen;
+                    ++persistCont_.n_gt0_tokens;
+                    if (bindOk) ++persistCont_.n_gt0_pass;
+                    PersistentEmitToken(
+                        stderr, (uint64_t)t, (uint64_t)kvLen,
+                        vulkanDeviceCount(), isModelLoaded() ? 1 : 0,
+                        gpuResidentDecodeEnabled() ? 1 : 0,
+                        ssvkBind16_.run != nullptr ? 1 : 0, bindOk ? 1 : 0,
+                        0, deviceCreateEvents_, modelLoadEvents_,
+                        commandRebuildEvents_, dualStickResetEvents_);
+                }
                 if (std::getenv("RAWRXD_DEEP2_SSVK_PRODUCT_STRICT")) {
                     if (!bindOk) {
                         std::fprintf(stderr,
@@ -10084,6 +10102,8 @@ void Deep2Engine::enableVulkan(bool enable) {
         // Keep a non-owning convention: getVulkanCompute returns devices[0].
         vulkanInitialized_ = true;
         vulkanEnabled_ = true;
+        ++deviceCreateEvents_;
+        ++persistCont_.device_create_events;
         vulkanGemvOk_ = 0;
         vulkanGemvFail_ = 0;
         vulkanGpuWeightBytes_ = 0;

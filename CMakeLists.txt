@@ -8642,6 +8642,24 @@ if(BUILD_BATCH2_LIVE_DECODE_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+option(BUILD_PERSISTENT_DECODE_CERT "Build DEEP2_PERSISTENT_DECODE_001 live cert" ON)
+if(BUILD_PERSISTENT_DECODE_CERT)
+    add_executable(persistent_decode_cert
+        src/deep2/persistent_decode_cert.cpp
+        src/deep2/deep2_persistent_decode.c)
+    target_link_libraries(persistent_decode_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(persistent_decode_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(persistent_decode_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(persistent_decode_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME persistent_decode_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message(STATUS "[Deep2] Persistent decode cert: persistent_decode_cert")
+endif()
 option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" ON)
 if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
     add_executable(deep2_gpu_dynamic_window_cert

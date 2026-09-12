@@ -47,6 +47,7 @@
 #include "Deep2GpuForward.hpp"
 #include "Deep2SsVkProductBind.hpp"
 #include "d2_engine_ssvk_bind16.h"
+#include "Deep2PersistentContinuity.hpp"
 #include "d2_generators.h"
 #include <memory>
 #include <string>
@@ -480,6 +481,16 @@ public:
     const D2Bind16Window* ssVkDecodeBindWindow() const {
         return d2bind16_window(&ssvkBind16_);
     }
+    uint64_t deviceCreateEvents() const { return deviceCreateEvents_; }
+    uint64_t modelLoadEvents() const { return modelLoadEvents_; }
+    uint64_t commandRebuildEvents() const { return commandRebuildEvents_; }
+    uint64_t sealedLogitsReuseEvents() const {
+        return sealedLogitsReuseEvents_;
+    }
+    uint64_t dualStickResetEvents() const { return dualStickResetEvents_; }
+    const PersistentContinuity& persistentContinuity() const {
+        return persistCont_;
+    }
     bool isRealGpuForward() const;
     bool ensureGpuForwardArena(unsigned slot);
     bool forwardLayerGpuResident(uint32_t layer, unsigned slot,
@@ -791,6 +802,12 @@ private:
     GpuForwardCounters gpuFwd_{};
     SsVkProductBind ssVkProductBind_{};
     D2EngineSsVkBind16 ssvkBind16_{};
+    uint64_t deviceCreateEvents_ = 0;
+    uint64_t modelLoadEvents_ = 0;
+    uint64_t commandRebuildEvents_ = 0;
+    uint64_t sealedLogitsReuseEvents_ = 0;
+    uint64_t dualStickResetEvents_ = 0;
+    PersistentContinuity persistCont_{};
     bool gpuFwdCommitted_ = false;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;

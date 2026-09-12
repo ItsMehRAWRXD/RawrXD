@@ -248,4 +248,18 @@ void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
     if (f && f != stdout) emit(f);
 }
 
+int Deep2Engine::sampleCommittedToken(const float* logits) {
+    return sampleToken(logits);
+}
+
+bool Deep2Engine::advancePersistentKv() {
+    if (!kvCache) return false;
+    kvCache->advance();
+    return true;
+}
+
+size_t Deep2Engine::persistentKvLength() const {
+    return kvCache ? kvCache->currentLength() : 0;
+}
+
 } // namespace Deep2
