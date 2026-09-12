@@ -24,6 +24,7 @@ GpuTransferSnapshot GpuTransfer_Snapshot() {
     s.tokens = GTC_tokens().load(); s.layers = GTC_layers().load();
     s.fwdLayers = GTC_fwdLayers().load();
     s.weightHits = GTC_wHits().load(); s.weightMisses = GTC_wMiss().load();
+    s.weightHitBytes = GTC_wHitB().load();
     s.firstLoadBytes = GTC_firstB().load(); s.reloadBytes = GTC_reloadB().load();
     s.slotReuses = GTC_slotReuse().load(); s.redundantUploads = GTC_redundant().load();
     return s;
@@ -49,6 +50,8 @@ void GpuTransfer_Emit(FILE* f) {
     fprintf(f, "GPU_COPY_OVERLAP_BYTES=%llu\n", (unsigned long long)s.overlapBytes);
     fprintf(f, "GPU_WEIGHT_CACHE_HITS=%llu\n", (unsigned long long)s.weightHits);
     fprintf(f, "GPU_WEIGHT_CACHE_MISSES=%llu\n", (unsigned long long)s.weightMisses);
+    fprintf(f, "GPU_WEIGHT_BYTES_ALREADY_LOCAL=%llu\n",
+            (unsigned long long)s.weightHitBytes);
     fprintf(f, "GPU_WEIGHT_BYTES_FIRST_LOAD=%llu\n", (unsigned long long)s.firstLoadBytes);
     fprintf(f, "GPU_WEIGHT_BYTES_RELOAD=%llu\n", (unsigned long long)s.reloadBytes);
     fprintf(f, "GPU_WEIGHT_SLOT_REUSES=%llu\n", (unsigned long long)s.slotReuses);

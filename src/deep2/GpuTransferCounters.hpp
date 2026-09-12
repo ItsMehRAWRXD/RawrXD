@@ -23,6 +23,7 @@ inline std::atomic<uint64_t>& GTC_layers() { static std::atomic<uint64_t> v{0}; 
 inline std::atomic<uint64_t>& GTC_fwdLayers() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_wHits() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_wMiss() { static std::atomic<uint64_t> v{0}; return v; }
+inline std::atomic<uint64_t>& GTC_wHitB() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_firstB() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_reloadB() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_slotReuse() { static std::atomic<uint64_t> v{0}; return v; }
@@ -35,7 +36,7 @@ inline void GpuTransfer_Reset() {
     GTC_waitUs().store(0); GTC_submitUs().store(0); GTC_overlapUs().store(0);
     GTC_overlapEv().store(0); GTC_overlapB().store(0);
     GTC_tokens().store(0); GTC_layers().store(0); GTC_fwdLayers().store(0);
-    GTC_wHits().store(0); GTC_wMiss().store(0);
+    GTC_wHits().store(0); GTC_wMiss().store(0); GTC_wHitB().store(0);
     GTC_firstB().store(0); GTC_reloadB().store(0);
     GTC_slotReuse().store(0); GTC_redundant().store(0);
     GpuTransfer_ResetSeenKeys();
@@ -70,8 +71,9 @@ inline void GpuTransfer_RecordLayer() { GTC_layers().fetch_add(1, std::memory_or
 inline void GpuTransfer_RecordFwdLayerExec(uint64_t n = 1) {
     GTC_fwdLayers().fetch_add(n, std::memory_order_relaxed);
 }
-inline void GpuTransfer_NoteWeightHit(uint64_t) {
+inline void GpuTransfer_NoteWeightHit(uint64_t bytes) {
     GTC_wHits().fetch_add(1, std::memory_order_relaxed);
+    if (bytes) GTC_wHitB().fetch_add(bytes, std::memory_order_relaxed);
 }
 inline void GpuTransfer_NoteWeightMiss(uint64_t bytes, bool firstEver) {
     GTC_wMiss().fetch_add(1, std::memory_order_relaxed);
@@ -89,7 +91,8 @@ struct GpuTransferSnapshot {
     uint64_t copyBytes = 0, copyOps = 0, weightBytes = 0, actBytes = 0;
     uint64_t waitUs = 0, submitUs = 0, overlapUs = 0, overlapEvents = 0, overlapBytes = 0;
     uint64_t tokens = 0, layers = 0, fwdLayers = 0;
-    uint64_t weightHits = 0, weightMisses = 0, firstLoadBytes = 0, reloadBytes = 0;
+    uint64_t weightHits = 0, weightMisses = 0, weightHitBytes = 0;
+    uint64_t firstLoadBytes = 0, reloadBytes = 0;
     uint64_t slotReuses = 0, redundantUploads = 0;
 };
 GpuTransferSnapshot GpuTransfer_Snapshot();
