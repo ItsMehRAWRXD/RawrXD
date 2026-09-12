@@ -1,4 +1,4 @@
-/* ss_vk_consume.c — import → embd model-op → optional blk.0 chain */
+/* ss_vk_consume.c — import → embd → block → onorm → lmhead → token → TPS */
 #include "ss_vk_api.h"
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +7,7 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
                      uint64_t dim1, uint64_t elems, uint64_t which,
                      const char *shard, SsVkPromote2 promote2)
 {
-    SsVk v; int rc, imported_ok = 0, consume_ok = 0;
+    SsVk v; int rc, imported_ok = 0, consume_ok = 0, st = 100;
     memset(&v, 0, sizeof v);
     printf("HANDLE_TYPE=D3D12_RESOURCE HANDLE_LIFETIME=APP_RETAIN CLOSE_AFTER_IMPORT=0\n");
     printf("INPUT_AUTHORITY=DEEP2_VULKAN_CONSUME REIMPORT=0 HOST_WEIGHT_COPY=0\n");
@@ -56,14 +56,36 @@ int ss_vk_import_hot(void *nt, uint64_t luid, uint64_t bytes, void *fence_nt,
         return consume_ok ? 3 : (imported_ok ? 2 : 100);
     }
     printf("DEEP2_IMPORTED_MODEL_OP=PASS MODEL_OP_AUTHORITY=1\n");
-    if (shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op) {
-        printf("DEEP2_IMPORTED_BLOCK_OP=PASS BLOCK_OP_AUTHORITY=1\n");
+    if (!(shard && promote2 && ss_vk_block(&v, shard, promote2) == 0 && v.block_op)) {
+        printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");
         printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
         ss_vk_drop(&v);
-        return 5;
+        return 4;
     }
-    printf("DEEP2_IMPORTED_BLOCK_OP=NOT_RUN BLOCK_OP_AUTHORITY=0\n");
-    printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+    printf("DEEP2_IMPORTED_BLOCK_OP=PASS BLOCK_OP_AUTHORITY=1\n");
+    st = 5;
+    if (ss_vk_onorm(&v, shard) == 0 && v.onorm_op) {
+        printf("DEEP2_OUTPUT_NORM=PASS\n");
+        st = 6;
+        if (ss_vk_lmhead(&v, shard, promote2) == 0 && v.logits_op) {
+            printf("DEEP2_LOGITS=PASS\n");
+            st = 7;
+            if (ss_vk_token_commit(&v) == 0 && v.token_op) {
+                printf("DEEP2_TOKEN=PASS\n");
+                st = 8;
+                if (ss_vk_abbrev_decode(&v, shard, 8) == 0 && v.decode_loop)
+                    printf("DEEP2_ABBREVIATED_DECODE_TPS=PASS\n");
+                else
+                    printf("DEEP2_ABBREVIATED_DECODE_TPS=NOT_RUN\n");
+            } else {
+                printf("TOKEN_COMMIT=NOT_RUN\n");
+            }
+        } else {
+            printf("LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+        }
+    } else {
+        printf("DEEP2_OUTPUT_NORM=NOT_RUN LOGITS=NOT_RUN TOKEN_COMMIT=NOT_RUN\n");
+    }
     ss_vk_drop(&v);
-    return 4;
+    return st;
 }

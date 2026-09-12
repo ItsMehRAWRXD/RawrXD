@@ -1,4 +1,4 @@
-/* ss_vk_block.c — load blk.0 attn_norm + attn_q_a HOT, then GPU chain */
+/* ss_vk_block.c — load blk.0 attn_norm + attn_q_a HOT; keep 7168 act */
 #include "ss_vk_api.h"
 #include "ss_gguf_find.h"
 #include "ss_evidence.h"
@@ -13,10 +13,17 @@ static int read_abs(const char *path, uint64_t abs, uint64_t n, void *dst)
     got = fread(dst, 1, (size_t)n, f); fclose(f);
     return got == n ? 0 : 1;
 }
+static void drop_proj(SsVk *v)
+{
+    if (!v || !v->dev) return;
+    if (v->pbuf && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->pbuf, 0);
+    if (v->pmem && v->a.free_mem) v->a.free_mem(v->dev, v->pmem, 0);
+    v->pbuf = 0; v->pmem = 0; v->pbytes = 0; v->proj_imported = 0;
+}
 int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2)
 {
     SsGgufTensor norm, q; void *nw = 0, *qw = 0, *map = 0, *pnt = 0, *fnt = 0;
-    VkBuffer nwb = 0, nob = 0, qob = 0; VkDeviceMemory nwm = 0, nom = 0, qom = 0;
+    VkBuffer qob = 0; VkDeviceMemory qom = 0;
     uint64_t fval = 0; uint32_t rows, cols; int rc; SsTensorId idn, idq;
     if (!v || !v->model_op || !v->outb || !shard || !promote2) return 100;
     if (ss_gguf_find(shard, "blk.0.attn_norm.weight", &norm) || !norm.found) return 100;
@@ -42,12 +49,12 @@ int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2)
     if (v->a.qidle && v->a.qidle(v->q) != VK_SUCCESS) goto fail;
     (void)fnt; (void)fval; v->proj_hot = 1;
     if (ss_tensor_id_check(&idq, idq.hash)) goto fail;
-    if (ss_vk_mkbuf(v, (VkDeviceSize)norm.bytes, &nwb, &nwm, &map)) goto fail;
-    memcpy(map, nw, (size_t)norm.bytes); v->a.unmap(v->dev, nwm); map = 0;
-    if (ss_vk_mkbuf(v, (VkDeviceSize)v->embd_dim * 4ull, &nob, &nom, 0)) goto fail;
+    if (ss_vk_mkbuf(v, (VkDeviceSize)norm.bytes, &v->anorm_wb, &v->anorm_wm, &map)) goto fail;
+    memcpy(map, nw, (size_t)norm.bytes); v->a.unmap(v->dev, v->anorm_wm); map = 0;
+    if (ss_vk_mkbuf(v, (VkDeviceSize)v->embd_dim * 4ull, &v->actb, &v->actmem, 0)) goto fail;
     if (ss_vk_mkbuf(v, (VkDeviceSize)rows * 4ull, &qob, &qom, 0)) goto fail;
     ss_barrier_note("token_embd", "blk0_attn_norm");
-    rc = ss_vk_block_exec(v, nwb, norm.bytes, nob, qob, qom, rows, cols);
+    rc = ss_vk_block_exec(v, v->anorm_wb, norm.bytes, v->actb, qob, qom, rows, cols);
     ss_copy_add_vk_readback((uint64_t)rows * 4ull);
     printf("INPUT_FROM_IMPORTED_MODEL_OP=1 INPUT_ACTIVATION_REAL=1 BLOCK_INDEX=0\n");
     printf("MODEL_GEOMETRY_REAL=1 RMSNORM_WEIGHT_REAL=1 RMSNORM_DISPATCHED=%d RMSNORM_COMPLETED=%d\n",
@@ -59,16 +66,16 @@ int ss_vk_block(SsVk *v, const char *shard, SsVkPromote2 promote2)
     printf("HOST_ACTIVATION_ROUNDTRIP=0 INTERMEDIATE_HOST_WEIGHT_COPY=0 CPU_WEIGHT_REUPLOAD=0\n");
     printf("SYNTHETIC_ACTIVATION=0 BLOCK_OP_OUTPUT_FINITE=%d BLOCK_OP_OUTPUT_OBSERVED=%d\n",
            v->block_finite, v->block_ok);
+    printf("ACT_7168_RETAINED=%d INPUT_FROM_BLOCK_OP=%d\n", v->actb ? 1 : 0, v->block_op);
     ss_copy_print();
-    if (nwb) v->a.destroy_buf(v->dev, nwb, 0);
-    if (nob) v->a.destroy_buf(v->dev, nob, 0);
     if (qob) v->a.destroy_buf(v->dev, qob, 0);
-    if (nwm) v->a.free_mem(v->dev, nwm, 0);
-    if (nom) v->a.free_mem(v->dev, nom, 0);
     if (qom) v->a.free_mem(v->dev, qom, 0);
+    drop_proj(v);
     free(nw); free(qw);
     return rc;
 fail:
+    if (qob) v->a.destroy_buf(v->dev, qob, 0);
+    if (qom) v->a.free_mem(v->dev, qom, 0);
     free(nw); free(qw);
     return 100;
 }

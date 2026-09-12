@@ -16,16 +16,23 @@ SS_E_PRIMITIVE_HOLD         equ 102
 SS_E_LOGITS_HOLD            equ 103
 SS_E_LMHEAD_HOLD            equ 104
 SS_E_OUTPUT_NORM_HOLD       equ 105
+SS_E_LMHEAD_HOLD_POST_ONORM equ 106
+SS_E_TOKEN_HOLD             equ 107
+SS_E_DECODE_HOLD            equ 108
 SS_DEEP2_IMPORTED           equ 2
 SS_DEEP2_CONSUMED           equ 3
 SS_DEEP2_MODEL_OP           equ 4
 SS_DEEP2_BLOCK_OP           equ 5
+SS_DEEP2_OUTPUT_NORM        equ 6
+SS_DEEP2_LOGITS             equ 7
+SS_DEEP2_TOKEN              equ 8
 
 SS_PROVIDER_FILE            equ 1
 SS_PROVIDER_MEM             equ 2
 
 SS_DEEP2_CONSUME_NOT_RUN    equ 1
 SS_TOKEN_COMMIT_NOT_RUN     equ 1
+SS_TOKEN_COMMIT_OK          equ 2
 
 GENERIC_READ                equ 80000000h
 FILE_SHARE_READ             equ 00000001h

@@ -65,7 +65,9 @@ int main(int argc, char **argv)
     if (fixture) DeleteFileA(path);
     if ((r.phase_rc == SS_E_DEEP2_INTEROP || r.phase_rc == SS_E_PRIMITIVE_HOLD
          || r.phase_rc == SS_E_LOGITS_HOLD || r.phase_rc == SS_E_LMHEAD_HOLD
-         || r.phase_rc == SS_E_OUTPUT_NORM_HOLD)
+         || r.phase_rc == SS_E_OUTPUT_NORM_HOLD
+         || r.phase_rc == SS_E_LMHEAD_HOLD_POST_ONORM
+         || r.phase_rc == SS_E_TOKEN_HOLD || r.phase_rc == SS_E_DECODE_HOLD)
         && r.warm_pass && r.hot_pass
         && r.readback_parity && r.mg_loads == 1 && r.hot_hits == 1
         && r.deep2_consume_status != 0)

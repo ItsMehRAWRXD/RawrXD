@@ -7,10 +7,17 @@
 #define SS_E_LOGITS_HOLD 103
 #define SS_E_LMHEAD_HOLD 104
 #define SS_E_OUTPUT_NORM_HOLD 105
+#define SS_E_LMHEAD_HOLD_POST_ONORM 106
+#define SS_E_TOKEN_HOLD 107
+#define SS_E_DECODE_HOLD 108
 #define SS_DEEP2_IMPORTED 2
 #define SS_DEEP2_CONSUMED 3
 #define SS_DEEP2_MODEL_OP 4
 #define SS_DEEP2_BLOCK_OP 5
+#define SS_DEEP2_OUTPUT_NORM 6
+#define SS_DEEP2_LOGITS 7
+#define SS_DEEP2_TOKEN 8
+#define SS_TOKEN_COMMIT_OK 2
 typedef struct {
     uint64_t completed, gpu, readback_parity, device_id;
     uint64_t allocation_generation, device_handle, bytes, pci_device;

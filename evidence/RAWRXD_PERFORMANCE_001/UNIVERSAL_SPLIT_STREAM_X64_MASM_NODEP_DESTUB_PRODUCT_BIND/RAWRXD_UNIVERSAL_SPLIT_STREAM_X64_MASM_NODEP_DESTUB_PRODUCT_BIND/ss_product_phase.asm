@@ -248,7 +248,7 @@ ss_product_split_phase PROC FRAME
     mov rax,[rsi].USRRegion.hot_hits
     mov [r13].SSPhaseResult.hot_hits,rax
 
-    ; Import+model-op+block while HOT live. 2=import 3=consume 4=embd 5=block.
+    ; Import ladder: 2..8 (token). Abbreviated decode holds at 108.
     mov eax,dword ptr [r15].SSTensorDesc.tensor_type
     mov qword ptr [rsp+300h].SSDeviceMaterialization.tensor_type,rax
     mov rax,[r15].SSTensorDesc.dim0
@@ -265,6 +265,12 @@ ss_product_split_phase PROC FRAME
     mov rcx,[rdi].SSGpuBackend.ctx
     lea rdx,[rsp+300h]
     call rax
+    cmp eax,SS_DEEP2_TOKEN
+    je ssp_token_ok
+    cmp eax,SS_DEEP2_LOGITS
+    je ssp_logits_ok
+    cmp eax,SS_DEEP2_OUTPUT_NORM
+    je ssp_onorm_ok
     cmp eax,SS_DEEP2_BLOCK_OP
     je ssp_block_ok
     cmp eax,SS_DEEP2_MODEL_OP
@@ -274,6 +280,15 @@ ss_product_split_phase PROC FRAME
     cmp eax,SS_DEEP2_IMPORTED
     jne ssp_no_consume
     mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_IMPORTED
+    jmp ssp_after_consume
+ssp_token_ok:
+    mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_TOKEN
+    jmp ssp_after_consume
+ssp_logits_ok:
+    mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_LOGITS
+    jmp ssp_after_consume
+ssp_onorm_ok:
+    mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_OUTPUT_NORM
     jmp ssp_after_consume
 ssp_block_ok:
     mov qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_BLOCK_OP
@@ -304,9 +319,25 @@ ssp_after_gpu_release:
     mov rcx,rsi
     call usr_unpin
 
-    ; Logits/token remain unreachable even after imported block op.
+    ; Token commit only when status>=TOKEN; else hold ladder.
     mov qword ptr [r13].SSPhaseResult.token_commit_status,SS_TOKEN_COMMIT_NOT_RUN
     mov eax,SS_E_DEEP2_INTEROP
+    cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_TOKEN
+    jne ssp_check_logits
+    mov qword ptr [r13].SSPhaseResult.token_commit_status,SS_TOKEN_COMMIT_OK
+    mov eax,SS_E_DECODE_HOLD
+    jmp ssp_set_phase_rc
+ssp_check_logits:
+    cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_LOGITS
+    jne ssp_check_onorm
+    mov eax,SS_E_TOKEN_HOLD
+    jmp ssp_set_phase_rc
+ssp_check_onorm:
+    cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_OUTPUT_NORM
+    jne ssp_check_block
+    mov eax,SS_E_LMHEAD_HOLD_POST_ONORM
+    jmp ssp_set_phase_rc
+ssp_check_block:
     cmp qword ptr [r13].SSPhaseResult.deep2_consume_status,SS_DEEP2_BLOCK_OP
     jne ssp_check_model
     mov eax,SS_E_OUTPUT_NORM_HOLD

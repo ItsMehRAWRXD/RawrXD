@@ -29,6 +29,16 @@ void ss_vk_drop(SsVk *v)
         if (v->dsl && v->a.destroy_dsl) v->a.destroy_dsl(v->dev, v->dsl, 0);
         if (v->dpool && v->a.destroy_dp) v->a.destroy_dp(v->dev, v->dpool, 0);
         if (v->sm && v->a.destroy_sm) v->a.destroy_sm(v->dev, v->sm, 0);
+        if (v->logitsb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->logitsb, 0);
+        if (v->logitsmem && v->a.free_mem) v->a.free_mem(v->dev, v->logitsmem, 0);
+        if (v->lbuf && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->lbuf, 0);
+        if (v->lmem && v->a.free_mem) v->a.free_mem(v->dev, v->lmem, 0);
+        if (v->onorm_wb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->onorm_wb, 0);
+        if (v->onorm_wm && v->a.free_mem) v->a.free_mem(v->dev, v->onorm_wm, 0);
+        if (v->anorm_wb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->anorm_wb, 0);
+        if (v->anorm_wm && v->a.free_mem) v->a.free_mem(v->dev, v->anorm_wm, 0);
+        if (v->actb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->actb, 0);
+        if (v->actmem && v->a.free_mem) v->a.free_mem(v->dev, v->actmem, 0);
         if (v->outb && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->outb, 0);
         if (v->outmem && v->a.free_mem) v->a.free_mem(v->dev, v->outmem, 0);
         if (v->pbuf && v->a.destroy_buf) v->a.destroy_buf(v->dev, v->pbuf, 0);
