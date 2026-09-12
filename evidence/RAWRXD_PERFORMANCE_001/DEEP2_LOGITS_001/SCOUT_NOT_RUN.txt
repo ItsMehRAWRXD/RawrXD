@@ -1,0 +1,48 @@
+DEEP2_LOGITS_001
+DATE=2026-09-12
+KIND=SCOUT_NOT_RUN
+RESULT=NOT_RUN
+NOT_RUN_NE_PASS=1
+
+AUTHORITY_CONTEXT:
+  CURRENT_SEALED=DEEP2_IMPORTED_MODEL_OP_001 PASS
+  CURRENT_STOP=DEEP2_IMPORTED_MODEL_OP
+  PHASE_RC=104 SS_E_LMHEAD_HOLD
+  NEXT_PRODUCT_GATE=DEEP2_IMPORTED_BLOCK_OP
+  DEEP2_LOGITS=NOT_YET_REACHABLE
+
+WHY_LOGITS_NOT_RUN:
+  Product HOT is token_embd.weight (WHICH=1, Q4_K), not lm_head.
+  Destub consume/model-op path does not materialize output.weight.
+  No F32[7168] activation / output_norm path on destub bind.
+  Embedding lookup PASS must not mint logits authority.
+
+SHARD1_LM_HEAD_SCOUT (inspect only; not HOT; not PASS):
+  FILE=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+  output.weight ABS=5245280 LEN=760166400
+  DIMS=7168 x 129280
+  TYPE=14 Q6_K
+  VOCAB_SIZE=129280
+  EMBEDDING_LENGTH=7168
+  output_norm.weight ABS=765411680 TYPE=F32 DIM=7168
+  token_embd.weight ABS=765440352 LEN=521256960 TYPE=Q4_K (current HOT)
+
+REQUIRED_FOR_FUTURE_PASS:
+  1. HOT output.weight Q6_K (second HOT or re-anchor) kept live through logits
+  2. Real F32[7168] activation after real output_norm / block path
+  3. Same-device Q6_K GEMV on imported lm_head → F32[129280]
+  4. LOGITS_COUNT==VOCAB_SIZE LOGITS_FINITE LOGITS_NONCONSTANT
+  5. duo_observe_logits only after CONSUMER_RAN + real buffer
+  6. CPU_WEIGHT_REUPLOAD=0 HOST_WEIGHT_COPY=0 SYNTHETIC_LOGITS=0
+
+FORBIDDEN_FALSE_PASS:
+  checksum/reduction on embd HOT
+  Q4_K embd GEMV labeled as logits
+  synthetic/fixed vocab vector
+  host-only dequant labeled as product logits
+
+PROMOTE=0
+DECODE_AUTHORITY=0
+TOKEN_AUTHORITY=0
+PRODUCT_PREREQ=0
+ENTERPRISE_READY=0
