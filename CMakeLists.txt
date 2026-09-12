@@ -8716,6 +8716,7 @@ if(BUILD_DAILY_STREAMER_LIVE_CERT)
         src/deep2/daily_streamer_live_cert.cpp
         src/deep2/daily/d2_session_deep2_adapter.cpp
         src/deep2/daily/d2_stream_session.c
+        src/deep2/daily/d2_stream_session_ops.c
         src/deep2/daily/d2_stream_metrics.c
         src/deep2/daily/d2_token_sink.c
         src/deep2/daily/d2_session_mock.c)
@@ -8732,6 +8733,31 @@ if(BUILD_DAILY_STREAMER_LIVE_CERT)
         OUTPUT_NAME daily_streamer_live_cert
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     message(STATUS "[Deep2] Daily streamer live cert: daily_streamer_live_cert")
+endif()
+
+option(BUILD_ENDURANCE_LIVE_CERT "Build DEEP2_ENDURANCE_001 live cert" ON)
+if(BUILD_ENDURANCE_LIVE_CERT)
+    add_executable(endurance_live_cert
+        src/deep2/endurance_live_cert.cpp
+        src/deep2/daily/d2_session_deep2_adapter.cpp
+        src/deep2/daily/d2_stream_session.c
+        src/deep2/daily/d2_stream_session_ops.c
+        src/deep2/daily/d2_stream_metrics.c
+        src/deep2/daily/d2_token_sink.c
+        src/deep2/daily/d2_session_mock.c)
+    target_link_libraries(endurance_live_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(endurance_live_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(endurance_live_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/deep2/daily
+        ${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(endurance_live_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME endurance_live_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    message(STATUS "[Deep2] Endurance live cert: endurance_live_cert")
 endif()
 
 option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" ON)
