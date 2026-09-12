@@ -58,9 +58,9 @@ EVIDENCE_INTEGRITY=PASS_PARTIAL
   STALE/SIDE: DEEP2_TOP15_RECONSTRUCTED AUTHORITY=0; BATCH_C SKIP
   This audit: LAW+RECEIPT minted; PRODUCT_AUDIT not authority closeout
 
-GIT_SYNC=PENDING_OR_HOLD
-  Tip 93a0a7928c; seal 0e20e73ed6 ancestor; branch cert/gpu-forward-child-ladder-20260909
-  Audit commit attempted for this folder only
+GIT_SYNC=PASS
+  Tip_at_start=93a0a7928c; seal 0e20e73ed6 ancestor; tip_after=afaa2c291c
+  branch cert/gpu-forward-child-ladder-20260909 pushed audit-only
 
 OPEN_RUNTIME_GATES=DEEP2_GEN_QUALITY_LLAMA32_Q2K_001
 PRODUCT_AUDIT=HOLD
