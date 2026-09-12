@@ -1,0 +1,56 @@
+RECEIPT=DEEP2_ROPE_KV_ATTN_REAL_001
+STATUS=PASS
+DATE=2026-09-12
+PRODUCT_BINARY=deep2_benchmark.exe
+MODEL=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+BRANCH=cert/gpu-forward-child-ladder-20260909
+PRIOR_SEAL=8cd61dee29
+
+DEEP2_ROPE_KV_ATTN_REAL=PASS
+
+ROPE_REAL=1
+ROPE_DIM=64
+ROPE_FREQ_BASE=10000
+ROPE_NONIDENTITY_AT_POS_GT0=1
+
+KV_CACHE_REAL=1
+KV_APPEND_OK=1
+KV_READ_MATCH=1
+KV_COMMITTED=4
+
+ATTENTION_REAL=1
+ATTENTION_CAUSAL=1
+ATTN_OUT_TO_RESIDUAL=1
+
+DECODE_STEPS=4
+HEADS=128
+K_WIDTH=16384
+V_WIDTH=16384
+FIRST_FAIL=0
+
+ORDER=
+  1) GPU MLA Q/KV from plan-bound blk.0 weights
+  2) RoPE on K/Q (last rope_dim) at positions 0..3
+  3) Persistent host KV append + readback match
+  4) Causal softmax attention over committed KV
+  5) attn_out GEMV + residual into block activation
+
+HONESTY=
+  Block-0 multi-step witness; repeated embd input across steps.
+  Host RoPE/KV/attention after GPU MLA (not fused GPU kernels).
+  Q/K use first 128 dims per head (kv_b K|V split); full MLA pe-path later.
+  Phase-1 61-block loop still uses RoPE@0 / V-extract shortcuts (ATTENTION_REAL=0 there).
+  Does NOT mint FULL_MODEL_FORWARD / ALL_BLOCKS_COMPLETED / MOE_ROUTER_REAL / PROMOTE.
+
+FULL_MODEL_FORWARD=0
+ALL_BLOCKS_COMPLETED=0
+MOE_ROUTER_REAL=0
+FULL_MODEL_TPS_AUTHORITY=0
+PROMOTE=0
+TIP_CLIMB=HOLD
+
+BASE_CURRENT_PRODUCT_CHAIN_TPS=10.594115
+TPS_SCOPE=PRODUCT_CHAIN_ONLY
+
+NEXT_GATE=DEEP2_MOE_OR_FULL_BLOCK_FFN
+LOG=UNIVERSAL_SPLIT_STREAM.../rope_kv_run.log

@@ -84,6 +84,11 @@ cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_bloc
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_block_fwd_q.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_block_fwd_kv.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_block0.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_rope.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_attn_causal.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_rope_kv_attn_print.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_mla_qkv.c || exit /b 1
+cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /I"%VKI%" /c ss_vk_rope_kv_witness.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_tensor_id.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_barrier_seq.c || exit /b 1
 cl /nologo /TC /O2 /W3 /MT /D_CRT_SECURE_NO_WARNINGS /I. /c ss_copy_acct.c || exit /b 1
@@ -109,6 +114,7 @@ link /nologo /subsystem:console smoke_phase.obj ss_d3d12_bridge.obj ss_product_p
   ss_tensor_roles.obj ss_model_plan_io.obj ss_model_plan_meta.obj ss_model_plan_bind.obj ss_model_plan.obj ^
   ss_block_plan.obj ss_plan_load.obj ss_kv_cache.obj ss_block_forward.obj ss_block_fwd_result.obj ss_full_forward.obj ^
   ss_vk_ops.obj ss_block_loop.obj ss_vk_block_util.obj ss_vk_block_fwd_q.obj ss_vk_block_fwd_kv.obj ss_vk_block0.obj ^
+  ss_rope.obj ss_attn_causal.obj ss_rope_kv_attn_print.obj ss_vk_mla_qkv.obj ss_vk_rope_kv_witness.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   d3d12.lib dxgi.lib kernel32.lib /out:ss_phase_smoke.exe
 if errorlevel 1 exit /b %errorlevel%
@@ -143,6 +149,7 @@ link /nologo /subsystem:console ss_product_main.obj ss_product_e2e.obj ss_d3d12_
   ss_tensor_roles.obj ss_model_plan_io.obj ss_model_plan_meta.obj ss_model_plan_bind.obj ss_model_plan.obj ^
   ss_block_plan.obj ss_plan_load.obj ss_kv_cache.obj ss_block_forward.obj ss_block_fwd_result.obj ss_full_forward.obj ^
   ss_vk_ops.obj ss_block_loop.obj ss_vk_block_util.obj ss_vk_block_fwd_q.obj ss_vk_block_fwd_kv.obj ss_vk_block0.obj ^
+  ss_rope.obj ss_attn_causal.obj ss_rope_kv_attn_print.obj ss_vk_mla_qkv.obj ss_vk_rope_kv_witness.obj ^
   ss_tensor_id.obj ss_barrier_seq.obj ss_copy_acct.obj ss_q6k_oracle.obj ss_geo_indep.obj ss_gate_check.obj ss_rms_oracle.obj ^
   duo_uu.obj duo_under.obj duo_layer.obj duo_over.obj duo_oo.obj duo_revoke.obj duo_emit.obj ^
   enterprise_gate.obj ent_product_bind.obj ^
