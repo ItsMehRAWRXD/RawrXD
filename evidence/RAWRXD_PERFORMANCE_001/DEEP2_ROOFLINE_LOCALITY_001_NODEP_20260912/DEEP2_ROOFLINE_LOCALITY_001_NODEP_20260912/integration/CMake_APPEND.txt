@@ -1,0 +1,11 @@
+# Append beside BUILD_RESIDENCY_CERT. This does not alter existing cert targets.
+option(BUILD_ROOFLINE_LOCALITY_CERT "Build DEEP2_ROOFLINE_LOCALITY_001 cert" OFF)
+if(BUILD_ROOFLINE_LOCALITY_CERT)
+    add_library(deep2_locality64 STATIC
+        src/deep2/Deep2Locality64.cpp)
+    target_include_directories(deep2_locality64 PUBLIC src/deep2)
+
+    # roofline_locality_cert.cpp is intentionally product-side: link it with the
+    # exact same Deep2Engine/Vulkan objects as residency_cert, plus d2_roofline.c.
+    # Do not replace or mutate residency_cert.
+endif()

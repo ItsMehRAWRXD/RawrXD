@@ -4,6 +4,7 @@
 #endif
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
+#include "deep2/Deep2Locality64.hpp"
 #include <cstring>
 #include <cstdlib>
 
@@ -26,6 +27,8 @@ bool VulkanCompute::DispatchGEMVQ6kPacked(const void* packed, size_t bytes,
     const uintptr_t key = WeightContentFingerprint(packed, bytes);
     const bool hit = q6k_logits_w_buf_ && bytes <= q6k_logits_w_cap_ &&
                      q6k_logits_w_key_ == key;
+    // Observe-only: do not change hit predicate / upload / hit counters.
+    Deep2::Locality64_NoteDemand(Deep2::LocalityKind::Weight, bytes, hit);
     if (!hit) {
         if (bytes > q6k_logits_w_cap_) {
             if (q6k_logits_w_buf_) {

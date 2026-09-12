@@ -8,7 +8,9 @@
 #include "lavapath/ParseMibBudget.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "Deep2LivePath.hpp"
+#include "Deep2Locality64.hpp"
 #include "GPUForwardChildIgnoreHooks.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -153,6 +155,9 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, (int)slot)) return false;
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
+    const uint64_t loc_t0 = (uint64_t)std::chrono::duration_cast<
+        std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
 
     const auto& lw = modelWeights.layers[layer];
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -466,6 +471,15 @@ bool Deep2Engine::forwardLayerGpuResident(
     }
     if (LivePath_Active())
         LivePath_OnLayerEnd(liveCyc, layer, liveSeq, 0);
+    {
+        const uint64_t loc_t1 = (uint64_t)std::chrono::duration_cast<
+            std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
+        const uint64_t ord = Locality64_ActiveOrdinal().load(
+            std::memory_order_acquire);
+        if (Locality64_Global().armed() && ord < Locality64Collector::kTargetTokens)
+            Locality64_NoteGpuForwardSpan(slot, ord, loc_t0, loc_t1);
+    }
     return true;
 }
 

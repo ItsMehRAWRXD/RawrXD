@@ -1,6 +1,7 @@
 // GpuTransferCounters.hpp — GPU copy / reuse / overlap (GPU_TRANSFER_*)
 #pragma once
 #include "StreamTransferCounters.hpp"
+#include "Deep2Locality64.hpp"
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -51,6 +52,7 @@ inline void GpuTransfer_NoteCopy(uint64_t bytes, GpuCopyKind kind) {
     else if (kind == GpuCopyKind::Activation)
         GTC_act().fetch_add(bytes, std::memory_order_relaxed);
     StreamTransfer_RecordGpuUpload(bytes);
+    Locality64_NoteHostToDevice(bytes, Locality64_Global().armed());
 }
 
 inline void GpuTransfer_AddWaitUs(uint64_t us) {
@@ -74,11 +76,13 @@ inline void GpuTransfer_RecordFwdLayerExec(uint64_t n = 1) {
 inline void GpuTransfer_NoteWeightHit(uint64_t bytes) {
     GTC_wHits().fetch_add(1, std::memory_order_relaxed);
     if (bytes) GTC_wHitB().fetch_add(bytes, std::memory_order_relaxed);
+    Locality64_NoteDemand(LocalityKind::Weight, bytes, true);
 }
 inline void GpuTransfer_NoteWeightMiss(uint64_t bytes, bool firstEver) {
     GTC_wMiss().fetch_add(1, std::memory_order_relaxed);
     if (firstEver) GTC_firstB().fetch_add(bytes, std::memory_order_relaxed);
     else GTC_reloadB().fetch_add(bytes, std::memory_order_relaxed);
+    Locality64_NoteDemand(LocalityKind::Weight, bytes, false);
 }
 inline void GpuTransfer_NoteSlotReuse() {
     GTC_slotReuse().fetch_add(1, std::memory_order_relaxed);

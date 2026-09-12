@@ -1,0 +1,17 @@
+CURRENT SEALED SITE:
+  src/vulkan_fwd_q6k_host.cpp
+  VulkanCompute::DispatchGEMVQ6kPacked
+
+Current branch computes:
+  const bool hit = q6k_logits_w_buf_ && bytes <= q6k_logits_w_cap_ &&
+                   q6k_logits_w_key_ == key;
+
+Add immediately after that predicate:
+
+  Deep2::Locality64_NoteDemand(Deep2::LocalityKind::Weight, bytes, hit);
+
+Do not change the hit predicate.
+Do not change q6k_logits_w_key_.
+Do not move UploadToDeviceLocal.
+Do not change gemv_weight_uploads_ / gemv_weight_hits_ semantics.
+This is observation-only and therefore cannot invalidate the RESIDENCY seal by construction.
