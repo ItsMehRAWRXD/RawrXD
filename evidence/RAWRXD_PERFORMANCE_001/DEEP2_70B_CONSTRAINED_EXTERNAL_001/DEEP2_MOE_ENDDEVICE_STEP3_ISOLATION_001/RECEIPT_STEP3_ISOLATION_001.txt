@@ -37,6 +37,7 @@ FIX=BeginMoePinHold/EndMoePinHold around stick pin→EndFused
   ZERO quota/budget/reload retune
 
 AUTH_PASS_RUN=kimi_moe_DS_L61t8_segquota_20260913_043839
+COMMIT=722d2c8ff779e48089900e14d0c4fe78accfe521
 PASS_IF_SCORECARD=
   EXIT=0                 YES
   GEN=8/8                YES TOKENS_COMMITTED=8
