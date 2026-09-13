@@ -1,4 +1,4 @@
-/* K2NativeMoEFfn_Expert.cpp — FindExpertSlice geometry + host GetGEMV. */
+/* K2NativeMoEFfn_Expert.cpp — FindExpertSlice + DualStick GPU or host GEMV. */
 #include "K2NativeMoEFfn.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2ShardIo.hpp"
@@ -7,18 +7,25 @@
 #include "MoEPlaceLiveCounters.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "StreamPathTiming.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
 namespace Deep2 {
+
+bool K2MoEExecExpertGpu(unsigned stick, int ggmlGate, const uint8_t* g,
+                        size_t gb, int ggmlUp, const uint8_t* u, size_t ub,
+                        int ggmlDown, const uint8_t* d, size_t db,
+                        const float* hidden, float* expertOut, size_t H,
+                        size_t I, uint32_t layer, int expertId);
+
 namespace {
 
 bool ReadExpertSlice(const GlobalTensorIndex& index, const char* base,
                      uint32_t expertId, std::vector<uint8_t>& out, int& ggmlType,
                      size_t& outBytes, std::string& error) {
-    /* AUTHORITATIVE geometry = FindExpertSlice (not float-dim division). */
     auto slice = index.FindExpertSlice(base, expertId);
     if (!slice) {
         error = std::string("expert slice missing: ") + base;
@@ -28,28 +35,7 @@ bool ReadExpertSlice(const GlobalTensorIndex& index, const char* base,
         error = "expert slice physical stride invalid";
         return false;
     }
-    if (slice->expertId >= slice->expertCount) {
-        error = "expertId out of range";
-        return false;
-    }
     auto full = index.Find(base);
-    if (full && full->expertCount > 0 && full->byteSize > 0) {
-        const uint64_t div = full->byteSize / (uint64_t)full->expertCount;
-        if (div != slice->expertStrideBytes ||
-            slice->byteSize != slice->expertStrideBytes) {
-            std::fprintf(stderr,
-                "EXPERT_SLICE_LAYOUT_MISMATCH base=%s expert=%u "
-                "find_stride=%llu div_stride=%llu find_bytes=%llu "
-                "src_bytes=%llu expertCount=%u — trust FindExpertSlice\n",
-                base, expertId,
-                (unsigned long long)slice->expertStrideBytes,
-                (unsigned long long)div,
-                (unsigned long long)slice->byteSize,
-                (unsigned long long)full->byteSize, full->expertCount);
-            MoEPlaceLive().expert_slice_layout_mismatch++;
-            /* trust FindExpertSlice — do not fail closed on validate-only */
-        }
-    }
     if (!full || slice->byteOffset + slice->byteSize > full->byteSize) {
         error = "expert slice offset+size > source.byteSize";
         return false;
@@ -75,15 +61,14 @@ void SiluMul(float* gate, const float* up, size_t n) {
     }
 }
 
-/* Host MoE: GetGEMV directly — MLA_Gemv host-rejects when GPU MLA off. */
 bool HostGemv(int ggmlType, const uint8_t* w, const float* x, float* y,
               size_t rows, size_t cols, const char* tag, std::string& error) {
     auto kn = QuantKernelRegistry::Instance().GetGEMV(ggmlType);
     if (!kn || !w || !x || !y || !rows || !cols) {
         char buf[192];
         std::snprintf(buf, sizeof(buf),
-            "%s GEMV failed type=%d kn=%p rows=%zu cols=%zu",
-            tag ? tag : "gemv", ggmlType, (void*)kn, rows, cols);
+                      "%s GEMV failed type=%d kn=%p rows=%zu cols=%zu",
+                      tag ? tag : "gemv", ggmlType, (void*)kn, rows, cols);
         error = buf;
         return false;
     }
@@ -92,9 +77,8 @@ bool HostGemv(int ggmlType, const uint8_t* w, const float* x, float* y,
     return true;
 }
 
-/* ggml expert W: shape [ne0=H, ne1=I, ne2=E] → GEMV rows=I cols=H. */
-bool MoEDimsFromGate(const GlobalTensorIndex& index, uint32_t layer,
-                     size_t& H, size_t& I, std::string& error) {
+bool MoEDimsFromGate(const GlobalTensorIndex& index, uint32_t layer, size_t& H,
+                     size_t& I, std::string& error) {
     char gateN[64];
     std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight", layer);
     auto g = index.Find(gateN);
@@ -107,24 +91,18 @@ bool MoEDimsFromGate(const GlobalTensorIndex& index, uint32_t layer,
     return false;
 }
 
-bool SwiGLUTriple(const uint8_t* g, int gt, const uint8_t* u, int ut,
-                  const uint8_t* d, int dt, const float* hidden, float* out,
-                  size_t H, size_t I, uint32_t layer, int expertId,
-                  bool shared, std::string& error) {
+bool SwiGLUHost(const uint8_t* g, int gt, const uint8_t* u, int ut,
+                const uint8_t* d, int dt, const float* hidden, float* out,
+                size_t H, size_t I, uint32_t layer, int expertId, bool shared,
+                std::string& error) {
     std::vector<float> gate(I), up(I);
     if (shared) moe_ltrace::BC(layer, "SHARED_GATE_ACQUIRE");
     else moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", expertId);
     if (!HostGemv(gt, g, hidden, gate.data(), I, H, "gate", error))
         return false;
-    if (shared) moe_ltrace::BC(layer, "SHARED_GATE_DONE");
-    else moe_ltrace::BCExpert(layer, "GATE_DONE", expertId);
-    if (!HostGemv(ut, u, hidden, up.data(), I, H, "up", error))
-        return false;
-    if (shared) moe_ltrace::BC(layer, "SHARED_UP_DONE");
-    else moe_ltrace::BCExpert(layer, "UP_DONE", expertId);
+    if (!HostGemv(ut, u, hidden, up.data(), I, H, "up", error)) return false;
     SiluMul(gate.data(), up.data(), I);
-    if (!HostGemv(dt, d, gate.data(), out, H, I, "down", error))
-        return false;
+    if (!HostGemv(dt, d, gate.data(), out, H, I, "down", error)) return false;
     if (shared) moe_ltrace::BC(layer, "SHARED_DOWN_DONE");
     else moe_ltrace::BCExpert(layer, "DOWN_DONE", expertId);
     return true;
@@ -133,8 +111,8 @@ bool SwiGLUTriple(const uint8_t* g, int gt, const uint8_t* u, int ut,
 } // namespace
 
 bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
-                     uint32_t layer, int expertId, const float* hidden,
-                     float* expertOut, std::string& error) {
+                     uint32_t layer, int expertId, unsigned stick,
+                     const float* hidden, float* expertOut, std::string& error) {
     char gateN[64], upN[64], downN[64];
     std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight", layer);
     std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up_exps.weight", layer);
@@ -155,14 +133,22 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     if (MoEDimsFromGate(index, layer, Hs, Is, error)) {
         H = Hs;
         I = Is;
-    } else {
+    } else
         error.clear();
-    }
-    (void)gb;
-    (void)ub;
-    (void)db;
-    return SwiGLUTriple(gateB.data(), gt, upB.data(), ut, downB.data(), dt,
-                        hidden, expertOut, H, I, layer, expertId, false, error);
+
+    const bool wantGpu =
+        (DualStickState().armed || DualStickState().planned ||
+         DualStickState().requested) &&
+        DualStickVc(stick) != nullptr;
+    if (wantGpu &&
+        K2MoEExecExpertGpu(stick, gt, gateB.data(), gb, ut, upB.data(), ub, dt,
+                           downB.data(), db, hidden, expertOut, H, I, layer,
+                           expertId))
+        return true;
+
+    MoEPlaceLive().host_gemv_expert++;
+    return SwiGLUHost(gateB.data(), gt, upB.data(), ut, downB.data(), dt, hidden,
+                      expertOut, H, I, layer, expertId, false, error);
 }
 
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
@@ -193,9 +179,10 @@ bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     const uint8_t* gp = gs.data ? gs.data : gBuf.data();
     const uint8_t* up = us.data ? us.data : uBuf.data();
     const uint8_t* dp = ds.data ? ds.data : dBuf.data();
-    return SwiGLUTriple(gp, (int)gRef->ggmlType, up, (int)uRef->ggmlType, dp,
-                        (int)dRef->ggmlType, hidden, sharedOut, H, I, layer, -1,
-                        true, error);
+    /* Shared stays host; HOST_GEMV_EXPERT counts routed experts only. */
+    return SwiGLUHost(gp, (int)gRef->ggmlType, up, (int)uRef->ggmlType, dp,
+                      (int)dRef->ggmlType, hidden, sharedOut, H, I, layer, -1,
+                      true, error);
 }
 
 } // namespace Deep2

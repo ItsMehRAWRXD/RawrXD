@@ -59,12 +59,17 @@ void MoEPlaceLiveEmit(FILE* f) {
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "
         "stick_retains=%llu stick_assigns=%llu\n"
+        "D2_MOE_LIVE EXPERT_GPU_ACQUIRE=%llu EXPERT_GPU_EXEC=%llu "
+        "HOST_GEMV_EXPERT=%llu\n"
         "D2_MOE_DECODE K2_MOE_LAYER_CALLS=%llu MOE_PLACE_CALLS=%llu "
         "EXPERTS_SELECTED=%llu EXPERTS_EXECUTED=%llu parity=%d\n",
         (unsigned long long)c.shared_expert_calls,
         (unsigned long long)c.expert_slice_layout_mismatch,
         (unsigned long long)c.expert_stick_retains,
         (unsigned long long)c.expert_stick_assigns,
+        (unsigned long long)c.expert_gpu_acquire,
+        (unsigned long long)c.expert_gpu_exec,
+        (unsigned long long)c.host_gemv_expert,
         (unsigned long long)c.decode_moe_layer_calls,
         (unsigned long long)c.decode_moe_place_calls,
         (unsigned long long)c.decode_experts_selected,

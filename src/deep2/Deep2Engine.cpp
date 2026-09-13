@@ -5188,8 +5188,8 @@ void Deep2Engine::emitContinuitySnap(FILE* f, uint32_t gen) const {
         gpuResidentDecodeEnabled() ? 1u : 0u,
         isModelLoaded() ? 1u : 0u,
         vulkanDeviceCount(),
-        (unsigned long long)gf.forwardSlot[0],
-        (unsigned long long)gf.forwardSlot[1],
+        (unsigned long long)(gf.forwardSlot[0] + ds.forwardCallsGpu0),
+        (unsigned long long)(gf.forwardSlot[1] + ds.forwardCallsGpu1),
         (unsigned long long)residencyEpoch_,
         (unsigned long long)modelLoadEvents_);
     std::fflush(f);
@@ -10321,11 +10321,17 @@ void Deep2Engine::enableVulkan(bool enable) {
                    multiGpuLayerPlan_.openedCount, vulkanStrictNoCpuFallback_ ? 1 : 0);
         }
         ++residencyEpoch_;
+        DualStickBindVc(0, getVulkanComputeSlot(0));
+        if (getVulkanComputeSlot(1))
+            DualStickBindVc(1, getVulkanComputeSlot(1));
         /* Batch2 + BIND16: idempotent ensure (never 72-byte MASM). */
         if (!EnsurePersistentDecodeBinding())
             fprintf(stderr, "[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=FAIL\n");
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
+        DualStickBindVc(0, getVulkanComputeSlot(0));
+        if (getVulkanComputeSlot(1))
+            DualStickBindVc(1, getVulkanComputeSlot(1));
     } else {
         vulkanEnabled_ = false;
         /* Disabling Vulkan does not arm CPU — HOST_DECODE is the only CPU opt-in. */

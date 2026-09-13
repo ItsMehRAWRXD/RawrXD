@@ -17,8 +17,8 @@
 namespace Deep2 {
 
 bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
-                     uint32_t layer, int expertId, const float* hidden,
-                     float* expertOut, std::string& error);
+                     uint32_t layer, int expertId, unsigned stick,
+                     const float* hidden, float* expertOut, std::string& error);
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      uint32_t layer, const float* hidden, float* sharedOut,
                      std::string& error);
@@ -143,12 +143,10 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         if (slot.thrash) MoEPlaceLive().moe_thrash_tokens++;
         if (slot.hit) MoEPlaceLive().expert_stick_retains++;
         else MoEPlaceLive().expert_stick_assigns++;
-        if (slot.fetch)
-            DualStickAcquire(slot.stick, nullptr, 0, 0, layer,
-                             (uint32_t)slot.expertId);
+        /* Acquire(n=0) removed — ExpertGpu DualStickAcquire(slice bytes). */
         moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", slot.expertId);
-        if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, normed,
-                             expertOut.data(), error)) {
+        if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, slot.stick,
+                             normed, expertOut.data(), error)) {
             MoEPlaceLive().expert_acquire_fail++;
             moe_ltrace::BCExpert(layer, "EXPERT_FAIL", slot.expertId);
             return false;

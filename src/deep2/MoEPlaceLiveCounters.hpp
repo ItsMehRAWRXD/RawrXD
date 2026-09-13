@@ -34,6 +34,10 @@ struct MoEPlaceLiveCounters {
     uint64_t decode_experts_executed;
     uint64_t shared_expert_calls;
     uint64_t expert_slice_layout_mismatch;
+    /* DualStick stick-VRAM expert path (K2_EXPERT_GPU_EXEC_BIND). */
+    uint64_t expert_gpu_acquire;
+    uint64_t expert_gpu_exec;
+    uint64_t host_gemv_expert; /* routed experts that fell back to GetGEMV */
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

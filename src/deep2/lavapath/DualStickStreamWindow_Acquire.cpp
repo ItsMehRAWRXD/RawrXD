@@ -21,11 +21,10 @@ static uint8_t* StickWork(unsigned stick, const void* src, size_t n,
     else
         future::AdvanceOwnership(z, cid);
     if (runtime) {
-        if ((stick & 1u) == 0) e.forwardCallsGpu0++;
-        else e.forwardCallsGpu1++;
-        e.runtimeDevices =
-            (e.forwardCallsGpu0 > 0 ? 1u : 0u) + (e.forwardCallsGpu1 > 0 ? 1u : 0u);
-        e.runtimeBytesWorked += credit;
+        /* FWD_G* authority = DualStickNoteExpertGpu after real GPU GEMV.
+         * n=0 FreeToken-only must NOT inflate forwardCalls (L8 negative ctrl). */
+        if (src && n)
+            e.runtimeBytesWorked += n;
     } else {
         e.armCount++;
         e.armAcquires++;

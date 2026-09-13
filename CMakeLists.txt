@@ -4916,6 +4916,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2NativeMoEFfn.cpp
     src/deep2/K2NativeMoEFfn_Place.cpp
     src/deep2/K2NativeMoEFfn_Expert.cpp
+    src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
     src/deep2/K2LogitsSplit.cpp
@@ -4960,6 +4961,7 @@ set(INFERENCE_ENGINE_SOURCES
     evidence/RAWRXD_PERFORMANCE_001/DEEP2_MATERIAL_DUAL_OVERLAP_NODEP_20260912/src/d2_material_overlap_win32.cpp
     src/deep2/lavapath/DualStickStreamWindow.cpp
     src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    src/deep2/lavapath/DualStickStreamWindow_Vc.cpp
     src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
     src/deep2/lavapath/DualStickEnvSnap.cpp
     src/deep2/lavapath/FutureConsumer_Space.cpp
@@ -6846,6 +6848,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2NativeMoEFfn.cpp
         src/deep2/K2NativeMoEFfn_Place.cpp
         src/deep2/K2NativeMoEFfn_Expert.cpp
+        src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
     src/deep2/K2GpuStreamCopy.cpp
         src/deep2/K2LivePathTensorCache.cpp
         src/deep2/K2WeightResolve.cpp

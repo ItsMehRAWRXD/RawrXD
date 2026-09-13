@@ -1,0 +1,13 @@
+﻿STAMP=20260912_233101
+TAG=DUALSTICK_L4_T4_EXPERT_GPU
+RAWRXD_ALLOW_GPU=1
+RAWRXD_HOST_DECODE=0
+DEEP2_DUALSTICK_ARM=1
+RAWRXD_K2_LAYERS=4
+DEEP2_MOE_PLACE_TRACE=1
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOKENS=4
+CMD=G:\~dev\rawrxd\build-fd\bin\rawr.exe run "F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf" "Say hi." --max-tokens 4
+NOTE=K2_EXPERT_GPU_EXEC_BIND short slice; PROMOTE=0

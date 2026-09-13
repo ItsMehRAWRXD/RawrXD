@@ -54,3 +54,11 @@ uint8_t* DualStickAcquire(unsigned stick, const void* src, size_t n,
 void DualStickResolve(unsigned stick, uint32_t layer);
 
 } // namespace Deep2
+
+/* Stick-VRAM expert path: bind opened VulkanCompute slots; Note = FWD_G*. */
+namespace CPUInference { class VulkanCompute; }
+namespace Deep2 {
+void DualStickBindVc(unsigned stick, CPUInference::VulkanCompute* vc);
+CPUInference::VulkanCompute* DualStickVc(unsigned stick);
+void DualStickNoteExpertGpu(unsigned stick, size_t bytes);
+} // namespace Deep2
