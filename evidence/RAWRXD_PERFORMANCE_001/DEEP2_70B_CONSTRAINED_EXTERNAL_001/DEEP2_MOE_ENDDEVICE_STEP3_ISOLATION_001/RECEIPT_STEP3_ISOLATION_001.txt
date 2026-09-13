@@ -1,0 +1,59 @@
+GATE=DEEP2_MOE_ENDDEVICE_STEP3_ISOLATION_001
+DATE=2026-09-13
+KIND=RECEIPT
+PROMOTE=0
+BLEND_W=0
+RAISE_BUDGET=DEFER
+RESIDENCY_POLICY=FROZEN_AT_50c614b280
+NOT_RUN!=PASS
+
+# Class (exactly one) — instrumented fail run
+AUTH_FAIL_RUN=kimi_moe_DS_L61t8_segquota_20260913_043326
+FAIL_LINE=
+  ENDDEVICE_STEP3 tag=END_FAIL STEP=3/8 layer=48 stick=0 nEx=4
+  pin_clock=6954 pin_bytes=12608913408 buf=ArenaFfnW bytes=28672
+  fused=1 d2h=0 vk=-4 phase=device_lost
+  in_hash=718c39d7afd51fc8 post_hash=0
+  CLASS=DEVICE/SYNC_FAILURE
+  ex=[302,97,214,71]
+PEER_OK_SAME_LAYER=
+  stick=1 END_OK same STEP/layer (concurrent DualStick)
+FAIL_CLASS=DEVICE/SYNC_FAILURE
+# not ENDDEVICE_ABORT_BEFORE_RESULT (staging survived; submit/fence DEVICE_LOST)
+# not ENDDEVICE_RESULT_RETURNED_PARITY_BAD (no host partial returned)
+
+ROOT_CAUSE=
+  MoE stick worklist pin-all-then-fuse: EnsurePinnedPackedWeight under MOE pin
+  floor could LRU-destroy peer MoE pins from the SAME worklist before Record/
+  EndFused (bundle meta / IsHot not yet protecting mid-pin peers).
+  Fused CB then referenced freed VkBuffers → VK_ERROR_DEVICE_LOST (-4) on
+  subsequent D2H SubmitOne. EndFused could still report ok if loss surfaced
+  on the next queue op.
+
+FIX=BeginMoePinHold/EndMoePinHold around stick pin→EndFused
+  skip MoE victims with lastUse > moe_pin_hold_clock_ during hold
+  + persistent gemv_out D2H staging (EnsureHostIo at BeginDevice)
+  + SubmitOne checks fence VkResult (exposes DEVICE_LOST)
+  ZERO quota/budget/reload retune
+
+AUTH_PASS_RUN=kimi_moe_DS_L61t8_segquota_20260913_043839
+PASS_IF_SCORECARD=
+  EXIT=0                 YES
+  GEN=8/8                YES TOKENS_COMMITTED=8
+  STREAM_ABORT=0         YES
+  PARITY=1               YES ARGMAX_PARITY=1 experts 3840/3840
+  GENERAL_TO_MOE=0       YES
+  MLA_TO_MOE=0           YES
+  SHRINK_BLOCKED=1       YES
+  AFTER_EVICTION         255295488 (~243.5 MiB) — not regress to ~1078 MiB
+
+STEP3_LAYER48_AFTER_FIX=
+  stick0 END_OK fused=1 d2h=1 phase=ok CLASS=D2H_OK
+  stick1 END_OK
+END_OK_COUNT=960 END_FAIL_COUNT=0
+
+REPLAY=identical CLI L61t8 hello · live router; step3 EndDevice no longer aborts
+
+PASS_IF=YES (isolation + stream survivability)
+SEGMENTED_MOE_QUOTA PASS_IF recoverable under frozen residency: YES
+NEXT=PHYSICAL_RELOAD_ENVELOPE (quota still FROZEN prove) · PROMOTE=0

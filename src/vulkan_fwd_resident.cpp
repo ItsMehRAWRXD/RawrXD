@@ -149,50 +149,75 @@ bool VulkanCompute::LoadComputePipeline(
 }
 
 bool VulkanCompute::SubmitOne(VkCommandBuffer cmd) {
+    last_d2h_vk_ = 0;
+    last_d2h_phase_ = "submit";
     VkFence fence = nullptr;
     VkFenceCreateInfo fi{VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-    vkCreateFence(device_, &fi, nullptr, &fence);
+    if (vkCreateFence(device_, &fi, nullptr, &fence) != VK_SUCCESS) {
+        last_d2h_phase_ = "fence_create";
+        return false;
+    }
     VkSubmitInfo si{VK_STRUCTURE_TYPE_SUBMIT_INFO};
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
-    bool ok = vkQueueSubmit(compute_queue_, 1, &si, fence) == VK_SUCCESS;
-    if (ok) {
-        vkWaitForFences(device_, 1, &fence, VK_TRUE, 30ull * 1000000000ull);
-        ++op_submits_;
+    const VkResult sr = vkQueueSubmit(compute_queue_, 1, &si, fence);
+    last_d2h_vk_ = (int)sr;
+    if (sr != VK_SUCCESS) {
+        last_d2h_phase_ = (sr == VK_ERROR_DEVICE_LOST) ? "device_lost" : "submit";
+        vkDestroyFence(device_, fence, nullptr);
+        vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
+        return false;
     }
+    const VkResult wr =
+        vkWaitForFences(device_, 1, &fence, VK_TRUE, 30ull * 1000000000ull);
+    last_d2h_vk_ = (int)wr;
     vkDestroyFence(device_, fence, nullptr);
     vkFreeCommandBuffers(device_, command_pool_, 1, &cmd);
-    return ok;
+    if (wr != VK_SUCCESS) {
+        last_d2h_phase_ =
+            (wr == VK_ERROR_DEVICE_LOST) ? "device_lost" : "fence";
+        return false;
+    }
+    last_d2h_phase_ = "ok";
+    ++op_submits_;
+    return true;
 }
 
 bool VulkanCompute::DownloadDeviceLocal(VkBuffer src, void* dst, size_t size) {
-    VkBuffer staging = nullptr;
-    VkDeviceMemory stagingMem = nullptr;
-    if (!CreateHostVisibleBuffer(size, staging, stagingMem)) return false;
+    /* Persistent gemv_out staging — avoid HOST_VISIBLE alloc after MoE pin fill. */
+    last_d2h_phase_ = "staging";
+    last_d2h_vk_ = 0;
+    if (!src || !dst || !size) return false;
+    if (!EnsureHostIo(size, size) || !gemv_out_buf_) {
+        last_d2h_phase_ = "staging";
+        return false;
+    }
     VkCommandBufferAllocateInfo cai{VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cai.commandPool = command_pool_;
     cai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cai.commandBufferCount = 1;
     VkCommandBuffer cmd = nullptr;
-    vkAllocateCommandBuffers(device_, &cai, &cmd);
+    if (vkAllocateCommandBuffers(device_, &cai, &cmd) != VK_SUCCESS || !cmd) {
+        last_d2h_phase_ = "cmd_alloc";
+        return false;
+    }
     VkCommandBufferBeginInfo bi{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &bi);
     VkBufferCopy copy{};
     copy.size = size;
-    vkCmdCopyBuffer(cmd, src, staging, 1, &copy);
+    vkCmdCopyBuffer(cmd, src, gemv_out_buf_, 1, &copy);
     vkEndCommandBuffer(cmd);
-    if (!SubmitOne(cmd)) {
-        vkDestroyBuffer(device_, staging, nullptr);
-        vkFreeMemory(device_, stagingMem, nullptr);
+    if (!SubmitOne(cmd)) return false;
+    void* mapped = nullptr;
+    if (vkMapMemory(device_, gemv_out_mem_, 0, size, 0, &mapped) != VK_SUCCESS ||
+        !mapped) {
+        last_d2h_phase_ = "map";
         return false;
     }
-    void* mapped = nullptr;
-    vkMapMemory(device_, stagingMem, 0, size, 0, &mapped);
     std::memcpy(dst, mapped, size);
-    vkUnmapMemory(device_, stagingMem);
-    vkDestroyBuffer(device_, staging, nullptr);
-    vkFreeMemory(device_, stagingMem, nullptr);
+    vkUnmapMemory(device_, gemv_out_mem_);
+    last_d2h_phase_ = "ok";
     return true;
 }
 

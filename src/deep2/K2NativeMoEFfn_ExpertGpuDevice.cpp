@@ -5,6 +5,7 @@
 #include "lavapath/DualStickImbalance.hpp"
 #include "lavapath/DualStickImbalance_Xfer.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/EndDeviceStep3Diag.hpp"
 #include "vulkan_compute.h"
 #include <vector>
 
@@ -90,6 +91,9 @@ bool K2MoEStickBeginDevice(unsigned stick, const float* hidden, size_t H,
     if (!vc || !hidden || !H || !I) return false;
     if (!vc->EnsureForwardArena((uint32_t)H, (uint32_t)I, 1, 1, 1, 1, 1))
         return false;
+    /* Reserve D2H staging BEFORE MoE pins fill HOST_VISIBLE/BAR heap. */
+    const size_t hb = H * sizeof(float);
+    if (!vc->EnsureHostIo(hb, hb)) return false;
     if (!vc->UploadBuf(vc->ArenaNormed(), hidden, (uint32_t)H)) return false;
     std::vector<float> z(H, 0.f);
     return vc->UploadBuf(vc->ArenaFfnW(), z.data(), (uint32_t)H);
@@ -136,7 +140,14 @@ bool K2MoEStickEndDevice(unsigned stick, float* hostPartial, size_t H,
                          StickGpuLocal& c) {
     auto* vc = DualStickVc(stick);
     if (!vc || !hostPartial || !H) return false;
-    if (!vc->DownloadBuf(vc->ArenaFfnW(), hostPartial, (uint32_t)H)) return false;
+    auto& ffn = vc->ArenaFfnW();
+    ed3::NotePins(vc->WeightPinClock(), vc->WeightPinResidentBytes(),
+                  (uintptr_t)ffn.buffer, ffn.bytes);
+    const int ok =
+        vc->DownloadBuf(ffn, hostPartial, (uint32_t)H) ? 1 : 0;
+    ed3::NoteD2h(ok, vc->LastD2hVk(), vc->LastD2hPhase(), hostPartial, H);
+    ed3::EmitBoundary(ok ? "END_OK" : "END_FAIL");
+    if (!ok) return false;
     c.d2h_partial_vectors++;
     c.d2h_bytes += (uint64_t)H * sizeof(float);
     return true;

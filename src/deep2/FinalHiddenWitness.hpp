@@ -1,6 +1,7 @@
 // FinalHiddenWitness.hpp — reverse emission: reachability observed (no deps).
 // Never fabricate index/value as 0; NOT_REACHED/INTERRUPTED are dispositions.
 #pragma once
+#include "lavapath/EndDeviceStep3Diag.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -24,6 +25,7 @@ inline size_t HiddenProbeIndex(uint32_t step, size_t count) {
 inline void StepEnter(uint32_t step, uint32_t steps) {
     std::fprintf(stderr, "STEP_ENTER STEP=%u/%u\n", step, steps);
     std::fflush(stderr);
+    ed3::SetStep(step, steps);
 }
 
 inline void StepExit(uint32_t step, uint32_t steps) {

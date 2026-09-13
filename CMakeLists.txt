@@ -4926,6 +4926,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/DualStickBundle_Attr.cpp
     src/deep2/lavapath/DualStickBundle_Pins.cpp
     src/deep2/lavapath/DualStickBundle_Touch.cpp
+    src/deep2/lavapath/EndDeviceStep3Diag.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
     src/deep2/K2LogitsSplit.cpp
@@ -6882,6 +6883,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/lavapath/DualStickBundle_Attr.cpp
         src/deep2/lavapath/DualStickBundle_Pins.cpp
         src/deep2/lavapath/DualStickBundle_Touch.cpp
+        src/deep2/lavapath/EndDeviceStep3Diag.cpp
     src/deep2/K2GpuStreamCopy.cpp
         src/deep2/K2LivePathTensorCache.cpp
         src/deep2/K2WeightResolve.cpp

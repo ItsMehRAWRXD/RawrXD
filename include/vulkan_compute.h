@@ -413,6 +413,14 @@ public:
     bool DownloadBuf(DeviceBuf& b, float* host, uint32_t n);
     bool UploadBuf(DeviceBuf& b, const float* host, uint32_t n);
     bool EnsureHostIo(size_t inBytes, size_t outBytes);
+    uint64_t WeightPinClock() const { return gemv_pin_clock_; }
+    void BeginMoePinHold() {
+        moe_pin_hold_ = 1;
+        moe_pin_hold_clock_ = gemv_pin_clock_;
+    }
+    void EndMoePinHold() { moe_pin_hold_ = 0; }
+    int LastD2hVk() const { return last_d2h_vk_; }
+    const char* LastD2hPhase() const { return last_d2h_phase_; }
     bool EnsureGemvActDevice(size_t inBytes, size_t outBytes);
     bool GemvHostWriteIn(const float* src, size_t bytes);
     bool GemvHostReadOut(float* dst, size_t bytes);
@@ -543,6 +551,8 @@ private:
     bool TuneFromDevice();
     uint64_t layer_submits_ = 0;
     uint64_t op_submits_ = 0;
+    int last_d2h_vk_ = 0;
+    const char* last_d2h_phase_ = "none";
     bool gemv_pipeline_created_ = false;
     VkPipeline q4k_pipe_ = nullptr;
     VkPipeline q4k_fused_pipe_ = nullptr;
@@ -617,6 +627,8 @@ private:
     };
     std::unordered_map<uint64_t, GemvResidentWeight> gemv_weight_cache_;
     uint64_t gemv_pin_clock_ = 0;
+    int moe_pin_hold_ = 0;
+    uint64_t moe_pin_hold_clock_ = 0;
 
     // Bounded weight window (STREAMER_GPU_WEIGHT_WINDOW_001)
     static constexpr uint32_t kWwMaxSlots = 128;

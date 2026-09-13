@@ -9,6 +9,7 @@
 #include "lavapath/DualStickExpertBundle.hpp"
 #include "lavapath/DualStickPinCoherency.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/EndDeviceStep3Diag.hpp"
 #include "vulkan_compute.h"
 #include <cstdio>
 #include <cstring>
@@ -93,6 +94,8 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         error = "DualStick VC missing for stick worklist";
         return false;
     }
+    ed3::BeginStick(stick, layer, normed, H);
+    auto* vcHold = DualStickVc(stick);
     if (!K2MoEStickBeginDevice(stick, normed, H, I)) {
         error = "K2MoEStickBeginDevice failed";
         return false;
@@ -160,16 +163,20 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         work.push_back(std::move(r));
     }
 
+    /* Hold MoE pins for this stick worklist — peer eviction ⇒ DEVICE_LOST. */
+    if (vcHold) vcHold->BeginMoePinHold();
     /* HARD_GATE: pin all weights before fuse (no mid-graph Upload submit). */
     for (auto& r : work) {
         if (!K2MoEStickPinExpert(stick, r.gt, r.g, r.gb, r.ut, r.u, r.ub, r.dt,
                                  r.d, r.db, H, I, layer, r.expertId,
                                  r.acquireMiss, ctr)) {
+            if (vcHold) vcHold->EndMoePinHold();
             error = "K2MoEStickPinExpert failed";
             return false;
         }
     }
     if (!K2MoEStickBeginFused(stick)) {
+        if (vcHold) vcHold->EndMoePinHold();
         error = "K2MoEStickBeginFused failed";
         return false;
     }
@@ -178,15 +185,23 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
                                     r.dt, r.d, r.db, r.weight, H, I, layer,
                                     r.expertId, r.acquireMiss, ctr)) {
             (void)DualStickVc(stick)->EndFusedLayer();
+            if (vcHold) vcHold->EndMoePinHold();
             error = "K2MoEStickExpertDevice failed";
             return false;
         }
         hotExperts.push_back(r.expertId);
     }
     if (!K2MoEStickEndFused(stick, ctr)) {
+        ed3::NoteFused(0);
+        ed3::NoteExperts(hotExperts.data(), (uint32_t)hotExperts.size());
+        ed3::EmitBoundary("FUSED_FAIL");
+        if (vcHold) vcHold->EndMoePinHold();
         error = "K2MoEStickEndFused failed";
         return false;
     }
+    ed3::NoteFused(1);
+    ed3::NoteExperts(hotExperts.data(), (uint32_t)hotExperts.size());
+    if (vcHold) vcHold->EndMoePinHold();
     if (!K2MoEStickEndDevice(stick, partial, H, ctr)) {
         error = "K2MoEStickEndDevice failed";
         return false;

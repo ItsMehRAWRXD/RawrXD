@@ -353,6 +353,10 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                     const int p = Deep2::DualStickMoePinProtected(jt->first);
                     if (p != wantProt) continue;
                 }
+                /* Stick worklist hold: never destroy MoE pins touched this hold. */
+                if (want == Deep2::PinWeightClass::MoE && moe_pin_hold_ &&
+                    jt->second.lastUse > moe_pin_hold_clock_)
+                    continue;
                 if (victim == gemv_weight_cache_.end() ||
                     jt->second.lastUse < victim->second.lastUse)
                     victim = jt;
