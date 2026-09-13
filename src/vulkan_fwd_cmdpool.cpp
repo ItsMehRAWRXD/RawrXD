@@ -58,6 +58,8 @@ bool VulkanCompute::BeginFusedLayer() {
     fused_pool_i_ = (i + 1u) & 3u;
     ++fused_cb_reuses_;
     gemv_ds_cursor_ = 0;
+    swiglu_ds_cursor_ = 0;
+    saxpy_ds_cursor_ = 0;
     rms_use_ = 0;
     add_use_ = 0;
     ResetWeightWindowLayerCursor();

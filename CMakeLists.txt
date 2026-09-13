@@ -4917,6 +4917,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2NativeMoEFfn_Place.cpp
     src/deep2/K2NativeMoEFfn_Expert.cpp
     src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
+    src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp
     src/deep2/lavapath/DualStickExpertBundle.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
@@ -6851,6 +6852,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2NativeMoEFfn_Place.cpp
         src/deep2/K2NativeMoEFfn_Expert.cpp
         src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
+        src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp
         src/deep2/lavapath/DualStickExpertBundle.cpp
     src/deep2/K2GpuStreamCopy.cpp
         src/deep2/K2LivePathTensorCache.cpp

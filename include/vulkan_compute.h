@@ -262,7 +262,7 @@ public:
                                uint32_t rows, uint32_t cols);
     bool DispatchGemvQuant(int ggmlType, const void* packed, size_t bytes,
                            DeviceBuf& in, DeviceBuf& out,
-                           uint32_t rows, uint32_t cols);
+                           uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
     bool DispatchGEMVQuant(int ggmlType, const void* packed, size_t bytes,
                            const float* input, float* output,
                            uint32_t rows, uint32_t cols, uint64_t pinKey = 0);
@@ -352,6 +352,9 @@ public:
     bool DispatchRmsNorm(DeviceBuf& in, DeviceBuf& w, DeviceBuf& out,
                          uint32_t n, float eps);
     bool DispatchResidualAdd(DeviceBuf& a, DeviceBuf& b, DeviceBuf& out, uint32_t n);
+    /* Stick MoE: accum[i] += scale * src[i] (device; no host Down). */
+    bool DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float scale,
+                           uint32_t n);
     bool DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, uint32_t nHeads,
                       uint32_t nKv, uint32_t pos, float theta);
     bool DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
@@ -502,7 +505,7 @@ private:
     VkDescriptorSetLayout gemv_ds_layout_ = nullptr;
     VkDescriptorPool gemv_desc_pool_ = nullptr;
     VkDescriptorSet gemv_ds_ = nullptr;
-    VkDescriptorSet gemv_ds_arr_[8]{};
+    VkDescriptorSet gemv_ds_arr_[64]{};
     uint32_t gemv_ds_n_ = 0;
     uint32_t gemv_ds_cursor_ = 0;
     VkCommandBuffer fused_cmd_ = nullptr;
@@ -686,6 +689,9 @@ private:
     bool FusedBarrier();
     bool FlushFusedRestart();
     VkDescriptorSet NextGemvDs();
+    VkDescriptorSet NextSwigluDs();
+    VkDescriptorSet NextSaxpyDs();
+    bool EnsureFusedAuxDs();
 
     // Forward-resident arena + pipelines
     DeviceBuf fwd_hidden_{}, fwd_residual_{}, fwd_normed_{};
@@ -716,6 +722,15 @@ private:
     VkPipeline swiglu_pipe_ = nullptr; VkPipelineLayout swiglu_layout_ = nullptr;
     VkDescriptorSetLayout swiglu_dsl_ = nullptr; VkDescriptorPool swiglu_pool_ = nullptr;
     VkDescriptorSet swiglu_ds_ = nullptr;
+    VkDescriptorSet swiglu_ds_arr_[16]{};
+    uint32_t swiglu_ds_n_ = 0;
+    uint32_t swiglu_ds_cursor_ = 0;
+    VkPipeline saxpy_pipe_ = nullptr; VkPipelineLayout saxpy_layout_ = nullptr;
+    VkDescriptorSetLayout saxpy_dsl_ = nullptr; VkDescriptorPool saxpy_pool_ = nullptr;
+    VkDescriptorSet saxpy_ds_ = nullptr;
+    VkDescriptorSet saxpy_ds_arr_[16]{};
+    uint32_t saxpy_ds_n_ = 0;
+    uint32_t saxpy_ds_cursor_ = 0;
     DeviceBuf mla_q_{}, mla_kb_{}, mla_vb_{}, mla_kpe_{}, mla_out_{};
     DeviceBuf mla_k_cache_{}, mla_v_cache_{};
     VkPipeline mla_attn_pipe_ = nullptr;

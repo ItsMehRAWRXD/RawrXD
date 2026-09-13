@@ -143,6 +143,9 @@ void VulkanCompute::Cleanup() {
         killPipe(rope_pipe_, rope_layout_, rope_dsl_, rope_pool_); rope_ds_ = nullptr;
         killPipe(attn_pipe_, attn_layout_, attn_dsl_, attn_pool_); attn_ds_ = nullptr;
         killPipe(swiglu_pipe_, swiglu_layout_, swiglu_dsl_, swiglu_pool_); swiglu_ds_ = nullptr;
+        swiglu_ds_n_ = 0; swiglu_ds_cursor_ = 0;
+        killPipe(saxpy_pipe_, saxpy_layout_, saxpy_dsl_, saxpy_pool_); saxpy_ds_ = nullptr;
+        saxpy_ds_n_ = 0; saxpy_ds_cursor_ = 0;
         
         // Free staging buffer
         if (staging_buffer_) {
@@ -506,26 +509,26 @@ bool VulkanCompute::EnsureGemvPipeline() {
 
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSize.descriptorCount = 3 * 8;
+    poolSize.descriptorCount = 3 * 64;
     VkDescriptorPoolCreateInfo dpInfo{};
     dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpInfo.maxSets = 8;
+    dpInfo.maxSets = 64;
     dpInfo.poolSizeCount = 1;
     dpInfo.pPoolSizes = &poolSize;
     if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS)
         return false;
-    VkDescriptorSetLayout layouts[8];
-    for (int i = 0; i < 8; ++i) layouts[i] = gemv_ds_layout_;
+    VkDescriptorSetLayout layouts[64];
+    for (int i = 0; i < 64; ++i) layouts[i] = gemv_ds_layout_;
     VkDescriptorSetAllocateInfo onceAlloc{};
     onceAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     onceAlloc.descriptorPool = gemv_desc_pool_;
-    onceAlloc.descriptorSetCount = 8;
+    onceAlloc.descriptorSetCount = 64;
     onceAlloc.pSetLayouts = layouts;
     if (vkAllocateDescriptorSets(device_, &onceAlloc, gemv_ds_arr_) != VK_SUCCESS)
         return false;
-    gemv_ds_n_ = 8;
+    gemv_ds_n_ = 64;
     gemv_ds_ = gemv_ds_arr_[0];
-    gemv_desc_allocs_ += 8;
+    gemv_desc_allocs_ += 64;
     gemv_pipeline_created_ = true;
     (void)TuneFromDevice();
     return true;

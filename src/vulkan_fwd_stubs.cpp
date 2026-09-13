@@ -11,7 +11,7 @@ bool VulkanCompute::DispatchGemvDevice(const float*, uint64_t, DeviceBuf&, Devic
 bool VulkanCompute::DispatchGemvPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::DispatchGemvQ6kPacked(const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchGEMVQ6kPacked(const void*, size_t, const float*, float*, uint32_t, uint32_t) { return false; }
-bool VulkanCompute::DispatchGemvQuant(int, const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t) { return false; }
+bool VulkanCompute::DispatchGemvQuant(int, const void*, size_t, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::DispatchGEMVQuant(int, const void*, size_t, const float*, float*, uint32_t, uint32_t, uint64_t) { return false; }
 bool VulkanCompute::EnsureQ4kPipeline() { return false; }
 bool VulkanCompute::EnsureQ4kFusedPipeline() { return false; }
@@ -64,6 +64,7 @@ bool VulkanCompute::BindGemvStorage(VkBuffer, size_t, VkBuffer, size_t, VkBuffer
 bool VulkanCompute::BindGemvStoragePc(VkBuffer, size_t, VkBuffer, size_t, VkBuffer, size_t, VkPipeline, const uint32_t*, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::DispatchRmsNorm(DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t, float) { return false; }
 bool VulkanCompute::DispatchResidualAdd(DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t) { return false; }
+bool VulkanCompute::DispatchScaledAdd(DeviceBuf&, DeviceBuf&, float, uint32_t) { return false; }
 bool VulkanCompute::DispatchRope(DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint32_t, uint32_t, float) { return false; }
 bool VulkanCompute::DispatchAttnDecode(DeviceBuf&, DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t, uint32_t, uint32_t, uint32_t, float, uint32_t) { return false; }
 bool VulkanCompute::DispatchSwiGLU(DeviceBuf&, DeviceBuf&, DeviceBuf&, uint32_t) { return false; }
@@ -88,6 +89,9 @@ bool VulkanCompute::EndFusedLayer() { return false; }
 bool VulkanCompute::FlushFusedRestart() { return false; }
 bool VulkanCompute::FusedBarrier() { return false; }
 VkDescriptorSet VulkanCompute::NextGemvDs() { return nullptr; }
+VkDescriptorSet VulkanCompute::NextSwigluDs() { return nullptr; }
+VkDescriptorSet VulkanCompute::NextSaxpyDs() { return nullptr; }
+bool VulkanCompute::EnsureFusedAuxDs() { return false; }
 bool VulkanCompute::RecordCompute(VkPipeline, VkPipelineLayout, VkDescriptorSet, const void*, uint32_t, uint32_t) { return false; }
 bool VulkanCompute::RecordCopy(VkBuffer, VkBuffer, VkDeviceSize, VkDeviceSize, VkDeviceSize) { return false; }
 bool VulkanCompute::UploadNormWeight(DeviceBuf&, const float*, uint32_t) { return false; }

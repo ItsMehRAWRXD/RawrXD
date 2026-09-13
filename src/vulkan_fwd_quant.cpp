@@ -10,22 +10,30 @@ namespace CPUInference {
 
 bool VulkanCompute::DispatchGemvQuant(int ggmlType, const void* packed, size_t bytes,
                                       DeviceBuf& in, DeviceBuf& out,
-                                      uint32_t rows, uint32_t cols) {
+                                      uint32_t rows, uint32_t cols,
+                                      uint64_t pinKey) {
     VkPipeline pipe = nullptr; uint64_t* ops = nullptr;
-    if (!SelectPackedPipe(ggmlType, pipe, ops) || !packed || !in.buffer ||
-        !out.buffer || !bytes)
+    if (!SelectPackedPipe(ggmlType, pipe, ops) || !in.buffer || !out.buffer ||
+        !bytes)
+        return false;
+    /* Pin-hit may omit host packed (HOST_BYTES_FOR_HIT=0). */
+    if (!packed &&
+        !(pinKey && WantWeightPin() &&
+          HasPinnedGemvWeight(pinKey, bytes, rows, cols)))
         return false;
     ++gemv_attempts_;
     VkBuffer wbuf = nullptr;
     if (WantWeightPin()) {
-        const uint64_t pinKey =
-            (uint64_t)WeightContentFingerprint(packed, bytes) ^
-            ((uint64_t)rows * 0x100000001b3ull) ^
-            ((uint64_t)cols * 0xcbf29ce484222325ull) ^
-            ((uint64_t)bytes * 0x9e3779b97f4a7c15ull);
-        if (!EnsurePinnedPackedWeight(packed, bytes, rows, cols, wbuf, pinKey))
+        uint64_t key = pinKey;
+        if (!key && packed)
+            key = (uint64_t)WeightContentFingerprint(packed, bytes) ^
+                  ((uint64_t)rows * 0x100000001b3ull) ^
+                  ((uint64_t)cols * 0xcbf29ce484222325ull) ^
+                  ((uint64_t)bytes * 0x9e3779b97f4a7c15ull);
+        if (!EnsurePinnedPackedWeight(packed, bytes, rows, cols, wbuf, key))
             return false;
     } else {
+        if (!packed) return false;
         if (!ww_active_ || bytes > ww_slot_bytes_) {
             size_t budget =
                 ww_budget_bytes_ ? ww_budget_bytes_ : ((size_t)512 << 20);

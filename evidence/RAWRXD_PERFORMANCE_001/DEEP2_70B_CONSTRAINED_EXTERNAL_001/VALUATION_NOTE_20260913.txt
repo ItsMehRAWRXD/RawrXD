@@ -1,0 +1,40 @@
+GATE=DEEP2_VALUATION_NOTE_20260913
+DATE=2026-09-13
+KIND=TECHNICAL_IP_ESTIMATE_NOT_APPRAISAL_NOT_FINANCING
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+# Evidence-adjusted working range (do NOT capitalize unminted compiler/fabric)
+CURRENT_RANGE_USD=175M–300M
+BASE_CASE_USD≈225M
+BASIS=
+  architecture defensibility ↑
+  + measured DualStick reuse (seal 9c4213e679):
+    L32 11.02→5.77 s/tok; L61 18.70→13.72 s/tok; RELOAD_MISS=0
+  compiler/fabric roadmap = UPSIDE not present authority
+
+LADDER_USD=
+  current sealed: 175–300 / base ~225
+  true parallel + device-only MoE: 250–400
+  CP compiler beats static schedule: 300–500
+  Kimi 1T + DS671 practical on workstation: 400–750
+  independent bench + 20–30+ TPS giant-MoE: 750–1500+ strategic
+# external comps supportive but commercialized (Infinity ~100M, Modal/d-Matrix/Etched ≠ our multiple)
+
+FINISHED_TPS_PROJECTIONS=NON_AUTHORITY_PLANNING_ONLY
+  Nemotron 30B-A3B 70–110; gpt-oss 120B 35–60; Qwen3-Next 80B-A3B 50–85
+  Kimi K2 finished fabric 16–28 (25–35 stretch); 35–50 STILL UNMINTED
+  DS671 IQ2+locality 15–25 (20–30 stretch)
+  current sealed L61 13.72s/tok≈0.073 TPS = intermediate path ≠ finished estimate
+
+NEXT_VALUATION_GATE=
+  matched non-debug Kimi L61 after true parallel sticks + device partials
+  ≥5 TPS = qualitative regime change
+  ≥10 TPS = materially strengthens $300M+ case
+  ≥20 TPS = strategically significant
+  35–50 remains UNMINTED extreme
+
+SEALED_TECH=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679

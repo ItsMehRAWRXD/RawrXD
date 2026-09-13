@@ -8,12 +8,17 @@
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
+#include "MoELiveAdd.hpp"
+#include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <thread>
+#include <atomic>
+#include <algorithm>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -26,6 +31,13 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      uint32_t layer, const float* hidden, float* sharedOut,
                      std::string& error);
+bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
+                            const KimiK2Config& cfg, uint32_t layer,
+                            const float* normed, MoEPlacePlan& plan,
+                            const uint32_t* idx, uint32_t n, unsigned stickId,
+                            float* partial, StickGpuLocal& ctr,
+                            std::vector<int32_t>& hotExperts,
+                            std::string& error);
 
 namespace {
 
@@ -90,31 +102,19 @@ bool LoadAndRoute(const GlobalTensorIndex& index, const KimiK2Config& cfg,
 bool ExecStickWorklist(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                        uint32_t layer, const float* normed,
                        MoEPlacePlan& plan, const uint32_t* idx, uint32_t n,
-                       float* partial, std::string& error, uint32_t& executed) {
-    std::vector<float> expertOut(cfg.hiddenDim);
-    MoEExpertResidencyPlace& place = MoEPlaceGlobal();
-    for (uint32_t k = 0; k < n; ++k) {
-        MoEPlaceSlot& mut = plan.slots[idx[k]];
-        if (mut.expertId < 0) continue;
-        if (mut.thrash) MoEPlaceLive().moe_thrash_tokens++;
-        if (mut.residentHandle)
-            MoEPlaceLive().secondary_lookup += 0; /* handle from Place */
-        else
-            MoEPlaceLive().secondary_lookup++;
-        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", mut.expertId);
-        if (!K2MoEExecExpert(index, cfg, layer, mut.expertId, mut.stick, normed,
-                             expertOut.data(), error)) {
-            MoEPlaceLive().expert_acquire_fail++;
-            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", mut.expertId);
-            return false;
-        }
-        MoEPlaceLive().expert_acquire_ok++;
-        place.MarkHot((int)layer, mut.expertId, mut.stick, 0);
-        MoEPlaceLive().expert_markhot++;
-        for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
-            partial[i] += mut.weight * expertOut[i];
-        ++executed;
+                       unsigned stickId, float* partial, std::string& error,
+                       uint32_t& executed, StickGpuLocal& ctr,
+                       std::vector<int32_t>& hotExperts) {
+    executed = 0;
+    for (uint32_t k = 0; k < n; ++k)
+        if (plan.slots[idx[k]].expertId >= 0) ++executed;
+    if (!K2MoEExecStickWorklist(index, cfg, layer, normed, plan, idx, n, stickId,
+                                partial, ctr, hotExperts, error)) {
+        MoELiveAdd(MoEPlaceLive().expert_acquire_fail, 1);
+        MoELiveAdd(MoEPlaceLive().worker_failures, 1);
+        return false;
     }
+    MoELiveAdd(MoEPlaceLive().expert_acquire_ok, executed);
     return true;
 }
 
@@ -222,7 +222,7 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         }
     }
 
-    /* #6/#10: two stick worklists → stick-local partials → one join. */
+    /* #6/#7/#10: true parallel stick workers → one D2H partial/stick → join. */
     uint32_t ix0[MOE_PLACE_MAX_K], ix1[MOE_PLACE_MAX_K];
     uint32_t n0 = 0, n1 = 0;
     for (uint32_t si = 0; si < plan.count; ++si) {
@@ -233,24 +233,113 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             ix1[n1++] = si;
     }
     std::vector<float> p0(cfg.hiddenDim, 0.f), p1(cfg.hiddenDim, 0.f);
-    uint32_t executed = 0;
-    const uint64_t tA = NowNs();
-    if (n0 && !ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0,
-                                 p0.data(), error, executed))
+    StickGpuLocal c0{}, c1{};
+    std::vector<int32_t> hot0, hot1;
+    std::string err0, err1;
+    uint32_t ex0 = 0, ex1 = 0;
+    bool ok0 = true, ok1 = true;
+    uint64_t s0b = 0, s0e = 0, s1b = 0, s1e = 0;
+    std::atomic<uint32_t> active{0}, maxActive{0};
+
+    auto bumpActive = [&]() {
+        const uint32_t now = active.fetch_add(1, std::memory_order_acq_rel) + 1;
+        uint32_t seen = maxActive.load(std::memory_order_relaxed);
+        while (seen < now &&
+               !maxActive.compare_exchange_weak(seen, now,
+                                                std::memory_order_relaxed)) {
+        }
+    };
+    auto dropActive = [&]() {
+        active.fetch_sub(1, std::memory_order_acq_rel);
+    };
+
+    const bool dual = sticks >= 2u;
+    auto run0 = [&] {
+        bumpActive();
+        s0b = NowNs();
+        ok0 = ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0, 0u,
+                                p0.data(), err0, ex0, c0, hot0);
+        s0e = NowNs();
+        dropActive();
+    };
+    auto run1 = [&] {
+        bumpActive();
+        s1b = NowNs();
+        ok1 = ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1, 1u,
+                                p1.data(), err1, ex1, c1, hot1);
+        s1e = NowNs();
+        dropActive();
+    };
+
+    std::thread w0, w1;
+    try {
+        /* HARD_GATE: always 2 stick submits + 2 partial D2H when DualStick. */
+        if (dual || n0) w0 = std::thread(run0);
+        if (dual || n1) w1 = std::thread(run1);
+        else if (!dual && n0) {
+            /* single-stick: already launched w0 */
+        }
+    } catch (...) {
+        if (w0.joinable()) w0.join();
+        if (w1.joinable()) w1.join();
+        MoEPlaceLive().worker_failures++;
+        error = "DualStick stick thread create failed";
         return false;
-    const uint64_t tB = NowNs();
-    if (tB >= tA) MoEPlaceLive().gpu0_work_ns += (tB - tA);
-    if (n1 && !ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1,
-                                 p1.data(), error, executed))
+    }
+    if (w0.joinable()) w0.join();
+    if (w1.joinable()) w1.join();
+
+    if ((dual || n0) && !ok0) {
+        MoEPlaceLive().worker_failures++;
+        error = err0;
         return false;
-    const uint64_t tC = NowNs();
-    if (tC >= tB) MoEPlaceLive().gpu1_work_ns += (tC - tB);
-    const uint64_t tJ0 = NowNs();
+    }
+    if ((dual || n1) && !ok1) {
+        MoEPlaceLive().worker_failures++;
+        error = err1;
+        return false;
+    }
+
+    StickGpuLocal merged{};
+    StickGpuMerge(merged, c0);
+    StickGpuMerge(merged, c1);
+    StickGpuCommit(merged);
+    MoEPlaceLive().gpu0_work_ns += (s0e >= s0b) ? (s0e - s0b) : 0;
+    MoEPlaceLive().gpu1_work_ns += (s1e >= s1b) ? (s1e - s1b) : 0;
+    if (dual && s0e && s1e && std::min(s0e, s1e) > std::max(s0b, s1b))
+        MoEPlaceLive().stick_overlap_ns +=
+            std::min(s0e, s1e) - std::max(s0b, s1b);
+    const uint64_t mc = maxActive.load(std::memory_order_relaxed);
+    if (mc > MoEPlaceLive().max_concurrent_stick_workers)
+        MoEPlaceLive().max_concurrent_stick_workers = mc;
+    if (dual || (n0 && n1)) {
+        const uint64_t last = std::max(s0e, s1e);
+        const uint64_t first = std::min(s0e, s1e);
+        if (last >= first) MoEPlaceLive().gpu_join_wait_ns += (last - first);
+    }
+    MoEPlaceLive().layer_joins++;
+
+    /* MarkHot after join (README_BIND). */
+    MoEExpertResidencyPlace& placeG = MoEPlaceGlobal();
+    for (int32_t ex : hot0) {
+        placeG.MarkHot((int)layer, ex, 0, 0);
+        MoEPlaceLive().expert_markhot++;
+    }
+    for (int32_t ex : hot1) {
+        placeG.MarkHot((int)layer, ex, 1, 0);
+        MoEPlaceLive().expert_markhot++;
+    }
+
     for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
         accum[i] += p0[i] + p1[i];
-    const uint64_t tJ1 = NowNs();
-    if (tJ1 >= tJ0) MoEPlaceLive().gpu_join_wait_ns += (tJ1 - tJ0);
-    if (n0 || n1) MoEPlaceLive().moe_layers_gpu++;
+    if (dual || n0 || n1) MoEPlaceLive().moe_layers_gpu++;
+    const uint32_t executed = ex0 + ex1;
+    if (merged.host_expert_down_vectors != 0)
+        MoEPlaceLive().product_backend_attested = 0;
+    else if (merged.device_down_vectors == executed &&
+             merged.device_partial_accums == executed && dual &&
+             merged.gpu_submits == 2 && merged.d2h_partial_vectors == 2)
+        MoEPlaceLive().product_backend_attested = 1;
 
     moe_ltrace::BC(layer, "ROUTED_ACCUM_DONE");
     MoEPlaceLive().experts_executed += executed;

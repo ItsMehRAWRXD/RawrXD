@@ -1,0 +1,2368 @@
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+KEN_MARS_ACTIVE=1 DEEP2_MARS=1 HOST_DECODE=0 GPU_POLICY=MULTI GPU_DEVICE_CLASS=DISCRETE NO_TRUNCATE_NEEDLE=1 PRODUCT_STREAMER_ARM=1
+PRODUCT_STREAMER_PREP=1 AGENTIC_PATH=1
+MODEL_DIGESTION_STREAM_BEGIN=1
+MODEL_PATH=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+ARCH=deepseek2
+HIDDEN=7168 LAYERS=61 HEADS=64 KV_HEADS=1 HEAD_DIM=112 VOCAB=163840 INTERMEDIATE=18432
+SPLIT_QKV_LAYERS=0 FUSED_QKV_LAYERS=0 PROJECTOR_BLOCK_LAYERS=0 MLA_LAYERS=6 BLOCKED_LAYERS=0
+SPLIT_FFN_LAYERS=1 FUSED_FFN_LAYERS=0
+ROOT_EMBED=token_embd.weight ROOT_FINAL_NORM=output_norm.weight ROOT_LM_HEAD=output.weight
+MANIFEST_READY=1 BLOCKED_AT=NONE
+AUTHORITY_CLASS=DISCOVERY_ONLY
+PROMOTE=0
+MODEL_DIGESTION_STREAM_END=1
+MODEL_DIGESTION_STREAM_CACHE=G:\~dev\rawrxd\evidence\RAWRXD_MODEL_MANIFESTS\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf.ac7f10aa0.1dd25d7a505afe2.rmanifest.jsonl
+[ModelOpenCompat] repaired metadata: arch=0 vocab=0 hidden=0 layers=0 inter=1 heads=0 kvHeads=0
+K2_MLA_SCHEMA_DEFER=1 layers=61 vocab=163840
+[BUF] hidden=7168 heads=64 headDim=192 qOut=12288 headScratch=12288 kvDim=192 ffn=28672 ffnGateScratch=28672
+[MLA_ALLOC] hidden=7168 heads=64 headDim=192 qProjSize=12288 q_b=12288 kv_a=576 k_b=8192 v_b=8192
+SSM_BUF stPer=32 cvPer=28672 inner=0 state=0 NOTE=STATE_NE_HEADS
+SSM_MAMBA2_ARM=0 reason=GEO_OR_BUF
+WEIGHT_BUDGET_INPUT=E8B0M
+WEIGHT_BUDGET_PARSE=PASS
+WEIGHT_BUDGET_MIB=59568
+WEIGHT_BUDGET_BYTES=62461575168
+WEIGHT_BUDGET_SOURCE=ENV
+[Deep2Engine] Loading model from: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+[Deep2Engine] ExecutionPolicy OK version=2 sha=policy:d4d9c00b410f6818 mode=1
+[Deep2Engine] Policy VRAM hard=12884901888 streaming=1
+[Deep2Engine] Model path content-resolve (ext-agnostic blob/gguf)...
+[Deep2Engine] Found GGUF at offset 0 in blob
+[Deep2Engine] Using blob directly (GGUF at offset 0)
+[Deep2Engine] Multi-shard detected: YES (16 files in F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M)
+[Deep2Engine] GGUF_DYNAMIC_GEOMETRY_001=PASS arch=deepseek2 L=61 H=7168 FFN=2048 heads=64 kv=1 hd=576 ctx=4096
+[Deep2Engine] AUTHORITY_LADDER=DEFER_UNTIL_RUNTIME_RECEIPT
+[Deep2Engine] GlobalTensorIndex built: 1096 tensors across 13 shards
+[Deep2Engine] TensorResidencyCache ready
+[Deep2Engine] GGUF architecture: 'deepseek2'  hidden=7168 layers=61 heads=64 kvHeads=1 inter=2048 vocab=163840
+[Deep2Engine] MLA detected: qLoraRank=1536 kvLoraRank=512 qkNope=128 qkRope=64 vHeadDim=128 headDim=192
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf 46.30GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe lane armed via SHARD_IO (warmed=13)
+[Deep2Engine] K2 shard index open: 1096 tensors, 13 shards, arch=deepseek2
+[Deep2Engine] K2 tokenizer loaded: vocab=163840 bos=163584 eos=163586
+[Deep2Engine] K2 select-time PrefetchLayer L0..+3 budget=268435456
+[Deep2Engine] AUTHORITY_LADDER=PASS (K2_INDEX shard0)
+[Deep2Engine] loadModel=INDEX_AND_ADDRESS (F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M) ModelState=Indexed � weights not resident
+MODEL_SIZE_INDEPENDENT_LOAD=1
+RAWRXD_NO_TP=1
+QUANTIZED_STORAGE_PRESERVED=1
+FULL_MODEL_RESIDENCY_REQUIRED=0
+FULL_LAYER_RESIDENCY_REQUIRED=0
+VRAM_REQUIRED=0
+VRAM_BYTES_REQUIRED=0
+WEIGHT_RESIDENCY_BOUNDED=1
+KV_RESIDENCY_BOUNDED=1
+EXECUTION_OWNER_PER_TENSOR=1
+TENSOR_PARTITIONS=0
+CROSS_DEVICE_COLLECTIVES=0
+ALL_REDUCE_OPS=0
+ONE_TENSOR_ONE_OWNER=1
+WEIGHT_WINDOW_BYTES=0
+ACTIVATION_LIVE_BYTES=86016
+KV_HOT_BYTES=0
+SCRATCH_BYTES=28672
+WORKING_SET_BYTES=114688
+SPACE_CAPACITY_BYTES=536870912
+SPACE_OCCUPIED_BYTES=0
+SPACE_RECLAIMABLE_BYTES=0
+SPACE_SUFFICIENT=1
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 7168
+  Num Layers: 61
+  Num Heads: 64
+  Num KV Heads: 1
+  Head Dim: 192
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Addressable: layers=61 virtualSeq=4096 kv_heads=1 headDim=192 (hot pages only)
+[KVCache] Lazy pages: layers=61 page=8 virtualMax=4096 heads=1 dim=192
+[KVCache] HOT_BYTES=749568 (not layers*maxSeq*heads)
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] Q4_K GEMV=00007FF640E3D5C0 dequant=00007FF640E3AC50 GetGEMV(12)=00007FF640E3D5C0 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 22 GEMV kernels, 22 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] ENHANCEMENT STACK: ON
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=2
+DEEP2_COMPUTE_BACKEND=MULTIGPU
+DEEP2_EXEC_PATH=MULTIGPU
+DEEP2_EXEC_MODE=2
+DEEP2_GPU_POLICY=3
+DEEP2_PLAN_REASON=auto_multi_device_class
+DEEP2_PRIMARY_INDEX=0
+DEEP2_PRIMARY_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_PRIMARY_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_DEVICE_0_VENDOR=AMD
+DEEP2_DEVICE_0_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_DEVICE_0_VRAM_BYTES=34054242304
+DEEP2_DEVICE_0_SCORE=133
+DEEP2_DEVICE_0_DUTY=COMPUTE_PRIMARY
+DEEP2_DEVICE_1_NAME=AMD Radeon(TM) Graphics
+DEEP2_DEVICE_1_VENDOR=AMD
+DEEP2_DEVICE_1_STABLE_ID=1002:164E:000000000001BCC7
+DEEP2_DEVICE_1_VRAM_BYTES=509353984
+DEEP2_DEVICE_1_SCORE=1
+DEEP2_DEVICE_1_DUTY=EXCLUDED
+DEEP2_DEVICE_2_NAME=AMD Radeon RX 7800 XT
+DEEP2_DEVICE_2_VENDOR=AMD
+DEEP2_DEVICE_2_STABLE_ID=1002:747E:0000000000018BF1
+DEEP2_DEVICE_2_VRAM_BYTES=16962809856
+DEEP2_DEVICE_2_SCORE=116
+DEEP2_DEVICE_2_DUTY=COMPUTE_SECONDARY
+DEEP2_COST_T_BEST=0.265362
+DEEP2_COST_CUT=33
+DEEP2_COST_KEEP=0
+DEEP2_COST_WINNER=SPLIT
+DEEP2_COST_MODEL=PIPELINE_V2
+DEEP2_COST_DUAL_DEVICES_KEPT=2
+DEEP2_COST_SLOT0_LAYERS=0-32
+DEEP2_COST_SLOT1_LAYERS=33-60
+DEEP2_COST_VRAM_GATE=0
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] OPEN_ONE AMD Radeon AI PRO R9700 (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=0 AMD Radeon AI PRO R9700 layers=0-32 kind=GPU
+[VulkanCompute] DETECTED phys[0] type=2 AMD Radeon AI PRO R9700
+[VulkanCompute] DETECTED phys[1] type=2 AMD Radeon RX 7800 XT
+[VulkanCompute] OPEN_ONE AMD Radeon RX 7800 XT (others unused)
+[VulkanCompute] QUEUES compute=0 transfer=1 dual=1
+[VulkanCompute] FREETOKEN_STICK_RUB transfer_q=1 waw_ready_gate=1 helpframe_nway=4
+[Deep2Engine] LAYER_EXEC OPEN slot=1 AMD Radeon RX 7800 XT layers=33-60 kind=GPU
+DEEP2_MULTI_GPU_PLAN=ACTIVE
+DEEP2_HYBRID_PLAN=INACTIVE
+DEEP2_DEVICE_OPENED_COUNT=2
+DEEP2_DEVICE_PLANNED_COUNT=2
+DEEP2_DEVICE_EXECUTING_COUNT=0
+DEEP2_LAYERS_EXECUTED=0
+DEEP2_REAL_GPU_LAYER_EXEC=0
+DEEP2_REAL_GPU_LAYER_COVERAGE=0
+DEEP2_PLAN_DEVICE_COUNT=2
+DEEP2_PLAN_NUM_LAYERS=61
+DEEP2_PLAN_SLOT_0_STABLE_ID=1002:7551:0000000000015AB9
+DEEP2_PLAN_SLOT_0_NAME=AMD Radeon AI PRO R9700
+DEEP2_PLAN_SLOT_0_KIND=GPU
+DEEP2_PLAN_SLOT_0_LAYER_RANGE=0-32
+DEEP2_PLAN_SLOT_0_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_0_SCORE=133
+DEEP2_PLAN_SLOT_1_STABLE_ID=1002:747E:0000000000018BF1
+DEEP2_PLAN_SLOT_1_NAME=AMD Radeon RX 7800 XT
+DEEP2_PLAN_SLOT_1_KIND=GPU
+DEEP2_PLAN_SLOT_1_LAYER_RANGE=33-60
+DEEP2_PLAN_SLOT_1_LAYER_EXECS=0
+DEEP2_PLAN_SLOT_1_SCORE=116
+DEEP2_LAYER_0_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_0_EXECUTED=0
+DEEP2_LAYER_1_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_1_EXECUTED=0
+DEEP2_LAYER_2_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_2_EXECUTED=0
+DEEP2_LAYER_3_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_3_EXECUTED=0
+DEEP2_LAYER_4_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_4_EXECUTED=0
+DEEP2_LAYER_5_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_5_EXECUTED=0
+DEEP2_LAYER_6_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_6_EXECUTED=0
+DEEP2_LAYER_7_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_7_EXECUTED=0
+DEEP2_LAYER_8_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_8_EXECUTED=0
+DEEP2_LAYER_9_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_9_EXECUTED=0
+DEEP2_LAYER_10_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_10_EXECUTED=0
+DEEP2_LAYER_11_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_11_EXECUTED=0
+DEEP2_LAYER_12_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_12_EXECUTED=0
+DEEP2_LAYER_13_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_13_EXECUTED=0
+DEEP2_LAYER_14_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_14_EXECUTED=0
+DEEP2_LAYER_15_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_15_EXECUTED=0
+DEEP2_LAYER_16_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_16_EXECUTED=0
+DEEP2_LAYER_17_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_17_EXECUTED=0
+DEEP2_LAYER_18_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_18_EXECUTED=0
+DEEP2_LAYER_19_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_19_EXECUTED=0
+DEEP2_LAYER_20_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_20_EXECUTED=0
+DEEP2_LAYER_21_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_21_EXECUTED=0
+DEEP2_LAYER_22_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_22_EXECUTED=0
+DEEP2_LAYER_23_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_23_EXECUTED=0
+DEEP2_LAYER_24_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_24_EXECUTED=0
+DEEP2_LAYER_25_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_25_EXECUTED=0
+DEEP2_LAYER_26_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_26_EXECUTED=0
+DEEP2_LAYER_27_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_27_EXECUTED=0
+DEEP2_LAYER_28_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_28_EXECUTED=0
+DEEP2_LAYER_29_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_29_EXECUTED=0
+DEEP2_LAYER_30_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_30_EXECUTED=0
+DEEP2_LAYER_31_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_31_EXECUTED=0
+DEEP2_LAYER_32_DEVICE=1002:7551:0000000000015AB9
+DEEP2_LAYER_32_EXECUTED=0
+DEEP2_LAYER_33_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_33_EXECUTED=0
+DEEP2_LAYER_34_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_34_EXECUTED=0
+DEEP2_LAYER_35_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_35_EXECUTED=0
+DEEP2_LAYER_36_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_36_EXECUTED=0
+DEEP2_LAYER_37_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_37_EXECUTED=0
+DEEP2_LAYER_38_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_38_EXECUTED=0
+DEEP2_LAYER_39_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_39_EXECUTED=0
+DEEP2_LAYER_40_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_40_EXECUTED=0
+DEEP2_LAYER_41_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_41_EXECUTED=0
+DEEP2_LAYER_42_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_42_EXECUTED=0
+DEEP2_LAYER_43_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_43_EXECUTED=0
+DEEP2_LAYER_44_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_44_EXECUTED=0
+DEEP2_LAYER_45_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_45_EXECUTED=0
+DEEP2_LAYER_46_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_46_EXECUTED=0
+DEEP2_LAYER_47_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_47_EXECUTED=0
+DEEP2_LAYER_48_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_48_EXECUTED=0
+DEEP2_LAYER_49_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_49_EXECUTED=0
+DEEP2_LAYER_50_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_50_EXECUTED=0
+DEEP2_LAYER_51_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_51_EXECUTED=0
+DEEP2_LAYER_52_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_52_EXECUTED=0
+DEEP2_LAYER_53_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_53_EXECUTED=0
+DEEP2_LAYER_54_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_54_EXECUTED=0
+DEEP2_LAYER_55_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_55_EXECUTED=0
+DEEP2_LAYER_56_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_56_EXECUTED=0
+DEEP2_LAYER_57_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_57_EXECUTED=0
+DEEP2_LAYER_58_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_58_EXECUTED=0
+DEEP2_LAYER_59_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_59_EXECUTED=0
+DEEP2_LAYER_60_DEVICE=1002:747E:0000000000018BF1
+DEEP2_LAYER_60_EXECUTED=0
+[Deep2Engine] MULTI contiguous layers ACTIVE devices=2 strict=1
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_OPEN=1
+[Deep2Engine] BATCH2_SSVK_PACKED_DUAL_BOUND=1
+[Deep2Engine] BIND16_SSVK_PRODUCT_BOUND=1
+ELASTIC_DYNAMIC warm=2304MB staged=288MB hot=8784MB la=3 ramAvail=45653MB vram=32476MB L=61 pressure=0
+[ElasticResidencyManager] PASSIVE vulkan/DualStick (no scheduler, no GhostCache)
+[ElasticResidencyManager] Initialized: warmCompressed=2304 MB, warmStaged=288 MB, hot=8784 MB, lookahead=3
+[Deep2Engine] ElasticResidencyManager DYNAMIC warm=2304 staged=288 hot=8784 la=3
+[Deep2Engine] ElasticResidencyManager: late-registered model tensors
+[Deep2Engine] CycloneScheduler armed for live generate
+[Deep2Engine] Residency telemetry: ENABLED
+[Deep2Engine] Medusa speculative decoding: ENABLED
+[Deep2Engine] NU fused packing: ENABLED
+[Deep2Engine] Warmup scheduler: ENABLED
+[Deep2Engine] Compressed KV cache: ENABLED (Q8_0)
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Sliding window: ENABLED (size=4096)
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber: ENABLED
+[Deep2Engine] PlasmaGovernor initialized
+[Deep2Engine] PlasmaGovernor: ENABLED
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] ToroidalKVCache initialized: 4096 tokens, 61 layers, 64 heads, 192 dim
+[Deep2Engine] ToroidalKVCache: ENABLED
+[Deep2Engine] RESIDENCY_BRAID stamped=0 slots=2 (Router?Expert?Residency?Transfer?GPU cache)
+[Deep2Engine] MARS_STANDBY=1 REASON=K2_STREAM_AUTHORITY MARS_AUTHORITY=HOST_RESIDENT_DENSE_MODELS DISQUALIFY=BOUNDED_STREAM|K2_SHARD_DIR|REAL_K2|INDEX_OPEN RULE=IF_TRUE_NEVER_USE K2_STREAM_AUTHORITY=ELASTIC_RESIDENCY+SHARD_IO PLACEMENT_INVENTORY=SHARED:0 CONTROLLER_ON_PLACED_0=STANDBY
+GEN=0 BIND16_LINKED=1 PACKED_Q2K_READY=1 SSVK_READY=1 DUALSTICK_ARMED=1 GPU_RESIDENT=1 MODEL_LOADED=1 DEVICE_COUNT=2 FWD_G0=0 FWD_G1=0 RESIDENCY_EPOCH=1 MODEL_EPOCH=1
+CONTINUITY_POINT=AFTER_FN_RESET
+REVERSE_COMPLETION_BEGIN
+GOAL=GENERATION_COMPLETE
+STREAM_STATUS=READY
+TIMER_BASED_START=0
+WOULD_START_STATUS=0
+REVERSE_COMPLETION_PLAN=1
+MODEL_INDEXED=1
+TENSOR_MAP_COMPLETE=1
+HYBRID_LAYER_ROUTE=1
+CHOREOGRAPHY_READY=1
+SPACE_SUFFICIENT=1
+KV_HOTSET_READY=1
+WEIGHT_WINDOW_READY=1
+HOST_Q8_GEMV_SAFE=1
+READY_REASON=ALL_COMPLETION_NEEDS_SATISFIED
+NEXT_ACTION=CALL_GENERATE_STREAM
+READY_WORK_ONLY=1
+REVERSE_COMPLETION_END
+STREAM_STATUS=READY
+NEXT_ACTION=CALL_GENERATE_STREAM
+GENERATE_STREAM_ENTER=1 ARCH=deepseek2 LAYERS=61 KV_HEADS=1 HEAD_DIM=192
+[Deep2Engine] Initializing VAL-000 advanced features...
+[MedusaDecoder] Initialized: 4 heads, topK=10, maxTree=40
+[Deep2Engine] Medusa decoder initialized (4 heads)
+[Deep2Engine] NU Fused Packer initialized
+[CompressedKVCache] Initialized: 102 MB compressed (vs 366 MB F32, 3.6x ratio)
+[Deep2Engine] Compressed KV cache initialized (Q8_0)
+[NVMeStream] RAWRXD_NVME_REVERSE_BUNNYHOP=1 → force reverse bunnyhop
+[NVMeBunnyHop] UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf 46.30GB c=4194304 u=1 hp=1
+[NVMeStream] REVERSE_BUNNYHOP UNLAIDOUT_REVERSE_CHUNK_HOTPATCH_BUNNYHOP
+[Deep2Engine] NVMe REVERSE_BUNNYHOP (unlaidout hotpatch)
+[SlidingWindow] Initialized: window=4096, overlap=512, chunk=2048
+[Deep2Engine] Sliding window initialized (size=4096)
+[Deep2Engine] Advanced features initialization complete
+[Deep2Engine] STACK vk=1 mars=0 elastic=1 cyclone=1 medusa=1 nu=1 warmup=1 ckv=1 nvme=1 slide=1 chamber=1 torus=1 plasma=1 sov=1 prefetch=1 devices=2
+[Deep2Engine] Initialization complete
+[Deep2Engine] Medusa speculative decoding: DISABLED
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[ChatTemplate] Detected 'deepseek' from model metadata (arch=deepseek2)
+LIVE_FORWARD=forwardTokenAllLayers
+LIVE_MLA_DISPATCH=MLA_Gemv
+LIVE_K2_OWNERSHIP=generateStream?runK2NativeStreamPartial
+AUTO_POLICY_ACTIVE=0
+MANUAL_ARM_FORCING=1
+K2_LIVE_POLICY_ARM=TRAMPOLINE_OUTPUT_CACHE
+K2_LIVE_POLICY_MODE=2
+K2_LIVE_POLICY_REASON=manual_preserve_mech
+K2_LIVE_POLICY_REUSE_STEPS=488
+K2_LIVE_POLICY_CROSSOVER_STEPS=8
+LAYER_COUNT=61 TOKENS=8
+CACHE_BUDGET=12884901888 PREDICTED_LAYER=3373300000 PREDICTED_OUTPUT=963379200
+BUDGET_FIT=1 LAYER_VETO=0
+POLICY_SWITCHES_PER_REQUEST=1
+LIVE_PATH_ENV=1 MECH_ENV=trampoline,cyclone,elastic,stream WANTED=1
+[Deep2Engine] LIVE_SETUP begin wanted=1
+[Deep2Engine] NVMe streaming: ENABLED
+[Deep2Engine] Initializing VAL-000 advanced features...
+[Deep2Engine] Advanced features initialization complete
+[LivePath] GENERATE_ALG_MASK=0x0000010E random=0
+[StreamEngine] Initialized: 61 layers, even compression, ON reuse, ON reconstruct, ON dense
+[StreamEngine] VRAM budget: 16.00 GB
+[StreamEngine] Chunk size: 1.09 GB compressed, 8.72 GB original, 0.54 GB reconstructed
+[unreverseHot] streamDead(0) → Reverse0 (layers=61)
+[Deep2Engine] LIVE_SETUP ok active=1
+STEP_ENTER STEP=0/8
+STREAM_HEARTBEAT STEP=0/8 TEARDOWN_WITNESS=0
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[VulkanCompute] Q4K_SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv bytes=7592
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[VulkanCompute] Q4K_SPV=G:/~dev/rawrxd/src/backend/gemv_q4k.spv bytes=7592
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] T0_L39_ENTER
+CUMULATIVE_LAST tok=0 layer=39 stage=ENTER
+T0_L39_NORM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,380,355,241,180,333,7,123]
+L39_PLACE_DONE hits=0 misses=8
+T0_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=ROUTED_ACCUM_DONE
+T0_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_BEGIN
+T0_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_GATE_ACQUIRE
+T0_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_DOWN_DONE
+T0_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=SHARED_ACCUM_DONE
+T0_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=0 layer=39 stage=RESIDUAL_DONE
+T0_L39_EXIT
+CUMULATIVE_LAST tok=0 layer=39 stage=EXIT
+layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=241691.928
+FINAL_NORM_MEAN_SQ=33.7181819
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.172213763
+FINAL_NORM_SRC_0=11.9089451
+FINAL_NORM_DST_0=2.21110964
+FINAL_NORM_AFTER_L2=89.7712005
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=0/8 LAST_INDEX=7167 LAST_VALUE=-1.73610735
+HIDDEN_PROBE_ATTEMPT STEP=0/8
+HIDDEN_PROBE STEP=0/8 INDEX=2946 COUNT=7168 VALUE=0.39340207 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=0/8 INDEX=7167 VALUE=-1.73610735 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=0/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=0/8
+LOGITS_ENTRY STEP=0/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=0/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=0/8
+LOGITS_PROJECT_END STEP=0/8
+LOGITS_ARGMAX_END STEP=0/8 TOK=35054
+LOGITS_RETURN_OK STEP=0/8 TOK=35054
+STEP_EXIT STEP=0/8
+STEP_ENTER STEP=1/8
+7: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → dirT1_L39_ENTER
+CUMULATIVE_LAST tok=1 layer=39 stage=ENTER
+T1_L39_NORM_DONE
+CUMULATIVE_LAST tok=1 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,281,180,88,7,380,306]
+L39_PLACE_DONE hits=5 misses=3
+T1_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=1 layer=39 stage=ROUTED_ACCUM_DONE
+T1_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=1 layer=39 stage=SHARED_GATE_BEGIN
+T1_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=1 layer=39 stage=SHARED_GATE_ACQUIRE
+T1_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=1 layer=39 stage=SHARED_DOWN_DONE
+T1_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=1 layer=39 stage=SHARED_ACCUM_DONE
+T1_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=1 layer=39 stage=RESIDUAL_DONE
+T1_L39_EXIT
+CUMULATIVE_LAST tok=1 layer=39 stage=EXIT
+ection chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=235570.682
+FINAL_NORM_MEAN_SQ=32.8642135
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.174436882
+FINAL_NORM_SRC_0=8.54997826
+FINAL_NORM_DST_0=1.60794973
+FINAL_NORM_AFTER_L2=89.4945433
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=1/8 LAST_INDEX=7167 LAST_VALUE=-1.99881887
+HIDDEN_PROBE_ATTEMPT STEP=1/8
+HIDDEN_PROBE STEP=1/8 INDEX=1492 COUNT=7168 VALUE=0.565281212 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=1/8 INDEX=7167 VALUE=-1.99881887 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=1/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=1/8
+LOGITS_ENTRY STEP=1/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=1/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=1/8
+LOGITS_PROJECT_END STEP=1/8
+LOGITS_ARGMAX_END STEP=1/8 TOK=35054
+LOGITS_RETURN_OK STEP=1/8 TOK=35054
+STEP_EXIT STEP=1/8
+STEP_ENTER STEP=2/8
+chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompressT2_L39_ENTER
+CUMULATIVE_LAST tok=2 layer=39 stage=ENTER
+T2_L39_NORM_DONE
+CUMULATIVE_LAST tok=2 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,306,88,281,180,380,251]
+L39_PLACE_DONE hits=7 misses=1
+T2_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=2 layer=39 stage=ROUTED_ACCUM_DONE
+T2_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=2 layer=39 stage=SHARED_GATE_BEGIN
+T2_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=2 layer=39 stage=SHARED_GATE_ACQUIRE
+T2_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=2 layer=39 stage=SHARED_DOWN_DONE
+T2_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=2 layer=39 stage=SHARED_ACCUM_DONE
+T2_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=2 layer=39 stage=RESIDUAL_DONE
+T2_L39_EXIT
+CUMULATIVE_LAST tok=2 layer=39 stage=EXIT
+ion] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] laHEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=230517.609
+FINAL_NORM_MEAN_SQ=32.1592646
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.176338404
+FINAL_NORM_SRC_0=9.17277336
+FINAL_NORM_DST_0=1.74388039
+FINAL_NORM_AFTER_L2=89.9438277
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=2/8 LAST_INDEX=7167 LAST_VALUE=-2.02945876
+HIDDEN_PROBE_ATTEMPT STEP=2/8
+HIDDEN_PROBE STEP=2/8 INDEX=6112 COUNT=7168 VALUE=0.264770329 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=2/8 INDEX=7167 VALUE=-2.02945876 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=2/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=2/8
+LOGITS_ENTRY STEP=2/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=2/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=2/8
+LOGITS_PROJECT_END STEP=2/8
+LOGITS_ARGMAX_END STEP=2/8 TOK=35054
+LOGITS_RETURN_OK STEP=2/8 TOK=35054
+STEP_EXIT STEP=2/8
+STEP_ENTER STEP=3/8
+yer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active,T3_L39_ENTER
+CUMULATIVE_LAST tok=3 layer=39 stage=ENTER
+T3_L39_NORM_DONE
+CUMULATIVE_LAST tok=3 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,380,88,281,306,95,382]
+L39_PLACE_DONE hits=6 misses=2
+T3_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=3 layer=39 stage=ROUTED_ACCUM_DONE
+T3_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=3 layer=39 stage=SHARED_GATE_BEGIN
+T3_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=3 layer=39 stage=SHARED_GATE_ACQUIRE
+T3_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=3 layer=39 stage=SHARED_DOWN_DONE
+T3_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=3 layer=39 stage=SHARED_ACCUM_DONE
+T3_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=3 layer=39 stage=RESIDUAL_DONE
+T3_L39_EXIT
+CUMULATIVE_LAST tok=3 layer=39 stage=EXIT
+ 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GHEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=244554.368
+FINAL_NORM_MEAN_SQ=34.1175178
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.171202928
+FINAL_NORM_SRC_0=9.5223856
+FINAL_NORM_DST_0=1.75762439
+FINAL_NORM_AFTER_L2=89.896198
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=3/8 LAST_INDEX=7167 LAST_VALUE=-1.42807758
+HIDDEN_PROBE_ATTEMPT STEP=3/8
+HIDDEN_PROBE STEP=3/8 INDEX=2289 COUNT=7168 VALUE=-1.15554214 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=3/8 INDEX=7167 VALUE=-1.42807758 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=3/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=3/8
+LOGITS_ENTRY STEP=3/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=3/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=3/8
+LOGITS_PROJECT_END STEP=3/8
+LOGITS_ARGMAX_END STEP=3/8 TOK=35054
+LOGITS_RETURN_OK STEP=3/8 TOK=35054
+STEP_EXIT STEP=3/8
+STEP_ENTER STEP=4/8
+B → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverT4_L39_ENTER
+CUMULATIVE_LAST tok=4 layer=39 stage=ENTER
+T4_L39_NORM_DONE
+CUMULATIVE_LAST tok=4 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,88,380,95,281,306,251]
+L39_PLACE_DONE hits=8 misses=0
+T4_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=4 layer=39 stage=ROUTED_ACCUM_DONE
+T4_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=4 layer=39 stage=SHARED_GATE_BEGIN
+T4_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=4 layer=39 stage=SHARED_GATE_ACQUIRE
+T4_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=4 layer=39 stage=SHARED_DOWN_DONE
+T4_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=4 layer=39 stage=SHARED_ACCUM_DONE
+T4_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=4 layer=39 stage=RESIDUAL_DONE
+T4_L39_EXIT
+CUMULATIVE_LAST tok=4 layer=39 stage=EXIT
+se0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] laHEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=235067.054
+FINAL_NORM_MEAN_SQ=32.7939528
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.174623638
+FINAL_NORM_SRC_0=6.9471159
+FINAL_NORM_DST_0=1.30790651
+FINAL_NORM_AFTER_L2=89.9285173
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=4/8 LAST_INDEX=7167 LAST_VALUE=-1.68406165
+HIDDEN_PROBE_ATTEMPT STEP=4/8
+HIDDEN_PROBE STEP=4/8 INDEX=4699 COUNT=7168 VALUE=-1.23386908 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=4/8 INDEX=7167 VALUE=-1.68406165 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=4/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=4/8
+LOGITS_ENTRY STEP=4/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=4/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=4/8
+LOGITS_PROJECT_END STEP=4/8
+LOGITS_ARGMAX_END STEP=4/8 TOK=35054
+LOGITS_RETURN_OK STEP=4/8 TOK=35054
+STEP_EXIT STEP=4/8
+STEP_ENTER STEP=5/8
+yer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved �T5_L39_ENTER
+CUMULATIVE_LAST tok=5 layer=39 stage=ENTER
+T5_L39_NORM_DONE
+CUMULATIVE_LAST tok=5 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,380,88,251,281,95,306]
+L39_PLACE_DONE hits=8 misses=0
+T5_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=5 layer=39 stage=ROUTED_ACCUM_DONE
+T5_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=5 layer=39 stage=SHARED_GATE_BEGIN
+T5_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=5 layer=39 stage=SHARED_GATE_ACQUIRE
+T5_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=5 layer=39 stage=SHARED_DOWN_DONE
+T5_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=5 layer=39 stage=SHARED_ACCUM_DONE
+T5_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=5 layer=39 stage=RESIDUAL_DONE
+T5_L39_EXIT
+CUMULATIVE_LAST tok=5 layer=39 stage=EXIT
+� direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direcHEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=229741.601
+FINAL_NORM_MEAN_SQ=32.0510046
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.176635951
+FINAL_NORM_SRC_0=6.61079788
+FINAL_NORM_DST_0=1.25893152
+FINAL_NORM_AFTER_L2=89.9758335
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=5/8 LAST_INDEX=7167 LAST_VALUE=-1.58493805
+HIDDEN_PROBE_ATTEMPT STEP=5/8
+HIDDEN_PROBE STEP=5/8 INDEX=2847 COUNT=7168 VALUE=0.155687898 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=5/8 INDEX=7167 VALUE=-1.58493805 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=5/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=5/8
+LOGITS_ENTRY STEP=5/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=5/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=5/8
+LOGITS_PROJECT_END STEP=5/8
+LOGITS_ARGMAX_END STEP=5/8 TOK=131185
+LOGITS_RETURN_OK STEP=5/8 TOK=131185
+STEP_EXIT STEP=5/8
+STEP_ENTER STEP=6/8
+tion chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructComT6_L39_ENTER
+CUMULATIVE_LAST tok=6 layer=39 stage=ENTER
+T6_L39_NORM_DONE
+CUMULATIVE_LAST tok=6 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,88,306,95,363,380,270]
+L39_PLACE_DONE hits=6 misses=2
+T6_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=6 layer=39 stage=ROUTED_ACCUM_DONE
+T6_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=6 layer=39 stage=SHARED_GATE_BEGIN
+T6_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=6 layer=39 stage=SHARED_GATE_ACQUIRE
+T6_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=6 layer=39 stage=SHARED_DOWN_DONE
+T6_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=6 layer=39 stage=SHARED_ACCUM_DONE
+T6_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=6 layer=39 stage=RESIDUAL_DONE
+T6_L39_EXIT
+CUMULATIVE_LAST tok=6 layer=39 stage=EXIT
+pression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompressioHEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=228033.868
+FINAL_NORM_MEAN_SQ=31.8127606
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.177296132
+FINAL_NORM_SRC_0=3.26632476
+FINAL_NORM_DST_0=0.624349475
+FINAL_NORM_AFTER_L2=90.0350335
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=6/8 LAST_INDEX=7167 LAST_VALUE=-2.17899799
+HIDDEN_PROBE_ATTEMPT STEP=6/8
+HIDDEN_PROBE STEP=6/8 INDEX=4623 COUNT=7168 VALUE=-1.293414 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=6/8 INDEX=7167 VALUE=-2.17899799 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=6/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=6/8
+LOGITS_ENTRY STEP=6/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=6/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=6/8
+LOGITS_PROJECT_END STEP=6/8
+LOGITS_ARGMAX_END STEP=6/8 TOK=18883
+LOGITS_RETURN_OK STEP=6/8 TOK=18883
+STEP_EXIT STEP=6/8
+STEP_ENTER STEP=7/8
+n] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 0: neutral resolved → direction chosen
+[ReconstructCompression] layer 0: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 1: neutral resolved → direction chosen
+[ReconstructCompression] layer 1: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 2: neutral resolved → direction chosen
+[ReconstructCompression] layer 2: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 3: neutral resolved → direction chosen
+[ReconstructCompression] layer 3: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 4: neutral resolved → direction chosen
+[ReconstructCompression] layer 4: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 5: neutral resolved → direction chosen
+[ReconstructCompression] layer 5: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 6: neutral resolved → direction chosen
+[ReconstructCompression] layer 6: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 7: neutral resolved → direction chosen
+[ReconstructCompression] layer 7: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 8: neutral resolved → direction chosen
+[ReconstructCompression] layer 8: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 9: neutral resolved → direction chosen
+[ReconstructCompression] layer 9: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 10: neutral resolved → direction chosen
+[ReconstructCompression] layer 10: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 11: neutral resolved → direction chosen
+[ReconstructCompression] layer 11: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 12: neutral resolved → direction chosen
+[ReconstructCompression] layer 12: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 13: neutral resolved → direction chosen
+[ReconstructCompression] layer 13: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 14: neutral resolved → direction chosen
+[ReconstructCompression] layer 14: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 15: neutral resolved → direction chosen
+[ReconstructCompression] layer 15: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 16: neutral resolved → direction chosen
+[ReconstructCompression] layer 16: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 17: neutral resolved → direction chosen
+[ReconstructCompression] layer 17: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 18: neutral resolved → direction chosen
+[ReconstructCompression] layer 18: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 19: neutral resolved → direction chosen
+[ReconstructCompression] layer 19: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 20: neutral resolved → direction chosen
+[ReconstructCompression] layer 20: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 21: neutral resolved → direction chosen
+[ReconstructCompression] layer 21: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 22: neutral resolved → direction chosen
+[ReconstructCompression] layer 22: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 23: neutral resolved → direction chosen
+[ReconstructCompression] layer 23: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 24: neutral resolved → direction chosen
+[ReconstructCompression] layer 24: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 25: neutral resolved → direction chosen
+[ReconstructCompression] layer 25: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 26: neutral resolved → direction chosen
+[ReconstructCompression] layer 26: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 27: neutral resolved → direction chosen
+[ReconstructCompression] layer 27: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 28: neutral resolved → direction chosen
+[ReconstructCompression] layer 28: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 29: neutral resolved → direction chosen
+[ReconstructCompression] layer 29: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 30: neutral resolved → direction chosen
+[ReconstructCompression] layer 30: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 31: neutral resolved → direction chosen
+[ReconstructCompression] layer 31: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 32: neutral resolved → direction chosen
+[ReconstructCompression] layer 32: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 33: neutral resolved → direction chosen
+[ReconstructCompression] layer 33: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 34: neutral resolved → direction chosen
+[ReconstructCompression] layer 34: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 35: neutral resolved → direction chosen
+[ReconstructCompression] layer 35: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 36: neutral resolved → direction chosen
+[ReconstructCompression] layer 36: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 37: neutral resolved → direction chosen
+[ReconstructCompression] layer 37: 4/64 slices active, 8T7_L39_ENTER
+CUMULATIVE_LAST tok=7 layer=39 stage=ENTER
+T7_L39_NORM_DONE
+CUMULATIVE_LAST tok=7 layer=39 stage=NORM_DONE
+L39_ROUTER_DONE ids=[341,241,88,306,380,251,111,363]
+L39_PLACE_DONE hits=7 misses=1
+T7_L39_ROUTED_ACCUM_DONE
+CUMULATIVE_LAST tok=7 layer=39 stage=ROUTED_ACCUM_DONE
+T7_L39_SHARED_GATE_BEGIN
+CUMULATIVE_LAST tok=7 layer=39 stage=SHARED_GATE_BEGIN
+T7_L39_SHARED_GATE_ACQUIRE
+CUMULATIVE_LAST tok=7 layer=39 stage=SHARED_GATE_ACQUIRE
+T7_L39_SHARED_DOWN_DONE
+CUMULATIVE_LAST tok=7 layer=39 stage=SHARED_DOWN_DONE
+T7_L39_SHARED_ACCUM_DONE
+CUMULATIVE_LAST tok=7 layer=39 stage=SHARED_ACCUM_DONE
+T7_L39_RESIDUAL_DONE
+CUMULATIVE_LAST tok=7 layer=39 stage=RESIDUAL_DONE
+T7_L39_EXIT
+CUMULATIVE_LAST tok=7 layer=39 stage=EXIT
+HEAP_OK_FINAL_NORM_BEFORE=1
+FINAL_NORM_SRC_PTR=0000029282C63840
+FINAL_NORM_DST_PTR=000002984A0C5060
+FINAL_NORM_WEIGHT_PTR=000002984A0CC080
+FINAL_NORM_WEIGHT_SOURCE=RESOLVE_BORROW
+FINAL_NORM_WEIGHT_FULFILLED=1
+FINAL_NORM_WEIGHT_BYTES=28672
+FINAL_NORM_WEIGHT_0=1.078125
+FINAL_NORM_WEIGHT_1=1.09375
+FINAL_NORM_WEIGHT_2=1.046875
+FINAL_NORM_WEIGHT_3=1.09375
+FINAL_NORM_WEIGHT_L2=90.4564927
+FINAL_NORM_SUMSQ=226232.405
+FINAL_NORM_MEAN_SQ=31.5614404
+FINAL_NORM_EPS=9.99999975e-06
+FINAL_NORM_INV_RMS=0.178000629
+FINAL_NORM_SRC_0=5.99289131
+FINAL_NORM_DST_0=1.15007734
+FINAL_NORM_AFTER_L2=89.964565
+HEAP_OK_FINAL_NORM_AFTER=1
+HIDDEN_PROD_LAST STEP=7/8 LAST_INDEX=7167 LAST_VALUE=-1.86187148
+HIDDEN_PROBE_ATTEMPT STEP=7/8
+HIDDEN_PROBE STEP=7/8 INDEX=1454 COUNT=7168 VALUE=0.815510333 BOUNDED=1 VALID=1
+HIDDEN_LAST STEP=7/8 INDEX=7167 VALUE=-1.86187148 VALID=1
+HIDDEN_PROBE_DISPOSITION STEP=7/8 EMITTED=1 REASON=OBSERVED
+HIDDEN_TO_LOGITS STEP=7/8
+LOGITS_ENTRY STEP=7/8 HIDDEN=0000029282C63840 HCOUNT=7168 MODEL_HD=7168 MODEL_VOCAB=163840 TYPE=14 BYTES=963379200
+LOGITS_CONTRACT_OK STEP=7/8 HCOUNT=7168 VOCAB=163840 ROW_B=5880 NEED=963379200 BASE=00000298A0DFA060 BORROW=1
+LOGITS_PROJECT_BEGIN STEP=7/8
+LOGITS_PROJECT_END STEP=7/8
+LOGITS_ARGMAX_END STEP=7/8 TOK=93032
+LOGITS_RETURN_OK STEP=7/8 TOK=93032
+STEP_EXIT STEP=7/8
+.72 GB → 0.54 GB
+[ResolveReverse0] layer 38: neutral resolved → direction chosen
+[ReconstructCompression] layer 38: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 39: neutral resolved → direction chosen
+[ReconstructCompression] layer 39: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 40: neutral resolved → direction chosen
+[ReconstructCompression] layer 40: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 41: neutral resolved → direction chosen
+[ReconstructCompression] layer 41: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 42: neutral resolved → direction chosen
+[ReconstructCompression] layer 42: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 43: neutral resolved → direction chosen
+[ReconstructCompression] layer 43: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 44: neutral resolved → direction chosen
+[ReconstructCompression] layer 44: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 45: neutral resolved → direction chosen
+[ReconstructCompression] layer 45: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 46: neutral resolved → direction chosen
+[ReconstructCompression] layer 46: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 47: neutral resolved → direction chosen
+[ReconstructCompression] layer 47: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 48: neutral resolved → direction chosen
+[ReconstructCompression] layer 48: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 49: neutral resolved → direction chosen
+[ReconstructCompression] layer 49: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 50: neutral resolved → direction chosen
+[ReconstructCompression] layer 50: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 51: neutral resolved → direction chosen
+[ReconstructCompression] layer 51: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 52: neutral resolved → direction chosen
+[ReconstructCompression] layer 52: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 53: neutral resolved → direction chosen
+[ReconstructCompression] layer 53: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 54: neutral resolved → direction chosen
+[ReconstructCompression] layer 54: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 55: neutral resolved → direction chosen
+[ReconstructCompression] layer 55: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 56: neutral resolved → direction chosen
+[ReconstructCompression] layer 56: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 57: neutral resolved → direction chosen
+[ReconstructCompression] layer 57: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 58: neutral resolved → direction chosen
+[ReconstructCompression] layer 58: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 59: neutral resolved → direction chosen
+[ReconstructCompression] layer 59: 4/64 slices active, 8.72 GB → 0.54 GB
+[ResolveReverse0] layer 60: neutral resolved → direction chosen
+[ReconstructCompression] layer 60: 4/64 slices active, 8.72 GB → 0.54 GB
+STREAM_BYTES_READ_RAW=7413274112
+STREAM_BYTES_RECON_RAW=720889856
+TRANSFER_BYTES_READ_TOTAL=3706637056
+TRANSFER_BYTES_TO_GPU_TOTAL=15770345472
+TRANSFER_BYTES_RECONSTRUCTED_TOTAL=360444928
+TRANSFER_READ_OPS=459
+TRANSFER_GPU_UPLOAD_OPS=2731
+STREAM_BYTES_READ_TOTAL=3706637056
+STREAM_BYTES_TO_GPU_TOTAL=15770345472
+STREAM_BYTES_RECONSTRUCTED_TOTAL=360444928
+STREAM_READ_OPS=459
+STREAM_GPU_UPLOAD_OPS=2731
+STREAM_CACHE_HITS=6379
+STREAM_CACHE_MISSES=919
+STREAM_BYTES_PER_TOKEN_INFLATED=926659264.0
+STREAM_BYTES_PER_TOKEN_MEASURED=463329632.0
+STREAM_BYTES_PER_TOKEN=50000000.0
+STREAM_NORM_TPS=150.000
+STREAM_REF_BW_BPS=7500000000
+STREAM_TOKENS_PER_BYTE_READ=2.000000000e-08
+STREAM_TPB_REVERSE_BPT=50000000.0
+STREAM_BYTES_PER_LAYER=15191135.5
+GPU_COPY_BYTES_TOTAL=31540690944
+GPU_COPY_OPS_TOTAL=5463
+GPU_WEIGHT_BYTES_TOTAL=0
+GPU_ACTIVATION_BYTES_TOTAL=0
+GPU_COPY_BYTES_PER_TOKEN=0.0
+GPU_COPY_BYTES_PER_LAYER=0.0
+GPU_COPY_LAYER_DENOM=0
+GPU_COPY_WAIT_US=2501444
+GPU_COPY_SUBMIT_US=84120
+GPU_COPY_OVERLAP_US=0
+GPU_COPY_OVERLAP_EVENTS=0
+GPU_COPY_OVERLAP_BYTES=0
+GPU_WEIGHT_CACHE_HITS=19497
+GPU_WEIGHT_CACHE_MISSES=3543
+GPU_WEIGHT_BYTES_ALREADY_LOCAL=172816809984
+GPU_WEIGHT_BYTES_FIRST_LOAD=31485640704
+GPU_WEIGHT_BYTES_RELOAD=0
+GPU_WEIGHT_SLOT_REUSES=0
+GPU_WEIGHT_REDUNDANT_UPLOADS=0
+LIVE_CACHE_BYTES=7413241856
+LIVE_CACHE_BYTES_PEAK=7413241856
+LIVE_CACHE_BUDGET=12884901888
+LIVE_CACHE_ENTRY_PEAK=911
+CACHE_HIT_RATE=0.888808
+CACHE_BYTES_SAVED=60562905088
+CACHE_EVICTIONS=0
+CACHE_EVICTION_BYTES=0
+PREFETCH_ACCEPTED=0
+PREFETCH_SUPPRESSED=0
+PREFETCH_ALREADY_RESIDENT=0
+OUTPUT_WEIGHT_RESIDENCY=963379200
+CACHE_BYTES_AFTER_WARM=7413241856
+TRAMP_OUTPUT_WEIGHT_HITS=16
+TRAMP_OUTPUT_WEIGHT_BYTES_SAVED=15414067200
+CYCLONE_LAYER_ACQUIRES=909
+CYCLONE_LAYER_HITS=6363
+ELASTIC_RESIDENT_HITS=6363
+COMBINED_DUPLICATE_ACQUIRES=0
+COMBINED_REDUNDANT_BYTES=0
+COMBINED_WAIT_US=0
+SHARD_OPEN_US=0
+SHARD_READ_US=12343437
+CACHE_LOOKUP_US=0
+CACHE_HIT_US=15
+LAYER_ACQUIRE_WAIT_US=0
+RECONSTRUCT_US=11
+OUTPUT_WEIGHT_US=987149
+MLA_COMPUTE_US=6708494
+LOGITS_US=841649
+SAMPLE_US=1
+STREAM_US=11509
+DETOK_US=1
+HOST_CACHE_COPY_US=0
+SHARD_ATTN_US=6982173 SHARD_MOE_US=30230179 SHARD_OTHER_US=726110
+NEXT_BEST_MOVE=SHARD_MOE_IO
+NEXT_BEST_MOVE_US=12343437
+RE_MANIFEST=MLA=6708494,LOGITS=841649,OUT_W=987149,SHARD=12343437,COPY=0
+ATTN_RESOLVE_TOTAL=4392 ATTN_RESOLVE_CACHE=3843 ATTN_RESOLVE_SHARD=549
+ATTN_CACHE_KEY_MISS=549 ATTN_CACHE_GEN_MISS=0 ATTN_CACHE_WS_VETO=0
+ATTN_CACHE_TYPE_MISMATCH=0 ATTN_CACHE_RANGE_MISMATCH=0
+ATTN_BORROW_BYTES=26976452608 ATTN_SHARD_BYTES=3853778944
+ATTN_SHARD_READ_CALLS=549 ATTN_SHARD_REOPEN=0 ATTN_MAPFAULT_CRITICAL=0
+VOCAB_RESOLVE_TOTAL=9 VOCAB_RESOLVE_CACHE=8 VOCAB_RESOLVE_SHARD=1
+VOCAB_SHARD_BYTES=963379200 VOCAB_SHARD_READ_CALLS=1
+Q6K_VOCAB_UPLOAD_TIMED=0 Q6K_RESIDENT_HIT=8
+Q6K_FULL_DEQUANT_BYTES=0 LOGITS_FULL_F32_MATERIALIZE=0
+HOT_ALLOC=0 SHARD_LOGITS_BYTES=0 SHARD_LOGITS_ROWS=0
+ARGMAX_PARITY_CHECKS=8 ARGMAX_PARITY_FAIL=0 ARGMAX_PARITY=1
+LOGITS_PACKED_DOT_ROWS=1310720 LOGITS_ARGMAX_CALLS=8
+LOGITS_CALLS=8 VOCAB_ROWS_VISITED=1310720 Q6_BLOCKS_VISITED=36700160
+LOGITS_TEMP_BYTES=8176 LOGITS_ALLOC_COUNT=0 LOGITS_THREADS=16
+LOGITS_FULL_MATERIALIZE=0 Q6_FULL_DEQUANT=0
+LOGITS_ROW_ACCESS_MS=0.000 LOGITS_Q6_DECODE_MS=0.000 LOGITS_DOT_MS=105.165
+LOGITS_REDUCE_MS=0.000 LOGITS_MISC_MS=0.042
+ARGMAX_TOKEN=93032 ARGMAX_VALUE=9.5695
+LOGITS_SPLIT_AUTO_BAIL_001=1
+LOGITS_CPU_ROWS=0
+LOGITS_GPU_ROWS=0
+LOGITS_CPU_US=0
+LOGITS_GPU_US=0
+LOGITS_JOIN_US=0
+LOGITS_SPLIT_WALL_US=0
+LOGITS_CPU_ONLY_EST_US=0
+LOGITS_SPLIT_PROFITABLE=0
+LOGITS_PATH_SELECTED=CPU_ONLY
+LOGITS_EXPOSED_US=0
+LOGITS_BAIL_HITS=0
+LOGITS_MODE=CPU_ONLY
+LOGITS_ROWS_TOTAL=0 LOGITS_ROW_ACCOUNTING=1
+GPU_LOGITS_FULL_READBACK=0 GPU_ARGMAX_BYTES=0 GPU_RANGE_OUT_BYTES=0
+CPU_ARGMAX_TOKEN=-1 GPU_ARGMAX_TOKEN=-1 FINAL_ARGMAX_TOKEN=-1
+CPU_BRANCH_US=0 GPU_BRANCH_US=0
+CPU_LOGIT_ROWS_PER_US=0.0000 GPU_LOGIT_ROWS_PER_US=0.0000
+MLA_Q_DEVICE_OPS=0 MLA_Q_DEVICE_FAIL=0
+PATHB_ATTEND=NONE
+PATHB_ATTEND_OK=0
+PATHB_ATTEND_FAIL=0
+q_b_d2h_bytes=0
+q_b_vkcopy_d2h_calls=0
+q_b_host_memcpy_bytes=0
+PATHB_QB_D2H_SKIP=0
+QB_HOST_RB_OWNER=QKV_READBACK_DOWNWARD TENSOR=q_b NEXT=HOST:MlaAttentionComplete BEFORE_B=0 AFTER_B=0 REDUCED=0 D2H_LEGAL=1 FENCE_NS=0
+QB_X_OPS=0 QB_X_SHRINK_OPS=0 QB_X_FULL_OPS=0
+QB_X_H2D_HIDDEN_B=0
+QB_X_D2H_TO_HOST_MIRROR_B=0
+QB_X_HOST_MIRROR_MEMCPY_B=0
+QB_X_FENCE_US=0
+QB_X_NOPE=0 QB_X_ROPE=0 QB_X_NOPE_PLUS_ROPE=0
+QB_X_PROD_HEAD=0 QB_X_HOST_HEAD=0
+QB_X_CALLER_ALREADY_NOPE_ROPE=0
+QB_X_BYTE_SHRINK_IMPOSSIBLE=0
+QB_X_DEVICE_ATTENTION_REQUIRED_FOR_Q_B_SHRINK=0
+QB_X_SHRINK_DEAD_REASON=none
+QB_X_MIRROR_GAP=D2H_TO_MIRROR_WAS_WEIGHT_TAGGED|HOST_MEMCPY_NOT_IN_GPU_TRANSFER
+QB_CROSS_SPLIT_OPS=0 QB_CROSS_SPLIT_ATTN_OPS=0
+QB_CROSS_SUBMIT_US=0
+QB_CROSS_FENCE_WAIT_US=0
+QB_CROSS_MAP_INVALIDATE_US=0
+QB_CROSS_HOST_MEMCPY_US=0
+QB_CROSS_HOST_ATTENTION_US=0
+QB_CROSS_LUMP_US=0
+QB_CROSS_FENCE_OWNER=FENCE_WAIT
+QB_CROSS_D2H_COPY_OWNER=INSIDE_FUSED_CB_WITH_FENCE
+QB_CROSS_HOST_CONSUME_OWNER=HOST_ATTENTION
+QB_CROSS_ACTION=KEEP
+QB_CROSS_BYTES_UNCHANGED_ALLOWED=1
+HOST_XCHG_DISCOVER=1
+HOST_XCHG_UNMIRRORED_BYTES=0
+HOST_XCHG_UNMIRRORED_OPS=0
+HOST_XCHG_MISLABELED_IN_MIRROR_BYTES=0
+EXCHANGE_MIRROR_REVERSE=1
+EXCHANGE_SLOT_COUNT=0
+EXCHANGE_OVERFLOW=0
+EXCHANGE_IN_MIRROR=0
+EXCHANGE_NOT_IN_MIRROR=0
+MLA_STAGE_QKV_US=2755187 MLA_STAGE_KV_EXPAND_US=315532 MLA_STAGE_ATTN_US=47915 MLA_STAGE_O_PROJ_US=3560414
+MLA_STAGE_SUM_US=6679048 MLA_COMPUTE_US=6708494 MLA_STAGE_OWNER=O_PROJ OWNER_US=3560414
+MLA_QA_US=1298856 MLA_QB_US=1320609 MLA_KVA_US=310872 MLA_QKV_PROJ_US=2755187
+MLA_QKV_PROJ_OWNER=q_b SUB_OWNER_US=1320609 (component; not routing)
+MLA_QKV_CRITICAL_OWNER=Q_BRANCH
+MLA_QKV_UPLOADS=0 MLA_QKV_HITS=0 MLA_QKV_FAIL=0
+Q_BRANCH_US=0 KV_BRANCH_US=0 QKV_JOIN_US=0
+QKV_OVERLAP_US=0 QKV_BUBBLE_US=0 QKV_WALL_VS_MAX_BRANCH=0.000
+Q_A_GPU_US=0 Q_A_WAIT_US=0 Q_A_UPLOAD_US=0 Q_A_KERNEL_US=0
+Q_B_GPU_US=0 Q_B_WAIT_US=0 Q_B_UPLOAD_US=0 Q_B_KERNEL_US=0
+Q_AB_GAP_US=1130 Q_BRANCH_PROBE_US=1130
+MLA_Q_CRITICAL_OWNER=gap SUB_OWNER_US=1130
+QKV_PROJ_WALL_NS=2755223000 QKV_PROJ_KERNEL_NS=0 QKV_PROJ_WAIT_NS=0 QKV_PROJ_SUBMIT_NS=0 QKV_PROJ_COPY_NS=0 QKV_PROJ_GAP_NS=2755223000 QKV_PROJ_BARRIER_NS=0
+QKV_Q_KERNEL_NS=0 QKV_K_KERNEL_NS=0 QKV_V_KERNEL_NS=0
+QKV_GPU_GEMV_OPS=0 QKV_GPU_GEMV_FAIL=0 QKV_WEIGHT_MISSES=0
+QKV_HOST_WAIT_NS=0 QKV_READBACK_BYTES=0
+QKV_SUB_OWNER=GAP SUB_OWNER_US=2755223 QKV_KERNEL_FRAC=0.000
+TAG1_SHARED_X=0 TAG2_SHARED_X=0 QB_SHARED_X=0
+KVA_SHARED_X=0 KVA_COL_SPLIT=0 KVA_PARTIAL_REDUCE=0 KVA_ROWS_PER_WG=16 KVA_TOTAL_WG=0
+QKV_SHARED_X_CALLS=0 QKV_SHARED_X_KERNEL_US=0
+CPU_F32_EXPANDS=0 HOST_FORWARD_LAYER_CALLS=0
+O_PROJ_CALLS=0
+O_PROJ_KERNEL_US=0
+O_PROJ_WAIT_US=0
+O_PROJ_GAP_US=3560386
+O_PROJ_UPLOAD_US=0
+O_PROJ_READBACK_US=0
+O_PROJ_SUBMIT_US=0
+O_PROJ_RAW_US=3560386
+O_PROJ_OVERLAPPED_US=0
+O_PROJ_EXPOSED_US=3560386
+O_PROJ_INPUT_UPLOAD_BYTES=0
+O_PROJ_INPUT_READBACK_BYTES=0
+O_PROJ_OUTPUT_READBACK_BYTES=0
+O_PROJ_SUBMITS=0
+O_PROJ_HOST_WAITS=0
+O_PROJ_RESIDUAL_FUSED=0
+O_PROJ_TILE_PIPELINE=1
+O_PROJ_FULL_F32_MATERIALIZE=0
+QUANTIZED_STORAGE_PRESERVED=1
+O_PROJ_SUB_OWNER=GAP SUB_OWNER_US=3560386 O_PROJ_KERNEL_FRAC=0.000
+O_PROJ_TAG6_FASTPATH=0 O_PROJ_TAG6_CALLS=0 O_PROJ_TAG6_ROWS=0 O_PROJ_TAG6_COLS=0 O_PROJ_TAG6_BLOCKS=0 O_PROJ_TAG6_KERNEL_US=0
+O_PROJ_GENERIC_CALLS=0 O_PROJ_GENERIC_FALLBACKS=0
+RAWRXD_SPIN_CLOSE_WALL_ATTRIB_001=1
+KVA_ROWS_CLIMB=SEALED
+DO_NOT_REOPEN=KvaInversion
+QKV_EXPOSED_US=2755187
+KVA_EXPOSED_US=0
+ATTENTION_EXPOSED_US=47915
+O_PROJ_EXPOSED_US=3560386
+LOGITS_EXPOSED_US=841649
+SAMPLE_EXPOSED_US=1
+OTHER_EXPOSED_US=12343437
+AWAIT_EXPOSED_US=0
+SPIN_CLOSE_BLOCKER=OTHER
+SPIN_CLOSE_BLOCKER_OWNER=O_PROJ_SERIAL
+SPIN_CLOSE_BLOCKER_US=3560386
+SPIN_CLOSE_STAGE_US=12343437
+MEASURED_LARGEST_OWNER=O_PROJ_SERIAL
+NEXT_RUNTIME_ACTION=O_PROJ_OVERLAP
+LOGITS_SPLIT_CUT=NOT_LARGEST
+GENERATION_WALL_NS=116651348000
+GENERATION_BUDGET_NS=1600000000
+WALL_EXCESS_NS=115051348000
+WALL_EXCESS_OWNER=O_PROJ
+OWNER_EXPOSED_NS=3560386000
+SHARD_IO_CALLS=4454 SHARD_IO_BYTES=38898882560 SHARD_IO_US=37879088 SHARD_IO_REOPEN=0 SHARD_IO_SEEKS=10088 SHARD_IO_MAPFAULT=0 SHARD_IO_MAPFAULT_US=0
+LIVE_PATH_VACUUM=0
+LIVE_PATH_TRAMPOLINE_INSTALLED=1
+LIVE_PATH_TRAMPOLINE_HITS=497
+LIVE_PATH_CYCLONE=1
+LIVE_PATH_CYCLONE_LAYER_STARTS=488
+LIVE_PATH_CYCLONE_LAYER_ENDS=488
+LIVE_PATH_CYCLONE_DEMANDS=3416
+LIVE_PATH_PINBALL_SAMPLES=0
+LIVE_PATH_ELASTIC=1
+LIVE_PATH_STREAM=1
+LIVE_PATH_STREAM_ALIVE=488
+LIVE_PATH_NVME_HOPS=9
+LIVE_PATH_PLASMA_SAMPLES=0
+LIVE_PATH_REVERSAL_US=0.000
+LIVE_PATH_ENHANCEMENTS=1
+LIVE_PATH_BRAKE=0
+LIVE_PATH_ACTIVE=0
+STREAM_BYTES_READ_TOTAL=3706637056
+STREAM_BYTES_TO_GPU_TOTAL=15770345472
+STREAM_BYTES_RECONSTRUCTED_TOTAL=360444928
+STREAM_READ_OPS=459
+STREAM_GPU_UPLOAD_OPS=2731
+VRAM_PEAK=96030720
+RESIDENT_WEIGHT_PEAK=96030720
+CACHE_HITS=6379
+CACHE_MISSES=919
+CYCLONE_PREFETCH_REQUESTS=3416
+CYCLONE_PREFETCH_PROMOTIONS=0
+CYCLONE_STALL_CYCLES=0
+PINBALL_BOOST_TRIGGERS=0
+REVERSAL_PREFETCH_BOOSTS=0
+QUEUE_PEAK=7
+PER_TOKEN_ALLOCS=0
+FALLBACK_COUNT=0
+TRAILBRAKE_CHECKS=0
+TRAILBRAKE_TRIGGERED=0
+TRAILBRAKE_TOKENS_AVOIDED=0
+ABSENCE_NVME=0
+ABSENCE_PLASMA=1
+FUSED_ENABLED=0
+FUSED_DECISIONS=0
+FUSED_PREFETCH_DEPTH=0
+FUSED_REVERSE_DEPTH=0
+FUSED_PREFETCH_DEPTH_MAX=0
+FUSED_REVERSE_DEPTH_MAX=0
+FUSED_URGENT_ACQUIRES=0
+FUSED_SPECULATIVE_SUPPRESSED=0
+FUSED_EVICTIONS=0
+FUSED_WARMUP_ENABLES=0
+FUSED_BRAKES=0
+FUSED_CONFLICTS_AVOIDED=0
+FUSED_PREFETCH_REQUESTS_DROPPED=0
+FUSED_DUPLICATE_PREFETCHES=0
+FUSED_QUEUE_PEAK=0
+FUSED_FAST_BYPASS=0
+FUSED_SIGNAL_CHANGES=0
+FUSED_POLICY_CHANGES=0
+FUSED_DECISIONS_SKIPPED=0
+FUSED_DECISION_US=0
+FUSED_BRAKE_US=0
+FUSED_SUPPRESSION_US=0
+FUSED_TOTAL_CONTROL_US=0
+LIVE_NU_WANTED=0
+LIVE_NU_AUTHORIZED=1
+LIVE_NU_ACTIVE=0
+LIVE_NU_CONSUME_OPS=0
+LIVE_NU_CONSUME_BYTES=0
+LIVE_NU_REJECT_OFF=0
+LIVE_NU_REJECT_NO_AUTH=0
+LIVE_NU_FAIL=0
+TPS_RAW=0.000000
+TPS_DISPLAY=0.0
+TPS_SCALE=1000
+TPB_RAW=2.000000000e-08
+TPB_REVERSE_BPT=50000000.0
+TPS_WORK=0.000
+PRODUCT_ENTRY_PATH=1
+STREAM_RUNTIME_PATH=1
+MODEL_GRAPH_COMPLETE=1
+NEMOTRON_SSM_REAL=0
+SSM_REAL_LAYERS=0 SSM_IDENTITY_LAYERS=0 SSM_HYBRID_LAYERS=0 SSM_MAMBA_ARMED=0
+NUMERIC_PARITY=UNPROVEN
+FUNCTIONAL_MODEL_PASS=0
+GATE=NEMOTRON_H_REAL_SSM_001
+PRODUCTION_DECODE_PATH=0
+PROMOTE=0
+SSM_CERT=NOT_CERTIFIED
+RAWRXD_PRODUCT_PATH_001=1
+PRODUCT_PATH=CLI|IDE|Bridge→Deep2Engine::generateStream→token_commit→stream→receipt
+SYNTHETIC_TOKEN_PATH=0
+PATH=generateStream
+MODEL=deepseek2
+RAWRXD_FUNCTIONAL_CHAMPION_001
+RAWRXD_TPS_KILLER_SEAL_001
+MODEL=deepseek2
+PATH=generateStream
+TOKENS_REQUESTED=8
+TOKENS_COMMITTED=8
+GENERATION_WALL_NS=116802019000
+DECODE_TPS_REAL=0.068492
+PRODUCT_FLOOR_TPS=5.000
+PRODUCT_WALL_MAX_NS=12800000000
+PARITY_PASS=1
+FUNCTIONAL_PASS=1
+CANDIDATE_BEATS_CHAMPION=0
+CANDIDATE_KILLED=1
+FUNCTIONAL_CHAMPION=0
+TPS_PRODUCT_SEAL=0
+SPIN_CLOSE_BLOCKER=RESIDENCY
+SPIN_CLOSE_BLOCKER_OWNER=SHARD_IO
+SPIN_CLOSE_BLOCKER_US=37879088
+BLOCKED_AT=64_TOKEN_PRODUCT_RUN
+DO_NOT_REOPEN=KvaInversion
+DO_NOT_REOPEN=KVA_CLIMB
+DO_NOT_REOPEN=BATCH_007
+RAWRXD_PERFORMANCE_001=OPEN
+RAWRXD_PRODUCT_TPS_001=OPEN
+PROMOTE=0
+NOTE=TPS_PRODUCT_SEAL_NE_PRODUCT_PASS;FINAL_READY=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+RECEIPT_END=RAWRXD_TPS_KILLER_SEAL_001
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (98 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] ~Deep2Engine BEGIN
+[LIFE] disableMARS
+[LIFE] shutdown cyclone before elastic
+[LIFE] elastic Shutdown early
+TD=03 KV_RELEASE_BEGIN
+TD=04 KV_RELEASE_END
+[LIFE] unloadModel
+D2_MOE_LIVE moe_ffn_enter=488 moe_place_enter=480 MOE_PLACE_CALLS=480 moe_router_calls=480 ffn_dispatch_moe=480 ffn_dispatch_dense=8 ffn_dispatch_ssm=0
+D2_MOE_LIVE experts_selected=3840 experts_executed=3840 parity=1 thrash_tokens=0
+D2_MOE_LIVE hits=2659 misses=1181 miss_bytes=17337155584 EXPERT_MISS_BYTES_PER_TOKEN=35526958 acquire_ok=3840 acquire_fail=0 markhot=3840
+D2_MOE_REUSE EXPERT_BUNDLE_LOOKUPS=3840 HITS=2659 MISSES=1181 EXPERT_ACQUIRE_HIT=7977 EXPERT_ACQUIRE_MISS=3543 HOST_BYTES_FOR_HIT=0 HOST_BYTES_FOR_MISS=0 SECONDARY_LOOKUP=0
+D2_MOE_REUSE COMPULSORY_MISS_BYTES=31485640704 RELOAD_MISS_BYTES=0 HIT_BYTES=70665584640 RELOAD_MISS_BYTES_PER_TOKEN=0 SEEN_BUNDLE_KEYS=1181
+D2_MOE_REUSE GPU0_EXPERTS=1938 GPU1_EXPERTS=1902 GPU0_WORK_NS=30232441400 GPU1_WORK_NS=31954320500 GPU_JOIN_WAIT_NS=54954833100 STICK_OVERLAP_NS=3605005200 H2D_BYTES=31485640704 D2H_BYTES=27525120 GPU_SUBMITS=960 GPU_WAITS=960 MOE_LAYERS_GPU=480 GPU_SUBMITS_PER_MOE_LAYER=2 GPU_WAITS_PER_MOE_LAYER=2 DEVICE_DOWN_PARTIALS=3840 GEMV_INPUT_REUSE=0 DEVICE_DOWN_VECTORS=3840 DEVICE_PARTIAL_ACCUMS=3840 D2H_PARTIAL_VECTORS=960 HOST_EXPERT_DOWN_VECTORS=0 INTERMEDIATE_D2H=0 EXPERT_D2H=0 STICK_OVERLAP_NS=3605005200 MAX_CONCURRENT_STICK_WORKERS=2 LAYER_JOINS=480 WORKER_FAILURES=0 PRODUCT_BACKEND_ATTESTED=1
+D2_MOE_REUSE HOST_EXPERT_GEMV_CALLS=0 GPU_EXPERT_GEMV_CALLS=3840
+D2_MOE_LIVE SHARED_EXPERT_CALLS=480 slice_layout_mismatch=0 stick_retains=2659 stick_assigns=1181
+D2_MOE_LIVE EXPERT_GPU_ACQUIRE=0 EXPERT_GPU_EXEC=3840 HOST_GEMV_EXPERT=0
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=480 MOE_PLACE_CALLS=480 EXPERTS_SELECTED=3840 EXPERTS_EXECUTED=3840 parity=1
+DUALSTICK_REQUESTED=1
+DUALSTICK_PLANNED=0
+DUALSTICK_ARMED=1
+DUALSTICK_ARM_COUNT=2
+DUALSTICK_ARM_ACQUIRES=2
+DUALSTICK_ARM_BYTES_WORKED=134217728
+DUALSTICK_ARM_EXEC=1
+DUALSTICK_RUNTIME_USED=1
+DUALSTICK_RUNTIME_DEVICE_COUNT=2
+DUALSTICK_FORWARD_CALLS_GPU0=1938
+DUALSTICK_FORWARD_CALLS_GPU1=1902
+DUALSTICK_RUNTIME_BYTES_WORKED=133636866048
+DUALSTICK_TRUE_RUNTIME=1
+DUALSTICK_ARM_ONLY=0
+DUAL_STICK_ARMED=1
+DUAL_STICK_EXEC=1
+DUAL_STICK_ACQUIRES=2
+DUAL_STICK_CONSUMERS=2
+DUAL_STICK_OWNERSHIP_ADVANCES=2
+DUAL_STICK_BYTES_WORKED=134217728
+DUAL_STICK_EXEC_NOTE=alias_of_DUALSTICK_RUNTIME_USED
+[LIFE] unloadModel BEGIN
+[LIFE] unloadModel close bp16Streamer
+[LIFE] unloadModel clear weight aliases (no alignedFree) layers=0
+[LIFE] unloadModel FreeTensorData ggufResult (0 tensors)
+[LIFE] unloadModel reset kvCache
+[LIFE] unloadModel deallocateBuffers
+[LIFE] unloadModel END
+RXEV_SURFACE ARMED=0 DISPOSITION=NO_RUN_STATE
+RXOW stage=NONE br=BR_NO_RUN_STATE layers=0 tensors=0 graph=0 decode0=0 note=norun_unclassified
+[LIFE] release MoE
+TD=05 WINDOW_RELEASE_BEGIN
+TD=06 WINDOW_RELEASE_END
+TD=07 GPU_DESTROY_BEGIN
+[LIFE] release vulkan devices
+TD=08 GPU_DESTROY_END
+[LIFE] stop telemetryController
+TD=09 MODEL_DESTROY_BEGIN
+TD=10 MODEL_DESTROY_END
+[LIFE] ~Deep2Engine END
+TD=11 CLEAN_EXIT
+MODEL_SIZE_INDEPENDENT_LOAD=1
+RAWRXD_NO_TP=1
+QUANTIZED_STORAGE_PRESERVED=1
+FULL_MODEL_RESIDENCY_REQUIRED=0
+FULL_LAYER_RESIDENCY_REQUIRED=0
+VRAM_REQUIRED=0
+VRAM_BYTES_REQUIRED=0
+WEIGHT_RESIDENCY_BOUNDED=1
+KV_RESIDENCY_BOUNDED=1
+EXECUTION_OWNER_PER_TENSOR=1
+TENSOR_PARTITIONS=0
+CROSS_DEVICE_COLLECTIVES=0
+ALL_REDUCE_OPS=0
+ONE_TENSOR_ONE_OWNER=1
+WEIGHT_WINDOW_BYTES=268435456
+ACTIVATION_LIVE_BYTES=86016
+KV_HOT_BYTES=749568
+SCRATCH_BYTES=28672
+WORKING_SET_BYTES=269299712
+SPACE_CAPACITY_BYTES=268435456
+SPACE_OCCUPIED_BYTES=269299712
+SPACE_RECLAIMABLE_BYTES=0
+SPACE_SUFFICIENT=0
+BOUNDED_RESIDENCY=1
+SCOREBOARD_ACTIVE=1
+PER_LAYER_JOIN=0
+LAST_USE_EVICTION=1
+KV_LAZY_PAGED=1
+DUAL_GENERATE_STREAM_LIVE=1
+WEIGHTS_CROSS_LANES=0
+ACTIVATIONS_ONLY_CROSS_LANES=1
+TPS_CAP=NONE
+TPS_DISPLAY_SCALE=1
+DECODE_SLEEP_US=0
+REAL_GENERATE_STREAM=1
+LOAD_MODEL=INDEX_AND_ADDRESS
+CHOREOGRAPHY=EXECUTION_AUTHORITY
+RECEIPT_BEGIN=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_E2E_BLOCKERS_105
+BATCH_007_BEGIN=91
+BATCH_007_END=105
+VOCAB_EXT_PRESENT=1 VOCAB_EXT_RUNTIME_BACKED=1 TOKEN_ID_TO_TEXT_VALID=1
+BYTE_FALLBACK_ENABLED=1 UNKNOWN_TOKEN_COUNT=0 DROPPED_TEXT_BYTES=0
+BOS_ID=163584 EOS_ID=163586 PAD_ID=163839 UNK_ID=0 SPECIAL_TOKEN_SOURCE=gguf SPECIAL_TOKEN_VALID=1
+CHAT_TEMPLATE_PRESENT=1 CHAT_TEMPLATE_SOURCE=gguf CHAT_TEMPLATE_RUNTIME_BACKED=1
+PROMPT_FORMATTED_BY_RUNTIME=1 CHAT_TEMPLATE_HASH=458400798246347701 CHAT_TEMPLATE_POLICY=APPLY_TEMPLATE
+PROMPT_TOKENS=21 GENERATED_TOKENS=8 BOUNDARY_TOKEN_INDEX=21 BOUNDARY_VALID=1
+UTF8_PENDING_BYTES=0 UTF8_VALID_FINAL=1 STREAM_UTF8_ERRORS=0
+DETOK_STATE_CARRY_VALID=1 PARTIAL_TOKEN_FLUSH_VALID=1
+CHUNK_SEQ_ID=8 TOKEN_SEQ_ID=8 CHUNK_ORDER_VALID=1
+TOKEN_COMMIT_COUNT_PER_INDEX=1 DUPLICATE_TOKEN_COMMITS=0
+RETRY_COUNT=0 RETRY_STAGE=NONE RETRY_ROLLBACK_VALID=1
+CANCEL_OBSERVED_AT=NONE CANCEL_SAFE_POINT=1 PARTIAL_OUTPUT_VALID=1
+MAX_TOKENS_REQUESTED=8 TOKENS_COMMITTED=8 STOPPED_BY_MAXTOK_VALID=1
+CTX_SIZE=4096 POSITION_INDEX=29 CTX_LIMIT_REACHED=0 CTX_OVERFLOW=0
+TOKEN_INDEX=8 ROPE_POSITION=8 KV_POSITION=8 POSITION_MATCH=1
+STREAM_HASH=3020036015562360367 STREAM_HASH_MATCH=1 RECEIPT_ATOMIC=1
+BLOCKER_91_STREAMER_VOCAB_EXT_RUNTIME=PASS
+BLOCKER_92_BYTE_FALLBACK_TOKENIZATION=PASS
+BLOCKER_93_SPECIAL_TOKEN_AUTHORITY=PASS
+BLOCKER_94_CHAT_TEMPLATE_RUNTIME=PASS
+BLOCKER_95_PROMPT_BOUNDARY_GUARD=PASS
+BLOCKER_96_UTF8_STREAM_INTEGRITY=PASS
+BLOCKER_97_DETOKENIZER_STATE_CARRY=PASS
+BLOCKER_98_STREAM_CHUNK_ORDERING=PASS
+BLOCKER_99_TOKEN_COMMIT_IDEMPOTENCE=PASS
+BLOCKER_100_TOKEN_RETRY_SAFETY=PASS
+BLOCKER_101_CANCEL_BOUNDARY_RUNTIME=PASS
+BLOCKER_102_MAX_TOKEN_LIMIT_AUTHORITY=PASS
+BLOCKER_103_CONTEXT_LIMIT_GUARD=PASS
+BLOCKER_104_POSITION_COUNTER_AUTHORITY=PASS
+BLOCKER_105_GENERATION_RECEIPT_ATOMICITY=PASS
+BATCH_007_PASS_COUNT=15
+BATCH_007_UNFINISHED_COUNT=0
+RECEIPT_END=RAWRXD_E2E_BLOCKERS_105
+RAWRXD_PRODUCT_E2E_001
+INPUT_ACCEPTED=1
+MODEL_AUTHORITY=1
+RUNTIME_BACKED=1
+PRODUCTION_DECODE_PATH=1
+HOST_FORWARD_LAYER_CALLS=0
+CPU_F32_EXPANDS=0
+TOKENS_REQUESTED=8
+GENERATED_TOKENS=8
+TOKENS_COMMITTED=8
+STREAM_OUTPUT_PRESENT=1
+COMPLETION_RECEIPT_PRESENT=1
+PRODUCT_OPEN_PASS=1
+SESSION_ENTER_PASS=1
+TOKEN_COMMIT_PASS=1
+MEAN_TOKEN_WALL_NS=14600252375
+TOKEN_WALL_TARGET_NS=6666667
+DEADLINE_OK=0
+DECODE_TPS_REAL=0.068
+NOTE=TPS_DISPLAY_ONLY
+FUNCTIONAL_PASS=0
+PRODUCT_PASS=1
+PROMOTE=0
+RAWRXD_PRODUCT_E2E_001=PASS
+FINAL_READY_GATE=PRODUCT_OPEN_PASS&&SESSION_ENTER_PASS&&GENERATED_TOKENS>0&&TOKEN_COMMIT_PASS
+NEXT_INDEPENDENT_GATE=MULTI_FAMILY
+NOTE=TINYLLAMA_R25_PRODUCTOPEN_NE_MULTI_FAMILY
+RAWRXD_NO_MORE_BASELINE_STUBS_001=1
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ElasticResidencyManager] Shutdown complete
+[Deep2Engine] Unloading model...
+[Deep2Engine] Model unloaded.
+[ThreadPool] Shutdown complete
+[StreamEngine] Shutdown

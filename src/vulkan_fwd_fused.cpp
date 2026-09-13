@@ -31,6 +31,57 @@ VkDescriptorSet VulkanCompute::NextGemvDs() {
     return ds;
 }
 
+VkDescriptorSet VulkanCompute::NextSwigluDs() {
+    if (swiglu_ds_n_ == 0) return swiglu_ds_;
+    VkDescriptorSet ds = swiglu_ds_arr_[swiglu_ds_cursor_ % swiglu_ds_n_];
+    ++swiglu_ds_cursor_;
+    return ds;
+}
+
+VkDescriptorSet VulkanCompute::NextSaxpyDs() {
+    if (saxpy_ds_n_ == 0) return saxpy_ds_;
+    VkDescriptorSet ds = saxpy_ds_arr_[saxpy_ds_cursor_ % saxpy_ds_n_];
+    ++saxpy_ds_cursor_;
+    return ds;
+}
+
+bool VulkanCompute::EnsureFusedAuxDs() {
+    if (!device_ || !swiglu_pool_ || !swiglu_dsl_ || !saxpy_pool_ || !saxpy_dsl_)
+        return false;
+    if (swiglu_ds_n_ >= 16 && saxpy_ds_n_ >= 16) return true;
+    if (swiglu_ds_ && swiglu_ds_n_ == 0) {
+        swiglu_ds_arr_[0] = swiglu_ds_;
+        swiglu_ds_n_ = 1;
+        VkDescriptorSetLayout layouts[15];
+        for (int i = 0; i < 15; ++i) layouts[i] = swiglu_dsl_;
+        VkDescriptorSetAllocateInfo dai{};
+        dai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        dai.descriptorPool = swiglu_pool_;
+        dai.descriptorSetCount = 15;
+        dai.pSetLayouts = layouts;
+        if (vkAllocateDescriptorSets(device_, &dai, &swiglu_ds_arr_[1]) !=
+            VK_SUCCESS)
+            return false;
+        swiglu_ds_n_ = 16;
+    }
+    if (saxpy_ds_ && saxpy_ds_n_ == 0) {
+        saxpy_ds_arr_[0] = saxpy_ds_;
+        saxpy_ds_n_ = 1;
+        VkDescriptorSetLayout layouts[15];
+        for (int i = 0; i < 15; ++i) layouts[i] = saxpy_dsl_;
+        VkDescriptorSetAllocateInfo dai{};
+        dai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        dai.descriptorPool = saxpy_pool_;
+        dai.descriptorSetCount = 15;
+        dai.pSetLayouts = layouts;
+        if (vkAllocateDescriptorSets(device_, &dai, &saxpy_ds_arr_[1]) !=
+            VK_SUCCESS)
+            return false;
+        saxpy_ds_n_ = 16;
+    }
+    return swiglu_ds_n_ >= 16 && saxpy_ds_n_ >= 16;
+}
+
 bool VulkanCompute::RecordCompute(VkPipeline pipe, VkPipelineLayout layout,
                                   VkDescriptorSet ds, const void* pc,
                                   uint32_t pcBytes, uint32_t groupsX) {

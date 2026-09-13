@@ -1,0 +1,59 @@
+GATE=DUALSTICK_THROUGHPUT_CLIMB_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+PURSUE_ALL_LANDED_SOURCES=1
+
+BASELINE_L61=13.72_s_per_tok SEAL=9c4213e679 RELOAD=0
+TAX=SUBMISSION_OVERHEAD + PCIE_LATENCY
+
+GEOMETRY=
+  MoE layer
+    SUBMIT#1 → GPU0 full expert graph (Gate/Up→SwiGLU→Down→scale→partial0)
+    SUBMIT#2 → GPU1 full expert graph (same → partial1)
+    READBACK#1=partial0  READBACK#2=partial1
+    one host join: accum[i]+=partial0[i]+partial1[i]
+
+HARD_GATE=
+  GPU_SUBMITS_PER_MOE_LAYER=2
+  GPU_WAITS_PER_MOE_LAYER<=2
+  INTERMEDIATE_D2H=0
+  EXPERT_D2H=0
+  D2H_PARTIAL_VECTORS=2
+  HOST_EXPERT_GEMV=0
+  SEL==EXE ACQUIRE_FAIL=0
+  PROMOTE=0 TPS_PERFORMANCE_AUTHORITY=0
+
+# Top 15 for 2+2 geometry
+# 1  One command graph per stick
+# 2  Single-submit stick batch
+# 3  Device-resident hidden broadcast
+# 4  Pinned expert descriptor table
+# 5  Batched Gate+Up stage
+# 6  In-graph SwiGLU chaining
+# 7  In-graph Down projection
+# 8  Weighted Down epilogue
+# 9  Persistent stick partial buffer
+# 10 Zero intermediate readbacks
+# 11 One fence/timeline signal per stick
+# 12 Exactly one partial D2H per stick
+# 13 CPU two-vector join only
+# 14 Reusable command templates
+# 15 Next-layer graph preparation overlap
+
+ATTACK_ORDER=
+  #1+#2 one graph + single submit/stick
+  → #3 hidden broadcast + #4 descriptor table
+  → #5+#6+#7+#8 in-graph Gate/Up/SwiGLU/Down/weight
+  → #9+#10+#11+#12+#13 partial + zero mid D2H + one fence + 2vec join
+  → #14 templates → #15 next-layer graph prep overlap
+
+AFTER_HARD_GATE_PASS=
+  NEXT_OWNER=quantized expert kernel throughput + stick completion imbalance
+  (submission/PCIe architecture closed)
+
+SEALED=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679
+DROPS=ENTERPRISE_NODEP + PARALLEL_DEVICE_PARTIAL_NODEP

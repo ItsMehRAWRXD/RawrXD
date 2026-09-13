@@ -132,10 +132,11 @@ bool VulkanCompute::LoadComputePipeline(
     }
     vkDestroyShaderModule(device_, mod, nullptr);
 
-    VkDescriptorPoolSize ps{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nBind * 4};
+    /* 16 sets: fused MoE stick may record ≤16 SwiGLU/saxpy in one CB. */
+    VkDescriptorPoolSize ps{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nBind * 16};
     VkDescriptorPoolCreateInfo dpi{};
     dpi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpi.maxSets = 4;
+    dpi.maxSets = 16;
     dpi.poolSizeCount = 1;
     dpi.pPoolSizes = &ps;
     if (vkCreateDescriptorPool(device_, &dpi, nullptr, &pool) != VK_SUCCESS) return false;
@@ -265,6 +266,12 @@ bool VulkanCompute::EnsureForwardArena(uint32_t hidden, uint32_t inter, uint32_t
     if (!LoadComputePipeline("attn_decode.spv", 4, 20, attn_pipe_, attn_layout_, attn_dsl_, attn_pool_, attn_ds_))
         return false;
     if (!LoadComputePipeline("swiglu.spv", 3, 4, swiglu_pipe_, swiglu_layout_, swiglu_dsl_, swiglu_pool_, swiglu_ds_))
+        return false;
+    /* scaled_add.spv: PC = {uint n; float scale} = 8 bytes, 2 storage bufs. */
+    if (!LoadComputePipeline("scaled_add.spv", 2, 8, saxpy_pipe_, saxpy_layout_,
+                             saxpy_dsl_, saxpy_pool_, saxpy_ds_))
+        return false;
+    if (!EnsureFusedAuxDs())
         return false;
     {
         VkDescriptorSetAllocateInfo dai{};
@@ -425,6 +432,32 @@ bool VulkanCompute::DispatchResidualAdd(DeviceBuf& a, DeviceBuf& b, DeviceBuf& o
     return RecordCompute(add_pipe_, add_layout_, ds, &pc, 4, (n + 255u) / 256u);
 }
 
+bool VulkanCompute::DispatchScaledAdd(DeviceBuf& accum, DeviceBuf& src, float scale,
+                                      uint32_t n) {
+    if (!saxpy_pipe_ || !saxpy_ds_ || !accum.buffer || !src.buffer || !n)
+        return false;
+    VkDescriptorSet ds = fused_cmd_ ? NextSaxpyDs() : saxpy_ds_;
+    VkDescriptorBufferInfo i0{accum.buffer, 0, accum.bytes};
+    VkDescriptorBufferInfo i1{src.buffer, 0, src.bytes};
+    VkWriteDescriptorSet w[2]{};
+    for (int i = 0; i < 2; ++i) {
+        w[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        w[i].dstSet = ds;
+        w[i].dstBinding = (uint32_t)i;
+        w[i].descriptorCount = 1;
+        w[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    }
+    w[0].pBufferInfo = &i0;
+    w[1].pBufferInfo = &i1;
+    vkUpdateDescriptorSets(device_, 2, w, 0, nullptr);
+    struct {
+        uint32_t n;
+        float scale;
+    } pc{n, scale};
+    return RecordCompute(saxpy_pipe_, saxpy_layout_, ds, &pc, sizeof(pc),
+                         (n + 255u) / 256u);
+}
+
 bool VulkanCompute::DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, uint32_t nHeads,
                                  uint32_t nKv, uint32_t pos, float theta) {
     if (!rope_pipe_) return false;
@@ -474,9 +507,10 @@ bool VulkanCompute::DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBu
 
 bool VulkanCompute::DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out, uint32_t n) {
     if (!swiglu_pipe_) return false;
-    Bind3(device_, swiglu_ds_, gate, up, out);
+    VkDescriptorSet ds = fused_cmd_ ? NextSwigluDs() : swiglu_ds_;
+    Bind3(device_, ds, gate, up, out);
     uint32_t pc = n;
-    return RecordCompute(swiglu_pipe_, swiglu_layout_, swiglu_ds_, &pc, 4, (n + 255u) / 256u);
+    return RecordCompute(swiglu_pipe_, swiglu_layout_, ds, &pc, 4, (n + 255u) / 256u);
 }
 
 bool VulkanCompute::AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim, uint32_t pos,

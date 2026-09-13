@@ -66,9 +66,16 @@ void MoEPlaceLiveEmit(FILE* f) {
             "SEEN_BUNDLE_KEYS=%llu\n"
             "D2_MOE_REUSE GPU0_EXPERTS=%llu GPU1_EXPERTS=%llu "
             "GPU0_WORK_NS=%llu GPU1_WORK_NS=%llu GPU_JOIN_WAIT_NS=%llu "
-            "H2D_BYTES=%llu D2H_BYTES=%llu "
+            "STICK_OVERLAP_NS=%llu H2D_BYTES=%llu D2H_BYTES=%llu "
             "GPU_SUBMITS=%llu GPU_WAITS=%llu MOE_LAYERS_GPU=%llu "
-            "GPU_SUBMITS_PER_MOE_LAYER=%llu GPU_WAITS_PER_MOE_LAYER=%llu\n"
+            "GPU_SUBMITS_PER_MOE_LAYER=%llu GPU_WAITS_PER_MOE_LAYER=%llu "
+            "DEVICE_DOWN_PARTIALS=%llu GEMV_INPUT_REUSE=%llu "
+            "DEVICE_DOWN_VECTORS=%llu DEVICE_PARTIAL_ACCUMS=%llu "
+            "D2H_PARTIAL_VECTORS=%llu HOST_EXPERT_DOWN_VECTORS=%llu "
+            "INTERMEDIATE_D2H=%llu EXPERT_D2H=%llu "
+            "STICK_OVERLAP_NS=%llu MAX_CONCURRENT_STICK_WORKERS=%llu "
+            "LAYER_JOINS=%llu WORKER_FAILURES=%llu "
+            "PRODUCT_BACKEND_ATTESTED=%llu\n"
             "D2_MOE_REUSE HOST_EXPERT_GEMV_CALLS=%llu "
             "GPU_EXPERT_GEMV_CALLS=%llu\n",
             (unsigned long long)c.expert_bundle_lookups,
@@ -88,6 +95,7 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.gpu0_work_ns,
             (unsigned long long)c.gpu1_work_ns,
             (unsigned long long)c.gpu_join_wait_ns,
+            (unsigned long long)c.stick_overlap_ns,
             (unsigned long long)c.h2d_bytes, (unsigned long long)c.d2h_bytes,
             (unsigned long long)c.gpu_submits, (unsigned long long)c.gpu_waits,
             (unsigned long long)c.moe_layers_gpu,
@@ -97,6 +105,19 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)(c.moe_layers_gpu
                                     ? c.gpu_waits / c.moe_layers_gpu
                                     : 0ull),
+            (unsigned long long)c.device_down_partials,
+            (unsigned long long)c.gemv_input_reuse,
+            (unsigned long long)c.device_down_vectors,
+            (unsigned long long)c.device_partial_accums,
+            (unsigned long long)c.d2h_partial_vectors,
+            (unsigned long long)c.host_expert_down_vectors,
+            0ull, /* INTERMEDIATE_D2H: device partial path keeps mid-D2H=0 */
+            (unsigned long long)c.host_expert_down_vectors, /* EXPERT_D2H */
+            (unsigned long long)c.stick_overlap_ns,
+            (unsigned long long)c.max_concurrent_stick_workers,
+            (unsigned long long)c.layer_joins,
+            (unsigned long long)c.worker_failures,
+            (unsigned long long)c.product_backend_attested,
             (unsigned long long)c.host_gemv_expert,
             (unsigned long long)c.expert_gpu_exec);
     }

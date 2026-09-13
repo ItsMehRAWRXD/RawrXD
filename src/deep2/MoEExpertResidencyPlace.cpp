@@ -1,5 +1,6 @@
 /* MoEExpertResidencyPlace.cpp — hot-set + DualStick place (≤99 lines). */
 #include "MoEExpertResidencyPlace.hpp"
+#include "lavapath/DualStickMetaLock.hpp"
 #include <cstring>
 
 namespace Deep2 {
@@ -81,6 +82,7 @@ void MoEExpertResidencyPlace::MarkCold(int layer, int expert) {
 
 void MoEExpertResidencyPlace::MarkHot(int layer, int expert, uint32_t stick,
                                       uint64_t bytes) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     int i = FindHot(layer, expert);
     if (i >= 0) {
         HotEnt& e = hot_[(uint32_t)i];

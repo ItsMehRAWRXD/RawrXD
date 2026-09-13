@@ -1,6 +1,7 @@
 /* DualStickStreamWindow_Vc.cpp — VC bind, FWD note, expert stick residency. */
 #include "DualStickStreamWindow.hpp"
 #include "DualStickExpertBundle.hpp"
+#include "DualStickMetaLock.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "vulkan_compute.h"
 #include <cstdlib>
@@ -51,6 +52,7 @@ CPUInference::VulkanCompute* DualStickVc(unsigned stick) {
 
 void DualStickNoteExpertGpu(unsigned stick, size_t bytes) {
     DualStickExec& e = DualStickState();
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     if ((stick & 1u) == 0) e.forwardCallsGpu0++;
     else e.forwardCallsGpu1++;
     e.runtimeDevices =
@@ -59,21 +61,26 @@ void DualStickNoteExpertGpu(unsigned stick, size_t bytes) {
 }
 
 int DualStickExpertStickOf(int layer, int expert) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     int i = ResFind(layer, expert);
     return i >= 0 ? (int)g_res[(uint32_t)i].stick : -1;
 }
 
 uint64_t DualStickExpertBytesOf(int layer, int expert) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     int i = ResFind(layer, expert);
     return i >= 0 ? g_res[(uint32_t)i].bytes : 0ull;
 }
 
 int DualStickExpertIsResident(int layer, int expert) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     return ResFind(layer, expert) >= 0 ? 1 : 0;
 }
 
 unsigned DualStickPickStick(uint32_t expertId) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     if (!g_stickVc[1]) return expertId & 1u;
+    /* #11 load-aware cold place: prefer lighter stick VRAM. */
     return (g_resBytes[0] <= g_resBytes[1]) ? 0u : 1u;
 }
 
@@ -81,28 +88,34 @@ void DualStickNoteExpertResident(int layer, int expert, unsigned stick,
                                  uint64_t bytes) {
     stick &= 1u;
     const uint64_t b = bytes ? bytes : (1ull << 20);
-    int i = ResFind(layer, expert);
-    if (i >= 0) {
-        ResEnt& e = g_res[(uint32_t)i];
-        if (g_resBytes[e.stick] >= e.bytes) g_resBytes[e.stick] -= e.bytes;
-        else g_resBytes[e.stick] = 0;
-        e.stick = stick;
-        e.bytes = b;
-        g_resBytes[stick] += b;
-    } else if (g_resN < RES_CAP) {
-        ResEnt& e = g_res[g_resN++];
-        e.layer = layer;
-        e.expert = expert;
-        e.stick = stick;
-        e.bytes = b;
-        g_resBytes[stick] += b;
+    {
+        std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
+        int i = ResFind(layer, expert);
+        if (i >= 0) {
+            ResEnt& e = g_res[(uint32_t)i];
+            if (g_resBytes[e.stick] >= e.bytes) g_resBytes[e.stick] -= e.bytes;
+            else g_resBytes[e.stick] = 0;
+            e.stick = stick;
+            e.bytes = b;
+            g_resBytes[stick] += b;
+        } else if (g_resN < RES_CAP) {
+            ResEnt& e = g_res[g_resN++];
+            e.layer = layer;
+            e.expert = expert;
+            e.stick = stick;
+            e.bytes = b;
+            g_resBytes[stick] += b;
+        }
     }
     MoEPlaceGlobal().MarkHot(layer, expert, stick, b);
 }
 
 void DualStickExpertResidencyReset() {
-    g_resN = 0;
-    g_resBytes[0] = g_resBytes[1] = 0;
+    {
+        std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
+        g_resN = 0;
+        g_resBytes[0] = g_resBytes[1] = 0;
+    }
     DualStickBundleTableReset();
 }
 

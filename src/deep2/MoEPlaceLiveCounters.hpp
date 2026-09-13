@@ -61,6 +61,17 @@ struct MoEPlaceLiveCounters {
     uint64_t gpu_waits;
     uint64_t moe_layers_gpu;
     uint64_t seen_bundle_keys; /* unique (layer,expert) first-touch count */
+    uint64_t stick_overlap_ns; /* intersection of stick worker intervals */
+    uint64_t device_down_partials; /* legacy alias increments */
+    uint64_t gemv_input_reuse; /* Gate→Up GemvReuseInputNext hits */
+    uint64_t device_down_vectors;
+    uint64_t device_partial_accums;
+    uint64_t d2h_partial_vectors;
+    uint64_t host_expert_down_vectors;
+    uint64_t max_concurrent_stick_workers;
+    uint64_t worker_failures;
+    uint64_t layer_joins;
+    uint64_t product_backend_attested; /* 1 only after live DualStick device path */
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();
