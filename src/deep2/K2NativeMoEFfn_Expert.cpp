@@ -3,6 +3,7 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "K2ShardIo.hpp"
 #include "K2WeightResolve.hpp"
+#include "K2NativeMoE_LayerTrace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "StreamPathTiming.hpp"
@@ -108,15 +109,24 @@ bool MoEDimsFromGate(const GlobalTensorIndex& index, uint32_t layer,
 
 bool SwiGLUTriple(const uint8_t* g, int gt, const uint8_t* u, int ut,
                   const uint8_t* d, int dt, const float* hidden, float* out,
-                  size_t H, size_t I, std::string& error) {
+                  size_t H, size_t I, uint32_t layer, int expertId,
+                  bool shared, std::string& error) {
     std::vector<float> gate(I), up(I);
+    if (shared) moe_ltrace::BC(layer, "SHARED_GATE_ACQUIRE");
+    else moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", expertId);
     if (!HostGemv(gt, g, hidden, gate.data(), I, H, "gate", error))
         return false;
+    if (shared) moe_ltrace::BC(layer, "SHARED_GATE_DONE");
+    else moe_ltrace::BCExpert(layer, "GATE_DONE", expertId);
     if (!HostGemv(ut, u, hidden, up.data(), I, H, "up", error))
         return false;
+    if (shared) moe_ltrace::BC(layer, "SHARED_UP_DONE");
+    else moe_ltrace::BCExpert(layer, "UP_DONE", expertId);
     SiluMul(gate.data(), up.data(), I);
     if (!HostGemv(dt, d, gate.data(), out, H, I, "down", error))
         return false;
+    if (shared) moe_ltrace::BC(layer, "SHARED_DOWN_DONE");
+    else moe_ltrace::BCExpert(layer, "DOWN_DONE", expertId);
     return true;
 }
 
@@ -152,7 +162,7 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     (void)ub;
     (void)db;
     return SwiGLUTriple(gateB.data(), gt, upB.data(), ut, downB.data(), dt,
-                        hidden, expertOut, H, I, error);
+                        hidden, expertOut, H, I, layer, expertId, false, error);
 }
 
 bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
@@ -184,7 +194,8 @@ bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     const uint8_t* up = us.data ? us.data : uBuf.data();
     const uint8_t* dp = ds.data ? ds.data : dBuf.data();
     return SwiGLUTriple(gp, (int)gRef->ggmlType, up, (int)uRef->ggmlType, dp,
-                        (int)dRef->ggmlType, hidden, sharedOut, H, I, error);
+                        (int)dRef->ggmlType, hidden, sharedOut, H, I, layer, -1,
+                        true, error);
 }
 
 } // namespace Deep2

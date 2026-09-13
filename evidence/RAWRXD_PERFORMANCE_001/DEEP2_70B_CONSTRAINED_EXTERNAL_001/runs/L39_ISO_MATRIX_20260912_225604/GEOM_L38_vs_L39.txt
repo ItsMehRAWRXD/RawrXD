@@ -1,0 +1,42 @@
+L39_GEOM_DUMP_BEGIN vs L38
+L38_GEOM name=blk.38.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_down_exps.weight ggml=12 ne=[2048,7168,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L38_SLICE name=blk.38.ffn_down_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L38_GEOM name=blk.38.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L38_GEOM name=blk.38.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_norm.weight ggml=0 ne=[7168,0,0,0] byteSize=28672 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_inp.weight ggml=0 ne=[7168,384,0,0] byteSize=11010048 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_gate_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_gate_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_up_exps.weight ggml=12 ne=[7168,2048,384,0] byteSize=3170893824 expertCount=384 stride=8257536
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=0 off=0 size=8257536 last=8257536 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=1 off=8257536 size=8257536 last=16515072 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=192 off=1585446912 size=8257536 last=1593704448 srcEnd=3170893824 bounds_ok=1
+L39_SLICE name=blk.39.ffn_up_exps.weight eid=383 off=3162636288 size=8257536 last=3170893824 srcEnd=3170893824 bounds_ok=1
+L39_GEOM name=blk.39.ffn_down_exps.weight ggml=14 ne=[2048,7168,384,0] byteSize=4624220160 expertCount=384 stride=12042240
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=0 off=0 size=12042240 last=12042240 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=1 off=12042240 size=12042240 last=24084480 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=192 off=2312110080 size=12042240 last=2324152320 srcEnd=4624220160 bounds_ok=1
+L39_SLICE name=blk.39.ffn_down_exps.weight eid=383 off=4612177920 size=12042240 last=4624220160 srcEnd=4624220160 bounds_ok=1
+L39_GEOM name=blk.39.ffn_gate_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_up_shexp.weight ggml=13 ne=[7168,2048,0,0] byteSize=10092544 expertCount=0 stride=0
+L39_GEOM name=blk.39.ffn_down_shexp.weight ggml=14 ne=[2048,7168,0,0] byteSize=12042240 expertCount=0 stride=0
+L39_GEOM_DUMP_END

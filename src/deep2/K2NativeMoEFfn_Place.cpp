@@ -5,6 +5,7 @@
 #include "MoEPlaceLiveCounters.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
+#include "K2NativeMoE_LayerTrace.hpp"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <cstdlib>
@@ -71,6 +72,15 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                        float* accum, std::string& error) {
     MoERoutingResult route{};
     if (!LoadAndRoute(index, cfg, layer, normed, route, error)) return false;
+    if (moe_ltrace::On(layer)) {
+        std::fprintf(stderr, "L%u_ROUTER_DONE ids=[", layer);
+        for (uint32_t i = 0; i < route.count; ++i) {
+            if (i) std::fputc(',', stderr);
+            std::fprintf(stderr, "%u", route.expertIds[i]);
+        }
+        std::fprintf(stderr, "]\n");
+        std::fflush(stderr);
+    }
 
     MoEPlaceIn pin[MOE_PLACE_MAX_K];
     uint32_t pn = 0;
@@ -112,6 +122,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      "miss_bytes=%llu\n",
                      layer, pn, plan.hits, plan.misses,
                      (unsigned long long)plan.bytesFetchPlan);
+    if (moe_ltrace::On(layer)) {
+        std::fprintf(stderr, "L%u_PLACE_DONE hits=%u misses=%u\n", layer,
+                     plan.hits, plan.misses);
+        std::fflush(stderr);
+    }
 
     std::vector<float> expertOut(cfg.hiddenDim);
     uint32_t executed = 0;
@@ -119,9 +134,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         const MoEPlaceSlot& slot = plan.slots[si];
         if (slot.expertId < 0) continue;
         if (slot.thrash) MoEPlaceLive().moe_thrash_tokens++;
+        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", slot.expertId);
         if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, normed,
                              expertOut.data(), error)) {
             MoEPlaceLive().expert_acquire_fail++;
+            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", slot.expertId);
             return false;
         }
         MoEPlaceLive().expert_acquire_ok++;
@@ -132,6 +149,7 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             accum[i] += slot.weight * expertOut[i];
         ++executed;
     }
+    moe_ltrace::BC(layer, "ROUTED_ACCUM_DONE");
     MoEPlaceLive().experts_executed += executed;
     if (decodePhase) MoEPlaceLive().decode_experts_executed += executed;
     if (executed != pn) {
@@ -140,8 +158,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     }
 
     std::vector<float> shared(cfg.hiddenDim, 0.f);
-    if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error))
+    moe_ltrace::BC(layer, "SHARED_GATE_BEGIN");
+    if (!K2MoEExecShared(index, cfg, layer, normed, shared.data(), error)) {
+        moe_ltrace::BC(layer, "SHARED_FAIL");
         return false;
+    }
+    moe_ltrace::BC(layer, "SHARED_ACCUM_DONE");
     MoEPlaceLive().shared_expert_calls++;
     for (uint32_t i = 0; i < cfg.hiddenDim; ++i) accum[i] += shared[i];
     return true;

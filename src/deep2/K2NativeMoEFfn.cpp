@@ -2,6 +2,7 @@
 #include "K2NativeMoEFfn.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
+#include "K2NativeMoE_LayerTrace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include <cstdlib>
 #include <cmath>
@@ -21,6 +22,8 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
         error = "K2MoE: bad args";
         return false;
     }
+    moe_ltrace::DumpLayerPair(index, moe_ltrace::TraceLayer());
+    moe_ltrace::BC(layer, "ENTER");
     MoEPlaceLive().moe_ffn_enter++;
     if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
         t && t[0] && t[0] != '0')
@@ -33,10 +36,12 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     std::snprintf(denseGate, sizeof(denseGate), "blk.%u.ffn_gate.weight", layer);
     if (layer == 0 && index.Find(denseGate)) {
         MoEPlaceLive().ffn_dispatch_dense++;
+        moe_ltrace::BC(layer, "EXIT_DENSE");
         return true;
     }
     if (cfg.numExperts == 0) {
         MoEPlaceLive().ffn_dispatch_dense++;
+        moe_ltrace::BC(layer, "EXIT_NO_EXPERTS");
         return true;
     }
     MoEPlaceLive().ffn_dispatch_moe++;
@@ -46,19 +51,27 @@ bool K2NativeMoE_AfterMla(const GlobalTensorIndex& index, const KimiK2Config& cf
     std::snprintf(normN, sizeof(normN), "blk.%u.ffn_norm.weight", layer);
     WeightSpan nSpan{};
     std::vector<uint8_t> nBuf;
-    if (!ResolveWeight(index, normN, nSpan, nBuf, error)) return false;
+    if (!ResolveWeight(index, normN, nSpan, nBuf, error)) {
+        moe_ltrace::BC(layer, "NORM_FAIL");
+        return false;
+    }
     const float* nw =
         reinterpret_cast<const float*>(nSpan.data ? nSpan.data : nBuf.data());
     float ss = 0.f;
     for (size_t i = 0; i < H; ++i) ss += hiddenIO[i] * hiddenIO[i];
     float inv = 1.f / std::sqrt(ss / (float)H + cfg.normRmsEps);
     for (size_t i = 0; i < H; ++i) scratch[i] = hiddenIO[i] * inv * nw[i];
+    moe_ltrace::BC(layer, "NORM_DONE");
 
     std::vector<float> accum(H, 0.f);
     if (!K2MoEPlaceAndExec(index, cfg, layer, decodePhase, scratch, accum.data(),
-                           error))
+                           error)) {
+        moe_ltrace::BC(layer, "PLACE_EXEC_FAIL");
         return false;
+    }
     for (size_t i = 0; i < H; ++i) hiddenIO[i] += accum[i];
+    moe_ltrace::BC(layer, "RESIDUAL_DONE");
+    moe_ltrace::BC(layer, "EXIT");
     return true;
 }
 
