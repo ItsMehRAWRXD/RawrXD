@@ -101,8 +101,17 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             ? 2u
             : 1u;
     place.SetStickCount(sticks);
+    /* Probe: software hot OR stick-VRAM residency (restore MarkHot). */
     place.SetProbe(
-        [](void*, int ly, int ex) -> int { return MoEPlaceGlobal().IsHot(ly, ex); },
+        [](void*, int ly, int ex) -> int {
+            if (MoEPlaceGlobal().IsHot(ly, ex)) return 1;
+            if (!DualStickExpertIsResident(ly, ex)) return 0;
+            const int st = DualStickExpertStickOf(ly, ex);
+            if (st < 0) return 0;
+            MoEPlaceGlobal().MarkHot(ly, ex, (uint32_t)st,
+                                    DualStickExpertBytesOf(ly, ex));
+            return 1;
+        },
         nullptr);
     if (place.Counters().place_calls == 0) {
         const uint64_t eb =
@@ -110,6 +119,16 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             (uint64_t)cfg.hiddenDim;
         const char* b = std::getenv("DEEP2_MOE_PLACE_BUDGET_MIB");
         uint64_t bud = b && *b ? ((uint64_t)std::atoi(b) << 20) : (8192ull << 20);
+        /* DualStick: place budget = sum of stick windows (avoid LRU thrash). */
+        if (sticks >= 2u) {
+            const char* s0 = std::getenv("DEEP2_STICK0_BUDGET_MIB");
+            const char* s1 = std::getenv("DEEP2_STICK1_BUDGET_MIB");
+            if (s0 && *s0 && s1 && *s1) {
+                const uint64_t sum =
+                    ((uint64_t)std::atoi(s0) + (uint64_t)std::atoi(s1)) << 20;
+                if (sum > bud) bud = sum;
+            }
+        }
         place.SetBudget(bud, eb ? eb : (1ull << 20));
     }
     MoEPlaceLive().experts_selected += pn;
@@ -138,25 +157,33 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     std::vector<float> expertOut(cfg.hiddenDim);
     uint32_t executed = 0;
     for (uint32_t si = 0; si < plan.count; ++si) {
-        const MoEPlaceSlot& slot = plan.slots[si];
-        if (slot.expertId < 0) continue;
-        if (slot.thrash) MoEPlaceLive().moe_thrash_tokens++;
-        if (slot.hit) MoEPlaceLive().expert_stick_retains++;
-        else MoEPlaceLive().expert_stick_assigns++;
+        MoEPlaceSlot& mut = plan.slots[si];
+        if (mut.expertId < 0) continue;
+        if (mut.thrash) MoEPlaceLive().moe_thrash_tokens++;
+        if (!mut.hit) {
+            const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
+            mut.stick = (uint8_t)((pref >= 0) ? (unsigned)pref
+                                             : DualStickPickStick((uint32_t)mut.expertId));
+            MoEPlaceLive().expert_stick_assigns++;
+        } else {
+            const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
+            if (pref >= 0) mut.stick = (uint8_t)(unsigned)pref;
+            MoEPlaceLive().expert_stick_retains++;
+        }
         /* Acquire(n=0) removed — ExpertGpu DualStickAcquire(slice bytes). */
-        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", slot.expertId);
-        if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, slot.stick,
+        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", mut.expertId);
+        if (!K2MoEExecExpert(index, cfg, layer, mut.expertId, mut.stick,
                              normed, expertOut.data(), error)) {
             MoEPlaceLive().expert_acquire_fail++;
-            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", slot.expertId);
+            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", mut.expertId);
             return false;
         }
         MoEPlaceLive().expert_acquire_ok++;
-        place.MarkHot((int)layer, slot.expertId, slot.stick,
-                      plan.bytesFetchPlan / (pn ? pn : 1u));
+        /* Bytes: ExpertGpu NoteResident already MarkHot with true VRAM size. */
+        place.MarkHot((int)layer, mut.expertId, mut.stick, 0);
         MoEPlaceLive().expert_markhot++;
         for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
-            accum[i] += slot.weight * expertOut[i];
+            accum[i] += mut.weight * expertOut[i];
         ++executed;
     }
     moe_ltrace::BC(layer, "ROUTED_ACCUM_DONE");

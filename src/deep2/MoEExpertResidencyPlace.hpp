@@ -9,7 +9,8 @@ namespace Deep2 {
 
 enum : uint32_t {
     MOE_PLACE_MAX_K = 16u,
-    MOE_PLACE_HOT_CAP = 512u
+    /* DualStick L8+/FULL depth: 512 LRU-thrashed unique (layer,expert). */
+    MOE_PLACE_HOT_CAP = 2048u
 };
 
 struct MoEPlaceIn {

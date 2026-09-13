@@ -10,6 +10,7 @@
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "MoEExpertResidencyPlace.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include "MlaCertAuthority.hpp"
 #include "K2KVCache.hpp"
 #include "K2TokenEmbedding.hpp"
@@ -1196,6 +1197,7 @@ Result Run(const fs::path& shardDir,
     Deep2::MlaStage_Reset();
     Deep2::MoEPlaceLiveReset();
     Deep2::MoEPlaceGlobal().Reset();
+    Deep2::DualStickExpertResidencyReset();
     /* EV512 arm+surface owned by Deep2Engine::generateStream (decoupled). */
     Deep2::Ev512::HostTryArm(0x50415448424E3503ull); /* PATHBN5; no-op if armed */
     // Preserve sticky MLA host cache + open shard HANDLEs across warm→timed.

@@ -60,7 +60,9 @@ bool K2MoEExecExpertGpu(unsigned stick, int ggmlGate, const uint8_t* g,
                    ExpertPin(layer, expertId, 3)))
         return false;
 
-    DualStickNoteExpertGpu(stick, gb + ub + db);
+    const uint64_t eb = (uint64_t)gb + (uint64_t)ub + (uint64_t)db;
+    DualStickNoteExpertGpu(stick, (size_t)eb);
+    DualStickNoteExpertResident((int)layer, expertId, stick, eb);
     MoEPlaceLive().expert_gpu_exec++;
     return true;
 }

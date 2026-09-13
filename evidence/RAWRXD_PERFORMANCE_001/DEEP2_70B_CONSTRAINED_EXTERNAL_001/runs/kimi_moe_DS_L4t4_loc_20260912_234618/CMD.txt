@@ -1,0 +1,14 @@
+﻿STAMP=20260912_234618
+TAG=DUALSTICK_L4_T4_LOCALITY
+RAWRXD_ALLOW_GPU=1
+RAWRXD_HOST_DECODE=0
+DEEP2_DUALSTICK_ARM=1
+RAWRXD_K2_LAYERS=4
+DEEP2_MOE_PLACE_TRACE=1
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+DEEP2_WEIGHT_PIN=via_ArmDualStick_SetEnvIfUnset
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOKENS=4
+CMD=G:\~dev\rawrxd\build-fd\bin\rawr.exe run "F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf" "Say hi." --max-tokens 4
+NOTE=DUALSTICK_LOCALITY_IMPROVE short L4; PROMOTE=0

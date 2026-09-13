@@ -1,0 +1,79 @@
+GATE=DEEP2_70B_CONSTRAINED_EXTERNAL_001
+DATE=2026-09-12
+PROMOTE=0
+TIP_CLIMB=HOLD
+FAIL_CLOSED=1
+NOT_RUN!=PASS
+TARGET_35_50_TPS=UNMINTED
+TPS_PERFORMANCE_AUTHORITY=0
+KIMI_GEN_QUALITY=HOLD
+
+# Prior seals (unchanged; NOT re-run; NO FULL60 reopen; NO GPU-exec reopen)
+FULL_HOST_MOE_EXECUTION=PASS SEAL=2d0f2dc480
+EXPERT_MISS_BYTES_PER_TOKEN_BASELINE=33564101
+K2_EXPERT_GPU_EXEC_BIND=PASS SEAL=ca3be53613
+  L4 GPU: EXPERT_GPU_EXEC=96 HOST_GEMV=0 FWD_G0=55 FWD_G1=41
+  LOCALITY_THEN=HOLD miss=62390272
+
+OWNER=DUALSTICK_LOCALITY_IMPROVE
+WIRE=
+  ArmDualStick SetEnvIfUnset DEEP2_WEIGHT_PIN=1 (stick GEMV pin, not stream thrash)
+  DualStickBindVc → SetPinResidentBudget(STICK0/1)
+  DualStickNoteExpertResident + MarkHot(true gb+ub+db) after ExpertGpu
+  Place probe: IsHot OR stick-VRAM residency restore MarkHot
+  Stick affinity: retain DualStickExpertStickOf; miss → DualStickPickStick(load)
+  MOE_PLACE_HOT_CAP 512→2048; DualStick place budget = max(env, STICK0+STICK1)
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+
+# Short slices (cold-start vs FULL61 amortized baseline)
+RUN_L4=runs/kimi_moe_DS_L4t4_loc_20260912_234618
+  SEL=EXE=96 ACQUIRE_FAIL=0 EXPERT_GPU_EXEC=96 HOST_GEMV_EXPERT=0
+  FWD_G0=44 FWD_G1=52 DEVICE_COUNT=2 stick_retains=28 stick_assigns=68
+  EXPERT_MISS_BYTES_PER_TOKEN=62390272 (delta_vs_prior_gpu_L4=0)
+  MEAN_TOKEN_WALL_NS=1447150750 (prior_gpu_L4=1909920000; wall_improve≈24%)
+  C_MISS_BYTES_LT_BASELINE=FAIL (cold L4 cannot amortize vs FULL61)
+
+RUN_L8=runs/kimi_moe_DS_L8t8_loc_20260912_234710
+  SEL=EXE=448 ACQUIRE_FAIL=0 EXPERT_GPU_EXEC=448 HOST_GEMV_EXPERT=0
+  FWD_G0=220 FWD_G1=228 stick_retains=208 stick_assigns=240
+  EXPERT_MISS_BYTES_PER_TOKEN=55050240
+  MEAN_TOKEN_WALL_NS=3260799625
+  C_MISS_BYTES_LT_BASELINE=FAIL
+
+# Optional deeper (amortize retain; same DualStick GPU conjunction)
+RUN_L8T32=runs/kimi_moe_DS_L8t32_loc_20260912_234810
+  SEL=EXE=1792 ACQUIRE_FAIL=0 EXPERT_GPU_EXEC=1792 HOST_GEMV_EXPERT=0
+  FWD_G0=863 FWD_G1=929 stick_retains=1359 stick_assigns=433
+  EXPERT_MISS_BYTES_PER_TOKEN=24829952
+  MEAN_TOKEN_WALL_NS=2484771593
+  C_MISS_BYTES_LT_BASELINE=PASS (24829952 < 33564101)
+
+RUN_L32T16=runs/kimi_moe_DS_L32t16_loc_20260912_235014
+  SEL=EXE=3968 ACQUIRE_FAIL=0 EXPERT_GPU_EXEC=3968 HOST_GEMV_EXPERT=0
+  FWD_G0=1903 FWD_G1=2065 stick_retains=3105 stick_assigns=863
+  EXPERT_MISS_BYTES_PER_TOKEN=24743936
+  MEAN_TOKEN_WALL_NS=11015947125
+  DECODE_TPS_REAL=0.091 NOTE=TPS_DISPLAY_ONLY_NE_PERFORMANCE_AUTHORITY
+  C_MISS_BYTES_LT_BASELINE=PASS (24743936 < 33564101)
+
+# Conjunction (primary deeper run L32T16)
+C_ARMED_DEVICE_COUNT=PASS
+C_SEL_EXE_ACQUIRE_FAIL=PASS
+C_EXPERT_GPU_EXEC_HOST_GEMV0=PASS
+C_FWD_BOTH_STICKS=PASS
+C_STICK_RETAIN_ASSIGN=PASS
+C_MISS_BYTES_LT_BASELINE=PASS
+C_TOKEN_WALL_AUTHORITY=HOLD
+  WHY=depth/token still ≠ FULL61 host wall authority; miss_bytes closed first;
+       do NOT mint 35-50 TPS
+
+# Disposition
+DUALSTICK_LOCALITY=PASS
+PRIMARY_EVIDENCE=RUN_L32T16 (+ RUN_L8T32 corroborate)
+SHORT_SLICE_NOTE=L4/L8 cold-start miss still > baseline (router unique set);
+  retain+pin path proven by deeper amortize + L4 wall drop
+WHY=stick-VRAM pin+residency MarkHot/probe + HOT_CAP/budget; miss_bytes/tok
+     24743936 < host baseline 33564101 with DualStick GPU exec intact
+NEXT=matched-depth wall/TPS authority only after locality (this seal);
+     PROMOTE=0 TIP_CLIMB=HOLD TARGET_35_50_TPS=UNMINTED
+PROMOTE=0

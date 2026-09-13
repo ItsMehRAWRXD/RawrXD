@@ -69,6 +69,8 @@ void ArmDualStickNoTruncate(const DualStickWindowPlan& p) {
     SetEnv("DEEP2_GPU_SELECT", "");
     SetEnv("RAWRXD_GPU_SELECT", "");
     SetEnv("RAWRXD_GPU_NAME", "");
+    /* Stick-VRAM expert GEMV must pin — stream slots thrash miss_bytes. */
+    SetEnvIfUnset("DEEP2_WEIGHT_PIN", "1");
     if (p.stick0Bytes) {
         char b0[32];
         std::snprintf(b0, sizeof(b0), "%llu",

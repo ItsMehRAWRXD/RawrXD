@@ -61,4 +61,12 @@ namespace Deep2 {
 void DualStickBindVc(unsigned stick, CPUInference::VulkanCompute* vc);
 CPUInference::VulkanCompute* DualStickVc(unsigned stick);
 void DualStickNoteExpertGpu(unsigned stick, size_t bytes);
+/* True stick residency for MoE Place probe / stick affinity retain. */
+void DualStickNoteExpertResident(int layer, int expert, unsigned stick,
+                                 uint64_t bytes);
+int DualStickExpertIsResident(int layer, int expert);
+int DualStickExpertStickOf(int layer, int expert);
+uint64_t DualStickExpertBytesOf(int layer, int expert);
+unsigned DualStickPickStick(uint32_t expertId);
+void DualStickExpertResidencyReset();
 } // namespace Deep2

@@ -83,6 +83,9 @@ void MoEExpertResidencyPlace::MarkHot(int layer, int expert, uint32_t stick,
                                       uint64_t bytes) {
     int i = FindHot(layer, expert);
     if (i >= 0) {
+        HotEnt& e = hot_[(uint32_t)i];
+        e.stick = stick & 1u;
+        if (bytes) e.bytes = bytes;
         Touch(i);
         ++ctr_.place_reuse;
         return;
