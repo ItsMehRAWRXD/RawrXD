@@ -6,6 +6,7 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "K2WeightResolve.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <cstdlib>
@@ -93,7 +94,13 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     MoEPlaceLive().moe_place_enter++;
     MoEPlaceLive().moe_tokens++;
     MoEExpertResidencyPlace& place = MoEPlaceGlobal();
-    place.SetStickCount(1u);
+    /* DualStick: stick placement on MoE experts (parity with computeMoEFFN). */
+    const uint32_t sticks =
+        (DualStickState().armed || DualStickState().planned ||
+         DualStickState().requested)
+            ? 2u
+            : 1u;
+    place.SetStickCount(sticks);
     place.SetProbe(
         [](void*, int ly, int ex) -> int { return MoEPlaceGlobal().IsHot(ly, ex); },
         nullptr);
@@ -134,6 +141,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         const MoEPlaceSlot& slot = plan.slots[si];
         if (slot.expertId < 0) continue;
         if (slot.thrash) MoEPlaceLive().moe_thrash_tokens++;
+        if (slot.hit) MoEPlaceLive().expert_stick_retains++;
+        else MoEPlaceLive().expert_stick_assigns++;
+        if (slot.fetch)
+            DualStickAcquire(slot.stick, nullptr, 0, 0, layer,
+                             (uint32_t)slot.expertId);
         moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", slot.expertId);
         if (!K2MoEExecExpert(index, cfg, layer, slot.expertId, normed,
                              expertOut.data(), error)) {

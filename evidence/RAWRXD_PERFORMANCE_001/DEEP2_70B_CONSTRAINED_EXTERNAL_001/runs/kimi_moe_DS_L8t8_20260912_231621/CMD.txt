@@ -1,0 +1,17 @@
+﻿STAMP=20260912_231621
+TAG=DUALSTICK_L8_T8
+RAWRXD_ALLOW_GPU=1
+RAWRXD_HOST_DECODE=0
+DEEP2_DUALSTICK_ARM=1
+RAWRXD_K2_LAYERS=8
+DEEP2_MOE_PLACE_TRACE=1
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+MOCK_BACKEND=0
+DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1
+VK_DRIVER_FILES=C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_914ba89eaaafdf60\amd-vulkan64.json
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+BINARY_MTIME=2026-09-12T23:15:55.1536094-04:00
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOKENS=8
+CMD=G:\~dev\rawrxd\build-fd\bin\rawr.exe run "F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf" "Say hi." --max-tokens 8
+NOTE=DualStick live short probe; clear R1_HOST_FLOOR via ALLOW_GPU; PROMOTE=0

@@ -1,0 +1,76 @@
+GATE=DEEP2_70B_CONSTRAINED_EXTERNAL_001
+DATE=2026-09-12
+PROMOTE=0
+TIP_CLIMB=HOLD
+FAIL_CLOSED=1
+NOT_RUN!=PASS
+TARGET_35_50_TPS=UNMINTED
+TPS_PERFORMANCE_AUTHORITY=0
+KIMI_GEN_QUALITY=HOLD
+
+# Governing host (unchanged; NOT re-run)
+FULL_HOST_MOE_EXECUTION=PASS
+GOVERNING_RUN=kimi_moe_FULL61_CUMUL_20260912_230009
+SEAL=2d0f2dc480
+EXPERT_MISS_BYTES_PER_TOKEN_BASELINE=33564101
+HOST_STRUCTURAL_TPS=0.052
+LAYER39_CRASH=CLOSED_AS_NOT_DETERMINISTIC_FAIL
+
+# DualStick short probe (independent of FULL60)
+RUN=runs/kimi_moe_DS_L8t8_20260912_231621
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+BINARY_MTIME=2026-09-12T23:15:55
+ENV=RAWRXD_ALLOW_GPU=1 RAWRXD_HOST_DECODE=0 DEEP2_DUALSTICK_ARM=1 RAWRXD_K2_LAYERS=8 DEEP2_MOE_PLACE_TRACE=1 DEEP2_MOE_PLACE_BUDGET_MIB=8192 DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1 VK_DRIVER_FILES=DriverStore/amdvlk.../amd-vulkan64.json
+TOKENS=8
+R1_HOST_FLOOR=CLEARED
+VK_ICD=LIVE
+HOST_DECODE=0
+
+# Measured
+DUALSTICK_ARMED=1
+DEVICE_COUNT=2
+LIVE_GPU0=AMD Radeon AI PRO R9700
+LIVE_GPU1=AMD Radeon RX 7800 XT
+FWD_G0=0
+FWD_G1=0
+SEL=EXE=448
+ACQUIRE_FAIL=0
+parity=1
+stick_retains=209
+stick_assigns=239
+EXPERT_MISS_BYTES_PER_TOKEN=54820864
+MEAN_TOKEN_WALL_NS=3064755625
+DECODE_TPS_REAL=0.326
+NOTE=TPS_DISPLAY_ONLY_NE_PERFORMANCE_AUTHORITY
+
+# Acceptance conjunction (all required)
+C1_ARMED_DEVICE_COUNT=PASS
+C2_BOTH_STICKS_EXECUTE_ROUTED=FAIL
+  WHY=FWD_G0=0 FWD_G1=0; K2MoEExecExpert remains host GEMV;
+       DualStickAcquire(n=0) is FreeToken ownership advance only —
+       not GPU expert FFN on stick VRAM.
+  EmitDualStickMechanics was absent on product rawr path this run
+  (now SOURCE_WIRED into MoEPlaceLiveEmit for next measure).
+C3_HOT_EXPERT_PREFERRED_STICK=PARTIAL
+  WHY=retains/assigns counters present; GPU stick locality unproven.
+C4_SEL_EXE_PARITY=PASS
+C5_ACQUIRE_FAIL=PASS
+C6_MISS_BYTES_LT_BASELINE=FAIL
+  MEASURED=54820864 BASELINE=33564101
+C7_TOKEN_WALL_IMPROVE=FAIL
+  WHY=depth mismatch vs FULL61 baseline; vs host L61t8
+       MEAN_TOKEN_WALL_NS=18698249750, DualStick L8=3064755625 looks
+       faster only from LAYERS=8; per-layer wall ~0.383s vs host
+       ~0.318s → no DualStick locality improvement.
+
+# Disposition
+DUALSTICK=HOLD
+DUALSTICK_LOCALITY=HOLD
+WHY=LOCALITY_CONJUNCTION_FAIL C2+C6+C7
+OWNER_UNBLOCK=src/deep2/K2NativeMoEFfn_Expert.cpp + DualStickAcquire path
+  must place+exec routed expert weights on stick VRAM (both sticks
+  nonzero); miss_bytes/tok must fall below 33564101; wall improve at
+  matched depth. ProductStreamerPrep R1_HOST_FLOOR is NOT the blocker
+  when RAWRXD_ALLOW_GPU=1 (this run cleared it).
+NEXT=GPU expert exec on DualStick sticks; re-measure conjunction
+PROMOTE=0

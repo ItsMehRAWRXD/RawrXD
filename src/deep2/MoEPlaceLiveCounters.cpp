@@ -1,5 +1,6 @@
 /* MoEPlaceLiveCounters.cpp — ≤99 lines. */
 #include "MoEPlaceLiveCounters.hpp"
+#include "lavapath/DualStickStreamWindow.hpp"
 #include <cstring>
 
 namespace Deep2 {
@@ -56,16 +57,22 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.expert_markhot);
     }
     std::fprintf(f,
-        "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu\n"
+        "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "
+        "stick_retains=%llu stick_assigns=%llu\n"
         "D2_MOE_DECODE K2_MOE_LAYER_CALLS=%llu MOE_PLACE_CALLS=%llu "
         "EXPERTS_SELECTED=%llu EXPERTS_EXECUTED=%llu parity=%d\n",
         (unsigned long long)c.shared_expert_calls,
         (unsigned long long)c.expert_slice_layout_mismatch,
+        (unsigned long long)c.expert_stick_retains,
+        (unsigned long long)c.expert_stick_assigns,
         (unsigned long long)c.decode_moe_layer_calls,
         (unsigned long long)c.decode_moe_place_calls,
         (unsigned long long)c.decode_experts_selected,
         (unsigned long long)c.decode_experts_executed,
         (c.decode_experts_selected == c.decode_experts_executed) ? 1 : 0);
+    /* Product rawr path: emit DualStick runtime stick work (parity cert only
+     * did this before — needed for BOTH_STICKS_EXECUTE conjunction). */
+    EmitDualStickMechanics(f);
     std::fflush(f);
 }
 
