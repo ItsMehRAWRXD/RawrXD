@@ -1,4 +1,4 @@
-/* DualStickImbalance_Observe.cpp — V6 walls + V7 shadow counters. ≤99. */
+/* DualStickImbalance_Observe.cpp — V6 walls + V7 shadow/coverage. ≤99. */
 #include "DualStickImbalance.hpp"
 #include "DualStickImbalance_Cost.hpp"
 #include "DualStickImbalance_State.hpp"
@@ -35,7 +35,7 @@ void DualStickImbalanceObserve(uint64_t t0_ns, uint64_t t1_ns, uint32_t n0,
         MoEPlaceLive().pred_err_kernel_ns += ad(predK, actK);
         MoEPlaceLive().pred_err_xfer_ns += ad(predX, actX);
         MoEPlaceLive().pred_err_queue_ns += ad(predQ, actQ);
-        /* Shadow NONAUTH: layer prior × n vs stick-proportional actK. */
+        /* Shadow NONAUTH only — never CostNoteSplit from stick wall/n. */
         if (V7Mode()) {
             const uint64_t sh = g_layerPrior[st] * (uint64_t)n;
             MoEPlaceLive().v7_shadow_err_ns += ad(sh, actK);
@@ -60,14 +60,7 @@ void DualStickImbalanceObserve(uint64_t t0_ns, uint64_t t1_ns, uint32_t n0,
     MoEPlaceLive().pred_err_sum_ns +=
         ad(g_predLayer[0], t0_ns) + ad(g_predLayer[1], t1_ns);
     MoEPlaceLive().pred_actual_sum_ns += t0_ns + t1_ns;
-    if (V7Mode()) {
-        uint32_t samp = 0;
-        for (uint32_t i = 0; i < g_costN; ++i) samp += g_cost[i].samples;
-        MoEPlaceLive().v7_cost_cells = g_costN;
-        MoEPlaceLive().v7_cost_samples = samp;
-        MoEPlaceLive().v7_observe_only = (V7Mode() == 1) ? 1ull : 0ull;
-        MoEPlaceLive().v7_blend_w_x100 = 0; /* blend stubbed */
-    }
+    if (V7Mode()) CostCoverageRefresh();
 }
 
 } // namespace Deep2

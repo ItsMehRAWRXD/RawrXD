@@ -96,6 +96,19 @@ struct MoEPlaceLiveCounters {
     uint64_t v7_blend_w_x100;
     uint64_t v7_shadow_err_ns;
     uint64_t v7_shadow_act_ns;
+    /* V7_MATRIX_COVERAGE_ATTRIBUTION_001 */
+    uint64_t v7_kernel_cells;
+    uint64_t v7_xfer_cells;
+    uint64_t v7_attr_cells;
+    uint64_t v7_hot_cells;
+    uint64_t v7_hot_cells_ge4;
+    uint64_t v7_min_hot_samples;
+    uint64_t v7_cell_cov_x100;
+    uint64_t v7_hot_cov_x100;
+    uint64_t v7_residual_sum_ns;
+    uint64_t v7_residual_n;
+    uint64_t v7_attrib_only;
+    uint64_t v7_compute_xfer_split;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

@@ -1,0 +1,62 @@
+GATE=V7_MATRIX_COVERAGE_ATTRIBUTION_001
+RECEIPT=RECEIPT_V7_MATRIX_COVERAGE_HOLD_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+BLEND_W=0
+V7_BLEND_05_001=NEXT_ONLY_NOT_ENABLED
+
+PARENT_OBSERVE=PASS da8c388fd RUN=kimi_moe_DS_L61t8_v6_20260913_030226
+AUTH_RUN=runs/kimi_moe_DS_L61t8_v6_20260913_033033
+EXIT=0 EXIT0_AUTHORITY=PROVEN
+GENERATED_TOKENS=8 SEL=3840/3840 parity=1 acquire_fail=0
+WORKER_FAILURES=0 PRODUCT_BACKEND_ATTESTED=1
+GPU_SUBMITS_PER_MOE_LAYER=2 D2H_PARTIAL_VECTORS=960 (2/layer)
+2PLUS2=HELD GPU0_EXPERTS=2012 GPU1_EXPERTS=1828
+MIGRATIONS=0 WORK_STEALS=0
+ASSIGN_AUTH=V6_FULLCOST BLEND_W=0 Pred/LPT/Steal/Note=OFF
+
+IMPLEMENTED=
+  CostSlot: kernel_ns, transfer_ns SEPARATE, samples, ewma, variance,
+    last_seen, resident, quant/shape in CellKey
+  ATTRIBUTABLE_SAMPLES_ONLY=1 (pin H2D + resident xfer=0 + n==1 kern only)
+  Note wall/n = HARD NO-OP; stick Observe never trains per-expert kern
+  COMPUTE_TRANSFER_SPLIT=1 live counters
+  MISSING15 sample_gate/confidence/split helpers PRODUCT_BOUND=0
+  COST_CAP=4096
+
+LIVE_V7=
+  v7_cost_cells=2088 v7_cost_samples=3840
+  v7_kernel_cells=0 v7_xfer_cells=2088 v7_attr_cells=2088
+  CELL_COVERAGE=100 HOT_CELL_COVERAGE=49 MIN_HOT_CELL_SAMPLES=2
+  hot_cells=595 hot_ge4=296
+  v7_observe_only=1 v7_blend_w_x100=0
+
+V6_AUTH=
+  SKEW=48 PREDICT_ERR=62 JOIN≈20.70s
+  RELOAD_MISS_BYTES=1226588160 (~1170MiB)
+
+PASS_IF_EVAL=
+  ATTRIBUTABLE_SAMPLES_ONLY=1 PASS
+  COMPUTE_TRANSFER_SPLIT=1 PASS
+  CELL_COVERAGE>=80 PASS (100)
+  HOT_CELL_COVERAGE>=95 FAIL (49 need>=95)
+  MIN_SAMPLES_PER_HOT_CELL>=4 FAIL (2 need>=4)
+  RELOAD<=227MiB observe baseline FAIL (~1170MiB)
+  ASSIGN=V6 BLEND_W=0 PASS
+  EXIT/parity/2+2 PASS
+PASS_IF=0
+ACCEPT=0
+
+GAPS=
+  1 HOT_CELL_COVERAGE 49→95 (299 more hot cells need samples>=4)
+  2 MIN_HOT_CELL_SAMPLES 2→4 (L61t8 revisit depth insufficient)
+  3 RELOAD ~1170MiB > 227MiB observe floor (assign unchanged; routing/
+     residency variance vs observe; NOT residency PASS)
+  4 v7_kernel_cells=0 (fused multi-expert sticks; n==1 attr rare)
+
+FROZEN_HOLDS=blend_w=0 Pred NOT in Assign LPT/Steal/Note=OFF
+NEXT=close HOT/MIN_SAMPLES (+ optional longer decode) then RELOAD
+  non-regression before V7_BLEND_05_001

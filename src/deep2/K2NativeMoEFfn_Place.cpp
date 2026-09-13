@@ -9,6 +9,7 @@
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
 #include "lavapath/DualStickImbalance.hpp"
+#include "lavapath/DualStickImbalance_Xfer.hpp"
 #include "MoELiveAdd.hpp"
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
@@ -335,6 +336,19 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     if (dual)
         DualStickImbalanceObserve(tw0, tw1, ex0, ex1, c0.h2d_bytes,
                                   c1.h2d_bytes);
+    /* ATTRIBUTABLE kernel only when stick uniquely has 1 expert (no wall/n). */
+    auto attr1 = [&](unsigned st, uint32_t exN, uint64_t wall,
+                     uint64_t h2d, const std::vector<int32_t>& hot) {
+        if (exN != 1u || hot.empty() || !wall) return;
+        const uint64_t x =
+            h2d ? ds_imb::TransferExecNs(st, h2d) : 0ull;
+        const uint64_t k = (wall > x) ? (wall - x) : wall;
+        DualStickImbalanceObserveExpert((int)layer, hot[0], st, 1, 0ull, k);
+    };
+    if (dual) {
+        attr1(0u, ex0, tw0, c0.h2d_bytes, hot0);
+        attr1(1u, ex1, tw1, c1.h2d_bytes, hot1);
+    }
     MoEPlaceLive().layer_joins++;
 
     /* MarkHot after join (README_BIND). */

@@ -168,7 +168,13 @@ void MoEPlaceLiveEmit(FILE* f) {
         std::fprintf(f,
             "D2_MOE_V7 v7_cost_cells=%llu v7_cost_samples=%llu "
             "v7_observe_only=%llu v7_blend_w_x100=%llu "
-            "v7_shadow_err_pct=%llu_NONAUTH\n",
+            "v7_shadow_err_pct=%llu_NONAUTH\n"
+            "D2_MOE_V7 ATTRIBUTABLE_SAMPLES_ONLY=%llu "
+            "COMPUTE_TRANSFER_SPLIT=%llu "
+            "v7_kernel_cells=%llu v7_xfer_cells=%llu v7_attr_cells=%llu\n"
+            "D2_MOE_V7 CELL_COVERAGE=%llu HOT_CELL_COVERAGE=%llu "
+            "MIN_HOT_CELL_SAMPLES=%llu hot_cells=%llu hot_ge4=%llu "
+            "residual_mean_ns=%llu\n",
             (unsigned long long)c.v7_cost_cells,
             (unsigned long long)c.v7_cost_samples,
             (unsigned long long)c.v7_observe_only,
@@ -176,6 +182,19 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)(c.v7_shadow_act_ns
                                     ? (c.v7_shadow_err_ns * 100ull) /
                                           c.v7_shadow_act_ns
+                                    : 0ull),
+            (unsigned long long)c.v7_attrib_only,
+            (unsigned long long)c.v7_compute_xfer_split,
+            (unsigned long long)c.v7_kernel_cells,
+            (unsigned long long)c.v7_xfer_cells,
+            (unsigned long long)c.v7_attr_cells,
+            (unsigned long long)c.v7_cell_cov_x100,
+            (unsigned long long)c.v7_hot_cov_x100,
+            (unsigned long long)c.v7_min_hot_samples,
+            (unsigned long long)c.v7_hot_cells,
+            (unsigned long long)c.v7_hot_cells_ge4,
+            (unsigned long long)(c.v7_residual_n
+                                    ? c.v7_residual_sum_ns / c.v7_residual_n
                                     : 0ull));
     }
     std::fprintf(f,
