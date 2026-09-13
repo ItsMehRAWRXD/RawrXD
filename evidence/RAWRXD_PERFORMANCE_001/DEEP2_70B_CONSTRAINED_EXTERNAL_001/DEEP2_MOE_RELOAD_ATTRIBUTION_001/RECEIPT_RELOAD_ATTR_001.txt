@@ -1,0 +1,60 @@
+GATE=DEEP2_MOE_RELOAD_ATTRIBUTION_001
+RECEIPT=RECEIPT_RELOAD_ATTR_001
+DATE=2026-09-13
+PROMOTE=0
+BLEND_W=0
+V7_MODE=0
+ASSIGN=V6_FULLCOST
+RAISE_BUDGET=DEFER
+NOT_RUN!=PASS
+PARENT_COHERENCY=PASS (sealed; not residency PASS)
+
+AUTH_RUN=runs/kimi_moe_DS_L61t8_pincoh_20260913_040150
+EXIT=0 WALL_MS=118477
+SEL=3840/3840 parity=1 STALE=0 FALSE_POS=0
+BUDGET_FINAL=12288MiB/stick DUALSTICK_BIND
+SHRINK_BLOCKED=ENGINE_MAX_HOT
+
+GLOBAL_SPLIT=
+  GPU_WEIGHT_BYTES_RELOAD=1131282432 (~1078MiB)
+  GPU_WEIGHT_BYTES_RELOAD_MOE=1131282432 (100%)
+  GPU_WEIGHT_BYTES_RELOAD_MLA=0
+  GPU_WEIGHT_BYTES_RELOAD_GENERAL=0
+
+MOE_EVICT_REUSE=
+  moe_evicted_keys=1141
+  moe_evicted_bundles=381
+  moe_evicted_then_reused_keys=126
+  moe_evicted_then_reused_bundles=42
+  MOE_RELOAD_AFTER_EVICTION_BYTES=1131282432 (~1078MiB)
+  MOE_COMPULSORY_LOAD_BYTES=34725003264
+  cause: mla_caused_moe_evictions=0 general_caused=0
+    (MoE→MoE self-pressure under shared gemv cache; prefer-non-MoE already on)
+
+NONAUTH=
+  RELOAD_MISS_BYTES=0 NONAUTH for residency (meta soft-invalidate)
+  prior ~928MiB global WARNING → now class-split: all MoE
+
+ANSWERS=
+  Of ~1141 evicted MoE keys, 126 reused (42 bundles)
+  Who: MoE inserter self-pressure (not MLA/GENERAL this run)
+  Physical re-upload after eviction: 1131282432 bytes
+  Class owning global reload: MOE 100%
+
+VERDICT_BRANCH=PARTITION
+  MOE_RELOAD_AFTER_EVICTION == GPU_WEIGHT_BYTES_RELOAD
+  => hard MoE cache partition/reservation required
+  NOT misread of global counter
+
+PARTITION_STATUS=NEXT
+  DEEP2_SEGMENTED_RESIDENCY_QUOTAS_001 law LOCKED
+  INVARIANT: NON_MOE_PRESSURE =/> MOE_RESERVED_EVICTION
+  TARGET: GENERAL_TO_MOE=0 MLA_TO_MOE=0 MOE_PHYSICAL_RELOAD stable
+  Full segmented quotas NOT implemented this receipt (meters first)
+
+IMPLEMENTED=
+  ClassifyPinKey MoE/MLA/GENERAL
+  GpuTransfer RELOAD_{MOE,MLA,GENERAL}
+  Bundle epochs live/soft-invalidate + pending_reload
+  DualStickMarkMoeKeyEvicted + NoteMoePinUpload auth path
+  D2_MOE_RELOAD_ATTR emit

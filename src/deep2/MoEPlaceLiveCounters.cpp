@@ -211,6 +211,20 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.dualstick_slot_invalidated,
             (unsigned long long)c.moe_pin_touches,
             (unsigned long long)c.moe_bundle_touches);
+        std::fprintf(f,
+            "D2_MOE_RELOAD_ATTR moe_evicted_keys=%llu moe_evicted_bundles=%llu "
+            "moe_evicted_then_reused_keys=%llu "
+            "moe_evicted_then_reused_bundles=%llu "
+            "MOE_RELOAD_AFTER_EVICTION_BYTES=%llu "
+            "MOE_COMPULSORY_LOAD_BYTES=%llu "
+            "MLA_RELOAD_BYTES=see_GPU_WEIGHT_BYTES_RELOAD_MLA "
+            "GENERAL_RELOAD_BYTES=see_GPU_WEIGHT_BYTES_RELOAD_GENERAL\n",
+            (unsigned long long)c.moe_evicted_keys,
+            (unsigned long long)c.moe_evicted_bundles,
+            (unsigned long long)c.moe_evicted_then_reused_keys,
+            (unsigned long long)c.moe_evicted_then_reused_bundles,
+            (unsigned long long)c.moe_reload_after_eviction_bytes,
+            (unsigned long long)c.moe_compulsory_load_bytes);
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "

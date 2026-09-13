@@ -6,6 +6,7 @@
 #if RAWR_VULKAN_AVAILABLE
 #include "GpuTransferCounters.hpp"
 #include "lavapath/DualStickPinCoherency.hpp"
+#include "lavapath/DualStickReloadAttr.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -306,7 +307,6 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
             victim = gemv_weight_cache_.begin();
         const uint64_t vkey = victim->first;
         const int vMoe = isMoePin(vkey) ? 1 : 0;
-        const int insMoe = isMoePin(key) ? 1 : 0;
         if (victim->second.buffer)
             vkDestroyBuffer(device_, victim->second.buffer, nullptr);
         if (victim->second.memory)
@@ -314,8 +314,13 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
         gemv_resident_bytes_ -= victim->second.bytes;
         gemv_weight_cache_.erase(victim);
         ++gemv_pin_evicts_;
-        if (vMoe)
-            Deep2::DualStickOnGemvPinEvicted(vkey, insMoe ? 0 : 1);
+        if (vMoe) {
+            Deep2::PinWeightClass ic = Deep2::ClassifyPinKey(key);
+            int cause = 0;
+            if (ic == Deep2::PinWeightClass::Mla) cause = 1;
+            else if (ic == Deep2::PinWeightClass::General) cause = 2;
+            Deep2::DualStickOnGemvPinEvicted(vkey, cause);
+        }
     }
     if (gemv_resident_bytes_ + bytes > budget) {
         ++ww_pin_rejects_;
@@ -343,8 +348,14 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
     {
         const bool first =
             Deep2::GpuTransfer_MarkSeenKey((uintptr_t)key);
-        Deep2::GpuTransfer_NoteWeightMiss(bytes, first);
+        Deep2::PinWeightClass pc = Deep2::ClassifyPinKey(key);
+        Deep2::GpuWeightClass gc = Deep2::GpuWeightClass::General;
+        if (pc == Deep2::PinWeightClass::MoE) gc = Deep2::GpuWeightClass::MoE;
+        else if (pc == Deep2::PinWeightClass::Mla) gc = Deep2::GpuWeightClass::Mla;
+        Deep2::GpuTransfer_NoteWeightMissClass(bytes, first, gc);
         if (!first) Deep2::GpuTransfer_NoteRedundantUpload();
+        if (pc == Deep2::PinWeightClass::MoE)
+            Deep2::DualStickNoteMoePinUpload(key, bytes, first ? 1 : 0);
         if (const char* t = std::getenv("RAWRXD_RESIDENCY_TRACE_UPLOAD")) {
             if (t[0] == '1')
                 std::fprintf(stderr,

@@ -27,6 +27,9 @@ inline std::atomic<uint64_t>& GTC_wMiss() { static std::atomic<uint64_t> v{0}; r
 inline std::atomic<uint64_t>& GTC_wHitB() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_firstB() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_reloadB() { static std::atomic<uint64_t> v{0}; return v; }
+inline std::atomic<uint64_t>& GTC_reloadMoe() { static std::atomic<uint64_t> v{0}; return v; }
+inline std::atomic<uint64_t>& GTC_reloadMla() { static std::atomic<uint64_t> v{0}; return v; }
+inline std::atomic<uint64_t>& GTC_reloadGen() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_slotReuse() { static std::atomic<uint64_t> v{0}; return v; }
 inline std::atomic<uint64_t>& GTC_redundant() { static std::atomic<uint64_t> v{0}; return v; }
 
@@ -39,6 +42,7 @@ inline void GpuTransfer_Reset() {
     GTC_tokens().store(0); GTC_layers().store(0); GTC_fwdLayers().store(0);
     GTC_wHits().store(0); GTC_wMiss().store(0); GTC_wHitB().store(0);
     GTC_firstB().store(0); GTC_reloadB().store(0);
+    GTC_reloadMoe().store(0); GTC_reloadMla().store(0); GTC_reloadGen().store(0);
     GTC_slotReuse().store(0); GTC_redundant().store(0);
     GpuTransfer_ResetSeenKeys();
 }
@@ -84,6 +88,19 @@ inline void GpuTransfer_NoteWeightMiss(uint64_t bytes, bool firstEver) {
     else GTC_reloadB().fetch_add(bytes, std::memory_order_relaxed);
     Locality64_NoteDemand(LocalityKind::Weight, bytes, false);
 }
+/* Class-split reload (MOE/MLA/GENERAL). firstEver still updates totals. */
+enum class GpuWeightClass : uint8_t { MoE = 0, Mla = 1, General = 2 };
+inline void GpuTransfer_NoteWeightMissClass(uint64_t bytes, bool firstEver,
+                                           GpuWeightClass c) {
+    GpuTransfer_NoteWeightMiss(bytes, firstEver);
+    if (firstEver || !bytes) return;
+    if (c == GpuWeightClass::MoE)
+        GTC_reloadMoe().fetch_add(bytes, std::memory_order_relaxed);
+    else if (c == GpuWeightClass::Mla)
+        GTC_reloadMla().fetch_add(bytes, std::memory_order_relaxed);
+    else
+        GTC_reloadGen().fetch_add(bytes, std::memory_order_relaxed);
+}
 inline void GpuTransfer_NoteSlotReuse() {
     GTC_slotReuse().fetch_add(1, std::memory_order_relaxed);
 }
@@ -97,6 +114,7 @@ struct GpuTransferSnapshot {
     uint64_t tokens = 0, layers = 0, fwdLayers = 0;
     uint64_t weightHits = 0, weightMisses = 0, weightHitBytes = 0;
     uint64_t firstLoadBytes = 0, reloadBytes = 0;
+    uint64_t reloadBytesMoe = 0, reloadBytesMla = 0, reloadBytesGeneral = 0;
     uint64_t slotReuses = 0, redundantUploads = 0;
 };
 GpuTransferSnapshot GpuTransfer_Snapshot();

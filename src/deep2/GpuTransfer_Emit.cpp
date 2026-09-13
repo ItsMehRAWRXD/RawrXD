@@ -26,6 +26,9 @@ GpuTransferSnapshot GpuTransfer_Snapshot() {
     s.weightHits = GTC_wHits().load(); s.weightMisses = GTC_wMiss().load();
     s.weightHitBytes = GTC_wHitB().load();
     s.firstLoadBytes = GTC_firstB().load(); s.reloadBytes = GTC_reloadB().load();
+    s.reloadBytesMoe = GTC_reloadMoe().load();
+    s.reloadBytesMla = GTC_reloadMla().load();
+    s.reloadBytesGeneral = GTC_reloadGen().load();
     s.slotReuses = GTC_slotReuse().load(); s.redundantUploads = GTC_redundant().load();
     return s;
 }
@@ -54,6 +57,12 @@ void GpuTransfer_Emit(FILE* f) {
             (unsigned long long)s.weightHitBytes);
     fprintf(f, "GPU_WEIGHT_BYTES_FIRST_LOAD=%llu\n", (unsigned long long)s.firstLoadBytes);
     fprintf(f, "GPU_WEIGHT_BYTES_RELOAD=%llu\n", (unsigned long long)s.reloadBytes);
+    fprintf(f, "GPU_WEIGHT_BYTES_RELOAD_MOE=%llu\n",
+            (unsigned long long)s.reloadBytesMoe);
+    fprintf(f, "GPU_WEIGHT_BYTES_RELOAD_MLA=%llu\n",
+            (unsigned long long)s.reloadBytesMla);
+    fprintf(f, "GPU_WEIGHT_BYTES_RELOAD_GENERAL=%llu\n",
+            (unsigned long long)s.reloadBytesGeneral);
     fprintf(f, "GPU_WEIGHT_SLOT_REUSES=%llu\n", (unsigned long long)s.slotReuses);
     fprintf(f, "GPU_WEIGHT_REDUNDANT_UPLOADS=%llu\n", (unsigned long long)s.redundantUploads);
     fflush(f);

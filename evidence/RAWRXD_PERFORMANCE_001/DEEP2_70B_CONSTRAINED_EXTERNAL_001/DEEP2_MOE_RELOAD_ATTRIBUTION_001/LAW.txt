@@ -1,0 +1,54 @@
+GATE=DEEP2_MOE_RELOAD_ATTRIBUTION_001
+DATE=2026-09-13
+KIND=NEXT_OWNER
+PROMOTE=0
+BLEND_W=0
+V7_MODE=0
+ASSIGN=V6_FULLCOST
+NOT_RUN!=PASS
+PARENT=DEEP2_MOE_PIN_EVICTION_COHERENCY_001 PIN_COHERENCY=PASS
+
+# Split global GPU_WEIGHT_BYTES_RELOAD from MoE-bundle RELOAD_MISS_BYTES
+
+COUNTERS=
+  GPU_WEIGHT_BYTES_RELOAD_MOE
+  GPU_WEIGHT_BYTES_RELOAD_MLA
+  GPU_WEIGHT_BYTES_RELOAD_GENERAL
+  MOE_EVICTED_KEYS
+  MOE_EVICTED_BUNDLES
+  MOE_EVICTED_THEN_REUSED_KEYS
+  MOE_EVICTED_THEN_REUSED_BUNDLES
+  MOE_RELOAD_AFTER_EVICTION_BYTES
+  MOE_COMPULSORY_LOAD_BYTES
+  GENERAL_RELOAD_BYTES
+  MLA_RELOAD_BYTES
+
+BUNDLE_EPOCH=
+  resident_epoch · eviction_epoch · last_acquire_epoch
+
+AUTH_RELOAD=
+  was_resident AND was_evicted AND needed_again AND physical_bytes_uploaded
+  => MOE_RELOAD_AFTER_EVICTION_BYTES += bytes
+# stronger than lookup-history alone
+
+QUESTIONS=
+  Of 1078 evicted MoE keys, how many needed again?
+  Who evicted them?
+  How many physical bytes re-uploaded?
+  Which class owns the ~928 MiB global reload?
+
+THEN_IF=
+  MOE_EVICTED_THEN_REUSED large AND MOE_RELOAD_AFTER_EVICTION≈928MiB
+    => hard MoE cache partition/reservation (not more LRU touching)
+  MOE_RELOAD_AFTER_EVICTION=0 AND GENERAL/MLA≈928MiB
+    => old GPU_WEIGHT_BYTES_RELOAD was misread as expert-thrash authority
+
+POLICY_HINT=
+  protect MoE from ALL non-MoE/general consumers (MLA not sole culprit this run)
+  quota arch: MOE_RESERVED | MLA_QUOTA | GENERAL_QUOTA
+  INVARIANT: NON_MOE_PRESSURE =/> MOE_RESERVED_EVICTION
+  SEE=DEEP2_SEGMENTED_RESIDENCY_QUOTAS_001
+
+NONAUTH=
+  RELOAD_MISS_BYTES=0 NONAUTH for residency until physical attribution repaired
+  ~928 MiB global GPU_WEIGHT_BYTES_RELOAD = WARNING only until class-split

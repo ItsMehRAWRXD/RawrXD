@@ -295,6 +295,15 @@ public:
     uint64_t PinBudgetShrinkBlocked() const { return ww_budget_shrink_blocked_; }
     uint64_t WeightPinCacheCount() const;
     uint64_t WeightPinResidentBytes() const;
+    /* SEGMENTED_MOE_QUOTA_001 — DualStick floor hard-reserved for MoE. */
+    uint64_t MoeReservedBytes() const { return ww_moe_reserved_bytes_; }
+    uint64_t MoeResidentBytes() const { return gemv_moe_resident_bytes_; }
+    uint64_t MlaResidentBytes() const { return gemv_mla_resident_bytes_; }
+    uint64_t GeneralResidentBytes() const {
+        return gemv_general_resident_bytes_;
+    }
+    uint64_t MlaQuotaBytes() const { return ww_mla_quota_bytes_; }
+    uint64_t GeneralQuotaBytes() const { return ww_general_quota_bytes_; }
     bool HasPinnedGemvWeight(uint64_t pinKey, size_t bytes, uint32_t rows,
                              uint32_t cols) const;
     bool TouchPinnedGemvWeight(uint64_t pinKey, size_t bytes, uint32_t rows,
@@ -593,6 +602,9 @@ private:
     uint64_t gemv_weight_hits_ = 0;
     uint64_t gemv_pin_evicts_ = 0;
     uint64_t gemv_resident_bytes_ = 0;
+    uint64_t gemv_moe_resident_bytes_ = 0;
+    uint64_t gemv_mla_resident_bytes_ = 0;
+    uint64_t gemv_general_resident_bytes_ = 0;
 
     struct GemvResidentWeight {
         VkBuffer buffer = nullptr;
@@ -635,6 +647,9 @@ private:
     size_t ww_budget_bytes_ = 0;
     // Sticky floor from SetPinResidentBudget — EnsureWeightWindow must not shrink below.
     size_t ww_pin_budget_floor_ = 0;
+    size_t ww_moe_reserved_bytes_ = 0;
+    size_t ww_mla_quota_bytes_ = 0;
+    size_t ww_general_quota_bytes_ = 0;
     char ww_pin_budget_owner_[24]{};
     uint64_t ww_budget_set_n_ = 0;
     uint64_t ww_budget_shrink_n_ = 0;

@@ -4919,7 +4919,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
     src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp
     src/deep2/lavapath/DualStickExpertBundle.cpp
+    src/deep2/lavapath/DualStickBundle_Table.cpp
+    src/deep2/lavapath/DualStickBundle_Note.cpp
     src/deep2/lavapath/DualStickBundle_Evict.cpp
+    src/deep2/lavapath/DualStickBundle_Attr.cpp
     src/deep2/lavapath/DualStickBundle_Pins.cpp
     src/deep2/lavapath/DualStickBundle_Touch.cpp
     src/deep2/MlaCertAuthority.cpp
@@ -4968,7 +4971,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
     src/deep2/lavapath/DualStickStreamWindow_Vc.cpp
     src/deep2/lavapath/DualStickExpertBundle.cpp
+    src/deep2/lavapath/DualStickBundle_Table.cpp
+    src/deep2/lavapath/DualStickBundle_Note.cpp
     src/deep2/lavapath/DualStickBundle_Evict.cpp
+    src/deep2/lavapath/DualStickBundle_Attr.cpp
     src/deep2/lavapath/DualStickBundle_Pins.cpp
     src/deep2/lavapath/DualStickBundle_Touch.cpp
     src/deep2/lavapath/DualStickImbalance.cpp
@@ -6867,7 +6873,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2NativeMoEFfn_ExpertGpu.cpp
         src/deep2/K2NativeMoEFfn_ExpertGpuDevice.cpp
         src/deep2/lavapath/DualStickExpertBundle.cpp
+        src/deep2/lavapath/DualStickBundle_Table.cpp
+        src/deep2/lavapath/DualStickBundle_Note.cpp
         src/deep2/lavapath/DualStickBundle_Evict.cpp
+        src/deep2/lavapath/DualStickBundle_Attr.cpp
         src/deep2/lavapath/DualStickBundle_Pins.cpp
         src/deep2/lavapath/DualStickBundle_Touch.cpp
     src/deep2/K2GpuStreamCopy.cpp

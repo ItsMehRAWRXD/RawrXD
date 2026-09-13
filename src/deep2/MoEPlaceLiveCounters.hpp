@@ -121,6 +121,13 @@ struct MoEPlaceLiveCounters {
     uint64_t moe_bundle_touches;
     uint64_t cache_budget_set;
     uint64_t cache_budget_shrink;
+    /* DEEP2_MOE_RELOAD_ATTRIBUTION_001 */
+    uint64_t moe_evicted_keys;
+    uint64_t moe_evicted_bundles;
+    uint64_t moe_evicted_then_reused_keys;
+    uint64_t moe_evicted_then_reused_bundles;
+    uint64_t moe_reload_after_eviction_bytes;
+    uint64_t moe_compulsory_load_bytes;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();
