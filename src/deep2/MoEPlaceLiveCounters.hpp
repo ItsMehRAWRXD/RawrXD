@@ -27,6 +27,13 @@ struct MoEPlaceLiveCounters {
     uint64_t ffn_dispatch_moe;
     uint64_t ffn_dispatch_dense;
     uint64_t ffn_dispatch_ssm;
+    /* Decode-phase subset (position>0); totals may include prefill. */
+    uint64_t decode_moe_layer_calls;
+    uint64_t decode_moe_place_calls;
+    uint64_t decode_experts_selected;
+    uint64_t decode_experts_executed;
+    uint64_t shared_expert_calls;
+    uint64_t expert_slice_layout_mismatch;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

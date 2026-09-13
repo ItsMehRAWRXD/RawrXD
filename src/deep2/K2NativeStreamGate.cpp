@@ -6,6 +6,9 @@
 #include "K2MLAWeights.hpp"
 #include "K2MLAAttention.hpp"
 #include "K2MLA_GpuGemv.hpp"
+#include "K2NativeMoEFfn.hpp"
+#include "MoEPlaceLiveCounters.hpp"
+#include "MoEExpertResidencyPlace.hpp"
 #include "MlaCertAuthority.hpp"
 #include "K2KVCache.hpp"
 #include "K2TokenEmbedding.hpp"
@@ -797,6 +800,17 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
             releaseKvTrack();
             return false;
         }
+        /* Host MoE after MLA: router → shared placer → execute ALL selected. */
+        if (k2cfg.numExperts > 0) {
+            /* Stream generate path: all tokens count as DECODE for host proof. */
+            const bool decodePhase = true;
+            if (!Deep2::K2NativeMoE_AfterMla(index, k2cfg, layer, decodePhase, out,
+                                             scratch.data(), error)) {
+                joinAll();
+                releaseKvTrack();
+                return false;
+            }
+        }
         Deep2::RawrScoreboardNoteExecute();
         issueUpTo(layer + 2);
         if (layer >= 1) retireSlot(slots[(layer - 1u) & 3u]);
@@ -841,6 +855,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         return false;
     }
     if (testLayers % 2 == 0) memcpy(hidden, tempHidden.data(), hiddenDim * sizeof(float));
+    if (k2cfg.numExperts > 0) Deep2::MoEPlaceLive().moe_tokens++;
     return true;
 }
 
@@ -1177,6 +1192,8 @@ Result Run(const fs::path& shardDir,
     Deep2::LogitsResidency_Reset();
     Deep2::LogitsClimb_Reset();
     Deep2::MlaStage_Reset();
+    Deep2::MoEPlaceLiveReset();
+    Deep2::MoEPlaceGlobal().Reset();
     /* EV512 arm+surface owned by Deep2Engine::generateStream (decoupled). */
     Deep2::Ev512::HostTryArm(0x50415448424E3503ull); /* PATHBN5; no-op if armed */
     // Preserve sticky MLA host cache + open shard HANDLEs across warm→timed.

@@ -4913,6 +4913,9 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2MLAAttention.cpp
     src/deep2/K2TokenEmbedding.cpp
     src/deep2/K2NativeStreamGate.cpp
+    src/deep2/K2NativeMoEFfn.cpp
+    src/deep2/K2NativeMoEFfn_Place.cpp
+    src/deep2/K2NativeMoEFfn_Expert.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
     src/deep2/K2LogitsSplit.cpp
@@ -6840,6 +6843,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/GpuDecodeEfficiency.cpp
         src/core/AmdGpuPowerBackend.cpp
         src/deep2/K2NativeStreamGate.cpp
+        src/deep2/K2NativeMoEFfn.cpp
+        src/deep2/K2NativeMoEFfn_Place.cpp
+        src/deep2/K2NativeMoEFfn_Expert.cpp
     src/deep2/K2GpuStreamCopy.cpp
         src/deep2/K2LivePathTensorCache.cpp
         src/deep2/K2WeightResolve.cpp

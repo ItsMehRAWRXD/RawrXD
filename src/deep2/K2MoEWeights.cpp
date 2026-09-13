@@ -1,216 +1,180 @@
-// ============================================================================
-// K2MoEWeights.cpp — K2-004/005 MoE Tensor Schema Implementation
-// ============================================================================
-
+/* K2MoEWeights.cpp — physical ExpertSlice + selection-only eScoreCorrectionBias. */
 #include "K2MoEWeights.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <numeric>
 
 namespace Deep2 {
+namespace {
 
-// ============================================================================
-// MoEWeights
-// ============================================================================
-
-ExpertSlice MoEWeights::GetExpertGate(uint32_t expertId, const KimiK2Config& config) const {
+ExpertSlice MakePhysicalSlice(const RawrXD::TensorView& src, uint32_t expertId,
+                              uint32_t expertCount) {
     ExpertSlice slice;
-    slice.source = ffnGateExps;
-    slice.expertCount = config.numExperts;
+    slice.source = src;
+    slice.expertCount = expertCount;
     slice.expertId = expertId;
-    // ffnGateExps shape: [moeIntermediateSize, hiddenDim, numExperts]
-    // Each expert: [moeIntermediateSize, hiddenDim]
-    const uint64_t expertSize = config.moeIntermediateSize * config.hiddenDim * sizeof(float);
-    slice.expertStrideBytes = expertSize;
-    slice.byteOffset = expertId * expertSize;
-    slice.byteSize = expertSize;
+    if (!expertCount) return slice;
+    const uint64_t total = src.byteSize();
+    slice.expertStrideBytes = total / (uint64_t)expertCount;
+    slice.byteOffset = (uint64_t)expertId * slice.expertStrideBytes;
+    slice.byteSize = slice.expertStrideBytes;
     return slice;
 }
 
-ExpertSlice MoEWeights::GetExpertUp(uint32_t expertId, const KimiK2Config& config) const {
-    ExpertSlice slice;
-    slice.source = ffnUpExps;
-    slice.expertCount = config.numExperts;
-    slice.expertId = expertId;
-    const uint64_t expertSize = config.moeIntermediateSize * config.hiddenDim * sizeof(float);
-    slice.expertStrideBytes = expertSize;
-    slice.byteOffset = expertId * expertSize;
-    slice.byteSize = expertSize;
-    return slice;
-}
+} // namespace
 
-ExpertSlice MoEWeights::GetExpertDown(uint32_t expertId, const KimiK2Config& config) const {
-    ExpertSlice slice;
-    slice.source = ffnDownExps;
-    slice.expertCount = config.numExperts;
-    slice.expertId = expertId;
-    const uint64_t expertSize = config.hiddenDim * config.moeIntermediateSize * sizeof(float);
-    slice.expertStrideBytes = expertSize;
-    slice.byteOffset = expertId * expertSize;
-    slice.byteSize = expertSize;
-    return slice;
+ExpertSlice MoEWeights::GetExpertGate(uint32_t expertId,
+                                      const KimiK2Config& config) const {
+    return MakePhysicalSlice(ffnGateExps, expertId, config.numExperts);
+}
+ExpertSlice MoEWeights::GetExpertUp(uint32_t expertId,
+                                    const KimiK2Config& config) const {
+    return MakePhysicalSlice(ffnUpExps, expertId, config.numExperts);
+}
+ExpertSlice MoEWeights::GetExpertDown(uint32_t expertId,
+                                      const KimiK2Config& config) const {
+    return MakePhysicalSlice(ffnDownExps, expertId, config.numExperts);
 }
 
 bool MoEWeights::Validate(const KimiK2Config& config, std::string& error) const {
-    // Detect layer type: dense FFN (layer 0) vs MoE (layers 1+)
-    const bool isDenseLayer = !ffnGate.dims().empty() || !ffnUp.dims().empty() || !ffnDown.dims().empty();
-    const bool isMoELayer = !ffnGateInp.dims().empty();
-
-    if (!isDenseLayer && !isMoELayer) {
-        error = "MoEWeights: layer has neither dense FFN nor MoE tensors";
+    (void)config;
+    const bool isDense = !ffnGate.dims().empty() || !ffnUp.dims().empty() ||
+                         !ffnDown.dims().empty();
+    const bool isMoE = !ffnGateInp.dims().empty();
+    if (!isDense && !isMoE) {
+        error = "MoEWeights: neither dense nor MoE";
         return false;
     }
-
-    // Router tensors (required for MoE layers only)
-    if (isMoELayer) {
-        if (ffnGateInp.dims().empty()) { error = "MoEWeights: ffn_gate_inp missing"; return false; }
-        if (expProbsB.dims().empty()) { error = "MoEWeights: exp_probs_b missing"; return false; }
-
-        // Expert tensors
-        if (ffnGateExps.dims().empty()) { error = "MoEWeights: ffn_gate_exps missing"; return false; }
-        if (ffnUpExps.dims().empty()) { error = "MoEWeights: ffn_up_exps missing"; return false; }
-        if (ffnDownExps.dims().empty()) { error = "MoEWeights: ffn_down_exps missing"; return false; }
+    if (isMoE) {
+        if (ffnGateInp.dims().empty()) {
+            error = "MoEWeights: ffn_gate_inp missing";
+            return false;
+        }
+        if (eScoreCorrectionBias.dims().empty()) {
+            error = "MoEWeights: eScoreCorrectionBias (exp_probs_b) missing";
+            return false;
+        }
+        if (ffnGateExps.dims().empty() || ffnUpExps.dims().empty() ||
+            ffnDownExps.dims().empty()) {
+            error = "MoEWeights: routed expert tensors missing";
+            return false;
+        }
+        if (ffnGateShexp.dims().empty() || ffnUpShexp.dims().empty() ||
+            ffnDownShexp.dims().empty()) {
+            error = "MoEWeights: shared expert missing";
+            return false;
+        }
     }
-
-    // Shared expert (required for MoE layers, optional for dense layer 0)
-    if (isMoELayer) {
-        if (ffnGateShexp.dims().empty()) { error = "MoEWeights: ffn_gate_shexp missing"; return false; }
-        if (ffnUpShexp.dims().empty()) { error = "MoEWeights: ffn_up_shexp missing"; return false; }
-        if (ffnDownShexp.dims().empty()) { error = "MoEWeights: ffn_down_shexp missing"; return false; }
+    if (ffnNorm.dims().empty()) {
+        error = "MoEWeights: ffn_norm missing";
+        return false;
     }
-
-    // Norm (always present)
-    if (ffnNorm.dims().empty()) { error = "MoEWeights: ffn_norm missing"; return false; }
-
     return true;
 }
 
-bool MoEWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error) {
-    char gateInpName[64], expProbsBName[64];
+bool MoEWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index,
+                                        uint32_t layer, std::string& error) {
+    char gateInpName[64], biasName[64];
     char gateExpsName[64], upExpsName[64], downExpsName[64];
     char gateShexpName[64], upShexpName[64], downShexpName[64];
-    char gateName[64], upName[64], downName[64];
-    char normName[64];
-
-    snprintf(gateInpName, sizeof(gateInpName), "blk.%u.ffn_gate_inp.weight", layer);
-    snprintf(expProbsBName, sizeof(expProbsBName), "blk.%u.exp_probs_b.bias", layer);
-    snprintf(gateExpsName, sizeof(gateExpsName), "blk.%u.ffn_gate_exps.weight", layer);
-    snprintf(upExpsName, sizeof(upExpsName), "blk.%u.ffn_up_exps.weight", layer);
-    snprintf(downExpsName, sizeof(downExpsName), "blk.%u.ffn_down_exps.weight", layer);
-    snprintf(gateShexpName, sizeof(gateShexpName), "blk.%u.ffn_gate_shexp.weight", layer);
-    snprintf(upShexpName, sizeof(upShexpName), "blk.%u.ffn_up_shexp.weight", layer);
-    snprintf(downShexpName, sizeof(downShexpName), "blk.%u.ffn_down_shexp.weight", layer);
-    snprintf(gateName, sizeof(gateName), "blk.%u.ffn_gate.weight", layer);
-    snprintf(upName, sizeof(upName), "blk.%u.ffn_up.weight", layer);
-    snprintf(downName, sizeof(downName), "blk.%u.ffn_down.weight", layer);
-    snprintf(normName, sizeof(normName), "blk.%u.ffn_norm.weight", layer);
+    char gateName[64], upName[64], downName[64], normName[64];
+    std::snprintf(gateInpName, sizeof(gateInpName), "blk.%u.ffn_gate_inp.weight", layer);
+    std::snprintf(biasName, sizeof(biasName), "blk.%u.exp_probs_b.bias", layer);
+    std::snprintf(gateExpsName, sizeof(gateExpsName), "blk.%u.ffn_gate_exps.weight", layer);
+    std::snprintf(upExpsName, sizeof(upExpsName), "blk.%u.ffn_up_exps.weight", layer);
+    std::snprintf(downExpsName, sizeof(downExpsName), "blk.%u.ffn_down_exps.weight", layer);
+    std::snprintf(gateShexpName, sizeof(gateShexpName), "blk.%u.ffn_gate_shexp.weight", layer);
+    std::snprintf(upShexpName, sizeof(upShexpName), "blk.%u.ffn_up_shexp.weight", layer);
+    std::snprintf(downShexpName, sizeof(downShexpName), "blk.%u.ffn_down_shexp.weight", layer);
+    std::snprintf(gateName, sizeof(gateName), "blk.%u.ffn_gate.weight", layer);
+    std::snprintf(upName, sizeof(upName), "blk.%u.ffn_up.weight", layer);
+    std::snprintf(downName, sizeof(downName), "blk.%u.ffn_down.weight", layer);
+    std::snprintf(normName, sizeof(normName), "blk.%u.ffn_norm.weight", layer);
 
     auto resolve = [&](const char* name, RawrXD::TensorView& view) -> bool {
         auto refOpt = index.Find(name);
         if (!refOpt) return false;
         const auto& ref = *refOpt;
-
         RawrXD::UniversalTensorDescriptor desc;
         desc.numDims = ref.nDims;
-        for (uint8_t i = 0; i < ref.nDims && i < 8; ++i) {
-            desc.shape[i] = ref.shape[i];
-        }
+        for (uint8_t i = 0; i < ref.nDims && i < 8; ++i) desc.shape[i] = ref.shape[i];
         desc.layout = RawrXD::TensorLayout::DENSE;
         desc.role = RawrXD::TensorRole::WEIGHT;
         desc.memorySpace = RawrXD::UniversalTensorDescriptor::MemorySpace::NVME;
         desc.data = nullptr;
-
         switch (ref.ggmlType) {
-            case 0:  desc.quantType = RawrXD::QuantType::F32; break;
-            case 1:  desc.quantType = RawrXD::QuantType::F16; break;
-            case 2:  desc.quantType = RawrXD::QuantType::Q4_0; break;
-            case 3:  desc.quantType = RawrXD::QuantType::Q4_1; break;
-            case 6:  desc.quantType = RawrXD::QuantType::Q5_0; break;
-            case 7:  desc.quantType = RawrXD::QuantType::Q5_1; break;
-            case 8:  desc.quantType = RawrXD::QuantType::Q8_0; break;
-            case 9:  desc.quantType = RawrXD::QuantType::Q8_1; break;
-            case 10: desc.quantType = RawrXD::QuantType::Q2_K; break;
-            case 11: desc.quantType = RawrXD::QuantType::Q3_K; break;
+            case 0: desc.quantType = RawrXD::QuantType::F32; break;
+            case 1: desc.quantType = RawrXD::QuantType::F16; break;
+            case 8: desc.quantType = RawrXD::QuantType::Q8_0; break;
             case 12: desc.quantType = RawrXD::QuantType::Q4_K; break;
-            case 13: desc.quantType = RawrXD::QuantType::Q5_K; break;
             case 14: desc.quantType = RawrXD::QuantType::Q6_K; break;
-            case 17: desc.quantType = RawrXD::QuantType::IQ2_XXS; break;
-            case 18: desc.quantType = RawrXD::QuantType::IQ2_XS; break;
-            case 19: desc.quantType = RawrXD::QuantType::IQ3_XXS; break;
-            case 21: desc.quantType = RawrXD::QuantType::IQ4_NL; break;
-            case 24: desc.quantType = RawrXD::QuantType::IQ4_XS; break;
             default: desc.quantType = RawrXD::QuantType::UNKNOWN; break;
         }
-
+        /* Physical GGUF bytes as BLOCKED 1-byte elems — not dim0*dim1*sizeof(float). */
+        if (ref.byteSize) {
+            desc.layout = RawrXD::TensorLayout::BLOCKED;
+            desc.numDims = 1;
+            desc.shape[0] = ref.byteSize;
+            desc.blockSize = 1;
+            desc.blockSizeBytes = 1;
+        }
         view = RawrXD::TensorView::FromBuffer(desc, nullptr, false);
         return true;
     };
 
-    // Layer 0 uses dense FFN (no router, no routed experts)
-    // Layers 1+ use MoE (router + routed experts + shared expert)
-    bool hasDenseFFN = false;
-    if (layer == 0) {
-        hasDenseFFN = resolve(gateName, ffnGate) && resolve(upName, ffnUp) && resolve(downName, ffnDown);
+    bool hasDense = false;
+    if (layer == 0)
+        hasDense = resolve(gateName, ffnGate) && resolve(upName, ffnUp) &&
+                   resolve(downName, ffnDown);
+    if (!hasDense) {
+        if (!resolve(gateInpName, ffnGateInp)) {
+            error = std::string("MoEWeights: ") + gateInpName + " not found";
+            return false;
+        }
+        if (!resolve(biasName, eScoreCorrectionBias)) {
+            error = std::string("MoEWeights: ") + biasName + " not found";
+            return false;
+        }
+        if (!resolve(gateExpsName, ffnGateExps) || !resolve(upExpsName, ffnUpExps) ||
+            !resolve(downExpsName, ffnDownExps)) {
+            error = "MoEWeights: routed expert tensor missing";
+            return false;
+        }
     }
-
-    if (!hasDenseFFN) {
-        // Router (required for MoE layers)
-        if (!resolve(gateInpName, ffnGateInp)) { error = std::string("MoEWeights: ") + gateInpName + " not found"; return false; }
-        if (!resolve(expProbsBName, expProbsB)) { error = std::string("MoEWeights: ") + expProbsBName + " not found"; return false; }
-
-        // Routed experts
-        if (!resolve(gateExpsName, ffnGateExps)) { error = std::string("MoEWeights: ") + gateExpsName + " not found"; return false; }
-        if (!resolve(upExpsName, ffnUpExps))     { error = std::string("MoEWeights: ") + upExpsName + " not found"; return false; }
-        if (!resolve(downExpsName, ffnDownExps)) { error = std::string("MoEWeights: ") + downExpsName + " not found"; return false; }
+    if (layer > 0 || !hasDense) {
+        if (!resolve(gateShexpName, ffnGateShexp) || !resolve(upShexpName, ffnUpShexp) ||
+            !resolve(downShexpName, ffnDownShexp)) {
+            error = "MoEWeights: shared expert missing";
+            return false;
+        }
     }
-
-    // Shared expert (present for MoE layers, optional for dense layer 0)
-    if (layer > 0 || !hasDenseFFN) {
-        if (!resolve(gateShexpName, ffnGateShexp)) { error = std::string("MoEWeights: ") + gateShexpName + " not found"; return false; }
-        if (!resolve(upShexpName, ffnUpShexp))       { error = std::string("MoEWeights: ") + upShexpName + " not found"; return false; }
-        if (!resolve(downShexpName, ffnDownShexp))   { error = std::string("MoEWeights: ") + downShexpName + " not found"; return false; }
+    if (!resolve(normName, ffnNorm)) {
+        error = std::string("MoEWeights: ") + normName + " not found";
+        return false;
     }
-
-    // Norm (always present)
-    if (!resolve(normName, ffnNorm)) { error = std::string("MoEWeights: ") + normName + " not found"; return false; }
-
     return true;
 }
 
 bool MoEWeights::DetectMoE(const std::string& tensorName) {
-    static const char* kMoEPrefixes[] = {
-        "ffn_gate_exps", "ffn_up_exps", "ffn_down_exps",
-        "ffn_gate_inp", "exp_probs_b"
-    };
-    for (const char* prefix : kMoEPrefixes) {
-        if (tensorName.find(prefix) != std::string::npos) return true;
-    }
-    return false;
+    return tensorName.find("ffn_gate_exps") != std::string::npos ||
+           tensorName.find("ffn_gate_inp") != std::string::npos ||
+           tensorName.find("exp_probs_b") != std::string::npos;
 }
-
 bool MoEWeights::DetectDenseFFN(const std::string& tensorName) {
     return tensorName.find("ffn_gate") != std::string::npos &&
            tensorName.find("exps") == std::string::npos &&
            tensorName.find("shexp") == std::string::npos;
 }
-
 bool MoEWeights::DetectSharedExpert(const std::string& tensorName) {
     return tensorName.find("shexp") != std::string::npos;
 }
 
-// ============================================================================
-// KimiK2Router
-// ============================================================================
-
 bool KimiK2Router::Initialize(const KimiK2Config& config, std::string& error) {
-    if (config.numExperts == 0) {
-        error = "KimiK2Router: numExperts is zero";
-        return false;
-    }
-    if (config.expertsPerToken == 0) {
-        error = "KimiK2Router: expertsPerToken is zero";
+    if (!config.numExperts || !config.expertsPerToken) {
+        error = "KimiK2Router: numExperts/expertsPerToken zero";
         return false;
     }
     config_ = config;
@@ -219,100 +183,91 @@ bool KimiK2Router::Initialize(const KimiK2Config& config, std::string& error) {
 }
 
 void KimiK2Router::SetRouterWeights(const RawrXD::TensorView& gateInp,
-                                     const RawrXD::TensorView& bias) {
-    if (!gateInp.data() || !bias.data()) return;
-
+                                    const RawrXD::TensorView& eScoreCorrectionBias) {
+    if (!gateInp.data() || !eScoreCorrectionBias.data()) return;
     const size_t hiddenDim = gateInp.dims()[0];
     const size_t numExperts = gateInp.dims()[1];
-
     routerWeights_.resize(hiddenDim * numExperts);
-    routerBias_.resize(numExperts);
-
-    // Copy from tensor views (assuming float32)
-    const float* gateData = static_cast<const float*>(gateInp.data());
-    std::copy(gateData, gateData + routerWeights_.size(), routerWeights_.begin());
-
-    const float* biasData = static_cast<const float*>(bias.data());
-    std::copy(biasData, biasData + numExperts, routerBias_.begin());
+    eScoreCorrectionBias_.resize(numExperts);
+    const float* g = static_cast<const float*>(gateInp.data());
+    std::copy(g, g + routerWeights_.size(), routerWeights_.begin());
+    const float* b = static_cast<const float*>(eScoreCorrectionBias.data());
+    std::copy(b, b + numExperts, eScoreCorrectionBias_.begin());
 }
 
-bool KimiK2Router::Route(const float* hidden, MoERoutingResult& result, std::string& error) {
-    if (!initialized_) {
-        error = "KimiK2Router: not initialized";
-        return false;
+std::vector<float> KimiK2Router::ComputeSigmoidScores(const float* hidden) {
+    const uint32_t H = config_.hiddenDim;
+    const uint32_t E = config_.numExperts;
+    std::vector<float> scores(E);
+    for (uint32_t e = 0; e < E; ++e) {
+        float logit = 0.f; /* NO bias in pre-sigmoid logits */
+        for (uint32_t h = 0; h < H; ++h)
+            logit += hidden[h] * routerWeights_[h * E + e];
+        scores[e] = 1.f / (1.f + std::exp(-logit));
     }
-    if (!hidden) {
-        error = "KimiK2Router: null hidden pointer";
-        return false;
-    }
-    if (routerWeights_.empty()) {
-        error = "KimiK2Router: router weights not set";
-        return false;
-    }
+    return scores;
+}
 
-    const uint32_t hiddenDim = config_.hiddenDim;
-    const uint32_t numExperts = config_.numExperts;
+MoERoutingResult KimiK2Router::SelectExpertsNoAuxTC(
+    const std::vector<float>& scores, const std::vector<float>& choiceScores) {
+    MoERoutingResult result{};
+    const uint32_t E = config_.numExperts;
     const uint32_t k = config_.expertsPerToken;
-    const float routedScalingFactor = config_.routedScalingFactor;
-
-    // Compute scores: sigmoid(hidden @ W + b)
-    std::vector<float> scores(numExperts);
-    for (uint32_t e = 0; e < numExperts; ++e) {
-        float dot = routerBias_[e];
-        for (uint32_t h = 0; h < hiddenDim; ++h) {
-            dot += hidden[h] * routerWeights_[h * numExperts + e];
-        }
-        // Sigmoid
-        scores[e] = 1.0f / (1.0f + std::exp(-dot));
-    }
-
-    // Top-k selection (noaux_tc — no auxiliary loss, just top-k)
-    std::vector<uint32_t> indices(numExperts);
-    std::iota(indices.begin(), indices.end(), 0);
-    std::partial_sort(indices.begin(), indices.begin() + k, indices.end(),
-        [&](uint32_t a, uint32_t b) { return scores[a] > scores[b]; });
-
-    // Copy top-k results
+    std::vector<uint32_t> idx(E);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),
+                      [&](uint32_t a, uint32_t b) {
+                          return choiceScores[a] > choiceScores[b];
+                      });
     result.count = k;
-    float weightSum = 0.0f;
     for (uint32_t i = 0; i < k; ++i) {
-        result.expertIds[i] = indices[i];
-        result.weights[i] = scores[indices[i]];
-        weightSum += result.weights[i];
+        result.expertIds[i] = idx[i];
+        result.weights[i] = scores[idx[i]]; /* UNBIASED scores, not choice */
     }
+    return result;
+}
 
-    // norm_topk_prob: normalize weights to sum to 1.0
-    if (weightSum > 0.0f) {
-        for (uint32_t i = 0; i < k; ++i) {
-            result.weights[i] /= weightSum;
-        }
+void KimiK2Router::NormalizeAndScaleSelectedWeights(MoERoutingResult& result) {
+    float sum = 0.f;
+    for (uint32_t i = 0; i < result.count; ++i) sum += result.weights[i];
+    const float scale =
+        config_.routedScalingFactor > 0.f ? config_.routedScalingFactor : 2.827f;
+    if (sum > 0.f) {
+        for (uint32_t i = 0; i < result.count; ++i)
+            result.weights[i] = (result.weights[i] / sum) * scale;
     }
+}
 
-    // Apply routed_scaling_factor
-    for (uint32_t i = 0; i < k; ++i) {
-        result.weights[i] *= routedScalingFactor;
+bool KimiK2Router::Route(const float* hidden, MoERoutingResult& result,
+                         std::string& error) {
+    if (!initialized_ || !hidden || routerWeights_.empty()) {
+        error = "KimiK2Router: not ready";
+        return false;
     }
-
+    const std::vector<float> scores = ComputeSigmoidScores(hidden);
+    std::vector<float> choice = scores;
+    if (eScoreCorrectionBias_.size() == scores.size()) {
+        for (size_t e = 0; e < scores.size(); ++e)
+            choice[e] = scores[e] + eScoreCorrectionBias_[e]; /* selection ONLY */
+    }
+    result = SelectExpertsNoAuxTC(scores, choice);
+    NormalizeAndScaleSelectedWeights(result);
     totalTokensRouted++;
-    totalExpertActivations += k;
+    totalExpertActivations += result.count;
     return true;
 }
 
-std::vector<MoERoutingResult> KimiK2Router::RouteBatch(
-    const float* hiddenBatch,
-    uint32_t numTokens,
-    std::string& error) {
-    std::vector<MoERoutingResult> results;
-    results.reserve(numTokens);
-
+std::vector<MoERoutingResult> KimiK2Router::RouteBatch(const float* hiddenBatch,
+                                                      uint32_t numTokens,
+                                                      std::string& error) {
+    std::vector<MoERoutingResult> out;
+    out.reserve(numTokens);
     for (uint32_t t = 0; t < numTokens; ++t) {
-        MoERoutingResult result;
-        if (!Route(hiddenBatch + t * config_.hiddenDim, result, error)) {
-            return {}; // Return empty on first failure
-        }
-        results.push_back(std::move(result));
+        MoERoutingResult r;
+        if (!Route(hiddenBatch + t * config_.hiddenDim, r, error)) return {};
+        out.push_back(std::move(r));
     }
-    return results;
+    return out;
 }
 
 } // namespace Deep2

@@ -6,60 +6,70 @@ FAIL_CLOSED=1
 NOT_RUN!=PASS
 TARGET_35_50_TPS=UNMINTED
 LIVE_TPS_AUTHORITY=0
+GEN_QUALITY=NOT_MINTED
 
-# --- PRIOR structural (pre-counter rebuild) ---
-PRIOR_RUN=kimi_live_20260912_221823
-PRIOR_TPS=1.117
+# --- SUPERSEDED (correct for MLA-only binary; not current authority) ---
+PRIOR_HOLD_RUN=kimi_live_20260912_222417
 PRIOR_MOE_PLACE_LIVE_REACHED=HOLD
-PRIOR_NOTE=MOE_PLACE=0 SHARD_MOE_US=0 HOST_DECODE=1 EXIT_FIELD_BLANK=1
+PRIOR_NOTE=moe_ffn_enter=0 moe_place_enter=0 K2 MLA-only bypass — SUPERSEDED by K2-native MoE wire
 
-# --- POST rebuild (MoEPlaceLiveCounters linked into rawr) ---
-RUN=kimi_live_20260912_222417
+# --- CURRENT: K2-native MoE AfterMla + FindExpertSlice geometry ---
+RUN=kimi_moe_wire_20260912_223934
 BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
-BINARY_MTIME=2026-09-12T22:23:26
+BINARY_MTIME=2026-09-12T22:39:24
 MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
-SHARDS=13 TOTAL_GiB=578.58
-ENV=DEEP2_MOE_PLACE_TRACE=1 DEEP2_DUALSTICK_ARM=1 DEEP2_MOE_PLACE_BUDGET_MIB=8192 MOCK_BACKEND=0
-HARNESS=System.Diagnostics.Process+WaitForExit
+ENV=DEEP2_MOE_PLACE_TRACE=1 DEEP2_DUALSTICK_ARM=0 DEEP2_MOE_PLACE_BUDGET_MIB=8192 RAWRXD_K2_LAYERS=4 RAWRXD_HOST_DECODE=1 MOCK_BACKEND=0
 EXIT=0
-EXIT_REFRESHED=1
-WALL_MS=28191
-
-# Structural decode (not placer authority)
-KIMI_LIVE_OPEN=PASS
-KIMI_LIVE_DECODE_32=PASS
+TD=11_CLEAN_EXIT
+WALL_MS=42007
 GENERATED_TOKENS=32
-KIMI_OBSERVED_TPS=1.173
-DECODE_TPS_REAL=1.173411
-MOCK_BACKEND=0
+DECODE_TPS_REAL=0.777
 HOST_DECODE=1
-DUALSTICK_ARM=0
-VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
-LIVE_K2_OWNERSHIP=generateStream->runK2NativeStreamPartial
-SHARD_MOE_US=0
+DUALSTICK_ARMED=0
+DUALSTICK=HOLD
+
+# Governing semantic locks (do not reopen)
+K2_ROUTER_BIAS=SELECTION_ONLY
+FINAL_WEIGHT_SUM≈2.827
+EXPERT_SLICE_PHYSICAL=1
+EXPERT_SLICE_AUTHORITY=FindExpertSlice
+SHARED_OUTSIDE_TOPK=1
+LAYER0_DENSE_SEPARATE=1
 
 # Live counter proof (destructor MoEPlaceLiveEmit)
 D2_MOE_LIVE_EMITTED=1
-moe_ffn_enter=0
-moe_place_enter=0
-ffn_dispatch_moe=0
-ffn_dispatch_dense=0
-ffn_dispatch_ssm=0
-experts_selected=0
-experts_executed=0
-EXPERT_MISS_BYTES_PER_TOKEN=0
-acquire_ok=0
-markhot=0
-INTERPRETATION=K2_NATIVE_PATH_BYPASSES_forwardLayer_FFN_DISPATCH_AND_computeMoEFFN_PLACER
+moe_ffn_enter=128
+moe_place_enter=96
+MOE_PLACE_CALLS=96
+moe_router_calls=96
+ffn_dispatch_moe=96
+ffn_dispatch_dense=32
+experts_selected=768
+experts_executed=768
+parity=1
+acquire_ok=768
+acquire_fail=0
+SHARED_EXPERT_CALLS=96
+slice_layout_mismatch=0
+EXPERT_MISS_BYTES_PER_TOKEN=35209216
+miss_bytes=4506779648
 
-# Placer reachability seal
-MOE_PLACE_SOURCE_WIRED=1
-MOE_PLACE_LIVE_REACHED=HOLD
-EXPERT_SET_PARITY_LIVE=HOLD
-EXPERT_MISS_BYTES_PER_TOKEN_AUTH=HOLD
-DUALSTICK_EXPERT_PLACEMENT=HOLD
-NOTE=zeros are K2 bypass evidence, not all-miss; do not invent PERFORMANCE_PASS / 35-50
+D2_MOE_DECODE K2_MOE_LAYER_CALLS=96 MOE_PLACE_CALLS=96 EXPERTS_SELECTED=768 EXPERTS_EXECUTED=768 parity=1
 
-# Build note
-BUILD_FIX=removed invalid moeWeightProxy_->Release(handle); handle is cache-backed (no Release API)
-NEXT=wire K2NativeStreamGate MoE FFN through computeMoEFFN placer OR force forwardLayer MoE path
+# Layer depth honesty
+LAYER_DEPTH=4
+MOE_LAYERS_ACTIVE=3
+NOTE=RAWRXD_K2_LAYERS=4 truncated; L0 dense stub OK; MoE L1-L3 only
+FULL60_LOWER_BOUND=MOE_PLACE_CALLS≈1920 EXPERTS≈15360 SHARED≈1920
+FULL60_STATUS=NOT_RUN_THIS_SEAL
+
+# Transition vs prior zeros
+TRANSITION=moe_place_enter>0 selected==executed miss_bytes/token MEASURED
+MOE_PLACE_LIVE_REACHED=1
+MOE_FFN_LIVE_REACHED=1
+LIVE_K2_PLACER=REACHED
+EXPERT_SET_PARITY_LIVE=1
+
+PROMOTE=0
+TARGET_35_50_TPS=UNMINTED
+NEXT=optional full depth 61 host proof without RAWRXD_K2_LAYERS truncate
