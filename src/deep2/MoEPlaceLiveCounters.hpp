@@ -121,6 +121,15 @@ struct MoEPlaceLiveCounters {
     uint64_t moe_bundle_touches;
     uint64_t cache_budget_set;
     uint64_t cache_budget_shrink;
+    uint64_t cache_budget_shrink_blocked;
+    /* DEEP2_SEGMENTED_RESIDENCY_QUOTAS_001 */
+    uint64_t moe_reserved_bytes;
+    uint64_t moe_resident_bytes;
+    uint64_t mla_quota_bytes;
+    uint64_t general_quota_bytes;
+    uint64_t mla_resident_bytes;
+    uint64_t general_resident_bytes;
+    uint64_t moe_physical_reload_bytes;
     /* DEEP2_MOE_RELOAD_ATTRIBUTION_001 */
     uint64_t moe_evicted_keys;
     uint64_t moe_evicted_bundles;

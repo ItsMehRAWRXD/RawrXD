@@ -15,4 +15,10 @@ void DualStickInvalidateExpert(int layer, int expert);
 void DualStickBundleTouchPins(unsigned stick, int layer, int expert, size_t H,
                               size_t I);
 
+/* 1 if MoE pin is hot-set or live DualStick bundle (protect from cold thrash). */
+int DualStickMoePinProtected(uint64_t pinKey);
+
+/* Re-publish VC quota floors into MoEPlaceLive after LiveReset. */
+void DualStickSyncQuotaLiveCounters();
+
 } // namespace Deep2

@@ -1,0 +1,62 @@
+GATE=DEEP2_SEGMENTED_RESIDENCY_QUOTAS_001
+ALIAS=SEGMENTED_MOE_QUOTA_001
+DATE=2026-09-13
+KIND=RECEIPT
+PARENT_ATTRIBUTION=PASS_METERS 53968f4c32 BRANCH=PARTITION
+PROMOTE=0
+BLEND_W=0
+RAISE_BUDGET=DEFER
+V7_MODE=0
+ASSIGN=V6_FULLCOST
+BUDGET_SHRINK_BLOCKED=1
+NOT_RUN!=PASS
+
+AUTH_RUN=kimi_moe_DS_L61t8_segquota_20260913_041525
+  (confirm _retry_stderr headroom: AFTER_EVICTION=362643456)
+IMPL=
+  gemv_weight_cache_ segmented: MOE_RESERVED vs MLA/GENERAL
+  eviction: GENERAL → MLA → cold/unpinned MoE → hot/pinned MoE
+  non-MoE insert never selects MoE victims
+  DualStickMoePinProtected = IsHot || live DualStick bundle
+  DualStickSyncQuotaLiveCounters after MoEPlaceLiveReset
+  256MiB pinCap headroom under DualStick floor (no raise)
+
+PASS_IF_SCORECARD=
+  EXIT=0                 YES (process; STREAM_ABORT=1 at step 3/8)
+  PARITY=1               NO  (experts 1872/1864 or 1728/1720)
+  STALE_PIN=0            YES
+  FALSE_POS=0            YES
+  BUDGET_SHRINK_BLOCKED=1 YES
+  MOE_RESERVED_BYTES >= 12288MiB  YES (=12884901888)
+  MOE_RESIDENT >= RESERVED YES (sum sticks; each at ~floor)
+  GENERAL_TO_MOE=0       YES
+  MLA_TO_MOE=0           YES
+  MOE_PHYSICAL_RELOAD STABLE ≤~1GiB  YES
+
+PASS_IF=NO
+  # conjunction fails on PARITY + STREAM_ABORT (K2MoEStickEndDevice)
+  # quota + reload-band objectives land; full 8-token parity open
+
+METERS_041525=
+  GENERAL_TO_MOE_EVICTIONS=0
+  MLA_TO_MOE_EVICTIONS=0
+  MOE_RESERVED_BYTES=12884901888
+  MOE_RESIDENT_BYTES=25755598848
+  MOE_PHYSICAL_RELOAD_BYTES=286949376
+  MOE_RELOAD_AFTER_EVICTION_BYTES=286949376 (~273.7 MiB)
+  moe_pin_evictions=61 (vs attribution 1141 MoE→MoE)
+  BUDGET_SHRINK_BLOCKED=1
+
+METERS_RETRY_HEADROOM=
+  MOE_RELOAD_AFTER_EVICTION_BYTES=362643456 (~345.8 MiB)
+  moe_pin_evictions=100
+  still STREAM_ABORT EndDevice @ step 3
+
+VS_ATTRIBUTION_PARTITION=
+  AFTER_EVICTION 1131282432 (~1078 MiB) → ~274–346 MiB band
+  keys evicted 1141 → 61–100
+  MLA_TO_MOE/GENERAL_TO_MOE remain 0
+
+NEXT=
+  diagnose K2MoEStickEndDevice @ decode step 3 under full MoE pin floor
+  then PHYSICAL_RELOAD_ENVELOPE → V7_TRACE_LOCKED → blend

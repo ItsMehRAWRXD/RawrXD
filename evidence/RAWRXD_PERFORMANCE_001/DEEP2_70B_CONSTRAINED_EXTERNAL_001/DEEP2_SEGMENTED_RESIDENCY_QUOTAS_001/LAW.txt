@@ -8,7 +8,14 @@ RAISE_BUDGET=DEFER
 V7_MODE=0
 ASSIGN=V6_FULLCOST
 NOT_RUN!=PASS
-PARENT_PIN_COHERENCY=PASS 05bf8b3c5a
+PARENT_ATTRIBUTION=PASS_METERS 53968f4c32 BRANCH=PARTITION
+  ~1078MiB = MoE RELOAD_AFTER_EVICTION (100% of global)
+  MLA_TO_MOE=0 GENERAL_TO_MOE=0 — thrash is MoE→MoE self-pressure
+  # protect hot MoE working set from cold MoE inserts too, not only MLA/GENERAL
+
+IMPL_NOTE=
+  MOE_RESERVED must survive both non-MoE pressure AND MoE capacity thrash
+  prefer hot/pinned MoE over cold MoE when under MOE quota
 
 # Hard per-stick MoE reservation vs ALL non-MoE pressure
 TOTAL_WEIGHT_CACHE=

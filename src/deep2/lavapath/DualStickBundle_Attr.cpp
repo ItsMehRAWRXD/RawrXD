@@ -27,6 +27,7 @@ void DualStickNoteMoePinUpload(uint64_t pinKey, size_t bytes, int firstEver) {
                     (m.live == 0 || m.pending_reload));
     if (wasEv) {
         MoEPlaceLive().moe_reload_after_eviction_bytes += bytes;
+        MoEPlaceLive().moe_physical_reload_bytes += bytes;
         MoEPlaceLive().moe_evicted_then_reused_keys++;
         if (have && !m.reuse_bundle_noted) {
             DualStickBundleNoteReuse(layer, expert);

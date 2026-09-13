@@ -4922,6 +4922,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/DualStickBundle_Table.cpp
     src/deep2/lavapath/DualStickBundle_Note.cpp
     src/deep2/lavapath/DualStickBundle_Evict.cpp
+    src/deep2/lavapath/DualStickBundle_Quota.cpp
     src/deep2/lavapath/DualStickBundle_Attr.cpp
     src/deep2/lavapath/DualStickBundle_Pins.cpp
     src/deep2/lavapath/DualStickBundle_Touch.cpp
@@ -4974,6 +4975,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/DualStickBundle_Table.cpp
     src/deep2/lavapath/DualStickBundle_Note.cpp
     src/deep2/lavapath/DualStickBundle_Evict.cpp
+    src/deep2/lavapath/DualStickBundle_Quota.cpp
     src/deep2/lavapath/DualStickBundle_Attr.cpp
     src/deep2/lavapath/DualStickBundle_Pins.cpp
     src/deep2/lavapath/DualStickBundle_Touch.cpp
@@ -6876,6 +6878,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/lavapath/DualStickBundle_Table.cpp
         src/deep2/lavapath/DualStickBundle_Note.cpp
         src/deep2/lavapath/DualStickBundle_Evict.cpp
+        src/deep2/lavapath/DualStickBundle_Quota.cpp
         src/deep2/lavapath/DualStickBundle_Attr.cpp
         src/deep2/lavapath/DualStickBundle_Pins.cpp
         src/deep2/lavapath/DualStickBundle_Touch.cpp

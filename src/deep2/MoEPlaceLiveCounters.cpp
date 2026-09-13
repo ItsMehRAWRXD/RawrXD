@@ -1,5 +1,6 @@
 /* MoEPlaceLiveCounters.cpp — emit place + DualStick reuse microfix. */
 #include "MoEPlaceLiveCounters.hpp"
+#include "lavapath/DualStickPinCoherency.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include <cstring>
 
@@ -16,6 +17,7 @@ void MoEPlaceLiveReset() {
 
 void MoEPlaceLiveEmit(FILE* f) {
     if (!f) return;
+    DualStickSyncQuotaLiveCounters();
     const MoEPlaceLiveCounters& c = MoEPlaceLive();
     std::fprintf(f,
         "D2_MOE_LIVE moe_ffn_enter=%llu moe_place_enter=%llu "
@@ -201,7 +203,12 @@ void MoEPlaceLiveEmit(FILE* f) {
             "mla_caused_moe_evictions=%llu general_caused_moe_evictions=%llu "
             "DUALSTICK_STALE_PIN_METADATA=%llu PINSREADY_FALSE_POSITIVE=%llu "
             "PINSREADY_REPAIR=%llu DUALSTICK_SLOT_INVALIDATED=%llu "
-            "moe_pin_touches=%llu moe_bundle_touches=%llu\n",
+            "moe_pin_touches=%llu moe_bundle_touches=%llu\n"
+            "D2_MOE_QUOTA MOE_RESERVED_BYTES=%llu MOE_RESIDENT_BYTES=%llu "
+            "MLA_QUOTA_BYTES=%llu GENERAL_QUOTA_BYTES=%llu "
+            "MLA_RESIDENT_BYTES=%llu GENERAL_RESIDENT_BYTES=%llu "
+            "GENERAL_TO_MOE_EVICTIONS=%llu MLA_TO_MOE_EVICTIONS=%llu "
+            "MOE_PHYSICAL_RELOAD_BYTES=%llu BUDGET_SHRINK_BLOCKED=%llu\n",
             (unsigned long long)c.moe_pin_evictions,
             (unsigned long long)c.mla_caused_moe_evictions,
             (unsigned long long)c.general_caused_moe_evictions,
@@ -210,13 +217,24 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.pinsready_repair,
             (unsigned long long)c.dualstick_slot_invalidated,
             (unsigned long long)c.moe_pin_touches,
-            (unsigned long long)c.moe_bundle_touches);
+            (unsigned long long)c.moe_bundle_touches,
+            (unsigned long long)c.moe_reserved_bytes,
+            (unsigned long long)c.moe_resident_bytes,
+            (unsigned long long)c.mla_quota_bytes,
+            (unsigned long long)c.general_quota_bytes,
+            (unsigned long long)c.mla_resident_bytes,
+            (unsigned long long)c.general_resident_bytes,
+            (unsigned long long)c.general_caused_moe_evictions,
+            (unsigned long long)c.mla_caused_moe_evictions,
+            (unsigned long long)c.moe_physical_reload_bytes,
+            (unsigned long long)c.cache_budget_shrink_blocked);
         std::fprintf(f,
             "D2_MOE_RELOAD_ATTR moe_evicted_keys=%llu moe_evicted_bundles=%llu "
             "moe_evicted_then_reused_keys=%llu "
             "moe_evicted_then_reused_bundles=%llu "
             "MOE_RELOAD_AFTER_EVICTION_BYTES=%llu "
             "MOE_COMPULSORY_LOAD_BYTES=%llu "
+            "MOE_PHYSICAL_RELOAD_BYTES=%llu "
             "MLA_RELOAD_BYTES=see_GPU_WEIGHT_BYTES_RELOAD_MLA "
             "GENERAL_RELOAD_BYTES=see_GPU_WEIGHT_BYTES_RELOAD_GENERAL\n",
             (unsigned long long)c.moe_evicted_keys,
@@ -224,7 +242,8 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.moe_evicted_then_reused_keys,
             (unsigned long long)c.moe_evicted_then_reused_bundles,
             (unsigned long long)c.moe_reload_after_eviction_bytes,
-            (unsigned long long)c.moe_compulsory_load_bytes);
+            (unsigned long long)c.moe_compulsory_load_bytes,
+            (unsigned long long)c.moe_physical_reload_bytes);
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "

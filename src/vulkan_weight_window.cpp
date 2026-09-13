@@ -5,6 +5,7 @@
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
 #include "GpuTransferCounters.hpp"
+#include "MoEPlaceLiveCounters.hpp"
 #include "lavapath/DualStickPinCoherency.hpp"
 #include "lavapath/DualStickReloadAttr.hpp"
 #include <algorithm>
@@ -15,6 +16,24 @@
 #include <cstring>
 
 namespace CPUInference {
+
+namespace {
+void AdjClassBytes(uint64_t& moe, uint64_t& mla, uint64_t& gen,
+                   Deep2::PinWeightClass c, size_t bytes, int add) {
+    uint64_t* p = &gen;
+    if (c == Deep2::PinWeightClass::MoE) p = &moe;
+    else if (c == Deep2::PinWeightClass::Mla) p = &mla;
+    if (add) *p += bytes;
+    else if (*p >= bytes) *p -= bytes;
+    else *p = 0;
+}
+void SyncQuotaLive(uint64_t moeR, uint64_t mlaR, uint64_t genR) {
+    auto& L = Deep2::MoEPlaceLive();
+    L.moe_resident_bytes = moeR;
+    L.mla_resident_bytes = mlaR;
+    L.general_resident_bytes = genR;
+}
+} // namespace
 
 bool VulkanCompute::WantWeightStream() {
     const char* m = std::getenv("DEEP2_WEIGHT_MODE");
@@ -27,6 +46,9 @@ void VulkanCompute::ClearPinnedGemvWeights() {
     if (!device_) {
         gemv_weight_cache_.clear();
         gemv_resident_bytes_ = 0;
+        gemv_moe_resident_bytes_ = 0;
+        gemv_mla_resident_bytes_ = 0;
+        gemv_general_resident_bytes_ = 0;
         gemv_weight_uploads_ = 0;
         gemv_weight_hits_ = 0;
         gemv_pin_evicts_ = 0;
@@ -41,6 +63,9 @@ void VulkanCompute::ClearPinnedGemvWeights() {
     }
     gemv_weight_cache_.clear();
     gemv_resident_bytes_ = 0;
+    gemv_moe_resident_bytes_ = 0;
+    gemv_mla_resident_bytes_ = 0;
+    gemv_general_resident_bytes_ = 0;
     gemv_weight_uploads_ = 0;
     gemv_weight_hits_ = 0;
     gemv_pin_evicts_ = 0;
@@ -205,21 +230,40 @@ void VulkanCompute::SetPinResidentBudgetAt(size_t bytes, const char* site) {
     const size_t old = ww_budget_bytes_;
     const int shrink = (old && bytes < old) ? 1 : 0;
     ++ww_budget_set_n_;
+    Deep2::MoEPlaceLive().cache_budget_set++;
     /* Fail-closed: DualStick bind owns pin floor; Engine must not shrink it. */
     if (shrink && ww_pin_budget_owner_[0] == 'D' && s[0] == 'E') {
         ++ww_budget_shrink_blocked_;
+        Deep2::MoEPlaceLive().cache_budget_shrink_blocked++;
         std::fprintf(stderr,
                      "PIN_BUDGET_SHRINK_BLOCKED owner=%s old=%zu new=%zu site=%s\n",
                      ww_pin_budget_owner_, old, bytes, s);
         return;
     }
-    if (shrink) ++ww_budget_shrink_n_;
+    if (shrink) {
+        ++ww_budget_shrink_n_;
+        Deep2::MoEPlaceLive().cache_budget_shrink++;
+    }
     ww_budget_bytes_ = bytes;
     ww_pin_budget_floor_ = bytes;
     std::snprintf(ww_pin_budget_owner_, sizeof(ww_pin_budget_owner_), "%s", s);
+    /* DualStick floor = MOE_RESERVED; MLA/GENERAL get remainder only. */
+    if (s[0] == 'D') {
+        ww_moe_reserved_bytes_ = bytes;
+        ww_mla_quota_bytes_ = 0;
+        ww_general_quota_bytes_ = 0;
+    } else if (bytes > ww_moe_reserved_bytes_) {
+        const size_t rem = bytes - ww_moe_reserved_bytes_;
+        ww_mla_quota_bytes_ = rem / 2u;
+        ww_general_quota_bytes_ = rem - ww_mla_quota_bytes_;
+    }
+    Deep2::MoEPlaceLive().moe_reserved_bytes = ww_moe_reserved_bytes_;
+    Deep2::MoEPlaceLive().mla_quota_bytes = ww_mla_quota_bytes_;
+    Deep2::MoEPlaceLive().general_quota_bytes = ww_general_quota_bytes_;
     std::fprintf(stderr,
-                 "PIN_BUDGET_SET site=%s old=%zu new=%zu owner=%s\n", s, old,
-                 bytes, ww_pin_budget_owner_);
+                 "PIN_BUDGET_SET site=%s old=%zu new=%zu owner=%s "
+                 "moe_reserved=%zu\n",
+                 s, old, bytes, ww_pin_budget_owner_, ww_moe_reserved_bytes_);
 }
 uint64_t VulkanCompute::WeightPinCacheCount() const {
     return (uint64_t)gemv_weight_cache_.size();
@@ -285,46 +329,75 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
         Deep2::GpuTransfer_NoteWeightHit(bytes);
         return true;
     }
-    /* Prefer non-MoE victims first (DualStickExpertPin: layer<<24|…|role1..3). */
-    auto isMoePin = [](uint64_t k) {
-        const uint64_t role = k & 0xffu;
-        return (k >> 24) != 0 && role >= 1u && role <= 3u;
-    };
-    while (gemv_resident_bytes_ + bytes > budget && !gemv_weight_cache_.empty()) {
+    /* Segmented quotas: NON_MOE never steals MoE; MoE prefers cold/unpinned. */
+    const Deep2::PinWeightClass ic = Deep2::ClassifyPinKey(key);
+    const int insertMoe = (ic == Deep2::PinWeightClass::MoE) ? 1 : 0;
+    size_t needAdd = bytes;
+    if (it != gemv_weight_cache_.end() && it->second.bytes <= bytes)
+        needAdd = bytes - it->second.bytes;
+    else if (it != gemv_weight_cache_.end())
+        needAdd = 0;
+    /* Leave staging/arena headroom under DualStick floor (do not raise). */
+    const size_t headroom = (size_t)256 << 20;
+    const size_t pinCap =
+        (budget > headroom) ? (budget - headroom) : budget;
+    while (gemv_resident_bytes_ + needAdd > pinCap &&
+           !gemv_weight_cache_.empty()) {
         auto victim = gemv_weight_cache_.end();
-        auto pick = [&](int wantMoe) {
+        auto pick = [&](Deep2::PinWeightClass want, int wantProt, int anyProt) {
             for (auto jt = gemv_weight_cache_.begin();
                  jt != gemv_weight_cache_.end(); ++jt) {
-                if ((int)isMoePin(jt->first) != wantMoe) continue;
+                if (jt->first == key) continue; /* never self-evict */
+                if (Deep2::ClassifyPinKey(jt->first) != want) continue;
+                if (want == Deep2::PinWeightClass::MoE && !anyProt) {
+                    const int p = Deep2::DualStickMoePinProtected(jt->first);
+                    if (p != wantProt) continue;
+                }
                 if (victim == gemv_weight_cache_.end() ||
                     jt->second.lastUse < victim->second.lastUse)
                     victim = jt;
             }
         };
-        pick(0);
-        if (victim == gemv_weight_cache_.end()) pick(1);
+        /* GENERAL → MLA → cold MoE → hot MoE (LRU within tier). */
+        pick(Deep2::PinWeightClass::General, 0, 1);
         if (victim == gemv_weight_cache_.end())
-            victim = gemv_weight_cache_.begin();
+            pick(Deep2::PinWeightClass::Mla, 0, 1);
+        if (victim == gemv_weight_cache_.end() && insertMoe) {
+            pick(Deep2::PinWeightClass::MoE, 0, 0);
+            if (victim == gemv_weight_cache_.end())
+                pick(Deep2::PinWeightClass::MoE, 1, 0);
+        }
+        if (victim == gemv_weight_cache_.end())
+            break; /* non-MoE cannot steal MoE; cold may refuse only-hot */
         const uint64_t vkey = victim->first;
-        const int vMoe = isMoePin(vkey) ? 1 : 0;
+        const Deep2::PinWeightClass vc = Deep2::ClassifyPinKey(vkey);
+        const size_t vb = victim->second.bytes;
         if (victim->second.buffer)
             vkDestroyBuffer(device_, victim->second.buffer, nullptr);
         if (victim->second.memory)
             vkFreeMemory(device_, victim->second.memory, nullptr);
-        gemv_resident_bytes_ -= victim->second.bytes;
+        gemv_resident_bytes_ -= vb;
+        AdjClassBytes(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                      gemv_general_resident_bytes_, vc, vb, 0);
         gemv_weight_cache_.erase(victim);
         ++gemv_pin_evicts_;
-        if (vMoe) {
-            Deep2::PinWeightClass ic = Deep2::ClassifyPinKey(key);
+        if (vc == Deep2::PinWeightClass::MoE) {
             int cause = 0;
             if (ic == Deep2::PinWeightClass::Mla) cause = 1;
             else if (ic == Deep2::PinWeightClass::General) cause = 2;
             Deep2::DualStickOnGemvPinEvicted(vkey, cause);
         }
     }
-    if (gemv_resident_bytes_ + bytes > budget) {
-        ++ww_pin_rejects_;
-        return false;
+    SyncQuotaLive(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                  gemv_general_resident_bytes_);
+    {
+        size_t projected = gemv_resident_bytes_ + bytes;
+        if (it != gemv_weight_cache_.end())
+            projected -= it->second.bytes;
+        if (projected > pinCap) {
+            ++ww_pin_rejects_;
+            return false;
+        }
     }
     GemvResidentWeight rw{};
     if (!CreateDeviceLocalBuffer(bytes, rw.buffer, rw.memory)) return false;
@@ -337,12 +410,19 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
     rw.contentFp = fpNow;
     rw.lastUse = ++gemv_pin_clock_;
     if (it != gemv_weight_cache_.end()) {
+        const Deep2::PinWeightClass oc = Deep2::ClassifyPinKey(it->first);
         if (it->second.buffer) vkDestroyBuffer(device_, it->second.buffer, nullptr);
         if (it->second.memory) vkFreeMemory(device_, it->second.memory, nullptr);
         gemv_resident_bytes_ -= it->second.bytes;
+        AdjClassBytes(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                      gemv_general_resident_bytes_, oc, it->second.bytes, 0);
     }
     gemv_weight_cache_[key] = rw;
     gemv_resident_bytes_ += bytes;
+    AdjClassBytes(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                  gemv_general_resident_bytes_, ic, bytes, 1);
+    SyncQuotaLive(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                  gemv_general_resident_bytes_);
     ww_peak_bytes_ = (std::max)(ww_peak_bytes_, gemv_resident_bytes_);
     ++gemv_weight_uploads_;
     {
@@ -373,14 +453,18 @@ void VulkanCompute::ReleasePinnedPackedWeight(uint64_t pinKey) {
     if (!device_ || !pinKey) return;
     auto it = gemv_weight_cache_.find(pinKey);
     if (it == gemv_weight_cache_.end()) return;
+    const Deep2::PinWeightClass vc = Deep2::ClassifyPinKey(pinKey);
+    const size_t vb = it->second.bytes;
     if (it->second.buffer)
         vkDestroyBuffer(device_, it->second.buffer, nullptr);
     if (it->second.memory)
         vkFreeMemory(device_, it->second.memory, nullptr);
-    if (gemv_resident_bytes_ >= it->second.bytes)
-        gemv_resident_bytes_ -= it->second.bytes;
-    else
-        gemv_resident_bytes_ = 0;
+    if (gemv_resident_bytes_ >= vb) gemv_resident_bytes_ -= vb;
+    else gemv_resident_bytes_ = 0;
+    AdjClassBytes(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                  gemv_general_resident_bytes_, vc, vb, 0);
+    SyncQuotaLive(gemv_moe_resident_bytes_, gemv_mla_resident_bytes_,
+                  gemv_general_resident_bytes_);
     gemv_weight_cache_.erase(it);
     ++gemv_pin_evicts_;
     Deep2::DualStickOnGemvPinEvicted(pinKey, 0);
