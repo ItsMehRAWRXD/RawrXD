@@ -1,0 +1,42 @@
+GATE=DUALSTICK_GOVERNING_LADDER_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+TPS_MINT=0
+NOT_RUN!=PASS
+
+OBJECTIVE_GLOBAL=MINIMIZE TOKEN_MAKESPAN
+# NOT individual expert runtime / total GPU work / bytes moved
+
+CURRENT_OWNER=PHASE_A DUALSTICK_THROUGHPUT_CLIMB_001
+# Do NOT spend authority on Phase D sophistication while substrate exposes
+# more than 2 submissions/readbacks per routed MoE layer.
+
+PHASE_A_PASS_IF=
+  GPU_SUBMITS_PER_MOE_LAYER == 2
+  && D2H_PARTIAL_VECTORS_PER_MOE_LAYER == 2
+  && EXPERT_INTERMEDIATE_D2H == 0
+  && HOST_GEMV_EXPERT == 0
+  && FWD_G0 > 0
+  && FWD_G1 > 0
+  && SEL == EXE
+  && ACQUIRE_FAIL == 0
+
+PHASE_B_PASS_IF= (only after A PASS)
+  STICK_COMPLETION_SKEW_PCT < 5
+  && GPU0_IDLE_AT_JOIN_NS materially reduced
+  && GPU1_IDLE_AT_JOIN_NS materially reduced
+  && RELOAD_MISS_BYTES_PER_TOKEN <= Phase_A baseline
+  && ROUTER_SET_UNCHANGED
+  && SEL == EXE
+  && ACQUIRE_FAIL == 0
+
+PHASE_C=QUANT_FABRIC SOURCE_READY after B
+PHASE_D=SPARSE_CRITICAL_PATH_COMPILER SOURCE_READY after A+B
+  # DAG→CP→enumerate/cost→hetero sched→transfer hide→fuse/barrier→2 graphs→PGO→whole-token
+  # live owner ONLY after A and B close
+
+VALUATION=VALUATION_NOTE_20260913.txt (~$225M base; B/C/D upside only)
+SEALED=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679

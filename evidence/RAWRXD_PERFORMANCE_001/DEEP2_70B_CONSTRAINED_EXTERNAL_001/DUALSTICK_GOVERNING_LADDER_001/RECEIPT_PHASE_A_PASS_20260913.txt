@@ -1,0 +1,39 @@
+GATE=DUALSTICK_GOVERNING_LADDER_001
+DATE=2026-09-13
+CURRENT_OWNER=PHASE_A
+DISPOSITION=PHASE_A_PASS
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+PHASE_A_PASS_IF (live product; fail-closed) = ALL TRUE
+  GPU_SUBMITS_PER_MOE_LAYER == 2                 # L61: 960/480=2
+  && D2H_PARTIAL_VECTORS_PER_MOE_LAYER == 2      # L61: 960/480=2
+  && EXPERT_INTERMEDIATE_D2H == 0                # INTERMEDIATE_D2H=0 EXPERT_D2H=0
+  && HOST_GEMV_EXPERT == 0                       # HOST_GEMV_EXPERT=0 HOST_EXPERT_GEMV_CALLS=0
+  && FWD_G0 > 0                                  # DUALSTICK_FORWARD_CALLS_GPU0=1938
+  && FWD_G1 > 0                                  # DUALSTICK_FORWARD_CALLS_GPU1=1902
+  && SEL == EXE                                  # 3840/3840 parity=1
+  && ACQUIRE_FAIL == 0                           # acquire_fail=0
+
+AUTHORITY_RUN=
+  L61=runs/kimi_moe_DS_L61t8_fuse_20260913_005437 EXIT=0
+  L8 =runs/kimi_moe_DS_L8t8_fuse_20260913_005024  EXIT=0 (geometry corroboration)
+  BINARY=build-fd/bin/rawr.exe
+  IMPL_SEAL=708098da45
+
+WALL_NOTE_NON_GATE=
+  L61 MEAN=14.60 s/tok vs sealed reuse 13.72 (REGRESS)
+  not part of PHASE_A_PASS_IF; wall climb ≠ reopen HARD_GATE geometry
+
+PHASE_B=SOURCE_READY only (SKEW product NOT_RUN)
+PHASE_C=SOURCE_READY
+PHASE_D=SOURCE_READY
+# Do NOT implement Phase D sophistication; substrate now ≤2 submits/readbacks.
+
+OBJECTIVE_GLOBAL=MINIMIZE TOKEN_MAKESPAN (still open; A closes substrate only)
+VALUATION=VALUATION_NOTE_20260913.txt (~$225M; B/C/D upside only; LIVE≪5 TPS)
+SEALED_PRESERVED=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679 708098da45
