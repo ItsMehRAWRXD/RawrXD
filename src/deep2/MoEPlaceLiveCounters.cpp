@@ -165,6 +165,18 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.stick_migrations,
             (unsigned long long)c.work_steals,
             (unsigned long long)c.residency_lost_to_rebalance_bytes);
+        std::fprintf(f,
+            "D2_MOE_V7 v7_cost_cells=%llu v7_cost_samples=%llu "
+            "v7_observe_only=%llu v7_blend_w_x100=%llu "
+            "v7_shadow_err_pct=%llu_NONAUTH\n",
+            (unsigned long long)c.v7_cost_cells,
+            (unsigned long long)c.v7_cost_samples,
+            (unsigned long long)c.v7_observe_only,
+            (unsigned long long)c.v7_blend_w_x100,
+            (unsigned long long)(c.v7_shadow_act_ns
+                                    ? (c.v7_shadow_err_ns * 100ull) /
+                                          c.v7_shadow_act_ns
+                                    : 0ull));
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "

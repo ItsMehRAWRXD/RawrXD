@@ -4969,6 +4969,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/lavapath/DualStickImbalance_Ewma.cpp
     src/deep2/lavapath/DualStickImbalance_Xfer.cpp
     src/deep2/lavapath/DualStickImbalance_Observe.cpp
+    src/deep2/lavapath/DualStickImbalance_Cost.cpp
     src/deep2/lavapath/DualStickImbalance_Steal.cpp
     src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
     src/deep2/lavapath/DualStickEnvSnap.cpp

@@ -6,17 +6,21 @@ TPS_MINT=0
 NOT_RUN!=PASS
 
 PARENT_V6d=HOLD c1e90fcdf5
-CENTRAL_LAW=MINIMIZE max(finish0,finish1)
-AUTH_BALANCE=ABS(FINISH0-FINISH1)/MAX
+FLOOR=74cd054d6
+GOVERNING=DEEP2_CONSTRAINT_HIERARCHY_001
+NO_TRADE=DEEP2_NO_TRADE_HIGHER_INVARIANT_001
+ORDER=SURVIVABILITY > RESIDENCY > PREDICTION > BALANCE > TPS
 
-# Live Expert Cost Matrix (foundation of CORE_PATH)
+CENTRAL_LAW=MINIMIZE max(finish0,finish1) s.t. higher invariants
+AUTH_BALANCE=ABS(FINISH0-FINISH1)/MAX
+AUTH_ASSIGN=V6 FullCost (Pred/LPT/Steal NOT wired)
+AUTH_PREDICT_ERR=PREDICTED_VS_ACTUAL_ERROR_PCT (V6)
+
+# Live Expert Cost Matrix
 COST[layer][expert][gpu][quant][shape][residency][kernel] = {
   ewma_kernel_ns, ewma_h2d_ns, queue_ns, variance, samples, confidence }
 
-PREDICTED_COST(gpu) = MATRIX_COST + CURRENT_QUEUE + TRANSFER_COST + RISK_PENALTY
-ASSIGN_TO = argmin max(FINISH_GPU0, FINISH_GPU1)
-
-# Matrix one-liners
+# 15 matrix gates (foundation)
 # 1  Layer×Expert×GPU Timing Cell actual_ns
 # 2  EWMA Cell Update (adaptive; not one-sample replace)
 # 3  Sample-Count Confidence (sparse→priors)
@@ -33,16 +37,32 @@ ASSIGN_TO = argmin max(FINISH_GPU0, FINISH_GPU1)
 # 14 Recency Decay
 # 15 Counterfactual Cost Lookup (both GPUs before assign)
 
-MATRIX_FIRST=#1 cell → #2 EWMA → #3 confidence → #4/#5 quant/shape
-  → #6 residency split → #8/#9 queue/H2D sep → #11 affinity → #15 lookup
-# then CORE_PATH: affinity→weighted-LPT pin-safe→finish place→pairwise swap→skew forecast
+# Safe transition (15 gates → ACCEPT); observe-only this turn
+TRANSITION=
+  1 V7_MATRIX_OBSERVE_ONLY
+  2 NO_ASSIGNMENT_CHANGE
+  3 MATRIX_SAMPLE_COVERAGE (attributable pin H2D only; FORBID wall/n)
+  4 PREDICT_ERR_BY_CELL (shadow NONAUTH)
+  5 CONFIDENCE>=N
+  6 V6/V7_BLEND w=f(samples) + excursion clamp
+  7 RELOAD→0
+  8 PREDICT_ERR<10
+  9 SKEW<5
+  10 JOIN_WAIT<=16.8s
+  11 SEL==EXE parity=1
+  12 acquire_fail=0 2+2 held
+  13 SUBMITS=2 D2H_PARTIAL=2
+  14 LPT/Steal still HELD
+  15 V7_ACCEPT=1
+
+ENV=DEEP2_V7_MODE=observe|blend (default observe; blend stubbed)
+NOTE_CPP=FORBIDDEN as auth feed (wall/n fake per-expert)
 
 CORE_PATH=
   LIVE_COST_MATRIX → GPU_AFFINITY → WEIGHTED_LPT → FINISH_PLACE
   → PAIRWISE_SWAP → SKEW_FORECAST → PREDICT_ERR<10 → SKEW<5
 
 ACCEPT=
-  EXIT=0 SKEW_PCT<5 PREDICT_ERR_PCT<10 JOIN_WAIT<V6d 16.8s
+  EXIT=0 SKEW_PCT<5 PREDICT_ERR_PCT<10 JOIN_WAIT<=16.8s
   RELOAD=0 SEL==EXE SUBMITS=2 D2H_PARTIAL=2
 PRESERVE_2PLUS2=1
-#14 late rebalance + runtime steal HELD until ACCEPT

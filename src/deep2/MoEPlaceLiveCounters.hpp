@@ -89,6 +89,13 @@ struct MoEPlaceLiveCounters {
     uint64_t pred_err_queue_ns;
     /* V6 miss-bytes split — do NOT use EXPERT_MISS_BYTES_PER_TOKEN as auth */
     uint64_t stream_generated_tokens;
+    /* V7 observe-only matrix diagnostics (NONAUTH for ACCEPT) */
+    uint64_t v7_cost_cells;
+    uint64_t v7_cost_samples;
+    uint64_t v7_observe_only;
+    uint64_t v7_blend_w_x100;
+    uint64_t v7_shadow_err_ns;
+    uint64_t v7_shadow_act_ns;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

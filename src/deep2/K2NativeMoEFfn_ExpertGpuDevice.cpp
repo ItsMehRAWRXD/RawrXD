@@ -2,6 +2,8 @@
 #include "StickGpuLocal.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
+#include "lavapath/DualStickImbalance.hpp"
+#include "lavapath/DualStickImbalance_Xfer.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "vulkan_compute.h"
 #include <vector>
@@ -13,14 +15,21 @@ bool PinExpert(CPUInference::VulkanCompute* vc, unsigned stick, int gt,
                const uint8_t* g, size_t gb, int ut, const uint8_t* u, size_t ub,
                int dt, const uint8_t* d, size_t db, size_t H, size_t I,
                uint32_t layer, int expertId, int acquireMiss, StickGpuLocal& c) {
+    const uint64_t eb = (uint64_t)gb + ub + db;
     if (acquireMiss) {
         c.acquire_misses += 3;
         if (g && gb) DualStickAcquire(stick, g, gb, 0, layer, (uint32_t)expertId);
         if (u && ub) DualStickAcquire(stick, u, ub, 0, layer, (uint32_t)expertId);
         if (d && db) DualStickAcquire(stick, d, db, 0, layer, (uint32_t)expertId);
-        c.h2d_bytes += (uint64_t)gb + ub + db;
+        c.h2d_bytes += eb;
+        /* V7: attributable H2D estimate into resident=0 cell; no wall/n kern. */
+        DualStickImbalanceObserveExpert(
+            (int)layer, expertId, stick, 0,
+            ds_imb::TransferExecNs(stick, eb), 0ull);
     } else {
         c.acquire_hits += 3;
+        DualStickImbalanceObserveExpert((int)layer, expertId, stick, 1, 0ull,
+                                        0ull);
     }
     const uint64_t p1 = DualStickExpertPin(layer, expertId, 1);
     const uint64_t p2 = DualStickExpertPin(layer, expertId, 2);

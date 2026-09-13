@@ -18,6 +18,10 @@ void DualStickImbalanceSteal(MoEPlacePlan& plan, int layer); /* held */
 /* #7+#13: stick walls + H2D bytes → kernel EWMA + transfer BW EWMA. */
 void DualStickImbalanceObserve(uint64_t t0_ns, uint64_t t1_ns, uint32_t n0,
                                uint32_t n1, uint64_t h2d0, uint64_t h2d1);
+/* V7 observe-only: attributable pin H2D / hit sighting → CostNoteSplit. */
+void DualStickImbalanceObserveExpert(int layer, int expert, unsigned stick,
+                                     int resident, uint64_t h2dNsOr0,
+                                     uint64_t kernNsOr0);
 uint64_t DualStickImbalancePredAvail(unsigned stick);
 
 } // namespace Deep2
