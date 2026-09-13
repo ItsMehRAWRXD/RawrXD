@@ -48,6 +48,8 @@
 #include "K2LogitsArgmaxContract.hpp"
 #include "RuntimeEvidence512Host.hpp"
 #include "RuntimeEvidence512Surface.hpp"
+#include "lavapath/GreedyDetTrace.hpp"
+#include "lavapath/DualStickImbalance_Det.hpp"
 #include <cstdint>
 #include <algorithm>
 #include <cmath>
@@ -1097,6 +1099,7 @@ bool ProjectLogitsArgmax(const Deep2::GlobalTensorIndex& index,
         return false;
     }
     bestTok = static_cast<int32_t>(br);
+    Deep2::greedy_det::NoteArgmax(bestTok);
     fprintf(stderr, "LOGITS_ARGMAX_END STEP=%u/%u TOK=%d\n",
             logitsStep, logitsSteps, (int)bestTok);
     fflush(stderr);

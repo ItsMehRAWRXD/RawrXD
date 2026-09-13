@@ -2,6 +2,7 @@
 #include "MoEPlaceLiveCounters.hpp"
 #include "lavapath/DualStickPinCoherency.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/GreedyDetTrace.hpp"
 #include <cstring>
 
 namespace Deep2 {
@@ -13,11 +14,13 @@ MoEPlaceLiveCounters& MoEPlaceLive() {
 
 void MoEPlaceLiveReset() {
     std::memset(&MoEPlaceLive(), 0, sizeof(MoEPlaceLiveCounters));
+    greedy_det::Reset();
 }
 
 void MoEPlaceLiveEmit(FILE* f) {
     if (!f) return;
     DualStickSyncQuotaLiveCounters();
+    greedy_det::Dump(f);
     const MoEPlaceLiveCounters& c = MoEPlaceLive();
     std::fprintf(f,
         "D2_MOE_LIVE moe_ffn_enter=%llu moe_place_enter=%llu "

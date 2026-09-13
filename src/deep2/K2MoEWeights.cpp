@@ -217,7 +217,9 @@ MoERoutingResult KimiK2Router::SelectExpertsNoAuxTC(
     std::iota(idx.begin(), idx.end(), 0);
     std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),
                       [&](uint32_t a, uint32_t b) {
-                          return choiceScores[a] > choiceScores[b];
+                          if (choiceScores[a] != choiceScores[b])
+                              return choiceScores[a] > choiceScores[b];
+                          return a < b; /* stable tie → lower expert id */
                       });
     result.count = k;
     for (uint32_t i = 0; i < k; ++i) {

@@ -12,8 +12,10 @@ void DualStickImbalanceSetShape(uint32_t quant, uint32_t inDim,
 /* Est kernel+miss+xfer cost for stick (no queue bump). */
 uint64_t DualStickImbalanceEstCost(unsigned stick, int resident,
                                    uint64_t bytes);
-/* pref=-1 cold; hit=1 retain. argmin finish; count-second on ties. */
-unsigned DualStickImbalanceAssign(int prefStick, uint64_t bytes, int hit);
+/* pref=-1 cold; hit=1 retain. argmin finish; count-second on ties.
+ * Hash mode (greedy/DETERMINISTIC): stick = hash(layer,expert); no EWMA. */
+unsigned DualStickImbalanceAssign(int layer, int expert, int prefStick,
+                                  uint64_t bytes, int hit);
 void DualStickImbalanceSteal(MoEPlacePlan& plan, int layer); /* held */
 /* #7+#13: stick walls + H2D bytes → kernel EWMA + transfer BW EWMA. */
 void DualStickImbalanceObserve(uint64_t t0_ns, uint64_t t1_ns, uint32_t n0,

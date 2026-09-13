@@ -19,27 +19,36 @@ SURVIVABILITY=PASS
   GENERAL_TO_MOE=0 MLA_TO_MOE=0 BUDGET_SHRINK_BLOCKED=1
   MoePinHold intact (no DEVICE_LOST / vk=-4)
 
+GREEDY_LOGIT_DETERMINISM=PASS
+  2× locked L61t8 (STICK_HASH_MODE=1):
+  RUN=.../GREEDY_LOGIT_DETERMINISM_001/runs/..._051148
+  RUN=.../GREEDY_LOGIT_DETERMINISM_001/runs/..._051403
+  TRACE_HASH=ac263efad52c3033 EXPERT_SEQUENCE_HASH=828a699d6ec6354a
+  SEEN=1277 ARGMAX identical EXIT0 GEN8/8
+
 AFTER_EVICTION_ENVELOPE=HOLD
   TARGET≈250–350 MiB on full GEN8
-  OBSERVED_FULL_GEN8_CONFIRM=
+  OBSERVED_FULL_GEN8_CONFIRM (pre-lock, nondeterministic routes)=
     045257 AFTER=2001764352 (~1909 MiB) SEEN=1371
     045547 AFTER=1746468864 (~1666 MiB) SEEN=1378
     045956 AFTER=1866547200 (~1780 MiB) SEEN=1398
+  OBSERVED_LOCKED_GEN8=
+    051148/051403 AFTER=931381248 (~888.2 MiB) SEEN=1277
+    # improved vs 1.7–1.9GiB but still >~350 band
   WITNESS_OUTLIER_ONLY=
     EndDevice 043839 AFTER=255295488 (~243.5 MiB) SEEN=1152
-    # not reproduced on 3 confirms; greedy first ARGMAX varies
-    # (950 / 96069 / 82 / 950) under claimed GREEDY temp=0
+    # not reproduced on confirms
 
 PARTITION_INTACT=
   GENERAL/MLA_TO_MOE remain 0 (≠ pre-partition ~1078 MLA/general steal)
-  MoE→MoE AFTER high is temporal thrash under high SEEN, not class steal
+  MoE→MoE AFTER high is temporal thrash under SEEN, not class steal
 
 ATTEMPTED=
   recent-touch MoE victim protect (age<4096) → AFTER still ~1780; REVERTED
-  no RAISE_BUDGET
+  greedy stick-hash lock → AFTER~888 on locked traces; no RAISE_BUDGET
 
 NEXT_OPEN_GATE=
-  PHYSICAL_RELOAD_ENVELOPE AFTER≤~350MiB stable on ≥2 full GEN8
-  OR GREEDY_LOGIT_DETERMINISM so SEEN/route reproducible
+  PHYSICAL_RELOAD_ENVELOPE AFTER≤~350MiB stable on ≥2 locked GEN8
 THEN=V7_TRACE_LOCKED_MATURITY_001 (BATCH_B) · BLEND still held
+BATCH_B=NOT_STARTED
 BATCH_C=BLOCKED until B PASS

@@ -71,6 +71,7 @@
 #include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
+#include "lavapath/DualStickImbalance_Det.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DeviceManager.hpp"
 #include "AttnCertProbe.hpp"
@@ -6559,11 +6560,13 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
     // One authoritative generation configuration for generate() / generateStream().
     if (options.temperature <= 0.0f || options.topK <= 1) {
         deterministicGreedy_ = true;
+        ds_imb::SetGreedyStick(1);
         sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
         printf("[GREEDY] enabled=1 temperature=%.4f topK=%u\n",
                options.temperature, options.topK);
     } else {
         deterministicGreedy_ = false;
+        ds_imb::SetGreedyStick(0);
         if (options.topP < 1.0f && options.topP > 0.0f) {
             sampler = std::make_unique<rawrxd::sampling::TopPSampler>(
                 options.temperature, options.topP);

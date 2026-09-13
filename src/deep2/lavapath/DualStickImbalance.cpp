@@ -1,5 +1,6 @@
 /* DualStickImbalance.cpp — V6 #1#4 assign (observe in _Observe.cpp). ≤99. */
 #include "DualStickImbalance.hpp"
+#include "DualStickImbalance_Det.hpp"
 #include "DualStickImbalance_State.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 
@@ -25,8 +26,17 @@ uint64_t DualStickImbalanceEstCost(unsigned stick, int resident,
                             bytes, resident);
 }
 
-unsigned DualStickImbalanceAssign(int prefStick, uint64_t bytes, int hit) {
+unsigned DualStickImbalanceAssign(int layer, int expert, int prefStick,
+                                  uint64_t bytes, int hit) {
     using namespace ds_imb;
+    if (StickHashMode()) {
+        unsigned pick = (hit && prefStick >= 0)
+                            ? ((unsigned)prefStick & 1u)
+                            : HashStickOf(layer, expert);
+        if (!hit) XferNoteMiss(pick);
+        g_nAssign[pick]++;
+        return pick;
+    }
     const uint64_t c0 = FullCost(0u, prefStick, bytes, hit);
     const uint64_t c1 = FullCost(1u, prefStick, bytes, hit);
     uint64_t f0 = g_avail[0] + c0, f1 = g_avail[1] + c1;

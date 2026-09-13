@@ -10,6 +10,7 @@
 #include "lavapath/DualStickExpertBundle.hpp"
 #include "lavapath/DualStickImbalance.hpp"
 #include "lavapath/DualStickImbalance_Xfer.hpp"
+#include "lavapath/GreedyDetTrace.hpp"
 #include "MoELiveAdd.hpp"
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
@@ -127,6 +128,8 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                        float* accum, std::string& error) {
     MoERoutingResult route{};
     if (!LoadAndRoute(index, cfg, layer, normed, route, error)) return false;
+    for (uint32_t i = 0; i < route.count; ++i)
+        greedy_det::NoteExpert(layer, (int32_t)route.expertIds[i]);
     if (moe_ltrace::On(layer)) {
         std::fprintf(stderr, "L%u_ROUTER_DONE ids=[", layer);
         for (uint32_t i = 0; i < route.count; ++i) {
@@ -228,8 +231,8 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         uint64_t bytes = DualStickExpertBytesOf((int)layer, mut.expertId);
         if (!bytes) bytes = 1ull << 20;
         if (sticks >= 2u)
-            mut.stick =
-                (uint8_t)DualStickImbalanceAssign(pref, bytes, (int)mut.hit);
+            mut.stick = (uint8_t)DualStickImbalanceAssign(
+                (int)layer, mut.expertId, pref, bytes, (int)mut.hit);
         else
             mut.stick = 0;
         if (mut.hit) MoEPlaceLive().expert_stick_retains++;

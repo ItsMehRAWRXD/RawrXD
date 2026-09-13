@@ -1,0 +1,37 @@
+GATE=GREEDY_LOGIT_DETERMINISM_001
+DATE=2026-09-13
+KIND=RECEIPT
+VERDICT=PASS
+PROMOTE=0
+TPS_MINT=0
+BLEND_W=0
+RAISE_BUDGET=DEFER
+NOT_RUN!=PASS
+PARENT_ENVELOPE=HOLD (AFTER band still open)
+
+OWNER=DualStick cold LPT stick-assign fed by wall-clock EWMA
+  → different GPU mapping across runs → float / route drift under temp=0
+FIX=
+  DEEP2_STICK_ASSIGN=hash (auto on RAWRXD_GREEDY / DEEP2_DETERMINISTIC / SetGreedyStick)
+  DualStickImbalanceAssign(layer,expert,...): hash stick; hits retain pref
+  KimiK2Router SelectExpertsNoAuxTC stable tie (lower expert id)
+  stick worklist sort by expertId before fused exec
+  MoERouter useLoadBalancing=false (no RNG noise)
+  GREEDY_DET TRACE_HASH / EXPERT_SEQUENCE_HASH emit
+
+PROOF_2x_L61t8 (V7_MODE=0 BLEND_W=0 STICK_HASH_MODE=1):
+  RUN=kimi_moe_DS_L61t8_physenv_20260913_051148 EXIT=0 GEN=8/8
+  RUN=kimi_moe_DS_L61t8_physenv_20260913_051403 EXIT=0 GEN=8/8
+  ARGMAX=[93032,143825,35054,131185,131185,17,17,131185] IDENTICAL
+  TRACE_HASH=ac263efad52c3033 IDENTICAL
+  EXPERT_SEQUENCE_HASH=828a699d6ec6354a IDENTICAL
+  SEEN_BUNDLE_KEYS=1277 IDENTICAL
+  ARGMAX_PARITY=1 STREAM_ABORT=0 END_FAIL=0
+
+AFTER_ON_LOCKED=
+  MOE_RELOAD_AFTER_EVICTION_BYTES=931381248 (~888.2 MiB) both runs
+  TARGET≈250–350 MiB → STILL OPEN (no residency retune this gate)
+
+THEN=PHYSICAL_RELOAD_ENVELOPE AFTER≤~350 on locked traces
+  → V7_TRACE_LOCKED_MATURITY_001 (BATCH_B) · BLEND still 0
+BATCH_B=NOT_STARTED

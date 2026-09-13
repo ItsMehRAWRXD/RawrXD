@@ -26,7 +26,7 @@ struct MoEConfig {
     float routerZLoss = 0.01f;      // Z-loss coefficient
     bool useSharedExpert = true;    // Shared expert across all tokens
     size_t sharedExpertDim = 2048;  // Shared expert dimension
-    bool useLoadBalancing = true;   // Enable load balancing
+    bool useLoadBalancing = false;  /* inference: no RNG noise (greedy lock) */
     float capacityFactor = 1.25f;  // Expert capacity multiplier
 };
 

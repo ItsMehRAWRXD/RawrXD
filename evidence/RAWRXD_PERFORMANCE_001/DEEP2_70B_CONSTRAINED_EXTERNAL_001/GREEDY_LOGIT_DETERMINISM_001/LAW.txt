@@ -1,0 +1,28 @@
+GATE=GREEDY_LOGIT_DETERMINISM_001
+DATE=2026-09-13
+KIND=NEXT_OWNER
+PROMOTE=0
+BLEND_W=0
+RAISE_BUDGET=DEFER
+NOT_RUN!=PASS
+PARENT_ENVELOPE=HOLD (AFTER band)
+VERDICT=PASS
+
+# Locked: identical ARGMAX / TRACE_HASH / EXPERT_SEQUENCE_HASH / SEEN ≥2×
+# Owner was DualStick EWMA-LPT stick assign under greedy temp=0
+# RECEIPT=RECEIPT_GREEDY_LOGIT_DETERMINISM_001.txt
+
+PASS_IF=
+  identical prompt + temp=0 + seed/fixed path
+  → identical first N ARGMAX tokens (or documented RNG owner)
+  → TRACE_HASH / EXPERT_SEQUENCE_HASH / SEEN stable across ≥2 runs
+  EXIT=0 GEN=8/8 PARITY STREAM_ABORT=0 retained
+  NO residency/quota retune as primary lever
+# ALL MET (hash stick assign; no quota retune)
+
+THEN=
+  PHYSICAL_RELOAD_ENVELOPE AFTER≤~350MiB on ≥2 locked traces
+  → V7_TRACE_LOCKED_MATURITY_001
+  → V7_BLEND_05 only if maturity PASS
+
+ORDER=SURVIVABILITY>RESIDENCY>PREDICTION>BALANCE>TPS

@@ -11,6 +11,7 @@
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/EndDeviceStep3Diag.hpp"
 #include "vulkan_compute.h"
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -162,6 +163,11 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         }
         work.push_back(std::move(r));
     }
+    /* Deterministic partial-sum order within stick (associativity lock). */
+    std::sort(work.begin(), work.end(),
+              [](const Resolved& a, const Resolved& b) {
+                  return a.expertId < b.expertId;
+              });
 
     /* Hold MoE pins for this stick worklist — peer eviction ⇒ DEVICE_LOST. */
     if (vcHold) vcHold->BeginMoePinHold();
