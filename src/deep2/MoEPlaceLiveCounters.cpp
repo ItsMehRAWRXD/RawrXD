@@ -1,4 +1,4 @@
-/* MoEPlaceLiveCounters.cpp — ≤99 lines. */
+/* MoEPlaceLiveCounters.cpp — emit place + DualStick reuse microfix. */
 #include "MoEPlaceLiveCounters.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include <cstring>
@@ -55,6 +55,50 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.expert_acquire_ok,
             (unsigned long long)c.expert_acquire_fail,
             (unsigned long long)c.expert_markhot);
+        const uint64_t rld = c.reload_miss_bytes / tok;
+        std::fprintf(f,
+            "D2_MOE_REUSE EXPERT_BUNDLE_LOOKUPS=%llu HITS=%llu MISSES=%llu "
+            "EXPERT_ACQUIRE_HIT=%llu EXPERT_ACQUIRE_MISS=%llu "
+            "HOST_BYTES_FOR_HIT=%llu HOST_BYTES_FOR_MISS=%llu "
+            "SECONDARY_LOOKUP=%llu\n"
+            "D2_MOE_REUSE COMPULSORY_MISS_BYTES=%llu RELOAD_MISS_BYTES=%llu "
+            "HIT_BYTES=%llu RELOAD_MISS_BYTES_PER_TOKEN=%llu "
+            "SEEN_BUNDLE_KEYS=%llu\n"
+            "D2_MOE_REUSE GPU0_EXPERTS=%llu GPU1_EXPERTS=%llu "
+            "GPU0_WORK_NS=%llu GPU1_WORK_NS=%llu GPU_JOIN_WAIT_NS=%llu "
+            "H2D_BYTES=%llu D2H_BYTES=%llu "
+            "GPU_SUBMITS=%llu GPU_WAITS=%llu MOE_LAYERS_GPU=%llu "
+            "GPU_SUBMITS_PER_MOE_LAYER=%llu GPU_WAITS_PER_MOE_LAYER=%llu\n"
+            "D2_MOE_REUSE HOST_EXPERT_GEMV_CALLS=%llu "
+            "GPU_EXPERT_GEMV_CALLS=%llu\n",
+            (unsigned long long)c.expert_bundle_lookups,
+            (unsigned long long)c.expert_bundle_hits,
+            (unsigned long long)c.expert_bundle_misses,
+            (unsigned long long)c.expert_acquire_hits,
+            (unsigned long long)c.expert_acquire_misses,
+            (unsigned long long)c.host_bytes_for_hit,
+            (unsigned long long)c.host_bytes_for_miss,
+            (unsigned long long)c.secondary_lookup,
+            (unsigned long long)c.compulsory_miss_bytes,
+            (unsigned long long)c.reload_miss_bytes,
+            (unsigned long long)c.hit_bytes, (unsigned long long)rld,
+            (unsigned long long)c.seen_bundle_keys,
+            (unsigned long long)c.gpu0_experts,
+            (unsigned long long)c.gpu1_experts,
+            (unsigned long long)c.gpu0_work_ns,
+            (unsigned long long)c.gpu1_work_ns,
+            (unsigned long long)c.gpu_join_wait_ns,
+            (unsigned long long)c.h2d_bytes, (unsigned long long)c.d2h_bytes,
+            (unsigned long long)c.gpu_submits, (unsigned long long)c.gpu_waits,
+            (unsigned long long)c.moe_layers_gpu,
+            (unsigned long long)(c.moe_layers_gpu
+                                    ? c.gpu_submits / c.moe_layers_gpu
+                                    : 0ull),
+            (unsigned long long)(c.moe_layers_gpu
+                                    ? c.gpu_waits / c.moe_layers_gpu
+                                    : 0ull),
+            (unsigned long long)c.host_gemv_expert,
+            (unsigned long long)c.expert_gpu_exec);
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "
@@ -75,8 +119,6 @@ void MoEPlaceLiveEmit(FILE* f) {
         (unsigned long long)c.decode_experts_selected,
         (unsigned long long)c.decode_experts_executed,
         (c.decode_experts_selected == c.decode_experts_executed) ? 1 : 0);
-    /* Product rawr path: emit DualStick runtime stick work (parity cert only
-     * did this before — needed for BOTH_STICKS_EXECUTE conjunction). */
     EmitDualStickMechanics(f);
     std::fflush(f);
 }

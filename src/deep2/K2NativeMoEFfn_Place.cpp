@@ -1,4 +1,4 @@
-/* K2NativeMoEFfn_Place.cpp — router (KimiK2 semantics) → Place → exec ALL. */
+/* K2NativeMoEFfn_Place.cpp — router → Place → stick-batched exec → join. */
 #include "K2NativeMoEFfn.hpp"
 #include "K2MoEWeights.hpp"
 #include "MoEExpertResidencyPlace.hpp"
@@ -7,12 +7,16 @@
 #include "K2WeightResolve.hpp"
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/DualStickExpertBundle.hpp"
 #include "TensorView.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Deep2 {
 
@@ -24,6 +28,22 @@ bool K2MoEExecShared(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      std::string& error);
 
 namespace {
+
+uint64_t NowNs() {
+#ifdef _WIN32
+    static LARGE_INTEGER f{};
+    static int init = 0;
+    if (!init) {
+        QueryPerformanceFrequency(&f);
+        init = 1;
+    }
+    LARGE_INTEGER c;
+    QueryPerformanceCounter(&c);
+    return (uint64_t)((c.QuadPart * 1000000000ull) / (uint64_t)f.QuadPart);
+#else
+    return 0;
+#endif
+}
 
 bool LoadAndRoute(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                   uint32_t layer, const float* hidden, MoERoutingResult& route,
@@ -50,7 +70,8 @@ bool LoadAndRoute(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     if (cachedLayer != layer) {
         RawrXD::UniversalTensorDescriptor gd{}, bd{};
         gd.numDims = gRef->nDims;
-        for (uint8_t i = 0; i < gRef->nDims && i < 8; ++i) gd.shape[i] = gRef->shape[i];
+        for (uint8_t i = 0; i < gRef->nDims && i < 8; ++i)
+            gd.shape[i] = gRef->shape[i];
         gd.quantType = RawrXD::QuantType::F32;
         gd.data = const_cast<uint8_t*>(gs.data ? gs.data : gBuf.data());
         auto gate = RawrXD::TensorView::FromResident(gd);
@@ -64,6 +85,37 @@ bool LoadAndRoute(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     }
     MoEPlaceLive().moe_router_calls++;
     return router.Route(hidden, route, error);
+}
+
+bool ExecStickWorklist(const GlobalTensorIndex& index, const KimiK2Config& cfg,
+                       uint32_t layer, const float* normed,
+                       MoEPlacePlan& plan, const uint32_t* idx, uint32_t n,
+                       float* partial, std::string& error, uint32_t& executed) {
+    std::vector<float> expertOut(cfg.hiddenDim);
+    MoEExpertResidencyPlace& place = MoEPlaceGlobal();
+    for (uint32_t k = 0; k < n; ++k) {
+        MoEPlaceSlot& mut = plan.slots[idx[k]];
+        if (mut.expertId < 0) continue;
+        if (mut.thrash) MoEPlaceLive().moe_thrash_tokens++;
+        if (mut.residentHandle)
+            MoEPlaceLive().secondary_lookup += 0; /* handle from Place */
+        else
+            MoEPlaceLive().secondary_lookup++;
+        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", mut.expertId);
+        if (!K2MoEExecExpert(index, cfg, layer, mut.expertId, mut.stick, normed,
+                             expertOut.data(), error)) {
+            MoEPlaceLive().expert_acquire_fail++;
+            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", mut.expertId);
+            return false;
+        }
+        MoEPlaceLive().expert_acquire_ok++;
+        place.MarkHot((int)layer, mut.expertId, mut.stick, 0);
+        MoEPlaceLive().expert_markhot++;
+        for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
+            partial[i] += mut.weight * expertOut[i];
+        ++executed;
+    }
+    return true;
 }
 
 } // namespace
@@ -94,14 +146,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     MoEPlaceLive().moe_place_enter++;
     MoEPlaceLive().moe_tokens++;
     MoEExpertResidencyPlace& place = MoEPlaceGlobal();
-    /* DualStick: stick placement on MoE experts (parity with computeMoEFFN). */
     const uint32_t sticks =
         (DualStickState().armed || DualStickState().planned ||
          DualStickState().requested)
             ? 2u
             : 1u;
     place.SetStickCount(sticks);
-    /* Probe: software hot OR stick-VRAM residency (restore MarkHot). */
     place.SetProbe(
         [](void*, int ly, int ex) -> int {
             if (MoEPlaceGlobal().IsHot(ly, ex)) return 1;
@@ -115,11 +165,12 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         nullptr);
     if (place.Counters().place_calls == 0) {
         const uint64_t eb =
-            (uint64_t)(cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u) *
+            (uint64_t)(cfg.moeIntermediateSize ? cfg.moeIntermediateSize
+                                               : 2048u) *
             (uint64_t)cfg.hiddenDim;
         const char* b = std::getenv("DEEP2_MOE_PLACE_BUDGET_MIB");
-        uint64_t bud = b && *b ? ((uint64_t)std::atoi(b) << 20) : (8192ull << 20);
-        /* DualStick: place budget = sum of stick windows (avoid LRU thrash). */
+        uint64_t bud =
+            b && *b ? ((uint64_t)std::atoi(b) << 20) : (8192ull << 20);
         if (sticks >= 2u) {
             const char* s0 = std::getenv("DEEP2_STICK0_BUDGET_MIB");
             const char* s1 = std::getenv("DEEP2_STICK1_BUDGET_MIB");
@@ -154,38 +205,53 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         std::fflush(stderr);
     }
 
-    std::vector<float> expertOut(cfg.hiddenDim);
-    uint32_t executed = 0;
+    /* Assign sticks: retain affinity; miss → load-aware pick (#11 light). */
     for (uint32_t si = 0; si < plan.count; ++si) {
         MoEPlaceSlot& mut = plan.slots[si];
         if (mut.expertId < 0) continue;
-        if (mut.thrash) MoEPlaceLive().moe_thrash_tokens++;
         if (!mut.hit) {
             const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
-            mut.stick = (uint8_t)((pref >= 0) ? (unsigned)pref
-                                             : DualStickPickStick((uint32_t)mut.expertId));
+            mut.stick = (uint8_t)((pref >= 0)
+                                      ? (unsigned)pref
+                                      : DualStickPickStick((uint32_t)mut.expertId));
             MoEPlaceLive().expert_stick_assigns++;
         } else {
             const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
             if (pref >= 0) mut.stick = (uint8_t)(unsigned)pref;
             MoEPlaceLive().expert_stick_retains++;
         }
-        /* Acquire(n=0) removed — ExpertGpu DualStickAcquire(slice bytes). */
-        moe_ltrace::BCExpert(layer, "GATE_ACQUIRE", mut.expertId);
-        if (!K2MoEExecExpert(index, cfg, layer, mut.expertId, mut.stick,
-                             normed, expertOut.data(), error)) {
-            MoEPlaceLive().expert_acquire_fail++;
-            moe_ltrace::BCExpert(layer, "EXPERT_FAIL", mut.expertId);
-            return false;
-        }
-        MoEPlaceLive().expert_acquire_ok++;
-        /* Bytes: ExpertGpu NoteResident already MarkHot with true VRAM size. */
-        place.MarkHot((int)layer, mut.expertId, mut.stick, 0);
-        MoEPlaceLive().expert_markhot++;
-        for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
-            accum[i] += mut.weight * expertOut[i];
-        ++executed;
     }
+
+    /* #6/#10: two stick worklists → stick-local partials → one join. */
+    uint32_t ix0[MOE_PLACE_MAX_K], ix1[MOE_PLACE_MAX_K];
+    uint32_t n0 = 0, n1 = 0;
+    for (uint32_t si = 0; si < plan.count; ++si) {
+        if (plan.slots[si].expertId < 0) continue;
+        if ((plan.slots[si].stick & 1u) == 0)
+            ix0[n0++] = si;
+        else
+            ix1[n1++] = si;
+    }
+    std::vector<float> p0(cfg.hiddenDim, 0.f), p1(cfg.hiddenDim, 0.f);
+    uint32_t executed = 0;
+    const uint64_t tA = NowNs();
+    if (n0 && !ExecStickWorklist(index, cfg, layer, normed, plan, ix0, n0,
+                                 p0.data(), error, executed))
+        return false;
+    const uint64_t tB = NowNs();
+    if (tB >= tA) MoEPlaceLive().gpu0_work_ns += (tB - tA);
+    if (n1 && !ExecStickWorklist(index, cfg, layer, normed, plan, ix1, n1,
+                                 p1.data(), error, executed))
+        return false;
+    const uint64_t tC = NowNs();
+    if (tC >= tB) MoEPlaceLive().gpu1_work_ns += (tC - tB);
+    const uint64_t tJ0 = NowNs();
+    for (uint32_t i = 0; i < cfg.hiddenDim; ++i)
+        accum[i] += p0[i] + p1[i];
+    const uint64_t tJ1 = NowNs();
+    if (tJ1 >= tJ0) MoEPlaceLive().gpu_join_wait_ns += (tJ1 - tJ0);
+    if (n0 || n1) MoEPlaceLive().moe_layers_gpu++;
+
     moe_ltrace::BC(layer, "ROUTED_ACCUM_DONE");
     MoEPlaceLive().experts_executed += executed;
     if (decodePhase) MoEPlaceLive().decode_experts_executed += executed;

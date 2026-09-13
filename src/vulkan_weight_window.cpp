@@ -215,7 +215,8 @@ bool VulkanCompute::HasPinnedGemvWeight(uint64_t pinKey, size_t bytes,
 bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                                              uint32_t rows, uint32_t cols,
                                              VkBuffer& outDev, uint64_t pinKey) {
-    if (!device_ || !packed || !bytes) return false;
+    if (!device_ || !bytes) return false;
+    if (!packed && !pinKey) return false;
     size_t budget = ww_budget_bytes_ ? ww_budget_bytes_ : ((size_t)2048 << 20);
     if (ww_pin_budget_floor_ > budget) budget = ww_pin_budget_floor_;
     // Prefer live SetPinResidentBudget; env only if unset (avoid shallow Sync poison).
@@ -239,6 +240,7 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
         Deep2::GpuTransfer_NoteWeightHit(bytes);
         return true;
     }
+    if (!packed) return false; /* miss requires host packed bytes */
     const uintptr_t fpNow = WeightContentFingerprint(packed, bytes);
     if (it != gemv_weight_cache_.end() && it->second.bytes == bytes &&
         it->second.rows == rows && it->second.cols == cols && it->second.buffer &&

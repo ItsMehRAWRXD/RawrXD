@@ -1,5 +1,6 @@
-/* MoEExpertResidencyPlace_Place.cpp — hits-first plan builder. */
+/* MoEExpertResidencyPlace_Place.cpp — hits-first plan + residentHandle. */
 #include "MoEExpertResidencyPlace.hpp"
+#include "lavapath/DualStickExpertBundle.hpp"
 
 namespace Deep2 {
 
@@ -32,16 +33,20 @@ MoEPlacePlan MoEExpertResidencyPlace::Place(int layer, const MoEPlaceIn* in,
         s.weight = in[i].weight;
         int hi = FindHot(layer, s.expertId);
         int hit = hi >= 0 ? 1 : 0;
-        /* Probe may restore MarkHot from stick-VRAM residency. */
         if (!hit && probe_)
             hit = probe_(probeCtx_, layer, s.expertId) ? 1 : 0;
         if (hit && hi < 0) hi = FindHot(layer, s.expertId);
         s.hit = (uint8_t)hit;
         s.fetch = hit ? 0 : 1;
+        DualStickBundleMeta bm{};
+        const int haveB = DualStickBundleLookup(layer, s.expertId, &bm);
+        if (haveB) s.residentHandle = bm.handle;
         if (hi >= 0) {
             s.stick = (uint8_t)(hot_[(uint32_t)hi].stick & 1u);
             Touch(hi);
             ++ctr_.place_reuse;
+        } else if (haveB) {
+            s.stick = (uint8_t)(bm.stick & 1u);
         } else {
             s.stick = (uint8_t)((uint32_t)s.expertId % sticks_);
         }

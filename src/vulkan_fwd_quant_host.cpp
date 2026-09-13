@@ -14,7 +14,12 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
                                       uint32_t rows, uint32_t cols,
                                       uint64_t pinKey) {
     VkPipeline pipe = nullptr; uint64_t* ops = nullptr;
-    if (!SelectPackedPipe(ggmlType, pipe, ops) || !packed || !input || !output || !bytes)
+    if (!SelectPackedPipe(ggmlType, pipe, ops) || !input || !output || !bytes)
+        return false;
+    /* Pin-hit may omit host packed (HOST_BYTES_FOR_HIT=0). */
+    if (!packed &&
+        !(pinKey && WantWeightPin() &&
+          HasPinnedGemvWeight(pinKey, bytes, rows, cols)))
         return false;
     ++gemv_attempts_;
     const size_t inB = (size_t)cols * 4, outB = (size_t)rows * 4;
@@ -36,6 +41,7 @@ bool VulkanCompute::DispatchGEMVQuant(int ggmlType, const void* packed, size_t b
         if (!EnsurePinnedPackedWeight(packed, bytes, rows, cols, wbuf, pinKey))
             return false;
     } else {
+        if (!packed) return false;
         if (!ww_active_ || bytes > ww_slot_bytes_) {
             size_t budget = ww_budget_bytes_ ? ww_budget_bytes_
                                             : ((size_t)512 << 20);

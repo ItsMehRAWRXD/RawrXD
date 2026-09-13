@@ -1,5 +1,6 @@
 /* DualStickStreamWindow_Vc.cpp — VC bind, FWD note, expert stick residency. */
 #include "DualStickStreamWindow.hpp"
+#include "DualStickExpertBundle.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "vulkan_compute.h"
 #include <cstdlib>
@@ -102,6 +103,7 @@ void DualStickNoteExpertResident(int layer, int expert, unsigned stick,
 void DualStickExpertResidencyReset() {
     g_resN = 0;
     g_resBytes[0] = g_resBytes[1] = 0;
+    DualStickBundleTableReset();
 }
 
 } // namespace Deep2

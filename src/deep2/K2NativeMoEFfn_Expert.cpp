@@ -8,6 +8,7 @@
 #include "QuantKernelRegistry.hpp"
 #include "StreamPathTiming.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
+#include "lavapath/DualStickExpertBundle.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -113,19 +114,6 @@ bool SwiGLUHost(const uint8_t* g, int gt, const uint8_t* u, int ut,
 bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
                      uint32_t layer, int expertId, unsigned stick,
                      const float* hidden, float* expertOut, std::string& error) {
-    char gateN[64], upN[64], downN[64];
-    std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight", layer);
-    std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up_exps.weight", layer);
-    std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down_exps.weight", layer);
-    std::vector<uint8_t> gateB, upB, downB;
-    int gt = 12, ut = 12, dt = 12;
-    size_t gb = 0, ub = 0, db = 0;
-    if (!ReadExpertSlice(index, gateN, (uint32_t)expertId, gateB, gt, gb, error))
-        return false;
-    if (!ReadExpertSlice(index, upN, (uint32_t)expertId, upB, ut, ub, error))
-        return false;
-    if (!ReadExpertSlice(index, downN, (uint32_t)expertId, downB, dt, db, error))
-        return false;
     size_t H = cfg.hiddenDim, I = cfg.moeIntermediateSize
                                        ? cfg.moeIntermediateSize
                                        : 2048u;
@@ -140,6 +128,30 @@ bool K2MoEExecExpert(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         (DualStickState().armed || DualStickState().planned ||
          DualStickState().requested) &&
         DualStickVc(stick) != nullptr;
+    /* #1/#4: pin-resident → GPU GEMV without host slice bounce. */
+    if (wantGpu &&
+        DualStickBundlePinsReady(stick, (int)layer, expertId, H, I)) {
+        MoEPlaceLive().host_bytes_for_hit += 0;
+        if (K2MoEExecExpertGpu(stick, 0, nullptr, 0, 0, nullptr, 0, 0, nullptr, 0,
+                               hidden, expertOut, H, I, layer, expertId))
+            return true;
+    }
+
+    char gateN[64], upN[64], downN[64];
+    std::snprintf(gateN, sizeof(gateN), "blk.%u.ffn_gate_exps.weight", layer);
+    std::snprintf(upN, sizeof(upN), "blk.%u.ffn_up_exps.weight", layer);
+    std::snprintf(downN, sizeof(downN), "blk.%u.ffn_down_exps.weight", layer);
+    std::vector<uint8_t> gateB, upB, downB;
+    int gt = 12, ut = 12, dt = 12;
+    size_t gb = 0, ub = 0, db = 0;
+    if (!ReadExpertSlice(index, gateN, (uint32_t)expertId, gateB, gt, gb, error))
+        return false;
+    if (!ReadExpertSlice(index, upN, (uint32_t)expertId, upB, ut, ub, error))
+        return false;
+    if (!ReadExpertSlice(index, downN, (uint32_t)expertId, downB, dt, db, error))
+        return false;
+    MoEPlaceLive().host_bytes_for_miss += (uint64_t)gb + ub + db;
+
     if (wantGpu &&
         K2MoEExecExpertGpu(stick, gt, gateB.data(), gb, ut, upB.data(), ub, dt,
                            downB.data(), db, hidden, expertOut, H, I, layer,

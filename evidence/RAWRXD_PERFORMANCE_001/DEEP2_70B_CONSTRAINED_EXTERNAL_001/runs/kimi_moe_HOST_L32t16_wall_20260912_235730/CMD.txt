@@ -1,0 +1,13 @@
+﻿STAMP=20260912_235730
+TAG=HOST_L32_T16_WALL_MATCH
+RAWRXD_ALLOW_GPU=0
+RAWRXD_HOST_DECODE=1
+DEEP2_DUALSTICK_ARM=0
+RAWRXD_K2_LAYERS=32
+DEEP2_MOE_PLACE_TRACE=0
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+TOKENS=16
+CMD=G:\~dev\rawrxd\build-fd\bin\rawr.exe run "F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf" "Say hi." --max-tokens 16
+NOTE=POST_LOCALITY_WALL_HOLD matched-depth host baseline vs DS L32t16; PROMOTE=0

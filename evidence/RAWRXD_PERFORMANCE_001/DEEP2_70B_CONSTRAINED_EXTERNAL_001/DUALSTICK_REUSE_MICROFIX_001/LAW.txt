@@ -1,0 +1,66 @@
+GATE=DUALSTICK_REUSE_MICROFIX_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+# Matched-depth wall (L32t16) — bottleneck law
+# DualStick is NOT "need more GPU." Failure mode:
+# placement/copy/sync overhead without enough stick-local reusable execution.
+HOST_WALL_S_PER_TOK≈10.1   # ≈0.099 TPS display-only
+DUALSTICK_WALL_S_PER_TOK≈11.0  # ≈0.091 TPS display-only
+DELTA≈+0.9s/tok (~9% regression)
+
+GOVERNING_METRIC=RELOAD_MISS_BYTES_PER_TOKEN
+# compulsory first-touch is unavoidable; attack reload/evict thrash
+# EXPERT_MISS_BYTES_PER_TOKEN remains reported but is no longer sole owner
+
+ARCH_SHAPE=
+  router top-8
+    → GPU0 expert batch | GPU1 expert batch
+    → stick-local partial sum | stick-local partial sum
+    → one join/add
+# two-way sparse FFN reduction — not 8 independent GEMV pipelines
+
+PRIORITY_IMMEDIATE=1,3,4,6,7,9,10
+# 1 stop reacquire resident (layer,expert,role,gen) → EXPERT_ACQUIRE_HIT↑ UPLOAD↓
+# 3 Place() yields {expertId,weight,stick,residentHandle} → SECONDARY_LOOKUP=0
+# 4 no host bounce on cache hit → HOST_BYTES_FOR_HIT=0
+# 6 batch 8 experts by stick → fewer submits/fences
+# 7 one sync per routed layer → WAIT_CALLS/layer↓
+# 9 Down stays on device until weighted accum → D2H ~1 partial/stick/layer
+# 10 stick-local partials → transfer 8→2 per MoE layer
+
+FULL_15=
+  2 Gate+Up+Down one residency unit (acq/expert →1)
+  5 persistent per-stick scratch (ALLOC_PER_EXPERT=0)
+  8 fuse Gate+Up dispatch where geometry allows
+  11 load-aware cold place (not expertId%2); hot retain authoritative
+  12 hotness key (layer,expert) — no cross-layer alias
+  13 evict whole expert bundles (Gate/Up/Down together)
+  14 one-layer-lookahead prefetch misses during current exec
+  15 split COMPULSORY vs RELOAD vs HIT bytes
+
+L61T8_INSTRUMENT=
+  EXPERT_BUNDLE_LOOKUPS HITS MISSES
+  COMPULSORY_MISS_BYTES RELOAD_MISS_BYTES HIT_BYTES
+  GPU0_EXPERTS GPU1_EXPERTS
+  GPU0_WORK_NS GPU1_WORK_NS GPU_JOIN_WAIT_NS
+  H2D_BYTES D2H_BYTES
+  GPU_SUBMITS_PER_MOE_LAYER GPU_WAITS_PER_MOE_LAYER
+  HOST_EXPERT_GEMV_CALLS GPU_EXPERT_GEMV_CALLS
+
+FIRST_PROGRESSION_PASS_IF=
+  FWD_G0>0 AND FWD_G1>0
+  AND HOST_EXPERT_GEMV↓
+  AND RELOAD_MISS_BYTES/token↓
+  AND GPU_JOIN_WAIT_NS↓
+# TPS win NOT required for micro-fix usefulness
+# If counters improve but full-depth DualStick still slower → NEXT=kernel throughput
+
+SEALED_DO_NOT_REOPEN=
+  FULL_HOST_MOE_EXECUTION=PASS 2d0f2dc480
+  K2_EXPERT_GPU_EXEC_BIND=PASS ca3be53613
+  DUALSTICK_LOCALITY=PASS 44b73b868e

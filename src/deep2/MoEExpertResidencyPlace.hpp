@@ -25,6 +25,7 @@ struct MoEPlaceSlot {
     uint8_t hit;     /* 1 = already resident */
     uint8_t fetch;   /* 1 = needs host/GPU fetch */
     uint8_t thrash;  /* 1 = miss under tight budget */
+    uint32_t residentHandle; /* DualStick bundle handle; 0 = none */
 };
 
 struct MoEPlacePlan {
