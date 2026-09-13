@@ -68,5 +68,6 @@ int DualStickExpertIsResident(int layer, int expert);
 int DualStickExpertStickOf(int layer, int expert);
 uint64_t DualStickExpertBytesOf(int layer, int expert);
 unsigned DualStickPickStick(uint32_t expertId);
+uint64_t DualStickStickResBytes(unsigned stick);
 void DualStickExpertResidencyReset();
 } // namespace Deep2

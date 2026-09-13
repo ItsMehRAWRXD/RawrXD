@@ -1,0 +1,71 @@
+GATE=DUALSTICK_KERNEL_IMBALANCE_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_PERFORMANCE_AUTHORITY=0
+TARGET_35_50_TPS=UNMINTED
+NOT_RUN!=PASS
+
+ACTIVATE_IF=DUALSTICK_THROUGHPUT_CLIMB_001 HARD_GATE product PASS
+
+OBJECTIVE=
+  minimize max(predicted_done_gpu0, predicted_done_gpu1)
+SUBJECT_TO=
+  router_topk unchanged
+  SEL == EXE
+  resident affinity preferred
+  no expert dropped
+  ACQUIRE_FAIL == 0
+  RELOAD_MISS not increased vs reuse seal
+
+COST=
+  cost(stick, expert) =
+      kernel_ns[stick][quant][shape]
+    + nonhidden_upload_ns
+    + queue_wait_ns
+    + migration_penalty
+    + predicted_sync_tail
+ASSIGN=
+  finish0 = gpu0_available_ns + cost(GPU0, expert)
+  finish1 = gpu1_available_ns + cost(GPU1, expert)
+  assign → argmin(finish0, finish1)
+
+SKEW_TARGET=
+  ABS(T_GPU0 - T_GPU1) / MAX(T_GPU0, T_GPU1) < 0.05
+  without increasing reload misses
+AFTER_SKEW_PASS=
+  NEXT_OWNER=per-stick quant kernel execution time ceiling
+  (scheduler no longer primary owner)
+
+# Top 15 closed-loop heterogeneous completion-time scheduler
+# 1  Per-stick EWMA latency model
+# 2  Predicted-finish assignment
+# 3  Barrier-skew feedback
+# 4  Quant-family performance matrix
+# 5  Shape-sensitive cost model
+# 6  Residency-aware finish prediction
+# 7  Queue-depth penalty
+# 8  Critical-path-first dispatch
+# 9  Adaptive asymmetric split
+# 10 Late expert work stealing
+# 11 Hysteresis on stick migration
+# 12 Prediction-error correction
+# 13 Tail-reserve expert pool
+# 14 Overlap-aware cost accounting
+# 15 Deadline-style layer controller (minimize max(T0,T1))
+
+FIRST_FIVE=
+  #1 EWMA latency model
+  → #2 predicted-finish assignment
+  → #3 skew feedback
+  → #6 residency cost
+  → #10 work stealing
+
+AUTHORITY_METRICS=
+  STICK_SKEW_NS STICK_SKEW_PCT
+  PREDICTED_VS_ACTUAL_ERROR_PCT
+  GPU0_IDLE_AT_JOIN_NS GPU1_IDLE_AT_JOIN_NS
+  MIGRATIONS_PER_LAYER WORK_STEALS_PER_LAYER
+  RESIDENCY_LOST_TO_REBALANCE_BYTES
+
+SEALED_PRESERVE=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679

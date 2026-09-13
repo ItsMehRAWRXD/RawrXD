@@ -72,6 +72,17 @@ struct MoEPlaceLiveCounters {
     uint64_t worker_failures;
     uint64_t layer_joins;
     uint64_t product_backend_attested; /* 1 only after live DualStick device path */
+    /* DUALSTICK_KERNEL_IMBALANCE_001 Phase B authority metrics */
+    uint64_t gpu0_idle_at_join_ns;
+    uint64_t gpu1_idle_at_join_ns;
+    uint64_t stick_skew_ns;
+    uint64_t stick_skew_pct_sum_x100; /* sum of 0.01% units */
+    uint64_t stick_skew_samples;
+    uint64_t stick_migrations;
+    uint64_t work_steals;
+    uint64_t residency_lost_to_rebalance_bytes;
+    uint64_t pred_err_sum_ns;
+    uint64_t pred_actual_sum_ns;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

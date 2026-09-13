@@ -77,6 +77,11 @@ int DualStickExpertIsResident(int layer, int expert) {
     return ResFind(layer, expert) >= 0 ? 1 : 0;
 }
 
+
+uint64_t DualStickStickResBytes(unsigned stick) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
+    return g_resBytes[stick & 1u];
+}
 unsigned DualStickPickStick(uint32_t expertId) {
     std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     if (!g_stickVc[1]) return expertId & 1u;

@@ -8,6 +8,7 @@
 #include "K2NativeMoE_LayerTrace.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
+#include "lavapath/DualStickImbalance.hpp"
 #include "MoELiveAdd.hpp"
 #include "StickGpuLocal.hpp"
 #include "TensorView.hpp"
@@ -205,22 +206,27 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         std::fflush(stderr);
     }
 
-    /* Assign sticks: retain affinity; miss → load-aware pick (#11 light). */
-    for (uint32_t si = 0; si < plan.count; ++si) {
-        MoEPlaceSlot& mut = plan.slots[si];
-        if (mut.expertId < 0) continue;
-        if (!mut.hit) {
-            const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
-            mut.stick = (uint8_t)((pref >= 0)
-                                      ? (unsigned)pref
-                                      : DualStickPickStick((uint32_t)mut.expertId));
-            MoEPlaceLive().expert_stick_assigns++;
-        } else {
-            const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
-            if (pref >= 0) mut.stick = (uint8_t)(unsigned)pref;
-            MoEPlaceLive().expert_stick_retains++;
-        }
-    }
+    /* Phase B: hits lock affinity then misses argmin; #10 steal. */
+    if (sticks >= 2u) DualStickImbalanceBeginLayer();
+    auto assignOne = [&](MoEPlaceSlot& mut) {
+        const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
+        uint64_t bytes = DualStickExpertBytesOf((int)layer, mut.expertId);
+        if (!bytes) bytes = 1ull << 20;
+        if (sticks >= 2u)
+            mut.stick =
+                (uint8_t)DualStickImbalanceAssign(pref, bytes, (int)mut.hit);
+        else
+            mut.stick = 0;
+        if (mut.hit) MoEPlaceLive().expert_stick_retains++;
+        else MoEPlaceLive().expert_stick_assigns++;
+    };
+    for (uint32_t si = 0; si < plan.count; ++si)
+        if (plan.slots[si].expertId >= 0 && plan.slots[si].hit)
+            assignOne(plan.slots[si]);
+    for (uint32_t si = 0; si < plan.count; ++si)
+        if (plan.slots[si].expertId >= 0 && !plan.slots[si].hit)
+            assignOne(plan.slots[si]);
+    /* steal held: L61 pin-abort under steal; finish-assign remains */
 
     /* #6/#7/#10: true parallel stick workers → one D2H partial/stick → join. */
     uint32_t ix0[MOE_PLACE_MAX_K], ix1[MOE_PLACE_MAX_K];
@@ -304,8 +310,10 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     StickGpuMerge(merged, c0);
     StickGpuMerge(merged, c1);
     StickGpuCommit(merged);
-    MoEPlaceLive().gpu0_work_ns += (s0e >= s0b) ? (s0e - s0b) : 0;
-    MoEPlaceLive().gpu1_work_ns += (s1e >= s1b) ? (s1e - s1b) : 0;
+    const uint64_t tw0 = (s0e >= s0b) ? (s0e - s0b) : 0;
+    const uint64_t tw1 = (s1e >= s1b) ? (s1e - s1b) : 0;
+    MoEPlaceLive().gpu0_work_ns += tw0;
+    MoEPlaceLive().gpu1_work_ns += tw1;
     if (dual && s0e && s1e && std::min(s0e, s1e) > std::max(s0b, s1b))
         MoEPlaceLive().stick_overlap_ns +=
             std::min(s0e, s1e) - std::max(s0b, s1b);
@@ -317,6 +325,7 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         const uint64_t first = std::min(s0e, s1e);
         if (last >= first) MoEPlaceLive().gpu_join_wait_ns += (last - first);
     }
+    if (dual) DualStickImbalanceObserve(tw0, tw1, ex0, ex1);
     MoEPlaceLive().layer_joins++;
 
     /* MarkHot after join (README_BIND). */

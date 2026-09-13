@@ -77,7 +77,12 @@ void MoEPlaceLiveEmit(FILE* f) {
             "LAYER_JOINS=%llu WORKER_FAILURES=%llu "
             "PRODUCT_BACKEND_ATTESTED=%llu\n"
             "D2_MOE_REUSE HOST_EXPERT_GEMV_CALLS=%llu "
-            "GPU_EXPERT_GEMV_CALLS=%llu\n",
+            "GPU_EXPERT_GEMV_CALLS=%llu\n"
+            "D2_MOE_IMBALANCE STICK_SKEW_NS=%llu STICK_COMPLETION_SKEW_PCT=%llu "
+            "PREDICTED_VS_ACTUAL_ERROR_PCT=%llu "
+            "GPU0_IDLE_AT_JOIN_NS=%llu GPU1_IDLE_AT_JOIN_NS=%llu "
+            "MIGRATIONS=%llu WORK_STEALS=%llu "
+            "RESIDENCY_LOST_TO_REBALANCE_BYTES=%llu\n",
             (unsigned long long)c.expert_bundle_lookups,
             (unsigned long long)c.expert_bundle_hits,
             (unsigned long long)c.expert_bundle_misses,
@@ -119,7 +124,22 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.worker_failures,
             (unsigned long long)c.product_backend_attested,
             (unsigned long long)c.host_gemv_expert,
-            (unsigned long long)c.expert_gpu_exec);
+            (unsigned long long)c.expert_gpu_exec,
+            (unsigned long long)c.stick_skew_ns,
+            (unsigned long long)(c.stick_skew_samples
+                                    ? (c.stick_skew_pct_sum_x100 /
+                                       c.stick_skew_samples) /
+                                          100ull
+                                    : 0ull),
+            (unsigned long long)(c.pred_actual_sum_ns
+                                    ? (c.pred_err_sum_ns * 100ull) /
+                                          c.pred_actual_sum_ns
+                                    : 0ull),
+            (unsigned long long)c.gpu0_idle_at_join_ns,
+            (unsigned long long)c.gpu1_idle_at_join_ns,
+            (unsigned long long)c.stick_migrations,
+            (unsigned long long)c.work_steals,
+            (unsigned long long)c.residency_lost_to_rebalance_bytes);
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "
