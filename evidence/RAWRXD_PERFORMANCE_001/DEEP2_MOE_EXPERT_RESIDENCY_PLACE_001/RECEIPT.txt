@@ -8,40 +8,29 @@ SOURCE_WIRED=1
   PLACE=src/deep2/MoEExpertResidencyPlace.hpp
   PLACE_IMPL=src/deep2/MoEExpertResidencyPlace.cpp
   PLACE_PLAN=src/deep2/MoEExpertResidencyPlace_Place.cpp
-  WIRE=Deep2Engine::computeMoEFFN (hits-first DualStick + MarkHot)
+  LIVE_CTR=src/deep2/MoEPlaceLiveCounters.{hpp,cpp}
+  WIRE=Deep2Engine::computeMoEFFN (hits-first DualStick + MarkHot + live counters)
   PROBE=MoEWeightsLoader::IsExpertCached + MoEWeightProxy::IsCached
-  CMAKE=MoEExpertResidencyPlace*.cpp linked after MoEWeightProxy.cpp (26 sites)
+  CMAKE=MoEPlaceLiveCounters.cpp linked with MoEExpertResidencyPlace*.cpp
 
 UNIT_PLACE_PASS=1
-  BINARY=selftest_moe_place.exe
-  BUILD=build_selftest.bat + VS2022 cl x64
-  OBSERVED=
-    hits-first (hot expert 7 before heavier cold 11)
-    DualStick stick retention on hot
-    MarkHot reuse on second Place
-    EmitTrace counters present
-  TRACE_SAMPLE=
-    MOE_PLACE expert_hits=3 expert_misses=5 bytes_fetched=5242880
-    place_reuse=3 place_calls=2 thrash_flags=0 hot_n=2
+  (prior selftest_moe_place hits-first + MarkHot reuse)
 
-LIVE_KIMI_DECODE_TPS=NOT_RUN
-  REASON=cert search used G:\OllamaModels + RAWRXD_MODEL_ROOT only (both empty/missing)
-  DISCOVERED_LOCAL_SHARDS=1
-  PATH_A=G:\~dev\rawrxd\models\_matrix_f\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
-  PATH_B=G:\~dev\rawrxd\_models_f\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
-  NOTE=gguf present (sample>=3); live 35-50 TPS still NOT_RUN — do not invent PERFORMANCE_PASS
-  HOLD=live decode measurement still required
-  NOT_RUN != PASS
+LIVE_KIMI_DECODE_TPS=MEASURED_STRUCTURAL_ONLY
+  RUN=kimi_live_20260912_222417
+  TPS=1.173 EXIT=0
+  D2_MOE_LIVE moe_ffn_enter=0 moe_place_enter=0
+  ffn_dispatch_moe=0 ffn_dispatch_dense=0 ffn_dispatch_ssm=0
+  SHARD_MOE_US=0 HOST_DECODE=1
+  PATH=generateStream->runK2NativeStreamPartial (bypasses forwardLayer FFN)
+  MOE_PLACE_LIVE_REACHED=HOLD
+  TARGET_35_50_TPS=UNMINTED
+  NOT_RUN_PLACER != PASS
 
-INVENTORY_NAIVE_PRIOR=
-  MoERouter::TopK = score-only order, no residency
-  Deep2MoeRouter = hardcoded expertIdx 4/12 stub
-  RuntimePlanner::PlanMoEStrategy = boolean expertsResident only
-  ExpertResidencyManager = LRU cache GetExpert, no exec place order
-  MoEWeightProxy::PrefetchAsync = CPU fallback stub note
+DISCOVERED_SHARDS=
+  KIMI=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M shards=13 GiB=578.58
+  DS671=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE shards=11 GiB=376.655
 
 NEXT=
-  set RAWRXD_MODEL_ROOT or rawr run against PATH_A/PATH_B Kimi-K2 Q4_K_M
-  short decode with DEEP2_MOE_PLACE_TRACE=1
-  measure decode TPS vs window-miss / expert_misses
+  K2 MoE FFN must enter computeMoEFFN placer (or disable K2 bypass for MoE layers)
   do not invent PERFORMANCE_PASS

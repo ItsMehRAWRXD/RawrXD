@@ -1,0 +1,4 @@
+STAMP=20260912_222417
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+HARNESS=Diagnostics.Process+WaitForExit+ExitCode
+DEEP2_MOE_PLACE_TRACE=1

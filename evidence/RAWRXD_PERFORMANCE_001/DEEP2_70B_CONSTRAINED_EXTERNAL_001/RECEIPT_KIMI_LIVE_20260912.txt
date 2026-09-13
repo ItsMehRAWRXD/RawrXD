@@ -1,0 +1,65 @@
+GATE=DEEP2_70B_CONSTRAINED_EXTERNAL_001
+DATE=2026-09-12
+PROMOTE=0
+TIP_CLIMB=HOLD
+FAIL_CLOSED=1
+NOT_RUN!=PASS
+TARGET_35_50_TPS=UNMINTED
+LIVE_TPS_AUTHORITY=0
+
+# --- PRIOR structural (pre-counter rebuild) ---
+PRIOR_RUN=kimi_live_20260912_221823
+PRIOR_TPS=1.117
+PRIOR_MOE_PLACE_LIVE_REACHED=HOLD
+PRIOR_NOTE=MOE_PLACE=0 SHARD_MOE_US=0 HOST_DECODE=1 EXIT_FIELD_BLANK=1
+
+# --- POST rebuild (MoEPlaceLiveCounters linked into rawr) ---
+RUN=kimi_live_20260912_222417
+BINARY=G:\~dev\rawrxd\build-fd\bin\rawr.exe
+BINARY_MTIME=2026-09-12T22:23:26
+MODEL=F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M\Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf
+SHARDS=13 TOTAL_GiB=578.58
+ENV=DEEP2_MOE_PLACE_TRACE=1 DEEP2_DUALSTICK_ARM=1 DEEP2_MOE_PLACE_BUDGET_MIB=8192 MOCK_BACKEND=0
+HARNESS=System.Diagnostics.Process+WaitForExit
+EXIT=0
+EXIT_REFRESHED=1
+WALL_MS=28191
+
+# Structural decode (not placer authority)
+KIMI_LIVE_OPEN=PASS
+KIMI_LIVE_DECODE_32=PASS
+GENERATED_TOKENS=32
+KIMI_OBSERVED_TPS=1.173
+DECODE_TPS_REAL=1.173411
+MOCK_BACKEND=0
+HOST_DECODE=1
+DUALSTICK_ARM=0
+VK_ICD=BLOCKED WHY=R1_HOST_FLOOR
+LIVE_K2_OWNERSHIP=generateStream->runK2NativeStreamPartial
+SHARD_MOE_US=0
+
+# Live counter proof (destructor MoEPlaceLiveEmit)
+D2_MOE_LIVE_EMITTED=1
+moe_ffn_enter=0
+moe_place_enter=0
+ffn_dispatch_moe=0
+ffn_dispatch_dense=0
+ffn_dispatch_ssm=0
+experts_selected=0
+experts_executed=0
+EXPERT_MISS_BYTES_PER_TOKEN=0
+acquire_ok=0
+markhot=0
+INTERPRETATION=K2_NATIVE_PATH_BYPASSES_forwardLayer_FFN_DISPATCH_AND_computeMoEFFN_PLACER
+
+# Placer reachability seal
+MOE_PLACE_SOURCE_WIRED=1
+MOE_PLACE_LIVE_REACHED=HOLD
+EXPERT_SET_PARITY_LIVE=HOLD
+EXPERT_MISS_BYTES_PER_TOKEN_AUTH=HOLD
+DUALSTICK_EXPERT_PLACEMENT=HOLD
+NOTE=zeros are K2 bypass evidence, not all-miss; do not invent PERFORMANCE_PASS / 35-50
+
+# Build note
+BUILD_FIX=removed invalid moeWeightProxy_->Release(handle); handle is cache-backed (no Release API)
+NEXT=wire K2NativeStreamGate MoE FFN through computeMoEFFN placer OR force forwardLayer MoE path

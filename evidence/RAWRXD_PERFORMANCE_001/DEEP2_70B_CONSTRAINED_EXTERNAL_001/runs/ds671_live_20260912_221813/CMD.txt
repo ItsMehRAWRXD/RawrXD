@@ -1,0 +1,7 @@
+STAMP=20260912_221813
+MODEL=F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf
+CMD="G:\~dev\rawrxd\build-fd\bin\rawr.exe" run "F:\OllamaModels\DeepSeek-R1-Q4_K_M-COMPLETE\DeepSeek-R1-Q4_K_M-00001-of-00011.gguf" "Say hi in five words." --max-tokens 32
+DEEP2_MOE_PLACE_TRACE=1
+DEEP2_DUALSTICK_ARM=1
+DEEP2_MOE_PLACE_BUDGET_MIB=8192
+MOCK_BACKEND=0

@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // Deep2Engine.cpp - Production Inference Engine Implementation
 // Real weight loading, real attention, real FFN, real sampling
 // NO STUBS, NO DUMMIES, NO HARDCODED VALUES
@@ -14,6 +14,7 @@
 #include "Deep2SsVkPackedDualAdapter.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "MoEExpertResidencyPlace.hpp"
+#include "MoEPlaceLiveCounters.hpp"
 #include "Deep2GpuCounterSnapshot.hpp"
 #include "Deep2Residency.hpp"
 #include "GpuTransferCounters.hpp"
@@ -1487,6 +1488,7 @@ Deep2Engine::~Deep2Engine() {
 
     std::fprintf(stderr, "[LIFE] unloadModel\n");
     std::fflush(stderr);
+    MoEPlaceLiveEmit(stderr);
     unloadModel();
 
     std::fprintf(stderr, "[LIFE] release MoE\n");
@@ -7613,13 +7615,15 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
     if (lw.hasSSM) {
-        // Hybrid layer: use SSM instead of FFN
+        MoEPlaceLive().ffn_dispatch_ssm++;
         computeSSM(layer, layerTemp, ffnOutput);
         B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
     } else if (modelWeights.isMoE && modelWeights.numExperts > 0) {
+        MoEPlaceLive().ffn_dispatch_moe++;
         computeMoEFFN(layer, layerTemp, ffnOutput);
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     } else {
+        MoEPlaceLive().ffn_dispatch_dense++;
         computeFFN(layer, layerTemp, ffnOutput);
         B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
@@ -8779,7 +8783,15 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 // NO dense fallback. NO stubs.
 // ============================================================================
 void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output) {
+    MoEPlaceLive().moe_ffn_enter++;
+    if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE")) {
+        if (t[0] && t[0] != '0')
+            std::fprintf(stderr, "D2_MOE_FFN_ENTER layer=%zu token_ctr=%llu\n",
+                         layer,
+                         (unsigned long long)MoEPlaceLive().moe_ffn_enter);
+    }
     if (layer >= modelWeights.layers.size()) {
+        MoEPlaceLive().moe_ffn_early_return++;
         memcpy(output, input, config.hiddenDim * sizeof(float));
         return;
     }
@@ -8813,10 +8825,12 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
     // --- Routed experts ---
     if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_) {
+        MoEPlaceLive().moe_ffn_early_return++;
         return;
     }
 
     // 1. Route the token through the per-layer router
+    MoEPlaceLive().moe_router_calls++;
     TokenRoute route = moeRouters_[layer]->Route(input);
 
     // 2. Check pending prefetches from layer N-1 (previous layer's async jobs)
@@ -8901,6 +8915,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // 4. Residency-aware place: hits-first DualStick order (router set unchanged)
     float* expertOut = attentionOutput;
     {
+        MoEPlaceLive().moe_place_enter++;
         MoEExpertResidencyPlace& place = MoEPlaceGlobal();
         place.SetProbe(
             [](void* ctx, int ly, int ex) -> int {
@@ -8929,12 +8944,30 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             pin[pn].weight = er.weight;
             ++pn;
         }
+        MoEPlaceLive().experts_selected += pn;
         MoEPlacePlan plan = place.Place((int)layer, pin, pn);
+        MoEPlaceLive().moe_place_calls++;
+        MoEPlaceLive().expert_cache_hits += plan.hits;
+        MoEPlaceLive().expert_cache_misses += plan.misses;
+        MoEPlaceLive().expert_miss_bytes += plan.bytesFetchPlan;
+        if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE")) {
+            if (t[0] && t[0] != '0')
+                std::fprintf(stderr,
+                    "D2_MOE_PLACE_ENTER layer=%zu n=%u hits=%u misses=%u "
+                    "miss_bytes=%llu\n",
+                    layer, pn, plan.hits, plan.misses,
+                    (unsigned long long)plan.bytesFetchPlan);
+        }
+        uint32_t executed = 0;
+        uint8_t thrashTok = 0;
         for (uint32_t si = 0; si < plan.count; ++si) {
             const MoEPlaceSlot& slot = plan.slots[si];
             const int expertId = slot.expertId;
             const float weight = slot.weight;
             if (expertId < 0) continue;
+            if (slot.thrash) thrashTok = 1;
+            if (slot.hit) MoEPlaceLive().expert_stick_retains++;
+            else MoEPlaceLive().expert_stick_assigns++;
             if (slot.fetch)
                 DualStickAcquire(slot.stick, nullptr, 0, 0, (uint32_t)layer,
                                  (uint32_t)expertId);
@@ -8947,9 +8980,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                 std::chrono::duration_cast<std::chrono::microseconds>(
                     tAcquire1 - tAcquire0)
                     .count();
-            if (!handle.valid) continue;
+            if (!handle.valid) {
+                MoEPlaceLive().expert_acquire_fail++;
+                continue;
+            }
+            MoEPlaceLive().expert_acquire_ok++;
             place.MarkHot((int)layer, expertId, slot.stick,
                           handle.expertBytes ? (uint64_t)handle.expertBytes : 0);
+            MoEPlaceLive().expert_markhot++;
             recordExpertAccess((int)layer, expertId, weight);
             bool prefetchHit = slot.hit || (acquireUs < 100);
             if (telemetryEnabled_ && residencyTelemetry_) {
@@ -8986,9 +9024,19 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                 for (size_t i = 0; i < hiddenDim; ++i)
                     output[i] += weight * expertOut[i];
             }
+            ++executed;
+            /* MoEWeightHandle is cache-backed; no Release API on proxy. */
         }
+        MoEPlaceLive().experts_executed += executed;
+        if (thrashTok) MoEPlaceLive().moe_thrash_tokens++;
+        MoEPlaceLive().moe_tokens++;
         if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE")) {
-            if (t[0] == '1') place.EmitTrace(stderr);
+            if (t[0] && t[0] != '0') {
+                std::fprintf(stderr,
+                    "D2_MOE_EXEC selected=%u executed=%u thrash=%u\n", pn,
+                    executed, (unsigned)thrashTok);
+                place.EmitTrace(stderr);
+            }
         }
     }
     prefetchNextExperts((int)layer);
