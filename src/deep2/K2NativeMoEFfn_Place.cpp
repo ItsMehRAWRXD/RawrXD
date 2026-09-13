@@ -192,6 +192,9 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     if (decodePhase) {
         MoEPlaceLive().decode_moe_place_calls++;
         MoEPlaceLive().decode_experts_selected += pn;
+        static thread_local uint32_t s_prevLy = ~0u;
+        if (s_prevLy == ~0u || layer < s_prevLy) MoEPlaceLive().stream_generated_tokens++;
+        s_prevLy = layer;
     }
     if (const char* t = std::getenv("DEEP2_MOE_PLACE_TRACE");
         t && t[0] && t[0] != '0')
@@ -206,7 +209,10 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         std::fflush(stderr);
     }
 
-    /* Phase B: hits lock affinity then misses argmin; #10 steal. */
+    /* V6: keyed EWMA + LPT misses; steal held until predict error collapses. */
+    DualStickImbalanceSetShape(
+        14u, cfg.hiddenDim,
+        cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u);
     if (sticks >= 2u) DualStickImbalanceBeginLayer();
     auto assignOne = [&](MoEPlaceSlot& mut) {
         const int pref = DualStickExpertStickOf((int)layer, mut.expertId);
@@ -223,10 +229,11 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
     for (uint32_t si = 0; si < plan.count; ++si)
         if (plan.slots[si].expertId >= 0 && plan.slots[si].hit)
             assignOne(plan.slots[si]);
+    /* Misses after hits; LPT deferred until pin-stable (V6d). */
     for (uint32_t si = 0; si < plan.count; ++si)
         if (plan.slots[si].expertId >= 0 && !plan.slots[si].hit)
             assignOne(plan.slots[si]);
-    /* steal held: L61 pin-abort under steal; finish-assign remains */
+    /* #10 steal RUNTIME_HELD until PREDICT_ERR collapses */
 
     /* #6/#7/#10: true parallel stick workers → one D2H partial/stick → join. */
     uint32_t ix0[MOE_PLACE_MAX_K], ix1[MOE_PLACE_MAX_K];
@@ -325,7 +332,9 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
         const uint64_t first = std::min(s0e, s1e);
         if (last >= first) MoEPlaceLive().gpu_join_wait_ns += (last - first);
     }
-    if (dual) DualStickImbalanceObserve(tw0, tw1, ex0, ex1);
+    if (dual)
+        DualStickImbalanceObserve(tw0, tw1, ex0, ex1, c0.h2d_bytes,
+                                  c1.h2d_bytes);
     MoEPlaceLive().layer_joins++;
 
     /* MarkHot after join (README_BIND). */

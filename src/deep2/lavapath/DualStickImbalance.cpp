@@ -1,81 +1,64 @@
-/* DualStickImbalance.cpp — #1 EWMA · #2 finish assign · #3 skew · #6 mig. */
+/* DualStickImbalance.cpp — V6 #1#4 assign (observe in _Observe.cpp). ≤99. */
 #include "DualStickImbalance.hpp"
 #include "DualStickImbalance_State.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 
 namespace Deep2 {
-namespace ds_imb {
-uint64_t g_ewma[2] = {8ull * 1000ull * 1000ull, 8ull * 1000ull * 1000ull};
-int64_t g_skewBias = 0;
-uint64_t g_avail[2] = {0, 0};
-uint64_t g_predLayer[2] = {0, 0};
-uint64_t g_migPenBase = 4ull * 1000ull * 1000ull;
-} // namespace ds_imb
 
 void DualStickImbalanceBeginLayer() {
     ds_imb::g_avail[0] = ds_imb::g_avail[1] = 0;
     ds_imb::g_predLayer[0] = ds_imb::g_predLayer[1] = 0;
+    ds_imb::g_nAssign[0] = ds_imb::g_nAssign[1] = 0;
+    ds_imb::XferBeginLayer();
+}
+
+void DualStickImbalanceSetShape(uint32_t quant, uint32_t inDim,
+                                uint32_t outDim) {
+    if (quant) ds_imb::g_quant = quant;
+    if (inDim) ds_imb::g_inDim = inDim;
+    if (outDim) ds_imb::g_outDim = outDim;
+}
+
+uint64_t DualStickImbalanceEstCost(unsigned stick, int resident,
+                                   uint64_t bytes) {
+    return ds_imb::FullCost(stick & 1u, resident ? (int)(stick & 1u) : -1,
+                            bytes, resident);
 }
 
 unsigned DualStickImbalanceAssign(int prefStick, uint64_t bytes, int hit) {
     using namespace ds_imb;
-    unsigned pick = (g_avail[0] + Cost(0u, prefStick, bytes) <=
-                     g_avail[1] + Cost(1u, prefStick, bytes))
-                        ? 0u
-                        : 1u;
+    const uint64_t c0 = FullCost(0u, prefStick, bytes, hit);
+    const uint64_t c1 = FullCost(1u, prefStick, bytes, hit);
+    uint64_t f0 = g_avail[0] + c0, f1 = g_avail[1] + c1;
+    unsigned pick = (f0 < f1)   ? 0u
+                    : (f1 < f0) ? 1u
+                    : (g_nAssign[0] <= g_nAssign[1] ? 0u : 1u);
     if (prefStick >= 0) {
         const unsigned p = (unsigned)prefStick & 1u;
-        const unsigned o = p ^ 1u;
         if (hit) {
-            pick = p; /* never migrate hits → reload_miss stays 0 */
+            pick = p; /* never migrate hits → RELOAD=0 */
         } else {
-            const uint64_t fp = g_avail[p] + Cost(p, prefStick, bytes);
-            const uint64_t fo = g_avail[o] + Cost(o, prefStick, bytes);
-            if (fo >= fp) pick = p;
-            else {
-                pick = o;
+            const uint64_t fp = g_avail[p] + FullCost(p, prefStick, bytes, 0);
+            const uint64_t fo =
+                g_avail[p ^ 1u] + FullCost(p ^ 1u, prefStick, bytes, 0);
+            if (fo < fp) {
+                pick = p ^ 1u;
                 MoEPlaceLive().stick_migrations++;
                 MoEPlaceLive().residency_lost_to_rebalance_bytes += bytes;
-            }
+            } else
+                pick = p;
         }
     }
-    g_avail[pick] += Cost(pick, prefStick, bytes);
+    if (!hit) XferNoteMiss(pick);
+    const uint64_t used = FullCost(pick, prefStick, bytes, hit);
+    g_avail[pick] += used;
     g_predLayer[pick] = g_avail[pick];
+    g_nAssign[pick]++;
     return pick;
 }
 
 uint64_t DualStickImbalancePredAvail(unsigned stick) {
     return ds_imb::g_avail[stick & 1u];
-}
-
-void DualStickImbalanceObserve(uint64_t t0_ns, uint64_t t1_ns, uint32_t n0,
-                               uint32_t n1) {
-    using namespace ds_imb;
-    if (n0) g_ewma[0] = (g_ewma[0] * 7ull + t0_ns / n0) / 8ull;
-    if (n1) g_ewma[1] = (g_ewma[1] * 7ull + t1_ns / n1) / 8ull;
-        g_skewBias += (int64_t)((t0_ns - t1_ns) / 8ull);
-        g_skewBias -= (int64_t)((t1_ns - t0_ns) / 8ull);
-    if (g_skewBias > (int64_t)g_ewma[0]) g_skewBias = (int64_t)g_ewma[0];
-    if (g_skewBias < -(int64_t)g_ewma[1]) g_skewBias = -(int64_t)g_ewma[1];
-
-    if (t0_ns <= t1_ns)
-        MoEPlaceLive().gpu0_idle_at_join_ns += (t1_ns - t0_ns);
-    else
-        MoEPlaceLive().gpu1_idle_at_join_ns += (t0_ns - t1_ns);
-
-    const uint64_t mx = (t0_ns > t1_ns) ? t0_ns : t1_ns;
-    const uint64_t mn = (t0_ns < t1_ns) ? t0_ns : t1_ns;
-    if (mx) {
-        MoEPlaceLive().stick_skew_ns += (mx - mn);
-        MoEPlaceLive().stick_skew_pct_sum_x100 += ((mx - mn) * 10000ull) / mx;
-        MoEPlaceLive().stick_skew_samples++;
-    }
-    auto absdiff = [](uint64_t a, uint64_t b) {
-        return (a > b) ? (a - b) : (b - a);
-    };
-    MoEPlaceLive().pred_err_sum_ns +=
-        absdiff(g_predLayer[0], t0_ns) + absdiff(g_predLayer[1], t1_ns);
-    MoEPlaceLive().pred_actual_sum_ns += t0_ns + t1_ns;
 }
 
 } // namespace Deep2

@@ -1,0 +1,38 @@
+GATE=COST_PREDICTOR_CALIBRATION_V6
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+PARENT_HOLD=7f9f52daaa
+PRESERVE_2PLUS2=1
+TARGET_PREDICT_ERR=75→<10
+
+# LIVE OWNER — do not skip to whole-token compiler
+transfer_finish_ns[g] =
+    queue_delay_ewma[g]
+  + startup_latency_ewma[g][size_class]
+  + bytes / effective_bw_ewma[g][size_class][concurrency]
+  + shared_fabric_penalty_ns
+
+# Fastest diagnostic for whether 75% error is kernel vs transfer/queue:
+DIAG_FIRST=#7 enqueue→start vs start→finish
+  → #8 BW EWMA only from execution samples; queue-delay separate penalty
+  → #9 queue delay in stick finish cost
+  → #10 concurrent dual-copy slowdown multiplier
+  → #11 solo_bw vs dual_active_bw EWMAs
+
+TIER1_TRANSFER=
+  1 PER_STICK_EWMA (GPU0≠GPU1; fast/slow dual EWMA; size buckets)
+  2 LATENCY_PLUS_BANDWIDTH (startup+bytes/bw; learn intercept; clamp floor)
+  3 QUEUE_DELAY_SEPARATION
+  4 CONCURRENT_COPY_PENALTY (overlap-duration gate)
+  5 SHARED_FABRIC_SATURATION (aggregate ceiling; reject over-demand)
+
+TIER2_AFTER_TIER1=
+  size buckets · cold/warm · H2D≠D2H · pinned/pageable · residency-source
+
+TIER3_REFINE=
+  quant-aware · device timestamps · adaptive alpha · outlier · confidence
+
+#15 steal = residual only

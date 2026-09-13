@@ -858,7 +858,9 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         return false;
     }
     if (testLayers % 2 == 0) memcpy(hidden, tempHidden.data(), hiddenDim * sizeof(float));
-    if (k2cfg.numExperts > 0) Deep2::MoEPlaceLive().moe_tokens++;
+    /* V6: per generated token (not MoE-event / place-enter). */
+    if (k2cfg.numExperts > 0)
+        Deep2::MoEPlaceLive().stream_generated_tokens++;
     return true;
 }
 

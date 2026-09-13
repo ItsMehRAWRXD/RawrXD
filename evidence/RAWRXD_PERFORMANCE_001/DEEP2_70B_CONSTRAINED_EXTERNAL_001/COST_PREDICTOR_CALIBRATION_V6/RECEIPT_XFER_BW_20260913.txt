@@ -1,0 +1,27 @@
+GATE=COST_PREDICTOR_CALIBRATION_V6
+DATE=2026-09-13
+DISPOSITION=SOURCE_WIRED_TRANSFER_BW
+PROMOTE=0
+TPS_MINT=0
+PARENT_HOLD=7f9f52daaa
+RUNTIME=PENDING_L61T8
+
+FILES=
+  DualStickImbalance_Xfer.{hpp,cpp}  #13 TRANSFER_FIRST
+  DualStickImbalance_State.hpp       kernel∪xfer no double-count
+  DualStickImbalance.cpp             #1#4 assign + #7/#13 observe(h2d)
+  DualStickImbalance_Ewma.cpp        adaptive α + outlier clip
+  K2NativeMoEFfn_Place.cpp           LPT + Observe(h2d0,h2d1)
+  K2NativeStreamGate.cpp             stream_generated_tokens
+  MoEPlaceLiveCounters.*             miss-bytes denom split
+  run_v6_l61t8.ps1                   WaitForExit+Refresh EXIT=0
+
+TRANSFER_LAW=
+  transfer_ns = fixed[g][bucket] + bytes*ns_per_mib[g][bucket]
+              + concurrent_copy_penalty + fabric_sat
+  NO hardcoded 56/44 split
+
+STEAL=#15 RUNTIME_HELD until PREDICT_ERR<10
+GEOMETRY=2+2 PRESERVE
+TARGET=PREDICT_ERR 75→<10 FIRST
+NOT_RUN!=PASS

@@ -37,7 +37,7 @@ void MoEPlaceLiveEmit(FILE* f) {
     if (c.moe_place_enter == 0) {
         std::fprintf(f,
             "D2_MOE_LIVE hits=N/A misses=N/A miss_bytes=N/A "
-            "EXPERT_MISS_BYTES_PER_TOKEN=N/A_NOT_REACHED "
+            "EXPERT_LOGICAL_MISS_BYTES=N/A_NOT_REACHED "
             "acquire_ok=%llu acquire_fail=%llu markhot=%llu\n",
             (unsigned long long)c.expert_acquire_ok,
             (unsigned long long)c.expert_acquire_fail,
@@ -45,8 +45,8 @@ void MoEPlaceLiveEmit(FILE* f) {
     } else {
         const uint64_t tok = c.moe_tokens ? c.moe_tokens : 1ull;
         std::fprintf(f,
-            "D2_MOE_LIVE hits=%llu misses=%llu miss_bytes=%llu "
-            "EXPERT_MISS_BYTES_PER_TOKEN=%llu acquire_ok=%llu "
+            "D2_MOE_LIVE hits=%llu misses=%llu EXPERT_LOGICAL_MISS_BYTES=%llu "
+            "EXPERT_MISS_BYTES_PER_PLACE_ENTER=%llu_NONAUTH acquire_ok=%llu "
             "acquire_fail=%llu markhot=%llu\n",
             (unsigned long long)c.expert_cache_hits,
             (unsigned long long)c.expert_cache_misses,
@@ -56,14 +56,20 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.expert_acquire_fail,
             (unsigned long long)c.expert_markhot);
         const uint64_t rld = c.reload_miss_bytes / tok;
+        const uint64_t genTok =
+            c.stream_generated_tokens ? c.stream_generated_tokens : 1ull;
+        const uint64_t layerDen = c.moe_layers_gpu ? c.moe_layers_gpu : 1ull;
         std::fprintf(f,
             "D2_MOE_REUSE EXPERT_BUNDLE_LOOKUPS=%llu HITS=%llu MISSES=%llu "
             "EXPERT_ACQUIRE_HIT=%llu EXPERT_ACQUIRE_MISS=%llu "
             "HOST_BYTES_FOR_HIT=%llu HOST_BYTES_FOR_MISS=%llu "
             "SECONDARY_LOOKUP=%llu\n"
             "D2_MOE_REUSE COMPULSORY_MISS_BYTES=%llu RELOAD_MISS_BYTES=%llu "
-            "HIT_BYTES=%llu RELOAD_MISS_BYTES_PER_TOKEN=%llu "
+            "HIT_BYTES=%llu RELOAD_MISS_BYTES_PER_PLACE_ENTER=%llu_NONAUTH "
             "SEEN_BUNDLE_KEYS=%llu\n"
+            "D2_MOE_BYTES EXPERT_H2D_BYTES=%llu EXPERT_H2D_BYTES_PER_GENERATED_TOKEN=%llu "
+            "EXPERT_H2D_BYTES_PER_MOE_LAYER=%llu RELOAD_MISS_BYTES_PER_GENERATED_TOKEN=%llu "
+            "STREAM_GENERATED_TOKENS=%llu\n"
             "D2_MOE_REUSE GPU0_EXPERTS=%llu GPU1_EXPERTS=%llu "
             "GPU0_WORK_NS=%llu GPU1_WORK_NS=%llu GPU_JOIN_WAIT_NS=%llu "
             "STICK_OVERLAP_NS=%llu H2D_BYTES=%llu D2H_BYTES=%llu "
@@ -80,6 +86,8 @@ void MoEPlaceLiveEmit(FILE* f) {
             "GPU_EXPERT_GEMV_CALLS=%llu\n"
             "D2_MOE_IMBALANCE STICK_SKEW_NS=%llu STICK_COMPLETION_SKEW_PCT=%llu "
             "PREDICTED_VS_ACTUAL_ERROR_PCT=%llu "
+            "PREDICT_ERR_KERNEL_PCT=%llu PREDICT_ERR_XFER_PCT=%llu "
+            "PREDICT_ERR_QUEUE_PCT=%llu "
             "GPU0_IDLE_AT_JOIN_NS=%llu GPU1_IDLE_AT_JOIN_NS=%llu "
             "MIGRATIONS=%llu WORK_STEALS=%llu "
             "RESIDENCY_LOST_TO_REBALANCE_BYTES=%llu\n",
@@ -95,6 +103,11 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)c.reload_miss_bytes,
             (unsigned long long)c.hit_bytes, (unsigned long long)rld,
             (unsigned long long)c.seen_bundle_keys,
+            (unsigned long long)c.h2d_bytes,
+            (unsigned long long)(c.h2d_bytes / genTok),
+            (unsigned long long)(c.h2d_bytes / layerDen),
+            (unsigned long long)(c.reload_miss_bytes / genTok),
+            (unsigned long long)c.stream_generated_tokens,
             (unsigned long long)c.gpu0_experts,
             (unsigned long long)c.gpu1_experts,
             (unsigned long long)c.gpu0_work_ns,
@@ -133,6 +146,18 @@ void MoEPlaceLiveEmit(FILE* f) {
                                     : 0ull),
             (unsigned long long)(c.pred_actual_sum_ns
                                     ? (c.pred_err_sum_ns * 100ull) /
+                                          c.pred_actual_sum_ns
+                                    : 0ull),
+            (unsigned long long)(c.pred_actual_sum_ns
+                                    ? (c.pred_err_kernel_ns * 100ull) /
+                                          c.pred_actual_sum_ns
+                                    : 0ull),
+            (unsigned long long)(c.pred_actual_sum_ns
+                                    ? (c.pred_err_xfer_ns * 100ull) /
+                                          c.pred_actual_sum_ns
+                                    : 0ull),
+            (unsigned long long)(c.pred_actual_sum_ns
+                                    ? (c.pred_err_queue_ns * 100ull) /
                                           c.pred_actual_sum_ns
                                     : 0ull),
             (unsigned long long)c.gpu0_idle_at_join_ns,

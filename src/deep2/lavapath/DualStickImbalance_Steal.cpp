@@ -46,8 +46,8 @@ void DualStickImbalanceSteal(MoEPlacePlan& plan, int layer) {
         if (DualStickStickResBytes(light) > DualStickStickResBytes(heavy) +
                                                 (1ull << 20))
             return;
-        const uint64_t cH = Cost(heavy, pref, bytes);
-        const uint64_t cL = Cost(light, pref, bytes);
+        const uint64_t cH = FullCost(heavy, pref, bytes, 0);
+        const uint64_t cL = FullCost(light, pref, bytes, 0);
         const uint64_t afterH =
             (g_avail[heavy] >= cH) ? (g_avail[heavy] - cH) : 0ull;
         const uint64_t afterL = g_avail[light] + cL;

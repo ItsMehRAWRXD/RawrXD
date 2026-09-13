@@ -83,6 +83,12 @@ struct MoEPlaceLiveCounters {
     uint64_t residency_lost_to_rebalance_bytes;
     uint64_t pred_err_sum_ns;
     uint64_t pred_actual_sum_ns;
+    /* V6 DIAG: decompose predict error kernel vs xfer vs queue */
+    uint64_t pred_err_kernel_ns;
+    uint64_t pred_err_xfer_ns;
+    uint64_t pred_err_queue_ns;
+    /* V6 miss-bytes split — do NOT use EXPERT_MISS_BYTES_PER_TOKEN as auth */
+    uint64_t stream_generated_tokens;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();
