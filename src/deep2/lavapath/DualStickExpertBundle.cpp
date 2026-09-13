@@ -1,8 +1,10 @@
-/* DualStickExpertBundle.cpp — residency meta for acquire-hit / no host bounce. */
+/* DualStickExpertBundle.cpp — bundle table + invalidate. ≤99. */
 #include "DualStickExpertBundle.hpp"
+#include "DualStickPinCoherency.hpp"
 #include "DualStickStreamWindow.hpp"
 #include "DualStickMetaLock.hpp"
-#include "vulkan_compute.h"
+#include "MoEExpertResidencyPlace.hpp"
+#include "MoEPlaceLiveCounters.hpp"
 
 namespace Deep2 {
 namespace {
@@ -23,6 +25,11 @@ int Find(int layer, int expert) {
         if (g_b[i].layer == layer && g_b[i].expert == expert) return (int)i;
     return -1;
 }
+void EraseAt(uint32_t i) {
+    if (i >= g_bn) return;
+    g_b[i] = g_b[g_bn - 1];
+    --g_bn;
+}
 } // namespace
 
 int DualStickBundleLookup(int layer, int expert, DualStickBundleMeta* out) {
@@ -40,6 +47,22 @@ int DualStickBundleLookup(int layer, int expert, DualStickBundleMeta* out) {
     out->ut = e.ut;
     out->dt = e.dt;
     return 1;
+}
+
+void DualStickInvalidateExpert(int layer, int expert) {
+    int erased = 0;
+    {
+        std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
+        int i = Find(layer, expert);
+        if (i >= 0) {
+            EraseAt((uint32_t)i);
+            erased = 1;
+        }
+    }
+    if (!erased) return;
+    DualStickForgetExpertResident(layer, expert);
+    MoEPlaceGlobal().MarkCold(layer, expert);
+    MoEPlaceLive().dualstick_slot_invalidated++;
 }
 
 void DualStickNoteExpertBundle(int layer, int expert, unsigned stick, size_t gb,
@@ -64,27 +87,6 @@ void DualStickNoteExpertBundle(int layer, int expert, unsigned stick, size_t gb,
         if (!e.handle) e.handle = g_nextHandle++;
     }
     DualStickNoteExpertResident(layer, expert, stick, (uint64_t)gb + ub + db);
-}
-
-int DualStickBundlePinsReady(unsigned stick, int layer, int expert, size_t H,
-                             size_t I) {
-    DualStickBundleMeta m{};
-    if (!DualStickBundleLookup(layer, expert, &m)) return 0;
-    if ((m.stick & 1u) != (stick & 1u)) return 0;
-    auto* vc = DualStickVc(stick);
-    if (!vc || !H || !I || !m.gb || !m.ub || !m.db) return 0;
-    const uint32_t rI = (uint32_t)I, cH = (uint32_t)H, rH = (uint32_t)H,
-                   cI = (uint32_t)I;
-    if (!vc->HasPinnedGemvWeight(DualStickExpertPin((uint32_t)layer, expert, 1),
-                                 m.gb, rI, cH))
-        return 0;
-    if (!vc->HasPinnedGemvWeight(DualStickExpertPin((uint32_t)layer, expert, 2),
-                                 m.ub, rI, cH))
-        return 0;
-    if (!vc->HasPinnedGemvWeight(DualStickExpertPin((uint32_t)layer, expert, 3),
-                                 m.db, rH, cI))
-        return 0;
-    return 1;
 }
 
 void DualStickBundleTableReset() {

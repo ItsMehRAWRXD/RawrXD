@@ -5,6 +5,7 @@
 #include "vulkan_compute.h"
 #if RAWR_VULKAN_AVAILABLE
 #include "GpuTransferCounters.hpp"
+#include "lavapath/DualStickPinCoherency.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -192,9 +193,32 @@ uintptr_t VulkanCompute::WeightContentFingerprint(const void* p, size_t bytes) {
 size_t VulkanCompute::WeightBudgetBytes() const { return ww_budget_bytes_; }
 size_t VulkanCompute::WeightPinBudgetFloor() const { return ww_pin_budget_floor_; }
 void VulkanCompute::SetPinResidentBudget(size_t bytes) {
+    SetPinResidentBudgetAt(bytes, "OTHER");
+}
+const char* VulkanCompute::PinBudgetOwnerSite() const {
+    return ww_pin_budget_owner_[0] ? ww_pin_budget_owner_ : "NONE";
+}
+void VulkanCompute::SetPinResidentBudgetAt(size_t bytes, const char* site) {
     if (!bytes) return;
+    const char* s = (site && *site) ? site : "OTHER";
+    const size_t old = ww_budget_bytes_;
+    const int shrink = (old && bytes < old) ? 1 : 0;
+    ++ww_budget_set_n_;
+    /* Fail-closed: DualStick bind owns pin floor; Engine must not shrink it. */
+    if (shrink && ww_pin_budget_owner_[0] == 'D' && s[0] == 'E') {
+        ++ww_budget_shrink_blocked_;
+        std::fprintf(stderr,
+                     "PIN_BUDGET_SHRINK_BLOCKED owner=%s old=%zu new=%zu site=%s\n",
+                     ww_pin_budget_owner_, old, bytes, s);
+        return;
+    }
+    if (shrink) ++ww_budget_shrink_n_;
     ww_budget_bytes_ = bytes;
     ww_pin_budget_floor_ = bytes;
+    std::snprintf(ww_pin_budget_owner_, sizeof(ww_pin_budget_owner_), "%s", s);
+    std::fprintf(stderr,
+                 "PIN_BUDGET_SET site=%s old=%zu new=%zu owner=%s\n", s, old,
+                 bytes, ww_pin_budget_owner_);
 }
 uint64_t VulkanCompute::WeightPinCacheCount() const {
     return (uint64_t)gemv_weight_cache_.size();
@@ -210,6 +234,14 @@ bool VulkanCompute::HasPinnedGemvWeight(uint64_t pinKey, size_t bytes,
     if (it == gemv_weight_cache_.end()) return false;
     return it->second.buffer && it->second.bytes == bytes &&
            it->second.rows == rows && it->second.cols == cols;
+}
+bool VulkanCompute::TouchPinnedGemvWeight(uint64_t pinKey, size_t bytes,
+                                          uint32_t rows, uint32_t cols) {
+    if (!HasPinnedGemvWeight(pinKey, bytes, rows, cols)) return false;
+    auto it = gemv_weight_cache_.find(pinKey);
+    if (it == gemv_weight_cache_.end()) return false;
+    it->second.lastUse = ++gemv_pin_clock_;
+    return true;
 }
 
 bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
@@ -252,10 +284,29 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
         Deep2::GpuTransfer_NoteWeightHit(bytes);
         return true;
     }
+    /* Prefer non-MoE victims first (DualStickExpertPin: layer<<24|…|role1..3). */
+    auto isMoePin = [](uint64_t k) {
+        const uint64_t role = k & 0xffu;
+        return (k >> 24) != 0 && role >= 1u && role <= 3u;
+    };
     while (gemv_resident_bytes_ + bytes > budget && !gemv_weight_cache_.empty()) {
-        auto victim = gemv_weight_cache_.begin();
-        for (auto jt = gemv_weight_cache_.begin(); jt != gemv_weight_cache_.end(); ++jt)
-            if (jt->second.lastUse < victim->second.lastUse) victim = jt;
+        auto victim = gemv_weight_cache_.end();
+        auto pick = [&](int wantMoe) {
+            for (auto jt = gemv_weight_cache_.begin();
+                 jt != gemv_weight_cache_.end(); ++jt) {
+                if ((int)isMoePin(jt->first) != wantMoe) continue;
+                if (victim == gemv_weight_cache_.end() ||
+                    jt->second.lastUse < victim->second.lastUse)
+                    victim = jt;
+            }
+        };
+        pick(0);
+        if (victim == gemv_weight_cache_.end()) pick(1);
+        if (victim == gemv_weight_cache_.end())
+            victim = gemv_weight_cache_.begin();
+        const uint64_t vkey = victim->first;
+        const int vMoe = isMoePin(vkey) ? 1 : 0;
+        const int insMoe = isMoePin(key) ? 1 : 0;
         if (victim->second.buffer)
             vkDestroyBuffer(device_, victim->second.buffer, nullptr);
         if (victim->second.memory)
@@ -263,6 +314,8 @@ bool VulkanCompute::EnsurePinnedPackedWeight(const void* packed, size_t bytes,
         gemv_resident_bytes_ -= victim->second.bytes;
         gemv_weight_cache_.erase(victim);
         ++gemv_pin_evicts_;
+        if (vMoe)
+            Deep2::DualStickOnGemvPinEvicted(vkey, insMoe ? 0 : 1);
     }
     if (gemv_resident_bytes_ + bytes > budget) {
         ++ww_pin_rejects_;
@@ -319,6 +372,7 @@ void VulkanCompute::ReleasePinnedPackedWeight(uint64_t pinKey) {
         gemv_resident_bytes_ = 0;
     gemv_weight_cache_.erase(it);
     ++gemv_pin_evicts_;
+    Deep2::DualStickOnGemvPinEvicted(pinKey, 0);
 }
 
 bool VulkanCompute::EnsurePinnedF32(const float* data, uint32_t n, VkBuffer& outDev,

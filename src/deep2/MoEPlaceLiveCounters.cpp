@@ -196,6 +196,21 @@ void MoEPlaceLiveEmit(FILE* f) {
             (unsigned long long)(c.v7_residual_n
                                     ? c.v7_residual_sum_ns / c.v7_residual_n
                                     : 0ull));
+        std::fprintf(f,
+            "D2_MOE_PIN_COHERENCY moe_pin_evictions=%llu "
+            "mla_caused_moe_evictions=%llu general_caused_moe_evictions=%llu "
+            "DUALSTICK_STALE_PIN_METADATA=%llu PINSREADY_FALSE_POSITIVE=%llu "
+            "PINSREADY_REPAIR=%llu DUALSTICK_SLOT_INVALIDATED=%llu "
+            "moe_pin_touches=%llu moe_bundle_touches=%llu\n",
+            (unsigned long long)c.moe_pin_evictions,
+            (unsigned long long)c.mla_caused_moe_evictions,
+            (unsigned long long)c.general_caused_moe_evictions,
+            (unsigned long long)c.dualstick_stale_pin_metadata,
+            (unsigned long long)c.pinsready_false_positive,
+            (unsigned long long)c.pinsready_repair,
+            (unsigned long long)c.dualstick_slot_invalidated,
+            (unsigned long long)c.moe_pin_touches,
+            (unsigned long long)c.moe_bundle_touches);
     }
     std::fprintf(f,
         "D2_MOE_LIVE SHARED_EXPERT_CALLS=%llu slice_layout_mismatch=%llu "

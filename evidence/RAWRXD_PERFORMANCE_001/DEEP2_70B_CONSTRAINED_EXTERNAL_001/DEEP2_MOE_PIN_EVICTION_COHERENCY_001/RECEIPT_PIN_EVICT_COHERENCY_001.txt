@@ -1,0 +1,62 @@
+GATE=DEEP2_MOE_PIN_EVICTION_COHERENCY_001
+RECEIPT=RECEIPT_PIN_EVICT_COHERENCY_001
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+BLEND_W=0
+V7_MODE=0
+ASSIGN=V6_FULLCOST
+RAISE_BUDGET=DEFER
+NOT_RUN!=PASS
+
+PARENT=
+  V7_RELOAD_AB=PASS_OBSERVE_DATA (causal NOT proven)
+  A≈1181MiB B≈885MiB observe envelope 227MiB
+
+AUTH_RUN=runs/kimi_moe_DS_L61t8_pincoh_20260913_035041
+EXIT=0 WALL_MS=104318
+SEL=3840/3840 parity=1 acquire_fail=0
+SUBMITS=2/layer WAITS=2 D2H_PARTIAL=960 PRODUCT_BACKEND=1
+WORKER_FAILURES=0 MIGRATIONS=0
+
+IMPLEMENTED=
+  1 Evict callback: gemv LRU MoE key → DualStickInvalidateExpert
+     (bundle erase + ForgetResident + MarkCold)
+  2 PinsReady: stale meta → STALE++ REPAIR++ invalidate; never return 1 on miss
+  3 SetPinResidentBudgetAt(site): DUALSTICK_BIND vs ENGINE_MAX_HOT
+     ENGINE shrink below DualStick → PIN_BUDGET_SHRINK_BLOCKED
+  4 Bundle TouchPins on hit path (secondary)
+  5 DESIGN_SEGMENT_QUOTAS.txt (partition deferred)
+
+BUDGET_TRACE=
+  FINAL stick0/1=12288MiB owner=DUALSTICK_BIND resident=12884901888
+  PIN_BUDGET_SHRINK_BLOCKED: ENGINE_MAX_HOT tried 9210691584 (~8782MiB) → blocked
+  RAISE_BUDGET=DEFER (no maxHot raise)
+
+COHERENCY=
+  DUALSTICK_STALE_PIN_METADATA=0
+  PINSREADY_FALSE_POSITIVE=0
+  PINSREADY_REPAIR=0
+  DUALSTICK_SLOT_INVALIDATED=360
+  moe_pin_evictions=1078 (general=1078 mla_caused=0)
+  moe_bundle_touches=2516 moe_pin_touches=7548
+  STALE_PIN_INVARIANT=HOLD (CACHE_RESIDENT=0 ⇒ PinsReady=0)
+
+RELOAD=
+  MoEPlace RELOAD_MISS_BYTES=0 (meta cleared on evict → re-touch=compulsory)
+  GPU_WEIGHT_BYTES_RELOAD=973357056 (~928MiB) — physical re-upload still live
+  vs observe envelope 227MiB: PHYSICAL_ABOVE
+  vs AB A 1181 / B 885: MoE counter ↓; physical ≈B band
+  NOTE: MoE RELOAD=0 ≠ residency PASS; accounting truth restored
+
+PASS_IF_EVAL=
+  EXIT/parity/2+2 PASS
+  PINSREADY_FALSE_POSITIVE=0 PASS
+  DUALSTICK_STALE_PIN_METADATA=0 PASS
+  EVICT→INVALIDATED live PASS (360 slots)
+  RELOAD≤227 PHYSICAL FAIL (~928MiB)
+  BLEND/V7 still frozen PASS
+DISPOSITION=HOLD (coherency PASS; physical reload envelope OPEN)
+NEXT=segmented MoE/MLA quotas (C) under RAISE_BUDGET=DEFER
+  THEN=V7_TRACE_LOCKED_MATURITY_001 (not BLEND_05)

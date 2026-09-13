@@ -5,6 +5,7 @@
 #include "MoEExpertResidencyPlace.hpp"
 #include "vulkan_compute.h"
 #include <cstdlib>
+#include <cstdio>
 
 namespace Deep2 {
 namespace {
@@ -45,7 +46,12 @@ void ApplyPinBudget(unsigned stick, CPUInference::VulkanCompute* vc) {
     }
     /* Cap below typical single-GPU heap so LRU fires before vkAllocate OOM. */
     if (mib > 12288u) mib = 12288u;
-    if (mib) vc->SetPinResidentBudget((size_t)(mib << 20));
+    if (mib)
+        vc->SetPinResidentBudgetAt((size_t)(mib << 20), "DUALSTICK_BIND");
+    std::fprintf(stderr,
+                 "PIN_BUDGET_FINAL stick=%u mib=%llu owner=%s resident=%zu\n",
+                 stick & 1u, (unsigned long long)mib, vc->PinBudgetOwnerSite(),
+                 vc->WeightBudgetBytes());
 }
 } // namespace
 
@@ -83,6 +89,17 @@ uint64_t DualStickExpertBytesOf(int layer, int expert) {
 int DualStickExpertIsResident(int layer, int expert) {
     std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
     return ResFind(layer, expert) >= 0 ? 1 : 0;
+}
+
+void DualStickForgetExpertResident(int layer, int expert) {
+    std::lock_guard<std::recursive_mutex> lk(DualStickMetaMu());
+    int i = ResFind(layer, expert);
+    if (i < 0) return;
+    ResEnt& e = g_res[(uint32_t)i];
+    if (g_resBytes[e.stick] >= e.bytes) g_resBytes[e.stick] -= e.bytes;
+    else g_resBytes[e.stick] = 0;
+    g_res[(uint32_t)i] = g_res[g_resN - 1];
+    --g_resN;
 }
 
 

@@ -12,9 +12,11 @@ uint32_t g_layerPriorN[2] = {0, 0};
 uint64_t g_sightSeq = 0;
 int V7Mode() {
     const char* m = std::getenv("DEEP2_V7_MODE");
-    if (!m || !*m || m[0] == 'o' || m[0] == 'O' || m[0] == '0') return 1;
+    /* 0/n/off = off; o/observe/unset = observe; b = blend stub. */
+    if (!m || !*m || m[0] == 'o' || m[0] == 'O') return 1;
     if (m[0] == 'b' || m[0] == 'B') return 2;
-    return (m[0] == 'n' || m[0] == 'N') ? 0 : 1;
+    if (m[0] == '0' || m[0] == 'n' || m[0] == 'N') return 0;
+    return 1;
 }
 static CostSlot* Find(uint64_t key) {
     for (uint32_t i = 0; i < g_costN; ++i)

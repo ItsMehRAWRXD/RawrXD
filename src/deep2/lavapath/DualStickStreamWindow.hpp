@@ -64,6 +64,7 @@ void DualStickNoteExpertGpu(unsigned stick, size_t bytes);
 /* True stick residency for MoE Place probe / stick affinity retain. */
 void DualStickNoteExpertResident(int layer, int expert, unsigned stick,
                                  uint64_t bytes);
+void DualStickForgetExpertResident(int layer, int expert);
 int DualStickExpertIsResident(int layer, int expert);
 int DualStickExpertStickOf(int layer, int expert);
 uint64_t DualStickExpertBytesOf(int layer, int expert);

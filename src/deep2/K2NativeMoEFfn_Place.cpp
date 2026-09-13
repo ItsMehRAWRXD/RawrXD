@@ -154,17 +154,25 @@ bool K2MoEPlaceAndExec(const GlobalTensorIndex& index, const KimiK2Config& cfg,
             ? 2u
             : 1u;
     place.SetStickCount(sticks);
+    struct PinProbeCtx {
+        size_t H;
+        size_t I;
+    };
+    static thread_local PinProbeCtx s_pp{};
+    s_pp.H = cfg.hiddenDim;
+    s_pp.I = cfg.moeIntermediateSize ? cfg.moeIntermediateSize : 2048u;
     place.SetProbe(
-        [](void*, int ly, int ex) -> int {
-            if (MoEPlaceGlobal().IsHot(ly, ex)) return 1;
-            if (!DualStickExpertIsResident(ly, ex)) return 0;
+        [](void* ctx, int ly, int ex) -> int {
+            auto* p = static_cast<PinProbeCtx*>(ctx);
             const int st = DualStickExpertStickOf(ly, ex);
-            if (st < 0) return 0;
+            if (st < 0 || !p || !p->H || !p->I) return 0;
+            if (!DualStickBundlePinsReady((unsigned)st, ly, ex, p->H, p->I))
+                return 0;
             MoEPlaceGlobal().MarkHot(ly, ex, (uint32_t)st,
                                     DualStickExpertBytesOf(ly, ex));
             return 1;
         },
-        nullptr);
+        &s_pp);
     if (place.Counters().place_calls == 0) {
         const uint64_t eb =
             (uint64_t)(cfg.moeIntermediateSize ? cfg.moeIntermediateSize

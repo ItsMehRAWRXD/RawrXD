@@ -122,11 +122,16 @@ bool VulkanCompute::EnsurePinnedF32(const float*, uint32_t, VkBuffer&, uint64_t)
 bool VulkanCompute::HasPinnedGemvWeight(uint64_t, size_t, uint32_t, uint32_t) const {
     return false;
 }
+bool VulkanCompute::TouchPinnedGemvWeight(uint64_t, size_t, uint32_t, uint32_t) {
+    return false;
+}
 void VulkanCompute::ReleaseWeightWindow() {}
 void VulkanCompute::ClearPinnedGemvWeights() {}
 size_t VulkanCompute::WeightBudgetBytes() const { return 0; }
 size_t VulkanCompute::WeightPinBudgetFloor() const { return 0; }
 void VulkanCompute::SetPinResidentBudget(size_t) {}
+void VulkanCompute::SetPinResidentBudgetAt(size_t, const char*) {}
+const char* VulkanCompute::PinBudgetOwnerSite() const { return "NONE"; }
 uint64_t VulkanCompute::WeightPinCacheCount() const { return 0; }
 uint64_t VulkanCompute::WeightPinResidentBytes() const { return 0; }
 bool VulkanCompute::WantWeightStream() { return false; }

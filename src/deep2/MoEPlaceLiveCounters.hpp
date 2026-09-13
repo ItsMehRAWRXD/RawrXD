@@ -109,6 +109,18 @@ struct MoEPlaceLiveCounters {
     uint64_t v7_residual_n;
     uint64_t v7_attrib_only;
     uint64_t v7_compute_xfer_split;
+    /* DEEP2_MOE_PIN_EVICTION_COHERENCY_001 */
+    uint64_t moe_pin_evictions;
+    uint64_t mla_caused_moe_evictions;
+    uint64_t general_caused_moe_evictions;
+    uint64_t dualstick_stale_pin_metadata;
+    uint64_t pinsready_false_positive;
+    uint64_t pinsready_repair;
+    uint64_t dualstick_slot_invalidated;
+    uint64_t moe_pin_touches;
+    uint64_t moe_bundle_touches;
+    uint64_t cache_budget_set;
+    uint64_t cache_budget_shrink;
 };
 
 MoEPlaceLiveCounters& MoEPlaceLive();

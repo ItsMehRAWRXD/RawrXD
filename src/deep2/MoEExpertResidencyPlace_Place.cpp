@@ -31,10 +31,17 @@ MoEPlacePlan MoEExpertResidencyPlace::Place(int layer, const MoEPlaceIn* in,
         MoEPlaceSlot s{};
         s.expertId = in[i].expertId;
         s.weight = in[i].weight;
+        /* Hot meta can outlive pin LRU — probe must prove live pins. */
         int hi = FindHot(layer, s.expertId);
-        int hit = hi >= 0 ? 1 : 0;
-        if (!hit && probe_)
+        int hit = 0;
+        if (probe_)
             hit = probe_(probeCtx_, layer, s.expertId) ? 1 : 0;
+        else
+            hit = hi >= 0 ? 1 : 0;
+        if (!hit && hi >= 0) {
+            MarkCold(layer, s.expertId);
+            hi = -1;
+        }
         if (hit && hi < 0) hi = FindHot(layer, s.expertId);
         s.hit = (uint8_t)hit;
         s.fetch = hit ? 0 : 1;

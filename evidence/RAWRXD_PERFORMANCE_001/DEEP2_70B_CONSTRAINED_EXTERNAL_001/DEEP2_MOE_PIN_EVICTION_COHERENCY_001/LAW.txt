@@ -1,0 +1,59 @@
+GATE=DEEP2_MOE_PIN_EVICTION_COHERENCY_001
+DATE=2026-09-13
+KIND=CORRECTNESS_THEN_POLICY
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+V7_MODE=0
+BLEND_W=0
+ASSIGN=V6_FULLCOST
+TRACE_LOCKED=1
+NOT_RUN!=PASS
+RAISE_BUDGET=DEFER
+
+# Root-cause tree for 227→1181 nonlinear reload
+# 1 correctness: LRU evict does not invalidate DualStickBundle metadata
+# 2 policy: MLA+MoE share gemv_weight_cache_; SetPinResidentBudget may overwrite ApplyPinBudget
+
+ORDER=
+  1 FIX EVICTION COHERENCY
+  2 PROVE BUDGET CALL ORDER
+  3 ISOLATE/PROTECT MOE PIN BUDGET
+  4 RE-RUN IDENTICAL TRACE
+  5 ONLY THEN reconsider V7
+
+LAW=
+  CACHE_RESIDENT=0 => DUALSTICK_METADATA_RESIDENT=0
+  never: LRU absent && DualStick PinsReady
+  MLA must never evict bound DualStick pin unless MoE budget exhausted
+
+FIX1_EVICT_CALLBACK=
+  gemv_weight_cache_ EvictionCallback → ClearResidentSlot; pins_ready=false
+  bundle-level TouchBundle (gate+up+down) as secondary defense only
+
+FIX2_BUDGET_TRACE=
+  every SetBudget: owner site old new (DUALSTICK_BIND vs ENGINE_MAX_HOT)
+  FINAL: BUDGET OWNER MOE_RESERVED MLA_RESERVED SHARED_EVICTABLE
+
+FIX3_SEGMENTED_BUDGET=
+  PERMANENT | MOE_PINNED | MLA | GENERAL quotas
+  eviction: GENERAL→MLA→cold MoE→hot MoE; never PERMANENT
+  Engine owns total; DualStick/MLA reserve; no late SetBudget(smaller) — fail-closed cert
+
+ABC=
+  A=current · B=metadata fix only · C=metadata+isolated MoE
+  B repairs truth; C repairs performance
+  measure RELOAD MOE_PIN_EVICTIONS MLA_CAUSED_MOE_EVICTIONS JOIN WALL
+
+HARD_INVARIANT=
+  PINSREADY_FALSE_POSITIVE=0
+  DUALSTICK_STALE_PIN_METADATA=0
+  EVICTED_MOE_KEY → DUALSTICK_SLOT_INVALIDATED=1
+
+COUNTERS=
+  MOE_PIN_EVICTIONS MLA_CAUSED_MOE_EVICTIONS GENERAL_CAUSED_MOE_EVICTIONS
+  DUALSTICK_STALE_PIN_METADATA PINSREADY_FALSE_POSITIVE PINSREADY_REPAIR
+  MOE_PIN_TOUCHES MOE_BUNDLE_TOUCHES
+  CACHE_BUDGET_SET/SHRINK FINAL budgets
+
+THEN=V7_TRACE_LOCKED_MATURITY_001 (not BLEND_05)

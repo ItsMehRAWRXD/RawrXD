@@ -9416,7 +9416,8 @@ void Deep2Engine::enableElasticResidency(bool enable) {
                    resConfig.maxHotBytes / (1024*1024),
                    resConfig.prefetchLookahead);
             if (auto* vc = getVulkanComputeSlot(0))
-                vc->SetPinResidentBudget(resConfig.maxHotBytes);
+                vc->SetPinResidentBudgetAt(resConfig.maxHotBytes,
+                                           "ENGINE_MAX_HOT");
             // Late enable (after loadModel): register mapped tensors with sourceData.
             // Without this, Acquire returns NotFound or zero-fills → gibberish embeds.
             if (modelWeights.loaded) {
@@ -9504,7 +9505,7 @@ void Deep2Engine::refreshElasticDynamicBudget() {
     elasticResidency_->ApplyDynamicCaps(caps);
     ElasticBudget_Emit(stdout, caps, probe);
     if (auto* vc = getVulkanComputeSlot(0))
-        vc->SetPinResidentBudget(caps.maxHotBytes);
+        vc->SetPinResidentBudgetAt(caps.maxHotBytes, "ENGINE_MAX_HOT");
     if (cyclone_)
         cyclone_->SetPrefetchLookahead(caps.prefetchLookahead);
 }

@@ -7,6 +7,7 @@
 #include "StickGpuLocal.hpp"
 #include "StreamPathTiming.hpp"
 #include "lavapath/DualStickExpertBundle.hpp"
+#include "lavapath/DualStickPinCoherency.hpp"
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "vulkan_compute.h"
 #include <cstdio>
@@ -121,6 +122,7 @@ bool K2MoEExecStickWorklist(const GlobalTensorIndex& index,
         r.weight = mut.weight;
         r.acquireMiss = 1;
         if (DualStickBundlePinsReady(stick, (int)layer, mut.expertId, H, I)) {
+            DualStickBundleTouchPins(stick, (int)layer, mut.expertId, H, I);
             DualStickBundleMeta m{};
             DualStickBundleLookup((int)layer, mut.expertId, &m);
             ctr.bundle_hits++;
@@ -207,6 +209,7 @@ bool K2MoEExecExpertGpu(unsigned stick, int ggmlGate, const uint8_t* g,
     size_t gb2 = gb, ub2 = ub, db2 = db;
     const uint8_t *g2 = g, *u2 = u, *d2 = d;
     if (DualStickBundlePinsReady(stick, (int)layer, expertId, H, I)) {
+        DualStickBundleTouchPins(stick, (int)layer, expertId, H, I);
         DualStickBundleMeta m{};
         DualStickBundleLookup((int)layer, expertId, &m);
         MoEPlaceLive().expert_bundle_hits++;

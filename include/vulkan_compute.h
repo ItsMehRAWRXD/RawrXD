@@ -287,10 +287,18 @@ public:
     size_t WeightBudgetBytes() const;
     size_t WeightPinBudgetFloor() const;
     void SetPinResidentBudget(size_t bytes);
+    /* Site: DUALSTICK_BIND | ENGINE_MAX_HOT | OTHER — blocks DualStick shrink. */
+    void SetPinResidentBudgetAt(size_t bytes, const char* site);
+    const char* PinBudgetOwnerSite() const;
+    uint64_t PinBudgetSetCount() const { return ww_budget_set_n_; }
+    uint64_t PinBudgetShrinkCount() const { return ww_budget_shrink_n_; }
+    uint64_t PinBudgetShrinkBlocked() const { return ww_budget_shrink_blocked_; }
     uint64_t WeightPinCacheCount() const;
     uint64_t WeightPinResidentBytes() const;
     bool HasPinnedGemvWeight(uint64_t pinKey, size_t bytes, uint32_t rows,
                              uint32_t cols) const;
+    bool TouchPinnedGemvWeight(uint64_t pinKey, size_t bytes, uint32_t rows,
+                               uint32_t cols);
     bool EnsurePinnedPackedWeight(const void* packed, size_t bytes,
                                   uint32_t rows, uint32_t cols, VkBuffer& outDev,
                                   uint64_t pinKey = 0);
@@ -627,6 +635,10 @@ private:
     size_t ww_budget_bytes_ = 0;
     // Sticky floor from SetPinResidentBudget — EnsureWeightWindow must not shrink below.
     size_t ww_pin_budget_floor_ = 0;
+    char ww_pin_budget_owner_[24]{};
+    uint64_t ww_budget_set_n_ = 0;
+    uint64_t ww_budget_shrink_n_ = 0;
+    uint64_t ww_budget_shrink_blocked_ = 0;
     bool ww_active_ = false;
     bool ww_init_done_ = false;
     bool ww_prefetch_ = false;

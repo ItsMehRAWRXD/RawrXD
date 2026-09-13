@@ -1,0 +1,23 @@
+GATE=DEEP2_MOE_PIN_EVICTION_COHERENCY_001
+KIND=DESIGN_NOTE
+PROMOTE=0
+RAISE_BUDGET=DEFER
+
+SEGMENTED_QUOTAS_TARGET=
+  PERMANENT   — never evicted (arena / fused CB)
+  MOE_PINNED  — DualStickExpertPin keys (layer<<24|expert|role1..3)
+  MLA         — MLA pinKey layer<<8|tag
+  GENERAL     — content-fp / untagged
+
+EVICTION_ORDER_TARGET=
+  GENERAL → MLA → cold MoE → hot MoE; never PERMANENT
+
+OWNERSHIP=
+  Engine owns device total heap ceiling
+  DualStickBind sets MOE_PINNED reserve via SetPinResidentBudgetAt(DUALSTICK_BIND)
+  ENGINE_MAX_HOT must not shrink below DualStick floor (fail-closed this gate)
+
+THIS_LANDING=
+  Metadata coherency + budget call-order + shrink-block
+  Prefer-non-MoE LRU victim (interim; full quotas = next)
+  Partition quotas NOT yet separate byte pools — RAISE_BUDGET=DEFER
