@@ -1,27 +1,46 @@
-/* K2NativeMoE_LayerTrace.hpp — fail-closed L39 isolation breadcrumbs (≤99). */
+/* K2NativeMoE_LayerTrace.hpp — token+layer+stage crumbs; cumulative LAST. */
 #pragma once
 #include "K2GlobalTensorIndex.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 namespace Deep2 {
 namespace moe_ltrace {
 
+inline uint32_t& Tok() {
+    static thread_local uint32_t t = 0;
+    return t;
+}
+inline void SetToken(uint32_t tokenIndex) { Tok() = tokenIndex; }
+
 inline uint32_t TraceLayer() {
     const char* e = std::getenv("DEEP2_K2_LAYER_TRACE");
     if (e && e[0]) return (uint32_t)std::atoi(e);
-    return 39u; /* default isolation target */
+    return 39u;
 }
-inline bool On(uint32_t layer) { return layer == TraceLayer(); }
+inline bool Cumulative() {
+    const char* e = std::getenv("DEEP2_K2_CUMULATIVE_TRACE");
+    return e && e[0] && e[0] != '0';
+}
+inline bool On(uint32_t layer) {
+    if (Cumulative()) return true; /* all layers: accumulate-state forensics */
+    return layer == TraceLayer();
+}
 
 inline void BC(uint32_t layer, const char* tag) {
     if (!On(layer)) return;
-    std::fprintf(stderr, "L%u_%s\n", layer, tag);
+    std::fprintf(stderr, "T%u_L%u_%s\n", Tok(), layer, tag);
+    std::fprintf(stderr, "CUMULATIVE_LAST tok=%u layer=%u stage=%s\n", Tok(),
+                 layer, tag);
     std::fflush(stderr);
 }
 inline void BCExpert(uint32_t layer, const char* tag, int expert) {
     if (!On(layer)) return;
-    std::fprintf(stderr, "L%u_%s expert=%d\n", layer, tag, expert);
+    std::fprintf(stderr, "T%u_L%u_%s expert=%d\n", Tok(), layer, tag, expert);
+    std::fprintf(stderr,
+                 "CUMULATIVE_LAST tok=%u layer=%u stage=%s expert=%d\n", Tok(),
+                 layer, tag, expert);
     std::fflush(stderr);
 }
 
@@ -70,7 +89,7 @@ inline void DumpTensorGeom(const GlobalTensorIndex& index, uint32_t layer,
 
 inline void DumpLayerPair(const GlobalTensorIndex& index, uint32_t focus) {
     static thread_local bool once = false;
-    if (once || !On(focus)) return;
+    if (once || (!On(focus) && focus != TraceLayer())) return;
     once = true;
     const uint32_t lo = focus > 0 ? focus - 1 : focus;
     std::fprintf(stderr, "L%u_GEOM_DUMP_BEGIN vs L%u\n", focus, lo);

@@ -7,6 +7,7 @@
 #include "K2MLAAttention.hpp"
 #include "K2MLA_GpuGemv.hpp"
 #include "K2NativeMoEFfn.hpp"
+#include "K2NativeMoE_LayerTrace.hpp"
 #include "MoEPlaceLiveCounters.hpp"
 #include "MoEExpertResidencyPlace.hpp"
 #include "MlaCertAuthority.hpp"
@@ -804,6 +805,7 @@ bool ForwardMLALayers(uint32_t testLayers, const Deep2::GlobalTensorIndex& index
         if (k2cfg.numExperts > 0) {
             /* Stream generate path: all tokens count as DECODE for host proof. */
             const bool decodePhase = true;
+            Deep2::moe_ltrace::SetToken(position);
             if (!Deep2::K2NativeMoE_AfterMla(index, k2cfg, layer, decodePhase, out,
                                              scratch.data(), error)) {
                 joinAll();
