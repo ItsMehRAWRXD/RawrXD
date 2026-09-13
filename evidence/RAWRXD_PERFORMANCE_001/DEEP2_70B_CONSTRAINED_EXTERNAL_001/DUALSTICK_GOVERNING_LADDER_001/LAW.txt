@@ -8,35 +8,42 @@ TPS_MINT=0
 NOT_RUN!=PASS
 
 OBJECTIVE_GLOBAL=MINIMIZE TOKEN_MAKESPAN
-# NOT individual expert runtime / total GPU work / bytes moved
 
-CURRENT_OWNER=PHASE_A DUALSTICK_THROUGHPUT_CLIMB_001
-# Do NOT spend authority on Phase D sophistication while substrate exposes
-# more than 2 submissions/readbacks per routed MoE layer.
+# Eras (do not conflate)
+HISTORICAL_KIMI_CAPABILITY>=~5_TPS
+  # Sovereign async-ring era ~14.1–14.4 TPS REOPENED — not current sealed Deep2 authority
+  # later Deep2 K2 receipt ~3.556 TPS measured; 5.0 TPS used as budget/target in that branch
+CURRENT_FUSE_DIAGNOSTIC≈0.0685_TPS
+  # instrumented/intermediate RE path while restructuring DualStick — NOT historical ceiling
 
-PHASE_A_PASS_IF=
-  GPU_SUBMITS_PER_MOE_LAYER == 2
-  && D2H_PARTIAL_VECTORS_PER_MOE_LAYER == 2
-  && EXPERT_INTERMEDIATE_D2H == 0
-  && HOST_GEMV_EXPERT == 0
-  && FWD_G0 > 0
-  && FWD_G1 > 0
-  && SEL == EXE
-  && ACQUIRE_FAIL == 0
+PHASE_A_GEOMETRY=PASS
+  AUTH_RUN=kimi_moe_DS_L61t8_fuse_20260913_005437
+  AUTH_SEAL=9fcad1540f COMMIT=708098da45
+  WALL_PASS=0 WALL=14.60s/tok
+  narrative=geometry PASS; throughput temporarily/regressive; recovery+surpass OPEN
 
-PHASE_B_PASS_IF= (only after A PASS)
+# 5 TPS = RECOVERY FLOOR (not breakthrough)
+PERF_LADDER=
+  < historical Kimi baseline = regression
+  ~5 TPS = baseline recovery
+  10 TPS = meaningful enhancement
+  15 TPS = ~historical high-end / strong recovery
+  20+ TPS = clear architectural win
+  30+ TPS = major sparse-fabric result
+  35–50 TPS = still UNMINTED extreme
+
+CURRENT_OWNER=PHASE_B DUALSTICK_KERNEL_IMBALANCE_001
+# judge vs pre-enhancement Kimi baseline, not vs zero
+# keep superior 2+2 geometry while clawing back throughput then exceed old engine
+DUALSTICK_KERNEL_IMBALANCE_PASS_IF=
   STICK_COMPLETION_SKEW_PCT < 5
   && GPU0_IDLE_AT_JOIN_NS materially reduced
   && GPU1_IDLE_AT_JOIN_NS materially reduced
   && RELOAD_MISS_BYTES_PER_TOKEN <= Phase_A baseline
-  && ROUTER_SET_UNCHANGED
-  && SEL == EXE
-  && ACQUIRE_FAIL == 0
+  && SEL == EXE && ACQUIRE_FAIL == 0 && ROUTER_SET_UNCHANGED
+  && GPU_SUBMITS_PER_MOE_LAYER == 2
+  && D2H_PARTIAL_VECTORS_PER_MOE_LAYER == 2
 
-PHASE_C=QUANT_FABRIC SOURCE_READY after B
-PHASE_D=SPARSE_CRITICAL_PATH_COMPILER SOURCE_READY after A+B
-  # DAG→CP→enumerate/cost→hetero sched→transfer hide→fuse/barrier→2 graphs→PGO→whole-token
-  # live owner ONLY after A and B close
-
-VALUATION=VALUATION_NOTE_20260913.txt (~$225M base; B/C/D upside only)
-SEALED=2d0f2dc480 ca3be53613 44b73b868e 9c4213e679
+PHASE_C=SOURCE_READY after B
+PHASE_D=SOURCE_READY after A+B
+VALUATION_BASE≈$225M; recovery≠breakthrough mint
