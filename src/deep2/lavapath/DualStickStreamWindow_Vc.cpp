@@ -33,10 +33,18 @@ void ApplyPinBudget(unsigned stick, CPUInference::VulkanCompute* vc) {
         (stick & 1u) ? "DEEP2_STICK1_BUDGET_MIB" : "DEEP2_STICK0_BUDGET_MIB";
     const char* v = std::getenv(k);
     uint64_t mib = (v && *v) ? (uint64_t)std::atoi(v) : 0;
+    /* Host WEIGHT_BUDGET (E8B0M) must NOT drive device pin — else LRU never
+     * runs before CreateDeviceLocalBuffer OOM (L61t8 StickPin abort). */
+    if (const char* m = std::getenv("DEEP2_MOE_PLACE_BUDGET_MIB"); m && *m) {
+        const uint64_t place = (uint64_t)std::atoi(m);
+        if (place && (!mib || mib > place)) mib = place;
+    }
     if (!mib) {
         const char* w = std::getenv("DEEP2_WEIGHT_BUDGET_MIB");
         if (w && *w) mib = (uint64_t)std::atoi(w) / 2u;
     }
+    /* Cap below typical single-GPU heap so LRU fires before vkAllocate OOM. */
+    if (mib > 12288u) mib = 12288u;
     if (mib) vc->SetPinResidentBudget((size_t)(mib << 20));
 }
 } // namespace

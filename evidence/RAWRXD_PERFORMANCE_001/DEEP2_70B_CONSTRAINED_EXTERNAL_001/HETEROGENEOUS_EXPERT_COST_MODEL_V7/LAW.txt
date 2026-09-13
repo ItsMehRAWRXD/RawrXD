@@ -1,0 +1,48 @@
+GATE=HETEROGENEOUS_EXPERT_COST_MODEL_V7
+DATE=2026-09-13
+PROMOTE=0
+TIP_CLIMB=HOLD
+TPS_MINT=0
+NOT_RUN!=PASS
+
+PARENT_V6d=HOLD c1e90fcdf5
+CENTRAL_LAW=MINIMIZE max(finish0,finish1)
+AUTH_BALANCE=ABS(FINISH0-FINISH1)/MAX
+
+# Live Expert Cost Matrix (foundation of CORE_PATH)
+COST[layer][expert][gpu][quant][shape][residency][kernel] = {
+  ewma_kernel_ns, ewma_h2d_ns, queue_ns, variance, samples, confidence }
+
+PREDICTED_COST(gpu) = MATRIX_COST + CURRENT_QUEUE + TRANSFER_COST + RISK_PENALTY
+ASSIGN_TO = argmin max(FINISH_GPU0, FINISH_GPU1)
+
+# Matrix one-liners
+# 1  Layer×Expert×GPU Timing Cell actual_ns
+# 2  EWMA Cell Update (adaptive; not one-sample replace)
+# 3  Sample-Count Confidence (sparse→priors)
+# 4  Quant-Type Dimension
+# 5  Shape Fingerprint (K,N,tiles/layout)
+# 6  Residency-State Split (resident ≠ cold)
+# 7  Kernel-Variant Split
+# 8  Queue-Delay Isolation
+# 9  Transfer-Time Side Matrix [expert][gpu]→H2D_ns
+# 10 Variance Matrix + risk penalty
+# 11 GPU Affinity Matrix speedup=cost1/cost0
+# 12 Cold-Start Prior Seeding
+# 13 Outlier-Rejected Learning
+# 14 Recency Decay
+# 15 Counterfactual Cost Lookup (both GPUs before assign)
+
+MATRIX_FIRST=#1 cell → #2 EWMA → #3 confidence → #4/#5 quant/shape
+  → #6 residency split → #8/#9 queue/H2D sep → #11 affinity → #15 lookup
+# then CORE_PATH: affinity→weighted-LPT pin-safe→finish place→pairwise swap→skew forecast
+
+CORE_PATH=
+  LIVE_COST_MATRIX → GPU_AFFINITY → WEIGHTED_LPT → FINISH_PLACE
+  → PAIRWISE_SWAP → SKEW_FORECAST → PREDICT_ERR<10 → SKEW<5
+
+ACCEPT=
+  EXIT=0 SKEW_PCT<5 PREDICT_ERR_PCT<10 JOIN_WAIT<V6d 16.8s
+  RELOAD=0 SEL==EXE SUBMITS=2 D2H_PARTIAL=2
+PRESERVE_2PLUS2=1
+#14 late rebalance + runtime steal HELD until ACCEPT
