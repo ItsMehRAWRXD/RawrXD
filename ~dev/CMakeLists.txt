@@ -377,3 +377,18 @@ target_include_directories(batch66_70_livecontract_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 71-75 product authority self-test (host-only, no Vulkan).
+add_executable(batch71_75_authority_selftest
+    tests/batch71_75_selftest.cpp
+    rawrxd/src/deep2/Deep2B71GpuCounterAdapter.cpp
+    rawrxd/src/deep2/Deep2B72RawrBenchCli.cpp
+    rawrxd/src/deep2/Deep2B73EvidenceStore.cpp
+    rawrxd/src/deep2/Deep2B74ReceiptReplay.cpp
+    rawrxd/src/deep2/Deep2B75FleetPromotion.cpp
+)
+target_include_directories(batch71_75_authority_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
