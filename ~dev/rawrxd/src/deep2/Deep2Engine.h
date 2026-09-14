@@ -56,6 +56,8 @@
 
 namespace Deep2 {
 
+struct PeerDeviceGroupProbe;
+
 // Forward declarations
 class ReverseIntegration;
 class Deep2TelemetryController {};
@@ -492,6 +494,16 @@ public:
     uint64_t vulkanSlotWeightHits(unsigned slot) const;
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
+
+    // Batch10: host-bound heavy GPU path. These methods are physically GPU-backed
+    // but deliberately do not claim fully resident no-host authority.
+    bool tryVulkanHostGEMV(const WeightTensor& wt, const float* input,
+                           float* output, size_t outDim);
+    bool computeMoEFFNGpu(size_t layer, const float* input, float* output);
+    bool computeMLAAttentionGpu(size_t layer, const float* input,
+                                float* output, size_t seqLen);
+    bool forwardTokenGpuHybrid(float* hidden, size_t seqLen);
+    PeerDeviceGroupProbe probeVulkanPeerGroup() const;
 
     // VAL-000 Phase 3: Advanced feature control
     void enableMedusa(bool enable);

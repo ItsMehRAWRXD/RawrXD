@@ -56,6 +56,8 @@ set(RAWRXD_DEEP2_SOURCES
     rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
     rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
     rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
+    rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+    rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
 )
 
 #--------------------
@@ -138,6 +140,8 @@ add_executable(deep2_standalone
     rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
     rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
     rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
+    rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+    rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
     tests/deep2_standalone.cpp
 )
 target_include_directories(deep2_standalone PRIVATE
@@ -166,3 +170,25 @@ target_include_directories(batch9_vulkan_multigpu_cert PRIVATE
 if(Vulkan_FOUND)
     target_link_libraries(batch9_vulkan_multigpu_cert PRIVATE Vulkan::Vulkan)
 endif()
+
+# Batch 10 hardware cert: peer group probe + dual row-split GEMV.
+add_executable(batch10_peer_rowsplit_cert
+    rawrxd/src/deep2/Batch10_PeerRowSplitCert.cpp
+    rawrxd/src/deep2/vulkan_compute.cpp
+    rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+)
+target_include_directories(batch10_peer_rowsplit_cert PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+)
+if(Vulkan_FOUND)
+    target_link_libraries(batch10_peer_rowsplit_cert PRIVATE Vulkan::Vulkan)
+endif()
+
+# Batch 10 row-split plan self-test (host-only, no Vulkan).
+add_executable(batch10_rowsplit_plan_selftest
+    rawrxd/src/deep2/Batch10_RowSplitPlan_SELFTEST.cpp
+)
+target_include_directories(batch10_rowsplit_plan_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)

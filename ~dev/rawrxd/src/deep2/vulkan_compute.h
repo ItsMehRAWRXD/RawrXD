@@ -49,6 +49,19 @@ struct VulkanPhysicalInfo {
     std::string name;
 };
 
+struct GpuWeightView {
+    const void* data = nullptr;
+    size_t bytes = 0;
+    int type = 0;
+    uint32_t rows = 0;
+    uint32_t cols = 0;
+    uint64_t key = 0;
+
+    bool valid() const noexcept {
+        return data && bytes && rows && cols;
+    }
+};
+
 class VulkanCompute {
 public:
     struct DeviceBuf {
@@ -167,6 +180,38 @@ public:
     bool WaitWeightCompute(uint32_t slot);
     bool WeightStreamActive() const noexcept { return weightBudgetBytes_ != 0; }
     bool WeightPrefetchActive() const noexcept;
+
+    // Batch 10 generic device math surface used by row-split, MoE and MLA.
+    bool EnsureScratch(unsigned index, size_t floatCount);
+    DeviceBuf& Scratch(unsigned index);
+    bool UploadVector(DeviceBuf& dst, const float* src, size_t count);
+    bool DownloadVector(const DeviceBuf& src, float* dst, size_t count);
+    bool CopyVector(DeviceBuf& src, DeviceBuf& dst, size_t count,
+                    size_t srcFloatOffset = 0, size_t dstFloatOffset = 0);
+    bool DispatchWeight(const GpuWeightView& weight,
+                        DeviceBuf& input, DeviceBuf& output);
+
+    bool RunExpertFFN(const GpuWeightView& gate,
+                      const GpuWeightView& up,
+                      const GpuWeightView& down,
+                      const float* input, float* output,
+                      uint32_t hidden, uint32_t intermediate,
+                      uint64_t epoch);
+
+    bool RunMLAAttentionHost(const float* q,
+                             const float* k,
+                             const float* v,
+                             float* output,
+                             uint32_t heads,
+                             uint32_t keyLen,
+                             uint32_t valueLen,
+                             uint32_t layer,
+                             uint32_t pos,
+                             uint32_t layers,
+                             uint32_t maxSeq,
+                             float scale,
+                             uint64_t epoch);
+    void ResetMLACache();
 
     DeviceBuf& ArenaHidden()   { return arenaHidden_; }
     DeviceBuf& ArenaAttnW()    { return arenaAttnW_; }
@@ -316,11 +361,23 @@ private:
     std::unordered_map<uint64_t, WeightCacheEntry> weightCache_;
     std::vector<PrefetchEntry> prefetch_;
 
+    std::vector<DeviceBuf> scratch_;
+
+    DeviceBuf mlaKCache_{};
+    DeviceBuf mlaVCache_{};
+    uint32_t mlaCacheHeads_ = 0;
+    uint32_t mlaCacheKeyLen_ = 0;
+    uint32_t mlaCacheValueLen_ = 0;
+    uint32_t mlaCacheLayers_ = 0;
+    uint32_t mlaCacheCapacity_ = 0;
+    uint32_t mlaCacheMaxSeq_ = 0;
+
     uint64_t gemvSuccess_ = 0;
     uint64_t weightUploads_ = 0;
     uint64_t weightHits_ = 0;
     bool lastCrossDeviceCopyUsedHost_ = false;
 
+    mutable std::recursive_mutex apiMu_;
     mutable std::mutex intervalMu_;
     std::deque<GpuWorkInterval> intervals_;
 };

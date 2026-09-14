@@ -200,6 +200,11 @@ void Deep2Engine::reset() {
     if (ffnOutput && config.hiddenDim)
         std::memset(ffnOutput, 0, config.hiddenDim * sizeof(float));
 
+    // BATCH10_RESET_MLA_CACHE
+    for (auto& gpu : vulkanDevices_) {
+        if (gpu) gpu->ResetMLACache();
+    }
+
     gpuFwdCommitted_ = false;
     gpuFwd_ = {};
 }
@@ -1001,6 +1006,21 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: tensor backing smaller than geometry");
     }
 
+    // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
+    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+        std::memset(output, 0, outDim * sizeof(float));
+        if (tryVulkanHostGEMV(wt, input, output, outDim)) {
+            if (bias) {
+                for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+            }
+            if (!finiteVector(output, outDim))
+                throw std::runtime_error("LinearW: non-finite GPU output");
+            return;
+        }
+        if (vulkanStrictNoCpuFallback_)
+            throw std::runtime_error("LinearW: GPU path failed under strict mode");
+    }
+
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
@@ -1176,8 +1196,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
 
     const LayerWeights& lw = modelWeights.layers[layer];
     if (lw.useMLA || modelWeights.useMLA) {
+        if (computeMLAAttentionGpu(layer, input, output, seqLen))
+            return;
         throw std::runtime_error(
-            "attention: MLA/K2 path is not certified in this subsystem");
+            "attention: GPU MLA path failed or unsupported");
     }
 
     const size_t H = modelWeights.hiddenDim
@@ -1360,6 +1382,14 @@ void Deep2Engine::computeMoEFFN(size_t layer,
                                 float* output) {
     if (!input || !output || layer >= modelWeights.layers.size())
         throw std::runtime_error("MoE: invalid layer/input/output");
+
+    // BATCH10_GPU_MOE_FIRST
+    if (vulkanInitialized_ && !vulkanDevices_.empty()) {
+        if (computeMoEFFNGpu(layer, input, output))
+            return;
+        if (vulkanStrictNoCpuFallback_)
+            throw std::runtime_error("MoE: GPU expert path failed under strict mode");
+    }
 
     const LayerWeights& lw = modelWeights.layers[layer];
     const size_t H = modelWeights.hiddenDim;
@@ -1547,8 +1577,19 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (!modelWeights.loaded || !hidden || seqLen == 0) return false;
     if (modelWeights.layers.size() < modelWeights.numLayers) return false;
 
-    // Batch 9: the GPU path owns GPU counters. CPU fallback must never increment
-    // forwardLayers, otherwise a host decode can counterfeit GPU authority.
+    // Batch10: MoE and MLA currently use host-orchestrated GPU-heavy execution.
+    // It is a product execution lane, but NOT fully-resident GPU authority.
+    if (vulkanEnabled_ && vulkanInitialized_ &&
+        (modelWeights.isMoE || modelWeights.useMLA)) {
+        if (forwardTokenGpuHybrid(hidden, seqLen))
+            return true;
+        if (vulkanStrictNoCpuFallback_) {
+            vulkanStrictViolation_ = true;
+            return false;
+        }
+    }
+
+    // Dense Batch9 resident path.
     if (vulkanEnabled_ && vulkanInitialized_) {
         if (tryGpuTokenForward(hidden)) {
             gpuFwdCommitted_ = true;

@@ -32,6 +32,7 @@ constexpr uint32_t OP_RESIDUAL = 3;
 constexpr uint32_t OP_SWIGLU   = 4;
 constexpr uint32_t OP_ROPE     = 5;
 constexpr uint32_t OP_ATTN     = 6;
+constexpr uint32_t OP_MLA_ATTN = 7;
 
 bool mulOverflow(size_t a, size_t b, size_t& out) {
     if (a != 0 && b > std::numeric_limits<size_t>::max() / a) return true;
@@ -1465,12 +1466,327 @@ bool VulkanCompute::WeightPrefetchActive() const noexcept {
     return e && e[0] && e[0]!='0';
 }
 
+bool VulkanCompute::EnsureScratch(unsigned index, size_t floatCount) {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!initialized_ || floatCount == 0 ||
+        floatCount > std::numeric_limits<size_t>::max()/sizeof(float))
+        return false;
+    if (scratch_.size() <= index) scratch_.resize(index + 1);
+    DeviceBuf& b = scratch_[index];
+    const size_t bytes = floatCount * sizeof(float);
+    if (b && b.size >= bytes) return true;
+    destroyBuffer(b);
+    return createBuffer(
+        bytes,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        b);
+}
+
+VulkanCompute::DeviceBuf& VulkanCompute::Scratch(unsigned index) {
+    if (scratch_.size() <= index) scratch_.resize(index + 1);
+    return scratch_[index];
+}
+
+bool VulkanCompute::UploadVector(
+    DeviceBuf& dst, const float* src, size_t count)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!src || count == 0 ||
+        count > std::numeric_limits<size_t>::max()/sizeof(float))
+        return false;
+    return uploadToBuffer(dst, src, count*sizeof(float));
+}
+
+bool VulkanCompute::DownloadVector(
+    const DeviceBuf& src, float* dst, size_t count)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!dst || count == 0 ||
+        count > std::numeric_limits<size_t>::max()/sizeof(float))
+        return false;
+    return downloadFromBuffer(src, dst, count*sizeof(float));
+}
+
+bool VulkanCompute::CopyVector(
+    DeviceBuf& src, DeviceBuf& dst, size_t count,
+    size_t srcFloatOffset, size_t dstFloatOffset)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!count ||
+        count > std::numeric_limits<size_t>::max()/sizeof(float) ||
+        srcFloatOffset > std::numeric_limits<size_t>::max()/sizeof(float) ||
+        dstFloatOffset > std::numeric_limits<size_t>::max()/sizeof(float))
+        return false;
+
+    const VkDeviceSize bytes = static_cast<VkDeviceSize>(count*sizeof(float));
+    const VkDeviceSize so =
+        static_cast<VkDeviceSize>(srcFloatOffset*sizeof(float));
+    const VkDeviceSize doff =
+        static_cast<VkDeviceSize>(dstFloatOffset*sizeof(float));
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    return beginCommand(cmd,query,true) &&
+           recordCopy(cmd,src,dst,bytes,so,doff) &&
+           endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
+                         bytes,workEpoch_,nullptr);
+}
+
+bool VulkanCompute::DispatchWeight(
+    const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!weight.valid()) return false;
+    if (static_cast<size_t>(weight.cols)*sizeof(float) > input.size ||
+        static_cast<size_t>(weight.rows)*sizeof(float) > output.size)
+        return false;
+
+    if (weight.type == 0) {
+        const uint64_t key = weight.key
+            ? weight.key
+            : static_cast<uint64_t>(
+                reinterpret_cast<uintptr_t>(weight.data));
+        return DispatchGemvDevice(
+            static_cast<const float*>(weight.data),key,
+            input,output,weight.rows,weight.cols);
+    }
+
+    return DispatchGemvQuant(
+        weight.type,weight.data,weight.bytes,
+        input,output,weight.rows,weight.cols);
+}
+
+bool VulkanCompute::RunExpertFFN(
+    const GpuWeightView& gate,
+    const GpuWeightView& up,
+    const GpuWeightView& down,
+    const float* input, float* output,
+    uint32_t hidden, uint32_t intermediate,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!input || !output || !hidden || !intermediate ||
+        gate.rows != intermediate || gate.cols != hidden ||
+        up.rows != intermediate || up.cols != hidden ||
+        down.rows != hidden || down.cols != intermediate)
+        return false;
+
+    SetWorkEpoch(epoch);
+    if (!EnsureScratch(0,hidden) ||
+        !EnsureScratch(1,intermediate) ||
+        !EnsureScratch(2,intermediate) ||
+        !EnsureScratch(3,intermediate) ||
+        !EnsureScratch(4,hidden))
+        return false;
+
+    DeviceBuf& x = Scratch(0);
+    DeviceBuf& g = Scratch(1);
+    DeviceBuf& u = Scratch(2);
+    DeviceBuf& act = Scratch(3);
+    DeviceBuf& y = Scratch(4);
+
+    if (!UploadVector(x,input,hidden)) return false;
+    if (!DispatchWeight(gate,x,g)) return false;
+    if (!DispatchWeight(up,x,u)) return false;
+    if (!DispatchSwiGLU(g,u,act,intermediate)) return false;
+    if (!DispatchWeight(down,act,y)) return false;
+    return DownloadVector(y,output,hidden);
+}
+
+void VulkanCompute::ResetMLACache() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    destroyBuffer(mlaKCache_);
+    destroyBuffer(mlaVCache_);
+    mlaCacheHeads_=0;
+    mlaCacheKeyLen_=0;
+    mlaCacheValueLen_=0;
+    mlaCacheLayers_=0;
+    mlaCacheCapacity_=0;
+    mlaCacheMaxSeq_=0;
+}
+
+bool VulkanCompute::RunMLAAttentionHost(
+    const float* q, const float* k, const float* v,
+    float* output,
+    uint32_t heads, uint32_t keyLen, uint32_t valueLen,
+    uint32_t layer, uint32_t pos,
+    uint32_t layers, uint32_t maxSeq,
+    float scale, uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!initialized_ || !opsPipeline_ ||
+        !q || !k || !v || !output ||
+        !heads || !keyLen || !valueLen ||
+        !layers || !maxSeq || layer>=layers || pos>=maxSeq ||
+        !(scale>0.0f) || !std::isfinite(scale))
+        return false;
+
+    const bool shapeChanged =
+        mlaCacheHeads_!=heads ||
+        mlaCacheKeyLen_!=keyLen ||
+        mlaCacheValueLen_!=valueLen ||
+        mlaCacheLayers_!=layers ||
+        mlaCacheMaxSeq_!=maxSeq;
+    if (shapeChanged) ResetMLACache();
+
+    auto checkedMul=[](uint64_t a,uint64_t b,uint64_t& out)->bool{
+        if(a && b>std::numeric_limits<uint64_t>::max()/a) return false;
+        out=a*b; return true;
+    };
+
+    if (mlaCacheCapacity_ <= pos) {
+        uint32_t newCap = mlaCacheCapacity_ ? mlaCacheCapacity_ : 16u;
+        while (newCap <= pos) {
+            if (newCap > maxSeq/2u) { newCap=maxSeq; break; }
+            newCap*=2u;
+        }
+        newCap=std::min(newCap,maxSeq);
+        if(newCap<=pos) return false;
+
+        uint64_t kElems=0,vElems=0,tmp=0;
+        if(!checkedMul(layers,newCap,tmp) ||
+           !checkedMul(tmp,heads,tmp) ||
+           !checkedMul(tmp,keyLen,kElems) ||
+           !checkedMul(layers,newCap,tmp) ||
+           !checkedMul(tmp,heads,tmp) ||
+           !checkedMul(tmp,valueLen,vElems))
+            return false;
+        if(kElems>std::numeric_limits<VkDeviceSize>::max()/sizeof(float) ||
+           vElems>std::numeric_limits<VkDeviceSize>::max()/sizeof(float))
+            return false;
+
+        DeviceBuf newK{},newV{};
+        const VkBufferUsageFlags usage =
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        if(!createBuffer(kElems*sizeof(float),usage,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,newK) ||
+           !createBuffer(vElems*sizeof(float),usage,
+                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,newV)) {
+            destroyBuffer(newK);destroyBuffer(newV);return false;
+        }
+
+        if(mlaKCache_ && mlaVCache_ && mlaCacheCapacity_) {
+            VkCommandBuffer cmd{};
+            VkQueryPool query{};
+            if(!beginCommand(cmd,query,true)) {
+                destroyBuffer(newK);destroyBuffer(newV);return false;
+            }
+            for(uint32_t l=0;l<layers;++l){
+                const uint64_t oldKBase=
+                    static_cast<uint64_t>(l)*mlaCacheCapacity_*heads*keyLen;
+                const uint64_t newKBase=
+                    static_cast<uint64_t>(l)*newCap*heads*keyLen;
+                const uint64_t oldVBase=
+                    static_cast<uint64_t>(l)*mlaCacheCapacity_*heads*valueLen;
+                const uint64_t newVBase=
+                    static_cast<uint64_t>(l)*newCap*heads*valueLen;
+                const uint64_t copyK=
+                    static_cast<uint64_t>(mlaCacheCapacity_)*heads*keyLen;
+                const uint64_t copyV=
+                    static_cast<uint64_t>(mlaCacheCapacity_)*heads*valueLen;
+                if(!recordCopy(cmd,mlaKCache_,newK,copyK*sizeof(float),
+                               oldKBase*sizeof(float),newKBase*sizeof(float)) ||
+                   !recordCopy(cmd,mlaVCache_,newV,copyV*sizeof(float),
+                               oldVBase*sizeof(float),newVBase*sizeof(float))) {
+                    destroyBuffer(newK);destroyBuffer(newV);return false;
+                }
+            }
+            if(!endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
+                              0,epoch,nullptr)) {
+                destroyBuffer(newK);destroyBuffer(newV);return false;
+            }
+        }
+
+        destroyBuffer(mlaKCache_);
+        destroyBuffer(mlaVCache_);
+        mlaKCache_=newK;
+        mlaVCache_=newV;
+        mlaCacheHeads_=heads;
+        mlaCacheKeyLen_=keyLen;
+        mlaCacheValueLen_=valueLen;
+        mlaCacheLayers_=layers;
+        mlaCacheCapacity_=newCap;
+        mlaCacheMaxSeq_=maxSeq;
+    } else if (mlaCacheCapacity_ && mlaCacheHeads_==0) {
+        return false;
+    }
+
+    if(mlaCacheHeads_==0){
+        mlaCacheHeads_=heads;
+        mlaCacheKeyLen_=keyLen;
+        mlaCacheValueLen_=valueLen;
+        mlaCacheLayers_=layers;
+        mlaCacheMaxSeq_=maxSeq;
+    }
+
+    const size_t qCount=static_cast<size_t>(heads)*keyLen;
+    const size_t kCount=qCount;
+    const size_t vCount=static_cast<size_t>(heads)*valueLen;
+    const size_t outCount=vCount;
+    if(!EnsureScratch(8,qCount) ||
+       !EnsureScratch(9,kCount) ||
+       !EnsureScratch(10,vCount) ||
+       !EnsureScratch(11,outCount))
+        return false;
+
+    DeviceBuf& qd=Scratch(8);
+    DeviceBuf& kd=Scratch(9);
+    DeviceBuf& vd=Scratch(10);
+    DeviceBuf& od=Scratch(11);
+    SetWorkEpoch(epoch);
+    if(!UploadVector(qd,q,qCount) ||
+       !UploadVector(kd,k,kCount) ||
+       !UploadVector(vd,v,vCount))
+        return false;
+
+    const uint64_t kOff=
+        ((static_cast<uint64_t>(layer)*mlaCacheCapacity_+pos)*heads)*keyLen;
+    const uint64_t vOff=
+        ((static_cast<uint64_t>(layer)*mlaCacheCapacity_+pos)*heads)*valueLen;
+    if(kOff>std::numeric_limits<size_t>::max() ||
+       vOff>std::numeric_limits<size_t>::max())
+        return false;
+
+    if(!CopyVector(kd,mlaKCache_,kCount,0,static_cast<size_t>(kOff)) ||
+       !CopyVector(vd,mlaVCache_,vCount,0,static_cast<size_t>(vOff)))
+        return false;
+
+    OpsPush p{};
+    p.op=OP_MLA_ATTN;
+    p.p0=keyLen;
+    p.p1=valueLen;
+    p.p2=heads;
+    p.p3=pos+1u;
+    p.p4=mlaCacheCapacity_;
+    p.p5=layer;
+    p.f0=scale;
+
+    if(!dispatchOps(qd,mlaKCache_,mlaVCache_,od,p,
+                    (static_cast<uint32_t>(outCount)+63u)/64u,
+                    GpuWorkKind::ModelCompute))
+        return false;
+
+    return DownloadVector(od,output,outCount);
+}
+
 void VulkanCompute::cleanup() {
     if (device_) vkDeviceWaitIdle(device_);
 
     for (auto& e : prefetch_) destroyBuffer(e.buffer);
     prefetch_.clear();
     clearWeightCache();
+
+    for (auto& b : scratch_) destroyBuffer(b);
+    scratch_.clear();
+    destroyBuffer(mlaKCache_);
+    destroyBuffer(mlaVCache_);
+    mlaCacheHeads_=mlaCacheKeyLen_=mlaCacheValueLen_=0;
+    mlaCacheLayers_=mlaCacheCapacity_=mlaCacheMaxSeq_=0;
 
     auto kill=[&](DeviceBuf& b){destroyBuffer(b);};
     kill(arenaHidden_);kill(arenaAttnW_);kill(arenaFfnW_);kill(arenaNormed_);

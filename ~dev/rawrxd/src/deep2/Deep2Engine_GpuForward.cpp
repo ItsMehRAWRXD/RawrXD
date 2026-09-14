@@ -76,11 +76,21 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
-    const uint32_t I = (uint32_t)(modelWeights.layers.empty() ? H * 4
-                          : (modelWeights.layers[0].wGate.rows
-                                 ? modelWeights.layers[0].wGate.rows
-                                 : modelWeights.intermediateDim));
-    const uint32_t inter = I ? I : (uint32_t)modelWeights.intermediateDim;
+    // BATCH10_ARENA_GEOMETRY: account for dense, MoE and MLA projection widths.
+    uint64_t inter64 = std::max<uint64_t>(
+        modelWeights.intermediateDim,
+        modelWeights.moeIntermediateDim);
+    inter64 = std::max<uint64_t>(inter64, modelWeights.qLoraRank);
+    inter64 = std::max<uint64_t>(
+        inter64, modelWeights.kvLoraRank + modelWeights.qkRopeHeadDim);
+    inter64 = std::max<uint64_t>(
+        inter64, modelWeights.numHeads *
+                 (modelWeights.qkNopeHeadDim + modelWeights.qkRopeHeadDim));
+    inter64 = std::max<uint64_t>(
+        inter64, modelWeights.numHeads * modelWeights.vHeadDim);
+    if (inter64 == 0) inter64 = (uint64_t)H * 4u;
+    if (inter64 > UINT32_MAX) return false;
+    const uint32_t inter = (uint32_t)inter64;
     if (!vc->EnsureForwardArena(
         H, inter ? inter : H * 4,
         (uint32_t)modelWeights.numHeads,

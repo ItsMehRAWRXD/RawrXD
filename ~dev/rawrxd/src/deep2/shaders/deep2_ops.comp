@@ -28,6 +28,7 @@ const uint OP_RESIDUAL = 3u;
 const uint OP_SWIGLU   = 4u;
 const uint OP_ROPE     = 5u;
 const uint OP_ATTN     = 6u;
+const uint OP_MLA_ATTN = 7u;
 
 void main() {
     uint gid = gl_GlobalInvocationID.x;
@@ -147,6 +148,52 @@ void main() {
             float e = exp(s - maxScore);
             denom += e;
             numer += e * c[kb + od];
+        }
+        d[gid] = denom > 0.0 ? numer / denom : 0.0;
+        return;
+    }
+
+    if (pc.op == OP_MLA_ATTN) {
+        // a=Q [heads,keyLen]
+        // b=K cache [layer,position,heads,keyLen]
+        // c=V cache [layer,position,heads,valueLen]
+        // d=output [heads,valueLen]
+        uint keyLen = pc.p0;
+        uint valueLen = pc.p1;
+        uint heads = pc.p2;
+        uint seqLen = pc.p3;
+        uint capacity = pc.p4;
+        uint layer = pc.p5;
+        uint total = heads * valueLen;
+        if (gid >= total || keyLen == 0u || valueLen == 0u ||
+            heads == 0u || seqLen == 0u || seqLen > capacity) return;
+
+        uint h = gid / valueLen;
+        uint od = gid % valueLen;
+        uint qb = h * keyLen;
+
+        float maxScore = -3.402823466e+38;
+        for (uint t = 0u; t < seqLen; ++t) {
+            uint kb = ((layer * capacity + t) * heads + h) * keyLen;
+            float score = 0.0;
+            for (uint j = 0u; j < keyLen; ++j)
+                score += a[qb + j] * b[kb + j];
+            score *= pc.f0;
+            maxScore = max(maxScore, score);
+        }
+
+        float denom = 0.0;
+        float numer = 0.0;
+        for (uint t = 0u; t < seqLen; ++t) {
+            uint kb = ((layer * capacity + t) * heads + h) * keyLen;
+            uint vb = ((layer * capacity + t) * heads + h) * valueLen;
+            float score = 0.0;
+            for (uint j = 0u; j < keyLen; ++j)
+                score += a[qb + j] * b[kb + j];
+            score *= pc.f0;
+            float e = exp(score - maxScore);
+            denom += e;
+            numer += e * c[vb + od];
         }
         d[gid] = denom > 0.0 ? numer / denom : 0.0;
         return;

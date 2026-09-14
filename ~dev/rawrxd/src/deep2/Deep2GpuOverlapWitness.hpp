@@ -96,4 +96,41 @@ inline GpuOverlapWitness Deep2Gpu_MeasureOverlap(
     return w;
 }
 
+inline GpuOverlapWitness Deep2Gpu_MeasureArithmeticOverlap(
+    const VulkanCompute& a, const VulkanCompute& b, uint64_t epoch)
+{
+    GpuOverlapWitness w{};
+    w.epoch = epoch;
+    const auto ia = a.RecentIntervals(epoch);
+    const auto ib = b.RecentIntervals(epoch);
+
+    for (const auto& x : ia) {
+        if (x.kind != GpuWorkKind::ModelCompute) continue;
+        w.device0ModelNs += x.calibratedDurationNs();
+        for (const auto& y : ib) {
+            if (y.kind != GpuWorkKind::ModelCompute) continue;
+            w.sameEpoch = true;
+            w.materialModelWork = true;
+            ++w.pairCount;
+
+            w.hostEnvelopeOverlapNs += Deep2IntervalOverlapNs(
+                x.hostSubmitNs,x.hostCompleteNs,
+                y.hostSubmitNs,y.hostCompleteNs);
+
+            if (x.calibrated && y.calibrated) {
+                const uint64_t overlap = Deep2IntervalOverlapNs(
+                    x.gpuStartNs,x.gpuEndNs,
+                    y.gpuStartNs,y.gpuEndNs);
+                w.calibratedOverlapNs += overlap;
+                if (overlap) w.calibrated = true;
+            }
+        }
+    }
+    for (const auto& y : ib)
+        if (y.kind == GpuWorkKind::ModelCompute)
+            w.device1ModelNs += y.calibratedDurationNs();
+
+    return w;
+}
+
 } // namespace Deep2

@@ -34,6 +34,11 @@ struct GpuForwardCounters {
     uint64_t q6kPackedOps = 0;
     uint64_t q2kPackedOps = 0;
     uint64_t cpuF32Expands = 0;
+    uint64_t dualRowSplitOps = 0;
+    uint64_t dualArithmeticOverlapNs = 0;
+    uint64_t hostMergeOps = 0;
+    uint64_t gpuExpertDispatches = 0;
+    uint64_t mlaGpuAttentionOps = 0;
 };
 
 inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
@@ -100,6 +105,16 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.q2kPackedOps);
         fprintf(o, "DEEP2_GPU_CPU_F32_EXPANDS=%llu\n",
                 (unsigned long long)c.cpuF32Expands);
+        fprintf(o, "DEEP2_GPU_DUAL_ROW_SPLIT_OPS=%llu\n",
+                (unsigned long long)c.dualRowSplitOps);
+        fprintf(o, "DEEP2_GPU_DUAL_ARITH_OVERLAP_NS=%llu\n",
+                (unsigned long long)c.dualArithmeticOverlapNs);
+        fprintf(o, "DEEP2_GPU_HOST_MERGE_OPS=%llu\n",
+                (unsigned long long)c.hostMergeOps);
+        fprintf(o, "DEEP2_GPU_EXPERT_DISPATCHES=%llu\n",
+                (unsigned long long)c.gpuExpertDispatches);
+        fprintf(o, "DEEP2_GPU_MLA_ATTN_OPS=%llu\n",
+                (unsigned long long)c.mlaGpuAttentionOps);
     };
     emit(stdout);
     if (f && f != stdout) emit(f);
