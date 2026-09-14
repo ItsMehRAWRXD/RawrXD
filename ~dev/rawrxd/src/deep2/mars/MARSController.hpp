@@ -1,20 +1,15 @@
 #pragma once
-// Stub: MARS dual-GPU VRAM orchestration
+// Stub: MARSController (Deep2 namespace)
 #include <cstdint>
 #include <string>
-namespace MARS {
-struct VRAMLease { uint64_t id = 0; size_t bytes = 0; };
-enum class HotpatchResult { Ok = 0, Fail = 1 };
-enum class DynamicParity { Healthy = 0, Degraded = 1 };
+namespace Deep2 {
+struct VRAMLease { uint64_t id = 0; size_t bytes = 0; int gpu = 0; };
+struct HotpatchResult { bool ok = false; };
+struct DynamicParity { float gpu0Util = 0.0f; float gpu1Util = 0.0f; };
 class MARSController {
 public:
-    bool enable(size_t, size_t) { return true; }
-    void disable() {}
-    VRAMLease* place(uint64_t, const std::string&, size_t, float) { return nullptr; }
-    HotpatchResult redirect(uint64_t, int) { return HotpatchResult::Ok; }
-    void rebalance() {}
-    DynamicParity parity() const { return DynamicParity::Healthy; }
-    bool handleFault(uint64_t) { return true; }
-    bool handleGPUFailure(int) { return true; }
+    bool initialize() { return true; }
+    bool submit(const std::string& /*work*/) { return true; }
+    bool synchronize() { return true; }
 };
-} // namespace MARS
+} // namespace Deep2

@@ -1,7 +1,7 @@
 #pragma once
 // Stub: MoE Router
 #include <vector>
-#include <math>
+#include <cmath>
 #include <cstdint>
 namespace Deep2 {
 struct MoERouter {
