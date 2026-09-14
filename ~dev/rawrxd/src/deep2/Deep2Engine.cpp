@@ -5,22 +5,30 @@
 #include "Tokenizer.hpp"
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <limits>
 #include <new>
+#include <stdexcept>
 
 namespace Deep2 {
 
 // =================== HELPER: RMSNorm ====================
 static void rmsnorm(float* out, const float* in, const float* weight,
                     size_t dim, float eps) {
+    if (!out || !in || dim == 0) return;
     float ss = 0.0f;
     for (size_t i = 0; i < dim; ++i) ss += in[i] * in[i];
     float norm = 1.0f / std::sqrt(ss / dim + eps);
-    for (size_t i = 0; i < dim; ++i) out[i] = in[i] * norm * weight[i];
+    if (weight) {
+        for (size_t i = 0; i < dim; ++i) out[i] = in[i] * norm * weight[i];
+    } else {
+        for (size_t i = 0; i < dim; ++i) out[i] = in[i] * norm;
+    }
 }
 
 // =================== HELPER: SiLU ====================
@@ -28,11 +36,43 @@ static float silu(float x) { return x / (1.0f + std::exp(-x)); }
 
 // =================== HELPER: Softmax ====================
 static void softmax(float* x, size_t n) {
+    if (!x || n == 0) return;
     float maxv = x[0];
     for (size_t i = 1; i < n; ++i) maxv = std::max(maxv, x[i]);
     float sum = 0.0f;
     for (size_t i = 0; i < n; ++i) { x[i] = std::exp(x[i] - maxv); sum += x[i]; }
-    for (size_t i = 0; i < n; ++i) x[i] /= sum;
+    const float inv = sum > 0.0f ? (1.0f / sum) : 0.0f;
+    for (size_t i = 0; i < n; ++i) x[i] *= inv;
+}
+
+static bool finiteVector(const float* x, size_t n) {
+    if (!x) return false;
+    for (size_t i = 0; i < n; ++i) {
+        if (!std::isfinite(x[i])) return false;
+    }
+    return true;
+}
+
+static bool matrixShape(const WeightTensor& wt, size_t& rows, size_t& cols) {
+    rows = wt.rows;
+    cols = wt.cols;
+    if ((rows == 0 || cols == 0) && wt.shape.size() >= 2) {
+        cols = static_cast<size_t>(wt.shape[0]);
+        rows = static_cast<size_t>(wt.shape[1]);
+    }
+    return rows != 0 && cols != 0;
+}
+
+static size_t packedBytesRequired(int type, size_t rows, size_t cols) {
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(type));
+    if (!desc || desc->blockBytes == 0 || desc->blockElements == 0) return 0;
+    const size_t blocksPerRow =
+        (cols + desc->blockElements - 1) / desc->blockElements;
+    if (rows > (std::numeric_limits<size_t>::max() /
+                (blocksPerRow ? blocksPerRow : 1))) {
+        return 0;
+    }
+    return rows * blocksPerRow * desc->blockBytes;
 }
 
 // =================== CONSTRUCTOR / DESTRUCTOR ====================
@@ -61,6 +101,7 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     tokenizer = std::make_unique<BPETokenizer>();
     sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
     deterministicGreedy_ = true;
+    QuantKernelRegistry::Instance().Initialize();
 
     // Initialization means the runtime is ready. Scratch buffers are allocated
     // immediately only when geometry is already known; otherwise loadModel()
@@ -68,6 +109,19 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     initialized = true;
     if (cfg.hiddenDim != 0 && cfg.vocabSize != 0) {
         if (!allocateBuffers()) {
+            initialized = false;
+            return false;
+        }
+    }
+
+    if (cfg.useKVCache && cfg.numLayers != 0 && cfg.maxSeqLen != 0 &&
+        cfg.numHeads != 0) {
+        KVCacheConfig kc{};
+        kc.numLayers = cfg.numLayers;
+        kc.numHeads = cfg.numKVHeads ? cfg.numKVHeads : cfg.numHeads;
+        kc.headDim = cfg.headDim ? cfg.headDim : (cfg.hiddenDim / cfg.numHeads);
+        kc.maxSeqLen = cfg.maxSeqLen;
+        if (kc.headDim == 0 || !kvCache->allocate(kc)) {
             initialized = false;
             return false;
         }
@@ -134,12 +188,10 @@ void Deep2Engine::deallocateBuffers() {
     delete[] layerTemp;       layerTemp = nullptr;
 }
 
-// =================== RESET ====================
+// =================== RESET (REAL KV RESET) ====================
 void Deep2Engine::reset() {
-    // Do not depend on KVCache::clear() while KVCache is still a later batch.
-    // Reconstructing the object gives this core a real zero-length reset now.
-    kvCache = std::make_unique<KVCache>();
     clearCancel();
+    if (kvCache) (void)kvCache->clear(false);
 
     if (hiddenStates && config.hiddenDim)
         std::memset(hiddenStates, 0, config.hiddenDim * sizeof(float));
@@ -152,24 +204,278 @@ void Deep2Engine::reset() {
     gpuFwd_ = {};
 }
 
-// =================== LOAD MODEL ====================
+// =================== LOAD MODEL (REAL GGUF BIND) ====================
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
-    // TODO: real GGUF parse
-    // For now: set minimal metadata so generate() can run with synthetic weights
-    modelWeights.numLayers = 2;
-    modelWeights.numHeads = 4;
-    modelWeights.numKVHeads = 4;
-    modelWeights.headDim = 64;
-    modelWeights.hiddenDim = 256;
-    modelWeights.vocabSize = 128;
-    modelWeights.intermediateDim = 1024;
-    modelWeights.numExperts = 0; // dense for now
-    modelWeights.normEps = 1e-5f;
-    modelWeights.loaded = true;
-    modelState_ = ModelState::Indexed;
+    if (ggufPath.empty()) return false;
 
-    // Until the GGUF loader batch replaces the synthetic metadata above,
-    // keep core geometry internally consistent and allocate using that geometry.
+    // Tear down aliases before replacing the mapping.
+    modelWeights = {};
+    ggufResult = {};
+    modelState_ = ModelState::Closed;
+
+    auto loader = std::make_shared<GGUFLoader>();
+    if (!loader->load(ggufPath)) {
+        std::fprintf(stderr, "[Deep2Engine] GGUF load failed: %s\n",
+                     loader->error().c_str());
+        return false;
+    }
+
+    const std::string arch = loader->getMetaString("general.architecture");
+    if (arch.empty()) {
+        std::fprintf(stderr, "[Deep2Engine] GGUF missing general.architecture\n");
+        return false;
+    }
+
+    auto metaSize = [&](const std::string& suffix, size_t def = 0) -> size_t {
+        const int64_t v = loader->getMetaInt(arch + "." + suffix,
+                                             static_cast<int64_t>(def));
+        return v > 0 ? static_cast<size_t>(v) : def;
+    };
+    auto metaFloat = [&](const std::string& suffix, double def = 0.0) -> double {
+        return loader->getMetaFloat(arch + "." + suffix, def);
+    };
+
+    auto tensor = [&](const char* name) -> const GGUFTensor* {
+        return loader->getTensor(name);
+    };
+
+    auto bindTensor = [&](const std::string& name, WeightTensor& wt) -> bool {
+        const GGUFTensor* t = loader->getTensor(name);
+        if (!t || !t->data || t->sizeBytes == 0) return false;
+
+        wt = {};
+        wt.data = const_cast<uint8_t*>(t->data);
+        wt.type = static_cast<int>(t->type);
+        wt.sizeBytes = t->sizeBytes;
+        wt.name = t->name;
+        wt.shape = t->shape;
+        wt.mapped = true;
+        wt.shardId = t->shardId;
+        wt.fileOffset = t->fileOffset;
+        wt.hasFileBacking = true;
+
+        if (t->shape.size() >= 2) {
+            wt.cols = static_cast<size_t>(t->shape[0]);
+            size_t rows = 1;
+            for (size_t i = 1; i < t->shape.size(); ++i) {
+                const size_t d = static_cast<size_t>(t->shape[i]);
+                if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
+                    return false;
+                rows *= d;
+            }
+            wt.rows = rows;
+        } else if (t->shape.size() == 1) {
+            wt.rows = static_cast<size_t>(t->shape[0]);
+            wt.cols = 1;
+        } else {
+            return false;
+        }
+        return true;
+    };
+
+    auto bindFirst = [&](WeightTensor& wt,
+                         std::initializer_list<const char*> names) -> bool {
+        for (const char* n : names) {
+            if (bindTensor(n, wt)) return true;
+        }
+        return false;
+    };
+
+    // Global tensor topology establishes hard geometry when metadata is absent.
+    if (!bindFirst(modelWeights.tokenEmbed,
+                   {"token_embd.weight", "token_embeddings.weight"})) {
+        std::fprintf(stderr, "[Deep2Engine] GGUF missing token embedding tensor\n");
+        return false;
+    }
+
+    const size_t embedCols = modelWeights.tokenEmbed.cols;
+    const size_t embedRows = modelWeights.tokenEmbed.rows;
+
+    modelWeights.hiddenDim = metaSize("embedding_length", embedCols);
+    modelWeights.vocabSize = embedRows;
+
+    if (modelWeights.hiddenDim == 0 ||
+        modelWeights.hiddenDim != embedCols ||
+        modelWeights.vocabSize == 0) {
+        std::fprintf(stderr, "[Deep2Engine] embedding geometry mismatch\n");
+        return false;
+    }
+
+    modelWeights.numLayers = metaSize("block_count", 0);
+    if (modelWeights.numLayers == 0) {
+        size_t maxLayer = 0;
+        bool sawLayer = false;
+        for (const std::string& name : loader->listTensors()) {
+            if (name.rfind("blk.", 0) != 0) continue;
+            size_t p = 4;
+            size_t value = 0;
+            bool any = false;
+            while (p < name.size() && name[p] >= '0' && name[p] <= '9') {
+                any = true;
+                value = value * 10 + static_cast<size_t>(name[p] - '0');
+                ++p;
+            }
+            if (any && p < name.size() && name[p] == '.') {
+                maxLayer = std::max(maxLayer, value);
+                sawLayer = true;
+            }
+        }
+        if (sawLayer) modelWeights.numLayers = maxLayer + 1;
+    }
+
+    modelWeights.numHeads = metaSize("attention.head_count", 0);
+    modelWeights.numKVHeads =
+        metaSize("attention.head_count_kv", modelWeights.numHeads);
+
+    if (modelWeights.numLayers == 0 || modelWeights.numHeads == 0 ||
+        modelWeights.numKVHeads == 0 ||
+        (modelWeights.hiddenDim % modelWeights.numHeads) != 0 ||
+        (modelWeights.numHeads % modelWeights.numKVHeads) != 0) {
+        std::fprintf(stderr, "[Deep2Engine] invalid transformer head/layer geometry\n");
+        return false;
+    }
+
+    modelWeights.headDim =
+        modelWeights.hiddenDim / modelWeights.numHeads;
+
+    modelWeights.intermediateDim =
+        metaSize("feed_forward_length", 0);
+    modelWeights.moeIntermediateDim =
+        metaSize("expert_feed_forward_length", 0);
+    modelWeights.numExperts =
+        metaSize("expert_count", 0);
+    modelWeights.numExpertsPerToken =
+        metaSize("expert_used_count", 0);
+    modelWeights.isMoE = modelWeights.numExperts > 0;
+
+    modelWeights.ropeDimensionCount =
+        metaSize("rope.dimension_count", modelWeights.headDim);
+    modelWeights.ropeTheta =
+        static_cast<float>(metaFloat("rope.freq_base", 0.0));
+    modelWeights.ropeScaling =
+        static_cast<float>(metaFloat("rope.scaling.factor", 1.0));
+
+    modelWeights.normEps = static_cast<float>(
+        metaFloat("attention.layer_norm_rms_epsilon",
+                  metaFloat("attention.layer_norm_epsilon", 0.0)));
+
+    if (!(modelWeights.normEps > 0.0f)) {
+        std::fprintf(stderr, "[Deep2Engine] GGUF missing layer-norm epsilon\n");
+        return false;
+    }
+
+    const size_t modelContext = metaSize("context_length", 0);
+    if (modelContext > 0) config.maxSeqLen = modelContext;
+
+    // Global output tensors.
+    bindFirst(modelWeights.finalNorm,
+              {"output_norm.weight", "model.norm.weight", "norm.weight"});
+
+    if (!bindFirst(modelWeights.lmHead,
+                   {"output.weight", "lm_head.weight"})) {
+        modelWeights.lmHead = modelWeights.tokenEmbed;
+        modelWeights.tieEmbeddings = true;
+    }
+
+    if (!modelWeights.finalNorm.data ||
+        !modelWeights.lmHead.data ||
+        modelWeights.lmHead.rows != modelWeights.vocabSize ||
+        modelWeights.lmHead.cols != modelWeights.hiddenDim) {
+        std::fprintf(stderr, "[Deep2Engine] final norm / LM-head topology invalid\n");
+        return false;
+    }
+
+    modelWeights.layers.assign(modelWeights.numLayers, LayerWeights{});
+
+    for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+        LayerWeights& lw = modelWeights.layers[layer];
+        const std::string p = "blk." + std::to_string(layer) + ".";
+
+        bindTensor(p + "attn_qkv.weight", lw.wqkv);
+        bindTensor(p + "attn_q.weight", lw.wq);
+        bindTensor(p + "attn_k.weight", lw.wk);
+        bindTensor(p + "attn_v.weight", lw.wv);
+        bindTensor(p + "attn_output.weight", lw.wo);
+        bindTensor(p + "attn_norm.weight", lw.attnNorm);
+        bindTensor(p + "attn_q_norm.weight", lw.attnQNorm);
+        bindTensor(p + "attn_k_norm.weight", lw.attnKNorm);
+
+        bindTensor(p + "ffn_gate.weight", lw.wGate);
+        bindTensor(p + "ffn_up.weight", lw.wUp);
+        bindTensor(p + "ffn_down.weight", lw.wDown);
+        bindTensor(p + "ffn_norm.weight", lw.ffnNorm);
+
+        // MoE routing descriptor is bound now; expert tensors are a later pair.
+        bindFirst(lw.moeRouter,
+                  {(p + "ffn_gate_inp.weight").c_str(),
+                   (p + "moe.router.weight").c_str()});
+
+        if (!lw.attnNorm.data || !lw.ffnNorm.data) {
+            std::fprintf(stderr,
+                "[Deep2Engine] layer %zu missing transformer norm tensors\n",
+                layer);
+            return false;
+        }
+
+        const bool splitQkv =
+            lw.wq.data && lw.wk.data && lw.wv.data;
+        const bool fusedQkv = lw.wqkv.data != nullptr;
+        if (!splitQkv && !fusedQkv) {
+            std::fprintf(stderr,
+                "[Deep2Engine] layer %zu missing Q/K/V topology\n", layer);
+            return false;
+        }
+
+        if (!modelWeights.isMoE) {
+            if (!lw.wUp.data || !lw.wDown.data) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu missing dense FFN tensors\n",
+                    layer);
+                return false;
+            }
+
+            if (modelWeights.intermediateDim == 0)
+                modelWeights.intermediateDim = lw.wUp.rows;
+
+            if (lw.wUp.rows != modelWeights.intermediateDim ||
+                lw.wUp.cols != modelWeights.hiddenDim ||
+                lw.wDown.rows != modelWeights.hiddenDim ||
+                lw.wDown.cols != modelWeights.intermediateDim) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu FFN geometry mismatch\n",
+                    layer);
+                return false;
+            }
+        }
+
+        if (splitQkv) {
+            const size_t kvDim =
+                modelWeights.numKVHeads * modelWeights.headDim;
+            if (lw.wq.rows != modelWeights.hiddenDim ||
+                lw.wq.cols != modelWeights.hiddenDim ||
+                lw.wk.rows != kvDim ||
+                lw.wk.cols != modelWeights.hiddenDim ||
+                lw.wv.rows != kvDim ||
+                lw.wv.cols != modelWeights.hiddenDim) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu attention projection geometry mismatch\n",
+                    layer);
+                return false;
+            }
+        }
+    }
+
+    if (!modelWeights.isMoE && modelWeights.intermediateDim == 0) {
+        std::fprintf(stderr, "[Deep2Engine] missing feed-forward geometry\n");
+        return false;
+    }
+
+    // Persist mapped-file ownership before any WeightTensor aliases are used.
+    ggufResult.ok = true;
+    ggufResult.mmapBound = 1;
+    ggufResult.shardCount = loader->shardCount();
+    ggufResult.loader = loader;
+
     config.numLayers = modelWeights.numLayers;
     config.numHeads = modelWeights.numHeads;
     config.numKVHeads = modelWeights.numKVHeads;
@@ -177,28 +483,64 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     config.hiddenDim = modelWeights.hiddenDim;
     config.vocabSize = modelWeights.vocabSize;
     config.intermediateDim = modelWeights.intermediateDim;
+    config.useRoPE = modelWeights.ropeDimensionCount > 0;
+    config.ropeTheta = modelWeights.ropeTheta;
+    config.ropeScaling =
+        modelWeights.ropeScaling > 0.0f ? modelWeights.ropeScaling : 1.0f;
     config.normEps = modelWeights.normEps;
+    std::snprintf(config.modelPath, sizeof(config.modelPath), "%s",
+                  ggufPath.c_str());
 
+    modelWeights.loaded = true;
+
+    // Runtime may be entered through loadModel-only clients.
     if (!initialized) {
         EngineConfig recovered = config;
-        if (!initialize(recovered)) return false;
-    }
-    if (!allocateBuffers()) {
+        if (!initialize(recovered)) {
+            modelWeights.loaded = false;
+            ggufResult = {};
+            return false;
+        }
+    } else if (!allocateBuffers()) {
         modelWeights.loaded = false;
-        modelState_ = ModelState::Closed;
+        ggufResult = {};
         return false;
     }
 
-    // Try load tokenizer
-    if (tokenizer) {
-        auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get());
-        if (bpe) {
-            // Try to find vocab file alongside GGUF
-            std::string vocabPath = ggufPath + ".vocab";
-            bpe->loadFromFile(vocabPath);
+    if (config.useKVCache) {
+        if (!kvCache) kvCache = std::make_unique<KVCache>();
+        KVCacheConfig kc{};
+        kc.numLayers = modelWeights.numLayers;
+        kc.numHeads = modelWeights.numKVHeads;
+        kc.headDim = modelWeights.headDim;
+        kc.maxSeqLen = config.maxSeqLen;
+        if (!kvCache->allocate(kc)) {
+            std::fprintf(stderr, "[Deep2Engine] KV cache allocation failed\n");
+            modelWeights.loaded = false;
+            ggufResult = {};
+            return false;
         }
     }
+
+    // Tokenizer integration remains a separate subsystem. Keep the existing
+    // sidecar bridge if present; GGUF tokenizer arrays are now available lazily
+    // through GGUFLoader::getMetaStringArray().
+    if (tokenizer) {
+        if (auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get())) {
+            bpe->loadFromFile(ggufPath + ".vocab");
+        }
+    }
+
     modelState_ = ModelState::Choreographable;
+
+    std::fprintf(stdout,
+        "[Deep2Engine] GGUF mapped: arch=%s shards=%u tensors=%zu "
+        "layers=%zu hidden=%zu heads=%zu kv_heads=%zu vocab=%zu\n",
+        arch.c_str(), loader->shardCount(), loader->tensorCount(),
+        modelWeights.numLayers, modelWeights.hiddenDim,
+        modelWeights.numHeads, modelWeights.numKVHeads,
+        modelWeights.vocabSize);
+
     return true;
 }
 
@@ -295,44 +637,350 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options) {
 
 bool Deep2Engine::isDeterministicGreedy() const { return deterministicGreedy_; }
 
-// =================== FORWARD LAYER (real) ====================
+// =================== QUANT-AWARE LINEAR ====================
+void Deep2Engine::LinearW(const WeightTensor& wt,
+                          const float* input,
+                          const float* bias,
+                          float* output,
+                          size_t outDim) {
+    if (!wt.data || !input || !output || outDim == 0) {
+        throw std::runtime_error("LinearW: null tensor/input/output");
+    }
+
+    size_t rows = 0, cols = 0;
+    if (!matrixShape(wt, rows, cols) || rows != outDim) {
+        throw std::runtime_error("LinearW: invalid matrix geometry");
+    }
+
+    const size_t required = packedBytesRequired(wt.type, rows, cols);
+    if (required == 0) {
+        throw std::runtime_error("LinearW: unsupported quant type");
+    }
+    if (wt.sizeBytes != 0 && required > wt.sizeBytes) {
+        throw std::runtime_error("LinearW: tensor backing smaller than geometry");
+    }
+
+    auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
+    if (!kernel) {
+        throw std::runtime_error("LinearW: no registered GEMV kernel");
+    }
+
+    std::memset(output, 0, outDim * sizeof(float));
+    kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
+
+    if (bias) {
+        for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+    }
+
+    if (!finiteVector(output, outDim)) {
+        throw std::runtime_error("LinearW: non-finite output");
+    }
+}
+
+// =================== WEIGHTED RMSNORM ====================
+void Deep2Engine::RMSNormW(const WeightTensor& normWeight,
+                           const float* input,
+                           float* output,
+                           size_t dim,
+                           float eps) {
+    if (!input || !output || dim == 0 || !(eps > 0.0f)) {
+        throw std::runtime_error("RMSNormW: invalid arguments");
+    }
+
+    double ss = 0.0;
+    for (size_t i = 0; i < dim; ++i) {
+        const double v = static_cast<double>(input[i]);
+        ss += v * v;
+    }
+    const float invRms =
+        1.0f / std::sqrt(static_cast<float>(ss / static_cast<double>(dim)) + eps);
+
+    if (!normWeight.data) {
+        for (size_t i = 0; i < dim; ++i) output[i] = input[i] * invRms;
+    } else {
+        const auto* desc = LookupQuantType(static_cast<uint32_t>(normWeight.type));
+        if (!desc || desc->blockBytes == 0 || desc->blockElements == 0) {
+            throw std::runtime_error("RMSNormW: unsupported weight type");
+        }
+        const size_t required =
+            ((dim + desc->blockElements - 1) / desc->blockElements) *
+            desc->blockBytes;
+        if (normWeight.sizeBytes != 0 && required > normWeight.sizeBytes) {
+            throw std::runtime_error("RMSNormW: norm tensor too small");
+        }
+
+        std::vector<float> w(dim);
+        auto dequant = QuantKernelRegistry::Instance().GetDequant(normWeight.type);
+        if (!dequant) {
+            throw std::runtime_error("RMSNormW: no dequant kernel");
+        }
+        dequant(static_cast<const uint8_t*>(normWeight.data), w.data(), dim);
+        if (!finiteVector(w.data(), dim)) {
+            throw std::runtime_error("RMSNormW: non-finite norm weights");
+        }
+        for (size_t i = 0; i < dim; ++i) {
+            output[i] = input[i] * invRms * w[i];
+        }
+    }
+
+    if (!finiteVector(output, dim)) {
+        throw std::runtime_error("RMSNormW: non-finite output");
+    }
+}
+
+// =================== ROPE ====================
+void Deep2Engine::applyRoPE(float* q, float* k,
+                            size_t headDim,
+                            size_t numHeads,
+                            size_t numKVHeads,
+                            size_t pos,
+                            float theta,
+                            float scaling) {
+    if (!q || !k || headDim == 0 || numHeads == 0 || numKVHeads == 0) {
+        throw std::runtime_error("RoPE: invalid geometry");
+    }
+    if (!(theta > 1.0f)) {
+        throw std::runtime_error("RoPE: theta not bound from model metadata");
+    }
+    if (!(scaling > 0.0f)) scaling = 1.0f;
+
+    size_t rotaryDim = modelWeights.ropeDimensionCount
+        ? std::min(modelWeights.ropeDimensionCount, headDim)
+        : headDim;
+    rotaryDim &= ~size_t(1);
+    if (rotaryDim == 0) {
+        throw std::runtime_error("RoPE: zero rotary dimension");
+    }
+
+    const float effectivePos = static_cast<float>(pos) / scaling;
+    auto rotateHead = [&](float* h) {
+        for (size_t i = 0; i < rotaryDim; i += 2) {
+            const float invFreq =
+                1.0f / std::pow(theta,
+                    static_cast<float>(i) / static_cast<float>(rotaryDim));
+            const float angle = effectivePos * invFreq;
+            const float c = std::cos(angle);
+            const float s = std::sin(angle);
+            const float x0 = h[i];
+            const float x1 = h[i + 1];
+            h[i]     = x0 * c - x1 * s;
+            h[i + 1] = x0 * s + x1 * c;
+        }
+    };
+
+    for (size_t h = 0; h < numHeads; ++h) {
+        rotateHead(q + h * headDim);
+    }
+    for (size_t h = 0; h < numKVHeads; ++h) {
+        rotateHead(k + h * headDim);
+    }
+}
+
+// =================== FORWARD LAYER ====================
 void Deep2Engine::forwardLayer(size_t layer, const float* input,
                                float* output, size_t seqLen) {
-    // 1. RMSNorm
-    rmsnorm(layerTemp, input, nullptr, config.hiddenDim, modelWeights.normEps);
-    // 2. Attention
+    if (!input || !output || config.hiddenDim == 0) {
+        throw std::runtime_error("forwardLayer: invalid buffers/geometry");
+    }
+    if (layer >= modelWeights.layers.size()) {
+        throw std::runtime_error("forwardLayer: layer weights not bound");
+    }
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    const size_t H = config.hiddenDim;
+
+    if (!lw.attnNorm.data) {
+        throw std::runtime_error("forwardLayer: missing attention norm");
+    }
+    RMSNormW(lw.attnNorm, input, layerTemp, H, modelWeights.normEps);
+
     computeAttention(layer, layerTemp, attentionOutput, seqLen);
-    // 3. Residual
-    for (size_t i = 0; i < config.hiddenDim; ++i) output[i] = input[i] + attentionOutput[i];
-    // 4. RMSNorm (FFN)
-    rmsnorm(layerTemp, output, nullptr, config.hiddenDim, modelWeights.normEps);
-    // 5. FFN or MoE
+
+    for (size_t i = 0; i < H; ++i) {
+        output[i] = input[i] + attentionOutput[i];
+    }
+
+    if (!lw.ffnNorm.data) {
+        throw std::runtime_error("forwardLayer: missing FFN norm");
+    }
+    RMSNormW(lw.ffnNorm, output, layerTemp, H, modelWeights.normEps);
+
+    // FFN/MoE body remains Batch 5; orchestration is real now.
     if (modelWeights.numExperts > 0) {
         computeMoEFFN(layer, layerTemp, ffnOutput);
     } else {
         computeFFN(layer, layerTemp, ffnOutput);
     }
-    // 6. Residual
-    for (size_t i = 0; i < config.hiddenDim; ++i) output[i] = output[i] + ffnOutput[i];
+
+    if (!finiteVector(ffnOutput, H)) {
+        throw std::runtime_error("forwardLayer: non-finite FFN output");
+    }
+
+    for (size_t i = 0; i < H; ++i) output[i] += ffnOutput[i];
+
+    if (!finiteVector(output, H)) {
+        throw std::runtime_error("forwardLayer: non-finite layer output");
+    }
 }
 
-// =================== ATTENTION (synthetic real) ====================
+// =================== ATTENTION (REAL MHA/GQA) ====================
 void Deep2Engine::computeAttention(size_t layer, const float* input,
                                    float* output, size_t seqLen) {
-    (void)layer;
-    size_t H = config.hiddenDim;
-    size_t nH = modelWeights.numHeads;
-    size_t hD = modelWeights.headDim;
-    // Synthetic: identity-like attention with RoPE-ish phase
-    for (size_t h = 0; h < nH; ++h) {
-        for (size_t d = 0; d < hD; ++d) {
-            size_t idx = h * hD + d;
-            float q = input[idx % H];
-            float k = q * 0.5f; // simplified
-            float v = input[idx % H];
-            float score = q * k / std::sqrt((float)hD);
-            output[idx % H] += score * v;
+    if (!input || !output || seqLen == 0) {
+        throw std::runtime_error("attention: invalid buffers/sequence");
+    }
+    if (layer >= modelWeights.layers.size()) {
+        throw std::runtime_error("attention: layer weights not bound");
+    }
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    if (lw.useMLA || modelWeights.useMLA) {
+        throw std::runtime_error(
+            "attention: MLA/K2 path is not certified in this subsystem");
+    }
+
+    const size_t H = modelWeights.hiddenDim
+        ? modelWeights.hiddenDim
+        : config.hiddenDim;
+    const size_t numHeads = modelWeights.numHeads;
+    const size_t numKVHeads = modelWeights.numKVHeads
+        ? modelWeights.numKVHeads
+        : numHeads;
+    const size_t headDim = modelWeights.headDim
+        ? modelWeights.headDim
+        : (numHeads ? H / numHeads : 0);
+
+    if (H == 0 || numHeads == 0 || numKVHeads == 0 || headDim == 0 ||
+        numHeads * headDim != H || numHeads % numKVHeads != 0) {
+        throw std::runtime_error("attention: invalid MHA/GQA geometry");
+    }
+
+    const size_t kvDim = numKVHeads * headDim;
+    const size_t groupSize = numHeads / numKVHeads;
+
+    std::memset(output, 0, H * sizeof(float));
+    std::memset(qProj, 0, H * sizeof(float));
+    std::memset(kProj, 0, kvDim * sizeof(float));
+    std::memset(vProj, 0, kvDim * sizeof(float));
+
+    if (lw.wq.data) {
+        if (!lw.wk.data || !lw.wv.data) {
+            throw std::runtime_error("attention: incomplete Q/K/V tensor set");
         }
+        LinearW(lw.wq, input, nullptr, qProj, H);
+        LinearW(lw.wk, input, nullptr, kProj, kvDim);
+        LinearW(lw.wv, input, nullptr, vProj, kvDim);
+    } else if (lw.wqkv.data) {
+        const size_t fusedDim = H + 2 * kvDim;
+        std::vector<float> fused(fusedDim);
+        LinearW(lw.wqkv, input, nullptr, fused.data(), fusedDim);
+        std::memcpy(qProj, fused.data(), H * sizeof(float));
+        std::memcpy(kProj, fused.data() + H, kvDim * sizeof(float));
+        std::memcpy(vProj, fused.data() + H + kvDim, kvDim * sizeof(float));
+    } else {
+        throw std::runtime_error("attention: no Q or fused-QKV weight");
+    }
+
+    if (lw.attnQNorm.data) {
+        for (size_t h = 0; h < numHeads; ++h) {
+            RMSNormW(lw.attnQNorm,
+                     qProj + h * headDim,
+                     qProj + h * headDim,
+                     headDim,
+                     modelWeights.normEps);
+        }
+    }
+    if (lw.attnKNorm.data) {
+        for (size_t h = 0; h < numKVHeads; ++h) {
+            RMSNormW(lw.attnKNorm,
+                     kProj + h * headDim,
+                     kProj + h * headDim,
+                     headDim,
+                     modelWeights.normEps);
+        }
+    }
+
+    if (!config.useKVCache || !kvCache) {
+        throw std::runtime_error(
+            "attention: causal generation requires an allocated KV cache");
+    }
+
+    const size_t pos = kvCache->currentLength();
+    if (config.maxSeqLen != 0 && pos >= config.maxSeqLen) {
+        throw std::runtime_error("attention: KV position exceeds context");
+    }
+    if (seqLen != pos + 1) {
+        throw std::runtime_error("attention: sequence/KV position mismatch");
+    }
+
+    if (config.useRoPE) {
+        const float theta = modelWeights.ropeTheta > 1.0f
+            ? modelWeights.ropeTheta
+            : config.ropeTheta;
+        const float scaling = modelWeights.ropeScaling > 0.0f
+            ? modelWeights.ropeScaling
+            : config.ropeScaling;
+        applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads,
+                  pos, theta, scaling);
+    }
+
+    for (size_t h = 0; h < numKVHeads; ++h) {
+        float* kd = kvCache->keyPtr(layer, h, pos);
+        float* vd = kvCache->valuePtr(layer, h, pos);
+        if (!kd || !vd) {
+            throw std::runtime_error("attention: invalid KV destination");
+        }
+        std::memcpy(kd, kProj + h * headDim, headDim * sizeof(float));
+        std::memcpy(vd, vProj + h * headDim, headDim * sizeof(float));
+    }
+
+    const size_t attend = pos + 1;
+    const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+    std::vector<float> scores(attend);
+
+    for (size_t h = 0; h < numHeads; ++h) {
+        const size_t kvHead = h / groupSize;
+        const float* q = qProj + h * headDim;
+        float* headOut = output + h * headDim;
+
+        for (size_t t = 0; t < attend; ++t) {
+            const float* k = kvCache->keyPtr(layer, kvHead, t);
+            if (!k) throw std::runtime_error("attention: invalid K cache read");
+            double dot = 0.0;
+            for (size_t d = 0; d < headDim; ++d) {
+                dot += static_cast<double>(q[d]) *
+                       static_cast<double>(k[d]);
+            }
+            scores[t] = static_cast<float>(dot) * scale;
+        }
+
+        softmax(scores.data(), scores.size());
+
+        std::memset(headOut, 0, headDim * sizeof(float));
+        for (size_t t = 0; t < attend; ++t) {
+            const float* v = kvCache->valuePtr(layer, kvHead, t);
+            if (!v) throw std::runtime_error("attention: invalid V cache read");
+            const float a = scores[t];
+            for (size_t d = 0; d < headDim; ++d) {
+                headOut[d] += a * v[d];
+            }
+        }
+    }
+
+    if (!finiteVector(output, H)) {
+        throw std::runtime_error("attention: non-finite softmax/value output");
+    }
+
+    const WeightTensor* outWeight =
+        lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
+    if (outWeight) {
+        std::vector<float> projected(H);
+        LinearW(*outWeight, output, nullptr, projected.data(), H);
+        std::memcpy(output, projected.data(), H * sizeof(float));
+    }
+
+    if (!finiteVector(output, H)) {
+        throw std::runtime_error("attention: non-finite projected output");
     }
 }
 
@@ -385,12 +1033,21 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 
 // =================== FORWARD ALL LAYERS ====================
 bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
-    if (!modelWeights.loaded) return false;
-    for (size_t l = 0; l < modelWeights.numLayers; ++l) {
-        forwardLayer(l, hidden, layerTemp, seqLen);
-        std::memcpy(hidden, layerTemp, config.hiddenDim * sizeof(float));
-        gpuFwd_.forwardLayers++;
+    if (!modelWeights.loaded || !hidden || seqLen == 0) return false;
+    if (modelWeights.layers.size() < modelWeights.numLayers) return false;
+
+    try {
+        for (size_t l = 0; l < modelWeights.numLayers; ++l) {
+            forwardLayer(l, hidden, layerTemp, seqLen);
+            std::memcpy(hidden, layerTemp, config.hiddenDim * sizeof(float));
+            gpuFwd_.forwardLayers++;
+        }
+    } catch (const std::exception& ex) {
+        std::fprintf(stderr, "[Deep2Engine] forward failed: %s\n", ex.what());
+        gpuFwdCommitted_ = false;
+        return false;
     }
+
     gpuFwdCommitted_ = true;
     return true;
 }
@@ -577,12 +1234,77 @@ bool Deep2Engine::gpuResidentDecodeEnabled() const { return false; }
 
 // =================== FIND / LOAD TENSOR ====================
 WeightTensor* Deep2Engine::findTensor(const std::string& namePattern) {
-    (void)namePattern;
+    auto match = [&](WeightTensor& wt) -> WeightTensor* {
+        if (!wt.name.empty() &&
+            (wt.name == namePattern ||
+             wt.name.find(namePattern) != std::string::npos))
+            return &wt;
+        return nullptr;
+    };
+
+    if (auto* p = match(modelWeights.tokenEmbed)) return p;
+    if (auto* p = match(modelWeights.lmHead)) return p;
+    if (auto* p = match(modelWeights.finalNorm)) return p;
+
+    for (LayerWeights& lw : modelWeights.layers) {
+        WeightTensor* fields[] = {
+            &lw.wq, &lw.wk, &lw.wv, &lw.wo, &lw.wqkv,
+            &lw.attnNorm, &lw.attnQNorm, &lw.attnKNorm,
+            &lw.wGate, &lw.wUp, &lw.wDown, &lw.ffnNorm,
+            &lw.moeRouter, &lw.moeSharedGate,
+            &lw.moeSharedUp, &lw.moeSharedDown,
+            &lw.ssmA, &lw.ssmAlpha, &lw.ssmBeta,
+            &lw.ssmIn, &lw.ssmD, &lw.ssmConv1d,
+            &lw.ssmConv1dBias, &lw.ssmDtBias,
+            &lw.ssmNorm, &lw.ssmOut
+        };
+        for (WeightTensor* wt : fields)
+            if (auto* p = match(*wt)) return p;
+
+        for (WeightTensor& wt : lw.moeGate)
+            if (auto* p = match(wt)) return p;
+        for (WeightTensor& wt : lw.moeUp)
+            if (auto* p = match(wt)) return p;
+        for (WeightTensor& wt : lw.moeDown)
+            if (auto* p = match(wt)) return p;
+    }
     return nullptr;
 }
-bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name) {
-    (void)wt; (void)name;
-    return false;
+
+bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt,
+                                     const std::string& name) {
+    if (!ggufResult.ok || !ggufResult.loader) return false;
+    const GGUFTensor* t = ggufResult.loader->getTensor(name);
+    if (!t || !t->data || t->sizeBytes == 0 || t->shape.empty())
+        return false;
+
+    wt = {};
+    wt.data = const_cast<uint8_t*>(t->data);
+    wt.type = static_cast<int>(t->type);
+    wt.sizeBytes = t->sizeBytes;
+    wt.name = t->name;
+    wt.shape = t->shape;
+    wt.mapped = true;
+    wt.shardId = t->shardId;
+    wt.fileOffset = t->fileOffset;
+    wt.hasFileBacking = true;
+
+    if (t->shape.size() == 1) {
+        wt.rows = static_cast<size_t>(t->shape[0]);
+        wt.cols = 1;
+        return true;
+    }
+
+    wt.cols = static_cast<size_t>(t->shape[0]);
+    size_t rows = 1;
+    for (size_t i = 1; i < t->shape.size(); ++i) {
+        const size_t d = static_cast<size_t>(t->shape[i]);
+        if (d != 0 && rows > std::numeric_limits<size_t>::max() / d)
+            return false;
+        rows *= d;
+    }
+    wt.rows = rows;
+    return true;
 }
 
 // =================== MARS (stubs) ====================
@@ -614,16 +1336,22 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
 
 // =================== KV CACHE ADVANCE ====================
 bool Deep2Engine::advancePersistentKv() {
-    if (kvCache) kvCache->advance();
-    return true;
+    return kvCache && kvCache->advance();
 }
+
 size_t Deep2Engine::persistentKvLength() const {
     return kvCache ? kvCache->currentLength() : 0;
 }
 
-// =================== GROW CONTEXT (stub) ====================
+// =================== GROW CONTEXT ====================
 bool Deep2Engine::growContext(size_t newMaxSeqLen) {
-    (void)newMaxSeqLen;
+    if (!initialized || !kvCache || newMaxSeqLen == 0)
+        return false;
+    if (newMaxSeqLen <= config.maxSeqLen)
+        return true;
+    if (!kvCache->grow(newMaxSeqLen))
+        return false;
+    config.maxSeqLen = newMaxSeqLen;
     return true;
 }
 
