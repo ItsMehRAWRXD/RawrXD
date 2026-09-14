@@ -1,6 +1,9 @@
-<<<<<<< HEAD
 # Build artifacts
 build/
+build-*/
+build_prod/
+out/
+tmp/
 *.obj
 *.o
 *.lib
@@ -34,30 +37,19 @@ moc_*.cpp.d
 # IDE
 .vscode/
 .idea/
+.clangd
 
 # OS
 .DS_Store
 Thumbs.db
-=======
-build/
-build-*/
-out/
-tmp/
-models/
-models-mnt
 
 compile_commands.json
 CMakeSettings.json
-.vs/
-.vscode/
-.idea/
-.clangd
 
 .venv/
 ggml_env/
 .exrc
 .cache
-.DS_Store
 .stablelm
 .gpt-2
 
@@ -67,7 +59,6 @@ tests/arm_neon.h
 zig-out/
 zig-cache/
 
-*.o
 *.d
 *.dot
 
@@ -76,9 +67,9 @@ zig-cache/
 __pycache__/
 
 # Model files
+models/
+models-mnt
 ggml-model-f16.bin
 *.bat
->>>>>>> upstream/master
-build_prod/
 
 *.gguf
