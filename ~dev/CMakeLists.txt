@@ -362,3 +362,18 @@ target_include_directories(batch61_65_showcase_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 66-70 live contract self-test (host-only, no Vulkan).
+add_executable(batch66_70_livecontract_selftest
+    tests/batch66_70_selftest.cpp
+    rawrxd/src/deep2/Deep2B66RuntimeMeta.cpp
+    rawrxd/src/deep2/Deep2B67LiveTelemetry.cpp
+    rawrxd/src/deep2/Deep2B68TargetCalibrator.cpp
+    rawrxd/src/deep2/Deep2B69ContractRunner.cpp
+    rawrxd/src/deep2/Deep2B70Receipt.cpp
+)
+target_include_directories(batch66_70_livecontract_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
