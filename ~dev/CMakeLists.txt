@@ -392,3 +392,23 @@ target_include_directories(batch71_75_authority_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 76-80 independent real-model E2E audit self-test (host-only, no Vulkan).
+add_executable(batch76_80_e2e_selftest
+    tests/batch76_80_e2e_selftest.cpp
+)
+target_include_directories(batch76_80_e2e_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
+
+# Batch 76-80 independent E2E audit tool (host-only, no Vulkan).
+add_executable(deep2_e2e_audit
+    rawrxd/src/deep2/deep2_e2e_audit.cpp
+)
+target_include_directories(deep2_e2e_audit PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
