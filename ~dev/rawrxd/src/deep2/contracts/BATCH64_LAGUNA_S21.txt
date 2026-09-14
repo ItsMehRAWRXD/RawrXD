@@ -1,0 +1,15 @@
+BATCH 64 — LAGUNA S 2.1 118B-A8B CONTRACT
+
+Reference architecture envelope:
+  118B total / ~8B active
+  48 layers
+  256 routed experts top-10 + 1 shared
+  8 KV heads, head dim 128
+  12 global + 36 sliding-window attention layers
+  sliding window 512
+  context 1048576
+
+Initial short-context contract:
+  p10 raw TPS >= 15
+  median raw TPS >= 18
+  target must have >=3% physical roofline headroom

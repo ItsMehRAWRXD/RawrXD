@@ -346,3 +346,19 @@ target_include_directories(batch56_60_roofline_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 61-65 showcase fleet self-test (host-only, no Vulkan).
+add_executable(batch61_65_showcase_selftest
+    tests/batch61_65_selftest.cpp
+    rawrxd/src/deep2/Deep2B61QwenNext.cpp
+    rawrxd/src/deep2/Deep2B62Nemotron.cpp
+    rawrxd/src/deep2/Deep2B63GptOss.cpp
+    rawrxd/src/deep2/Deep2B64Laguna.cpp
+    rawrxd/src/deep2/Deep2B65DeepSeekFlash.cpp
+    rawrxd/src/deep2/Deep2FleetContract.cpp
+)
+target_include_directories(batch61_65_showcase_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)

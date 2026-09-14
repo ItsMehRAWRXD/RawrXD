@@ -1,0 +1,18 @@
+BATCH 61 — QWEN3-NEXT 80B-A3B CONTRACT
+
+Reference architecture envelope:
+  80B total / 3B active
+  48 layers
+  hidden 2048
+  512 experts / top-10 + 1 shared
+  16 Q heads / 2 KV heads
+  head dim 256
+  hybrid linear-attention + attention
+  native context 262144
+
+Initial short-context contract:
+  p10 raw TPS >= 40
+  median raw TPS >= 45
+  target must have >=3% physical roofline headroom
+
+This is a certification target, not a pre-measured claim.
