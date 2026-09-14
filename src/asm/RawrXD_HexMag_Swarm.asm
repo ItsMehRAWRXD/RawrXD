@@ -209,6 +209,10 @@ g_ActImpl       DB  'implement', 0
 g_ActWrite      DB  'write', 0
 g_ActBuild      DB  'build', 0
 g_ActFix        DB  'fix', 0
+g_ActRepair     DB  'repair', 0
+g_ActMake       DB  'make', 0
+g_ActOpen       DB  'open', 0
+g_ActRun        DB  'run', 0
 g_ActPrint      DB  'print', 0
 g_ActHello      DB  'hello', 0
 g_ActMasm       DB  'masm', 0
@@ -216,6 +220,34 @@ g_ActVerify     DB  'verify', 0
 g_ActRefactor   DB  'refactor', 0
 g_ActProgram    DB  'program', 0
 g_ActCode       DB  'code', 0
+
+; Objectless-imperative: verb + unresolved pronoun, no usable target/evidence
+g_PronIt        DB  ' it', 0
+g_PronThis      DB  ' this', 0
+g_PronThat      DB  ' that', 0
+g_PronThem      DB  ' them', 0
+g_VagueMakeWork DB  'it work', 0
+g_SubCpp        DB  '.cpp', 0
+g_SubHpp        DB  '.hpp', 0
+g_SubH          DB  '.h', 0
+g_SubMd         DB  '.md', 0
+g_SubAsm        DB  '.asm', 0
+g_SubPy         DB  '.py', 0
+g_SubError      DB  'error', 0
+g_SubFail       DB  'fail', 0
+g_SubTest       DB  'test', 0
+g_SubLine       DB  'line', 0
+g_SubSrc        DB  'src', 0
+g_SubFile       DB  'file', 0
+g_SubProj       DB  'project', 0
+g_SubCompile    DB  'compile', 0
+g_SubFunc       DB  'function', 0
+g_SubReadme     DB  'readme', 0
+g_SubBug        DB  'bug', 0
+g_SubCrash      DB  'crash', 0
+g_SubTok        DB  'tokenizer', 0
+g_SubSlash      DB  '/', 0
+g_SubBslash     DB  '\', 0
 
 _DATA64 ENDS
 
@@ -1027,8 +1059,230 @@ hx_stristr PROC FRAME
 hx_stristr ENDP
 
 ; -----------------------------------------------------------------------------
+; hx_goal_has_substance — EAX=1 if usable target/evidence/path present
+; -----------------------------------------------------------------------------
+hx_goal_has_substance PROC FRAME
+    push    rbx
+    .pushreg rbx
+    push    rsi
+    .pushreg rsi
+    push    r12
+    .pushreg r12
+    sub     rsp, 20h
+    .allocstack 20h
+    .endprolog
+
+    lea     rbx, g_HxState
+    mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
+    test    rsi, rsi
+    jz      @gs_no
+    lea     r12, [rsi].HX_AGENT_CTX.root_goal
+
+    mov     rcx, r12
+    lea     rdx, g_SubCpp
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubHpp
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubH
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubMd
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubAsm
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubPy
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubError
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubFail
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubTest
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubLine
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubSrc
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubFile
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubProj
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubCompile
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubFunc
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubReadme
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubBug
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubCrash
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubTok
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubSlash
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+    mov     rcx, r12
+    lea     rdx, g_SubBslash
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gs_yes
+@gs_no:
+    xor     eax, eax
+    jmp     @gs_done
+@gs_yes:
+    mov     eax, 1
+@gs_done:
+    add     rsp, 20h
+    pop     r12
+    pop     rsi
+    pop     rbx
+    ret
+hx_goal_has_substance ENDP
+
+; -----------------------------------------------------------------------------
+; hx_goal_objectless_imperative — EAX=1 if fix/repair/make + pronoun, no target
+; -----------------------------------------------------------------------------
+hx_goal_objectless_imperative PROC FRAME
+    push    rbx
+    .pushreg rbx
+    push    rsi
+    .pushreg rsi
+    push    r12
+    .pushreg r12
+    sub     rsp, 20h
+    .allocstack 20h
+    .endprolog
+
+    lea     rbx, g_HxState
+    mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
+    test    rsi, rsi
+    jz      @oo_no
+    lea     r12, [rsi].HX_AGENT_CTX.root_goal
+
+    ; Repair-class verb?
+    mov     rcx, r12
+    lea     rdx, g_ActFix
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_have_verb
+    mov     rcx, r12
+    lea     rdx, g_ActRepair
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_have_verb
+    mov     rcx, r12
+    lea     rdx, g_ActMake
+    call    hx_stristr
+    test    eax, eax
+    jz      @oo_no
+
+@oo_have_verb:
+    ; Usable target/evidence ⇒ not objectless
+    call    hx_goal_has_substance
+    test    eax, eax
+    jnz     @oo_no
+
+    ; Unresolved pronoun / "it work"
+    mov     rcx, r12
+    lea     rdx, g_PronIt
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_yes
+    mov     rcx, r12
+    lea     rdx, g_PronThis
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_yes
+    mov     rcx, r12
+    lea     rdx, g_PronThat
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_yes
+    mov     rcx, r12
+    lea     rdx, g_PronThem
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_yes
+    mov     rcx, r12
+    lea     rdx, g_VagueMakeWork
+    call    hx_stristr
+    test    eax, eax
+    jnz     @oo_yes
+
+@oo_no:
+    xor     eax, eax
+    jmp     @oo_done
+@oo_yes:
+    mov     eax, 1
+@oo_done:
+    add     rsp, 20h
+    pop     r12
+    pop     rsi
+    pop     rbx
+    ret
+hx_goal_objectless_imperative ENDP
+
+; -----------------------------------------------------------------------------
 ; hx_goal_needs_input — EAX=1 if architect must ASK_USER (no FINAL)
-; Markers force NEED_INPUT; else require an actionable verb/token.
+; Markers force NEED_INPUT; objectless imperatives force NEED_INPUT;
+; else require an actionable verb/token.
 ; -----------------------------------------------------------------------------
 hx_goal_needs_input PROC FRAME
     push    rbx
@@ -1074,6 +1328,11 @@ hx_goal_needs_input PROC FRAME
     test    eax, eax
     jnz     @gn_yes
 
+    ; Objectless imperative (Fix it. / Repair this. / Make it work.)
+    call    hx_goal_objectless_imperative
+    test    eax, eax
+    jnz     @gn_yes
+
     ; Actionable content present?
     mov     rcx, r12
     lea     rdx, g_ActCreate
@@ -1097,6 +1356,26 @@ hx_goal_needs_input PROC FRAME
     jnz     @gn_no
     mov     rcx, r12
     lea     rdx, g_ActFix
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActRepair
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActMake
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActOpen
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActRun
     call    hx_stristr
     test    eax, eax
     jnz     @gn_no

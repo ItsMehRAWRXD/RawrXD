@@ -42,6 +42,7 @@ $srcs = @(
     (Join-Path $Root "src\core\hexmag_control_plane.cpp"),
     (Join-Path $Root "src\core\hexmag_oracle_binder.cpp")
 )
+# finalize_policy is header-only (evaluateFinalize inline)
 
 $bat = Join-Path $OutDir "build_cert.bat"
 @"

@@ -1,1 +1,3 @@
-BACKEND_FAILURE
+need_input: NEED_INPUT
+need_input_resume: NEED_INPUT_LATCH: reject FINAL resurrection
+real_need_input: NEED_INPUT

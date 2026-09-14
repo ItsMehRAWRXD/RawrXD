@@ -33,10 +33,11 @@ bool Win32TerminalManager::start(ShellType shell)
         return false;
     }
 
-    // Ensure write handles are not inherited
-    SetHandleInformation(m_hStdOutWrite, HANDLE_FLAG_INHERIT, 0);
-    SetHandleInformation(m_hStdErrWrite, HANDLE_FLAG_INHERIT, 0);
-    SetHandleInformation(m_hStdInRead, HANDLE_FLAG_INHERIT, 0);
+    // Parent keeps read(out/err) + write(in); those must NOT be inherited.
+    // Child inherits: InRead, OutWrite, ErrWrite.
+    SetHandleInformation(m_hStdOutRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(m_hStdErrRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(m_hStdInWrite, HANDLE_FLAG_INHERIT, 0);
 
     // Set up process startup info
     STARTUPINFOA si;
@@ -50,10 +51,15 @@ bool Win32TerminalManager::start(ShellType shell)
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(pi));
 
-    // Choose shell
+    // Choose shell — pwsh (PS7) first, fall back to Windows PowerShell 5.
     std::string cmd;
     if (shell == PowerShell) {
-        cmd = "powershell.exe -NoExit -Command -";
+        char pwshPath[MAX_PATH];
+        if (SearchPathA(nullptr, "pwsh.exe", nullptr, MAX_PATH, pwshPath, nullptr)) {
+            cmd = "pwsh.exe -NoExit -NoLogo -NoProfile";
+        } else {
+            cmd = "powershell.exe -NoExit -NoLogo -NoProfile";
+        }
     } else {
         cmd = "cmd.exe";
     }

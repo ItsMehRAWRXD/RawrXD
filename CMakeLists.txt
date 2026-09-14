@@ -1,5 +1,14 @@
 # CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
+
+# P1 Win32IDE closure: CMakeLists.txt.new is the canonical IDE source graph.
+# Close-1-Win32IDE.ps1 passes -DRAWRXD_BUILD_WIN32IDE=ON and expects RawrXD-Win32IDE.
+option(RAWRXD_BUILD_WIN32IDE "Build the canonical Win32IDE target from CMakeLists.txt.new" OFF)
+if(RAWRXD_BUILD_WIN32IDE)
+    include("${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt.new")
+    return()
+endif()
+
 project(RawrXD-Native VERSION 14.2.0 LANGUAGES CXX ASM_MASM)
 
 set(CMAKE_CXX_STANDARD 20)

@@ -3,6 +3,9 @@
 #include <cmath>
 #include <algorithm>
 
+// TransparentRenderer — Phase 33 implementation complete
+
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -36,8 +39,10 @@ float4 main(PS_INPUT input) : SV_TARGET {
 )";
 
 TransparentRenderer::TransparentRenderer()
-    : m_hwnd(nullptr), m_width(TARGET_WIDTH), m_height(TARGET_HEIGHT), 
-      m_clearColor{0.01f, 0.01f, 0.02f, 0.25f}, m_targetHz(TARGET_REFRESH_HZ)
+    : m_hwnd(nullptr), m_width(TARGET_WIDTH), m_height(TARGET_HEIGHT),
+      // Opaque by default — glass/see-through only when explicitly enabled.
+      m_clearColor{0.01f, 0.01f, 0.02f, 1.0f}, m_targetHz(TARGET_REFRESH_HZ),
+      m_glassEnabled(false)
 {
     m_lastFrameTime = std::chrono::high_resolution_clock::now();
     m_waveVertices.resize((WAVE_SEGMENTS + 1) * 2);
@@ -48,7 +53,7 @@ TransparentRenderer::~TransparentRenderer()
     cleanupSwapChain();
 }
 
-bool TransparentRenderer::initialize(HWND hwnd)
+bool TransparentRenderer::Initialize(HWND hwnd)
 {
     if (!hwnd) return false;
     m_hwnd = hwnd;
@@ -71,18 +76,21 @@ bool TransparentRenderer::initialize(HWND hwnd)
     if (!createWaveResources()) return false;
     createD2DResources();
 
-    enableGlassEffect();
+    // Do NOT enable DWM glass / layered alpha here.
+    // Launch must be opaque; glass is END_TO_END only via SetGlassEnabled(true)
+    // (transparency toggle / setWindowTransparency). Auto-glass was END_WITHOUT_ONE.
+    m_glassEnabled = false;
     return true;
 }
 
 void TransparentRenderer::setTargetResolution(UINT w, UINT h)
 {
     if (w > 0 && h > 0) {
-        resize(w, h);
+        Resize(w, h);
     }
 }
 
-void TransparentRenderer::resize(UINT width, UINT height)
+void TransparentRenderer::Resize(UINT width, UINT height)
 {
     if (!m_swapChain) return;
     if (width == 0 || height == 0) return;
@@ -268,7 +276,7 @@ void TransparentRenderer::renderChromaticText(HDC hdc, const wchar_t* text, int 
 // ============================================================================
 // Main render loop - optimized for 540Hz
 // ============================================================================
-void TransparentRenderer::render()
+void TransparentRenderer::Render()
 {
     if (!m_context || !m_rtv) return;
     
@@ -787,4 +795,99 @@ void TransparentRenderer::enableGlassEffect()
         SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
     }
     SetLayeredWindowAttributes(m_hwnd, 0, 255, LWA_ALPHA);
+    m_glassEnabled = true;
+}
+
+void TransparentRenderer::disableGlassEffect()
+{
+    if (!m_hwnd) return;
+
+    DWM_BLURBEHIND blur{};
+    blur.dwFlags = DWM_BB_ENABLE;
+    blur.fEnable = FALSE;
+    blur.hRgnBlur = nullptr;
+    DwmEnableBlurBehindWindow(m_hwnd, &blur);
+
+    LONG_PTR exStyle = GetWindowLongPtr(m_hwnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_LAYERED) {
+        SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_LAYERED);
+    }
+    m_clearColor[3] = 1.0f;
+    m_glassEnabled = false;
+}
+
+void TransparentRenderer::SetGlassEnabled(bool enabled)
+{
+    if (enabled) {
+        enableGlassEffect();
+        if (m_clearColor[3] >= 0.999f)
+            m_clearColor[3] = 0.85f; // visible glass without going fully invisible
+    } else {
+        disableGlassEffect();
+    }
+}
+
+void TransparentRenderer::SetTransparency(float alpha)
+{
+    const float a = (alpha < 0.0f) ? 0.0f : ((alpha > 1.0f) ? 1.0f : alpha);
+    m_clearColor[3] = a;
+    // Transparency API is the toggle gate: glass on when alpha < 1, off when opaque.
+    if (a < 0.999f)
+        SetGlassEnabled(true);
+    else
+        SetGlassEnabled(false);
+}
+
+void TransparentRenderer::DrawText(const std::wstring& text, float x, float y, float size, uint32_t color)
+{
+    if (!m_d2dContext || !m_textBrush || text.empty()) return;
+
+    // Create a temporary text format for the size if needed, or just use default for now
+    // For enterprise implementation, we should cache formats
+    
+    // Simple color conversion from uint32_t (ARGb) to D2D1::ColorF
+    float a = ((color >> 24) & 0xFF) / 255.0f;
+    float r = ((color >> 16) & 0xFF) / 255.0f;
+    float g = ((color >> 8) & 0xFF) / 255.0f;
+    float b = (color & 0xFF) / 255.0f;
+    m_textBrush->SetColor(D2D1::ColorF(r, g, b, a));
+
+    D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + 1000.0f, y + 100.0f);
+    m_d2dContext->DrawText(
+        text.c_str(), 
+        (UINT32)text.length(), 
+        m_textFormat.Get(), 
+        layoutRect, 
+        m_textBrush.Get()
+    );
+}
+
+void TransparentRenderer::DrawRect(float x, float y, float w, float h, uint32_t color)
+{
+    if (!m_d2dContext || !m_backgroundBrush) return;
+
+    float a = ((color >> 24) & 0xFF) / 255.0f;
+    float r = ((color >> 16) & 0xFF) / 255.0f;
+    float g = ((color >> 8) & 0xFF) / 255.0f;
+    float b = (color & 0xFF) / 255.0f;
+    m_backgroundBrush->SetColor(D2D1::ColorF(r, g, b, a));
+    
+    D2D1_RECT_F rect = D2D1::RectF(x, y, x + w, y + h);
+    m_d2dContext->FillRectangle(rect, m_backgroundBrush.Get());
+}
+
+void TransparentRenderer::BeginFrame()
+{
+    // Begin D2D draw if utilizing D2D overlay during frame
+    if (m_d2dContext && m_d2dTargetBitmap) {
+        m_d2dContext->BeginDraw();
+        m_d2dContext->Clear(D2D1::ColorF(0, 0, 0, 0));
+    }
+}
+
+void TransparentRenderer::EndFrame()
+{
+    if (m_d2dContext && m_d2dTargetBitmap) {
+        m_d2dContext->EndDraw();
+    }
 }

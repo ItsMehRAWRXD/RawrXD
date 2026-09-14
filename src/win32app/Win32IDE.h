@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -849,7 +849,11 @@ private:
     HWND m_hwndMain;
     HWND m_hwndEditor;
     HWND m_hwndCommandInput;
+    HWND getStatusBar() const noexcept { return m_hwndStatusBar; }
     HWND m_hwndStatusBar;
+    bool m_hexmagRouteCopilotPanel = true;
+    bool m_hexmagGgufFallbackEnabled = false;
+    int m_hexmagSwarmAgentCount = 3;
     HWND m_hwndOutputTabs;
     HWND m_hwndMinimap;
     HWND m_hwndHelp;
@@ -1302,6 +1306,7 @@ private:
     void onHexMagSetSwarmSizeFromCmd(unsigned cmdId);
     bool handleHexMagCommand(unsigned cmdId);
     void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel);
+    bool tryHexMagControllerCopilotSend(const std::string& userMessage);
     bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId);
     void onHexMagShowTelemetryPanel();
     void onHexMagStartAgentTelemetryStream();

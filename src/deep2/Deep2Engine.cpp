@@ -19,6 +19,7 @@
 #include "SlidingWindowEngine.h"
 #include "MoEWeightsLoader.hpp"  // Complete type for unique_ptr destructor / Close()
 #include "HotPatcher.hpp"        // The Bottle - Runtime code modification
+#include "../core/decode_work_attribution.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -132,43 +133,15 @@ extern "C" void Deep2_VecDotProduct(const float* a, const float* b, float* out, 
 // Uses polynomial approximation for sigmoid and FMA for throughput
 extern "C" void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n) {
     if (n == 0) return;
-    
-    // AVX2-optimized sigmoid approximation using tanh
-    // sigmoid(x) = 0.5 * (1 + tanh(x/2))
-    // For x in [-6, 6]: tanh(x) ≈ x * (1 - x²/3 + 2x⁴/15)
-    
-    const __m256 half = _mm256_set1_ps(0.5f);
-    const __m256 one = _mm256_set1_ps(1.0f);
-    const __m256 c1 = _mm256_set1_ps(-0.3333333f);  // -1/3 for tanh approx
-    const __m256 c2 = _mm256_set1_ps(0.1333333f);   // 2/15 for tanh approx
-    
-    size_t i = 0;
-    for (; i + 8 <= n; i += 8) {
-        __m256 vx = _mm256_loadu_ps(x + i);
-        __m256 vy = _mm256_loadu_ps(y + i);
-        
-        // Compute sigmoid(vy) using fast approximation
-        // For numerical stability, clamp to [-10, 10] range
-        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-10.0f), 
-                                       _mm256_min_ps(_mm256_set1_ps(10.0f), vy));
-        
-        // sigmoid(x) ≈ 0.5 + 0.5 * tanh(x/2)
-        __m256 half_y = _mm256_mul_ps(clamped, half);
-        __m256 y2 = _mm256_mul_ps(half_y, half_y);
-        __m256 tanh_approx = _mm256_mul_ps(half_y, 
-            _mm256_fmadd_ps(y2, c1, one));
-        tanh_approx = _mm256_fmadd_ps(_mm256_mul_ps(y2, y2), c2, tanh_approx);
-        __m256 sigmoid = _mm256_fmadd_ps(tanh_approx, half, half);
-        
-        // SwiGLU: x * sigmoid(y) * y
-        __m256 result = _mm256_mul_ps(vx, _mm256_mul_ps(sigmoid, vy));
-        _mm256_storeu_ps(out + i, result);
-    }
-    
-    // Scalar remainder with standard sigmoid
-    for (; i < n; ++i) {
-        float sig = 1.0f / (1.0f + std::exp(-y[i]));
-        out[i] = x[i] * sig * y[i];
+    // Match Deep2Engine::SwiGLU — no clamp-then-unclamped multiply (L2 FFN_ACT fail).
+    // Legacy Deep2_SwiGLU(x,y,out) = x * silu(y)  (up * silu(gate))
+    auto silu1 = [](float v) -> float {
+        if (v > 20.0f) return v;
+        if (v < -20.0f) return 0.0f;
+        return v / (1.0f + expf(-v));
+    };
+    for (size_t i = 0; i < n; ++i) {
+        out[i] = x[i] * silu1(y[i]);
     }
 }
 
@@ -413,6 +386,7 @@ static void q4kGEMV(const void* weights, const float* input,
     size_t blockSize = sizeof(Q4_K_M_Block);
 
     float* dequantBuf = alignedAlloc(256);
+    const auto deq0 = std::chrono::steady_clock::now();
 
     for (size_t r = 0; r < rows; ++r) {
         const Q4_K_M_Block* rowBlocks =
@@ -438,6 +412,11 @@ static void q4kGEMV(const void* weights, const float* input,
         }
         output[r] = sum;
     }
+
+    const auto deq1 = std::chrono::steady_clock::now();
+    const uint64_t ns = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(deq1 - deq0).count());
+    RawrXD::Decode::addDequantNs(ns);
 
     alignedFree(dequantBuf);
 }
@@ -1151,50 +1130,27 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
 // ============================================================================
 void Deep2Engine::SwiGLU(const float* gate, const float* up, float* output, size_t dim) {
     if (dim == 0) return;
-    
+
+    // Stable SiLU: for |x| large, sigmoid saturates. Must NOT compute
+    // x * sigmoid(clamp(x,±N)) — that under-scales when |x|>N (L2 FFN_ACT fail).
+    auto silu1 = [](float x) -> float {
+        if (x > 20.0f) return x;
+        if (x < -20.0f) return 0.0f;
+        return x / (1.0f + expf(-x));
+    };
+
     size_t i = 0;
-    const __m256 one = _mm256_set1_ps(1.0f);
-    
-    // AVX2 vectorized path with fast sigmoid approximation
-    // sigmoid(x) ≈ 0.5 * (1 + tanh(x/2)) for x in [-6, 6]
     for (; i + 8 <= dim; i += 8) {
-        __m256 g = _mm256_loadu_ps(&gate[i]);
-        __m256 u = _mm256_loadu_ps(&up[i]);
-        
-        // Fast sigmoid using polynomial approximation
-        // Clamp to [-6, 6] for numerical stability
-        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-6.0f), 
-                                       _mm256_min_ps(_mm256_set1_ps(6.0f), g));
-        
-        // Compute sigmoid(x) = 1 / (1 + exp(-x)) using fast exp approximation
-        // exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24 (Taylor series)
-        __m256 neg_x = _mm256_sub_ps(_mm256_setzero_ps(), clamped);
-        __m256 x2 = _mm256_mul_ps(neg_x, neg_x);
-        __m256 x3 = _mm256_mul_ps(x2, neg_x);
-        __m256 x4 = _mm256_mul_ps(x3, neg_x);
-        
-        __m256 exp_approx = _mm256_add_ps(one,
-            _mm256_add_ps(neg_x,
-                _mm256_add_ps(_mm256_mul_ps(x2, _mm256_set1_ps(0.5f)),
-                    _mm256_add_ps(_mm256_mul_ps(x3, _mm256_set1_ps(1.0f/6.0f)),
-                                  _mm256_mul_ps(x4, _mm256_set1_ps(1.0f/24.0f))))));
-        
-        // sigmoid(x) = 1 / (1 + exp(-x))
-        __m256 denom = _mm256_add_ps(one, exp_approx);
-        __m256 sigmoid = _mm256_div_ps(one, denom);
-        
-        // SiLU = g * sigmoid(g)
-        __m256 silu = _mm256_mul_ps(g, sigmoid);
-        
-        // output = silu * up
-        __m256 result = _mm256_mul_ps(silu, u);
-        _mm256_storeu_ps(&output[i], result);
+        alignas(32) float g_arr[8], u_arr[8], o_arr[8];
+        std::memcpy(g_arr, gate + i, 8 * sizeof(float));
+        std::memcpy(u_arr, up + i, 8 * sizeof(float));
+        for (int j = 0; j < 8; ++j) {
+            o_arr[j] = silu1(g_arr[j]) * u_arr[j];
+        }
+        std::memcpy(output + i, o_arr, 8 * sizeof(float));
     }
-    
-    // Scalar remainder with standard sigmoid
     for (; i < dim; ++i) {
-        float sig = 1.0f / (1.0f + expf(-gate[i]));
-        output[i] = gate[i] * sig * up[i];
+        output[i] = silu1(gate[i]) * up[i];
     }
 }
 
@@ -1313,12 +1269,21 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     size_t tokensGenerated = 0;
     size_t currentPos = promptLen;
 
+    RawrXD::Decode::DecodePhaseAccum phaseAccum;
+    std::vector<RawrXD::Decode::DecodeTimeline> timelines;
+    RawrXD::Decode::DecodeWorkAttribution workAttr;
+    decodePhaseAccum_ = stats ? &phaseAccum : nullptr;
+    RawrXD::Decode::ScopedDecodeAttribution scopedAttr(stats ? &workAttr : nullptr);
+
     // Generate tokens (decode)
     for (size_t t = 0; t < maxOutputLen; ++t) {
+        phaseAccum.clear();
+        auto tokenStart = std::chrono::high_resolution_clock::now();
+
         // Use the last hidden state as input
         float* h = hiddenStates;
 
-        // Forward through all layers
+        // Forward through all layers (attention/ffn timed inside forwardLayer)
         float* layerInput = h;
         float* layerOutput = attentionOutput;
 
@@ -1329,20 +1294,36 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             layerOutput = temp;
         }
 
+        auto tLm0 = std::chrono::high_resolution_clock::now();
         // Compute logits: lm_head * hiddenState
         computeLogits(layerInput, logits);
+        auto tLm1 = std::chrono::high_resolution_clock::now();
+        phaseAccum.lmhead_us +=
+            std::chrono::duration<double, std::micro>(tLm1 - tLm0).count();
 
+        auto tSm0 = std::chrono::high_resolution_clock::now();
         // Sample next token
         int nextToken = sampleToken(logits);
+        auto tSm1 = std::chrono::high_resolution_clock::now();
+        phaseAccum.sampling_us +=
+            std::chrono::duration<double, std::micro>(tSm1 - tSm0).count();
+
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
         
         if (onToken) {
             if (!onToken(nextToken)) {
+                auto tokenEnd = std::chrono::high_resolution_clock::now();
+                if (stats) {
+                    auto tl = phaseAccum.toTimeline(static_cast<uint64_t>(tokensGenerated - 1));
+                    tl.total_us = std::chrono::duration<double, std::micro>(tokenEnd - tokenStart).count();
+                    timelines.push_back(tl);
+                }
                 break;
             }
         }
 
+        auto tEmb0 = std::chrono::high_resolution_clock::now();
         // Embed the new token for next iteration
         embedToken(nextToken, hiddenStates);
 
@@ -1351,6 +1332,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             kvCache->advance();
         }
         currentPos++;
+        auto tEmb1 = std::chrono::high_resolution_clock::now();
+        phaseAccum.dispatch_us +=
+            std::chrono::duration<double, std::micro>(tEmb1 - tEmb0).count();
 
         // Reverse analysis hook: token generated
         if (reverseAnalysisEnabled_ && reverseIntegration_) {
@@ -1359,11 +1343,27 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             reverseIntegration_->onTokenGenerated(static_cast<uint64_t>(nextToken), &tokenByte, 1);
         }
 
+        auto tokenEnd = std::chrono::high_resolution_clock::now();
+        if (stats) {
+            phaseAccum.dequant_us += workAttr.dequantNs.load() / 1000.0;
+            phaseAccum.sync_wait_us += workAttr.syncNs.load() / 1000.0;
+            const double ioU = workAttr.ioNs.load() / 1000.0;
+            const double resU = workAttr.residencyNs.load() / 1000.0;
+            if (ioU > phaseAccum.io_wait_us) phaseAccum.io_wait_us = ioU;
+            if (resU > phaseAccum.residency_wait_us) phaseAccum.residency_wait_us = resU;
+            workAttr.reset();
+            auto tl = phaseAccum.toTimeline(static_cast<uint64_t>(tokensGenerated - 1));
+            tl.total_us = std::chrono::duration<double, std::micro>(tokenEnd - tokenStart).count();
+            timelines.push_back(tl);
+        }
+
         // Check for EOS
         if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId) {
             break;
         }
     }
+
+    decodePhaseAccum_ = nullptr;
 
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
@@ -1373,7 +1373,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         stats->tokensGenerated = tokensGenerated;
         if (totalMs > 0) {
             stats->tokensPerSecond = tokensGenerated / (totalMs / 1000.0);
-            stats->latencyMs = totalMs / tokensGenerated;
+            stats->latencyMs = tokensGenerated > 0 ? totalMs / tokensGenerated : 0.0;
+        }
+        if (!timelines.empty()) {
+            stats->hasDecodeTimeline = true;
+            stats->tokenTimelines = std::move(timelines);
+            stats->decodeAggregate = RawrXD::Decode::aggregateTimelines(stats->tokenTimelines);
+            stats->primaryHealth =
+                RawrXD::Decode::evaluatePrimaryHealth(stats->decodeAggregate, true);
         }
     }
 
@@ -1381,6 +1388,140 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
            tokensGenerated, totalMs, totalMs > 0 ? tokensGenerated / (totalMs / 1000.0) : 0.0);
 
     return tokensGenerated;
+}
+
+// ============================================================================
+// GBS_D1 — Persistent verifier KV helpers
+// ============================================================================
+size_t Deep2Engine::kvLength() const {
+    return kvCache ? kvCache->currentLength() : 0;
+}
+
+bool Deep2Engine::rewindKv(size_t pos) {
+    if (!kvCache) return false;
+    if (pos > kvCache->currentLength()) return false;
+    kvCache->rewindTo(pos);
+    return true;
+}
+
+size_t Deep2Engine::prefillTokens(const int* tokens, size_t len, bool force) {
+    if (!initialized || !modelWeights.loaded || !tokens || len == 0) return 0;
+    if (!force && kvCache && kvCache->currentLength() == len) {
+        return 0; // already warm at this length
+    }
+    if (force && kvCache) {
+        kvCache->reset();
+    } else if (kvCache && kvCache->currentLength() != 0 &&
+               kvCache->currentLength() != len) {
+        // Length mismatch: caller must rewind or reset explicitly.
+        kvCache->reset();
+    }
+
+    size_t filled = 0;
+    for (size_t t = 0; t < len && t < config.maxSeqLen; ++t) {
+        float* h = hiddenStates + t * config.hiddenDim;
+        embedToken(tokens[t], h);
+        float* layerInput = h;
+        float* layerOutput = attentionOutput;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            forwardLayer(layer, layerInput, layerOutput, t + 1);
+            float* temp = layerInput;
+            layerInput = layerOutput;
+            layerOutput = temp;
+        }
+        if (layerInput != h) {
+            memcpy(h, layerInput, config.hiddenDim * sizeof(float));
+        }
+        // Keep slot 0 as "last hidden" for decodeContinue (match generate()).
+        if (t + 1 == len && h != hiddenStates) {
+            memcpy(hiddenStates, h, config.hiddenDim * sizeof(float));
+        }
+        if (kvCache) kvCache->advance();
+        ++filled;
+    }
+    if (filled > 0 && filled < len) {
+        // Cap hit — leave KV at filled.
+    }
+    // Ensure last-token hidden lives at hiddenStates[0..] for decode.
+    if (filled > 0) {
+        float* last = hiddenStates + (filled - 1) * config.hiddenDim;
+        if (last != hiddenStates) {
+            memcpy(hiddenStates, last, config.hiddenDim * sizeof(float));
+        }
+    }
+    return filled;
+}
+
+size_t Deep2Engine::decodeContinue(int* outputTokens, size_t maxOutputLen,
+                                   InferenceStats* stats,
+                                   std::function<bool(int)> onToken) {
+    if (!initialized || !modelWeights.loaded || !outputTokens || maxOutputLen == 0)
+        return 0;
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    size_t tokensGenerated = 0;
+    size_t currentPos = kvCache ? kvCache->currentLength() : 0;
+
+    for (size_t t = 0; t < maxOutputLen; ++t) {
+        float* h = hiddenStates;
+        float* layerInput = h;
+        float* layerOutput = attentionOutput;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
+            float* temp = layerInput;
+            layerInput = layerOutput;
+            layerOutput = temp;
+        }
+        computeLogits(layerInput, logits);
+        int nextToken = sampleToken(logits);
+        outputTokens[tokensGenerated++] = nextToken;
+        if (onToken && !onToken(nextToken)) break;
+        embedToken(nextToken, hiddenStates);
+        if (kvCache) kvCache->advance();
+        currentPos++;
+        if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId) break;
+    }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+    double totalMs = duration.count() / 1000.0;
+    if (stats) {
+        stats->tokensGenerated = tokensGenerated;
+        if (totalMs > 0) {
+            stats->tokensPerSecond = tokensGenerated / (totalMs / 1000.0);
+            stats->latencyMs = tokensGenerated > 0 ? totalMs / tokensGenerated : 0.0;
+        }
+    }
+    return tokensGenerated;
+}
+
+size_t Deep2Engine::advanceKvWithoutVerify(const int* tokens, size_t len) {
+    // Fail-closed: no model / empty → 0 (orchestrator falls back to decodeContinue).
+    if (!initialized || !modelWeights.loaded || !kvCache || !tokens || len == 0)
+        return 0;
+
+    size_t advanced = 0;
+    size_t currentPos = kvCache->currentLength();
+    for (size_t i = 0; i < len; ++i) {
+        if (currentPos >= config.maxSeqLen) break;
+        float* h = hiddenStates;
+        embedToken(tokens[i], h);
+        float* layerInput = h;
+        float* layerOutput = attentionOutput;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
+            float* temp = layerInput;
+            layerInput = layerOutput;
+            layerOutput = temp;
+        }
+        if (layerInput != hiddenStates) {
+            memcpy(hiddenStates, layerInput, config.hiddenDim * sizeof(float));
+        }
+        kvCache->advance();
+        currentPos++;
+        ++advanced;
+    }
+    return advanced;
 }
 
 // ============================================================================
@@ -1409,16 +1550,33 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
-    // MARS: Place layer weights on GPU before compute
+    // MARS: time ONLY PlaceTensor (not the whole layer). Split transfer vs resident.
     if (marsEnabled_ && marsController_) {
         uint64_t layerId = 1000ULL + layer;
         size_t layerBytes = lw.wq.sizeBytes + lw.wk.sizeBytes + lw.wv.sizeBytes +
                             lw.wo.sizeBytes + lw.wGate.sizeBytes + lw.wUp.sizeBytes +
                             lw.wDown.sizeBytes;
         if (layerBytes > 0) {
+            bool alreadyResident = false;
+            if (auto* node = marsController_->GetTensorGraph()->GetNode(layerId)) {
+                alreadyResident = (node->gpu >= 0);
+            }
+            auto tR0 = std::chrono::high_resolution_clock::now();
             auto* lease = marsController_->PlaceTensor(layerId, "layer_" + std::to_string(layer),
                                                         layerBytes, 1.0f, true);
-            (void)lease; // TODO: use lease for eviction tracking
+            auto tR1 = std::chrono::high_resolution_clock::now();
+            const uint64_t ns = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(tR1 - tR0).count());
+            const bool transferred = !alreadyResident;
+            RawrXD::Decode::addMarsPlacementNs(ns, transferred);
+            if (transferred) RawrXD::Decode::addIoNs(ns);
+            else RawrXD::Decode::addResidencyNs(ns);
+            if (decodePhaseAccum_) {
+                const double us = ns / 1000.0;
+                if (transferred) decodePhaseAccum_->io_wait_us += us;
+                else decodePhaseAccum_->residency_wait_us += us;
+            }
+            (void)lease;
         }
     }
 
@@ -1426,6 +1584,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // Hybrid architectures like Nemotron-H alternate between attention and SSM blocks.
     // If this layer has SSM weights, use the SSM path instead of attention.
     if (lw.hasSSM && lw.ssmIn.data && modelWeights.isSSM) {
+        auto tA0 = std::chrono::high_resolution_clock::now();
         // 1. SSM RMSNorm (uses ssm_norm, not attn_norm)
         RMSNormW(lw.ssmNorm, input, attentionOutput, hiddenDim, modelWeights.normEps);
 
@@ -1436,7 +1595,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         for (size_t i = 0; i < hiddenDim; ++i) {
             output[i] += input[i];
         }
+        if (decodePhaseAccum_) {
+            auto tA1 = std::chrono::high_resolution_clock::now();
+            decodePhaseAccum_->attention_us +=
+                std::chrono::duration<double, std::micro>(tA1 - tA0).count();
+        }
 
+        auto tF0 = std::chrono::high_resolution_clock::now();
         // 4. FFN RMSNorm
         RMSNormW(lw.ffnNorm, output, attentionOutput, hiddenDim, modelWeights.normEps);
 
@@ -1451,6 +1616,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         for (size_t i = 0; i < hiddenDim; ++i) {
             output[i] += ffnOutput[i];
         }
+        if (decodePhaseAccum_) {
+            auto tF1 = std::chrono::high_resolution_clock::now();
+            decodePhaseAccum_->ffn_us +=
+                std::chrono::duration<double, std::micro>(tF1 - tF0).count();
+        }
 
         // Reverse analysis hook: layer processed
         if (reverseAnalysisEnabled_ && reverseIntegration_) {
@@ -1460,6 +1630,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
 
     // ── Standard Attention block path ───────────────────────────────────
+    auto tA0 = std::chrono::high_resolution_clock::now();
     // 1. Attention RMSNorm
     RMSNormW(lw.attnNorm, input, attentionOutput, hiddenDim, modelWeights.normEps);
 
@@ -1470,7 +1641,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += input[i];
     }
+    if (decodePhaseAccum_) {
+        auto tA1 = std::chrono::high_resolution_clock::now();
+        decodePhaseAccum_->attention_us +=
+            std::chrono::duration<double, std::micro>(tA1 - tA0).count();
+    }
 
+    auto tF0 = std::chrono::high_resolution_clock::now();
     // 4. FFN RMSNorm
     RMSNormW(lw.ffnNorm, output, attentionOutput, hiddenDim, modelWeights.normEps);
 
@@ -1484,6 +1661,11 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // 6. Residual connection
     for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += ffnOutput[i];
+    }
+    if (decodePhaseAccum_) {
+        auto tF1 = std::chrono::high_resolution_clock::now();
+        decodePhaseAccum_->ffn_us +=
+            std::chrono::duration<double, std::micro>(tF1 - tF0).count();
     }
 
     // Reverse analysis hook: layer processed
@@ -2089,9 +2271,13 @@ void Deep2Engine::LinearParallel(int weightIdx, const float* input, const float*
         });
     }
 
+    const auto sync0 = std::chrono::steady_clock::now();
     while (completed < numThreads) {
         _mm_pause();
     }
+    const auto sync1 = std::chrono::steady_clock::now();
+    RawrXD::Decode::addSyncNs(static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(sync1 - sync0).count()));
 }
 
 // ============================================================================

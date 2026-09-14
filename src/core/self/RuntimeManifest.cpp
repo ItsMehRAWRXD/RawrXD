@@ -60,6 +60,12 @@ static bool containsCi(const std::string& hay, const char* needle) {
 
 static ComponentState classifyGateText(const std::string& text) {
     if (text.empty()) return ComponentState::Missing;
+    // Explicit agent / SwiGLU closed markers (before FIRST_FAIL heuristics).
+    if (containsCi(text, "agent.schema_pre_dispatch") && containsCi(text, "CLOSED") &&
+        containsCi(text, "AGENT-TOOL-SCHEMA-002") && containsCi(text, "PASS"))
+        return ComponentState::Closed;
+    if (containsCi(text, "L2 SwiGLU clamp defect") && containsCi(text, "CLOSED"))
+        return ComponentState::Closed;
     // Prefer explicit closed markers from our GATE.txt convention.
     if (containsCi(text, "FIRST_GENUINE_FAIL = NONE") ||
         containsCi(text, "FIRST_FAIL=none") ||
@@ -84,10 +90,15 @@ static ComponentState classifyGateText(const std::string& text) {
         !containsCi(text, "FIRST_FAIL (L1 path) = none")) {
         // Tip FAIL under incomplete oracle → Uncertified, not Broken.
         if (containsCi(text, "NOT a localized") ||
-            containsCi(text, "oracle") && containsCi(text, "MISSING"))
+            (containsCi(text, "oracle") && containsCi(text, "MISSING")))
             return ComponentState::Uncertified;
+        // Documented ULP residual after SwiGLU fix — open work, not "broken product".
+        if (containsCi(text, "residual") && containsCi(text, "ULP"))
+            return ComponentState::Open;
         return ComponentState::Broken;
     }
+    if (containsCi(text, "sparse tips @ 1e-6") && containsCi(text, "OPEN"))
+        return ComponentState::Open;
     if (containsCi(text, "CLOSED")) return ComponentState::Closed;
     if (containsCi(text, "PASS") && containsCi(text, "FIRST_FAIL=none"))
         return ComponentState::Closed;
@@ -114,6 +125,8 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
     };
 
     // Canonical ordered ladder — DO NOT reorder without cert authority change.
+    // Agent GATEs live under evidence/; Deep2 GATEs under DEEP2_PARITY_PROBE_001/.
+    // When evidenceRoot is the probe dir, resolve agent paths via parent.
     const Spec specs[] = {
         {"gate1.tokenizer", "Gate1 / tokenizer + chat template",
          "TOKENIZER_PARITY_001", "CLOSED (Gate1Freeze)"},
@@ -123,6 +136,8 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
          "BATCH2_L1_ATTN_OUT_LOC/GATE.txt", nullptr},
         {"l1.ffn", "L1 FFN → L1_LAYER_OUT",
          "BATCH2_L1_FFN_LADDER_001/GATE.txt", nullptr},
+        {"l2.swiglu", "L2 SwiGLU clamp fix + FFN ladder",
+         "BATCH2_L2_FFN_LADDER_001/GATE.txt", nullptr},
         {"sparse.tips", "Sparse tips L2/L4/L8/L12/L16/L21 under FORCE L0..21",
          "BATCH2_SPARSE_TIPS_001/GATE.txt", nullptr},
         {"tip.final_norm", "FINAL_NORM (clean full-stack oracle)",
@@ -134,11 +149,11 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
         {"decode.kv", "Multi-token decode + KV parity",
          "", nullptr},
         {"agent.schema_pre_dispatch", "Strict pre-dispatch tool schema",
-         "AGENT_TOOL_EFFECT_001", nullptr},
+         "AGENT_TOOL_SCHEMA_002/GATE.txt", nullptr},
         {"agent.schema_retry", "Schema rejection → correction retry",
-         "AGENT_TOOL_EFFECT_001", nullptr},
+         "AGENT_TOOL_EFFECT_001/GATE.txt", nullptr},
         {"agent.edit_e2e", "Model-driven edit → compile → repair E2E",
-         "", nullptr},
+         "AGENT_TOOL_EFFECT_001/GATE.txt", nullptr},
         {"lifecycle.soak", "Lifecycle / soak / failure recovery",
          "", nullptr},
         {"dist.clean_machine", "Clean-machine offline distribution",
@@ -147,7 +162,8 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
          "", nullptr},
     };
 
-    bool prefixClosed = true;
+    bool deepPrefixClosed = true;
+    bool agentPrefixClosed = true;
     for (const Spec& sp : specs) {
         LadderRung r;
         r.id = sp.id;
@@ -155,6 +171,11 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
         r.evidence = sp.gateRel ? sp.gateRel : "";
 
         fs::path gatePath = root / (sp.gateRel ? sp.gateRel : "");
+        // Agent evidence lives next to DEEP2_PARITY_PROBE_001, not inside it.
+        if (!r.evidence.empty() && !fs::exists(gatePath) &&
+            std::string(sp.id).rfind("agent.", 0) == 0 && root.has_parent_path()) {
+            gatePath = root.parent_path() / (sp.gateRel ? sp.gateRel : "");
+        }
         std::string text;
         if (!r.evidence.empty()) {
             if (fs::is_directory(gatePath)) {
@@ -190,7 +211,9 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
                 }
             }
         } else {
-            r.state = prefixClosed ? ComponentState::Open : ComponentState::Blocked;
+            const bool isAgent = std::string(sp.id).rfind("agent.", 0) == 0;
+            const bool trackOk = isAgent ? agentPrefixClosed : deepPrefixClosed;
+            r.state = trackOk ? ComponentState::Open : ComponentState::Blocked;
             r.note = "no evidence path yet";
         }
 
@@ -208,6 +231,39 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
                     r.state = ComponentState::Uncertified;
                     r.note = "prior FINAL_NORM fail under incomplete FORCE — re-score on SPARSE_CLEAN";
                 }
+                if (containsCi(text, "FIRST_FAIL") && containsCi(text, "L2_OUT") &&
+                    containsCi(text, "ULP")) {
+                    r.state = ComponentState::Open;
+                    r.note = "post-SwiGLU residual ULP floor @ L2_OUT 4.58e-5; tips inherit";
+                }
+                if (std::string(sp.id).rfind("tip.", 0) == 0 &&
+                    containsCi(text, "BLOCKED")) {
+                    r.state = ComponentState::Blocked;
+                    r.note = "blocked on sparse residual / tip dump alignment";
+                }
+            }
+            if (std::string(sp.id) == "l2.swiglu") {
+                if (containsCi(text, "SwiGLU") && containsCi(text, "CLOSED") &&
+                    containsCi(text, "residual")) {
+                    r.state = ComponentState::Closed;
+                    r.note = "clamp CLOSED; residual ULP documented (not reopen <=L1)";
+                }
+            }
+            if (std::string(sp.id) == "agent.schema_pre_dispatch" &&
+                containsCi(text, "CLOSED") && containsCi(text, "PASS")) {
+                r.state = ComponentState::Closed;
+                r.note = "DIRECT cert LANE_A/R/B PASS; fail-closed pre-dispatch";
+            }
+            if (std::string(sp.id) == "agent.schema_retry" &&
+                containsCi(text, "schema_retry") && containsCi(text, "OPEN")) {
+                r.state = ComponentState::Open;
+                r.note = "pre-dispatch CLOSED; model retry loop still open";
+            }
+            if (std::string(sp.id) == "agent.edit_e2e" &&
+                (containsCi(text, "edit_e2e") || containsCi(text, "FILE_BYTES_CHANGED"))) {
+                r.state = agentPrefixClosed ? ComponentState::Open : ComponentState::Blocked;
+                if (containsCi(text, "FILE_BYTES_CHANGED     FAIL"))
+                    r.note = "no file mutate yet; blocked on schema_retry quality";
             }
             if (std::string(sp.id) == "l1.ffn" && containsCi(text, "L1 FFN") &&
                 containsCi(text, "CLOSED")) {
@@ -232,11 +288,19 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
             r.note = "Gate1Freeze TOKENIZER_CERTIFIED";
         }
 
-        if (!prefixClosed && r.state == ComponentState::Open)
+        if (!deepPrefixClosed && r.state == ComponentState::Open &&
+            std::string(sp.id).rfind("agent.", 0) != 0)
+            r.state = ComponentState::Blocked;
+        if (!agentPrefixClosed && r.state == ComponentState::Open &&
+            std::string(sp.id).rfind("agent.", 0) == 0)
             r.state = ComponentState::Blocked;
 
-        if (r.state != ComponentState::Closed)
-            prefixClosed = false;
+        if (r.state != ComponentState::Closed) {
+            if (std::string(sp.id).rfind("agent.", 0) == 0)
+                agentPrefixClosed = false;
+            else
+                deepPrefixClosed = false;
+        }
 
         snap.ladder.push_back(std::move(r));
     }
@@ -263,11 +327,14 @@ RuntimeManifestSnapshot buildCertLadderManifest(const std::string& evidenceRoot)
         } else {
             t.priority = TodoPriority::P1;
         }
-        // Collect blockers = prior open/broken ids
+        // Collect blockers = prior open/broken ids on the SAME track
+        const bool isAgent = r.id.rfind("agent.", 0) == 0;
         for (const auto& prev : snap.ladder) {
             if (prev.id == r.id) break;
-            if (prev.state != ComponentState::Closed)
-                t.blockedBy.push_back(prev.id);
+            if (prev.state == ComponentState::Closed) continue;
+            const bool prevAgent = prev.id.rfind("agent.", 0) == 0;
+            if (prevAgent != isAgent) continue; // deep2 vs agent tracks are parallel
+            t.blockedBy.push_back(prev.id);
         }
         snap.nextTodos.push_back(std::move(t));
         if (snap.firstOpen.empty()) snap.firstOpen = r.id;

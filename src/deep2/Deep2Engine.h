@@ -21,6 +21,7 @@
 #include "CompressedKVCache.h"
 #include "NVMeStream.h"
 #include "SlidingWindowEngine.h"
+#include "../core/decode_timeline.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -169,6 +170,12 @@ struct InferenceStats {
     size_t cacheHits = 0;
     size_t cacheMisses = 0;
     double memoryBandwidthGBps = 0.0;
+
+    // P2-0 decode timeline (filled when generate() instruments the decode loop)
+    bool hasDecodeTimeline = false;
+    RawrXD::Decode::DecodeAggregate decodeAggregate{};
+    RawrXD::Decode::PrimaryHealth primaryHealth{};
+    std::vector<RawrXD::Decode::DecodeTimeline> tokenTimelines;
 };
 
 // ============================================================================
@@ -298,6 +305,26 @@ public:
     // Set sampler
     void setSampler(std::unique_ptr<rawrxd::sampling::ISampler> sampler);
 
+    // ----------------------------------------------------------------
+    // GBS_D1 — persistent verifier KV (hybrid acceleration substrate)
+    // Prefill once; decodeContinue without re-prefill; rewind on reject.
+    // Does not change generate() semantics used by frozen P2 wall cert.
+    // ----------------------------------------------------------------
+    size_t kvLength() const;
+    bool rewindKv(size_t pos);
+    /// Prefill tokens into KV. If kv already at `len` and `force` is false, no-op.
+    /// Returns number of tokens newly prefilled (0 if skipped).
+    size_t prefillTokens(const int* tokens, size_t len, bool force = false);
+    /// Decode up to maxOutputLen tokens from current KV / last hidden (no prefill).
+    size_t decodeContinue(int* outputTokens, size_t maxOutputLen,
+                          InferenceStats* stats = nullptr,
+                          std::function<bool(int)> onToken = nullptr);
+
+    /// GBS_D3 seam: append accepted/reusable tokens into KV without sampling.
+    /// Runs embed+forward (fills K/V) so subsequent decodeContinue stays consistent.
+    /// Returns tokens advanced; 0 = fail-closed (caller must full verify).
+    size_t advanceKvWithoutVerify(const int* tokens, size_t len);
+
     // Token embedding lookup (public for tree speculative decoding)
     void embedToken(int tokenId, float* output);
 
@@ -380,6 +407,9 @@ private:
     bool nvmeStreamingEnabled_ = false;
     bool slidingWindowEnabled_ = false;
     bool reverseAnalysisEnabled_ = false;
+
+    // P2-0: optional per-token phase accumulator (non-owning during generate)
+    RawrXD::Decode::DecodePhaseAccum* decodePhaseAccum_ = nullptr;
     
     // MARS: Dynamic dual-GPU VRAM orchestration
     std::unique_ptr<MARS::MARSController> marsController_;

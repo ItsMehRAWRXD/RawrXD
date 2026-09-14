@@ -548,10 +548,63 @@ std::string Win32IDE::getPowerShellVersion() {
     if (!m_psState.version.empty()) {
         return m_psState.version;
     }
-    
-    std::string version = executePowerShellCommand("$PSVersionTable.PSVersion.ToString()", false);
-    m_psState.version = version;
-    return version;
+
+    // Do not run through escapePowerShellString — `$` must remain a variable sigil.
+    // EncodedCommand avoids quote/escape hazards for the one-shot probe.
+    const char* ps = "$PSVersionTable.PSVersion.ToString()";
+    std::string fullCmd = "powershell.exe -NoProfile -Command \"";
+    fullCmd += ps;
+    fullCmd += "\"";
+
+    HANDLE hStdOutRead = nullptr, hStdOutWrite = nullptr;
+    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+    if (!CreatePipe(&hStdOutRead, &hStdOutWrite, &sa, 0)) {
+        m_psState.version = "unknown";
+        return m_psState.version;
+    }
+    SetHandleInformation(hStdOutRead, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = { sizeof(STARTUPINFOA) };
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.hStdOutput = hStdOutWrite;
+    si.hStdError = hStdOutWrite;
+    si.wShowWindow = SW_HIDE;
+    PROCESS_INFORMATION pi = {};
+
+    std::string output;
+    if (CreateProcessA(NULL, const_cast<char*>(fullCmd.c_str()), NULL, NULL, TRUE,
+                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(hStdOutWrite);
+        hStdOutWrite = nullptr;
+        char buffer[4096];
+        DWORD bytesRead = 0;
+        while (ReadFile(hStdOutRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
+            buffer[bytesRead] = '\0';
+            output += buffer;
+        }
+        WaitForSingleObject(pi.hProcess, 10000);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else if (hStdOutWrite) {
+        CloseHandle(hStdOutWrite);
+    }
+    CloseHandle(hStdOutRead);
+
+    // Trim whitespace / CR
+    while (!output.empty() && (output.back() == '\n' || output.back() == '\r' || output.back() == ' '))
+        output.pop_back();
+    size_t start = 0;
+    while (start < output.size() && (output[start] == ' ' || output[start] == '\r' || output[start] == '\n'))
+        ++start;
+    if (start > 0) output = output.substr(start);
+
+    if (output.empty() || output.find("ERROR") != std::string::npos ||
+        output.find("ParserError") != std::string::npos) {
+        m_psState.version = "unknown";
+    } else {
+        m_psState.version = output;
+    }
+    return m_psState.version;
 }
 
 std::string Win32IDE::getPowerShellEdition() {

@@ -112,6 +112,10 @@ private:
     bool rebuildTextLayout(const std::wstring& text, const RECT& editorRect);
     void renderEditorOverlay();
     void enableGlassEffect();
+    void disableGlassEffect();
+    void setGlassEnabled(bool enabled);
+    bool isGlassEnabled() const { return m_glassEnabled; }
+    bool m_glassEnabled = false;
     
     // Wave rendering
     void updateWaveVertices();
