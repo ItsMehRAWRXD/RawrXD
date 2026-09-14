@@ -301,3 +301,18 @@ target_include_directories(batch41_45_roofline_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 46-50 roofline self-test (host-only, no Vulkan).
+add_executable(batch46_50_roofline_selftest
+    tests/batch46_50_selftest.cpp
+    rawrxd/src/deep2/Deep2B46NativeQuant.cpp
+    rawrxd/src/deep2/Deep2B47RegisterExpert.cpp
+    rawrxd/src/deep2/Deep2B48CrossLayerFusion.cpp
+    rawrxd/src/deep2/Deep2B49ShaderSpecializer.cpp
+    rawrxd/src/deep2/Deep2B50ChallengeSeal.cpp
+)
+target_include_directories(batch46_50_roofline_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
