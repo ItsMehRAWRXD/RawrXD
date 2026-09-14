@@ -271,3 +271,33 @@ target_include_directories(batch31_35_roofline_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+
+# Batch 36-40 roofline self-test (host-only, no Vulkan).
+add_executable(batch36_40_roofline_selftest
+    tests/batch36_40_selftest.cpp
+    rawrxd/src/deep2/Deep2B36WaveDot.cpp
+    rawrxd/src/deep2/Deep2B37RegisterTune.cpp
+    rawrxd/src/deep2/Deep2B38CoopGemv.cpp
+    rawrxd/src/deep2/Deep2B39FamilySpecializer.cpp
+    rawrxd/src/deep2/Deep2B40PhysicalSeal.cpp
+)
+target_include_directories(batch36_40_roofline_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
+
+# Batch 41-45 roofline self-test (host-only, no Vulkan).
+add_executable(batch41_45_roofline_selftest
+    tests/batch41_45_selftest.cpp
+    rawrxd/src/deep2/Deep2B41PackedDot.cpp
+    rawrxd/src/deep2/Deep2B42AsyncLds.cpp
+    rawrxd/src/deep2/Deep2B43MoEWave.cpp
+    rawrxd/src/deep2/Deep2B44MlaComputeBalance.cpp
+    rawrxd/src/deep2/Deep2B45KernelPlan.cpp
+)
+target_include_directories(batch41_45_roofline_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)

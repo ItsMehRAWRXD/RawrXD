@@ -1,0 +1,53 @@
+#version 460
+layout(local_size_x=256) in;
+
+// Reference multistage LDS pipeline for packed weights.
+// Production path substitutes exact quant format and asynchronous copy primitives.
+layout(set=0,binding=0,std430) readonly buffer W { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y { float y[]; };
+
+layout(push_constant) uniform PC {
+    uint rows;
+    uint cols;
+    uint wordsPerRow;
+    uint tileCols;
+} pc;
+
+shared float sx[1024];
+shared uint sw0[4096];
+shared uint sw1[4096];
+
+float dq4(uint word,uint nib) {
+    return float(int((word>>(nib*4u))&15u)-8);
+}
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+    uint lid=gl_LocalInvocationID.x;
+    float sum=0.0;
+
+    for(uint base=0;base<pc.cols;base+=pc.tileCols) {
+        uint stage=((base/pc.tileCols)&1u);
+        for(uint i=lid;i<pc.tileCols && base+i<pc.cols;i+=256u)
+            sx[i]=x[base+i];
+
+        uint wordBegin=base>>3u;
+        uint wordCount=(pc.tileCols+7u)>>3u;
+        for(uint i=lid;i<wordCount;i+=256u) {
+            uint wi=row*pc.wordsPerRow+wordBegin+i;
+            if(stage==0u) sw0[i]=w[wi]; else sw1[i]=w[wi];
+        }
+        barrier();
+
+        for(uint i=lid;i<pc.tileCols && base+i<pc.cols;i+=256u) {
+            uint word=(stage==0u)?sw0[i>>3u]:sw1[i>>3u];
+            sum+=dq4(word,i&7u)*sx[i];
+        }
+        barrier();
+    }
+
+    // Production path uses subgroup reduction; scalar emission omitted here.
+    if(lid==0u) y[row]=sum;
+}
