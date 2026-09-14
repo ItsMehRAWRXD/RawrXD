@@ -1,0 +1,39 @@
+#version 460
+// B27 reference expert superkernel: gate + up -> SiLU*up -> down accumulation.
+// One workgroup computes one intermediate row for gate/up. Production version
+// maps quantized blocks and performs down projection in tiled cooperative groups.
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer X  { float x[]; };
+layout(set=0,binding=1,std430) readonly buffer WG { float gateW[]; };
+layout(set=0,binding=2,std430) readonly buffer WU { float upW[]; };
+layout(set=0,binding=3,std430) writeonly buffer H { float h[]; };
+layout(push_constant) uniform PC {
+    uint hidden;
+    uint intermediate;
+    float routeWeight;
+} pc;
+
+shared float rg[256];
+shared float ru[256];
+
+float silu(float z) { return z / (1.0 + exp(-z)); }
+
+void main() {
+    uint row=gl_WorkGroupID.x;
+    if(row>=pc.intermediate) return;
+    uint lid=gl_LocalInvocationID.x;
+    float g=0.0, u=0.0;
+    uint base=row*pc.hidden;
+    for(uint c=lid;c<pc.hidden;c+=256u) {
+        float xv=x[c];
+        g += gateW[base+c]*xv;
+        u += upW[base+c]*xv;
+    }
+    rg[lid]=g; ru[lid]=u; barrier();
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride) { rg[lid]+=rg[lid+stride]; ru[lid]+=ru[lid+stride]; }
+        barrier();
+    }
+    if(lid==0u) h[row]=silu(rg[0])*ru[0]*pc.routeWeight;
+}
