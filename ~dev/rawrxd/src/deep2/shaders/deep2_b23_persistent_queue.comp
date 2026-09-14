@@ -1,0 +1,23 @@
+#version 460
+// Batch 23: persistent device queue control skeleton.
+// Actual op bodies bind to existing Deep2 production kernels.
+layout(local_size_x=64) in;
+
+struct Cmd { uint op; uint layer; uint deviceMask; uint arg0; uint arg1; };
+layout(set=0,binding=0,std430) readonly buffer Q { Cmd cmd[]; };
+layout(set=0,binding=1,std430) buffer State { uint head; uint tail; uint stop; uint completed; } st;
+
+void main() {
+    if(gl_GlobalInvocationID.x!=0u) return;
+    while(atomicAdd(st.stop,0u)==0u) {
+        uint h=atomicAdd(st.head,0u);
+        uint t=atomicAdd(st.tail,0u);
+        if(h>=t) continue;
+        uint mine=atomicAdd(st.head,1u);
+        if(mine>=t) continue;
+        // Dispatcher hook: command interpretation is intentionally supplied
+        // by the existing Vulkan backend rather than simulated here.
+        memoryBarrierBuffer();
+        atomicAdd(st.completed,1u);
+    }
+}
