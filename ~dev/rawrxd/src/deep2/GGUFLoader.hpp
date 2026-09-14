@@ -269,6 +269,94 @@ public:
         return true;
     }
 
+    bool getMetaFloatArray(const std::string& key,
+                           std::vector<float>& out) const {
+        out.clear();
+        auto it = metaArrays_.find(key);
+        if (it == metaArrays_.end()) return false;
+        const MetaArrayView& a = it->second;
+        const uint8_t* p = a.data;
+        out.reserve(static_cast<size_t>(a.count));
+
+        for (uint64_t i = 0; i < a.count; ++i) {
+            float v = 0.0f;
+            switch (static_cast<GGUFMetaType>(a.elementType)) {
+                case GGUFMetaType::FLOAT32: {
+                    if (!readPod(p,a.end,v)) return false;
+                    break;
+                }
+                case GGUFMetaType::FLOAT64: {
+                    double d = 0.0;
+                    if (!readPod(p,a.end,d)) return false;
+                    v = static_cast<float>(d);
+                    break;
+                }
+                default:
+                    out.clear();
+                    return false;
+            }
+            out.push_back(v);
+        }
+        return true;
+    }
+
+    bool getMetaInt32Array(const std::string& key,
+                           std::vector<int32_t>& out) const {
+        out.clear();
+        auto it = metaArrays_.find(key);
+        if (it == metaArrays_.end()) return false;
+        const MetaArrayView& a = it->second;
+        const uint8_t* p = a.data;
+        out.reserve(static_cast<size_t>(a.count));
+
+        for (uint64_t i = 0; i < a.count; ++i) {
+            int64_t v = 0;
+            switch (static_cast<GGUFMetaType>(a.elementType)) {
+                case GGUFMetaType::UINT8: {
+                    uint8_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                case GGUFMetaType::INT8: {
+                    int8_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                case GGUFMetaType::UINT16: {
+                    uint16_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                case GGUFMetaType::INT16: {
+                    int16_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                case GGUFMetaType::UINT32: {
+                    uint32_t x = 0; if (!readPod(p,a.end,x)) return false;
+                    if (x > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
+                        return false;
+                    v=x; break;
+                }
+                case GGUFMetaType::INT32: {
+                    int32_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                case GGUFMetaType::UINT64: {
+                    uint64_t x = 0; if (!readPod(p,a.end,x)) return false;
+                    if (x > static_cast<uint64_t>(std::numeric_limits<int32_t>::max()))
+                        return false;
+                    v=static_cast<int64_t>(x); break;
+                }
+                case GGUFMetaType::INT64: {
+                    int64_t x = 0; if (!readPod(p,a.end,x)) return false; v=x; break;
+                }
+                default:
+                    out.clear();
+                    return false;
+            }
+
+            if (v < std::numeric_limits<int32_t>::min() ||
+                v > std::numeric_limits<int32_t>::max()) {
+                out.clear();
+                return false;
+            }
+            out.push_back(static_cast<int32_t>(v));
+        }
+        return true;
+    }
+
 private:
     static constexpr uint32_t kMagic = 0x46554747u; // bytes: G G U F
     static constexpr uint64_t kDefaultAlignment = 32;

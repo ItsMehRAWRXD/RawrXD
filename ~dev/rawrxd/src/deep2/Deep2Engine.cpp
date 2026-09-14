@@ -522,12 +522,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
-    // Tokenizer integration remains a separate subsystem. Keep the existing
-    // sidecar bridge if present; GGUF tokenizer arrays are now available lazily
-    // through GGUFLoader::getMetaStringArray().
+    // Tokenizer integration: use GGUF metadata when available.
     if (tokenizer) {
         if (auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get())) {
-            bpe->loadFromFile(ggufPath + ".vocab");
+            if (!bpe->loadFromGGUF(*loader)) {
+                bpe->loadFromFile(ggufPath + ".vocab");
+            }
         }
     }
 
@@ -586,27 +586,73 @@ std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
     return tokenizer->decode(tokens);
 }
 
-// =================== EMBED TOKEN ====================
+// =================== EMBED TOKEN (REAL MAPPED WEIGHT ROW) ====================
 bool Deep2Engine::embedToken(int tokenId, float* output) {
-    // TODO: real embedding lookup
-    // Synthetic: hash tokenId to a fixed pattern
-    for (size_t i = 0; i < config.hiddenDim; ++i) {
-        output[i] = std::sin((float)(tokenId * 31 + i * 17)) * 0.01f;
-    }
-    return true;
+    if (!modelWeights.loaded || !output ||
+        tokenId < 0 ||
+        static_cast<size_t>(tokenId) >= modelWeights.vocabSize)
+        return false;
+
+    const WeightTensor& wt = modelWeights.tokenEmbed;
+    const size_t H = modelWeights.hiddenDim;
+    const size_t V = modelWeights.vocabSize;
+
+    if (!wt.data || wt.rows != V || wt.cols != H || H == 0)
+        return false;
+
+    const auto* desc = LookupQuantType(static_cast<uint32_t>(wt.type));
+    if (!desc || desc->blockBytes == 0 || desc->blockElements == 0)
+        return false;
+
+    if (desc->blockElements > 1 && (H % desc->blockElements) != 0)
+        return false;
+
+    const size_t blocksPerRow =
+        (H + desc->blockElements - 1) / desc->blockElements;
+    if (blocksPerRow >
+        std::numeric_limits<size_t>::max() / desc->blockBytes)
+        return false;
+
+    const size_t rowBytes = blocksPerRow * desc->blockBytes;
+    const size_t row = static_cast<size_t>(tokenId);
+    if (row > std::numeric_limits<size_t>::max() / rowBytes)
+        return false;
+
+    const size_t offset = row * rowBytes;
+    if (wt.sizeBytes != 0 &&
+        (offset > wt.sizeBytes || rowBytes > wt.sizeBytes - offset))
+        return false;
+
+    auto dequant = QuantKernelRegistry::Instance().GetDequant(wt.type);
+    if (!dequant) return false;
+
+    const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
+    dequant(src, output, H);
+    return finiteVector(output, H);
 }
 
-// =================== COMPUTE LOGITS ====================
+// =================== COMPUTE LOGITS (FINAL NORM + REAL LM HEAD) ====================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
-    // TODO: real LM head projection ( WeightTensor * hidden )
-    // Synthetic: random-ish projection
-    for (size_t v = 0; v < config.vocabSize; ++v) {
-        float sum = 0.0f;
-        for (size_t i = 0; i < config.hiddenDim; ++i) {
-            sum += hiddenState[i] * std::sin((float)(v * 13 + i * 7));
-        }
-        logitsOut[v] = sum;
+    if (!modelWeights.loaded || !hiddenState || !logitsOut)
+        throw std::runtime_error("computeLogits: invalid state");
+
+    const size_t H = modelWeights.hiddenDim;
+    const size_t V = modelWeights.vocabSize;
+
+    if (H == 0 || V == 0 ||
+        !modelWeights.finalNorm.data ||
+        !modelWeights.lmHead.data ||
+        !layerTemp) {
+        throw std::runtime_error(
+            "computeLogits: final norm / LM head not bound");
     }
+
+    RMSNormW(modelWeights.finalNorm, hiddenState, layerTemp,
+             H, modelWeights.normEps);
+    LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
+
+    if (!finiteVector(logitsOut, V))
+        throw std::runtime_error("computeLogits: non-finite logits");
 }
 
 // =================== SAMPLE TOKEN ====================
