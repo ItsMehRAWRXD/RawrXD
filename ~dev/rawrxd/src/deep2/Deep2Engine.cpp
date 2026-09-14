@@ -346,6 +346,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         metaSize("expert_count", 0);
     modelWeights.numExpertsPerToken =
         metaSize("expert_used_count", 0);
+    modelWeights.numSharedExperts =
+        metaSize("expert_shared_count", 0);
     modelWeights.isMoE = modelWeights.numExperts > 0;
 
     modelWeights.ropeDimensionCount =
@@ -405,10 +407,181 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         bindTensor(p + "ffn_down.weight", lw.wDown);
         bindTensor(p + "ffn_norm.weight", lw.ffnNorm);
 
-        // MoE routing descriptor is bound now; expert tensors are a later pair.
+        // Batch 8: real MoE router + expert tensor binding.
         bindFirst(lw.moeRouter,
                   {(p + "ffn_gate_inp.weight").c_str(),
-                   (p + "moe.router.weight").c_str()});
+                   (p + "moe.router.weight").c_str(),
+                   (p + "router.weight").c_str()});
+
+        auto bindAny = [&](WeightTensor& dst,
+                           const std::vector<std::string>& names) -> bool {
+            for (const std::string& name : names) {
+                if (bindTensor(name, dst)) return true;
+            }
+            return false;
+        };
+
+        auto bindPackedExperts =
+            [&](const std::vector<std::string>& names,
+                std::vector<WeightTensor>& dst) -> bool {
+            const GGUFTensor* t = nullptr;
+            for (const std::string& name : names) {
+                t = loader->getTensor(name);
+                if (t) break;
+            }
+            if (!t) return false;
+
+            if (!t->data || t->shape.size() != 3 ||
+                t->shape[0] <= 0 || t->shape[1] <= 0 ||
+                t->shape[2] != static_cast<int64_t>(modelWeights.numExperts) ||
+                modelWeights.numExperts == 0 ||
+                (t->sizeBytes % modelWeights.numExperts) != 0) {
+                return false;
+            }
+
+            const size_t sliceBytes =
+                t->sizeBytes / modelWeights.numExperts;
+            if (sliceBytes == 0) return false;
+
+            dst.assign(modelWeights.numExperts, WeightTensor{});
+            for (size_t e = 0; e < modelWeights.numExperts; ++e) {
+                if (e > std::numeric_limits<size_t>::max() / sliceBytes)
+                    return false;
+                const size_t byteOffset = e * sliceBytes;
+                if (byteOffset > t->sizeBytes ||
+                    sliceBytes > t->sizeBytes - byteOffset)
+                    return false;
+
+                WeightTensor& wt = dst[e];
+                wt.data = const_cast<uint8_t*>(t->data + byteOffset);
+                wt.type = static_cast<int>(t->type);
+                wt.cols = static_cast<size_t>(t->shape[0]);
+                wt.rows = static_cast<size_t>(t->shape[1]);
+                wt.sizeBytes = sliceBytes;
+                wt.name = t->name + "#expert=" + std::to_string(e);
+                wt.shape = { t->shape[0], t->shape[1] };
+                wt.mapped = true;
+                wt.shardId = t->shardId;
+                if (static_cast<uint64_t>(byteOffset) >
+                    std::numeric_limits<uint64_t>::max() - t->fileOffset)
+                    return false;
+                wt.fileOffset = t->fileOffset + static_cast<uint64_t>(byteOffset);
+                wt.hasFileBacking = true;
+            }
+            return true;
+        };
+
+        auto bindSeparateExperts =
+            [&](const char* role,
+                const char* hfRole,
+                const char* hfAlt,
+                std::vector<WeightTensor>& dst) -> bool {
+            dst.assign(modelWeights.numExperts, WeightTensor{});
+            for (size_t e = 0; e < modelWeights.numExperts; ++e) {
+                const std::string es = std::to_string(e);
+                const std::vector<std::string> names = {
+                    p + "ffn_" + role + "_exp." + es + ".weight",
+                    p + "experts." + es + "." + hfRole + ".weight",
+                    p + "moe.experts." + es + "." + hfRole + ".weight",
+                    p + "experts." + es + "." + hfAlt + ".weight"
+                };
+                if (!bindAny(dst[e], names)) {
+                    dst.clear();
+                    return false;
+                }
+            }
+            return !dst.empty();
+        };
+
+        auto bindExpertFamily =
+            [&](const char* role,
+                const char* hfRole,
+                const char* hfAlt,
+                std::vector<WeightTensor>& dst) -> bool {
+            const std::vector<std::string> packedNames = {
+                p + "ffn_" + role + "_exp.weight",
+                p + "ffn_" + role + "_exps.weight"
+            };
+            if (bindPackedExperts(packedNames, dst)) return true;
+            return bindSeparateExperts(role, hfRole, hfAlt, dst);
+        };
+
+        if (lw.moeRouter.data) {
+            if (lw.moeRouter.rows != modelWeights.numExperts ||
+                lw.moeRouter.cols != modelWeights.hiddenDim) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu MoE router geometry mismatch\n",
+                    layer);
+                return false;
+            }
+
+            if (!bindExpertFamily("gate", "gate_proj", "w1", lw.moeGate) ||
+                !bindExpertFamily("up",   "up_proj",   "w3", lw.moeUp) ||
+                !bindExpertFamily("down", "down_proj", "w2", lw.moeDown)) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu missing routed expert tensors\n",
+                    layer);
+                return false;
+            }
+
+            if (lw.moeGate.size() != modelWeights.numExperts ||
+                lw.moeUp.size() != modelWeights.numExperts ||
+                lw.moeDown.size() != modelWeights.numExperts) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu incomplete expert set\n", layer);
+                return false;
+            }
+
+            if (modelWeights.moeIntermediateDim == 0)
+                modelWeights.moeIntermediateDim = lw.moeGate[0].rows;
+
+            const size_t EI = modelWeights.moeIntermediateDim;
+            for (size_t e = 0; e < modelWeights.numExperts; ++e) {
+                const auto& g = lw.moeGate[e];
+                const auto& u = lw.moeUp[e];
+                const auto& d = lw.moeDown[e];
+                if (g.rows != EI || g.cols != modelWeights.hiddenDim ||
+                    u.rows != EI || u.cols != modelWeights.hiddenDim ||
+                    d.rows != modelWeights.hiddenDim || d.cols != EI) {
+                    std::fprintf(stderr,
+                        "[Deep2Engine] layer %zu expert %zu geometry mismatch\n",
+                        layer, e);
+                    return false;
+                }
+            }
+
+            // Common DeepSeek/Kimi shared-expert tensor spellings.
+            bindAny(lw.moeSharedGate, {
+                p + "ffn_gate_shexp.weight",
+                p + "shared_experts.gate_proj.weight",
+                p + "shared_experts.w1.weight"
+            });
+            bindAny(lw.moeSharedUp, {
+                p + "ffn_up_shexp.weight",
+                p + "shared_experts.up_proj.weight",
+                p + "shared_experts.w3.weight"
+            });
+            bindAny(lw.moeSharedDown, {
+                p + "ffn_down_shexp.weight",
+                p + "shared_experts.down_proj.weight",
+                p + "shared_experts.w2.weight"
+            });
+
+            const bool anyShared =
+                lw.moeSharedGate.data || lw.moeSharedUp.data ||
+                lw.moeSharedDown.data;
+            const bool allShared =
+                lw.moeSharedGate.data &&
+                lw.moeSharedUp.data &&
+                lw.moeSharedDown.data;
+            if ((anyShared && !allShared) ||
+                (modelWeights.numSharedExperts > 0 && !allShared)) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu incomplete shared expert\n",
+                    layer);
+                return false;
+            }
+        }
 
         if (!lw.attnNorm.data || !lw.ffnNorm.data) {
             std::fprintf(stderr,
@@ -468,6 +641,128 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (!modelWeights.isMoE && modelWeights.intermediateDim == 0) {
         std::fprintf(stderr, "[Deep2Engine] missing feed-forward geometry\n");
         return false;
+    }
+
+    // Batch 8: initialize per-layer router runtimes from GGUF MoE metadata.
+    moeRouters_.clear();
+    moePinnedHandles_.clear();
+    moeInitialized_ = false;
+
+    if (modelWeights.isMoE) {
+        if (modelWeights.numExpertsPerToken == 0 ||
+            modelWeights.numExpertsPerToken > modelWeights.numExperts ||
+            modelWeights.moeIntermediateDim == 0) {
+            std::fprintf(stderr, "[Deep2Engine] invalid MoE metadata\n");
+            return false;
+        }
+
+        moeConfig_ = {};
+        moeConfig_.numExperts = modelWeights.numExperts;
+        moeConfig_.expertsPerToken = modelWeights.numExpertsPerToken;
+        moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+        moeConfig_.hiddenDim = modelWeights.hiddenDim;
+        moeConfig_.expertDim = modelWeights.moeIntermediateDim;
+        moeConfig_.sharedExpertDim = modelWeights.moeIntermediateDim;
+        moeConfig_.numSharedExperts = modelWeights.numSharedExperts;
+        moeConfig_.useSharedExpert = modelWeights.numSharedExperts > 0;
+
+        const int64_t gating =
+            loader->getMetaInt(arch + ".expert_gating_func", 1);
+        if (gating < 1 || gating > 4 || gating == 3) {
+            std::fprintf(stderr,
+                "[Deep2Engine] unsupported expert_gating_func=%lld\n",
+                static_cast<long long>(gating));
+            return false;
+        }
+        moeConfig_.gatingFunc =
+            static_cast<MoEGatingFunc>(static_cast<uint32_t>(gating));
+
+        moeConfig_.expertWeightsScale = static_cast<float>(
+            loader->getMetaFloat(arch + ".expert_weights_scale", 1.0));
+        moeConfig_.normalizeSelectedWeights =
+            loader->getMetaInt(arch + ".expert_weights_norm", 1) != 0;
+
+        moeConfig_.expertGroupCount = static_cast<size_t>(std::max<int64_t>(
+            0, loader->getMetaInt(arch + ".expert_group_count", 0)));
+        moeConfig_.expertGroupUsedCount = static_cast<size_t>(std::max<int64_t>(
+            0, loader->getMetaInt(arch + ".expert_group_used_count", 0)));
+        moeConfig_.expertsPerGroup = static_cast<size_t>(std::max<int64_t>(
+            0, loader->getMetaInt(arch + ".experts_per_group", 0)));
+
+        moeRouters_.resize(modelWeights.numLayers);
+        moePinnedHandles_.resize(modelWeights.numLayers);
+
+        size_t moeLayerCount = 0;
+        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            LayerWeights& lw = modelWeights.layers[layer];
+            const bool layerIsMoE =
+                lw.moeRouter.data &&
+                lw.moeGate.size() == modelWeights.numExperts &&
+                lw.moeUp.size() == modelWeights.numExperts &&
+                lw.moeDown.size() == modelWeights.numExperts;
+
+            if (!layerIsMoE) {
+                // Leading/interleaved dense layers are legal in hybrid MoE.
+                if (!lw.wUp.data || !lw.wDown.data) {
+                    std::fprintf(stderr,
+                        "[Deep2Engine] layer %zu has neither complete dense nor MoE FFN\n",
+                        layer);
+                    return false;
+                }
+                continue;
+            }
+
+            auto router = std::make_unique<MoERouter>();
+            if (!router->Initialize(moeConfig_)) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu router initialization failed\n",
+                    layer);
+                return false;
+            }
+            moeRouters_[layer] = std::move(router);
+
+            auto& handles = moePinnedHandles_[layer];
+            handles.resize(modelWeights.numExperts);
+            for (size_t e = 0; e < modelWeights.numExperts; ++e) {
+                MoEWeightHandle& h = handles[e];
+                h.layer = static_cast<int>(layer);
+                h.expert = static_cast<int>(e);
+                h.gate = &lw.moeGate[e];
+                h.up = &lw.moeUp[e];
+                h.down = &lw.moeDown[e];
+
+                const size_t a = h.gate->sizeBytes;
+                const size_t b = h.up->sizeBytes;
+                const size_t c = h.down->sizeBytes;
+                if (a > std::numeric_limits<size_t>::max() - b ||
+                    a + b > std::numeric_limits<size_t>::max() - c) {
+                    std::fprintf(stderr,
+                        "[Deep2Engine] layer %zu expert %zu byte overflow\n",
+                        layer, e);
+                    return false;
+                }
+                h.bytes = a + b + c;
+            }
+            ++moeLayerCount;
+        }
+
+        if (moeLayerCount == 0) {
+            std::fprintf(stderr,
+                "[Deep2Engine] expert_count>0 but no MoE layer tensors were bound\n");
+            return false;
+        }
+        moeInitialized_ = true;
+
+        std::fprintf(stdout,
+            "[Deep2Engine] MoE bound: experts=%zu topk=%zu shared=%zu "
+            "moe_layers=%zu gating=%u scale=%.4f norm=%u\n",
+            modelWeights.numExperts,
+            modelWeights.numExpertsPerToken,
+            modelWeights.numSharedExperts,
+            moeLayerCount,
+            static_cast<unsigned>(moeConfig_.gatingFunc),
+            moeConfig_.expertWeightsScale,
+            moeConfig_.normalizeSelectedWeights ? 1u : 0u);
     }
 
     // Persist mapped-file ownership before any WeightTensor aliases are used.
@@ -1050,25 +1345,195 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     }
 }
 
-// =================== MoE FFN (stub → delegates to FFN) ====================
-void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output) {
-    (void)layer;
-    // TODO: real MoE routing
-    // For now: route to single dense expert
-    computeFFN(layer, input, output);
+// =================== SwiGLU ACTIVATION ====================
+void Deep2Engine::SwiGLU(const float* gate, const float* up,
+                         float* output, size_t dim) {
+    if (!gate || !up || !output || dim == 0)
+        throw std::runtime_error("SwiGLU: null input/output");
+    for (size_t i = 0; i < dim; ++i)
+        output[i] = silu(gate[i]) * up[i];
+}
+
+// =================== MoE FFN (REAL ROUTED EXPERTS) ====================
+void Deep2Engine::computeMoEFFN(size_t layer,
+                                const float* input,
+                                float* output) {
+    if (!input || !output || layer >= modelWeights.layers.size())
+        throw std::runtime_error("MoE: invalid layer/input/output");
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    const size_t H = modelWeights.hiddenDim;
+    const size_t E = modelWeights.numExperts;
+    const size_t K = modelWeights.numExpertsPerToken;
+    const size_t I = modelWeights.moeIntermediateDim;
+
+    if (H == 0 || E == 0 || K == 0 || K > E || I == 0)
+        throw std::runtime_error("MoE: invalid model geometry");
+    if (!lw.moeRouter.data ||
+        lw.moeRouter.rows != E ||
+        lw.moeRouter.cols != H)
+        throw std::runtime_error("MoE: router tensor not bound");
+    if (lw.moeGate.size() != E ||
+        lw.moeUp.size() != E ||
+        lw.moeDown.size() != E)
+        throw std::runtime_error("MoE: expert tensors not fully bound");
+    if (layer >= moeRouters_.size() || !moeRouters_[layer])
+        throw std::runtime_error("MoE: router runtime not initialized");
+
+    std::vector<float> routerLogits(E, 0.0f);
+    LinearW(lw.moeRouter, input, nullptr, routerLogits.data(), E);
+
+    TokenRoute route =
+        moeRouters_[layer]->RouteFromLogits(routerLogits.data(), E);
+    if (!route.valid ||
+        route.expertIds.size() != K ||
+        route.expertWeights.size() != K)
+        throw std::runtime_error("MoE: route failed");
+
+    std::fill(output, output + H, 0.0f);
+
+    // Shared expert participates independently of routed top-k experts.
+    if (lw.moeSharedGate.data || lw.moeSharedUp.data ||
+        lw.moeSharedDown.data) {
+        std::vector<float> shared(H, 0.0f);
+        computeSharedExpertFFN(layer, input, shared.data());
+        for (size_t i = 0; i < H; ++i)
+            output[i] += shared[i];
+    }
+
+    auto runOne = [&](size_t routeIndex) -> std::vector<float> {
+        const int expertId = route.expertIds[routeIndex];
+        if (expertId < 0 || static_cast<size_t>(expertId) >= E)
+            throw std::runtime_error("MoE: routed expert id out of range");
+
+        MoEWeightHandle handle;
+        handle.layer = static_cast<int>(layer);
+        handle.expert = expertId;
+        handle.gate = &lw.moeGate[static_cast<size_t>(expertId)];
+        handle.up   = &lw.moeUp[static_cast<size_t>(expertId)];
+        handle.down = &lw.moeDown[static_cast<size_t>(expertId)];
+
+        const size_t a = handle.gate->sizeBytes;
+        const size_t b = handle.up->sizeBytes;
+        const size_t c = handle.down->sizeBytes;
+        if (a > std::numeric_limits<size_t>::max() - b ||
+            a + b > std::numeric_limits<size_t>::max() - c)
+            throw std::runtime_error("MoE: expert byte counter overflow");
+        handle.bytes = a + b + c;
+
+        std::vector<float> expertOut(H, 0.0f);
+        computeExpertFFN(handle, input, expertOut.data(), H, I);
+        return expertOut;
+    };
+
+    // Top-k experts are independent. Use the real worker pool when safe;
+    // nested calls from a pool worker execute inline to avoid starvation.
+    if (threadPool && !threadPool->isWorkerThread() && K > 1) {
+        std::vector<std::future<std::vector<float>>> futures;
+        futures.reserve(K);
+        for (size_t j = 0; j < K; ++j) {
+            futures.emplace_back(threadPool->enqueue(
+                [&, j] { return runOne(j); }));
+        }
+
+        for (size_t j = 0; j < K; ++j) {
+            std::vector<float> expertOut = futures[j].get();
+            const float w = route.expertWeights[j];
+            for (size_t i = 0; i < H; ++i)
+                output[i] += w * expertOut[i];
+        }
+    } else {
+        for (size_t j = 0; j < K; ++j) {
+            std::vector<float> expertOut = runOne(j);
+            const float w = route.expertWeights[j];
+            for (size_t i = 0; i < H; ++i)
+                output[i] += w * expertOut[i];
+        }
+    }
+
+    if (!finiteVector(output, H))
+        throw std::runtime_error("MoE: non-finite routed output");
 }
 
 void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
-                                    const float* input, float* output,
-                                    size_t hiddenDim, size_t expertDim) {
-    (void)handle;
-    // Placeholder
-    std::memset(output, 0, hiddenDim * sizeof(float));
+                                   const float* input,
+                                   float* output,
+                                   size_t hiddenDim,
+                                   size_t expertDim) {
+    if (!handle.valid() || !input || !output ||
+        hiddenDim == 0 || expertDim == 0)
+        throw std::runtime_error("MoE expert: invalid handle/geometry");
+
+    const WeightTensor& gate = *handle.gate;
+    const WeightTensor& up   = *handle.up;
+    const WeightTensor& down = *handle.down;
+
+    if (!gate.data || !up.data || !down.data ||
+        gate.rows != expertDim || gate.cols != hiddenDim ||
+        up.rows != expertDim || up.cols != hiddenDim ||
+        down.rows != hiddenDim || down.cols != expertDim)
+        throw std::runtime_error("MoE expert: tensor geometry mismatch");
+
+    std::vector<float> gateBufLocal(expertDim, 0.0f);
+    std::vector<float> upBufLocal(expertDim, 0.0f);
+
+    LinearW(gate, input, nullptr, gateBufLocal.data(), expertDim);
+    LinearW(up,   input, nullptr, upBufLocal.data(), expertDim);
+
+    SwiGLU(gateBufLocal.data(),
+           upBufLocal.data(),
+           gateBufLocal.data(),
+           expertDim);
+
+    std::fill(output, output + hiddenDim, 0.0f);
+    LinearW(down, gateBufLocal.data(), nullptr, output, hiddenDim);
+
+    if (!finiteVector(output, hiddenDim))
+        throw std::runtime_error("MoE expert: non-finite output");
 }
 
-void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input, float* output) {
-    (void)layer;
-    computeFFN(layer, input, output);
+void Deep2Engine::computeSharedExpertFFN(size_t layer,
+                                         const float* input,
+                                         float* output) {
+    if (!input || !output || layer >= modelWeights.layers.size())
+        throw std::runtime_error("MoE shared: invalid layer/input/output");
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    const size_t H = modelWeights.hiddenDim;
+
+    const bool any =
+        lw.moeSharedGate.data || lw.moeSharedUp.data || lw.moeSharedDown.data;
+    if (!any) {
+        std::fill(output, output + H, 0.0f);
+        return;
+    }
+
+    if (!lw.moeSharedGate.data ||
+        !lw.moeSharedUp.data ||
+        !lw.moeSharedDown.data)
+        throw std::runtime_error("MoE shared: incomplete shared expert");
+
+    const size_t I = lw.moeSharedGate.rows;
+    if (I == 0 ||
+        lw.moeSharedGate.cols != H ||
+        lw.moeSharedUp.rows != I ||
+        lw.moeSharedUp.cols != H ||
+        lw.moeSharedDown.rows != H ||
+        lw.moeSharedDown.cols != I)
+        throw std::runtime_error("MoE shared: tensor geometry mismatch");
+
+    std::vector<float> gate(I, 0.0f);
+    std::vector<float> up(I, 0.0f);
+
+    LinearW(lw.moeSharedGate, input, nullptr, gate.data(), I);
+    LinearW(lw.moeSharedUp, input, nullptr, up.data(), I);
+    SwiGLU(gate.data(), up.data(), gate.data(), I);
+
+    std::fill(output, output + H, 0.0f);
+    LinearW(lw.moeSharedDown, gate.data(), nullptr, output, H);
+
+    if (!finiteVector(output, H))
+        throw std::runtime_error("MoE shared: non-finite output");
 }
 
 // =================== SSM / Mamba (stub) ====================
