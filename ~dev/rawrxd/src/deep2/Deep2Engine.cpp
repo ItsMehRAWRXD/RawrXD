@@ -9,6 +9,8 @@
 #include <cmath>
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <new>
 
 namespace Deep2 {
 
@@ -39,32 +41,83 @@ Deep2Engine::~Deep2Engine() { unloadModel(); }
 
 // =================== INITIALIZE ====================
 bool Deep2Engine::initialize(const EngineConfig& cfg) {
+    // Core lifecycle owns runtime objects; model geometry may still be unknown
+    // until the GGUF/model-loader batch binds real metadata.
+    deallocateBuffers();
     config = cfg;
-    if (cfg.numThreads > 0) {
+
+    clearCancel();
+    gpuFwd_ = {};
+    gpuFwdCommitted_ = false;
+    modelState_ = ModelState::Closed;
+
+    if (cfg.useThreadPool && cfg.numThreads > 0) {
         threadPool = std::make_unique<ThreadPool>(cfg.numThreads);
+    } else {
+        threadPool.reset();
     }
+
     kvCache = std::make_unique<KVCache>();
     tokenizer = std::make_unique<BPETokenizer>();
     sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
-    initialized = allocateBuffers();
-    return initialized;
+    deterministicGreedy_ = true;
+
+    // Initialization means the runtime is ready. Scratch buffers are allocated
+    // immediately only when geometry is already known; otherwise loadModel()
+    // (or a later real loader) binds geometry and allocates them.
+    initialized = true;
+    if (cfg.hiddenDim != 0 && cfg.vocabSize != 0) {
+        if (!allocateBuffers()) {
+            initialized = false;
+            return false;
+        }
+    }
+    return true;
 }
 
 // =================== ALLOCATE BUFFERS ====================
 bool Deep2Engine::allocateBuffers() {
-    size_t H = config.hiddenDim;
-    size_t maxS = config.maxSeqLen ? config.maxSeqLen : 2048;
-    hiddenStates   = new float[H];
-    attentionOutput= new float[H];
-    ffnOutput      = new float[H];
-    logits         = new float[config.vocabSize];
-    qProj = new float[H];
-    kProj = new float[H];
-    vProj = new float[H];
-    gateBuf = new float[H * 4]; // intermediate dim
-    upBuf   = new float[H * 4];
-    layerTemp = new float[H];
-    std::memset(hiddenStates, 0, H * sizeof(float));
+    const size_t H = modelWeights.hiddenDim ? modelWeights.hiddenDim : config.hiddenDim;
+    const size_t V = modelWeights.vocabSize ? modelWeights.vocabSize : config.vocabSize;
+    const size_t I = modelWeights.intermediateDim
+        ? modelWeights.intermediateDim
+        : (config.intermediateDim ? config.intermediateDim : (H ? H * 4 : 0));
+
+    if (H == 0 || V == 0 || I == 0) return false;
+
+    deallocateBuffers();
+
+    hiddenStates    = new (std::nothrow) float[H];
+    attentionOutput = new (std::nothrow) float[H];
+    ffnOutput       = new (std::nothrow) float[H];
+    logits          = new (std::nothrow) float[V];
+    qProj           = new (std::nothrow) float[H];
+    kProj           = new (std::nothrow) float[H];
+    vProj           = new (std::nothrow) float[H];
+    gateBuf         = new (std::nothrow) float[I];
+    upBuf           = new (std::nothrow) float[I];
+    layerTemp       = new (std::nothrow) float[H];
+
+    if (!hiddenStates || !attentionOutput || !ffnOutput || !logits ||
+        !qProj || !kProj || !vProj || !gateBuf || !upBuf || !layerTemp) {
+        deallocateBuffers();
+        return false;
+    }
+
+    std::memset(hiddenStates,    0, H * sizeof(float));
+    std::memset(attentionOutput, 0, H * sizeof(float));
+    std::memset(ffnOutput,       0, H * sizeof(float));
+    std::memset(logits,          0, V * sizeof(float));
+    std::memset(qProj,           0, H * sizeof(float));
+    std::memset(kProj,           0, H * sizeof(float));
+    std::memset(vProj,           0, H * sizeof(float));
+    std::memset(gateBuf,         0, I * sizeof(float));
+    std::memset(upBuf,           0, I * sizeof(float));
+    std::memset(layerTemp,       0, H * sizeof(float));
+
+    config.hiddenDim = H;
+    config.vocabSize = V;
+    config.intermediateDim = I;
     return true;
 }
 
@@ -83,7 +136,18 @@ void Deep2Engine::deallocateBuffers() {
 
 // =================== RESET ====================
 void Deep2Engine::reset() {
-    if (kvCache) kvCache->advance(); // TODO: proper reset
+    // Do not depend on KVCache::clear() while KVCache is still a later batch.
+    // Reconstructing the object gives this core a real zero-length reset now.
+    kvCache = std::make_unique<KVCache>();
+    clearCancel();
+
+    if (hiddenStates && config.hiddenDim)
+        std::memset(hiddenStates, 0, config.hiddenDim * sizeof(float));
+    if (attentionOutput && config.hiddenDim)
+        std::memset(attentionOutput, 0, config.hiddenDim * sizeof(float));
+    if (ffnOutput && config.hiddenDim)
+        std::memset(ffnOutput, 0, config.hiddenDim * sizeof(float));
+
     gpuFwdCommitted_ = false;
     gpuFwd_ = {};
 }
@@ -103,6 +167,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.normEps = 1e-5f;
     modelWeights.loaded = true;
     modelState_ = ModelState::Indexed;
+
+    // Until the GGUF loader batch replaces the synthetic metadata above,
+    // keep core geometry internally consistent and allocate using that geometry.
+    config.numLayers = modelWeights.numLayers;
+    config.numHeads = modelWeights.numHeads;
+    config.numKVHeads = modelWeights.numKVHeads;
+    config.headDim = modelWeights.headDim;
+    config.hiddenDim = modelWeights.hiddenDim;
+    config.vocabSize = modelWeights.vocabSize;
+    config.intermediateDim = modelWeights.intermediateDim;
+    config.normEps = modelWeights.normEps;
+
+    if (!initialized) {
+        EngineConfig recovered = config;
+        if (!initialize(recovered)) return false;
+    }
+    if (!allocateBuffers()) {
+        modelWeights.loaded = false;
+        modelState_ = ModelState::Closed;
+        return false;
+    }
+
     // Try load tokenizer
     if (tokenizer) {
         auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get());
@@ -112,18 +198,33 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             bpe->loadFromFile(vocabPath);
         }
     }
+    modelState_ = ModelState::Choreographable;
     return true;
 }
 
 bool Deep2Engine::loadWeights(const void* weightData, size_t weightSize) {
-    (void)weightData; (void)weightSize;
-    return true; // TODO: real weight copy
+    if (!weightData || weightSize == 0) return false;
+
+    uint8_t* copy = new (std::nothrow) uint8_t[weightSize];
+    if (!copy) return false;
+    std::memcpy(copy, weightData, weightSize);
+
+    delete[] reinterpret_cast<uint8_t*>(weights);
+    weights = reinterpret_cast<float*>(copy);
+    this->weightSize = weightSize;
+    return true;
 }
 
 void Deep2Engine::unloadModel() {
     deallocateBuffers();
+    delete[] reinterpret_cast<uint8_t*>(weights);
+    weights = nullptr;
+    weightSize = 0;
     modelWeights = {};
-    initialized = false;
+    kvCache = std::make_unique<KVCache>();
+    clearCancel();
+    gpuFwd_ = {};
+    gpuFwdCommitted_ = false;
     modelState_ = ModelState::Closed;
 }
 
@@ -299,49 +400,106 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                               int* outputTokens, size_t maxOutputLen,
                               InferenceStats* stats,
                               std::function<bool(int)> onToken) {
+    if (stats) *stats = {};
     if (!initialized || !modelWeights.loaded) return 0;
+    if (!promptTokens || promptLen == 0) return 0;
+    if (!outputTokens || maxOutputLen == 0) return 0;
+    if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) return 0;
+
+    // A fresh top-level generate transaction consumes any old cancel request.
+    clearCancel();
+    modelState_ = ModelState::Generating;
+
     auto t0 = std::chrono::steady_clock::now();
-    // Embed prompt
+
     std::vector<float> hidden(config.hiddenDim);
-    if (promptLen > 0) {
-        embedToken(promptTokens[0], hidden.data());
-    } else {
-        embedToken(1, hidden.data()); // BOS
+
+    // Prefill each prompt token exactly once, in token order.
+    for (size_t p = 0; p < promptLen; ++p) {
+        if (cancelRequested_.load(std::memory_order_acquire)) {
+            modelState_ = ModelState::Choreographable;
+            return 0;
+        }
+        if (!embedToken(promptTokens[p], hidden.data())) {
+            modelState_ = ModelState::Choreographable;
+            return 0;
+        }
+        if (!forwardTokenAllLayers(hidden.data(), p + 1)) {
+            modelState_ = ModelState::Choreographable;
+            return 0;
+        }
+        if (config.useKVCache && kvCache) kvCache->advance();
     }
-    // Prefill: run through all prompt tokens
-    for (size_t p = 1; p < promptLen; ++p) {
-        forwardTokenAllLayers(hidden.data(), p + 1);
-        embedToken(promptTokens[p], hidden.data());
-    }
+
     auto tPrefillEnd = std::chrono::steady_clock::now();
-    // Decode loop
+
+    // Context cap is an execution invariant, not a best-effort hint.
+    size_t decodeLimit = maxOutputLen;
+    if (config.maxSeqLen != 0) {
+        if (promptLen >= config.maxSeqLen) {
+            decodeLimit = 0;
+        } else {
+            decodeLimit = std::min(decodeLimit, config.maxSeqLen - promptLen);
+        }
+    }
+
     size_t generated = 0;
-    int nextTok = promptLen > 0 ? promptTokens[promptLen - 1] : 1;
-    for (size_t i = 0; i < maxOutputLen; ++i) {
-        if (cancelRequested_.load()) break;
-        embedToken(nextTok, hidden.data());
-        forwardTokenAllLayers(hidden.data(), promptLen + i + 1);
+
+    // First generated token comes from the final prompt hidden state. Every
+    // later token consumes the previously generated token exactly once.
+    for (size_t i = 0; i < decodeLimit; ++i) {
+        if (cancelRequested_.load(std::memory_order_acquire)) break;
+
+        if (i > 0) {
+            const int prev = outputTokens[i - 1];
+            if (!embedToken(prev, hidden.data())) break;
+            if (!forwardTokenAllLayers(hidden.data(), promptLen + i)) break;
+            if (config.useKVCache && kvCache) kvCache->advance();
+        }
+
         computeLogits(hidden.data(), logits);
-        nextTok = sampleToken(logits);
+        const int nextTok = sampleToken(logits);
+        if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) break;
+
         outputTokens[i] = nextTok;
         generated++;
+
         if (onToken && !onToken(nextTok)) break;
     }
+
     auto tEnd = std::chrono::steady_clock::now();
+
     if (stats) {
         stats->tokensGenerated = generated;
         stats->promptTokens = promptLen;
+        stats->prefillMs =
+            std::chrono::duration<double, std::milli>(tPrefillEnd - t0).count();
         stats->totalWallMs = std::chrono::duration<double, std::milli>(tEnd - t0).count();
         stats->decodeMs = std::chrono::duration<double, std::milli>(tEnd - tPrefillEnd).count();
-        if (stats->decodeMs > 0)
+
+        if (stats->prefillMs > 0.0) {
+            stats->prefillTokensPerSecond =
+                static_cast<double>(promptLen) / (stats->prefillMs / 1000.0);
+        }
+        if (stats->decodeMs > 0.0) {
             stats->decodeTokensPerSecond = generated / (stats->decodeMs / 1000.0);
-        stats->tokensPerSecond = stats->decodeTokensPerSecond;
+        }
+        if (stats->totalWallMs > 0.0) {
+            stats->tokensPerSecond = generated / (stats->totalWallMs / 1000.0);
+        }
+        if (generated > 0) {
+            stats->latencyMs = stats->totalWallMs / static_cast<double>(generated);
+        }
     }
+
+    modelState_ = ModelState::Choreographable;
     return generated;
 }
 
 std::string Deep2Engine::generateText(const std::string& prompt, size_t maxTokens) {
+    if (prompt.empty() || maxTokens == 0) return {};
     auto toks = tokenize(prompt);
+    if (toks.empty()) return {};
     std::vector<int> out(maxTokens);
     InferenceStats st{};
     size_t n = generate(toks.data(), toks.size(), out.data(), maxTokens, &st);
@@ -349,24 +507,46 @@ std::string Deep2Engine::generateText(const std::string& prompt, size_t maxToken
     return detokenize(out);
 }
 
-// =================== STREAMING GENERATE (stub) ====================
+// =================== STREAMING GENERATE ====================
 GenerationResult Deep2Engine::generateStream(
     const std::string& prompt,
     const GenerationOptions& options,
     TokenCallback callback) {
+    GenerationResult res{};
     configureGeneration(options);
+
     auto toks = tokenize(prompt);
-    std::vector<int> out(options.maxTokens ? options.maxTokens : 256);
+    res.promptTokens = toks.size();
+    if (toks.empty() || !initialized || !modelWeights.loaded) return res;
+
+    // maxTokens==0 means "until a real stop condition". This engine does not
+    // yet own EOS metadata, so the hard context boundary is the safe stop.
+    size_t limit = options.maxTokens;
+    if (limit == 0) {
+        if (config.maxSeqLen > toks.size()) {
+            limit = config.maxSeqLen - toks.size();
+        } else {
+            return res;
+        }
+    }
+
+    std::vector<int> out(limit);
     InferenceStats st{};
-    size_t n = generate(toks.data(), toks.size(), out.data(), out.size(), &st,
+
+    const size_t n = generate(toks.data(), toks.size(), out.data(), out.size(), &st,
         [&](int tok) {
-            if (callback) return callback(tok, "");
+            if (callback) {
+                const std::string piece = tokenizer ? tokenizer->decode(tok) : std::string{};
+                return callback(tok, piece);
+            }
             return true;
         });
-    GenerationResult res;
+
     res.generatedTokens = n;
+    res.promptTimeMs = st.prefillMs;
     res.generationTimeMs = st.decodeMs;
-    res.completed = true;
+    res.cancelled = cancelRequested_.load(std::memory_order_acquire);
+    res.completed = !res.cancelled;
     return res;
 }
 
