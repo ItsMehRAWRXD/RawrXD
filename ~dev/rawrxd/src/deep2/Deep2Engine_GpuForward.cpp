@@ -138,6 +138,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, (int)slot)) return false;
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
+    vc->SetWorkEpoch(kvCache ? kvCache->currentLength() : 0);
 
     const auto& lw = modelWeights.layers[layer];
     const uint32_t H = (uint32_t)config.hiddenDim;
@@ -222,49 +223,50 @@ bool Deep2Engine::forwardLayerGpuResident(
         return vc->DispatchGemvDevice(w, WeightKey(wt), in, out, rows, cols);
     };
     // Overlapped QKV: upload next while prior GEMV runs
-    auto gemvOverlap3 = [&](const WeightTensor& a, const WeightTensor& b, const WeightTensor& c,
+    auto gemvOverlap3 = [&](const WeightTensor& qa, const WeightTensor& qb,
+                            const WeightTensor& qc,
                             CPUInference::VulkanCompute::DeviceBuf& in,
                             CPUInference::VulkanCompute::DeviceBuf& outA,
                             CPUInference::VulkanCompute::DeviceBuf& outB,
                             CPUInference::VulkanCompute::DeviceBuf& outC,
                             uint32_t rA, uint32_t rB, uint32_t rC, uint32_t cols) -> bool {
         if (!(prefetch && vc->WeightStreamActive())) {
-            return gemv(a, in, outA, rA, cols) && gemv(b, in, outB, rB, cols) &&
-                   gemv(c, in, outC, rC, cols);
+            return gemv(qa, in, outA, rA, cols) && gemv(qb, in, outB, rB, cols) &&
+                   gemv(qc, in, outC, rC, cols);
         }
-        if (PackedQuant(a) && PackedQuant(b) && PackedQuant(c)) {
+        if (PackedQuant(qa) && PackedQuant(qb) && PackedQuant(qc)) {
             auto bumpQ = [&](const WeightTensor& wt) {
                 if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) ++c.q4kPackedOps;
                 else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) ++c.q6kPackedOps;
                 else if (wt.type == (int)GGMLType::GGML_TYPE_Q2_K) ++c.q2kPackedOps;
             };
-            bumpQ(a); bumpQ(b); bumpQ(c);
+            bumpQ(qa); bumpQ(qb); bumpQ(qc);
             if (!vc->FlushWeightComputes()) return false;
             uint32_t sa = 0, sb = 0, sc = 0;
-            if (!vc->PrefetchWeight(a.data, a.sizeBytes, sa)) return false;
-            if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols, a.sizeBytes, a.type))
+            if (!vc->PrefetchWeight(qa.data, qa.sizeBytes, sa)) return false;
+            if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols, qa.sizeBytes, qa.type))
                 return false;
-            if (!vc->PrefetchWeight(b.data, b.sizeBytes, sb)) return false;
+            if (!vc->PrefetchWeight(qb.data, qb.sizeBytes, sb)) return false;
             if (!vc->WaitWeightCompute(sa)) return false;
-            if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols, b.sizeBytes, b.type))
+            if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols, qb.sizeBytes, qb.type))
                 return false;
-            if (!vc->PrefetchWeight(c.data, c.sizeBytes, sc)) return false;
+            if (!vc->PrefetchWeight(qc.data, qc.sizeBytes, sc)) return false;
             if (!vc->WaitWeightCompute(sb)) return false;
-            if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols, c.sizeBytes, c.type))
+            if (!vc->SubmitGemvPrefetch(sc, in, outC, rC, cols, qc.sizeBytes, qc.type))
                 return false;
             return vc->WaitWeightCompute(sc);
         }
         if (!vc->FlushWeightComputes()) return false;
-        const float* wa = EnsureF32(*this, a, vulkanWeightF32_);
+        const float* wa = EnsureF32(*this, qa, vulkanWeightF32_);
         uint32_t sa = 0;
         if (!wa || !vc->PrefetchWeight(wa, (size_t)rA * cols * 4, sa)) return false;
         if (!vc->SubmitGemvPrefetch(sa, in, outA, rA, cols)) return false;
-        const float* wb = EnsureF32(*this, b, vulkanWeightF32_);
+        const float* wb = EnsureF32(*this, qb, vulkanWeightF32_);
         uint32_t sb = 0;
         if (!wb || !vc->PrefetchWeight(wb, (size_t)rB * cols * 4, sb)) return false; // overlaps GEMV A
         if (!vc->WaitWeightCompute(sa)) return false;
         if (!vc->SubmitGemvPrefetch(sb, in, outB, rB, cols)) return false;
-        const float* wc = EnsureF32(*this, c, vulkanWeightF32_);
+        const float* wc = EnsureF32(*this, qc, vulkanWeightF32_);
         uint32_t sc = 0;
         if (!wc || !vc->PrefetchWeight(wc, (size_t)rC * cols * 4, sc)) return false; // overlaps GEMV B
         if (!vc->WaitWeightCompute(sb)) return false;
@@ -414,8 +416,54 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
     if (!vc0 || !vc0->UploadHidden(hostIn, H)) return false;
     ++gpuFwd_.hostSyncBoundaries;
 
+    // BATCH9_USEFUL_NEXT_STICK_PRIME:
+    // While GPU0 executes its dependent layer range, GPU1 transfers a REAL
+    // tensor that GPU1 will consume next. The target buffer is adopted into
+    // the normal weight cache; this is not a disposable timing workload.
+    CPUInference::VulkanCompute::MaterialTicket batch9Prime{};
+    int batch9PrimeType = -1;
+    uint64_t batch9PrimeKey = 0;
+    bool batch9PrimeLive = false;
+    if (gpuN > 1) {
+        auto* next = getVulkanComputeSlot(1);
+        const uint32_t nLo = multiGpuLayerPlan_.rangeLo[1];
+        if (next && nLo < modelWeights.layers.size() &&
+            !next->WeightPrefetchActive()) {
+            const WeightTensor& wt = modelWeights.layers[nLo].wq;
+            const bool gpuPacked =
+                wt.type == (int)GGMLType::GGML_TYPE_Q8_0 ||
+                wt.type == (int)GGMLType::GGML_TYPE_Q2_K ||
+                wt.type == (int)GGMLType::GGML_TYPE_Q4_K ||
+                wt.type == (int)GGMLType::GGML_TYPE_Q6_K;
+            if (wt.data && (gpuPacked ||
+                wt.type == (int)GGMLType::GGML_TYPE_F32)) {
+                const size_t bytes = gpuPacked
+                    ? wt.sizeBytes
+                    : wt.rows * wt.cols * sizeof(float);
+                batch9PrimeType = gpuPacked ? wt.type : 0;
+                batch9PrimeKey = gpuPacked
+                    ? (uint64_t)(uintptr_t)wt.data
+                    : WeightKey(wt);
+                const uint64_t epoch =
+                    kvCache ? kvCache->currentLength() : 0;
+                next->SetWorkEpoch(epoch);
+                batch9PrimeLive = next->SubmitWeightPrimeAsync(
+                    wt.data, bytes, batch9PrimeType,
+                    batch9PrimeKey, epoch, batch9Prime);
+            }
+        }
+    }
+
     for (unsigned s = 0; s < gpuN; ++s) {
         auto* vc = getVulkanComputeSlot(s);
+        if (s == 1 && batch9PrimeLive) {
+            Deep2::GpuWorkInterval primeInterval{};
+            if (!vc || !vc->CommitWeightPrime(
+                    batch9Prime,batch9PrimeType,batch9PrimeKey,
+                    &primeInterval))
+                return false;
+            batch9PrimeLive = false;
+        }
         if (!vc) return false;
         const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
@@ -446,6 +494,11 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
             }
             if (!next || !vc->CopyArenaHiddenTo(*next, H)) return false;
             ++gpuFwd_.ownershipTransfers;
+            if (vc->LastCrossDeviceCopyUsedHost()) {
+                // Batch 9 refuses to call a host bounce peer-resident.
+                ++gpuFwd_.hostMaterializations;
+                ++gpuFwd_.intraSlotHostTransfers;
+            }
         }
     }
 

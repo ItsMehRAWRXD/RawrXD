@@ -1,0 +1,171 @@
+#version 450
+// Batch 9 packed GGUF GEMV.
+// Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+layout(local_size_x = 64) in;
+
+layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint type;
+    uint rows;
+    uint cols;
+    uint weightBytes;
+} pc;
+
+uint getb(uint byteIndex) {
+    uint word = w[byteIndex >> 2u];
+    return (word >> ((byteIndex & 3u) * 8u)) & 255u;
+}
+int gets8(uint byteIndex) {
+    int v = int(getb(byteIndex));
+    return v >= 128 ? v - 256 : v;
+}
+float geth(uint byteIndex) {
+    uint h = getb(byteIndex) | (getb(byteIndex + 1u) << 8u);
+    return unpackHalf2x16(h).x;
+}
+
+void q4kScaleMin(uint base, uint sb, out uint sc, out uint mn) {
+    if (sb < 4u) {
+        sc = getb(base + 4u + sb) & 63u;
+        mn = getb(base + 8u + sb) & 63u;
+    } else {
+        uint j = sb - 4u;
+        sc = (getb(base + 12u + j) & 15u) |
+             ((getb(base + 4u + j) >> 6u) << 4u);
+        mn = (getb(base + 12u + j) >> 4u) |
+             ((getb(base + 8u + j) >> 6u) << 4u);
+    }
+}
+
+float q8_0_weight(uint rowBase, uint col) {
+    uint block = col / 32u;
+    uint i = col % 32u;
+    uint b = rowBase + block * 34u;
+    return geth(b) * float(gets8(b + 2u + i));
+}
+
+float q2k_weight(uint rowBase, uint col) {
+    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * 84u;
+    float ds = geth(b + 0u);
+    float dm = geth(b + 2u);
+
+    uint chunk = idx / 128u;
+    uint rem = idx % 128u;
+    uint subBlock = rem / 32u;
+    uint group = (rem % 32u) / 16u;
+    uint pos = rem % 16u;
+
+    uint scaleIdx = chunk * 8u + subBlock * 2u + group;
+    uint packedScale = getb(b + 4u + scaleIdx);
+    float dl = ds * float(packedScale & 15u);
+    float ml = dm * float(packedScale >> 4u);
+
+    uint qsIdx = chunk * 32u + group * 16u + pos;
+    uint shift = subBlock * 2u;
+    uint q = (getb(b + 20u + qsIdx) >> shift) & 3u;
+    return dl * float(q) - ml;
+}
+
+float q4k_weight(uint rowBase, uint col) {
+    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * 144u;
+    float ds = geth(b + 0u);
+    float dm = geth(b + 2u);
+
+    uint sb = idx / 32u;
+    uint l = idx % 32u;
+    uint sc, mn;
+    q4kScaleMin(b, sb, sc, mn);
+
+    uint pair = sb / 2u;
+    uint packed = getb(b + 16u + pair * 32u + l);
+    uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
+    return ds * float(sc) * float(q) - dm * float(mn);
+}
+
+float q6k_weight(uint rowBase, uint col) {
+    uint block = col / 256u;
+    uint idx = col % 256u;
+    uint b = rowBase + block * 210u;
+    float ds = geth(b + 208u);
+
+    uint hi128 = idx / 128u;
+    uint within = idx % 128u;
+    uint cat = within / 32u;
+    uint l = within % 32u;
+    uint is = l / 16u;
+
+    uint qlBase = b + hi128 * 64u;
+    uint qhBase = b + 128u + hi128 * 32u;
+    uint scBase = b + 192u + hi128 * 8u;
+
+    uint q = 0u;
+    uint scIndex = 0u;
+    if (cat == 0u) {
+        q = (getb(qlBase + l) & 15u) |
+            (((getb(qhBase + l) >> 0u) & 3u) << 4u);
+        scIndex = is + 0u;
+    } else if (cat == 1u) {
+        q = (getb(qlBase + l + 32u) & 15u) |
+            (((getb(qhBase + l) >> 2u) & 3u) << 4u);
+        scIndex = is + 2u;
+    } else if (cat == 2u) {
+        q = (getb(qlBase + l) >> 4u) |
+            (((getb(qhBase + l) >> 4u) & 3u) << 4u);
+        scIndex = is + 4u;
+    } else {
+        q = (getb(qlBase + l + 32u) >> 4u) |
+            (((getb(qhBase + l) >> 6u) & 3u) << 4u);
+        scIndex = is + 6u;
+    }
+    int qs = int(q) - 32;
+    int scale = gets8(scBase + scIndex);
+    return ds * float(scale) * float(qs);
+}
+
+void main() {
+    uint row = gl_GlobalInvocationID.x;
+    if (row >= pc.rows) return;
+
+    uint blocksPerRow = 0u;
+    uint rowBytes = 0u;
+    if (pc.type == 8u) {
+        blocksPerRow = (pc.cols + 31u) / 32u;
+        rowBytes = blocksPerRow * 34u;
+    } else if (pc.type == 10u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        rowBytes = blocksPerRow * 84u;
+    } else if (pc.type == 12u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        rowBytes = blocksPerRow * 144u;
+    } else if (pc.type == 14u) {
+        blocksPerRow = (pc.cols + 255u) / 256u;
+        rowBytes = blocksPerRow * 210u;
+    } else {
+        y[row] = uintBitsToFloat(0x7fc00000u);
+        return;
+    }
+
+    uint rb = row * rowBytes;
+    if (rb + rowBytes > pc.weightBytes) {
+        y[row] = uintBitsToFloat(0x7fc00000u);
+        return;
+    }
+
+    float acc = 0.0;
+    for (uint j = 0u; j < pc.cols; ++j) {
+        float ww = 0.0;
+        if (pc.type == 8u) ww = q8_0_weight(rb, j);
+        else if (pc.type == 10u) ww = q2k_weight(rb, j);
+        else if (pc.type == 12u) ww = q4k_weight(rb, j);
+        else if (pc.type == 14u) ww = q6k_weight(rb, j);
+        acc += ww * x[j];
+    }
+    y[row] = acc;
+}

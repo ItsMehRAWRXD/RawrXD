@@ -4936,6 +4936,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/DualLaneChoreographer.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
     src/deep2/Deep2MultiGpu_CostCut.cpp
+    src/deep2/vulkan_compute.cpp
+    src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
     src/deep2/Deep2Engine_GpuToken.cpp
     src/deep2/Deep2Engine_SsVkDecodeBind.cpp

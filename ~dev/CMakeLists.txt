@@ -52,6 +52,10 @@ set(RAWRXD_DEEP2_SOURCES
     rawrxd/src/deep2/QuantKernelRegistry.cpp
     rawrxd/src/deep2/Deep2Engine_SsVkDecodeBind.cpp
     rawrxd/src/deep2/d2_engine_ssvk_decode_bind.c
+    rawrxd/src/deep2/vulkan_compute.cpp
+    rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+    rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+    rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
 )
 
 #--------------------
@@ -130,6 +134,10 @@ add_executable(deep2_standalone
     rawrxd/src/deep2/QuantKernelRegistry.cpp
     rawrxd/src/deep2/Deep2Engine_SsVkDecodeBind.cpp
     rawrxd/src/deep2/d2_engine_ssvk_decode_bind.c
+    rawrxd/src/deep2/vulkan_compute.cpp
+    rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+    rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+    rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
     tests/deep2_standalone.cpp
 )
 target_include_directories(deep2_standalone PRIVATE
@@ -137,3 +145,24 @@ target_include_directories(deep2_standalone PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
 )
+
+# Batch 9: Vulkan runtime for deep2_standalone.
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+    target_link_libraries(deep2_standalone PRIVATE Vulkan::Vulkan)
+else()
+    message(STATUS "[deep2_standalone] Vulkan SDK not found - Batch 9 runtime will fail closed at device init")
+endif()
+
+# Batch 9 hardware cert: physical enumeration + dual-device probe.
+add_executable(batch9_vulkan_multigpu_cert
+    rawrxd/src/deep2/Batch9_VulkanMultiGpuCert.cpp
+    rawrxd/src/deep2/vulkan_compute.cpp
+)
+target_include_directories(batch9_vulkan_multigpu_cert PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+)
+if(Vulkan_FOUND)
+    target_link_libraries(batch9_vulkan_multigpu_cert PRIVATE Vulkan::Vulkan)
+endif()

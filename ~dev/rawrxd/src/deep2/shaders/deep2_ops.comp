@@ -1,0 +1,154 @@
+#version 450
+// Batch 9 Deep2 generic correctness-first GPU ops.
+// No external shader libraries.
+layout(local_size_x = 64) in;
+
+layout(set=0,binding=0,std430) buffer A0 { float a[]; };
+layout(set=0,binding=1,std430) buffer B0 { float b[]; };
+layout(set=0,binding=2,std430) buffer C0 { float c[]; };
+layout(set=0,binding=3,std430) buffer D0 { float d[]; };
+
+layout(push_constant) uniform Push {
+    uint op;
+    uint n;
+    uint p0;
+    uint p1;
+    uint p2;
+    uint p3;
+    uint p4;
+    uint p5;
+    float f0;
+    float f1;
+} pc;
+
+const uint OP_PROBE    = 0u;
+const uint OP_GEMV_F32 = 1u;
+const uint OP_RMSNORM  = 2u;
+const uint OP_RESIDUAL = 3u;
+const uint OP_SWIGLU   = 4u;
+const uint OP_ROPE     = 5u;
+const uint OP_ATTN     = 6u;
+
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+
+    if (pc.op == OP_PROBE) {
+        if (gid < pc.n) c[gid] = a[gid] * pc.f0 + pc.f1;
+        return;
+    }
+
+    if (pc.op == OP_GEMV_F32) {
+        uint row = gid;
+        uint rows = pc.n;
+        uint cols = pc.p0;
+        if (row >= rows) return;
+        float acc = 0.0;
+        uint off = row * cols;
+        for (uint j = 0u; j < cols; ++j) acc += a[off + j] * b[j];
+        c[row] = acc;
+        return;
+    }
+
+    if (pc.op == OP_RMSNORM) {
+        if (gid >= pc.n) return;
+        float ss = 0.0;
+        for (uint j = 0u; j < pc.n; ++j) ss += a[j] * a[j];
+        float inv = inversesqrt(ss / float(pc.n) + pc.f0);
+        c[gid] = a[gid] * inv * b[gid];
+        return;
+    }
+
+    if (pc.op == OP_RESIDUAL) {
+        if (gid < pc.n) c[gid] = a[gid] + b[gid];
+        return;
+    }
+
+    if (pc.op == OP_SWIGLU) {
+        if (gid < pc.n) {
+            float g = a[gid];
+            float silu = g >= 0.0
+                ? g / (1.0 + exp(-g))
+                : g * exp(g) / (1.0 + exp(g));
+            c[gid] = silu * b[gid];
+        }
+        return;
+    }
+
+    if (pc.op == OP_ROPE) {
+        uint headDim = pc.p0;
+        uint heads = pc.p1;
+        uint kvHeads = pc.p2;
+        uint pos = pc.p3;
+        uint pairsPerHead = headDim / 2u;
+        uint allHeads = heads + kvHeads;
+        uint totalPairs = allHeads * pairsPerHead;
+        if (gid >= totalPairs || headDim == 0u || pc.f0 <= 0.0) return;
+
+        uint h = gid / pairsPerHead;
+        uint pair = gid % pairsPerHead;
+        uint i0 = h * headDim + pair * 2u;
+        uint i1 = i0 + 1u;
+        float exponent = -float(pair * 2u) / float(headDim);
+        float theta = float(pos) * pow(pc.f0, exponent);
+        float cs = cos(theta);
+        float sn = sin(theta);
+
+        if (h < heads) {
+            float x0 = a[i0], x1 = a[i1];
+            a[i0] = x0 * cs - x1 * sn;
+            a[i1] = x0 * sn + x1 * cs;
+        } else {
+            uint kh = h - heads;
+            i0 = kh * headDim + pair * 2u;
+            i1 = i0 + 1u;
+            float x0 = b[i0], x1 = b[i1];
+            b[i0] = x0 * cs - x1 * sn;
+            b[i1] = x0 * sn + x1 * cs;
+        }
+        return;
+    }
+
+    if (pc.op == OP_ATTN) {
+        // a=Q, b=K cache, c=V cache, d=output
+        uint headDim = pc.p0;
+        uint heads = pc.p1;
+        uint kvHeads = pc.p2;
+        uint seqLen = pc.p3;
+        uint kvDim = pc.p4;
+        uint layerBase = pc.p5; // float-element offset into layer's cache
+        uint total = heads * headDim;
+        if (gid >= total || kvHeads == 0u || heads % kvHeads != 0u) return;
+
+        uint h = gid / headDim;
+        uint od = gid % headDim;
+        uint group = heads / kvHeads;
+        uint kh = h / group;
+
+        float maxScore = -3.402823466e+38;
+        for (uint t = 0u; t < seqLen; ++t) {
+            uint kb = layerBase + t * kvDim + kh * headDim;
+            float s = 0.0;
+            uint qb = h * headDim;
+            for (uint j = 0u; j < headDim; ++j)
+                s += a[qb + j] * b[kb + j];
+            s *= pc.f0;
+            maxScore = max(maxScore, s);
+        }
+
+        float denom = 0.0;
+        float numer = 0.0;
+        for (uint t = 0u; t < seqLen; ++t) {
+            uint kb = layerBase + t * kvDim + kh * headDim;
+            float s = 0.0;
+            uint qb = h * headDim;
+            for (uint j = 0u; j < headDim; ++j)
+                s += a[qb + j] * b[kb + j];
+            s *= pc.f0;
+            float e = exp(s - maxScore);
+            denom += e;
+            numer += e * c[kb + od];
+        }
+        d[gid] = denom > 0.0 ? numer / denom : 0.0;
+        return;
+    }
+}

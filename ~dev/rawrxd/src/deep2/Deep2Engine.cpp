@@ -1547,11 +1547,27 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (!modelWeights.loaded || !hidden || seqLen == 0) return false;
     if (modelWeights.layers.size() < modelWeights.numLayers) return false;
 
+    // Batch 9: the GPU path owns GPU counters. CPU fallback must never increment
+    // forwardLayers, otherwise a host decode can counterfeit GPU authority.
+    if (vulkanEnabled_ && vulkanInitialized_) {
+        if (tryGpuTokenForward(hidden)) {
+            gpuFwdCommitted_ = true;
+            return true;
+        }
+
+        ++vulkanGemvFail_;
+        gpuFwdCommitted_ = false;
+        if (vulkanStrictNoCpuFallback_) {
+            vulkanStrictViolation_ = true;
+            return false;
+        }
+    }
+
     try {
         for (size_t l = 0; l < modelWeights.numLayers; ++l) {
             forwardLayer(l, hidden, layerTemp, seqLen);
             std::memcpy(hidden, layerTemp, config.hiddenDim * sizeof(float));
-            gpuFwd_.forwardLayers++;
+            ++gpuFwd_.hostForwardLayerCalls;
         }
     } catch (const std::exception& ex) {
         std::fprintf(stderr, "[Deep2Engine] forward failed: %s\n", ex.what());
@@ -1559,7 +1575,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         return false;
     }
 
-    gpuFwdCommitted_ = true;
+    gpuFwdCommitted_ = false;
     return true;
 }
 
@@ -1719,29 +1735,8 @@ GenerationResult Deep2Engine::generateStream(
 }
 
 // =================== GPU FORWARD (stubs) ====================
-bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
-    (void)slot;
-    return true;
-}
-bool Deep2Engine::forwardLayerGpuResident(uint32_t layer, unsigned slot,
-                                          bool uploadEntry, bool downloadExit) {
-    (void)layer; (void)slot; (void)uploadEntry; (void)downloadExit;
-    return true;
-}
-bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
-                                            const float* hostIn, float* hostOut) {
-    (void)slot; (void)lo; (void)hi; (void)hostIn; (void)hostOut;
-    return true;
-}
-bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
-    (void)hostIn; (void)hostOut;
-    return true;
-}
-bool Deep2Engine::tryGpuTokenForward(float* hidden) {
-    (void)hidden;
-    return false; // CPU path
-}
-bool Deep2Engine::gpuResidentDecodeEnabled() const { return false; }
+// Batch 9: real definitions live in Deep2Engine_GpuForward.cpp +
+// Deep2Engine_VulkanRuntime.cpp. Old success stubs removed.
 
 // =================== FIND / LOAD TENSOR ====================
 WeightTensor* Deep2Engine::findTensor(const std::string& namePattern) {
@@ -1833,9 +1828,8 @@ void Deep2Engine::enableAllEnhancements() {}
 void Deep2Engine::enableProfiling(bool enable) { profilingEnabled_ = enable; }
 
 // =================== TOKEN HELPERS ====================
-const GpuForwardCounters& Deep2Engine::gpuForwardCounters() const { return gpuFwd_; }
-void Deep2Engine::resetGpuForwardCounters() { gpuFwd_ = {}; gpuFwdCommitted_ = false; }
-bool Deep2Engine::isRealGpuForward() const { return gpuFwdCommitted_ && gpuFwd_.forwardLayers > 0; }
+// Batch 9: gpuForwardCounters/resetGpuForwardCounters/isRealGpuForward are
+// defined in Deep2Engine_GpuForward.cpp.
 
 // =================== CHAT (stub) ====================
 std::string Deep2Engine::generateChat(const std::string& userMessage,
@@ -1866,14 +1860,7 @@ bool Deep2Engine::growContext(size_t newMaxSeqLen) {
     return true;
 }
 
-// =================== VULKAN (stubs) ====================
-void Deep2Engine::enableVulkan(bool enable) {
-    vulkanEnabled_ = enable;
-}
-
-Deep2::VulkanCompute* Deep2Engine::getVulkanComputeSlot(unsigned slot) const {
-    (void)slot;
-    return nullptr;
-}
+// Batch 9: Vulkan runtime bindings live in Deep2Engine_VulkanRuntime.cpp.
+// Old null-device stubs removed.
 
 } // namespace Deep2
