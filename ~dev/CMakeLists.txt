@@ -192,3 +192,21 @@ add_executable(batch10_rowsplit_plan_selftest
 target_include_directories(batch10_rowsplit_plan_selftest PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# Batch 11-15 roofline self-test (host-only, no Vulkan).
+add_executable(batch11_roofline_selftest
+    tests/roofline_selftest.cpp
+    rawrxd/src/deep2/Deep2PersistentDecode.cpp
+    rawrxd/src/deep2/Deep2ExpertResidency.cpp
+    rawrxd/src/deep2/Deep2PredictiveRouter.cpp
+    rawrxd/src/deep2/Deep2DualGpuBalancer.cpp
+    rawrxd/src/deep2/Deep2CommandBatch.cpp
+    rawrxd/src/deep2/Deep2RooflineGovernor.cpp
+    rawrxd/src/deep2/Deep2RooflineCert.cpp
+    rawrxd/src/deep2/Deep2RooflineRuntime.cpp
+)
+target_include_directories(batch11_roofline_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
