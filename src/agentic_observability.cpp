@@ -495,14 +495,14 @@ bool AgenticObservability::isHealthy() const
     return getSystemHealth().value("healthy").toBool(true);
 }
 
-void* AgenticObservability::getPerformanceSummary() const
+nlohmann::json AgenticObservability::getPerformanceSummary() const
 {
-    void* summary;
+    nlohmann::json summary;
 
     // Find latency-related metrics
     for (const auto& metric : m_metrics) {
-        if (metric.metricName.contains("duration")) {
-            auto stats = getHistogramStats(metric.metricName.replace("_duration", ""));
+        if (metric.metricName.find("duration") != std::string::npos) {
+            auto stats = getHistogramStats(metric.metricName);
             summary[metric.metricName] = stats;
         }
     }
@@ -510,17 +510,17 @@ void* AgenticObservability::getPerformanceSummary() const
     return summary;
 }
 
-void* AgenticObservability::getErrorSummary() const
+nlohmann::json AgenticObservability::getErrorSummary() const
 {
-    void* summary;
+    nlohmann::json summary;
 
-    void* errorsByComponent;
+    nlohmann::json errorsByComponent;
     for (const auto& pair : m_errorCounts) {
-        errorsByComponent[std::string::fromStdString(pair.first)] = pair.second;
+        errorsByComponent[pair.first] = pair.second;
     }
 
     summary["errors_by_component"] = errorsByComponent;
-    summary["total_errors"] = getSystemHealth().value("total_errors");
+    summary["total_errors"] = getSystemHealth().value("total_errors", 0);
 
     return summary;
 }
@@ -541,7 +541,7 @@ std::vector<std::string> AgenticObservability::detectBottlenecks()
     return bottlenecks;
 }
 
-void* AgenticObservability::analyzeLatency()
+nlohmann::json AgenticObservability::analyzeLatency()
 {
     return getPerformanceSummary();
 }

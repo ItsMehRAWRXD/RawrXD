@@ -15,6 +15,15 @@ namespace GGUFConstants
     // Supported GGUF version
     constexpr uint32_t GGUF_VERSION = 3;
 
+    // Model source types
+    enum class ModelSourceType {
+        UNKNOWN = 0,
+        LOCAL_FILE = 1,
+        HUGGINGFACE_REPO = 2,
+        HTTP_URL = 3,
+        OLLAMA_BLOB = 4
+    };
+
     // GGUF metadata value types
     constexpr uint32_t GGUF_VALUE_TYPE_STRING = 1;
     constexpr uint32_t GGUF_VALUE_TYPE_UINT32 = 4;
