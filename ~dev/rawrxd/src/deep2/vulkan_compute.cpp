@@ -438,13 +438,347 @@ bool VulkanCompute::createPipelineFromFile(
 bool VulkanCompute::createPipelines() {
     const std::string ops = shaderPath("deep2_ops.spv");
     const std::string q = shaderPath("deep2_qgemv.spv");
+    const std::string qb = shaderPath("deep2_qgemv_batch.spv");
+    const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
+    const std::string q8r = shaderPath("deep2_qgemv_batch8row.spv");
+    const std::string am = shaderPath("deep2_argmax.spv");
+    const std::string so = shaderPath("deep2_spec_ops.spv");
+    const std::string sa = shaderPath("deep2_spec_attn.spv");
+    const std::string ac = shaderPath("deep2_spec_accept.spv");
     if (!ops.empty())
         (void)createPipelineFromFile(
             ops, opsSetLayout_, sizeof(OpsPush), opsPipelineLayout_, opsPipeline_);
     if (!q.empty())
         (void)createPipelineFromFile(
             q, qSetLayout_, sizeof(QPush), qPipelineLayout_, qPipeline_);
+    if(!qb.empty())
+        (void)createPipelineFromFile(
+            qb,qSetLayout_,sizeof(QBatchPush),
+            qBatchPipelineLayout_,qBatchPipeline_);
+    if(!q4r.empty())
+        (void)createPipelineFromFile(
+            q4r,qSetLayout_,sizeof(QBatchPush),
+            qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
+    if(!q8r.empty())
+        (void)createPipelineFromFile(
+            q8r,qSetLayout_,sizeof(QBatchPush),
+            qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
+    if(!am.empty())
+        (void)createPipelineFromFile(
+            am,qSetLayout_,sizeof(ArgmaxPush),
+            argmaxPipelineLayout_,argmaxPipeline_);
+    if(!so.empty())
+        (void)createPipelineFromFile(
+            so,opsSetLayout_,sizeof(SpecOpsPush),
+            specOpsPipelineLayout_,specOpsPipeline_);
+    if(!sa.empty())
+        (void)createPipelineFromFile(
+            sa,opsSetLayout_,sizeof(SpecAttnPush),
+            specAttnPipelineLayout_,specAttnPipeline_);
     return opsPipeline_ != VK_NULL_HANDLE;
+}
+
+bool VulkanCompute::DispatchGemvQ4KBatch8Row(
+    const void* weights,size_t weightBytes,
+    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
+    uint32_t rows,uint32_t cols,uint32_t batch)
+{
+    if(!qBatch8RowPipeline_||!weights||!weightBytes||
+       !rows||!cols||!batch||batch>4) return false;
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own&&!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getQuantDescriptor(*wb,inputBatch,outputBatch);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch8RowPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch8RowPipelineLayout_,
+        0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.type=12;p.rows=rows;p.cols=cols;
+    p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
+    vkCmdPushConstants(
+        cmd,qBatch8RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    vkCmdDispatch(cmd,(rows+7u)/8u,1,1);
+    recordComputeBarrier(cmd);
+    ++q4kBatch8RowOps_;
+    q4kBatchWeightBytes_+=weightBytes;
+    if(!own) return true;
+    uint64_t elapsed=0;
+    const bool ok=endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,
+        weightBytes,workEpoch_,&elapsed);
+    if(ok) q4kBatchGpuNs_+=elapsed;
+    return ok;
+}
+
+VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
+    const void* weights,size_t weightBytes,
+    DeviceBuf& inputBatch,DeviceBuf& scratchOutput,
+    uint32_t rows,uint32_t cols,uint32_t batch)
+{
+    const char* force=std::getenv("DEEP2_Q4K_FORCE_TILE");
+    if(force&&force[0]=='8') return Q4KBatchTile::Eight;
+    if(force&&force[0]=='4') return Q4KBatchTile::Four;
+    const char* at=std::getenv("DEEP2_Q4K_AUTOTUNE");
+    if(at&&at[0]=='0') return Q4KBatchTile::Four;
+
+    Q4KTileKey key{rows,cols,batch};
+    auto it=q4kTileChoices_.find(key);
+    if(it!=q4kTileChoices_.end()) return it->second.tile;
+
+    // Autotune is warmup-only and only when not inside an existing fused cmd.
+    // If called during fused execution, defer the choice to 4-row until a
+    // standalone warmup call seals this geometry.
+    if(fused_||!qBatch8RowPipeline_) return Q4KBatchTile::Four;
+
+    auto timeOne=[&](Q4KBatchTile t)->uint64_t {
+        uint64_t before=q4kBatchGpuNs_;
+        bool ok=t==Q4KBatchTile::Eight
+            ? DispatchGemvQ4KBatch8Row(
+                weights,weightBytes,inputBatch,scratchOutput,
+                rows,cols,batch)
+            : DispatchGemvQ4KBatch4Row(
+                weights,weightBytes,inputBatch,scratchOutput,
+                rows,cols,batch);
+        if(!ok) return UINT64_MAX;
+        return q4kBatchGpuNs_-before;
+    };
+    const uint64_t n4=timeOne(Q4KBatchTile::Four);
+    const uint64_t n8=timeOne(Q4KBatchTile::Eight);
+    Q4KTileChoice c{};
+    c.fourNs=n4;c.eightNs=n8;
+    c.tile=(n8<n4)?Q4KBatchTile::Eight:Q4KBatchTile::Four;
+    q4kTileChoices_[key]=c;
+    ++q4kAutotuneRuns_;
+    return c.tile;
+}
+
+bool VulkanCompute::DispatchGemvQ4KBatch4Row(
+    const void* weights,size_t weightBytes,
+    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
+    uint32_t rows,uint32_t cols,uint32_t batch)
+{
+    if(!qBatch4RowPipeline_||!weights||!weightBytes||
+       !rows||!cols||!batch||batch>4)
+        return false;
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
+
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own&&!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getQuantDescriptor(*wb,inputBatch,outputBatch);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch4RowPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch4RowPipelineLayout_,
+        0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.type=12;p.rows=rows;p.cols=cols;
+    p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
+    vkCmdPushConstants(
+        cmd,qBatch4RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    vkCmdDispatch(cmd,(rows+3u)/4u,1,1);
+    recordComputeBarrier(cmd);
+    ++q4kBatch4RowOps_;
+    q4kBatchWeightBytes_+=weightBytes;
+    if(!own) return true;
+
+    uint64_t elapsed=0;
+    const bool ok=endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,
+        weightBytes,workEpoch_,&elapsed);
+    if(ok) q4kBatchGpuNs_+=elapsed;
+    return ok;
+}
+
+bool VulkanCompute::RunSpecAttentionHostBatch(
+    const float* q,const float* k,const float* v,float* output,
+    uint32_t heads,uint32_t kvHeads,uint32_t headDim,
+    uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!q||!k||!v||!output||!heads||!kvHeads||!headDim||
+       !seqLen||!batch||batch>4||heads%kvHeads!=0)
+        return false;
+    SetWorkEpoch(epoch);
+    const size_t qn=(size_t)batch*heads*headDim;
+    const size_t kvn=(size_t)kvHeads*seqLen*headDim;
+    if(!EnsureScratch(100,qn)||!EnsureScratch(101,kvn)||
+       !EnsureScratch(102,kvn)||!EnsureScratch(103,qn))
+        return false;
+    auto& qb=Scratch(100);auto& kb=Scratch(101);
+    auto& vb=Scratch(102);auto& ob=Scratch(103);
+    if(!UploadVector(qb,q,qn)||!UploadVector(kb,k,kvn)||
+       !UploadVector(vb,v,kvn))
+        return false;
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getOpsDescriptor(qb,kb,vb,ob);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipelineLayout_,
+        0,1,&set,0,nullptr);
+    SpecAttnPush p{};
+    p.headDim=headDim;p.heads=heads;p.kvHeads=kvHeads;
+    p.seqLen=seqLen;p.basePos=basePos;p.batch=batch;
+    p.scale=1.0f/std::sqrt((float)headDim);
+    vkCmdPushConstants(
+        cmd,specAttnPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    const uint32_t total=batch*heads*headDim;
+    vkCmdDispatch(cmd,(total+63u)/64u,1,1);
+    recordComputeBarrier(cmd);
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
+        return false;
+    return DownloadVector(ob,output,qn);
+}
+
+bool VulkanCompute::dispatchSpecOps(
+    DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d,
+    const SpecOpsPush& p)
+{
+    if(!specOpsPipeline_||!p.width||!p.batch||p.batch>4) return false;
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own&&!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getOpsDescriptor(a,b,c,d);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specOpsPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specOpsPipelineLayout_,
+        0,1,&set,0,nullptr);
+    vkCmdPushConstants(
+        cmd,specOpsPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    vkCmdDispatch(cmd,p.batch,1,1);
+    recordComputeBarrier(cmd);
+    if(!own) return true;
+    return endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr);
+}
+
+bool VulkanCompute::RunSpecRmsNormHostBatch(
+    const float* input,const float* weight,float* output,
+    uint32_t width,uint32_t batch,float eps,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!input||!weight||!output||!width||!batch||batch>4) return false;
+    SetWorkEpoch(epoch);
+    const size_t n=(size_t)width*batch;
+    if(!EnsureScratch(90,n)||!EnsureScratch(91,width)||
+       !EnsureScratch(92,n)||!EnsureScratch(93,1))
+        return false;
+    auto& in=Scratch(90);auto& w=Scratch(91);
+    auto& out=Scratch(92);auto& dummy=Scratch(93);
+    if(!UploadVector(in,input,n)||!UploadVector(w,weight,width))
+        return false;
+    SpecOpsPush p{};p.op=0;p.width=width;p.batch=batch;p.eps=eps;
+    if(!dispatchSpecOps(in,w,out,dummy,p)) return false;
+    return DownloadVector(out,output,n);
+}
+
+bool VulkanCompute::RunSpecSwiGLUHostBatch(
+    const float* gate,const float* up,float* output,
+    uint32_t width,uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!gate||!up||!output||!width||!batch||batch>4) return false;
+    SetWorkEpoch(epoch);
+    const size_t n=(size_t)width*batch;
+    if(!EnsureScratch(94,n)||!EnsureScratch(95,n)||
+       !EnsureScratch(96,n)||!EnsureScratch(97,1))
+        return false;
+    auto& g=Scratch(94);auto& u=Scratch(95);
+    auto& o=Scratch(96);auto& d=Scratch(97);
+    if(!UploadVector(g,gate,n)||!UploadVector(u,up,n)) return false;
+    SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
+    if(!dispatchSpecOps(g,u,o,d,p)) return false;
+    return DownloadVector(o,output,n);
+}
+
+bool VulkanCompute::DispatchArgmaxBatch(
+    DeviceBuf& logits,DeviceBuf& values,DeviceBuf& indices,
+    uint32_t rows,uint32_t batch)
+{
+    if(!argmaxPipeline_||!rows||!batch||batch>4) return false;
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own&&!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getQuantDescriptor(logits,values,indices);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,argmaxPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,argmaxPipelineLayout_,
+        0,1,&set,0,nullptr);
+    ArgmaxPush p{rows,batch};
+    vkCmdPushConstants(
+        cmd,argmaxPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    vkCmdDispatch(cmd,batch,1,1);
+    recordComputeBarrier(cmd);
+    if(!own) return true;
+    return endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr);
+}
+
+bool VulkanCompute::RunWeightBatchQ4KTop1(
+    const GpuWeightView& weight,const float* inputBatch,uint32_t batch,
+    uint32_t rowBase,uint32_t* outIndex,float* outValue,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weight.valid()||weight.type!=12||!inputBatch||!outIndex||!outValue||
+       !batch||batch>4) return false;
+    SetWorkEpoch(epoch);
+    const size_t inCount=(size_t)batch*weight.cols;
+    const size_t logitCount=(size_t)batch*weight.rows;
+    if(!EnsureScratch(80,inCount)||!EnsureScratch(81,logitCount)||
+       !EnsureScratch(82,batch)||!EnsureScratch(83,batch))
+        return false;
+    auto& in=Scratch(80);auto& lg=Scratch(81);
+    auto& mv=Scratch(82);auto& mi=Scratch(83);
+    const size_t inBytes=inCount*sizeof(float);
+    const size_t retBytes=batch*(sizeof(float)+sizeof(uint32_t));
+    DeviceBuf* us=nullptr;DeviceBuf* ds=nullptr;
+    void* um=nullptr;void* dm=nullptr;
+    if(!ensureMappedStaging(true,inBytes,us,um)||
+       !ensureMappedStaging(false,retBytes,ds,dm))
+        return false;
+    std::memcpy(um,inputBatch,inBytes);
+    if(!BeginFusedLayer()) return false;
+    if(!recordCopy(fusedCmd_,*us,in,inBytes)||
+       !DispatchGemvQ4KBatch(
+           weight.data,weight.bytes,in,lg,weight.rows,weight.cols,batch)||
+       !DispatchArgmaxBatch(lg,mv,mi,weight.rows,batch)||
+       !recordCopy(fusedCmd_,mv,*ds,batch*sizeof(float),0,0)||
+       !recordCopy(fusedCmd_,mi,*ds,batch*sizeof(uint32_t),0,
+                   batch*sizeof(float))) {
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    }
+    if(!EndFusedLayer()) return false;
+    const float* vals=(const float*)dm;
+    const uint32_t* idx=(const uint32_t*)(
+        (const uint8_t*)dm+batch*sizeof(float));
+    for(uint32_t b=0;b<batch;++b) {
+        outValue[b]=vals[b];
+        outIndex[b]=rowBase+idx[b];
+    }
+    return true;
 }
 
 bool VulkanCompute::initialize() {
@@ -528,6 +862,52 @@ void VulkanCompute::destroyBuffer(DeviceBuf& b) {
     if (b.buffer) vkDestroyBuffer(device_, b.buffer, nullptr);
     if (b.memory) vkFreeMemory(device_, b.memory, nullptr);
     b = {};
+}
+
+bool VulkanCompute::ensureMappedStaging(
+    bool upload, size_t bytes, DeviceBuf*& buffer, void*& mapped)
+{
+    buffer = upload ? &uploadStaging_ : &downloadStaging_;
+    void*& mapRef = upload ? uploadMapped_ : downloadMapped_;
+    size_t& cap = upload ? uploadStagingBytes_ : downloadStagingBytes_;
+
+    if (buffer->buffer && cap >= bytes && mapRef) {
+        mapped = mapRef;
+        return true;
+    }
+
+    if (mapRef && buffer->memory) {
+        vkUnmapMemory(device_, buffer->memory);
+        mapRef = nullptr;
+    }
+    destroyBuffer(*buffer);
+    cap = 0;
+
+    // Geometric growth prevents repeated realloc when activation dimensions
+    // alternate between hidden and FFN widths.
+    size_t want = 4096;
+    while (want < bytes && want <= std::numeric_limits<size_t>::max() / 2u)
+        want *= 2u;
+    if (want < bytes) want = bytes;
+
+    const VkBufferUsageFlags usage = upload
+        ? VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+        : VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    if (!createBuffer(
+            want, usage,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            *buffer))
+        return false;
+
+    if (vkMapMemory(device_, buffer->memory, 0, want, 0, &mapRef) != VK_SUCCESS) {
+        destroyBuffer(*buffer);
+        mapRef = nullptr;
+        return false;
+    }
+    cap = want;
+    mapped = mapRef;
+    return true;
 }
 
 bool VulkanCompute::beginCommand(
@@ -668,6 +1048,7 @@ bool VulkanCompute::endSubmitWait(
         vkDestroyFence(device_, fence, nullptr);
         return false;
     }
+    ++queueSubmitCount_;
 
     VkResult wait = vkWaitForFences(device_, 1, &fence, VK_TRUE, UINT64_MAX);
     const uint64_t completeNs = nowNs();
@@ -714,30 +1095,227 @@ bool VulkanCompute::recordCopy(
     return true;
 }
 
+VkDescriptorSet VulkanCompute::getOpsDescriptor(
+    DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d)
+{
+    DescriptorKey key{a.id,b.id,c.id,d.id};
+    auto hit=opsDescriptorCache_.find(key);
+    if(hit!=opsDescriptorCache_.end()) return hit->second;
+
+    VkDescriptorSetAllocateInfo ai{};
+    ai.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    ai.descriptorPool=descriptorPool_;
+    ai.descriptorSetCount=1;
+    ai.pSetLayouts=&opsSetLayout_;
+    VkDescriptorSet set=VK_NULL_HANDLE;
+    if(vkAllocateDescriptorSets(device_,&ai,&set)!=VK_SUCCESS)
+        return VK_NULL_HANDLE;
+
+    DeviceBuf* bufs[4]={&a,&b,&c,&d};
+    VkDescriptorBufferInfo bi[4]{};
+    VkWriteDescriptorSet wr[4]{};
+    for(uint32_t i=0;i<4;++i){
+        bi[i].buffer=bufs[i]->buffer;
+        bi[i].offset=0;
+        bi[i].range=bufs[i]->size;
+        wr[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        wr[i].dstSet=set;
+        wr[i].dstBinding=i;
+        wr[i].descriptorCount=1;
+        wr[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        wr[i].pBufferInfo=&bi[i];
+    }
+    vkUpdateDescriptorSets(device_,4,wr,0,nullptr);
+    opsDescriptorCache_.emplace(key,set);
+    return set;
+}
+
+VkDescriptorSet VulkanCompute::getQuantDescriptor(
+    DeviceBuf& w,DeviceBuf& in,DeviceBuf& out)
+{
+    DescriptorKey key{w.id,in.id,out.id,0};
+    auto hit=quantDescriptorCache_.find(key);
+    if(hit!=quantDescriptorCache_.end()) return hit->second;
+
+    VkDescriptorSetAllocateInfo ai{};
+    ai.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    ai.descriptorPool=descriptorPool_;
+    ai.descriptorSetCount=1;
+    ai.pSetLayouts=&qSetLayout_;
+    VkDescriptorSet set=VK_NULL_HANDLE;
+    if(vkAllocateDescriptorSets(device_,&ai,&set)!=VK_SUCCESS)
+        return VK_NULL_HANDLE;
+
+    DeviceBuf* bufs[3]={&w,&in,&out};
+    VkDescriptorBufferInfo bi[3]{};
+    VkWriteDescriptorSet wr[3]{};
+    for(uint32_t i=0;i<3;++i){
+        bi[i].buffer=bufs[i]->buffer;
+        bi[i].offset=0;
+        bi[i].range=bufs[i]->size;
+        wr[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        wr[i].dstSet=set;
+        wr[i].dstBinding=i;
+        wr[i].descriptorCount=1;
+        wr[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        wr[i].pBufferInfo=&bi[i];
+    }
+    vkUpdateDescriptorSets(device_,3,wr,0,nullptr);
+    quantDescriptorCache_.emplace(key,set);
+    return set;
+}
+
 bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes) {
     if (!dst || !src || !bytes || bytes > dst.size) return false;
 
-    DeviceBuf staging{};
-    if (!createBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging))
-        return false;
-
+    DeviceBuf* staging = nullptr;
     void* mapped = nullptr;
-    bool ok = vkMapMemory(device_, staging.memory, 0, bytes, 0, &mapped) == VK_SUCCESS;
-    if (ok) {
-        std::memcpy(mapped, src, bytes);
-        vkUnmapMemory(device_, staging.memory);
+    if (!ensureMappedStaging(true, bytes, staging, mapped)) return false;
+    std::memcpy(mapped, src, bytes);
 
-        VkCommandBuffer cmd{};
-        VkQueryPool query{};
-        ok = beginCommand(cmd, query, true) &&
-             recordCopy(cmd, staging, dst, bytes) &&
-             endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
-                           bytes, workEpoch_, nullptr);
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    return beginCommand(cmd, query, true) &&
+           recordCopy(cmd, *staging, dst, bytes) &&
+           endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                         bytes, workEpoch_, nullptr);
+}
+
+bool VulkanCompute::uploadToBufferRange(
+    DeviceBuf& dst,const void* src,size_t bytes,VkDeviceSize dstOffset)
+{
+    if(!dst||!src||!bytes||dstOffset>dst.size||
+       bytes>dst.size-dstOffset)
+        return false;
+    DeviceBuf* staging=nullptr;
+    void* mapped=nullptr;
+    if(!ensureMappedStaging(true,bytes,staging,mapped)) return false;
+    std::memcpy(mapped,src,bytes);
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    return beginCommand(cmd,query,true) &&
+           recordCopy(cmd,*staging,dst,bytes,0,dstOffset) &&
+           endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
+                         bytes,workEpoch_,nullptr);
+}
+
+void VulkanCompute::ResetSpecKvMirror() {
+    for(auto& b:specKMirror_) destroyBuffer(b);
+    for(auto& b:specVMirror_) destroyBuffer(b);
+    specKMirror_.clear();specVMirror_.clear();
+    specKvLayers_=specKvHeads_=specKvHeadDim_=specKvCapacity_=0;
+}
+
+bool VulkanCompute::EnsureSpecKvMirror(
+    uint32_t layers,uint32_t kvHeads,uint32_t headDim,uint32_t maxSeq)
+{
+    if(!layers||!kvHeads||!headDim||!maxSeq) return false;
+    if(specKvLayers_==layers&&specKvHeads_==kvHeads&&
+       specKvHeadDim_==headDim&&specKvCapacity_==maxSeq&&
+       specKMirror_.size()==layers&&specVMirror_.size()==layers)
+        return true;
+
+    ResetSpecKvMirror();
+    const uint64_t floats=(uint64_t)kvHeads*maxSeq*headDim;
+    if(floats>SIZE_MAX/sizeof(float)) return false;
+    const size_t bytes=(size_t)floats*sizeof(float);
+    specKMirror_.resize(layers);
+    specVMirror_.resize(layers);
+    for(uint32_t l=0;l<layers;++l) {
+        if(!createBuffer(
+                bytes,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT|
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,specKMirror_[l])||
+           !createBuffer(
+                bytes,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT|
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,specVMirror_[l])) {
+            ResetSpecKvMirror();
+            return false;
+        }
     }
-    destroyBuffer(staging);
-    return ok;
+    specKvLayers_=layers;specKvHeads_=kvHeads;
+    specKvHeadDim_=headDim;specKvCapacity_=maxSeq;
+    return true;
+}
+
+bool VulkanCompute::UploadSpecKvRange(
+    uint32_t layer,uint32_t start,uint32_t count,
+    const float* kTokenMajor,const float* vTokenMajor)
+{
+    if(layer>=specKMirror_.size()||!count||!kTokenMajor||!vTokenMajor||
+       start>specKvCapacity_||count>specKvCapacity_-start)
+        return false;
+    const size_t hd=specKvHeadDim_;
+    std::vector<float> tmp((size_t)count*hd);
+    for(uint32_t h=0;h<specKvHeads_;++h) {
+        for(uint32_t t=0;t<count;++t) {
+            const float* ks=kTokenMajor+
+                ((size_t)t*specKvHeads_+h)*hd;
+            std::memcpy(tmp.data()+(size_t)t*hd,ks,hd*sizeof(float));
+        }
+        const VkDeviceSize off=
+            ((VkDeviceSize)h*specKvCapacity_+start)*hd*sizeof(float);
+        if(!uploadToBufferRange(
+                specKMirror_[layer],tmp.data(),
+                tmp.size()*sizeof(float),off))
+            return false;
+        for(uint32_t t=0;t<count;++t) {
+            const float* vs=vTokenMajor+
+                ((size_t)t*specKvHeads_+h)*hd;
+            std::memcpy(tmp.data()+(size_t)t*hd,vs,hd*sizeof(float));
+        }
+        if(!uploadToBufferRange(
+                specVMirror_[layer],tmp.data(),
+                tmp.size()*sizeof(float),off))
+            return false;
+    }
+    return true;
+}
+
+bool VulkanCompute::RunSpecAttentionResident(
+    uint32_t layer,const float* q,float* output,
+    uint32_t heads,uint32_t kvHeads,uint32_t headDim,
+    uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
+{
+    if(layer>=specKMirror_.size()||!q||!output||!heads||!kvHeads||
+       !headDim||!seqLen||!batch||batch>4||seqLen>specKvCapacity_)
+        return false;
+    SetWorkEpoch(epoch);
+    const size_t qn=(size_t)batch*heads*headDim;
+    if(!EnsureScratch(104,qn)||!EnsureScratch(105,qn))
+        return false;
+    auto& qb=Scratch(104);auto& ob=Scratch(105);
+    if(!UploadVector(qb,q,qn)) return false;
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getOpsDescriptor(
+        qb,specKMirror_[layer],specVMirror_[layer],ob);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipelineLayout_,
+        0,1,&set,0,nullptr);
+    SpecAttnPush p{};
+    p.headDim=headDim;p.heads=heads;p.kvHeads=kvHeads;
+    p.seqLen=seqLen;p.capacity=specKvCapacity_;
+    p.basePos=basePos;p.batch=batch;
+    p.scale=1.0f/std::sqrt((float)headDim);
+    vkCmdPushConstants(
+        cmd,specAttnPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    const uint32_t total=batch*heads*headDim;
+    vkCmdDispatch(cmd,(total+63u)/64u,1,1);
+    recordComputeBarrier(cmd);
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
+        return false;
+    return DownloadVector(ob,output,qn);
 }
 
 bool VulkanCompute::downloadFromBuffer(
@@ -745,27 +1323,17 @@ bool VulkanCompute::downloadFromBuffer(
 {
     if (!src || !dst || !bytes || bytes > src.size) return false;
 
-    DeviceBuf staging{};
-    if (!createBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging))
-        return false;
+    DeviceBuf* staging = nullptr;
+    void* mapped = nullptr;
+    if (!ensureMappedStaging(false, bytes, staging, mapped)) return false;
 
     VkCommandBuffer cmd{};
     VkQueryPool query{};
     bool ok = beginCommand(cmd, query, true) &&
-              recordCopy(cmd, src, staging, bytes) &&
+              recordCopy(cmd, src, *staging, bytes) &&
               endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
                             bytes, workEpoch_, nullptr);
-    if (ok) {
-        void* mapped = nullptr;
-        ok = vkMapMemory(device_, staging.memory, 0, bytes, 0, &mapped) == VK_SUCCESS;
-        if (ok) {
-            std::memcpy(dst, mapped, bytes);
-            vkUnmapMemory(device_, staging.memory);
-        }
-    }
-    destroyBuffer(staging);
+    if (ok) std::memcpy(dst, mapped, bytes);
     return ok;
 }
 
@@ -781,34 +1349,11 @@ bool VulkanCompute::dispatchOps(
     VkQueryPool query = fusedQuery_;
     const bool own = !fused_;
     if (own) {
-        vkResetDescriptorPool(device_, descriptorPool_, 0);
         if (!beginCommand(cmd, query, true)) return false;
     }
 
-    VkDescriptorSetAllocateInfo ai{};
-    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    ai.descriptorPool = descriptorPool_;
-    ai.descriptorSetCount = 1;
-    ai.pSetLayouts = &opsSetLayout_;
-    VkDescriptorSet set = VK_NULL_HANDLE;
-    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
-        return false;
-
-    DeviceBuf* bufs[4] = {&aa,&bb,&cc,&dd};
-    VkDescriptorBufferInfo bi[4]{};
-    VkWriteDescriptorSet wr[4]{};
-    for (uint32_t i = 0; i < 4; ++i) {
-        bi[i].buffer = bufs[i]->buffer;
-        bi[i].offset = 0;
-        bi[i].range = bufs[i]->size;
-        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        wr[i].dstSet = set;
-        wr[i].dstBinding = i;
-        wr[i].descriptorCount = 1;
-        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        wr[i].pBufferInfo = &bi[i];
-    }
-    vkUpdateDescriptorSets(device_, 4, wr, 0, nullptr);
+    VkDescriptorSet set=getOpsDescriptor(aa,bb,cc,dd);
+    if(set==VK_NULL_HANDLE) return false;
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, opsPipeline_);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -832,41 +1377,19 @@ bool VulkanCompute::dispatchQuant(
     VkQueryPool query = fusedQuery_;
     const bool own = !fused_;
     if (own) {
-        vkResetDescriptorPool(device_, descriptorPool_, 0);
         if (!beginCommand(cmd, query, true)) return false;
     }
 
-    VkDescriptorSetAllocateInfo ai{};
-    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    ai.descriptorPool = descriptorPool_;
-    ai.descriptorSetCount = 1;
-    ai.pSetLayouts = &qSetLayout_;
-    VkDescriptorSet set = VK_NULL_HANDLE;
-    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
-        return false;
-
-    DeviceBuf* bufs[3] = {&weights,&input,&output};
-    VkDescriptorBufferInfo bi[3]{};
-    VkWriteDescriptorSet wr[3]{};
-    for (uint32_t i = 0; i < 3; ++i) {
-        bi[i].buffer = bufs[i]->buffer;
-        bi[i].offset = 0;
-        bi[i].range = bufs[i]->size;
-        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        wr[i].dstSet = set;
-        wr[i].dstBinding = i;
-        wr[i].descriptorCount = 1;
-        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        wr[i].pBufferInfo = &bi[i];
-    }
-    vkUpdateDescriptorSets(device_, 3, wr, 0, nullptr);
+    VkDescriptorSet set=getQuantDescriptor(weights,input,output);
+    if(set==VK_NULL_HANDLE) return false;
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
                             qPipelineLayout_, 0, 1, &set, 0, nullptr);
     vkCmdPushConstants(cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
                        0, sizeof(push), &push);
-    vkCmdDispatch(cmd, (push.rows + 63u) / 64u, 1, 1);
+    // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
+    vkCmdDispatch(cmd, push.rows, 1, 1);
     recordComputeBarrier(cmd);
 
     if (!own) return true;
@@ -1180,12 +1703,71 @@ bool VulkanCompute::UploadNormWeight(
            uploadToBuffer(dst, src, count*sizeof(float));
 }
 
+VulkanCompute::DeviceBuf* VulkanCompute::ResolveResidentF32(
+    const float* src, uint64_t key, size_t count)
+{
+    if (!src || !count ||
+        count > std::numeric_limits<size_t>::max() / sizeof(float))
+        return nullptr;
+    DeviceBuf* out = nullptr;
+    if (!ensureWeightF32(src, key, count * sizeof(float), out))
+        return nullptr;
+    return out;
+}
+
+bool VulkanCompute::ensureReusableFusedSubmitObjects() {
+    if(!device_||!commandPool_) return false;
+
+    if(reusableFusedCmd_==VK_NULL_HANDLE){
+        VkCommandBufferAllocateInfo ai{};
+        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        ai.commandPool=commandPool_;
+        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        ai.commandBufferCount=1;
+        if(vkAllocateCommandBuffers(device_,&ai,&reusableFusedCmd_)!=VK_SUCCESS)
+            return false;
+    }
+    if(reusableFusedFence_==VK_NULL_HANDLE){
+        VkFenceCreateInfo fi{};
+        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        if(vkCreateFence(device_,&fi,nullptr,&reusableFusedFence_)!=VK_SUCCESS)
+            return false;
+    }
+    if(timestampValidBits_ && reusableFusedQuery_==VK_NULL_HANDLE){
+        VkQueryPoolCreateInfo qi{};
+        qi.sType=VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        qi.queryType=VK_QUERY_TYPE_TIMESTAMP;
+        qi.queryCount=2;
+        if(vkCreateQueryPool(device_,&qi,nullptr,&reusableFusedQuery_)!=VK_SUCCESS)
+            return false;
+    }
+    return true;
+}
+
 bool VulkanCompute::BeginFusedLayer() {
+
     if (fused_ || !initialized_ || !opsPipeline_) return false;
-    vkResetDescriptorPool(device_, descriptorPool_, 0);
-    if (!beginCommand(fusedCmd_, fusedQuery_, true)) return false;
+    if(!ensureReusableFusedSubmitObjects()) return false;
+
+    if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
+        return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if(vkBeginCommandBuffer(reusableFusedCmd_,&bi)!=VK_SUCCESS)
+        return false;
+
+    if(reusableFusedQuery_){
+        vkCmdResetQueryPool(reusableFusedCmd_,reusableFusedQuery_,0,2);
+        vkCmdWriteTimestamp(
+            reusableFusedCmd_,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            reusableFusedQuery_,0);
+    }
+
+    fusedCmd_=reusableFusedCmd_;
+    fusedQuery_=reusableFusedQuery_;
     fused_ = true;
-    fusedHostSubmitNs_ = 0;
+    fusedHostSubmitNs_=0;
     return true;
 }
 
@@ -1196,10 +1778,33 @@ bool VulkanCompute::EndFusedLayer() {
     fused_ = false;
     fusedCmd_ = VK_NULL_HANDLE;
     fusedQuery_ = VK_NULL_HANDLE;
-    bool ok = endSubmitWait(
-        cmd, q, GpuWorkKind::ModelCompute, 0, workEpoch_, nullptr);
-    vkResetDescriptorPool(device_, descriptorPool_, 0);
-    return ok;
+
+    if(q)
+        vkCmdWriteTimestamp(cmd,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,q,1);
+    if(vkEndCommandBuffer(cmd)!=VK_SUCCESS) return false;
+    if(vkResetFences(device_,1,&reusableFusedFence_)!=VK_SUCCESS)
+        return false;
+
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;
+    si.pCommandBuffers=&cmd;
+
+    const uint64_t submitNs=nowNs();
+    if(vkQueueSubmit(queue_,1,&si,reusableFusedFence_)!=VK_SUCCESS)
+        return false;
+    ++queueSubmitCount_;
+    if(vkWaitForFences(
+            device_,1,&reusableFusedFence_,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    const uint64_t completeNs=nowNs();
+
+    GpuWorkInterval wi{};
+    if(finalizeInterval(
+            q,submitNs,completeNs,workEpoch_,0,
+            GpuWorkKind::ModelCompute,wi))
+        recordInterval(wi);
+    return true;
 }
 
 bool VulkanCompute::FlushWeightComputes() {
@@ -1291,10 +1896,294 @@ bool VulkanCompute::DispatchAttnDecode(
     return dispatchOps(q,kCache,vCache,out,p,(p.n+63u)/64u);
 }
 
+void VulkanCompute::clearRecordedQ4K() {
+    for(auto& kv:recordedQ4K_) {
+        auto& r=kv.second;
+        if(r.fence) vkDestroyFence(device_,r.fence,nullptr);
+        if(r.cmd&&commandPool_)
+            vkFreeCommandBuffers(device_,commandPool_,1,&r.cmd);
+    }
+    recordedQ4K_.clear();
+}
+
+bool VulkanCompute::SubmitRecordedResidentQ4K(
+    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
+    uint32_t batch,uint64_t epoch)
+{
+    if(!weight.valid()||weight.type!=12||!input||!output||
+       !batch||batch>4||fused_)
+        return false;
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(
+            weight.type,weight.data,weight.bytes,wb))
+        return false;
+    const Q4KBatchTile tile=SelectQ4KBatchTile(
+        weight.data,weight.bytes,input,output,
+        weight.rows,weight.cols,batch);
+    const uint32_t tileN=(uint32_t)tile;
+    RecordedQ4KKey key{
+        wb->buffer,input.buffer,output.buffer,
+        weight.rows,weight.cols,batch,tileN};
+    auto it=recordedQ4K_.find(key);
+    if(it==recordedQ4K_.end()) {
+        RecordedQ4K r{};
+        VkCommandBufferAllocateInfo ai{};
+        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        ai.commandPool=commandPool_;
+        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        ai.commandBufferCount=1;
+        if(vkAllocateCommandBuffers(device_,&ai,&r.cmd)!=VK_SUCCESS)
+            return false;
+        VkCommandBufferBeginInfo bi{};
+        bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        bi.flags=VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        if(vkBeginCommandBuffer(r.cmd,&bi)!=VK_SUCCESS) return false;
+        r.set=getQuantDescriptor(*wb,input,output);
+        if(r.set==VK_NULL_HANDLE) return false;
+        VkPipeline pipe=tile==Q4KBatchTile::Eight
+            ? qBatch8RowPipeline_:qBatch4RowPipeline_;
+        VkPipelineLayout layout=tile==Q4KBatchTile::Eight
+            ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
+        vkCmdBindPipeline(
+            r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
+        vkCmdBindDescriptorSets(
+            r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
+            0,1,&r.set,0,nullptr);
+        QBatchPush p{};
+        p.type=12;p.rows=weight.rows;p.cols=weight.cols;
+        p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
+        vkCmdPushConstants(
+            r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
+            0,sizeof(p),&p);
+        vkCmdDispatch(
+            r.cmd,
+            (weight.rows+(tileN-1u))/tileN,1,1);
+        recordComputeBarrier(r.cmd);
+        if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
+        VkFenceCreateInfo fi{};
+        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        if(vkCreateFence(device_,&fi,nullptr,&r.fence)!=VK_SUCCESS)
+            return false;
+        it=recordedQ4K_.emplace(key,r).first;
+        ++recordedQ4KBuilds_;
+    }
+    auto& r=it->second;
+    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    if(vkResetFences(device_,1,&r.fence)!=VK_SUCCESS) return false;
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;
+    si.pCommandBuffers=&r.cmd;
+    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    ++recordedQ4KSubmits_;
+    ++queueSubmitCount_;
+    SetWorkEpoch(epoch);
+    return true;
+}
+void VulkanCompute::clearRecordedGroups() {
+    for(auto& kv:recordedGroups_) {
+        auto& r=kv.second;
+        if(r.fence) vkDestroyFence(device_,r.fence,nullptr);
+        if(r.cmd&&commandPool_)
+            vkFreeCommandBuffers(device_,commandPool_,1,&r.cmd);
+    }
+    recordedGroups_.clear();
+}
+
+static bool deep2RecordedGroupAsyncEnabled() noexcept {
+    const char* e=std::getenv("DEEP2_RECORDED_GROUP_ASYNC");
+    return e && *e && *e!='0';
+}
+
+bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
+    const GpuWeightView* weights,size_t weightCount,
+    uint32_t cols,uint32_t batch,uint64_t epoch)
+{
+    if(!weights||weightCount<2||weightCount>3||
+       !residentBatchInput_||!batch||batch>4)
+        return false;
+    if(!EnsureResidentGroupOutputs(weights,weightCount,batch))
+        return false;
+
+    DeviceBuf* wb[3]{};
+    RecordedGroupKey key{};
+    key.input=residentBatchInput_.buffer;
+    key.cols=cols;key.batch=batch;key.count=(uint32_t)weightCount;
+    for(size_t i=0;i<weightCount;++i) {
+        if(!weights[i].valid()||weights[i].type!=12||
+           weights[i].cols!=cols||!PinWeightView(weights[i])||
+           !ensureWeightQuant(
+               weights[i].type,weights[i].data,weights[i].bytes,wb[i]))
+            return false;
+        key.weight[i]=wb[i]->buffer;
+        key.output[i]=residentGroupOutputs_[i].buffer;
+        key.rows[i]=weights[i].rows;
+    }
+
+    auto it=recordedGroups_.find(key);
+    if(it==recordedGroups_.end()) {
+        RecordedGroup r{};
+        VkCommandBufferAllocateInfo ai{};
+        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        ai.commandPool=commandPool_;
+        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        ai.commandBufferCount=1;
+        if(vkAllocateCommandBuffers(device_,&ai,&r.cmd)!=VK_SUCCESS)
+            return false;
+        VkCommandBufferBeginInfo bi{};
+        bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        bi.flags=VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        if(vkBeginCommandBuffer(r.cmd,&bi)!=VK_SUCCESS) return false;
+
+        for(size_t i=0;i<weightCount;++i) {
+            const Q4KBatchTile tile=SelectQ4KBatchTile(
+                weights[i].data,weights[i].bytes,
+                residentBatchInput_,residentGroupOutputs_[i],
+                weights[i].rows,cols,batch);
+            VkPipeline pipe=tile==Q4KBatchTile::Eight
+                ? qBatch8RowPipeline_:qBatch4RowPipeline_;
+            VkPipelineLayout layout=tile==Q4KBatchTile::Eight
+                ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
+            r.set[i]=getQuantDescriptor(
+                *wb[i],residentBatchInput_,residentGroupOutputs_[i]);
+            if(r.set[i]==VK_NULL_HANDLE) return false;
+            vkCmdBindPipeline(
+                r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
+            vkCmdBindDescriptorSets(
+                r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
+                0,1,&r.set[i],0,nullptr);
+            QBatchPush p{};
+            p.type=12;p.rows=weights[i].rows;p.cols=cols;
+            p.weightBytes=(uint32_t)weights[i].bytes;p.batch=batch;
+            vkCmdPushConstants(
+                r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
+                0,sizeof(p),&p);
+            const uint32_t tileN=(uint32_t)tile;
+            vkCmdDispatch(
+                r.cmd,(weights[i].rows+tileN-1u)/tileN,1,1);
+            recordComputeBarrier(r.cmd);
+        }
+        if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
+        VkFenceCreateInfo fi{};
+        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
+        if(vkCreateFence(device_,&fi,nullptr,&r.fence)!=VK_SUCCESS)
+            return false;
+        it=recordedGroups_.emplace(key,r).first;
+        ++recordedGroupBuilds_;
+    }
+
+    auto& r=it->second;
+
+    // Timeline fast path. The command buffer was recorded with
+    // VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT in Batch 15, so no host
+    // completion wait is needed merely to submit the next immutable group.
+    // Same-queue ordering preserves transformer dependency order. The exposed
+    // last signal can be consumed by a cross-queue dependent stage.
+    if(deep2RecordedGroupAsyncEnabled() && TimelineSemaphoreEnabled()) {
+        const uint64_t signal=NextTimelineValue();
+        const uint64_t wait=recordedGroupLastSignal_;
+        if(!SubmitTimelineCommand(
+                r.cmd,queue_,wait,signal,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT))
+            return false;
+        recordedGroupLastSignal_=signal;
+        ++recordedGroupAsyncSubmits_;
+        ++recordedGroupSubmits_;
+        SetWorkEpoch(epoch);
+        return true;
+    }
+
+    ++recordedGroupSyncWaits_;
+    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    if(vkResetFences(device_,1,&r.fence)!=VK_SUCCESS) return false;
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;si.pCommandBuffers=&r.cmd;
+    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
+    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    ++recordedGroupSubmits_;
+    ++queueSubmitCount_;
+    SetWorkEpoch(epoch);
+    return true;
+}
 void VulkanCompute::clearWeightCache() {
-    for (auto& kv : weightCache_) destroyBuffer(kv.second.buffer);
-    weightCache_.clear();
-    weightCacheBytes_ = 0;
+    clearRecordedGroups();
+    // Recorded commands reference resident weight buffers.
+    // Drop command cache before any unpinned weight buffers are destroyed.
+    clearRecordedQ4K();
+    for (auto it = weightCache_.begin(); it != weightCache_.end();) {
+        if (it->second.pinned) { ++it; continue; }
+        weightCacheBytes_ -= it->second.bytes;
+        destroyBuffer(it->second.buffer);
+        it = weightCache_.erase(it);
+    }
+}
+
+bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
+    if (!view.valid()) return false;
+    DeviceBuf* b = nullptr;
+    if (view.type == 0) {
+        const uint64_t key = view.key ? view.key : (uint64_t)(uintptr_t)view.data;
+        if (!ensureWeightF32((const float*)view.data, key, view.bytes, b))
+            return false;
+    } else {
+        if (!ensureWeightQuant(view.type, view.data, view.bytes, b))
+            return false;
+    }
+    const uint64_t key = view.key
+        ? view.key
+        : ((uint64_t)(uintptr_t)view.data ^
+           ((uint64_t)view.bytes << 1) ^
+           ((uint64_t)(uint32_t)view.type << 48));
+    auto it = weightCache_.find(key);
+    if (it == weightCache_.end()) {
+        for (auto jt = weightCache_.begin(); jt != weightCache_.end(); ++jt) {
+            if (&jt->second.buffer == b || jt->second.buffer.buffer == b->buffer) {
+                it = jt; break;
+            }
+        }
+    }
+    if (it == weightCache_.end()) return false;
+    if (!it->second.pinned) {
+        it->second.pinned = true;
+        pinnedWeightBytes_ += it->second.bytes;
+        ++pinnedWeightEntries_;
+    }
+    return true;
+}
+
+void VulkanCompute::UnpinAllWeights() {
+    for (auto& kv : weightCache_) kv.second.pinned = false;
+    pinnedWeightBytes_ = 0;
+    pinnedWeightEntries_ = 0;
+}
+
+bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
+    if (!weightBudgetBytes_) return true;
+    if (incomingBytes > weightBudgetBytes_) return false;
+
+    while (weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
+        auto victim = weightCache_.end();
+        for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
+            if (victim == weightCache_.end() ||
+                it->second.lastUse < victim->second.lastUse) {
+                victim = it;
+            }
+        }
+        if (victim == weightCache_.end()) return false;
+
+        const size_t bytes = victim->second.bytes;
+        destroyBuffer(victim->second.buffer);
+        weightCache_.erase(victim);
+        weightCacheBytes_ = bytes <= weightCacheBytes_
+            ? weightCacheBytes_ - bytes : 0;
+    }
+    return true;
 }
 
 bool VulkanCompute::ensureWeightF32(
@@ -1304,13 +2193,13 @@ bool VulkanCompute::ensureWeightF32(
     auto it = weightCache_.find(key);
     if (it != weightCache_.end()) {
         ++weightHits_;
+        it->second.lastUse = weightUseClock_++;
         out = &it->second.buffer;
         return true;
     }
     if (!weights || !bytes) return false;
     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
-    if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_)
-        clearWeightCache();
+    if (!evictWeightCacheUntil(bytes)) return false;
 
     WeightCacheEntry e{};
     size_t padded = (bytes+3u)&~size_t(3u);
@@ -1324,7 +2213,7 @@ bool VulkanCompute::ensureWeightF32(
         destroyBuffer(e.buffer);
         return false;
     }
-    e.bytes=bytes; e.type=0;
+    e.bytes=bytes; e.type=0; e.lastUse=weightUseClock_++;
     auto ins = weightCache_.emplace(key,std::move(e)).first;
     weightCacheBytes_ += bytes;
     ++weightUploads_;
@@ -1339,13 +2228,13 @@ bool VulkanCompute::ensureWeightQuant(
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
         ++weightHits_;
+        it->second.lastUse = weightUseClock_++;
         out=&it->second.buffer;
         return true;
     }
     if(!weights||!bytes) return false;
     if(weightBudgetBytes_ && bytes>weightBudgetBytes_) return false;
-    if(weightBudgetBytes_ && weightCacheBytes_+bytes>weightBudgetBytes_)
-        clearWeightCache();
+    if(!evictWeightCacheUntil(bytes)) return false;
 
     WeightCacheEntry e{};
     size_t padded=(bytes+3u)&~size_t(3u);
@@ -1361,7 +2250,8 @@ bool VulkanCompute::ensureWeightQuant(
     if(!uploadToBuffer(e.buffer,tmp.data(),padded)){
         destroyBuffer(e.buffer); return false;
     }
-    e.bytes=bytes; e.type=type;
+    e.bytes=bytes; e.type=type; e.lastUse=weightUseClock_++;
+
     auto ins=weightCache_.emplace(key,std::move(e)).first;
     weightCacheBytes_+=bytes;
     ++weightUploads_;
@@ -1407,6 +2297,172 @@ bool VulkanCompute::DispatchGemvQuant(
     bool ok=dispatchQuant(*w,input,output,p);
     if(ok) ++gemvSuccess_;
     return ok;
+}
+
+bool VulkanCompute::DispatchGemvQ4KBatch(
+    const void* weights,size_t weightBytes,
+    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
+    uint32_t rows,uint32_t cols,uint32_t batch)
+{
+    if(type==12 && rows>=4 && qBatch4RowPipeline_) {
+        const Q4KBatchTile tile=SelectQ4KBatchTile(
+            weights,weightBytes,inputBatch,outputBatch,
+            rows,cols,batch);
+        if(tile==Q4KBatchTile::Eight && rows>=8 && qBatch8RowPipeline_)
+            return DispatchGemvQ4KBatch8Row(
+                weights,weightBytes,inputBatch,outputBatch,
+                rows,cols,batch);
+        return DispatchGemvQ4KBatch4Row(
+            weights,weightBytes,inputBatch,outputBatch,
+            rows,cols,batch);
+    }
+    if(!qBatchPipeline_||!weights||!weightBytes||
+       !rows||!cols||batch==0||batch>4)
+        return false;
+    if(inputBatch.size < (size_t)batch*cols*sizeof(float) ||
+       outputBatch.size < (size_t)batch*rows*sizeof(float))
+        return false;
+
+    DeviceBuf* w=nullptr;
+    if(!ensureWeightQuant(12,weights,weightBytes,w)) return false;
+
+    VkCommandBuffer cmd=fusedCmd_;
+    VkQueryPool query=fusedQuery_;
+    const bool own=!fused_;
+    if(own){
+        if(!beginCommand(cmd,query,true)) return false;
+    }
+
+    VkDescriptorSet set=getQuantDescriptor(*w,inputBatch,outputBatch);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatchPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatchPipelineLayout_,
+        0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.rows=rows;p.cols=cols;p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
+    vkCmdPushConstants(
+        cmd,qBatchPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    vkCmdDispatch(cmd,rows,1,1);
+    recordComputeBarrier(cmd);
+    if(!own) return true;
+    const bool ok=endSubmitWait(
+        cmd,query,GpuWorkKind::ModelCompute,
+        weightBytes,workEpoch_,nullptr);
+    if(ok) ++gemvSuccess_;
+    return ok;
+}
+
+bool VulkanCompute::RunWeightHostBatchQ4K(
+    const GpuWeightView& weight,
+    const float* inputBatch,float* outputBatch,
+    uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weight.valid()||weight.type!=12||!inputBatch||!outputBatch||
+       batch==0||batch>4||!initialized_)
+        return false;
+
+    SetWorkEpoch(epoch);
+    const size_t inCount=(size_t)batch*weight.cols;
+    const size_t outCount=(size_t)batch*weight.rows;
+    if(!EnsureScratch(70,inCount)||!EnsureScratch(71,outCount))
+        return false;
+    DeviceBuf& in=Scratch(70);
+    DeviceBuf& out=Scratch(71);
+
+    DeviceBuf* resident=nullptr;
+    if(!ensureWeightQuant(
+            weight.type,weight.data,weight.bytes,resident))
+        return false;
+
+    const size_t inBytes=inCount*sizeof(float);
+    const size_t outBytes=outCount*sizeof(float);
+    DeviceBuf* upStage=nullptr;
+    DeviceBuf* downStage=nullptr;
+    void* upMap=nullptr;
+    void* downMap=nullptr;
+    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
+       !ensureMappedStaging(false,outBytes,downStage,downMap))
+        return false;
+    std::memcpy(upMap,inputBatch,inBytes);
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+        return abort();
+    if(!DispatchGemvQ4KBatch(
+            weight.data,weight.bytes,in,out,
+            weight.rows,weight.cols,batch))
+        return abort();
+    if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
+        return abort();
+    if(!EndFusedLayer()) return false;
+
+    std::memcpy(outputBatch,downMap,outBytes);
+    return true;
+}
+
+bool VulkanCompute::RunWeightGroupHostBatchQ4K(
+    const GpuWeightView* weights,float* const* outputs,size_t weightCount,
+    const float* inputBatch,uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weights||!outputs||!inputBatch||weightCount<2||weightCount>3||
+       !batch||batch>4) return false;
+    const uint32_t cols=weights[0].cols;
+    if(!cols) return false;
+    for(size_t i=0;i<weightCount;++i)
+        if(!weights[i].valid()||weights[i].type!=12||
+           weights[i].cols!=cols||!outputs[i])
+            return false;
+
+    SetWorkEpoch(epoch);
+    const size_t inCount=(size_t)batch*cols;
+    if(!EnsureScratch(110,inCount)) return false;
+    auto& in=Scratch(110);
+    DeviceBuf* us=nullptr;void* um=nullptr;
+    const size_t inBytes=inCount*sizeof(float);
+    if(!ensureMappedStaging(true,inBytes,us,um)) return false;
+    std::memcpy(um,inputBatch,inBytes);
+
+    size_t totalOutBytes=0;
+    size_t offsets[3]{};
+    for(size_t i=0;i<weightCount;++i) {
+        offsets[i]=totalOutBytes;
+        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
+        if(totalOutBytes>SIZE_MAX-b) return false;
+        totalOutBytes+=b;
+        if(!EnsureScratch(111u+(unsigned)i,(size_t)batch*weights[i].rows))
+            return false;
+    }
+    DeviceBuf* ds=nullptr;void* dm=nullptr;
+    if(!ensureMappedStaging(false,totalOutBytes,ds,dm)) return false;
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{if(FusedRecording())(void)EndFusedLayer();return false;};
+    if(!recordCopy(fusedCmd_,*us,in,inBytes)) return abort();
+    for(size_t i=0;i<weightCount;++i) {
+        auto& out=Scratch(111u+(unsigned)i);
+        if(!DispatchGemvQ4KBatch(
+                weights[i].data,weights[i].bytes,in,out,
+                weights[i].rows,weights[i].cols,batch))
+            return abort();
+        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
+        if(!recordCopy(
+                fusedCmd_,out,*ds,b,0,(VkDeviceSize)offsets[i]))
+            return abort();
+    }
+    if(!EndFusedLayer()) return false;
+    for(size_t i=0;i<weightCount;++i) {
+        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
+        std::memcpy(outputs[i],(const uint8_t*)dm+offsets[i],b);
+    }
+    return true;
 }
 
 bool VulkanCompute::PrefetchWeight(
@@ -1716,6 +2772,162 @@ bool VulkanCompute::RunMLAAttentionHost(
         return false;
     }
 
+bool VulkanCompute::RunWeightHostRoundTrip(
+    const GpuWeightView& weight,
+    const float* input,
+    float* output,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weight.valid()||!input||!output||!initialized_)
+        return false;
+
+    SetWorkEpoch(epoch);
+    if(!EnsureScratch(60,weight.cols)||
+       !EnsureScratch(61,weight.rows))
+        return false;
+    DeviceBuf& in=Scratch(60);
+    DeviceBuf& out=Scratch(61);
+
+    DeviceBuf* resident=nullptr;
+    if(weight.type==0){
+        const uint64_t key=weight.key
+            ? weight.key
+            : static_cast<uint64_t>(
+                reinterpret_cast<uintptr_t>(weight.data));
+        if(!ensureWeightF32(
+                static_cast<const float*>(weight.data),key,
+                weight.bytes,resident))
+            return false;
+    }else{
+        if(!ensureWeightQuant(
+                weight.type,weight.data,weight.bytes,resident))
+            return false;
+    }
+
+    const size_t inBytes=
+        static_cast<size_t>(weight.cols)*sizeof(float);
+    const size_t outBytes=
+        static_cast<size_t>(weight.rows)*sizeof(float);
+
+    DeviceBuf* upStage=nullptr;
+    DeviceBuf* downStage=nullptr;
+    void* upMap=nullptr;
+    void* downMap=nullptr;
+    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
+       !ensureMappedStaging(false,outBytes,downStage,downMap))
+        return false;
+    std::memcpy(upMap,input,inBytes);
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+
+    // BeginFusedLayer made fusedCmd_ active, so DispatchWeight records only.
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+        return abort();
+    if(!DispatchWeight(weight,in,out))
+        return abort();
+    if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
+        return abort();
+    if(!EndFusedLayer())
+        return false;
+
+    std::memcpy(output,downMap,outBytes);
+    return true;
+}
+
+bool VulkanCompute::RunWeightGroupHostRoundTrip(
+    const GpuWeightView* weights,
+    float* const* outputs,
+    size_t count,
+    const float* input,
+    uint32_t inputCount,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weights||!outputs||!input||count<2||count>3||!inputCount)
+        return false;
+
+    SetWorkEpoch(epoch);
+    if(!EnsureScratch(62,inputCount)) return false;
+    DeviceBuf& in=Scratch(62);
+
+    size_t totalOutBytes=0;
+    size_t offsets[3]{};
+    DeviceBuf* resident[3]{};
+
+    for(size_t i=0;i<count;++i){
+        const auto& w=weights[i];
+        if(!w.valid()||w.cols!=inputCount||!outputs[i])
+            return false;
+        if(!EnsureScratch(63u+(unsigned)i,w.rows))
+            return false;
+
+        offsets[i]=totalOutBytes;
+        const size_t b=static_cast<size_t>(w.rows)*sizeof(float);
+        if(totalOutBytes>std::numeric_limits<size_t>::max()-b)
+            return false;
+        totalOutBytes+=b;
+
+        if(w.type==0){
+            const uint64_t key=w.key
+                ? w.key
+                : static_cast<uint64_t>(
+                    reinterpret_cast<uintptr_t>(w.data));
+            if(!ensureWeightF32(
+                    static_cast<const float*>(w.data),key,
+                    w.bytes,resident[i]))
+                return false;
+        }else{
+            if(!ensureWeightQuant(
+                    w.type,w.data,w.bytes,resident[i]))
+                return false;
+        }
+    }
+
+    const size_t inBytes=static_cast<size_t>(inputCount)*sizeof(float);
+    DeviceBuf* upStage=nullptr;
+    DeviceBuf* downStage=nullptr;
+    void* upMap=nullptr;
+    void* downMap=nullptr;
+    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
+       !ensureMappedStaging(false,totalOutBytes,downStage,downMap))
+        return false;
+    std::memcpy(upMap,input,inBytes);
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+        return abort();
+
+    for(size_t i=0;i<count;++i){
+        DeviceBuf& out=Scratch(63u+(unsigned)i);
+        if(!DispatchWeight(weights[i],in,out))
+            return abort();
+        const VkDeviceSize b=
+            static_cast<VkDeviceSize>(weights[i].rows)*sizeof(float);
+        if(!recordCopy(
+                fusedCmd_,out,*downStage,b,0,
+                static_cast<VkDeviceSize>(offsets[i])))
+            return abort();
+    }
+    if(!EndFusedLayer()) return false;
+
+    for(size_t i=0;i<count;++i){
+        std::memcpy(
+            outputs[i],
+            static_cast<const uint8_t*>(downMap)+offsets[i],
+            static_cast<size_t>(weights[i].rows)*sizeof(float));
+    }
+    return true;
+}
+
     if(mlaCacheHeads_==0){
         mlaCacheHeads_=heads;
         mlaCacheKeyLen_=keyLen;
@@ -1774,12 +2986,389 @@ bool VulkanCompute::RunMLAAttentionHost(
     return DownloadVector(od,output,outCount);
 }
 
+void VulkanCompute::ResetSpecBatchArena() {
+    for(auto& a:specArenas_) {
+        destroyBuffer(a.hidden); destroyBuffer(a.norm);
+        destroyBuffer(a.q);      destroyBuffer(a.k);
+        destroyBuffer(a.v);      destroyBuffer(a.attn);
+        destroyBuffer(a.proj);   destroyBuffer(a.gate);
+        destroyBuffer(a.up);     destroyBuffer(a.act);
+        destroyBuffer(a.down);   destroyBuffer(a.tmp);
+        a={};
+    }
+    specArenaIndex_=0;
+}
+
+bool VulkanCompute::EnsureSpecBatchArena(
+    uint32_t hidden,uint32_t kvWidth,uint32_t intermediate,uint32_t batch)
+{
+    if(!hidden||!kvWidth||!intermediate||!batch||batch>4) return false;
+    if(specArenas_[0].valid()&&specArenas_[1].valid()&&
+       specArenas_[0].hiddenWidth>=hidden&&
+       specArenas_[0].kvWidth>=kvWidth&&
+       specArenas_[0].intermediate>=intermediate&&
+       specArenas_[0].batchCapacity>=batch)
+        return true;
+
+    ResetSpecBatchArena();
+    auto mk=[&](DeviceBuf& b,uint64_t floats)->bool {
+        if(!floats||floats>SIZE_MAX/sizeof(float)) return false;
+        return createBuffer(
+            (size_t)floats*sizeof(float),
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,b);
+    };
+    const uint64_t B=batch;
+    for(auto& a:specArenas_) {
+        if(!mk(a.hidden,B*hidden) ||
+           !mk(a.norm,B*hidden)   ||
+           !mk(a.q,B*hidden)      ||
+           !mk(a.k,B*kvWidth)     ||
+           !mk(a.v,B*kvWidth)     ||
+           !mk(a.attn,B*hidden)   ||
+           !mk(a.proj,B*hidden)   ||
+           !mk(a.gate,B*intermediate) ||
+           !mk(a.up,B*intermediate)   ||
+           !mk(a.act,B*intermediate)  ||
+           !mk(a.down,B*hidden)   ||
+           !mk(a.tmp,B*std::max(hidden,intermediate))) {
+            ResetSpecBatchArena();
+            return false;
+        }
+        a.hiddenWidth=hidden;a.kvWidth=kvWidth;
+        a.intermediate=intermediate;a.batchCapacity=batch;
+    }
+    return true;
+}
+
+// Call after immutable next-window preparation has completed and before the
+// target verifier begins consuming it.
+void VulkanCompute::FlipSpecArena() noexcept {
+    specArenaIndex_^=1u;
+    ++specArenaFlips_;
+}
+
+bool VulkanCompute::UploadSpecHidden(
+    const float* src,uint32_t hidden,uint32_t batch)
+{
+    if(!src||!EnsureSpecBatchArena(
+            hidden,specArena_.kvWidth?specArena_.kvWidth:hidden,
+            specArena_.intermediate?specArena_.intermediate:hidden*4,batch))
+        return false;
+    return uploadToBuffer(
+        specArena_.hidden,src,(size_t)hidden*batch*sizeof(float));
+}
+
+bool VulkanCompute::DownloadSpecHidden(
+    float* dst,uint32_t hidden,uint32_t batch)
+{
+    if(!dst||!specArena_.hidden||
+       hidden>specArena_.hiddenWidth||batch>specArena_.batchCapacity)
+        return false;
+    return downloadFromBuffer(
+        specArena_.hidden,dst,(size_t)hidden*batch*sizeof(float));
+}
+bool VulkanCompute::EnsureResidentBatchInput(
+    uint32_t cols,uint32_t batch)
+{
+    if(!cols||!batch||batch>4) return false;
+    if(residentBatchInput_ &&
+       residentBatchCols_>=cols &&
+       residentBatchCapacity_>=batch)
+        return true;
+
+    destroyBuffer(residentBatchInput_);
+    residentBatchCols_=0;
+    residentBatchCapacity_=0;
+    const uint64_t elems=(uint64_t)cols*batch;
+    if(elems>SIZE_MAX/sizeof(float)) return false;
+    if(!createBuffer(
+            (size_t)elems*sizeof(float),
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            residentBatchInput_))
+        return false;
+    residentBatchCols_=cols;
+    residentBatchCapacity_=batch;
+    return true;
+}
+
+bool VulkanCompute::UploadResidentBatchInput(
+    const float* input,uint32_t cols,uint32_t batch,uint64_t epoch)
+{
+    if(!input||!EnsureResidentBatchInput(cols,batch)) return false;
+    SetWorkEpoch(epoch);
+    const size_t bytes=(size_t)cols*batch*sizeof(float);
+    if(!uploadToBuffer(residentBatchInput_,input,bytes)) return false;
+    ++residentBatchInputUploads_;
+    return true;
+}
+bool VulkanCompute::EnsureResidentGroupOutputs(
+    const GpuWeightView* weights,size_t weightCount,uint32_t batch)
+{
+    if(!weights||weightCount<2||weightCount>3||!batch||batch>4)
+        return false;
+    for(size_t i=0;i<weightCount;++i) {
+        if(!weights[i].valid()) return false;
+        const size_t need=(size_t)weights[i].rows*batch;
+        if(residentGroupOutputs_[i] &&
+           residentGroupOutputFloats_[i]>=need)
+            continue;
+        destroyBuffer(residentGroupOutputs_[i]);
+        residentGroupOutputFloats_[i]=0;
+        if(!createBuffer(
+                need*sizeof(float),
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                residentGroupOutputs_[i]))
+            return false;
+        residentGroupOutputFloats_[i]=need;
+        ++residentGroupOutputReallocs_;
+    }
+    return true;
+}
+bool VulkanCompute::EnsureResidentFullOutput(
+    uint32_t rows,uint32_t batch)
+{
+    if(!rows||!batch||batch>4) return false;
+    if(residentFullOutput_&&
+       residentFullOutputRows_>=rows&&
+       residentFullOutputBatch_>=batch)
+        return true;
+    destroyBuffer(residentFullOutput_);
+    residentFullOutputRows_=residentFullOutputBatch_=0;
+    const uint64_t elems=(uint64_t)rows*batch;
+    if(elems>SIZE_MAX/sizeof(float)) return false;
+    if(!createBuffer(
+            (size_t)elems*sizeof(float),
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            residentFullOutput_))
+        return false;
+    residentFullOutputRows_=rows;
+    residentFullOutputBatch_=batch;
+    return true;
+}
+
+bool VulkanCompute::CopyDeviceSliceIntoFullOutput(
+    DeviceBuf& src,uint32_t srcRows,uint32_t rowBegin,
+    uint32_t fullRows,uint32_t batch)
+{
+    if(!src||!srcRows||!fullRows||!batch||batch>4||
+       rowBegin>fullRows||srcRows>fullRows-rowBegin||
+       !EnsureResidentFullOutput(fullRows,batch))
+        return false;
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    const VkDeviceSize rowBytes=(VkDeviceSize)srcRows*sizeof(float);
+    for(uint32_t b=0;b<batch;++b) {
+        const VkDeviceSize so=(VkDeviceSize)b*rowBytes;
+        const VkDeviceSize doff=
+            ((VkDeviceSize)b*fullRows+rowBegin)*sizeof(float);
+        if(!recordCopy(
+                cmd,src,residentFullOutput_,rowBytes,so,doff))
+            return false;
+    }
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelTransfer,
+            (uint64_t)rowBytes*batch,workEpoch_,nullptr))
+        return false;
+    residentFullOutputCopies_+=batch;
+    return true;
+}
+void VulkanCompute::ResetDownloadRing() {
+    for(auto& s:downloadRing_) {
+        if(s.inFlight&&s.fence)
+            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
+        if(s.mapped&&s.staging.memory)
+            vkUnmapMemory(device_,s.staging.memory);
+        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
+        destroyBuffer(s.staging);
+        s={};
+        if(s.cmd&&transferCommandPool_)
+            vkFreeCommandBuffers(
+                device_,transferCommandPool_,1,&s.cmd);
+    }
+    downloadRingHead_=0;
+}
+
+bool VulkanCompute::EnsureDownloadRing(size_t bytes) {
+    if(!bytes) return false;
+    bool good=true;
+    for(const auto& s:downloadRing_)
+        good=good&&s.staging&&s.capacity>=bytes&&s.mapped&&s.fence;
+    if(good) return true;
+    ResetDownloadRing();
+    for(auto& s:downloadRing_) {
+        if(!createBuffer(
+                bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,s.staging))
+            return false;
+        if(vkMapMemory(
+                device_,s.staging.memory,0,bytes,0,&s.mapped)!=VK_SUCCESS)
+            return false;
+        VkFenceCreateInfo fi{};
+        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
+        if(vkCreateFence(device_,&fi,nullptr,&s.fence)!=VK_SUCCESS)
+            return false;
+        VkCommandBufferAllocateInfo ai{};
+        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        ai.commandPool=transferCommandPool_
+            ? transferCommandPool_:commandPool_;
+        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        ai.commandBufferCount=1;
+        if(vkAllocateCommandBuffers(device_,&ai,&s.cmd)!=VK_SUCCESS)
+            return false;
+        s.capacity=bytes;
+    }
+    return true;
+}
+
+bool VulkanCompute::SubmitDownloadRing(
+    DeviceBuf& src,size_t bytes,uint32_t& slotOut)
+{
+    if(!src||!bytes||bytes>src.size||!EnsureDownloadRing(bytes))
+        return false;
+    const uint32_t idx=downloadRingHead_++%3u;
+    auto& s=downloadRing_[idx];
+    if(vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    if(vkResetFences(device_,1,&s.fence)!=VK_SUCCESS) return false;
+
+    if(vkResetCommandBuffer(s.cmd,0)!=VK_SUCCESS) return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if(vkBeginCommandBuffer(s.cmd,&bi)!=VK_SUCCESS) return false;
+    if(!recordCopy(s.cmd,src,s.staging,bytes)) return false;
+    if(vkEndCommandBuffer(s.cmd)!=VK_SUCCESS) return false;
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;si.pCommandBuffers=&s.cmd;
+    VkQueue tq=transferQueue_?transferQueue_:queue_;
+    if(vkQueueSubmit(tq,1,&si,s.fence)!=VK_SUCCESS) return false;
+    s.bytes=bytes;s.inFlight=true;
+    slotOut=idx;
+    ++downloadRingSubmits_;
+    ++transferQueueSubmits_;
+    ++queueSubmitCount_;
+    return true;
+}
+
+bool VulkanCompute::WaitDownloadRing(
+    uint32_t idx,void* dst,size_t bytes)
+{
+    if(idx>=3||!dst) return false;
+    auto& s=downloadRing_[idx];
+    if(!s.inFlight||bytes>s.bytes) return false;
+    const auto a=std::chrono::steady_clock::now();
+    if(vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    const auto b=std::chrono::steady_clock::now();
+    downloadRingWaitNs_+=(uint64_t)std::chrono::duration_cast<
+        std::chrono::nanoseconds>(b-a).count();
+    std::memcpy(dst,s.mapped,bytes);
+    s.inFlight=false;
+    return true;
+}
+bool VulkanCompute::CaptureVerifiedHidden(
+    DeviceBuf& hiddenBatch,uint32_t tokenIndex,
+    uint32_t hiddenWidth,uint32_t batch)
+{
+    if(!hiddenBatch||!hiddenWidth||!batch||tokenIndex>=batch) return false;
+    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
+    if(!verifiedHidden_||verifiedHiddenWidth_<hiddenWidth) {
+        destroyBuffer(verifiedHidden_);
+        if(!createBuffer(
+                bytes,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,verifiedHidden_))
+            return false;
+        verifiedHiddenWidth_=hiddenWidth;
+    }
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    const VkDeviceSize src=(VkDeviceSize)tokenIndex*bytes;
+    if(!recordCopy(cmd,hiddenBatch,verifiedHidden_,bytes,src,0))
+        return false;
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelTransfer,
+            bytes,workEpoch_,nullptr))
+        return false;
+    ++verifiedHiddenHandoffs_;
+    return true;
+}
+
+bool VulkanCompute::RestoreVerifiedHiddenToArena(uint32_t hiddenWidth) {
+    if(!verifiedHidden_||hiddenWidth>verifiedHiddenWidth_||
+       !SpecArena().hidden)
+        return false;
+    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    if(!recordCopy(cmd,verifiedHidden_,SpecArena().hidden,bytes,0,0))
+        return false;
+    return endSubmitWait(
+        cmd,query,GpuWorkKind::ModelTransfer,
+        bytes,workEpoch_,nullptr);
+}
+
+bool VulkanCompute::DownloadVerifiedHidden(
+    float* dst,uint32_t hiddenWidth)
+{
+    if(!dst||!verifiedHidden_||hiddenWidth>verifiedHiddenWidth_) return false;
+    return downloadFromBuffer(
+        verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
+}
 void VulkanCompute::cleanup() {
     if (device_) vkDeviceWaitIdle(device_);
+    ResetDownloadRing();
+
+    clearRecordedQ4K();
+
+    ResetSpecBatchArena();
+
+    ResetSpecKvMirror();
+
+    if(device_ && reusableFusedFence_)
+        vkDestroyFence(device_,reusableFusedFence_,nullptr);
+    if(device_ && reusableFusedQuery_)
+        vkDestroyQueryPool(device_,reusableFusedQuery_,nullptr);
+    if(device_ && reusableFusedCmd_ && commandPool_)
+        vkFreeCommandBuffers(device_,commandPool_,1,&reusableFusedCmd_);
+    reusableFusedFence_=VK_NULL_HANDLE;
+    reusableFusedQuery_=VK_NULL_HANDLE;
+    reusableFusedCmd_=VK_NULL_HANDLE;
+
+    if (device_ && uploadMapped_ && uploadStaging_.memory)
+        vkUnmapMemory(device_, uploadStaging_.memory);
+    if (device_ && downloadMapped_ && downloadStaging_.memory)
+        vkUnmapMemory(device_, downloadStaging_.memory);
+    uploadMapped_ = downloadMapped_ = nullptr;
+    destroyBuffer(uploadStaging_);
+    destroyBuffer(downloadStaging_);
+    uploadStagingBytes_ = downloadStagingBytes_ = 0;
 
     for (auto& e : prefetch_) destroyBuffer(e.buffer);
+
     prefetch_.clear();
     clearWeightCache();
+    opsDescriptorCache_.clear();
+    quantDescriptorCache_.clear();
 
     for (auto& b : scratch_) destroyBuffer(b);
     scratch_.clear();
@@ -1796,8 +3385,36 @@ void VulkanCompute::cleanup() {
 
     if(device_ && opsPipeline_) vkDestroyPipeline(device_,opsPipeline_,nullptr);
     if(device_ && qPipeline_) vkDestroyPipeline(device_,qPipeline_,nullptr);
+    if(device_ && qBatchPipeline_)
+        vkDestroyPipeline(device_,qBatchPipeline_,nullptr);
+    if(device_ && qBatch4RowPipeline_)
+        vkDestroyPipeline(device_,qBatch4RowPipeline_,nullptr);
+    if(device_ && qBatch8RowPipeline_)
+        vkDestroyPipeline(device_,qBatch8RowPipeline_,nullptr);
+    if(device_ && argmaxPipeline_)
+        vkDestroyPipeline(device_,argmaxPipeline_,nullptr);
+    if(device_ && specOpsPipeline_)
+        vkDestroyPipeline(device_,specOpsPipeline_,nullptr);
+    if(device_ && specAttnPipeline_)
+        vkDestroyPipeline(device_,specAttnPipeline_,nullptr);
     if(device_ && opsPipelineLayout_) vkDestroyPipelineLayout(device_,opsPipelineLayout_,nullptr);
     if(device_ && qPipelineLayout_) vkDestroyPipelineLayout(device_,qPipelineLayout_,nullptr);
+    if(device_ && qBatchPipelineLayout_)
+        vkDestroyPipelineLayout(device_,qBatchPipelineLayout_,nullptr);
+    if(device_ && qBatch4RowPipelineLayout_)
+        vkDestroyPipelineLayout(
+            device_,qBatch4RowPipelineLayout_,nullptr);
+    if(device_ && qBatch8RowPipelineLayout_)
+        vkDestroyPipelineLayout(
+            device_,qBatch8RowPipelineLayout_,nullptr);
+
+    if(device_ && argmaxPipelineLayout_)
+        vkDestroyPipelineLayout(device_,argmaxPipelineLayout_,nullptr);
+    if(device_ && specOpsPipelineLayout_)
+        vkDestroyPipelineLayout(device_,specOpsPipelineLayout_,nullptr);
+    if(device_ && specAttnPipelineLayout_)
+        vkDestroyPipelineLayout(device_,specAttnPipelineLayout_,nullptr);
+
     if(device_ && opsSetLayout_) vkDestroyDescriptorSetLayout(device_,opsSetLayout_,nullptr);
     if(device_ && qSetLayout_) vkDestroyDescriptorSetLayout(device_,qSetLayout_,nullptr);
     if(device_ && descriptorPool_) vkDestroyDescriptorPool(device_,descriptorPool_,nullptr);
@@ -1809,7 +3426,9 @@ void VulkanCompute::cleanup() {
     queue_=VK_NULL_HANDLE;commandPool_=VK_NULL_HANDLE;descriptorPool_=VK_NULL_HANDLE;
     opsSetLayout_=qSetLayout_=VK_NULL_HANDLE;
     opsPipelineLayout_=qPipelineLayout_=VK_NULL_HANDLE;
-    opsPipeline_=qPipeline_=VK_NULL_HANDLE;
+    opsPipeline_=qPipeline_=qBatchPipeline_=VK_NULL_HANDLE;
+    qBatchPipelineLayout_=VK_NULL_HANDLE;
+
     fpGetCalibrated_=nullptr;
     calibratedAvailable_=false;
     initialized_=false;
@@ -1821,3 +3440,769 @@ void VulkanCompute::cleanup() {
 }
 
 } // namespace Deep2
+bool VulkanCompute::SpecBatchRmsNorm(
+    DeviceBuf& input,DeviceBuf& weight,DeviceBuf& output,
+    uint32_t width,uint32_t batch,float eps)
+{
+    if(!input||!weight||!output||!width||!batch||batch>4) return false;
+    SpecOpsPush p{};p.op=0;p.width=width;p.batch=batch;p.eps=eps;
+    return dispatchSpecOps(input,weight,output,specArena_.tmp,p);
+}
+
+bool VulkanCompute::SpecBatchSwiGLU(
+    DeviceBuf& gate,DeviceBuf& up,DeviceBuf& output,
+    uint32_t width,uint32_t batch)
+{
+    if(!gate||!up||!output||!width||!batch||batch>4) return false;
+    SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
+    return dispatchSpecOps(gate,up,output,specArena_.tmp,p);
+}
+
+bool VulkanCompute::SpecBatchResidual(
+    DeviceBuf& a,DeviceBuf& b,DeviceBuf& output,
+    uint32_t width,uint32_t batch)
+{
+    if(!a||!b||!output||!width||!batch||batch>4) return false;
+    SpecOpsPush p{};p.op=2;p.width=width;p.batch=batch;
+    return dispatchSpecOps(a,b,output,specArena_.tmp,p);
+}
+bool VulkanCompute::ReduceHostPartialInto(
+    DeviceBuf& primary,const float* partial,uint32_t count)
+{
+    if(!primary||!partial||!count) return false;
+    if(!EnsureScratch(120,count)) return false;
+    auto& incoming=Scratch(120);
+    if(!UploadVector(incoming,partial,count)) return false;
+    OpsPush p{};
+    p.op=3; // existing OP_RESIDUAL
+    p.n=count;
+    return dispatchOps(
+        primary,incoming,specArena_.tmp,specArena_.tmp,
+        p,(count+63u)/64u,GpuWorkKind::ModelCompute);
+}
+    destroyBuffer(residentBatchInput_);
+    residentBatchInput_={};
+    residentBatchCols_=residentBatchCapacity_=0;
+bool VulkanCompute::RunWeightGroupResidentInputQ4K(
+    const GpuWeightView* weights,float* const* outputs,size_t weightCount,
+    uint32_t cols,uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weights||!outputs||weightCount<2||weightCount>3||
+       !residentBatchInput_||cols>residentBatchCols_||
+       batch>residentBatchCapacity_||!batch)
+        return false;
+    SetWorkEpoch(epoch);
+
+    size_t totalBytes=0, offsets[3]{};
+    for(size_t i=0;i<weightCount;++i) {
+        if(!weights[i].valid()||weights[i].type!=12||
+           weights[i].cols!=cols||!outputs[i])
+            return false;
+        if(!PinWeightView(weights[i])) return false;
+        offsets[i]=totalBytes;
+        totalBytes+=(size_t)batch*weights[i].rows*sizeof(float);
+        if(!EnsureScratch(
+                130u+(unsigned)i,
+                (size_t)batch*weights[i].rows))
+            return false;
+    }
+    DeviceBuf* ds=nullptr;void* dm=nullptr;
+    if(!ensureMappedStaging(false,totalBytes,ds,dm)) return false;
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+    for(size_t i=0;i<weightCount;++i) {
+        auto& out=Scratch(130u+(unsigned)i);
+        if(!DispatchGemvQ4KBatch(
+                weights[i].data,weights[i].bytes,
+                residentBatchInput_,out,
+                weights[i].rows,cols,batch))
+            return abort();
+        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
+        if(!recordCopy(
+                fusedCmd_,out,*ds,bytes,0,(VkDeviceSize)offsets[i]))
+            return abort();
+    }
+    if(!EndFusedLayer()) return false;
+    for(size_t i=0;i<weightCount;++i) {
+        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
+        std::memcpy(outputs[i],(const uint8_t*)dm+offsets[i],bytes);
+    }
+    return true;
+}
+bool VulkanCompute::SubmitDownloadAsync(
+    DeviceBuf& src,size_t bytes,DownloadTicket& t)
+{
+    if(t.active||!src||!bytes||bytes>src.size) return false;
+    if(!createBuffer(
+            bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,t.staging))
+        return false;
+    if(vkMapMemory(
+            device_,t.staging.memory,0,bytes,0,&t.mapped)!=VK_SUCCESS) {
+        destroyBuffer(t.staging);return false;
+    }
+    if(!beginCommand(t.cmd,t.query,true)||
+       !recordCopy(t.cmd,src,t.staging,bytes)) {
+        CancelDownloadTicket(t);return false;
+    }
+    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
+        CancelDownloadTicket(t);return false;
+    }
+    VkFenceCreateInfo fi{};
+    fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if(vkCreateFence(device_,&fi,nullptr,&t.fence)!=VK_SUCCESS) {
+        CancelDownloadTicket(t);return false;
+    }
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;si.pCommandBuffers=&t.cmd;
+    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+        CancelDownloadTicket(t);return false;
+    }
+    t.bytes=bytes;t.active=true;
+    return true;
+}
+
+bool VulkanCompute::WaitDownloadAsync(
+    DownloadTicket& t,void* dst,size_t bytes)
+{
+    if(!t.active||!dst||bytes>t.bytes) return false;
+    if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    std::memcpy(dst,t.mapped,bytes);
+    CancelDownloadTicket(t);
+    return true;
+}
+
+void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
+    if(t.mapped&&t.staging.memory) vkUnmapMemory(device_,t.staging.memory);
+    if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
+    if(t.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
+    if(t.query) vkDestroyQueryPool(device_,t.query,nullptr);
+    destroyBuffer(t.staging);
+    t={};
+}
+    for(auto& b:residentGroupOutputs_) destroyBuffer(b);
+    for(auto& n:residentGroupOutputFloats_) n=0;
+bool VulkanCompute::RunWeightGroupResidentInputQ4KSingleReturn(
+    const GpuWeightView* weights,float* contiguousOutput,
+    size_t* outputOffsets,size_t weightCount,
+    uint32_t cols,uint32_t batch,uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weights||!contiguousOutput||!outputOffsets||
+       weightCount<2||weightCount>3||!batch||batch>4||
+       !residentBatchInput_)
+        return false;
+    if(!EnsureResidentGroupOutputs(weights,weightCount,batch))
+        return false;
+
+    size_t totalBytes=0;
+    for(size_t i=0;i<weightCount;++i) {
+        if(!PinWeightView(weights[i])||weights[i].cols!=cols)
+            return false;
+        outputOffsets[i]=totalBytes/sizeof(float);
+        totalBytes+=(size_t)batch*weights[i].rows*sizeof(float);
+    }
+
+    DeviceBuf* ds=nullptr;void* dm=nullptr;
+    if(!ensureMappedStaging(false,totalBytes,ds,dm)) return false;
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+
+    size_t byteOffset=0;
+    for(size_t i=0;i<weightCount;++i) {
+        auto& out=residentGroupOutputs_[i];
+        if(!DispatchGemvQ4KBatch(
+                weights[i].data,weights[i].bytes,
+                residentBatchInput_,out,
+                weights[i].rows,cols,batch))
+            return abort();
+        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
+        if(!recordCopy(
+                fusedCmd_,out,*ds,bytes,0,(VkDeviceSize)byteOffset))
+            return abort();
+        byteOffset+=bytes;
+    }
+    if(!EndFusedLayer()) return false;
+    std::memcpy(contiguousOutput,dm,totalBytes);
+    return true;
+}
+bool VulkanCompute::AppendSpecKvFromDevice(
+    uint32_t layer,uint32_t start,uint32_t count,
+    DeviceBuf& kTokenMajor,DeviceBuf& vTokenMajor)
+{
+    if(layer>=specKMirror_.size()||!count||
+       !kTokenMajor||!vTokenMajor||
+       start>specKvCapacity_||count>specKvCapacity_-start)
+        return false;
+
+    // Device source is token-major [token][kvHead][headDim].
+    // Mirror is head-major [kvHead][capacity][headDim].
+    // Use small device copies per head/token; no host materialization.
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    const VkDeviceSize hdBytes=(VkDeviceSize)specKvHeadDim_*sizeof(float);
+    for(uint32_t t=0;t<count;++t) {
+        for(uint32_t h=0;h<specKvHeads_;++h) {
+            const VkDeviceSize src=
+                ((VkDeviceSize)t*specKvHeads_+h)*hdBytes;
+            const VkDeviceSize dst=
+                ((VkDeviceSize)h*specKvCapacity_+start+t)*hdBytes;
+            if(!recordCopy(
+                    cmd,kTokenMajor,specKMirror_[layer],
+                    hdBytes,src,dst)||
+               !recordCopy(
+                    cmd,vTokenMajor,specVMirror_[layer],
+                    hdBytes,src,dst))
+                return false;
+        }
+    }
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelTransfer,
+            (uint64_t)count*specKvHeads_*hdBytes*2,
+            workEpoch_,nullptr))
+        return false;
+    directSpecKvAppends_+=count;
+    return true;
+}
+    destroyBuffer(residentFullOutput_);
+    residentFullOutput_={};
+    residentFullOutputRows_=residentFullOutputBatch_=0;
+bool VulkanCompute::ImportHostRowsIntoFullOutput(
+    const float* rows,uint32_t rowCount,uint32_t rowBegin,
+    uint32_t fullRows,uint32_t batch)
+{
+    if(!rows||!rowCount||!fullRows||!batch||batch>4||
+       rowBegin>fullRows||rowCount>fullRows-rowBegin||
+       !EnsureResidentFullOutput(fullRows,batch))
+        return false;
+    const size_t slab=(size_t)rowCount*batch;
+    DeviceBuf* staging=nullptr;
+    void* mapped=nullptr;
+    if(!ensureMappedStaging(
+            true,slab*sizeof(float),staging,mapped))
+        return false;
+    std::memcpy(mapped,rows,slab*sizeof(float));
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    const VkDeviceSize rowBytes=(VkDeviceSize)rowCount*sizeof(float);
+    for(uint32_t b=0;b<batch;++b) {
+        const VkDeviceSize so=(VkDeviceSize)b*rowBytes;
+        const VkDeviceSize doff=
+            ((VkDeviceSize)b*fullRows+rowBegin)*sizeof(float);
+        if(!recordCopy(
+                cmd,*staging,residentFullOutput_,rowBytes,so,doff))
+            return false;
+    }
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelTransfer,
+            slab*sizeof(float),workEpoch_,nullptr))
+        return false;
+    secondaryImportBytes_+=slab*sizeof(float);
+    return true;
+}
+bool VulkanCompute::DownloadResidentFullOutput(
+    float* dst,uint32_t rows,uint32_t batch)
+{
+    if(!dst||!residentFullOutput_||
+       rows>residentFullOutputRows_||
+       batch>residentFullOutputBatch_)
+        return false;
+    const size_t bytes=(size_t)rows*batch*sizeof(float);
+    if(!downloadFromBuffer(residentFullOutput_,dst,bytes))
+        return false;
+    fullOutputBoundaryBytes_+=bytes;
+    return true;
+}
+bool VulkanCompute::BeginSpecLayerGraph(uint64_t epoch) {
+    if(specLayerGraphActive_||fused_) return false;
+    SetWorkEpoch(epoch);
+    if(!BeginFusedLayer()) return false;
+    specLayerGraphActive_=true;
+    return true;
+}
+
+bool VulkanCompute::EndSpecLayerGraph() {
+    if(!specLayerGraphActive_) return false;
+    const bool ok=EndFusedLayer();
+    specLayerGraphActive_=false;
+    if(ok) ++specLayerGraphSubmits_;
+    return ok;
+}
+void VulkanCompute::ResetAsyncCmdRing() {
+    for(auto& s:asyncCmdRing_) {
+        if(s.inFlight&&s.fence)
+            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
+        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
+        if(s.cmd&&commandPool_)
+            vkFreeCommandBuffers(device_,commandPool_,1,&s.cmd);
+        s={};
+    }
+    asyncCmdRingHead_=0;
+}
+
+bool VulkanCompute::EnsureAsyncCmdRing() {
+    bool good=true;
+    for(const auto& s:asyncCmdRing_)
+        good=good&&s.cmd&&s.fence;
+    if(good) return true;
+    ResetAsyncCmdRing();
+    for(auto& s:asyncCmdRing_) {
+        VkCommandBufferAllocateInfo ai{};
+        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        ai.commandPool=commandPool_;
+        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        ai.commandBufferCount=1;
+        if(vkAllocateCommandBuffers(device_,&ai,&s.cmd)!=VK_SUCCESS)
+            return false;
+        VkFenceCreateInfo fi{};
+        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
+        if(vkCreateFence(device_,&fi,nullptr,&s.fence)!=VK_SUCCESS)
+            return false;
+    }
+    return true;
+}
+bool VulkanCompute::BeginQ4KResidentAsync(
+    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
+    uint32_t batch,uint64_t epoch,Q4KAsyncTicket& t)
+{
+    if(t.active||!weight.valid()||weight.type!=12||!input||!output||
+       !batch||batch>4||fused_)
+        return false;
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(weight.type,weight.data,weight.bytes,wb))
+        return false;
+
+    Q4KBatchTile tile=SelectQ4KBatchTile(
+        weight.data,weight.bytes,input,output,
+        weight.rows,weight.cols,batch);
+    VkPipeline pipe=tile==Q4KBatchTile::Eight
+        ? qBatch8RowPipeline_:qBatch4RowPipeline_;
+    VkPipelineLayout layout=tile==Q4KBatchTile::Eight
+        ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
+    if(!pipe||!layout) return false;
+
+    if(!EnsureAsyncCmdRing()) return false;
+    auto& slot=asyncCmdRing_[asyncCmdRingHead_++%4u];
+    if(vkWaitForFences(device_,1,&slot.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    if(vkResetFences(device_,1,&slot.fence)!=VK_SUCCESS) return false;
+    if(vkResetCommandBuffer(slot.cmd,0)!=VK_SUCCESS) return false;
+    t.cmd=slot.cmd;
+    t.fence=slot.fence;
+    slot.inFlight=true;
+    ++asyncCmdRingReuses_;
+
+    VkCommandBufferBeginInfo bi{};
+    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if(vkBeginCommandBuffer(t.cmd,&bi)!=VK_SUCCESS) {
+        CancelQ4KAsync(t); return false;
+    }
+    VkDescriptorSet set=getQuantDescriptor(*wb,input,output);
+    if(set==VK_NULL_HANDLE) {
+        CancelQ4KAsync(t); return false;
+    }
+    vkCmdBindPipeline(t.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
+    vkCmdBindDescriptorSets(
+        t.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
+        0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.type=12;p.rows=weight.rows;p.cols=weight.cols;
+    p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
+    vkCmdPushConstants(
+        t.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(p),&p);
+    const uint32_t tileN=(uint32_t)tile;
+    vkCmdDispatch(t.cmd,(weight.rows+tileN-1u)/tileN,1,1);
+    recordComputeBarrier(t.cmd);
+    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
+        CancelQ4KAsync(t); return false;
+    }
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount=1;
+    si.pCommandBuffers=&t.cmd;
+    const auto now=std::chrono::steady_clock::now();
+    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
+        CancelQ4KAsync(t); return false;
+    }
+    t.submitNs=(uint64_t)std::chrono::duration_cast<
+        std::chrono::nanoseconds>(now.time_since_epoch()).count();
+    t.weightBytes=weight.bytes;
+    t.active=true;
+    ++q4kAsyncSubmits_;
+    ++queueSubmitCount_;
+    SetWorkEpoch(epoch);
+    return true;
+}
+
+bool VulkanCompute::WaitQ4KResidentAsync(
+    Q4KAsyncTicket& t,uint64_t* gpuNs)
+{
+    if(!t.active) return false;
+    const auto w0=std::chrono::steady_clock::now();
+    if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    const auto w1=std::chrono::steady_clock::now();
+    q4kAsyncWaitNs_+=(uint64_t)std::chrono::duration_cast<
+        std::chrono::nanoseconds>(w1-w0).count();
+    t.completeNs=(uint64_t)std::chrono::duration_cast<
+        std::chrono::nanoseconds>(w1.time_since_epoch()).count();
+    if(gpuNs) *gpuNs=t.completeNs>t.submitNs
+        ? t.completeNs-t.submitNs:0;
+    CancelQ4KAsync(t);
+    return true;
+}
+
+void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
+    // Ring owns cmd/fence. Locate and release logical in-flight state only.
+    for(auto& s:asyncCmdRing_) {
+        if(s.cmd==t.cmd&&s.fence==t.fence) {
+            s.inFlight=false;
+            break;
+        }
+    }
+    if(t.query) vkDestroyQueryPool(device_,t.query,nullptr);
+    t={};
+}
+bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
+    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
+    uint32_t batch,uint64_t epoch,TimelineTicket& ticket)
+{
+    ticket={};
+    if(!TimelineSemaphoreEnabled()||!weight.valid()||weight.type!=12||
+       !input||!output||!batch||batch>4)
+        return false;
+
+    DeviceBuf* wb=nullptr;
+    if(!ensureWeightQuant(weight.type,weight.data,weight.bytes,wb))
+        return false;
+    const Q4KBatchTile tile=SelectQ4KBatchTile(
+        weight.data,weight.bytes,input,output,
+        weight.rows,weight.cols,batch);
+    VkPipeline pipe=tile==Q4KBatchTile::Eight
+        ? qBatch8RowPipeline_:qBatch4RowPipeline_;
+    VkPipelineLayout layout=tile==Q4KBatchTile::Eight
+        ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
+    if(!pipe||!layout) return false;
+
+    // Compute command.
+    VkCommandBuffer ccmd{};
+    VkCommandBufferAllocateInfo cai{};
+    cai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cai.commandPool=commandPool_;
+    cai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cai.commandBufferCount=1;
+    if(vkAllocateCommandBuffers(device_,&cai,&ccmd)!=VK_SUCCESS) return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if(vkBeginCommandBuffer(ccmd,&bi)!=VK_SUCCESS) return false;
+    VkDescriptorSet set=getQuantDescriptor(*wb,input,output);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(ccmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
+    vkCmdBindDescriptorSets(
+        ccmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&set,0,nullptr);
+    QBatchPush p{};
+    p.type=12;p.rows=weight.rows;p.cols=weight.cols;
+    p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
+    vkCmdPushConstants(
+        ccmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(p),&p);
+    const uint32_t tileN=(uint32_t)tile;
+    vkCmdDispatch(ccmd,(weight.rows+tileN-1u)/tileN,1,1);
+    recordComputeBarrier(ccmd);
+    if(vkEndCommandBuffer(ccmd)!=VK_SUCCESS) return false;
+
+    const size_t bytes=(size_t)batch*weight.rows*sizeof(float);
+    if(!EnsureDownloadRing(bytes)) return false;
+    const uint32_t slot=downloadRingHead_++%3u;
+    auto& rs=downloadRing_[slot];
+    if(vkWaitForFences(device_,1,&rs.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+        return false;
+    if(vkResetFences(device_,1,&rs.fence)!=VK_SUCCESS) return false;
+    if(vkResetCommandBuffer(rs.cmd,0)!=VK_SUCCESS) return false;
+    if(vkBeginCommandBuffer(rs.cmd,&bi)!=VK_SUCCESS) return false;
+    if(!recordCopy(rs.cmd,output,rs.staging,bytes)) return false;
+    if(vkEndCommandBuffer(rs.cmd)!=VK_SUCCESS) return false;
+
+    const uint64_t computeValue=NextTimelineValue();
+    const uint64_t transferValue=NextTimelineValue();
+    VkTimelineSemaphoreSubmitInfo ctsi{};
+    ctsi.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+    ctsi.signalSemaphoreValueCount=1;
+    ctsi.pSignalSemaphoreValues=&computeValue;
+    VkSubmitInfo csi{};
+    csi.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    csi.pNext=&ctsi;
+    csi.commandBufferCount=1;csi.pCommandBuffers=&ccmd;
+    csi.signalSemaphoreCount=1;csi.pSignalSemaphores=&timelineSemaphore_;
+    if(vkQueueSubmit(queue_,1,&csi,VK_NULL_HANDLE)!=VK_SUCCESS) return false;
+    ++timelineSignals_;++queueSubmitCount_;
+
+    VkPipelineStageFlags waitStage=VK_PIPELINE_STAGE_TRANSFER_BIT;
+    VkTimelineSemaphoreSubmitInfo ttsi{};
+    ttsi.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+    ttsi.waitSemaphoreValueCount=1;
+    ttsi.pWaitSemaphoreValues=&computeValue;
+    ttsi.signalSemaphoreValueCount=1;
+    ttsi.pSignalSemaphoreValues=&transferValue;
+    VkSubmitInfo tsi{};
+    tsi.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    tsi.pNext=&ttsi;
+    tsi.waitSemaphoreCount=1;tsi.pWaitSemaphores=&timelineSemaphore_;
+    tsi.pWaitDstStageMask=&waitStage;
+    tsi.commandBufferCount=1;tsi.pCommandBuffers=&rs.cmd;
+    tsi.signalSemaphoreCount=1;tsi.pSignalSemaphores=&timelineSemaphore_;
+    VkQueue tq=transferQueue_?transferQueue_:queue_;
+    if(vkQueueSubmit(tq,1,&tsi,rs.fence)!=VK_SUCCESS) return false;
+    ++timelineSignals_;++transferQueueSubmits_;++queueSubmitCount_;
+
+    rs.bytes=bytes;rs.inFlight=true;
+    ticket.computeDone=computeValue;
+    ticket.transferDone=transferValue;
+    ticket.ringSlot=slot;
+    ticket.bytes=bytes;
+    ticket.active=true;
+    ++timelineComputeTransferChains_;
+    SetWorkEpoch(epoch);
+    return true;
+}
+
+bool VulkanCompute::WaitTimelineDownload(
+    TimelineTicket& t,void* dst,size_t bytes)
+{
+    if(!t.active||!dst||bytes>t.bytes||t.ringSlot>=3) return false;
+    if(!WaitTimelineValue(t.transferDone)) return false;
+    auto& rs=downloadRing_[t.ringSlot];
+    std::memcpy(dst,rs.mapped,bytes);
+    rs.inFlight=false;
+    t={};
+    return true;
+}
+    ResetAsyncCmdRing();
+    clearRecordedGroups();
+    if(!ac.empty())
+        (void)createPipelineFromFile(
+            ac,opsSetLayout_,sizeof(uint32_t),
+            specAcceptPipelineLayout_,specAcceptPipeline_);
+bool VulkanCompute::RunSpecAcceptPrefix(
+    const uint32_t* target,const uint32_t* proposal,
+    uint32_t count,SpecAcceptResult& result)
+{
+    result={};
+    if(!target||!proposal||!count||count>4||!specAcceptPipeline_)
+        return false;
+    if(!EnsureScratch(160,count)||!EnsureScratch(161,count)||
+       !EnsureScratch(162,3)||!EnsureScratch(163,1))
+        return false;
+    auto& t=Scratch(160);auto& p=Scratch(161);
+    auto& o=Scratch(162);auto& d=Scratch(163);
+    if(!UploadVector(t,target,count)||!UploadVector(p,proposal,count))
+        return false;
+    specAcceptInputUploadBytes_ +=
+        (uint64_t)count*sizeof(uint32_t)*2ull;
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getOpsDescriptor(t,p,o,d);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipelineLayout_,
+        0,1,&set,0,nullptr);
+    vkCmdPushConstants(
+        cmd,specAcceptPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(count),&count);
+    vkCmdDispatch(cmd,1,1,1);
+    recordComputeBarrier(cmd);
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
+        return false;
+    uint32_t h[3]{};
+    if(!DownloadVector(o,h,3)) return false;
+    result.accepted=h[0];
+    result.replacement=h[1];
+    result.bonus=h[2];
+    ++specAcceptGpuOps_;
+    return true;
+}
+
+bool VulkanCompute::RunSpecAcceptPrefixResident(
+    DeviceBuf& targetIds,DeviceBuf& proposalIds,
+    uint32_t count,SpecAcceptResult& result)
+{
+    result={};
+    if(!targetIds||!proposalIds||!count||count>4||!specAcceptPipeline_)
+        return false;
+    if(!EnsureScratch(162,3)||!EnsureScratch(163,1))
+        return false;
+    auto& o=Scratch(162);
+    auto& d=Scratch(163);
+
+    VkCommandBuffer cmd{};
+    VkQueryPool query{};
+    if(!beginCommand(cmd,query,true)) return false;
+    VkDescriptorSet set=getOpsDescriptor(targetIds,proposalIds,o,d);
+    if(set==VK_NULL_HANDLE) return false;
+    vkCmdBindPipeline(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipelineLayout_,
+        0,1,&set,0,nullptr);
+    vkCmdPushConstants(
+        cmd,specAcceptPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
+        0,sizeof(count),&count);
+    vkCmdDispatch(cmd,1,1,1);
+    recordComputeBarrier(cmd);
+    if(!endSubmitWait(
+            cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
+        return false;
+
+    uint32_t h[3]{};
+    if(!DownloadVector(o,h,3)) return false;
+    result.accepted=h[0];
+    result.replacement=h[1];
+    result.bonus=h[2];
+    ++specAcceptGpuOps_;
+    ++specAcceptResidentOps_;
+    return true;
+}
+
+    if(device_&&specAcceptPipeline_)
+        vkDestroyPipeline(device_,specAcceptPipeline_,nullptr);
+    if(device_&&specAcceptPipelineLayout_)
+        vkDestroyPipelineLayout(device_,specAcceptPipelineLayout_,nullptr);
+    destroyBuffer(verifiedHidden_);
+    verifiedHidden_={};
+    verifiedHiddenWidth_=0;
+bool VulkanCompute::SubmitTimelineCommand(
+    VkCommandBuffer cmd,VkQueue q,
+    uint64_t waitValue,uint64_t signalValue,
+    VkPipelineStageFlags waitStage)
+{
+    if(!TimelineSemaphoreEnabled()||cmd==VK_NULL_HANDLE||q==VK_NULL_HANDLE||
+       !signalValue)
+        return false;
+    VkTimelineSemaphoreSubmitInfo ti{};
+    ti.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+    if(waitValue) {
+        ti.waitSemaphoreValueCount=1;
+        ti.pWaitSemaphoreValues=&waitValue;
+    }
+    ti.signalSemaphoreValueCount=1;
+    ti.pSignalSemaphoreValues=&signalValue;
+    VkSubmitInfo si{};
+    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.pNext=&ti;
+    if(waitValue) {
+        si.waitSemaphoreCount=1;
+        si.pWaitSemaphores=&timelineSemaphore_;
+        si.pWaitDstStageMask=&waitStage;
+    }
+    si.commandBufferCount=1;
+    si.pCommandBuffers=&cmd;
+    si.signalSemaphoreCount=1;
+    si.pSignalSemaphores=&timelineSemaphore_;
+    if(vkQueueSubmit(q,1,&si,VK_NULL_HANDLE)!=VK_SUCCESS)
+        return false;
+    ++timelineSignals_;
+    ++queueSubmitCount_;
+    ++layerTimelineChains_;
+    return true;
+}
+static bool deep2BeginOneShot(
+    VkDevice device,VkCommandPool pool,VkCommandBuffer& cmd)
+{
+    VkCommandBufferAllocateInfo ai{};
+    ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    ai.commandPool=pool;
+    ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    ai.commandBufferCount=1;
+    if(vkAllocateCommandBuffers(device,&ai,&cmd)!=VK_SUCCESS) return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    return vkBeginCommandBuffer(cmd,&bi)==VK_SUCCESS;
+}
+
+bool VulkanCompute::CaptureVerifiedHiddenTimeline(
+    DeviceBuf& hiddenBatch,uint32_t tokenIndex,
+    uint32_t hiddenWidth,uint32_t batch,
+    uint64_t waitValue,HiddenCopyTicket& ticket)
+{
+    ticket={};
+    if(!TimelineSemaphoreEnabled()||!hiddenBatch||!hiddenWidth||
+       !batch||tokenIndex>=batch)
+        return false;
+    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
+    if(!verifiedHidden_||verifiedHiddenWidth_<hiddenWidth) {
+        destroyBuffer(verifiedHidden_);
+        if(!createBuffer(
+                bytes,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,verifiedHidden_))
+            return false;
+        verifiedHiddenWidth_=hiddenWidth;
+    }
+    if(!deep2BeginOneShot(device_,commandPool_,ticket.cmd)) return false;
+    const VkDeviceSize src=(VkDeviceSize)tokenIndex*bytes;
+    if(!recordCopy(ticket.cmd,hiddenBatch,verifiedHidden_,bytes,src,0))
+        return false;
+    if(vkEndCommandBuffer(ticket.cmd)!=VK_SUCCESS) return false;
+    ticket.signalValue=NextTimelineValue();
+    if(!SubmitTimelineCommand(
+            ticket.cmd,queue_,waitValue,ticket.signalValue,
+            VK_PIPELINE_STAGE_TRANSFER_BIT))
+        return false;
+    ticket.active=true;
+    ++hiddenTimelineSubmits_;
+    ++verifiedHiddenHandoffs_;
+    return true;
+}
+
+bool VulkanCompute::RestoreVerifiedHiddenTimeline(
+    uint32_t hiddenWidth,uint64_t waitValue,
+    HiddenCopyTicket& ticket)
+{
+    ticket={};
+    if(!TimelineSemaphoreEnabled()||!verifiedHidden_||
+       hiddenWidth>verifiedHiddenWidth_||!SpecArena().hidden)
+        return false;
+    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
+    if(!deep2BeginOneShot(device_,commandPool_,ticket.cmd)) return false;
+    if(!recordCopy(
+            ticket.cmd,verifiedHidden_,SpecArena().hidden,bytes,0,0))
+        return false;
+    if(vkEndCommandBuffer(ticket.cmd)!=VK_SUCCESS) return false;
+    ticket.signalValue=NextTimelineValue();
+    if(!SubmitTimelineCommand(
+            ticket.cmd,queue_,waitValue,ticket.signalValue,
+            VK_PIPELINE_STAGE_TRANSFER_BIT))
+        return false;
+    ticket.active=true;
+    ++hiddenTimelineSubmits_;
+    return true;
+}
+
+bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
+    if(!ticket.active) return true;
+    const bool ok=WaitTimelineValue(ticket.signalValue);
+    if(ticket.cmd&&commandPool_)
+        vkFreeCommandBuffers(device_,commandPool_,1,&ticket.cmd);
+    ticket={};
+    return ok;
+}

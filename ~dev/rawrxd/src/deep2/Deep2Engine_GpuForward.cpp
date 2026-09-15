@@ -111,7 +111,17 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     acc(modelWeights.lmHead);
     if (maxB == 0) maxB = (size_t)H * (size_t)H * 4;
     /* Hard parse: env set + FAIL → do not silently use 512. */
+    // Dense 32B decode must remain resident after warmup.  A 512 MiB
+    // default guarantees full-model cache churn.  Reserve 20% of VRAM for
+    // KV/arenas/driver allocations and let the packed layer weights use the
+    // remaining 80%.  Explicit env values still override this policy.
     size_t budget = (size_t)512 << 20;
+    const uint64_t localBytes = vc->deviceLocalBytes();
+    if (localBytes >= (uint64_t(4) << 30)) {
+        const uint64_t autoBudget = (localBytes / 10u) * 8u;
+        if (autoBudget <= (uint64_t)SIZE_MAX)
+            budget = static_cast<size_t>(autoBudget);
+    }
     if (const char* be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
         MibParseResult pr = ParseMibTokenEx(be);
         EmitWeightBudgetReceipt(stderr, pr, "ENV");
@@ -119,6 +129,7 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         budget = (size_t)pr.bytes;
     }
     /* Per-stick windows from dual-stick plan (7800XT gets full share, no starve). */
+
     if (const char* s0 = std::getenv("DEEP2_STICK0_BUDGET_MIB")) {
         MibParseResult p0 = ParseMibTokenEx(s0);
         if (p0.ok && slot == 0) budget = (size_t)p0.bytes;
@@ -180,9 +191,12 @@ bool Deep2Engine::forwardLayerGpuResident(
         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
     const bool fuse = !prefetch;
-    if (fuse && !vc->BeginFusedLayer()) return false;
+    // A caller may already own a token/range-wide command buffer.
+    // Only create/submit a per-layer command when no outer fusion exists.
+    const bool ownFusion = fuse && !vc->FusedRecording();
+    if (ownFusion && !vc->BeginFusedLayer()) return false;
     auto fail = [&]() -> bool {
-        if (fuse) (void)vc->EndFusedLayer();
+        if (ownFusion) (void)vc->EndFusedLayer();
         (void)vc->FlushWeightComputes();
         return false;
     };
@@ -192,9 +206,16 @@ bool Deep2Engine::forwardLayerGpuResident(
         DualStickAcquire(slot, attnW, (size_t)H * sizeof(float), 0, layer, 0);
     else
         DualStickResolve(slot, layer);
-    if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return fail();
+    if (!attnW) return fail();
+    auto* attnNormBuf =
+        vc->ResolveResidentF32(attnW, WeightKey(lw.attnNorm), H);
+    if (!attnNormBuf) return fail();
+
     const float* ffnW = EnsureF32(*this, lw.ffnNorm, vulkanWeightF32_);
-    if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return fail();
+    if (!ffnW) return fail();
+    auto* ffnNormBuf =
+        vc->ResolveResidentF32(ffnW, WeightKey(lw.ffnNorm), H);
+    if (!ffnNormBuf) return fail();
     const WeightTensor* woWt = lw.wo.data ? &lw.wo : (lw.attnO.data ? &lw.attnO : nullptr);
     if (!woWt) return fail();
     auto gemv = [&](const WeightTensor& wt, CPUInference::VulkanCompute::DeviceBuf& in,
@@ -290,7 +311,7 @@ bool Deep2Engine::forwardLayerGpuResident(
     using rawr::gpu_iso::Run;
     (void)Run::G0;
 
-    if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
+    if (!vc->DispatchRmsNorm(vc->ArenaHidden(), *attnNormBuf, vc->ArenaNormed(),
                              H, modelWeights.normEps))
         return fail();
     ++c.rmsNormOps;
@@ -332,9 +353,10 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.residualOps;
     }
 
-    if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
+    if (!vc->DispatchRmsNorm(vc->ArenaResidual(), *ffnNormBuf, vc->ArenaNormed(),
                              H, modelWeights.normEps))
         return fail();
+
     ++c.ffnNormOps;
 
     {
@@ -368,13 +390,13 @@ bool Deep2Engine::forwardLayerGpuResident(
         ++c.ffnResidualOps;
     }
 
-    if (fuse && !vc->EndFusedLayer()) return false;
+    if (ownFusion && !vc->EndFusedLayer()) return false;
     {
         DEEP2_GPU_CHILD_SCOPE(syncScope, SyncWait);
         if (!vc->FlushWeightComputes()) return false;
     }
     if (!fuse) vc->ResetWeightWindowLayerCursor();
-    if (fuse) ++c.layerSubmits;
+    if (ownFusion) ++c.layerSubmits;
     ++c.forwardLayers;
     GpuTransfer_RecordFwdLayerExec(1);
     if (slot < 8) ++c.forwardSlot[slot];
@@ -403,9 +425,18 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     const uint32_t H = (uint32_t)config.hiddenDim;
     if (!vc->UploadHidden(hostIn, H)) return false;
     ++gpuFwd_.hostSyncBoundaries;
+
+    const bool rangeFuse = !vc->WeightPrefetchActive();
+    if (rangeFuse && !vc->BeginFusedLayer()) return false;
     for (uint32_t L = lo; L <= hi; ++L) {
-        if (!forwardLayerGpuResident(L, slot, false, false)) return false;
+        if (!forwardLayerGpuResident(L, slot, false, false)) {
+            if (rangeFuse && vc->FusedRecording())
+                (void)vc->EndFusedLayer();
+            return false;
+        }
     }
+    if (rangeFuse && !vc->EndFusedLayer()) return false;
+    if (rangeFuse) ++gpuFwd_.layerSubmits;
     {
         DEEP2_GPU_CHILD_SCOPE(rbScope, ReadbackD2H);
         if (!vc->DownloadHidden(hostOut, H)) return false;
@@ -477,10 +508,20 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         if (!vc) return false;
         const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
+
+        const bool rangeFuse = !vc->WeightPrefetchActive();
+        if (rangeFuse && !vc->BeginFusedLayer()) return false;
         for (uint32_t L = lo; L <= hi; ++L) {
-            if (!forwardLayerGpuResident(L, s, false, false)) return false;
+            if (!forwardLayerGpuResident(L, s, false, false)) {
+                if (rangeFuse && vc->FusedRecording())
+                    (void)vc->EndFusedLayer();
+                return false;
+            }
         }
+        if (rangeFuse && !vc->EndFusedLayer()) return false;
+        if (rangeFuse) ++gpuFwd_.layerSubmits;
         if (s + 1 < gpuN) {
+
             auto* next = getVulkanComputeSlot(s + 1);
             /* BATCH_D: ownership handoff — readiness only here (single async
              * residency path already queued). Not three transfer lanes.

@@ -1,7 +1,14 @@
 #version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
 // Batch 9 packed GGUF GEMV.
 // Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
-layout(local_size_x = 64) in;
+//
+// 40TPS_BATCH2:
+//   one workgroup = one output row
+//   256 lanes cooperatively consume input columns
+//   shared-memory tree reduction emits exactly one row result
+layout(local_size_x = 256) in;
 
 layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
 layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
@@ -13,6 +20,9 @@ layout(push_constant) uniform Push {
     uint cols;
     uint weightBytes;
 } pc;
+
+// AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
+shared float subgroupSums[8];
 
 uint getb(uint byteIndex) {
     uint word = w[byteIndex >> 2u];
@@ -89,6 +99,41 @@ float q4k_weight(uint rowBase, uint col) {
     return ds * float(sc) * float(q) - dm * float(mn);
 }
 
+// Four-column Q4_K dot fragment.
+// colBase is always a multiple of four. Q4_K block/sub-block boundaries
+// are multiples of 32/256, so the 4-byte qs fetch cannot straddle either.
+float q4k_dot4(uint rowBase, uint colBase) {
+    uint block = colBase / 256u;
+    uint idx = colBase % 256u;
+    uint b = rowBase + block * 144u;
+
+    float ds = geth(b + 0u);
+    float dm = geth(b + 2u);
+
+    uint sb = idx / 32u;
+    uint l = idx % 32u;
+    uint sc, mn;
+    q4kScaleMin(b, sb, sc, mn);
+
+    uint pair = sb / 2u;
+    uint qsByte = b + 16u + pair * 32u + l;
+    // qsByte is 4-byte aligned for colBase=(lane*4 + k*1024).
+    uint packed4 = w[qsByte >> 2u];
+
+    float d = ds * float(sc);
+    float m = dm * float(mn);
+    float sum = 0.0;
+
+    for (uint k = 0u; k < 4u; ++k) {
+        uint col = colBase + k;
+        if (col >= pc.cols) break;
+        uint packed = (packed4 >> (k * 8u)) & 255u;
+        uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
+        sum += (d * float(q) - m) * x[col];
+    }
+    return sum;
+}
+
 float q6k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
@@ -130,7 +175,8 @@ float q6k_weight(uint rowBase, uint col) {
 }
 
 void main() {
-    uint row = gl_GlobalInvocationID.x;
+    uint row = gl_WorkGroupID.x;
+    uint lane = gl_LocalInvocationID.x;
     if (row >= pc.rows) return;
 
     uint blocksPerRow = 0u;
@@ -154,18 +200,40 @@ void main() {
 
     uint rb = row * rowBytes;
     if (rb + rowBytes > pc.weightBytes) {
-        y[row] = uintBitsToFloat(0x7fc00000u);
+        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
         return;
     }
 
     float acc = 0.0;
-    for (uint j = 0u; j < pc.cols; ++j) {
-        float ww = 0.0;
-        if (pc.type == 8u) ww = q8_0_weight(rb, j);
-        else if (pc.type == 10u) ww = q2k_weight(rb, j);
-        else if (pc.type == 12u) ww = q4k_weight(rb, j);
-        else if (pc.type == 14u) ww = q6k_weight(rb, j);
-        acc += ww * x[j];
+    if (pc.type == 12u) {
+        // 256 lanes * 4 contiguous values = 1024 columns per sweep.
+        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
+            acc += q4k_dot4(rb, j);
+    } else {
+        for (uint j = lane; j < pc.cols; j += 256u) {
+            float ww = 0.0;
+            if (pc.type == 8u) ww = q8_0_weight(rb, j);
+            else if (pc.type == 10u) ww = q2k_weight(rb, j);
+            else if (pc.type == 14u) ww = q6k_weight(rb, j);
+            acc += ww * x[j];
+        }
     }
-    y[row] = acc;
+
+    // First reduction is entirely register/wave based.
+    float wave = subgroupAdd(acc);
+    if (subgroupElect())
+        subgroupSums[gl_SubgroupID] = wave;
+    barrier();
+
+    // The first subgroup reduces one value per subgroup.
+    if (gl_SubgroupID == 0u) {
+        float v = gl_SubgroupInvocationID < gl_NumSubgroups
+            ? subgroupSums[gl_SubgroupInvocationID]
+            : 0.0;
+        float total = subgroupAdd(v);
+        if (subgroupElect())
+            y[row] = total;
+    }
+
 }
+

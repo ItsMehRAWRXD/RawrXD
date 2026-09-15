@@ -1,0 +1,135 @@
+#version 450
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
+layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
+
+layout(push_constant) uniform Push {
+    uint type;
+    uint rows;
+    uint cols;
+    uint weightBytes;
+    uint batch;
+} pc;
+
+// 4 tokens x one Q4_K block (256 activations).
+shared float xs[4][256];
+// Four 64-thread row cohorts x four tokens.
+shared float red0[256];
+shared float red1[256];
+shared float red2[256];
+shared float red3[256];
+
+uint getb(uint byteIndex) {
+    uint word=w[byteIndex>>2u];
+    return (word>>((byteIndex&3u)*8u))&255u;
+}
+float geth(uint byteIndex) {
+    uint h=getb(byteIndex)|(getb(byteIndex+1u)<<8u);
+    return unpackHalf2x16(h).x;
+}
+void q4kScaleMin(uint base,uint sb,out uint sc,out uint mn) {
+    if(sb<4u) {
+        sc=getb(base+4u+sb)&63u;
+        mn=getb(base+8u+sb)&63u;
+    } else {
+        uint j=sb-4u;
+        sc=(getb(base+12u+j)&15u) |
+           ((getb(base+4u+j)>>6u)<<4u);
+        mn=(getb(base+12u+j)>>4u) |
+           ((getb(base+8u+j)>>6u)<<4u);
+    }
+}
+float q4kWeight(uint rowBase,uint col) {
+    uint block=col>>8u;       // /256
+    uint idx=col&255u;
+    uint b=rowBase+block*144u;
+    float d=geth(b);
+    float dmin=geth(b+2u);
+    uint sb=idx>>5u;          // /32
+    uint l=idx&31u;
+    uint sc,mn;
+    q4kScaleMin(b,sb,sc,mn);
+    uint pair=sb>>1u;
+    uint packed=getb(b+16u+pair*32u+l);
+    uint q=(sb&1u)==0u ? (packed&15u) : (packed>>4u);
+    return d*float(sc)*float(q)-dmin*float(mn);
+}
+
+void main() {
+    if(pc.type!=12u||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
+
+    uint lid=gl_LocalInvocationID.x;
+    uint cohort=lid>>6u; // 0..3
+    uint lane=lid&63u;   // 0..63
+    uint row=gl_WorkGroupID.x*4u+cohort;
+
+    uint blocks=(pc.cols+255u)>>8u;
+    uint rowBytes=blocks*144u;
+
+    float a0=0.0;
+    float a1=0.0;
+    float a2=0.0;
+    float a3=0.0;
+
+    for(uint blk=0u;blk<blocks;++blk) {
+        uint colBase=blk*256u;
+
+        // Whole workgroup cooperatively loads activation tile once.
+        uint col=colBase+lid;
+        if(col<pc.cols) {
+            xs[0][lid]=x[col];
+            xs[1][lid]=pc.batch>1u ? x[pc.cols+col] : 0.0;
+            xs[2][lid]=pc.batch>2u ? x[2u*pc.cols+col] : 0.0;
+            xs[3][lid]=pc.batch>3u ? x[3u*pc.cols+col] : 0.0;
+        } else {
+            xs[0][lid]=0.0;
+            xs[1][lid]=0.0;
+            xs[2][lid]=0.0;
+            xs[3][lid]=0.0;
+        }
+        barrier();
+
+        if(row<pc.rows) {
+            uint rb=row*rowBytes;
+            // 64 lanes cover 256 columns using four positions/lane.
+            for(uint k=0u;k<4u;++k) {
+                uint localCol=lane+k*64u;
+                uint globalCol=colBase+localCol;
+                if(globalCol>=pc.cols) continue;
+                float ww=q4kWeight(rb,globalCol);
+                a0+=ww*xs[0][localCol];
+                if(pc.batch>1u) a1+=ww*xs[1][localCol];
+                if(pc.batch>2u) a2+=ww*xs[2][localCol];
+                if(pc.batch>3u) a3+=ww*xs[3][localCol];
+            }
+        }
+        barrier();
+    }
+
+    red0[lid]=a0;
+    red1[lid]=a1;
+    red2[lid]=a2;
+    red3[lid]=a3;
+    barrier();
+
+    // Independent reduction inside each fixed 64-thread cohort.
+    for(uint stride=32u;stride>0u;stride>>=1u) {
+        if(lane<stride) {
+            uint j=lid+stride;
+            red0[lid]+=red0[j];
+            red1[lid]+=red1[j];
+            red2[lid]+=red2[j];
+            red3[lid]+=red3[j];
+        }
+        barrier();
+    }
+
+    if(lane==0u&&row<pc.rows) {
+        y[row]=red0[lid];
+        if(pc.batch>1u) y[pc.rows+row]=red1[lid];
+        if(pc.batch>2u) y[2u*pc.rows+row]=red2[lid];
+        if(pc.batch>3u) y[3u*pc.rows+row]=red3[lid];
+    }
+}

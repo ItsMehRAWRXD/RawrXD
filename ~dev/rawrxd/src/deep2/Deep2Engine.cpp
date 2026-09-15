@@ -431,6 +431,7 @@ void Deep2Engine::reset() {
     // BATCH10_RESET_MLA_CACHE
     for (auto& gpu : vulkanDevices_) {
         if (gpu) gpu->ResetMLACache();
+    specKvMirrorReset();
     }
 
     gpuFwdCommitted_ = false;
@@ -1135,6 +1136,8 @@ void Deep2Engine::unloadModel() {
     weights = nullptr;
     weightSize = 0;
     modelWeights = {};
+    specWs_.clear();
+    specKvMirrorReset();
     kvCache = std::make_unique<KVCache>();
     clearCancel();
     gpuFwd_ = {};
@@ -1204,6 +1207,20 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
     return finiteVector(output, H);
 }
 
+bool Deep2Engine::embedTokensBatch(
+    const int* tokenIds,size_t count,float* outputBatch)
+{
+    if(!tokenIds||!outputBatch||count==0||count>4||
+       modelWeights.hiddenDim==0)
+        return false;
+    const size_t H=modelWeights.hiddenDim;
+    for(size_t b=0;b<count;++b) {
+        if(!embedToken(tokenIds[b],outputBatch+b*H))
+            return false;
+    }
+    return true;
+}
+
 // =================== COMPUTE LOGITS (FINAL NORM + REAL LM HEAD) ====================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
     if (!modelWeights.loaded || !hiddenState || !logitsOut)
@@ -1228,6 +1245,25 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
     if (!finiteVector(logitsOut, V))
         throw std::runtime_error("computeLogits: non-finite logits");
     parityEmit(ParityCheckpoint::Logits, logitsOut, V);
+}
+
+void Deep2Engine::computeLogitsBatch(
+    const float* hiddenBatch,size_t count,float* logitsBatch)
+{
+    if(!hiddenBatch||!logitsBatch||count==0||count>4)
+        throw std::runtime_error("computeLogitsBatch: invalid batch");
+    const size_t H=modelWeights.hiddenDim;
+    const size_t V=modelWeights.vocabSize;
+    if(!H||!V||!modelWeights.finalNorm.data||!modelWeights.lmHead.data)
+        throw std::runtime_error("computeLogitsBatch: model tensors missing");
+
+    std::vector<float> normed(count*H);
+    for(size_t b=0;b<count;++b)
+        RMSNormW(modelWeights.finalNorm,
+                 hiddenBatch+b*H,normed.data()+b*H,
+                 H,modelWeights.normEps);
+    LinearWBatch4(modelWeights.lmHead,normed.data(),count,nullptr,
+                  logitsBatch,V);
 }
 
 // =================== SAMPLE TOKEN ====================
@@ -1257,6 +1293,20 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options) {
 }
 
 bool Deep2Engine::isDeterministicGreedy() const { return deterministicGreedy_; }
+
+void Deep2Engine::enableVerifiedSpeculation(bool enable,uint32_t window) {
+    medusaEnabled_=enable;
+    medusaConfig_.window=std::max<uint32_t>(1,std::min<uint32_t>(4,window));
+    if(enable) {
+        medusaDecoder_=std::make_unique<MedusaDecoder>(medusaConfig_);
+    } else {
+        medusaDecoder_.reset();
+    }
+}
+
+const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
+    return medusaDecoder_?medusaDecoder_->stats.exact:speculativeEmpty_;
+}
 
 // =================== QUANT-AWARE LINEAR ====================
 void Deep2Engine::LinearW(const WeightTensor& wt,
@@ -1546,9 +1596,19 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             ? reinterpret_cast<const float*>(lw.bk.data) : nullptr;
         const float* bv = lw.bv.data
             ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
-        LinearW(lw.wq, input, bq, qProj, H);
-        LinearW(lw.wk, input, bk, kProj, kvDim);
-        LinearW(lw.wv, input, bv, vProj, kvDim);
+        const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
+        float* qkvY[3]={qProj,kProj,vProj};
+        const bool grouped=tryVulkanHostGEMVGroup(
+            qkvW,qkvY,3,input,H);
+        if(grouped){
+            if(bq) for(size_t i=0;i<H;++i) qProj[i]+=bq[i];
+            if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
+            if(bv) for(size_t i=0;i<kvDim;++i) vProj[i]+=bv[i];
+        } else {
+            LinearW(lw.wq, input, bq, qProj, H);
+            LinearW(lw.wk, input, bk, kProj, kvDim);
+            LinearW(lw.wv, input, bv, vProj, kvDim);
+        }
         parityEmit(ParityCheckpoint::Q, qProj, H);
         parityEmit(ParityCheckpoint::K, kProj, kvDim);
         parityEmit(ParityCheckpoint::V, vProj, kvDim);
@@ -1691,8 +1751,13 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     const LayerWeights& lw = modelWeights.layers[layer];
     if (lw.wGate.data && lw.wUp.data && lw.wDown.data) {
         // Real SwiGLU: gate = Wg @ x, up = Wu @ x
-        LinearW(lw.wGate, input, nullptr, gateBuf, I);
-        LinearW(lw.wUp,   input, nullptr, upBuf,   I);
+        const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
+        float* guY[2]={gateBuf,upBuf};
+        if(!tryVulkanHostGEMVGroup(guW,guY,2,input,H)){
+            LinearW(lw.wGate, input, nullptr, gateBuf, I);
+            LinearW(lw.wUp,   input, nullptr, upBuf,   I);
+        }
+
         parityEmit(ParityCheckpoint::FfnGate, gateBuf, I);
         parityEmit(ParityCheckpoint::FfnUp,   upBuf,   I);
         parityEmitLayer(static_cast<int>(layer), "FFN_GATE", gateBuf, I);
@@ -1841,6 +1906,44 @@ void Deep2Engine::computeMoEFFN(size_t layer,
         throw std::runtime_error("MoE: non-finite routed output");
 }
 
+void Deep2Engine::LinearWBatch4(
+    const WeightTensor& wt,const float* inputBatch,size_t count,
+    const float* bias,float* outputBatch,size_t outDim)
+{
+    if(!inputBatch||!outputBatch||count==0||count>4||outDim==0)
+        throw std::runtime_error("LinearWBatch4: invalid arguments");
+
+    size_t rows=0,cols=0;
+    if(!matrixShape(wt,rows,cols)||rows!=outDim)
+        throw std::runtime_error("LinearWBatch4: geometry mismatch");
+
+    // Q4_K is the target amortized path. Other types retain exactness by
+    // using the already GPU-backed single-vector LinearW path.
+    if(wt.type==(int)GGMLType::GGML_TYPE_Q4_K &&
+       vulkanInitialized_&&vulkanDevices_.size()>=2) {
+        std::memset(outputBatch,0,count*outDim*sizeof(float));
+        if(tryVulkanHostGEMVBatch4(
+                wt,inputBatch,count,outputBatch,outDim)) {
+            if(bias) {
+                for(size_t b=0;b<count;++b)
+                    for(size_t i=0;i<outDim;++i)
+                        outputBatch[b*outDim+i]+=bias[i];
+            }
+            if(!finiteVector(outputBatch,count*outDim))
+                throw std::runtime_error(
+                    "LinearWBatch4: non-finite GPU batch output");
+            return;
+        }
+        if(vulkanStrictNoCpuFallback_)
+            throw std::runtime_error(
+                "LinearWBatch4: Q4_K batch GPU path failed under strict mode");
+    }
+
+    for(size_t b=0;b<count;++b)
+        LinearW(wt,inputBatch+b*cols,bias,
+                outputBatch+b*outDim,outDim);
+}
+
 void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
                                    const float* input,
                                    float* output,
@@ -1945,8 +2048,51 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         }
     }
 
+    // 40TPS dense lane:
+    // A contiguous layer split keeps activations resident but executes GPU0's
+    // dependent range before GPU1's range, so bandwidth does not aggregate.
+    // For dense two-stick models, run the normal mathematically-verified
+    // host orchestration while LinearW's strict dual-row backend sends every
+    // heavy weight GEMV to both GPUs simultaneously.
+    //
+    // This is deliberately classified separately from FULL_RESIDENT_GPU:
+    // activations/KV orchestration are host-visible, weight arithmetic is not.
+    const char* denseExec=std::getenv("DEEP2_DENSE_EXEC");
+    const bool forceLayerSplit=
+        denseExec && std::strcmp(denseExec,"LAYER_SPLIT")==0;
+    const bool dualRowDense=
+        !forceLayerSplit &&
+        vulkanEnabled_ && vulkanInitialized_ &&
+        vulkanDevices_.size()>=2 &&
+        !modelWeights.isMoE && !modelWeights.useMLA;
+
+    if(dualRowDense){
+        try {
+            for(size_t l=0;l<modelWeights.numLayers;++l){
+                forwardLayer(l,hidden,layerOut,seqLen);
+                std::memcpy(
+                    hidden,layerOut,config.hiddenDim*sizeof(float));
+                ++gpuFwd_.hostForwardLayerCalls; // planned orchestration
+            }
+            ++gpuFwd_.dualRowDenseTokens;
+            gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
+            return true;
+        } catch(const std::exception& ex) {
+            std::fprintf(stderr,
+                "[Deep2Engine] dual-row dense forward failed: %s\n",
+                ex.what());
+            if(vulkanStrictNoCpuFallback_){
+                vulkanStrictViolation_=true;
+                return false;
+            }
+            // Non-strict callers may continue into the resident layer-split
+            // lane below; strict 40-TPS authority never takes this fallback.
+        }
+    }
+
     // Dense Batch9 resident path.
     if (vulkanEnabled_ && vulkanInitialized_) {
+
         if (tryGpuTokenForward(hidden)) {
             gpuFwdCommitted_ = true;
             return true;
@@ -2027,20 +2173,57 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
 
     size_t generated = 0;
+    bool pendingForward=false;
+    int pendingToken=-1;
+    const bool specActive=
+        medusaEnabled_&&deterministicGreedy_&&medusaDecoder_&&
+        parityProbe_==nullptr&&!modelWeights.isMoE&&!modelWeights.useMLA;
+    if(specActive) {
+        medusaDecoder_->reset();
+        medusaDecoder_->observe(promptTokens,promptLen);
+    }
 
-    // First generated token comes from the final prompt hidden state. Every
-    // later token consumes the previously generated token exactly once.
-    for (size_t i = 0; i < decodeLimit; ++i) {
-        if (cancelRequested_.load(std::memory_order_acquire)) break;
+    while(generated<decodeLimit) {
+        if(cancelRequested_.load(std::memory_order_acquire)) break;
 
-        if (i > 0) {
-            // The token forwarded in decode step i occupies KV position
-            // promptLen + i - 1 (0-indexed) — label parity records by it.
-            parityBeginStep(static_cast<int>(promptLen + i - 1));
-            const int prev = outputTokens[i - 1];
-            if (!embedToken(prev, hidden.data())) break;
-            if (!forwardTokenAllLayers(hidden.data(), promptLen + i)) break;
-            if (config.useKVCache && kvCache) kvCache->advance();
+        // Exactly one emitted token remains unforwarded between decode
+        // transactions. Accepted speculative prefix tokens are already in KV.
+        if(pendingForward) {
+            parityBeginStep(static_cast<int>(
+                kvCache?kvCache->currentLength():promptLen+generated-1));
+            if(!embedToken(pendingToken,hidden.data())) break;
+            const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
+            if(!forwardTokenAllLayers(hidden.data(),seq)) break;
+            if(config.useKVCache&&kvCache&&!kvCache->advance()) break;
+            pendingForward=false;
+        }
+
+        const size_t remaining=decodeLimit-generated;
+        if(specActive&&remaining>=2) {
+            std::vector<int32_t> proposals;
+            (void)buildAdaptiveSpeculativeProposals(
+                hidden.data(),remaining,proposals);
+            if(!proposals.empty()) {
+
+                std::vector<int32_t> verified;
+                if(verifySpeculativeGreedyWindow(
+                        hidden.data(),proposals,remaining,verified)&&
+                   !verified.empty()) {
+                    bool stop=false;
+                    for(int32_t tok:verified) {
+                        if(generated>=decodeLimit) break;
+                        outputTokens[generated++]=tok;
+                        medusaDecoder_->observe(tok);
+                        if(onToken&&!onToken(tok)) {stop=true;break;}
+                    }
+                    if(!verified.empty()) {
+                        pendingToken=verified.back();
+                        pendingForward=true;
+                    }
+                    if(stop) break;
+                    continue;
+                }
+            }
         }
 
         computeLogits(hidden.data(), logits);
@@ -2075,9 +2258,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         const int nextTok = sampleToken(logits);
         if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) break;
 
-        outputTokens[i] = nextTok;
-        generated++;
-
+        outputTokens[generated++] = nextTok;
+        if(specActive) medusaDecoder_->observe(nextTok);
+        pendingToken=nextTok;
+        pendingForward=true;
         if (onToken && !onToken(nextTok)) break;
     }
 

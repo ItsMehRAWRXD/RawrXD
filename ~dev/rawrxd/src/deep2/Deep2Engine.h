@@ -19,6 +19,8 @@
 #include "MoERouter.hpp"
 #include "MoEWeightProxy.hpp"
 #include "MedusaDecoder.hpp"
+#include "KVSpecTransaction.hpp"
+#include "Deep2Speculative.hpp"
 #include "NUFusedPacker.hpp"
 #include "WarmupScheduler.hpp"
 #include "CompressedKVCache.h"
@@ -487,6 +489,21 @@ public:
     bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
     bool tryGpuTokenForward(float* hidden);
     bool forwardTokenAllLayers(float* hidden, size_t seqLen);
+    bool forwardSpeculativeBlock(const int* tokenIds,size_t count,
+                                 size_t basePos,float* finalHiddenBatch);
+    bool verifySpeculativeGreedyWindow(
+        float* currentHidden,
+        const std::vector<int32_t>& proposals,
+        size_t maxEmit,
+        std::vector<int32_t>& verified);
+    bool proposeSelfSpeculativeGreedy(
+        const float* currentHidden,size_t maxDraft,
+        std::vector<int32_t>& proposals,
+        uint32_t draftLayersOverride=0);
+    bool buildAdaptiveSpeculativeProposals(
+        const float* currentHidden,size_t remaining,
+        std::vector<int32_t>& proposals);
+
     bool gpuResidentDecodeEnabled() const;
     void emitHotpathWitnesses();
     void emitLiveDecodeWitnesses(FILE* f = nullptr);
@@ -497,14 +514,68 @@ public:
     uint64_t vulkanSlotGemvSuccess(unsigned slot) const;
     uint64_t vulkanSlotWeightUploads(unsigned slot) const;
     uint64_t vulkanSlotWeightHits(unsigned slot) const;
+    uint64_t vulkanSlotQueueSubmits(unsigned slot) const;
+    uint64_t vulkanSlotPinnedWeightBytes(unsigned slot) const;
+    uint64_t vulkanSlotPinnedWeightEntries(unsigned slot) const;
+    uint64_t vulkanSlotResidentBatchInputUploads(unsigned slot) const;
+    uint64_t vulkanSlotDirectSpecKvAppends(unsigned slot) const;
+    uint64_t vulkanSlotResidentGroupOutputReallocs(unsigned slot) const;
+    uint64_t vulkanSlotSecondaryImportBytes(unsigned slot) const;
+    uint64_t vulkanSlotFullOutputBoundaryBytes(unsigned slot) const;
+    uint64_t vulkanSlotResidentFullOutputCopies(unsigned slot) const;
+    uint64_t vulkanSlotSpecLayerGraphSubmits(unsigned slot) const;
+    uint64_t vulkanSlotQ4KBatchWeightBytes(unsigned slot) const;
+    uint64_t vulkanSlotQ4KBatchGpuNs(unsigned slot) const;
+    uint64_t vulkanSlotQ4KBatch4RowOps(unsigned slot) const;
+    uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
+    uint64_t vulkanSlotQ4KBatch8RowOps(unsigned slot) const;
+    uint64_t vulkanSlotQ4KAutotuneRuns(unsigned slot) const;
+    uint64_t vulkanSlotRecordedQ4KSubmits(unsigned slot) const;
+    uint64_t vulkanSlotRecordedQ4KBuilds(unsigned slot) const;
+    uint64_t vulkanSlotQ4KAsyncSubmits(unsigned slot) const;
+    uint64_t vulkanSlotQ4KAsyncWaitNs(unsigned slot) const;
+    uint64_t vulkanSlotDownloadRingSubmits(unsigned slot) const;
+    uint64_t vulkanSlotDownloadRingWaitNs(unsigned slot) const;
+    bool vulkanSlotHasDedicatedTransferQueue(unsigned slot) const;
+    uint32_t vulkanSlotComputeQueueFamily(unsigned slot) const;
+    uint32_t vulkanSlotTransferQueueFamily(unsigned slot) const;
+    uint64_t vulkanSlotTransferQueueSubmits(unsigned slot) const;
+    uint64_t vulkanSlotTransferRingOverlapNs(unsigned slot) const;
+    bool vulkanSlotTimelineSemaphoreEnabled(unsigned slot) const;
+    uint64_t vulkanSlotTimelineSignals(unsigned slot) const;
+    uint64_t vulkanSlotTimelineWaits(unsigned slot) const;
+    uint64_t vulkanSlotTimelineComputeTransferChains(unsigned slot) const;
+    uint64_t vulkanSlotAsyncCmdRingReuses(unsigned slot) const;
+    uint64_t vulkanSlotRecordedGroupBuilds(unsigned slot) const;
+    uint64_t vulkanSlotRecordedGroupSubmits(unsigned slot) const;
+    uint64_t vulkanSlotSpecAcceptGpuOps(unsigned slot) const;
+    uint64_t vulkanSlotVerifiedHiddenHandoffs(unsigned slot) const;
+    uint64_t vulkanSlotLayerTimelineChains(unsigned slot) const;
+    uint64_t vulkanSlotRecordedGroupAsyncSubmits(unsigned slot) const;
+    uint64_t vulkanSlotRecordedGroupSyncWaits(unsigned slot) const;
+    uint64_t vulkanSlotSpecAcceptResidentOps(unsigned slot) const;
+    uint64_t vulkanSlotSpecAcceptInputUploadBytes(unsigned slot) const;
+    uint64_t vulkanSlotHiddenTimelineSubmits(unsigned slot) const;
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
+
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 
     // Batch10: host-bound heavy GPU path. These methods are physically GPU-backed
     // but deliberately do not claim fully resident no-host authority.
     bool tryVulkanHostGEMV(const WeightTensor& wt, const float* input,
                            float* output, size_t outDim);
+    bool tryVulkanHostGEMVBatch4(const WeightTensor& wt,
+                                 const float* inputBatch, size_t count,
+                                 float* outputBatch, size_t outDim);
+
+    bool tryVulkanHostGEMVGroup(
+        const WeightTensor* const* weights,
+        float* const* outputs,
+        size_t count,
+        const float* input,
+        size_t inputCount);
     bool computeMoEFFNGpu(size_t layer, const float* input, float* output);
+
     bool computeMLAAttentionGpu(size_t layer, const float* input,
                                 float* output, size_t seqLen);
     bool forwardTokenGpuHybrid(float* hidden, size_t seqLen);
@@ -512,6 +583,8 @@ public:
 
     // VAL-000 Phase 3: Advanced feature control
     void enableMedusa(bool enable);
+    void enableVerifiedSpeculation(bool enable,uint32_t window=4);
+    const SpeculativeCounters& speculativeCounters() const;
     void enableNUPacking(bool enable);
     void enableWarmupScheduler(bool enable);
     void enableCompressedKV(bool enable, KVQuantType quantType = KVQuantType::KV_Q8_0);
@@ -567,6 +640,10 @@ public:
     // Linear using WeightTensor directly
     void LinearW(const WeightTensor& wt, const float* input, const float* bias,
                  float* output, size_t outDim);
+    void LinearWBatch4(const WeightTensor& wt,
+                       const float* inputBatch, size_t count,
+                       const float* bias, float* outputBatch,
+                       size_t outDim);
     
     // Parallel version using ThreadPool
     void LinearParallel(int weightIdx, const float* input, const float* bias,
@@ -599,9 +676,26 @@ public:
     // Token embedding lookup (public for tree speculative decoding)
     // Returns false on FATAL_EMBED (zero/nonfinite row). Callers must abort inference.
     bool embedToken(int tokenId, float* output);
+    bool embedTokensBatch(const int* tokenIds, size_t count, float* outputBatch);
 
     // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
     void computeLogits(const float* hiddenState, float* logits);
+    void computeLogitsBatch(const float* hiddenBatch, size_t count,
+                            float* logitsBatch);
+    bool computeGreedyTop1Batch(const float* hiddenBatch,size_t count,
+                                int32_t* outTokens);
+    bool trySpecRmsNormBatch(const WeightTensor& w,const float* in,
+                             float* out,size_t width,size_t count);
+    bool trySpecSwiGLUBatch(const float* gate,const float* up,float* out,
+                            size_t width,size_t count);
+    bool trySpecAttentionBatch(size_t layer,const float* q,
+                               const float* k,const float* v,float* out,
+                               size_t basePos,size_t count);
+    bool trySpecColumnSplitBatch(const WeightTensor& wt,const float* in,
+                                 float* out,size_t count);
+    bool trySpecQ4KGroup(
+        const WeightTensor* const* w,float* const* out,size_t weightCount,
+        const float* input,size_t count);
 
     // DEEP2_ENGINE_SSVK_DECODE_BIND_001 — product decode transaction surface
     int sampleCommittedToken(const float* logits);
@@ -694,6 +788,12 @@ public:
     void disableParityProbe();
 
 private:
+    PreparedSpecWindow preparedSpec_[2]{};
+    uint64_t specGeneration_=0;
+    bool prepareSpecWindow(
+        const float* currentHidden,size_t remaining,
+        PreparedSpecWindow& out);
+
     struct ParityProbe;
     ParityProbe* parityProbe_ = nullptr;  // owned; only when enabled
 
@@ -715,6 +815,24 @@ private:
     std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
     bool deterministicGreedy_ = false;
+    std::vector<float> speculativeHiddenScratch_;
+    struct SpecWorkspace {
+        std::vector<float> hidden,norm,q,k,v,attn,proj,gate,up,down;
+        std::vector<float> logits,scores;
+        std::vector<float> kPacked,vPacked;
+        void clear() {
+            hidden.clear();norm.clear();q.clear();k.clear();v.clear();
+            attn.clear();proj.clear();gate.clear();up.clear();down.clear();
+            logits.clear();scores.clear();
+            kPacked.clear();vPacked.clear();
+        }
+    };
+
+    SpecWorkspace specWs_{};
+    std::vector<size_t> specKvMirrorCommittedLen_;
+    void specKvMirrorCommit(size_t newLen);
+    void specKvMirrorReset();
+
     std::atomic<bool> cancelRequested_{false};
     
     // Real model weights
@@ -755,6 +873,8 @@ private:
     
     // Feature flags
     bool medusaEnabled_ = false;
+    SpeculativeCounters speculativeEmpty_{};
+
     bool nuPackingEnabled_ = false;
     bool warmupEnabled_ = false;
     bool compressedKVEnabled_ = false;

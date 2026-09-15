@@ -36,7 +36,11 @@ struct GpuForwardCounters {
     uint64_t cpuF32Expands = 0;
     uint64_t dualRowSplitOps = 0;
     uint64_t dualArithmeticOverlapNs = 0;
+    uint64_t dualAsyncWindows=0;
+    uint64_t dualAsyncOverlapNs=0;
+    uint64_t dualAsyncWallNs=0;
     uint64_t hostMergeOps = 0;
+    uint64_t dualRowDenseTokens = 0;
     uint64_t gpuExpertDispatches = 0;
     uint64_t mlaGpuAttentionOps = 0;
 };
@@ -111,6 +115,9 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.dualArithmeticOverlapNs);
         fprintf(o, "DEEP2_GPU_HOST_MERGE_OPS=%llu\n",
                 (unsigned long long)c.hostMergeOps);
+        fprintf(o, "DEEP2_DUAL_ROW_DENSE_TOKENS=%llu\n",
+                (unsigned long long)c.dualRowDenseTokens);
+
         fprintf(o, "DEEP2_GPU_EXPERT_DISPATCHES=%llu\n",
                 (unsigned long long)c.gpuExpertDispatches);
         fprintf(o, "DEEP2_GPU_MLA_ATTN_OPS=%llu\n",

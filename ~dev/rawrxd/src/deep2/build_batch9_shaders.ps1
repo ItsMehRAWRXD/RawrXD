@@ -35,5 +35,21 @@ Compile-One (Join-Path $ShaderDir "deep2_ops.comp") `
             (Join-Path $ShaderDir "deep2_ops.spv")
 Compile-One (Join-Path $ShaderDir "deep2_qgemv.comp") `
             (Join-Path $ShaderDir "deep2_qgemv.spv")
+Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch.comp") `
+            (Join-Path $ShaderDir "deep2_qgemv_batch.spv")
+Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch4row.comp") `
+            (Join-Path $ShaderDir "deep2_qgemv_batch4row.spv")
+Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch8row.comp") `
+            (Join-Path $ShaderDir "deep2_qgemv_batch8row.spv")
+
+Compile-One (Join-Path $ShaderDir "deep2_argmax.comp") `
+            (Join-Path $ShaderDir "deep2_argmax.spv")
+Compile-One (Join-Path $ShaderDir "deep2_spec_ops.comp") `
+            (Join-Path $ShaderDir "deep2_spec_ops.spv")
+Compile-One (Join-Path $ShaderDir "deep2_spec_attn.comp") `
+            (Join-Path $ShaderDir "deep2_spec_attn.spv")
 
 Write-Host "BATCH9_SHADER_BUILD=PASS"
+
+Compile-One (Join-Path $ShaderDir "deep2_spec_accept.comp") `
+            (Join-Path $ShaderDir "deep2_spec_accept.spv")

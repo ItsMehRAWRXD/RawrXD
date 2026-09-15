@@ -113,7 +113,54 @@ bool Deep2Engine::tryVulkanHostGEMV(
     return finiteVec(output,outDim);
 }
 
+bool Deep2Engine::tryVulkanHostGEMVBatch4(
+    const WeightTensor& wt,const float* inputBatch,size_t count,
+    float* outputBatch,size_t outDim)
+{
+    if(!vulkanInitialized_||vulkanDevices_.size()<2||
+       !inputBatch||!outputBatch||count==0||count>4||
+       wt.rows!=outDim||wt.type!=(int)GGMLType::GGML_TYPE_Q4_K)
+        return false;
+    const uint64_t epoch=kvCache?kvCache->currentLength():0;
+    RowSplitReceipt r{};
+    if(!Deep2RunDualGpuRowSplitBatch4(
+            *vulkanDevices_[0],*vulkanDevices_[1],
+            wt,inputBatch,outputBatch,(uint32_t)count,epoch,&r))
+        return false;
+    ++gpuFwd_.dualRowSplitOps;
+    ++gpuFwd_.hostMergeOps;
+    gpuFwd_.dualArithmeticOverlapNs=
+        std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
+    return true;
+}
+
+
+bool Deep2Engine::tryVulkanHostGEMVGroup(
+    const WeightTensor* const* weights,float* const* outputs,size_t count,
+    const float* input,size_t inputCount)
+{
+    if(!vulkanInitialized_||vulkanDevices_.size()<2||
+       !weights||!outputs||!input||count<2||count>3||
+       inputCount==0||inputCount>UINT32_MAX)
+        return false;
+
+    const uint64_t epoch=kvCache?kvCache->currentLength():0;
+    RowSplitReceipt r{};
+    if(!Deep2RunDualGpuRowSplitGroup(
+            *vulkanDevices_[0],*vulkanDevices_[1],
+            weights,outputs,count,input,(uint32_t)inputCount,epoch,&r))
+        return false;
+
+    ++gpuFwd_.dualRowSplitOps;
+    ++gpuFwd_.hostMergeOps;
+    ++gpuFwd_.hostMaterializations;
+    gpuFwd_.dualArithmeticOverlapNs=
+        std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
+    return true;
+}
+
 bool Deep2Engine::computeMoEFFNGpu(
+
     size_t layer,const float* input,float* output)
 {
     if(!vulkanInitialized_||vulkanDevices_.empty()||

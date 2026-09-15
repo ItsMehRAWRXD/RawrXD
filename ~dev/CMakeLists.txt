@@ -47,7 +47,9 @@ set(DEEP2_SOURCES
 
 set(RAWRXD_DEEP2_SOURCES
     rawrxd/src/deep2/Deep2Engine.cpp
+    rawrxd/src/deep2/Deep2Engine_Speculative.cpp
     rawrxd/src/deep2/Tokenizer.cpp
+
     rawrxd/src/deep2/Sampler.cpp
     rawrxd/src/deep2/QuantKernelRegistry.cpp
     rawrxd/src/deep2/Deep2Engine_SsVkDecodeBind.cpp
@@ -149,6 +151,23 @@ target_include_directories(deep2_standalone PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
 )
+
+# Qwen2.5-Coder-32B real measured >=40 TPS authority gate.
+# Safe if Vulkan was already discovered; idempotent otherwise.
+find_package(Vulkan QUIET)
+add_executable(qwen32_40tps_gate
+    tests/qwen32_40tps_gate.cpp
+    ${RAWRXD_DEEP2_SOURCES}
+)
+target_include_directories(qwen32_40tps_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+if(Vulkan_FOUND)
+    target_link_libraries(qwen32_40tps_gate PRIVATE Vulkan::Vulkan)
+endif()
 
 # Batch 9: Vulkan runtime for deep2_standalone.
 find_package(Vulkan QUIET)
@@ -412,3 +431,25 @@ target_include_directories(deep2_e2e_audit PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
 )
+add_executable(qwen32_85tps_prereq
+    tests/qwen32_85tps_prereq.cpp
+)
+target_include_directories(qwen32_85tps_prereq PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+)
+add_executable(qwen32_85tps_gate
+    tests/qwen32_85tps_gate.cpp
+    ${RAWRXD_DEEP2_SOURCES}
+)
+target_include_directories(qwen32_85tps_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+    target_link_libraries(qwen32_85tps_gate PRIVATE Vulkan::Vulkan)
+endif()

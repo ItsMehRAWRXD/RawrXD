@@ -79,6 +79,14 @@ public:
         return true;
     }
 
+    bool advanceBy(size_t count) {
+        if(!allocated_||count>config_.maxSeqLen-currentLen_) return false;
+        currentLen_+=count;
+        return true;
+    }
+
+    size_t checkpoint() const noexcept { return currentLen_; }
+
     bool rewind(size_t newLength, bool zeroDiscarded = false) {
         if (!allocated_ || newLength > currentLen_) return false;
         if (zeroDiscarded && newLength < currentLen_) {

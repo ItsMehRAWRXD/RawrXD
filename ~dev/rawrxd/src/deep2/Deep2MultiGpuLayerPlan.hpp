@@ -132,6 +132,104 @@ struct Deep2MultiGpuLayerPlan {
         return active && cursor <= layers;
     }
 
+    // Dense decode is sequential across layers, so capacity-proportional
+    // assignment can badly imbalance cards with similar bandwidth but
+    // different VRAM sizes.  This planner targets equal *time* using
+    // throughput weights, while refusing assignments that exceed the
+    // supplied per-GPU resident byte capacities.
+    bool configureThroughputBalanced(
+        const std::vector<uint64_t>& layerBytes,
+        const std::vector<uint64_t>& gpuCapacityBytes,
+        const std::vector<double>& throughputWeight)
+    {
+        clear();
+        const size_t layers = layerBytes.size();
+        if (!layers || gpuCapacityBytes.empty()) return false;
+
+        const size_t gpuN = std::min(layers, gpuCapacityBytes.size());
+        if (!gpuN) return false;
+
+        std::vector<double> speed(gpuN, 1.0);
+        for (size_t i = 0; i < gpuN && i < throughputWeight.size(); ++i)
+            if (throughputWeight[i] > 0.0) speed[i] = throughputWeight[i];
+
+        long double totalSpeed = 0.0L;
+        uint64_t bytesTotal = 0;
+        for (size_t i = 0; i < gpuN; ++i) totalSpeed += speed[i];
+        for (uint64_t b : layerBytes) {
+            if (bytesTotal > std::numeric_limits<uint64_t>::max() - b)
+                return false;
+            bytesTotal += b;
+        }
+        if (totalSpeed <= 0.0L || !bytesTotal) return false;
+
+        gpuSlotCount = static_cast<unsigned>(gpuN);
+        plannedCount = gpuSlotCount;
+        active = true;
+        hybrid = false;
+        totalLayers = layers;
+        totalWeight = bytesTotal;
+        rangeLo.resize(gpuN);
+        rangeHi.resize(gpuN);
+        slotKind.assign(gpuN, MultiGpuSlotKind::GPU);
+        layerSlot.assign(layers, UINT32_MAX);
+        layerExecuted.assign(layers, 0);
+
+        size_t cursor = 0;
+        uint64_t prefixBytes = 0;
+        long double prefixSpeed = 0.0L;
+
+        for (size_t s = 0; s < gpuN; ++s) {
+            rangeLo[s] = static_cast<uint32_t>(cursor);
+
+            if (s + 1 == gpuN) {
+                rangeHi[s] = static_cast<uint32_t>(layers - 1);
+            } else {
+                prefixSpeed += speed[s];
+                const long double target =
+                    static_cast<long double>(bytesTotal) *
+                    prefixSpeed / totalSpeed;
+
+                const size_t maxEnd = layers - (gpuN - s - 1) - 1;
+                size_t end = cursor;
+                uint64_t running = prefixBytes;
+                while (end < maxEnd &&
+                       static_cast<long double>(running + layerBytes[end]) < target) {
+                    running += layerBytes[end];
+                    ++end;
+                }
+
+                // Choose the nearer side of the target when legal.
+                if (end > cursor) {
+                    const long double before =
+                        static_cast<long double>(running);
+                    const long double after =
+                        static_cast<long double>(running + layerBytes[end]);
+                    if ((target - before) <= (after - target))
+                        --end;
+                }
+                rangeHi[s] = static_cast<uint32_t>(end);
+            }
+
+            uint64_t slotBytes = 0;
+            for (uint32_t l = rangeLo[s]; l <= rangeHi[s]; ++l) {
+                layerSlot[l] = static_cast<uint32_t>(s);
+                slotBytes += layerBytes[l];
+            }
+
+            // 80% resident budget matches the default GPU cache policy.
+            const uint64_t cap = (gpuCapacityBytes[s] / 10u) * 8u;
+            if (slotBytes > cap) {
+                clear();
+                return false;
+            }
+
+            prefixBytes += slotBytes;
+            cursor = static_cast<size_t>(rangeHi[s]) + 1;
+        }
+        return cursor == layers;
+    }
+
     std::vector<uint32_t> planLayers(size_t n) const {
         std::vector<uint32_t> out;
         const size_t lim = std::min(n, layerSlot.size());

@@ -8,6 +8,28 @@
 #include <cstdint>
 
 namespace Deep2 {
+struct DualAsyncFanIn {
+    uint64_t wallNs=0;
+    uint64_t gpu0Ns=0;
+    uint64_t gpu1Ns=0;
+    uint64_t overlapNs=0;
+    uint64_t hostSpinNs=0;
+};
+
+bool Deep2WaitDualQ4KFanIn(
+    VulkanCompute& g0,VulkanCompute::Q4KAsyncTicket& t0,
+    VulkanCompute& g1,VulkanCompute::Q4KAsyncTicket& t1,
+    DualAsyncFanIn& out);
+
+struct CachedDualRowPlan {
+    RowSplitPlan split{};
+    GpuWeightView gpu0{};
+    GpuWeightView gpu1{};
+    bool valid=false;
+};
+
+const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
+    const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1);
 
 struct RowSplitReceipt {
     bool valid = false;
@@ -34,5 +56,49 @@ bool Deep2RunDualGpuRowSplit(
     float* output,
     uint64_t epoch,
     RowSplitReceipt* receipt = nullptr);
+
+// Group 2-3 independent GEMVs that share one input activation.
+// outputs[i] receives the full host-visible result for weights[i].
+bool Deep2RunDualGpuRowSplitGroup(
+    VulkanCompute& g0,
+    VulkanCompute& g1,
+    const WeightTensor* const* weights,
+    float* const* outputs,
+    size_t count,
+    const float* input,
+    uint32_t inputCount,
+    uint64_t epoch,
+    RowSplitReceipt* receipt = nullptr);
+
+bool Deep2RunDualGpuRowSplitBatch4(
+    VulkanCompute& g0,VulkanCompute& g1,
+    const WeightTensor& wt,
+    const float* inputBatch,float* outputBatch,
+    uint32_t batch,uint64_t epoch,
+    RowSplitReceipt* receipt=nullptr);
+bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
+    VulkanCompute& primary,VulkanCompute& secondary,
+    const WeightTensor& wt,const float* inputBatch,
+    uint32_t batch,uint64_t epoch,
+    VulkanCompute::DeviceBuf** fullOutput=nullptr);
+
+bool Deep2RunDualGpuRowSplitBatchTop1(
+    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
+    const float* inputBatch,uint32_t batch,
+    uint32_t* outToken,float* outValue,uint64_t epoch);
+bool Deep2RunDualGpuColumnSplitBatch4(
+    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
+    const float* inputBatch,float* outputBatch,
+    uint32_t batch,uint64_t epoch);
+bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
+    VulkanCompute& primary,VulkanCompute& secondary,
+    const WeightTensor& wt,const float* inputBatch,
+    VulkanCompute::DeviceBuf& primaryOutput,
+    uint32_t batch,uint64_t epoch);
+
+bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
+    VulkanCompute& g0,VulkanCompute& g1,
+    const WeightTensor* const* weights,float* const* outputs,size_t weightCount,
+    const float* inputBatch,uint32_t batch,uint64_t epoch);
 
 } // namespace Deep2
