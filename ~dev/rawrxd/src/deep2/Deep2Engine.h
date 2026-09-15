@@ -101,6 +101,10 @@ struct LayerWeights {
     WeightTensor wv;          // [kvDim, hiddenDim]
     WeightTensor wo;          // [hiddenDim, hiddenDim]
     WeightTensor wqkv;        // [hiddenDim + 2*kvDim, hiddenDim] fused QKV (Phi-3, etc.)
+    // Attention projection biases (Qwen2 family). F32 when present.
+    WeightTensor bq;
+    WeightTensor bk;
+    WeightTensor bv;
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
     WeightTensor attnQNorm;   // [headDim] per-head Q RMSNorm (Qwen3.5)
     WeightTensor attnKNorm;   // [headDim] per-head K RMSNorm (Qwen3.5)
@@ -186,6 +190,7 @@ struct ModelWeights {
     float  ropeTheta      = 0.0f;   // unset until GGUF dynamic geometry
     float  ropeScaling    = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
     float  normEps        = 0.0f;   // unset until GGUF dynamic geometry
+    bool   ropeNeoxStyle  = false;  // true: NeoX rotated-half (llama/qwen); false: GPT-J adjacent
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
     bool   loaded         = false;
@@ -656,7 +661,55 @@ public:
     const rawr::olma::AuthorityBundle& sessionAuthority() const { return sessionAuth_; }
     bool sessionAuthorityPass() const { return sessionAuth_.PASS != 0; }
 
+    // ------------------------------------------------------------------------
+    // Layer-0 parity probe (DEEP2_QWEN25_LAYER0_LOGIT_PARITY_001)
+    // Emits compact per-checkpoint fingerprints (STEP/COUNT/FINITE/MIN/MAX/
+    // MEAN/L2/FIRST8/HASH) to a file so an external oracle can compare against
+    // a reference implementation. Disabled unless enabledParityProbe() is
+    // called; zero overhead otherwise.
+    // ------------------------------------------------------------------------
+    enum class ParityCheckpoint : int {
+        Embed = 0, AttnNorm = 1, Q = 2, K = 3, V = 4,
+        Q_Rope = 5, K_Rope = 6, AttnScores = 7, AttnProbs = 8,
+        AttnValue = 9, OProj = 10, AttnResidual = 11, FfnNorm = 12,
+        FfnGate = 13, FfnUp = 14, Swiglu = 15, FfnDown = 16,
+        LayerResidual = 17, FinalNorm = 18, Logits = 19
+    };
+    void enableParityProbe(const char* filePath, int maxSteps);
+
+    // Multi-position mode: starts a new generation step. All checkpoint
+    // emissions are re-armed and tagged with the current step; the trace then
+    // contains one full checkpoint set per position (steps 0..N-1).
+    void parityBeginStep(int step);
+
+    // Layer-scoped KV-cache write fingerprints for the CURRENT step.
+    // Emits K_CACHE_WRITE / V_CACHE_WRITE records (per-call: one layer).
+    void parityEmitKvWrite(int layer, const float* k, const float* v,
+                           size_t n);
+
+    // Layer-scoped LOGITS_TOP10 record for the CURRENT step: deterministic
+    // top-10 (tokenId,logit) pairs with greedy tie-break (first max wins).
+    void parityEmitLogitsTop10(const float* logits, size_t n);
+
+    void disableParityProbe();
+
 private:
+    struct ParityProbe;
+    ParityProbe* parityProbe_ = nullptr;  // owned; only when enabled
+
+    // Internal probe emission (called by forward paths).
+    void parityEmit(ParityCheckpoint cp, const float* v, size_t n);
+    void parityEmitCount(ParityCheckpoint cp, size_t n, double minv,
+                         double maxv, double mean, double l2,
+                         const float* first8, uint64_t hash);
+    // Layer-scoped emission (bypasses once-per-step guard).
+    void parityEmitLayer(int layer, const char* cpName,
+                         const float* v, size_t n);
+
+private:
+    // ------------------------------------------------------------------------
+    // End parity probe
+    // ------------------------------------------------------------------------
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
     std::unique_ptr<KVCache> kvCache;
@@ -815,6 +868,7 @@ private:
     float* gateBuf = nullptr;
     float* upBuf = nullptr;
     float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
+    float* layerOut = nullptr;   // Layer output buffer (must NOT alias layerTemp)
     float* attnHeadScratch_ = nullptr; // [numHeads*headDim] pre-O concat
 
     // MLA (K2) buffers

@@ -45,6 +45,230 @@ static void softmax(float* x, size_t n) {
     for (size_t i = 0; i < n; ++i) x[i] *= inv;
 }
 
+// =================== LAYER-0 PARITY PROBE (FNV-1a fingerprints) ============
+// Emits one compact record per checkpoint for an external oracle. Format:
+//   STEP=<name> COUNT=<n> FINITE=<k> MIN=<v> MAX=<v> MEAN=<v> L2=<v>
+//   FIRST8=<a,b,c,d,e,f,g,h> HASH=<hex>
+struct Deep2Engine::ParityProbe {
+    FILE* f = nullptr;
+    static constexpr int kCpCount = 21;
+    bool emitted[kCpCount] = {};
+    int  step = 0;            // current generation step (position)
+    bool stepMode = false;    // true: re-arm checkpoints each parityBeginStep
+    static const char* name(ParityCheckpoint cp) {
+        switch (cp) {
+            case ParityCheckpoint::Embed:        return "EMBED";
+            case ParityCheckpoint::AttnNorm:     return "ATTN_NORM";
+            case ParityCheckpoint::Q:            return "Q";
+            case ParityCheckpoint::K:            return "K";
+            case ParityCheckpoint::V:            return "V";
+            case ParityCheckpoint::Q_Rope:       return "Q_ROPE";
+            case ParityCheckpoint::K_Rope:       return "K_ROPE";
+            case ParityCheckpoint::AttnScores:   return "ATTN_SCORES";
+            case ParityCheckpoint::AttnProbs:    return "ATTN_PROBS";
+            case ParityCheckpoint::AttnValue:    return "ATTN_VALUE";
+            case ParityCheckpoint::OProj:        return "O_PROJ";
+            case ParityCheckpoint::AttnResidual: return "ATTN_RESIDUAL";
+            case ParityCheckpoint::FfnNorm:      return "FFN_NORM";
+            case ParityCheckpoint::FfnGate:      return "FFN_GATE";
+            case ParityCheckpoint::FfnUp:        return "FFN_UP";
+            case ParityCheckpoint::Swiglu:       return "SWIGLU";
+            case ParityCheckpoint::FfnDown:      return "FFN_DOWN";
+            case ParityCheckpoint::LayerResidual:return "LAYER_RESIDUAL";
+            case ParityCheckpoint::FinalNorm:    return "FINAL_NORM";
+            case ParityCheckpoint::Logits:       return "LOGITS";
+            case (ParityCheckpoint)20:           return "HIDDEN_FINAL";
+        }
+        return "?";
+    }
+};
+
+static uint64_t parityHash(const float* v, size_t n) {
+    uint64_t h = 1469598103934665603ull;  // FNV-1a 64 offset basis
+    const auto* bytes = reinterpret_cast<const uint8_t*>(v);
+    for (size_t i = 0; i < n * sizeof(float); ++i) {
+        h ^= bytes[i];
+        h *= 1099511628211ull;
+    }
+    return h;
+}
+
+void Deep2Engine::parityEmitCount(ParityCheckpoint cp, size_t n, double minv,
+                                  double maxv, double mean, double l2,
+                                  const float* first8, uint64_t hash) {
+    if (!parityProbe_ || !parityProbe_->f) return;
+    const int idx = static_cast<int>(cp);
+    if (idx < 0 || idx >= Deep2Engine::ParityProbe::kCpCount) return;
+    if (parityProbe_->emitted[idx]) return;  // once per step (or once total)
+    parityProbe_->emitted[idx] = true;
+    if (parityProbe_->stepMode) {
+        std::fprintf(parityProbe_->f, "STEP=%d ", parityProbe_->step);
+    }
+    std::fprintf(parityProbe_->f,
+        "CP=%s COUNT=%zu MIN=%.9g MAX=%.9g MEAN=%.9g L2=%.9g "
+        "FIRST8=%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g HASH=%016llx\n",
+        Deep2Engine::ParityProbe::name(cp), n, minv, maxv, mean, l2,
+        first8 ? first8[0] : 0.0, first8 ? first8[1] : 0.0,
+        first8 ? first8[2] : 0.0, first8 ? first8[3] : 0.0,
+        first8 ? first8[4] : 0.0, first8 ? first8[5] : 0.0,
+        first8 ? first8[6] : 0.0, first8 ? first8[7] : 0.0,
+        static_cast<unsigned long long>(hash));
+    std::fflush(parityProbe_->f);
+}
+
+void Deep2Engine::parityEmit(ParityCheckpoint cp, const float* v, size_t n) {
+    if (!parityProbe_ || !parityProbe_->f) return;
+    const int idx = static_cast<int>(cp);
+    if (idx < 0 || idx >= Deep2Engine::ParityProbe::kCpCount) return;
+    if (parityProbe_->emitted[idx]) return;
+    if (!v || n == 0) {
+        parityEmitCount(cp, 0, 0, 0, 0, 0, nullptr, 0);
+        return;
+    }
+    double mn = v[0], mx = v[0], sum = 0.0, l2 = 0.0;
+    size_t finite = 0;
+    for (size_t i = 0; i < n; ++i) {
+        const double x = static_cast<double>(v[i]);
+        if (std::isfinite(x)) {
+            ++finite;
+            if (x < mn) mn = x;
+            if (x > mx) mx = x;
+            sum += x;
+            l2 += x * x;
+        }
+    }
+    const double mean = finite ? sum / static_cast<double>(finite) : 0.0;
+    parityEmitCount(cp, n, mn, mx, mean, std::sqrt(l2), v, parityHash(v, n));
+}
+
+void Deep2Engine::enableParityProbe(const char* filePath, int maxSteps) {
+    disableParityProbe();
+    parityProbe_ = new ParityProbe();
+    parityProbe_->f = std::fopen(filePath, "w");
+    (void)maxSteps;  // per-checkpoint once-semantics; maxSteps reserved
+    parityProbe_->stepMode = false;
+    parityProbe_->step = 0;
+}
+
+void Deep2Engine::parityBeginStep(int step) {
+    if (!parityProbe_) return;
+    parityProbe_->step = step;
+    parityProbe_->stepMode = true;
+    for (int i = 0; i < Deep2Engine::ParityProbe::kCpCount; ++i)
+        parityProbe_->emitted[i] = false;
+}
+
+void Deep2Engine::parityEmitKvWrite(int layer, const float* k, const float* v,
+                                    size_t n) {
+    if (!parityProbe_ || !parityProbe_->f) return;
+    if (!parityProbe_->stepMode) return;  // KV records are step-scoped
+    if (!k || !v || n == 0) return;
+    const double kMin = *std::min_element(k, k + n);
+    const double kMax = *std::max_element(k, k + n);
+    double kSum = 0.0, kL2 = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        kSum += static_cast<double>(k[i]);
+        kL2 += static_cast<double>(k[i]) * static_cast<double>(k[i]);
+    }
+    const double kMean = kSum / static_cast<double>(n);
+    const uint64_t kHash = parityHash(k, n);
+    const double vMin = *std::min_element(v, v + n);
+    const double vMax = *std::max_element(v, v + n);
+    double vSum = 0.0, vL2 = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        vSum += static_cast<double>(v[i]);
+        vL2 += static_cast<double>(v[i]) * static_cast<double>(v[i]);
+    }
+    const double vMean = vSum / static_cast<double>(n);
+    const uint64_t vHash = parityHash(v, n);
+    std::fprintf(parityProbe_->f,
+        "STEP=%d CP=KV_WRITE LAYER=%d COUNT=%zu "
+        "K_MIN=%.9g K_MAX=%.9g K_MEAN=%.9g K_L2=%.9g K_HASH=%016llx "
+        "V_MIN=%.9g V_MAX=%.9g V_MEAN=%.9g V_L2=%.9g V_HASH=%016llx\n",
+        parityProbe_->step, layer, n,
+        kMin, kMax, kMean, std::sqrt(kL2),
+        static_cast<unsigned long long>(kHash),
+        vMin, vMax, vMean, std::sqrt(vL2),
+        static_cast<unsigned long long>(vHash));
+    std::fflush(parityProbe_->f);
+}
+
+void Deep2Engine::parityEmitLogitsTop10(const float* logits, size_t n) {
+    if (!parityProbe_ || !parityProbe_->f) return;
+    if (!parityProbe_->stepMode) return;
+    if (!logits || n == 0) return;
+    // Greedy top-10 with first-max-wins tie-break (matches GreedySampler and
+    // np.argmax): linear scan, strictly-greater comparison.
+    int topIdx[10] = {};
+    float topVal[10] = {};
+    const size_t keep = std::min<size_t>(10, n);
+    for (size_t i = 0; i < n; ++i) {
+        float val = logits[i];
+        // Insert into the (up to) 10-slot sorted-desc list.
+        for (size_t s = 0; s < keep; ++s) {
+            if (val > topVal[s]) {
+                for (size_t t = keep - 1; t > s; --t) {
+                    topVal[t] = topVal[t - 1];
+                    topIdx[t] = topIdx[t - 1];
+                }
+                topVal[s] = val;
+                topIdx[s] = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+    std::fprintf(parityProbe_->f, "STEP=%d CP=LOGITS_TOP10 TOP10=", 
+                 parityProbe_->step);
+    for (size_t s = 0; s < keep; ++s) {
+        std::fprintf(parityProbe_->f, "%s%d:%.6f",
+                     s ? "," : "", topIdx[s], topVal[s]);
+    }
+    std::fprintf(parityProbe_->f, "\n");
+    std::fflush(parityProbe_->f);
+}
+
+void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
+                                   const float* v, size_t n) {
+    if (!parityProbe_ || !parityProbe_->f) return;
+    if (!parityProbe_->stepMode) return;
+    if (!v || n == 0) {
+        std::fprintf(parityProbe_->f,
+            "STEP=%d CP=LAYER_%d_%s COUNT=0 MIN=0 MAX=0 MEAN=0 L2=0 "
+            "FIRST8=0,0,0,0,0,0,0,0 HASH=0000000000000000\n",
+            parityProbe_->step, layer, cpName);
+        std::fflush(parityProbe_->f);
+        return;
+    }
+    double mn = v[0], mx = v[0], sum = 0.0, l2 = 0.0;
+    size_t finite = 0;
+    for (size_t i = 0; i < n; ++i) {
+        const double x = static_cast<double>(v[i]);
+        if (std::isfinite(x)) {
+            ++finite;
+            if (x < mn) mn = x;
+            if (x > mx) mx = x;
+            sum += x;
+            l2 += x * x;
+        }
+    }
+    const double mean = finite ? sum / static_cast<double>(finite) : 0.0;
+    const uint64_t hash = parityHash(v, n);
+    std::fprintf(parityProbe_->f,
+        "STEP=%d CP=LAYER_%d_%s COUNT=%zu MIN=%.9g MAX=%.9g MEAN=%.9g L2=%.9g "
+        "FIRST8=%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g,%.9g HASH=%016llx\n",
+        parityProbe_->step, layer, cpName, n, mn, mx, mean, std::sqrt(l2),
+        v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7],
+        static_cast<unsigned long long>(hash));
+    std::fflush(parityProbe_->f);
+}
+void Deep2Engine::disableParityProbe() {
+    if (parityProbe_) {
+        if (parityProbe_->f) std::fclose(parityProbe_->f);
+        delete parityProbe_;
+        parityProbe_ = nullptr;
+    }
+}
+
 static bool finiteVector(const float* x, size_t n) {
     if (!x) return false;
     for (size_t i = 0; i < n; ++i) {
@@ -151,9 +375,11 @@ bool Deep2Engine::allocateBuffers() {
     gateBuf         = new (std::nothrow) float[I];
     upBuf           = new (std::nothrow) float[I];
     layerTemp       = new (std::nothrow) float[H];
+    layerOut        = new (std::nothrow) float[H];
 
     if (!hiddenStates || !attentionOutput || !ffnOutput || !logits ||
-        !qProj || !kProj || !vProj || !gateBuf || !upBuf || !layerTemp) {
+        !qProj || !kProj || !vProj || !gateBuf || !upBuf || !layerTemp ||
+        !layerOut) {
         deallocateBuffers();
         return false;
     }
@@ -168,6 +394,7 @@ bool Deep2Engine::allocateBuffers() {
     std::memset(gateBuf,         0, I * sizeof(float));
     std::memset(upBuf,           0, I * sizeof(float));
     std::memset(layerTemp,       0, H * sizeof(float));
+    std::memset(layerOut,        0, H * sizeof(float));
 
     config.hiddenDim = H;
     config.vocabSize = V;
@@ -186,6 +413,7 @@ void Deep2Engine::deallocateBuffers() {
     delete[] gateBuf;         gateBuf = nullptr;
     delete[] upBuf;           upBuf = nullptr;
     delete[] layerTemp;       layerTemp = nullptr;
+    delete[] layerOut;        layerOut = nullptr;
 }
 
 // =================== RESET (REAL KV RESET) ====================
@@ -371,6 +599,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
+    // RoPE pairing convention is architecture-defined (not in GGUF metadata):
+    //   NeoX rotated-half: llama/qwen/mistral/gemma
+    //   GPT-J adjacent:    gpt-neox/phi (legacy GGUF conversions)
+    const bool archIsNeoxRoPE =
+        arch == "llama" || arch == "qwen" || arch == "qwen2" ||
+        arch == "mistral" || arch == "gemma" || arch == "gemma2" ||
+        arch == "gemma3" || arch == "baichuan" || arch == "yi" ||
+        arch == "olmo" || arch == "starchat" || arch == "replit" ||
+        arch == "refact" || arch == "stablelm" || arch == "deepseek2";
+    modelWeights.ropeNeoxStyle = archIsNeoxRoPE;
+    if (const char* overrideStyle = std::getenv("DEEP2_ROPE_GPTJ")) {
+        if (overrideStyle[0] == '1') modelWeights.ropeNeoxStyle = false;
+    }
+
     const size_t modelContext = metaSize("context_length", 0);
     if (modelContext > 0) config.maxSeqLen = modelContext;
 
@@ -403,6 +645,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         bindTensor(p + "attn_k.weight", lw.wk);
         bindTensor(p + "attn_v.weight", lw.wv);
         bindTensor(p + "attn_output.weight", lw.wo);
+        // Qwen2-family attention projection biases. Optional: bound only when
+        // the GGUF provides them (presence recorded for parity audits).
+        bindTensor(p + "attn_q.bias", lw.bq);
+        bindTensor(p + "attn_k.bias", lw.bk);
+        bindTensor(p + "attn_v.bias", lw.bv);
         bindTensor(p + "attn_norm.weight", lw.attnNorm);
         bindTensor(p + "attn_q_norm.weight", lw.attnQNorm);
         bindTensor(p + "attn_k_norm.weight", lw.attnKNorm);
@@ -841,6 +1088,31 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.numHeads, modelWeights.numKVHeads,
         modelWeights.vocabSize);
 
+    // Architecture report for parity audits (runtime values actually used).
+    const bool hasBq = modelWeights.layers[0].bq.data != nullptr;
+    const bool hasBk = modelWeights.layers[0].bk.data != nullptr;
+    const bool hasBv = modelWeights.layers[0].bv.data != nullptr;
+    std::fprintf(stdout,
+        "ARCH=%s\nHIDDEN=%zu\nLAYERS=%zu\nHEADS=%zu\nKV_HEADS=%zu\n"
+        "HEAD_DIM=%zu\nGQA_GROUP=%zu\nFFN_DIM=%zu\nROPE_THETA=%.6g\n"
+        "ROPE_SCALING=%.6g\nROPE_DIM=%zu\nROPE_NEOX=%d\nRMS_EPS=%.6g\n"
+        "Q_BIAS=%s\nK_BIAS=%s\nV_BIAS=%s\nTIE_EMBED=%d\n",
+        arch.c_str(),
+        modelWeights.hiddenDim, modelWeights.numLayers,
+        modelWeights.numHeads, modelWeights.numKVHeads,
+        modelWeights.headDim,
+        modelWeights.numHeads / modelWeights.numKVHeads,
+        modelWeights.intermediateDim,
+        static_cast<double>(modelWeights.ropeTheta),
+        static_cast<double>(modelWeights.ropeScaling),
+        modelWeights.ropeDimensionCount,
+        modelWeights.ropeNeoxStyle ? 1 : 0,
+        static_cast<double>(modelWeights.normEps),
+        hasBq ? "present" : "absent",
+        hasBk ? "present" : "absent",
+        hasBv ? "present" : "absent",
+        modelWeights.tieEmbeddings ? 1 : 0);
+
     return true;
 }
 
@@ -928,6 +1200,7 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
 
     const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
     dequant(src, output, H);
+    parityEmit(ParityCheckpoint::Embed, output, H);
     return finiteVector(output, H);
 }
 
@@ -949,10 +1222,12 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
 
     RMSNormW(modelWeights.finalNorm, hiddenState, layerTemp,
              H, modelWeights.normEps);
+    parityEmit(ParityCheckpoint::FinalNorm, layerTemp, H);
     LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
 
     if (!finiteVector(logitsOut, V))
         throw std::runtime_error("computeLogits: non-finite logits");
+    parityEmit(ParityCheckpoint::Logits, logitsOut, V);
 }
 
 // =================== SAMPLE TOKEN ====================
@@ -1114,6 +1389,33 @@ void Deep2Engine::applyRoPE(float* q, float* k,
     }
 
     const float effectivePos = static_cast<float>(pos) / scaling;
+    // NeoX (llama/qwen/mistral): rotate pair (i, i + rotaryDim/2) inside the
+    // first rotaryDim dims. GPT-J (phi/gpt-neox-legacy): rotate adjacent pair
+    // (i, i+1) across the full headDim.
+    if (modelWeights.ropeNeoxStyle) {
+        const size_t half = rotaryDim / 2;
+        auto rotateHeadNeox = [&](float* h) {
+            for (size_t i = 0; i < half; ++i) {
+                const float invFreq =
+                    1.0f / std::pow(theta,
+                        static_cast<float>(i) / static_cast<float>(half));
+                const float angle = effectivePos * invFreq;
+                const float c = std::cos(angle);
+                const float s = std::sin(angle);
+                const float x0 = h[i];
+                const float x1 = h[i + half];
+                h[i]        = x0 * c - x1 * s;
+                h[i + half] = x0 * s + x1 * c;
+            }
+        };
+        for (size_t h = 0; h < numHeads; ++h) {
+            rotateHeadNeox(q + h * headDim);
+        }
+        for (size_t h = 0; h < numKVHeads; ++h) {
+            rotateHeadNeox(k + h * headDim);
+        }
+        return;
+    }
     auto rotateHead = [&](float* h) {
         for (size_t i = 0; i < rotaryDim; i += 2) {
             const float invFreq =
@@ -1154,17 +1456,23 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         throw std::runtime_error("forwardLayer: missing attention norm");
     }
     RMSNormW(lw.attnNorm, input, layerTemp, H, modelWeights.normEps);
+    parityEmit(ParityCheckpoint::AttnNorm, layerTemp, H);
+    parityEmitLayer(static_cast<int>(layer), "ATTN_NORM", layerTemp, H);
 
     computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
     for (size_t i = 0; i < H; ++i) {
         output[i] = input[i] + attentionOutput[i];
     }
+    parityEmit(ParityCheckpoint::AttnResidual, output, H);
+    parityEmitLayer(static_cast<int>(layer), "ATTN_RESIDUAL", output, H);
 
     if (!lw.ffnNorm.data) {
         throw std::runtime_error("forwardLayer: missing FFN norm");
     }
     RMSNormW(lw.ffnNorm, output, layerTemp, H, modelWeights.normEps);
+    parityEmit(ParityCheckpoint::FfnNorm, layerTemp, H);
+    parityEmitLayer(static_cast<int>(layer), "FFN_NORM", layerTemp, H);
 
     // FFN/MoE body remains Batch 5; orchestration is real now.
     if (modelWeights.numExperts > 0) {
@@ -1182,6 +1490,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     if (!finiteVector(output, H)) {
         throw std::runtime_error("forwardLayer: non-finite layer output");
     }
+    parityEmit(ParityCheckpoint::LayerResidual, output, H);
+    parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
@@ -1230,9 +1540,21 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         if (!lw.wk.data || !lw.wv.data) {
             throw std::runtime_error("attention: incomplete Q/K/V tensor set");
         }
-        LinearW(lw.wq, input, nullptr, qProj, H);
-        LinearW(lw.wk, input, nullptr, kProj, kvDim);
-        LinearW(lw.wv, input, nullptr, vProj, kvDim);
+        const float* bq = lw.bq.data
+            ? reinterpret_cast<const float*>(lw.bq.data) : nullptr;
+        const float* bk = lw.bk.data
+            ? reinterpret_cast<const float*>(lw.bk.data) : nullptr;
+        const float* bv = lw.bv.data
+            ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
+        LinearW(lw.wq, input, bq, qProj, H);
+        LinearW(lw.wk, input, bk, kProj, kvDim);
+        LinearW(lw.wv, input, bv, vProj, kvDim);
+        parityEmit(ParityCheckpoint::Q, qProj, H);
+        parityEmit(ParityCheckpoint::K, kProj, kvDim);
+        parityEmit(ParityCheckpoint::V, vProj, kvDim);
+        parityEmitLayer(static_cast<int>(layer), "Q", qProj, H);
+        parityEmitLayer(static_cast<int>(layer), "K", kProj, kvDim);
+        parityEmitLayer(static_cast<int>(layer), "V", vProj, kvDim);
     } else if (lw.wqkv.data) {
         const size_t fusedDim = H + 2 * kvDim;
         std::vector<float> fused(fusedDim);
@@ -1285,6 +1607,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             : config.ropeScaling;
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads,
                   pos, theta, scaling);
+        parityEmit(ParityCheckpoint::Q_Rope, qProj, H);
+        parityEmit(ParityCheckpoint::K_Rope, kProj, kvDim);
+        parityEmitLayer(static_cast<int>(layer), "Q_ROPE", qProj, H);
+        parityEmitLayer(static_cast<int>(layer), "K_ROPE", kProj, kvDim);
     }
 
     for (size_t h = 0; h < numKVHeads; ++h) {
@@ -1296,6 +1622,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         std::memcpy(kd, kProj + h * headDim, headDim * sizeof(float));
         std::memcpy(vd, vProj + h * headDim, headDim * sizeof(float));
     }
+    // One parity record per layer over the full kvDim span (post-RoPE K,
+    // raw V) matching the reference cache layout [kvHead][headDim].
+    parityEmitKvWrite(static_cast<int>(layer), kProj, vProj, kvDim);
 
     const size_t attend = pos + 1;
     const float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
@@ -1316,8 +1645,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             }
             scores[t] = static_cast<float>(dot) * scale;
         }
+        parityEmitLayer(static_cast<int>(layer), "ATTN_SCORES",
+                        scores.data(), attend);
 
         softmax(scores.data(), scores.size());
+        parityEmitLayer(static_cast<int>(layer), "ATTN_PROBS",
+                        scores.data(), attend);
 
         std::memset(headOut, 0, headDim * sizeof(float));
         for (size_t t = 0; t < attend; ++t) {
@@ -1329,6 +1662,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             }
         }
     }
+    parityEmitLayer(static_cast<int>(layer), "ATTN_VALUE", output, H);
 
     if (!finiteVector(output, H)) {
         throw std::runtime_error("attention: non-finite softmax/value output");
@@ -1341,29 +1675,51 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         LinearW(*outWeight, output, nullptr, projected.data(), H);
         std::memcpy(output, projected.data(), H * sizeof(float));
     }
+    parityEmitLayer(static_cast<int>(layer), "O_PROJ", output, H);
 
     if (!finiteVector(output, H)) {
         throw std::runtime_error("attention: non-finite projected output");
     }
 }
 
-// =================== FFN (SwiGLU synthetic) ====================
+// =================== FFN (SwiGLU real) ====================
 void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     (void)layer;
     size_t H = config.hiddenDim;
     size_t I = modelWeights.intermediateDim ? modelWeights.intermediateDim : H * 4;
-    // gate = Wg @ x, up = Wu @ x
-    for (size_t i = 0; i < I; ++i) {
-        gateBuf[i] = input[i % H] * 0.1f;
-        upBuf[i]   = input[i % H] * 0.1f;
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    if (lw.wGate.data && lw.wUp.data && lw.wDown.data) {
+        // Real SwiGLU: gate = Wg @ x, up = Wu @ x
+        LinearW(lw.wGate, input, nullptr, gateBuf, I);
+        LinearW(lw.wUp,   input, nullptr, upBuf,   I);
+        parityEmit(ParityCheckpoint::FfnGate, gateBuf, I);
+        parityEmit(ParityCheckpoint::FfnUp,   upBuf,   I);
+        parityEmitLayer(static_cast<int>(layer), "FFN_GATE", gateBuf, I);
+        parityEmitLayer(static_cast<int>(layer), "FFN_UP",   upBuf,   I);
+        // silu(gate) * up
+        for (size_t i = 0; i < I; ++i) gateBuf[i] = silu(gateBuf[i]) * upBuf[i];
+        parityEmit(ParityCheckpoint::Swiglu, gateBuf, I);
+        parityEmitLayer(static_cast<int>(layer), "SWIGLU", gateBuf, I);
+        // down = Wd @ gateBuf
+        LinearW(lw.wDown, gateBuf, nullptr, output, H);
+        parityEmit(ParityCheckpoint::FfnDown, output, H);
+        parityEmitLayer(static_cast<int>(layer), "FFN_DOWN", output, H);
+    } else {
+        // Fallback synthetic (no weights bound)
+        for (size_t i = 0; i < I; ++i) {
+            gateBuf[i] = input[i % H] * 0.1f;
+            upBuf[i]   = input[i % H] * 0.1f;
+        }
+        for (size_t i = 0; i < I; ++i) gateBuf[i] = silu(gateBuf[i]) * upBuf[i];
+        for (size_t o = 0; o < H; ++o) {
+            float sum = 0.0f;
+            for (size_t i = 0; i < I; ++i) sum += gateBuf[i] * 0.01f;
+            output[o] = sum;
+        }
     }
-    // silu(gate) * up
-    for (size_t i = 0; i < I; ++i) gateBuf[i] = silu(gateBuf[i]) * upBuf[i];
-    // down = Wd @ gateBuf
-    for (size_t o = 0; o < H; ++o) {
-        float sum = 0.0f;
-        for (size_t i = 0; i < I; ++i) sum += gateBuf[i] * 0.01f;
-        output[o] = sum;
+    if (!finiteVector(output, H)) {
+        throw std::runtime_error("computeFFN: non-finite output");
     }
 }
 
@@ -1606,8 +1962,8 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
 
     try {
         for (size_t l = 0; l < modelWeights.numLayers; ++l) {
-            forwardLayer(l, hidden, layerTemp, seqLen);
-            std::memcpy(hidden, layerTemp, config.hiddenDim * sizeof(float));
+            forwardLayer(l, hidden, layerOut, seqLen);
+            std::memcpy(hidden, layerOut, config.hiddenDim * sizeof(float));
             ++gpuFwd_.hostForwardLayerCalls;
         }
     } catch (const std::exception& ex) {
@@ -1645,6 +2001,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             modelState_ = ModelState::Choreographable;
             return 0;
         }
+        parityBeginStep(static_cast<int>(p));
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;
             return 0;
@@ -1657,6 +2014,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
 
     auto tPrefillEnd = std::chrono::steady_clock::now();
+    parityEmit((ParityCheckpoint)20, hidden.data(), config.hiddenDim);
 
     // Context cap is an execution invariant, not a best-effort hint.
     size_t decodeLimit = maxOutputLen;
@@ -1676,6 +2034,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (cancelRequested_.load(std::memory_order_acquire)) break;
 
         if (i > 0) {
+            // The token forwarded in decode step i occupies KV position
+            // promptLen + i - 1 (0-indexed) — label parity records by it.
+            parityBeginStep(static_cast<int>(promptLen + i - 1));
             const int prev = outputTokens[i - 1];
             if (!embedToken(prev, hidden.data())) break;
             if (!forwardTokenAllLayers(hidden.data(), promptLen + i)) break;
@@ -1683,6 +2044,34 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         computeLogits(hidden.data(), logits);
+        // Step label was set by the prefill loop (step 0) or by the decode
+        // parityBeginStep(promptLen+i-1) before this token's forward pass.
+        parityEmitLogitsTop10(logits, config.vocabSize);
+        // Temporary logits sanity dump (first 5 and top-5 indices)
+        {
+            int vocab = static_cast<int>(config.vocabSize);
+            float maxv = logits[0];
+            int maxi = 0;
+            float minv = logits[0];
+            for (int vi = 1; vi < vocab; ++vi) {
+                if (logits[vi] > maxv) { maxv = logits[vi]; maxi = vi; }
+                if (logits[vi] < minv) minv = logits[vi];
+            }
+            double mean = 0.0;
+            for (int vi = 0; vi < vocab; ++vi) mean += logits[vi];
+            mean /= vocab;
+            double var = 0.0;
+            for (int vi = 0; vi < vocab; ++vi) { double d = logits[vi] - mean; var += d * d; }
+            var = std::sqrt(var / vocab);
+            std::fprintf(stderr, "[LOGITS] token=%zu min=%.4f max=%.4f mean=%.4f std=%.4f argmax=%d\n",
+                         generated, minv, maxv, mean, var, maxi);
+            std::string topDbg;
+            for (int ti = 0; ti < std::min(vocab, 5); ++ti) {
+                if (ti) topDbg += " ";
+                topDbg += std::to_string(logits[ti]);
+            }
+            std::fprintf(stderr, "[LOGITS_HEAD] %s\n", topDbg.c_str());
+        }
         const int nextTok = sampleToken(logits);
         if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) break;
 
