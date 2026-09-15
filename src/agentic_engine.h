@@ -39,8 +39,8 @@ public:
     
     // Configuration
     void updateConfig(const GenerationConfig& config);
-    // Fixed: Use RawrXD::InferenceEngine
-    void setInferenceEngine(RawrXD::InferenceEngine* engine) { m_inferenceEngine = engine; }
+    // Fixed: Use RawrXD::CPUInferenceEngine
+    void setInferenceEngine(RawrXD::CPUInferenceEngine* engine) { m_inferenceEngine = engine; }
     
     // Context Management
     void clearHistory();
@@ -68,7 +68,7 @@ private:
     bool m_modelLoaded;
     std::shared_ptr<RawrXD::UniversalModelRouter> m_router;
     std::string m_currentModelPath;
-    RawrXD::InferenceEngine* m_inferenceEngine;
+    RawrXD::CPUInferenceEngine* m_inferenceEngine;
     GenerationConfig m_genConfig;
     std::unordered_map<std::string, std::string> m_userPreferences;
     

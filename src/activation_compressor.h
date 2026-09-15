@@ -337,10 +337,10 @@ public:
             }
 
             // Quantize
-            auto [, k_params] = QuantizationCodec::quantizeChannelWise(
+            auto [_kq, k_params] = QuantizationCodec::quantizeChannelWise(
                 head_keys.data(), head_numel, 1
             );
-            auto [, v_params] = QuantizationCodec::quantizeChannelWise(
+            auto [_vq, v_params] = QuantizationCodec::quantizeChannelWise(
                 head_values.data(), head_numel, 1
             );
 
@@ -349,10 +349,10 @@ public:
 
             // Store quantized data
             std::memcpy(&cache.key_data[h * head_numel],
-                       .data(),
+                       _kq.data(),
                        head_numel);
             std::memcpy(&cache.value_data[h * head_numel],
-                       .data(),
+                       _vq.data(),
                        head_numel);
         }
 
@@ -377,13 +377,13 @@ public:
             uint32_t head_numel = window_size * head_dim;
 
             // Extract quantized data for this head
-            std::vector<int8_t> (head_numel);
-            std::vector<int8_t> (head_numel);
+            std::vector<int8_t> kq_data(head_numel);
+            std::vector<int8_t> vq_data(head_numel);
 
-            std::memcpy(.data(),
+            std::memcpy(kq_data.data(),
                        &compressed.key_data[h * head_numel],
                        head_numel);
-            std::memcpy(.data(),
+            std::memcpy(vq_data.data(),
                        &compressed.value_data[h * head_numel],
                        head_numel);
 
@@ -394,8 +394,8 @@ public:
             k_params.num_channels = 1;
             k_params.num_elements_per_channel = head_numel;
 
-            auto deq_keys = QuantizationCodec::dequantizeChannelWise(.data(), k_params);
-            auto deq_values = QuantizationCodec::dequantizeChannelWise(.data(), k_params);
+            auto deq_keys = QuantizationCodec::dequantizeChannelWise(kq_data.data(), k_params);
+            auto deq_values = QuantizationCodec::dequantizeChannelWise(vq_data.data(), k_params);
 
             // Write back to output buffer
             for (uint32_t i = 0; i < window_size; ++i) {

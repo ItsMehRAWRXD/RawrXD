@@ -9933,7 +9933,6 @@ add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
     src/agentic/agentic_orchestrator_smoke_test.cpp
 )
 
-<<<<<<< Updated upstream
 # Include MASM components
 add_subdirectory(src/masm)
 
@@ -9978,7 +9977,8 @@ target_include_directories(RawrXD_Native PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/agentic
     ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/src/win32app
     ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/include
-=======
+)
+
 target_include_directories(agentic_orchestrator_smoke_test PRIVATE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src
@@ -10040,7 +10040,6 @@ add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
     validation/fault_injection/StateCorruptionInjector.cpp
     validation/fault_injection/ExceptionStormInjector.cpp
     validation/recovery_telemetry/RecoveryTelemetry.cpp
->>>>>>> Stashed changes
 )
 
 target_include_directories(RawrXD-GoldenRecoveryTests PRIVATE

@@ -36,7 +36,7 @@ bool BrutalGzipWrapper::Compress(const std::vector<uint8_t>& raw,
     try {
         // Use REAL brutal::compress() from deflate_brutal_qt.hpp
         // This calls deflate_brutal_masm() which is the ACTUAL MASM assembly implementation
-        std::vector<uint8_t> input(reinterpret_cast<const char*>(raw.data()), static_cast<int>(raw.size()));
+        std::vector<uint8_t> input(raw.data(), raw.data() + raw.size());
         std::vector<uint8_t> output = brutal::compress(input);
         
         if (output.empty() && !input.empty()) {
@@ -45,7 +45,7 @@ bool BrutalGzipWrapper::Compress(const std::vector<uint8_t>& raw,
         }
         
         // Copy compressed data to output vector
-        compressed.assign(output.constData(), output.constData() + output.size());
+        compressed.assign(output.data(), output.data() + output.size());
 
 
         return true;
@@ -67,8 +67,7 @@ bool BrutalGzipWrapper::Decompress(const std::vector<uint8_t>& compressed,
         // For decompression, we'd need a separate inflate implementation
         // For now, use codec::inflate() from inflate_deflate_cpp.cpp
         
-        std::vector<uint8_t> input(reinterpret_cast<const char*>(compressed.data()), 
-                        static_cast<int>(compressed.size()));
+        std::vector<uint8_t> input(compressed.data(), compressed.data() + compressed.size());
         bool ok = false;
         std::vector<uint8_t> output = codec::inflate(input, &ok);
         
@@ -78,7 +77,7 @@ bool BrutalGzipWrapper::Decompress(const std::vector<uint8_t>& compressed,
         }
         
         // Copy decompressed data to output vector
-        raw.assign(output.constData(), output.constData() + output.size());
+        raw.assign(output.data(), output.data() + output.size());
 
 
         return true;
@@ -140,7 +139,7 @@ bool DeflateWrapper::Compress(const std::vector<uint8_t>& raw,
     try {
         // Use REAL codec::deflate() from inflate_deflate_cpp.cpp
         // This calls deflate_brutal_masm() - the ACTUAL MASM assembly kernel
-        std::vector<uint8_t> input(reinterpret_cast<const char*>(raw.data()), static_cast<int>(raw.size()));
+        std::vector<uint8_t> input(raw.data(), raw.data() + raw.size());
         bool ok = false;
         std::vector<uint8_t> output = codec::deflate(input, &ok);
         
@@ -150,7 +149,7 @@ bool DeflateWrapper::Compress(const std::vector<uint8_t>& raw,
         }
         
         // Copy compressed data to output vector
-        compressed.assign(output.constData(), output.constData() + output.size());
+        compressed.assign(output.data(), output.data() + output.size());
         
         total_compressed_input_ += raw.size();
         compression_calls_++;
@@ -172,8 +171,7 @@ bool DeflateWrapper::Decompress(const std::vector<uint8_t>& compressed,
     
     try {
         // Use REAL codec::inflate() from inflate_deflate_cpp.cpp
-        std::vector<uint8_t> input(reinterpret_cast<const char*>(compressed.data()), 
-                        static_cast<int>(compressed.size()));
+        std::vector<uint8_t> input(compressed.data(), compressed.data() + compressed.size());
         bool ok = false;
         std::vector<uint8_t> output = codec::inflate(input, &ok);
         
@@ -183,7 +181,7 @@ bool DeflateWrapper::Decompress(const std::vector<uint8_t>& compressed,
         }
         
         // Copy decompressed data to output vector
-        raw.assign(output.constData(), output.constData() + output.size());
+        raw.assign(output.data(), output.data() + output.size());
         
         total_decompressed_bytes_ += raw.size();
         decompression_calls_++;
