@@ -251,7 +251,12 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
             if (key.find("feed_forward_length") != std::string::npos || key.find("intermediate_size") != std::string::npos) {
                 metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
             }
-            if (key.find("rms_norm_eps") != std::string::npos || key.find("layer_norm_eps") != std::string::npos) {
+            // TinyLlama/Llama2 GGUF key is llama.attention.layer_norm_rms_epsilon
+            // (1e-5). "layer_norm_eps" alone is NOT a substring of that name.
+            if (key.find("rms_norm_eps") != std::string::npos ||
+                key.find("layer_norm_rms_epsilon") != std::string::npos ||
+                key.find("layer_norm_epsilon") != std::string::npos ||
+                key.find("layer_norm_eps") != std::string::npos) {
                 metadata.rmsNormEps = (float)atof(valueStr.c_str());
             }
             if (key.find("rope.dimension_count") != std::string::npos) {

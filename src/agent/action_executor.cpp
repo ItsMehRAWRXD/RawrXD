@@ -7,6 +7,7 @@
  */
 
 #include "action_executor.hpp"
+#include "../agents/SharedAgentWorkRegistry.hpp"
 #include <fstream>
 #include <sstream>
 #include <filesystem>
@@ -208,6 +209,8 @@ json ActionExecutor::getAggregatedResult() const
  */
 bool ActionExecutor::handleFileEdit(Action& action)
 {
+    using namespace RawrXD::Agents;
+
     fs::path filePath = fs::path(m_context.projectRoot) / action.target;
     std::string editAction = action.params.value("action", "");
     std::string content = action.params.value("content", "");
@@ -224,6 +227,28 @@ bool ActionExecutor::handleFileEdit(Action& action)
         action.result = "DRY RUN: Would edit " + filePath.string();
         return true;
     }
+
+    WorkKey editKey = SharedAgentWorkRegistry::makeKey(
+        AgentWorkLease::Kind::Edit, filePath.string(), editAction);
+    auto& registry = SharedAgentWorkRegistry::instance();
+    AcquireOutcome lease = registry.acquireOrJoin(
+        editKey, m_context.sessionId, m_context.agentId);
+    if (lease.status == AcquireResult::ConflictingWrite) {
+        action.error =
+            "Conflicting EDIT lease; serialize or transfer ownership "
+            "(owner_session=" + std::to_string(lease.owner.sessionId) +
+            " owner_agent=" + std::to_string(lease.owner.agentId) + ")";
+        return false;
+    }
+
+    struct EditLeaseGuard {
+        SharedAgentWorkRegistry& reg;
+        WorkKey key;
+        bool armed = true;
+        ~EditLeaseGuard() {
+            if (armed) reg.complete(key);
+        }
+    } editGuard{registry, editKey, lease.status == AcquireResult::Acquired};
 
     // Create backup
     if (!createBackup(filePath.string())) {
@@ -312,16 +337,71 @@ bool ActionExecutor::handleFileEdit(Action& action)
 
 /**
  * @brief Handle file search action
+ *
+ * Cross-session search coalescing via SharedAgentWorkRegistry (above frozen
+ * Deep2 streamer). Same resource+query → JOIN / reuse; different query → parallel.
  */
 bool ActionExecutor::handleSearchFiles(Action& action)
 {
+    using namespace RawrXD::Agents;
+
     fs::path searchPath = fs::path(m_context.projectRoot) / action.params.value("path", "");
     std::string pattern = action.params.value("pattern", "*");
     std::string query = action.params.value("query", "");
+    if (query.empty()) {
+        query = pattern;
+    }
 
     if (!fs::exists(searchPath) || !fs::is_directory(searchPath)) {
         action.error = "Search path does not exist: " + searchPath.string();
         return false;
+    }
+
+    const std::string resource = searchPath.string();
+    WorkKey key = SharedAgentWorkRegistry::makeKey(
+        AgentWorkLease::Kind::Search, resource, query);
+
+    AgentEventStream::instance().emit(AgentEvent{
+        AgentEventType::Searching,
+        std::string("searching ") + resource + "...",
+        0, 0,
+        m_context.sessionId, m_context.agentId,
+        resource, query, 0, 0});
+
+    auto& registry = SharedAgentWorkRegistry::instance();
+    AcquireOutcome acquired = registry.acquireOrJoin(
+        key, m_context.sessionId, m_context.agentId);
+
+    if (acquired.status == AcquireResult::ConflictingWrite) {
+        action.error = "Conflicting write on search resource; deferring";
+        return false;
+    }
+
+    if (acquired.status == AcquireResult::JoinedExisting) {
+        std::string payload = acquired.resultReady
+            ? acquired.sharedPayload
+            : registry.waitForResult(key, static_cast<uint64_t>(m_context.timeoutMs));
+
+        if (payload.empty()) {
+            // Owner vanished/timeout — try to become the new owner.
+            acquired = registry.acquireOrJoin(key, m_context.sessionId, m_context.agentId);
+            if (acquired.status == AcquireResult::JoinedExisting) {
+                payload = registry.waitForResult(
+                    key, static_cast<uint64_t>(m_context.timeoutMs));
+            }
+        }
+
+        if (!payload.empty() && acquired.status == AcquireResult::JoinedExisting) {
+            action.result =
+                AgentEventStream::joinedExistingSearchBanner(
+                    acquired.owner.sessionId, acquired.owner.agentId, resource, query) +
+                payload;
+            return true;
+        }
+        if (acquired.status != AcquireResult::Acquired) {
+            action.error = "Failed to join or acquire search lease";
+            return false;
+        }
     }
 
     json results = json::array();
@@ -331,15 +411,14 @@ bool ActionExecutor::handleSearchFiles(Action& action)
     for (const auto& entry : fs::directory_iterator(searchPath)) {
         if (!entry.is_regular_file()) continue;
         filesSearched++;
+        registry.heartbeat(key, m_context.sessionId);
 
-        if (query.empty()) {
-            // Just list files
+        if (query.empty() || query == "*") {
             json fileObj;
             fileObj["path"] = entry.path().string();
             fileObj["size"] = entry.file_size();
             results.push_back(fileObj);
         } else {
-            // Search content
             std::ifstream file(entry.path());
             if (file) {
                 std::stringstream buffer;
@@ -369,8 +448,11 @@ bool ActionExecutor::handleSearchFiles(Action& action)
     result["files_searched"] = filesSearched;
     result["matches"] = matchCount;
     result["results"] = results;
+    result["coord"] = "acquired";
 
     action.result = result.dump(2);
+    registry.publishResult(key, action.result, static_cast<uint64_t>(matchCount));
+    registry.complete(key);
     return true;
 }
 

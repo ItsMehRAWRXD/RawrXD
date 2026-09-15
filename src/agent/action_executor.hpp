@@ -18,6 +18,7 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <cstdint>
 #include <nlohmann/json.hpp>
 #include "agentic_engine.h"
 
@@ -64,6 +65,10 @@ struct ExecutionContext {
     int timeoutMs = 30000;                  ///< Default action timeout
     bool dryRun = false;                    ///< Preview without executing
     nlohmann::json state;                   ///< Shared state across actions
+
+    // Cross-session coordination (SharedAgentWorkRegistry). Not used by Deep2 streamer.
+    uint64_t sessionId = 1;
+    uint64_t agentId = 1;
 
     // Tracking
     int currentActionIndex = 0;

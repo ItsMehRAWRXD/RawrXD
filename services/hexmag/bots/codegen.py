@@ -1,18 +1,50 @@
 from typing import List, Any, Dict, Set
-from core.contracts import Bot, Event, Finding
+from core.contracts import (
+    LABEL_ANSWER,
+    LABEL_LLM_ANSWER,
+    LABEL_PARTIAL,
+    ROLE_CODE_GENERATION,
+    ROLE_VERIFICATION,
+    Bot,
+    Event,
+    Finding,
+    make_answer,
+    make_handoff,
+    make_partial,
+)
+from core.model_policy_router import select_model_for_role
+
 
 class CodegenBot(Bot):
     name = "codegen-bot"
-    version = "0.2.0"
+    version = "0.3.0"
+    roles = {ROLE_CODE_GENERATION}
 
     def supports(self, event: Event) -> bool:
-        return event.kind == "llm.question"
+        if event.kind == "llm.question":
+            return True
+        if event.kind == "role.requested":
+            target = (event.payload.get("target_role") or "").lower()
+            return target in self.roles or target in (
+                "codegen",
+                "codegen-bot",
+                "coder",
+                "code_generation",
+            )
+        return False
 
     async def run(self, event: Event) -> List[Finding]:
+        route = select_model_for_role(ROLE_CODE_GENERATION)
+        route_meta = route.to_dict()
+
+        if event.kind == "role.requested":
+            return self._run_agent_role(event, route_meta)
+
+        # Legacy /ask path
         question = event.payload.get("question", "").lower()
         size = event.payload.get("size", "small").lower()
-        findings = []
-        
+        findings: List[Finding] = []
+
         generated_code = ""
         rationale = ""
 
@@ -22,7 +54,7 @@ class CodegenBot(Bot):
                 generated_code = self._generate_large_asm_parser()
             else:
                 generated_code = self._generate_small_asm_parser()
-                
+
         elif any(k in question for k in ["ide", "editor", "textpad", "text editor"]):
             rationale = f"Detected request for Text Editor ({size})"
             if size == "large":
@@ -31,15 +63,108 @@ class CodegenBot(Bot):
                 generated_code = self._generate_small_text_editor()
 
         if generated_code:
-            findings.append(Finding(
-                bot=self.name,
-                labels={"llm.answer", "code.generation", "cpp"},
-                score=1.0,
-                rationale=rationale,
-                data={"answer": generated_code}
-            ))
-            
+            findings.append(
+                Finding(
+                    bot=self.name,
+                    labels={LABEL_ANSWER, LABEL_LLM_ANSWER, "code.generation", "cpp"},
+                    score=1.0,
+                    rationale=rationale,
+                    data={"answer": generated_code, "model_route": route_meta},
+                )
+            )
+
         return findings
+
+    def _run_agent_role(self, event: Event, route_meta: Dict[str, Any]) -> List[Finding]:
+        remaining = (
+            event.payload.get("remaining_goal")
+            or event.payload.get("goal")
+            or ""
+        )
+        context = event.payload.get("context") or {}
+        plan = context.get("plan") or []
+        size = str(event.payload.get("size") or context.get("size") or "small").lower()
+
+        code, rationale = self._synthesize(remaining, size)
+        findings: List[Finding] = [
+            Finding(
+                bot=self.name,
+                labels={LABEL_PARTIAL, "code.generation"},
+                score=0.9,
+                rationale="codegen.finding",
+                data={
+                    "phase": "codegen.finding",
+                    "summary": rationale,
+                    "plan": plan,
+                    "model_route": route_meta,
+                    "artifacts": [
+                        {"type": "code", "content": code, "language": "cpp"},
+                    ],
+                },
+            ),
+            make_answer(
+                self.name,
+                code,
+                rationale=rationale,
+                model_route=route_meta,
+                artifacts=[{"type": "code", "content": code, "language": "cpp"}],
+            ),
+            make_handoff(
+                bot=self.name,
+                target_role=ROLE_VERIFICATION,
+                reason="Implementation ready for build/run verification",
+                remaining_goal=remaining,
+                context={
+                    "plan": plan,
+                    "implementation": code,
+                    "model_route": route_meta,
+                },
+                artifacts=[{"type": "code", "content": code, "language": "cpp"}],
+            ),
+        ]
+        return findings
+
+    def _synthesize(self, goal: str, size: str) -> tuple[str, str]:
+        g = (goal or "").lower()
+        if "parser" in g or "parse" in g:
+            code = (
+                self._generate_large_asm_parser()
+                if size == "large"
+                else self._generate_small_asm_parser()
+            )
+            return code, "Generated ASM parser for agent goal"
+        if any(k in g for k in ["ide", "editor", "textpad"]):
+            code = (
+                self._generate_large_text_editor()
+                if size == "large"
+                else self._generate_small_text_editor()
+            )
+            return code, "Generated text editor for agent goal"
+        if "compile" in g or "fix" in g or "error" in g:
+            code = self._generate_compile_fix_stub(goal)
+            return code, "Generated minimal compile-fix patch stub"
+        code = self._generate_generic_fix(goal)
+        return code, "Generated generic implementation stub"
+
+    def _generate_compile_fix_stub(self, goal: str) -> str:
+        return (
+            "// HexMag codegen-bot — compile-fix stub\n"
+            "// Goal: " + goal.replace("\n", " ")[:200] + "\n"
+            "#include <iostream>\n"
+            "int main() {\n"
+            "    std::cout << \"fixed\" << std::endl;\n"
+            "    return 0;\n"
+            "}\n"
+        )
+
+    def _generate_generic_fix(self, goal: str) -> str:
+        return (
+            "// HexMag codegen-bot — implementation stub\n"
+            "// Goal: " + goal.replace("\n", " ")[:200] + "\n"
+            "void hexmag_apply_change() {\n"
+            "    // TODO: apply planned change\n"
+            "}\n"
+        )
 
     def _generate_small_asm_parser(self) -> str:
         return r"""// Generated by HexMag Copilot - ASM Parser (Small)

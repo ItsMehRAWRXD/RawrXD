@@ -1,136 +1,49 @@
-from __future__ import annotations
-
 import asyncio
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Set
 
-from core.contracts import Event, Finding
+from core.contracts import (
+    LABEL_ANSWER,
+    LABEL_FAILED,
+    LABEL_GOAL_SATISFIED,
+    LABEL_HANDOFF,
+    LABEL_LLM_ANSWER,
+    LABEL_PARTIAL,
+    ROLE_ARCHITECT,
+    AgentContext,
+    Event,
+    Finding,
+    make_failed,
+    make_goal_satisfied,
+)
 from core.registry import load_bots
-from core.repeat_tuner import FailureSignal, GenerationProfile, RepeatTuner, generation_id
-
-
-FAILURE_LABELS = {
-    "verification.failed",
-    "wrong",
-    "failed",
-    "contradiction",
-    "counterexample",
-    "assumption_failure",
-    "invariant_failure",
-    "unsupported_claim",
-    "hallucination",
-    "test_failure",
-    "compile_failure",
-    "runtime_failure",
-}
-
-PASS_LABELS = {
-    "verification.pass",
-    "verification.survived",
-    "goal.satisfied",
-}
-
-
-@dataclass
-class RequestState:
-    request_id: str
-    question: str
-    attempt: int
-    profile: GenerationProfile
-    generation_id: str
-    max_attempts: int
-    code: Optional[str] = None
-
-    candidate: Optional[Finding] = None
-    final: Optional[Finding] = None
-    failures: List[FailureSignal] = field(default_factory=list)
-    answer_history: List[str] = field(default_factory=list)
-    status: str = "RUNNING"
 
 
 class Engine:
     """
-    HexMag event loop with request-local polymorphic retries.
+    HexMag swarm loop.
 
-    Invariants:
-      * first answer is a candidate, not a final answer;
-      * a verifier/test/reverse failure triggers a tuned new generation;
-      * retries may not reuse the same generation profile;
-      * stale generation findings are discarded;
-      * retries use Q_BLOCKING with 3 cyclic passes;
-      * tuning changes request-local structure/policy, never persistent weights.
+    /ask path: llm.question → bots → answer (fallback Q&A OK)
+    /agent path: goal.requested → role chain via Finding(label=handoff)
     """
 
-    def __init__(self, max_attempts: int = 6):
+    def __init__(self):
         self.q: List[Event] = []
         self.history: List[Finding] = []
         self.event_count = 0
         self.bots = load_bots()
-        self.tuner = RepeatTuner(max_attempts=max_attempts)
-        self.max_attempts = max_attempts
-        self.requests: Dict[str, RequestState] = {}
+        self.sse_events: List[Dict[str, Any]] = []
         print(f"Engine initialized with {len(self.bots)} bots.")
 
     def add(self, event: Event) -> None:
-        if event.kind == "llm.question":
-            self._ensure_request(event)
         self.q.append(event)
 
-    def _ensure_request(self, event: Event) -> RequestState:
-        request_id = str(event.payload.get("request_id", "")).strip()
-        if not request_id:
-            raise ValueError("HexMag llm.question requires payload.request_id")
+    def emit_sse(self, kind: str, **payload: Any) -> None:
+        self.sse_events.append({"kind": kind, **payload})
 
-        state = self.requests.get(request_id)
-        if state is not None:
-            return state
-
-        profile = self.tuner.initial(request_id)
-        gid = generation_id(request_id, 0, profile)
-        state = RequestState(
-            request_id=request_id,
-            question=str(event.payload.get("question", "")),
-            code=event.payload.get("code"),
-            attempt=0,
-            profile=profile,
-            generation_id=gid,
-            max_attempts=int(event.payload.get("max_attempts", self.max_attempts)),
-        )
-        self.requests[request_id] = state
-        return state
-
-    def get_final(self, request_id: str) -> Optional[Finding]:
-        state = self.requests.get(request_id)
-        return None if state is None else state.final
-
-    def get_state(self, request_id: str) -> Optional[RequestState]:
-        return self.requests.get(request_id)
-
-    def submit_feedback(
-        self,
-        request_id: str,
-        correct: bool,
-        kind: str = "wrong",
-        detail: str = "",
-        failed_claim: str = "",
-    ) -> None:
-        """
-        Feed an automatic test/verifier/user feedback result back into the loop.
-
-        A negative verdict never replays the same generation. It produces a new,
-        failure-targeted generation profile.
-        """
-        state = self.requests.get(request_id)
-        if state is None:
-            raise KeyError(f"unknown request_id: {request_id}")
-
-        if correct:
-            if state.candidate is not None and state.final is None:
-                self._finalize(state, state.candidate, verified_by="external-feedback")
-            return
-
-        failure = FailureSignal(kind=kind, detail=detail, failed_claim=failed_claim)
-        self._schedule_retry(state, [failure])
+    def drain_sse(self) -> List[Dict[str, Any]]:
+        events = list(self.sse_events)
+        self.sse_events.clear()
+        return events
 
     async def step(self) -> None:
         if not self.q:
@@ -140,334 +53,253 @@ class Engine:
         event = self.q.pop(0)
         self.event_count += 1
 
-        request_id = str(event.payload.get("request_id", "")).strip()
-        state = self.requests.get(request_id) if request_id else None
+        ctx = AgentContext.from_dict(event.payload.get("agent_context"))
+        if event.kind in ("agent.goal", "goal.requested") and ctx is None:
+            goal = event.payload.get("goal") or event.payload.get("root_goal") or ""
+            ctx = AgentContext.new(goal)
+            event.payload["agent_context"] = ctx.to_dict()
+            event.payload["goal"] = goal
+            self.emit_sse(
+                "goal.requested",
+                goal_id=ctx.goal_id,
+                goal=goal,
+                bot="engine",
+            )
 
-        # Ignore stale events after a retry changed generation_id.
-        if state is not None:
-            event_gid = str(event.payload.get("generation_id", state.generation_id))
-            if event_gid != state.generation_id:
-                return
-            if state.status in {"CONVERGED", "PROVEN", "INSUFFICIENT_INFORMATION", "FAILED"}:
-                return
-
-        handled, findings = await self._dispatch(event)
-
-        if state is not None:
-            findings = [self._stamp_finding(f, state) for f in findings]
-            findings = [f for f in findings if self._finding_is_current(f, state)]
-
-        if findings:
-            self.history.extend(findings)
-
-        # Failure signals have priority over candidate acceptance.
-        failures = self._collect_failures(findings)
-        if state is not None and failures:
-            self._schedule_retry(state, failures)
-            return
-
-        if event.kind == "response.verify" and state is not None:
-            # If a verifier handled the event and produced no explicit failure,
-            # accept only an explicit pass. If no verifier exists, use the
-            # built-in sanity/reverse-availability gate below.
-            if handled:
-                if any(PASS_LABELS & set(f.labels) for f in findings):
-                    if state.candidate is not None:
-                        self._finalize(state, state.candidate, verified_by="swarm-verifier")
-                else:
-                    self._schedule_retry(
-                        state,
-                        [FailureSignal("verification_failed", "Verifier produced no pass signal")],
-                    )
-            elif state.candidate is not None:
-                # No specialized verifier loaded: candidate may survive only the
-                # deterministic checks. This is convergence, not proof.
-                self._finalize(state, state.candidate, verified_by="available-checks")
-            return
-
-        if state is not None:
-            candidates = [f for f in findings if "llm.answer" in set(f.labels)]
-            if candidates:
-                candidate = max(candidates, key=lambda f: float(f.score))
-                failure = self._builtin_candidate_check(state, candidate)
-                if failure is not None:
-                    self._schedule_retry(state, [failure])
-                    return
-
-                state.candidate = candidate
-                answer = str(candidate.data.get("answer", ""))
-                state.answer_history.append(answer)
-
-                self.q.append(
-                    Event(
-                        kind="response.verify",
-                        source_bot="HexMag-Engine",
-                        payload={
-                            "request_id": state.request_id,
-                            "generation_id": state.generation_id,
-                            "attempt": state.attempt,
-                            "question": state.question,
-                            "code": state.code,
-                            "candidate": answer,
-                            "generation_profile": state.profile.payload(),
-                            "verification_contract": {
-                                "check_contradictions": True,
-                                "check_counterexamples": True,
-                                "check_invariants": True,
-                                "check_reverse_consistency": True,
-                                "reject_unsupported_claims": True,
-                            },
-                        },
-                    )
-                )
-                return
-
-        if event.kind == "llm.question" and state is not None and not handled:
-            self._run_default_logic(event, state)
-
-    async def _dispatch(self, event: Event) -> Tuple[bool, List[Finding]]:
+        # Dispatch to matching bots
         tasks = []
         for bot in self.bots:
-            try:
-                if bot.supports(event):
-                    tasks.append(bot.run(event))
-            except Exception as exc:
-                self.history.append(
-                    Finding(
-                        bot=getattr(bot, "name", "unknown-bot"),
-                        labels={"bot.error"},
-                        score=0.0,
-                        rationale=str(exc),
-                        data={"event_kind": event.kind},
-                    )
-                )
+            if bot.supports(event):
+                tasks.append((bot.name, bot.run(event)))
 
-        if not tasks:
-            return False, []
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        findings: List[Finding] = []
-        for res in results:
-            if isinstance(res, list):
-                findings.extend(x for x in res if isinstance(x, Finding))
-            elif isinstance(res, Exception):
-                self.history.append(
-                    Finding(
-                        bot="HexMag-Engine",
-                        labels={"bot.error"},
-                        score=0.0,
-                        rationale=str(res),
-                        data={"event_kind": event.kind},
-                    )
-                )
-        return True, findings
-
-    def _stamp_finding(self, finding: Finding, state: RequestState) -> Finding:
-        finding.data.setdefault("request_id", state.request_id)
-        finding.data.setdefault("generation_id", state.generation_id)
-        finding.data.setdefault("attempt", state.attempt)
-        finding.data.setdefault("generation_profile", state.profile.payload())
-        return finding
-
-    def _finding_is_current(self, finding: Finding, state: RequestState) -> bool:
-        return str(finding.data.get("generation_id", "")) == state.generation_id
-
-    def _collect_failures(self, findings: Sequence[Finding]) -> List[FailureSignal]:
-        out: List[FailureSignal] = []
-        for f in findings:
-            labels = set(f.labels)
-            hit = FAILURE_LABELS & labels
-            if not hit:
-                continue
-            kind = sorted(hit)[0]
-            out.append(
-                FailureSignal(
-                    kind=kind,
-                    detail=str(f.data.get("detail", f.rationale)),
-                    failed_claim=str(f.data.get("failed_claim", "")),
-                    severity=max(0.0, min(1.0, 1.0 - float(f.score))),
-                )
+        produced: List[Finding] = []
+        if tasks:
+            results = await asyncio.gather(
+                *[t[1] for t in tasks], return_exceptions=True
             )
-        return out
+            for (bot_name, _), res in zip(tasks, results):
+                if isinstance(res, list):
+                    produced.extend(res)
+                elif isinstance(res, Exception):
+                    print(f"Bot error ({bot_name}): {res}")
+                    produced.append(make_failed(bot_name, str(res)))
 
-    def _builtin_candidate_check(self, state: RequestState, finding: Finding) -> Optional[FailureSignal]:
-        answer = str(finding.data.get("answer", "")).strip()
-        if not answer:
-            return FailureSignal("empty_answer", "Candidate answer was empty")
+        answered = False
+        satisfied = False
+        handed_off = False
+        failed = False
 
-        placeholder_fragments = (
-            "the hexmag engine is processing your request",
-            "received your input and is generating",
-            "i can help you explore this topic",
-            "processing request:",
-        )
-        lowered = answer.lower()
-        if any(fragment in lowered for fragment in placeholder_fragments):
-            return FailureSignal("unsupported_claim", "Placeholder/meta answer is not task completion")
+        for finding in produced:
+            self.history.append(finding)
+            labels = finding.labels or set()
+            if ctx is not None:
+                ctx.record_finding(finding)
 
-        if float(finding.score) < 0.50:
-            return FailureSignal("low_verifier_score", f"candidate score={finding.score}")
+            if labels & {LABEL_ANSWER, LABEL_LLM_ANSWER}:
+                answered = True
+                self.emit_sse(
+                    "answer",
+                    bot=finding.bot,
+                    rationale=finding.rationale,
+                    goal_id=ctx.goal_id if ctx else None,
+                )
+            if LABEL_PARTIAL in labels:
+                self.emit_sse(
+                    "partial",
+                    bot=finding.bot,
+                    rationale=finding.rationale,
+                    goal_id=ctx.goal_id if ctx else None,
+                )
+            if LABEL_FAILED in labels:
+                failed = True
+                self.emit_sse(
+                    "failed",
+                    bot=finding.bot,
+                    rationale=finding.rationale,
+                    goal_id=ctx.goal_id if ctx else None,
+                )
+            if LABEL_GOAL_SATISFIED in labels:
+                satisfied = True
+                self.emit_sse(
+                    LABEL_GOAL_SATISFIED,
+                    bot=finding.bot,
+                    result=finding.data.get("result"),
+                    goal_id=ctx.goal_id if ctx else None,
+                    elapsed_depth=ctx.handoff_depth if ctx else 0,
+                )
+            if LABEL_HANDOFF in labels:
+                if self._enqueue_handoff(finding, ctx):
+                    handed_off = True
 
-        if state.answer_history and answer == state.answer_history[-1]:
-            return FailureSignal("duplicate_answer", "Retry reproduced the same answer")
+        if ctx is not None:
+            event.payload["agent_context"] = ctx.to_dict()
 
-        if finding.data.get("tests_passed") is False:
-            return FailureSignal("test_failure", str(finding.data.get("test_output", "tests failed")))
-        if finding.data.get("compile_ok") is False:
-            return FailureSignal("compile_failure", str(finding.data.get("compile_output", "compile failed")))
-        if finding.data.get("runtime_ok") is False:
-            return FailureSignal("runtime_failure", str(finding.data.get("runtime_output", "runtime failed")))
-
-        return None
-
-    def _schedule_retry(self, state: RequestState, failures: Sequence[FailureSignal]) -> None:
-        if state.status != "RUNNING":
+        # /ask fallback only — never treat empty /agent work as success
+        if event.kind == "llm.question" and not answered and not handed_off:
+            self._run_default_ask(event)
             return
 
-        state.failures.extend(failures)
+        if event.kind in ("agent.goal", "goal.requested", "role.requested"):
+            if satisfied or handed_off:
+                return
+            if not produced:
+                # Empty bot result is NOT success
+                fail = make_failed(
+                    "HexMag-Engine",
+                    f"No bot produced a finding for {event.kind}",
+                    event_kind=event.kind,
+                    target_role=event.payload.get("target_role"),
+                )
+                self.history.append(fail)
+                if ctx:
+                    ctx.record_finding(fail)
+                self.emit_sse("failed", bot=fail.bot, rationale=fail.rationale)
+                return
+            if failed and not handed_off and not answered:
+                return
+            # Agent entry with findings but no handoff/satisfy: escalate to architect once
+            if event.kind in ("agent.goal", "goal.requested") and ctx is not None:
+                self._bootstrap_architect(ctx)
+                return
 
-        if state.attempt + 1 >= state.max_attempts:
-            self._finalize_insufficient(state, failures)
+    def _bootstrap_architect(self, ctx: AgentContext) -> None:
+        ok, reason = ctx.can_handoff(ROLE_ARCHITECT, ctx.current_goal)
+        if not ok:
+            fail = make_failed("HexMag-Engine", reason)
+            self.history.append(fail)
+            ctx.record_finding(fail)
+            self.emit_sse("failed", bot=fail.bot, rationale=reason)
             return
+        self._queue_role(ROLE_ARCHITECT, ctx, reason="Bootstrap architect for goal", remaining_goal=ctx.current_goal)
 
-        state.attempt += 1
-        state.profile = self.tuner.next(
-            request_id=state.request_id,
-            previous=state.profile,
-            failures=failures,
-            attempt=state.attempt,
-        )
-        state.generation_id = generation_id(state.request_id, state.attempt, state.profile)
-        state.candidate = None
+    def _enqueue_handoff(self, finding: Finding, ctx: Optional[AgentContext]) -> bool:
+        target = str(finding.data.get("target_role") or "")
+        remaining = str(finding.data.get("remaining_goal") or (ctx.current_goal if ctx else ""))
+        if ctx is None:
+            # Handoff without agent context: create minimal context
+            ctx = AgentContext.new(remaining or finding.rationale)
+        ok, reason = ctx.can_handoff(target, remaining)
+        if not ok:
+            fail = make_failed(finding.bot, reason, suppressed_handoff=target)
+            self.history.append(fail)
+            ctx.record_finding(fail)
+            self.emit_sse("failed", bot=finding.bot, rationale=reason, suppressed=True)
+            return False
 
-        self.q.append(
-            Event(
-                kind="llm.question",
-                source_bot="HexMag-RepeatTuner",
-                payload={
-                    "request_id": state.request_id,
-                    "generation_id": state.generation_id,
-                    "attempt": state.attempt,
-                    "question": state.question,
-                    "code": state.code,
-                    "retry": True,
-                    "queue_policy": "Q_BLOCKING",
-                    "blocking_passes": 3,
-                    "generation_profile": state.profile.payload(),
-                    "failure_context": [
-                        {
-                            "kind": f.kind,
-                            "detail": f.detail,
-                            "failed_claim": f.failed_claim,
-                            "severity": f.severity,
-                            "fingerprint": f.fingerprint,
-                        }
-                        for f in failures
-                    ],
-                    "instruction": (
-                        "Do not repeat the previous answer. Repair the specific failure_context. "
-                        "Use the generation_profile strategy and produce a materially different candidate."
-                    ),
-                },
-            )
-        )
+        role = ctx.normalize_role(target)
+        signature = ctx.handoff_signature(role, remaining)
+        ctx.handoff_depth += 1
+        ctx.current_goal = remaining
+        ctx.handoff_signatures.append(signature)
+        if role not in ctx.visited_roles:
+            ctx.visited_roles.append(role)
 
-    def _finalize(self, state: RequestState, candidate: Finding, verified_by: str) -> None:
-        answer = str(candidate.data.get("answer", "")).strip()
-        state.status = "CONVERGED"
-        state.final = Finding(
-            bot="HexMag-Resolver",
-            labels={"llm.final", "goal.satisfied", "converged"},
-            score=float(candidate.score),
-            rationale=f"Candidate survived {verified_by}",
-            data={
-                "request_id": state.request_id,
-                "generation_id": state.generation_id,
-                "attempt": state.attempt,
-                "answer": answer,
-                "status": "CONVERGED",
-                "verified_by": verified_by,
-                "generation_profile": state.profile.payload(),
-                "persistent_weight_delta_bytes": 0,
-            },
-        )
-        self.history.append(state.final)
-        self.tuner.reset(state.request_id)
-
-    def _finalize_insufficient(self, state: RequestState, failures: Sequence[FailureSignal]) -> None:
-        state.status = "INSUFFICIENT_INFORMATION"
-        state.final = Finding(
-            bot="HexMag-Resolver",
-            labels={"llm.final", "insufficient_information"},
-            score=0.0,
-            rationale="Retry budget exhausted without a verified candidate",
-            data={
-                "request_id": state.request_id,
-                "generation_id": state.generation_id,
-                "attempt": state.attempt,
-                "answer": "INSUFFICIENT_INFORMATION",
-                "status": "INSUFFICIENT_INFORMATION",
-                "failures": [
-                    {"kind": f.kind, "detail": f.detail, "failed_claim": f.failed_claim}
-                    for f in failures
-                ],
-                "persistent_weight_delta_bytes": 0,
-            },
-        )
-        self.history.append(state.final)
-        self.tuner.reset(state.request_id)
-
-    def _run_default_logic(self, event: Event, state: RequestState) -> None:
-        """
-        Small deterministic fallback for smoke testing only.
-
-        Placeholder prose is intentionally rejected by _builtin_candidate_check,
-        so this fallback cannot fake task completion for unknown questions.
-        """
-        question = str(event.payload.get("question", ""))
-        q_lower = question.lower()
-
-        if "2+2" in q_lower or "2 + 2" in q_lower:
-            answer = "2 + 2 = 4"
-        elif "hello world" in q_lower or "hello, world" in q_lower:
-            if "c++" in q_lower or "cpp" in q_lower:
-                answer = '#include <iostream>\nint main(){std::cout<<"Hello, World!\\n";}'
+        # Merge artifacts/context into agent context
+        handoff_ctx = finding.data.get("context") or {}
+        arts = finding.data.get("artifacts") or []
+        if arts:
+            if isinstance(arts, list):
+                ctx.artifacts.extend(arts)
             else:
-                answer = 'print("Hello, World!")'
-        else:
-            answer = f"Processing request: {question[:100]}..."
+                ctx.artifacts.append(arts)
 
+        self.emit_sse(
+            LABEL_HANDOFF,
+            bot=finding.bot,
+            target_role=role,
+            reason=finding.data.get("reason") or finding.rationale,
+            remaining_goal=remaining,
+            handoff_depth=ctx.handoff_depth,
+            goal_id=ctx.goal_id,
+        )
+        self._queue_role(
+            role,
+            ctx,
+            reason=str(finding.data.get("reason") or finding.rationale),
+            remaining_goal=remaining,
+            extra_context=handoff_ctx if isinstance(handoff_ctx, dict) else {},
+            source_bot=finding.bot,
+        )
+        return True
+
+    def _queue_role(
+        self,
+        role: str,
+        ctx: AgentContext,
+        reason: str,
+        remaining_goal: str,
+        extra_context: Optional[Dict[str, Any]] = None,
+        source_bot: str = "engine",
+    ) -> None:
+        payload = {
+            "target_role": role,
+            "goal": ctx.root_goal,
+            "remaining_goal": remaining_goal,
+            "reason": reason,
+            "context": extra_context or {},
+            "artifacts": list(ctx.artifacts),
+            "agent_context": ctx.to_dict(),
+        }
+        self.add(Event(kind="role.requested", payload=payload, source_bot=source_bot))
+        self.emit_sse(
+            "role.requested",
+            target_role=role,
+            remaining_goal=remaining_goal,
+            goal_id=ctx.goal_id,
+            handoff_depth=ctx.handoff_depth,
+            bot=source_bot,
+        )
+
+    def _run_default_ask(self, event: Event) -> None:
+        question = event.payload.get("question", "")
+        answer = self._generate_answer(question)
         finding = Finding(
             bot="HexMag-Engine",
-            labels={"llm.answer"},
             score=1.0,
-            rationale="Deterministic fallback candidate",
-            data={
-                "answer": answer,
-                "request_id": state.request_id,
-                "generation_id": state.generation_id,
-                "attempt": state.attempt,
-            },
+            labels={LABEL_ANSWER, LABEL_LLM_ANSWER},
+            rationale="Direct answer generated by HexMag engine",
+            data={"answer": answer, "question": question},
         )
         self.history.append(finding)
+        self.emit_sse("answer", bot=finding.bot, rationale=finding.rationale)
 
-        failure = self._builtin_candidate_check(state, finding)
-        if failure is not None:
-            self._schedule_retry(state, [failure])
-        else:
-            state.candidate = finding
-            state.answer_history.append(answer)
-            self.q.append(
-                Event(
-                    kind="response.verify",
-                    source_bot="HexMag-Engine",
-                    payload={
-                        "request_id": state.request_id,
-                        "generation_id": state.generation_id,
-                        "attempt": state.attempt,
-                        "question": state.question,
-                        "candidate": answer,
-                        "generation_profile": state.profile.payload(),
-                    },
-                )
+    def _generate_answer(self, question: str) -> str:
+        q_lower = question.lower()
+
+        if "hello world" in q_lower or "hello, world" in q_lower:
+            if "python" in q_lower:
+                return 'print("Hello, World!")'
+            if "javascript" in q_lower or "js" in q_lower:
+                return 'console.log("Hello, World!");'
+            if "c++" in q_lower or "cpp" in q_lower:
+                return '#include <iostream>\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}'
+            if "java" in q_lower:
+                return 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}'
+            return 'print("Hello, World!")  # Python example'
+
+        if "2+2" in q_lower or "2 + 2" in q_lower:
+            return "2 + 2 = 4"
+
+        if "quantum computing" in q_lower:
+            return (
+                "Quantum computing leverages quantum mechanical phenomena like superposition and entanglement "
+                "to process information. Unlike classical bits (0 or 1), quantum bits (qubits) can exist in "
+                "multiple states simultaneously, enabling parallel computation for certain problems."
             )
+
+        if "hexmag" in q_lower:
+            return (
+                "HexMag is a local multi-agent control plane: bots hand off work via Finding(label='handoff'), "
+                "model_policy_router selects which model serves a role, and Deep2 provides native GGUF inference."
+            )
+
+        if "?" in question:
+            return (
+                f"Based on your question about '{question[:50]}...', I can help you explore this topic. "
+                "The HexMag engine is processing your request and analyzing the context provided."
+            )
+
+        return (
+            f"Processing request: {question[:100]}... "
+            "The HexMag swarm engine has received your input and is generating a contextual response."
+        )

@@ -8,6 +8,8 @@
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
+#include "CanonicalTokenizer.hpp"
+#include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
 #include "QuantKernelRegistry.hpp"
@@ -565,18 +567,28 @@ bool Deep2Engine::allocateBuffers() {
     upBuf           = alignedAlloc(hiddenSize * 4);
 
     // SSM buffers — allocated if model has SSM blocks
-    // Use modelWeights values if already loaded, otherwise config defaults
+    // Mamba-2 layout: ssm_in produces [d_inner + 2*n_group*d_state + d_inner + dt_rank]
+    //   = [x(7680) | B(1024) | C(1024) | z(7680) | dt(96)] = 17504
+    // conv1d processes x+B+C = 9728 channels
+    // SSM state: [d_state=128, head_dim=80, n_head=96]
     size_t ssmInner = modelWeights.ssmInnerSize > 0 ? modelWeights.ssmInnerSize : 0;
     size_t ssmStateDim = modelWeights.ssmStateSize > 0 ? modelWeights.ssmStateSize : 0;
+    size_t ssmGroups = modelWeights.ssmGroupCount > 0 ? modelWeights.ssmGroupCount : 1;
+    size_t ssmDtRank = modelWeights.ssmTimeStepRank > 0 ? modelWeights.ssmTimeStepRank : 0;
     if (ssmInner > 0 && ssmStateDim > 0) {
-        ssmInnerBuf  = alignedAlloc(ssmInner);
-        ssmConvBuf   = alignedAlloc(ssmInner);
-        ssmDtBuf     = alignedAlloc(ssmInner);
-        ssmABuf      = alignedAlloc(ssmInner);
-        ssmOutBuf    = alignedAlloc(ssmInner);
-        ssmTempBuf   = alignedAlloc(ssmInner);
-        ssmState     = alignedAlloc(ssmInner * ssmStateDim);
-        if (ssmState) memset(ssmState, 0, ssmInner * ssmStateDim * sizeof(float));
+        // xBC buffer: d_inner + 2*n_group*d_state + d_inner + dt_rank
+        size_t xBCSize = ssmInner + 2 * ssmGroups * ssmStateDim + ssmInner + ssmDtRank;
+        ssmInnerBuf  = alignedAlloc(xBCSize);          // full ssm_in output
+        ssmConvBuf   = alignedAlloc(ssmInner + 2 * ssmGroups * ssmStateDim); // conv output (9728)
+        ssmDtBuf     = alignedAlloc(ssmDtRank > 0 ? ssmDtRank : ssmInner);   // dt (96)
+        ssmABuf      = alignedAlloc(ssmDtRank > 0 ? ssmDtRank : ssmInner);   // A per head
+        ssmOutBuf    = alignedAlloc(ssmInner);         // y output (7680)
+        ssmTempBuf   = alignedAlloc(ssmInner);         // z buffer (7680)
+        // SSM state: [d_state, head_dim, n_head] = [128, 80, 96]
+        size_t nHead = ssmDtRank > 0 ? ssmDtRank : 1;
+        size_t headDim = ssmInner / nHead;
+        ssmState     = alignedAlloc(ssmStateDim * headDim * nHead);
+        if (ssmState) memset(ssmState, 0, ssmStateDim * headDim * nHead * sizeof(float));
         ssmStateInitialized = true;
     }
 
@@ -849,6 +861,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
+    // Canonical tokenizer: GGUF vocab → BPETokenizer (shared + engine-owned).
+    if (!CanonicalTokenizer::Instance().LoadFromGGUF(ggufPath)) {
+        printf("[Deep2Engine] WARNING: CanonicalTokenizer load failed: %s\n",
+               CanonicalTokenizer::Instance().LastError());
+    } else {
+        auto bundle = LoadTokenizerFromGGUF(ggufPath.c_str());
+        if (bundle.ok) {
+            auto bpe = std::make_unique<BPETokenizer>();
+            if (ApplyTokenizerBundle(*bpe, bundle)) {
+                tokenizer = std::move(bpe);
+                printf("[Deep2Engine] Tokenizer loaded: vocab=%zu bos=%d eos=%d\n",
+                       tokenizer->VocabSize(),
+                       tokenizer->GetSpecialTokens().bosId,
+                       tokenizer->GetSpecialTokens().eosId);
+            }
+        }
+    }
+
     return true;
 }
 
@@ -865,25 +895,22 @@ std::vector<int> Deep2Engine::tokenize(const std::string& text) {
     if (tokenizer) {
         return tokenizer->Encode(text);
     }
-    // Fallback: simple whitespace tokenization
-    std::vector<int> tokens;
-    // Use token IDs as character codes (minimal fallback)
-    for (char c : text) {
-        tokens.push_back((int)(unsigned char)c);
+    if (CanonicalTokenizer::Instance().IsLoaded()) {
+        return CanonicalTokenizer::Instance().Encode(text);
     }
-    return tokens;
+    // Fail closed: no silent char-code fake tokens in production paths.
+    printf("[Deep2Engine] ERROR: tokenize() called with no tokenizer loaded\n");
+    return {};
 }
 
 std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
     if (tokenizer) {
         return tokenizer->Decode(tokens);
     }
-    // Fallback
-    std::string result;
-    for (int t : tokens) {
-        if (t >= 0 && t < 256) result += (char)t;
+    if (CanonicalTokenizer::Instance().IsLoaded()) {
+        return CanonicalTokenizer::Instance().Decode(tokens);
     }
-    return result;
+    return {};
 }
 
 // ============================================================================
@@ -1789,9 +1816,15 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 }
 
 // ============================================================================
-// SSM (State Space Model) Block — Mamba-style SSM for hybrid architectures
-// Implements: conv1d -> dt projection -> state update -> output projection
-// This is the real SSM path for Nemotron-H and similar hybrid models.
+// SSM (State Space Model) Block — Mamba-2 for Nemotron-H hybrid architecture
+// Implements the exact Mamba-2 recurrence:
+//   ssm_in: [hidden] -> [xBC(9728) | z(7680) | dt(96)]
+//   conv1d on xBC (9728 channels) -> SiLU
+//   split xBC into x(7680) + B(1024) + C(1024)  (B,C = n_group*d_state)
+//   dt = softplus(dt + dt_bias)
+//   A per head [96]
+//   SSM scan: state[d_state=128, head_dim=80, n_head=96]
+//   y = silu(z) * y, grouped RMS norm, ssm_out projection
 // ============================================================================
 void Deep2Engine::computeSSMBlock(size_t layer, const float* input, float* output, size_t seqLen) {
     if (layer >= modelWeights.layers.size()) {
@@ -1801,138 +1834,152 @@ void Deep2Engine::computeSSMBlock(size_t layer, const float* input, float* outpu
 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
-    size_t ssmInner = modelWeights.ssmInnerSize;
-    size_t ssmStateDim = modelWeights.ssmStateSize;
-    size_t convKernel = modelWeights.ssmConvKernel;
-    size_t groups = modelWeights.ssmGroupCount > 0 ? modelWeights.ssmGroupCount : 1;
+    size_t dInner = modelWeights.ssmInnerSize;       // 7680
+    size_t dState = modelWeights.ssmStateSize;       // 128
+    size_t convKernel = modelWeights.ssmConvKernel;  // 4
+    size_t nGroup = modelWeights.ssmGroupCount > 0 ? modelWeights.ssmGroupCount : 1; // 8
+    size_t dtRank = modelWeights.ssmTimeStepRank;    // 96
+    size_t nHead = dtRank > 0 ? dtRank : 1;          // 96
+    size_t headDim = dInner / nHead;                 // 80
 
-    if (ssmInner == 0 || ssmStateDim == 0) {
-        // No SSM configured — passthrough
+    if (dInner == 0 || dState == 0) {
         memcpy(output, input, hiddenDim * sizeof(float));
         return;
     }
 
-    // ── Step 1: Input projection: ssmInner = ssmIn * input ─────────────
-    // ssmIn: [ssmInner, hiddenDim], input: [hiddenDim] -> ssmInnerBuf: [ssmInner]
-    LinearW(lw.ssmIn, input, nullptr, ssmInnerBuf, ssmInner);
+    // ── Step 1: Input projection ────────────────────────────────────────
+    // ssm_in: [hidden, 17504] -> ssmInnerBuf: [17504]
+    // 17504 = dInner + 2*nGroup*dState + dInner + dtRank
+    size_t xBCSize = dInner + 2 * nGroup * dState;   // 9728
+    size_t totalIn = xBCSize + dInner + dtRank;       // 17504
+    LinearW(lw.ssmIn, input, nullptr, ssmInnerBuf, totalIn);
 
-    // ── Step 2: Conv1D (causal) ─────────────────────────────────────────
-    // ssmConv1d: [ssmInner, convKernel], applied as causal 1D conv
-    // For single-token inference, this is just a weighted sum of the input
-    // with the conv kernel (since there's no history for a fresh token)
+    // ── Step 2: Conv1D on xBC (9728 channels) ───────────────────────────
+    // ssm_conv1d: [4, 9728], bias: [9728]
+    // For single-token decode, use kernel[0] (current token weight)
     if (lw.ssmConv1d.data && lw.ssmConv1dBias.data) {
-        // Conv1D: for single token, output[i] = conv_weight[i, 0] * input[i] + bias[i]
-        // (The conv kernel processes the current token with kernel[0] weight)
-        // For a full sequence, we'd need a sliding window, but for token-by-token
-        // generation, we use the first kernel position.
         const float* convW = (const float*)lw.ssmConv1d.data;
         const float* convB = (const float*)lw.ssmConv1dBias.data;
-
-        // Check if weights are quantized — use LinearW for the conv1d as a GEMV
-        // with convKernel as the "cols" dimension
-        // For simplicity in single-token mode: apply conv1d as element-wise
-        // scale + bias (kernel[0] is the current-token weight)
         if (lw.ssmConv1d.type == (int)GGMLType::GGML_TYPE_F32) {
-            for (size_t i = 0; i < ssmInner; ++i) {
+            for (size_t i = 0; i < xBCSize; ++i) {
                 ssmConvBuf[i] = convW[i * convKernel] * ssmInnerBuf[i] + convB[i];
             }
         } else {
-            // Quantized conv1d — dequant on the fly via LinearW with kernel as cols
-            // Fall back to just using the bias + input
-            for (size_t i = 0; i < ssmInner; ++i) {
+            for (size_t i = 0; i < xBCSize; ++i) {
                 ssmConvBuf[i] = ssmInnerBuf[i] + convB[i];
             }
         }
     } else {
-        memcpy(ssmConvBuf, ssmInnerBuf, ssmInner * sizeof(float));
+        memcpy(ssmConvBuf, ssmInnerBuf, xBCSize * sizeof(float));
     }
 
-    // ── Step 3: SiLU activation on conv output ──────────────────────────
-    for (size_t i = 0; i < ssmInner; ++i) {
+    // ── Step 3: SiLU on conv output ─────────────────────────────────────
+    for (size_t i = 0; i < xBCSize; ++i) {
         float x = ssmConvBuf[i];
-        ssmConvBuf[i] = x / (1.0f + expf(-x));  // SiLU
+        ssmConvBuf[i] = x / (1.0f + expf(-x));
     }
 
-    // ── Step 4: dt (delta time) projection ──────────────────────────────
-    // ssmDt: [ssmInner, hiddenDim], ssmDtBias: [ssmInner]
-    // dt = softplus(ssmDt * input + ssmDtBias)
-    if (lw.ssmDt.data) {
-        LinearW(lw.ssmDt, input, nullptr, ssmDtBuf, ssmInner);
+    // ── Step 4: Split xBC into x, B, C ─────────────────────────────────
+    // x: [0, dInner) = 7680
+    // B: [dInner, dInner + nGroup*dState) = 1024
+    // C: [dInner + nGroup*dState, dInner + 2*nGroup*dState) = 1024
+    const float* xPtr = ssmConvBuf;
+    const float* bPtr = ssmConvBuf + dInner;
+    const float* cPtr = ssmConvBuf + dInner + nGroup * dState;
+
+    // ── Step 5: dt = softplus(dt + dt_bias) ────────────────────────────
+    // dt is at offset xBCSize in ssmInnerBuf, size dtRank
+    const float* dtRaw = ssmInnerBuf + xBCSize;
+    for (size_t i = 0; i < dtRank; ++i) {
+        float v = dtRaw[i];
         if (lw.ssmDtBias.data) {
-            const float* dtBias = (const float*)lw.ssmDtBias.data;
-            for (size_t i = 0; i < ssmInner; ++i) {
-                ssmDtBuf[i] += dtBias[i];
+            v += ((const float*)lw.ssmDtBias.data)[i];
+        }
+        ssmDtBuf[i] = (v <= 20.0f) ? log1pf(expf(v)) : v;  // softplus
+    }
+
+    // ── Step 6: A parameter per head ────────────────────────────────────
+    // ssm_a: [1, 96] — one A per head
+    const float* aData = lw.ssmA.data ? (const float*)lw.ssmA.data : nullptr;
+    for (size_t h = 0; h < nHead; ++h) {
+        ssmABuf[h] = aData ? aData[h] : 0.0f;
+    }
+
+    // ── Step 7: SSM scan recurrence ────────────────────────────────────
+    // state: [dState, headDim, nHead]
+    // For each head h, each dim d in [0, headDim):
+    //   dt_softplus = ssmDtBuf[h]
+    //   dA = exp(dt_softplus * A[h])
+    //   x_dt = x[h*headDim + d] * dt_softplus
+    //   B_val = B[group*headDim + d]  (group = h / (nHead/nGroup))
+    //   C_val = C[group*headDim + d]
+    //   state[dState, d, h] = state[dState, d, h] * dA + B_val * x_dt
+    //   y[h*headDim + d] = sum over dState of state * C_val
+    size_t headsPerGroup = nHead / nGroup;  // 96/8 = 12
+    for (size_t h = 0; h < nHead; ++h) {
+        size_t group = h / headsPerGroup;
+        float dtSoft = ssmDtBuf[h];
+        float dA = expf(dtSoft * ssmABuf[h]);
+        for (size_t d = 0; d < headDim; ++d) {
+            size_t idx = h * headDim + d;
+            float xVal = xPtr[idx];
+            float xDt = xVal * dtSoft;
+            float bVal = bPtr[group * headDim + d];
+            float cVal = cPtr[group * headDim + d];
+            float* stateCol = ssmState + d * nHead + h;  // [dState, d, h] stride
+            float sumf = 0.0f;
+            for (size_t s = 0; s < dState; ++s) {
+                float st = stateCol[s * nHead * headDim] * dA + bVal * xDt;
+                stateCol[s * nHead * headDim] = st;
+                sumf += st * cVal;
             }
-        }
-        // softplus: dt = ln(1 + exp(dt))
-        for (size_t i = 0; i < ssmInner; ++i) {
-            ssmDtBuf[i] = logf(1.0f + expf(ssmDtBuf[i]));
-        }
-    } else {
-        // Default dt = 1.0 if no projection
-        for (size_t i = 0; i < ssmInner; ++i) ssmDtBuf[i] = 1.0f;
-    }
-
-    // ── Step 5: A parameter — discretize: A_bar = exp(-a * dt) ──────────
-    if (lw.ssmA.data) {
-        const float* aData = (const float*)lw.ssmA.data;
-        for (size_t i = 0; i < ssmInner; ++i) {
-            // A is stored as log(A) in some models, or as -A in others
-            // Nemotron-H stores A directly (negative for stability)
-            float a = aData[i];
-            ssmABuf[i] = expf(a * ssmDtBuf[i]);  // A_bar = exp(A * dt)
-        }
-    } else {
-        for (size_t i = 0; i < ssmInner; ++i) ssmABuf[i] = 0.0f;
-    }
-
-    // ── Step 6: SSM state update ────────────────────────────────────────
-    // For each group, the state is [ssmState] per channel
-    // state[i, s] = A_bar[i] * state[i, s] + B_bar[i, s] * conv[i]
-    // For single-token inference, B is computed from the input (B = ssmConvBuf)
-    // In Mamba: B is projected from input, but Nemotron-H uses a simplified path
-    // where B = conv output broadcast across state dimension
-    if (ssmState && ssmStateDim) {
-        for (size_t i = 0; i < ssmInner; ++i) {
-            float* stateRow = ssmState + i * ssmStateDim;
-            float bBar = ssmConvBuf[i];  // B_bar ≈ dt * conv (simplified)
-            float dtB = ssmDtBuf[i] * bBar;
-            for (size_t s = 0; s < ssmStateDim; ++s) {
-                stateRow[s] = ssmABuf[i] * stateRow[s] + dtB;
-            }
+            ssmOutBuf[idx] = sumf;
         }
     }
 
-    // ── Step 7: SSM output: y[i] = C * state[i] + D * conv[i] ───────────
-    // C is projected from input (C = ssmConvBuf in simplified path)
-    // D is a skip connection
+    // ── Step 8: D skip connection ──────────────────────────────────────
+    // ssm_d: [1, 96] per head — y += D * x
     if (lw.ssmD.data) {
         const float* dData = (const float*)lw.ssmD.data;
-        for (size_t i = 0; i < ssmInner; ++i) {
-            float* stateRow = ssmState + i * ssmStateDim;
-            // y = sum(C * state) + D * x
-            // Simplified: C = conv output (broadcast)
-            float cDotState = 0.0f;
-            float cVal = ssmConvBuf[i];  // C ≈ conv output
-            for (size_t s = 0; s < ssmStateDim; ++s) {
-                cDotState += cVal * stateRow[s];
+        for (size_t h = 0; h < nHead; ++h) {
+            float dVal = dData[h];
+            for (size_t d = 0; d < headDim; ++d) {
+                ssmOutBuf[h * headDim + d] += dVal * xPtr[h * headDim + d];
             }
-            ssmOutBuf[i] = cDotState + dData[i] * ssmConvBuf[i];
-        }
-    } else {
-        for (size_t i = 0; i < ssmInner; ++i) {
-            float* stateRow = ssmState + i * ssmStateDim;
-            float cDotState = 0.0f;
-            float cVal = ssmConvBuf[i];
-            for (size_t s = 0; s < ssmStateDim; ++s) {
-                cDotState += cVal * stateRow[s];
-            }
-            ssmOutBuf[i] = cDotState + ssmConvBuf[i];  // D=1 skip
         }
     }
 
-    // ── Step 8: Output projection: hiddenDim = ssmOut * ssmOutBuf ──────
-    // ssmOut: [hiddenDim, ssmInner], ssmOutBuf: [ssmInner] -> output: [hiddenDim]
+    // ── Step 9: z gate — y = silu(z) * y ──────────────────────────────
+    // z is at offset xBCSize + dtRank in ssmInnerBuf, size dInner
+    const float* zPtr = ssmInnerBuf + xBCSize + dtRank;
+    for (size_t i = 0; i < dInner; ++i) {
+        float z = zPtr[i];
+        float silu = z / (1.0f + expf(-z));
+        ssmOutBuf[i] *= silu;
+    }
+
+    // ── Step 10: Grouped RMS norm ──────────────────────────────────────
+    // ssm_norm: [960, 8] = 7680 — grouped RMS norm over nGroup groups
+    if (lw.ssmNorm.data) {
+        const float* normW = (const float*)lw.ssmNorm.data;
+        size_t groupSize = dInner / nGroup;  // 960
+        for (size_t g = 0; g < nGroup; ++g) {
+            // RMS over group
+            float sumSq = 0.0f;
+            for (size_t i = 0; i < groupSize; ++i) {
+                float v = ssmOutBuf[g * groupSize + i];
+                sumSq += v * v;
+            }
+            float rms = sqrtf(sumSq / groupSize + modelWeights.normEps);
+            float invRms = 1.0f / rms;
+            for (size_t i = 0; i < groupSize; ++i) {
+                ssmOutBuf[g * groupSize + i] *= invRms * normW[g * groupSize + i];
+            }
+        }
+    }
+
+    // ── Step 11: Output projection ─────────────────────────────────────
+    // ssm_out: [hidden, dInner] -> output: [hidden]
     LinearW(lw.ssmOut, ssmOutBuf, nullptr, output, hiddenDim);
 }
 
@@ -1941,10 +1988,13 @@ void Deep2Engine::computeSSMBlock(size_t layer, const float* input, float* outpu
 // ============================================================================
 void Deep2Engine::resetSSMState() {
     if (ssmState && ssmStateInitialized) {
-        size_t ssmInner = modelWeights.ssmInnerSize;
-        size_t ssmStateDim = modelWeights.ssmStateSize;
-        if (ssmInner > 0 && ssmStateDim > 0) {
-            memset(ssmState, 0, ssmInner * ssmStateDim * sizeof(float));
+        size_t dInner = modelWeights.ssmInnerSize;
+        size_t dState = modelWeights.ssmStateSize;
+        size_t dtRank = modelWeights.ssmTimeStepRank;
+        size_t nHead = dtRank > 0 ? dtRank : 1;
+        size_t headDim = dInner / nHead;
+        if (dInner > 0 && dState > 0) {
+            memset(ssmState, 0, dState * headDim * nHead * sizeof(float));
         }
     }
 }

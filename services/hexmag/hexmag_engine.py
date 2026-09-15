@@ -1,26 +1,49 @@
 #!/usr/bin/env python3
 """
-Run HexMag as a swarm model reachable from the IDE.
+HexMag control plane — IDE submits intent here; HexMag decides WHO, then WHAT model.
 
-Key behavior:
-  * /ask returns only llm.final, never the first llm.answer candidate.
-  * every request has a request_id + generation_id.
-  * negative verifier/test/user feedback triggers the request-local RepeatTuner.
+$ python hexmag_engine.py --port 8001
 """
-from __future__ import annotations
-
+import argparse
 import asyncio
+import json
 import sqlite3
 import time
-import uuid
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, AsyncIterator, Dict, List, Optional, Set
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from core.contracts import Event, Finding
-from run_loop import Engine
+try:
+    from core.contracts import (
+        LABEL_ANSWER,
+        LABEL_GOAL_SATISFIED,
+        LABEL_LLM_ANSWER,
+        Event,
+        Finding,
+    )
+    from core.model_policy_router import get_inventory, select_model_for_role
+    from run_loop import Engine
+except ImportError:
+    print("Warning: HexMag core files not found. Using stubs.")
+    from core.contracts import Event, Finding  # type: ignore
+    from run_loop import Engine  # type: ignore
+
+    def get_inventory():  # type: ignore
+        class _I:
+            def to_dict(self):
+                return {"models": []}
+
+        return _I()
+
+    def select_model_for_role(role, **kwargs):  # type: ignore
+        class _R:
+            def to_dict(self):
+                return {"role": role, "model_id": "stub", "backend": "stub"}
+
+        return _R()
 
 
 DB_FILE = "hexmag.sqlite"
@@ -30,7 +53,6 @@ class AskRequest(BaseModel):
     question: str
     code: Optional[str] = None
     timeout: float = 25.0
-    max_attempts: int = 6
 
 
 class AskResponse(BaseModel):
@@ -39,12 +61,9 @@ class AskResponse(BaseModel):
     meta: Dict[str, Any]
 
 
-class FeedbackRequest(BaseModel):
-    request_id: str
-    correct: bool
-    kind: str = "wrong"
-    detail: str = ""
-    failed_claim: str = ""
+class AgentRequest(BaseModel):
+    goal: str
+    max_time: float = 30.0
 
 
 class SwarmModel:
@@ -68,143 +87,156 @@ class SwarmModel:
                 """
             )
 
-    async def ask(
-        self,
-        question: str,
-        code: Optional[str],
-        timeout: float,
-        max_attempts: int = 6,
-    ) -> AskResponse:
-        request_id = uuid.uuid4().hex
-
+    async def ask(self, question: str, code: Optional[str], timeout: float) -> AskResponse:
         prompt = question
         if code:
             prompt = f"{question}\n\nCode context:\n```\n{code}\n```"
 
         t0 = time.time()
+        hist_before = len(self.engine.history)
         self.engine.add(
-            Event(
-                kind="llm.question",
-                source_bot="API/IDE",
-                payload={
-                    "request_id": request_id,
-                    "question": prompt,
-                    "code": code,
-                    "max_attempts": max_attempts,
-                },
-            )
+            Event(kind="llm.question", payload={"question": prompt}, source_bot="API/IDE")
         )
 
         sources: Set[str] = set()
-
         while time.time() - t0 < timeout:
             await self.engine.step()
+            self.engine.drain_sse()
 
-            # Only inspect findings belonging to this request.
-            for item in reversed(self.engine.history):
-                data = getattr(item, "data", {})
-                if data.get("request_id") != request_id:
-                    continue
-                labels = set(getattr(item, "labels", set()))
+            final_answer: Optional[Finding] = None
+            for item in reversed(self.engine.history[hist_before:]):
+                labels = getattr(item, "labels", set()) or set()
+                data = getattr(item, "data", {}) or {}
                 if "web.content" in labels and data.get("url"):
                     sources.add(data["url"])
                 if "search.results" in labels:
                     sources.update(data.get("links", []))
+                if final_answer is None and (labels & {LABEL_ANSWER, LABEL_LLM_ANSWER, "llm.answer"}):
+                    final_answer = item
 
-            final = self.engine.get_final(request_id)
-            if final is not None:
-                data = final.data
-                state = self.engine.get_state(request_id)
+            if final_answer:
                 return AskResponse(
-                    answer=str(data.get("answer", "")),
+                    answer=final_answer.data.get("answer", ""),
                     sources=sorted(sources)[:10],
                     meta={
-                        "request_id": request_id,
-                        "generation_id": data.get("generation_id"),
-                        "status": data.get("status"),
-                        "attempts": 0 if state is None else state.attempt + 1,
                         "events_processed": self.engine.event_count,
-                        "findings": sum(
-                            1
-                            for x in self.engine.history
-                            if getattr(x, "data", {}).get("request_id") == request_id
-                        ),
+                        "findings": len(self.engine.history) - hist_before,
                         "elapsed": round(time.time() - t0, 2),
-                        "persistent_weight_delta_bytes": 0,
                     },
                 )
+            await asyncio.sleep(0.05)
 
-            await asyncio.sleep(0.02)
+        raise HTTPException(status_code=504, detail="Swarm did not produce an answer in time")
 
-        raise HTTPException(
-            status_code=504,
-            detail={
-                "message": "Swarm did not converge before timeout",
-                "request_id": request_id,
-            },
+    async def agent_stream(self, goal: str, max_time: float) -> AsyncIterator[Dict[str, Any]]:
+        """Drive goal.requested → handoffs → goal.satisfied, yielding SSE payloads."""
+        t0 = time.time()
+        hist_before = len(self.engine.history)
+        self.engine.drain_sse()
+        self.engine.add(
+            Event(
+                kind="goal.requested",
+                payload={"goal": goal, "root_goal": goal},
+                source_bot="API/IDE",
+            )
         )
 
+        while time.time() - t0 < max_time:
+            await self.engine.step()
+            for evt in self.engine.drain_sse():
+                evt.setdefault("elapsed", round(time.time() - t0, 2))
+                yield evt
+                if evt.get("kind") == LABEL_GOAL_SATISFIED:
+                    return
+                if evt.get("kind") == "failed" and evt.get("suppressed"):
+                    continue
 
-app = FastAPI(title="HexMag-Swarm-as-Model", version="1.1.0")
+            # Terminal check on findings if SSE missed
+            for item in reversed(self.engine.history[hist_before:]):
+                labels = getattr(item, "labels", set()) or set()
+                if LABEL_GOAL_SATISFIED in labels:
+                    yield {
+                        "kind": LABEL_GOAL_SATISFIED,
+                        "bot": item.bot,
+                        "result": (item.data or {}).get("result"),
+                        "elapsed": round(time.time() - t0, 2),
+                    }
+                    return
+
+            if not self.engine.q:
+                # Idle with no satisfaction → allow a few more drains then fail
+                await asyncio.sleep(0.05)
+                if not self.engine.q:
+                    # One more step in case of race
+                    await self.engine.step()
+                    for evt in self.engine.drain_sse():
+                        evt.setdefault("elapsed", round(time.time() - t0, 2))
+                        yield evt
+                        if evt.get("kind") == LABEL_GOAL_SATISFIED:
+                            return
+                    if not any(
+                        LABEL_GOAL_SATISFIED in (f.labels or set())
+                        for f in self.engine.history[hist_before:]
+                    ):
+                        yield {
+                            "kind": "failed",
+                            "detail": "Agent idle without goal.satisfied",
+                            "elapsed": round(time.time() - t0, 2),
+                        }
+                        return
+            else:
+                await asyncio.sleep(0.02)
+
+        yield {"kind": "error", "detail": "Goal execution timeout", "elapsed": round(time.time() - t0, 2)}
+
+
+app = FastAPI(title="HexMag-Swarm-Control-Plane", version="1.1.0")
 swarm = SwarmModel()
 
 
 @app.post("/ask", response_model=AskResponse)
 async def ask_endpoint(req: AskRequest) -> AskResponse:
-    return await swarm.ask(req.question, req.code, req.timeout, req.max_attempts)
+    return await swarm.ask(req.question, req.code, req.timeout)
 
 
-@app.post("/feedback")
-async def feedback_endpoint(req: FeedbackRequest) -> Dict[str, Any]:
-    """
-    Feed automatic test/verifier/user judgement into the active request.
+@app.post("/agent")
+async def agent_endpoint(req: AgentRequest):
+    async def event_generator():
+        async for evt in swarm.agent_stream(req.goal, req.max_time):
+            yield f"data: {json.dumps(evt)}\n\n"
 
-    For correct=false, HexMag immediately schedules a failure-targeted generation
-    with a new generation_id/profile. It never blindly replays the same answer.
-    """
-    try:
-        swarm.engine.submit_feedback(
-            request_id=req.request_id,
-            correct=req.correct,
-            kind=req.kind,
-            detail=req.detail,
-            failed_claim=req.failed_claim,
-        )
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-    state = swarm.engine.get_state(req.request_id)
-    return {
-        "ok": True,
-        "request_id": req.request_id,
-        "status": None if state is None else state.status,
-        "attempt": None if state is None else state.attempt,
-        "generation_id": None if state is None else state.generation_id,
-        "generation_profile": None if state is None else state.profile.payload(),
-    }
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.get("/health")
 def health() -> Dict[str, Any]:
-    active = sum(1 for s in swarm.engine.requests.values() if s.status == "RUNNING")
     return {
         "status": "ok",
-        "queue": len(swarm.engine.q),
-        "active_requests": active,
-        "bots": len(swarm.engine.bots),
+        "queue": len(getattr(swarm.engine, "q", [])),
+        "bots": [b.name for b in getattr(swarm.engine, "bots", [])],
     }
 
 
+@app.get("/models")
+def models() -> Dict[str, Any]:
+    """Model inventory for role→backend routing (Deep2 is a worker, not the boss)."""
+    return get_inventory().to_dict()
+
+
+@app.get("/route/{role}")
+def route_role(role: str) -> Dict[str, Any]:
+    return select_model_for_role(role).to_dict()
+
+
 async def run(port: int = 8000) -> None:
+    # Single stepper: avoid racing a background pump against /agent
     config = uvicorn.Config(app, host="0.0.0.0", port=port)
     server = uvicorn.Server(config)
     await server.serve()
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
     args = parser.parse_args()
     asyncio.run(run(port=args.port))
