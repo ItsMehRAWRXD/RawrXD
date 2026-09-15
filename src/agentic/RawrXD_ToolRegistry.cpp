@@ -6,6 +6,10 @@
 #include <filesystem>
 #include <regex>
 
+#ifndef LOG_WARNING
+#define LOG_WARNING(msg) (void)0
+#endif
+
 using RawrXD::Agent::ToolRegistry;
 using RawrXD::Agent::ToolResult;
 using RawrXD::Agent::DangerLevel;
@@ -177,7 +181,7 @@ ToolResult ToolRegistry::Execute(const std::string& tool_name, const std::string
             return ToolResult::ValidationFailed;
         }
 
-        json args = json::object_type();
+        json args = json::object();
         if (!json_args.empty()) {
             args = json::parse(json_args);
         }

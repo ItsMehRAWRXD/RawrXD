@@ -4,6 +4,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "../agentic/AgentToolAuthority.hpp"
 #include <sstream>
 #include <algorithm>
 #include <regex>
@@ -112,8 +113,16 @@ void AgenticBridge::StopAgentLoop() {
 }
 
 std::vector<std::string> AgenticBridge::GetAvailableTools() {
-    // Return tools available in the native registry
-    // This could also query m_nativeEngine->getAvailableTools() if implemented
+    // Gate: RAWRXD_AGENT_TOOL_AUTHORITY_001 — GUI surface.
+    // Return the canonical tool list from the single AgentToolRegistry
+    // authority so the GUI surface reaches the registry.
+    auto* registry = RawrXD::Agent::AgentToolAuthority::Get();
+    if (registry) {
+        return registry->ListTools();
+    }
+    // Fallback (records bypass for gate honesty)
+    RawrXD::Agent::AgentToolAuthority::IncrementBypass(
+        RawrXD::Agent::AgentToolSurface::GUI);
     return {
         "access_fs", "read_file", "write_file", 
         "web_fetch", "list_directory", "git_ops", "code_analysis"

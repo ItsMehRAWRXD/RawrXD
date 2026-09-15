@@ -164,4 +164,7 @@ private:
 
     nlohmann::json m_cache;
     bool m_cachingEnabled = true;
+    std::string m_backend;
+    std::string m_endpoint;
+    bool m_isInvoking = false;
 };

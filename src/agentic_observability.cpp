@@ -4,17 +4,17 @@
 
 #include <algorithm>
 #include <cmath>
+#include <random>
+#include <iomanip>
+#include <sstream>
 
-AgenticObservability::AgenticObservability(void* parent)
-    : void(parent),
-      m_systemStartTime(std::chrono::system_clock::time_point::currentDateTime())
+AgenticObservability::AgenticObservability()
+    : m_systemStartTime(std::chrono::system_clock::now())
 {
 }
 
 AgenticObservability::~AgenticObservability()
 {
-             << m_totalLogsWritten << "entries and"
-             << m_totalMetricsRecorded << "metrics";
 }
 
 // ===== STRUCTURED LOGGING =====
@@ -23,15 +23,17 @@ void AgenticObservability::log(
     LogLevel level,
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     // Apply sampling
-    if (QRandomGenerator::global()->generateDouble() > m_samplingRate) {
+    static std::mt19937 gen(std::random_device{}());
+    static std::uniform_real_distribution<> dis(0.0, 1.0);
+    if (dis(gen) > m_samplingRate) {
         return;
     }
 
     LogEntry entry;
-    entry.timestamp = std::chrono::system_clock::time_point::currentDateTime();
+    entry.timestamp = std::chrono::system_clock::now();
     entry.level = level;
     entry.component = component;
     entry.message = message;
@@ -46,14 +48,12 @@ void AgenticObservability::log(
     if (m_logs.size() > m_maxLogEntries) {
         m_logs.erase(m_logs.begin());
     }
-
-    logWritten(entry);
 }
 
 void AgenticObservability::logDebug(
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     log(LogLevel::DEBUG, component, message, context);
 }
@@ -61,7 +61,7 @@ void AgenticObservability::logDebug(
 void AgenticObservability::logInfo(
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     log(LogLevel::INFO, component, message, context);
 }
@@ -69,7 +69,7 @@ void AgenticObservability::logInfo(
 void AgenticObservability::logWarn(
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     log(LogLevel::WARN, component, message, context);
 }
@@ -77,30 +77,29 @@ void AgenticObservability::logWarn(
 void AgenticObservability::logError(
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     log(LogLevel::ERROR, component, message, context);
-    m_errorCounts[component.toStdString()]++;
+    m_errorCounts[component]++;
 }
 
 void AgenticObservability::logCritical(
     const std::string& component,
     const std::string& message,
-    const void*& context)
+    const nlohmann::json& context)
 {
     log(LogLevel::CRITICAL, component, message, context);
-    m_errorCounts[component.toStdString()]++;
+    m_errorCounts[component]++;
 }
 
 std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogs(
     int limit,
     LogLevel minLevel,
-    const std::string& component)
-{
+    const std::string& component) const {
     std::vector<LogEntry> filtered;
 
     for (const auto& entry : m_logs) {
-        if (entry.level < minLevel) continue;
+        if (static_cast<int>(entry.level) < static_cast<int>(minLevel)) continue;
         if (!component.empty() && entry.component != component) continue;
         filtered.push_back(entry);
     }
@@ -115,7 +114,7 @@ std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogs(
 std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogsByTimeRange(
     const std::chrono::system_clock::time_point& start,
     const std::chrono::system_clock::time_point& end,
-    LogLevel minLevel)
+    LogLevel minLevel) const
 {
     std::vector<LogEntry> filtered;
 
@@ -133,14 +132,14 @@ std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogsByTimeR
 void AgenticObservability::recordMetric(
     const std::string& metricName,
     float value,
-    const void*& labels,
+    const nlohmann::json& labels,
     const std::string& unit)
 {
     MetricPoint point;
     point.metricName = metricName;
     point.value = value;
     point.labels = labels;
-    point.timestamp = std::chrono::system_clock::time_point::currentDateTime();
+    point.timestamp = std::chrono::system_clock::now();
     point.unit = unit;
 
     m_metrics.push_back(point);
@@ -151,13 +150,13 @@ void AgenticObservability::recordMetric(
         m_metrics.erase(m_metrics.begin());
     }
 
-    metricRecorded(metricName);
+    
 }
 
 void AgenticObservability::incrementCounter(
     const std::string& metricName,
     int delta,
-    const void*& labels)
+    const nlohmann::json& labels)
 {
     recordMetric(metricName, delta, labels, "count");
 }
@@ -176,7 +175,7 @@ float AgenticObservability::getCounterValue(const std::string& metricName) const
 void AgenticObservability::setGauge(
     const std::string& metricName,
     float value,
-    const void*& labels)
+    const nlohmann::json& labels)
 {
     recordMetric(metricName, value, labels, "gauge");
 }
@@ -195,7 +194,7 @@ float AgenticObservability::getGaugeValue(const std::string& metricName) const
 void AgenticObservability::recordHistogram(
     const std::string& metricName,
     float value,
-    const void*& labels)
+    const nlohmann::json& labels)
 {
     recordMetric(metricName + "_histogram", value, labels, "histogram");
 }
@@ -359,7 +358,7 @@ std::string AgenticObservability::startSpan(const std::string& spanName, const s
     span.spanId = spanId;
     span.parentSpanId = parentSpanId;
     span.operation = spanName;
-    span.startTime = std::chrono::system_clock::time_point::currentDateTime();
+    span.startTime = std::chrono::system_clock::now();
     span.hasError = false;
     span.statusCode = 0;
 
@@ -376,7 +375,7 @@ void AgenticObservability::endSpan(
 {
     auto it = m_spans.find(spanId.toStdString());
     if (it != m_spans.end()) {
-        it->second.endTime = std::chrono::system_clock::time_point::currentDateTime();
+        it->second.endTime = std::chrono::system_clock::now();
         it->second.hasError = hasError;
         it->second.errorMessage = errorMessage;
         it->second.statusCode = statusCode;
@@ -399,13 +398,13 @@ void AgenticObservability::setSpanAttribute(
 void AgenticObservability::addSpanEvent(
     const std::string& spanId,
     const std::string& eventName,
-    const void*& attributes)
+    const nlohmann::json& attributes)
 {
     auto it = m_spans.find(spanId.toStdString());
     if (it != m_spans.end()) {
         void* event;
         event["name"] = eventName;
-        event["timestamp"] = std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate);
+        event["timestamp"] = std::chrono::system_clock::now().toString(//ISODate);
         event["attributes"] = attributes;
         
         // Store event in attributes array
@@ -478,7 +477,7 @@ void* AgenticObservability::getSystemHealth() const
         errorCount += pair.second;
     }
 
-    float uptime = m_systemStartTime.msecsTo(std::chrono::system_clock::time_point::currentDateTime()) / 1000.0f;
+    float uptime = m_systemStartTime.msecsTo(std::chrono::system_clock::now()) / 1000.0f;
 
     health["uptime_seconds"] = uptime;
     health["total_logs"] = m_totalLogsWritten;
@@ -623,12 +622,20 @@ std::string AgenticObservability::exportLogsAsJson() const
 
 std::string AgenticObservability::generateTraceId()
 {
-    return QUuid::createUuid().toString();
+    static std::mt19937_64 gen(std::random_device{}());
+    std::uniform_int_distribution<uint64_t> dis;
+    std::ostringstream oss;
+    oss << std::hex << dis(gen) << dis(gen);
+    return oss.str();
 }
 
 std::string AgenticObservability::generateSpanId()
 {
-    return QUuid::createUuid().toString();
+    static std::mt19937_64 gen(std::random_device{}());
+    std::uniform_int_distribution<uint64_t> dis;
+    std::ostringstream oss;
+    oss << std::hex << dis(gen);
+    return oss.str();
 }
 
 std::string AgenticObservability::levelToString(LogLevel level) const

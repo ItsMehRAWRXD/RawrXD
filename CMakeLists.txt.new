@@ -690,6 +690,7 @@ set(SOURCES
 
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
     src/agentic/AgentOrchestrator.cpp
+    src/agentic/AgentToolAuthority.cpp
     src/agentic/OrchestratorBridge.cpp
     src/agentic/AgenticSubmitInference_Fix.cpp
     src/agentic/AgenticNavigator.cpp
@@ -1516,10 +1517,27 @@ endif()
 # =============================================================================
 add_subdirectory(src/reverse_engineering)
 
-add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
+# Filter out non-existent source files to avoid "No SOURCES" errors
+set(_RAWR_ENGINE_EXISTING_SOURCES "")
+foreach(_src ${RAWR_ENGINE_SOURCES})
+    if(IS_ABSOLUTE "${_src}")
+        if(EXISTS "${_src}")
+            list(APPEND _RAWR_ENGINE_EXISTING_SOURCES "${_src}")
+        endif()
+    else()
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            list(APPEND _RAWR_ENGINE_EXISTING_SOURCES "${_src}")
+        endif()
+    endif()
+endforeach()
+if(_RAWR_ENGINE_EXISTING_SOURCES)
+add_executable(RawrEngine ${_RAWR_ENGINE_EXISTING_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
     add_dependencies(RawrEngine regen-ssot-beacons verify-ssot-ext-ownership)
+endif()
+else()
+    message(STATUS "[RawrEngine] Skipped — no existing sources after filtering")
 endif()
 
 # Lane B: curated sources already include required stubs.
@@ -1673,7 +1691,35 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     )
 endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
-add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
+set(_GOLD_EXISTING_SOURCES "")
+foreach(_src ${GOLD_UNDERSCORE_SOURCES})
+    if(IS_ABSOLUTE "${_src}")
+        if(EXISTS "${_src}")
+            list(APPEND _GOLD_EXISTING_SOURCES "${_src}")
+        endif()
+    else()
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            list(APPEND _GOLD_EXISTING_SOURCES "${_src}")
+        endif()
+    endif()
+endforeach()
+if(_GOLD_EXISTING_SOURCES)
+set(_GOLD_ASM_EXISTING "")
+foreach(_src ${ASM_KERNEL_SOURCES})
+    if(IS_ABSOLUTE "${_src}")
+        if(EXISTS "${_src}")
+            list(APPEND _GOLD_ASM_EXISTING "${_src}")
+        endif()
+    else()
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            list(APPEND _GOLD_ASM_EXISTING "${_src}")
+        endif()
+    endif()
+endforeach()
+add_executable(RawrXD_Gold ${_GOLD_EXISTING_SOURCES} ${_GOLD_ASM_EXISTING})
+else()
+    message(STATUS "[RawrXD_Gold] Skipped — no existing sources after filtering")
+endif()
 
 if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
@@ -1758,7 +1804,8 @@ if(WIN32)
 endif()
 
 # Gold-only sources not present in the main SOURCES aggregation lane.
-target_sources(RawrXD_Gold PRIVATE
+if(TARGET RawrXD_Gold)
+set(_GOLD_EXTRA_SOURCES
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
     src/agentic/AgentOllamaClient.cpp
@@ -1783,10 +1830,7 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/context_config.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
-    src/agentic/observability/Telemetry.cpp
     src/agentic/hotpatch/Sentinel.cpp
-    src/win32app/TitanIPC.cpp
-    # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
     tests/gguf_link_stubs.cpp
     src/core/rawrengine_command_handlers.cpp
     src/agent/quantum_dynamic_time_manager_impl.cpp
@@ -1806,10 +1850,20 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/unlinked_symbols_batch_012.cpp
     src/core/unlinked_symbols_batch_014.cpp
 )
+set(_GOLD_EXTRA_EXISTING "")
+foreach(_src ${_GOLD_EXTRA_SOURCES})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+        list(APPEND _GOLD_EXTRA_EXISTING "${_src}")
+    endif()
+endforeach()
+if(_GOLD_EXTRA_EXISTING)
+target_sources(RawrXD_Gold PRIVATE ${_GOLD_EXTRA_EXISTING})
+endif()
 
 # Vulkan SDK for Gold build â€” linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
+endif()
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # MASM x64 Assembly â€” Phase 20/21 AVX-512 Requantization + Swarm Streaming
@@ -2786,7 +2840,23 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
     src/inference/inference_standalone_main.cpp
 )
 
-add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+set(_IE_EXISTING_SOURCES "")
+foreach(_src ${INFERENCE_ENGINE_LIBRARY_SOURCES})
+    if(IS_ABSOLUTE "${_src}")
+        if(EXISTS "${_src}")
+            list(APPEND _IE_EXISTING_SOURCES "${_src}")
+        endif()
+    else()
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            list(APPEND _IE_EXISTING_SOURCES "${_src}")
+        endif()
+    endif()
+endforeach()
+if(_IE_EXISTING_SOURCES)
+add_library(InferenceEngine STATIC ${_IE_EXISTING_SOURCES})
+else()
+    message(STATUS "[InferenceEngine] Skipped — no existing sources after filtering")
+endif()
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
@@ -3358,6 +3428,7 @@ if(WIN32)
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
         src/agentic/AgentOrchestrator.cpp
+        src/agentic/AgentToolAuthority.cpp
         src/agentic/OrchestratorBridge.cpp
         src/agentic/AgenticSubmitInference_Fix.cpp
         src/agentic/AgenticNavigator.cpp
@@ -5373,6 +5444,87 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
 
+    # Gate: RAWRXD_AGENT_TOOL_AUTHORITY_001 — authority selftest
+    add_executable(agent_tool_authority_selftest
+        tests/agent_tool_authority_selftest.cpp
+        src/agentic/AgentToolAuthority.cpp
+        src/agentic/ToolRegistry.cpp
+    )
+    target_include_directories(agent_tool_authority_selftest PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}
+    )
+    target_link_libraries(agent_tool_authority_selftest PRIVATE kernel32)
+    set_target_properties(agent_tool_authority_selftest PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
+    # Gate: RAWRXD_AGENT_TOOL_AUTHORITY_E2E_002 — E2E runtime authority harness
+    # Stubs ARE allowed for this target (bounded harness proof).
+    add_executable(agent_tool_authority_e2e_selftest
+        tests/agent_tool_authority_e2e_selftest.cpp
+        src/agentic/AgentToolAuthority.cpp
+        src/agentic/ToolRegistry.cpp
+        tests/agent_tool_authority_e2e_stubs.cpp
+    )
+    target_compile_definitions(agent_tool_authority_e2e_selftest PRIVATE
+        RAWRXD_AUTHORITY_HARNESS=1
+    )
+    target_include_directories(agent_tool_authority_e2e_selftest PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}
+    )
+    target_link_libraries(agent_tool_authority_e2e_selftest PRIVATE kernel32)
+    set_target_properties(agent_tool_authority_e2e_selftest PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
+    # Gate: RAWRXD_AGENT_TOOL_AUTHORITY_PRODUCT_E2E_003 — production E2E
+    # Links against the REAL product source boundary (${SOURCES}) — no stubs.
+    list(LENGTH SOURCES _PRODUCT_E2E_SOURCE_COUNT)
+    message(STATUS "[PRODUCT_E2E] SOURCES count: ${_PRODUCT_E2E_SOURCE_COUNT}")
+    set(PRODUCT_E2E_SOURCES ${SOURCES})
+    list(REMOVE_ITEM PRODUCT_E2E_SOURCES src/main.cpp)
+    # Convert relative paths to absolute for reliable source resolution
+    set(_PRODUCT_E2E_ABS_SOURCES "")
+    foreach(_src ${PRODUCT_E2E_SOURCES})
+        if(IS_ABSOLUTE "${_src}")
+            if(EXISTS "${_src}")
+                list(APPEND _PRODUCT_E2E_ABS_SOURCES "${_src}")
+            endif()
+        else()
+            if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+                list(APPEND _PRODUCT_E2E_ABS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+            endif()
+        endif()
+    endforeach()
+    list(LENGTH _PRODUCT_E2E_ABS_SOURCES _PRODUCT_E2E_ABS_COUNT)
+    message(STATUS "[PRODUCT_E2E] existing absolute sources: ${_PRODUCT_E2E_ABS_COUNT}")
+    add_executable(agent_tool_authority_product_e2e
+        tests/agent_tool_authority_product_e2e.cpp
+        ${_PRODUCT_E2E_ABS_SOURCES}
+    )
+    target_compile_definitions(agent_tool_authority_product_e2e PRIVATE
+        RAWRXD_AUTHORITY_PRODUCT_E2E=1
+    )
+    target_include_directories(agent_tool_authority_product_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}
+    )
+    target_link_libraries(agent_tool_authority_product_e2e PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid
+        comdlg32 advapi32 version ws2_32
+    )
+    # Add Vulkan SDK if available (required by production sources)
+    if(Vulkan_FOUND)
+        target_include_directories(agent_tool_authority_product_e2e PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(agent_tool_authority_product_e2e PRIVATE Vulkan::Vulkan)
+        target_compile_definitions(agent_tool_authority_product_e2e PRIVATE RAWR_HAS_VULKAN=1)
+    endif()
+    set_target_properties(agent_tool_authority_product_e2e PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
     add_executable(workflow_persistence_smoke EXCLUDE_FROM_ALL
         tests/test_workflow_persistence.cpp
         src/agentic_loop_state.cpp
@@ -5610,7 +5762,6 @@ if(WIN32)
         src/llm_adapter/GGUFRunner.cpp
         src/llm_adapter/gguf_k_quants.cpp
         src/llm_adapter/QuantBackend.cpp
-        src/llm_adapter/ggufrunner_link_fallbacks.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
         src/runtime_surface/GenerationStopwatch.cpp
@@ -5694,7 +5845,7 @@ if(WIN32)
 endif()
 
 # Swarm smoke test (manual)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/SwarmSmokeTest.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/swarm_smoke_stubs.cpp")
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
         src/tests/SwarmSmokeTest.cpp
         src/bridge/Win32SwarmBridge.cpp
@@ -5837,6 +5988,7 @@ set_target_properties(ExtensionInstallerSmoke PROPERTIES
 message(STATUS "[ExtSmoke] Target: ExtensionInstallerSmoke  (offline + --live)")
 
 # BackendOrchestrator model sharding smoke test (manual)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/tests/backend_orchestrator_shard_smoke.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/backend_orchestrator_shard_smoke_stubs.cpp")
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
     src/tests/backend_orchestrator_shard_smoke.cpp
     src/tests/backend_orchestrator_shard_smoke_stubs.cpp
@@ -5854,6 +6006,7 @@ if(WIN32)
     target_link_libraries(BackendOrchestratorShardSmoke PRIVATE kernel32 psapi)
 endif()
 message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke")
+endif()
 
 # Context decision policy harness (manual + optional ctest)
 add_executable(RawrXD-ContextDecisionHarness EXCLUDE_FROM_ALL

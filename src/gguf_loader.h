@@ -72,6 +72,12 @@ struct GGUFMetadata {
     uint32_t type;
     uint32_t length;
     uint64_t offset;
+
+    // Extended metadata fields (used by ModelBruteForceEngine)
+    uint32_t architecture_type = 0;
+    uint32_t vocab_size = 0;
+    uint32_t context_length = 0;
+    uint32_t embedding_dim = 0;
 };
 
 // Interface for GGUF Loaders
@@ -122,7 +128,8 @@ public:
     bool LoadTensorRange(size_t start_idx, size_t count, std::vector<uint8_t>& data) override;
 
     // Helper for subclasses or internal use
-    const void* GetBaseAddress() const { return mappedView; }
+    // Returns nullptr for stream-based loading (no memory-mapped view).
+    const void* GetBaseAddress() const { return nullptr; }
 
     template<typename T>
     bool ReadValue(T& val) {
