@@ -508,11 +508,11 @@ bool VulkanCompute::DispatchGemvQ4KBatch8Row(
     ++q4kBatch8RowOps_;
     q4kBatchWeightBytes_+=weightBytes;
     if(!own) return true;
-    uint64_t elapsed=0;
+    GpuWorkInterval wi{};
     const bool ok=endSubmitWait(
         cmd,query,GpuWorkKind::ModelCompute,
-        weightBytes,workEpoch_,&elapsed);
-    if(ok) q4kBatchGpuNs_+=elapsed;
+        weightBytes,workEpoch_,&wi);
+    if(ok) q4kBatchGpuNs_+=wi.calibratedDurationNs();
     return ok;
 }
 
@@ -592,11 +592,11 @@ bool VulkanCompute::DispatchGemvQ4KBatch4Row(
     q4kBatchWeightBytes_+=weightBytes;
     if(!own) return true;
 
-    uint64_t elapsed=0;
+    GpuWorkInterval wi{};
     const bool ok=endSubmitWait(
         cmd,query,GpuWorkKind::ModelCompute,
-        weightBytes,workEpoch_,&elapsed);
-    if(ok) q4kBatchGpuNs_+=elapsed;
+        weightBytes,workEpoch_,&wi);
+    if(ok) q4kBatchGpuNs_+=wi.calibratedDurationNs();
     return ok;
 }
 
@@ -2304,7 +2304,7 @@ bool VulkanCompute::DispatchGemvQ4KBatch(
     DeviceBuf& inputBatch,DeviceBuf& outputBatch,
     uint32_t rows,uint32_t cols,uint32_t batch)
 {
-    if(type==12 && rows>=4 && qBatch4RowPipeline_) {
+    if(rows>=4 && qBatch4RowPipeline_) {
         const Q4KBatchTile tile=SelectQ4KBatchTile(
             weights,weightBytes,inputBatch,outputBatch,
             rows,cols,batch);
@@ -2772,6 +2772,58 @@ bool VulkanCompute::RunMLAAttentionHost(
         return false;
     }
 
+    // Upload the single query/key/value vectors for this position.
+    const size_t qElems=(size_t)heads*keyLen;
+    const size_t vElems=(size_t)heads*valueLen;
+    if(!EnsureScratch(40,qElems)||
+       !EnsureScratch(41,(size_t)layers*heads*keyLen)||
+       !EnsureScratch(42,(size_t)layers*heads*valueLen)||
+       !EnsureScratch(43,qElems))
+        return false;
+    DeviceBuf& qBuf=Scratch(40);
+    DeviceBuf& kSlice=Scratch(41);
+    DeviceBuf& vSlice=Scratch(42);
+    DeviceBuf& outBuf=Scratch(43);
+    if(!UploadVector(qBuf,q,qElems*sizeof(float))||
+       !UploadVector(kSlice,k,qElems*sizeof(float))||
+       !UploadVector(vSlice,v,vElems*sizeof(float)))
+        return false;
+
+    // Copy the K/V slice into the device cache at (layer, pos).
+    {
+        const uint64_t kBase=(uint64_t)layer*mlaCacheCapacity_*heads*keyLen+pos*heads*keyLen;
+        const uint64_t vBase=(uint64_t)layer*mlaCacheCapacity_*heads*valueLen+pos*heads*valueLen;
+        VkCommandBuffer cmd{};
+        VkQueryPool query{};
+        if(!beginCommand(cmd,query,true)) return false;
+        if(!recordCopy(cmd,kSlice,mlaKCache_,(VkDeviceSize)(heads*keyLen*sizeof(float)),
+                       0,(VkDeviceSize)(kBase*sizeof(float)))||
+           !recordCopy(cmd,vSlice,mlaVCache_,(VkDeviceSize)(heads*valueLen*sizeof(float)),
+                       0,(VkDeviceSize)(vBase*sizeof(float))))
+            return false;
+        recordComputeBarrier(cmd);
+        if(!endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
+                          (heads*(keyLen+valueLen))*sizeof(float),
+                          epoch,nullptr))
+            return false;
+    }
+
+    // Dispatch attention: q . cached_K^T -> softmax -> . cached_V -> output.
+    OpsPush push{};
+    push.op=OP_MLA_ATTN;
+    push.n=pos+1;
+    push.p0=heads;
+    push.p1=keyLen;
+    push.p2=valueLen;
+    push.p3=layer;
+    push.f0=scale;
+    if(!dispatchOps(qBuf,mlaKCache_,mlaVCache_,outBuf,push,
+                    (pos+1)*heads,GpuWorkKind::ModelCompute))
+        return false;
+
+    return DownloadVector(outBuf,output,qElems*sizeof(float));
+}
+
 bool VulkanCompute::RunWeightHostRoundTrip(
     const GpuWeightView& weight,
     const float* input,
@@ -2928,64 +2980,6 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
     return true;
 }
 
-    if(mlaCacheHeads_==0){
-        mlaCacheHeads_=heads;
-        mlaCacheKeyLen_=keyLen;
-        mlaCacheValueLen_=valueLen;
-        mlaCacheLayers_=layers;
-        mlaCacheMaxSeq_=maxSeq;
-    }
-
-    const size_t qCount=static_cast<size_t>(heads)*keyLen;
-    const size_t kCount=qCount;
-    const size_t vCount=static_cast<size_t>(heads)*valueLen;
-    const size_t outCount=vCount;
-    if(!EnsureScratch(8,qCount) ||
-       !EnsureScratch(9,kCount) ||
-       !EnsureScratch(10,vCount) ||
-       !EnsureScratch(11,outCount))
-        return false;
-
-    DeviceBuf& qd=Scratch(8);
-    DeviceBuf& kd=Scratch(9);
-    DeviceBuf& vd=Scratch(10);
-    DeviceBuf& od=Scratch(11);
-    SetWorkEpoch(epoch);
-    if(!UploadVector(qd,q,qCount) ||
-       !UploadVector(kd,k,kCount) ||
-       !UploadVector(vd,v,vCount))
-        return false;
-
-    const uint64_t kOff=
-        ((static_cast<uint64_t>(layer)*mlaCacheCapacity_+pos)*heads)*keyLen;
-    const uint64_t vOff=
-        ((static_cast<uint64_t>(layer)*mlaCacheCapacity_+pos)*heads)*valueLen;
-    if(kOff>std::numeric_limits<size_t>::max() ||
-       vOff>std::numeric_limits<size_t>::max())
-        return false;
-
-    if(!CopyVector(kd,mlaKCache_,kCount,0,static_cast<size_t>(kOff)) ||
-       !CopyVector(vd,mlaVCache_,vCount,0,static_cast<size_t>(vOff)))
-        return false;
-
-    OpsPush p{};
-    p.op=OP_MLA_ATTN;
-    p.p0=keyLen;
-    p.p1=valueLen;
-    p.p2=heads;
-    p.p3=pos+1u;
-    p.p4=mlaCacheCapacity_;
-    p.p5=layer;
-    p.f0=scale;
-
-    if(!dispatchOps(qd,mlaKCache_,mlaVCache_,od,p,
-                    (static_cast<uint32_t>(outCount)+63u)/64u,
-                    GpuWorkKind::ModelCompute))
-        return false;
-
-    return DownloadVector(od,output,outCount);
-}
-
 void VulkanCompute::ResetSpecBatchArena() {
     for(auto& a:specArenas_) {
         destroyBuffer(a.hidden); destroyBuffer(a.norm);
@@ -3043,32 +3037,25 @@ bool VulkanCompute::EnsureSpecBatchArena(
     return true;
 }
 
-// Call after immutable next-window preparation has completed and before the
-// target verifier begins consuming it.
-void VulkanCompute::FlipSpecArena() noexcept {
-    specArenaIndex_^=1u;
-    ++specArenaFlips_;
-}
-
 bool VulkanCompute::UploadSpecHidden(
     const float* src,uint32_t hidden,uint32_t batch)
 {
     if(!src||!EnsureSpecBatchArena(
-            hidden,specArena_.kvWidth?specArena_.kvWidth:hidden,
-            specArena_.intermediate?specArena_.intermediate:hidden*4,batch))
+            hidden,SpecArena().kvWidth?SpecArena().kvWidth:hidden,
+            SpecArena().intermediate?SpecArena().intermediate:hidden*4,batch))
         return false;
     return uploadToBuffer(
-        specArena_.hidden,src,(size_t)hidden*batch*sizeof(float));
+        SpecArena().hidden,src,(size_t)hidden*batch*sizeof(float));
 }
 
 bool VulkanCompute::DownloadSpecHidden(
     float* dst,uint32_t hidden,uint32_t batch)
 {
-    if(!dst||!specArena_.hidden||
-       hidden>specArena_.hiddenWidth||batch>specArena_.batchCapacity)
+    if(!dst||!SpecArena().hidden||
+       hidden>SpecArena().hiddenWidth||batch>SpecArena().batchCapacity)
         return false;
     return downloadFromBuffer(
-        specArena_.hidden,dst,(size_t)hidden*batch*sizeof(float));
+        SpecArena().hidden,dst,(size_t)hidden*batch*sizeof(float));
 }
 bool VulkanCompute::EnsureResidentBatchInput(
     uint32_t cols,uint32_t batch)
@@ -3337,12 +3324,17 @@ bool VulkanCompute::DownloadVerifiedHidden(
 void VulkanCompute::cleanup() {
     if (device_) vkDeviceWaitIdle(device_);
     ResetDownloadRing();
+    ResetAsyncCmdRing();
 
     clearRecordedQ4K();
+    clearRecordedGroups();
 
     ResetSpecBatchArena();
 
     ResetSpecKvMirror();
+    ResetResidentBatchInput();
+    ResetResidentGroupOutputs();
+    ResetResidentFullOutput();
 
     if(device_ && reusableFusedFence_)
         vkDestroyFence(device_,reusableFusedFence_,nullptr);
@@ -3397,6 +3389,8 @@ void VulkanCompute::cleanup() {
         vkDestroyPipeline(device_,specOpsPipeline_,nullptr);
     if(device_ && specAttnPipeline_)
         vkDestroyPipeline(device_,specAttnPipeline_,nullptr);
+    if(device_ && specAcceptPipeline_)
+        vkDestroyPipeline(device_,specAcceptPipeline_,nullptr);
     if(device_ && opsPipelineLayout_) vkDestroyPipelineLayout(device_,opsPipelineLayout_,nullptr);
     if(device_ && qPipelineLayout_) vkDestroyPipelineLayout(device_,qPipelineLayout_,nullptr);
     if(device_ && qBatchPipelineLayout_)
@@ -3414,6 +3408,8 @@ void VulkanCompute::cleanup() {
         vkDestroyPipelineLayout(device_,specOpsPipelineLayout_,nullptr);
     if(device_ && specAttnPipelineLayout_)
         vkDestroyPipelineLayout(device_,specAttnPipelineLayout_,nullptr);
+    if(device_ && specAcceptPipelineLayout_)
+        vkDestroyPipelineLayout(device_,specAcceptPipelineLayout_,nullptr);
 
     if(device_ && opsSetLayout_) vkDestroyDescriptorSetLayout(device_,opsSetLayout_,nullptr);
     if(device_ && qSetLayout_) vkDestroyDescriptorSetLayout(device_,qSetLayout_,nullptr);
@@ -3439,14 +3435,13 @@ void VulkanCompute::cleanup() {
     weightBudgetBytes_=weightCacheBytes_=0;
 }
 
-} // namespace Deep2
 bool VulkanCompute::SpecBatchRmsNorm(
     DeviceBuf& input,DeviceBuf& weight,DeviceBuf& output,
     uint32_t width,uint32_t batch,float eps)
 {
     if(!input||!weight||!output||!width||!batch||batch>4) return false;
     SpecOpsPush p{};p.op=0;p.width=width;p.batch=batch;p.eps=eps;
-    return dispatchSpecOps(input,weight,output,specArena_.tmp,p);
+    return dispatchSpecOps(input,weight,output,SpecArena().tmp,p);
 }
 
 bool VulkanCompute::SpecBatchSwiGLU(
@@ -3455,7 +3450,7 @@ bool VulkanCompute::SpecBatchSwiGLU(
 {
     if(!gate||!up||!output||!width||!batch||batch>4) return false;
     SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
-    return dispatchSpecOps(gate,up,output,specArena_.tmp,p);
+    return dispatchSpecOps(gate,up,output,SpecArena().tmp,p);
 }
 
 bool VulkanCompute::SpecBatchResidual(
@@ -3464,7 +3459,7 @@ bool VulkanCompute::SpecBatchResidual(
 {
     if(!a||!b||!output||!width||!batch||batch>4) return false;
     SpecOpsPush p{};p.op=2;p.width=width;p.batch=batch;
-    return dispatchSpecOps(a,b,output,specArena_.tmp,p);
+    return dispatchSpecOps(a,b,output,SpecArena().tmp,p);
 }
 bool VulkanCompute::ReduceHostPartialInto(
     DeviceBuf& primary,const float* partial,uint32_t count)
@@ -3477,12 +3472,16 @@ bool VulkanCompute::ReduceHostPartialInto(
     p.op=3; // existing OP_RESIDUAL
     p.n=count;
     return dispatchOps(
-        primary,incoming,specArena_.tmp,specArena_.tmp,
+        primary,incoming,SpecArena().tmp,SpecArena().tmp,
         p,(count+63u)/64u,GpuWorkKind::ModelCompute);
 }
+
+void VulkanCompute::ResetResidentBatchInput() {
     destroyBuffer(residentBatchInput_);
     residentBatchInput_={};
     residentBatchCols_=residentBatchCapacity_=0;
+}
+
 bool VulkanCompute::RunWeightGroupResidentInputQ4K(
     const GpuWeightView* weights,float* const* outputs,size_t weightCount,
     uint32_t cols,uint32_t batch,uint64_t epoch)
@@ -3587,8 +3586,12 @@ void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
     destroyBuffer(t.staging);
     t={};
 }
+
+void VulkanCompute::ResetResidentGroupOutputs() {
     for(auto& b:residentGroupOutputs_) destroyBuffer(b);
     for(auto& n:residentGroupOutputFloats_) n=0;
+}
+
 bool VulkanCompute::RunWeightGroupResidentInputQ4KSingleReturn(
     const GpuWeightView* weights,float* contiguousOutput,
     size_t* outputOffsets,size_t weightCount,
@@ -3675,9 +3678,13 @@ bool VulkanCompute::AppendSpecKvFromDevice(
     directSpecKvAppends_+=count;
     return true;
 }
+
+void VulkanCompute::ResetResidentFullOutput() {
     destroyBuffer(residentFullOutput_);
     residentFullOutput_={};
     residentFullOutputRows_=residentFullOutputBatch_=0;
+}
+
 bool VulkanCompute::ImportHostRowsIntoFullOutput(
     const float* rows,uint32_t rowCount,uint32_t rowBegin,
     uint32_t fullRows,uint32_t batch)
@@ -3992,12 +3999,7 @@ bool VulkanCompute::WaitTimelineDownload(
     t={};
     return true;
 }
-    ResetAsyncCmdRing();
-    clearRecordedGroups();
-    if(!ac.empty())
-        (void)createPipelineFromFile(
-            ac,opsSetLayout_,sizeof(uint32_t),
-            specAcceptPipelineLayout_,specAcceptPipeline_);
+
 bool VulkanCompute::RunSpecAcceptPrefix(
     const uint32_t* target,const uint32_t* proposal,
     uint32_t count,SpecAcceptResult& result)
@@ -4010,7 +4012,8 @@ bool VulkanCompute::RunSpecAcceptPrefix(
         return false;
     auto& t=Scratch(160);auto& p=Scratch(161);
     auto& o=Scratch(162);auto& d=Scratch(163);
-    if(!UploadVector(t,target,count)||!UploadVector(p,proposal,count))
+    if(!uploadToBuffer(t,target,count*sizeof(uint32_t))||
+       !uploadToBuffer(p,proposal,count*sizeof(uint32_t)))
         return false;
     specAcceptInputUploadBytes_ +=
         (uint64_t)count*sizeof(uint32_t)*2ull;
@@ -4032,7 +4035,7 @@ bool VulkanCompute::RunSpecAcceptPrefix(
             cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
         return false;
     uint32_t h[3]{};
-    if(!DownloadVector(o,h,3)) return false;
+    if(!downloadFromBuffer(o,h,3*sizeof(uint32_t))) return false;
     result.accepted=h[0];
     result.replacement=h[1];
     result.bonus=h[2];
@@ -4072,7 +4075,7 @@ bool VulkanCompute::RunSpecAcceptPrefixResident(
         return false;
 
     uint32_t h[3]{};
-    if(!DownloadVector(o,h,3)) return false;
+    if(!downloadFromBuffer(o,h,3*sizeof(uint32_t))) return false;
     result.accepted=h[0];
     result.replacement=h[1];
     result.bonus=h[2];
@@ -4081,13 +4084,28 @@ bool VulkanCompute::RunSpecAcceptPrefixResident(
     return true;
 }
 
-    if(device_&&specAcceptPipeline_)
-        vkDestroyPipeline(device_,specAcceptPipeline_,nullptr);
-    if(device_&&specAcceptPipelineLayout_)
-        vkDestroyPipelineLayout(device_,specAcceptPipelineLayout_,nullptr);
+void VulkanCompute::ResetVerifiedHidden() {
     destroyBuffer(verifiedHidden_);
     verifiedHidden_={};
     verifiedHiddenWidth_=0;
+}
+
+bool VulkanCompute::WaitTimelineValue(uint64_t value, uint64_t timeoutNs) {
+    if(!TimelineSemaphoreEnabled()||!value) return false;
+    VkSemaphoreWaitInfo wi{};
+    wi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
+    wi.flags = 0;
+    wi.semaphoreCount = 1;
+    wi.pSemaphores = &timelineSemaphore_;
+    wi.pValues = &value;
+    const VkResult r = vkWaitSemaphores(device_, &wi, timeoutNs);
+    if(r == VK_SUCCESS) {
+        ++timelineWaits_;
+        return true;
+    }
+    return false;
+}
+
 bool VulkanCompute::SubmitTimelineCommand(
     VkCommandBuffer cmd,VkQueue q,
     uint64_t waitValue,uint64_t signalValue,
@@ -4206,3 +4224,5 @@ bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
     ticket={};
     return ok;
 }
+
+} // namespace Deep2

@@ -14,9 +14,16 @@
 #include <vector>
 
 namespace Deep2 {
-namespace {
 
-long double envThroughput(const char* name) noexcept;
+
+long double envThroughput(const char* name) noexcept {
+    const char* s=std::getenv(name);
+    if(!s||!*s) return 1.0L;
+    char* end=nullptr;
+    const long double v=std::strtold(s,&end);
+    return end!=s && v>0.0L ? v : 1.0L;
+}
+
 RowSplitPlan chooseThroughputSplit(
     uint32_t rows, const VulkanCompute& g0, const VulkanCompute& g1) noexcept;
 RowSplitPlan cachedThroughputSplit(
@@ -80,7 +87,6 @@ struct DualPlanHash {
         return (size_t)h;
     }
 };
-}
 
 const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1)
@@ -190,6 +196,80 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     }
     auto ins=cache.emplace(key,std::move(s));
     return &ins.first->second;
+}
+
+class DualRowExecutor {
+public:
+    DualRowExecutor() {
+        worker_[0] = std::thread([this]{ loop(0); });
+        worker_[1] = std::thread([this]{ loop(1); });
+    }
+    ~DualRowExecutor() {
+        {
+            std::lock_guard<std::mutex> g(mu_);
+            stop_ = true;
+            ++generation_;
+        }
+        cv_.notify_all();
+        for (auto& t : worker_) if (t.joinable()) t.join();
+    }
+
+    bool run(std::function<bool()> a, std::function<bool()> b) {
+        std::unique_lock<std::mutex> lk(mu_);
+        done_[0] = done_[1] = false;
+        result_[0] = result_[1] = false;
+        job_[0] = std::move(a);
+        job_[1] = std::move(b);
+        const uint64_t g = ++generation_;
+        cv_.notify_all();
+        doneCv_.wait(lk, [&] {
+            return stop_ || (done_[0] && done_[1] && completedGeneration_ == g);
+        });
+        return !stop_ && result_[0] && result_[1];
+    }
+
+private:
+    void loop(unsigned lane) {
+        uint64_t seen = 0;
+        for (;;) {
+            std::function<bool()> fn;
+            uint64_t g = 0;
+            {
+                std::unique_lock<std::mutex> lk(mu_);
+                cv_.wait(lk, [&]{ return stop_ || generation_ != seen; });
+                if (stop_) return;
+                seen = generation_;
+                g = seen;
+                fn = job_[lane];
+            }
+            const bool r = fn ? fn() : false;
+            {
+                std::lock_guard<std::mutex> lk(mu_);
+                result_[lane] = r;
+                done_[lane] = true;
+                if (done_[0] && done_[1]) {
+                    completedGeneration_ = g;
+                    doneCv_.notify_one();
+                }
+            }
+        }
+    }
+
+    std::mutex mu_;
+    std::condition_variable cv_;
+    std::condition_variable doneCv_;
+    std::thread worker_[2];
+    std::function<bool()> job_[2];
+    bool done_[2] = {false,false};
+    bool result_[2] = {false,false};
+    bool stop_ = false;
+    uint64_t generation_ = 0;
+    uint64_t completedGeneration_ = 0;
+};
+
+DualRowExecutor& rowExecutor() {
+    static DualRowExecutor ex;
+    return ex;
 }
 
 bool Deep2RunDualGpuColumnSplitBatch4(
@@ -392,14 +472,6 @@ RowSplitPlan cachedThroughputSplit(
     return p;
 }
 
-long double envThroughput(const char* name) noexcept {
-    const char* s=std::getenv(name);
-    if(!s||!*s) return 1.0L;
-    char* end=nullptr;
-    const long double v=std::strtold(s,&end);
-    return end!=s && v>0.0L ? v : 1.0L;
-}
-
 RowSplitPlan chooseThroughputSplit(
     uint32_t rows,const VulkanCompute& g0,const VulkanCompute& g1) noexcept
 {
@@ -427,80 +499,6 @@ RowSplitPlan chooseThroughputSplit(
     return Deep2ChooseRowSplitWeighted(rows,s0,s1);
 }
 
-class DualRowExecutor {
-public:
-    DualRowExecutor() {
-        worker_[0] = std::thread([this]{ loop(0); });
-        worker_[1] = std::thread([this]{ loop(1); });
-    }
-    ~DualRowExecutor() {
-        {
-            std::lock_guard<std::mutex> g(mu_);
-            stop_ = true;
-            ++generation_;
-        }
-        cv_.notify_all();
-        for (auto& t : worker_) if (t.joinable()) t.join();
-    }
-
-    bool run(std::function<bool()> a, std::function<bool()> b) {
-        std::unique_lock<std::mutex> lk(mu_);
-        done_[0] = done_[1] = false;
-        result_[0] = result_[1] = false;
-        job_[0] = std::move(a);
-        job_[1] = std::move(b);
-        const uint64_t g = ++generation_;
-        cv_.notify_all();
-        doneCv_.wait(lk, [&] {
-            return stop_ || (done_[0] && done_[1] && completedGeneration_ == g);
-        });
-        return !stop_ && result_[0] && result_[1];
-    }
-
-private:
-    void loop(unsigned lane) {
-        uint64_t seen = 0;
-        for (;;) {
-            std::function<bool()> fn;
-            uint64_t g = 0;
-            {
-                std::unique_lock<std::mutex> lk(mu_);
-                cv_.wait(lk, [&]{ return stop_ || generation_ != seen; });
-                if (stop_) return;
-                seen = generation_;
-                g = seen;
-                fn = job_[lane];
-            }
-            const bool r = fn ? fn() : false;
-            {
-                std::lock_guard<std::mutex> lk(mu_);
-                result_[lane] = r;
-                done_[lane] = true;
-                if (done_[0] && done_[1]) {
-                    completedGeneration_ = g;
-                    doneCv_.notify_one();
-                }
-            }
-        }
-    }
-
-    std::mutex mu_;
-    std::condition_variable cv_;
-    std::condition_variable doneCv_;
-    std::thread worker_[2];
-    std::function<bool()> job_[2];
-    bool done_[2] = {false,false};
-    bool result_[2] = {false,false};
-    bool stop_ = false;
-    uint64_t generation_ = 0;
-    uint64_t completedGeneration_ = 0;
-};
-
-DualRowExecutor& rowExecutor() {
-    static DualRowExecutor ex;
-    return ex;
-}
-
 bool supportedGpuType(int t) noexcept {
     return t==0 || t==8 || t==10 || t==12 || t==14;
 }
@@ -513,8 +511,6 @@ uint64_t sliceKey(const WeightTensor& wt,uint32_t begin,uint32_t count) noexcept
     h^=(uint64_t)(uint32_t)wt.type*0x9E3779B185EBCA87ull;
     return h;
 }
-
-} // namespace
 
 bool Deep2BuildGpuWeightView(
     const WeightTensor& wt,uint32_t rowBegin,uint32_t rowCount,
@@ -783,8 +779,6 @@ bool Deep2RunDualGpuRowSplitBatchTop1(
     return true;
 }
 
-} // namespace Deep2
-
 bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
     VulkanCompute& primary,VulkanCompute& secondary,
     const WeightTensor& wt,const float* inputBatch,
@@ -990,3 +984,5 @@ bool Deep2WaitDualQ4KFanIn(
     updateOverlapEfficiency(n0,n1,out.wallNs);
     return true;
 }
+
+} // namespace Deep2

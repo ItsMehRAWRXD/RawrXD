@@ -2200,15 +2200,20 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         const size_t remaining=decodeLimit-generated;
         if(specActive&&remaining>=2) {
+            std::fprintf(stderr,"SPEC_PATH_ENTER gen=%zu rem=%zu\n",generated,remaining); std::fflush(stderr);
             std::vector<int32_t> proposals;
+            std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_BEGIN\n"); std::fflush(stderr);
             (void)buildAdaptiveSpeculativeProposals(
                 hidden.data(),remaining,proposals);
+            std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_END count=%zu\n",proposals.size()); std::fflush(stderr);
             if(!proposals.empty()) {
 
                 std::vector<int32_t> verified;
+                std::fprintf(stderr,"SPEC_VSGW_BEGIN proposals=%zu\n",proposals.size()); std::fflush(stderr);
                 if(verifySpeculativeGreedyWindow(
                         hidden.data(),proposals,remaining,verified)&&
                    !verified.empty()) {
+                    std::fprintf(stderr,"SPEC_VSGW_END verified=%zu\n",verified.size()); std::fflush(stderr);
                     bool stop=false;
                     for(int32_t tok:verified) {
                         if(generated>=decodeLimit) break;
@@ -2222,7 +2227,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                     }
                     if(stop) break;
                     continue;
+                } else {
+                    std::fprintf(stderr,"SPEC_VSGW_FAILED_OR_EMPTY\n"); std::fflush(stderr);
                 }
+            } else {
+                std::fprintf(stderr,"SPEC_NO_PROPOSALS\n"); std::fflush(stderr);
             }
         }
 

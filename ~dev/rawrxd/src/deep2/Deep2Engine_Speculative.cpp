@@ -1,4 +1,5 @@
 #include "Deep2Engine.h"
+#include "Deep2DualGpuRowSplit.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -348,11 +349,14 @@ bool Deep2Engine::forwardSpeculativeBlock(
     float* gate=ws.gate.data();
     float* up=ws.up.data();
     float* down=ws.down.data();
-    if(!embedTokensBatch(tokenIds,count,hidden.data()))
+    std::fprintf(stderr,"FSB_EMBED_BEGIN B=%zu\n",count); std::fflush(stderr);
+    if(!embedTokensBatch(tokenIds,count,hidden))
         return false;
+    std::fprintf(stderr,"FSB_EMBED_OK\n"); std::fflush(stderr);
 
     const size_t group=NH/NK;
     for(size_t layer=0;layer<modelWeights.numLayers;++layer) {
+        std::fprintf(stderr,"FSB_L%zu_ENTER\n",layer); std::fflush(stderr);
         const LayerWeights& lw=modelWeights.layers[layer];
         if(!lw.attnNorm.data||!lw.ffnNorm.data||
            !lw.wq.data||!lw.wk.data||!lw.wv.data||
@@ -360,11 +364,14 @@ bool Deep2Engine::forwardSpeculativeBlock(
            !lw.wGate.data||!lw.wUp.data||!lw.wDown.data)
             return false;
 
-        if(!trySpecRmsNormBatch(lw.attnNorm,hidden,norm,H,count)) {
+        std::fprintf(stderr,"FSB_L%zu_ATTN_NORM_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU NORM - force CPU fallback
+        if(true || !trySpecRmsNormBatch(lw.attnNorm,hidden,norm,H,count)) {
             for(size_t b=0;b<count;++b)
                 RMSNormW(lw.attnNorm,hidden+b*H,
                          norm+b*H,H,modelWeights.normEps);
         }
+        std::fprintf(stderr,"FSB_L%zu_ATTN_NORM_END\n",layer); std::fflush(stderr);
 
         const float* bq=lw.bq.data
             ? reinterpret_cast<const float*>(lw.bq.data):nullptr;
@@ -372,13 +379,17 @@ bool Deep2Engine::forwardSpeculativeBlock(
             ? reinterpret_cast<const float*>(lw.bk.data):nullptr;
         const float* bv=lw.bv.data
             ? reinterpret_cast<const float*>(lw.bv.data):nullptr;
+        std::fprintf(stderr,"FSB_L%zu_QKV_BEGIN\n",layer); std::fflush(stderr);
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
-        if(!trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
+        // TEMPORARILY DISABLE GPU QKV BATCH - force CPU fallback
+        if(true || !trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
+            std::fprintf(stderr,"FSB_L%zu_QKV_CPU_FALLBACK\n",layer); std::fflush(stderr);
             LinearWBatch4(lw.wq,norm,count,bq,q,H);
             LinearWBatch4(lw.wk,norm,count,bk,k,KD);
             LinearWBatch4(lw.wv,norm,count,bv,v,KD);
         } else {
+            std::fprintf(stderr,"FSB_L%zu_QKV_GPU_OK\n",layer); std::fflush(stderr);
             if(bq) for(size_t t=0;t<count;++t)
                 for(size_t i=0;i<H;++i) q[t*H+i]+=bq[i];
             if(bk) for(size_t t=0;t<count;++t)
@@ -386,10 +397,12 @@ bool Deep2Engine::forwardSpeculativeBlock(
             if(bv) for(size_t t=0;t<count;++t)
                 for(size_t i=0;i<KD;++i) v[t*KD+i]+=bv[i];
         }
+        std::fprintf(stderr,"FSB_L%zu_QKV_END\n",layer); std::fflush(stderr);
 
         for(size_t b=0;b<count;++b) {
             float* qb=q+b*H;
             float* kb=k+b*KD;
+            std::fprintf(stderr,"FSB_L%zu_ROPE_KV_BEGIN b=%zu\n",layer,b); std::fflush(stderr);
             if(lw.attnQNorm.data) {
                 for(size_t h=0;h<NH;++h)
                     RMSNormW(lw.attnQNorm,qb+h*HD,qb+h*HD,
@@ -414,9 +427,12 @@ bool Deep2Engine::forwardSpeculativeBlock(
                 std::memcpy(vd,v+b*KD+h*HD,HD*sizeof(float));
             }
         }
+        std::fprintf(stderr,"FSB_L%zu_ROPE_KV_END\n",layer); std::fflush(stderr);
 
-        const bool gpuAttn=trySpecAttentionBatch(
-            layer,q,k,v,attn,basePos,count);
+        std::fprintf(stderr,"FSB_L%zu_ATTN_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU ATTN - force CPU fallback
+        const bool gpuAttn=false; // trySpecAttentionBatch(
+            // layer,q,k,v,attn,basePos,count);
         const float scale=1.0f/std::sqrt((float)HD);
         if(!gpuAttn) for(size_t b=0;b<count;++b) {
             const size_t attend=basePos+b+1;
@@ -426,7 +442,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
             float* scores=ws.scores.data();
             for(size_t h=0;h<NH;++h) {
                 const size_t kh=h/group;
-                const float* qq=q.data()+b*H+h*HD;
+                const float* qq=q+b*H+h*HD;
                 for(size_t t=0;t<attend;++t) {
                     const float* kk=kvCache->keyPtr(layer,kh,t);
                     if(!kk) return false;
@@ -444,35 +460,58 @@ bool Deep2Engine::forwardSpeculativeBlock(
                 }
             }
         }
+        std::fprintf(stderr,"FSB_L%zu_ATTN_END\n",layer); std::fflush(stderr);
 
         const WeightTensor& wo=lw.wo.data?lw.wo:lw.attnO;
-        if(!trySpecColumnSplitBatch(wo,attn,proj,count))
+        std::fprintf(stderr,"FSB_L%zu_OPROJ_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU OPROJ - force CPU fallback
+        if(true || !trySpecColumnSplitBatch(wo,attn,proj,count))
             LinearWBatch4(wo,attn,count,nullptr,proj,H);
+        std::fprintf(stderr,"FSB_L%zu_OPROJ_END\n",layer); std::fflush(stderr);
         for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
 
-        if(!trySpecRmsNormBatch(lw.ffnNorm,hidden,norm,H,count)) {
+        std::fprintf(stderr,"FSB_L%zu_FFN_NORM_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU NORM - force CPU fallback
+        if(true || !trySpecRmsNormBatch(lw.ffnNorm,hidden,norm,H,count)) {
             for(size_t b=0;b<count;++b)
                 RMSNormW(lw.ffnNorm,hidden+b*H,
                          norm+b*H,H,modelWeights.normEps);
         }
+        std::fprintf(stderr,"FSB_L%zu_FFN_NORM_END\n",layer); std::fflush(stderr);
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guO[2]={gate,up};
-        if(!trySpecQ4KGroup(guW,guO,2,norm,count)) {
+        std::fprintf(stderr,"FSB_L%zu_FFN_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU FFN BATCH - force CPU fallback
+        if(true || !trySpecQ4KGroup(guW,guO,2,norm,count)) {
+            std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
             LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
             LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
+        } else {
+            std::fprintf(stderr,"FSB_L%zu_FFN_GPU_OK\n",layer); std::fflush(stderr);
         }
 
-        if(!trySpecSwiGLUBatch(gate,up,gate,I,count))
+        std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU SWIGLU - force CPU fallback
+        if(true || !trySpecSwiGLUBatch(gate,up,gate,I,count))
             for(size_t i=0;i<count*I;++i)
                 gate[i]=specSilu(gate[i])*up[i];
-        if(!trySpecColumnSplitBatch(lw.wDown,gate,down,count))
+        std::fprintf(stderr,"FSB_L%zu_SWIGLU_END\n",layer); std::fflush(stderr);
+        std::fprintf(stderr,"FSB_L%zu_DOWN_BEGIN\n",layer); std::fflush(stderr);
+        // TEMPORARILY DISABLE GPU DOWN - force CPU fallback
+        if(true || !trySpecColumnSplitBatch(lw.wDown,gate,down,count))
             LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
+        std::fprintf(stderr,"FSB_L%zu_DOWN_END\n",layer); std::fflush(stderr);
 
         for(size_t i=0;i<count*H;++i) hidden[i]+=down[i];
+        std::fprintf(stderr,"FSB_L%zu_FFN_END\n",layer); std::fflush(stderr);
         if(!finiteAll(hidden,count*H)) return false;
+        std::fprintf(stderr,"FSB_L%zu_EXIT\n",layer); std::fflush(stderr);
     }
 
+    std::fprintf(stderr,"FSB_COPY_HIDDEN\n"); std::fflush(stderr);
     std::memcpy(finalHiddenBatch,hidden,count*H*sizeof(float));
+
+    std::fprintf(stderr,"FSB_EXIT_OK\n"); std::fflush(stderr);
 
     return true;
 }
@@ -510,6 +549,7 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
     size_t maxEmit,
     std::vector<int32_t>& verified)
 {
+    std::fprintf(stderr,"VSGW_ENTER proposals=%zu maxEmit=%zu\n",proposals.size(),maxEmit); std::fflush(stderr);
     const size_t verifiedBefore=verified.size();
     const auto __v0=std::chrono::steady_clock::now();
     verified.clear();
@@ -522,40 +562,47 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
 
     // First proposal can be rejected before running any speculative block.
     std::vector<float> currentLogits(modelWeights.vocabSize);
+    std::fprintf(stderr,"VSGW_LOGITS_0_BEGIN\n"); std::fflush(stderr);
     computeLogits(currentHidden,currentLogits.data());
     const int first=greedyArgmax(currentLogits.data(),currentLogits.size());
+    std::fprintf(stderr,"VSGW_LOGITS_0_END first=%d\n",first); std::fflush(stderr);
     if(first<0) return false;
     if(proposals[0]!=first) {
         verified.push_back(first);
-    if(medusaDecoder_)
-        ++medusaDecoder_->stats.exact.pipelineVerifyWindows;
+        if(medusaDecoder_)
+            ++medusaDecoder_->stats.exact.pipelineVerifyWindows;
         if(medusaDecoder_) {
-        auto& c=medusaDecoder_->stats.exact;
-        ++c.verifiedTargetWindows;
-        const uint64_t acceptedNow=
-            verified.size()>=verifiedBefore
-                ? (uint64_t)(verified.size()-verifiedBefore) : 0ull;
-        c.acceptedVerifiedTokens += acceptedNow;
-        if(!acceptedNow) ++c.rejectedSpecWindows;
+            auto& c=medusaDecoder_->stats.exact;
+            ++c.verifiedTargetWindows;
+            const uint64_t acceptedNow=
+                verified.size()>=verifiedBefore
+                    ? (uint64_t)(verified.size()-verifiedBefore) : 0ull;
+            c.acceptedVerifiedTokens += acceptedNow;
+            if(!acceptedNow) ++c.rejectedSpecWindows;
             ++medusaDecoder_->stats.rejected;
             ++medusaDecoder_->stats.exact.rejectedTokens;
             ++medusaDecoder_->stats.exact.verifiedOutputTokens;
         }
         return true;
-        if(!verified.empty())
-            ++c.pipelineCommitWindows;
     }
 
     const size_t base=kvCache->currentLength();
+    std::fprintf(stderr,"VSGW_KV_BASE=%zu B=%zu\n",base,B); std::fflush(stderr);
     KVSpecTransaction tx(*kvCache);
-    if(!kvCache->advanceBy(B)) return false;
+    std::fprintf(stderr,"VSGW_ADVANCE_BY_BEGIN B=%zu\n",B); std::fflush(stderr);
+    if(!kvCache->advanceBy(B)) { std::fprintf(stderr,"VSGW_ADVANCE_BY_FAIL\n"); std::fflush(stderr); return false; }
+    std::fprintf(stderr,"VSGW_ADVANCE_BY_OK kv=%zu\n",kvCache->currentLength()); std::fflush(stderr);
 
     std::vector<float> hiddenBatch(B*modelWeights.hiddenDim);
     const auto __b0=std::chrono::steady_clock::now();
+    std::fprintf(stderr,"VSGW_FORWARD_BLOCK_BEGIN B=%zu base=%zu\n",B,base); std::fflush(stderr);
     if(!forwardSpeculativeBlock(
             reinterpret_cast<const int*>(proposals.data()),
-            B,base,hiddenBatch.data()))
+            B,base,hiddenBatch.data())) {
+        std::fprintf(stderr,"VSGW_FORWARD_BLOCK_FAIL\n"); std::fflush(stderr);
         return false; // RAII rollback
+    }
+    std::fprintf(stderr,"VSGW_FORWARD_BLOCK_OK\n"); std::fflush(stderr);
     if(medusaDecoder_) {
         medusaDecoder_->stats.exact.targetBatchNs += (uint64_t)
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -563,7 +610,9 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
     }
 
     int32_t top1[4]{};
+    std::fprintf(stderr,"VSGW_TOP1_BEGIN\n"); std::fflush(stderr);
     if(!computeGreedyTop1Batch(hiddenBatch.data(),B,top1)) {
+        std::fprintf(stderr,"VSGW_TOP1_FALLBACK\n"); std::fflush(stderr);
         // Exact fallback retains correctness; strict 85 authority will expose
         // zero GPU-top1 batches rather than silently minting the optimization.
         std::vector<float> logitsBatch(B*modelWeights.vocabSize);
@@ -573,6 +622,7 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
                 logitsBatch.data()+j*modelWeights.vocabSize,
                 modelWeights.vocabSize);
     }
+    std::fprintf(stderr,"VSGW_TOP1_END tok0=%d tok1=%d\n",(int)top1[0],B>1?(int)top1[1]:-1); std::fflush(stderr);
 
     size_t accepted=1; // proposal[0] matched current target logits
     int replacement=-1;
@@ -602,8 +652,10 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
         verified.push_back(bonus);
     }
 
-    if(!tx.commitAccepted(accepted)) return false;
+    if(!tx.commitAccepted(accepted)) { std::fprintf(stderr,"VSGW_COMMIT_FAIL\n"); std::fflush(stderr); return false; }
+    std::fprintf(stderr,"VSGW_COMMIT_OK accepted=%zu\n",accepted); std::fflush(stderr);
     specKvMirrorCommit(base+accepted);
+    std::fprintf(stderr,"VSGW_MIRROR_COMMIT_OK\n"); std::fflush(stderr);
 
     // currentHidden must describe the last KV-committed token. The final
     // replacement/bonus remains unforwarded, matching ordinary decode.

@@ -419,3 +419,5 @@ uint64_t Deep2Engine::vulkanSlotHiddenTimelineSubmits(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->HiddenTimelineSubmits():0;
 }
+
+} // namespace Deep2
