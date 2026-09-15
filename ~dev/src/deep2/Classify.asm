@@ -1,4 +1,4 @@
-﻿.code
+.code
 ClassifyStub proc
     xor rax, rax
     ret

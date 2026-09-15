@@ -26,7 +26,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # AVX-512 flags
 #--------------------
 if(MSVC)
-    add_compile_options(/arch:AVX512 /O2 /fp:fast /GS-)
+    add_compile_options(/arch:AVX512 /O2 /fp:fast)
     add_compile_definitions(_WIN32 WIN32_LEAN_AND_MEAN NOMINMAX)
 else()
     add_compile_options(-mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512vnni -mfma -O3)
@@ -71,6 +71,8 @@ if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
         src/deep2/Classify.asm
     )
     set_source_files_properties(src/deep2/Classify.asm PROPERTIES LANGUAGE ASM_MASM)
+    # MASM does not accept C++ compiler flags; override them.
+    set_source_files_properties(src/deep2/Classify.asm PROPERTIES COMPILE_FLAGS "")
 else()
     set(DEEP2_ASM "")
     message(STATUS "Classify.asm skipped — MASM requires Windows x64")
@@ -84,6 +86,7 @@ add_executable(rawr_monolith
     ${DEEP2_SOURCES}
     ${DEEP2_ASM}
 )
+target_compile_definitions(rawr_monolith PRIVATE RAWR_MONOLITH_STANDALONE)
 
 target_include_directories(rawr_monolith PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -118,15 +121,21 @@ target_include_directories(k2_smoke_test PRIVATE
 #--------------------
 # Deep2 Engine + Decode Bind (certification)
 #--------------------
-add_executable(deep2_engine_ssvk_decode_bind_cert
-    rawrxd/src/deep2/deep2_engine_ssvk_decode_bind_cert.cpp
-    ${RAWRXD_DEEP2_SOURCES}
-)
-target_include_directories(deep2_engine_ssvk_decode_bind_cert PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
-)
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+    add_executable(deep2_engine_ssvk_decode_bind_cert
+        rawrxd/src/deep2/deep2_engine_ssvk_decode_bind_cert.cpp
+        ${RAWRXD_DEEP2_SOURCES}
+    )
+    target_include_directories(deep2_engine_ssvk_decode_bind_cert PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+    )
+    target_link_libraries(deep2_engine_ssvk_decode_bind_cert PRIVATE Vulkan::Vulkan)
+else()
+    message(STATUS "[deep2_engine_ssvk_decode_bind_cert] Vulkan SDK not found - target skipped")
+endif()
 
 #--------------------
 # Deep2 standalone engine test
@@ -144,6 +153,7 @@ add_executable(deep2_standalone
     rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
     rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
     rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+    rawrxd/src/deep2/Deep2Engine_Speculative.cpp
     tests/deep2_standalone.cpp
 )
 target_include_directories(deep2_standalone PRIVATE

@@ -365,8 +365,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
             return false;
 
         std::fprintf(stderr,"FSB_L%zu_ATTN_NORM_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU NORM - force CPU fallback
-        if(true || !trySpecRmsNormBatch(lw.attnNorm,hidden,norm,H,count)) {
+        // STEP1: GPU RMSNorm re-enabled
+        if(!trySpecRmsNormBatch(lw.attnNorm,hidden,norm,H,count)) {
             for(size_t b=0;b<count;++b)
                 RMSNormW(lw.attnNorm,hidden+b*H,
                          norm+b*H,H,modelWeights.normEps);
@@ -382,8 +382,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_QKV_BEGIN\n",layer); std::fflush(stderr);
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
-        // TEMPORARILY DISABLE GPU QKV BATCH - force CPU fallback
-        if(true || !trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
+        // STEP5: GPU QKV batch enabled
+        if(!trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
             std::fprintf(stderr,"FSB_L%zu_QKV_CPU_FALLBACK\n",layer); std::fflush(stderr);
             LinearWBatch4(lw.wq,norm,count,bq,q,H);
             LinearWBatch4(lw.wk,norm,count,bk,k,KD);
@@ -430,9 +430,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_ROPE_KV_END\n",layer); std::fflush(stderr);
 
         std::fprintf(stderr,"FSB_L%zu_ATTN_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU ATTN - force CPU fallback
-        const bool gpuAttn=false; // trySpecAttentionBatch(
-            // layer,q,k,v,attn,basePos,count);
+        // Attention GPU DISABLED - causes heap corruption
+        const bool gpuAttn=false;
         const float scale=1.0f/std::sqrt((float)HD);
         if(!gpuAttn) for(size_t b=0;b<count;++b) {
             const size_t attend=basePos+b+1;
@@ -464,15 +463,15 @@ bool Deep2Engine::forwardSpeculativeBlock(
 
         const WeightTensor& wo=lw.wo.data?lw.wo:lw.attnO;
         std::fprintf(stderr,"FSB_L%zu_OPROJ_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU OPROJ - force CPU fallback
-        if(true || !trySpecColumnSplitBatch(wo,attn,proj,count))
+        // STEP4: GPU ColumnSplit re-enabled
+        if(!trySpecColumnSplitBatch(wo,attn,proj,count))
             LinearWBatch4(wo,attn,count,nullptr,proj,H);
         std::fprintf(stderr,"FSB_L%zu_OPROJ_END\n",layer); std::fflush(stderr);
         for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
 
         std::fprintf(stderr,"FSB_L%zu_FFN_NORM_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU NORM - force CPU fallback
-        if(true || !trySpecRmsNormBatch(lw.ffnNorm,hidden,norm,H,count)) {
+        // STEP1: GPU RMSNorm re-enabled
+        if(!trySpecRmsNormBatch(lw.ffnNorm,hidden,norm,H,count)) {
             for(size_t b=0;b<count;++b)
                 RMSNormW(lw.ffnNorm,hidden+b*H,
                          norm+b*H,H,modelWeights.normEps);
@@ -481,8 +480,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guO[2]={gate,up};
         std::fprintf(stderr,"FSB_L%zu_FFN_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU FFN BATCH - force CPU fallback
-        if(true || !trySpecQ4KGroup(guW,guO,2,norm,count)) {
+        // STEP5: GPU FFN Q4KGroup enabled
+        if(!trySpecQ4KGroup(guW,guO,2,norm,count)) {
             std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
             LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
             LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
@@ -491,14 +490,14 @@ bool Deep2Engine::forwardSpeculativeBlock(
         }
 
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU SWIGLU - force CPU fallback
+        // SwiGLU GPU DISABLED - confirmed corrupting heap memory
         if(true || !trySpecSwiGLUBatch(gate,up,gate,I,count))
             for(size_t i=0;i<count*I;++i)
                 gate[i]=specSilu(gate[i])*up[i];
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_END\n",layer); std::fflush(stderr);
         std::fprintf(stderr,"FSB_L%zu_DOWN_BEGIN\n",layer); std::fflush(stderr);
-        // TEMPORARILY DISABLE GPU DOWN - force CPU fallback
-        if(true || !trySpecColumnSplitBatch(lw.wDown,gate,down,count))
+        // STEP4: GPU ColumnSplit re-enabled
+        if(!trySpecColumnSplitBatch(lw.wDown,gate,down,count))
             LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
         std::fprintf(stderr,"FSB_L%zu_DOWN_END\n",layer); std::fflush(stderr);
 
