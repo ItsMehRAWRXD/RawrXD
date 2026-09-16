@@ -495,7 +495,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
 
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
         // ISOLATION STEP 2: SwiGLU GPU re-enabled
-        if(!trySpecSwiGLUBatch(gate,up,gate,I,count))
+        // ISOLATION NTOK4 A/B: Force CPU SwiGLU
+        if(true)
             for(size_t i=0;i<count*I;++i)
                 gate[i]=specSilu(gate[i])*up[i];
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_END\n",layer); std::fflush(stderr);
