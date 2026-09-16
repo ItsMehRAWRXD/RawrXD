@@ -382,19 +382,14 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_QKV_BEGIN\n",layer); std::fflush(stderr);
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
-        // ISOLATION: Q4KGroup disabled for SwiGLU isolation
-        if(true) {
-            std::fprintf(stderr,"FSB_L%zu_QKV_CPU_FALLBACK\n",layer); std::fflush(stderr);
-            try{
-                LinearWBatch4(lw.wq,norm,count,bq,q,H);
-                LinearWBatch4(lw.wk,norm,count,bk,k,KD);
-                LinearWBatch4(lw.wv,norm,count,bv,v,KD);
-            }catch(const std::exception& e){
-                std::fprintf(stderr,"FATAL_LINEAR_QKV layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
-                return false;
-            }
-        } else {
-            std::fprintf(stderr,"FSB_L%zu_QKV_GPU_OK\n",layer); std::fflush(stderr);
+        try{
+            LinearWBatch4(lw.wq,norm,count,bq,q,H);
+            LinearWBatch4(lw.wk,norm,count,bk,k,KD);
+            LinearWBatch4(lw.wv,norm,count,bv,v,KD);
+        }catch(const std::exception& e){
+            std::fprintf(stderr,"FATAL_LINEAR_QKV layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+            vulkanStrictViolation_=true;
+            return false;
         }
         std::fprintf(stderr,"FSB_L%zu_QKV_END\n",layer); std::fflush(stderr);
 
@@ -429,9 +424,9 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_ROPE_KV_END\n",layer); std::fflush(stderr);
 
         std::fprintf(stderr,"FSB_L%zu_ATTN_BEGIN\n",layer); std::fflush(stderr);
-        const bool gpuAttn=false; // ISOLATION: Attention disabled for SwiGLU isolation
         const float scale=1.0f/std::sqrt((float)HD);
-        if(!gpuAttn) for(size_t b=0;b<count;++b) {
+        if(!trySpecAttentionBatch(layer,q,k,v,attn,basePos,count))
+        for(size_t b=0;b<count;++b) {
             const size_t attend=basePos+b+1;
             float* out=attn+b*H;
             std::fill(out,out+H,0.0f);
@@ -483,20 +478,17 @@ bool Deep2Engine::forwardSpeculativeBlock(
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guO[2]={gate,up};
         std::fprintf(stderr,"FSB_L%zu_FFN_BEGIN\n",layer); std::fflush(stderr);
-        // ISOLATION: FFN Q4KGroup disabled for clean single-primitive isolation
-        std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
         try{
             LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
             LinearWBatch4(lw.wUp  ,norm,count,nullptr,up  ,I);
         }catch(const std::exception& e){
             std::fprintf(stderr,"FATAL_LINEAR_FFN layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+            vulkanStrictViolation_=true;
             return false;
         }
 
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
-        // ISOLATION STEP 2: SwiGLU GPU re-enabled
-        // ISOLATION NTOK4 A/B: Force CPU SwiGLU
-        if(true)
+        if(!trySpecSwiGLUBatch(gate,up,gate,I,count))
             for(size_t i=0;i<count*I;++i)
                 gate[i]=specSilu(gate[i])*up[i];
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_END\n",layer); std::fflush(stderr);
