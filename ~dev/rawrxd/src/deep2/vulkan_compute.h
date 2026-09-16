@@ -311,9 +311,18 @@ public:
     VkPipelineLayout specAttnPipelineLayout_ = VK_NULL_HANDLE;
     struct SpecAttnPush {
         uint32_t headDim = 0, heads = 0, kvHeads = 0, seqLen = 0;
-        uint32_t basePos = 0, batch = 0, capacity = 0;
+        uint32_t capacity = 0, basePos = 0, batch = 0;
         float scale = 1.0f;
     };
+    static_assert(offsetof(SpecAttnPush, headDim)  == 0);
+    static_assert(offsetof(SpecAttnPush, heads)    == 4);
+    static_assert(offsetof(SpecAttnPush, kvHeads)  == 8);
+    static_assert(offsetof(SpecAttnPush, seqLen)   == 12);
+    static_assert(offsetof(SpecAttnPush, capacity) == 16);
+    static_assert(offsetof(SpecAttnPush, basePos)  == 20);
+    static_assert(offsetof(SpecAttnPush, batch)    == 24);
+    static_assert(offsetof(SpecAttnPush, scale)    == 28);
+    static_assert(sizeof(SpecAttnPush) == 32);
 
     // ========== KV mirror ==========
     bool EnsureSpecKvMirror(uint32_t layers, uint32_t kvHeads,

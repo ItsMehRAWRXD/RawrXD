@@ -1282,6 +1282,7 @@ bool VulkanCompute::RunSpecAttentionResident(
     uint32_t heads,uint32_t kvHeads,uint32_t headDim,
     uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
     if(layer>=specKMirror_.size()||!q||!output||!heads||!kvHeads||
        !headDim||!seqLen||!batch||batch>4||seqLen>specKvCapacity_)
         return false;

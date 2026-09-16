@@ -382,7 +382,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_QKV_BEGIN\n",layer); std::fflush(stderr);
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
-        // STEP5: GPU QKV batch enabled
+        // ISOLATION STEP 5: Q4KGroup re-enabled
         if(!trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
             std::fprintf(stderr,"FSB_L%zu_QKV_CPU_FALLBACK\n",layer); std::fflush(stderr);
             LinearWBatch4(lw.wq,norm,count,bq,q,H);
@@ -390,12 +390,6 @@ bool Deep2Engine::forwardSpeculativeBlock(
             LinearWBatch4(lw.wv,norm,count,bv,v,KD);
         } else {
             std::fprintf(stderr,"FSB_L%zu_QKV_GPU_OK\n",layer); std::fflush(stderr);
-            if(bq) for(size_t t=0;t<count;++t)
-                for(size_t i=0;i<H;++i) q[t*H+i]+=bq[i];
-            if(bk) for(size_t t=0;t<count;++t)
-                for(size_t i=0;i<KD;++i) k[t*KD+i]+=bk[i];
-            if(bv) for(size_t t=0;t<count;++t)
-                for(size_t i=0;i<KD;++i) v[t*KD+i]+=bv[i];
         }
         std::fprintf(stderr,"FSB_L%zu_QKV_END\n",layer); std::fflush(stderr);
 
@@ -430,8 +424,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_ROPE_KV_END\n",layer); std::fflush(stderr);
 
         std::fprintf(stderr,"FSB_L%zu_ATTN_BEGIN\n",layer); std::fflush(stderr);
-        // Attention GPU DISABLED - causes heap corruption
-        const bool gpuAttn=false;
+        const bool gpuAttn=false; // ISOLATION: Attention disabled for SwiGLU isolation
         const float scale=1.0f/std::sqrt((float)HD);
         if(!gpuAttn) for(size_t b=0;b<count;++b) {
             const size_t attend=basePos+b+1;
@@ -460,10 +453,11 @@ bool Deep2Engine::forwardSpeculativeBlock(
             }
         }
         std::fprintf(stderr,"FSB_L%zu_ATTN_END\n",layer); std::fflush(stderr);
+        std::fprintf(stderr,"FSB_L%zu_ATTN_END\n",layer); std::fflush(stderr);
 
         const WeightTensor& wo=lw.wo.data?lw.wo:lw.attnO;
         std::fprintf(stderr,"FSB_L%zu_OPROJ_BEGIN\n",layer); std::fflush(stderr);
-        // STEP4: GPU ColumnSplit re-enabled
+        // ISOLATION STEP 4: ColumnSplit re-enabled
         if(!trySpecColumnSplitBatch(wo,attn,proj,count))
             LinearWBatch4(wo,attn,count,nullptr,proj,H);
         std::fprintf(stderr,"FSB_L%zu_OPROJ_END\n",layer); std::fflush(stderr);
@@ -480,23 +474,23 @@ bool Deep2Engine::forwardSpeculativeBlock(
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guO[2]={gate,up};
         std::fprintf(stderr,"FSB_L%zu_FFN_BEGIN\n",layer); std::fflush(stderr);
-        // STEP5: GPU FFN Q4KGroup enabled
+        // ISOLATION STEP 5: FFN Q4KGroup re-enabled
         if(!trySpecQ4KGroup(guW,guO,2,norm,count)) {
             std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
-            LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
-            LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
+            LinearWBatch4(lw.wGate,norm,count,nullptr,gate,H);
+            LinearWBatch4(lw.wUp  ,norm,count,nullptr,up  ,H);
         } else {
             std::fprintf(stderr,"FSB_L%zu_FFN_GPU_OK\n",layer); std::fflush(stderr);
         }
 
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
-        // SwiGLU GPU DISABLED - confirmed corrupting heap memory
-        if(true || !trySpecSwiGLUBatch(gate,up,gate,I,count))
+        // ISOLATION STEP 2: SwiGLU GPU re-enabled
+        if(!trySpecSwiGLUBatch(gate,up,gate,I,count))
             for(size_t i=0;i<count*I;++i)
                 gate[i]=specSilu(gate[i])*up[i];
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_END\n",layer); std::fflush(stderr);
         std::fprintf(stderr,"FSB_L%zu_DOWN_BEGIN\n",layer); std::fflush(stderr);
-        // STEP4: GPU ColumnSplit re-enabled
+        // ISOLATION STEP 4: ColumnSplit re-enabled
         if(!trySpecColumnSplitBatch(lw.wDown,gate,down,count))
             LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
         std::fprintf(stderr,"FSB_L%zu_DOWN_END\n",layer); std::fflush(stderr);
