@@ -117,6 +117,26 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         vkGetPhysicalDeviceProperties(devs[i], &p);
         vkGetPhysicalDeviceMemoryProperties(devs[i], &mp);
 
+        VkPhysicalDeviceIDProperties idp{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
+        };
+        VkPhysicalDeviceProperties2 p2{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+        };
+        p2.pNext = &idp;
+        vkGetPhysicalDeviceProperties2(devs[i], &p2);
+
+        // Deduplicate by deviceUUID — skip D3D12 aliases of same physical GPU
+        bool dup = false;
+        for (const auto& existing : out) {
+            if (std::memcmp(existing.deviceUUID, idp.deviceUUID,
+                            VK_UUID_SIZE) == 0) {
+                dup = true;
+                break;
+            }
+        }
+        if (dup) continue;
+
         uint32_t qn = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(devs[i], &qn, nullptr);
         std::vector<VkQueueFamilyProperties> q(qn);
@@ -135,7 +155,7 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
                 local += mp.memoryHeaps[h].size;
 
         VulkanPhysicalInfo d{};
-        d.ordinal = i;
+        d.ordinal = static_cast<uint32_t>(out.size());
         d.vendorId = p.vendorID;
         d.deviceId = p.deviceID;
         d.apiVersion = p.apiVersion;
@@ -143,6 +163,14 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         d.discrete = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
         d.compute = compute;
         d.name = p.deviceName;
+        std::memcpy(d.deviceUUID, idp.deviceUUID, VK_UUID_SIZE);
+        std::fprintf(stderr,
+            "VK_PHYS ordinal=%u name=%s vendor=0x%04X device=0x%04X type=%u "
+            "discrete=%d compute=%d localGB=%.2f\n",
+            d.ordinal, d.name.c_str(), d.vendorId, d.deviceId,
+            (unsigned)p.deviceType,
+            d.discrete ? 1 : 0, d.compute ? 1 : 0,
+            (double)d.deviceLocalBytes / (1024.0*1024.0*1024.0));
         out.push_back(std::move(d));
     }
 
@@ -189,11 +217,45 @@ bool VulkanCompute::createInstance() {
 bool VulkanCompute::selectPhysical() {
     uint32_t n = 0;
     if (vkEnumeratePhysicalDevices(instance_, &n, nullptr) != VK_SUCCESS ||
-        n == 0 || requestedOrdinal_ >= n) return false;
+        n == 0) return false;
 
-    std::vector<VkPhysicalDevice> devs(n);
-    if (vkEnumeratePhysicalDevices(instance_, &n, devs.data()) != VK_SUCCESS)
+    std::vector<VkPhysicalDevice> rawDevs(n);
+    if (vkEnumeratePhysicalDevices(instance_, &n, rawDevs.data()) != VK_SUCCESS)
         return false;
+
+    // Deduplicate by deviceUUID — match EnumeratePhysicalDevices() ordering
+    std::vector<VkPhysicalDevice> devs;
+    devs.reserve(n);
+    for (uint32_t i = 0; i < n; ++i) {
+        VkPhysicalDeviceProperties p{};
+        vkGetPhysicalDeviceProperties(rawDevs[i], &p);
+        VkPhysicalDeviceIDProperties idp{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
+        };
+        VkPhysicalDeviceProperties2 p2{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+        };
+        p2.pNext = &idp;
+        vkGetPhysicalDeviceProperties2(rawDevs[i], &p2);
+        bool dup = false;
+        for (auto existingVk : devs) {
+            VkPhysicalDeviceIDProperties existingId{
+                VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
+            };
+            VkPhysicalDeviceProperties2 existingP2{
+                VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+            };
+            existingP2.pNext = &existingId;
+            vkGetPhysicalDeviceProperties2(existingVk, &existingP2);
+            if (std::memcmp(existingId.deviceUUID, idp.deviceUUID,
+                            VK_UUID_SIZE) == 0) {
+                dup = true;
+                break;
+            }
+        }
+        if (!dup) devs.push_back(rawDevs[i]);
+    }
+    if (requestedOrdinal_ >= devs.size()) return false;
     physical_ = devs[requestedOrdinal_];
 
     VkPhysicalDeviceProperties p{};
@@ -699,14 +761,26 @@ bool VulkanCompute::RunSpecSwiGLUHostBatch(
     if(!gate||!up||!output||!width||!batch||batch>4) return false;
     SetWorkEpoch(epoch);
     const size_t n=(size_t)width*batch;
+    const size_t nbytes=n*sizeof(float);
+    std::fprintf(stderr,"[SwiGLU] width=%u batch=%u n=%zu nbytes=%zu\n",width,batch,n,nbytes); std::fflush(stderr);
+
     if(!EnsureScratch(94,n)||!EnsureScratch(95,n)||
        !EnsureScratch(96,n)||!EnsureScratch(97,1))
         return false;
     auto& g=Scratch(94);auto& u=Scratch(95);
     auto& o=Scratch(96);auto& d=Scratch(97);
+    std::fprintf(stderr,"[SwiGLU] buf g(id=%llu size=%zu) u(id=%llu size=%zu) o(id=%llu size=%zu) d(id=%llu size=%zu)\n",
+        (unsigned long long)g.id,(size_t)g.size,(unsigned long long)u.id,(size_t)u.size,(unsigned long long)o.id,(size_t)o.size,(unsigned long long)d.id,(size_t)d.size); std::fflush(stderr);
+    if(g.size<nbytes||u.size<nbytes||o.size<nbytes||d.size<sizeof(float)){
+        std::fprintf(stderr,"[SwiGLU] FATAL: scratch undersized\n"); std::fflush(stderr);
+        return false;
+    }
+
     if(!UploadVector(g,gate,n)||!UploadVector(u,up,n)) return false;
     SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
+    std::fprintf(stderr,"[SwiGLU] dispatch op=%u width=%u batch=%u\n",p.op,p.width,p.batch); std::fflush(stderr);
     if(!dispatchSpecOps(g,u,o,d,p)) return false;
+    std::fprintf(stderr,"[SwiGLU] download n=%zu\n",n); std::fflush(stderr);
     return DownloadVector(o,output,n);
 }
 
@@ -1795,9 +1869,15 @@ bool VulkanCompute::EndFusedLayer() {
     if(vkQueueSubmit(queue_,1,&si,reusableFusedFence_)!=VK_SUCCESS)
         return false;
     ++queueSubmitCount_;
-    if(vkWaitForFences(
-            device_,1,&reusableFusedFence_,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+    const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
+    VkResult waitRes = vkWaitForFences(
+            device_,1,&reusableFusedFence_,VK_TRUE,fusedWaitTimeoutNs);
+    if(waitRes==VK_TIMEOUT){
+        std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
+        std::fflush(stderr);
         return false;
+    }
+    if(waitRes!=VK_SUCCESS) return false;
     const uint64_t completeNs=nowNs();
 
     GpuWorkInterval wi{};

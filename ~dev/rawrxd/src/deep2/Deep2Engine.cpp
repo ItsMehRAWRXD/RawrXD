@@ -2127,11 +2127,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                               int* outputTokens, size_t maxOutputLen,
                               InferenceStats* stats,
                               std::function<bool(int)> onToken) {
+    std::fprintf(stderr,"GEN_ENTER maxOut=%zu\n",maxOutputLen); std::fflush(stderr);
     if (stats) *stats = {};
-    if (!initialized || !modelWeights.loaded) return 0;
-    if (!promptTokens || promptLen == 0) return 0;
-    if (!outputTokens || maxOutputLen == 0) return 0;
-    if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) return 0;
+    if (!initialized || !modelWeights.loaded) { std::fprintf(stderr,"GEN_FAIL_INIT\n"); return 0; }
+    if (!promptTokens || promptLen == 0) { std::fprintf(stderr,"GEN_FAIL_PROMPT\n"); return 0; }
+    if (!outputTokens || maxOutputLen == 0) { std::fprintf(stderr,"GEN_FAIL_OUTPUT\n"); return 0; }
+    if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) { std::fprintf(stderr,"GEN_FAIL_STATE\n"); return 0; }
 
     // A fresh top-level generate transaction consumes any old cancel request.
     clearCancel();
@@ -2145,15 +2146,18 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     for (size_t p = 0; p < promptLen; ++p) {
         if (cancelRequested_.load(std::memory_order_acquire)) {
             modelState_ = ModelState::Choreographable;
+            std::fprintf(stderr,"GEN_PREFILL_CANCEL p=%zu\n",p); std::fflush(stderr);
             return 0;
         }
         parityBeginStep(static_cast<int>(p));
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;
+            std::fprintf(stderr,"GEN_PREFILL_EMBED_FAIL p=%zu\n",p); std::fflush(stderr);
             return 0;
         }
         if (!forwardTokenAllLayers(hidden.data(), p + 1)) {
             modelState_ = ModelState::Choreographable;
+            std::fprintf(stderr,"GEN_PREFILL_FORWARD_FAIL p=%zu\n",p); std::fflush(stderr);
             return 0;
         }
         if (config.useKVCache && kvCache) kvCache->advance();
@@ -2167,6 +2171,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     if (config.maxSeqLen != 0) {
         if (promptLen >= config.maxSeqLen) {
             decodeLimit = 0;
+            std::fprintf(stderr,"GEN_DECODE_LIMIT_ZERO seqCap\n"); std::fflush(stderr);
         } else {
             decodeLimit = std::min(decodeLimit, config.maxSeqLen - promptLen);
         }
@@ -2178,27 +2183,41 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     const bool specActive=
         medusaEnabled_&&deterministicGreedy_&&medusaDecoder_&&
         parityProbe_==nullptr&&!modelWeights.isMoE&&!modelWeights.useMLA;
+    std::fprintf(stderr,"GEN_DECODE_LIMIT=%zu specActive=%d\n",decodeLimit,(int)specActive); std::fflush(stderr);
     if(specActive) {
         medusaDecoder_->reset();
         medusaDecoder_->observe(promptTokens,promptLen);
     }
 
     while(generated<decodeLimit) {
-        if(cancelRequested_.load(std::memory_order_acquire)) break;
+        if(cancelRequested_.load(std::memory_order_acquire)) {
+            std::fprintf(stderr,"GEN_DECODE_CANCEL gen=%zu\n",generated); std::fflush(stderr);
+            break;
+        }
 
         // Exactly one emitted token remains unforwarded between decode
         // transactions. Accepted speculative prefix tokens are already in KV.
         if(pendingForward) {
             parityBeginStep(static_cast<int>(
                 kvCache?kvCache->currentLength():promptLen+generated-1));
-            if(!embedToken(pendingToken,hidden.data())) break;
+            if(!embedToken(pendingToken,hidden.data())) {
+                std::fprintf(stderr,"GEN_PENDING_EMBED_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                break;
+            }
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
-            if(!forwardTokenAllLayers(hidden.data(),seq)) break;
-            if(config.useKVCache&&kvCache&&!kvCache->advance()) break;
+            if(!forwardTokenAllLayers(hidden.data(),seq)) {
+                std::fprintf(stderr,"GEN_PENDING_FORWARD_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                break;
+            }
+            if(config.useKVCache&&kvCache&&!kvCache->advance()) {
+                std::fprintf(stderr,"GEN_PENDING_KV_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                break;
+            }
             pendingForward=false;
         }
 
         const size_t remaining=decodeLimit-generated;
+        std::fprintf(stderr,"GEN_LOOP_TOP gen=%zu rem=%zu specActive=%d\n",generated,remaining,(int)specActive); std::fflush(stderr);
         if(specActive&&remaining>=2) {
             std::fprintf(stderr,"SPEC_PATH_ENTER gen=%zu rem=%zu\n",generated,remaining); std::fflush(stderr);
             std::vector<int32_t> proposals;
@@ -2265,14 +2284,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             std::fprintf(stderr, "[LOGITS_HEAD] %s\n", topDbg.c_str());
         }
         const int nextTok = sampleToken(logits);
-        if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) break;
+        if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
+            std::fprintf(stderr,"GEN_SAMPLE_FAIL nextTok=%d vocab=%zu\n",nextTok,config.vocabSize); std::fflush(stderr);
+            break;
+        }
 
         outputTokens[generated++] = nextTok;
         if(specActive) medusaDecoder_->observe(nextTok);
         pendingToken=nextTok;
         pendingForward=true;
-        if (onToken && !onToken(nextTok)) break;
+        if (onToken && !onToken(nextTok)) {
+            std::fprintf(stderr,"GEN_ONTOKEN_STOP gen=%zu\n",generated); std::fflush(stderr);
+            break;
+        }
     }
+
+    std::fprintf(stderr,"GEN_EXIT generated=%zu\n",generated); std::fflush(stderr);
 
     auto tEnd = std::chrono::steady_clock::now();
 

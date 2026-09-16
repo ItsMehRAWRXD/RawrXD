@@ -81,12 +81,35 @@ void Deep2Engine::enableVulkan(bool enable) {
             [](const VulkanPhysicalInfo& d){ return !d.compute; }),
         devs.end());
 
+    // Reject integrated GPUs when two or more discrete GPUs are available
+    size_t discreteCount = std::count_if(devs.begin(), devs.end(),
+        [](const VulkanPhysicalInfo& d){ return d.discrete; });
+    if (discreteCount >= 2) {
+        devs.erase(
+            std::remove_if(devs.begin(), devs.end(),
+                [](const VulkanPhysicalInfo& d){ return !d.discrete; }),
+            devs.end());
+        std::fprintf(stderr,
+            "DEEP2_GPU_FILTER discrete=%zu igpu=REJECTED\n",
+            discreteCount);
+    }
+
     std::stable_sort(devs.begin(),devs.end(),
         [](const VulkanPhysicalInfo& a,const VulkanPhysicalInfo& b){
             const int sa=deviceScore(a), sb=deviceScore(b);
             if(sa!=sb) return sa>sb;
             return a.ordinal<b.ordinal;
         });
+
+    for (size_t i=0; i<devs.size(); ++i) {
+        std::fprintf(stderr,
+            "DEEP2_GPU_CANDIDATE rank=%zu ordinal=%u name=%s "
+            "vendor=0x%04X device=0x%04X discrete=%d localGB=%.2f\n",
+            i, devs[i].ordinal, devs[i].name.c_str(),
+            devs[i].vendorId, devs[i].deviceId,
+            devs[i].discrete ? 1 : 0,
+            (double)devs[i].deviceLocalBytes / (1024.0*1024.0*1024.0));
+    }
 
     // Deep2 Batch 9 owns a maximum of two physical sticks because the current
     // product plan and receipts are dual-stick authority.
@@ -98,6 +121,11 @@ void Deep2Engine::enableVulkan(bool enable) {
                 devs[i].ordinal,devs[i].name.c_str());
             continue;
         }
+        std::fprintf(stderr,
+            "DEEP2_GPU_SELECT slot=%zu ordinal=%u name=%s "
+            "vendor=0x%04X device=0x%04X\n",
+            vulkanDevices_.size(), devs[i].ordinal, devs[i].name.c_str(),
+            devs[i].vendorId, devs[i].deviceId);
         vulkanDevices_.push_back(std::move(vc));
     }
 

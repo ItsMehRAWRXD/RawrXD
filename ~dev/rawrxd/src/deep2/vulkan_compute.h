@@ -63,6 +63,7 @@ struct VulkanPhysicalInfo {
     bool discrete = false;
     bool compute = false;
     std::string name;
+    uint8_t deviceUUID[VK_UUID_SIZE] = {};
 };
 
 struct GpuWeightView {

@@ -110,7 +110,7 @@ static std::vector<int> run(
 
 int main(int argc,char** argv) {
     if(argc<2) {
-        std::fprintf(stderr,"usage: qwen32_85tps_gate model.gguf [tokens]\n");
+        std::fprintf(stderr,"usage: qwen32_85tps_gate model.gguf [--only N]\n");
         return 2;
     }
     const char* model=argv[1];
@@ -118,13 +118,18 @@ int main(int argc,char** argv) {
         "Implement a high performance C++ lock free queue and explain "
         "the memory ordering guarantees in detail. ";
 
-    // THRESHOLD LADDER: Find first failing token count for speculative generation.
-    // Single engine, spec=true from setup, no reset, fresh each time.
+    int onlyNtok = -1;
+    if(argc>=4 && std::strcmp(argv[2],"--only")==0) {
+        onlyNtok = std::atoi(argv[3]);
+        std::fprintf(stderr,"GATE_ONLY_MODE ntok=%d\n",onlyNtok); fflush(stderr);
+    }
+
     const int thresholds[] = {1,2,3,4,5,6,7,8,12,16};
     const int numThresholds = (int)(sizeof(thresholds)/sizeof(thresholds[0]));
 
     for(int ti=0; ti<numThresholds; ++ti) {
         const int ntok = thresholds[ti];
+        if(onlyNtok>0 && ntok!=onlyNtok) continue;
         std::fprintf(stderr,"\n=== THRESHOLD ntok=%d ===\n",ntok); fflush(stderr);
         Deep2Engine e;
         if(!setup(e,model,true)) {

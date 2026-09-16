@@ -382,12 +382,17 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_QKV_BEGIN\n",layer); std::fflush(stderr);
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
-        // ISOLATION STEP 5: Q4KGroup re-enabled
-        if(!trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
+        // ISOLATION: Q4KGroup disabled for SwiGLU isolation
+        if(true) {
             std::fprintf(stderr,"FSB_L%zu_QKV_CPU_FALLBACK\n",layer); std::fflush(stderr);
-            LinearWBatch4(lw.wq,norm,count,bq,q,H);
-            LinearWBatch4(lw.wk,norm,count,bk,k,KD);
-            LinearWBatch4(lw.wv,norm,count,bv,v,KD);
+            try{
+                LinearWBatch4(lw.wq,norm,count,bq,q,H);
+                LinearWBatch4(lw.wk,norm,count,bk,k,KD);
+                LinearWBatch4(lw.wv,norm,count,bv,v,KD);
+            }catch(const std::exception& e){
+                std::fprintf(stderr,"FATAL_LINEAR_QKV layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+                return false;
+            }
         } else {
             std::fprintf(stderr,"FSB_L%zu_QKV_GPU_OK\n",layer); std::fflush(stderr);
         }
@@ -453,13 +458,17 @@ bool Deep2Engine::forwardSpeculativeBlock(
             }
         }
         std::fprintf(stderr,"FSB_L%zu_ATTN_END\n",layer); std::fflush(stderr);
-        std::fprintf(stderr,"FSB_L%zu_ATTN_END\n",layer); std::fflush(stderr);
 
         const WeightTensor& wo=lw.wo.data?lw.wo:lw.attnO;
         std::fprintf(stderr,"FSB_L%zu_OPROJ_BEGIN\n",layer); std::fflush(stderr);
         // ISOLATION STEP 4: ColumnSplit re-enabled
         if(!trySpecColumnSplitBatch(wo,attn,proj,count))
-            LinearWBatch4(wo,attn,count,nullptr,proj,H);
+            try{
+                LinearWBatch4(wo,attn,count,nullptr,proj,H);
+            }catch(const std::exception& e){
+                std::fprintf(stderr,"FATAL_LINEAR_OPROJ layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+                return false;
+            }
         std::fprintf(stderr,"FSB_L%zu_OPROJ_END\n",layer); std::fflush(stderr);
         for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
 
@@ -474,13 +483,14 @@ bool Deep2Engine::forwardSpeculativeBlock(
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guO[2]={gate,up};
         std::fprintf(stderr,"FSB_L%zu_FFN_BEGIN\n",layer); std::fflush(stderr);
-        // ISOLATION STEP 5: FFN Q4KGroup re-enabled
-        if(!trySpecQ4KGroup(guW,guO,2,norm,count)) {
-            std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
-            LinearWBatch4(lw.wGate,norm,count,nullptr,gate,H);
-            LinearWBatch4(lw.wUp  ,norm,count,nullptr,up  ,H);
-        } else {
-            std::fprintf(stderr,"FSB_L%zu_FFN_GPU_OK\n",layer); std::fflush(stderr);
+        // ISOLATION: FFN Q4KGroup disabled for clean single-primitive isolation
+        std::fprintf(stderr,"FSB_L%zu_FFN_CPU_FALLBACK\n",layer); std::fflush(stderr);
+        try{
+            LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
+            LinearWBatch4(lw.wUp  ,norm,count,nullptr,up  ,I);
+        }catch(const std::exception& e){
+            std::fprintf(stderr,"FATAL_LINEAR_FFN layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+            return false;
         }
 
         std::fprintf(stderr,"FSB_L%zu_SWIGLU_BEGIN\n",layer); std::fflush(stderr);
@@ -492,7 +502,12 @@ bool Deep2Engine::forwardSpeculativeBlock(
         std::fprintf(stderr,"FSB_L%zu_DOWN_BEGIN\n",layer); std::fflush(stderr);
         // ISOLATION STEP 4: ColumnSplit re-enabled
         if(!trySpecColumnSplitBatch(lw.wDown,gate,down,count))
-            LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
+            try{
+                LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
+            }catch(const std::exception& e){
+                std::fprintf(stderr,"FATAL_LINEAR_DOWN layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+                return false;
+            }
         std::fprintf(stderr,"FSB_L%zu_DOWN_END\n",layer); std::fflush(stderr);
 
         for(size_t i=0;i<count*H;++i) hidden[i]+=down[i];
