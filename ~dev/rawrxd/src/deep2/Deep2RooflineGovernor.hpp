@@ -8,9 +8,12 @@ struct GovernorDecision {
     u32 prefetchDepth = 1;
     bool useFusedBatch = true;
     bool bandwidthBound = true;
+    bool useColumnSplit = false;
     double measuredTps = 0.0;
     double estimatedRooflineTps = 0.0;
     double rooflineFraction = 0.0;
+    double speculativeAcceptanceRatio = 0.0;
+    double specWindowMultiplier = 1.0;
 };
 
 class RooflineGovernor {

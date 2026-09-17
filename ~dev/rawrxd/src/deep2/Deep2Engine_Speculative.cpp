@@ -1,11 +1,14 @@
 #include "Deep2Engine.h"
 #include "Deep2DualGpuRowSplit.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
+
+extern std::atomic<uint32_t> g_strictGpuViolations;
 
 namespace Deep2 {
 namespace {
@@ -389,6 +392,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
         }catch(const std::exception& e){
             std::fprintf(stderr,"FATAL_LINEAR_QKV layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
             vulkanStrictViolation_=true;
+            g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
             return false;
         }
         std::fprintf(stderr,"FSB_L%zu_QKV_END\n",layer); std::fflush(stderr);
@@ -462,6 +466,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
                 LinearWBatch4(wo,attn,count,nullptr,proj,H);
             }catch(const std::exception& e){
                 std::fprintf(stderr,"FATAL_LINEAR_OPROJ layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+                vulkanStrictViolation_=true;
+                g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
                 return false;
             }
         std::fprintf(stderr,"FSB_L%zu_OPROJ_END\n",layer); std::fflush(stderr);
@@ -484,6 +490,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
         }catch(const std::exception& e){
             std::fprintf(stderr,"FATAL_LINEAR_FFN layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
             vulkanStrictViolation_=true;
+            g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
             return false;
         }
 
@@ -499,6 +506,8 @@ bool Deep2Engine::forwardSpeculativeBlock(
                 LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
             }catch(const std::exception& e){
                 std::fprintf(stderr,"FATAL_LINEAR_DOWN layer=%zu exc=%s\n",layer,e.what()); std::fflush(stderr);
+                vulkanStrictViolation_=true;
+                g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
                 return false;
             }
         std::fprintf(stderr,"FSB_L%zu_DOWN_END\n",layer); std::fflush(stderr);

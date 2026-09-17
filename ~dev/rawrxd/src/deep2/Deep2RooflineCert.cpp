@@ -11,6 +11,8 @@ CertResult Certify(const std::vector<TokenMetrics>& t, const CertTargets& g, dou
     u64 wall = 0;
     double overlap = 0.0, skew = 0.0;
     bool parity = true, stable = true;
+    u64 totalSpecProposed = 0, totalSpecAccepted = 0;
+    u64 steadyHostTraffic = 0;
     for (const auto& x : t) {
         wall += x.tokenWallNs;
         overlap += x.overlapRatio();
@@ -19,8 +21,17 @@ CertResult Certify(const std::vector<TokenMetrics>& t, const CertTargets& g, dou
         r.totalForwards[1] += x.gpu[1].forwards;
         r.steadyWeightReuploads += x.weightReuploads;
         r.steadyDescriptorRebuilds += x.descriptorRebuilds;
+        steadyHostTraffic += x.hostBytesTransferred;
+        totalSpecProposed += x.speculativeProposed;
+        totalSpecAccepted += x.speculativeAccepted;
         parity = parity && x.argmaxParity;
         stable = stable && x.outputStable;
+    }
+    r.steadyHostTrafficBytes = steadyHostTraffic;
+    if (totalSpecProposed > 0) {
+        r.specAcceptanceRatio = static_cast<double>(totalSpecAccepted) / static_cast<double>(totalSpecProposed);
+    } else {
+        r.specAcceptanceRatio = 0.0;
     }
     if (!t.empty()) {
         r.meanOverlapRatio = overlap / t.size();
@@ -34,10 +45,13 @@ CertResult Certify(const std::vector<TokenMetrics>& t, const CertTargets& g, dou
     if (g.requireStableOutput && !stable) r.failures.push_back("OUTPUT_STABILITY_FAIL");
     if (r.steadyWeightReuploads > g.maxSteadyWeightReuploads) r.failures.push_back("WEIGHT_REUPLOAD_STEADY_STATE");
     if (r.steadyDescriptorRebuilds > g.maxSteadyDescriptorRebuilds) r.failures.push_back("DESCRIPTOR_REBUILD_STEADY_STATE");
+    if (r.steadyHostTrafficBytes > g.maxSteadyHostTrafficBytes) r.failures.push_back("HOST_TRAFFIC_GT_TARGET");
+    if (totalSpecProposed > 0 && r.specAcceptanceRatio < g.minSpeculativeAcceptanceRatio) r.failures.push_back("SPEC_ACCEPTANCE_RATIO_LT_TARGET");
     if (r.meanOverlapRatio < g.minOverlapRatio) r.failures.push_back("OVERLAP_LT_TARGET");
     if (r.meanCompletionSkew > g.maxCompletionSkew) r.failures.push_back("COMPLETION_SKEW_GT_TARGET");
     if (g.minMeasuredTps > 0.0 && r.measuredTps < g.minMeasuredTps) r.failures.push_back("TPS_LT_TARGET");
     if (g.minRooflineFraction > 0.0 && r.rooflineFraction < g.minRooflineFraction) r.failures.push_back("ROOFLINE_FRACTION_LT_TARGET");
+    if (rooflineTps > 0.0 && r.measuredTps > rooflineTps * 1.01) r.failures.push_back("ROOFLINE_EXCEEDS_THEORETICAL_CEILING");
 
     r.pass = r.failures.empty();
     return r;
@@ -55,6 +69,8 @@ std::string CertResult::emit() const {
     o << "GPU1_FORWARDS=" << totalForwards[1] << '\n';
     o << "STEADY_WEIGHT_REUPLOADS=" << steadyWeightReuploads << '\n';
     o << "STEADY_DESCRIPTOR_REBUILDS=" << steadyDescriptorRebuilds << '\n';
+    o << "STEADY_HOST_TRAFFIC_BYTES=" << steadyHostTrafficBytes << '\n';
+    o << "SPEC_ACCEPTANCE_RATIO=" << specAcceptanceRatio << '\n';
     o << "FAILURE_COUNT=" << failures.size() << '\n';
     for (const auto& f : failures) o << "FAIL=" << f << '\n';
     return o.str();

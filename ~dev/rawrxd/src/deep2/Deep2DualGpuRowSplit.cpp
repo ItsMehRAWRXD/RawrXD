@@ -700,15 +700,31 @@ bool Deep2RunDualGpuRowSplitBatch4(
     if(receipt) *receipt={};
     if(!inputBatch||!outputBatch||batch==0||batch>4||
        wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||
-       wt.rows<2||!wt.cols)
+       wt.rows<2||!wt.cols) {
+        std::fprintf(stderr,
+            "[BATCH4_FAIL] input validation: ib=%p ob=%p batch=%u "
+            "type=%d rows=%u cols=%u\n",
+            static_cast<const void*>(inputBatch),
+            static_cast<void*>(outputBatch),batch,
+            wt.type,wt.rows,wt.cols);
         return false;
+    }
 
     RowSplitPlan p=cachedThroughputSplit(wt,g0,g1);
-    if(!p.valid) return false;
+    if(!p.valid) {
+        std::fprintf(stderr,
+            "[BATCH4_FAIL] cachedThroughputSplit invalid rows=%u cols=%u\n",
+            wt.rows,wt.cols);
+        return false;
+    }
     GpuWeightView w0{},w1{};
     if(!Deep2BuildGpuWeightView(wt,p.row0Begin,p.row0Count,w0)||
-       !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1))
+       !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1)) {
+        std::fprintf(stderr,
+            "[BATCH4_FAIL] Deep2BuildGpuWeightView r0=%u c0=%u r1=%u c1=%u\n",
+            p.row0Begin,p.row0Count,p.row1Begin,p.row1Count);
         return false;
+    }
 
     std::vector<float> y0((size_t)batch*p.row0Count);
     std::vector<float> y1((size_t)batch*p.row1Count);
@@ -724,7 +740,12 @@ bool Deep2RunDualGpuRowSplitBatch4(
                 w1,inputBatch,y1.data(),batch,epoch);
             return ok1;
         });
-    if(!both||!ok0||!ok1) return false;
+    if(!both||!ok0||!ok1) {
+        std::fprintf(stderr,
+            "[BATCH4_FAIL] RunWeightHostBatchQ4K both=%d ok0=%d ok1=%d\n",
+            both?1:0,ok0?1:0,ok1?1:0);
+        return false;
+    }
 
     for(uint32_t b=0;b<batch;++b) {
         float* dst=outputBatch+(size_t)b*wt.rows;

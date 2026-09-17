@@ -14,6 +14,8 @@ struct CertResult {
     u64 totalForwards[2]{};
     u64 steadyWeightReuploads = 0;
     u64 steadyDescriptorRebuilds = 0;
+    u64 steadyHostTrafficBytes = 0;
+    double specAcceptanceRatio = 0.0;
     std::vector<std::string> failures;
     std::string emit() const;
 };

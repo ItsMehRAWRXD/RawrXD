@@ -1,11 +1,14 @@
 #include "deep2/Deep2Engine.h"
 #include "deep2/Deep2Speculative.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
+
+std::atomic<uint32_t> g_strictGpuViolations{0};
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -141,15 +144,20 @@ int main(int argc,char** argv) {
         std::fprintf(stderr,"THRESHOLD_GEN_BEGIN ntok=%d\n",ntok); fflush(stderr);
         auto x=run(e,prompt,(size_t)ntok,s);
         std::fprintf(stderr,"THRESHOLD_GEN_END ntok=%d got=%zu\n",ntok,x.size()); fflush(stderr);
-        if(x.size()==(size_t)ntok) {
+        if(e.vulkanStrictViolation()) {
+            g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
+        }
+        if(x.size()==(size_t)ntok && g_strictGpuViolations.load(std::memory_order_relaxed)==0) {
             std::fprintf(stderr,"THRESHOLD_RESULT ntok=%d PASS\n",ntok); fflush(stderr);
         } else {
-            std::fprintf(stderr,"THRESHOLD_RESULT ntok=%d FAIL got=%zu\n",ntok,x.size()); fflush(stderr);
+            std::fprintf(stderr,"THRESHOLD_RESULT ntok=%d FAIL got=%zu strictGpuViolations=%u\n",ntok,x.size(),g_strictGpuViolations.load(std::memory_order_relaxed)); fflush(stderr);
             std::fprintf(stderr,"FIRST_FAILING_THRESHOLD=%d\n",ntok); fflush(stderr);
             break;
         }
     }
 
     std::fprintf(stderr,"\n=== THRESHOLD LADDER COMPLETE ===\n"); fflush(stderr);
+    std::fprintf(stderr,"STRICT_GPU_VIOLATIONS=%u\n",g_strictGpuViolations.load(std::memory_order_relaxed)); fflush(stderr);
+    if(g_strictGpuViolations.load(std::memory_order_relaxed)!=0) return 40;
     return 0;
 }

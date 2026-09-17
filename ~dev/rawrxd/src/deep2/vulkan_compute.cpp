@@ -507,22 +507,37 @@ bool VulkanCompute::createPipelines() {
     const std::string so = shaderPath("deep2_spec_ops.spv");
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
+
+    std::fprintf(stderr,
+        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s am=%s so=%s sa=%s ac=%s\n",
+        ops.empty()?"NOTFOUND":ops.c_str(),
+        q.empty()?"NOTFOUND":q.c_str(),
+        qb.empty()?"NOTFOUND":qb.c_str(),
+        q4r.empty()?"NOTFOUND":q4r.c_str(),
+        q8r.empty()?"NOTFOUND":q8r.c_str(),
+        am.empty()?"NOTFOUND":am.c_str(),
+        so.empty()?"NOTFOUND":so.c_str(),
+        sa.empty()?"NOTFOUND":sa.c_str(),
+        ac.empty()?"NOTFOUND":ac.c_str());
+    std::fflush(stderr);
+
+    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false;
     if (!ops.empty())
-        (void)createPipelineFromFile(
+        okOps=createPipelineFromFile(
             ops, opsSetLayout_, sizeof(OpsPush), opsPipelineLayout_, opsPipeline_);
     if (!q.empty())
-        (void)createPipelineFromFile(
+        okQ=createPipelineFromFile(
             q, qSetLayout_, sizeof(QPush), qPipelineLayout_, qPipeline_);
     if(!qb.empty())
-        (void)createPipelineFromFile(
+        okQb=createPipelineFromFile(
             qb,qSetLayout_,sizeof(QBatchPush),
             qBatchPipelineLayout_,qBatchPipeline_);
     if(!q4r.empty())
-        (void)createPipelineFromFile(
+        okQ4r=createPipelineFromFile(
             q4r,qSetLayout_,sizeof(QBatchPush),
             qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
     if(!q8r.empty())
-        (void)createPipelineFromFile(
+        okQ8r=createPipelineFromFile(
             q8r,qSetLayout_,sizeof(QBatchPush),
             qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
     if(!am.empty())
@@ -537,6 +552,12 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             sa,opsSetLayout_,sizeof(SpecAttnPush),
             specAttnPipelineLayout_,specAttnPipeline_);
+
+    std::fprintf(stderr,
+        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u\n",
+        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u);
+    std::fflush(stderr);
+
     return opsPipeline_ != VK_NULL_HANDLE;
 }
 
@@ -868,10 +889,11 @@ bool VulkanCompute::initialize() {
 
     std::fprintf(stdout,
         "BATCH9_VK_DEVICE ordinal=%u name=%s vendor=0x%04x vram=%llu "
-        "compute_pipeline=%u qgemv_pipeline=%u calibrated=%u\n",
+        "compute_pipeline=%u qgemv_pipeline=%u batch4row=%u batch8row=%u calibrated=%u\n",
         info_.ordinal, info_.name.c_str(), info_.vendorId,
         static_cast<unsigned long long>(info_.deviceLocalBytes),
         opsPipeline_ ? 1u : 0u, qPipeline_ ? 1u : 0u,
+        qBatch4RowPipeline_ ? 1u : 0u, qBatch8RowPipeline_ ? 1u : 0u,
         calibratedAvailable_ ? 1u : 0u);
     return true;
 }
@@ -893,20 +915,28 @@ bool VulkanCompute::createBuffer(
     VkMemoryPropertyFlags required, DeviceBuf& out)
 {
     destroyBuffer(out);
-    if (!device_ || bytes == 0) return false;
+    if (!device_ || bytes == 0) {
+        fprintf(stderr, "[CB_FAIL] device=%p bytes=%zu\n", (void*)device_, (size_t)bytes);
+        return false;
+    }
 
     VkBufferCreateInfo bi{};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = bytes;
     bi.usage = usage;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    if (vkCreateBuffer(device_, &bi, nullptr, &out.buffer) != VK_SUCCESS)
+    VkResult rcb = vkCreateBuffer(device_, &bi, nullptr, &out.buffer);
+    if (rcb != VK_SUCCESS) {
+        fprintf(stderr, "[CB_FAIL] vkCreateBuffer failed bytes=%zu rc=%d\n", (size_t)bytes, (int)rcb);
         return false;
+    }
 
     VkMemoryRequirements mr{};
     vkGetBufferMemoryRequirements(device_, out.buffer, &mr);
     uint32_t mt = findMemoryType(mr.memoryTypeBits, required);
     if (mt == UINT32_MAX) {
+        fprintf(stderr, "[CB_FAIL] findMemoryType failed bytes=%zu memTypeBits=0x%x required=0x%x\n",
+                (size_t)bytes, mr.memoryTypeBits, (unsigned)required);
         vkDestroyBuffer(device_, out.buffer, nullptr);
         out = {};
         return false;
@@ -916,12 +946,16 @@ bool VulkanCompute::createBuffer(
     ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     ai.allocationSize = mr.size;
     ai.memoryTypeIndex = mt;
-    if (vkAllocateMemory(device_, &ai, nullptr, &out.memory) != VK_SUCCESS) {
+    VkResult ram = vkAllocateMemory(device_, &ai, nullptr, &out.memory);
+    if (ram != VK_SUCCESS) {
+        fprintf(stderr, "[CB_FAIL] vkAllocateMemory failed bytes=%zu allocSize=%zu mt=%u rc=%d\n",
+                (size_t)bytes, (size_t)mr.size, mt, (int)ram);
         vkDestroyBuffer(device_, out.buffer, nullptr);
         out = {};
         return false;
     }
     if (vkBindBufferMemory(device_, out.buffer, out.memory, 0) != VK_SUCCESS) {
+        fprintf(stderr, "[CB_FAIL] vkBindBufferMemory failed bytes=%zu\n", (size_t)bytes);
         destroyBuffer(out);
         return false;
     }
@@ -1744,11 +1778,14 @@ bool VulkanCompute::EnsureForwardArena(
 
 bool VulkanCompute::ApplyWeightWindowPolicy(
     size_t maxWeightBytes, size_t budgetBytes,
-    uint32_t, size_t)
+    uint32_t, size_t arenaBytes)
 {
     if (!maxWeightBytes || !budgetBytes || budgetBytes < maxWeightBytes)
         return false;
-    weightBudgetBytes_ = budgetBytes;
+    size_t effectiveBudget = budgetBytes;
+    if (arenaBytes && effectiveBudget > arenaBytes)
+        effectiveBudget -= arenaBytes;
+    weightBudgetBytes_ = effectiveBudget;
     return true;
 }
 
@@ -2313,9 +2350,18 @@ bool VulkanCompute::ensureWeightQuant(
         out=&it->second.buffer;
         return true;
     }
-    if(!weights||!bytes) return false;
-    if(weightBudgetBytes_ && bytes>weightBudgetBytes_) return false;
-    if(!evictWeightCacheUntil(bytes)) return false;
+    if(!weights||!bytes) {
+        fprintf(stderr,"[EWB_Q4K] FAIL1 weights=%p bytes=%zu\n",weights,bytes);
+        return false;
+    }
+    if(weightBudgetBytes_ && bytes>weightBudgetBytes_) {
+        fprintf(stderr,"[EWB_Q4K] FAIL2 budget=%zu bytes=%zu\n",weightBudgetBytes_,bytes);
+        return false;
+    }
+    if(!evictWeightCacheUntil(bytes)) {
+        fprintf(stderr,"[EWB_Q4K] FAIL3 evict bytes=%zu cacheBytes=%zu\n",bytes,weightCacheBytes_);
+        return false;
+    }
 
     WeightCacheEntry e{};
     size_t padded=(bytes+3u)&~size_t(3u);
@@ -2323,12 +2369,15 @@ bool VulkanCompute::ensureWeightQuant(
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
         VK_BUFFER_USAGE_TRANSFER_DST_BIT |
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,e.buffer))
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,e.buffer)) {
+        fprintf(stderr,"[EWB_Q4K] FAIL4 createBuffer padded=%zu\n",padded);
         return false;
+    }
 
     std::vector<unsigned char> tmp(padded,0);
     std::memcpy(tmp.data(),weights,bytes);
     if(!uploadToBuffer(e.buffer,tmp.data(),padded)){
+        fprintf(stderr,"[EWB_Q4K] FAIL5 uploadToBuffer padded=%zu\n",padded);
         destroyBuffer(e.buffer); return false;
     }
     e.bytes=bytes; e.type=type; e.lastUse=weightUseClock_++;
@@ -2442,21 +2491,30 @@ bool VulkanCompute::RunWeightHostBatchQ4K(
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
     if(!weight.valid()||weight.type!=12||!inputBatch||!outputBatch||
-       batch==0||batch>4||!initialized_)
+       batch==0||batch>4||!initialized_) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL1 valid=%d type=%d in=%p out=%p batch=%u init=%d\n",
+            (int)weight.valid(),weight.type,(const void*)inputBatch,(void*)outputBatch,batch,(int)initialized_);
         return false;
+    }
 
     SetWorkEpoch(epoch);
     const size_t inCount=(size_t)batch*weight.cols;
     const size_t outCount=(size_t)batch*weight.rows;
-    if(!EnsureScratch(70,inCount)||!EnsureScratch(71,outCount))
+    if(!EnsureScratch(70,inCount)||!EnsureScratch(71,outCount)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL2 scratch70=%d scratch71=%d inCount=%zu outCount=%zu\n",
+            (int)EnsureScratch(70,inCount),(int)EnsureScratch(71,outCount),inCount,outCount);
         return false;
+    }
     DeviceBuf& in=Scratch(70);
     DeviceBuf& out=Scratch(71);
 
     DeviceBuf* resident=nullptr;
     if(!ensureWeightQuant(
-            weight.type,weight.data,weight.bytes,resident))
+            weight.type,weight.data,weight.bytes,resident)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL3 ensureWeightQuant type=%d bytes=%zu\n",
+            weight.type,weight.bytes);
         return false;
+    }
 
     const size_t inBytes=inCount*sizeof(float);
     const size_t outBytes=outCount*sizeof(float);
@@ -2465,24 +2523,40 @@ bool VulkanCompute::RunWeightHostBatchQ4K(
     void* upMap=nullptr;
     void* downMap=nullptr;
     if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
-       !ensureMappedStaging(false,outBytes,downStage,downMap))
+       !ensureMappedStaging(false,outBytes,downStage,downMap)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL4 up=%p down=%p inBytes=%zu outBytes=%zu\n",
+            (void*)upStage,(void*)downStage,inBytes,outBytes);
         return false;
+    }
     std::memcpy(upMap,inputBatch,inBytes);
 
-    if(!BeginFusedLayer()) return false;
+    if(!BeginFusedLayer()) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL5 BeginFusedLayer\n");
+        return false;
+    }
     auto abort=[&]{
         if(FusedRecording()) (void)EndFusedLayer();
         return false;
     };
-    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL6 recordCopy up\n");
         return abort();
+    }
     if(!DispatchGemvQ4KBatch(
             weight.data,weight.bytes,in,out,
-            weight.rows,weight.cols,batch))
+            weight.rows,weight.cols,batch)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL7 DispatchGemvQ4KBatch rows=%u cols=%u batch=%u\n",
+            weight.rows,weight.cols,batch);
         return abort();
-    if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
+    }
+    if(!recordCopy(fusedCmd_,out,*downStage,outBytes)) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL8 recordCopy down\n");
         return abort();
-    if(!EndFusedLayer()) return false;
+    }
+    if(!EndFusedLayer()) {
+        fprintf(stderr,"[RWHB_Q4K] FAIL9 EndFusedLayer\n");
+        return false;
+    }
 
     std::memcpy(outputBatch,downMap,outBytes);
     return true;

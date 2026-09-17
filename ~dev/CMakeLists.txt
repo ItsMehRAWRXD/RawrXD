@@ -26,7 +26,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # AVX-512 flags
 #--------------------
 if(MSVC)
-    add_compile_options(/arch:AVX512 /O2 /fp:fast)
+    add_compile_options(/arch:AVX512 /fp:fast)
+    add_compile_options($<$<NOT:$<CONFIG:Debug>>:/O2>)
     add_compile_definitions(_WIN32 WIN32_LEAN_AND_MEAN NOMINMAX)
 else()
     add_compile_options(-mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512vnni -mfma -O3)

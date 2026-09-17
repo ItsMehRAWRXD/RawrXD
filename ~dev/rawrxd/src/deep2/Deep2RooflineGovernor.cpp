@@ -20,6 +20,13 @@ GovernorDecision RooflineGovernor::decide(u32 rows, u64 bytesPerToken, double te
             ? static_cast<double>(prev->prefetchMisses) / static_cast<double>(prev->prefetchHits + prev->prefetchMisses)
             : 0.0;
         d.prefetchDepth = missRate > 0.20 ? 3u : (missRate > 0.05 ? 2u : 1u);
+        const double skew = prev->completionSkew();
+        const double overlap = prev->overlapRatio();
+        d.useColumnSplit = (skew > 0.25) && (overlap > 0.50);
+        if (prev->speculativeProposed > 0) {
+            d.speculativeAcceptanceRatio = static_cast<double>(prev->speculativeAccepted) / static_cast<double>(prev->speculativeProposed);
+            d.specWindowMultiplier = 1.0 + d.speculativeAcceptanceRatio;
+        }
     }
 
     f0 = std::clamp(f0, 0.10, 0.90);

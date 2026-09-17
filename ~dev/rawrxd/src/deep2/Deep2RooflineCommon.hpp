@@ -13,6 +13,10 @@ namespace Deep2::Roofline {
 using u64 = std::uint64_t;
 using u32 = std::uint32_t;
 
+inline constexpr double AGGREGATE_BANDWIDTH_GBS = 640.0 + 624.0;
+inline constexpr double QWEN32_Q4KM_SIZE_GB = 18.49;
+inline constexpr double THEORETICAL_SINGLE_PASS_TPS = AGGREGATE_BANDWIDTH_GBS / QWEN32_Q4KM_SIZE_GB; // ~68.36
+
 struct HardwareProfile {
     double gpuBandwidthGBs[2]{640.0, 624.0};
     double gpuComputeTOPS[2]{0.0, 0.0}; // optional: 0 disables compute roofline
@@ -47,6 +51,9 @@ struct TokenMetrics {
     u64 residencyMisses = 0;
     u64 prefetchHits = 0;
     u64 prefetchMisses = 0;
+    u64 hostBytesTransferred = 0;
+    u64 speculativeProposed = 0;
+    u64 speculativeAccepted = 0;
     bool argmaxParity = true;
     bool outputStable = true;
 
@@ -95,6 +102,8 @@ struct CertTargets {
     double maxCompletionSkew = 0.15;
     u64 maxSteadyWeightReuploads = 0;
     u64 maxSteadyDescriptorRebuilds = 0;
+    u64 maxSteadyHostTrafficBytes = 0;
+    double minSpeculativeAcceptanceRatio = 0.0;
     bool requireBothGpus = true;
     bool requireParity = true;
     bool requireStableOutput = true;

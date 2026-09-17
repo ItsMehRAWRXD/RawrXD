@@ -1921,6 +1921,12 @@ void Deep2Engine::LinearWBatch4(
     // using the already GPU-backed single-vector LinearW path.
     if(wt.type==(int)GGMLType::GGML_TYPE_Q4_K &&
        vulkanInitialized_&&vulkanDevices_.size()>=2) {
+        std::fprintf(stderr,
+            "Q4K_OPROJ_TRACE LinearWBatch4 wt=%p type=%d rows=%zu cols=%zu count=%zu outDim=%zu input=%p output=%p strict=%d\n",
+            wt.data, wt.type, rows, cols, count, outDim,
+            (const void*)inputBatch, (const void*)outputBatch,
+            (int)vulkanStrictNoCpuFallback_);
+        std::fflush(stderr);
         std::memset(outputBatch,0,count*outDim*sizeof(float));
         if(tryVulkanHostGEMVBatch4(
                 wt,inputBatch,count,outputBatch,outDim)) {
