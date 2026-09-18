@@ -20,6 +20,21 @@
 namespace rawrxd {
 namespace agent {
 
+// Scan-epoch identity — schema v2.
+// The epoch is a fast change detector (FNV-1a 64), NOT cryptographic
+// attestation; receipts label it as such. Versioned so an epoch-algorithm
+// change invalidates prior generations instead of silently carrying stale
+// candidates across the transition.
+constexpr uint32_t kCurrentEpochSchema = 2;
+constexpr const char* kEpochAlgorithm = "FNV1A64_PATH_CONTENT";
+
+struct ScanGeneration {
+    uint32_t    epochSchema = kCurrentEpochSchema;
+    std::string epochAlgorithm = kEpochAlgorithm;
+    std::string scanEpoch;        // content-sensitive tree hash
+    std::string sourceGitSha;      // provenance (advisory)
+};
+
 enum class CandidateType : uint8_t {
     Todo          = 0,
     EmptyImpl     = 1,
@@ -49,6 +64,8 @@ struct AuditCandidate {
     uint32_t                line = 0;
     CandidateType           type = CandidateType::Other;
     ScanKind                scanKind = ScanKind::StubComment;  // RAWR_STUB_SCAN_001 origin
+    std::string             scanEpoch;   // scan generation this candidate belongs to
+    uint64_t                sourceFileHash = 0;  // per-file content hash at scan time
     std::string             evidence;
     std::string             reasoning;
 
@@ -91,6 +108,28 @@ public:
     // Populates the candidate ledger; sets sourceScanComplete. Idempotent.
     bool runSourceScan();
 
+    // Scan generation identity: content-sensitive FNV-1a 64-bit hash over
+    // (path + full contents) of the enumerated set. Schema-versioned: an
+    // epoch-algorithm change archives the prior generation rather than
+    // migrating stale candidates.
+    std::string computeScanEpoch() const;
+    const std::string& scanEpoch() const { return generation_.scanEpoch; }
+    void refreshScanEpoch();
+
+    // Generation lifecycle: archive the current candidates to a generation
+    // file and reset for a new scan (schema/epoch mismatch, or explicit).
+    bool generationMatchesLive() const;
+    void archiveGeneration(const char* reason);
+    bool loadGeneration();          // resume a matching generation if present
+    const ScanGeneration& generation() const { return generation_; }
+
+    // Per-file content hash (same algorithm, single file) for immediate
+    // stale-review protection on candidate.read / candidate.review.
+    uint64_t computeFileHash(const std::string& relPath) const;
+    // Three-state freshness check for a candidate's source file.
+    // 0 = current, 1 = stale, 2 = missing.
+    int candidateFileFreshness(uint64_t id) const;
+
     // Model-driven state transitions (invoked by audit.* tools only).
     uint64_t addCandidate(const std::string& file, uint32_t line,
                           CandidateType type, const std::string& evidence,
@@ -103,6 +142,10 @@ public:
     // Candidate access for audit.candidate.read / audit.candidates tools.
     std::vector<AuditCandidate> pendingCandidates(uint32_t limit) const;
     size_t candidateCount() const;
+
+    // Epoch guard: candidate reviews are rejected when the candidate's scan
+    // epoch no longer matches the workspace's current epoch.
+    bool candidateMatchesEpoch(uint64_t id) const;
 
     void countToolFailure()   { std::lock_guard<std::mutex> g(mu_); counters_.toolFailures++; persistLocked(); }
     void countModelFallback(){ std::lock_guard<std::mutex> g(mu_); counters_.modelFallbacks++; persistLocked(); }
@@ -154,10 +197,17 @@ public:
 private:
     void persistLocked();          // appends one JSONL state line
     void persistCandidatesLocked();
+    void refreshScanEpochLocked();
+    void persistGenerationLocked();
+    bool writeSnapshotLocked(const std::filesystem::path& jsonlOut) const;
+    uint64_t computeFileHashLocked(const std::string& relPath) const;
 
     mutable std::mutex      mu_;
     std::filesystem::path   root_;
     std::filesystem::path   statePath_;
+    std::filesystem::path   generationPath_;
+    std::string             scanEpoch_;
+    ScanGeneration           generation_;
     std::vector<std::string> enumerated_;
     std::unordered_set<std::string> reviewedFiles_;
     std::vector<AuditCandidate> candidates_;

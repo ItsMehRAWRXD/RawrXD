@@ -95,6 +95,7 @@ add_executable(rawr_monolith
     src/rawr_audit_state.cpp
     src/rawr_agent_dispatch.cpp
     src/rawr_stub_scan.cpp
+    src/rawr_agent_audit_driver.cpp
     rawrxd/src/deep2/AgentToolAuthority.cpp
     ${RAWRXD_DEEP2_SOURCES}
     ${DEEP2_ASM}

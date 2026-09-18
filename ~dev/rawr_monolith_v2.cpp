@@ -1384,6 +1384,7 @@ static std::string resolve_model_alias(const std::string& alias) {
 // Both drive ONE Deep2Engine through the shared persistent runner.
 #include "rawr_run_stream.hpp"
 #include "rawr_agent.hpp"
+#include "rawr_agent_audit_driver.hpp"
 
 // =================== 13. MAIN =======================================
 #ifdef RAWR_MONOLITH_STANDALONE
@@ -1395,6 +1396,7 @@ int main(int argc, char** argv) {
         std::cerr << "  " << argv[0] << " <model.gguf> [prompt] [max_tokens]" << std::endl;
         std::cerr << "  " << argv[0] << " run <model_alias> '<free-form request>' [--max-tokens=N]" << std::endl;
         std::cerr << "  " << argv[0] << " agent <model_alias> '<free-form request>' [--max-steps=N] [--max-tokens-per-step=N] [--workspace=PATH]" << std::endl;
+        std::cerr << "  " << argv[0] << " agent-audit <model_alias> [--workspace=PATH] [--batch-size=N] [--max-batches=N]" << std::endl;
         std::cerr << "\nExample:" << std::endl;
         std::cerr << "  " << argv[0] << " model.gguf \"hello world\" 50" << std::endl;
         std::cerr << "  " << argv[0] << " run qwen32 \"audit my IDE codebase for any stubs\"" << std::endl;
@@ -1406,6 +1408,43 @@ int main(int argc, char** argv) {
     std::string prompt;
     int max_tokens = 256;
     
+    // RAWR_IDE_AUDIT_E2E_001: runtime-owned durable batch audit driver.
+    // The runtime (never the model) owns the outer loop and completion.
+    if (argc >= 3 && std::string(argv[1]) == "agent-audit") {
+        std::string alias = argv[2];
+        std::string model_path = resolve_model_alias(alias);
+        std::string workspace = ".";
+        rawrxd::agent::AuditDriverOptions dOpts;
+        for (int i = 3; i < argc; ++i) {
+            std::string arg = argv[i];
+            auto val = [&](const char* flag) -> const char* {
+                return arg.rfind(flag, 0) == 0 ? arg.c_str() + strlen(flag) : nullptr;
+            };
+            if (const char* v = val("--workspace=")) { workspace = v; continue; }
+            if (const char* v = val("--batch-size=")) { dOpts.batchSize = (uint32_t)atoi(v); continue; }
+            if (const char* v = val("--max-batches=")) { dOpts.maxBatches = (uint64_t)atoi(v); continue; }
+            if (const char* v = val("--max-tokens-per-step=")) { dOpts.maxTokensPerStep = (uint32_t)atoi(v); continue; }
+        }
+
+        std::cerr << "[RAWR_AUDIT_E2E] SUBCOMMAND=agent-audit" << std::endl;
+        std::cerr << "[RAWR_AUDIT_E2E] MODEL_ALIAS=" << alias << std::endl;
+        std::cerr << "[RAWR_AUDIT_E2E] MODEL_PATH=" << model_path << std::endl;
+        std::cerr << "[RAWR_AUDIT_E2E] WORKSPACE=" << workspace << std::endl;
+        std::cerr << "[RAWR_AUDIT_E2E] BATCH_SIZE=" << dOpts.batchSize << std::endl;
+
+        rawrxd::runstream::RunStreamReceipt receipt{};
+        rawrxd::runstream::RawrDeep2Runner* runner =
+            rawrxd::runstream::acquireSharedRunner(model_path, receipt);
+        if (!runner) {
+            std::cerr << "[RAWR_AUDIT_E2E] MODEL_LOAD_FAILED" << std::endl;
+            return 2;
+        }
+
+        const auto result = rawrxd::agent::runAuditToCompletion(
+            *runner, std::filesystem::path(workspace), dOpts);
+        return result.exitCode;
+    }
+
     // RAWR_AGENT_LOOP_001: unified agent subcommand. Same parse, agent mode.
     if (argc >= 4 && std::string(argv[1]) == "agent") {
         std::string alias = argv[2];
