@@ -1,6 +1,7 @@
 #include "deep2/Deep2Engine.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -11,6 +12,8 @@ using Deep2::Deep2Engine;
 using Deep2::EngineConfig;
 using Deep2::GenerationOptions;
 using Deep2::GenerationResult;
+
+std::atomic<uint32_t> g_strictGpuViolations{0};
 
 static GenerationResult run(
     Deep2Engine& e, const char* prompt, uint32_t n, bool print)
@@ -32,6 +35,46 @@ static GenerationResult run(
             }
             return true;
         });
+}
+
+struct Telemetry {
+    uint64_t gpuNs = 0;
+    uint64_t asyncWaitNs = 0;
+    uint64_t downloadWaitNs = 0;
+    uint64_t transferOverlapNs = 0;
+    uint64_t batchWeightBytes = 0;
+    uint64_t secondaryImportBytes = 0;
+    uint64_t boundaryBytes = 0;
+    uint64_t batchInputUploads = 0;
+    uint64_t timelineSignals = 0;
+    uint64_t timelineWaits = 0;
+    uint64_t timelineChains = 0;
+    uint64_t groupSubmits = 0;
+    uint64_t groupSyncWaits = 0;
+};
+
+static Telemetry snap(const Deep2Engine& e, unsigned s)
+{
+    Telemetry x{};
+    x.gpuNs              = e.vulkanSlotQ4KBatchGpuNs(s);
+    x.asyncWaitNs        = e.vulkanSlotQ4KAsyncWaitNs(s);
+    x.downloadWaitNs     = e.vulkanSlotDownloadRingWaitNs(s);
+    x.transferOverlapNs  = e.vulkanSlotTransferRingOverlapNs(s);
+    x.batchWeightBytes   = e.vulkanSlotQ4KBatchWeightBytes(s);
+    x.secondaryImportBytes = e.vulkanSlotSecondaryImportBytes(s);
+    x.boundaryBytes      = e.vulkanSlotFullOutputBoundaryBytes(s);
+    x.batchInputUploads  = e.vulkanSlotResidentBatchInputUploads(s);
+    x.timelineSignals    = e.vulkanSlotTimelineSignals(s);
+    x.timelineWaits      = e.vulkanSlotTimelineWaits(s);
+    x.timelineChains     = e.vulkanSlotTimelineComputeTransferChains(s);
+    x.groupSubmits       = e.vulkanSlotRecordedGroupSubmits(s);
+    x.groupSyncWaits     = e.vulkanSlotRecordedGroupSyncWaits(s);
+    return x;
+}
+
+static inline uint64_t delta(uint64_t a, uint64_t b)
+{
+    return b >= a ? b - a : 0;
 }
 
 int main(int argc, char** argv) {
@@ -85,8 +128,10 @@ int main(int argc, char** argv) {
         e,
         "Write a detailed C++ implementation of a lock free queue and explain ",
         32, false);
-    if (!warm.generatedTokens) {
-        std::fprintf(stderr, "QWEN32_40TPS=HOLD stage=warmup\n");
+    if (warm.generatedTokens != 32) {
+        std::fprintf(stderr,
+            "QWEN32_40TPS=HOLD stage=warmup got=%llu expected=32\n",
+            static_cast<unsigned long long>(warm.generatedTokens));
         return 14;
     }
 
@@ -96,6 +141,8 @@ int main(int argc, char** argv) {
     const uint64_t hits1a = e.vulkanSlotWeightHits(1);
     const uint64_t submit0a = e.vulkanSlotQueueSubmits(0);
     const uint64_t submit1a = e.vulkanSlotQueueSubmits(1);
+    const Telemetry pre0 = snap(e, 0);
+    const Telemetry pre1 = snap(e, 1);
 
     e.reset();
     e.resetGpuForwardCounters();
@@ -119,10 +166,14 @@ int main(int argc, char** argv) {
                                         ? tokenWallNs / measured.generatedTokens
                                         : 0;
 
-    const double tps =
+    const double tpsEngine =
         measured.generationTimeMs > 0.0
             ? static_cast<double>(measured.generatedTokens) /
               (measured.generationTimeMs * 0.001)
+            : 0.0;
+    const double tpsQpc =
+        tokenWallSec > 0.0
+            ? static_cast<double>(measured.generatedTokens) / tokenWallSec
             : 0.0;
 
     const uint64_t uploads0b = e.vulkanSlotWeightUploads(0);
@@ -131,6 +182,8 @@ int main(int argc, char** argv) {
     const uint64_t hits1b = e.vulkanSlotWeightHits(1);
     const uint64_t submit0b = e.vulkanSlotQueueSubmits(0);
     const uint64_t submit1b = e.vulkanSlotQueueSubmits(1);
+    const Telemetry post0 = snap(e, 0);
+    const Telemetry post1 = snap(e, 1);
 
     const auto& gf = e.gpuForwardCounters();
     const bool fullResidentGpu = e.isRealGpuForward();
@@ -150,20 +203,16 @@ int main(int argc, char** argv) {
         (e.vulkanDeviceCount() < 2 || uploads1b == uploads1a);
     const bool enoughTokens = measured.generatedTokens >= std::min<uint32_t>(32, measure);
 
-    const uint64_t gpu0Ns = e.vulkanSlotQ4KBatchGpuNs(0);
-    const uint64_t gpu1Ns = e.vulkanSlotQ4KBatchGpuNs(1);
-    const uint64_t gpuTimedNs = gpu0Ns + gpu1Ns;
+    const uint64_t gpu0Ns = delta(pre0.gpuNs, post0.gpuNs);
+    const uint64_t gpu1Ns = delta(pre1.gpuNs, post1.gpuNs);
+    const uint64_t gpuWorkNsSum = gpu0Ns + gpu1Ns;
+    const uint64_t gpuCriticalPathLowerBoundNs = std::max(gpu0Ns, gpu1Ns);
 
-    const uint64_t asyncWait0 = e.vulkanSlotQ4KAsyncWaitNs(0);
-    const uint64_t asyncWait1 = e.vulkanSlotQ4KAsyncWaitNs(1);
-    const uint64_t dlWait0 = e.vulkanSlotDownloadRingWaitNs(0);
-    const uint64_t dlWait1 = e.vulkanSlotDownloadRingWaitNs(1);
+    const uint64_t asyncWait0 = delta(pre0.asyncWaitNs, post0.asyncWaitNs);
+    const uint64_t asyncWait1 = delta(pre1.asyncWaitNs, post1.asyncWaitNs);
+    const uint64_t dlWait0 = delta(pre0.downloadWaitNs, post0.downloadWaitNs);
+    const uint64_t dlWait1 = delta(pre1.downloadWaitNs, post1.downloadWaitNs);
     const uint64_t explicitWaitNs = asyncWait0 + asyncWait1 + dlWait0 + dlWait1;
-
-    const uint64_t accountedNs = gpuTimedNs + explicitWaitNs;
-    const uint64_t accountedPct = tokenWallNs > 0
-                                      ? (accountedNs * 100) / tokenWallNs
-                                      : 0;
 
     std::fprintf(stderr,
         "GATE=DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001\n"
@@ -174,7 +223,8 @@ int main(int argc, char** argv) {
         "GENERATION_MS=%.3f\n"
         "TOKEN_WALL_NS=%llu\n"
         "AVG_TOKEN_WALL_NS=%llu\n"
-        "DECODE_TPS_REAL=%.6f\n"
+        "DECODE_TPS_ENGINE=%.6f\n"
+        "DECODE_TPS_QPC=%.6f\n"
         "GPU_DEVICES=%u\n"
         "REAL_GPU_FORWARD=%u\n"
         "FULL_RESIDENT_GPU=%u\n"
@@ -192,7 +242,8 @@ int main(int argc, char** argv) {
         "SLOT1_QUEUE_SUBMIT_DELTA=%llu\n"
         "GPU0_COMPUTE_NS=%llu\n"
         "GPU1_COMPUTE_NS=%llu\n"
-        "GPU_TIMED_NS=%llu\n"
+        "GPU_WORK_NS_SUM=%llu\n"
+        "GPU_CRITICAL_PATH_LOWER_BOUND_NS=%llu\n"
         "SLOT0_Q4K_ASYNC_WAIT_NS=%llu\n"
         "SLOT1_Q4K_ASYNC_WAIT_NS=%llu\n"
         "SLOT0_DOWNLOAD_RING_WAIT_NS=%llu\n"
@@ -222,9 +273,11 @@ int main(int argc, char** argv) {
         "HOST_MATERIALIZATIONS=%llu\n"
         "ROW_EXECUTOR_WAIT_INSTRUMENTED=0\n"
         "HOST_MERGE_NS_INSTRUMENTED=0\n"
-        "TOKEN_WALL_ACCOUNTED_NS=%llu\n"
-        "TOKEN_WALL_ACCOUNTED_PCT=%llu\n"
-        "ACCOUNTING_COMPLETE=1\n"
+        "GPU_COMPUTE_SCOPE=Q4K_BATCH_COUNTER_ONLY\n"
+        "EXPLICIT_WAIT_SCOPE=Q4K_ASYNC_PLUS_DOWNLOAD_RING\n"
+        "TOKEN_WALL_ACCOUNTED_NS=0\n"
+        "TOKEN_WALL_ACCOUNTED_PCT=0.000\n"
+        "ACCOUNTING_COMPLETE=0\n"
         "RESIDENT_REUSE=%u\n"
         "BOUNDED_UPLOADS=%u\n",
         static_cast<unsigned long long>(measure),
@@ -233,7 +286,8 @@ int main(int argc, char** argv) {
         measured.generationTimeMs,
         static_cast<unsigned long long>(tokenWallNs),
         static_cast<unsigned long long>(avgTokenWallNs),
-        tps,
+        tpsEngine,
+        tpsQpc,
         e.vulkanDeviceCount(),
         realGpu ? 1u : 0u,
         fullResidentGpu ? 1u : 0u,
@@ -251,36 +305,35 @@ int main(int argc, char** argv) {
         static_cast<unsigned long long>(submit1b - submit1a),
         static_cast<unsigned long long>(gpu0Ns),
         static_cast<unsigned long long>(gpu1Ns),
-        static_cast<unsigned long long>(gpuTimedNs),
+        static_cast<unsigned long long>(gpuWorkNsSum),
+        static_cast<unsigned long long>(gpuCriticalPathLowerBoundNs),
         static_cast<unsigned long long>(asyncWait0),
         static_cast<unsigned long long>(asyncWait1),
         static_cast<unsigned long long>(dlWait0),
         static_cast<unsigned long long>(dlWait1),
         static_cast<unsigned long long>(explicitWaitNs),
-        static_cast<unsigned long long>(e.vulkanSlotTransferRingOverlapNs(0)),
-        static_cast<unsigned long long>(e.vulkanSlotTransferRingOverlapNs(1)),
-        static_cast<unsigned long long>(e.vulkanSlotQ4KBatchWeightBytes(0)),
-        static_cast<unsigned long long>(e.vulkanSlotQ4KBatchWeightBytes(1)),
-        static_cast<unsigned long long>(e.vulkanSlotSecondaryImportBytes(0)),
-        static_cast<unsigned long long>(e.vulkanSlotSecondaryImportBytes(1)),
-        static_cast<unsigned long long>(e.vulkanSlotFullOutputBoundaryBytes(0)),
-        static_cast<unsigned long long>(e.vulkanSlotFullOutputBoundaryBytes(1)),
-        static_cast<unsigned long long>(e.vulkanSlotResidentBatchInputUploads(0)),
-        static_cast<unsigned long long>(e.vulkanSlotResidentBatchInputUploads(1)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineSignals(0)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineSignals(1)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineWaits(0)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineWaits(1)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineComputeTransferChains(0)),
-        static_cast<unsigned long long>(e.vulkanSlotTimelineComputeTransferChains(1)),
-        static_cast<unsigned long long>(e.vulkanSlotRecordedGroupSubmits(0)),
-        static_cast<unsigned long long>(e.vulkanSlotRecordedGroupSubmits(1)),
-        static_cast<unsigned long long>(e.vulkanSlotRecordedGroupSyncWaits(0)),
-        static_cast<unsigned long long>(e.vulkanSlotRecordedGroupSyncWaits(1)),
+        static_cast<unsigned long long>(delta(pre0.transferOverlapNs, post0.transferOverlapNs)),
+        static_cast<unsigned long long>(delta(pre1.transferOverlapNs, post1.transferOverlapNs)),
+        static_cast<unsigned long long>(delta(pre0.batchWeightBytes, post0.batchWeightBytes)),
+        static_cast<unsigned long long>(delta(pre1.batchWeightBytes, post1.batchWeightBytes)),
+        static_cast<unsigned long long>(delta(pre0.secondaryImportBytes, post0.secondaryImportBytes)),
+        static_cast<unsigned long long>(delta(pre1.secondaryImportBytes, post1.secondaryImportBytes)),
+        static_cast<unsigned long long>(delta(pre0.boundaryBytes, post0.boundaryBytes)),
+        static_cast<unsigned long long>(delta(pre1.boundaryBytes, post1.boundaryBytes)),
+        static_cast<unsigned long long>(delta(pre0.batchInputUploads, post0.batchInputUploads)),
+        static_cast<unsigned long long>(delta(pre1.batchInputUploads, post1.batchInputUploads)),
+        static_cast<unsigned long long>(delta(pre0.timelineSignals, post0.timelineSignals)),
+        static_cast<unsigned long long>(delta(pre1.timelineSignals, post1.timelineSignals)),
+        static_cast<unsigned long long>(delta(pre0.timelineWaits, post0.timelineWaits)),
+        static_cast<unsigned long long>(delta(pre1.timelineWaits, post1.timelineWaits)),
+        static_cast<unsigned long long>(delta(pre0.timelineChains, post0.timelineChains)),
+        static_cast<unsigned long long>(delta(pre1.timelineChains, post1.timelineChains)),
+        static_cast<unsigned long long>(delta(pre0.groupSubmits, post0.groupSubmits)),
+        static_cast<unsigned long long>(delta(pre1.groupSubmits, post1.groupSubmits)),
+        static_cast<unsigned long long>(delta(pre0.groupSyncWaits, post0.groupSyncWaits)),
+        static_cast<unsigned long long>(delta(pre1.groupSyncWaits, post1.groupSyncWaits)),
         static_cast<unsigned long long>(gf.hostMergeOps),
         static_cast<unsigned long long>(gf.hostMaterializations),
-        static_cast<unsigned long long>(accountedNs),
-        static_cast<unsigned long long>(accountedPct),
         residentReuse ? 1u : 0u,
         boundedUploads ? 1u : 0u);
 
