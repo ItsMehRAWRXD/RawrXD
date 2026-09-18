@@ -31,6 +31,13 @@ struct CachedDualRowPlan {
 const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1);
 
+// B4_LMHEAD_PERMANENT_RESIDENCY_001 helper: compute the CURRENT split
+// geometry and build per-device weight views WITHOUT dispatching. Used by
+// the lmHead pin path so pinning always matches the live split.
+bool Deep2ProbeRowSplitViews(const WeightTensor& wt,
+                              VulkanCompute& g0, VulkanCompute& g1,
+                              GpuWeightView& out0, GpuWeightView& out1);
+
 struct RowSplitReceipt {
     bool valid = false;
     bool gpu0 = false;

@@ -6,6 +6,7 @@
 #include "Sampler.hpp"
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "Deep2DualGpuRowSplit.hpp"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -1358,6 +1359,43 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         std::memset(output, 0, outDim * sizeof(float));
         if (deep2ForwardTraceEnabled()) {
             std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
+        }
+
+        // B4_LMHEAD_PERMANENT_RESIDENCY_001: the lmHead must never churn
+        // through the weight cache. Pin its per-device slices (at the live
+        // dual-row split geometry) before the first logits GEMV; a geometry
+        // change re-pins. Pinned entries are invisible to eviction, so the
+        // per-token re-upload churn B3 measured on slot 1 cannot recur.
+        const bool isLmHead = (&wt == &modelWeights.lmHead);
+        if (isLmHead && vulkanDevices_.size() >= 2 && wt.rows >= 2) {
+            GpuWeightView w0v{}, w1v{};
+            if (Deep2ProbeRowSplitViews(wt, *vulkanDevices_[0],
+                                        *vulkanDevices_[1], w0v, w1v)) {
+                const bool geometryChanged =
+                    lmHeadPinned_[0] &&
+                    lmHeadPinRow0Count_ != w0v.rows;
+                if (geometryChanged) ++lmHeadPinRePins_;
+                const uint64_t up0a = vulkanDevices_[0]->WeightUploadCount();
+                const uint64_t up1a = vulkanDevices_[1]->WeightUploadCount();
+                const bool pinOk =
+                    vulkanDevices_[0]->PinWeightView(w0v) &&
+                    vulkanDevices_[1]->PinWeightView(w1v);
+                if (pinOk) {
+                    lmHeadPinned_[0] = true;
+                    lmHeadPinned_[1] = true;
+                    lmHeadPinRow0Count_ = w0v.rows;
+                    const uint64_t up0b = vulkanDevices_[0]->WeightUploadCount();
+                    const uint64_t up1b = vulkanDevices_[1]->WeightUploadCount();
+                    lmHeadPinUploadDeltas_[0] += up0b - up0a;
+                    lmHeadPinUploadDeltas_[1] += up1b - up1a;
+                    if (deep2ForwardTraceEnabled() || geometryChanged) {
+                        std::fprintf(stderr,
+                            "[B4_LMHEAD_PIN] slot0rows=%u slot1rows=%u "
+                            "repin=%u\n",
+                            w0v.rows, w1v.rows, lmHeadPinRePins_);
+                    }
+                }
+            }
         }
 
         // Attempt 1: dual-GPU row split

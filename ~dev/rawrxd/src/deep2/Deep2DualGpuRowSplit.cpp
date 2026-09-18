@@ -651,6 +651,18 @@ bool Deep2BuildGpuWeightView(
     return true;
 }
 
+bool Deep2ProbeRowSplitViews(const WeightTensor& wt,
+                              VulkanCompute& g0, VulkanCompute& g1,
+                              GpuWeightView& out0, GpuWeightView& out1) {
+    if (wt.rows < 2 || !wt.cols || !supportedGpuType(wt.type)) return false;
+    const RowSplitPlan plan = cachedThroughputSplit(wt, g0, g1);
+    if (!plan.valid) return false;
+    if (!Deep2BuildGpuWeightView(wt, plan.row0Begin, plan.row0Count, out0) ||
+        !Deep2BuildGpuWeightView(wt, plan.row1Begin, plan.row1Count, out1))
+        return false;
+    return true;
+}
+
 bool Deep2RunDualGpuRowSplit(
     VulkanCompute& g0,VulkanCompute& g1,
     const WeightTensor& wt,const float* input,float* output,

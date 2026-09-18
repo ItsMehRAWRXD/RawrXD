@@ -966,6 +966,14 @@ private:
     uint64_t plannedGpuGemvOps_ = 0;
     GpuForwardCounters gpuFwd_{};
     bool gpuFwdCommitted_ = false;
+
+    // B4_LMHEAD_PERMANENT_RESIDENCY_001: lmHead slices pinned on both
+    // devices at the frozen dual-row split geometry. Pinning happens once
+    // at first logits GEMV; a split-geometry change re-pins (counted).
+    bool lmHeadPinned_[2] = {false, false};
+    uint32_t lmHeadPinRow0Count_ = 0;
+    uint32_t lmHeadPinRePins_ = 0;
+    uint64_t lmHeadPinUploadDeltas_[2] = {0, 0};
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     int parseWeightLayerIndex(const std::string& name) const;
