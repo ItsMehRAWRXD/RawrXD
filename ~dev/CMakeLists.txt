@@ -70,10 +70,16 @@ if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8)
     enable_language(ASM_MASM)
     set(DEEP2_ASM
         src/deep2/Classify.asm
+        rawrxd/src/rawr_classifier_scalar.asm
+        rawrxd/src/rawr_classifier_avx2.asm
     )
     set_source_files_properties(src/deep2/Classify.asm PROPERTIES LANGUAGE ASM_MASM)
+    set_source_files_properties(rawrxd/src/rawr_classifier_scalar.asm PROPERTIES LANGUAGE ASM_MASM)
+    set_source_files_properties(rawrxd/src/rawr_classifier_avx2.asm  PROPERTIES LANGUAGE ASM_MASM)
     # MASM does not accept C++ compiler flags; override them.
     set_source_files_properties(src/deep2/Classify.asm PROPERTIES COMPILE_FLAGS "")
+    set_source_files_properties(rawrxd/src/rawr_classifier_scalar.asm PROPERTIES COMPILE_FLAGS "")
+    set_source_files_properties(rawrxd/src/rawr_classifier_avx2.asm  PROPERTIES COMPILE_FLAGS "")
 else()
     set(DEEP2_ASM "")
     message(STATUS "Classify.asm skipped — MASM requires Windows x64")

@@ -1368,24 +1368,62 @@ struct Engine {
 } // namespace monolith
 } // namespace rawrxd
 
+// =================== MODEL ALIAS RESOLVER ===========================
+// RAWR_MODEL_RESOLVE_001: Thin vertical alias -> local GGUF path map.
+// Replaced later by ModelRegistry JSON / unified inference C API.
+static std::string resolve_model_alias(const std::string& alias) {
+    if (alias == "qwen32") {
+        return "F:\\models\\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf";
+    }
+    // No alias match: treat input as a literal filesystem path.
+    return alias;
+}
+
 // =================== 13. MAIN =======================================
 #ifdef RAWR_MONOLITH_STANDALONE
 int main(int argc, char** argv) {
     srand((unsigned)time(nullptr));
     
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <model.gguf> [prompt] [max_tokens]" << std::endl;
+        std::cerr << "Usage:" << std::endl;
+        std::cerr << "  " << argv[0] << " <model.gguf> [prompt] [max_tokens]" << std::endl;
+        std::cerr << "  " << argv[0] << " run <model_alias> '<free-form request>'" << std::endl;
         std::cerr << "\nExample:" << std::endl;
         std::cerr << "  " << argv[0] << " model.gguf \"hello world\" 50" << std::endl;
+        std::cerr << "  " << argv[0] << " run qwen32 \"audit my IDE codebase for any stubs\"" << std::endl;
         return 1;
     }
     
-    const char* model_path = argv[1];
-    std::string prompt = (argc > 2) ? argv[2] : "hello world";
-    int max_tokens = (argc > 3) ? atoi(argv[3]) : 50;
+    std::string model_path;
+    std::string prompt;
+    int max_tokens = 256;
+    
+    // RAWR_RUN_PARSE_001: CLI free-form parse for 'run' subcommand
+    if (argc >= 4 && std::string(argv[1]) == "run") {
+        std::string alias = argv[2];
+        model_path = resolve_model_alias(alias);
+        
+        // Concatenate remaining args as the free-form request
+        std::string request;
+        for (int i = 3; i < argc; ++i) {
+            if (i > 3) request += " ";
+            request += argv[i];
+        }
+        prompt = request;
+        max_tokens = 1024;  // product-path default
+        
+        std::cerr << "[RAWR_RUN_PARSE_001] SUBCOMMAND=run" << std::endl;
+        std::cerr << "[RAWR_RUN_PARSE_001] MODEL_ALIAS=" << alias << std::endl;
+        std::cerr << "[RAWR_RUN_PARSE_001] MODEL_PATH=" << model_path << std::endl;
+        std::cerr << "[RAWR_RUN_PARSE_001] REQUEST_LEN=" << prompt.size() << std::endl;
+    } else {
+        model_path = argv[1];
+        prompt = (argc > 2) ? argv[2] : "hello world";
+        max_tokens = (argc > 3) ? atoi(argv[3]) : 50;
+    }
     
     try {
-        rawrxd::monolith::Engine engine(model_path);
+        rawrxd::monolith::Engine engine(model_path.c_str());
         engine.run_inference(prompt, max_tokens);
     } catch (const std::exception& e) {
         std::cerr << "[RAWR] Fatal error: " << e.what() << std::endl;
