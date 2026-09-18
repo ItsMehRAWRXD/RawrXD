@@ -45,6 +45,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
+#include <filesystem>
 
 // FlashAttention integration layer
 #include "flash_attention_integration.cpp"
@@ -1379,12 +1380,10 @@ static std::string resolve_model_alias(const std::string& alias) {
     return alias;
 }
 
-// RAWR_RUN_STREAM_001: thin Deep2 Vulkan product-path runner
-// (src/rawr_run_stream.cpp — lifted from qwen32_40tps_gate invocation).
-namespace rawrxd { namespace runstream {
-int run_rawr_run(const std::string& modelPath, const std::string& prompt,
-                 uint32_t maxTokens);
-}} // namespace rawrxd::runstream
+// RAWR_RUN_STREAM_001 + RAWR_AGENT_LOOP_001 product surfaces.
+// Both drive ONE Deep2Engine through the shared persistent runner.
+#include "rawr_run_stream.hpp"
+#include "rawr_agent.hpp"
 
 // =================== 13. MAIN =======================================
 #ifdef RAWR_MONOLITH_STANDALONE
@@ -1394,10 +1393,12 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage:" << std::endl;
         std::cerr << "  " << argv[0] << " <model.gguf> [prompt] [max_tokens]" << std::endl;
-        std::cerr << "  " << argv[0] << " run <model_alias> '<free-form request>'" << std::endl;
+        std::cerr << "  " << argv[0] << " run <model_alias> '<free-form request>' [--max-tokens=N]" << std::endl;
+        std::cerr << "  " << argv[0] << " agent <model_alias> '<free-form request>' [--max-steps=N] [--max-tokens-per-step=N] [--workspace=PATH]" << std::endl;
         std::cerr << "\nExample:" << std::endl;
         std::cerr << "  " << argv[0] << " model.gguf \"hello world\" 50" << std::endl;
         std::cerr << "  " << argv[0] << " run qwen32 \"audit my IDE codebase for any stubs\"" << std::endl;
+        std::cerr << "  " << argv[0] << " agent qwen32 \"audit my entire RawrXD IDE codebase for unfinished, fake, disabled, or stub implementations\"" << std::endl;
         return 1;
     }
     
@@ -1405,6 +1406,64 @@ int main(int argc, char** argv) {
     std::string prompt;
     int max_tokens = 256;
     
+    // RAWR_AGENT_LOOP_001: unified agent subcommand. Same parse, agent mode.
+    if (argc >= 4 && std::string(argv[1]) == "agent") {
+        std::string alias = argv[2];
+        model_path = resolve_model_alias(alias);
+
+        std::string request;
+        uint32_t max_steps = 32;
+        uint32_t max_tokens_per_step = 512;
+        std::string workspace = ".";  // cwd default
+        for (int i = 3; i < argc; ++i) {
+            std::string arg = argv[i];
+            auto val = [&](const char* flag) -> const char* {
+                return arg.rfind(flag, 0) == 0 ? arg.c_str() + strlen(flag) : nullptr;
+            };
+            if (const char* v = val("--max-steps=")) { max_steps = (uint32_t)atoi(v); continue; }
+            if (const char* v = val("--max-tokens-per-step=")) { max_tokens_per_step = (uint32_t)atoi(v); continue; }
+            if (const char* v = val("--workspace=")) { workspace = v; continue; }
+            if (const char* v = val("--max-tokens=")) { max_tokens_per_step = (uint32_t)atoi(v); continue; }
+            if (!request.empty()) request += " ";
+            request += arg;
+        }
+
+        std::cerr << "[RAWR_AGENT_PARSE] SUBCOMMAND=agent" << std::endl;
+        std::cerr << "[RAWR_AGENT_PARSE] MODEL_ALIAS=" << alias << std::endl;
+        std::cerr << "[RAWR_AGENT_PARSE] MODEL_PATH=" << model_path << std::endl;
+        std::cerr << "[RAWR_AGENT_PARSE] REQUEST_LEN=" << request.size() << std::endl;
+        std::cerr << "[RAWR_AGENT_PARSE] MAX_STEPS=" << max_steps << std::endl;
+        std::cerr << "[RAWR_AGENT_PARSE] WORKSPACE=" << workspace << std::endl;
+
+        rawrxd::runstream::RunStreamReceipt receipt{};
+        rawrxd::runstream::RawrDeep2Runner* runner =
+            rawrxd::runstream::acquireSharedRunner(model_path, receipt);
+        if (!runner) {
+            std::cerr << "[RAWR_AGENT] MODEL_LOAD_FAILED" << std::endl;
+            return 2;
+        }
+
+        // Audit mode is enabled when the request asks for repository audit.
+        const bool auditMode =
+            request.find("audit") != std::string::npos ||
+            request.find("stub") != std::string::npos ||
+            request.find("unfinished") != std::string::npos;
+
+        rawrxd::agent::AgentOptions opts;
+        opts.maxSteps = max_steps;
+        opts.maxTokensPerStep = max_tokens_per_step;
+
+        const auto result = rawrxd::agent::run_agent_session(
+            *runner, request, std::filesystem::path(workspace), opts, auditMode);
+
+        if (!result.finalText.empty()) {
+            std::cout << result.finalText << std::endl;
+        }
+        std::cerr << "RAWR_AGENT_EXIT=" << result.exitCode
+                  << " STATUS=" << result.status << std::endl;
+        return result.exitCode;
+    }
+
     // RAWR_RUN_PARSE_001: CLI free-form parse for 'run' subcommand
     if (argc >= 4 && std::string(argv[1]) == "run") {
         std::string alias = argv[2];

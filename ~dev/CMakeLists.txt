@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(rawr_monolith CXX ASM)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -91,6 +91,10 @@ endif()
 add_executable(rawr_monolith
     rawr_monolith_v2.cpp
     src/rawr_run_stream.cpp
+    src/rawr_agent.cpp
+    src/rawr_audit_state.cpp
+    src/rawr_agent_dispatch.cpp
+    rawrxd/src/deep2/AgentToolAuthority.cpp
     ${RAWRXD_DEEP2_SOURCES}
     ${DEEP2_ASM}
 )
@@ -105,6 +109,7 @@ endif()
 
 target_include_directories(rawr_monolith PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
 )

@@ -9,15 +9,11 @@
 // benchmark harness.
 // ============================================================================
 
-#include <atomic>
-#include <cstdint>
-#include <cstdio>
-#include <functional>
-#include <memory>
-#include <string>
-#include <string_view>
+#include "rawr_run_stream.hpp"
 
-#include "deep2/Deep2Engine.h"
+#include <atomic>
+#include <cstdio>
+#include <memory>
 
 // Strict-GPU violation counter owned by the embedding binary.
 // Deep2Engine_Speculative.cpp increments this whenever a strict no-CPU-
@@ -33,117 +29,87 @@ using Deep2::EngineConfig;
 using Deep2::GenerationOptions;
 using Deep2::GenerationResult;
 
-// Receipt emitted by run_rawr_run() — RAWR_RUN_STREAM_001 authority.
-struct RunStreamReceipt {
-    int         exitCode            = 1;
-    bool        modelResolved       = false;
-    bool        engineInitialized   = false;
-    bool        modelLoaded         = false;
-    bool        vulkanInference     = false;
-    bool        cpuDemoEngine       = false;
-    bool        modelFallback       = false;
-    bool        streamCallbackUsed  = false;
-    uint64_t    generatedTokens     = 0;
-    uint64_t    promptTokens        = 0;
-    double      generationMs        = 0.0;
-    double      decodeTps           = 0.0;
-    uint64_t    unplannedFallbacks  = 0;
-    bool        strictViolation     = false;
-    std::string status             = "FAIL";
-};
+// ---------------------------------------------------------------------------
+// RawrDeep2Runner — cold load, warm run. Class declared in the header.
+// ---------------------------------------------------------------------------
 
-class RawrDeep2Runner {
-public:
-    // Cold path: initialize engine + load model exactly as the gate does.
-    bool load(const std::string& modelPath, RunStreamReceipt& receipt) {
-        EngineConfig cfg{};
-        cfg.maxSeqLen = 4096;
-        cfg.numThreads = 0;
+bool RawrDeep2Runner::load(const std::string& modelPath,
+                           RunStreamReceipt& receipt) {
+    EngineConfig cfg{};
+    cfg.maxSeqLen = 4096;
+    cfg.numThreads = 0;
 
-        if (!engine_.initialize(cfg)) {
-            std::fprintf(stderr,
-                         "[RAWR_RUN_STREAM_001] stage=initialize FAIL\n");
-            receipt.engineInitialized = false;
-            return false;
-        }
-        receipt.engineInitialized = true;
-        receipt.vulkanInference = false;
-
-        if (!engine_.loadModel(modelPath)) {
-            std::fprintf(stderr,
-                         "[RAWR_RUN_STREAM_001] stage=load FAIL path=%s\n",
-                         modelPath.c_str());
-            return false;
-        }
-        receipt.modelLoaded = true;
-        loadedModel_ = modelPath;
-
-        // Same strict Vulkan enablement as qwen32_40tps_gate:
-        // no CPU fallback is permitted on the product path.
-        engine_.setVulkanStrictNoCpuFallback(true);
-        engine_.enableVulkan(true);
-        if (!engine_.isVulkanInitialized() ||
-            !engine_.gpuResidentDecodeEnabled()) {
-            std::fprintf(stderr,
-                         "[RAWR_RUN_STREAM_001] stage=vulkan FAIL devices=%u\n",
-                         engine_.vulkanDeviceCount());
-            return false;
-        }
-        receipt.vulkanInference = true;
-        return true;
+    if (!engine_.initialize(cfg)) {
+        std::fprintf(stderr, "[RAWR_RUN_STREAM_001] stage=initialize FAIL\n");
+        receipt.engineInitialized = false;
+        return false;
     }
+    receipt.engineInitialized = true;
+    receipt.vulkanInference = false;
 
-    // Warm path: model remains mapped, Vulkan pipelines remain warm.
-    bool run(std::string_view prompt, uint32_t maxTokens,
-             const std::function<void(std::string_view)>& onToken,
-             RunStreamReceipt& receipt) {
-        GenerationOptions opts{};
-        opts.maxTokens = maxTokens;
-        opts.temperature = 0.0f;
-        opts.topK = 1;
-        opts.topP = 1.0f;
-        opts.repeatPenalty = 1.0f;
-        opts.seed = 1;
-
-        bool streamed = false;
-        const GenerationResult result = engine_.generateStream(
-            std::string(prompt), opts,
-            [&](int32_t, const std::string& piece) -> bool {
-                streamed = true;
-                if (onToken) {
-                    onToken(std::string_view(piece));
-                }
-                return true;
-            });
-
-        receipt.generatedTokens = result.generatedTokens;
-        receipt.promptTokens = result.promptTokens;
-        receipt.generationMs = result.generationTimeMs;
-        receipt.decodeTps =
-            result.generationTimeMs > 0.0
-                ? static_cast<double>(result.generatedTokens) /
-                      (result.generationTimeMs * 0.001)
-                : 0.0;
-        receipt.streamCallbackUsed = streamed;
-        receipt.unplannedFallbacks = engine_.vulkanUnplannedFallbacks();
-        receipt.strictViolation = engine_.vulkanStrictViolation();
-        return result.generatedTokens > 0;
+    if (!engine_.loadModel(modelPath)) {
+        std::fprintf(stderr, "[RAWR_RUN_STREAM_001] stage=load FAIL path=%s\n",
+                     modelPath.c_str());
+        return false;
     }
+    receipt.modelLoaded = true;
+    loadedModel_ = modelPath;
 
-    const std::string& loadedModel() const { return loadedModel_; }
-    bool loaded() const { return !loadedModel_.empty(); }
+    // Same strict Vulkan enablement as qwen32_40tps_gate:
+    // no CPU fallback is permitted on the product path.
+    engine_.setVulkanStrictNoCpuFallback(true);
+    engine_.enableVulkan(true);
+    if (!engine_.isVulkanInitialized() || !engine_.gpuResidentDecodeEnabled()) {
+        std::fprintf(stderr,
+                     "[RAWR_RUN_STREAM_001] stage=vulkan FAIL devices=%u\n",
+                     engine_.vulkanDeviceCount());
+        return false;
+    }
+    receipt.vulkanInference = true;
+    return true;
+}
 
-private:
-    Deep2Engine engine_{};
-    std::string loadedModel_;
-};
+bool RawrDeep2Runner::run(std::string_view prompt, uint32_t maxTokens,
+                           const std::function<void(std::string_view)>& onToken,
+                           RunStreamReceipt& receipt) {
+    GenerationOptions opts{};
+    opts.maxTokens = maxTokens;
+    opts.temperature = 0.0f;
+    opts.topK = 1;
+    opts.topP = 1.0f;
+    opts.repeatPenalty = 1.0f;
+    opts.seed = 1;
+
+    bool streamed = false;
+    const GenerationResult result = engine_.generateStream(
+        std::string(prompt), opts,
+        [&](int32_t, const std::string& piece) -> bool {
+            streamed = true;
+            if (onToken) {
+                onToken(std::string_view(piece));
+            }
+            return true;
+        });
+
+    receipt.generatedTokens = result.generatedTokens;
+    receipt.promptTokens = result.promptTokens;
+    receipt.generationMs = result.generationTimeMs;
+    receipt.decodeTps =
+        result.generationTimeMs > 0.0
+            ? static_cast<double>(result.generatedTokens) /
+                  (result.generationTimeMs * 0.001)
+            : 0.0;
+    receipt.streamCallbackUsed = streamed;
+    receipt.unplannedFallbacks = engine_.vulkanUnplannedFallbacks();
+    receipt.strictViolation = engine_.vulkanStrictViolation();
+    return result.generatedTokens > 0;
+}
 
 // ---------------------------------------------------------------------------
 // Persistent runner (RAWR_RUN_PERSISTENT_ENGINE_001 hook).
 // The engine stays alive across requests: warm tokenizer, warm Vulkan
-// pipelines, resident weights. Today one process = one invocation, but the
-// lifetime already lives here so `rawr process` / IDE server ownership is a
-// drop-in change.
+// pipelines, resident weights. Shared by run_rawr_run() and the agent loop
+// (rawr_agent.cpp) so both surfaces drive one Deep2Engine.
 // ---------------------------------------------------------------------------
 static std::unique_ptr<RawrDeep2Runner> g_runner;
 static std::string g_loadedModel;
@@ -182,10 +148,10 @@ static void emitReceipt(const RunStreamReceipt& r) {
     std::fflush(stderr);
 }
 
-// Acquire the persistent runner, loading the model on first use or on model
-// switch. Returns nullptr when load fails.
-static RawrDeep2Runner* acquireRunner(const std::string& modelPath,
-                                       RunStreamReceipt& receipt) {
+// Acquire the persistent shared runner, loading the model on first use or on
+// model switch. Returns nullptr when load fails.
+RawrDeep2Runner* acquireSharedRunner(const std::string& modelPath,
+                                      RunStreamReceipt& receipt) {
     if (g_runner && g_loadedModel == modelPath) {
         return g_runner.get();
     }
@@ -214,7 +180,7 @@ int run_rawr_run(const std::string& modelPath, const std::string& prompt,
     }
     receipt.modelResolved = true;
 
-    RawrDeep2Runner* runner = acquireRunner(modelPath, receipt);
+    RawrDeep2Runner* runner = acquireSharedRunner(modelPath, receipt);
     if (!runner) {
         emitReceipt(receipt);
         return 1;
