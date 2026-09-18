@@ -15,6 +15,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "rawr_stub_scan.hpp"
+
 namespace rawrxd {
 namespace agent {
 
@@ -46,6 +48,7 @@ struct AuditCandidate {
     std::string             file;
     uint32_t                line = 0;
     CandidateType           type = CandidateType::Other;
+    ScanKind                scanKind = ScanKind::StubComment;  // RAWR_STUB_SCAN_001 origin
     std::string             evidence;
     std::string             reasoning;
 
@@ -60,9 +63,14 @@ struct AuditCounters {
     uint64_t filesEnumerated  = 0;
     uint64_t filesReviewed    = 0;
     uint64_t filesExcluded    = 0;
+    uint64_t filesScanned     = 0;      // RAWR_STUB_SCAN_001
+    bool     sourceScanComplete = false; // RAWR_STUB_SCAN_001
     uint64_t candidatesTotal     = 0;
     uint64_t candidatesReviewed  = 0;
     uint64_t candidatesPending  = 0;
+    uint64_t confirmedDefects   = 0;
+    uint64_t falsePositives     = 0;
+    uint64_t needsRuntimeProof  = 0;
     uint64_t toolFailures       = 0;
     uint64_t modelFallbacks     = 0;
 };
@@ -79,13 +87,22 @@ public:
     // Returns the number of files enumerated. Idempotent.
     uint64_t enumerateSources();
 
+    // RAWR_STUB_SCAN_001: scan every enumerated file for candidates.
+    // Populates the candidate ledger; sets sourceScanComplete. Idempotent.
+    bool runSourceScan();
+
     // Model-driven state transitions (invoked by audit.* tools only).
     uint64_t addCandidate(const std::string& file, uint32_t line,
                           CandidateType type, const std::string& evidence,
                           const std::string& reasoning);
+    uint64_t addScanCandidate(const ScanCandidate& sc);
     bool reviewCandidate(uint64_t id, const std::string& verdict,
                          const std::string& note);
     bool markFilesReviewed(const std::vector<std::string>& files);
+
+    // Candidate access for audit.candidate.read / audit.candidates tools.
+    std::vector<AuditCandidate> pendingCandidates(uint32_t limit) const;
+    size_t candidateCount() const;
 
     void countToolFailure()   { std::lock_guard<std::mutex> g(mu_); counters_.toolFailures++; persistLocked(); }
     void countModelFallback(){ std::lock_guard<std::mutex> g(mu_); counters_.modelFallbacks++; persistLocked(); }
@@ -95,8 +112,17 @@ public:
         AuditCounters c = counters_;
         c.candidatesTotal    = candidates_.size();
         c.candidatesReviewed = 0;
-        for (const auto& cand : candidates_)
-            if (cand.reviewed) ++c.candidatesReviewed;
+        c.confirmedDefects   = 0;
+        c.falsePositives     = 0;
+        c.needsRuntimeProof  = 0;
+        for (const auto& cand : candidates_) {
+            if (cand.reviewed) {
+                ++c.candidatesReviewed;
+                if (cand.verdict == "confirmed") ++c.confirmedDefects;
+                else if (cand.verdict == "false_positive") ++c.falsePositives;
+                else if (cand.verdict == "needs_runtime_proof") ++c.needsRuntimeProof;
+            }
+        }
         c.candidatesPending = c.candidatesTotal - c.candidatesReviewed;
         c.filesReviewed     = reviewedFiles_.size();
         return c;
@@ -110,6 +136,7 @@ public:
         const AuditCounters c = counters();
         return c.filesEnumerated > 0 &&
                c.filesEnumerated == c.filesTotal &&
+               c.sourceScanComplete &&
                c.filesReviewed == c.filesEnumerated &&
                c.candidatesPending == 0 &&
                c.toolFailures == 0;

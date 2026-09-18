@@ -25,6 +25,8 @@ struct AgentResult {
     uint64_t    generatedTokens = 0;
     bool        coverageComplete = false;
     bool        reachedFinal    = false;
+    bool        sawToolResult   = false;   // a generation ran with real tool output in context
+    std::string firstTool;                // first successfully dispatched tool name
     std::string finalText;
     std::string status          = "FAIL";
 };
@@ -38,13 +40,28 @@ struct AgentOptions {
 // Known tool names for lenient reply parsing (filled by dispatch registration).
 void setKnownToolNames(const std::vector<std::string>& names);
 
+// RAWR_AGENT_PROTOCOL_SELFTEST_001 hook: deterministic parse of a raw model
+// reply using the EXACT production parser + canonical matching. Exposed so
+// the self-test is a behavioral lock on real code, not a duplicate.
+struct ProtocolParseResultForTest {
+    bool        isTool  = false;
+    bool        isFinal = false;
+    std::string tool;
+    std::string args;
+};
+ProtocolParseResultForTest parseModelReplyForTest(const std::string& raw);
+
 // Runs one agent session. The runner must already be loaded (shared engine
 // with `rawr run`). Workspace root scopes the ledger and tools.
+// requireCoverage=false certifies the LOOP only (tool dispatch + result in
+// context) without demanding full repository coverage — the RAWR_AGENT_LOOP_001
+// certification gate.
 AgentResult run_agent_session(runstream::RawrDeep2Runner& runner,
                               const std::string& userRequest,
                               const std::filesystem::path& workspaceRoot,
                               const AgentOptions& options,
-                              bool auditMode);
+                              bool auditMode,
+                              bool requireCoverage = true);
 
 } // namespace agent
 } // namespace rawrxd

@@ -8,7 +8,10 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
 #include <sstream>
+
+#include "rawr_stub_scan.hpp"
 
 namespace rawrxd {
 namespace agent {
@@ -116,6 +119,54 @@ uint64_t AuditLedger::enumerateSources() {
     return counters_.filesEnumerated;
 }
 
+// RAWR_STUB_SCAN_001: deterministic scan of every enumerated file.
+bool AuditLedger::runSourceScan() {
+    std::lock_guard<std::mutex> g(mu_);
+    counters_.filesScanned = 0;
+    counters_.sourceScanComplete = false;
+
+    std::vector<ScanCandidate> found;
+    for (const auto& rel : enumerated_) {
+        std::ifstream f(root_ / rel, std::ios::binary);
+        if (!f) continue;  // unreadable: excluded from scan set
+        std::string text((std::istreambuf_iterator<char>(f)),
+                         std::istreambuf_iterator<char>());
+        scanSourceText(rel, text, found);
+        ++counters_.filesScanned;
+    }
+
+    // Append deduplicated candidates to the ledger.
+    for (const auto& sc : found) {
+        bool dup = false;
+        for (const auto& existing : candidates_) {
+            if (existing.file == sc.file && existing.line == sc.line &&
+                existing.scanKind == sc.kind) { dup = true; break; }
+        }
+        if (dup) continue;
+        AuditCandidate c;
+        c.id = nextCandidateId_++;
+        c.file = sc.file;
+        c.line = sc.line;
+        c.scanKind = sc.kind;
+        c.evidence = sc.snippet;
+        switch (sc.kind) {
+            case ScanKind::TodoFixme:        c.type = CandidateType::Todo; break;
+            case ScanKind::NotImplemented:   c.type = CandidateType::StubApi; break;
+            case ScanKind::AssertFalse:      c.type = CandidateType::Unreachable; break;
+            case ScanKind::StubComment:      c.type = CandidateType::StubApi; break;
+            case ScanKind::FakeSuccess:      c.type = CandidateType::FakeSuccess; break;
+            case ScanKind::DisabledPath:     c.type = CandidateType::DisabledPath; break;
+            case ScanKind::StubBody:          c.type = CandidateType::EmptyImpl; break;
+            case ScanKind::UnimplementedRef: c.type = CandidateType::StubApi; break;
+        }
+        candidates_.push_back(c);
+    }
+
+    counters_.sourceScanComplete = true;
+    persistLocked();
+    return true;
+}
+
 uint64_t AuditLedger::addCandidate(const std::string& file, uint32_t line,
                                    CandidateType type,
                                    const std::string& evidence,
@@ -131,6 +182,53 @@ uint64_t AuditLedger::addCandidate(const std::string& file, uint32_t line,
     candidates_.push_back(c);
     persistLocked();
     return c.id;
+}
+
+uint64_t AuditLedger::addScanCandidate(const ScanCandidate& sc) {
+    std::lock_guard<std::mutex> g(mu_);
+    // Deduplicate: same file+line+kind never enters twice.
+    for (const auto& existing : candidates_) {
+        if (existing.file == sc.file && existing.line == sc.line &&
+            existing.scanKind == sc.kind) {
+            return existing.id;
+        }
+    }
+    AuditCandidate c;
+    c.id = nextCandidateId_++;
+    c.file = sc.file;
+    c.line = sc.line;
+    c.scanKind = sc.kind;
+    c.evidence = sc.snippet;
+    switch (sc.kind) {
+        case ScanKind::TodoFixme:        c.type = CandidateType::Todo; break;
+        case ScanKind::NotImplemented:   c.type = CandidateType::StubApi; break;
+        case ScanKind::AssertFalse:      c.type = CandidateType::Unreachable; break;
+        case ScanKind::StubComment:      c.type = CandidateType::StubApi; break;
+        case ScanKind::FakeSuccess:      c.type = CandidateType::FakeSuccess; break;
+        case ScanKind::DisabledPath:     c.type = CandidateType::DisabledPath; break;
+        case ScanKind::StubBody:          c.type = CandidateType::EmptyImpl; break;
+        case ScanKind::UnimplementedRef: c.type = CandidateType::StubApi; break;
+    }
+    candidates_.push_back(c);
+    return c.id;
+}
+
+std::vector<AuditCandidate> AuditLedger::pendingCandidates(uint32_t limit) const {
+    std::lock_guard<std::mutex> g(mu_);
+    std::vector<AuditCandidate> out;
+    out.reserve(std::min<size_t>(limit, candidates_.size()));
+    for (const auto& c : candidates_) {
+        if (!c.reviewed) {
+            out.push_back(c);
+            if (out.size() >= limit) break;
+        }
+    }
+    return out;
+}
+
+size_t AuditLedger::candidateCount() const {
+    std::lock_guard<std::mutex> g(mu_);
+    return candidates_.size();
 }
 
 bool AuditLedger::reviewCandidate(uint64_t id, const std::string& verdict,

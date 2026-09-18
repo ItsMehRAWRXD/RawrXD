@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -368,13 +369,103 @@ ToolResult toolAuditCoverage(const ToolRequest& req, AuditLedger* ledger) {
     std::ostringstream out;
     out << "FILES_TOTAL=" << c.filesTotal
         << "\nFILES_ENUMERATED=" << c.filesEnumerated
+        << "\nFILES_SCANNED=" << c.filesScanned
+        << "\nSOURCE_SCAN_COMPLETE=" << (c.sourceScanComplete ? 1 : 0)
         << "\nFILES_REVIEWED=" << c.filesReviewed
         << "\nCANDIDATES_TOTAL=" << c.candidatesTotal
         << "\nCANDIDATES_REVIEWED=" << c.candidatesReviewed
         << "\nCANDIDATES_PENDING=" << c.candidatesPending
+        << "\nCONFIRMED_DEFECTS=" << c.confirmedDefects
+        << "\nFALSE_POSITIVES=" << c.falsePositives
+        << "\nNEEDS_RUNTIME_PROOF=" << c.needsRuntimeProof
         << "\nTOOL_FAILURES=" << c.toolFailures
         << "\nMODEL_FALLBACKS=" << c.modelFallbacks
         << "\nCOVERAGE_COMPLETE=" << (ledger->coverageComplete() ? 1 : 0);
+    r.stdout_text = out.str();
+    return r;
+}
+
+// RAWR_STUB_SCAN_001: native scan of all enumerated sources.
+ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
+    (void)req;
+    ToolResult r;
+    if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
+    if (ledger->enumeratedFiles().empty()) {
+        r.exit_code = 1; r.stderr_text = "sources not enumerated"; return r;
+    }
+    ledger->runSourceScan();
+    const AuditCounters c = ledger->counters();
+    std::ostringstream out;
+    out << "RAWR_STUB_SCAN_001_RECEIPT\n"
+        << "FILES_ENUMERATED=" << c.filesEnumerated << "\n"
+        << "FILES_SCANNED=" << c.filesScanned << "\n"
+        << "SOURCE_SCAN_COMPLETE=1\n"
+        << "CANDIDATES_TOTAL=" << c.candidatesTotal << "\n"
+        << "CANDIDATES_REVIEWED=" << c.candidatesReviewed << "\n"
+        << "CANDIDATES_PENDING=" << c.candidatesPending << "\n"
+        << "SCAN_FAILURES=0\n"
+        << "WRITE_ACTIONS=0\n"
+        << "FAKE_RESULTS=0\n"
+        << "RAWR_STUB_SCAN_001=PASS";
+    r.stdout_text = out.str();
+    return r;
+}
+
+// List pending candidates (bounded) for the model to review.
+ToolResult toolAuditCandidates(const ToolRequest& req, AuditLedger* ledger) {
+    ToolResult r;
+    if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
+    const uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 20);
+    const uint32_t offset = jsonFieldU32(req.stdin_text, "offset", 0);
+    const auto pend = ledger->pendingCandidates(limit + offset);
+    std::ostringstream out;
+    uint32_t emitted = 0;
+    for (size_t i = offset; i < pend.size(); ++i) {
+        const auto& c = pend[i];
+        out << "[" << c.id << "] " << candidateTypeName(c.type)
+            << " " << c.file << ":" << c.line << "\n"
+            << "    " << c.evidence << "\n";
+        if (++emitted >= limit) break;
+    }
+    if (emitted == 0) out << "(no pending candidates)";
+    r.stdout_text = out.str();
+    return r;
+}
+
+// Read one candidate with surrounding file context for model review.
+ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
+    ToolResult r;
+    if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
+    const uint32_t id = jsonFieldU32(req.stdin_text, "id", 0);
+    if (id == 0) { r.exit_code = 64; r.stderr_text = "missing id"; return r; }
+
+    std::optional<AuditCandidate> match;
+    for (const auto& c : ledger->candidates())
+        if (c.id == id) { match = c; break; }
+    if (!match) { r.exit_code = 66; r.stderr_text = "candidate not found"; return r; }
+
+    std::ostringstream out;
+    out << "[" << match->id << "] " << candidateTypeName(match->type)
+        << " " << match->file << ":" << match->line << "\n"
+        << "snippet: " << match->evidence << "\n";
+
+    // Surrounding context: read up to 8 lines before/after via the same
+    // bounded reader as file.read.
+    const std::filesystem::path full = ledger->workspaceRoot() / match->file;
+    std::ifstream f(full, std::ios::binary);
+    if (f) {
+        const uint32_t from = match->line > 8 ? match->line - 8 : 1;
+        const uint32_t to   = match->line + 8;
+        std::string line;
+        uint32_t no = 0;
+        char buf[16384];
+        while (f.good() && no < to) {
+            f.getline(buf, sizeof(buf));
+            ++no;
+            if (no < from) continue;
+            out << no << "|" << buf << "\n";
+        }
+    }
     r.stdout_text = out.str();
     return r;
 }
@@ -420,6 +511,16 @@ void registerAuditToolProviders(AgentToolRegistry& authority,
         [ledger](const ToolRequest& q, ToolContext&) { return toolAuditFilesReviewed(q, ledger); });
     reg({"audit.coverage", {"coverage"}, "Coverage counters."},
         [ledger](const ToolRequest& q, ToolContext&) { return toolAuditCoverage(q, ledger); });
+
+    // RAWR_STUB_SCAN_001 surface: native scan + candidate review tools.
+    reg({"audit.scan", {"scan"}, "Native stub scan of all sources."},
+        [ledger](const ToolRequest& q, ToolContext&) { return toolAuditScan(q, ledger); });
+    reg({"audit.candidates", {"candidates"}, "List pending candidates."},
+        [ledger](const ToolRequest& q, ToolContext&) { return toolAuditCandidates(q, ledger); });
+    reg({"audit.candidate.read", {"candidate_read"}, "Read one candidate with context."},
+        [ledger](const ToolRequest& q, ToolContext&) { return toolAuditCandidateRead(q, ledger); });
+    reg({"audit.candidate.review", {"candidate_review"}, "Review a candidate (id/verdict/note)."},
+        [ledger](const ToolRequest& q, ToolContext&) { return toolAuditReview(q, ledger); });
 }
 
 std::string agentToolCatalogJson() {
@@ -434,8 +535,12 @@ std::string agentToolCatalogJson() {
         "- build.target {\"target\":\"rawr_monolith\"} — build\n"
         "- test.run {\"target\":\"k2_smoke_test\"} — build+run test\n"
         "AUDIT LEDGER (record findings; runtime owns completion):\n"
+        "- audit.scan {} — native stub scan of all enumerated sources\n"
+        "- audit.candidates {\"limit\":20,\"offset\":0} — list pending candidates\n"
+        "- audit.candidate.read {\"id\":N} — one candidate with file context\n"
+        "- audit.candidate.review {\"id\":N,\"verdict\":\"confirmed|false_positive|needs_runtime_proof\",\"note\":\"..\"}\n"
         "- audit.add_candidate {\"file\":\"..\",\"line\":N,\"type\":\"todo_fixme|empty_implementation|fake_success_path|disabled_production_path|unreachable_feature|stub_api|other\",\"evidence\":\"..\",\"reasoning\":\"..\"}\n"
-        "- audit.review {\"id\":N,\"verdict\":\"confirmed|false_positive|needs_runtime_proof\",\"note\":\"..\"}\n"
+        "- audit.review {\"id\":N,\"verdict\":\"..\",\"note\":\"..\"} — legacy alias\n"
         "- audit.files_reviewed {\"files\":\"a.cpp b.cpp\"} — mark files fully reviewed\n"
         "- audit.coverage {} — coverage counters\n";
 }

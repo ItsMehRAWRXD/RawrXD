@@ -94,6 +94,7 @@ add_executable(rawr_monolith
     src/rawr_agent.cpp
     src/rawr_audit_state.cpp
     src/rawr_agent_dispatch.cpp
+    src/rawr_stub_scan.cpp
     rawrxd/src/deep2/AgentToolAuthority.cpp
     ${RAWRXD_DEEP2_SOURCES}
     ${DEEP2_ASM}
@@ -134,6 +135,21 @@ add_executable(k2_smoke_test
 )
 target_include_directories(k2_smoke_test PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+
+#--------------------
+# Agent protocol self-test (RAWR_AGENT_PROTOCOL_SELFTEST_001)
+# Deterministic parse/canonicalization lock — no model, no GPU.
+#--------------------
+add_executable(rawr_agent_protocol_selftest
+    tests/rawr_agent_protocol_selftest.cpp
+    src/rawr_agent_parse_only.cpp
+)
+target_include_directories(rawr_agent_protocol_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
 )

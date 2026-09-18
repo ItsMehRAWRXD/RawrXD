@@ -1415,11 +1415,13 @@ int main(int argc, char** argv) {
         uint32_t max_steps = 32;
         uint32_t max_tokens_per_step = 512;
         std::string workspace = ".";  // cwd default
+        bool loop_cert = false;
         for (int i = 3; i < argc; ++i) {
             std::string arg = argv[i];
             auto val = [&](const char* flag) -> const char* {
                 return arg.rfind(flag, 0) == 0 ? arg.c_str() + strlen(flag) : nullptr;
             };
+            if (arg == "--loop-cert") { loop_cert = true; continue; }
             if (const char* v = val("--max-steps=")) { max_steps = (uint32_t)atoi(v); continue; }
             if (const char* v = val("--max-tokens-per-step=")) { max_tokens_per_step = (uint32_t)atoi(v); continue; }
             if (const char* v = val("--workspace=")) { workspace = v; continue; }
@@ -1454,7 +1456,8 @@ int main(int argc, char** argv) {
         opts.maxTokensPerStep = max_tokens_per_step;
 
         const auto result = rawrxd::agent::run_agent_session(
-            *runner, request, std::filesystem::path(workspace), opts, auditMode);
+            *runner, request, std::filesystem::path(workspace), opts, auditMode,
+            /*requireCoverage=*/!loop_cert);
 
         if (!result.finalText.empty()) {
             std::cout << result.finalText << std::endl;
