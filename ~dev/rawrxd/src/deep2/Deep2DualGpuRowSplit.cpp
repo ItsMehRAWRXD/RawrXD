@@ -184,15 +184,10 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
         std::memcpy(s.w0.data()+r*row0,src+r*rowBytes,row0);
         std::memcpy(s.w1.data()+r*row1,src+r*rowBytes+row0,row1);
     }
-    auto ins=cache.emplace(wt.data,Entry{std::move(s),pm});
-    if(!ins.second) {
-        ins.first->second.s=std::move(ins.first->second.s);
-        ins.first->second.s=Q4KColumnSlices{};
-        ins.first->second.s=s;
-        ins.first->second.ratioPermille=pm;
-        return &ins.first->second.s;
-    }
-    return &ins.first->second.s;
+    auto [it2, inserted] = cache.try_emplace(wt.data);
+    it2->second.s = std::move(s);
+    it2->second.ratioPermille = pm;
+    return &it2->second.s;
 }
 
 struct DualRowJob {
