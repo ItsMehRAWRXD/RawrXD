@@ -175,6 +175,22 @@ target_include_directories(rawr_agent_dispatch_selftest PRIVATE
 )
 
 #--------------------
+# Audit resume self-test (RAWR_AUDIT_RESUME_001)
+# Deterministic cross-process resume + stale-guard certification.
+#--------------------
+add_executable(rawr_audit_resume_selftest
+    tests/rawr_audit_resume_selftest.cpp
+    src/rawr_audit_state.cpp
+    src/rawr_stub_scan.cpp
+)
+target_include_directories(rawr_audit_resume_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+
+#--------------------
 # Deep2 Engine + Decode Bind (certification)
 #--------------------
 find_package(Vulkan QUIET)

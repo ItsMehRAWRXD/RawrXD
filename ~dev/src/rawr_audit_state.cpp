@@ -100,6 +100,24 @@ AuditLedger::AuditLedger(std::filesystem::path workspaceRoot)
     std::filesystem::create_directories(root_ / ".rawr", ec);
     statePath_ = root_ / ".rawr" / "audit_state.jsonl";
     generationPath_ = root_ / ".rawr" / "scan_generation.json";
+    candidatesPath_ = root_ / ".rawr" / "audit_candidates.jsonl";
+
+    // Monotonic generation sequence: highest archived/known seq + 1.
+    std::error_code ec2;
+    uint64_t seq = 0;
+    for (auto it = std::filesystem::directory_iterator(root_ / ".rawr", ec2);
+         !ec2 && it != std::filesystem::directory_iterator(); it.increment(ec2)) {
+        const std::string name = it->path().filename().string();
+        if (name.rfind("gen_", 0) == 0) {
+            try {
+                const uint64_t v = std::stoull(name.substr(4));
+                if (v > seq) seq = v;
+            } catch (...) {}
+        }
+    }
+    // gen_<seq>_<epoch> candidate snapshots define the sequence.
+    generationSeq_ = seq;
+    generation_.generationId = seq + 1;
 }
 
 // Deterministic source enumeration. Idempotent: repeated calls do not grow
@@ -356,22 +374,24 @@ void AuditLedger::archiveGeneration(const char* reason) {
     // Preserve the stale generation's evidence verbatim — never rewrite
     // candidate epochs (that would destroy the record that they belonged to
     // a different snapshot).
+    const uint64_t seq =
+        generation_.generationId > 0 ? generation_.generationId : 1;
     std::ostringstream name;
-    name << "scan_generation_archived_"
-         << (generation_.scanEpoch.empty() ? "none" : generation_.scanEpoch)
-         << ".jsonl";
-    const std::filesystem::path archivePath =
-        root_ / ".rawr" / name.str();
+    name << "gen_" << seq << "_" << generation_.scanEpoch << ".jsonl";
+    const std::filesystem::path archivePath = root_ / ".rawr" / name.str();
     writeSnapshotLocked(archivePath);
+    archivedGenerationId_ = seq;
     std::fprintf(stderr,
-                 "[RAWR_AUDIT] generation archived reason=%s epoch=%s "
+                 "[RAWR_AUDIT] generation %llu archived reason=%s epoch=%s "
                  "candidates=%zu -> %s\n",
-                 reason, generation_.scanEpoch.c_str(), candidates_.size(),
+                 static_cast<unsigned long long>(seq), reason,
+                 generation_.scanEpoch.c_str(), candidates_.size(),
                  archivePath.string().c_str());
     candidates_.clear();
     reviewedFiles_.clear();
     nextCandidateId_ = 1;
     generation_ = ScanGeneration{};
+    generation_.generationId = seq + 1;
     scanEpoch_.clear();
     counters_ = AuditCounters{};
     std::error_code ec;
@@ -380,10 +400,130 @@ void AuditLedger::archiveGeneration(const char* reason) {
 
 bool AuditLedger::loadGeneration() {
     std::lock_guard<std::mutex> g(mu_);
-    if (candidates_.empty() || generation_.scanEpoch.empty()) return false;
-    // Rewrite the generation file + candidates as the durable resume set.
+    if (generation_.scanEpoch.empty()) return false;
     persistGenerationLocked();
-    writeSnapshotLocked(root_ / ".rawr" / "audit_candidates.jsonl");
+    writeSnapshotLocked(candidatesPath_);
+    return true;
+}
+
+namespace {
+
+// Minimal JSON string field extractor for the generation file (single-line
+// safe; the file is machine-written).
+std::string jsonGet(const std::string& text, const std::string& key) {
+    const std::string needle = "\"" + key + "\"";
+    size_t p = text.find(needle);
+    if (p == std::string::npos) return {};
+    p = text.find(':', p + needle.size());
+    if (p == std::string::npos) return {};
+    ++p;
+    while (p < text.size() && isspace(static_cast<unsigned char>(text[p]))) ++p;
+    if (p < text.size() && text[p] == '"') {
+        ++p;
+        std::string out;
+        while (p < text.size() && text[p] != '"') {
+            if (text[p] == '\\' && p + 1 < text.size()) { ++p; }
+            out += text[p++];
+        }
+        return out;
+    }
+    std::string out;
+    while (p < text.size() && text[p] != ',' && text[p] != '}' &&
+           !isspace(static_cast<unsigned char>(text[p])))
+        out += text[p++];
+    return out;
+}
+
+} // namespace
+
+bool AuditLedger::resumeGeneration() {
+    std::lock_guard<std::mutex> g(mu_);
+    if (!std::filesystem::exists(generationPath_)) return false;
+
+    std::ifstream gf(generationPath_);
+    if (!gf) return false;
+    std::string genText((std::istreambuf_iterator<char>(gf)),
+                        std::istreambuf_iterator<char>());
+
+    auto parseU64 = [](const std::string& s, uint64_t fallback) -> uint64_t {
+        try {
+            if (s.empty()) return fallback;
+            return std::stoull(s);
+        } catch (...) { return fallback; }
+    };
+
+    ScanGeneration persisted;
+    persisted.generationId =
+        parseU64(jsonGet(genText, "generation_id"), 1);
+    persisted.epochSchema = static_cast<uint32_t>(
+        parseU64(jsonGet(genText, "epoch_schema"), 0));
+    persisted.epochAlgorithm = jsonGet(genText, "epoch_algorithm");
+    persisted.scanEpoch = jsonGet(genText, "scan_epoch");
+    persisted.sourceGitSha = jsonGet(genText, "source_git_sha");
+    persisted.nextCandidateId =
+        parseU64(jsonGet(genText, "next_candidate_id"), 1);
+
+    // Schema/algorithm mismatch => not resumable (caller archives).
+    if (persisted.epochSchema != kCurrentEpochSchema) return false;
+    if (persisted.epochAlgorithm != kEpochAlgorithm) return false;
+    if (persisted.scanEpoch.empty()) return false;
+
+    // Load candidates + verdicts from the durable snapshot.
+    std::ifstream cf(candidatesPath_);
+    if (!cf) return false;
+    std::vector<AuditCandidate> loaded;
+    std::string line;
+    uint64_t maxId = 0;
+    while (std::getline(cf, line)) {
+        if (line.rfind("{\"event\":\"candidate\"", 0) != 0) continue;
+        AuditCandidate c;
+        c.id = parseU64(jsonGet(line, "id"), 0);
+        if (c.id == 0) continue;
+        if (c.id > maxId) maxId = c.id;
+        c.file = jsonGet(line, "file");
+        if (c.file.empty()) continue;
+        c.line = static_cast<uint32_t>(parseU64(jsonGet(line, "line"), 0));
+        const std::string kind = jsonGet(line, "scan_kind");
+        for (int k = 0; k <= 7; ++k) {
+            const ScanKind sk = static_cast<ScanKind>(k);
+            if (kind == scanKindName(sk)) { c.scanKind = sk; break; }
+        }
+        c.scanEpoch = jsonGet(line, "scan_epoch");
+        {
+            std::stringstream ss(jsonGet(line, "source_file_hash"));
+            ss >> std::hex >> c.sourceFileHash;
+            if (c.sourceFileHash == 0)
+                c.sourceFileHash = parseU64(
+                    jsonGet(line, "source_file_hash"), 0);
+        }
+        c.evidence = jsonGet(line, "evidence");
+        c.reviewed = jsonGet(line, "reviewed") == "1";
+        c.verdict = jsonGet(line, "verdict");
+        c.reviewNote = jsonGet(line, "note");
+        loaded.push_back(std::move(c));
+    }
+    if (loaded.empty()) return false;
+    if (persisted.nextCandidateId <= maxId)
+        persisted.nextCandidateId = maxId + 1;
+
+    generation_ = persisted;
+    scanEpoch_ = persisted.scanEpoch;
+    nextCandidateId_ = persisted.nextCandidateId;
+    candidates_ = std::move(loaded);
+    generationLoadedFromDisk_ = true;
+    loadedReviewed_ = 0;
+    for (const auto& c : candidates_)
+        if (c.reviewed) ++loadedReviewed_;
+    counters_.sourceScanComplete = true;
+    counters_.candidatesTotal = candidates_.size();
+    counters_.filesScanned = counters_.filesEnumerated;
+    std::fprintf(stderr,
+                 "[RAWR_AUDIT] generation %llu LOADED from disk: candidates=%zu "
+                 "reviewed=%llu epoch=%s\n",
+                 static_cast<unsigned long long>(generation_.generationId),
+                 candidates_.size(),
+                 static_cast<unsigned long long>(loadedReviewed_),
+                 generation_.scanEpoch.c_str());
     return true;
 }
 
@@ -412,6 +552,7 @@ void AuditLedger::persistGenerationLocked() {
     std::ofstream out(generationPath_, std::ios::trunc);
     if (!out) return;
     out << "{\n"
+        << "  \"generation_id\": " << generation_.generationId << ",\n"
         << "  \"epoch_schema\": " << generation_.epochSchema << ",\n"
         << "  \"epoch_algorithm\": \"" << generation_.epochAlgorithm << "\",\n"
         << "  \"scan_epoch\": \"" << generation_.scanEpoch << "\",\n"
@@ -475,6 +616,7 @@ bool AuditLedger::writeSnapshotLocked(
             << ",\"reviewed\":" << (c.reviewed ? 1 : 0)
             << ",\"verdict\":\"" << jsonEscape(c.verdict) << "\""
             << ",\"evidence\":\"" << jsonEscape(c.evidence) << "\""
+            << ",\"note\":\"" << jsonEscape(c.reviewNote) << "\""
             << ",\"reasoning\":\"" << jsonEscape(c.reasoning) << "\"}\n";
     }
     return true;

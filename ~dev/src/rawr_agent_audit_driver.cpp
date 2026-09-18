@@ -306,21 +306,37 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
     std::fprintf(stderr, "[RAWR_AUDIT_E2E] source_git_sha=%s dirty_at_start=%d\n",
                  sourceGitSha.c_str(), sourceDirtyAtStart ? 1 : 0);
 
-    // Generation lifecycle: a persisted generation is RESUMED only when
-    // its schema, algorithm, and content epoch match the live tree. Any
-    // mismatch archives the stale generation verbatim (evidence preserved)
-    // and starts a fresh one. Old candidates are never rewritten.
-    ledger.refreshScanEpoch();
-    if (!ledger.generationMatchesLive()) {
-        std::fprintf(stderr,
-                     "[RAWR_AUDIT_E2E] generation mismatch — archiving stale "
-                     "generation and starting a new scan generation\n");
-        ledger.archiveGeneration("EPOCH_OR_SCHEMA_MISMATCH");
-        ledger.enumerateSources();
+    // Generation lifecycle — resume-first (RAWR_AUDIT_RESUME_001):
+    //   1. try to LOAD a persisted generation matching the live tree
+    //   2. if it matches, resume with prior verdicts intact (no rescan)
+    //   3. if none matches, archive any stale generation and scan fresh
+    bool resumed = false;
+    if (ledger.resumeGeneration()) {
+        ledger.refreshScanEpoch();
+        if (ledger.generationMatchesLive()) {
+            resumed = true;
+            std::fprintf(stderr,
+                         "[RAWR_AUDIT_E2E] GENERATION_LOADED=1 generation=%llu "
+                         "prior_verdicts=%llu\n",
+                         static_cast<unsigned long long>(
+                             ledger.generation().generationId),
+                         static_cast<unsigned long long>(
+                             ledger.candidatesReviewedAtLoad()));
+        } else {
+            std::fprintf(stderr,
+                         "[RAWR_AUDIT_E2E] persisted generation stale — "
+                         "archiving and starting fresh\n");
+            ledger.archiveGeneration("EPOCH_MISMATCH_AT_RESUME");
+            ledger.enumerateSources();
+        }
     } else {
         std::fprintf(stderr,
-                     "[RAWR_AUDIT_E2E] matching generation — fresh scan generation\n");
+                     "[RAWR_AUDIT_E2E] no resumable generation — fresh scan "
+                     "generation %llu\n",
+                     static_cast<unsigned long long>(
+                         ledger.generation().generationId));
     }
+    const bool legacyArchived = ledger.generationSeqAtArchive() != 0;
 
     AgentToolRegistry authority;
     registerAuditToolProviders(authority, &ledger);
@@ -330,9 +346,10 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
         setKnownToolNames(names);
     }
 
-    // Phase 1: exhaustive scan (runtime decides; model not asked).
+    // Phase 1: exhaustive scan (runtime decides; model not asked). A resumed
+    // generation skips the rescan entirely.
     AuditCounters cov = ledger.counters();
-    if (!cov.sourceScanComplete || ledger.candidateCount() == 0) {
+    if (!resumed && (!cov.sourceScanComplete || ledger.candidateCount() == 0)) {
         ledger.runSourceScan();
         cov = ledger.counters();
         std::fprintf(stderr, "[RAWR_AUDIT_E2E] scan complete files_scanned=%llu "
@@ -341,7 +358,7 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
                      static_cast<unsigned long long>(cov.candidatesTotal),
                      ledger.scanEpoch().c_str());
     }
-    // Persist the generation for crash/resume.
+    // Persist the generation for crash/resume (durable snapshot).
     ledger.loadGeneration();
 
     // Phase 2: restrict the tool surface to adjudication only.
@@ -359,6 +376,8 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
 
     // Phase 3: batch loop until CANDIDATES_PENDING=0 (runtime authority).
     const std::string scanEpochStart = ledger.scanEpoch();
+    const uint64_t generationIdAtStart = ledger.generation().generationId;
+    const uint64_t reviewedBeforeRun = ledger.counters().candidatesReviewed;
     uint32_t noProgressBatches = 0;
     bool haltedNoProgress = false;
     bool maxBatchesReached = false;
@@ -424,12 +443,14 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
     }
 
     // Phase 4: global receipt — the runtime mints it, never the model.
+    const uint64_t reviewedBeforeBatch = reviewedBeforeRun;
     cov = ledger.counters();
     ledger.refreshScanEpoch();
     const std::string scanEpochEnd = ledger.scanEpoch();
     const bool epochMatch = scanEpochStart == scanEpochEnd;
     e2e.coverageComplete = ledger.coverageComplete() && epochMatch;
     ledger.writeSnapshot(workspaceRoot / ".rawr" / "audit_candidates.jsonl");
+    ledger.loadGeneration();  // persist latest verdicts for the next process
     const bool sourceDirtyAtEnd = !gitTreeClean(workspaceRoot);
 
     const bool complete = cov.candidatesPending == 0;
@@ -457,6 +478,11 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
                  "RAWR_IDE_AUDIT_E2E_001_RECEIPT\n"
                  "SCAN_EPOCH_SCHEMA=%u\n"
                  "SCAN_EPOCH_ALGO=%s\n"
+                 "GENERATION_ID=%llu\n"
+                 "GENERATION_LOADED=%d\n"
+                 "GENERATION_ARCHIVED=%d\n"
+                 "SOURCE_RESCAN=%d\n"
+                 "LEGACY_CANDIDATES_MIGRATED=0\n"
                  "SOURCE_GIT_SHA=%s\n"
                  "SOURCE_DIRTY_AT_SCAN_START=%d\n"
                  "SOURCE_DIRTY_AT_COMPLETION=%d\n"
@@ -467,6 +493,7 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
                  "FILES_SCANNED=%llu\n"
                  "SOURCE_SCAN_COMPLETE=%d\n"
                  "CANDIDATES_TOTAL=%llu\n"
+                 "CANDIDATES_REVIEWED_BEFORE=%llu\n"
                  "CANDIDATES_REVIEWED=%llu\n"
                  "CANDIDATES_PENDING=%llu\n"
                  "CONFIRMED_DEFECTS=%llu\n"
@@ -487,6 +514,10 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
                  "RAWR_IDE_AUDIT_E2E_001=%s\n",
                  kCurrentEpochSchema,
                  kEpochAlgorithm,
+                 static_cast<unsigned long long>(generationIdAtStart),
+                 resumed ? 1 : 0,
+                 legacyArchived ? 1 : 0,
+                 resumed ? 0 : 1,
                  sourceGitSha.c_str(),
                  sourceDirtyAtStart ? 1 : 0,
                  sourceDirtyAtEnd ? 1 : 0,
@@ -497,6 +528,7 @@ AuditE2EResult runAuditToCompletion(RawrDeep2Runner& runner,
                  static_cast<unsigned long long>(cov.filesScanned),
                  cov.sourceScanComplete ? 1 : 0,
                  static_cast<unsigned long long>(cov.candidatesTotal),
+                 static_cast<unsigned long long>(reviewedBeforeBatch),
                  static_cast<unsigned long long>(cov.candidatesReviewed),
                  static_cast<unsigned long long>(cov.candidatesPending),
                  static_cast<unsigned long long>(cov.confirmedDefects),

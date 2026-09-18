@@ -29,10 +29,12 @@ constexpr uint32_t kCurrentEpochSchema = 2;
 constexpr const char* kEpochAlgorithm = "FNV1A64_PATH_CONTENT";
 
 struct ScanGeneration {
+    uint64_t    generationId = 0;        // monotonic, persisted
     uint32_t    epochSchema = kCurrentEpochSchema;
     std::string epochAlgorithm = kEpochAlgorithm;
     std::string scanEpoch;        // content-sensitive tree hash
     std::string sourceGitSha;      // provenance (advisory)
+    uint64_t    nextCandidateId = 1;
 };
 
 enum class CandidateType : uint8_t {
@@ -120,8 +122,18 @@ public:
     // file and reset for a new scan (schema/epoch mismatch, or explicit).
     bool generationMatchesLive() const;
     void archiveGeneration(const char* reason);
-    bool loadGeneration();          // resume a matching generation if present
+    // loadGeneration: PERSIST the in-memory generation (crash snapshot).
+    // resumeGeneration: LOAD a matching persisted generation from disk into
+    // memory (candidates + verdicts + id counter). Returns false when no
+    // persisted generation exists or it does not match the live tree.
+    bool loadGeneration();
+    bool resumeGeneration();
+    bool generationLoadedFromDisk() const { return generationLoadedFromDisk_; }
     const ScanGeneration& generation() const { return generation_; }
+
+    // Resume receipt fields (RAWR_AUDIT_RESUME_001).
+    uint64_t candidatesReviewedAtLoad() const { return loadedReviewed_; }
+    uint64_t generationSeqAtArchive() const { return archivedGenerationId_; }
 
     // Per-file content hash (same algorithm, single file) for immediate
     // stale-review protection on candidate.read / candidate.review.
@@ -206,8 +218,13 @@ private:
     std::filesystem::path   root_;
     std::filesystem::path   statePath_;
     std::filesystem::path   generationPath_;
+    std::filesystem::path   candidatesPath_;   // durable candidate snapshot
     std::string             scanEpoch_;
     ScanGeneration           generation_;
+    bool                    generationLoadedFromDisk_ = false;
+    uint64_t                loadedReviewed_ = 0;
+    uint64_t                archivedGenerationId_ = 0;
+    uint64_t                generationSeq_ = 0;   // last archived seq
     std::vector<std::string> enumerated_;
     std::unordered_set<std::string> reviewedFiles_;
     std::vector<AuditCandidate> candidates_;
