@@ -26,6 +26,12 @@ int deviceScore(const VulkanPhysicalInfo& d) {
     return score;
 }
 
+bool isDeep2RequiredNativeGpu(const VulkanPhysicalInfo& d) {
+    if (d.vendorId != 0x1002) return false;
+    if (!d.discrete) return false;
+    return d.deviceId == 0x7551 || d.deviceId == 0x747E;
+}
+
 uint64_t tensorResidentBytes(const WeightTensor& w) {
     if (!w.data) return 0;
     if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
@@ -81,17 +87,25 @@ void Deep2Engine::enableVulkan(bool enable) {
             [](const VulkanPhysicalInfo& d){ return !d.compute; }),
         devs.end());
 
-    // Reject integrated GPUs when two or more discrete GPUs are available
-    size_t discreteCount = std::count_if(devs.begin(), devs.end(),
-        [](const VulkanPhysicalInfo& d){ return d.discrete; });
-    if (discreteCount >= 2) {
-        devs.erase(
-            std::remove_if(devs.begin(), devs.end(),
-                [](const VulkanPhysicalInfo& d){ return !d.discrete; }),
-            devs.end());
+    // Only accept native AMD discrete GPUs: R9700 (0x7551) or RX 7800 XT (0x747E)
+    devs.erase(
+        std::remove_if(devs.begin(), devs.end(),
+            [](const VulkanPhysicalInfo& d){ return !isDeep2RequiredNativeGpu(d); }),
+        devs.end());
+
+    bool found7551 = false, found747E = false;
+    for (const auto& d : devs) {
+        if (d.deviceId == 0x7551) found7551 = true;
+        if (d.deviceId == 0x747E) found747E = true;
+    }
+
+    if (!found7551 || !found747E) {
         std::fprintf(stderr,
-            "DEEP2_GPU_FILTER discrete=%zu igpu=REJECTED\n",
-            discreteCount);
+            "DEEP2_REQUIRED_DUAL_AMD_PAIR_MISSING r9700=%d rx7800xt=%d\n",
+            (int)found7551, (int)found747E);
+        vulkanStrictViolation_ = vulkanStrictNoCpuFallback_;
+        vulkanInitialized_ = false;
+        return;
     }
 
     std::stable_sort(devs.begin(),devs.end(),

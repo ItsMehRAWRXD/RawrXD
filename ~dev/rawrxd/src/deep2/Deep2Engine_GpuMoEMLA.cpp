@@ -83,6 +83,8 @@ bool Deep2Engine::tryVulkanHostGEMV(
                 *vulkanDevices_[0],*vulkanDevices_[1],
                 wt,input,output,epoch,&r)){
             ++gpuFwd_.dualRowSplitOps;
+            ++gpuFwd_.dualRowSlot[0];
+            ++gpuFwd_.dualRowSlot[1];
             ++gpuFwd_.hostMergeOps;
             gpuFwd_.dualArithmeticOverlapNs=
                 std::max(gpuFwd_.dualArithmeticOverlapNs,
@@ -94,23 +96,45 @@ bool Deep2Engine::tryVulkanHostGEMV(
 
     // One valid device is still a real GPU path; no fake two-stick claim.
     auto* g=getVulkanComputeSlot(0);
-    if(!g) return false;
+    if(!g){
+        std::fprintf(stderr,"GEMV_SINGLE getVulkanComputeSlot(0)=null name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
+        return false;
+    }
     GpuWeightView view{};
-    if(!fullView(wt,view)) return false;
+    if(!fullView(wt,view)){
+        std::fprintf(stderr,"GEMV_SINGLE fullView failed name=%s\n",wt.name.empty()?"null":wt.name.c_str()); std::fflush(stderr);
+        return false;
+    }
+    const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
 
     g->SetWorkEpoch(epoch);
-    if(!g->EnsureScratch(30,wt.cols)||
-       !g->EnsureScratch(31,wt.rows))
+    if(!g->EnsureScratch(30,wt.cols)){
+        std::fprintf(stderr,"GEMV_SINGLE EnsureScratch(30,cols) failed name=%s cols=%zu\n",wtn,wt.cols); std::fflush(stderr);
         return false;
+    }
+    if(!g->EnsureScratch(31,wt.rows)){
+        std::fprintf(stderr,"GEMV_SINGLE EnsureScratch(31,rows) failed name=%s rows=%zu\n",wtn,wt.rows); std::fflush(stderr);
+        return false;
+    }
     auto& x=g->Scratch(30);
     auto& y=g->Scratch(31);
-    if(!g->UploadVector(x,input,wt.cols)||
-       !g->DispatchWeight(view,x,y)||
-       !g->DownloadVector(y,output,wt.rows))
+    if(!g->UploadVector(x,input,wt.cols)){
+        std::fprintf(stderr,"GEMV_SINGLE UploadVector failed name=%s\n",wtn); std::fflush(stderr);
         return false;
+    }
+    if(!g->DispatchWeight(view,x,y)){
+        std::fprintf(stderr,"GEMV_SINGLE DispatchWeight failed name=%s type=%d rows=%u cols=%u bytes=%zu\n",wtn,view.type,view.rows,view.cols,view.bytes); std::fflush(stderr);
+        return false;
+    }
+    if(!g->DownloadVector(y,output,wt.rows)){
+        std::fprintf(stderr,"GEMV_SINGLE DownloadVector failed name=%s\n",wtn); std::fflush(stderr);
+        return false;
+    }
 
     ++gpuFwd_.hostMaterializations;
-    return finiteVec(output,outDim);
+    bool fin=finiteVec(output,outDim);
+    if(!fin) std::fprintf(stderr,"GEMV_SINGLE finiteVec failed name=%s\n",wtn), std::fflush(stderr);
+    return fin;
 }
 
 bool Deep2Engine::tryVulkanHostGEMVBatch4(
@@ -128,6 +152,8 @@ bool Deep2Engine::tryVulkanHostGEMVBatch4(
             wt,inputBatch,outputBatch,(uint32_t)count,epoch,&r))
         return false;
     ++gpuFwd_.dualRowSplitOps;
+    ++gpuFwd_.dualRowSlot[0];
+    ++gpuFwd_.dualRowSlot[1];
     ++gpuFwd_.hostMergeOps;
     gpuFwd_.dualArithmeticOverlapNs=
         std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
@@ -152,6 +178,8 @@ bool Deep2Engine::tryVulkanHostGEMVGroup(
         return false;
 
     ++gpuFwd_.dualRowSplitOps;
+    ++gpuFwd_.dualRowSlot[0];
+    ++gpuFwd_.dualRowSlot[1];
     ++gpuFwd_.hostMergeOps;
     ++gpuFwd_.hostMaterializations;
     gpuFwd_.dualArithmeticOverlapNs=

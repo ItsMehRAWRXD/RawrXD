@@ -41,6 +41,7 @@ struct GpuForwardCounters {
     uint64_t dualAsyncWallNs=0;
     uint64_t hostMergeOps = 0;
     uint64_t dualRowDenseTokens = 0;
+    uint64_t dualRowSlot[8]{};          // real-weight dual-row dispatches per device
     uint64_t gpuExpertDispatches = 0;
     uint64_t mlaGpuAttentionOps = 0;
 };
@@ -53,6 +54,18 @@ inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
 
 inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexcept {
     return Deep2GpuForward_Resident(c) && c.hostMaterializations == 0;
+}
+
+inline bool Deep2GpuForward_DualPhysicalGpuReal(const GpuForwardCounters& c) noexcept {
+    // Authority from either:
+    //   A) resident decode: both GPU slots executed >0 layers, AND no host materializations
+    //   B) dual-row dense: both GPU slots performed >0 real-weight dual-row dispatches
+    const bool residentEvidence =
+        Deep2GpuForward_IsReal(c, 0) &&
+        c.forwardSlot[0] > 0 && c.forwardSlot[1] > 0;
+    const bool dualRowEvidence =
+        c.dualRowSlot[0] > 0 && c.dualRowSlot[1] > 0;
+    return residentEvidence || dualRowEvidence;
 }
 
 inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t cpuFb) noexcept {
@@ -117,11 +130,17 @@ inline void Deep2GpuForward_Emit(FILE* f, const GpuForwardCounters& c, uint64_t 
                 (unsigned long long)c.hostMergeOps);
         fprintf(o, "DEEP2_DUAL_ROW_DENSE_TOKENS=%llu\n",
                 (unsigned long long)c.dualRowDenseTokens);
+        fprintf(o, "DEEP2_DUAL_ROW_SLOT_0=%llu\n",
+                (unsigned long long)c.dualRowSlot[0]);
+        fprintf(o, "DEEP2_DUAL_ROW_SLOT_1=%llu\n",
+                (unsigned long long)c.dualRowSlot[1]);
 
         fprintf(o, "DEEP2_GPU_EXPERT_DISPATCHES=%llu\n",
                 (unsigned long long)c.gpuExpertDispatches);
         fprintf(o, "DEEP2_GPU_MLA_ATTN_OPS=%llu\n",
                 (unsigned long long)c.mlaGpuAttentionOps);
+        fprintf(o, "DEEP2_DUAL_PHYSICAL_GPU_FORWARD=%u\n",
+                Deep2GpuForward_DualPhysicalGpuReal(c) ? 1u : 0u);
     };
     emit(stdout);
     if (f && f != stdout) emit(f);

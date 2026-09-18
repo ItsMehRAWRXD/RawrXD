@@ -156,6 +156,7 @@ public:
         uint32_t maxSeq, uint32_t layers);
     bool ApplyWeightWindowPolicy(size_t maxWeightBytes, size_t budgetBytes,
                                  uint32_t slotOverride, size_t arenaBytes);
+    bool ReserveDecodeScratch();
 
     bool UploadHidden(const float* src, uint32_t count);
     bool DownloadHidden(float* dst, uint32_t count);
@@ -969,6 +970,10 @@ private:
 
     size_t weightBudgetBytes_ = 0;
     size_t weightCacheBytes_ = 0;
+    size_t scratchReservedBytes_ = 0;
+    bool memoryBudgetAvailable_ = false;
+    size_t deviceLocalHeapHeadroom() const;
+    bool checkLiveHeapAdmission(size_t bytes) const;
     std::unordered_map<uint64_t, WeightCacheEntry> weightCache_;
     std::vector<PrefetchEntry> prefetch_;
 

@@ -1,5 +1,6 @@
 #include "deep2/Deep2Engine.h"
 #include "deep2/Deep2Speculative.hpp"
+#include "deep2/Deep2GpuForward.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cstdio>
@@ -140,10 +141,12 @@ int main(int argc,char** argv) {
             return 20;
         }
         std::fprintf(stderr,"THRESHOLD_SETUP_OK ntok=%d\n",ntok); fflush(stderr);
+        e.resetGpuForwardCounters();
         InferenceStats s{};
         std::fprintf(stderr,"THRESHOLD_GEN_BEGIN ntok=%d\n",ntok); fflush(stderr);
         auto x=run(e,prompt,(size_t)ntok,s);
         std::fprintf(stderr,"THRESHOLD_GEN_END ntok=%d got=%zu\n",ntok,x.size()); fflush(stderr);
+        Deep2GpuForward_Emit(stderr, e.gpuForwardCounters(), 0);
         if(e.vulkanStrictViolation()) {
             g_strictGpuViolations.fetch_add(1, std::memory_order_relaxed);
         }

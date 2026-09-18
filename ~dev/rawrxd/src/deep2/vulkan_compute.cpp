@@ -137,6 +137,21 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         }
         if (dup) continue;
 
+        // Fallback dedup by (vendorId, deviceId) for D3D12 wrappers with different UUIDs
+        bool dupFallback = false;
+        for (const auto& existing : out) {
+            if (existing.vendorId == p.vendorID && existing.deviceId == p.deviceID) {
+                dupFallback = true;
+                break;
+            }
+        }
+        if (dupFallback) {
+            std::fprintf(stderr,
+                "VK_PHYS_DEDUP ordinal=%u name=%s vendor=0x%04X device=0x%04X reason=FALLBACK_DEDUP\n",
+                i, p.deviceName, p.vendorID, p.deviceID);
+            continue;
+        }
+
         uint32_t qn = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(devs[i], &qn, nullptr);
         std::vector<VkQueueFamilyProperties> q(qn);
@@ -253,6 +268,16 @@ bool VulkanCompute::selectPhysical() {
                 break;
             }
         }
+        if (dup) continue;
+        // Fallback dedup by (vendorId, deviceId) to align with EnumeratePhysicalDevices()
+        for (auto existingVk : devs) {
+            VkPhysicalDeviceProperties existingP{};
+            vkGetPhysicalDeviceProperties(existingVk, &existingP);
+            if (existingP.vendorID == p.vendorID && existingP.deviceID == p.deviceID) {
+                dup = true;
+                break;
+            }
+        }
         if (!dup) devs.push_back(rawDevs[i]);
     }
     if (requestedOrdinal_ >= devs.size()) return false;
@@ -305,10 +330,15 @@ bool VulkanCompute::createDevice() {
         vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extCount, ext.data());
 
     bool haveCalibrated = false;
-    for (const auto& e : ext)
+    bool haveMemoryBudget = false;
+    for (const auto& e : ext) {
         if (std::strcmp(e.extensionName,
                         VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME) == 0)
             haveCalibrated = true;
+        if (std::strcmp(e.extensionName,
+                        VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) == 0)
+            haveMemoryBudget = true;
+    }
 
     float prio = 1.0f;
     VkDeviceQueueCreateInfo qi{};
@@ -320,6 +350,8 @@ bool VulkanCompute::createDevice() {
     std::vector<const char*> enabled;
     if (haveCalibrated)
         enabled.push_back(VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME);
+    if (haveMemoryBudget)
+        enabled.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
 
     VkDeviceCreateInfo di{};
     di.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -337,6 +369,7 @@ bool VulkanCompute::createDevice() {
     }
 
     vkGetDeviceQueue(device_, queueFamily_, 0, &queue_);
+    memoryBudgetAvailable_ = haveMemoryBudget;
 
     if (haveCalibrated) {
         fpGetCalibrated_ = reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(
@@ -381,12 +414,12 @@ bool VulkanCompute::createCommandPool() {
 bool VulkanCompute::createDescriptorSystems() {
     VkDescriptorPoolSize ps{};
     ps.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    ps.descriptorCount = 32768;
+    ps.descriptorCount = 524288;
 
     VkDescriptorPoolCreateInfo pi{};
     pi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pi.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    pi.maxSets = 8192;
+    pi.maxSets = 131072;
     pi.poolSizeCount = 1;
     pi.pPoolSizes = &ps;
     if (vkCreateDescriptorPool(device_, &pi, nullptr, &descriptorPool_) != VK_SUCCESS)
@@ -886,6 +919,7 @@ bool VulkanCompute::initialize() {
 
     (void)createPipelines(); // Device runtime is valid even before shader build.
     initialized_ = true;
+    (void)ReserveDecodeScratch();
 
     std::fprintf(stdout,
         "BATCH9_VK_DEVICE ordinal=%u name=%s vendor=0x%04x vram=%llu "
@@ -895,6 +929,19 @@ bool VulkanCompute::initialize() {
         opsPipeline_ ? 1u : 0u, qPipeline_ ? 1u : 0u,
         qBatch4RowPipeline_ ? 1u : 0u, qBatch8RowPipeline_ ? 1u : 0u,
         calibratedAvailable_ ? 1u : 0u);
+    return true;
+}
+
+bool VulkanCompute::ReserveDecodeScratch() {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    const size_t bytes = 128u * 1024u * 1024u; // 128 MiB
+    const size_t floats = bytes / sizeof(float);
+    if (!EnsureScratch(104, floats)) {
+        std::fprintf(stderr, "[SCRATCH_RESERVE_FAIL] attention bytes=%zu\n", bytes);
+        return false;
+    }
+    scratchReservedBytes_ = bytes;
+    std::fprintf(stdout, "[SCRATCH_RESERVE_OK] attention bytes=%zu\n", bytes);
     return true;
 }
 
@@ -908,6 +955,44 @@ uint32_t VulkanCompute::findMemoryType(
             (mp.memoryTypes[i].propertyFlags & required) == required)
             return i;
     return UINT32_MAX;
+}
+
+size_t VulkanCompute::deviceLocalHeapHeadroom() const {
+    if (!memoryBudgetAvailable_) return SIZE_MAX;
+
+    VkPhysicalDeviceMemoryProperties mp{};
+    vkGetPhysicalDeviceMemoryProperties(physical_, &mp);
+
+    VkPhysicalDeviceMemoryBudgetPropertiesEXT budget{};
+    budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
+
+    VkPhysicalDeviceMemoryProperties2 mp2{};
+    mp2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
+    mp2.pNext = &budget;
+
+    vkGetPhysicalDeviceMemoryProperties2(physical_, &mp2);
+
+    size_t total = 0;
+    for (uint32_t h = 0; h < mp.memoryHeapCount; ++h) {
+        if (mp.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+            if (budget.heapBudget[h] > budget.heapUsage[h])
+                total += static_cast<size_t>(budget.heapBudget[h] - budget.heapUsage[h]);
+        }
+    }
+    return total;
+}
+
+bool VulkanCompute::checkLiveHeapAdmission(size_t bytes) const {
+    if (!memoryBudgetAvailable_) return true;
+    size_t headroom = deviceLocalHeapHeadroom();
+    size_t emergency = info_.deviceLocalBytes / 20;
+    const size_t minEmergency = (size_t)512 << 20;
+    const size_t maxEmergency = (size_t)2048 << 20;
+    if (emergency < minEmergency) emergency = minEmergency;
+    if (emergency > maxEmergency) emergency = maxEmergency;
+    if (headroom <= emergency) return false;
+    if (bytes > headroom - emergency) return false;
+    return true;
 }
 
 bool VulkanCompute::createBuffer(
@@ -1785,6 +1870,11 @@ bool VulkanCompute::ApplyWeightWindowPolicy(
     size_t effectiveBudget = budgetBytes;
     if (arenaBytes && effectiveBudget > arenaBytes)
         effectiveBudget -= arenaBytes;
+    const size_t emergencyBytes = (size_t)512 << 20;
+    if (effectiveBudget > scratchReservedBytes_ + emergencyBytes)
+        effectiveBudget -= (scratchReservedBytes_ + emergencyBytes);
+    else
+        effectiveBudget = 0;
     weightBudgetBytes_ = effectiveBudget;
     return true;
 }
@@ -2282,12 +2372,12 @@ void VulkanCompute::UnpinAllWeights() {
 }
 
 bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
-    if (!weightBudgetBytes_) return true;
-    if (incomingBytes > weightBudgetBytes_) return false;
+    if (weightBudgetBytes_ && incomingBytes > weightBudgetBytes_) return false;
 
-    while (weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
+    while (weightBudgetBytes_ && weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
         auto victim = weightCache_.end();
         for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
+            if (it->second.pinned) continue;
             if (victim == weightCache_.end() ||
                 it->second.lastUse < victim->second.lastUse) {
                 victim = it;
@@ -2301,6 +2391,27 @@ bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
         weightCacheBytes_ = bytes <= weightCacheBytes_
             ? weightCacheBytes_ - bytes : 0;
     }
+
+    if (memoryBudgetAvailable_) {
+        while (!checkLiveHeapAdmission(incomingBytes)) {
+            auto victim = weightCache_.end();
+            for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
+                if (it->second.pinned) continue;
+                if (victim == weightCache_.end() ||
+                    it->second.lastUse < victim->second.lastUse) {
+                    victim = it;
+                }
+            }
+            if (victim == weightCache_.end()) return false;
+
+            const size_t bytes = victim->second.bytes;
+            destroyBuffer(victim->second.buffer);
+            weightCache_.erase(victim);
+            weightCacheBytes_ = bytes <= weightCacheBytes_
+                ? weightCacheBytes_ - bytes : 0;
+        }
+    }
+
     return true;
 }
 
@@ -2316,8 +2427,18 @@ bool VulkanCompute::ensureWeightF32(
         return true;
     }
     if (!weights || !bytes) return false;
+    if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
+        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
+                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
+        return false;
+    }
     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
     if (!evictWeightCacheUntil(bytes)) return false;
+    if (!checkLiveHeapAdmission(bytes)) {
+        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu live_headroom_insufficient need=%zu\n",
+                static_cast<unsigned long long>(key), bytes);
+        return false;
+    }
 
     WeightCacheEntry e{};
     size_t padded = (bytes+3u)&~size_t(3u);
@@ -2354,12 +2475,50 @@ bool VulkanCompute::ensureWeightQuant(
         fprintf(stderr,"[EWB_Q4K] FAIL1 weights=%p bytes=%zu\n",weights,bytes);
         return false;
     }
+    if(weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
+        fprintf(stderr,"[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
+                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
+        return false;
+    }
     if(weightBudgetBytes_ && bytes>weightBudgetBytes_) {
         fprintf(stderr,"[EWB_Q4K] FAIL2 budget=%zu bytes=%zu\n",weightBudgetBytes_,bytes);
         return false;
     }
-    if(!evictWeightCacheUntil(bytes)) {
-        fprintf(stderr,"[EWB_Q4K] FAIL3 evict bytes=%zu cacheBytes=%zu\n",bytes,weightCacheBytes_);
+
+    size_t headroom_before = deviceLocalHeapHeadroom();
+    bool evict_ok = evictWeightCacheUntil(bytes);
+    if(!evict_ok) {
+        size_t headroom_after = deviceLocalHeapHeadroom();
+        fprintf(stderr,
+            "Q4K_ADMISSION_FAIL"
+            " stage=EVICT_EXHAUSTED"
+            " request=%zu"
+            " cacheBytes=%zu"
+            " cacheEntries=%zu"
+            " headroom_before=%zu"
+            " headroom_after=%zu"
+            " weightBudget=%zu"
+            " memoryBudget=%d\n",
+            bytes, weightCacheBytes_, weightCache_.size(), headroom_before, headroom_after,
+            weightBudgetBytes_, (int)memoryBudgetAvailable_);
+        return false;
+    }
+    if (!checkLiveHeapAdmission(bytes)) {
+        size_t headroom_after = deviceLocalHeapHeadroom();
+        fprintf(stderr,
+            "Q4K_ADMISSION_FAIL"
+            " stage=LIVE_HEADROOM"
+            " request=%zu"
+            " cacheBytes=%zu"
+            " cacheEntries=%zu"
+            " headroom_before=%zu"
+            " headroom_after=%zu"
+            " weightBudget=%zu"
+            " memoryBudget=%d\n",
+            bytes, weightCacheBytes_, weightCache_.size(), headroom_before, headroom_after,
+            weightBudgetBytes_, (int)memoryBudgetAvailable_);
+        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu live_headroom_insufficient need=%zu\n",
+                static_cast<unsigned long long>(key), bytes);
         return false;
     }
 
@@ -2750,10 +2909,16 @@ bool VulkanCompute::DispatchWeight(
     const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (!weight.valid()) return false;
-    if (static_cast<size_t>(weight.cols)*sizeof(float) > input.size ||
-        static_cast<size_t>(weight.rows)*sizeof(float) > output.size)
+    if (!weight.valid()) {
+        std::fprintf(stderr,"[DW] FAIL weight.valid()=0\n"); std::fflush(stderr);
         return false;
+    }
+    if (static_cast<size_t>(weight.cols)*sizeof(float) > input.size ||
+        static_cast<size_t>(weight.rows)*sizeof(float) > output.size) {
+        std::fprintf(stderr,"[DW] FAIL size mismatch w.cols=%u w.rows=%u in.size=%zu out.size=%zu\n",
+                     weight.cols, weight.rows, (size_t)input.size, (size_t)output.size); std::fflush(stderr);
+        return false;
+    }
 
     if (weight.type == 0) {
         const uint64_t key = weight.key
@@ -2765,9 +2930,14 @@ bool VulkanCompute::DispatchWeight(
             input,output,weight.rows,weight.cols);
     }
 
-    return DispatchGemvQuant(
+    bool ok = DispatchGemvQuant(
         weight.type,weight.data,weight.bytes,
         input,output,weight.rows,weight.cols);
+    if(!ok) {
+        std::fprintf(stderr,"[DW] DispatchGemvQuant failed type=%d bytes=%zu rows=%u cols=%u\n",
+                     weight.type, weight.bytes, weight.rows, weight.cols); std::fflush(stderr);
+    }
+    return ok;
 }
 
 bool VulkanCompute::RunExpertFFN(

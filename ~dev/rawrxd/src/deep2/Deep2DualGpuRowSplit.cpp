@@ -136,27 +136,17 @@ struct Q4KColumnSlices {
     uint32_t cols0=0,cols1=0;
     std::vector<uint8_t> w0,w1;
 };
-struct ColKey {
-    const void* p=nullptr;size_t bytes=0;uint32_t rows=0,cols=0;
-    uint16_t ratioPermille=500;
-    bool operator==(const ColKey& o) const noexcept {
-        return p==o.p&&bytes==o.bytes&&rows==o.rows&&cols==o.cols&&
-               ratioPermille==o.ratioPermille;
-    }
-};
-struct ColHash {
-    size_t operator()(const ColKey& k) const noexcept {
-        return (size_t)(uintptr_t)k.p ^ k.bytes ^
-               ((size_t)k.rows<<32) ^ k.cols ^
-               ((size_t)k.ratioPermille<<11);
-    }
-};
 
+// One mutable/latest slice set per weight tensor pointer, keyed by wt.data only.
+// Replaced when ratio changes — prevents unbounded growth under varying ratioPermille.
 const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
        !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
+
+    struct Entry { Q4KColumnSlices s; uint16_t ratioPermille=0; };
     static std::mutex mu;
-    static std::unordered_map<ColKey,Q4KColumnSlices,ColHash> cache;
+    static std::unordered_map<const void*, Entry> cache;
+
     long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
     long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
     if(autoColumnSplit()) {
@@ -167,11 +157,6 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     const long double ratio=s0/(s0+s1);
     const uint16_t pm=(uint16_t)std::max<long double>(
         1.0L,std::min<long double>(999.0L,ratio*1000.0L+0.5L));
-    const ColKey key{
-        wt.data,wt.sizeBytes,(uint32_t)wt.rows,(uint32_t)wt.cols,pm};
-    std::lock_guard<std::mutex> g(mu);
-    auto it=cache.find(key);
-    if(it!=cache.end()) return &it->second;
 
     const uint32_t blocks=(uint32_t)wt.cols/256u;
     if(blocks<2) return nullptr;
@@ -185,6 +170,11 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     const size_t row1=(size_t)b1*QB;
     if(wt.sizeBytes<(size_t)wt.rows*rowBytes) return nullptr;
 
+    std::lock_guard<std::mutex> g(mu);
+    auto it=cache.find(wt.data);
+    if(it!=cache.end() && it->second.ratioPermille==pm)
+        return &it->second.s;
+
     Q4KColumnSlices s{};
     s.cols0=b0*256u;s.cols1=b1*256u;
     s.w0.resize((size_t)wt.rows*row0);
@@ -194,9 +184,21 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
         std::memcpy(s.w0.data()+r*row0,src+r*rowBytes,row0);
         std::memcpy(s.w1.data()+r*row1,src+r*rowBytes+row0,row1);
     }
-    auto ins=cache.emplace(key,std::move(s));
-    return &ins.first->second;
+    auto ins=cache.emplace(wt.data,Entry{std::move(s),pm});
+    if(!ins.second) {
+        ins.first->second.s=std::move(ins.first->second.s);
+        ins.first->second.s=Q4KColumnSlices{};
+        ins.first->second.s=s;
+        ins.first->second.ratioPermille=pm;
+        return &ins.first->second.s;
+    }
+    return &ins.first->second.s;
 }
+
+struct DualRowJob {
+    bool (*fn)(void*) noexcept = nullptr;
+    void* ctx = nullptr;
+};
 
 class DualRowExecutor {
 public:
@@ -214,12 +216,12 @@ public:
         for (auto& t : worker_) if (t.joinable()) t.join();
     }
 
-    bool run(std::function<bool()> a, std::function<bool()> b) {
+    bool run(DualRowJob a, DualRowJob b) {
         std::unique_lock<std::mutex> lk(mu_);
         done_[0] = done_[1] = false;
         result_[0] = result_[1] = false;
-        job_[0] = std::move(a);
-        job_[1] = std::move(b);
+        job_[0] = a;
+        job_[1] = b;
         const uint64_t g = ++generation_;
         cv_.notify_all();
         doneCv_.wait(lk, [&] {
@@ -232,7 +234,7 @@ private:
     void loop(unsigned lane) {
         uint64_t seen = 0;
         for (;;) {
-            std::function<bool()> fn;
+            DualRowJob j{};
             uint64_t g = 0;
             {
                 std::unique_lock<std::mutex> lk(mu_);
@@ -240,9 +242,9 @@ private:
                 if (stop_) return;
                 seen = generation_;
                 g = seen;
-                fn = job_[lane];
+                j = job_[lane];
             }
-            const bool r = fn ? fn() : false;
+            const bool r = j.fn ? j.fn(j.ctx) : false;
             {
                 std::lock_guard<std::mutex> lk(mu_);
                 result_[lane] = r;
@@ -259,7 +261,7 @@ private:
     std::condition_variable cv_;
     std::condition_variable doneCv_;
     std::thread worker_[2];
-    std::function<bool()> job_[2];
+    DualRowJob job_[2];
     bool done_[2] = {false,false};
     bool result_[2] = {false,false};
     bool stop_ = false;
@@ -281,8 +283,12 @@ bool Deep2RunDualGpuColumnSplitBatch4(
     const Q4KColumnSlices* s=q4kColumnSlices(wt);
     if(!s) return false;
     const uint32_t rows=(uint32_t)wt.rows;
-    std::vector<float> x0((size_t)batch*s->cols0);
-    std::vector<float> x1((size_t)batch*s->cols1);
+    static thread_local std::vector<float> x0;
+    static thread_local std::vector<float> x1;
+    static thread_local std::vector<float> y0;
+    static thread_local std::vector<float> y1;
+    x0.resize((size_t)batch*s->cols0);
+    x1.resize((size_t)batch*s->cols1);
     for(uint32_t b=0;b<batch;++b) {
         const float* src=inputBatch+(size_t)b*wt.cols;
         std::memcpy(x0.data()+(size_t)b*s->cols0,src,
@@ -290,38 +296,44 @@ bool Deep2RunDualGpuColumnSplitBatch4(
         std::memcpy(x1.data()+(size_t)b*s->cols1,src+s->cols0,
                     (size_t)s->cols1*sizeof(float));
     }
-    std::vector<float> y0((size_t)batch*rows);
-    std::vector<float> y1((size_t)batch*rows);
+    y0.resize((size_t)batch*rows);
+    y1.resize((size_t)batch*rows);
+
     GpuWeightView w0{},w1{};
     w0.data=s->w0.data();w0.bytes=s->w0.size();w0.type=12;
     w0.rows=rows;w0.cols=s->cols0;
     w1.data=s->w1.data();w1.bytes=s->w1.size();w1.type=12;
     w1.rows=rows;w1.cols=s->cols1;
 
-    bool ok0=false,ok1=false;
-    uint64_t ns0=0,ns1=0;
+    struct ColSplitCtx {
+        VulkanCompute* g;
+        const GpuWeightView* w;
+        const float* x;
+        float* y;
+        uint32_t batch;
+        uint64_t epoch;
+        uint64_t ns;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<ColSplitCtx*>(p);
+        const auto a=std::chrono::steady_clock::now();
+        c->ok=c->g->RunWeightHostBatchQ4K(
+            *c->w,c->x,c->y,c->batch,c->epoch);
+        const auto z=std::chrono::steady_clock::now();
+        c->ns=(uint64_t)std::chrono::duration_cast<
+            std::chrono::nanoseconds>(z-a).count();
+        return c->ok;
+    };
+    ColSplitCtx c0{&g0,&w0,x0.data(),y0.data(),batch,epoch,0,false};
+    ColSplitCtx c1{&g1,&w1,x1.data(),y1.data(),batch,epoch,0,false};
+
     const bool both=rowExecutor().run(
-        [&]{
-            const auto a=std::chrono::steady_clock::now();
-            ok0=g0.RunWeightHostBatchQ4K(
-                w0,x0.data(),y0.data(),batch,epoch);
-            const auto z=std::chrono::steady_clock::now();
-            ns0=(uint64_t)std::chrono::duration_cast<
-                std::chrono::nanoseconds>(z-a).count();
-            return ok0;
-        },
-        [&]{
-            const auto a=std::chrono::steady_clock::now();
-            ok1=g1.RunWeightHostBatchQ4K(
-                w1,x1.data(),y1.data(),batch,epoch);
-            const auto z=std::chrono::steady_clock::now();
-            ns1=(uint64_t)std::chrono::duration_cast<
-                std::chrono::nanoseconds>(z-a).count();
-            return ok1;
-        });
-    if(!both||!ok0||!ok1) return false;
-    updateColSpeed(0,s->cols0,ns0);
-    updateColSpeed(1,s->cols1,ns1);
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
+    updateColSpeed(0,s->cols0,c0.ns);
+    updateColSpeed(1,s->cols1,c1.ns);
 
     const size_t n=(size_t)batch*rows;
     for(size_t i=0;i<n;++i) outputBatch[i]=y0[i]+y1[i];
@@ -335,25 +347,23 @@ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
 {
     if(!weights||!outputs||!inputBatch||weightCount<2||weightCount>3||
        !batch||batch>4) return false;
-    struct Item {
-        RowSplitPlan p{};
-        GpuWeightView w[2]{};
-        std::vector<float> y[2];
-    };
-    std::vector<Item> it(weightCount);
+    RowSplitPlan plans[3];
+    GpuWeightView wv[3][2]{};
+    static thread_local std::vector<float> slab0;
+    static thread_local std::vector<float> slab1;
+    size_t offsets0[3]{};
+    size_t offsets1[3]{};
     for(size_t i=0;i<weightCount;++i) {
         if(!weights[i]||!outputs[i]||
            weights[i]->type!=(int)GGMLType::GGML_TYPE_Q4_K)
             return false;
-        it[i].p=cachedThroughputSplit(*weights[i],g0,g1);
-        if(!it[i].p.valid||
+        plans[i]=cachedThroughputSplit(*weights[i],g0,g1);
+        if(!plans[i].valid||
            !Deep2BuildGpuWeightView(
-               *weights[i],it[i].p.row0Begin,it[i].p.row0Count,it[i].w[0])||
+               *weights[i],plans[i].row0Begin,plans[i].row0Count,wv[i][0])||
            !Deep2BuildGpuWeightView(
-               *weights[i],it[i].p.row1Begin,it[i].p.row1Count,it[i].w[1]))
+               *weights[i],plans[i].row1Begin,plans[i].row1Count,wv[i][1]))
             return false;
-        it[i].y[0].resize((size_t)batch*it[i].p.row0Count);
-        it[i].y[1].resize((size_t)batch*it[i].p.row1Count);
     }
     // Both cards receive the shared activation ONCE.
     if(!g0.UploadResidentBatchInput(
@@ -362,43 +372,54 @@ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
             inputBatch,weights[0]->cols,batch,epoch))
         return false;
 
-    std::vector<float> slab[2];
-    size_t offsets[2][3]{};
-    for(unsigned s=0;s<2;++s) {
-        size_t total=0;
-        for(size_t i=0;i<weightCount;++i)
-            total+=(size_t)batch*it[i].w[s].rows;
-        slab[s].resize(total);
+    size_t total0=0,total1=0;
+    for(size_t i=0;i<weightCount;++i) {
+        total0+=(size_t)batch*wv[i][0].rows;
+        total1+=(size_t)batch*wv[i][1].rows;
     }
+    slab0.resize(total0);
+    slab1.resize(total1);
 
-    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
-        GpuWeightView views[3]{};
-        for(size_t i=0;i<weightCount;++i) {
-            views[i]=it[i].w[s];
-        }
-        return g.RunWeightGroupResidentInputQ4KSingleReturn(
-            views,slab[s].data(),offsets[s],
-            weightCount,weights[0]->cols,batch,epoch);
+    struct GroupQ4KCtx {
+        VulkanCompute* g;
+        GpuWeightView* views;
+        float* slab;
+        size_t* offsets;
+        size_t weightCount;
+        uint32_t cols;
+        uint32_t batch;
+        uint64_t epoch;
+        bool ok;
     };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<GroupQ4KCtx*>(p);
+        c->ok=c->g->RunWeightGroupResidentInputQ4KSingleReturn(
+            c->views,c->slab,c->offsets,
+            c->weightCount,c->cols,c->batch,c->epoch);
+        return c->ok;
+    };
+    GroupQ4KCtx c0{&g0,wv[0],slab0.data(),offsets0,
+        weightCount,(uint32_t)weights[0]->cols,batch,epoch,false};
+    GroupQ4KCtx c1{&g1,wv[1],slab1.data(),offsets1,
+        weightCount,(uint32_t)weights[0]->cols,batch,epoch,false};
 
-    bool a=false,b=false;
     const bool both=rowExecutor().run(
-        [&]{a=lane(0,g0);return a;},
-        [&]{b=lane(1,g1);return b;});
-    if(!both||!a||!b) return false;
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
     for(size_t i=0;i<weightCount;++i) {
         for(uint32_t t=0;t<batch;++t) {
             float* dst=outputs[i]+(size_t)t*weights[i]->rows;
             std::memcpy(
-                dst+it[i].p.row0Begin,
-                slab[0].data()+offsets[0][i]+
-                    (size_t)t*it[i].p.row0Count,
-                (size_t)it[i].p.row0Count*sizeof(float));
+                dst+plans[i].row0Begin,
+                slab0.data()+offsets0[i]+
+                    (size_t)t*plans[i].row0Count,
+                (size_t)plans[i].row0Count*sizeof(float));
             std::memcpy(
-                dst+it[i].p.row1Begin,
-                slab[1].data()+offsets[1][i]+
-                    (size_t)t*it[i].p.row1Count,
-                (size_t)it[i].p.row1Count*sizeof(float));
+                dst+plans[i].row1Begin,
+                slab1.data()+offsets1[i]+
+                    (size_t)t*plans[i].row1Count,
+                (size_t)plans[i].row1Count*sizeof(float));
         }
     }
 
@@ -568,32 +589,35 @@ bool Deep2RunDualGpuRowSplit(
        !Deep2BuildGpuWeightView(wt,plan.row1Begin,plan.row1Count,w1))
         return false;
 
-    auto run=[&](unsigned lane,VulkanCompute& g,const GpuWeightView& w,
-                 float* dst)->bool{
-        const auto t0=std::chrono::steady_clock::now();
-        const bool ok=g.RunWeightHostRoundTrip(w,input,dst,epoch);
-        const auto t1=std::chrono::steady_clock::now();
-        if(ok){
-            const uint64_t ns=(uint64_t)
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    t1-t0).count();
-            updateAutoSpeed(lane,w.rows,ns);
-        }
-        return ok;
-    };
-
     // Reuse caller-thread buffers across all matrices/tokens.
     static thread_local std::vector<float> y0;
     static thread_local std::vector<float> y1;
     y0.resize(plan.row0Count);
     y1.resize(plan.row1Count);
 
-    bool ok0=false,ok1=false;
-    const bool both = rowExecutor().run(
-        [&]{ ok0=run(0,g0,w0,y0.data()); return ok0; },
-        [&]{ ok1=run(1,g1,w1,y1.data()); return ok1; });
+    struct Ctx {
+        unsigned lane;
+        VulkanCompute* g;
+        const GpuWeightView* w;
+        const float* input;
+        float* dst;
+        uint64_t epoch;
+        bool ok;
+    } c0{0,&g0,&w0,input,y0.data(),epoch,false};
+    Ctx c1{1,&g1,&w1,input,y1.data(),epoch,false};
 
-    if(!both||!ok0||!ok1) return false;
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<Ctx*>(p);
+        const bool ok=c->g->RunWeightHostRoundTrip(*c->w,c->input,c->dst,c->epoch);
+        if(ok){ updateAutoSpeed(c->lane,c->w->rows,0); }
+        c->ok=ok;
+        return ok;
+    };
+
+    const bool both = rowExecutor().run(
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
 
     std::memcpy(output+plan.row0Begin,y0.data(),
                 y0.size()*sizeof(float));
@@ -603,8 +627,8 @@ bool Deep2RunDualGpuRowSplit(
     auto overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
     if(receipt){
         receipt->valid=true;
-        receipt->gpu0=ok0;
-        receipt->gpu1=ok1;
+        receipt->gpu0=c0.ok;
+        receipt->gpu1=c1.ok;
         receipt->hostMerge=true;
         receipt->rows0=plan.row0Count;
         receipt->rows1=plan.row1Count;
@@ -624,54 +648,70 @@ bool Deep2RunDualGpuRowSplitGroup(
     if(!weights||!outputs||!input||!inputCount||count<2||count>3)
         return false;
 
-    struct Item {
-        RowSplitPlan p{};
-        GpuWeightView w[2]{};
-        std::vector<float> y[2];
-    };
-    std::vector<Item> items(count);
+    RowSplitPlan plans[3];
+    GpuWeightView wv[3][2]{};
+    static thread_local std::vector<float> y0buf[3];
+    static thread_local std::vector<float> y1buf[3];
 
     for(size_t i=0;i<count;++i){
         if(!weights[i]||!outputs[i]||weights[i]->cols!=inputCount||
            weights[i]->rows<2||!supportedGpuType(weights[i]->type))
             return false;
-        items[i].p=chooseThroughputSplit(
+        plans[i]=chooseThroughputSplit(
             (uint32_t)weights[i]->rows,g0,g1);
 
-        if(!items[i].p.valid) return false;
+        if(!plans[i].valid) return false;
         if(!Deep2BuildGpuWeightView(
-                *weights[i],items[i].p.row0Begin,items[i].p.row0Count,
-                items[i].w[0]) ||
+                *weights[i],plans[i].row0Begin,plans[i].row0Count,
+                wv[i][0]) ||
            !Deep2BuildGpuWeightView(
-                *weights[i],items[i].p.row1Begin,items[i].p.row1Count,
-                items[i].w[1]))
+                *weights[i],plans[i].row1Begin,plans[i].row1Count,
+                wv[i][1]))
             return false;
-        items[i].y[0].resize(items[i].p.row0Count);
-        items[i].y[1].resize(items[i].p.row1Count);
+        y0buf[i].resize(plans[i].row0Count);
+        y1buf[i].resize(plans[i].row1Count);
     }
 
-    auto laneRun=[&](unsigned lane,VulkanCompute& g)->bool{
-        GpuWeightView views[3]{};
-        float* outs[3]{};
-        for(size_t i=0;i<count;++i){
-            views[i]=items[i].w[lane];
-            outs[i]=items[i].y[lane].data();
-        }
-        return g.RunWeightGroupHostRoundTrip(
-            views,outs,count,input,inputCount,epoch);
-    };
+    float* outs0[3]{};
+    float* outs1[3]{};
+    GpuWeightView views0[3]{};
+    GpuWeightView views1[3]{};
+    for(size_t i=0;i<count;++i){
+        views0[i]=wv[i][0];
+        views1[i]=wv[i][1];
+        outs0[i]=y0buf[i].data();
+        outs1[i]=y1buf[i].data();
+    }
 
-    bool ok0=false,ok1=false;
+    struct GroupCtx {
+        VulkanCompute* g;
+        GpuWeightView* views;
+        float** outs;
+        size_t count;
+        const float* input;
+        uint32_t inputCount;
+        uint64_t epoch;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<GroupCtx*>(p);
+        c->ok=c->g->RunWeightGroupHostRoundTrip(
+            c->views,c->outs,c->count,c->input,c->inputCount,c->epoch);
+        return c->ok;
+    };
+    GroupCtx c0{&g0,views0,outs0,count,input,inputCount,epoch,false};
+    GroupCtx c1{&g1,views1,outs1,count,input,inputCount,epoch,false};
+
     const bool both=rowExecutor().run(
-        [&]{ok0=laneRun(0,g0);return ok0;},
-        [&]{ok1=laneRun(1,g1);return ok1;});
-    if(!both||!ok0||!ok1) return false;
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
 
     for(size_t i=0;i<count;++i){
-        std::memcpy(outputs[i]+items[i].p.row0Begin,items[i].y[0].data(),
-                    items[i].y[0].size()*sizeof(float));
-        std::memcpy(outputs[i]+items[i].p.row1Begin,items[i].y[1].data(),
-                    items[i].y[1].size()*sizeof(float));
+        std::memcpy(outputs[i]+plans[i].row0Begin,y0buf[i].data(),
+                    plans[i].row0Count*sizeof(float));
+        std::memcpy(outputs[i]+plans[i].row1Begin,y1buf[i].data(),
+                    plans[i].row1Count*sizeof(float));
     }
 
     if(receipt){
@@ -680,8 +720,8 @@ bool Deep2RunDualGpuRowSplitGroup(
         receipt->gpu1=true;
         receipt->hostMerge=true;
         for(size_t i=0;i<count;++i){
-            receipt->rows0+=items[i].p.row0Count;
-            receipt->rows1+=items[i].p.row1Count;
+            receipt->rows0+=plans[i].row0Count;
+            receipt->rows1+=plans[i].row1Count;
         }
         auto overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
         receipt->calibratedOverlapNs=overlap.calibratedOverlapNs;
@@ -702,48 +742,60 @@ bool Deep2RunDualGpuRowSplitBatch4(
        wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||
        wt.rows<2||!wt.cols) {
         std::fprintf(stderr,
-            "[BATCH4_FAIL] input validation: ib=%p ob=%p batch=%u "
-            "type=%d rows=%u cols=%u\n",
+            "[BATCH4_FAIL] input validation: ib=%p ob=%p batch=%zu "
+            "type=%d rows=%zu cols=%zu\n",
             static_cast<const void*>(inputBatch),
-            static_cast<void*>(outputBatch),batch,
-            wt.type,wt.rows,wt.cols);
+            static_cast<void*>(outputBatch),(size_t)batch,
+            wt.type,(size_t)wt.rows,(size_t)wt.cols);
         return false;
     }
 
     RowSplitPlan p=cachedThroughputSplit(wt,g0,g1);
     if(!p.valid) {
         std::fprintf(stderr,
-            "[BATCH4_FAIL] cachedThroughputSplit invalid rows=%u cols=%u\n",
-            wt.rows,wt.cols);
+            "[BATCH4_FAIL] cachedThroughputSplit invalid rows=%zu cols=%zu\n",
+            (size_t)wt.rows,(size_t)wt.cols);
         return false;
     }
     GpuWeightView w0{},w1{};
     if(!Deep2BuildGpuWeightView(wt,p.row0Begin,p.row0Count,w0)||
        !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1)) {
         std::fprintf(stderr,
-            "[BATCH4_FAIL] Deep2BuildGpuWeightView r0=%u c0=%u r1=%u c1=%u\n",
-            p.row0Begin,p.row0Count,p.row1Begin,p.row1Count);
+            "[BATCH4_FAIL] Deep2BuildGpuWeightView r0=%zu c0=%zu r1=%zu c1=%zu\n",
+            (size_t)p.row0Begin,(size_t)p.row0Count,(size_t)p.row1Begin,(size_t)p.row1Count);
         return false;
     }
 
-    std::vector<float> y0((size_t)batch*p.row0Count);
-    std::vector<float> y1((size_t)batch*p.row1Count);
-    bool ok0=false,ok1=false;
+    static thread_local std::vector<float> y0;
+    static thread_local std::vector<float> y1;
+    y0.resize((size_t)batch*p.row0Count);
+    y1.resize((size_t)batch*p.row1Count);
+
+    struct Batch4Ctx {
+        VulkanCompute* g;
+        const GpuWeightView* w;
+        const float* inputBatch;
+        float* y;
+        uint32_t batch;
+        uint64_t epoch;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<Batch4Ctx*>(p);
+        c->ok=c->g->RunWeightHostBatchQ4K(
+            *c->w,c->inputBatch,c->y,c->batch,c->epoch);
+        return c->ok;
+    };
+    Batch4Ctx c0{&g0,&w0,inputBatch,y0.data(),batch,epoch,false};
+    Batch4Ctx c1{&g1,&w1,inputBatch,y1.data(),batch,epoch,false};
+
     const bool both=rowExecutor().run(
-        [&]{
-            ok0=g0.RunWeightHostBatchQ4K(
-                w0,inputBatch,y0.data(),batch,epoch);
-            return ok0;
-        },
-        [&]{
-            ok1=g1.RunWeightHostBatchQ4K(
-                w1,inputBatch,y1.data(),batch,epoch);
-            return ok1;
-        });
-    if(!both||!ok0||!ok1) {
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) {
         std::fprintf(stderr,
             "[BATCH4_FAIL] RunWeightHostBatchQ4K both=%d ok0=%d ok1=%d\n",
-            both?1:0,ok0?1:0,ok1?1:0);
+            both?1:0,c0.ok?1:0,c1.ok?1:0);
         return false;
     }
 
@@ -783,13 +835,32 @@ bool Deep2RunDualGpuRowSplitBatchTop1(
         return false;
     uint32_t i0[4]{},i1[4]{};
     float v0[4]{},v1[4]{};
-    bool a=false,b=false;
+
+    struct Top1Ctx {
+        VulkanCompute* g;
+        const GpuWeightView* w;
+        const float* inputBatch;
+        uint32_t batch;
+        uint32_t rowBegin;
+        uint32_t* outToken;
+        float* outValue;
+        uint64_t epoch;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<Top1Ctx*>(p);
+        c->ok=c->g->RunWeightBatchQ4KTop1(
+            *c->w,c->inputBatch,c->batch,c->rowBegin,
+            c->outToken,c->outValue,c->epoch);
+        return c->ok;
+    };
+    Top1Ctx c0{&g0,&w0,inputBatch,batch,p.row0Begin,i0,v0,epoch,false};
+    Top1Ctx c1{&g1,&w1,inputBatch,batch,p.row1Begin,i1,v1,epoch,false};
+
     const bool both=rowExecutor().run(
-        [&]{a=g0.RunWeightBatchQ4KTop1(
-            w0,inputBatch,batch,p.row0Begin,i0,v0,epoch);return a;},
-        [&]{b=g1.RunWeightBatchQ4KTop1(
-            w1,inputBatch,batch,p.row1Begin,i1,v1,epoch);return b;});
-    if(!both||!a||!b) return false;
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
     for(uint32_t n=0;n<batch;++n) {
         if(v1[n]>v0[n] || (v1[n]==v0[n]&&i1[n]<i0[n])) {
             outToken[n]=i1[n];outValue[n]=v1[n];
@@ -812,8 +883,12 @@ bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
     const uint32_t rows=(uint32_t)wt.rows;
     const size_t n=(size_t)batch*rows;
 
-    std::vector<float> x0((size_t)batch*s->cols0);
-    std::vector<float> x1((size_t)batch*s->cols1);
+    static thread_local std::vector<float> x0;
+    static thread_local std::vector<float> x1;
+    static thread_local std::vector<float> y0;
+    static thread_local std::vector<float> y1;
+    x0.resize((size_t)batch*s->cols0);
+    x1.resize((size_t)batch*s->cols1);
     for(uint32_t b=0;b<batch;++b) {
         const float* src=inputBatch+(size_t)b*wt.cols;
         std::memcpy(x0.data()+(size_t)b*s->cols0,src,
@@ -828,14 +903,31 @@ bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
     w1.data=s->w1.data();w1.bytes=s->w1.size();w1.type=12;
     w1.rows=rows;w1.cols=s->cols1;
 
-    std::vector<float> y0(n),y1(n);
-    bool a=false,b=false;
+    y0.resize(n);
+    y1.resize(n);
+
+    struct ResidentCtx {
+        VulkanCompute* g;
+        const GpuWeightView* w;
+        const float* x;
+        float* y;
+        uint32_t batch;
+        uint64_t epoch;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<ResidentCtx*>(p);
+        c->ok=c->g->RunWeightHostBatchQ4K(
+            *c->w,c->x,c->y,c->batch,c->epoch);
+        return c->ok;
+    };
+    ResidentCtx c0{&primary,&w0,x0.data(),y0.data(),batch,epoch,false};
+    ResidentCtx c1{&secondary,&w1,x1.data(),y1.data(),batch,epoch,false};
+
     const bool both=rowExecutor().run(
-        [&]{a=primary.RunWeightHostBatchQ4K(
-            w0,x0.data(),y0.data(),batch,epoch);return a;},
-        [&]{b=secondary.RunWeightHostBatchQ4K(
-            w1,x1.data(),y1.data(),batch,epoch);return b;});
-    if(!both||!a||!b) return false;
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
 
     // One host->GPU0 materialization for the owner partial, then reduce only
     // GPU1's partial into it. The next operation can remain on GPU0.
@@ -869,23 +961,35 @@ bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
     auto& y0=primary.Scratch(140);
     auto& y1=secondary.Scratch(140);
 
-    bool ok0=false,ok1=false;
+    struct AssembledCtx {
+        VulkanCompute* g;
+        const void* wdata;
+        size_t wbytes;
+        VulkanCompute::DeviceBuf input;
+        VulkanCompute::DeviceBuf output;
+        uint32_t rows;
+        uint32_t cols;
+        uint32_t batch;
+        bool ok;
+    };
+    auto runFn=[](void* p) noexcept -> bool {
+        auto* c=static_cast<AssembledCtx*>(p);
+        c->ok=c->g->DispatchGemvQ4KBatch(
+            c->wdata,c->wbytes,c->input,c->output,
+            c->rows,c->cols,c->batch);
+        return c->ok;
+    };
+    AssembledCtx c0{&primary,w0.data,w0.bytes,
+        primary.ResidentBatchInput(),y0,
+        w0.rows,w0.cols,batch,false};
+    AssembledCtx c1{&secondary,w1.data,w1.bytes,
+        secondary.ResidentBatchInput(),y1,
+        w1.rows,w1.cols,batch,false};
+
     const bool both=rowExecutor().run(
-        [&]{
-            ok0=primary.DispatchGemvQ4KBatch(
-                w0.data,w0.bytes,
-                primary.ResidentBatchInput(),y0,
-                w0.rows,w0.cols,batch);
-            return ok0;
-        },
-        [&]{
-            ok1=secondary.DispatchGemvQ4KBatch(
-                w1.data,w1.bytes,
-                secondary.ResidentBatchInput(),y1,
-                w1.rows,w1.cols,batch);
-            return ok1;
-        });
-    if(!both||!ok0||!ok1) return false;
+        DualRowJob{runFn,&c0},
+        DualRowJob{runFn,&c1});
+    if(!both||!c0.ok||!c1.ok) return false;
 
     if(!primary.CopyDeviceSliceIntoFullOutput(
             y0,w0.rows,p.row0Begin,(uint32_t)wt.rows,batch))
@@ -946,10 +1050,12 @@ bool Deep2RunDualGpuRowSplitBatch4Async(
     if(!g1.SubmitDownloadRing(y1,bytes1,ringSlot)) return false;
 
     // GPU0 slice can be returned/placed while the secondary transfer is live.
-    std::vector<float> h0((size_t)batch*w0.rows);
+    static thread_local std::vector<float> h0;
+    static thread_local std::vector<float> h1;
+    h0.resize((size_t)batch*w0.rows);
     if(!g0.DownloadVector(y0,h0.data(),h0.size())) return false;
 
-    std::vector<float> h1((size_t)batch*w1.rows);
+    h1.resize((size_t)batch*w1.rows);
     if(!g1.WaitDownloadRing(ringSlot,h1.data(),bytes1)) return false;
     for(uint32_t b=0;b<batch;++b) {
         float* dst=outputBatch+(size_t)b*wt.rows;

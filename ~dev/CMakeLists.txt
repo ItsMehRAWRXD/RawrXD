@@ -460,7 +460,18 @@ target_include_directories(qwen32_85tps_gate PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
 )
+add_executable(qwen32_accepted_tps_gate
+    tests/qwen32_accepted_tps_gate.cpp
+    ${RAWRXD_DEEP2_SOURCES}
+)
+target_include_directories(qwen32_accepted_tps_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
     target_link_libraries(qwen32_85tps_gate PRIVATE Vulkan::Vulkan)
+    target_link_libraries(qwen32_accepted_tps_gate PRIVATE Vulkan::Vulkan)
 endif()

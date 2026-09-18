@@ -15,6 +15,11 @@
 #include <new>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#endif
+
 namespace Deep2 {
 
 // =================== HELPER: RMSNorm ====================
@@ -1314,6 +1319,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                           const float* bias,
                           float* output,
                           size_t outDim) {
+    const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
+    std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
+                 wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
     if (!wt.data || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
@@ -1334,7 +1342,18 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
-        if (tryVulkanHostGEMV(wt, input, output, outDim)) {
+        std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
+
+        // Attempt 1: dual-GPU row split
+        bool triedDual = false, dualOk = false;
+        if (vulkanDevices_.size() >= 2 && wt.rows >= 2) {
+            triedDual = true;
+            if (tryVulkanHostGEMV(wt, input, output, outDim)) {
+                dualOk = true;
+            }
+        }
+        if (dualOk) {
+            std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -1342,10 +1361,30 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                 throw std::runtime_error("LinearW: non-finite GPU output");
             return;
         }
+        if (triedDual) {
+            std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
+        }
+
+        // Attempt 2: single-GPU fallback
+        if (tryVulkanHostGEMV(wt, input, output, outDim)) {
+            std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
+            if (bias) {
+                for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
+            }
+            if (!finiteVector(output, outDim))
+                throw std::runtime_error("LinearW: non-finite GPU output");
+            return;
+        }
+
+        // GPU paths exhausted
+        std::fprintf(stderr,"LINEARW_RESULT=FAIL name=%s strict=%d\n",
+                     wtn,(int)vulkanStrictNoCpuFallback_); std::fflush(stderr);
         if (vulkanStrictNoCpuFallback_)
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
     }
 
+    // CPU fallback
+    std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
@@ -1492,6 +1531,7 @@ void Deep2Engine::applyRoPE(float* q, float* k,
 // =================== FORWARD LAYER ====================
 void Deep2Engine::forwardLayer(size_t layer, const float* input,
                                float* output, size_t seqLen) {
+    std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
     if (!input || !output || config.hiddenDim == 0) {
         throw std::runtime_error("forwardLayer: invalid buffers/geometry");
     }
@@ -1509,6 +1549,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     parityEmit(ParityCheckpoint::AttnNorm, layerTemp, H);
     parityEmitLayer(static_cast<int>(layer), "ATTN_NORM", layerTemp, H);
 
+    std::fprintf(stderr,"FWD_LAYER layer=%zu ATTENTION\n",layer); std::fflush(stderr);
     computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
     for (size_t i = 0; i < H; ++i) {
@@ -1525,6 +1566,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     parityEmitLayer(static_cast<int>(layer), "FFN_NORM", layerTemp, H);
 
     // FFN/MoE body remains Batch 5; orchestration is real now.
+    std::fprintf(stderr,"FWD_LAYER layer=%zu FFN_ENTER\n",layer); std::fflush(stderr);
     if (modelWeights.numExperts > 0) {
         computeMoEFFN(layer, layerTemp, ffnOutput);
     } else {
@@ -1542,6 +1584,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     }
     parityEmit(ParityCheckpoint::LayerResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
+    std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
@@ -2083,6 +2126,24 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             ++gpuFwd_.dualRowDenseTokens;
             gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
             return true;
+        } catch(const std::bad_alloc& bae) {
+#ifdef _WIN32
+            PROCESS_MEMORY_COUNTERS pmc{};
+            SIZE_T workingSet=0;
+            if(GetProcessMemoryInfo(GetCurrentProcess(),&pmc,sizeof(pmc))) {
+                workingSet=pmc.WorkingSetSize;
+            }
+            std::fprintf(stderr,
+                "[Deep2Engine] ALLOCATION_RECEIPT: std::bad_alloc at layer (unknown), "
+                "seqLen=%zu. WorkingSet=%zu MB. Exception: %s\n",
+                seqLen,(size_t)(workingSet/(1024ULL*1024ULL)),bae.what());
+#else
+            std::fprintf(stderr,
+                "[Deep2Engine] ALLOCATION_RECEIPT: std::bad_alloc at layer (unknown), "
+                "seqLen=%zu. Exception: %s\n",
+                seqLen,bae.what());
+#endif
+            throw; // rethrow so outer handler records it as a strict violation
         } catch(const std::exception& ex) {
             std::fprintf(stderr,
                 "[Deep2Engine] dual-row dense forward failed: %s\n",
