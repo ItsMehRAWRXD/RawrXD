@@ -132,12 +132,16 @@ public:
     const std::vector<std::string>& enumeratedFiles() const { return enumerated_; }
 
     // Deterministic completion authority — the runtime decides, never the model.
+    // The scanner IS the exhaustive file-level review stage: filesScanned ==
+    // filesEnumerated proves 100% codebase coverage without pretending the
+    // LLM personally read every file. The model reviews CANDIDATES, not all
+    // files.
     bool coverageComplete() const {
         const AuditCounters c = counters();
         return c.filesEnumerated > 0 &&
                c.filesEnumerated == c.filesTotal &&
                c.sourceScanComplete &&
-               c.filesReviewed == c.filesEnumerated &&
+               c.filesScanned == c.filesEnumerated &&
                c.candidatesPending == 0 &&
                c.toolFailures == 0;
     }

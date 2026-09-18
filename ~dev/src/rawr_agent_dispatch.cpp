@@ -411,20 +411,23 @@ ToolResult toolAuditScan(const ToolRequest& req, AuditLedger* ledger) {
     return r;
 }
 
-// List pending candidates (bounded) for the model to review.
+// List pending candidates (bounded, METADATA-ONLY pages for compact
+// reasoning turns; snippets live in audit.candidate.read).
 ToolResult toolAuditCandidates(const ToolRequest& req, AuditLedger* ledger) {
     ToolResult r;
     if (!ledger) { r.exit_code = 1; r.stderr_text = "no ledger"; return r; }
-    const uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 20);
+    const uint32_t limit = jsonFieldU32(req.stdin_text, "limit", 16);
     const uint32_t offset = jsonFieldU32(req.stdin_text, "offset", 0);
     const auto pend = ledger->pendingCandidates(limit + offset);
     std::ostringstream out;
     uint32_t emitted = 0;
     for (size_t i = offset; i < pend.size(); ++i) {
         const auto& c = pend[i];
-        out << "[" << c.id << "] " << candidateTypeName(c.type)
-            << " " << c.file << ":" << c.line << "\n"
-            << "    " << c.evidence << "\n";
+        out << "ID=" << c.id
+            << " FILE=" << c.file
+            << " LINE=" << c.line
+            << " KIND=" << scanKindName(c.scanKind)
+            << " STATE=PENDING\n";
         if (++emitted >= limit) break;
     }
     if (emitted == 0) out << "(no pending candidates)";
@@ -449,13 +452,12 @@ ToolResult toolAuditCandidateRead(const ToolRequest& req, AuditLedger* ledger) {
         << " " << match->file << ":" << match->line << "\n"
         << "snippet: " << match->evidence << "\n";
 
-    // Surrounding context: read up to 8 lines before/after via the same
-    // bounded reader as file.read.
+    // Surrounding context: bounded window around the candidate line.
     const std::filesystem::path full = ledger->workspaceRoot() / match->file;
     std::ifstream f(full, std::ios::binary);
     if (f) {
-        const uint32_t from = match->line > 8 ? match->line - 8 : 1;
-        const uint32_t to   = match->line + 8;
+        const uint32_t from = match->line > 20 ? match->line - 20 : 1;
+        const uint32_t to   = match->line + 20;
         std::string line;
         uint32_t no = 0;
         char buf[16384];

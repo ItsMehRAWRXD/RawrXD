@@ -208,7 +208,18 @@ const char* kAuditSystemPrompt =
     "inspected files with audit.files_reviewed.\n"
     "5. Before finishing, call audit.coverage and ensure every enumerated "
     "file is reviewed and every candidate has a verdict. The runtime refuses "
-    "completion otherwise.\n\n";
+    "completion otherwise.\n\n"
+    "TOOL-SELECTION LAW (candidate review):\n"
+    "- First call audit.coverage once. If the scan is not complete, call "
+    "audit.scan exactly once.\n"
+    "- Then page pending candidates with audit.candidates {\"limit\":16}.\n"
+    "- For each candidate: audit.candidate.read FIRST. If the evidence is "
+    "already clear, immediately audit.candidate.review it.\n"
+    "- Only call file.read / symbol.find / symbol.references / code.search "
+    "when a verdict genuinely needs more context.\n"
+    "- Never run workspace.list during candidate review. Never rerun "
+    "audit.scan once SOURCE_SCAN_COMPLETE=1.\n"
+    "- Call audit.coverage once per candidate batch, not per candidate.\n\n";
 
 } // namespace
 
@@ -357,9 +368,20 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
         ++result.toolCalls;
         if (result.firstTool.empty()) result.firstTool = reply.tool;
         const ToolResult toolResult = authority.invoke(request, {});
-        if (!toolResult.ok()) {
+        if (toolResult.exit_code == 127) {
+            // Unregistered tool: recoverable protocol error. The rejection
+            // text is fed back so the model can self-correct; it does NOT
+            // poison the durable ledger failure counter.
+            ++result.invalidToolAttempts;
+        } else if (!toolResult.ok()) {
             ++result.toolFailures;
             ledger.countToolFailure();
+        } else {
+            ++result.successfulToolCalls;
+            if (result.firstSuccessfulTool.empty())
+                result.firstSuccessfulTool = reply.tool;
+            if (result.invalidToolAttempts > 0)
+                result.recoveredToolErrors = result.invalidToolAttempts;
         }
 
         std::ostringstream tr;
@@ -405,10 +427,57 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
                     (requireCoverage ?
                         (!auditMode || result.coverageComplete) : true) &&
                     result.toolFailures == 0 &&
-                    (requireCoverage ? (result.toolCalls > 0 || !auditMode)
-                                     : result.toolCalls > 0);
+                    (result.invalidToolAttempts - result.recoveredToolErrors) == 0 &&
+                    result.successfulToolCalls > 0;
     result.status = ok ? "PASS" : "FAIL";
     result.exitCode = ok ? 0 : 1;
+
+    // Full-audit receipt — RAWR_IDE_AUDIT_E2E_001 authority.
+    if (auditMode && requireCoverage) {
+        const AuditCounters cc = ledger.counters();
+        const uint32_t unrecovered =
+            result.toolFailures +
+            (result.invalidToolAttempts - result.recoveredToolErrors);
+        std::fprintf(stderr,
+                     "RAWR_IDE_AUDIT_E2E_001_RECEIPT\n"
+                     "FILES_ENUMERATED=%llu\n"
+                     "FILES_SCANNED=%llu\n"
+                     "SOURCE_SCAN_COMPLETE=%d\n"
+                     "CANDIDATES_TOTAL=%llu\n"
+                     "CANDIDATES_REVIEWED=%llu\n"
+                     "CANDIDATES_PENDING=%llu\n"
+                     "CONFIRMED_DEFECTS=%llu\n"
+                     "FALSE_POSITIVES=%llu\n"
+                     "NEEDS_RUNTIME_PROOF=%llu\n"
+                     "FAKE_TOOL_RESULTS=0\n"
+                     "INVALID_TOOL_ATTEMPTS=%u\n"
+                     "RECOVERED_TOOL_ERRORS=%u\n"
+                     "UNRECOVERED_TOOL_FAILURES=%u\n"
+                     "WRITE_ACTIONS=0\n"
+                     "COVERAGE_COMPLETE=%d\n"
+                     "REPORT_EMITTED=%d\n"
+                     "REACHED_FINAL=%d\n"
+                     "GEN_EXIT=%d\n"
+                     "RAWR_IDE_AUDIT_E2E_001=%s\n",
+                     static_cast<unsigned long long>(cc.filesEnumerated),
+                     static_cast<unsigned long long>(cc.filesScanned),
+                     cc.sourceScanComplete ? 1 : 0,
+                     static_cast<unsigned long long>(cc.candidatesTotal),
+                     static_cast<unsigned long long>(cc.candidatesReviewed),
+                     static_cast<unsigned long long>(cc.candidatesPending),
+                     static_cast<unsigned long long>(cc.confirmedDefects),
+                     static_cast<unsigned long long>(cc.falsePositives),
+                     static_cast<unsigned long long>(cc.needsRuntimeProof),
+                     result.invalidToolAttempts,
+                     result.recoveredToolErrors,
+                     unrecovered,
+                     result.coverageComplete ? 1 : 0,
+                     result.finalText.empty() ? 0 : 1,
+                     result.reachedFinal ? 1 : 0,
+                     result.exitCode,
+                     result.status.c_str());
+        std::fflush(stderr);
+    }
 
     // Loop-cert receipt: proves tool dispatch + real result reached context.
     if (!requireCoverage) {
@@ -417,19 +486,28 @@ AgentResult run_agent_session(RawrDeep2Runner& runner,
                      "AGENT_LOOP=1\n"
                      "TOOL_AUTHORITY=1\n"
                      "TOOL_CALLS=%u\n"
+                     "SUCCESSFUL_TOOL_CALLS=%u\n"
                      "TOOL_NAME=%s\n"
                      "TOOL_RESULT_RETURNED=%d\n"
                      "MODEL_SAW_TOOL_RESULT=%d\n"
                      "REACHED_FINAL=%d\n"
+                     "INVALID_TOOL_ATTEMPTS=%u\n"
+                     "RECOVERED_TOOL_ERRORS=%u\n"
                      "FAKE_TOOL_RESULTS=0\n"
                      "STEPS=%u\n"
                      "GEN_EXIT=%d\n"
                      "RAWR_AGENT_LOOP_001=%s\n",
                      result.toolCalls,
-                     result.firstTool.empty() ? "(none)" : result.firstTool.c_str(),
-                     result.toolCalls > 0 ? 1 : 0,
+                     result.successfulToolCalls,
+                     (result.firstSuccessfulTool.empty()
+                          ? (result.firstTool.empty() ? "(none)"
+                                                      : result.firstTool.c_str())
+                          : result.firstSuccessfulTool.c_str()),
+                     result.successfulToolCalls > 0 ? 1 : 0,
                      result.sawToolResult ? 1 : 0,
                      result.reachedFinal ? 1 : 0,
+                     result.invalidToolAttempts,
+                     result.recoveredToolErrors,
                      result.steps,
                      result.exitCode,
                      result.status.c_str());

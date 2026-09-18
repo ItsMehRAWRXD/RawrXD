@@ -21,12 +21,16 @@ struct AgentResult {
     int         exitCode        = 1;
     uint32_t    steps           = 0;
     uint32_t    toolCalls       = 0;
-    uint32_t    toolFailures    = 0;
+    uint32_t    toolFailures    = 0;      // genuine failures (non-127)
+    uint32_t    invalidToolAttempts = 0;  // unregistered-tool rejections (recoverable)
+    uint32_t    recoveredToolErrors = 0; // invalid attempts later followed by a successful dispatch
+    uint32_t    successfulToolCalls = 0;
     uint64_t    generatedTokens = 0;
     bool        coverageComplete = false;
     bool        reachedFinal    = false;
     bool        sawToolResult   = false;   // a generation ran with real tool output in context
-    std::string firstTool;                // first successfully dispatched tool name
+    std::string firstTool;                  // first attempted tool (may be invalid)
+    std::string firstSuccessfulTool;        // first successfully dispatched tool
     std::string finalText;
     std::string status          = "FAIL";
 };

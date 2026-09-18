@@ -155,6 +155,25 @@ target_include_directories(rawr_agent_protocol_selftest PRIVATE
 )
 
 #--------------------
+# Agent dispatch self-test (RAWR_AGENT_DISPATCH_001)
+# Deterministic tool-authority certification — real registry + providers,
+# no model, no GPU.
+#--------------------
+add_executable(rawr_agent_dispatch_selftest
+    tests/rawr_agent_dispatch_selftest.cpp
+    src/rawr_agent_dispatch.cpp
+    src/rawr_audit_state.cpp
+    src/rawr_stub_scan.cpp
+    rawrxd/src/deep2/AgentToolAuthority.cpp
+)
+target_include_directories(rawr_agent_dispatch_selftest PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+
+#--------------------
 # Deep2 Engine + Decode Bind (certification)
 #--------------------
 find_package(Vulkan QUIET)
