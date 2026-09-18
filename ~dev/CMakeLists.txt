@@ -89,11 +89,19 @@ endif()
 # Main executable
 #--------------------
 add_executable(rawr_monolith
-    ${MONOLITH_SOURCES}
-    ${DEEP2_SOURCES}
+    rawr_monolith_v2.cpp
+    src/rawr_run_stream.cpp
+    ${RAWRXD_DEEP2_SOURCES}
     ${DEEP2_ASM}
 )
 target_compile_definitions(rawr_monolith PRIVATE RAWR_MONOLITH_STANDALONE)
+
+find_package(Vulkan QUIET)
+if(Vulkan_FOUND)
+    target_link_libraries(rawr_monolith PRIVATE Vulkan::Vulkan)
+else()
+    message(STATUS "[rawr_monolith] Vulkan SDK not found — rawr run needs Vulkan")
+endif()
 
 target_include_directories(rawr_monolith PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}

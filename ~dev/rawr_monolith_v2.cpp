@@ -1379,6 +1379,13 @@ static std::string resolve_model_alias(const std::string& alias) {
     return alias;
 }
 
+// RAWR_RUN_STREAM_001: thin Deep2 Vulkan product-path runner
+// (src/rawr_run_stream.cpp — lifted from qwen32_40tps_gate invocation).
+namespace rawrxd { namespace runstream {
+int run_rawr_run(const std::string& modelPath, const std::string& prompt,
+                 uint32_t maxTokens);
+}} // namespace rawrxd::runstream
+
 // =================== 13. MAIN =======================================
 #ifdef RAWR_MONOLITH_STANDALONE
 int main(int argc, char** argv) {
@@ -1403,19 +1410,33 @@ int main(int argc, char** argv) {
         std::string alias = argv[2];
         model_path = resolve_model_alias(alias);
         
-        // Concatenate remaining args as the free-form request
+        // Concatenate remaining args as the free-form request; an optional
+        // trailing --max-tokens=N bounds generation for cert/gate runs.
         std::string request;
+        uint32_t max_gen_tokens = 1024;  // product-path default
         for (int i = 3; i < argc; ++i) {
-            if (i > 3) request += " ";
-            request += argv[i];
+            std::string arg = argv[i];
+            const std::string flag = "--max-tokens=";
+            if (arg.rfind(flag, 0) == 0) {
+                max_gen_tokens = (uint32_t)atoi(arg.c_str() + flag.size());
+                continue;
+            }
+            if (!request.empty()) request += " ";
+            request += arg;
         }
         prompt = request;
-        max_tokens = 1024;  // product-path default
+        max_tokens = (int)max_gen_tokens;
         
         std::cerr << "[RAWR_RUN_PARSE_001] SUBCOMMAND=run" << std::endl;
         std::cerr << "[RAWR_RUN_PARSE_001] MODEL_ALIAS=" << alias << std::endl;
         std::cerr << "[RAWR_RUN_PARSE_001] MODEL_PATH=" << model_path << std::endl;
         std::cerr << "[RAWR_RUN_PARSE_001] REQUEST_LEN=" << prompt.size() << std::endl;
+        std::cerr << "[RAWR_RUN_PARSE_001] MAX_TOKENS=" << max_gen_tokens << std::endl;
+        
+        // RAWR_RUN_STREAM_001: execute via the real Deep2 Vulkan path.
+        // No CPU demo fallback. Exit code is the stream receipt verdict.
+        return rawrxd::runstream::run_rawr_run(model_path, prompt,
+                                               max_gen_tokens);
     } else {
         model_path = argv[1];
         prompt = (argc > 2) ? argv[2] : "hello world";

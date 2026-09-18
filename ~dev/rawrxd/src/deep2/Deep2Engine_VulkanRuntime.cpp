@@ -177,7 +177,7 @@ void Deep2Engine::enableVulkan(bool enable) {
         }
         if (multiGpuLayerPlan_.active) {
             for (unsigned s = 0; s < multiGpuLayerPlan_.gpuSlotCount; ++s) {
-                std::fprintf(stdout,
+                std::fprintf(stderr,
                     "DEEP2_DENSE_SLOT slot=%u lo=%u hi=%u speed_weight=%.3f\n",
                     s,
                     multiGpuLayerPlan_.rangeLo[s],
@@ -188,7 +188,7 @@ void Deep2Engine::enableVulkan(bool enable) {
     }
 
     vulkanInitialized_=true;
-    std::fprintf(stdout,
+    std::fprintf(stderr,
         "BATCH9_VULKAN_INIT=DEVICE_BACKED devices=%u plan_active=%u\n",
         static_cast<unsigned>(vulkanDevices_.size()),
         multiGpuLayerPlan_.active?1u:0u);
@@ -257,7 +257,7 @@ bool Deep2Engine::gpuResidentDecodeEnabled() const {
 }
 
 void Deep2Engine::emitHotpathWitnesses() {
-    std::fprintf(stdout,
+    std::fprintf(stderr,
         "BATCH9_GPU_HOTPATH device_backed=%u devices=%u real_forward=%u "
         "host_materializations=%llu\n",
         vulkanInitialized_?1u:0u,
@@ -269,7 +269,7 @@ void Deep2Engine::emitHotpathWitnesses() {
         const uint64_t epoch=kvCache?kvCache->currentLength():0;
         auto w=Deep2Gpu_MeasureOverlap(
             *vulkanDevices_[0],*vulkanDevices_[1],epoch);
-        std::fprintf(stdout,
+        std::fprintf(stderr,
             "BATCH9_TEMPORAL_WITNESS epoch=%llu calibrated=%u overlap_ns=%llu "
             "host_envelope_overlap_ns=%llu authority=%u\n",
             static_cast<unsigned long long>(epoch),

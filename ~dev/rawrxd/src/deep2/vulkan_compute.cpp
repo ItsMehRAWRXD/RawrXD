@@ -922,7 +922,7 @@ bool VulkanCompute::initialize() {
     initialized_ = true;
     (void)ReserveDecodeScratch();
 
-    std::fprintf(stdout,
+    std::fprintf(stderr,
         "BATCH9_VK_DEVICE ordinal=%u name=%s vendor=0x%04x vram=%llu "
         "compute_pipeline=%u qgemv_pipeline=%u batch4row=%u batch8row=%u calibrated=%u\n",
         info_.ordinal, info_.name.c_str(), info_.vendorId,
@@ -942,7 +942,7 @@ bool VulkanCompute::ReserveDecodeScratch() {
         return false;
     }
     scratchReservedBytes_ = bytes;
-    std::fprintf(stdout, "[SCRATCH_RESERVE_OK] attention bytes=%zu\n", bytes);
+    std::fprintf(stderr, "[SCRATCH_RESERVE_OK] attention bytes=%zu\n", bytes);
     return true;
 }
 

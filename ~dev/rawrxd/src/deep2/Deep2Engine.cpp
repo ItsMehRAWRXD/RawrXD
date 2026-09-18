@@ -1011,7 +1011,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
         moeInitialized_ = true;
 
-        std::fprintf(stdout,
+        std::fprintf(stderr,
             "[Deep2Engine] MoE bound: experts=%zu topk=%zu shared=%zu "
             "moe_layers=%zu gating=%u scale=%.4f norm=%u\n",
             modelWeights.numExperts,
@@ -1086,7 +1086,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     modelState_ = ModelState::Choreographable;
 
-    std::fprintf(stdout,
+    std::fprintf(stderr,
         "[Deep2Engine] GGUF mapped: arch=%s shards=%u tensors=%zu "
         "layers=%zu hidden=%zu heads=%zu kv_heads=%zu vocab=%zu\n",
         arch.c_str(), loader->shardCount(), loader->tensorCount(),
@@ -1098,7 +1098,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     const bool hasBq = modelWeights.layers[0].bq.data != nullptr;
     const bool hasBk = modelWeights.layers[0].bk.data != nullptr;
     const bool hasBv = modelWeights.layers[0].bv.data != nullptr;
-    std::fprintf(stdout,
+    std::fprintf(stderr,
         "ARCH=%s\nHIDDEN=%zu\nLAYERS=%zu\nHEADS=%zu\nKV_HEADS=%zu\n"
         "HEAD_DIM=%zu\nGQA_GROUP=%zu\nFFN_DIM=%zu\nROPE_THETA=%.6g\n"
         "ROPE_SCALING=%.6g\nROPE_DIM=%zu\nROPE_NEOX=%d\nRMS_EPS=%.6g\n"
@@ -1313,6 +1313,18 @@ const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
     return medusaDecoder_?medusaDecoder_->stats.exact:speculativeEmpty_;
 }
 
+// =================== FORWARD-LAYER TRACE GATE ====================
+// Product path (rawr run) must stream only generated text to stdout and
+// receipts to stderr. Per-op FWD_LAYER/LINEARW tracing is a batch-gate
+// diagnostic: opt-in via DEEP2_TRACE_FORWARD=1 (checked once per process).
+static bool deep2ForwardTraceEnabled() {
+    static const bool enabled = [] {
+        const char* v = std::getenv("DEEP2_TRACE_FORWARD");
+        return v && v[0] == '1';
+    }();
+    return enabled;
+}
+
 // =================== QUANT-AWARE LINEAR ====================
 void Deep2Engine::LinearW(const WeightTensor& wt,
                           const float* input,
@@ -1320,8 +1332,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
                           float* output,
                           size_t outDim) {
     const char* wtn = wt.name.empty() ? "null" : wt.name.c_str();
-    std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
-                 wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"LINEARW name=%s rows=%zu cols=%zu type=%d\n",
+                     wtn, wt.rows, wt.cols, wt.type); std::fflush(stderr);
+    }
     if (!wt.data || !input || !output || outDim == 0) {
         throw std::runtime_error("LinearW: null tensor/input/output");
     }
@@ -1342,7 +1356,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
     // BATCH10_ROW_SPLIT_LINEAR — real GPU arithmetic, host result contract.
     if (vulkanInitialized_ && !vulkanDevices_.empty()) {
         std::memset(output, 0, outDim * sizeof(float));
-        std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,"LINEARW_TRY_GPU name=%s\n",wtn); std::fflush(stderr);
+        }
 
         // Attempt 1: dual-GPU row split
         bool triedDual = false, dualOk = false;
@@ -1353,7 +1369,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             }
         }
         if (dualOk) {
-            std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"LINEARW_RESULT=DUAL_GPU name=%s\n",wtn); std::fflush(stderr);
+            }
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -1362,12 +1380,16 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
             return;
         }
         if (triedDual) {
-            std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"LINEARW_DUAL_ROW_FAIL name=%s\n",wtn); std::fflush(stderr);
+            }
         }
 
         // Attempt 2: single-GPU fallback
         if (tryVulkanHostGEMV(wt, input, output, outDim)) {
-            std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"LINEARW_RESULT=SINGLE_GPU name=%s\n",wtn); std::fflush(stderr);
+            }
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
             }
@@ -1377,14 +1399,18 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         }
 
         // GPU paths exhausted
-        std::fprintf(stderr,"LINEARW_RESULT=FAIL name=%s strict=%d\n",
-                     wtn,(int)vulkanStrictNoCpuFallback_); std::fflush(stderr);
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,"LINEARW_RESULT=FAIL name=%s strict=%d\n",
+                         wtn,(int)vulkanStrictNoCpuFallback_); std::fflush(stderr);
+        }
         if (vulkanStrictNoCpuFallback_)
             throw std::runtime_error("LinearW: GPU path failed under strict mode");
     }
 
     // CPU fallback
-    std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"LINEARW_RESULT=CPU_FALLBACK name=%s\n",wtn); std::fflush(stderr);
+    }
     auto kernel = QuantKernelRegistry::Instance().GetGEMV(wt.type);
     if (!kernel) {
         throw std::runtime_error("LinearW: no registered GEMV kernel");
@@ -1531,7 +1557,9 @@ void Deep2Engine::applyRoPE(float* q, float* k,
 // =================== FORWARD LAYER ====================
 void Deep2Engine::forwardLayer(size_t layer, const float* input,
                                float* output, size_t seqLen) {
-    std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
+    }
     if (!input || !output || config.hiddenDim == 0) {
         throw std::runtime_error("forwardLayer: invalid buffers/geometry");
     }
@@ -1549,7 +1577,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     parityEmit(ParityCheckpoint::AttnNorm, layerTemp, H);
     parityEmitLayer(static_cast<int>(layer), "ATTN_NORM", layerTemp, H);
 
-    std::fprintf(stderr,"FWD_LAYER layer=%zu ATTENTION\n",layer); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"FWD_LAYER layer=%zu ATTENTION\n",layer); std::fflush(stderr);
+    }
     computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
     for (size_t i = 0; i < H; ++i) {
@@ -1566,7 +1596,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     parityEmitLayer(static_cast<int>(layer), "FFN_NORM", layerTemp, H);
 
     // FFN/MoE body remains Batch 5; orchestration is real now.
-    std::fprintf(stderr,"FWD_LAYER layer=%zu FFN_ENTER\n",layer); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"FWD_LAYER layer=%zu FFN_ENTER\n",layer); std::fflush(stderr);
+    }
     if (modelWeights.numExperts > 0) {
         computeMoEFFN(layer, layerTemp, ffnOutput);
     } else {
@@ -1584,7 +1616,9 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     }
     parityEmit(ParityCheckpoint::LayerResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
-    std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
+    }
 }
 
 // =================== ATTENTION (REAL MHA/GQA) ====================
@@ -2284,22 +2318,34 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         const size_t remaining=decodeLimit-generated;
-        std::fprintf(stderr,"GEN_LOOP_TOP gen=%zu rem=%zu specActive=%d\n",generated,remaining,(int)specActive); std::fflush(stderr);
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,"GEN_LOOP_TOP gen=%zu rem=%zu specActive=%d\n",generated,remaining,(int)specActive); std::fflush(stderr);
+        }
         if(specActive&&remaining>=2) {
-            std::fprintf(stderr,"SPEC_PATH_ENTER gen=%zu rem=%zu\n",generated,remaining); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"SPEC_PATH_ENTER gen=%zu rem=%zu\n",generated,remaining); std::fflush(stderr);
+            }
             std::vector<int32_t> proposals;
-            std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_BEGIN\n"); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_BEGIN\n"); std::fflush(stderr);
+            }
             (void)buildAdaptiveSpeculativeProposals(
                 hidden.data(),remaining,proposals);
-            std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_END count=%zu\n",proposals.size()); std::fflush(stderr);
+            if (deep2ForwardTraceEnabled()) {
+                std::fprintf(stderr,"SPEC_BUILD_PROPOSALS_END count=%zu\n",proposals.size()); std::fflush(stderr);
+            }
             if(!proposals.empty()) {
 
                 std::vector<int32_t> verified;
-                std::fprintf(stderr,"SPEC_VSGW_BEGIN proposals=%zu\n",proposals.size()); std::fflush(stderr);
+                if (deep2ForwardTraceEnabled()) {
+                    std::fprintf(stderr,"SPEC_VSGW_BEGIN proposals=%zu\n",proposals.size()); std::fflush(stderr);
+                }
                 if(verifySpeculativeGreedyWindow(
                         hidden.data(),proposals,remaining,verified)&&
                    !verified.empty()) {
-                    std::fprintf(stderr,"SPEC_VSGW_END verified=%zu\n",verified.size()); std::fflush(stderr);
+                    if (deep2ForwardTraceEnabled()) {
+                        std::fprintf(stderr,"SPEC_VSGW_END verified=%zu\n",verified.size()); std::fflush(stderr);
+                    }
                     bool stop=false;
                     for(int32_t tok:verified) {
                         if(generated>=decodeLimit) break;
@@ -2314,10 +2360,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                     if(stop) break;
                     continue;
                 } else {
-                    std::fprintf(stderr,"SPEC_VSGW_FAILED_OR_EMPTY\n"); std::fflush(stderr);
+                    if (deep2ForwardTraceEnabled()) {
+                        std::fprintf(stderr,"SPEC_VSGW_FAILED_OR_EMPTY\n"); std::fflush(stderr);
+                    }
                 }
             } else {
-                std::fprintf(stderr,"SPEC_NO_PROPOSALS\n"); std::fflush(stderr);
+                if (deep2ForwardTraceEnabled()) {
+                    std::fprintf(stderr,"SPEC_NO_PROPOSALS\n"); std::fflush(stderr);
+                }
             }
         }
 
@@ -2326,7 +2376,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // parityBeginStep(promptLen+i-1) before this token's forward pass.
         parityEmitLogitsTop10(logits, config.vocabSize);
         // Temporary logits sanity dump (first 5 and top-5 indices)
-        {
+        if (deep2ForwardTraceEnabled()) {
             int vocab = static_cast<int>(config.vocabSize);
             float maxv = logits[0];
             int maxi = 0;
@@ -2355,7 +2405,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             std::fprintf(stderr,"GEN_SAMPLE_FAIL nextTok=%d vocab=%zu\n",nextTok,config.vocabSize); std::fflush(stderr);
             break;
         }
-
         outputTokens[generated++] = nextTok;
         if(specActive) medusaDecoder_->observe(nextTok);
         pendingToken=nextTok;
@@ -2366,7 +2415,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
     }
 
-    std::fprintf(stderr,"GEN_EXIT generated=%zu\n",generated); std::fflush(stderr);
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,"GEN_EXIT generated=%zu\n",generated); std::fflush(stderr);
+    }
 
     auto tEnd = std::chrono::steady_clock::now();
 

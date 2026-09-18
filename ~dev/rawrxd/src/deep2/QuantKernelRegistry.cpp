@@ -1874,7 +1874,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
     // MASM linked but unverified — use scalar reference until byte-level comparison passes
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
-    printf("[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
+    std::fprintf(stderr, "[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
            (void*)(GEMVKernelFn)gemv_q4_k_scalar,
            (void*)(DequantKernelFn)dequant_q4_k,
            (void*)GetGEMV((int)GGMLType::GGML_TYPE_Q4_K),
@@ -1943,11 +1943,11 @@ void QuantKernelRegistry::Initialize() {
     ProbeCPU();
     RegisterBuiltins();
 
-    printf("[QuantKernelRegistry] CPU features: AVX512F=%d AVX512BW=%d "
+    std::fprintf(stderr, "[QuantKernelRegistry] CPU features: AVX512F=%d AVX512BW=%d "
            "AVX512DQ=%d AVX512VNNI=%d AVX2=%d FMA=%d F16C=%d\n",
            cpu_.avx512f, cpu_.avx512bw, cpu_.avx512dq,
            cpu_.avx512vnni, cpu_.avx2, cpu_.fma, cpu_.f16c);
-    printf("[QuantKernelRegistry] Registered %zu GEMV kernels, %zu dequant kernels\n",
+    std::fprintf(stderr, "[QuantKernelRegistry] Registered %zu GEMV kernels, %zu dequant kernels\n",
            gemvTable_.size(), dequantTable_.size());
 }
 
