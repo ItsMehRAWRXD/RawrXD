@@ -1326,6 +1326,19 @@ static bool deep2ForwardTraceEnabled() {
     return enabled;
 }
 
+// B4b: once the lmHead slices are pinned at the frozen split geometry, the
+// per-token probe/pin bookkeeping is pure overhead. Re-probing stays
+// available for diagnostics via DEEP2_LMHEAD_GEOMETRY_PROBE=1 (checked
+// once per process). The frozen-split gate already makes geometry drift
+// impossible during decode unless DEEP2_SPLIT_FREEZE=0.
+static bool lmHeadGeometryProbeEnabled() {
+    static const bool enabled = [] {
+        const char* v = std::getenv("DEEP2_LMHEAD_GEOMETRY_PROBE");
+        return v && v[0] == '1';
+    }();
+    return enabled;
+}
+
 // =================== QUANT-AWARE LINEAR ====================
 void Deep2Engine::LinearW(const WeightTensor& wt,
                           const float* input,
@@ -1366,8 +1379,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         // dual-row split geometry) before the first logits GEMV; a geometry
         // change re-pins. Pinned entries are invisible to eviction, so the
         // per-token re-upload churn B3 measured on slot 1 cannot recur.
+        // B4b: with the split frozen after warmup the geometry is stable,
+        // and the probe itself costs real per-token work (split-plan lookup,
+        // 2 view builds, 2 pin-cache round trips). Once both slices are
+        // pinned, skip the probe entirely; the frozen-split gate re-pins
+        // only if DEEP2_SPLIT_FREEZE is disabled.
         const bool isLmHead = (&wt == &modelWeights.lmHead);
-        if (isLmHead && vulkanDevices_.size() >= 2 && wt.rows >= 2) {
+        const bool lmHeadPinFastPath =
+            isLmHead && lmHeadPinned_[0] && lmHeadPinned_[1] &&
+            !lmHeadGeometryProbeEnabled();
+        if (isLmHead && !lmHeadPinFastPath &&
+            vulkanDevices_.size() >= 2 && wt.rows >= 2) {
             GpuWeightView w0v{}, w1v{};
             if (Deep2ProbeRowSplitViews(wt, *vulkanDevices_[0],
                                         *vulkanDevices_[1], w0v, w1v)) {
