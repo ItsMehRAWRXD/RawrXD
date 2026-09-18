@@ -569,6 +569,7 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
             if (vc->LastCrossDeviceCopyUsedHost()) {
                 // Batch 9 refuses to call a host bounce peer-resident.
                 ++gpuFwd_.hostMaterializations;
+                ++gpuFwd_.matCrossDeviceHandoff;
                 ++gpuFwd_.intraSlotHostTransfers;
             }
         }
@@ -596,8 +597,18 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         }
         std::memcpy(hostOut, cur.data(), H * sizeof(float));
     } else {
+        const auto dlStart = std::chrono::steady_clock::now();
         if (!lastGpu->DownloadHidden(hostOut, H)) return false;
+        const auto dlEnd = std::chrono::steady_clock::now();
         ++gpuFwd_.hostSyncBoundaries;
+        // The final download is its own materialization class: required by
+        // the current contract (host samples logits) but measured explicitly
+        // so B5.2/B6 can target it.
+        ++gpuFwd_.hostMaterializations;
+        ++gpuFwd_.matFinalDownload;
+        gpuFwd_.matFinalDownloadNs += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                dlEnd - dlStart).count());
     }
     return true;
 }

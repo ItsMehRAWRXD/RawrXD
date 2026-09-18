@@ -391,6 +391,41 @@ int main(int argc, char** argv) {
         enoughTokens && realGpu && noFallback && residentReuse && boundedUploads
         && callParity && dr.calls > 0;
 
+    // B5_MATERIALIZATION_PROFILE_001: classify every host materialization
+    // with wall time per class; ACCOUNTING_MATCH requires the class sum to
+    // equal the raw hostMaterializations counter exactly.
+    {
+        const uint64_t matTotal = gf.hostMaterializations;
+        const uint64_t classSum = Deep2::Deep2GpuForward_MatClassSum(gf);
+        const uint64_t perTokenNum = measured.generatedTokens;
+        std::fprintf(stderr,
+            "B5_MATERIALIZATION_PROFILE_001\n"
+            "CROSS_DEVICE_HANDOFF_MATERIALIZATIONS=%llu\n"
+            "FINAL_OUTPUT_MATERIALIZATIONS=%llu\n"
+            "GEMV_STAGING_MATERIALIZATIONS=%llu\n"
+            "DUAL_ROW_MERGE_MATERIALIZATIONS=%llu\n"
+            "OTHER_MATERIALIZATIONS=%llu\n"
+            "TOTAL_MATERIALIZATIONS=%llu\n"
+            "ACCOUNTING_MATCH=%d\n"
+            "MATERIALIZATIONS_PER_TOKEN=%.3f\n"
+            "CROSS_DEVICE_HANDOFF_WALL_NS=%llu\n"
+            "FINAL_OUTPUT_WALL_NS=%llu\n"
+            "GEMV_STAGING_WALL_NS=%llu\n"
+            "OTHER_MATERIALIZATION_WALL_NS=%llu\n",
+            static_cast<unsigned long long>(gf.matCrossDeviceHandoff),
+            static_cast<unsigned long long>(gf.matFinalDownload),
+            static_cast<unsigned long long>(gf.matGemvSingleRoundTrip),
+            static_cast<unsigned long long>(gf.matDualRowMerge),
+            static_cast<unsigned long long>(gf.matOther),
+            static_cast<unsigned long long>(matTotal),
+            classSum == matTotal ? 1 : 0,
+            perTokenNum ? (double)matTotal / (double)perTokenNum : 0.0,
+            static_cast<unsigned long long>(gf.matCrossDeviceHandoffNs),
+            static_cast<unsigned long long>(gf.matFinalDownloadNs),
+            static_cast<unsigned long long>(gf.matGemvSingleNs),
+            static_cast<unsigned long long>(gf.matOtherNs));
+    }
+
     std::fprintf(stderr,
         "DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=%s\n",
         pass ? "PASS" : "HOLD");

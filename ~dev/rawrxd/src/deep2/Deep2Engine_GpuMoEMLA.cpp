@@ -86,10 +86,11 @@ bool Deep2Engine::tryVulkanHostGEMV(
             ++gpuFwd_.dualRowSlot[0];
             ++gpuFwd_.dualRowSlot[1];
             ++gpuFwd_.hostMergeOps;
+            ++gpuFwd_.hostMaterializations; // explicit row-slice merge
+            ++gpuFwd_.matDualRowMerge;
             gpuFwd_.dualArithmeticOverlapNs=
                 std::max(gpuFwd_.dualArithmeticOverlapNs,
                          r.calibratedOverlapNs);
-            ++gpuFwd_.hostMaterializations; // explicit row-slice merge
             return finiteVec(output,outDim);
         }
     }
@@ -132,6 +133,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
     }
 
     ++gpuFwd_.hostMaterializations;
+    ++gpuFwd_.matGemvSingleRoundTrip;
     bool fin=finiteVec(output,outDim);
     if(!fin) std::fprintf(stderr,"GEMV_SINGLE finiteVec failed name=%s\n",wtn), std::fflush(stderr);
     return fin;

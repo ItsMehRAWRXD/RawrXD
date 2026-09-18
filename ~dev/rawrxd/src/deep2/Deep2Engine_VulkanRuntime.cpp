@@ -192,6 +192,40 @@ void Deep2Engine::enableVulkan(bool enable) {
         "BATCH9_VULKAN_INIT=DEVICE_BACKED devices=%u plan_active=%u\n",
         static_cast<unsigned>(vulkanDevices_.size()),
         multiGpuLayerPlan_.active?1u:0u);
+
+    // B5.2 capability probe — before any peer-transfer implementation.
+    // PEER_HANDOFF_SUPPORTED requires both devices to expose external
+    // memory (win32) AND at least one shared exportable handle type.
+    // The transfer path fails closed when this is 0.
+    if (vulkanDevices_.size() >= 2) {
+        const auto& c0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& c1 = vulkanDevices_[1]->PeerHandoffCapability();
+        bool common = false;
+        std::string handle = "(none)";
+        if (c0.omtHandle && c1.omtHandle) {
+            common = true;
+            handle = "OPAQUE_WIN32";
+        } else if (c0.d3d12Handle && c1.d3d12Handle) {
+            common = true;
+            handle = "D3D12_RESOURCE";
+        }
+        std::fprintf(stderr,
+            "B5_PEER_HANDOFF_PROBE\n"
+            "GPU0_EXTERNAL_MEMORY=%d\n"
+            "GPU1_EXTERNAL_MEMORY=%d\n"
+            "GPU0_OMT=%d GPU1_OMT=%d\n"
+            "GPU0_D3D12=%d GPU1_D3D12=%d\n"
+            "EXTERNAL_SEMAPHORE=%d\n"
+            "COMMON_HANDLE_TYPE=%s\n"
+            "PEER_HANDOFF_SUPPORTED=%d\n",
+            c0.externalMemoryExtension ? 1 : 0,
+            c1.externalMemoryExtension ? 1 : 0,
+            c0.omtHandle ? 1 : 0, c1.omtHandle ? 1 : 0,
+            c0.d3d12Handle ? 1 : 0, c1.d3d12Handle ? 1 : 0,
+            (c0.externalSemaphore && c1.externalSemaphore) ? 1 : 0,
+            handle.c_str(),
+            common ? 1 : 0);
+    }
 }
 
 VulkanCompute* Deep2Engine::getVulkanComputeSlot(unsigned slot) const {

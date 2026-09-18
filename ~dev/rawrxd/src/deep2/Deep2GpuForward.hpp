@@ -21,6 +21,18 @@ struct GpuForwardCounters {
     uint64_t forwardSlot[8]{};
     uint64_t hostSyncBoundaries = 0;
     uint64_t hostMaterializations = 0;
+    // B5_MATERIALIZATION_PROFILE_001: classify every host materialization
+    // event + wall time per class. ACCOUNTING_MATCH requires the class sum
+    // to equal hostMaterializations exactly.
+    uint64_t matCrossDeviceHandoff = 0;   // CopyArenaHiddenTo host bounce
+    uint64_t matGemvSingleRoundTrip = 0;   // tryVulkanHostGEMV single-GPU lane
+    uint64_t matDualRowMerge = 0;          // dual-row explicit row-slice merge
+    uint64_t matFinalDownload = 0;         // final hidden DownloadHidden
+    uint64_t matOther = 0;                 // MoE/MLA/speculative residue
+    uint64_t matCrossDeviceHandoffNs = 0;
+    uint64_t matGemvSingleNs = 0;
+    uint64_t matFinalDownloadNs = 0;
+    uint64_t matOtherNs = 0;
     uint64_t ownershipTransfers = 0;
     uint64_t intraSlotHostTransfers = 0;
     uint64_t liveDecodeResidentTokens = 0;
@@ -54,6 +66,13 @@ inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
 
 inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexcept {
     return Deep2GpuForward_Resident(c) && c.hostMaterializations == 0;
+}
+
+// B5_MATERIALIZATION_PROFILE_001: class sum must equal the raw counter.
+inline uint64_t Deep2GpuForward_MatClassSum(
+    const GpuForwardCounters& c) noexcept {
+    return c.matCrossDeviceHandoff + c.matGemvSingleRoundTrip +
+           c.matDualRowMerge + c.matFinalDownload + c.matOther;
 }
 
 inline bool Deep2GpuForward_DualPhysicalGpuReal(const GpuForwardCounters& c) noexcept {

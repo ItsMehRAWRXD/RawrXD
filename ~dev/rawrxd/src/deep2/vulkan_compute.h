@@ -407,6 +407,26 @@ public:
     void UnpinAllWeights();
     uint64_t PinnedWeightBytes() const noexcept { return pinnedWeightBytes_; }
     uint64_t PinnedWeightEntries() const noexcept { return pinnedWeightEntries_; }
+
+    // ===== B5.2 PEER_HANDOFF capability probe ==============================
+    // A GPU0->GPU1 handoff without a host bounce needs external-memory
+    // import/export between the two discrete GPUs. Capability-ONLY: never
+    // fabricates support. PEER_HANDOFF_SUPPORTED requires BOTH devices to
+    // expose a COMMON exportable/importable handle type. Probe BEFORE any
+    // transfer implementation; the transfer fails closed otherwise.
+    struct PeerHandoffCaps {
+        bool     externalMemoryExtension = false;
+        bool     win32 = false;
+        bool     omtHandle = false;
+        bool     d3d12Handle = false;
+        bool     externalSemaphore = false;
+        bool     commonHandleType = false;
+        std::string commonHandleName;
+    };
+    const PeerHandoffCaps& PeerHandoffCapability() const;
+    bool PeerHandoffSupported() const {
+        return PeerHandoffCapability().commonHandleType;
+    }
     DeviceBuf* ResolveResidentF32(const float* src, uint64_t key, size_t count);
     uint64_t weightUseClock_ = 0;
     uint64_t pinnedWeightBytes_ = 0;
@@ -913,6 +933,10 @@ private:
     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
                            DeviceBuf*& out);
     void clearWeightCache();
+
+    // B5.2 probe state
+    mutable PeerHandoffCaps peerHandoffCaps_{};
+    mutable bool peerHandoffCapsProbed_ = false;
 
     uint32_t findMemoryType(uint32_t bits, VkMemoryPropertyFlags required) const;
     static uint64_t nowNs();
