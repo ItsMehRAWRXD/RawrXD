@@ -91,14 +91,34 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     if (inter64 == 0) inter64 = (uint64_t)H * 4u;
     if (inter64 > UINT32_MAX) return false;
     const uint32_t inter = (uint32_t)inter64;
+    // Batch3 #12: multi-GPU layer-split slots only execute their contiguous
+    // layer range; size K/V caches to that range instead of all 64 layers.
+    // Reclaims ~1GB of device-local VRAM per split slot (the 7800 XT's
+    // weight budget was short by exactly the lmHead slice it re-uploaded
+    // every token in the B3 experiment).
+    uint32_t kvLayers = 0;
+    if (multiGpuLayerPlan_.active &&
+        slot < multiGpuLayerPlan_.gpuSlotCount &&
+        multiGpuLayerPlan_.rangeLo.size() > slot) {
+        const uint32_t lo = multiGpuLayerPlan_.rangeLo[slot];
+        const uint32_t hi = multiGpuLayerPlan_.rangeHi[slot];
+        if (hi >= lo) kvLayers = hi - lo + 1u;
+    }
     if (!vc->EnsureForwardArena(
         H, inter ? inter : H * 4,
         (uint32_t)modelWeights.numHeads,
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
-        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22)))
+        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22),
+        kvLayers))
         return false;
+    // Absolute-layer -> cache-slot mapping for split slots: AppendKV and
+    // DispatchAttnDecode address the sized K/V region relative to this base.
+    if (kvLayers && slot < multiGpuLayerPlan_.rangeLo.size())
+        vc->SetKvLayerBase(multiGpuLayerPlan_.rangeLo[slot]);
+    else
+        vc->SetKvLayerBase(0u);
     size_t maxB = 0;
     auto acc = [&](const WeightTensor& w) {
         size_t b = StreamBytes(w);
@@ -147,7 +167,8 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
         (uint32_t)modelWeights.numKVHeads,
         (uint32_t)modelWeights.headDim,
         (uint32_t)(config.maxSeqLen ? config.maxSeqLen : 128),
-        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22));
+        (uint32_t)(modelWeights.numLayers ? modelWeights.numLayers : 22),
+        kvLayers);
     return vc->ApplyWeightWindowPolicy(maxB, budget, ov, arena);
 }
 

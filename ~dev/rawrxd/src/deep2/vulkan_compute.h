@@ -111,10 +111,22 @@ public:
     VulkanCompute& operator=(const VulkanCompute&) = delete;
 
     static std::vector<VulkanPhysicalInfo> EnumeratePhysicalDevices();
+    // ========== Forward arena (Batch9 resident decode) ==========
+    // kvLayers=0 sizes K/V caches for ALL model layers (legacy behavior).
+    // kvLayers=N sizes them for only the N layers this slot executes in a
+    // multi-GPU layer-split plan, reclaiming dead KV VRAM on split slots.
+    // SetKvLayerBase maps absolute layer indices onto the sized region:
+    // cache slot 0 corresponds to absolute layer `base`.
+    bool EnsureForwardArena(
+        uint32_t hidden, uint32_t intermediate,
+        uint32_t heads, uint32_t kvHeads, uint32_t headDim,
+        uint32_t maxSeq, uint32_t layers, uint32_t kvLayers = 0);
+    void SetKvLayerBase(uint32_t base) noexcept { kvLayerBase_ = base; }
+    uint32_t KvLayerBase() const noexcept { return kvLayerBase_; }
     static size_t ForwardArenaReserveBytes(
         uint32_t hidden, uint32_t intermediate,
         uint32_t heads, uint32_t kvHeads, uint32_t headDim,
-        uint32_t maxSeq, uint32_t layers);
+        uint32_t maxSeq, uint32_t layers, uint32_t kvLayers = 0);
     static size_t ForwardArenaReserveBytes(int deviceOrdinal);
 
     bool initialize();
@@ -150,10 +162,6 @@ public:
     GpuWorkInterval LastInterval() const;
     bool calibratedTimestampsAvailable() const noexcept { return calibratedAvailable_; }
 
-    bool EnsureForwardArena(
-        uint32_t hidden, uint32_t intermediate,
-        uint32_t heads, uint32_t kvHeads, uint32_t headDim,
-        uint32_t maxSeq, uint32_t layers);
     bool ApplyWeightWindowPolicy(size_t maxWeightBytes, size_t budgetBytes,
                                  uint32_t slotOverride, size_t arenaBytes);
     bool ReserveDecodeScratch();
@@ -962,6 +970,8 @@ private:
     uint32_t hidden_ = 0, intermediate_ = 0, heads_ = 0;
     uint32_t kvHeads_ = 0, headDim_ = 0, maxSeq_ = 0, layers_ = 0;
     uint32_t kvDim_ = 0;
+    uint32_t kvArenaLayers_ = 0; // K/V arena sizing (layer-split slots)
+    uint32_t kvLayerBase_ = 0;  // first absolute layer mapped to cache slot 0
 
     DeviceBuf arenaHidden_{}, arenaAttnW_{}, arenaFfnW_{}, arenaNormed_{};
     DeviceBuf arenaQ_{}, arenaK_{}, arenaV_{}, arenaAttn_{}, arenaResidual_{};

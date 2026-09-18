@@ -24,6 +24,17 @@ long double envThroughput(const char* name) noexcept {
     return end!=s && v>0.0L ? v : 1.0L;
 }
 
+// Overlap-probe sampling period. The pairwise witness scan costs ~50us and
+// used to run after EVERY GEMV (~7% of dense-row wall at 32T). Authority or
+// cert runs that need full-rate calibrated overlap set
+// DEEP2_OVERLAP_PROBE_EVERY=1; 0 falls back to the default 16.
+static uint64_t envOverlapProbePeriod() noexcept {
+    const char* e=std::getenv("DEEP2_OVERLAP_PROBE_EVERY");
+    if(!e||!*e) return 16;
+    const unsigned long v=std::strtoul(e,nullptr,10);
+    return v?v:16;
+}
+
 RowSplitPlan chooseThroughputSplit(
     uint32_t rows, const VulkanCompute& g0, const VulkanCompute& g1) noexcept;
 RowSplitPlan cachedThroughputSplit(
@@ -175,6 +186,10 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
     if(it!=cache.end() && it->second.ratioPermille==pm)
         return &it->second.s;
 
+    // Rebuild under drift: free the old slice pair BEFORE constructing the
+    // replacement. Building-then-swapping would transiently hold both
+    // images (~2x model bytes) during the copy loop below.
+    if(it!=cache.end()) it->second.s={};
     Q4KColumnSlices s{};
     s.cols0=b0*256u;s.cols1=b1*256u;
     s.w0.resize((size_t)wt.rows*row0);
@@ -184,6 +199,8 @@ const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
         std::memcpy(s.w0.data()+r*row0,src+r*rowBytes,row0);
         std::memcpy(s.w1.data()+r*row1,src+r*rowBytes+row0,row1);
     }
+    // try_emplace keeps position when the key exists (drift case);
+    // overwrite in place instead of inserting a second Entry.
     auto [it2, inserted] = cache.try_emplace(wt.data);
     it2->second.s = std::move(s);
     it2->second.ratioPermille = pm;
@@ -267,6 +284,45 @@ private:
 DualRowExecutor& rowExecutor() {
     static DualRowExecutor ex;
     return ex;
+}
+
+static std::atomic<uint64_t> gDualRowTimingCalls{0};
+static std::atomic<uint64_t> gDualRowTimingSingleCalls{0};
+static std::atomic<uint64_t> gDualRowTimingGroupCalls{0};
+static std::atomic<uint64_t> gDualRowTimingTotalWallNs{0};
+static std::atomic<uint64_t> gDualRowTimingExecutorWallNs{0};
+static std::atomic<uint64_t> gDualRowTimingLane0HostEnvelopeNs{0};
+static std::atomic<uint64_t> gDualRowTimingLane1HostEnvelopeNs{0};
+static std::atomic<uint64_t> gDualRowTimingLaneCriticalNs{0};
+static std::atomic<uint64_t> gDualRowTimingHostMergeNs{0};
+static std::atomic<uint64_t> gDualRowTimingOverlapProbeNs{0};
+
+void Deep2ResetDualRowTiming() noexcept {
+    gDualRowTimingCalls.store(0, std::memory_order_relaxed);
+    gDualRowTimingSingleCalls.store(0, std::memory_order_relaxed);
+    gDualRowTimingGroupCalls.store(0, std::memory_order_relaxed);
+    gDualRowTimingTotalWallNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingExecutorWallNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingLane0HostEnvelopeNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingLane1HostEnvelopeNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingLaneCriticalNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingHostMergeNs.store(0, std::memory_order_relaxed);
+    gDualRowTimingOverlapProbeNs.store(0, std::memory_order_relaxed);
+}
+
+DualRowTimingCounters Deep2GetDualRowTiming() noexcept {
+    DualRowTimingCounters c{};
+    c.calls = gDualRowTimingCalls.load(std::memory_order_relaxed);
+    c.singleCalls = gDualRowTimingSingleCalls.load(std::memory_order_relaxed);
+    c.groupCalls = gDualRowTimingGroupCalls.load(std::memory_order_relaxed);
+    c.totalWallNs = gDualRowTimingTotalWallNs.load(std::memory_order_relaxed);
+    c.executorWallNs = gDualRowTimingExecutorWallNs.load(std::memory_order_relaxed);
+    c.lane0HostEnvelopeNs = gDualRowTimingLane0HostEnvelopeNs.load(std::memory_order_relaxed);
+    c.lane1HostEnvelopeNs = gDualRowTimingLane1HostEnvelopeNs.load(std::memory_order_relaxed);
+    c.laneCriticalNs = gDualRowTimingLaneCriticalNs.load(std::memory_order_relaxed);
+    c.hostMergeNs = gDualRowTimingHostMergeNs.load(std::memory_order_relaxed);
+    c.overlapProbeNs = gDualRowTimingOverlapProbeNs.load(std::memory_order_relaxed);
+    return c;
 }
 
 bool Deep2RunDualGpuColumnSplitBatch4(
@@ -491,6 +547,34 @@ RowSplitPlan cachedThroughputSplit(
 RowSplitPlan chooseThroughputSplit(
     uint32_t rows,const VulkanCompute& g0,const VulkanCompute& g1) noexcept
 {
+    // Frozen-split gate: once the async ratio has converged through warmup,
+    // stop chasing per-token drift. Re-deriving geometry per call churns
+    // plan caches and can rebuild host-heavy column slices mid-decode.
+    static std::atomic<uint64_t> frozenSamples{0};
+    static std::atomic<double> frozenRatio{-1.0};
+    const uint64_t samples=gAsyncSamples.load(std::memory_order_relaxed);
+    const char* freezeEnv=std::getenv("DEEP2_SPLIT_FREEZE");
+    const bool freezeEnabled=!(freezeEnv&&freezeEnv[0]=='0');
+    if(freezeEnabled&&asyncSplitControl()&&samples>0) {
+        uint64_t seen=frozenSamples.load(std::memory_order_relaxed);
+        if(seen==0&&samples>=256) {
+            // Warmup convergence point: capture and freeze the ratio.
+            frozenSamples.store(samples,std::memory_order_relaxed);
+            frozenRatio.store(
+                gAsyncRowRatio.load(std::memory_order_relaxed),
+                std::memory_order_relaxed);
+        }
+        if(frozenSamples.load(std::memory_order_relaxed)>0) {
+            const double r=frozenRatio.load(std::memory_order_relaxed);
+            uint32_t n0=(uint32_t)std::llround((double)rows*r);
+            n0=std::max<uint32_t>(1,std::min<uint32_t>(rows-1,n0));
+            RowSplitPlan p{};
+            p.valid=true;
+            p.row0Begin=0;p.row0Count=n0;
+            p.row1Begin=n0;p.row1Count=rows-n0;
+            return p;
+        }
+    }
     if(asyncSplitControl()&&gAsyncSamples.load(std::memory_order_relaxed)>0) {
         const double r=gAsyncRowRatio.load(std::memory_order_relaxed);
         uint32_t n0=(uint32_t)std::llround((double)rows*r);
@@ -572,6 +656,7 @@ bool Deep2RunDualGpuRowSplit(
     const WeightTensor& wt,const float* input,float* output,
     uint64_t epoch,RowSplitReceipt* receipt)
 {
+    const auto totalStart = std::chrono::steady_clock::now();
     if(receipt) *receipt={};
     if(!input||!output||wt.rows<2||!wt.cols||!supportedGpuType(wt.type))
         return false;
@@ -584,12 +669,8 @@ bool Deep2RunDualGpuRowSplit(
        !Deep2BuildGpuWeightView(wt,plan.row1Begin,plan.row1Count,w1))
         return false;
 
-    // Reuse caller-thread buffers across all matrices/tokens.
-    static thread_local std::vector<float> y0;
-    static thread_local std::vector<float> y1;
-    y0.resize(plan.row0Count);
-    y1.resize(plan.row1Count);
-
+    // Batch2 #7: lanes write directly into the caller's disjoint final row
+    // ranges — staging vectors and the host merge memcpy are gone.
     struct Ctx {
         unsigned lane;
         VulkanCompute* g;
@@ -597,34 +678,81 @@ bool Deep2RunDualGpuRowSplit(
         const float* input;
         float* dst;
         uint64_t epoch;
+        uint64_t hostEnvelopeNs;
         bool ok;
-    } c0{0,&g0,&w0,input,y0.data(),epoch,false};
-    Ctx c1{1,&g1,&w1,input,y1.data(),epoch,false};
+    } c0{0,&g0,&w0,input,output+plan.row0Begin,epoch,0,false};
+    Ctx c1{1,&g1,&w1,input,output+plan.row1Begin,epoch,0,false};
 
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<Ctx*>(p);
+        const auto a = std::chrono::steady_clock::now();
         const bool ok=c->g->RunWeightHostRoundTrip(*c->w,c->input,c->dst,c->epoch);
+        const auto z = std::chrono::steady_clock::now();
+        c->hostEnvelopeNs = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
         if(ok){ updateAutoSpeed(c->lane,c->w->rows,0); }
         c->ok=ok;
         return ok;
     };
 
+    const auto execStart = std::chrono::steady_clock::now();
     const bool both = rowExecutor().run(
         DualRowJob{runFn,&c0},
         DualRowJob{runFn,&c1});
+    const auto execEnd = std::chrono::steady_clock::now();
     if(!both||!c0.ok||!c1.ok) return false;
 
-    std::memcpy(output+plan.row0Begin,y0.data(),
-                y0.size()*sizeof(float));
-    std::memcpy(output+plan.row1Begin,y1.data(),
-                y1.size()*sizeof(float));
+    // Host merge eliminated by direct final-range lane writes.
+    const uint64_t hostMergeNs = 0;
 
-    auto overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
+    // Sampled overlap probe: 1-in-N GEMVs pay the ~50us witness scan.
+    // Call 0 always samples; full rate via DEEP2_OVERLAP_PROBE_EVERY=1.
+    GpuOverlapWitness overlap{};
+    uint64_t overlapProbeNs = 0;
+    {
+        static std::atomic<uint64_t> probeSeq{0};
+        const uint64_t seq=probeSeq.fetch_add(1,std::memory_order_relaxed);
+        if(seq%envOverlapProbePeriod()==0){
+            const auto overlapStart = std::chrono::steady_clock::now();
+            overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
+            const auto overlapEnd = std::chrono::steady_clock::now();
+            overlapProbeNs = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    overlapEnd - overlapStart).count());
+        }
+    }
+
+    const uint64_t executorWallNs = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(execEnd - execStart).count());
+    const uint64_t lane0HostEnvelopeNs = c0.hostEnvelopeNs;
+    const uint64_t lane1HostEnvelopeNs = c1.hostEnvelopeNs;
+    const uint64_t laneCriticalNs = std::max(lane0HostEnvelopeNs, lane1HostEnvelopeNs);
+    const uint64_t totalWallNs = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            execEnd - totalStart).count()) + overlapProbeNs;
+
+    gDualRowTimingCalls.fetch_add(1, std::memory_order_relaxed);
+    gDualRowTimingSingleCalls.fetch_add(1, std::memory_order_relaxed);
+    gDualRowTimingExecutorWallNs.fetch_add(executorWallNs, std::memory_order_relaxed);
+    gDualRowTimingLane0HostEnvelopeNs.fetch_add(lane0HostEnvelopeNs, std::memory_order_relaxed);
+    gDualRowTimingLane1HostEnvelopeNs.fetch_add(lane1HostEnvelopeNs, std::memory_order_relaxed);
+    gDualRowTimingLaneCriticalNs.fetch_add(laneCriticalNs, std::memory_order_relaxed);
+    gDualRowTimingHostMergeNs.fetch_add(hostMergeNs, std::memory_order_relaxed);
+    gDualRowTimingOverlapProbeNs.fetch_add(overlapProbeNs, std::memory_order_relaxed);
+    gDualRowTimingTotalWallNs.fetch_add(totalWallNs, std::memory_order_relaxed);
+
+    // Feed the real dual-lane timing into the async ratio controller.
+    // Before this wiring the controller was dead code: gAsyncSamples stayed
+    // 0, chooseThroughputSplit never left the static env-weight branch, and
+    // both GPUs split rows 50/50 regardless of measured lane speed.
+    if(lane0HostEnvelopeNs>0&&lane1HostEnvelopeNs>0)
+        updateAsyncRowRatio(lane0HostEnvelopeNs,lane1HostEnvelopeNs);
+
     if(receipt){
         receipt->valid=true;
         receipt->gpu0=c0.ok;
         receipt->gpu1=c1.ok;
-        receipt->hostMerge=true;
+        receipt->hostMerge=false; // lanes wrote final ranges directly (#7)
         receipt->rows0=plan.row0Count;
         receipt->rows1=plan.row1Count;
         receipt->calibratedOverlapNs=overlap.calibratedOverlapNs;
@@ -639,34 +767,43 @@ bool Deep2RunDualGpuRowSplitGroup(
     const float* input,uint32_t inputCount,uint64_t epoch,
     RowSplitReceipt* receipt)
 {
+    const auto totalStart = std::chrono::steady_clock::now();
     if(receipt) *receipt={};
     if(!weights||!outputs||!input||!inputCount||count<2||count>3)
         return false;
 
     RowSplitPlan plans[3];
     GpuWeightView wv[3][2]{};
-    static thread_local std::vector<float> y0buf[3];
-    static thread_local std::vector<float> y1buf[3];
 
     for(size_t i=0;i<count;++i){
         if(!weights[i]||!outputs[i]||weights[i]->cols!=inputCount||
            weights[i]->rows<2||!supportedGpuType(weights[i]->type))
             return false;
-        plans[i]=chooseThroughputSplit(
-            (uint32_t)weights[i]->rows,g0,g1);
-
-        if(!plans[i].valid) return false;
-        if(!Deep2BuildGpuWeightView(
-                *weights[i],plans[i].row0Begin,plans[i].row0Count,
-                wv[i][0]) ||
-           !Deep2BuildGpuWeightView(
-                *weights[i],plans[i].row1Begin,plans[i].row1Count,
-                wv[i][1]))
-            return false;
-        y0buf[i].resize(plans[i].row0Count);
-        y1buf[i].resize(plans[i].row1Count);
+        // Cached plan path: frozen split geometry + zero-copy row views
+        // (identical to the single-GEMV lane). Only fall back to a direct
+        // chooseThroughputSplit when the cache cannot serve this tensor.
+        const CachedDualRowPlan* cp=
+            Deep2GetCachedDualRowPlan(*weights[i],g0,g1);
+        if(cp&&cp->valid){
+            plans[i]=cp->split;
+            wv[i][0]=cp->gpu0;
+            wv[i][1]=cp->gpu1;
+        } else {
+            plans[i]=chooseThroughputSplit(
+                (uint32_t)weights[i]->rows,g0,g1);
+            if(!plans[i].valid) return false;
+            if(!Deep2BuildGpuWeightView(
+                    *weights[i],plans[i].row0Begin,plans[i].row0Count,
+                    wv[i][0]) ||
+               !Deep2BuildGpuWeightView(
+                    *weights[i],plans[i].row1Begin,plans[i].row1Count,
+                    wv[i][1]))
+                return false;
+        }
     }
 
+    // Batch2 #7: each lane writes its row range of each grouped output
+    // directly — staging row buffers and the merge loop are gone.
     float* outs0[3]{};
     float* outs1[3]{};
     GpuWeightView views0[3]{};
@@ -674,8 +811,8 @@ bool Deep2RunDualGpuRowSplitGroup(
     for(size_t i=0;i<count;++i){
         views0[i]=wv[i][0];
         views1[i]=wv[i][1];
-        outs0[i]=y0buf[i].data();
-        outs1[i]=y1buf[i].data();
+        outs0[i]=outputs[i]+plans[i].row0Begin;
+        outs1[i]=outputs[i]+plans[i].row1Begin;
     }
 
     struct GroupCtx {
@@ -686,39 +823,81 @@ bool Deep2RunDualGpuRowSplitGroup(
         const float* input;
         uint32_t inputCount;
         uint64_t epoch;
+        uint64_t hostEnvelopeNs;
         bool ok;
     };
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<GroupCtx*>(p);
+        const auto a = std::chrono::steady_clock::now();
         c->ok=c->g->RunWeightGroupHostRoundTrip(
             c->views,c->outs,c->count,c->input,c->inputCount,c->epoch);
+        const auto z = std::chrono::steady_clock::now();
+        c->hostEnvelopeNs = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
         return c->ok;
     };
-    GroupCtx c0{&g0,views0,outs0,count,input,inputCount,epoch,false};
-    GroupCtx c1{&g1,views1,outs1,count,input,inputCount,epoch,false};
+    GroupCtx c0{&g0,views0,outs0,count,input,inputCount,epoch,0,false};
+    GroupCtx c1{&g1,views1,outs1,count,input,inputCount,epoch,0,false};
 
+    const auto execStart = std::chrono::steady_clock::now();
     const bool both=rowExecutor().run(
         DualRowJob{runFn,&c0},
         DualRowJob{runFn,&c1});
+    const auto execEnd = std::chrono::steady_clock::now();
     if(!both||!c0.ok||!c1.ok) return false;
 
-    for(size_t i=0;i<count;++i){
-        std::memcpy(outputs[i]+plans[i].row0Begin,y0buf[i].data(),
-                    plans[i].row0Count*sizeof(float));
-        std::memcpy(outputs[i]+plans[i].row1Begin,y1buf[i].data(),
-                    plans[i].row1Count*sizeof(float));
+    // Host merge eliminated by direct final-range lane writes.
+    const uint64_t hostMergeNs = 0;
+
+    // Sampled overlap probe (1-in-N; call 0 samples; env full-rate override).
+    GpuOverlapWitness overlap{};
+    uint64_t overlapProbeNs = 0;
+    {
+        static std::atomic<uint64_t> groupProbeSeq{0};
+        const uint64_t seq=groupProbeSeq.fetch_add(1,std::memory_order_relaxed);
+        if(seq%envOverlapProbePeriod()==0){
+            const auto overlapStart = std::chrono::steady_clock::now();
+            overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
+            const auto overlapEnd = std::chrono::steady_clock::now();
+            overlapProbeNs = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    overlapEnd - overlapStart).count());
+        }
     }
+
+    const uint64_t executorWallNs = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(execEnd - execStart).count());
+    const uint64_t lane0HostEnvelopeNs = c0.hostEnvelopeNs;
+    const uint64_t lane1HostEnvelopeNs = c1.hostEnvelopeNs;
+    const uint64_t laneCriticalNs = std::max(lane0HostEnvelopeNs, lane1HostEnvelopeNs);
+    const uint64_t totalWallNs = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            execEnd - totalStart).count()) + overlapProbeNs;
+
+    gDualRowTimingCalls.fetch_add(1, std::memory_order_relaxed);
+    gDualRowTimingGroupCalls.fetch_add(1, std::memory_order_relaxed);
+    gDualRowTimingExecutorWallNs.fetch_add(executorWallNs, std::memory_order_relaxed);
+    gDualRowTimingLane0HostEnvelopeNs.fetch_add(lane0HostEnvelopeNs, std::memory_order_relaxed);
+    gDualRowTimingLane1HostEnvelopeNs.fetch_add(lane1HostEnvelopeNs, std::memory_order_relaxed);
+    gDualRowTimingLaneCriticalNs.fetch_add(laneCriticalNs, std::memory_order_relaxed);
+    gDualRowTimingHostMergeNs.fetch_add(hostMergeNs, std::memory_order_relaxed);
+    gDualRowTimingOverlapProbeNs.fetch_add(overlapProbeNs, std::memory_order_relaxed);
+    gDualRowTimingTotalWallNs.fetch_add(totalWallNs, std::memory_order_relaxed);
+
+    // Same live-ratio feed as the single-GEMV lane: measured group lane
+    // envelopes drive the split controller instead of a static 50/50.
+    if(lane0HostEnvelopeNs>0&&lane1HostEnvelopeNs>0)
+        updateAsyncRowRatio(lane0HostEnvelopeNs,lane1HostEnvelopeNs);
 
     if(receipt){
         receipt->valid=true;
         receipt->gpu0=true;
         receipt->gpu1=true;
-        receipt->hostMerge=true;
+        receipt->hostMerge=false; // lanes wrote final ranges directly (#7)
         for(size_t i=0;i<count;++i){
             receipt->rows0+=plans[i].row0Count;
             receipt->rows1+=plans[i].row1Count;
         }
-        auto overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
         receipt->calibratedOverlapNs=overlap.calibratedOverlapNs;
         receipt->hostEnvelopeOverlapNs=overlap.hostEnvelopeOverlapNs;
     }

@@ -196,15 +196,16 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
 size_t VulkanCompute::ForwardArenaReserveBytes(
     uint32_t hidden, uint32_t intermediate,
     uint32_t, uint32_t kvHeads, uint32_t headDim,
-    uint32_t maxSeq, uint32_t layers)
+    uint32_t maxSeq, uint32_t layers, uint32_t kvLayers)
 {
     const uint64_t H = hidden;
     const uint64_t I = intermediate;
     const uint64_t kv = static_cast<uint64_t>(kvHeads) * headDim;
     const uint64_t seqCap = std::min<uint64_t>(maxSeq ? maxSeq : 1, 4096);
+    const uint64_t kvCount = kvLayers ? kvLayers : layers;
     uint64_t floats =
         H * 8ull + I * 3ull + kv * 2ull +
-        static_cast<uint64_t>(layers) * seqCap * kv * 2ull;
+        kvCount * seqCap * kv * 2ull;
     if (floats > std::numeric_limits<size_t>::max() / sizeof(float))
         return std::numeric_limits<size_t>::max();
     return static_cast<size_t>(floats * sizeof(float));
@@ -1803,7 +1804,7 @@ GpuWorkInterval VulkanCompute::LastInterval() const {
 bool VulkanCompute::EnsureForwardArena(
     uint32_t hidden, uint32_t intermediate,
     uint32_t heads, uint32_t kvHeads, uint32_t headDim,
-    uint32_t maxSeq, uint32_t layers)
+    uint32_t maxSeq, uint32_t layers, uint32_t kvLayers)
 {
     if (!initialized_ || !hidden || !intermediate || !heads ||
         !kvHeads || !headDim || !maxSeq || !layers) return false;
@@ -1814,9 +1815,16 @@ bool VulkanCompute::EnsureForwardArena(
         if (v) seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
     }
 
+    // kvLayers=0 preserves legacy all-layer K/V sizing. A multi-GPU
+    // layer-split slot only executes its own contiguous layer range, so
+    // sizing K/V to that range reclaims dead cache VRAM (Batch3 #12).
+    const uint32_t kvLayerCount =
+        kvLayers ? std::min<uint32_t>(kvLayers, layers) : layers;
+
     if (hidden_ == hidden && intermediate_ == intermediate &&
         heads_ == heads && kvHeads_ == kvHeads && headDim_ == headDim &&
-        maxSeq_ == seqCap && layers_ == layers && arenaHidden_)
+        maxSeq_ == seqCap && layers_ == layers && arenaHidden_ &&
+        kvArenaLayers_ == kvLayerCount)
         return true;
 
     auto kill = [&](DeviceBuf& b){ destroyBuffer(b); };
@@ -1828,6 +1836,7 @@ bool VulkanCompute::EnsureForwardArena(
     hidden_ = hidden; intermediate_ = intermediate; heads_ = heads;
     kvHeads_ = kvHeads; headDim_ = headDim; maxSeq_ = seqCap; layers_ = layers;
     kvDim_ = kvHeads * headDim;
+    kvArenaLayers_ = kvLayerCount;
 
     const VkBufferUsageFlags u =
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
@@ -1842,7 +1851,7 @@ bool VulkanCompute::EnsureForwardArena(
     };
 
     uint64_t cacheFloats =
-        static_cast<uint64_t>(layers_) * maxSeq_ * kvDim_;
+        static_cast<uint64_t>(kvLayerCount) * maxSeq_ * kvDim_;
 
     return allocF(arenaHidden_, hidden_) &&
            allocF(arenaAttnW_, hidden_) &&
@@ -2059,11 +2068,16 @@ bool VulkanCompute::AppendKV(
     DeviceBuf& k, DeviceBuf& v, uint32_t kvDim,
     uint32_t pos, uint32_t layer)
 {
-    if (!k || !v || kvDim != kvDim_ || pos >= maxSeq_ || layer >= layers_)
+    // Layer-split slots map absolute layers onto a sized K/V region whose
+    // slot 0 is absolute layer kvLayerBase_.
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    if (relLayer >= kvArenaLayers_) return false;
+    if (!k || !v || kvDim != kvDim_ || pos >= maxSeq_)
         return false;
     const VkDeviceSize bytes = static_cast<VkDeviceSize>(kvDim)*sizeof(float);
     const uint64_t elemOff =
-        (static_cast<uint64_t>(layer)*maxSeq_ + pos)*kvDim_;
+        (static_cast<uint64_t>(relLayer)*maxSeq_ + pos)*kvDim_;
     const VkDeviceSize dstOff =
         static_cast<VkDeviceSize>(elemOff*sizeof(float));
     if (dstOff + bytes > arenaKCache_.size ||
@@ -2090,10 +2104,14 @@ bool VulkanCompute::DispatchAttnDecode(
     uint32_t heads, uint32_t kvHeads,
     uint32_t seqLen, float scale, uint32_t layer)
 {
+    // Layer-relative addressing mirrors AppendKV (kvLayerBase_ offset).
+    const uint32_t relLayer =
+        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
+    if (relLayer >= kvArenaLayers_) return false;
     if (!headDim || !heads || !kvHeads || heads%kvHeads ||
-        !seqLen || seqLen>maxSeq_ || layer>=layers_) return false;
+        !seqLen || seqLen>maxSeq_) return false;
 
-    uint64_t base = static_cast<uint64_t>(layer)*maxSeq_*kvDim_;
+    uint64_t base = static_cast<uint64_t>(relLayer)*maxSeq_*kvDim_;
     if (base > std::numeric_limits<uint32_t>::max()) return false;
 
     OpsPush p{};

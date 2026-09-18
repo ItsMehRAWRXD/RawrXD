@@ -1,5 +1,24 @@
+// qwen32_baseline_authority_gate.cpp — DEEP2_32B_BASELINE_AUTHORITY_001
+//
+// Canonical baseline authority run for Qwen2.5-Coder-32B-Instruct-Q4_K_M.
+// Emits a frozen receipt with exact commit, model hash, GPU identity,
+// and measured decode TPS under controlled conditions.
+//
+// Usage:
+//   qwen32_baseline_authority_gate.exe <model.gguf> [measure_tokens=256]
+//
+// Authority rules:
+//   - WARMUP_TOKENS=32
+//   - MEASURED_TOKENS>=32
+//   - STRICT_GPU_VIOLATIONS=0
+//   - UNPLANNED_FALLBACKS=0
+//   - DUAL_ROW_SPLIT_OPS>0
+//   - REAL_DUAL_ROW_GPU=1
+//
+
 #include "deep2/Deep2Engine.h"
 #include "deep2/Deep2DualGpuRowSplit.hpp"
+#include "deep2/deep2_sha256.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -78,10 +97,24 @@ static inline uint64_t delta(uint64_t a, uint64_t b)
     return b >= a ? b - a : 0;
 }
 
+static std::string gpuName(const Deep2Engine& e, unsigned slot)
+{
+    if (slot >= e.vulkanDeviceCount()) return "none";
+    auto* vc = e.getVulkanComputeSlot(slot);
+    if (!vc) return "none";
+    return vc->physicalInfo().name;
+}
+
+static std::string envOr(const char* name, const char* fallback)
+{
+    const char* v = std::getenv(name);
+    return v ? std::string(v) : std::string(fallback);
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::fprintf(stderr,
-            "usage: qwen32_40tps_gate.exe model.gguf [measure_tokens]\n");
+            "usage: qwen32_baseline_authority_gate.exe model.gguf [measure_tokens]\n");
         return 2;
     }
 
@@ -92,17 +125,22 @@ int main(int argc, char** argv) {
         if (v > 0 && v <= 4096) measure = static_cast<uint32_t>(v);
     }
 
+    // Compute model SHA256 before any load.
+    std::array<uint8_t,32> modelHash{};
+    uint64_t modelBytes = 0;
+    bool modelSha256Ok = deep2::sha256_file(model, modelHash, &modelBytes);
+
     Deep2Engine e;
     EngineConfig cfg{};
     cfg.maxSeqLen = 4096;
     cfg.numThreads = 0;
 
     if (!e.initialize(cfg)) {
-        std::fprintf(stderr, "QWEN32_40TPS=HOLD stage=initialize\n");
+        std::fprintf(stderr, "BASELINE=HOLD stage=initialize\n");
         return 10;
     }
     if (!e.loadModel(model)) {
-        std::fprintf(stderr, "QWEN32_40TPS=HOLD stage=load\n");
+        std::fprintf(stderr, "BASELINE=HOLD stage=load\n");
         return 11;
     }
 
@@ -110,7 +148,7 @@ int main(int argc, char** argv) {
     if (c.numLayers != 64 || c.hiddenDim != 5120 ||
         c.numHeads != 40 || c.numKVHeads != 8) {
         std::fprintf(stderr,
-            "QWEN32_40TPS=HOLD stage=geometry layers=%zu hidden=%zu heads=%zu kv=%zu\n",
+            "BASELINE=HOLD stage=geometry layers=%zu hidden=%zu heads=%zu kv=%zu\n",
             c.numLayers, c.hiddenDim, c.numHeads, c.numKVHeads);
         return 12;
     }
@@ -119,10 +157,13 @@ int main(int argc, char** argv) {
     e.enableVulkan(true);
     if (!e.isVulkanInitialized() || !e.gpuResidentDecodeEnabled()) {
         std::fprintf(stderr,
-            "QWEN32_40TPS=HOLD stage=vulkan devices=%u\n",
+            "BASELINE=HOLD stage=vulkan devices=%u\n",
             e.vulkanDeviceCount());
         return 13;
     }
+
+    const std::string gpu0 = gpuName(e, 0);
+    const std::string gpu1 = gpuName(e, 1);
 
     // Warmup pass: 32 tokens to stabilize residency and adaptive split.
     const auto warm = run(
@@ -131,7 +172,7 @@ int main(int argc, char** argv) {
         32, false);
     if (warm.generatedTokens != 32) {
         std::fprintf(stderr,
-            "QWEN32_40TPS=HOLD stage=warmup got=%llu expected=32\n",
+            "BASELINE=HOLD stage=warmup got=%llu expected=32\n",
             static_cast<unsigned long long>(warm.generatedTokens));
         return 14;
     }
@@ -196,8 +237,7 @@ int main(int argc, char** argv) {
         gf.hostMergeOps > 0;
     const bool realGpu = fullResidentGpu || realDualRowGpu;
     const bool noFallback =
-        e.vulkanUnplannedFallbacks() == 0 &&
-        !e.vulkanStrictViolation();
+        e.vulkanUnplannedFallbacks() == 0 && !e.vulkanStrictViolation();
     const bool residentReuse =
         (hits0b > hits0a) &&
         (e.vulkanDeviceCount() < 2 || hits1b > hits1a);
@@ -231,10 +271,14 @@ int main(int argc, char** argv) {
     const uint64_t explicitWaitNs = asyncWait0 + asyncWait1 + dlWait0 + dlWait1;
 
     std::fprintf(stderr,
-        "GATE=DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001\n"
+        "GATE=DEEP2_32B_BASELINE_AUTHORITY_001\n"
+        "COMMIT=%s\n"
+        "MODEL_SHA256=%s\n"
+        "MODEL_BYTES=%llu\n"
+        "GPU0=%s\n"
+        "GPU1=%s\n"
         "WARMUP_TOKENS=32\n"
         "MEASURED_TOKENS=%llu\n"
-        "MODEL=%s\n"
         "GENERATED=%llu\n"
         "GENERATION_MS=%.3f\n"
         "TOKEN_WALL_NS=%llu\n"
@@ -312,8 +356,12 @@ int main(int argc, char** argv) {
         "ACCOUNTING_COMPLETE=%u\n"
         "RESIDENT_REUSE=%u\n"
         "BOUNDED_UPLOADS=%u\n",
+        envOr("GATE_COMMIT_HASH", "UNKNOWN").c_str(),
+        modelSha256Ok ? deep2::hex32(modelHash).c_str() : "FAILED",
+        static_cast<unsigned long long>(modelBytes),
+        gpu0.c_str(),
+        gpu1.c_str(),
         static_cast<unsigned long long>(measure),
-        model,
         static_cast<unsigned long long>(measured.generatedTokens),
         measured.generationTimeMs,
         static_cast<unsigned long long>(tokenWallNs),
@@ -392,7 +440,72 @@ int main(int argc, char** argv) {
         && callParity && dr.calls > 0;
 
     std::fprintf(stderr,
-        "DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=%s\n",
+        "DEEP2_32B_BASELINE_AUTHORITY_001=%s\n",
         pass ? "PASS" : "HOLD");
+
+    // Also emit receipt to a hardcoded file for reliable capture regardless of shell redirects.
+    {
+        const char* receiptPath = "C:\\Users\\Garrett\\baseline_receipt.txt";
+        FILE* rf = nullptr;
+        errno_t err = fopen_s(&rf, receiptPath, "w");
+        if (rf && err == 0) {
+            std::fprintf(rf,
+                "GATE=DEEP2_32B_BASELINE_AUTHORITY_001\n"
+                "COMMIT=%s\n"
+                "MODEL_SHA256=%s\n"
+                "MODEL_BYTES=%llu\n"
+                "GPU0=%s\n"
+                "GPU1=%s\n"
+                "WARMUP_TOKENS=32\n"
+                "MEASURED_TOKENS=%llu\n"
+                "GENERATED=%llu\n"
+                "GENERATION_MS=%.3f\n"
+                "TOKEN_WALL_NS=%llu\n"
+                "AVG_TOKEN_WALL_NS=%llu\n"
+                "DECODE_TPS_ENGINE=%.6f\n"
+                "DECODE_TPS_QPC=%.6f\n"
+                "GPU_DEVICES=%u\n"
+                "REAL_GPU_FORWARD=%u\n"
+                "FULL_RESIDENT_GPU=%u\n"
+                "REAL_DUAL_ROW_GPU=%u\n"
+                "DUAL_ROW_DENSE_TOKENS=%llu\n"
+                "DUAL_ROW_SPLIT_OPS=%llu\n"
+                "UNPLANNED_FALLBACKS=%llu\n"
+                "STRICT_GPU_VIOLATIONS=%u\n"
+                "DENSE_ROW_TIMING_CALLS=%llu\n"
+                "DENSE_ROW_WALL_PCT=%.3f\n"
+                "RESIDENT_REUSE=%u\n"
+                "BOUNDED_UPLOADS=%u\n"
+                "DEEP2_32B_BASELINE_AUTHORITY_001=%s\n",
+                envOr("GATE_COMMIT_HASH", "UNKNOWN").c_str(),
+                modelSha256Ok ? deep2::hex32(modelHash).c_str() : "FAILED",
+                static_cast<unsigned long long>(modelBytes),
+                gpu0.c_str(),
+                gpu1.c_str(),
+                static_cast<unsigned long long>(measure),
+                static_cast<unsigned long long>(measured.generatedTokens),
+                measured.generationTimeMs,
+                static_cast<unsigned long long>(tokenWallNs),
+                static_cast<unsigned long long>(avgTokenWallNs),
+                tpsEngine,
+                tpsQpc,
+                e.vulkanDeviceCount(),
+                realGpu ? 1u : 0u,
+                fullResidentGpu ? 1u : 0u,
+                realDualRowGpu ? 1u : 0u,
+                static_cast<unsigned long long>(gf.dualRowDenseTokens),
+                static_cast<unsigned long long>(gf.dualRowSplitOps),
+                static_cast<unsigned long long>(e.vulkanUnplannedFallbacks()),
+                e.vulkanStrictViolation() ? 1u : 0u,
+                static_cast<unsigned long long>(dr.calls),
+                denseRowPct,
+                residentReuse ? 1u : 0u,
+                boundedUploads ? 1u : 0u,
+                pass ? "PASS" : "HOLD");
+            std::fflush(rf);
+            std::fclose(rf);
+        }
+    }
+
     return pass ? 0 : 1;
 }

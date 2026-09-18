@@ -293,6 +293,12 @@ bool Deep2Engine::trySpecColumnSplitBatch(
     const WeightTensor& wt,const float* in,float* out,size_t count)
 {
     if(vulkanDevices_.size()<2||!in||!out||count==0||count>4) return false;
+    // Deep2RunDualGpuColumnSplitBatch4 only materializes Q4_K column
+    // slices (q4kColumnSlices returns nullptr for every other type).
+    // Fail fast for Q6_K (type 14) oproj/down weights so the caller's
+    // LinearWBatch4 fallback routes them through the zero-copy
+    // dual-row-split lane instead of a wasted column-split attempt.
+    if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K) return false;
     const bool ok=Deep2RunDualGpuColumnSplitBatch4(
         *vulkanDevices_[0],*vulkanDevices_[1],wt,in,out,
         (uint32_t)count,kvCache?kvCache->currentLength():0);

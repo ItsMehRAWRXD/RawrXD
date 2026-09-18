@@ -1,0 +1,49 @@
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+RECEIPT_DATE=2026-09-18T01:50:00
+RUN_MODE=Canonical authority run — solitary process, no concurrent GPU workloads
+COMMIT_TAG=B2_DIRECT_WRITE_PROBE_SAMPLE
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+MODEL_BYTES=19851336672
+GPU0=AMD Radeon AI PRO R9700
+GPU1=AMD Radeon RX 7800 XT
+WARMUP_TOKENS=32
+MEASURED_TOKENS=256
+GENERATED=256
+GENERATION_MS=49840.843
+TOKEN_WALL_NS=54151757100
+AVG_TOKEN_WALL_NS=211530301
+DECODE_TPS_ENGINE=5.136350
+DECODE_TPS_QPC=4.727455
+GPU_DEVICES=2
+REAL_GPU_FORWARD=1
+FULL_RESIDENT_GPU=0
+REAL_DUAL_ROW_GPU=1
+DUAL_ROW_DENSE_TOKENS=280
+DUAL_ROW_SPLIT_OPS=71936
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+DENSE_ROW_TIMING_CALLS=71936
+DENSE_ROW_WALL_PCT=86.814
+RESIDENT_REUSE=1
+BOUNDED_UPLOADS=1
+DEEP2_32B_BASELINE_AUTHORITY_001=PASS
+
+BATCH_LADDER (canonical 256T):
+  BASELINE 741e4bfc:          QPC=4.295151 ENGINE=4.675248
+  BATCH1 MOD_SPLIT_FREEZE_R1: QPC=4.387731 (+2.2%)  — split freeze at 256 samples, cached-plan group lane, live ratio feed, Q6_K fail-fast, slice-rebuild memory safety
+  BATCH2 B2_DIRECT_WRITE:     QPC=4.727455 (+7.7% over B1, +10.1% total) — lanes write final row ranges directly (host merge eliminated), overlap probe sampled 1-in-16
+
+COUNTER DELTAS (32T, vs baseline):
+  DENSE_ROW_OVERLAP_PROBE_NS: 747464900 -> 43132000 (-94%)
+  DENSE_ROW_HOST_MERGE_NS:      40572700 -> 0        (eliminated)
+  DENSE_ROW_TOTAL_WALL_NS:   10572076500 -> 9181537100 (-13%)
+
+CHANGES IN THIS BATCH:
+  1. Deep2RunDualGpuRowSplit: lanes write output+row0Begin / output+row1Begin
+     directly (staging vectors y0/y1 and memcpy merge removed).
+  2. Deep2RunDualGpuRowSplitGroup: per-lane output pointers offset by each
+     plan's row range (y0buf/y1buf staging and merge loop removed).
+  3. Overlap witness probe sampled 1-in-16 (env DEEP2_OVERLAP_PROBE_EVERY,
+     default 16, call 0 always samples) in both single and group paths.
+  4. Receipt hostMerge=false in both paths (semantics: no host merge).

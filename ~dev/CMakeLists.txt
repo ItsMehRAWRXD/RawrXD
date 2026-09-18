@@ -180,6 +180,22 @@ if(Vulkan_FOUND)
     target_link_libraries(qwen32_40tps_gate PRIVATE Vulkan::Vulkan)
 endif()
 
+# DEEP2_32B_BASELINE_AUTHORITY_001 — canonical baseline authority gate.
+# Emits frozen receipt with commit, model SHA256, GPU identity, and TPS.
+add_executable(qwen32_baseline_authority_gate
+    tests/qwen32_baseline_authority_gate.cpp
+    ${RAWRXD_DEEP2_SOURCES}
+)
+target_include_directories(qwen32_baseline_authority_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+if(Vulkan_FOUND)
+    target_link_libraries(qwen32_baseline_authority_gate PRIVATE Vulkan::Vulkan)
+endif()
+
 # Batch 9: Vulkan runtime for deep2_standalone.
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)

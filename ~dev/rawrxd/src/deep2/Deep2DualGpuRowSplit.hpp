@@ -101,4 +101,23 @@ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
     const WeightTensor* const* weights,float* const* outputs,size_t weightCount,
     const float* inputBatch,uint32_t batch,uint64_t epoch);
 
+struct DualRowTimingCounters {
+    uint64_t calls = 0;
+    uint64_t singleCalls = 0;
+    uint64_t groupCalls = 0;
+
+    uint64_t totalWallNs = 0;
+
+    uint64_t executorWallNs = 0;
+    uint64_t lane0HostEnvelopeNs = 0;
+    uint64_t lane1HostEnvelopeNs = 0;
+    uint64_t laneCriticalNs = 0;
+
+    uint64_t hostMergeNs = 0;
+    uint64_t overlapProbeNs = 0;
+};
+
+void Deep2ResetDualRowTiming() noexcept;
+DualRowTimingCounters Deep2GetDualRowTiming() noexcept;
+
 } // namespace Deep2
