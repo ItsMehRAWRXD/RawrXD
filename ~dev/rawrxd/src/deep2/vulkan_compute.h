@@ -1095,9 +1095,10 @@ public:
         int type = 0;
         uint32_t rows = 0;
         uint32_t cols = 0;
-        // Back-reference for LRU eviction (handle itself never moves:
-        // unordered_map nodes are pointer-stable and handles are only
-        // erased at cleanup).
+        // Back-reference for LRU eviction (the handle itself never
+        // moves: unordered_map nodes are pointer-stable and are NEVER
+        // erased, not even across cleanup()/initialize() — the map dies
+        // only with the VulkanCompute object).
         ResidentHotHandle* handle = nullptr;
     };
     struct ResidentHotHandle {
@@ -1115,8 +1116,17 @@ public:
     // the last use of the buffer.
     ResidentWeight* AcquireHotView(ResidentHotHandle* handle);
     void ReleaseHotView() noexcept;
+    // Promotion ownership chain: TryBeginHotPromotion takes the
+    // Promoting() sentinel (null→Promoting CAS); PublishHotView completes
+    // it (Promoting→view CAS) and FailHotView abandons it
+    // (Promoting→Failed CAS). A caller that did not win TryBeginHotPromotion
+    // can never publish — duplicate/stale promotion is structurally
+    // impossible.
     bool TryBeginHotPromotion(ResidentHotHandle* handle);
-    void PublishHotView(ResidentHotHandle* handle, ResidentWeight* view);
+    // CAS-based publication: takes ownership ONLY when the view is in
+    // the Promoting() state. Returns false when ownership was not taken —
+    // the caller must then destroy the buffer itself.
+    bool PublishHotView(ResidentHotHandle* handle, ResidentWeight* view);
     void FailHotView(ResidentHotHandle* handle);
 
     // TRAP-5 LOCKDOWN: single authoritative packed-row stride shared by
@@ -1408,7 +1418,10 @@ private:
 
     // ===== DEEP2_RCU_RESIDENCY_HANDLES_001 ===============================
     // Heap-stable ownership. hotHandles_ nodes are pointer-stable
-    // (unordered_map); entries are only erased in cleanup().
+    // (unordered_map) and LIVE FOR THE LIFETIME OF THE VULKANCOMPUTE
+    // OBJECT: ReclaimAllResidents() invalidates views but never erases
+    // nodes, so caller-cached ResidentHotHandle* values remain valid
+    // across cleanup()/initialize() (resolve-once contract).
     std::unordered_map<uint64_t, ResidentHotHandle> hotHandles_;
     std::vector<std::unique_ptr<ResidentWeight>> residentObjects_; // LRU order
     size_t residentObjectBytes_ = 0;
@@ -1448,11 +1461,20 @@ private:
         DeviceBuf& target, int type, uint64_t hotWeightKey);
     // recordQuantRowsResident: ranged quant dispatch into any command
     // buffer (cold-race lane owns its own cmd; the fused API passes
-    // fusedCmd_).
+    // fusedCmd_). setOut: when non-null the caller captures the
+    // never-cached ranged descriptor set to free after its fence; when
+    // null the set is queued on pendingDescriptorFrees_ and drained by
+    // EndFusedLayer() after the fused fence (endurance fix — ranged
+    // descriptors must never accumulate).
     bool recordQuantRowsResident(
         VkCommandBuffer cmd, const GpuWeightView& meta, DeviceBuf& target,
         uint32_t rowBase, uint32_t rowCount,
-        DeviceBuf& input, DeviceBuf& output);
+        DeviceBuf& input, DeviceBuf& output,
+        VkDescriptorSet* setOut = nullptr);
+
+    // Ranged descriptor sets awaiting a fence-confirmed free.
+    std::vector<VkDescriptorSet> pendingDescriptorFrees_;
+    void drainPendingDescriptorFrees(); // apiMu_ held
 
     std::vector<DeviceBuf> scratch_;
 

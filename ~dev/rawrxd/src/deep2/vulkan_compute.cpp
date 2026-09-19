@@ -2344,6 +2344,11 @@ bool VulkanCompute::EndFusedLayer() {
     if(waitRes!=VK_SUCCESS) return false;
     const uint64_t completeNs=nowNs();
 
+    // DEEP2_COLD_ROW_RACE_001 endurance fix: the fused fence is signaled —
+    // free every ranged descriptor set recorded into this fused layer
+    // (recordQuantRowsResident queued them; never cached, never reused).
+    drainPendingDescriptorFrees();
+
     GpuWorkInterval wi{};
     if(finalizeInterval(
             q,submitNs,completeNs,workEpoch_,0,
@@ -3946,7 +3951,8 @@ bool VulkanCompute::DispatchQuantRowsResident(
 bool VulkanCompute::recordQuantRowsResident(
     VkCommandBuffer cmd, const GpuWeightView& meta, DeviceBuf& target,
     uint32_t rowBase, uint32_t rowCount,
-    DeviceBuf& input, DeviceBuf& output)
+    DeviceBuf& input, DeviceBuf& output,
+    VkDescriptorSet* setOut)
 {
     if (cmd == VK_NULL_HANDLE || !qPipeline_) return false;
     const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
@@ -3957,6 +3963,16 @@ bool VulkanCompute::recordQuantRowsResident(
         static_cast<VkDeviceSize>(rowCount)*static_cast<VkDeviceSize>(rowBytes),
         input, output);
     if (set == VK_NULL_HANDLE) return false;
+
+    // Endurance fix: ranged descriptors are never cached. Either the
+    // caller captures the set (setOut) to free after its own fence, or —
+    // fused recording — the set is queued and drained by EndFusedLayer()
+    // once the fused fence confirms the GPU is done with it.
+    if (setOut) {
+        *setOut = set;
+    } else {
+        pendingDescriptorFrees_.push_back(set);
+    }
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(
@@ -3974,6 +3990,22 @@ bool VulkanCompute::recordQuantRowsResident(
     recordComputeBarrier(cmd);
     ++residentDirectDispatches_;
     return true;
+}
+
+void VulkanCompute::drainPendingDescriptorFrees()
+{
+    // Called under apiMu_ AFTER the owning fence has been waited on —
+    // the GPU is guaranteed done with these sets. Sets allocated with
+    // VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT may be freed
+    // individually.
+    if (pendingDescriptorFrees_.empty()) return;
+    if (descriptorPool_ != VK_NULL_HANDLE) {
+        vkFreeDescriptorSets(
+            device_, descriptorPool_,
+            static_cast<uint32_t>(pendingDescriptorFrees_.size()),
+            pendingDescriptorFrees_.data());
+    }
+    pendingDescriptorFrees_.clear();
 }
 
 size_t VulkanCompute::QuantPackedRowBytes(int type, uint32_t cols) noexcept
@@ -3999,8 +4031,11 @@ size_t VulkanCompute::QuantPackedRowBytes(int type, uint32_t cols) noexcept
 
 VulkanCompute::ResidentHotHandle* VulkanCompute::GetHotHandle(uint64_t weightKey)
 {
-    // Handle nodes are pointer-stable: unordered_map nodes do not move on
-    // rehash and entries are only erased in cleanup().
+    // Handle nodes are pointer-stable and LIVE FOR THE LIFETIME OF THE
+    // VULKANCOMPUTE OBJECT: unordered_map nodes do not move on rehash,
+    // and ReclaimAllResidents() invalidates views but NEVER erases
+    // nodes (clearing the map would dangle every caller-cached handle
+    // across cleanup()/initialize()).
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
     auto it = hotHandles_.find(weightKey);
     if (it != hotHandles_.end())
@@ -4051,14 +4086,20 @@ bool VulkanCompute::TryBeginHotPromotion(ResidentHotHandle* handle)
         std::memory_order_acq_rel, std::memory_order_acquire);
 }
 
-void VulkanCompute::PublishHotView(
+bool VulkanCompute::PublishHotView(
     ResidentHotHandle* handle, ResidentWeight* view)
 {
-    if (!handle || !view) return;
-    // Publication is a release store; the object is fully constructed and
-    // its device buffer is complete before this point.
-    handle->view.store(view, std::memory_order_release);
-    ++rcuPublishes_;
+    // CAS-based publication (promotion ownership, review fix): ownership
+    // is taken ONLY when the handle is in the Promoting() state — i.e.
+    // the same caller that won TryBeginHotPromotion(). A racing loser
+    // can never publish its duplicate buffer over the winner's view.
+    if (!handle || !view) return false;
+    ResidentWeight* expected = ResidentHotHandle::Promoting();
+    const bool taken = handle->view.compare_exchange_strong(
+        expected, view,
+        std::memory_order_seq_cst, std::memory_order_seq_cst);
+    if (taken) ++rcuPublishes_;
+    return taken;
 }
 
 void VulkanCompute::FailHotView(ResidentHotHandle* handle)
@@ -4344,7 +4385,9 @@ bool VulkanCompute::PublishCompletedPrime(
     if (hotWeightKey) {
         // RCU publication path: ownership goes to a heap-stable
         // ResidentWeight, published lock-free. weightCache_ is NOT the
-        // publication authority.
+        // publication authority. NOTE: this path assumes the caller won
+        // TryBeginHotPromotion() BEFORE submitting the promotion ticket —
+        // the CAS publish only completes a Promoting() sentinel.
         ResidentHotHandle* handle = GetHotHandle(hotWeightKey);
         if (!handle) {
             destroyBuffer(t.target);
@@ -4368,7 +4411,13 @@ bool VulkanCompute::PublishCompletedPrime(
         obj->type = type;
         obj->handle = handle;
 
-        PublishHotView(handle, obj.get());
+        // CAS publication: on ownership loss (racing winner already
+        // published), destroy the duplicate instead of tracking it.
+        if (!PublishHotView(handle, obj.get())) {
+            destroyBuffer(obj->buffer);
+            t = {};
+            return false;
+        }
         residentObjectBytes_ += obj->bytes;
         residentObjects_.push_back(std::move(obj));
         ++coldRacePromotionsCompleted_;
@@ -4459,10 +4508,15 @@ void VulkanCompute::RetireResidentObject(std::unique_ptr<ResidentWeight> obj)
 
 void VulkanCompute::ReclaimAllResidents()
 {
-    // cleanup()-only: device idle, no readers possible; drop everything.
+    // cleanup()-only: device idle, no readers possible. Invalidate every
+    // published view BUT DO NOT ERASE THE HANDLE NODES — caller-cached
+    // ResidentHotHandle* values must survive cleanup()/initialize()
+    // (the resolve-once contract; review fix). The map dies only with
+    // the VulkanCompute object itself. Views become cold (nullptr), so
+    // post-reinit calls take the cold-race path and re-promote under the
+    // fresh deviceGeneration_.
     for (auto& kv : hotHandles_)
-        kv.second.view.store(nullptr, std::memory_order_release);
-    hotHandles_.clear();
+        kv.second.view.store(nullptr, std::memory_order_seq_cst);
     for (auto& obj : residentObjects_) {
         destroyBuffer(obj->buffer);
         obj.reset();
@@ -4520,6 +4574,17 @@ bool VulkanCompute::RunWeightColdRowRace(
         return RunCpuQuantRowsFull(weight, input, output);
 
     ++coldRaceCalls_;
+
+    // ---- Promotion ownership (review fix): take the Promoting()
+    // sentinel BEFORE allocating the target. If another caller won,
+    // this invocation still computes the current token on CPU-only
+    // (the winner's promotion is already in flight) — duplicate
+    // promotion is structurally impossible.
+    ResidentHotHandle* handle = GetHotHandle(weight.key);
+    if (!handle) return RunCpuQuantRowsFull(weight, input, output);
+    const bool ownsPromotion = TryBeginHotPromotion(handle);
+    if (!ownsPromotion)
+        return RunCpuQuantRowsFull(weight, input, output);
 
     // ---- Promotion target: ONE complete whole-tensor allocation. ----
     DeviceBuf target{};
@@ -4665,9 +4730,11 @@ bool VulkanCompute::RunWeightColdRowRace(
 
         VkCommandBuffer gcmd{};
         VkQueryPool gquery{};
+        VkDescriptorSet chunkSet = VK_NULL_HANDLE;
         if (!beginCommand(gcmd, gquery, true) ||
             !recordQuantRowsResident(
-                gcmd, weight, target, lo, gpuCount, inBuf, outBuf)) {
+                gcmd, weight, target, lo, gpuCount, inBuf, outBuf,
+                &chunkSet)) {
             raceOk = false;
             break;
         }
@@ -4683,6 +4750,12 @@ bool VulkanCompute::RunWeightColdRowRace(
                            epoch, nullptr)) {
             raceOk = false;
             break;
+        }
+        // endSubmitWait waited the fence: the GPU is done with the set —
+        // free it now (endurance fix; ranged sets are never cached).
+        if (chunkSet != VK_NULL_HANDLE && descriptorPool_) {
+            vkFreeDescriptorSets(
+                device_, descriptorPool_, 1, &chunkSet);
         }
         gpuComputed += gpuCount;
         coldRaceGpuRows_ += gpuCount;
@@ -4779,12 +4852,19 @@ bool VulkanCompute::RunWeightColdRowRace(
     }
 
     if (!raceOk) {
+        // Aborted race: the current token's output was recovered on CPU
+        // above. Abandon the promotion so the next cold miss can retry
+        // (Promoting→Failed CAS; Failed is cold-equivalent for readers).
+        FailHotView(handle);
         destroyBuffer(target);
-        return true; // output was recovered on CPU above
+        return true;
     }
 
     // ---- Full-weight residency proof → heap-stable ResidentWeight
     // object → lock-free RCU publish (weightCache_ is NOT the authority).
+    // The CAS publish only completes when this invocation owns the
+    // Promoting() sentinel taken above; on loss the duplicate buffer is
+    // destroyed inside PublishResidentTarget.
     // ----
     (void)PublishResidentTarget(target, weight.type, weight.key);
     return true;
@@ -4875,7 +4955,13 @@ bool VulkanCompute::PublishResidentTarget(
     obj->type = type;
     obj->handle = handle;
 
-    PublishHotView(handle, obj.get());
+    // CAS publication: if ownership was NOT taken (handle not in
+    // Promoting() — a racing winner already published), destroy the
+    // duplicate buffer instead of leaking it.
+    if (!PublishHotView(handle, obj.get())) {
+        destroyBuffer(target);
+        return false;
+    }
     residentObjectBytes_ += obj->bytes;
     residentObjects_.push_back(std::move(obj));
     ++coldRacePromotionsCompleted_;
@@ -5083,6 +5169,16 @@ bool VulkanCompute::RunWeightResidentHotDirect(
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+
+    // Endurance fix: the fence is signaled — the GPU is done with the
+    // ranged descriptor set this submit bound. Free it now (quant path
+    // captured it in lane.lastSet; the F32 path used a CACHED ops
+    // descriptor which must NOT be freed).
+    if (lane.lastSet != VK_NULL_HANDLE && descriptorPool_) {
+        vkFreeDescriptorSets(
+            device_, descriptorPool_, 1, &lane.lastSet);
+        lane.lastSet = VK_NULL_HANDLE;
+    }
 
     std::memcpy(output, lane.downMapped, outBytes);
     ++lane.residentDispatches;
@@ -5570,6 +5666,9 @@ void VulkanCompute::cleanup() {
 
     prefetch_.clear();
     clearWeightCache();
+    // Device idle: any ranged sets still queued are GPU-unused — free
+    // them before the descriptor pool dies (endurance fix).
+    drainPendingDescriptorFrees();
     opsDescriptorCache_.clear();
     quantDescriptorCache_.clear();
 
