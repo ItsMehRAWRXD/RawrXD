@@ -56,6 +56,27 @@ struct GpuForwardCounters {
     uint64_t hostMergeOps = 0;
     uint64_t dualRowDenseTokens = 0;
     uint64_t dualRowSlot[8]{};          // real-weight dual-row dispatches per device
+    // DEEP2_RESIDENT_COST_ATTRIBUTION_001: phase-level walls for the
+    // resident multi-map lane. All phases are host walls bracketing the
+    // blocking calls; residentRangeGpuNs is the calibrated EndFusedLayer
+    // GPU interval per slot range. Attention/KV-append execute inside the
+    // fused range — their length-scaling is read from the range-GPU slope
+    // across 64/128/256-token runs, not from separate per-op counters.
+    uint64_t residentUploadHiddenNs = 0;
+    uint64_t residentUploadHiddenCount = 0;
+    uint64_t residentUploadHiddenBytes = 0;
+    uint64_t residentPrimeCommitNs = 0;      // CommitWeightPrime fence wait
+    uint64_t residentPrimeCommitCount = 0;
+    uint64_t residentRangeNs[2] = {};        // host wall: record+submit+wait
+    uint64_t residentRangeGpuNs[2] = {};    // calibrated GPU interval
+    uint64_t residentRangeCount[2] = {};
+    uint64_t residentHandoffNs = 0;         // CopyArenaHiddenTo host bounce
+    uint64_t residentHandoffCount = 0;
+    uint64_t residentHandoffBytes = 0;
+    uint64_t residentFinalDownloadNs = 0;
+    uint64_t residentFinalDownloadCount = 0;
+    uint64_t residentQueueSubmits = 0;      // blocking submits on this lane
+    uint64_t residentFenceWaits = 0;        // blocking waits on this lane
     uint64_t gpuExpertDispatches = 0;
     uint64_t mlaGpuAttentionOps = 0;
 };

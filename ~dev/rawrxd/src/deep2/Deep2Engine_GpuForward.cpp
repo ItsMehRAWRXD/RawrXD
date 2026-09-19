@@ -446,10 +446,21 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     auto* vc = getVulkanComputeSlot(slot);
     if (!vc || !ensureGpuForwardArena(slot)) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
-    if (!vc->UploadHidden(hostIn, H)) return false;
+    {
+        const auto upStart = std::chrono::steady_clock::now();
+        if (!vc->UploadHidden(hostIn, H)) return false;
+        const auto upEnd = std::chrono::steady_clock::now();
+        gpuFwd_.residentUploadHiddenNs += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                upEnd - upStart).count());
+        ++gpuFwd_.residentUploadHiddenCount;
+        gpuFwd_.residentUploadHiddenBytes +=
+            static_cast<uint64_t>(H) * sizeof(float);
+    }
     ++gpuFwd_.hostSyncBoundaries;
 
     const bool rangeFuse = !vc->WeightPrefetchActive();
+    const auto rangeStart = std::chrono::steady_clock::now();
     if (rangeFuse && !vc->BeginFusedLayer()) return false;
     for (uint32_t L = lo; L <= hi; ++L) {
         if (!forwardLayerGpuResident(L, slot, false, false)) {
@@ -459,10 +470,30 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
         }
     }
     if (rangeFuse && !vc->EndFusedLayer()) return false;
-    if (rangeFuse) ++gpuFwd_.layerSubmits;
+    const auto rangeEnd = std::chrono::steady_clock::now();
+    if (rangeFuse) {
+        ++gpuFwd_.layerSubmits;
+        ++gpuFwd_.residentQueueSubmits;
+        ++gpuFwd_.residentFenceWaits;
+    }
+    if (slot < 2) {
+        gpuFwd_.residentRangeNs[slot] += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                rangeEnd - rangeStart).count());
+        if (vc->LastFusedIntervalValid())
+            gpuFwd_.residentRangeGpuNs[slot] +=
+                vc->LastFusedInterval().calibratedDurationNs();
+        ++gpuFwd_.residentRangeCount[slot];
+    }
     {
         DEEP2_GPU_CHILD_SCOPE(rbScope, ReadbackD2H);
+        const auto dlStart = std::chrono::steady_clock::now();
         if (!vc->DownloadHidden(hostOut, H)) return false;
+        const auto dlEnd = std::chrono::steady_clock::now();
+        gpuFwd_.residentFinalDownloadNs += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                dlEnd - dlStart).count());
+        ++gpuFwd_.residentFinalDownloadCount;
         ++gpuFwd_.hostSyncBoundaries;
     }
     return true;
@@ -531,7 +562,18 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         if (!ensureGpuForwardArena(s)) return false;
 
     auto* vc0 = getVulkanComputeSlot(0);
-    if (!vc0 || !vc0->UploadHidden(hostIn, H)) return false;
+    if (!vc0) return false;
+    {
+        const auto upStart = std::chrono::steady_clock::now();
+        if (!vc0->UploadHidden(hostIn, H)) return false;
+        const auto upEnd = std::chrono::steady_clock::now();
+        gpuFwd_.residentUploadHiddenNs += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                upEnd - upStart).count());
+        ++gpuFwd_.residentUploadHiddenCount;
+        gpuFwd_.residentUploadHiddenBytes +=
+            static_cast<uint64_t>(H) * sizeof(float);
+    }
     ++gpuFwd_.hostSyncBoundaries;
 
     // BATCH9_USEFUL_NEXT_STICK_PRIME:
@@ -576,10 +618,19 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         auto* vc = getVulkanComputeSlot(s);
         if (s == 1 && batch9PrimeLive) {
             Deep2::GpuWorkInterval primeInterval{};
+            // COST_ATTRIBUTION: the prime's fence wait is a blocking host
+            // phase of the resident lane — measure it separately from the
+            // layer range so 64/128/256 slopes can isolate it.
+            const auto primeStart = std::chrono::steady_clock::now();
             if (!vc || !vc->CommitWeightPrime(
                     batch9Prime,batch9PrimeType,batch9PrimeKey,
                     &primeInterval))
                 return false;
+            const auto primeEnd = std::chrono::steady_clock::now();
+            gpuFwd_.residentPrimeCommitNs += static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    primeEnd - primeStart).count());
+            ++gpuFwd_.residentPrimeCommitCount;
             batch9PrimeLive = false;
         }
         if (!vc) return false;
@@ -587,6 +638,7 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
 
         const bool rangeFuse = !vc->WeightPrefetchActive();
+        const auto rangeStart = std::chrono::steady_clock::now();
         if (rangeFuse && !vc->BeginFusedLayer()) return false;
         for (uint32_t L = lo; L <= hi; ++L) {
             if (!forwardLayerGpuResident(L, s, false, false)) {
@@ -596,7 +648,21 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
             }
         }
         if (rangeFuse && !vc->EndFusedLayer()) return false;
-        if (rangeFuse) ++gpuFwd_.layerSubmits;
+        if (rangeFuse) {
+            ++gpuFwd_.layerSubmits;
+            ++gpuFwd_.residentQueueSubmits;
+            ++gpuFwd_.residentFenceWaits;
+        }
+        const auto rangeEnd = std::chrono::steady_clock::now();
+        if (s < 2) {
+            gpuFwd_.residentRangeNs[s] += static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    rangeEnd - rangeStart).count());
+            if (vc->LastFusedIntervalValid())
+                gpuFwd_.residentRangeGpuNs[s] +=
+                    vc->LastFusedInterval().calibratedDurationNs();
+            ++gpuFwd_.residentRangeCount[s];
+        }
         if (s + 1 < gpuN) {
 
             auto* next = getVulkanComputeSlot(s + 1);
@@ -620,7 +686,15 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
                         elasticResidency_->PrefetchHitRatePct(),
                         (double)BATCH_D_B011_HIT_RATE_REF_PCT);
             }
+            const auto hoStart = std::chrono::steady_clock::now();
             if (!next || !vc->CopyArenaHiddenTo(*next, H)) return false;
+            const auto hoEnd = std::chrono::steady_clock::now();
+            gpuFwd_.residentHandoffNs += static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    hoEnd - hoStart).count());
+            ++gpuFwd_.residentHandoffCount;
+            gpuFwd_.residentHandoffBytes +=
+                static_cast<uint64_t>(H) * sizeof(float);
             ++gpuFwd_.ownershipTransfers;
             if (vc->LastCrossDeviceCopyUsedHost()) {
                 // Batch 9 refuses to call a host bounce peer-resident.
@@ -656,6 +730,10 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         const auto dlStart = std::chrono::steady_clock::now();
         if (!lastGpu->DownloadHidden(hostOut, H)) return false;
         const auto dlEnd = std::chrono::steady_clock::now();
+        gpuFwd_.residentFinalDownloadNs += static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                dlEnd - dlStart).count());
+        ++gpuFwd_.residentFinalDownloadCount;
         ++gpuFwd_.hostSyncBoundaries;
         // The final download is its own materialization class: required by
         // the current contract (host samples logits) but measured explicitly

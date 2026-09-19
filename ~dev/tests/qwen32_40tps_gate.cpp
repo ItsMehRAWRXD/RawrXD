@@ -477,7 +477,93 @@ int main(int argc, char** argv) {
             static_cast<unsigned long long>(gf.matCrossDeviceHandoffNs),
             static_cast<unsigned long long>(gf.matFinalDownloadNs),
             static_cast<unsigned long long>(gf.matGemvSingleNs),
-            static_cast<unsigned long long>(gf.matOtherNs));
+        static_cast<unsigned long long>(gf.matOtherNs));
+    }
+
+    // DEEP2_RESIDENT_COST_ATTRIBUTION_001: phase walls of the resident
+    // lane (resident-first experiment laboratory). Accounting law:
+    //   upload + prime + range0 + handoff + range1 + download
+    //     == residentAccountedNs (multi-map order)
+    // and RESIDENT_ACCOUNTED_PCT vs the token wall names the unattributed
+    // remainder. Run at 64/128/256 tokens for slope attribution.
+    {
+        const uint64_t tokens = measured.generatedTokens;
+        const uint64_t upload = gf.residentUploadHiddenNs;
+        const uint64_t prime = gf.residentPrimeCommitNs;
+        const uint64_t range0 = gf.residentRangeNs[0];
+        const uint64_t range1 = gf.residentRangeNs[1];
+        const uint64_t handoff = gf.residentHandoffNs;
+        const uint64_t download = gf.residentFinalDownloadNs;
+        const uint64_t accounted = upload + prime + range0 + range1 +
+                                   handoff + download;
+        const double pct = tokenWallNs
+            ? 100.0 * static_cast<double>(accounted) /
+                  static_cast<double>(tokenWallNs)
+            : 0.0;
+        auto perTok = [&](uint64_t ns) -> double {
+            return tokens ? static_cast<double>(ns) / static_cast<double>(tokens)
+                          : 0.0;
+        };
+        std::fprintf(stderr,
+            "DEEP2_RESIDENT_COST_ATTRIBUTION_001\n"
+            "RESIDENT_TOKENS=%llu\n"
+            "RESIDENT_UPLOAD_HIDDEN_NS=%llu\n"
+            "RESIDENT_UPLOAD_HIDDEN_COUNT=%llu\n"
+            "RESIDENT_UPLOAD_HIDDEN_BYTES=%llu\n"
+            "RESIDENT_UPLOAD_HIDDEN_US_PER_TOKEN=%.3f\n"
+            "RESIDENT_PRIME_COMMIT_NS=%llu\n"
+            "RESIDENT_PRIME_COMMIT_COUNT=%llu\n"
+            "RESIDENT_PRIME_COMMIT_US_PER_TOKEN=%.3f\n"
+            "RESIDENT_RANGE0_NS=%llu\n"
+            "RESIDENT_RANGE0_GPU_NS=%llu\n"
+            "RESIDENT_RANGE0_COUNT=%llu\n"
+            "RESIDENT_RANGE0_MS_PER_TOKEN=%.3f\n"
+            "RESIDENT_RANGE1_NS=%llu\n"
+            "RESIDENT_RANGE1_GPU_NS=%llu\n"
+            "RESIDENT_RANGE1_COUNT=%llu\n"
+            "RESIDENT_RANGE1_MS_PER_TOKEN=%.3f\n"
+            "RESIDENT_RANGE_GPU_NS_SUM=%llu\n"
+            "RESIDENT_HANDOFF_NS=%llu\n"
+            "RESIDENT_HANDOFF_COUNT=%llu\n"
+            "RESIDENT_HANDOFF_BYTES=%llu\n"
+            "RESIDENT_HANDOFF_US_PER_TOKEN=%.3f\n"
+            "RESIDENT_FINAL_DOWNLOAD_NS=%llu\n"
+            "RESIDENT_FINAL_DOWNLOAD_COUNT=%llu\n"
+            "RESIDENT_FINAL_DOWNLOAD_US_PER_TOKEN=%.3f\n"
+            "RESIDENT_QUEUE_SUBMITS=%llu\n"
+            "RESIDENT_FENCE_WAITS=%llu\n"
+            "RESIDENT_ACCOUNTED_NS=%llu\n"
+            "RESIDENT_ACCOUNTED_PCT=%.3f\n",
+            static_cast<unsigned long long>(tokens),
+            static_cast<unsigned long long>(upload),
+            static_cast<unsigned long long>(gf.residentUploadHiddenCount),
+            static_cast<unsigned long long>(gf.residentUploadHiddenBytes),
+            perTok(upload) / 1000.0,
+            static_cast<unsigned long long>(prime),
+            static_cast<unsigned long long>(gf.residentPrimeCommitCount),
+            perTok(prime) / 1000.0,
+            static_cast<unsigned long long>(range0),
+            static_cast<unsigned long long>(gf.residentRangeGpuNs[0]),
+            static_cast<unsigned long long>(gf.residentRangeCount[0]),
+            perTok(range0) / 1.0e6,
+            static_cast<unsigned long long>(range1),
+            static_cast<unsigned long long>(gf.residentRangeGpuNs[1]),
+            static_cast<unsigned long long>(gf.residentRangeCount[1]),
+            perTok(range1) / 1.0e6,
+            static_cast<unsigned long long>(
+                gf.residentRangeGpuNs[0] + gf.residentRangeGpuNs[1]),
+            static_cast<unsigned long long>(handoff),
+            static_cast<unsigned long long>(gf.residentHandoffCount),
+            static_cast<unsigned long long>(gf.residentHandoffBytes),
+            perTok(handoff) / 1000.0,
+            static_cast<unsigned long long>(download),
+            static_cast<unsigned long long>(gf.residentFinalDownloadCount),
+            perTok(download) / 1000.0,
+            static_cast<unsigned long long>(gf.residentQueueSubmits),
+            static_cast<unsigned long long>(gf.residentFenceWaits),
+            static_cast<unsigned long long>(accounted),
+            pct);
+        std::fflush(stderr);
     }
 
     std::fprintf(stderr,

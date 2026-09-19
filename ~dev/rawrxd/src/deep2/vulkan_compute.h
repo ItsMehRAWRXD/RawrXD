@@ -819,6 +819,15 @@ public:
         if (isGroup) denseRowGroupGpuNs_ += gpuNs;
         else         denseRowSingleGpuNs_ += gpuNs;
     }
+    // Read the interval EndFusedLayer finalized on this thread. Valid only
+    // immediately after a successful EndFusedLayer under the same apiMu_
+    // guard; BeginFusedLayer invalidates it.
+    const GpuWorkInterval& LastFusedInterval() const noexcept {
+        return lastFusedInterval_;
+    }
+    bool LastFusedIntervalValid() const noexcept {
+        return lastFusedIntervalValid_;
+    }
     // Last interval finalized by EndFusedLayer, for callers that need the
     // GPU-side duration of the fused submission they just waited on.
     // Valid only immediately after a successful EndFusedLayer on the same
