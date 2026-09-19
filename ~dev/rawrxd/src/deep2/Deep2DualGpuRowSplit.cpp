@@ -843,8 +843,23 @@ bool Deep2RunDualGpuRowSplit(
     // Before this wiring the controller was dead code: gAsyncSamples stayed
     // 0, chooseThroughputSplit never left the static env-weight branch, and
     // both GPUs split rows 50/50 regardless of measured lane speed.
-    if(lane0HostEnvelopeNs>0&&lane1HostEnvelopeNs>0)
-        updateAsyncRowRatio(plan.row0Count, lane0HostEnvelopeNs, plan.row1Count, lane1HostEnvelopeNs);
+    // DEEP2_SPLIT_COMPUTE_FEED_001: prefer the lane's measured GPU
+    // COMPUTE interval (fence waits excluded) — envelope feeding dilutes
+    // the signal with host-side wait, and the first calibrated receipt
+    // showed a 59% GPU-time imbalance the envelope feed under-corrected.
+    {
+        const uint64_t gpu0 =
+            g0.hotLane().lastLaneGpuNs;
+        const uint64_t gpu1 =
+            g1.hotLane().lastLaneGpuNs;
+        if (gpu0 > 0 && gpu1 > 0)
+            updateAsyncRowRatio(
+                plan.row0Count, gpu0, plan.row1Count, gpu1);
+        else if (lane0HostEnvelopeNs > 0 && lane1HostEnvelopeNs > 0)
+            updateAsyncRowRatio(
+                plan.row0Count, lane0HostEnvelopeNs,
+                plan.row1Count, lane1HostEnvelopeNs);
+    }
 
     if(receipt){
         receipt->valid=true;

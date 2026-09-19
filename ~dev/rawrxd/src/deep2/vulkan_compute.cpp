@@ -5302,8 +5302,15 @@ bool VulkanCompute::RunWeightResidentHotDirect(
         GpuWorkInterval laneWi{};
         if (finalizeInterval(
                 lane.query, submitNs, completeNs, epoch, 0,
-                GpuWorkKind::ModelCompute, laneWi))
+                GpuWorkKind::ModelCompute, laneWi)) {
             RecordDenseRowGpuInterval(laneWi, /*isGroup=*/false);
+            lane.lastLaneGpuNs = laneWi.calibratedDurationNs();
+        } else {
+            lane.lastLaneGpuNs = 0;
+        }
+    } else {
+        lane.lastLaneGpuNs = completeNs > submitNs
+            ? completeNs - submitNs : 0;
     }
 
     std::memcpy(output, lane.downMapped, outBytes);
@@ -5500,8 +5507,15 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
         GpuWorkInterval laneWi{};
         if (finalizeInterval(
                 lane.query, groupSubmitNs, groupCompleteNs, epoch, 0,
-                GpuWorkKind::ModelCompute, laneWi))
+                GpuWorkKind::ModelCompute, laneWi)) {
             RecordDenseRowGpuInterval(laneWi, /*isGroup=*/true);
+            lane.lastLaneGpuNs = laneWi.calibratedDurationNs();
+        } else {
+            lane.lastLaneGpuNs = 0;
+        }
+    } else {
+        lane.lastLaneGpuNs = groupCompleteNs > groupSubmitNs
+            ? groupCompleteNs - groupSubmitNs : 0;
     }
 
     // Scatter from the shared down staging into the member outputs.

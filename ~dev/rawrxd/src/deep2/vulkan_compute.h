@@ -1215,6 +1215,10 @@ public:
 
         uint64_t residentDispatches = 0;
         uint64_t submits = 0;
+        // Most recent measured GPU interval (calibrated) — feeds the
+        // async split controller pure compute time instead of host
+        // envelopes (which include fence waits and dilute the signal).
+        uint64_t lastLaneGpuNs = 0;
         bool initialized = false;
     };
     HotLaneContext hotLane_{};
