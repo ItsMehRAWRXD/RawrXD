@@ -2203,11 +2203,39 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     const char* denseExec=std::getenv("DEEP2_DENSE_EXEC");
     const bool forceLayerSplit=
         denseExec && std::strcmp(denseExec,"LAYER_SPLIT")==0;
+    // DEEP2_RESIDENT_FORWARD_PREEMPTION_001 (Case A routing experiment):
+    // the resident forward path (device arenas, resident weights, fused
+    // per-layer command buffers, device KV) already proved 5.59 TPS with
+    // DENSE_ROW_WALL_PCT=1.904 in the b3 layersplit receipt, while the
+    // dual-row host lane measures 5.08-5.14 TPS at 88% dense-row wall.
+    // RESIDENT_FIRST gives tryGpuTokenForward first claim on dense
+    // two-stick models; the dual-row lane remains the fallback. Fail-
+    // closed: under strict mode a resident failure still refuses CPU.
+    const char* residentFirstEnv=std::getenv("DEEP2_RESIDENT_FIRST");
+    const bool residentFirst=
+        residentFirstEnv && residentFirstEnv[0]=='1';
     const bool dualRowDense=
-        !forceLayerSplit &&
+        !forceLayerSplit && !residentFirst &&
         vulkanEnabled_ && vulkanInitialized_ &&
         vulkanDevices_.size()>=2 &&
         !modelWeights.isMoE && !modelWeights.useMLA;
+
+    // Resident-first: the full-token resident graph gets first claim.
+    // Everything below is fallback only.
+    if (residentFirst && vulkanEnabled_ && vulkanInitialized_ &&
+        !modelWeights.isMoE && !modelWeights.useMLA) {
+        if (tryGpuTokenForward(hidden))
+            return true;
+        std::fprintf(stderr,
+            "[RESIDENT_FIRST] resident forward declined; "
+            "falling back to dual-row lane\n");
+        if (vulkanStrictNoCpuFallback_) {
+            // Strict authority must not silently accept the slower host lane
+            // when the resident graph declined; record and fail closed.
+            vulkanStrictViolation_ = true;
+            return false;
+        }
+    }
 
     if(dualRowDense){
         try {
