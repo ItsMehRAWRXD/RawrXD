@@ -456,6 +456,8 @@ public:
     uint64_t weightUseClock_ = 0;
     uint64_t pinnedWeightBytes_ = 0;
     uint64_t pinnedWeightEntries_ = 0;
+    uint32_t currentLayerLease_ = 0;
+    uint64_t layerLeaseEpoch_ = 0;
 
     // ========== Resident group Q4K ==========
     bool RunWeightGroupResidentInputQ4K(
@@ -1004,6 +1006,24 @@ public:
         const float* input, float* output,
         uint64_t epoch);
 
+    // DEEP2_HOT_COLD_CONTRACT_001: lightweight resident-hot bypass.
+    // Assumes weight buffer is already resident (caller pinned it).
+    // No cache admission, no eviction, no GGUF lookup, no cold-state checks.
+    bool RunWeightResidentHot(
+        const GpuWeightView& weight, DeviceBuf* residentWeight,
+        const float* input, float* output,
+        uint64_t epoch);
+    bool RunWeightGroupResidentHot(
+        const GpuWeightView* weights, DeviceBuf* const* residentWeights,
+        float* const* outputs, size_t count,
+        const float* input, uint32_t inputCount,
+        uint64_t epoch);
+
+    // DEEP2_LAYER_RESIDENCY_LEASE_001: amortize PinWeightView across a layer.
+    // Call Begin before the layer's first GEMV, End after the last.
+    bool BeginLayerResidencyLease(uint32_t layerIndex);
+    bool EndLayerResidencyLease(uint32_t layerIndex);
+
 private:
     struct WeightCacheEntry {
         DeviceBuf buffer{};
@@ -1011,6 +1031,7 @@ private:
         int type = 0;
         uint64_t lastUse = 0;
         bool pinned = false;
+        uint64_t failedResidentEpoch = 0; // DEEP2_NEGATIVE_RESIDENCY_CACHE_001
     };
     struct PrefetchEntry {
         DeviceBuf buffer{};

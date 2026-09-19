@@ -3790,6 +3790,160 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
     return true;
 }
 
+bool VulkanCompute::RunWeightResidentHot(
+    const GpuWeightView& weight, DeviceBuf* residentWeight,
+    const float* input, float* output,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weight.valid()||!residentWeight||!input||!output||!initialized_)
+        return false;
+
+    SetQ4kLaneTag(kQ4kLaneDual);
+    struct LaneTagRestore {
+        VulkanCompute* self; uint32_t prev;
+        ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
+    } laneRestore{this, q4kLane_};
+
+    SetWorkEpoch(epoch);
+    if(!EnsureScratch(60,weight.cols)||
+       !EnsureScratch(61,weight.rows))
+        return false;
+    DeviceBuf& in=Scratch(60);
+    DeviceBuf& out=Scratch(61);
+
+    const size_t inBytes=static_cast<size_t>(weight.cols)*sizeof(float);
+    const size_t outBytes=static_cast<size_t>(weight.rows)*sizeof(float);
+
+    DeviceBuf* upStage=nullptr;
+    DeviceBuf* downStage=nullptr;
+    void* upMap=nullptr;
+    void* downMap=nullptr;
+    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
+       !ensureMappedStaging(false,outBytes,downStage,downMap))
+        return false;
+    std::memcpy(upMap,input,inBytes);
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+        return abort();
+    if(!DispatchWeight(weight,in,out))
+        return abort();
+    if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
+        return abort();
+    if(!EndFusedLayer())
+        return false;
+
+    std::memcpy(output,downMap,outBytes);
+
+    if(lastFusedIntervalValid_)
+        RecordDenseRowGpuInterval(lastFusedInterval_, /*isGroup=*/false);
+    return true;
+}
+
+bool VulkanCompute::RunWeightGroupResidentHot(
+    const GpuWeightView* weights, DeviceBuf* const* residentWeights,
+    float* const* outputs, size_t count,
+    const float* input, uint32_t inputCount,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(!weights||!residentWeights||!outputs||!input||count<2||count>3||!inputCount)
+        return false;
+
+    SetQ4kLaneTag(kQ4kLaneDual);
+    struct LaneTagRestore {
+        VulkanCompute* self; uint32_t prev;
+        ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
+    } laneRestore{this, q4kLane_};
+
+    SetWorkEpoch(epoch);
+    if(!EnsureScratch(62,inputCount)) return false;
+    DeviceBuf& in=Scratch(62);
+
+    size_t totalOutBytes=0;
+    size_t offsets[3]{};
+    for(size_t i=0;i<count;++i){
+        if(!weights[i].valid()||weights[i].cols!=inputCount||!outputs[i])
+            return false;
+        if(!EnsureScratch(63u+(unsigned)i,weights[i].rows))
+            return false;
+        offsets[i]=totalOutBytes;
+        const size_t b=static_cast<size_t>(weights[i].rows)*sizeof(float);
+        if(totalOutBytes>std::numeric_limits<size_t>::max()-b)
+            return false;
+        totalOutBytes+=b;
+    }
+
+    const size_t inBytes=static_cast<size_t>(inputCount)*sizeof(float);
+    DeviceBuf* upStage=nullptr;
+    DeviceBuf* downStage=nullptr;
+    void* upMap=nullptr;
+    void* downMap=nullptr;
+    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
+       !ensureMappedStaging(false,totalOutBytes,downStage,downMap))
+        return false;
+    std::memcpy(upMap,input,inBytes);
+
+    if(!BeginFusedLayer()) return false;
+    auto abort=[&]{
+        if(FusedRecording()) (void)EndFusedLayer();
+        return false;
+    };
+    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
+        return abort();
+
+    for(size_t i=0;i<count;++i){
+        DeviceBuf& out=Scratch(63u+(unsigned)i);
+        if(!DispatchWeight(weights[i],in,out))
+            return abort();
+        const VkDeviceSize b=
+            static_cast<VkDeviceSize>(weights[i].rows)*sizeof(float);
+        if(!recordCopy(
+                fusedCmd_,out,*downStage,b,0,
+                static_cast<VkDeviceSize>(offsets[i])))
+            return abort();
+    }
+    if(!EndFusedLayer()) return false;
+
+    for(size_t i=0;i<count;++i){
+        std::memcpy(
+            outputs[i],
+            static_cast<const uint8_t*>(downMap)+offsets[i],
+            static_cast<size_t>(weights[i].rows)*sizeof(float));
+    }
+
+    if(lastFusedIntervalValid_)
+        RecordDenseRowGpuInterval(lastFusedInterval_, /*isGroup=*/true);
+    return true;
+}
+
+bool VulkanCompute::BeginLayerResidencyLease(uint32_t layerIndex) {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(layerIndex == currentLayerLease_)
+        return true;
+    // End any previous lease to avoid double-pinning.
+    if(currentLayerLease_ != ~0u)
+        UnpinAllWeights();
+    currentLayerLease_ = layerIndex;
+    layerLeaseEpoch_   = weightUseClock_++;
+    return true;
+}
+
+bool VulkanCompute::EndLayerResidencyLease(uint32_t layerIndex) {
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if(currentLayerLease_ != layerIndex)
+        return true;
+    UnpinAllWeights();
+    currentLayerLease_ = ~0u;
+    return true;
+}
+
 void VulkanCompute::ResetSpecBatchArena() {
     for(auto& a:specArenas_) {
         destroyBuffer(a.hidden); destroyBuffer(a.norm);
