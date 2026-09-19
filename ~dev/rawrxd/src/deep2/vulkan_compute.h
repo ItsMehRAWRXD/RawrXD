@@ -443,6 +443,15 @@ public:
     bool PeerHandoffSupported() const {
         return PeerHandoffCapability().peerHandoffSupported;
     }
+
+    // B5_SHARED_HOST_IMPORT_001: same host allocation imported into both devices
+    struct SharedHostImportResult {
+        int32_t  hostPointerQueryResult = INT32_MIN; // vkGetMemoryHostPointerPropertiesEXT
+        uint32_t memoryTypeBits = 0;
+        int32_t  importMemoryResult = INT32_MIN;    // vkAllocateMemory with VkImportMemoryHostPointerInfoEXT
+        int32_t  bindResult = INT32_MIN;              // vkBindBufferMemory
+    };
+    SharedHostImportResult TestSharedHostImport(size_t testBytes = 4096) const;
     DeviceBuf* ResolveResidentF32(const float* src, uint64_t key, size_t count);
     uint64_t weightUseClock_ = 0;
     uint64_t pinnedWeightBytes_ = 0;

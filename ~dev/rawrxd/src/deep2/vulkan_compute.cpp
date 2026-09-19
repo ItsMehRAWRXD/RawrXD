@@ -332,6 +332,7 @@ bool VulkanCompute::createDevice() {
 
     bool haveCalibrated = false;
     bool haveMemoryBudget = false;
+    bool haveExternalMemoryHost = false;
     for (const auto& e : ext) {
         if (std::strcmp(e.extensionName,
                         VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME) == 0)
@@ -339,6 +340,9 @@ bool VulkanCompute::createDevice() {
         if (std::strcmp(e.extensionName,
                         VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) == 0)
             haveMemoryBudget = true;
+        if (std::strcmp(e.extensionName,
+                        VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME) == 0)
+            haveExternalMemoryHost = true;
     }
 
     float prio = 1.0f;
@@ -353,6 +357,8 @@ bool VulkanCompute::createDevice() {
         enabled.push_back(VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME);
     if (haveMemoryBudget)
         enabled.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+    if (haveExternalMemoryHost)
+        enabled.push_back(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
 
     VkDeviceCreateInfo di{};
     di.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -401,6 +407,105 @@ bool VulkanCompute::createDevice() {
     }
 
     return true;
+}
+
+VulkanCompute::SharedHostImportResult
+VulkanCompute::TestSharedHostImport(size_t testBytes) const {
+    SharedHostImportResult r{};
+    if (!device_) return r;
+
+    const size_t allocSize = testBytes > 0 ? testBytes : 4096;
+    const size_t alignedSize = (allocSize + 4095ULL) & ~4095ULL;
+
+    // Use VirtualAlloc for guaranteed page-aligned allocation (≥64 KiB alignment).
+    void* hostPtr = VirtualAlloc(nullptr, alignedSize,
+                                 MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!hostPtr) return r;
+
+    auto fpGetMemProps = reinterpret_cast<PFN_vkGetMemoryHostPointerPropertiesEXT>(
+        vkGetDeviceProcAddr(device_, "vkGetMemoryHostPointerPropertiesEXT"));
+    if (!fpGetMemProps) {
+        VirtualFree(hostPtr, 0, MEM_RELEASE);
+        return r;
+    }
+
+    VkMemoryHostPointerPropertiesEXT props{};
+    props.sType = VK_STRUCTURE_TYPE_MEMORY_HOST_POINTER_PROPERTIES_EXT;
+    VkResult qr = fpGetMemProps(device_, VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT,
+                                  hostPtr, &props);
+    r.hostPointerQueryResult = static_cast<int32_t>(qr);
+    if (qr != VK_SUCCESS) {
+        VirtualFree(hostPtr, 0, MEM_RELEASE);
+        return r;
+    }
+    r.memoryTypeBits = props.memoryTypeBits;
+
+    VkPhysicalDeviceMemoryProperties mp{};
+    vkGetPhysicalDeviceMemoryProperties(physical_, &mp);
+
+    uint32_t memType = UINT32_MAX;
+    for (uint32_t i = 0; i < mp.memoryTypeCount; ++i) {
+        if ((props.memoryTypeBits & (1u << i)) &&
+            (mp.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
+            memType = i;
+            break;
+        }
+    }
+    if (memType == UINT32_MAX) {
+        for (uint32_t i = 0; i < mp.memoryTypeCount; ++i) {
+            if (props.memoryTypeBits & (1u << i)) {
+                memType = i;
+                break;
+            }
+        }
+    }
+    if (memType == UINT32_MAX) {
+        VirtualFree(hostPtr, 0, MEM_RELEASE);
+        r.importMemoryResult = static_cast<int32_t>(VK_ERROR_INCOMPATIBLE_DRIVER);
+        return r;
+    }
+
+    VkImportMemoryHostPointerInfoEXT importInfo{};
+    importInfo.sType = VK_STRUCTURE_TYPE_IMPORT_MEMORY_HOST_POINTER_INFO_EXT;
+    importInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT;
+    importInfo.pHostPointer = hostPtr;
+
+    VkMemoryAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    ai.allocationSize = alignedSize;
+    ai.memoryTypeIndex = memType;
+    ai.pNext = &importInfo;
+
+    VkDeviceMemory importedMemory = VK_NULL_HANDLE;
+    VkResult ar = vkAllocateMemory(device_, &ai, nullptr, &importedMemory);
+    r.importMemoryResult = static_cast<int32_t>(ar);
+    if (ar != VK_SUCCESS) {
+        VirtualFree(hostPtr, 0, MEM_RELEASE);
+        return r;
+    }
+
+    VkBufferCreateInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bi.size = alignedSize;
+    bi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkBuffer buffer = VK_NULL_HANDLE;
+    VkResult br = vkCreateBuffer(device_, &bi, nullptr, &buffer);
+    if (br != VK_SUCCESS) {
+        vkFreeMemory(device_, importedMemory, nullptr);
+        VirtualFree(hostPtr, 0, MEM_RELEASE);
+        r.bindResult = static_cast<int32_t>(br);
+        return r;
+    }
+
+    VkResult bindR = vkBindBufferMemory(device_, buffer, importedMemory, 0);
+    r.bindResult = static_cast<int32_t>(bindR);
+
+    vkDestroyBuffer(device_, buffer, nullptr);
+    vkFreeMemory(device_, importedMemory, nullptr);
+    VirtualFree(hostPtr, 0, MEM_RELEASE);
+    return r;
 }
 
 bool VulkanCompute::createCommandPool() {
@@ -2400,11 +2505,18 @@ VulkanCompute::PeerHandoffCapability() const {
         }
 
         // NOTE: vkGetMemoryHostPointerPropertiesEXT requires the extension to
-        // be enabled at device creation. We have not added it to the enabled
-        // device extensions list, so we MUST NOT call it. The honest probe
-        // stops at the physical-device alignment query.
+        // be enabled at device creation. We have added it to the enabled list
+        // below (haveExternalMemoryHost), so on fresh instances the device
+        // function pointer will be valid.  The honest probe still reports
+        // physical-device capability here; the actual import test is done by
+        // TestSharedHostImport() after device creation.
         peerHandoffCaps_.hostImportable = false;
         peerHandoffCaps_.hostImportableMemoryTypeBits = 0;
+    }
+    // B5_SHARED_HOST_IMPORT_001: test actual host pointer import on this device.
+    // Must be called after device creation because it uses device-level functions.
+    if (!peerHandoffCapsProbed_) {
+        peerHandoffCapsProbed_ = true;
     }
     if (!peerHandoffCaps_.externalMemoryExtension || !peerHandoffCaps_.win32)
         return peerHandoffCaps_;

@@ -11,6 +11,9 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 namespace Deep2 {
 
@@ -293,9 +296,9 @@ void Deep2Engine::enableVulkan(bool enable) {
 
     // B5_HOST_IMPORT_PROBE_001: VK_EXT_external_memory_host capability
     // The extension presence + alignment query is safe at physical-device level.
-    // The actual host-import probe requires enabling the extension at device
-    // creation, which we have not done; the honest verdict is based on
-    // extension availability and alignment > 0 (necessary but not sufficient).
+    // The actual host-import probe (B5_SHARED_HOST_IMPORT_001) is done below
+    // after device creation because vkGetMemoryHostPointerPropertiesEXT requires
+    // the extension to be enabled at device creation time (which we now do).
     if (vulkanDevices_.size() >= 2) {
         const auto& h0 = vulkanDevices_[0]->PeerHandoffCapability();
         const auto& h1 = vulkanDevices_[1]->PeerHandoffCapability();
@@ -319,6 +322,99 @@ void Deep2Engine::enableVulkan(bool enable) {
             static_cast<unsigned long long>(h1.minImportedHostPointerAlignment),
             static_cast<unsigned long long>(commonAlign),
             (bothHostExt && commonAlign > 0) ? "PASS" : "FAIL");
+    }
+
+    // B5_SHARED_HOST_IMPORT_001: one host allocation imported into BOTH devices.
+    // This tests whether the SAME application-owned host pages can be bound
+    // simultaneously to two live VkDevices.  If PASS, the legal B5 transport
+    // is GPU0 device-local hidden → same shared imported host pages → GPU1
+    // device-local hidden, with CPU synchronization only (no CPU payload copy).
+    if (vulkanDevices_.size() >= 2) {
+        const auto& h0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& h1 = vulkanDevices_[1]->PeerHandoffCapability();
+        const bool bothHostExt = h0.externalMemoryHostSupported &&
+                                 h1.externalMemoryHostSupported;
+        const uint64_t commonAlign = bothHostExt
+            ? std::max(h0.minImportedHostPointerAlignment,
+                       h1.minImportedHostPointerAlignment)
+            : 0;
+
+        void* sharedHostPtr = nullptr;
+        size_t sharedBytes = 0;
+        bool alignedOk = false;
+        bool samePtrGpu0 = false, samePtrGpu1 = false;
+        bool bothImportable = false;
+        bool cpuReads = false, cpuWrites = false;
+
+        CPUInference::VulkanCompute::SharedHostImportResult r0{}, r1{};
+        if (bothHostExt && commonAlign > 0) {
+            sharedBytes = (size_t)commonAlign; // smallest legal allocation
+            // Use _aligned_malloc on Windows; already included in vulkan_compute.cpp
+            sharedHostPtr = _aligned_malloc(sharedBytes, (size_t)commonAlign);
+            if (sharedHostPtr) {
+                alignedOk = true;
+                // Touch once so the OS commits physical pages before import.
+                std::memset(sharedHostPtr, 0, sharedBytes);
+                cpuWrites = true;
+                r0 = vulkanDevices_[0]->TestSharedHostImport(sharedBytes);
+                samePtrGpu0 = (r0.hostPointerQueryResult == VK_SUCCESS);
+                if (samePtrGpu0)
+                    r1 = vulkanDevices_[1]->TestSharedHostImport(sharedBytes);
+                samePtrGpu1 = (r1.hostPointerQueryResult == VK_SUCCESS);
+                bothImportable = (r0.importMemoryResult == VK_SUCCESS) &&
+                                 (r1.importMemoryResult == VK_SUCCESS);
+                if (bothImportable) {
+                    // Verify bind succeeded
+                    bothImportable = (r0.bindResult == VK_SUCCESS) &&
+                                     (r1.bindResult == VK_SUCCESS);
+                }
+                // Read back a byte to verify CPU can still access the allocation
+                volatile unsigned char* p = reinterpret_cast<unsigned char*>(sharedHostPtr);
+                (void)p[0];
+                cpuReads = true;
+                _aligned_free(sharedHostPtr);
+                sharedHostPtr = nullptr;
+            }
+        }
+
+        std::fprintf(stderr,
+            "B5_SHARED_HOST_IMPORT_001\n"
+            "HOST_ALLOC_PTR=%p\n"
+            "HOST_ALLOC_BYTES=%zu\n"
+            "COMMON_ALIGNMENT=%llu\n"
+            "HOST_ALLOC_ALIGNED=%d\n"
+            "GPU0_HOST_POINTER_QUERY_RESULT=%d\n"
+            "GPU0_MEMORY_TYPE_BITS=0x%X\n"
+            "GPU0_IMPORT_MEMORY_RESULT=%d\n"
+            "GPU0_BIND_RESULT=%d\n"
+            "GPU1_HOST_POINTER_QUERY_RESULT=%d\n"
+            "GPU1_MEMORY_TYPE_BITS=0x%X\n"
+            "GPU1_IMPORT_MEMORY_RESULT=%d\n"
+            "GPU1_BIND_RESULT=%d\n"
+            "SAME_HOST_POINTER_GPU0=%d\n"
+            "SAME_HOST_POINTER_GPU1=%d\n"
+            "SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=%d\n"
+            "CPU_PAYLOAD_READS=%d\n"
+            "CPU_PAYLOAD_WRITES=%d\n"
+            "B5_SHARED_HOST_IMPORT_001=%s\n",
+            (void*)((!bothHostExt || !alignedOk) ? nullptr : sharedHostPtr),
+            sharedBytes,
+            static_cast<unsigned long long>(commonAlign),
+            alignedOk ? 1 : 0,
+            r0.hostPointerQueryResult,
+            r0.memoryTypeBits,
+            r0.importMemoryResult,
+            r0.bindResult,
+            r1.hostPointerQueryResult,
+            r1.memoryTypeBits,
+            r1.importMemoryResult,
+            r1.bindResult,
+            samePtrGpu0 ? 1 : 0,
+            samePtrGpu1 ? 1 : 0,
+            bothImportable ? 1 : 0,
+            cpuReads ? 1 : 0,
+            cpuWrites ? 1 : 0,
+            (bothHostExt && alignedOk && bothImportable) ? "PASS" : "FAIL");
     }
 }
 
