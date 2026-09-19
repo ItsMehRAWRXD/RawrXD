@@ -462,6 +462,8 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
     const bool rangeFuse = !vc->WeightPrefetchActive();
     const auto rangeStart = std::chrono::steady_clock::now();
     if (rangeFuse && !vc->BeginFusedLayer()) return false;
+    // PARITY: resident lane tag for dispatches inside this range.
+    vc->SetQ4kLaneTag(CPUInference::VulkanCompute::kQ4kLaneResident);
     for (uint32_t L = lo; L <= hi; ++L) {
         if (!forwardLayerGpuResident(L, slot, false, false)) {
             if (rangeFuse && vc->FusedRecording())
@@ -469,6 +471,7 @@ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t
             return false;
         }
     }
+    vc->SetQ4kLaneTag(0);
     if (rangeFuse && !vc->EndFusedLayer()) return false;
     const auto rangeEnd = std::chrono::steady_clock::now();
     if (rangeFuse) {
@@ -640,6 +643,8 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
         const bool rangeFuse = !vc->WeightPrefetchActive();
         const auto rangeStart = std::chrono::steady_clock::now();
         if (rangeFuse && !vc->BeginFusedLayer()) return false;
+        // PARITY: resident lane tag for dispatches inside this range.
+        vc->SetQ4kLaneTag(CPUInference::VulkanCompute::kQ4kLaneResident);
         for (uint32_t L = lo; L <= hi; ++L) {
             if (!forwardLayerGpuResident(L, s, false, false)) {
                 if (rangeFuse && vc->FusedRecording())
@@ -647,6 +652,7 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
                 return false;
             }
         }
+        vc->SetQ4kLaneTag(0);
         if (rangeFuse && !vc->EndFusedLayer()) return false;
         if (rangeFuse) {
             ++gpuFwd_.layerSubmits;

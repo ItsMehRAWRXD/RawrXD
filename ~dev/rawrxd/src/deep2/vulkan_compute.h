@@ -839,6 +839,39 @@ public:
     uint64_t denseRowSingleGpuNs_ = 0;
     uint64_t denseRowGroupGpuNs_ = 0;
 
+    // ========== Q4K execution-path parity harness ==========
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: both the dual-row lane and
+    // the resident lane execute Q4_K GEMVs through dispatchQuant() on the
+    // SAME qPipeline_ (deep2_qgemv.comp, one 256-lane workgroup per row).
+    // This harness lane-tags every quant dispatch and samples GPU
+    // timestamp pairs around dispatches (mid-command-buffer), collected
+    // post-fence — no new synchronization. Emits per-lane ns/row so the
+    // receipt can compute RESIDENT_Q4K_SLOWDOWN = resident/dual ns/row.
+    //   lane: 0=untagged, 1=dual-row, 2=resident-range
+    static constexpr uint32_t kQ4kLaneDual = 1;
+    static constexpr uint32_t kQ4kLaneResident = 2;
+    void SetQ4kLaneTag(uint32_t lane) noexcept { q4kLane_ = lane; }
+    uint64_t Q4kParityDispatchCount(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kDispatchCount_[lane] : 0;
+    }
+    uint64_t Q4kParityRows(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kRows_[lane] : 0;
+    }
+    uint64_t Q4kParitySampledNs(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kSampledNs_[lane] : 0;
+    }
+    uint64_t Q4kParitySampledCount(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kSampledCount_[lane] : 0;
+    }
+    uint64_t Q4kParitySampledRows(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kSampledRows_[lane] : 0;
+    }
+    // Pipeline-handle identity per lane: proves both lanes bind the same
+    // compute pipeline (Q4K_SHADER_MATCH / Q4K_LAYOUT_MATCH authority).
+    VkPipeline Q4kParityPipeline(uint32_t lane) const noexcept {
+        return lane < 3 ? q4kPipelineSeen_[lane] : VK_NULL_HANDLE;
+    }
+
     // ========== Spec accept ==========
     struct SpecAcceptResult {
         uint32_t accepted = 0;
@@ -1109,6 +1142,28 @@ private:
     VkCommandBuffer reusableFusedCmd_ = VK_NULL_HANDLE;
     VkQueryPool reusableFusedQuery_ = VK_NULL_HANDLE;
     VkFence reusableFusedFence_ = VK_NULL_HANDLE;
+
+    // ---- Q4K parity harness state (see public accessors above) ----
+    struct Q4kParitySample {
+        uint32_t rows;
+        uint32_t cols;
+        uint32_t lane;
+    };
+    bool ensureQ4kParityPool();
+    void accumulateQ4kParitySamples() noexcept;
+    VkQueryPool q4kParityQuery_ = VK_NULL_HANDLE;
+    std::vector<Q4kParitySample> q4kParityMeta_;
+    uint32_t q4kParityNext_ = 0;        // next sample slot this fused layer
+    uint32_t q4kParityCapacity_ = 256;   // sample slots (2 queries each)
+    uint64_t q4kParitySeq_ = 0;
+    uint64_t q4kParitySampleEvery_ = 4;  // 1-in-N sampling; 0 disables
+    uint32_t q4kLane_ = 0;
+    uint64_t q4kDispatchCount_[3] = {};
+    uint64_t q4kRows_[3] = {};
+    uint64_t q4kSampledNs_[3] = {};
+    uint64_t q4kSampledCount_[3] = {};
+    uint64_t q4kSampledRows_[3] = {};
+    VkPipeline q4kPipelineSeen_[3] = {};
 
     DeviceBuf uploadStaging_{};
     DeviceBuf downloadStaging_{};

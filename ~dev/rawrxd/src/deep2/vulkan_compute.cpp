@@ -1680,6 +1680,31 @@ bool VulkanCompute::dispatchQuant(
         if (!beginCommand(cmd, query, true)) return false;
     }
 
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: lane-tagged counters + geometry
+    // capture. Every quant dispatch through this entry point — dual-row
+    // (DispatchWeight) and resident (gemv lambda) alike — records rows,
+    // lane tag, and the bound pipeline for the shader/layout match law.
+    {
+        const uint32_t lane = q4kLane_;
+        if (lane < 3) {
+            ++q4kDispatchCount_[lane];
+            q4kRows_[lane] += push.rows;
+            q4kPipelineSeen_[lane] = qPipeline_;
+        }
+    }
+
+    // Sampled GPU timestamp pair around this dispatch (mid-buffer writes
+    // into the parity pool; collected post-fence). 1-in-N to bound cost.
+    const bool sample = q4kParityQuery_ && q4kParitySampleEvery_ &&
+        (q4kParitySeq_ % q4kParitySampleEvery_) == 0 &&
+        q4kParityNext_ < q4kParityCapacity_;
+    const uint32_t slot = sample ? q4kParityNext_ : 0u;
+    if (sample) {
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                            q4kParityQuery_, slot * 2u);
+    }
+    ++q4kParitySeq_;
+
     VkDescriptorSet set=getQuantDescriptor(weights,input,output);
     if(set==VK_NULL_HANDLE) return false;
 
@@ -1691,6 +1716,14 @@ bool VulkanCompute::dispatchQuant(
     // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
     vkCmdDispatch(cmd, push.rows, 1, 1);
     recordComputeBarrier(cmd);
+
+    if (sample) {
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                            q4kParityQuery_, slot * 2u + 1u);
+        q4kParityMeta_.push_back(
+            Q4kParitySample{push.rows, push.cols, q4kLane_});
+        ++q4kParityNext_;
+    }
 
     if (!own) return true;
     return endSubmitWait(cmd, query, GpuWorkKind::ModelCompute,
@@ -2057,7 +2090,57 @@ bool VulkanCompute::ensureReusableFusedSubmitObjects() {
         if(vkCreateQueryPool(device_,&qi,nullptr,&reusableFusedQuery_)!=VK_SUCCESS)
             return false;
     }
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: parity timestamp pool
+    // (2 queries per sample slot; 1-in-N sampled dispatches).
+    if(q4kParityQuery_==VK_NULL_HANDLE && timestampValidBits_){
+        VkQueryPoolCreateInfo qi{};
+        qi.sType=VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        qi.queryType=VK_QUERY_TYPE_TIMESTAMP;
+        qi.queryCount=q4kParityCapacity_*2u;
+        if(vkCreateQueryPool(device_,&qi,nullptr,&q4kParityQuery_)!=VK_SUCCESS)
+            return false;
+    }
     return true;
+}
+
+void VulkanCompute::accumulateQ4kParitySamples() noexcept {
+    if(!q4kParityQuery_ || q4kParityMeta_.empty()) {
+        q4kParityMeta_.clear();
+        q4kParityNext_=0;
+        return;
+    }
+    // Non-blocking read; incomplete pairs are skipped (fence guarantees
+    // completion for this fused layer, but defensive check costs nothing).
+    std::vector<uint64_t> ticks(q4kParityNext_*2u,0u);
+    const size_t n=q4kParityNext_*2u;
+    const VkResult vr = n
+        ? vkGetQueryPoolResults(
+            device_,q4kParityQuery_,0,
+            static_cast<uint32_t>(n),
+            ticks.size()*sizeof(uint64_t),ticks.data(),
+            sizeof(uint64_t),VK_QUERY_RESULT_64_BIT)
+        : VK_SUCCESS;
+    if(vr==VK_SUCCESS){
+        uint64_t mask = ~0ull;
+        if (timestampValidBits_ < 64)
+            mask = (1ull << timestampValidBits_) - 1ull;
+        for(size_t i=0;i<q4kParityMeta_.size();++i){
+            const uint64_t s=ticks[i*2u],e=ticks[i*2u+1u];
+            const Q4kParitySample& m=q4kParityMeta_[i];
+            if(!m.lane || m.lane>=3) continue;
+            const uint64_t gap=(e-s)&mask;
+            if(e!=s || gap){
+                const uint64_t ns=static_cast<uint64_t>(
+                    static_cast<long double>(gap)*
+                    static_cast<long double>(timestampPeriodNs_));
+                q4kSampledNs_[m.lane]+=ns;
+                ++q4kSampledCount_[m.lane];
+                q4kSampledRows_[m.lane]+=m.rows;
+            }
+        }
+    }
+    q4kParityMeta_.clear();
+    q4kParityNext_=0;
 }
 
 bool VulkanCompute::BeginFusedLayer() {
@@ -2069,6 +2152,14 @@ bool VulkanCompute::BeginFusedLayer() {
     // interval so a failed/aborted fused sequence can never leak an
     // older interval into the timing authority.
     lastFusedIntervalValid_ = false;
+
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: reset the sampled-slot
+    // cursor for this fused layer and reset the pool inside the new
+    // recording (the legal place for vkCmdResetQueryPool).
+    q4kParityNext_ = 0;
+    if (q4kParityQuery_)
+        vkCmdResetQueryPool(reusableFusedCmd_, q4kParityQuery_,
+                             0, q4kParityCapacity_ * 2u);
 
     if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
         return false;
@@ -2135,6 +2226,9 @@ bool VulkanCompute::EndFusedLayer() {
     // interval to the caller (post-fence; no new synchronization).
     lastFusedInterval_ = wi;
     lastFusedIntervalValid_ = true;
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: collect this fused layer's
+    // sampled Q4K timestamp pairs now that the fence is signaled.
+    accumulateQ4kParitySamples();
     return true;
 }
 
@@ -3439,6 +3533,13 @@ bool VulkanCompute::RunWeightHostRoundTrip(
     if(!weight.valid()||!input||!output||!initialized_)
         return false;
 
+    // PARITY: dual-row lane tag (dispatches inside this round-trip).
+    SetQ4kLaneTag(kQ4kLaneDual);
+    struct LaneTagRestore {
+        VulkanCompute* self; uint32_t prev;
+        ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
+    } laneRestore{this, q4kLane_};
+
     SetWorkEpoch(epoch);
     if(!EnsureScratch(60,weight.cols)||
        !EnsureScratch(61,weight.rows))
@@ -3513,6 +3614,13 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
     if(!weights||!outputs||!input||count<2||count>3||!inputCount)
         return false;
+
+    // PARITY: dual-row lane tag (dispatches inside this group round-trip).
+    SetQ4kLaneTag(kQ4kLaneDual);
+    struct LaneTagRestore {
+        VulkanCompute* self; uint32_t prev;
+        ~LaneTagRestore(){ self->SetQ4kLaneTag(prev); }
+    } laneRestore{this, q4kLane_};
 
     SetWorkEpoch(epoch);
     if(!EnsureScratch(62,inputCount)) return false;

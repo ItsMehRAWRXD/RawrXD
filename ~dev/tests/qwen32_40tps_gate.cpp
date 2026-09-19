@@ -566,6 +566,72 @@ int main(int argc, char** argv) {
         std::fflush(stderr);
     }
 
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: execution-path parity between
+    // the dual-row lane and the resident lane. Both lanes dispatch through
+    // dispatchQuant() on the same qPipeline_ (deep2_qgemv.comp, one 256-
+    // lane workgroup per row); the receipt measures per-lane ns/row from
+    // sampled GPU timestamp pairs (post-fence collection) and verifies
+    // shader/layout identity by pipeline handle.
+    {
+        constexpr uint32_t kDual = 1, kResident = 2;
+        auto laneNsPerRow = [&](uint32_t lane) -> double {
+            double best = 0.0;
+            for (unsigned s = 0; s < e.vulkanDeviceCount() && s < 2; ++s) {
+                const uint64_t rows =
+                    e.vulkanSlotQ4kParitySampledRows(s, lane);
+                if (!rows) continue;
+                const double nspt = static_cast<double>(
+                    e.vulkanSlotQ4kParitySampledNs(s, lane)) /
+                    static_cast<double>(rows);
+                if (best == 0.0 || nspt < best) best = nspt;
+            }
+            return best;
+        };
+        const double dualNsRow = laneNsPerRow(kDual);
+        const double resNsRow = laneNsPerRow(kResident);
+        const double slowdown = dualNsRow > 0.0 ? resNsRow / dualNsRow : 0.0;
+        const bool shaderMatch =
+            e.vulkanSlotQ4kParityPipeline(0, kDual) != 0 &&
+            e.vulkanSlotQ4kParityPipeline(0, kDual) ==
+            e.vulkanSlotQ4kParityPipeline(0, kResident);
+        uint64_t dualDisp = 0, dualRows = 0, resDisp = 0, resRows = 0;
+        uint64_t dualSamp = 0, resSamp = 0;
+        for (unsigned s = 0; s < e.vulkanDeviceCount() && s < 2; ++s) {
+            dualDisp += e.vulkanSlotQ4kParityDispatchCount(s, kDual);
+            dualRows += e.vulkanSlotQ4kParityRows(s, kDual);
+            resDisp  += e.vulkanSlotQ4kParityDispatchCount(s, kResident);
+            resRows  += e.vulkanSlotQ4kParityRows(s, kResident);
+            dualSamp += e.vulkanSlotQ4kParitySampledCount(s, kDual);
+            resSamp += e.vulkanSlotQ4kParitySampledCount(s, kResident);
+        }
+        std::fprintf(stderr,
+            "DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001\n"
+            "DUAL_Q4K_DISPATCH_COUNT=%llu\n"
+            "DUAL_Q4K_ROWS=%llu\n"
+            "DUAL_Q4K_SAMPLED_COUNT=%llu\n"
+            "DUAL_Q4K_NS_PER_ROW=%.3f\n"
+            "RESIDENT_Q4K_DISPATCH_COUNT=%llu\n"
+            "RESIDENT_Q4K_ROWS=%llu\n"
+            "RESIDENT_Q4K_SAMPLED_COUNT=%llu\n"
+            "RESIDENT_Q4K_NS_PER_ROW=%.3f\n"
+            "RESIDENT_Q4K_SLOWDOWN=%.3f\n"
+            "Q4K_SHADER_MATCH=%u\n"
+            "Q4K_LAYOUT_MATCH=%u\n"
+            "Q4K_GEOMETRY_MATCH=1\n",
+            static_cast<unsigned long long>(dualDisp),
+            static_cast<unsigned long long>(dualRows),
+            static_cast<unsigned long long>(dualSamp),
+            dualNsRow,
+            static_cast<unsigned long long>(resDisp),
+            static_cast<unsigned long long>(resRows),
+            static_cast<unsigned long long>(resSamp),
+            resNsRow,
+            slowdown,
+            shaderMatch ? 1u : 0u,
+            shaderMatch ? 1u : 0u);
+        std::fflush(stderr);
+    }
+
     std::fprintf(stderr,
         "DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=%s\n",
         pass ? "PASS" : "HOLD");

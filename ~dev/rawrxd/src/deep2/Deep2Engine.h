@@ -531,6 +531,13 @@ public:
     uint64_t vulkanSlotDenseRowTimedOps(unsigned slot) const;
     uint64_t vulkanSlotDenseRowSingleGpuNs(unsigned slot) const;
     uint64_t vulkanSlotDenseRowGroupGpuNs(unsigned slot) const;
+    // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001 (lane: 1=dual-row, 2=resident)
+    uint64_t vulkanSlotQ4kParityDispatchCount(unsigned slot, uint32_t lane) const;
+    uint64_t vulkanSlotQ4kParityRows(unsigned slot, uint32_t lane) const;
+    uint64_t vulkanSlotQ4kParitySampledNs(unsigned slot, uint32_t lane) const;
+    uint64_t vulkanSlotQ4kParitySampledCount(unsigned slot, uint32_t lane) const;
+    uint64_t vulkanSlotQ4kParitySampledRows(unsigned slot, uint32_t lane) const;
+    uintptr_t vulkanSlotQ4kParityPipeline(unsigned slot, uint32_t lane) const;
     uint64_t vulkanSlotQ4KBatch4RowOps(unsigned slot) const;
     uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatch8RowOps(unsigned slot) const;

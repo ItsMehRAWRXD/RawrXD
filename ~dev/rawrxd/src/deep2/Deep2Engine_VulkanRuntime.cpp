@@ -584,6 +584,32 @@ uint64_t Deep2Engine::vulkanSlotDenseRowGroupGpuNs(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->DenseRowGroupGpuNs():0;
 }
+// DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: per-lane quant-dispatch parity
+// counters (lane: 1=dual-row, 2=resident).
+uint64_t Deep2Engine::vulkanSlotQ4kParityDispatchCount(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParityDispatchCount(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParityRows(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParityRows(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledNs(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledNs(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledCount(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledCount(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledRows(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledRows(lane):0;
+}
+uintptr_t Deep2Engine::vulkanSlotQ4kParityPipeline(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?(uintptr_t)vc->Q4kParityPipeline(lane):0;
+}
 uint64_t Deep2Engine::vulkanSlotQ4KBatch4RowOps(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->Q4KBatch4RowOps():0;
