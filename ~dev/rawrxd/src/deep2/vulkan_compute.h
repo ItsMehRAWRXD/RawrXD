@@ -802,6 +802,34 @@ public:
     uint64_t recordedGroupLastSignal_ = 0;
     void clearRecordedGroups();
 
+    // ========== Dense-row GPU timing authority (DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001)
+    // Timestamp-derived GPU compute ns for the dual-row dense lane
+    // (RunWeightHostRoundTrip / RunWeightGroupHostRoundTrip). Accumulated
+    // from the already-finalized EndFusedLayer interval AFTER the existing
+    // fence — no new synchronization point. Separate authority from the
+    // Q4K-batch counters: never overloaded.
+    uint64_t DenseRowGpuNs() const noexcept { return denseRowGpuNs_; }
+    uint64_t DenseRowTimedOps() const noexcept { return denseRowTimedOps_; }
+    uint64_t DenseRowSingleGpuNs() const noexcept { return denseRowSingleGpuNs_; }
+    uint64_t DenseRowGroupGpuNs() const noexcept { return denseRowGroupGpuNs_; }
+    void RecordDenseRowGpuInterval(const GpuWorkInterval& wi, bool isGroup) noexcept {
+        const uint64_t gpuNs = wi.calibratedDurationNs();
+        denseRowGpuNs_ += gpuNs;
+        ++denseRowTimedOps_;
+        if (isGroup) denseRowGroupGpuNs_ += gpuNs;
+        else         denseRowSingleGpuNs_ += gpuNs;
+    }
+    // Last interval finalized by EndFusedLayer, for callers that need the
+    // GPU-side duration of the fused submission they just waited on.
+    // Valid only immediately after a successful EndFusedLayer on the same
+    // thread (guarded by apiMu_).
+    GpuWorkInterval lastFusedInterval_{};
+    bool lastFusedIntervalValid_ = false;
+    uint64_t denseRowGpuNs_ = 0;
+    uint64_t denseRowTimedOps_ = 0;
+    uint64_t denseRowSingleGpuNs_ = 0;
+    uint64_t denseRowGroupGpuNs_ = 0;
+
     // ========== Spec accept ==========
     struct SpecAcceptResult {
         uint32_t accepted = 0;

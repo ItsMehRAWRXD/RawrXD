@@ -2065,6 +2065,11 @@ bool VulkanCompute::BeginFusedLayer() {
     if (fused_ || !initialized_ || !opsPipeline_) return false;
     if(!ensureReusableFusedSubmitObjects()) return false;
 
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: invalidate the stale
+    // interval so a failed/aborted fused sequence can never leak an
+    // older interval into the timing authority.
+    lastFusedIntervalValid_ = false;
+
     if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
         return false;
     VkCommandBufferBeginInfo bi{};
@@ -2126,6 +2131,10 @@ bool VulkanCompute::EndFusedLayer() {
             q,submitNs,completeNs,workEpoch_,0,
             GpuWorkKind::ModelCompute,wi))
         recordInterval(wi);
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: expose the finalized
+    // interval to the caller (post-fence; no new synchronization).
+    lastFusedInterval_ = wi;
+    lastFusedIntervalValid_ = true;
     return true;
 }
 
@@ -3484,6 +3493,12 @@ bool VulkanCompute::RunWeightHostRoundTrip(
         return false;
 
     std::memcpy(output,downMap,outBytes);
+
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: accumulate the interval
+    // EndFusedLayer finalized (timestamp queries, post-fence) into the
+    // dense-row timing authority. No new synchronization point.
+    if (lastFusedIntervalValid_)
+        RecordDenseRowGpuInterval(lastFusedInterval_, /*isGroup=*/false);
     return true;
 }
 
@@ -3573,6 +3588,11 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
             static_cast<const uint8_t*>(downMap)+offsets[i],
             static_cast<size_t>(weights[i].rows)*sizeof(float));
     }
+
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001 (group lane): same
+    // post-fence interval accumulation as the single lane.
+    if (lastFusedIntervalValid_)
+        RecordDenseRowGpuInterval(lastFusedInterval_, /*isGroup=*/true);
     return true;
 }
 

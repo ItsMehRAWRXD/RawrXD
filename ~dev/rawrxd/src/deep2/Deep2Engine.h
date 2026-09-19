@@ -526,6 +526,11 @@ public:
     uint64_t vulkanSlotSpecLayerGraphSubmits(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatchWeightBytes(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatchGpuNs(unsigned slot) const;
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001
+    uint64_t vulkanSlotDenseRowGpuNs(unsigned slot) const;
+    uint64_t vulkanSlotDenseRowTimedOps(unsigned slot) const;
+    uint64_t vulkanSlotDenseRowSingleGpuNs(unsigned slot) const;
+    uint64_t vulkanSlotDenseRowGroupGpuNs(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatch4RowOps(unsigned slot) const;
     uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatch8RowOps(unsigned slot) const;

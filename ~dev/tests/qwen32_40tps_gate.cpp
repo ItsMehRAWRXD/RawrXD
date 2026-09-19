@@ -52,6 +52,10 @@ struct Telemetry {
     uint64_t timelineChains = 0;
     uint64_t groupSubmits = 0;
     uint64_t groupSyncWaits = 0;
+    uint64_t denseRowGpuNs = 0;
+    uint64_t denseRowTimedOps = 0;
+    uint64_t denseRowSingleGpuNs = 0;
+    uint64_t denseRowGroupGpuNs = 0;
 };
 
 static Telemetry snap(const Deep2Engine& e, unsigned s)
@@ -70,6 +74,10 @@ static Telemetry snap(const Deep2Engine& e, unsigned s)
     x.timelineChains     = e.vulkanSlotTimelineComputeTransferChains(s);
     x.groupSubmits       = e.vulkanSlotRecordedGroupSubmits(s);
     x.groupSyncWaits     = e.vulkanSlotRecordedGroupSyncWaits(s);
+    x.denseRowGpuNs      = e.vulkanSlotDenseRowGpuNs(s);
+    x.denseRowTimedOps   = e.vulkanSlotDenseRowTimedOps(s);
+    x.denseRowSingleGpuNs= e.vulkanSlotDenseRowSingleGpuNs(s);
+    x.denseRowGroupGpuNs = e.vulkanSlotDenseRowGroupGpuNs(s);
     return x;
 }
 
@@ -230,6 +238,24 @@ int main(int argc, char** argv) {
     const uint64_t dlWait1 = delta(pre1.downloadWaitNs, post1.downloadWaitNs);
     const uint64_t explicitWaitNs = asyncWait0 + asyncWait1 + dlWait0 + dlWait1;
 
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: scoped GPU compute
+    // authorities. Q4K batch counters are no longer printed as a generic
+    // "GPUx_COMPUTE_NS" — each receipt states its execution domain.
+    const uint64_t denseRowGpuNs0 =
+        delta(pre0.denseRowGpuNs, e.vulkanSlotDenseRowGpuNs(0));
+    const uint64_t denseRowGpuNs1 =
+        delta(pre1.denseRowGpuNs, e.vulkanSlotDenseRowGpuNs(1));
+    const uint64_t denseRowTimedOps0 =
+        delta(pre0.denseRowTimedOps, e.vulkanSlotDenseRowTimedOps(0));
+    const uint64_t denseRowTimedOps1 =
+        delta(pre1.denseRowTimedOps, e.vulkanSlotDenseRowTimedOps(1));
+    const bool denseRowTimingComplete =
+        denseRowGpuNs0 > 0 && denseRowGpuNs1 > 0 &&
+        denseRowTimedOps0 > 0 && denseRowTimedOps1 > 0;
+    // Routing state: which lane owned the measured tokens.
+    const bool residentPathPreemptedDualRow =
+        gf.dualRowDenseTokens > 0 && gf.dualRowSplitOps == 0;
+
     std::fprintf(stderr,
         "GATE=DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001\n"
         "WARMUP_TOKENS=32\n"
@@ -260,6 +286,18 @@ int main(int argc, char** argv) {
         "GPU1_COMPUTE_NS=%llu\n"
         "GPU_WORK_NS_SUM=%llu\n"
         "GPU_CRITICAL_PATH_LOWER_BOUND_NS=%llu\n"
+        "DENSE_ROW_GPU0_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU1_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU0_TIMED_OPS=%llu\n"
+        "DENSE_ROW_GPU1_TIMED_OPS=%llu\n"
+        "DENSE_ROW_GPU0_SINGLE_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU1_SINGLE_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU0_GROUP_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU1_GROUP_COMPUTE_NS=%llu\n"
+        "DENSE_ROW_GPU_TIMING_COMPLETE=%u\n"
+        "Q4K_BATCH_GPU0_COMPUTE_NS=%llu\n"
+        "Q4K_BATCH_GPU1_COMPUTE_NS=%llu\n"
+        "RESIDENT_PATH_PREEMPTED_DUAL_ROW=%u\n"
         "SLOT0_Q4K_ASYNC_WAIT_NS=%llu\n"
         "SLOT1_Q4K_ASYNC_WAIT_NS=%llu\n"
         "SLOT0_DOWNLOAD_RING_WAIT_NS=%llu\n"
@@ -339,6 +377,18 @@ int main(int argc, char** argv) {
         static_cast<unsigned long long>(gpu1Ns),
         static_cast<unsigned long long>(gpuWorkNsSum),
         static_cast<unsigned long long>(gpuCriticalPathLowerBoundNs),
+        static_cast<unsigned long long>(denseRowGpuNs0),
+        static_cast<unsigned long long>(denseRowGpuNs1),
+        static_cast<unsigned long long>(denseRowTimedOps0),
+        static_cast<unsigned long long>(denseRowTimedOps1),
+        static_cast<unsigned long long>(delta(pre0.denseRowSingleGpuNs, e.vulkanSlotDenseRowSingleGpuNs(0))),
+        static_cast<unsigned long long>(delta(pre1.denseRowSingleGpuNs, e.vulkanSlotDenseRowSingleGpuNs(1))),
+        static_cast<unsigned long long>(delta(pre0.denseRowGroupGpuNs, e.vulkanSlotDenseRowGroupGpuNs(0))),
+        static_cast<unsigned long long>(delta(pre1.denseRowGroupGpuNs, e.vulkanSlotDenseRowGroupGpuNs(1))),
+        denseRowTimingComplete ? 1u : 0u,
+        static_cast<unsigned long long>(gpu0Ns),
+        static_cast<unsigned long long>(gpu1Ns),
+        residentPathPreemptedDualRow ? 1u : 0u,
         static_cast<unsigned long long>(asyncWait0),
         static_cast<unsigned long long>(asyncWait1),
         static_cast<unsigned long long>(dlWait0),
@@ -403,8 +453,10 @@ int main(int argc, char** argv) {
             "CROSS_DEVICE_HANDOFF_MATERIALIZATIONS=%llu\n"
             "FINAL_OUTPUT_MATERIALIZATIONS=%llu\n"
             "GEMV_STAGING_MATERIALIZATIONS=%llu\n"
-            "DUAL_ROW_MERGE_MATERIALIZATIONS=%llu\n"
+            "DUAL_ROW_SINGLE_MATERIALIZATIONS=%llu\n"
+            "DUAL_ROW_GROUP_MATERIALIZATIONS=%llu\n"
             "OTHER_MATERIALIZATIONS=%llu\n"
+            "CLASSIFIED_MATERIALIZATIONS=%llu\n"
             "TOTAL_MATERIALIZATIONS=%llu\n"
             "ACCOUNTING_MATCH=%d\n"
             "MATERIALIZATIONS_PER_TOKEN=%.3f\n"
@@ -415,8 +467,10 @@ int main(int argc, char** argv) {
             static_cast<unsigned long long>(gf.matCrossDeviceHandoff),
             static_cast<unsigned long long>(gf.matFinalDownload),
             static_cast<unsigned long long>(gf.matGemvSingleRoundTrip),
-            static_cast<unsigned long long>(gf.matDualRowMerge),
+            static_cast<unsigned long long>(gf.matDualRowSingle),
+            static_cast<unsigned long long>(gf.matDualRowGroup),
             static_cast<unsigned long long>(gf.matOther),
+            static_cast<unsigned long long>(classSum),
             static_cast<unsigned long long>(matTotal),
             classSum == matTotal ? 1 : 0,
             perTokenNum ? (double)matTotal / (double)perTokenNum : 0.0,

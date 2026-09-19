@@ -87,7 +87,7 @@ bool Deep2Engine::tryVulkanHostGEMV(
             ++gpuFwd_.dualRowSlot[1];
             ++gpuFwd_.hostMergeOps;
             ++gpuFwd_.hostMaterializations; // explicit row-slice merge
-            ++gpuFwd_.matDualRowMerge;
+            ++gpuFwd_.matDualRowSingle;
             gpuFwd_.dualArithmeticOverlapNs=
                 std::max(gpuFwd_.dualArithmeticOverlapNs,
                          r.calibratedOverlapNs);
@@ -184,6 +184,7 @@ bool Deep2Engine::tryVulkanHostGEMVGroup(
     ++gpuFwd_.dualRowSlot[1];
     ++gpuFwd_.hostMergeOps;
     ++gpuFwd_.hostMaterializations;
+    ++gpuFwd_.matDualRowGroup; // grouped dual-row host round-trip
     gpuFwd_.dualArithmeticOverlapNs=
         std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
     return true;
@@ -269,6 +270,7 @@ bool Deep2Engine::computeMoEFFNGpu(
 
     gpuFwd_.gpuExpertDispatches+=K;
     gpuFwd_.hostMaterializations+=K; // one returned vector per routed expert
+    gpuFwd_.matOther+=K; // expert host round-trips: MoE residue class
 
     // Shared expert is independent of top-k route and runs on GPU0.
     const bool anyShared=
@@ -294,6 +296,7 @@ bool Deep2Engine::computeMoEFFNGpu(
         for(size_t i=0;i<H;++i) output[i]+=shared[i];
         ++gpuFwd_.gpuExpertDispatches;
         ++gpuFwd_.hostMaterializations;
+        ++gpuFwd_.matOther; // shared expert host round-trip: MoE residue class
     }
 
     if(vulkanDevices_.size()>=2){

@@ -26,7 +26,9 @@ struct GpuForwardCounters {
     // to equal hostMaterializations exactly.
     uint64_t matCrossDeviceHandoff = 0;   // CopyArenaHiddenTo host bounce
     uint64_t matGemvSingleRoundTrip = 0;   // tryVulkanHostGEMV single-GPU lane
-    uint64_t matDualRowMerge = 0;          // dual-row explicit row-slice merge
+    uint64_t matDualRowSingle = 0;         // dual-row single-GEMV host round-trip
+    uint64_t matDualRowGroup = 0;          // dual-row grouped-GEMV host round-trip
+    uint64_t matDualRowMerge = 0;          // LEGACY alias: DualRowSingle+DualRowGroup
     uint64_t matFinalDownload = 0;         // final hidden DownloadHidden
     uint64_t matOther = 0;                 // MoE/MLA/speculative residue
     uint64_t matCrossDeviceHandoffNs = 0;
@@ -69,10 +71,22 @@ inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexce
 }
 
 // B5_MATERIALIZATION_PROFILE_001: class sum must equal the raw counter.
+// DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001 makes the classification
+// exhaustive: every hostMaterializations increment belongs to exactly one
+// class (DualRowSingle / DualRowGroup / FinalOutput / CrossDevice /
+// GemvStaging / Other), so ACCOUNTING_MATCH=1 is a hard invariant.
+// matDualRowMerge is a LEGACY computed alias (= Single + Group), never
+// incremented directly and never summed alongside its parts.
 inline uint64_t Deep2GpuForward_MatClassSum(
     const GpuForwardCounters& c) noexcept {
     return c.matCrossDeviceHandoff + c.matGemvSingleRoundTrip +
-           c.matDualRowMerge + c.matFinalDownload + c.matOther;
+           c.matDualRowSingle + c.matDualRowGroup +
+           c.matFinalDownload + c.matOther;
+}
+
+inline uint64_t Deep2GpuForward_DualRowMaterializations(
+    const GpuForwardCounters& c) noexcept {
+    return c.matDualRowSingle + c.matDualRowGroup;
 }
 
 inline bool Deep2GpuForward_DualPhysicalGpuReal(const GpuForwardCounters& c) noexcept {

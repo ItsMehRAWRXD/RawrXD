@@ -566,6 +566,24 @@ uint64_t Deep2Engine::vulkanSlotQ4KBatchGpuNs(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->Q4KBatchGpuNs():0;
 }
+// DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: scoped dense-row GPU compute
+// authority (separate from the Q4K-batch counters, never overloaded).
+uint64_t Deep2Engine::vulkanSlotDenseRowGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowGpuNs():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowTimedOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowTimedOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowSingleGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowSingleGpuNs():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowGroupGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowGroupGpuNs():0;
+}
 uint64_t Deep2Engine::vulkanSlotQ4KBatch4RowOps(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->Q4KBatch4RowOps():0;
