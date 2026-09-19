@@ -2399,31 +2399,12 @@ VulkanCompute::PeerHandoffCapability() const {
                 hostProps.minImportedHostPointerAlignment;
         }
 
-        // Try a dummy aligned allocation and query which memory types accept it.
-        // We only need to know IF the device can import *some* aligned pointer.
-        auto fpQuery = reinterpret_cast<PFN_vkGetMemoryHostPointerPropertiesEXT>(
-            vkGetInstanceProcAddr(instance_,
-                "vkGetMemoryHostPointerPropertiesEXT"));
-        if (fpQuery && peerHandoffCaps_.minImportedHostPointerAlignment > 0 &&
-            device_ != VK_NULL_HANDLE) {
-            size_t align = static_cast<size_t>(
-                peerHandoffCaps_.minImportedHostPointerAlignment);
-            void* dummy = _aligned_malloc(4096, align);
-            if (dummy) {
-                VkMemoryHostPointerPropertiesEXT q{
-                    VK_STRUCTURE_TYPE_MEMORY_HOST_POINTER_PROPERTIES_EXT
-                };
-                VkResult qr = fpQuery(device_,
-                    VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT,
-                    dummy, &q);
-                if (qr == VK_SUCCESS) {
-                    peerHandoffCaps_.hostImportable = true;
-                    peerHandoffCaps_.hostImportableMemoryTypeBits =
-                        q.memoryTypeBits;
-                }
-                _aligned_free(dummy);
-            }
-        }
+        // NOTE: vkGetMemoryHostPointerPropertiesEXT requires the extension to
+        // be enabled at device creation. We have not added it to the enabled
+        // device extensions list, so we MUST NOT call it. The honest probe
+        // stops at the physical-device alignment query.
+        peerHandoffCaps_.hostImportable = false;
+        peerHandoffCaps_.hostImportableMemoryTypeBits = 0;
     }
     if (!peerHandoffCaps_.externalMemoryExtension || !peerHandoffCaps_.win32)
         return peerHandoffCaps_;
