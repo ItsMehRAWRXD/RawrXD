@@ -1256,8 +1256,22 @@ public:
         uint64_t laneOwnerViolations = 0;
         uint64_t laneResidentDispatches = 0;
         uint64_t laneSubmits = 0;
+        // DEEP2_HOT_RESIDENCY_RUNTIME_001 certification fields:
+        uint64_t rcuEvictions = 0;          // LRU pointer-removal retirements
+        uint64_t rangedSetAllocs = 0;       // getQuantDescriptorRange allocations
+        uint64_t rangedSetFrees = 0;        // fence-confirmed vkFreeDescriptorSets
+        uint64_t residentObjectsLive = 0;   // heap-stable ResidentWeight count
+        uint64_t residentBytesLive = 0;     // residentObjectBytes_
     };
     HotResidencyStats HotResidencyStatsReport() const noexcept;
+
+    // DEEP2_HOT_RESIDENCY_RUNTIME_001: shrink the resident budget so the
+    // eviction/re-promotion stress gate can force LRU retirement on a
+    // live device (production budget stays untouched by default).
+    void SetResidentBudgetForCertification(size_t budgetBytes) noexcept {
+        std::lock_guard<std::recursive_mutex> lock(apiMu_);
+        weightBudgetBytes_ = budgetBytes;
+    }
 
 private:
     struct WeightCacheEntry {
@@ -1429,6 +1443,9 @@ private:
     uint64_t rcuHotAcquires_ = 0;
     uint64_t rcuPublishes_ = 0;
     uint64_t rcuStaleRejects_ = 0;
+    uint64_t rcuEvictions_ = 0;
+    uint64_t rangedSetAllocs_ = 0;
+    uint64_t rangedSetFrees_ = 0;
 
     // ===== DEEP2_COLD_ROW_RACE_001 =======================================
     uint64_t coldRaceCalls_ = 0;
@@ -1445,9 +1462,17 @@ private:
     uint64_t laneOwnerViolations_ = 0;
     uint64_t deviceGeneration_ = 0;
 
-    // RCU retirement: spin until every in-flight reader has released
-    // (reader grace), then destroy the buffer. Called under apiMu_.
-    void RetireResidentObject(std::unique_ptr<ResidentWeight> obj);
+    // RCU retirement (liveness architecture): eviction DETACHES victims
+    // under apiMu_ (pointer removal + LRU vector pop) but never spins on
+    // the reader count while holding the mutex. The grace spin + buffer
+    // destroy happen here, WITHOUT apiMu_ — a hot-path reader may hold
+    // the RCU count across a locked fallback, so this discipline keeps
+    // the whole system deadlock-free.
+    void ProcessRetireQueue();
+    // Same discipline for callers already holding apiMu_ that need
+    // synchronous reclamation (cleanup; device idle).
+    void ProcessRetireQueueLocked();
+    std::vector<std::unique_ptr<ResidentWeight>> retireQueue_;
     // LRU eviction of published ResidentWeight objects to satisfy the
     // weight budget. Removes the hot pointer BEFORE retiring.
     bool EvictResidentObjectsFor(size_t incomingBytes);

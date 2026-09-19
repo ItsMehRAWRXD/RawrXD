@@ -1486,6 +1486,7 @@ VkDescriptorSet VulkanCompute::getQuantDescriptorRange(
     VkDescriptorSet set = VK_NULL_HANDLE;
     if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
         return VK_NULL_HANDLE;
+    ++rangedSetAllocs_; // DEEP2_HOT_RESIDENCY_RUNTIME_001 zero-growth gate
 
     VkDescriptorBufferInfo bi[3]{};
     VkWriteDescriptorSet wr[3]{};
@@ -4004,6 +4005,7 @@ void VulkanCompute::drainPendingDescriptorFrees()
             device_, descriptorPool_,
             static_cast<uint32_t>(pendingDescriptorFrees_.size()),
             pendingDescriptorFrees_.data());
+        rangedSetFrees_ += pendingDescriptorFrees_.size();
     }
     pendingDescriptorFrees_.clear();
 }
@@ -4487,23 +4489,54 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
                 std::memory_order_seq_cst, std::memory_order_seq_cst);
         }
         residentObjectBytes_ -= victim->bytes;
-        RetireResidentObject(std::move(residentObjects_.front()));
+        // DETACH ONLY (liveness architecture): the grace spin + buffer
+        // destroy happen in ProcessRetireQueue() OUTSIDE apiMu_. A hot-path
+        // reader may hold the RCU reader count across a locked fallback
+        // (apiMu_ acquisition) — that is only deadlock-free if no evictor
+        // ever spins on the count while holding the mutex.
+        retireQueue_.push_back(std::move(residentObjects_.front()));
         residentObjects_.erase(residentObjects_.begin());
+        ++rcuEvictions_;
     }
     (void)totalResidentBytes;
     return true;
 }
 
-void VulkanCompute::RetireResidentObject(std::unique_ptr<ResidentWeight> obj)
+void VulkanCompute::ProcessRetireQueue()
 {
-    // Called under apiMu_ with the hot pointer already removed. Wait for
-    // the RCU reader grace period: every in-flight AcquireHotView holder
-    // must release before the buffer may be destroyed. seq_cst load pairs
-    // with AcquireHotView's seq_cst register-before-observe (review fix).
+    // LIVENESS ARCHITECTURE (DEEP2_HOT_RESIDENCY_RUNTIME_001): called
+    // WITHOUT apiMu_ (hot-path safe). Eviction detaches victims under
+    // the mutex but never spins on the RCU reader count there — a reader
+    // may legitimately hold the count across a locked fallback. Here,
+    // with no mutex held, waiting for every in-flight reader is
+    // deadlock-free: readers release either before their apiMu_ wait or
+    // immediately after their dispatch, and apiMu_ waiters never wait on
+    // this thread.
+    if (retireQueue_.empty()) return;
     while (residentReaderCount_.load(std::memory_order_seq_cst) != 0) {
         std::this_thread::yield();
     }
-    destroyBuffer(obj->buffer);
+    for (auto& obj : retireQueue_) {
+        if (obj) destroyBuffer(obj->buffer);
+        obj.reset();
+    }
+    retireQueue_.clear();
+}
+
+void VulkanCompute::ProcessRetireQueueLocked()
+{
+    // Same grace discipline for callers already holding apiMu_ that need
+    // synchronous reclamation (e.g. ReclaimAllResidents during cleanup:
+    // device idle — readers impossible — so the spin is trivially done).
+    if (retireQueue_.empty()) return;
+    while (residentReaderCount_.load(std::memory_order_seq_cst) != 0) {
+        std::this_thread::yield();
+    }
+    for (auto& obj : retireQueue_) {
+        if (obj) destroyBuffer(obj->buffer);
+        obj.reset();
+    }
+    retireQueue_.clear();
 }
 
 void VulkanCompute::ReclaimAllResidents()
@@ -4523,6 +4556,9 @@ void VulkanCompute::ReclaimAllResidents()
     }
     residentObjects_.clear();
     residentObjectBytes_ = 0;
+    // Any detached-but-undrained retirements also die here; device idle
+    // means the grace spin is trivially satisfied.
+    ProcessRetireQueueLocked();
 }
 
 bool VulkanCompute::RunCpuQuantRowsFull(
@@ -4756,6 +4792,7 @@ bool VulkanCompute::RunWeightColdRowRace(
         if (chunkSet != VK_NULL_HANDLE && descriptorPool_) {
             vkFreeDescriptorSets(
                 device_, descriptorPool_, 1, &chunkSet);
+            ++rangedSetFrees_;
         }
         gpuComputed += gpuCount;
         coldRaceGpuRows_ += gpuCount;
@@ -4902,21 +4939,35 @@ bool VulkanCompute::RunWeightAutoHot(
     // 1) RCU hot view: register reader (seq_cst), then one atomic load.
     ResidentWeight* hot = AcquireHotView(handle);
     if (hot) {
+        // LIVENESS (review-hardened): snapshot the buffer while the
+        // reader count is held, then RELEASE the reader BEFORE taking
+        // apiMu_. The evictor holds apiMu_ and spins on the reader count
+        // in RetireResidentObject — a reader that waited on apiMu_ while
+        // holding the count would deadlock with it. The ResidentWeight
+        // object is heap-stable, so the buffer pointer outlives the
+        // release; the LRU vector slot keeps the buffer alive through
+        // the dispatch below (eviction removes the pointer first and
+        // then waits for readers — with the count already released and
+        // apiMu_ held by this call, no retire can interleave here).
+        DeviceBuf* hotBuf = &hot->buffer;
+        ReleaseHotView();
+
         // Direct resident dispatch on the lock-free lane if prepared and
         // owned; otherwise the locked compatibility API.
         bool dispatched = false;
         if (hotLane_.initialized &&
             hotLane_.ownerThreadId == hotLaneCurrentThreadId()) {
             dispatched = RunWeightResidentHotDirect(
-                hotLane_, weight, hot->buffer, input, output, epoch);
+                hotLane_, weight, *hotBuf, input, output, epoch);
         }
         if (!dispatched) {
             std::lock_guard<std::recursive_mutex> lock(apiMu_);
             dispatched = RunWeightResidentHot(
-                weight, &hot->buffer, input, output, epoch);
+                weight, hotBuf, input, output, epoch);
         }
-        // Exactly one release per successful AcquireHotView.
-        ReleaseHotView();
+        // Drain detached retirements lock-free (liveness architecture —
+        // the grace spin never happens under apiMu_).
+        ProcessRetireQueue();
         return dispatched;
     }
 
@@ -5177,6 +5228,7 @@ bool VulkanCompute::RunWeightResidentHotDirect(
     if (lane.lastSet != VK_NULL_HANDLE && descriptorPool_) {
         vkFreeDescriptorSets(
             device_, descriptorPool_, 1, &lane.lastSet);
+        ++rangedSetFrees_;
         lane.lastSet = VK_NULL_HANDLE;
     }
 
@@ -5277,6 +5329,11 @@ VulkanCompute::HotResidencyStatsReport() const noexcept
     s.laneOwnerViolations = laneOwnerViolations_;
     s.laneResidentDispatches = hotLane_.residentDispatches;
     s.laneSubmits = hotLane_.submits;
+    s.rcuEvictions = rcuEvictions_;
+    s.rangedSetAllocs = rangedSetAllocs_;
+    s.rangedSetFrees = rangedSetFrees_;
+    s.residentObjectsLive = residentObjects_.size();
+    s.residentBytesLive = residentObjectBytes_;
     return s;
 }
 

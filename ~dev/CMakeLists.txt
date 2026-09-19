@@ -283,6 +283,23 @@ if(Vulkan_FOUND)
     target_link_libraries(qwen32_baseline_authority_gate PRIVATE Vulkan::Vulkan)
 endif()
 
+# DEEP2_HOT_RESIDENCY_RUNTIME_001 — live-device certification receipt for
+# the hot-residency stack (RCU handles, direct-resident dispatch, cold-row
+# race, promotion ownership, descriptor reclamation, cached-handle reload).
+add_executable(hot_residency_runtime_gate
+    tests/hot_residency_runtime_gate.cpp
+    ${RAWRXD_DEEP2_SOURCES}
+)
+target_include_directories(hot_residency_runtime_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+if(Vulkan_FOUND)
+    target_link_libraries(hot_residency_runtime_gate PRIVATE Vulkan::Vulkan)
+endif()
+
 # Batch 9: Vulkan runtime for deep2_standalone.
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
