@@ -1855,7 +1855,7 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- F16 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_F16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_F16));
     RegisterDequant((int)GGMLType::GGML_TYPE_F16, dequant_f16);
-    if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_masm);
+    if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
 
     // BF16 (ggml id 30) — common for lm_head / norms on newer GGUFs
