@@ -290,6 +290,45 @@ void Deep2Engine::enableVulkan(bool enable) {
             (c0.subsetAllocation || c1.subsetAllocation) ? 1 : 0,
             (c0.peerHandoffSupported && c1.peerHandoffSupported) ? 1 : 0);
     }
+
+    // B5_HOST_IMPORT_PROBE_001: VK_EXT_external_memory_host capability
+    if (vulkanDevices_.size() >= 2) {
+        const auto& h0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& h1 = vulkanDevices_[1]->PeerHandoffCapability();
+        const bool bothHostExt = h0.externalMemoryHostSupported &&
+                                 h1.externalMemoryHostSupported;
+        const uint64_t commonAlign = bothHostExt
+            ? std::max(h0.minImportedHostPointerAlignment,
+                       h1.minImportedHostPointerAlignment)
+            : 0;
+        const bool bothImportable = h0.hostImportable && h1.hostImportable;
+        const uint32_t commonTypeBits = bothImportable
+            ? (h0.hostImportableMemoryTypeBits & h1.hostImportableMemoryTypeBits)
+            : 0;
+        std::fprintf(stderr,
+            "B5_HOST_IMPORT_PROBE_001\n"
+            "GPU0_EXTERNAL_MEMORY_HOST=%d\n"
+            "GPU1_EXTERNAL_MEMORY_HOST=%d\n"
+            "GPU0_MIN_HOST_ALIGNMENT=%llu\n"
+            "GPU1_MIN_HOST_ALIGNMENT=%llu\n"
+            "COMMON_ALIGNMENT=%llu\n"
+            "GPU0_IMPORTABLE=%d\n"
+            "GPU1_IMPORTABLE=%d\n"
+            "SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=%d\n"
+            "COMMON_MEMORY_TYPE_BITS=0x%08X\n"
+            "B5_HOST_IMPORT_PROBE_001=%s\n",
+            h0.externalMemoryHostSupported ? 1 : 0,
+            h1.externalMemoryHostSupported ? 1 : 0,
+            static_cast<unsigned long long>(h0.minImportedHostPointerAlignment),
+            static_cast<unsigned long long>(h1.minImportedHostPointerAlignment),
+            static_cast<unsigned long long>(commonAlign),
+            h0.hostImportable ? 1 : 0,
+            h1.hostImportable ? 1 : 0,
+            bothImportable ? 1 : 0,
+            commonTypeBits,
+            (bothHostExt && bothImportable && commonTypeBits != 0)
+                ? "PASS" : "FAIL");
+    }
 }
 
 VulkanCompute* Deep2Engine::getVulkanComputeSlot(unsigned slot) const {

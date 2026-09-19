@@ -433,6 +433,11 @@ public:
         bool     peerCopyDst = false;
         bool     peerHandoffSupported = false;   // the honest verdict
         std::string commonHandleName;
+        // B5_HOST_IMPORT_PROBE_001: VK_EXT_external_memory_host
+        bool     externalMemoryHostSupported = false;
+        uint64_t minImportedHostPointerAlignment = 0;
+        uint32_t hostImportableMemoryTypeBits = 0;
+        bool     hostImportable = false;   // dummy pointer query succeeded
     };
     const PeerHandoffCaps& PeerHandoffCapability() const;
     bool PeerHandoffSupported() const {

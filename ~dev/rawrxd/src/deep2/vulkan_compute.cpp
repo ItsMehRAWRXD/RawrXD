@@ -2376,6 +2376,52 @@ VulkanCompute::PeerHandoffCapability() const {
                     peerHandoffCaps_.externalSemaphore = true;
                 else if (name == "VK_KHR_external_semaphore")
                     peerHandoffCaps_.externalSemaphore = true;
+                else if (name == "VK_EXT_external_memory_host")
+                    peerHandoffCaps_.externalMemoryHostSupported = true;
+            }
+        }
+    }
+
+    // B5_HOST_IMPORT_PROBE_001: query VkPhysicalDeviceExternalMemoryHostPropertiesEXT
+    if (peerHandoffCaps_.externalMemoryHostSupported) {
+        VkPhysicalDeviceExternalMemoryHostPropertiesEXT hostProps{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT
+        };
+        VkPhysicalDeviceProperties2 p2{
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
+        };
+        p2.pNext = &hostProps;
+        auto fpGetProps2 = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2>(
+            vkGetInstanceProcAddr(instance_, "vkGetPhysicalDeviceProperties2"));
+        if (fpGetProps2) {
+            fpGetProps2(physical_, &p2);
+            peerHandoffCaps_.minImportedHostPointerAlignment =
+                hostProps.minImportedHostPointerAlignment;
+        }
+
+        // Try a dummy aligned allocation and query which memory types accept it.
+        // We only need to know IF the device can import *some* aligned pointer.
+        auto fpQuery = reinterpret_cast<PFN_vkGetMemoryHostPointerPropertiesEXT>(
+            vkGetInstanceProcAddr(instance_,
+                "vkGetMemoryHostPointerPropertiesEXT"));
+        if (fpQuery && peerHandoffCaps_.minImportedHostPointerAlignment > 0 &&
+            device_ != VK_NULL_HANDLE) {
+            size_t align = static_cast<size_t>(
+                peerHandoffCaps_.minImportedHostPointerAlignment);
+            void* dummy = _aligned_malloc(4096, align);
+            if (dummy) {
+                VkMemoryHostPointerPropertiesEXT q{
+                    VK_STRUCTURE_TYPE_MEMORY_HOST_POINTER_PROPERTIES_EXT
+                };
+                VkResult qr = fpQuery(device_,
+                    VK_EXTERNAL_MEMORY_HANDLE_TYPE_HOST_ALLOCATION_BIT_EXT,
+                    dummy, &q);
+                if (qr == VK_SUCCESS) {
+                    peerHandoffCaps_.hostImportable = true;
+                    peerHandoffCaps_.hostImportableMemoryTypeBits =
+                        q.memoryTypeBits;
+                }
+                _aligned_free(dummy);
             }
         }
     }
