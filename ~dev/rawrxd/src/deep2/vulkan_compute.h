@@ -409,23 +409,34 @@ public:
     uint64_t PinnedWeightEntries() const noexcept { return pinnedWeightEntries_; }
 
     // ===== B5.2 PEER_HANDOFF capability probe ==============================
-    // A GPU0->GPU1 handoff without a host bounce needs external-memory
-    // import/export between the two discrete GPUs. Capability-ONLY: never
-    // fabricates support. PEER_HANDOFF_SUPPORTED requires BOTH devices to
-    // expose a COMMON exportable/importable handle type. Probe BEFORE any
-    // transfer implementation; the transfer fails closed otherwise.
+    // CAUTION: device-extension + handle-type support does NOT prove that
+    // memory exported by GPU A can be imported by GPU B. Vulkan restricts
+    // Win32 external-memory import to the SAME underlying physical device
+    // as the exporter; two discrete AMD GPUs are different physical devices.
+    // The only native cross-physical-device mechanism is a
+    // VkPhysicalDeviceGroup logical device with peer memory features.
+    // Fails closed: peerHandoffSupported=1 ONLY when sameDeviceGroup=1 AND
+    // peer COPY features are present.
     struct PeerHandoffCaps {
         bool     externalMemoryExtension = false;
         bool     win32 = false;
         bool     omtHandle = false;
         bool     d3d12Handle = false;
         bool     externalSemaphore = false;
-        bool     commonHandleType = false;
+        bool     externalMemoryApiSupported = false;
+        // Device-group authority (B5.2a):
+        bool     deviceGroupSupported = false;
+        bool     sameDeviceGroup = false;
+        uint32_t groupCount = 0;
+        bool     subsetAllocation = false;
+        bool     peerCopySrc = false;
+        bool     peerCopyDst = false;
+        bool     peerHandoffSupported = false;   // the honest verdict
         std::string commonHandleName;
     };
     const PeerHandoffCaps& PeerHandoffCapability() const;
     bool PeerHandoffSupported() const {
-        return PeerHandoffCapability().commonHandleType;
+        return PeerHandoffCapability().peerHandoffSupported;
     }
     DeviceBuf* ResolveResidentF32(const float* src, uint64_t key, size_t count);
     uint64_t weightUseClock_ = 0;

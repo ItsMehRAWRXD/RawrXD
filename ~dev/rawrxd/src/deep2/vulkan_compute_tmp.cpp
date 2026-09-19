@@ -1,5 +1,5 @@
-// ============================================================================
-// vulkan_compute.cpp — Batch 9 real Vulkan device/runtime implementation
+﻿// ============================================================================
+// vulkan_compute.cpp â€” Batch 9 real Vulkan device/runtime implementation
 // ============================================================================
 #include "vulkan_compute.h"
 
@@ -117,41 +117,6 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         vkGetPhysicalDeviceProperties(devs[i], &p);
         vkGetPhysicalDeviceMemoryProperties(devs[i], &mp);
 
-        VkPhysicalDeviceIDProperties idp{
-            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
-        };
-        VkPhysicalDeviceProperties2 p2{
-            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
-        };
-        p2.pNext = &idp;
-        vkGetPhysicalDeviceProperties2(devs[i], &p2);
-
-        // Deduplicate by deviceUUID — skip D3D12 aliases of same physical GPU
-        bool dup = false;
-        for (const auto& existing : out) {
-            if (std::memcmp(existing.deviceUUID, idp.deviceUUID,
-                            VK_UUID_SIZE) == 0) {
-                dup = true;
-                break;
-            }
-        }
-        if (dup) continue;
-
-        // Fallback dedup by (vendorId, deviceId) for D3D12 wrappers with different UUIDs
-        bool dupFallback = false;
-        for (const auto& existing : out) {
-            if (existing.vendorId == p.vendorID && existing.deviceId == p.deviceID) {
-                dupFallback = true;
-                break;
-            }
-        }
-        if (dupFallback) {
-            std::fprintf(stderr,
-                "VK_PHYS_DEDUP ordinal=%u name=%s vendor=0x%04X device=0x%04X reason=FALLBACK_DEDUP\n",
-                i, p.deviceName, p.vendorID, p.deviceID);
-            continue;
-        }
-
         uint32_t qn = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(devs[i], &qn, nullptr);
         std::vector<VkQueueFamilyProperties> q(qn);
@@ -170,7 +135,7 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
                 local += mp.memoryHeaps[h].size;
 
         VulkanPhysicalInfo d{};
-        d.ordinal = static_cast<uint32_t>(out.size());
+        d.ordinal = i;
         d.vendorId = p.vendorID;
         d.deviceId = p.deviceID;
         d.apiVersion = p.apiVersion;
@@ -178,14 +143,6 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
         d.discrete = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
         d.compute = compute;
         d.name = p.deviceName;
-        std::memcpy(d.deviceUUID, idp.deviceUUID, VK_UUID_SIZE);
-        std::fprintf(stderr,
-            "VK_PHYS ordinal=%u name=%s vendor=0x%04X device=0x%04X type=%u "
-            "discrete=%d compute=%d localGB=%.2f\n",
-            d.ordinal, d.name.c_str(), d.vendorId, d.deviceId,
-            (unsigned)p.deviceType,
-            d.discrete ? 1 : 0, d.compute ? 1 : 0,
-            (double)d.deviceLocalBytes / (1024.0*1024.0*1024.0));
         out.push_back(std::move(d));
     }
 
@@ -196,16 +153,15 @@ std::vector<VulkanPhysicalInfo> VulkanCompute::EnumeratePhysicalDevices() {
 size_t VulkanCompute::ForwardArenaReserveBytes(
     uint32_t hidden, uint32_t intermediate,
     uint32_t, uint32_t kvHeads, uint32_t headDim,
-    uint32_t maxSeq, uint32_t layers, uint32_t kvLayers)
+    uint32_t maxSeq, uint32_t layers)
 {
     const uint64_t H = hidden;
     const uint64_t I = intermediate;
     const uint64_t kv = static_cast<uint64_t>(kvHeads) * headDim;
     const uint64_t seqCap = std::min<uint64_t>(maxSeq ? maxSeq : 1, 4096);
-    const uint64_t kvCount = kvLayers ? kvLayers : layers;
     uint64_t floats =
         H * 8ull + I * 3ull + kv * 2ull +
-        kvCount * seqCap * kv * 2ull;
+        static_cast<uint64_t>(layers) * seqCap * kv * 2ull;
     if (floats > std::numeric_limits<size_t>::max() / sizeof(float))
         return std::numeric_limits<size_t>::max();
     return static_cast<size_t>(floats * sizeof(float));
@@ -233,55 +189,11 @@ bool VulkanCompute::createInstance() {
 bool VulkanCompute::selectPhysical() {
     uint32_t n = 0;
     if (vkEnumeratePhysicalDevices(instance_, &n, nullptr) != VK_SUCCESS ||
-        n == 0) return false;
+        n == 0 || requestedOrdinal_ >= n) return false;
 
-    std::vector<VkPhysicalDevice> rawDevs(n);
-    if (vkEnumeratePhysicalDevices(instance_, &n, rawDevs.data()) != VK_SUCCESS)
+    std::vector<VkPhysicalDevice> devs(n);
+    if (vkEnumeratePhysicalDevices(instance_, &n, devs.data()) != VK_SUCCESS)
         return false;
-
-    // Deduplicate by deviceUUID — match EnumeratePhysicalDevices() ordering
-    std::vector<VkPhysicalDevice> devs;
-    devs.reserve(n);
-    for (uint32_t i = 0; i < n; ++i) {
-        VkPhysicalDeviceProperties p{};
-        vkGetPhysicalDeviceProperties(rawDevs[i], &p);
-        VkPhysicalDeviceIDProperties idp{
-            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
-        };
-        VkPhysicalDeviceProperties2 p2{
-            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
-        };
-        p2.pNext = &idp;
-        vkGetPhysicalDeviceProperties2(rawDevs[i], &p2);
-        bool dup = false;
-        for (auto existingVk : devs) {
-            VkPhysicalDeviceIDProperties existingId{
-                VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES
-            };
-            VkPhysicalDeviceProperties2 existingP2{
-                VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2
-            };
-            existingP2.pNext = &existingId;
-            vkGetPhysicalDeviceProperties2(existingVk, &existingP2);
-            if (std::memcmp(existingId.deviceUUID, idp.deviceUUID,
-                            VK_UUID_SIZE) == 0) {
-                dup = true;
-                break;
-            }
-        }
-        if (dup) continue;
-        // Fallback dedup by (vendorId, deviceId) to align with EnumeratePhysicalDevices()
-        for (auto existingVk : devs) {
-            VkPhysicalDeviceProperties existingP{};
-            vkGetPhysicalDeviceProperties(existingVk, &existingP);
-            if (existingP.vendorID == p.vendorID && existingP.deviceID == p.deviceID) {
-                dup = true;
-                break;
-            }
-        }
-        if (!dup) devs.push_back(rawDevs[i]);
-    }
-    if (requestedOrdinal_ >= devs.size()) return false;
     physical_ = devs[requestedOrdinal_];
 
     VkPhysicalDeviceProperties p{};
@@ -331,15 +243,10 @@ bool VulkanCompute::createDevice() {
         vkEnumerateDeviceExtensionProperties(physical_, nullptr, &extCount, ext.data());
 
     bool haveCalibrated = false;
-    bool haveMemoryBudget = false;
-    for (const auto& e : ext) {
+    for (const auto& e : ext)
         if (std::strcmp(e.extensionName,
                         VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME) == 0)
             haveCalibrated = true;
-        if (std::strcmp(e.extensionName,
-                        VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) == 0)
-            haveMemoryBudget = true;
-    }
 
     float prio = 1.0f;
     VkDeviceQueueCreateInfo qi{};
@@ -351,8 +258,6 @@ bool VulkanCompute::createDevice() {
     std::vector<const char*> enabled;
     if (haveCalibrated)
         enabled.push_back(VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME);
-    if (haveMemoryBudget)
-        enabled.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
 
     VkDeviceCreateInfo di{};
     di.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -370,7 +275,6 @@ bool VulkanCompute::createDevice() {
     }
 
     vkGetDeviceQueue(device_, queueFamily_, 0, &queue_);
-    memoryBudgetAvailable_ = haveMemoryBudget;
 
     if (haveCalibrated) {
         fpGetCalibrated_ = reinterpret_cast<PFN_vkGetCalibratedTimestampsEXT>(
@@ -415,12 +319,12 @@ bool VulkanCompute::createCommandPool() {
 bool VulkanCompute::createDescriptorSystems() {
     VkDescriptorPoolSize ps{};
     ps.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    ps.descriptorCount = 524288;
+    ps.descriptorCount = 32768;
 
     VkDescriptorPoolCreateInfo pi{};
     pi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pi.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    pi.maxSets = 131072;
+    pi.maxSets = 8192;
     pi.poolSizeCount = 1;
     pi.pPoolSizes = &ps;
     if (vkCreateDescriptorPool(device_, &pi, nullptr, &descriptorPool_) != VK_SUCCESS)
@@ -541,37 +445,22 @@ bool VulkanCompute::createPipelines() {
     const std::string so = shaderPath("deep2_spec_ops.spv");
     const std::string sa = shaderPath("deep2_spec_attn.spv");
     const std::string ac = shaderPath("deep2_spec_accept.spv");
-
-    std::fprintf(stderr,
-        "[SHADER_PATH] ops=%s q=%s qb=%s q4r=%s q8r=%s am=%s so=%s sa=%s ac=%s\n",
-        ops.empty()?"NOTFOUND":ops.c_str(),
-        q.empty()?"NOTFOUND":q.c_str(),
-        qb.empty()?"NOTFOUND":qb.c_str(),
-        q4r.empty()?"NOTFOUND":q4r.c_str(),
-        q8r.empty()?"NOTFOUND":q8r.c_str(),
-        am.empty()?"NOTFOUND":am.c_str(),
-        so.empty()?"NOTFOUND":so.c_str(),
-        sa.empty()?"NOTFOUND":sa.c_str(),
-        ac.empty()?"NOTFOUND":ac.c_str());
-    std::fflush(stderr);
-
-    bool okOps=false, okQ=false, okQb=false, okQ4r=false, okQ8r=false;
     if (!ops.empty())
-        okOps=createPipelineFromFile(
+        (void)createPipelineFromFile(
             ops, opsSetLayout_, sizeof(OpsPush), opsPipelineLayout_, opsPipeline_);
     if (!q.empty())
-        okQ=createPipelineFromFile(
+        (void)createPipelineFromFile(
             q, qSetLayout_, sizeof(QPush), qPipelineLayout_, qPipeline_);
     if(!qb.empty())
-        okQb=createPipelineFromFile(
+        (void)createPipelineFromFile(
             qb,qSetLayout_,sizeof(QBatchPush),
             qBatchPipelineLayout_,qBatchPipeline_);
     if(!q4r.empty())
-        okQ4r=createPipelineFromFile(
+        (void)createPipelineFromFile(
             q4r,qSetLayout_,sizeof(QBatchPush),
             qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
     if(!q8r.empty())
-        okQ8r=createPipelineFromFile(
+        (void)createPipelineFromFile(
             q8r,qSetLayout_,sizeof(QBatchPush),
             qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
     if(!am.empty())
@@ -586,12 +475,6 @@ bool VulkanCompute::createPipelines() {
         (void)createPipelineFromFile(
             sa,opsSetLayout_,sizeof(SpecAttnPush),
             specAttnPipelineLayout_,specAttnPipeline_);
-
-    std::fprintf(stderr,
-        "[PIPELINE_CREATE] ops=%u q=%u qb=%u q4r=%u q8r=%u\n",
-        okOps?1u:0u, okQ?1u:0u, okQb?1u:0u, okQ4r?1u:0u, okQ8r?1u:0u);
-    std::fflush(stderr);
-
     return opsPipeline_ != VK_NULL_HANDLE;
 }
 
@@ -816,26 +699,14 @@ bool VulkanCompute::RunSpecSwiGLUHostBatch(
     if(!gate||!up||!output||!width||!batch||batch>4) return false;
     SetWorkEpoch(epoch);
     const size_t n=(size_t)width*batch;
-    const size_t nbytes=n*sizeof(float);
-    std::fprintf(stderr,"[SwiGLU] width=%u batch=%u n=%zu nbytes=%zu\n",width,batch,n,nbytes); std::fflush(stderr);
-
     if(!EnsureScratch(94,n)||!EnsureScratch(95,n)||
        !EnsureScratch(96,n)||!EnsureScratch(97,1))
         return false;
     auto& g=Scratch(94);auto& u=Scratch(95);
     auto& o=Scratch(96);auto& d=Scratch(97);
-    std::fprintf(stderr,"[SwiGLU] buf g(id=%llu size=%zu) u(id=%llu size=%zu) o(id=%llu size=%zu) d(id=%llu size=%zu)\n",
-        (unsigned long long)g.id,(size_t)g.size,(unsigned long long)u.id,(size_t)u.size,(unsigned long long)o.id,(size_t)o.size,(unsigned long long)d.id,(size_t)d.size); std::fflush(stderr);
-    if(g.size<nbytes||u.size<nbytes||o.size<nbytes||d.size<sizeof(float)){
-        std::fprintf(stderr,"[SwiGLU] FATAL: scratch undersized\n"); std::fflush(stderr);
-        return false;
-    }
-
     if(!UploadVector(g,gate,n)||!UploadVector(u,up,n)) return false;
     SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
-    std::fprintf(stderr,"[SwiGLU] dispatch op=%u width=%u batch=%u\n",p.op,p.width,p.batch); std::fflush(stderr);
     if(!dispatchSpecOps(g,u,o,d,p)) return false;
-    std::fprintf(stderr,"[SwiGLU] download n=%zu\n",n); std::fflush(stderr);
     return DownloadVector(o,output,n);
 }
 
@@ -920,29 +791,14 @@ bool VulkanCompute::initialize() {
 
     (void)createPipelines(); // Device runtime is valid even before shader build.
     initialized_ = true;
-    (void)ReserveDecodeScratch();
 
-    std::fprintf(stderr,
+    std::fprintf(stdout,
         "BATCH9_VK_DEVICE ordinal=%u name=%s vendor=0x%04x vram=%llu "
-        "compute_pipeline=%u qgemv_pipeline=%u batch4row=%u batch8row=%u calibrated=%u\n",
+        "compute_pipeline=%u qgemv_pipeline=%u calibrated=%u\n",
         info_.ordinal, info_.name.c_str(), info_.vendorId,
         static_cast<unsigned long long>(info_.deviceLocalBytes),
         opsPipeline_ ? 1u : 0u, qPipeline_ ? 1u : 0u,
-        qBatch4RowPipeline_ ? 1u : 0u, qBatch8RowPipeline_ ? 1u : 0u,
         calibratedAvailable_ ? 1u : 0u);
-    return true;
-}
-
-bool VulkanCompute::ReserveDecodeScratch() {
-    std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    const size_t bytes = 128u * 1024u * 1024u; // 128 MiB
-    const size_t floats = bytes / sizeof(float);
-    if (!EnsureScratch(104, floats)) {
-        std::fprintf(stderr, "[SCRATCH_RESERVE_FAIL] attention bytes=%zu\n", bytes);
-        return false;
-    }
-    scratchReservedBytes_ = bytes;
-    std::fprintf(stderr, "[SCRATCH_RESERVE_OK] attention bytes=%zu\n", bytes);
     return true;
 }
 
@@ -958,71 +814,25 @@ uint32_t VulkanCompute::findMemoryType(
     return UINT32_MAX;
 }
 
-size_t VulkanCompute::deviceLocalHeapHeadroom() const {
-    if (!memoryBudgetAvailable_) return SIZE_MAX;
-
-    VkPhysicalDeviceMemoryProperties mp{};
-    vkGetPhysicalDeviceMemoryProperties(physical_, &mp);
-
-    VkPhysicalDeviceMemoryBudgetPropertiesEXT budget{};
-    budget.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT;
-
-    VkPhysicalDeviceMemoryProperties2 mp2{};
-    mp2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
-    mp2.pNext = &budget;
-
-    vkGetPhysicalDeviceMemoryProperties2(physical_, &mp2);
-
-    size_t total = 0;
-    for (uint32_t h = 0; h < mp.memoryHeapCount; ++h) {
-        if (mp.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
-            if (budget.heapBudget[h] > budget.heapUsage[h])
-                total += static_cast<size_t>(budget.heapBudget[h] - budget.heapUsage[h]);
-        }
-    }
-    return total;
-}
-
-bool VulkanCompute::checkLiveHeapAdmission(size_t bytes) const {
-    if (!memoryBudgetAvailable_) return true;
-    size_t headroom = deviceLocalHeapHeadroom();
-    size_t emergency = info_.deviceLocalBytes / 20;
-    const size_t minEmergency = (size_t)512 << 20;
-    const size_t maxEmergency = (size_t)2048 << 20;
-    if (emergency < minEmergency) emergency = minEmergency;
-    if (emergency > maxEmergency) emergency = maxEmergency;
-    if (headroom <= emergency) return false;
-    if (bytes > headroom - emergency) return false;
-    return true;
-}
-
 bool VulkanCompute::createBuffer(
     VkDeviceSize bytes, VkBufferUsageFlags usage,
     VkMemoryPropertyFlags required, DeviceBuf& out)
 {
     destroyBuffer(out);
-    if (!device_ || bytes == 0) {
-        fprintf(stderr, "[CB_FAIL] device=%p bytes=%zu\n", (void*)device_, (size_t)bytes);
-        return false;
-    }
+    if (!device_ || bytes == 0) return false;
 
     VkBufferCreateInfo bi{};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = bytes;
     bi.usage = usage;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    VkResult rcb = vkCreateBuffer(device_, &bi, nullptr, &out.buffer);
-    if (rcb != VK_SUCCESS) {
-        fprintf(stderr, "[CB_FAIL] vkCreateBuffer failed bytes=%zu rc=%d\n", (size_t)bytes, (int)rcb);
+    if (vkCreateBuffer(device_, &bi, nullptr, &out.buffer) != VK_SUCCESS)
         return false;
-    }
 
     VkMemoryRequirements mr{};
     vkGetBufferMemoryRequirements(device_, out.buffer, &mr);
     uint32_t mt = findMemoryType(mr.memoryTypeBits, required);
     if (mt == UINT32_MAX) {
-        fprintf(stderr, "[CB_FAIL] findMemoryType failed bytes=%zu memTypeBits=0x%x required=0x%x\n",
-                (size_t)bytes, mr.memoryTypeBits, (unsigned)required);
         vkDestroyBuffer(device_, out.buffer, nullptr);
         out = {};
         return false;
@@ -1032,16 +842,12 @@ bool VulkanCompute::createBuffer(
     ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     ai.allocationSize = mr.size;
     ai.memoryTypeIndex = mt;
-    VkResult ram = vkAllocateMemory(device_, &ai, nullptr, &out.memory);
-    if (ram != VK_SUCCESS) {
-        fprintf(stderr, "[CB_FAIL] vkAllocateMemory failed bytes=%zu allocSize=%zu mt=%u rc=%d\n",
-                (size_t)bytes, (size_t)mr.size, mt, (int)ram);
+    if (vkAllocateMemory(device_, &ai, nullptr, &out.memory) != VK_SUCCESS) {
         vkDestroyBuffer(device_, out.buffer, nullptr);
         out = {};
         return false;
     }
     if (vkBindBufferMemory(device_, out.buffer, out.memory, 0) != VK_SUCCESS) {
-        fprintf(stderr, "[CB_FAIL] vkBindBufferMemory failed bytes=%zu\n", (size_t)bytes);
         destroyBuffer(out);
         return false;
     }
@@ -1476,7 +1282,6 @@ bool VulkanCompute::RunSpecAttentionResident(
     uint32_t heads,uint32_t kvHeads,uint32_t headDim,
     uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
 {
-    std::lock_guard<std::recursive_mutex> lock(apiMu_);
     if(layer>=specKMirror_.size()||!q||!output||!heads||!kvHeads||
        !headDim||!seqLen||!batch||batch>4||seqLen>specKvCapacity_)
         return false;
@@ -1804,7 +1609,7 @@ GpuWorkInterval VulkanCompute::LastInterval() const {
 bool VulkanCompute::EnsureForwardArena(
     uint32_t hidden, uint32_t intermediate,
     uint32_t heads, uint32_t kvHeads, uint32_t headDim,
-    uint32_t maxSeq, uint32_t layers, uint32_t kvLayers)
+    uint32_t maxSeq, uint32_t layers)
 {
     if (!initialized_ || !hidden || !intermediate || !heads ||
         !kvHeads || !headDim || !maxSeq || !layers) return false;
@@ -1815,16 +1620,9 @@ bool VulkanCompute::EnsureForwardArena(
         if (v) seqCap = std::min<uint32_t>(maxSeq, static_cast<uint32_t>(v));
     }
 
-    // kvLayers=0 preserves legacy all-layer K/V sizing. A multi-GPU
-    // layer-split slot only executes its own contiguous layer range, so
-    // sizing K/V to that range reclaims dead cache VRAM (Batch3 #12).
-    const uint32_t kvLayerCount =
-        kvLayers ? std::min<uint32_t>(kvLayers, layers) : layers;
-
     if (hidden_ == hidden && intermediate_ == intermediate &&
         heads_ == heads && kvHeads_ == kvHeads && headDim_ == headDim &&
-        maxSeq_ == seqCap && layers_ == layers && arenaHidden_ &&
-        kvArenaLayers_ == kvLayerCount)
+        maxSeq_ == seqCap && layers_ == layers && arenaHidden_)
         return true;
 
     auto kill = [&](DeviceBuf& b){ destroyBuffer(b); };
@@ -1836,7 +1634,6 @@ bool VulkanCompute::EnsureForwardArena(
     hidden_ = hidden; intermediate_ = intermediate; heads_ = heads;
     kvHeads_ = kvHeads; headDim_ = headDim; maxSeq_ = seqCap; layers_ = layers;
     kvDim_ = kvHeads * headDim;
-    kvArenaLayers_ = kvLayerCount;
 
     const VkBufferUsageFlags u =
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
@@ -1851,7 +1648,7 @@ bool VulkanCompute::EnsureForwardArena(
     };
 
     uint64_t cacheFloats =
-        static_cast<uint64_t>(kvLayerCount) * maxSeq_ * kvDim_;
+        static_cast<uint64_t>(layers_) * maxSeq_ * kvDim_;
 
     return allocF(arenaHidden_, hidden_) &&
            allocF(arenaAttnW_, hidden_) &&
@@ -1872,19 +1669,11 @@ bool VulkanCompute::EnsureForwardArena(
 
 bool VulkanCompute::ApplyWeightWindowPolicy(
     size_t maxWeightBytes, size_t budgetBytes,
-    uint32_t, size_t arenaBytes)
+    uint32_t, size_t)
 {
     if (!maxWeightBytes || !budgetBytes || budgetBytes < maxWeightBytes)
         return false;
-    size_t effectiveBudget = budgetBytes;
-    if (arenaBytes && effectiveBudget > arenaBytes)
-        effectiveBudget -= arenaBytes;
-    const size_t emergencyBytes = (size_t)512 << 20;
-    if (effectiveBudget > scratchReservedBytes_ + emergencyBytes)
-        effectiveBudget -= (scratchReservedBytes_ + emergencyBytes);
-    else
-        effectiveBudget = 0;
-    weightBudgetBytes_ = effectiveBudget;
+    weightBudgetBytes_ = budgetBytes;
     return true;
 }
 
@@ -2005,15 +1794,9 @@ bool VulkanCompute::EndFusedLayer() {
     if(vkQueueSubmit(queue_,1,&si,reusableFusedFence_)!=VK_SUCCESS)
         return false;
     ++queueSubmitCount_;
-    const uint64_t fusedWaitTimeoutNs = 30000000000ULL; // 30 seconds
-    VkResult waitRes = vkWaitForFences(
-            device_,1,&reusableFusedFence_,VK_TRUE,fusedWaitTimeoutNs);
-    if(waitRes==VK_TIMEOUT){
-        std::fprintf(stderr,"[GPU] EndFusedLayer vkWaitForFences TIMEOUT after 30s\n");
-        std::fflush(stderr);
+    if(vkWaitForFences(
+            device_,1,&reusableFusedFence_,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
         return false;
-    }
-    if(waitRes!=VK_SUCCESS) return false;
     const uint64_t completeNs=nowNs();
 
     GpuWorkInterval wi{};
@@ -2068,16 +1851,11 @@ bool VulkanCompute::AppendKV(
     DeviceBuf& k, DeviceBuf& v, uint32_t kvDim,
     uint32_t pos, uint32_t layer)
 {
-    // Layer-split slots map absolute layers onto a sized K/V region whose
-    // slot 0 is absolute layer kvLayerBase_.
-    const uint32_t relLayer =
-        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
-    if (relLayer >= kvArenaLayers_) return false;
-    if (!k || !v || kvDim != kvDim_ || pos >= maxSeq_)
+    if (!k || !v || kvDim != kvDim_ || pos >= maxSeq_ || layer >= layers_)
         return false;
     const VkDeviceSize bytes = static_cast<VkDeviceSize>(kvDim)*sizeof(float);
     const uint64_t elemOff =
-        (static_cast<uint64_t>(relLayer)*maxSeq_ + pos)*kvDim_;
+        (static_cast<uint64_t>(layer)*maxSeq_ + pos)*kvDim_;
     const VkDeviceSize dstOff =
         static_cast<VkDeviceSize>(elemOff*sizeof(float));
     if (dstOff + bytes > arenaKCache_.size ||
@@ -2104,14 +1882,10 @@ bool VulkanCompute::DispatchAttnDecode(
     uint32_t heads, uint32_t kvHeads,
     uint32_t seqLen, float scale, uint32_t layer)
 {
-    // Layer-relative addressing mirrors AppendKV (kvLayerBase_ offset).
-    const uint32_t relLayer =
-        layer >= kvLayerBase_ ? layer - kvLayerBase_ : 0u;
-    if (relLayer >= kvArenaLayers_) return false;
     if (!headDim || !heads || !kvHeads || heads%kvHeads ||
-        !seqLen || seqLen>maxSeq_) return false;
+        !seqLen || seqLen>maxSeq_ || layer>=layers_) return false;
 
-    uint64_t base = static_cast<uint64_t>(relLayer)*maxSeq_*kvDim_;
+    uint64_t base = static_cast<uint64_t>(layer)*maxSeq_*kvDim_;
     if (base > std::numeric_limits<uint32_t>::max()) return false;
 
     OpsPush p{};
@@ -2350,120 +2124,6 @@ void VulkanCompute::clearWeightCache() {
     }
 }
 
-const VulkanCompute::PeerHandoffCaps&
-VulkanCompute::PeerHandoffCapability() const {
-    if (peerHandoffCapsProbed_) return peerHandoffCaps_;
-    peerHandoffCapsProbed_ = true;
-    peerHandoffCaps_ = PeerHandoffCaps{};
-
-    if (!physical_) return peerHandoffCaps_;
-
-    // 1. Device extensions.
-    uint32_t extCount = 0;
-    if (vkEnumerateDeviceExtensionProperties(
-            physical_, nullptr, &extCount, nullptr) == VK_SUCCESS &&
-        extCount > 0) {
-        std::vector<VkExtensionProperties> ext(extCount);
-        if (vkEnumerateDeviceExtensionProperties(
-                physical_, nullptr, &extCount, ext.data()) == VK_SUCCESS) {
-            for (const auto& e : ext) {
-                const std::string name(e.extensionName);
-                if (name == "VK_KHR_external_memory")
-                    peerHandoffCaps_.externalMemoryExtension = true;
-                else if (name == "VK_KHR_external_memory_win32")
-                    peerHandoffCaps_.win32 = true;
-                else if (name == "VK_KHR_external_semaphore_win32")
-                    peerHandoffCaps_.externalSemaphore = true;
-                else if (name == "VK_KHR_external_semaphore")
-                    peerHandoffCaps_.externalSemaphore = true;
-            }
-        }
-    }
-    if (!peerHandoffCaps_.externalMemoryExtension || !peerHandoffCaps_.win32)
-        return peerHandoffCaps_;
-
-    // 2. Handle-type exportability/importability. The probe asks the device
-    // whether an exportable storage buffer of the given Windows handle type
-    // is supported at all; unsupported types stay false (fail closed — no
-    // fabricated peer support).
-    auto probeHandle = [&](VkExternalMemoryHandleTypeFlagBits htype) -> bool {
-        VkExternalBufferProperties props{};
-        props.sType = VK_STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES;
-        VkPhysicalDeviceExternalBufferInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO;
-        info.flags = 0;
-        info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-        info.handleType = htype;
-        auto fp = reinterpret_cast<PFN_vkGetPhysicalDeviceExternalBufferProperties>(
-            vkGetInstanceProcAddr(instance_,
-                "vkGetPhysicalDeviceExternalBufferProperties"));
-        if (!fp) return false;
-        fp(physical_, &info, &props);
-        return props.externalMemoryProperties.externalMemoryFeatures != 0;
-    };
-
-    peerHandoffCaps_.omtHandle = probeHandle(
-        VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT);
-    peerHandoffCaps_.d3d12Handle = probeHandle(
-        VK_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT);
-
-    peerHandoffCaps_.externalMemoryApiSupported =
-        peerHandoffCaps_.omtHandle || peerHandoffCaps_.d3d12Handle;
-
-    // 3. B5.2a device-group authority. Cross-physical-device OPAQUE_WIN32
-    // import is spec-restricted to the SAME underlying physical device, so
-    // the API-surface flags above CANNOT license a peer handoff between the
-    // two discrete GPUs. The native mechanism is ONE logical
-    // VkPhysicalDeviceGroup device spanning both. Probe the instance-level
-    // group enumeration: both GPUs must appear in the SAME group, and the
-    // group must report subset allocation + we require peer COPY features
-    // (checked per-heap at bind time; group presence gates the verdict).
-    {
-        auto fpGroups = reinterpret_cast<PFN_vkEnumeratePhysicalDeviceGroups>(
-            vkGetInstanceProcAddr(instance_,
-                "vkEnumeratePhysicalDeviceGroups"));
-        if (fpGroups) {
-            uint32_t groupCount = 0;
-            if (fpGroups(instance_, &groupCount, nullptr) == VK_SUCCESS &&
-                groupCount > 0) {
-                std::vector<VkPhysicalDeviceGroupProperties> groups(
-                    groupCount, VkPhysicalDeviceGroupProperties{});
-                groups[0].sType =
-                    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
-                for (size_t i = 1; i < groups.size(); ++i)
-                    groups[i].sType =
-                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES;
-                if (fpGroups(instance_, &groupCount, groups.data()) ==
-                    VK_SUCCESS) {
-                    peerHandoffCaps_.groupCount = groupCount;
-                    for (const auto& g : groups) {
-                        bool hasSelf = false;
-                        for (uint32_t i = 0; i < g.physicalDeviceCount; ++i)
-                            if (g.physicalDevices[i] == physical_)
-                                hasSelf = true;
-                        if (hasSelf) {
-                            peerHandoffCaps_.subsetAllocation =
-                                g.subsetAllocation != VK_FALSE;
-                            if (g.physicalDeviceCount > 1) {
-                                peerHandoffCaps_.sameDeviceGroup = true;
-                                peerHandoffCaps_.deviceGroupSupported = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Honest verdict: peer handoff is only supported through a device-group
-    // logical device. (Peer COPY src/dst features are verified per-heap at
-    // bind time when a group device is actually created.)
-    peerHandoffCaps_.peerHandoffSupported =
-        peerHandoffCaps_.sameDeviceGroup;
-    return peerHandoffCaps_;
-}
-
 bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
     if (!view.valid()) return false;
     DeviceBuf* b = nullptr;
@@ -2504,12 +2164,12 @@ void VulkanCompute::UnpinAllWeights() {
 }
 
 bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
-    if (weightBudgetBytes_ && incomingBytes > weightBudgetBytes_) return false;
+    if (!weightBudgetBytes_) return true;
+    if (incomingBytes > weightBudgetBytes_) return false;
 
-    while (weightBudgetBytes_ && weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
+    while (weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
         auto victim = weightCache_.end();
         for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
-            if (it->second.pinned) continue;
             if (victim == weightCache_.end() ||
                 it->second.lastUse < victim->second.lastUse) {
                 victim = it;
@@ -2523,27 +2183,6 @@ bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
         weightCacheBytes_ = bytes <= weightCacheBytes_
             ? weightCacheBytes_ - bytes : 0;
     }
-
-    if (memoryBudgetAvailable_) {
-        while (!checkLiveHeapAdmission(incomingBytes)) {
-            auto victim = weightCache_.end();
-            for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
-                if (it->second.pinned) continue;
-                if (victim == weightCache_.end() ||
-                    it->second.lastUse < victim->second.lastUse) {
-                    victim = it;
-                }
-            }
-            if (victim == weightCache_.end()) return false;
-
-            const size_t bytes = victim->second.bytes;
-            destroyBuffer(victim->second.buffer);
-            weightCache_.erase(victim);
-            weightCacheBytes_ = bytes <= weightCacheBytes_
-                ? weightCacheBytes_ - bytes : 0;
-        }
-    }
-
     return true;
 }
 
@@ -2559,18 +2198,8 @@ bool VulkanCompute::ensureWeightF32(
         return true;
     }
     if (!weights || !bytes) return false;
-    if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
-        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
-                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
-        return false;
-    }
     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
     if (!evictWeightCacheUntil(bytes)) return false;
-    if (!checkLiveHeapAdmission(bytes)) {
-        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu live_headroom_insufficient need=%zu\n",
-                static_cast<unsigned long long>(key), bytes);
-        return false;
-    }
 
     WeightCacheEntry e{};
     size_t padded = (bytes+3u)&~size_t(3u);
@@ -2607,50 +2236,12 @@ bool VulkanCompute::ensureWeightQuant(
         fprintf(stderr,"[EWB_Q4K] FAIL1 weights=%p bytes=%zu\n",weights,bytes);
         return false;
     }
-    if(weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_) {
-        fprintf(stderr,"[WEIGHT_BUDGET_BLOCK] key=%llu cache=%zu incoming=%zu budget=%zu\n",
-                static_cast<unsigned long long>(key), weightCacheBytes_, bytes, weightBudgetBytes_);
-        return false;
-    }
     if(weightBudgetBytes_ && bytes>weightBudgetBytes_) {
         fprintf(stderr,"[EWB_Q4K] FAIL2 budget=%zu bytes=%zu\n",weightBudgetBytes_,bytes);
         return false;
     }
-
-    size_t headroom_before = deviceLocalHeapHeadroom();
-    bool evict_ok = evictWeightCacheUntil(bytes);
-    if(!evict_ok) {
-        size_t headroom_after = deviceLocalHeapHeadroom();
-        fprintf(stderr,
-            "Q4K_ADMISSION_FAIL"
-            " stage=EVICT_EXHAUSTED"
-            " request=%zu"
-            " cacheBytes=%zu"
-            " cacheEntries=%zu"
-            " headroom_before=%zu"
-            " headroom_after=%zu"
-            " weightBudget=%zu"
-            " memoryBudget=%d\n",
-            bytes, weightCacheBytes_, weightCache_.size(), headroom_before, headroom_after,
-            weightBudgetBytes_, (int)memoryBudgetAvailable_);
-        return false;
-    }
-    if (!checkLiveHeapAdmission(bytes)) {
-        size_t headroom_after = deviceLocalHeapHeadroom();
-        fprintf(stderr,
-            "Q4K_ADMISSION_FAIL"
-            " stage=LIVE_HEADROOM"
-            " request=%zu"
-            " cacheBytes=%zu"
-            " cacheEntries=%zu"
-            " headroom_before=%zu"
-            " headroom_after=%zu"
-            " weightBudget=%zu"
-            " memoryBudget=%d\n",
-            bytes, weightCacheBytes_, weightCache_.size(), headroom_before, headroom_after,
-            weightBudgetBytes_, (int)memoryBudgetAvailable_);
-        fprintf(stderr, "[WEIGHT_BUDGET_BLOCK] key=%llu live_headroom_insufficient need=%zu\n",
-                static_cast<unsigned long long>(key), bytes);
+    if(!evictWeightCacheUntil(bytes)) {
+        fprintf(stderr,"[EWB_Q4K] FAIL3 evict bytes=%zu cacheBytes=%zu\n",bytes,weightCacheBytes_);
         return false;
     }
 
@@ -3041,16 +2632,10 @@ bool VulkanCompute::DispatchWeight(
     const GpuWeightView& weight, DeviceBuf& input, DeviceBuf& output)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMu_);
-    if (!weight.valid()) {
-        std::fprintf(stderr,"[DW] FAIL weight.valid()=0\n"); std::fflush(stderr);
-        return false;
-    }
+    if (!weight.valid()) return false;
     if (static_cast<size_t>(weight.cols)*sizeof(float) > input.size ||
-        static_cast<size_t>(weight.rows)*sizeof(float) > output.size) {
-        std::fprintf(stderr,"[DW] FAIL size mismatch w.cols=%u w.rows=%u in.size=%zu out.size=%zu\n",
-                     weight.cols, weight.rows, (size_t)input.size, (size_t)output.size); std::fflush(stderr);
+        static_cast<size_t>(weight.rows)*sizeof(float) > output.size)
         return false;
-    }
 
     if (weight.type == 0) {
         const uint64_t key = weight.key
@@ -3062,14 +2647,9 @@ bool VulkanCompute::DispatchWeight(
             input,output,weight.rows,weight.cols);
     }
 
-    bool ok = DispatchGemvQuant(
+    return DispatchGemvQuant(
         weight.type,weight.data,weight.bytes,
         input,output,weight.rows,weight.cols);
-    if(!ok) {
-        std::fprintf(stderr,"[DW] DispatchGemvQuant failed type=%d bytes=%zu rows=%u cols=%u\n",
-                     weight.type, weight.bytes, weight.rows, weight.cols); std::fflush(stderr);
-    }
-    return ok;
 }
 
 bool VulkanCompute::RunExpertFFN(
@@ -4541,28 +4121,13 @@ bool VulkanCompute::RunSpecAcceptPrefixResident(
     return true;
 }
 
-void VulkanCompute::ResetVerifiedHidden() {
+    if(device_&&specAcceptPipeline_)
+        vkDestroyPipeline(device_,specAcceptPipeline_,nullptr);
+    if(device_&&specAcceptPipelineLayout_)
+        vkDestroyPipelineLayout(device_,specAcceptPipelineLayout_,nullptr);
     destroyBuffer(verifiedHidden_);
     verifiedHidden_={};
     verifiedHiddenWidth_=0;
-}
-
-bool VulkanCompute::WaitTimelineValue(uint64_t value, uint64_t timeoutNs) {
-    if(!TimelineSemaphoreEnabled()||!value) return false;
-    VkSemaphoreWaitInfo wi{};
-    wi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-    wi.flags = 0;
-    wi.semaphoreCount = 1;
-    wi.pSemaphores = &timelineSemaphore_;
-    wi.pValues = &value;
-    const VkResult r = vkWaitSemaphores(device_, &wi, timeoutNs);
-    if(r == VK_SUCCESS) {
-        ++timelineWaits_;
-        return true;
-    }
-    return false;
-}
-
 bool VulkanCompute::SubmitTimelineCommand(
     VkCommandBuffer cmd,VkQueue q,
     uint64_t waitValue,uint64_t signalValue,

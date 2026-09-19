@@ -1,6 +1,7 @@
 // Deep2Engine_GpuForward.cpp — forwardLayerGpuResident + contiguous/multi/hybrid
 #include "Deep2Engine.h"
 #include "Deep2GpuForward.hpp"
+#include "Deep2DualGpuRowSplit.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "GpuTransferCounters.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
@@ -9,6 +10,7 @@
 #include "lavapath/DualStickStreamWindow.hpp"
 #include "Deep2LivePath.hpp"
 #include "GPUForwardChildIgnoreHooks.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -470,6 +472,60 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
     if (!multiGpuLayerPlan_.active || multiGpuLayerPlan_.gpuSlotCount < 1) return false;
     const uint32_t H = (uint32_t)config.hiddenDim;
     const unsigned gpuN = multiGpuLayerPlan_.gpuSlotCount;
+
+    // B5_SLOT1_RANGE_RESIDENCY_001 (+ slot 0): pin every slot's full layer
+    // range at first execution so the measured 280-upload slot-1 churn
+    // cannot recur. Admission is proven at init
+    // (B5_SLOT1_RESIDENCY_ADMISSION_001, ADMISSION_FITS=1). Pinning reuses
+    // the B4 PinWeightView substrate: pinned entries are skipped by
+    // eviction but still count against the cache budget, so the admission
+    // arithmetic remains the authority.
+    for (unsigned s = 0; s < gpuN && s < 2; ++s) {
+        if (layerRangePinned_[s]) continue;
+        auto* vc = getVulkanComputeSlot(s);
+        if (!vc) continue;
+        const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
+        const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
+        bool allOk = true;
+        const auto t0 = std::chrono::steady_clock::now();
+        for (uint32_t L = lo; L <= hi && L < modelWeights.layers.size(); ++L) {
+            const auto& lw = modelWeights.layers[L];
+            GpuWeightView v{};
+            if (!Deep2BuildGpuWeightView(lw.wq, 0,
+                    static_cast<uint32_t>(lw.wq.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            if (!Deep2BuildGpuWeightView(lw.wk, 0,
+                    static_cast<uint32_t>(lw.wk.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            if (!Deep2BuildGpuWeightView(lw.wv, 0,
+                    static_cast<uint32_t>(lw.wv.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            const WeightTensor& woT = lw.wo.data ? lw.wo : lw.attnO;
+            if (!Deep2BuildGpuWeightView(woT, 0,
+                    static_cast<uint32_t>(woT.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            if (!Deep2BuildGpuWeightView(lw.wGate, 0,
+                    static_cast<uint32_t>(lw.wGate.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            if (!Deep2BuildGpuWeightView(lw.wUp, 0,
+                    static_cast<uint32_t>(lw.wUp.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+            if (!Deep2BuildGpuWeightView(lw.wDown, 0,
+                    static_cast<uint32_t>(lw.wDown.rows), v) ||
+                !vc->PinWeightView(v)) { allOk = false; break; }
+        }
+        if (allOk) {
+            layerRangePinned_[s] = true;
+            const auto t1 = std::chrono::steady_clock::now();
+            const uint64_t pinNs = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    t1 - t0).count());
+            std::fprintf(stderr,
+                "[B5_RANGE_PIN] slot=%u layers=%u-%u pinned in %llu ns\n",
+                s, lo, hi,
+                static_cast<unsigned long long>(pinNs));
+        }
+    }
 
     for (unsigned s = 0; s < gpuN; ++s)
         if (!ensureGpuForwardArena(s)) return false;

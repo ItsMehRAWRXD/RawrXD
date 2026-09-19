@@ -184,6 +184,76 @@ void Deep2Engine::enableVulkan(bool enable) {
                     multiGpuLayerPlan_.rangeHi[s],
                     speed[s]);
             }
+
+            // B5_SLOT1_RESIDENCY_ADMISSION_001: exact byte accounting for
+            // pinning the slot-1 resident layer range. Pinning is only legal
+            // when the full residency set fits the device with headroom.
+            if (multiGpuLayerPlan_.gpuSlotCount >= 2 &&
+                modelWeights.layers.size() > 0) {
+                const uint32_t lo1 = multiGpuLayerPlan_.rangeLo[1];
+                const uint32_t hi1 = multiGpuLayerPlan_.rangeHi[1];
+                uint64_t layerBytes = 0;
+                for (uint32_t L = lo1; L <= hi1 &&
+                     L < modelWeights.layers.size(); ++L) {
+                    const auto& lw = modelWeights.layers[L];
+                    layerBytes += tensorResidentBytes(lw.wq);
+                    layerBytes += tensorResidentBytes(lw.wk);
+                    layerBytes += tensorResidentBytes(lw.wv);
+                    layerBytes += tensorResidentBytes(lw.wo.data ? lw.wo : lw.attnO);
+                    layerBytes += tensorResidentBytes(lw.attnNorm);
+                    layerBytes += tensorResidentBytes(lw.ffnNorm);
+                    layerBytes += tensorResidentBytes(lw.wGate);
+                    layerBytes += tensorResidentBytes(lw.wUp);
+                    layerBytes += tensorResidentBytes(lw.wDown);
+                }
+                const uint64_t lmHeadBytes = tensorResidentBytes(modelWeights.lmHead);
+                const uint64_t kvBytes =
+                    CPUInference::VulkanCompute::ForwardArenaReserveBytes(
+                        (uint32_t)config.hiddenDim,
+                        (uint32_t)(modelWeights.intermediateDim
+                                        ? modelWeights.intermediateDim
+                                        : config.hiddenDim * 4),
+                        (uint32_t)modelWeights.numHeads,
+                        (uint32_t)modelWeights.numKVHeads,
+                        (uint32_t)modelWeights.headDim,
+                        (uint32_t)(config.maxSeqLen
+                                        ? config.maxSeqLen
+                                        : (size_t)128),
+                        (uint32_t)modelWeights.numLayers,
+                        hi1 - lo1 + 1);
+                auto* slot1 = getVulkanComputeSlot(1);
+                const uint64_t deviceBytes =
+                    slot1 ? slot1->deviceLocalBytes() : 0;
+                const uint64_t budgetBytes = (deviceBytes / 10ull) * 8ull;
+                const uint64_t handoffBytes =
+                    (uint64_t)config.hiddenDim * sizeof(float);
+                const uint64_t headroomBytes = (uint64_t)512 << 20;  // 512 MiB
+                const uint64_t totalRequired =
+                    layerBytes + lmHeadBytes + kvBytes +
+                    handoffBytes + headroomBytes;
+                const bool fits = totalRequired <= budgetBytes;
+                std::fprintf(stderr,
+                    "B5_SLOT1_RESIDENCY_ADMISSION_001\n"
+                    "SLOT1_DEVICE_LOCAL_BYTES=%llu\n"
+                    "SLOT1_BUDGET_BYTES=%llu\n"
+                    "LAYER_RANGE_BYTES=%llu (layers %u-%u)\n"
+                    "LMHEAD_SLICE_BYTES=%llu\n"
+                    "KV_ARENA_BYTES=%llu\n"
+                    "HANDOFF_BYTES=%llu\n"
+                    "RESERVED_HEADROOM_BYTES=%llu\n"
+                    "TOTAL_REQUIRED_BYTES=%llu\n"
+                    "ADMISSION_FITS=%d\n",
+                    static_cast<unsigned long long>(deviceBytes),
+                    static_cast<unsigned long long>(budgetBytes),
+                    static_cast<unsigned long long>(layerBytes),
+                    lo1, hi1,
+                    static_cast<unsigned long long>(lmHeadBytes),
+                    static_cast<unsigned long long>(kvBytes),
+                    static_cast<unsigned long long>(handoffBytes),
+                    static_cast<unsigned long long>(headroomBytes),
+                    static_cast<unsigned long long>(totalRequired),
+                    fits ? 1 : 0);
+            }
         }
     }
 
@@ -193,38 +263,32 @@ void Deep2Engine::enableVulkan(bool enable) {
         static_cast<unsigned>(vulkanDevices_.size()),
         multiGpuLayerPlan_.active?1u:0u);
 
-    // B5.2 capability probe — before any peer-transfer implementation.
-    // PEER_HANDOFF_SUPPORTED requires both devices to expose external
-    // memory (win32) AND at least one shared exportable handle type.
-    // The transfer path fails closed when this is 0.
+    // B5.2a capability probe — before any peer-transfer implementation.
+    // EXTERNAL_MEMORY_API_SUPPORTED does NOT license cross-physical-device
+    // import (Vulkan restricts Win32 import to the same physical device as
+    // the exporter). The honest gate is SAME_DEVICE_GROUP: one
+    // VkPhysicalDeviceGroup logical device is the only native cross-GPU
+    // memory mechanism. Fails closed.
     if (vulkanDevices_.size() >= 2) {
         const auto& c0 = vulkanDevices_[0]->PeerHandoffCapability();
         const auto& c1 = vulkanDevices_[1]->PeerHandoffCapability();
-        bool common = false;
-        std::string handle = "(none)";
-        if (c0.omtHandle && c1.omtHandle) {
-            common = true;
-            handle = "OPAQUE_WIN32";
-        } else if (c0.d3d12Handle && c1.d3d12Handle) {
-            common = true;
-            handle = "D3D12_RESOURCE";
-        }
         std::fprintf(stderr,
             "B5_PEER_HANDOFF_PROBE\n"
-            "GPU0_EXTERNAL_MEMORY=%d\n"
-            "GPU1_EXTERNAL_MEMORY=%d\n"
-            "GPU0_OMT=%d GPU1_OMT=%d\n"
-            "GPU0_D3D12=%d GPU1_D3D12=%d\n"
-            "EXTERNAL_SEMAPHORE=%d\n"
-            "COMMON_HANDLE_TYPE=%s\n"
+            "EXTERNAL_MEMORY_API_SUPPORTED=%d\n"
+            "EXTERNAL_SEMAPHORE_API_SUPPORTED=%d\n"
+            "DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN\n"
+            "PHYSICAL_DEVICE_GROUP_COUNT=%u\n"
+            "SAME_DEVICE_GROUP=%d\n"
+            "SUBSET_ALLOCATION=%d\n"
+            "PEER_MEMORY_FEATURES=(device-group-bind-time)\n"
             "PEER_HANDOFF_SUPPORTED=%d\n",
-            c0.externalMemoryExtension ? 1 : 0,
-            c1.externalMemoryExtension ? 1 : 0,
-            c0.omtHandle ? 1 : 0, c1.omtHandle ? 1 : 0,
-            c0.d3d12Handle ? 1 : 0, c1.d3d12Handle ? 1 : 0,
+            (c0.externalMemoryApiSupported &&
+             c1.externalMemoryApiSupported) ? 1 : 0,
             (c0.externalSemaphore && c1.externalSemaphore) ? 1 : 0,
-            handle.c_str(),
-            common ? 1 : 0);
+            c0.groupCount,
+            (c0.sameDeviceGroup && c1.sameDeviceGroup) ? 1 : 0,
+            (c0.subsetAllocation || c1.subsetAllocation) ? 1 : 0,
+            (c0.peerHandoffSupported && c1.peerHandoffSupported) ? 1 : 0);
     }
 }
 

@@ -967,6 +967,9 @@ private:
     GpuForwardCounters gpuFwd_{};
     bool gpuFwdCommitted_ = false;
 
+    // B5_SLOT1_RANGE_RESIDENCY_001: per-slot layer-range pin state.
+    bool layerRangePinned_[2] = {false, false};
+
     // B4_LMHEAD_PERMANENT_RESIDENCY_001: lmHead slices pinned on both
     // devices at the frozen dual-row split geometry. Pinning happens once
     // at first logits GEMV; a split-geometry change re-pins (counted).
