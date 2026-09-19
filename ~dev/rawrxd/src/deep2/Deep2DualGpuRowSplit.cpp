@@ -951,17 +951,16 @@ bool Deep2RunDualGpuRowSplitGroup(
         // DEEP2_HOT_LANE_CONTEXT_001: permanent dual-row worker claims its
         // device's lane (CAS, idempotent per thread).
         (void)c->g->ClaimHotLaneForCurrentThread();
-        bool ok=true;
-        for(size_t i=0;i<c->count && ok;++i){
-            ok=c->g->RunWeightAutoHot(
-                c->handles[i],c->views[i],
-                c->input,c->outs[i],c->epoch);
-        }
+        // DEEP2_SUBMIT_AMORTIZATION_001: all-hot groups take the single
+        // submit / single fence group path; any cold member falls back
+        // per-member (cold race + promotion behind execution).
+        c->ok=c->g->RunWeightGroupAutoHot(
+            c->handles,c->views,c->count,
+            c->input,c->inputCount,c->outs,c->epoch);
         const auto z = std::chrono::steady_clock::now();
         c->hostEnvelopeNs = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
-        c->ok=ok;
-        return ok;
+        return c->ok;
     };
     GroupCtx c0{&g0,views0,handles0,outs0,count,input,inputCount,epoch,0,false};
     GroupCtx c1{&g1,views1,handles1,outs1,count,input,inputCount,epoch,0,false};

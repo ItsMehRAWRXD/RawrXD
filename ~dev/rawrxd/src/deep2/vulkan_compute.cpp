@@ -5189,7 +5189,9 @@ void VulkanCompute::ResetHotLane()
     hotLane_.cmd = VK_NULL_HANDLE;
     hotLane_.fence = VK_NULL_HANDLE;
     hotLane_.query = VK_NULL_HANDLE;
-    hotLane_.lastSet = VK_NULL_HANDLE;
+    for (uint32_t i = 0; i < 4; ++i)
+        hotLane_.pendingSets[i] = VK_NULL_HANDLE;
+    hotLane_.pendingSetCount = 0;
     hotLane_.residentDispatches = 0;
     hotLane_.submits = 0;
     hotLane_.initialized = false;
@@ -5275,15 +5277,18 @@ bool VulkanCompute::RunWeightResidentHotDirect(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
 
-    // Endurance fix: the fence is signaled — the GPU is done with the
-    // ranged descriptor set this submit bound. Free it now (quant path
-    // captured it in lane.lastSet; the F32 path used a CACHED ops
-    // descriptor which must NOT be freed).
-    if (lane.lastSet != VK_NULL_HANDLE && descriptorPool_) {
+    // Endurance fix: the fence is signaled — the GPU is done with every
+    // ranged descriptor set this submit bound. Free them all now (quant
+    // pushes 1 on the single path, up to 3 on the group path; the F32
+    // path used a CACHED ops descriptor and pushed nothing).
+    if (lane.pendingSetCount > 0 && descriptorPool_) {
         vkFreeDescriptorSets(
-            device_, descriptorPool_, 1, &lane.lastSet);
-        ++rangedSetFrees_;
-        lane.lastSet = VK_NULL_HANDLE;
+            device_, descriptorPool_, lane.pendingSetCount,
+            lane.pendingSets);
+        rangedSetFrees_ += lane.pendingSetCount;
+        for (uint32_t i = 0; i < lane.pendingSetCount; ++i)
+            lane.pendingSets[i] = VK_NULL_HANDLE;
+        lane.pendingSetCount = 0;
     }
 
     std::memcpy(output, lane.downMapped, outBytes);
@@ -5341,7 +5346,8 @@ bool VulkanCompute::DispatchWeightResidentLane(
         static_cast<VkDeviceSize>(meta.bytes),
         input, output);
     if (set == VK_NULL_HANDLE) return false;
-    lane.lastSet = set;
+    if (lane.pendingSetCount >= 4) return false; // single submit capacity
+    lane.pendingSets[lane.pendingSetCount++] = set;
     vkCmdBindPipeline(
         lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
     vkCmdBindDescriptorSets(
@@ -5360,6 +5366,182 @@ bool VulkanCompute::DispatchWeightResidentLane(
     ++residentDirectDispatches_;
     ++lane.residentDispatches;
     return true;
+}
+
+bool VulkanCompute::RunWeightGroupResidentHotDirect(
+    HotLaneContext& lane,
+    const GpuWeightView* metas,
+    ResidentWeight* const* views, size_t count,
+    const float* input, uint32_t inputCount,
+    float* const* outputs, uint64_t epoch)
+{
+    // DEEP2_SUBMIT_AMORTIZATION_001: grouped lock-free lane dispatch.
+    // ONE input staging memcpy, ONE command buffer, ONE queue submit,
+    // ONE fence wait for all 2-3 members. The per-member AutoHot wiring
+    // cost count submits + count waits per QKV/gate-up group; this
+    // restores the fused-group property on the zero-lock path.
+    if (!lane.initialized || count < 2 || count > 3) return false;
+    if (lane.ownerThreadId.load(std::memory_order_acquire) !=
+        hotLaneCurrentThreadId())
+        return false;
+
+    const size_t inBytes =
+        static_cast<size_t>(inputCount) * sizeof(float);
+    if (lane.input.size < inBytes || lane.upCapacity < inBytes)
+        return false;
+    size_t totalOutBytes = 0;
+    for (size_t i = 0; i < count; ++i) {
+        const size_t b =
+            static_cast<size_t>(metas[i].rows) * sizeof(float);
+        if (lane.groupOutput[i].size < b || lane.downCapacity < b)
+            return false;
+        if (totalOutBytes > SIZE_MAX - b) return false;
+        totalOutBytes += b;
+    }
+
+    lane.epoch = epoch;
+    lane.q4kLaneTag = kQ4kLaneDual;
+
+    std::memcpy(lane.upMapped, input, inBytes);
+
+    if (vkResetCommandBuffer(lane.cmd, 0) != VK_SUCCESS)
+        return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(lane.cmd, &bi) != VK_SUCCESS)
+        return false;
+
+    if (lane.query) {
+        vkCmdResetQueryPool(lane.cmd, lane.query, 0, 2);
+        vkCmdWriteTimestamp(
+            lane.cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            lane.query, 0);
+    }
+
+    // Reset the per-submit set list; members push as they record.
+    lane.pendingSetCount = 0;
+
+    if (!recordCopy(lane.cmd, lane.upStaging, lane.input, inBytes))
+        return false;
+    for (size_t i = 0; i < count; ++i) {
+        if (!metas[i].valid() || !views[i] ||
+            views[i]->buffer.size < metas[i].bytes)
+            return false;
+        if (!DispatchWeightResidentLane(
+                lane, metas[i], views[i]->buffer,
+                lane.input, lane.groupOutput[i]))
+            return false;
+    }
+    // Download each member's rows into the shared down staging at its
+    // byte offset — one copy per member inside the SAME submit.
+    size_t offset = 0;
+    for (size_t i = 0; i < count; ++i) {
+        const VkDeviceSize b =
+            static_cast<VkDeviceSize>(metas[i].rows) * sizeof(float);
+        if (!recordCopy(
+                lane.cmd, lane.groupOutput[i], lane.downStaging,
+                b, 0, static_cast<VkDeviceSize>(offset)))
+            return false;
+        offset += b;
+    }
+
+    if (lane.query)
+        vkCmdWriteTimestamp(
+            lane.cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            lane.query, 1);
+    if (vkEndCommandBuffer(lane.cmd) != VK_SUCCESS)
+        return false;
+    if (vkResetFences(device_, 1, &lane.fence) != VK_SUCCESS)
+        return false;
+
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &lane.cmd;
+    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
+        return false;
+    ++lane.submits;
+    if (vkWaitForFences(
+            device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+        return false;
+
+    // Free every ranged set this submit bound.
+    if (lane.pendingSetCount > 0 && descriptorPool_) {
+        vkFreeDescriptorSets(
+            device_, descriptorPool_, lane.pendingSetCount,
+            lane.pendingSets);
+        rangedSetFrees_ += lane.pendingSetCount;
+        for (uint32_t i = 0; i < lane.pendingSetCount; ++i)
+            lane.pendingSets[i] = VK_NULL_HANDLE;
+        lane.pendingSetCount = 0;
+    }
+
+    // Scatter from the shared down staging into the member outputs.
+    offset = 0;
+    for (size_t i = 0; i < count; ++i) {
+        const size_t b =
+            static_cast<size_t>(metas[i].rows) * sizeof(float);
+        std::memcpy(
+            outputs[i],
+            static_cast<const uint8_t*>(lane.downMapped) + offset,
+            b);
+        offset += b;
+    }
+    ++lane.residentDispatches;
+    return true;
+}
+
+bool VulkanCompute::RunWeightGroupAutoHot(
+    ResidentHotHandle* const* handles,
+    const GpuWeightView* metas, size_t count,
+    const float* input, uint32_t inputCount,
+    float* const* outputs, uint64_t epoch)
+{
+    // Group policy chain (zero-lock fast path): register readers for ALL
+    // members first, then decide. If every member is hot AND the lane is
+    // owned -> single-submit group dispatch (one upload, one submit, one
+    // wait). Otherwise release and fall back per-member (cold members
+    // take the compute-on-miss race). The all-or-nothing rule keeps the
+    // RCU lifetime contract trivially correct: either every buffer use
+    // is inside the reader window or the group path is not taken.
+    if (!handles || !metas || !outputs || count < 2 || count > 3)
+        return false;
+
+    ResidentWeight* views[3] = {};
+    size_t acquired = 0;
+    bool allHot = true;
+    for (size_t i = 0; i < count; ++i) {
+        if (!handles[i]) { allHot = false; break; }
+        views[i] = AcquireHotView(handles[i]);
+        if (!views[i]) { allHot = false; break; }
+        ++acquired;
+    }
+
+    if (allHot &&
+        hotLane_.initialized &&
+        hotLane_.ownerThreadId.load(std::memory_order_acquire) ==
+            hotLaneCurrentThreadId()) {
+        const bool dispatched = RunWeightGroupResidentHotDirect(
+            hotLane_, metas, views, count,
+            input, inputCount, outputs, epoch);
+        for (size_t i = 0; i < acquired; ++i) ReleaseHotView();
+        ProcessRetireQueue();
+        if (dispatched) return true;
+        // Lane dispatch failed (capacity/geometry) -> fall through to
+        // per-member, but re-acquire below because we released above.
+    } else {
+        for (size_t i = 0; i < acquired; ++i) ReleaseHotView();
+        ProcessRetireQueue();
+    }
+
+    // Per-member fallback: cold members race, hot members dispatch
+    // through their own AutoHot chain.
+    bool ok = true;
+    for (size_t i = 0; i < count && ok; ++i)
+        ok = RunWeightAutoHot(handles[i], metas[i],
+                              input, outputs[i], epoch);
+    return ok;
 }
 
 VulkanCompute::HotResidencyStats

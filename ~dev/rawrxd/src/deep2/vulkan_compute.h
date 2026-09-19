@@ -1206,10 +1206,12 @@ public:
         VkCommandBuffer cmd = VK_NULL_HANDLE;
         VkFence fence = VK_NULL_HANDLE;
         VkQueryPool query = VK_NULL_HANDLE;
-        // Per-submit descriptor set (allocated fresh, freed after the
-        // fence wait — never cached, so retirement can never strand a
-        // descriptor pointing at a destroyed buffer).
-        VkDescriptorSet lastSet = VK_NULL_HANDLE;
+        // Per-submit ranged descriptor sets (quant path): pushed during
+        // recording, ALL freed together after the fence wait (a group
+        // submit binds up to 3; lastSet only tracked one and leaked the
+        // rest). F32 uses CACHED ops descriptors and pushes nothing.
+        VkDescriptorSet pendingSets[4] = {};
+        uint32_t pendingSetCount = 0;
 
         uint64_t residentDispatches = 0;
         uint64_t submits = 0;
@@ -1237,6 +1239,24 @@ public:
         DeviceBuf& residentWeight,
         const float* input, float* output,
         uint64_t epoch);
+    // DEEP2_SUBMIT_AMORTIZATION_001: grouped lane dispatch — one input
+    // upload, one lane submit, ONE fence wait for all 2-3 members
+    // (restores the fused-group property on the lock-free path; the
+    // per-member wiring cost 3 submits + 3 waits per QKV group).
+    bool RunWeightGroupResidentHotDirect(
+        HotLaneContext& lane,
+        const GpuWeightView* metas,
+        ResidentWeight* const* views, size_t count,
+        const float* input, uint32_t inputCount,
+        float* const* outputs, uint64_t epoch);
+    // Group policy chain: acquire ALL member RCU views; if every member
+    // is hot and the lane is owned -> single-submit group dispatch;
+    // otherwise per-member fallback (cold members take the race path).
+    bool RunWeightGroupAutoHot(
+        ResidentHotHandle* const* handles,
+        const GpuWeightView* metas, size_t count,
+        const float* input, uint32_t inputCount,
+        float* const* outputs, uint64_t epoch);
     bool DispatchWeightResidentLane(
         HotLaneContext& lane,
         const GpuWeightView& meta,
