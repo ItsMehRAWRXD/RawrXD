@@ -5,9 +5,11 @@
 // Requires only the Vulkan SDK already used by RawrXD.
 // ============================================================================
 #include <vulkan/vulkan.h>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -102,6 +104,10 @@ public:
         uint64_t epoch = 0;
         uint64_t bytes = 0;
         bool submitted = false;
+        // DEEP2_RCU_RESIDENCY_HANDLES_001: promotion-generation guard so a
+        // stale async ticket can never publish into a newer residency
+        // generation.
+        uint64_t generation = 0;
     };
 
     explicit VulkanCompute(uint32_t physicalOrdinal = 0);
@@ -1024,6 +1030,215 @@ public:
     bool BeginLayerResidencyLease(uint32_t layerIndex);
     bool EndLayerResidencyLease(uint32_t layerIndex);
 
+    // ====================================================================
+    // DEEP2_DIRECT_RESIDENT_DISPATCH_001
+    // Once residency is resolved, dispatch binds the resident DeviceBuf
+    // directly. The resident path can never re-enter ensureWeight* /
+    // weightCache_ (certified by RESIDENT_LOOKUP_VIOLATIONS == 0).
+    // ====================================================================
+    bool DispatchWeightResident(
+        const GpuWeightView& weight,
+        DeviceBuf& residentWeight,
+        DeviceBuf& input, DeviceBuf& output);
+    bool DispatchGemvF32Resident(
+        DeviceBuf& residentWeight, DeviceBuf& input, DeviceBuf& output,
+        uint32_t rows, uint32_t cols);
+    // Row-range dispatch into a (partially) promoted whole-tensor target
+    // buffer. Must run between BeginFusedLayer()/EndFusedLayer().
+    bool DispatchQuantRowsResident(
+        const GpuWeightView& meta, DeviceBuf& target,
+        uint32_t rowBase, uint32_t rowCount,
+        DeviceBuf& input, DeviceBuf& output);
+
+    // Certification guard: while active, any ensureWeight* entry counts a
+    // resident-lookup violation (the hot path must never do cache work).
+    struct ResidentDispatchGuard {
+        VulkanCompute* self;
+        explicit ResidentDispatchGuard(VulkanCompute* s) : self(s) {
+            ++self->residentDispatchDepth_;
+        }
+        ~ResidentDispatchGuard() { --self->residentDispatchDepth_; }
+    };
+    uint64_t ResidentDirectDispatches() const noexcept {
+        return residentDirectDispatches_;
+    }
+    uint64_t ResidentLookupViolations() const noexcept {
+        return residentLookupViolations_;
+    }
+
+    // ====================================================================
+    // DEEP2_RCU_RESIDENCY_HANDLES_001
+    // Lock-free published residency keyed by GpuWeightView.key.
+    //
+    // TRAP-1 LOCKDOWN: published views are pointers to HEAP-STABLE
+    // ResidentWeight objects owned by this runtime (residentObjects_),
+    // NEVER into weightCache_ (unordered_map storage moves on
+    // erase/rehash). Eviction removes the pointer first, then waits for
+    // in-flight readers (residentReaderCount_) before destroying the
+    // buffer — lifetime is tied to reader grace, not the CPU caller.
+    //
+    // view pointer semantics:
+    //   nullptr        -> cold (no residency knowledge yet)
+    //   Promoting()    -> promotion owned by another caller
+    //   Failed()       -> promotion failed; stay CPU-only
+    //   real ResidentWeight* -> immutable published view
+    // Readers perform one atomic acquire load: zero map lookups, zero
+    // mutex, zero cache admission. weightCache_ is NOT the publication
+    // authority for these objects.
+    // ====================================================================
+    struct ResidentHotHandle;
+    struct ResidentWeight {
+        DeviceBuf buffer{};
+        uint64_t key = 0;
+        uint64_t generation = 0;
+        size_t bytes = 0;
+        int type = 0;
+        uint32_t rows = 0;
+        uint32_t cols = 0;
+        // Back-reference for LRU eviction (handle itself never moves:
+        // unordered_map nodes are pointer-stable and handles are only
+        // erased at cleanup).
+        ResidentHotHandle* handle = nullptr;
+    };
+    struct ResidentHotHandle {
+        std::atomic<ResidentWeight*> view{nullptr};
+        static ResidentWeight* Promoting() noexcept {
+            return reinterpret_cast<ResidentWeight*>(uintptr_t(1));
+        }
+        static ResidentWeight* Failed() noexcept {
+            return reinterpret_cast<ResidentWeight*>(uintptr_t(2));
+        }
+    };
+    ResidentHotHandle* GetHotHandle(uint64_t weightKey);
+    // Returns the published object or nullptr (never a sentinel).
+    // Bumps the reader count; caller MUST call ReleaseHotView() after
+    // the last use of the buffer.
+    ResidentWeight* AcquireHotView(ResidentHotHandle* handle);
+    void ReleaseHotView() noexcept;
+    bool TryBeginHotPromotion(ResidentHotHandle* handle);
+    void PublishHotView(ResidentHotHandle* handle, ResidentWeight* view);
+    void FailHotView(ResidentHotHandle* handle);
+
+    // TRAP-5 LOCKDOWN: single authoritative packed-row stride shared by
+    // CPU row GEMV, GPU ranged upload, resident range dispatch and
+    // cold-race accounting. Returns 0 for unsupported shapes.
+    static size_t QuantPackedRowBytes(int type, uint32_t cols) noexcept;
+
+    // ====================================================================
+    // DEEP2_COLD_ROW_RACE_001 — heterogeneous compute-on-miss.
+    // Cold Q4_K miss: CPU AVX tail rows race progressively-promoted GPU
+    // head rows toward the middle (disjoint final-output row spans, no
+    // merge buffer); the whole tensor finishes promotion afterwards and
+    // publishes an RCU hot view for the next invocation.
+    // ====================================================================
+    bool RunWeightColdRowRace(
+        const GpuWeightView& weight,
+        const float* input, float* output,
+        uint64_t epoch);
+    // Full policy chain: RCU hot view -> direct resident dispatch,
+    // else cold-row race (compute-on-miss + promotion-behind-execution).
+    bool RunWeightAutoHot(
+        const GpuWeightView& weight,
+        const float* input, float* output,
+        uint64_t epoch);
+    // CPU-only Q4_K GEMV straight from immutable GGUF bytes.
+    bool RunCpuQuantRowsFull(
+        const GpuWeightView& weight,
+        const float* input, float* output);
+
+    // Non-blocking promotion completion -> cache commit + RCU publish.
+    bool PollMaterialUpload(MaterialTicket& t);
+    bool PublishCompletedPrime(
+        MaterialTicket& t, int type, uint64_t cacheKey,
+        uint64_t hotWeightKey = 0, GpuWorkInterval* interval = nullptr);
+    // Range upload into a preallocated whole-tensor promotion target.
+    bool SubmitMaterialRangeAsync(
+        DeviceBuf& target, VkDeviceSize targetOffset,
+        const void* src, size_t bytes, uint64_t epoch,
+        MaterialTicket& t);
+
+    // ====================================================================
+    // DEEP2_HOT_LANE_CONTEXT_001 — thread-confined lock-free hot lane.
+    // PrepareHotLane allocates every lane resource under apiMu_; after
+    // that RunWeightResidentHotDirect executes with ZERO apiMu_
+    // acquisition. The lane is owner-thread confined (one dual-row
+    // worker per VulkanCompute instance). Owner violations fall back to
+    // the locked compatibility API.
+    // ====================================================================
+    struct HotLaneContext {
+        uint32_t ownerThreadId = 0;
+        uint32_t gpuOrdinal = 0;
+        uint64_t epoch = 0;
+        uint32_t q4kLaneTag = 0;
+        uint64_t generation = 0;
+
+        DeviceBuf input{};
+        DeviceBuf output{};
+        DeviceBuf groupOutput[3]{};
+
+        DeviceBuf upStaging{};
+        DeviceBuf downStaging{};
+        void* upMapped = nullptr;
+        void* downMapped = nullptr;
+        size_t upCapacity = 0;
+        size_t downCapacity = 0;
+
+        VkCommandBuffer cmd = VK_NULL_HANDLE;
+        VkFence fence = VK_NULL_HANDLE;
+        VkQueryPool query = VK_NULL_HANDLE;
+        // Per-submit descriptor set (allocated fresh, freed after the
+        // fence wait — never cached, so retirement can never strand a
+        // descriptor pointing at a destroyed buffer).
+        VkDescriptorSet lastSet = VK_NULL_HANDLE;
+
+        uint64_t residentDispatches = 0;
+        uint64_t submits = 0;
+        bool initialized = false;
+    };
+    HotLaneContext hotLane_{};
+    bool PrepareHotLane(size_t maxInputFloats,
+                        size_t maxOutputFloats,
+                        size_t maxGroupOutputFloats);
+    void ResetHotLane();
+    // Zero-lock resident execution. Returns false when the lane is not
+    // prepared or the calling thread is not the owner (caller falls back
+    // to the locked API).
+    bool RunWeightResidentHotDirect(
+        HotLaneContext& lane,
+        const GpuWeightView& meta,
+        DeviceBuf& residentWeight,
+        const float* input, float* output,
+        uint64_t epoch);
+    bool DispatchWeightResidentLane(
+        HotLaneContext& lane,
+        const GpuWeightView& meta,
+        DeviceBuf& residentWeight,
+        DeviceBuf& input, DeviceBuf& output);
+    uint64_t LaneOwnerViolations() const noexcept {
+        return laneOwnerViolations_;
+    }
+
+    struct HotResidencyStats {
+        uint64_t residentDirectDispatches = 0;
+        uint64_t residentLookupViolations = 0;
+        uint64_t rcuHotAcquires = 0;
+        uint64_t rcuPublishes = 0;
+        uint64_t rcuStaleRejects = 0;
+        uint64_t coldRaceCalls = 0;
+        uint64_t coldRaceCpuOnlyCalls = 0;
+        uint64_t coldRaceGpuRows = 0;
+        uint64_t coldRaceCpuRows = 0;
+        uint64_t coldRaceDuplicateRows = 0;
+        uint64_t coldRaceUncomputedRows = 0;
+        uint64_t coldRaceRangeSubmits = 0;
+        uint64_t coldRaceRangeBytes = 0;
+        uint64_t coldRacePromotionsCompleted = 0;
+        uint64_t laneOwnerViolations = 0;
+        uint64_t laneResidentDispatches = 0;
+        uint64_t laneSubmits = 0;
+    };
+    HotResidencyStats HotResidencyStatsReport() const noexcept;
+
 private:
     struct WeightCacheEntry {
         DeviceBuf buffer{};
@@ -1176,6 +1391,59 @@ private:
     std::unordered_map<uint64_t, WeightCacheEntry> weightCache_;
     std::vector<PrefetchEntry> prefetch_;
 
+    // ===== DEEP2_DIRECT_RESIDENT_DISPATCH_001 ============================
+    uint32_t residentDispatchDepth_ = 0;
+    uint64_t residentDirectDispatches_ = 0;
+    uint64_t residentLookupViolations_ = 0;
+
+    // ===== DEEP2_RCU_RESIDENCY_HANDLES_001 ===============================
+    // Heap-stable ownership. hotHandles_ nodes are pointer-stable
+    // (unordered_map); entries are only erased in cleanup().
+    std::unordered_map<uint64_t, ResidentHotHandle> hotHandles_;
+    std::vector<std::unique_ptr<ResidentWeight>> residentObjects_; // LRU order
+    size_t residentObjectBytes_ = 0;
+    std::atomic<uint32_t> residentReaderCount_{0};
+    uint64_t rcuHotAcquires_ = 0;
+    uint64_t rcuPublishes_ = 0;
+    uint64_t rcuStaleRejects_ = 0;
+
+    // ===== DEEP2_COLD_ROW_RACE_001 =======================================
+    uint64_t coldRaceCalls_ = 0;
+    uint64_t coldRaceCpuOnlyCalls_ = 0;
+    uint64_t coldRaceGpuRows_ = 0;
+    uint64_t coldRaceCpuRows_ = 0;
+    uint64_t coldRaceDuplicateRows_ = 0;
+    uint64_t coldRaceUncomputedRows_ = 0;
+    uint64_t coldRaceRangeSubmits_ = 0;
+    uint64_t coldRaceRangeBytes_ = 0;
+    uint64_t coldRacePromotionsCompleted_ = 0;
+
+    // ===== DEEP2_HOT_LANE_CONTEXT_001 ====================================
+    uint64_t laneOwnerViolations_ = 0;
+    uint64_t deviceGeneration_ = 0;
+
+    // RCU retirement: spin until every in-flight reader has released
+    // (reader grace), then destroy the buffer. Called under apiMu_.
+    void RetireResidentObject(std::unique_ptr<ResidentWeight> obj);
+    // LRU eviction of published ResidentWeight objects to satisfy the
+    // weight budget. Removes the hot pointer BEFORE retiring.
+    bool EvictResidentObjectsFor(size_t incomingBytes);
+    // cleanup()-only: device is idle; drop everything without grace spin.
+    void ReclaimAllResidents();
+
+    static uint32_t hotLaneCurrentThreadId() noexcept;
+    // Direct ownership transfer of a completed promotion target into a
+    // heap-stable ResidentWeight + RCU publish (caller holds apiMu_).
+    bool PublishResidentTarget(
+        DeviceBuf& target, int type, uint64_t hotWeightKey);
+    // recordQuantRowsResident: ranged quant dispatch into any command
+    // buffer (cold-race lane owns its own cmd; the fused API passes
+    // fusedCmd_).
+    bool recordQuantRowsResident(
+        VkCommandBuffer cmd, const GpuWeightView& meta, DeviceBuf& target,
+        uint32_t rowBase, uint32_t rowCount,
+        DeviceBuf& input, DeviceBuf& output);
+
     std::vector<DeviceBuf> scratch_;
 
     DeviceBuf mlaKCache_{};
@@ -1203,6 +1471,13 @@ private:
                                      DeviceBuf& c, DeviceBuf& d);
     VkDescriptorSet getQuantDescriptor(DeviceBuf& weights,
                                        DeviceBuf& input, DeviceBuf& output);
+    // DEEP2_COLD_ROW_RACE_001: storage descriptor binding a byte RANGE of
+    // a (partially promoted) weight buffer so the shader's row indexing
+    // starts at rowBase instead of the buffer start. Keyed by buffer ids
+    // + weight byte offset.
+    VkDescriptorSet getQuantDescriptorRange(
+        DeviceBuf& w, VkDeviceSize wOffset, VkDeviceSize wRange,
+        DeviceBuf& in, DeviceBuf& out);
     bool ensureReusableFusedSubmitObjects();
     bool uploadToBufferRange(DeviceBuf& dst, const void* src, size_t bytes,
                              VkDeviceSize dstOffset);

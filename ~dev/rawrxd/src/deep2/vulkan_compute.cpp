@@ -2,6 +2,7 @@
 // vulkan_compute.cpp — Batch 9 real Vulkan device/runtime implementation
 // ============================================================================
 #include "vulkan_compute.h"
+#include "QuantKernelRegistry.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -1026,6 +1027,8 @@ bool VulkanCompute::initialize() {
     (void)createPipelines(); // Device runtime is valid even before shader build.
     initialized_ = true;
     (void)ReserveDecodeScratch();
+    ++deviceGeneration_; // any pre-init promotion is now stale
+    residentDispatchDepth_ = 0;
 
     std::fprintf(stderr,
         "BATCH9_VK_DEVICE ordinal=%u name=%s vendor=0x%04x vram=%llu "
@@ -1461,6 +1464,44 @@ VkDescriptorSet VulkanCompute::getQuantDescriptor(
     }
     vkUpdateDescriptorSets(device_,3,wr,0,nullptr);
     quantDescriptorCache_.emplace(key,set);
+    return set;
+}
+
+VkDescriptorSet VulkanCompute::getQuantDescriptorRange(
+    DeviceBuf& w, VkDeviceSize wOffset, VkDeviceSize wRange,
+    DeviceBuf& in, DeviceBuf& out)
+{
+    // DEEP2_COLD_ROW_RACE_001: storage descriptor over a byte RANGE of a
+    // (partially promoted) weight buffer so the shader's row indexing
+    // starts at rowBase. Range descriptors are never cached: the caller's
+    // lane frees them after the fence (vkFreeDescriptorSets), so RCU
+    // retirement can never strand a descriptor at a destroyed buffer.
+    if (!w || !in || !out || wRange == 0 || wOffset + wRange > w.size)
+        return VK_NULL_HANDLE;
+    VkDescriptorSetAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    ai.descriptorPool = descriptorPool_;
+    ai.descriptorSetCount = 1;
+    ai.pSetLayouts = &qSetLayout_;
+    VkDescriptorSet set = VK_NULL_HANDLE;
+    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
+        return VK_NULL_HANDLE;
+
+    VkDescriptorBufferInfo bi[3]{};
+    VkWriteDescriptorSet wr[3]{};
+    DeviceBuf* bufs[3] = {&w, &in, &out};
+    for (uint32_t i = 0; i < 3; ++i) {
+        bi[i].buffer = bufs[i]->buffer;
+        bi[i].offset = i == 0 ? wOffset : 0;
+        bi[i].range = i == 0 ? wRange : bufs[i]->size;
+        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        wr[i].dstSet = set;
+        wr[i].dstBinding = i;
+        wr[i].descriptorCount = 1;
+        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        wr[i].pBufferInfo = &bi[i];
+    }
+    vkUpdateDescriptorSets(device_, 3, wr, 0, nullptr);
     return set;
 }
 
@@ -2879,6 +2920,18 @@ bool VulkanCompute::ensureWeightF32(
     const float* weights, uint64_t key, size_t bytes, DeviceBuf*& out)
 {
     out = nullptr;
+    // DEEP2_DIRECT_RESIDENT_DISPATCH_001: certification — the resident
+    // hot path must never reach admission. Any hit here while a resident
+    // dispatch is active is a lookup violation.
+    if (residentDispatchDepth_) {
+        ++residentLookupViolations_;
+#ifdef _DEBUG
+        std::fprintf(stderr,
+            "[RESIDENT_LOOKUP_VIOLATION] ensureWeightF32 depth=%u key=%llu\n",
+            residentDispatchDepth_,
+            static_cast<unsigned long long>(key));
+#endif
+    }
     auto it = weightCache_.find(key);
     if (it != weightCache_.end()) {
         ++weightHits_;
@@ -2923,6 +2976,16 @@ bool VulkanCompute::ensureWeightF32(
 bool VulkanCompute::ensureWeightQuant(
     int type, const void* weights, size_t bytes, DeviceBuf*& out)
 {
+    // DEEP2_DIRECT_RESIDENT_DISPATCH_001: certification counter — see
+    // ensureWeightF32.
+    if (residentDispatchDepth_) {
+        ++residentLookupViolations_;
+#ifdef _DEBUG
+        std::fprintf(stderr,
+            "[RESIDENT_LOOKUP_VIOLATION] ensureWeightQuant depth=%u type=%d\n",
+            residentDispatchDepth_, type);
+#endif
+    }
     const uint64_t key=quantWeightKey(weights,bytes,type);
     auto it=weightCache_.find(key);
     if(it!=weightCache_.end()){
@@ -3790,6 +3853,213 @@ bool VulkanCompute::RunWeightGroupHostRoundTrip(
     return true;
 }
 
+bool VulkanCompute::DispatchWeightResident(
+    const GpuWeightView& weight,
+    DeviceBuf& residentWeight,
+    DeviceBuf& input, DeviceBuf& output)
+{
+    // DEEP2_DIRECT_RESIDENT_DISPATCH_001: once residency is resolved the
+    // dispatch binds the resident DeviceBuf directly. There is NO route
+    // from this function into ensureWeightF32/ensureWeightQuant — the
+    // meta is used only for geometry/type push constants.
+    ResidentDispatchGuard guard(this);
+    ++residentDirectDispatches_;
+
+    if (weight.rows == 0 || weight.cols == 0)
+        return false;
+    if (!residentWeight ||
+        residentWeight.buffer == VK_NULL_HANDLE)
+        return false;
+    if (residentWeight.size < weight.bytes)
+        return false;
+    if (static_cast<size_t>(weight.cols)*sizeof(float) > input.size ||
+        static_cast<size_t>(weight.rows)*sizeof(float) > output.size)
+        return false;
+
+    if (weight.type == 0) {
+        return DispatchGemvF32Resident(
+            residentWeight, input, output,
+            weight.rows, weight.cols);
+    }
+
+    if (weight.bytes > std::numeric_limits<uint32_t>::max())
+        return false;
+
+    QPush p{};
+    p.type = static_cast<uint32_t>(weight.type);
+    p.rows = weight.rows;
+    p.cols = weight.cols;
+    p.weightBytes = static_cast<uint32_t>(weight.bytes);
+    const bool ok = dispatchQuant(residentWeight, input, output, p);
+    if (ok) ++gemvSuccess_;
+    return ok;
+}
+
+bool VulkanCompute::DispatchGemvF32Resident(
+    DeviceBuf& residentWeight, DeviceBuf& input, DeviceBuf& output,
+    uint32_t rows, uint32_t cols)
+{
+    // Admission-free F32 mirror of the quant resident dispatch.
+    ResidentDispatchGuard guard(this);
+    if (!residentWeight || !rows || !cols)
+        return false;
+    if (static_cast<size_t>(rows)*static_cast<size_t>(cols)*sizeof(float) >
+        static_cast<size_t>(residentWeight.size))
+        return false;
+    OpsPush p{};
+    p.op = OP_GEMV_F32;
+    p.n = rows;
+    p.p0 = cols;
+    const bool ok = dispatchOps(
+        residentWeight, input, output, output, p, (rows+63u)/64u);
+    if (ok) ++gemvSuccess_;
+    return ok;
+}
+
+bool VulkanCompute::DispatchQuantRowsResident(
+    const GpuWeightView& meta, DeviceBuf& target,
+    uint32_t rowBase, uint32_t rowCount,
+    DeviceBuf& input, DeviceBuf& output)
+{
+    // DEEP2_COLD_ROW_RACE_001: ranged dispatch into a (partially)
+    // promoted whole-tensor target. Must run inside a fused layer so the
+    // only synchronization is the layer's terminal fence.
+    ResidentDispatchGuard guard(this);
+    if (!meta.valid() || !target || !input || !output || !rowCount)
+        return false;
+    const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
+    if (!rowBytes || meta.bytes < rowBytes) return false;
+    const uint64_t rowsPerSlice = meta.bytes / rowBytes;
+    if (rowBase + rowCount > rowsPerSlice) return false;
+    if (static_cast<size_t>(meta.cols)*sizeof(float) > input.size)
+        return false;
+    if (static_cast<size_t>(rowCount)*sizeof(float) > output.size)
+        return false;
+
+    // Reuse the existing single-row quant GEMV shader by binding a
+    // byte RANGE of the target as the weight storage buffer so the
+    // shader's row indexing starts at rowBase.
+    return recordQuantRowsResident(
+        fusedCmd_, meta, target, rowBase, rowCount, input, output);
+}
+
+bool VulkanCompute::recordQuantRowsResident(
+    VkCommandBuffer cmd, const GpuWeightView& meta, DeviceBuf& target,
+    uint32_t rowBase, uint32_t rowCount,
+    DeviceBuf& input, DeviceBuf& output)
+{
+    if (cmd == VK_NULL_HANDLE || !qPipeline_) return false;
+    const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
+    if (!rowBytes) return false;
+    const VkDescriptorSet set = getQuantDescriptorRange(
+        target,
+        static_cast<VkDeviceSize>(rowBase)*static_cast<VkDeviceSize>(rowBytes),
+        static_cast<VkDeviceSize>(rowCount)*static_cast<VkDeviceSize>(rowBytes),
+        input, output);
+    if (set == VK_NULL_HANDLE) return false;
+
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
+    vkCmdBindDescriptorSets(
+        cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+        qPipelineLayout_, 0, 1, &set, 0, nullptr);
+    QPush push{};
+    push.type = static_cast<uint32_t>(meta.type);
+    push.rows = rowCount;
+    push.cols = meta.cols;
+    push.weightBytes = static_cast<uint32_t>(rowCount*rowBytes);
+    vkCmdPushConstants(
+        cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+        0, sizeof(push), &push);
+    vkCmdDispatch(cmd, rowCount, 1, 1);
+    recordComputeBarrier(cmd);
+    ++residentDirectDispatches_;
+    return true;
+}
+
+size_t VulkanCompute::QuantPackedRowBytes(int type, uint32_t cols) noexcept
+{
+    // TRAP-5: the one authoritative packed-row stride. Any call site
+    // needing "bytes of packed weights per row" goes through this.
+    if (cols == 0) return 0;
+    if (type == 0) {
+        if (cols > std::numeric_limits<uint32_t>::max()/sizeof(float))
+            return 0;
+        return static_cast<size_t>(cols)*sizeof(float);
+    }
+    const QuantTypeDesc* desc = LookupQuantType(static_cast<uint32_t>(type));
+    if (!desc || !desc->isQuantized || !desc->blockElements)
+        return 0;
+    if (cols % desc->blockElements != 0)
+        return 0;
+    const size_t blocksPerRow = cols / desc->blockElements;
+    if (blocksPerRow > std::numeric_limits<size_t>::max()/desc->blockBytes)
+        return 0;
+    return blocksPerRow * desc->blockBytes;
+}
+
+VulkanCompute::ResidentHotHandle* VulkanCompute::GetHotHandle(uint64_t weightKey)
+{
+    // Handle nodes are pointer-stable: unordered_map nodes do not move on
+    // rehash and entries are only erased in cleanup().
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    auto it = hotHandles_.find(weightKey);
+    if (it != hotHandles_.end())
+        return &it->second;
+    // ResidentHotHandle holds a std::atomic (non-movable): construct the
+    // node in place instead of emplacing a temporary.
+    return &hotHandles_.try_emplace(weightKey).first->second;
+}
+
+VulkanCompute::ResidentWeight* VulkanCompute::AcquireHotView(
+    ResidentHotHandle* handle)
+{
+    if (!handle) return nullptr;
+    ResidentWeight* v = handle->view.load(std::memory_order_acquire);
+    if (v == ResidentHotHandle::Promoting() ||
+        v == ResidentHotHandle::Failed() ||
+        !v) {
+        return nullptr;
+    }
+    // Reader registration. The publisher never frees while readers hold
+    // the count above zero (see RetireResidentObject).
+    residentReaderCount_.fetch_add(1, std::memory_order_acq_rel);
+    ++rcuHotAcquires_;
+    return v;
+}
+
+void VulkanCompute::ReleaseHotView() noexcept
+{
+    residentReaderCount_.fetch_sub(1, std::memory_order_release);
+}
+
+bool VulkanCompute::TryBeginHotPromotion(ResidentHotHandle* handle)
+{
+    if (!handle) return false;
+    ResidentWeight* expected = nullptr;
+    return handle->view.compare_exchange_strong(
+        expected, ResidentHotHandle::Promoting(),
+        std::memory_order_acq_rel, std::memory_order_acquire);
+}
+
+void VulkanCompute::PublishHotView(
+    ResidentHotHandle* handle, ResidentWeight* view)
+{
+    if (!handle || !view) return;
+    // Publication is a release store; the object is fully constructed and
+    // its device buffer is complete before this point.
+    handle->view.store(view, std::memory_order_release);
+    ++rcuPublishes_;
+}
+
+void VulkanCompute::FailHotView(ResidentHotHandle* handle)
+{
+    if (!handle) return;
+    ResidentWeight* expected = ResidentHotHandle::Promoting();
+    handle->view.compare_exchange_strong(
+        expected, ResidentHotHandle::Failed(),
+        std::memory_order_acq_rel, std::memory_order_relaxed);
+}
+
 bool VulkanCompute::RunWeightResidentHot(
     const GpuWeightView& weight, DeviceBuf* residentWeight,
     const float* input, float* output,
@@ -3832,7 +4102,11 @@ bool VulkanCompute::RunWeightResidentHot(
 
     if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
         return abort();
-    if(!DispatchWeight(weight,in,out))
+    // DEEP2_DIRECT_RESIDENT_DISPATCH_001: the resolved resident buffer is
+    // bound directly — no re-entry into weightCache_ admission (the old
+    // code validated residentWeight and then routed through DispatchWeight,
+    // which re-looked the weight up).
+    if(!DispatchWeightResident(weight,*residentWeight,in,out))
         return abort();
     if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
         return abort();
@@ -3942,6 +4216,934 @@ bool VulkanCompute::EndLayerResidencyLease(uint32_t layerIndex) {
     UnpinAllWeights();
     currentLayerLease_ = ~0u;
     return true;
+}
+
+// ============================================================================
+// DEEP2_COLD_ROW_RACE_001 + DEEP2_HOT_LANE_CONTEXT_001 implementation
+// ============================================================================
+
+bool VulkanCompute::SubmitMaterialRangeAsync(
+    DeviceBuf& target, VkDeviceSize targetOffset,
+    const void* src, size_t bytes, uint64_t epoch,
+    MaterialTicket& t)
+{
+    t = {};
+    if (!initialized_ || !target || !src || !bytes ||
+        targetOffset + bytes > target.size)
+        return false;
+
+    // Reuse the shared upload staging (mapped, geometric-growth). The copy
+    // into staging happens on the calling thread; the device copy into the
+    // promotion target is what gets fenced.
+    DeviceBuf* staging = nullptr;
+    void* mapped = nullptr;
+    if (!ensureMappedStaging(true, bytes, staging, mapped))
+        return false;
+    std::memcpy(mapped, src, bytes);
+
+    if (!beginCommand(t.cmd, t.query, true) ||
+        !recordCopy(t.cmd, *staging, target, bytes, 0, targetOffset)) {
+        return false;
+    }
+    if (t.query)
+        vkCmdWriteTimestamp(
+            t.cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, t.query, 1);
+    if (vkEndCommandBuffer(t.cmd) != VK_SUCCESS)
+        return false;
+
+    VkFenceCreateInfo fi{};
+    fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if (vkCreateFence(device_, &fi, nullptr, &t.fence) != VK_SUCCESS)
+        return false;
+
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &t.cmd;
+
+    t.hostSubmitNs = nowNs();
+    if (vkQueueSubmit(queue_, 1, &si, t.fence) != VK_SUCCESS) {
+        vkDestroyFence(device_, t.fence, nullptr);
+        t.fence = VK_NULL_HANDLE;
+        return false;
+    }
+    ++queueSubmitCount_;
+
+    t.epoch = epoch;
+    t.bytes = bytes;
+    t.generation = deviceGeneration_;
+    t.submitted = true;
+    return true;
+}
+
+bool VulkanCompute::PollMaterialUpload(MaterialTicket& t)
+{
+    if (!t.submitted || !t.fence)
+        return false;
+    return vkGetFenceStatus(device_, t.fence) == VK_SUCCESS;
+}
+
+bool VulkanCompute::PublishCompletedPrime(
+    MaterialTicket& t, int type, uint64_t cacheKey,
+    uint64_t hotWeightKey, GpuWorkInterval* interval)
+{
+    if (!t.submitted || !t.fence || !t.target)
+        return false;
+
+    // Final blocking wait (the poll variant calls this only after the
+    // fence is already signaled, so this is instant).
+    if (!PollMaterialUpload(t)) {
+        VkResult wait =
+            vkWaitForFences(device_, 1, &t.fence, VK_TRUE, UINT64_MAX);
+        if (wait != VK_SUCCESS)
+            return false;
+    }
+    const uint64_t done = nowNs();
+
+    // TRAP-4: stale generation can never poison the current residency.
+    if (t.generation != deviceGeneration_) {
+        ++rcuStaleRejects_;
+        if (t.fence) vkDestroyFence(device_, t.fence, nullptr);
+        if (t.query) vkDestroyQueryPool(device_, t.query, nullptr);
+        if (t.cmd) vkFreeCommandBuffers(device_, commandPool_, 1, &t.cmd);
+        destroyBuffer(t.target);
+        t = {};
+        return false;
+    }
+
+    GpuWorkInterval wi{};
+    finalizeInterval(t.query, t.hostSubmitNs, done, t.epoch, t.bytes,
+                     GpuWorkKind::ModelTransfer, wi);
+    recordInterval(wi);
+    if (interval) *interval = wi;
+
+    // Destroy transfer ticket objects; the target buffer ownership moves
+    // to the heap-stable ResidentWeight.
+    if (t.fence) vkDestroyFence(device_, t.fence, nullptr);
+    if (t.query) vkDestroyQueryPool(device_, t.query, nullptr);
+    if (t.cmd) vkFreeCommandBuffers(device_, commandPool_, 1, &t.cmd);
+    t.fence = VK_NULL_HANDLE;
+    t.cmd = VK_NULL_HANDLE;
+    t.query = VK_NULL_HANDLE;
+
+    if (hotWeightKey) {
+        // RCU publication path: ownership goes to a heap-stable
+        // ResidentWeight, published lock-free. weightCache_ is NOT the
+        // publication authority.
+        ResidentHotHandle* handle = GetHotHandle(hotWeightKey);
+        if (!handle) {
+            destroyBuffer(t.target);
+            t = {};
+            return false;
+        }
+        // LRU eviction first (pointer removal before retirement).
+        if (!EvictResidentObjectsFor(t.bytes)) {
+            FailHotView(handle);
+            destroyBuffer(t.target);
+            t = {};
+            return false;
+        }
+
+        auto obj = std::make_unique<ResidentWeight>();
+        obj->buffer = t.target;
+        t.target = {};
+        obj->key = hotWeightKey;
+        obj->generation = deviceGeneration_;
+        obj->bytes = t.bytes;
+        obj->type = type;
+        obj->handle = handle;
+
+        PublishHotView(handle, obj.get());
+        residentObjectBytes_ += obj->bytes;
+        residentObjects_.push_back(std::move(obj));
+        ++coldRacePromotionsCompleted_;
+        t = {};
+        return true;
+    }
+
+    // Legacy cache-commit path (CommitWeightPrime semantics).
+    const uint64_t key = type == 0
+        ? cacheKey
+        : quantWeightKey(
+              reinterpret_cast<const void*>(
+                  static_cast<uintptr_t>(cacheKey)),
+              t.bytes, type);
+    if (!key) {
+        destroyBuffer(t.target);
+        t = {};
+        return false;
+    }
+    auto old = weightCache_.find(key);
+    if (old != weightCache_.end()) {
+        weightCacheBytes_ -= old->second.bytes;
+        destroyBuffer(old->second.buffer);
+        weightCache_.erase(old);
+    }
+    WeightCacheEntry e{};
+    e.buffer = t.target;
+    e.bytes = t.bytes;
+    e.type = type;
+    t.target = {};
+    weightCacheBytes_ += e.bytes;
+    weightCache_.emplace(key, std::move(e));
+    ++weightUploads_;
+    t = {};
+    return true;
+}
+
+bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
+{
+    // Called under apiMu_. Removes hot pointers FIRST, then waits for
+    // reader grace, then destroys. Pinned-cache-style budget: residents
+    // share the same weightBudgetBytes_ envelope as weightCache_.
+    if (weightBudgetBytes_ &&
+        incomingBytes > weightBudgetBytes_)
+        return false;
+
+    auto totalResidentBytes = [&]() -> size_t {
+        return residentObjectBytes_;
+    };
+
+    while (weightBudgetBytes_ &&
+           weightCacheBytes_ + residentObjectBytes_ + incomingBytes >
+               weightBudgetBytes_) {
+        if (residentObjects_.empty())
+            return false;
+        // LRU: front of vector is oldest.
+        ResidentWeight* victim = residentObjects_.front().get();
+        ResidentHotHandle* handle = victim->handle;
+        // Pointer removal first (atomic exchange); new readers see null.
+        if (handle) {
+            ResidentWeight* expected = victim;
+            handle->view.compare_exchange_strong(
+                expected, nullptr,
+                std::memory_order_acq_rel, std::memory_order_relaxed);
+        }
+        residentObjectBytes_ -= victim->bytes;
+        RetireResidentObject(std::move(residentObjects_.front()));
+        residentObjects_.erase(residentObjects_.begin());
+    }
+    (void)totalResidentBytes;
+    return true;
+}
+
+void VulkanCompute::RetireResidentObject(std::unique_ptr<ResidentWeight> obj)
+{
+    // Called under apiMu_ with the hot pointer already removed. Wait for
+    // the RCU reader grace period: every in-flight AcquireHotView holder
+    // must release before the buffer may be destroyed.
+    while (residentReaderCount_.load(std::memory_order_acquire) != 0) {
+        std::this_thread::yield();
+    }
+    destroyBuffer(obj->buffer);
+}
+
+void VulkanCompute::ReclaimAllResidents()
+{
+    // cleanup()-only: device idle, no readers possible; drop everything.
+    for (auto& kv : hotHandles_)
+        kv.second.view.store(nullptr, std::memory_order_release);
+    hotHandles_.clear();
+    for (auto& obj : residentObjects_) {
+        destroyBuffer(obj->buffer);
+        obj.reset();
+    }
+    residentObjects_.clear();
+    residentObjectBytes_ = 0;
+}
+
+bool VulkanCompute::RunCpuQuantRowsFull(
+    const GpuWeightView& weight,
+    const float* input, float* output)
+{
+    // CPU-only Q4_K GEMV straight from immutable GGUF bytes via the
+    // registry's AVX512-backed kernel table.
+    if (!weight.valid() || !input || !output)
+        return false;
+    if (weight.type == 0) {
+        // F32: naive dot products (rare path).
+        const float* w = static_cast<const float*>(weight.data);
+        for (uint32_t r = 0; r < weight.rows; ++r) {
+            float acc = 0.0f;
+            const float* row = w + static_cast<size_t>(r)*weight.cols;
+            for (uint32_t c = 0; c < weight.cols; ++c)
+                acc += row[c]*input[c];
+            output[r] = acc;
+        }
+        return true;
+    }
+    GEMVKernelFn kernel =
+        QuantKernelRegistry::Instance().GetGEMV(weight.type);
+    if (!kernel) return false;
+    kernel(static_cast<const uint8_t*>(weight.data),
+           input, output,
+           weight.rows, weight.cols);
+    return true;
+}
+
+bool VulkanCompute::RunWeightColdRowRace(
+    const GpuWeightView& weight,
+    const float* input, float* output,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!weight.valid() || !input || !output || !initialized_)
+        return false;
+    const size_t rowBytes =
+        QuantPackedRowBytes(weight.type, weight.cols);
+    if (!rowBytes || weight.bytes < rowBytes)
+        return false;
+    const uint64_t rowsPerSlice = weight.bytes / rowBytes;
+    if (rowsPerSlice == 0 || rowsPerSlice > UINT32_MAX)
+        return false;
+    const uint32_t totalRows = static_cast<uint32_t>(rowsPerSlice);
+    if (totalRows < 2)
+        return RunCpuQuantRowsFull(weight, input, output);
+
+    ++coldRaceCalls_;
+
+    // ---- Promotion target: ONE complete whole-tensor allocation. ----
+    DeviceBuf target{};
+    const size_t padded = (weight.bytes + 3u) & ~size_t(3u);
+    if (!createBuffer(padded,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, target)) {
+        ++coldRaceCpuOnlyCalls_;
+        return RunCpuQuantRowsFull(weight, input, output);
+    }
+
+    GEMVKernelFn cpuKernel = weight.type == 0
+        ? nullptr
+        : QuantKernelRegistry::Instance().GetGEMV(weight.type);
+
+    const uint32_t chunkRows = 64; // coarse chunks (autotune later)
+    const size_t inBytes =
+        static_cast<size_t>(weight.cols)*sizeof(float);
+
+    // Scratch: input activation (device) + full-row output (device).
+    if (!EnsureScratch(170, weight.cols) ||
+        !EnsureScratch(171, totalRows)) {
+        destroyBuffer(target);
+        ++coldRaceCpuOnlyCalls_;
+        return RunCpuQuantRowsFull(weight, input, output);
+    }
+    DeviceBuf& inBuf = Scratch(170);
+    DeviceBuf& outBuf = Scratch(171);
+
+    DeviceBuf* upStage = nullptr;
+    DeviceBuf* downStage = nullptr;
+    void* upMap = nullptr;
+    void* downMap = nullptr;
+    if (!ensureMappedStaging(true, inBytes, upStage, upMap) ||
+        !ensureMappedStaging(
+            false,
+            static_cast<size_t>(totalRows)*sizeof(float),
+            downStage, downMap)) {
+        destroyBuffer(target);
+        ++coldRaceCpuOnlyCalls_;
+        return RunCpuQuantRowsFull(weight, input, output);
+    }
+    std::memcpy(upMap, input, inBytes);
+
+    // Upload the input ONCE (fenced) before racing.
+    {
+        VkCommandBuffer cmd{};
+        VkQueryPool query{};
+        if (!beginCommand(cmd, query, true) ||
+            !recordCopy(cmd, *upStage, inBuf, inBytes) ||
+            !endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                           inBytes, epoch, nullptr)) {
+            destroyBuffer(target);
+            return RunCpuQuantRowsFull(weight, input, output);
+        }
+    }
+
+    // Race frontiers. gpuLo: next unclaimed row from the head (GPU owns
+    // [0, gpuLo)). cpuHi: next unclaimed row from the tail (CPU owns
+    // [cpuHi, totalRows)). Frontiers meeting ends the current-token work
+    // with no merge and no duplicate rows.
+    std::atomic<uint32_t> gpuLo{0};
+    std::atomic<uint32_t> cpuHi{totalRows};
+    // TRAP-3: residency completeness is tracked SEPARATELY from output
+    // ownership. uploadedRows == contiguous GPU-head rows present in the
+    // target buffer; RCU publish requires uploadedRows == totalRows.
+    uint32_t uploadedRows = 0;
+    uint32_t gpuComputed = 0;
+    uint32_t cpuComputed = 0;
+    bool raceOk = true;
+
+    MaterialTicket rangeTicket{};
+
+    while (raceOk) {
+        const uint32_t lo = gpuLo.load(std::memory_order_acquire);
+        const uint32_t hi = cpuHi.load(std::memory_order_acquire);
+        if (lo >= hi) break;
+
+        // ---- GPU claims a head chunk (claim BEFORE compute/upload so
+        // the CPU can never duplicate these rows). ----
+        const uint32_t gpuCount = std::min(chunkRows, hi - lo);
+        uint32_t expectedLo = lo;
+        if (!gpuLo.compare_exchange_strong(
+                expectedLo, lo + gpuCount, std::memory_order_acq_rel))
+            continue;
+
+        // Submit the range upload (PCIe DMA in flight).
+        if (!SubmitMaterialRangeAsync(
+                target,
+                static_cast<VkDeviceSize>(lo)*rowBytes,
+                static_cast<const uint8_t*>(weight.data) +
+                    static_cast<size_t>(lo)*rowBytes,
+                static_cast<size_t>(gpuCount)*rowBytes,
+                epoch, rangeTicket)) {
+            gpuLo.store(lo, std::memory_order_release); // unclaim
+            raceOk = false;
+            break;
+        }
+        ++coldRaceRangeSubmits_;
+        coldRaceRangeBytes_ += static_cast<uint64_t>(gpuCount)*rowBytes;
+
+        // ---- CPU tail chunk WHILE the range upload is in flight. ----
+        while (cpuKernel && raceOk) {
+            const uint32_t hi2 = cpuHi.load(std::memory_order_acquire);
+            const uint32_t lo2 = gpuLo.load(std::memory_order_acquire);
+            const uint32_t avail = hi2 > lo2 ? hi2 - lo2 : 0;
+            if (avail == 0) break;
+            const uint32_t cpuCount = std::min(chunkRows, avail);
+            const uint32_t begin = hi2 - cpuCount;
+            uint32_t expectedHi = hi2;
+            if (!cpuHi.compare_exchange_strong(
+                    expectedHi, begin, std::memory_order_acq_rel))
+                continue;
+
+            // The CPU kernel ACCUMULATES (y[r] += dot); zero the rows
+            // first so exactly-once computation yields the true dot.
+            for (uint32_t r = 0; r < cpuCount; ++r)
+                output[begin + r] = 0.0f;
+            const uint8_t* wRows =
+                static_cast<const uint8_t*>(weight.data) +
+                static_cast<size_t>(begin)*rowBytes;
+            cpuKernel(wRows, input, output + begin,
+                      cpuCount, weight.cols);
+            cpuComputed += cpuCount;
+            coldRaceCpuRows_ += cpuCount;
+
+            if (begin <= lo + gpuCount) break; // frontiers met
+        }
+
+        // ---- Wait for the range upload, then GPU-compute the chunk.
+        // The fence also guarantees the shared upload staging is idle
+        // before the next range submit. ----
+        (void)vkWaitForFences(
+            device_, 1, &rangeTicket.fence, VK_TRUE, UINT64_MAX);
+        uploadedRows = lo + gpuCount;
+        vkDestroyFence(device_, rangeTicket.fence, nullptr);
+        vkFreeCommandBuffers(device_, commandPool_, 1, &rangeTicket.cmd);
+        if (rangeTicket.query)
+            vkDestroyQueryPool(device_, rangeTicket.query, nullptr);
+        rangeTicket = {};
+
+        VkCommandBuffer gcmd{};
+        VkQueryPool gquery{};
+        if (!beginCommand(gcmd, gquery, true) ||
+            !recordQuantRowsResident(
+                gcmd, weight, target, lo, gpuCount, inBuf, outBuf)) {
+            raceOk = false;
+            break;
+        }
+        // Shader wrote chunk rows [0..gpuCount) at the START of outBuf;
+        // copy them to the download staging at their final row offset.
+        if (!recordCopy(
+                gcmd, outBuf, *downStage,
+                static_cast<VkDeviceSize>(gpuCount)*sizeof(float),
+                0,
+                static_cast<VkDeviceSize>(lo)*sizeof(float)) ||
+            !endSubmitWait(gcmd, gquery, GpuWorkKind::ModelCompute,
+                           static_cast<uint64_t>(gpuCount)*rowBytes,
+                           epoch, nullptr)) {
+            raceOk = false;
+            break;
+        }
+        gpuComputed += gpuCount;
+        coldRaceGpuRows_ += gpuCount;
+    }
+
+    // ---- Merge: only the GPU-owned head rows come from the download
+    // staging; the CPU already wrote its tail rows into final output.
+    // (Copying the whole buffer would clobber CPU results.) ----
+    const uint32_t gpuHeadRows = gpuComputed;
+    if (gpuHeadRows > 0) {
+        // endSubmitWait above guarantees the staging content is final.
+        std::memcpy(
+            output, downMap,
+            static_cast<size_t>(gpuHeadRows)*sizeof(float));
+    }
+
+    const uint32_t computedTotal = gpuComputed + cpuComputed;
+    if (computedTotal < totalRows) {
+        // Frontiers met with a gap only on CAS failure paths; finish on
+        // CPU so COLD_RACE_UNCOMPUTED_ROWS can never ship silently.
+        const uint32_t missing = totalRows - computedTotal;
+        coldRaceUncomputedRows_ += missing;
+        // Zero + compute the full missing span via the CPU kernel.
+        // (The claim frontiers may have diverged under CAS retries; the
+        // simple correct recovery is a full CPU pass over rows missing
+        // from both counters.)
+        // Track claimed spans instead: recompute ownership exactly.
+        // gpuComputed is contiguous [0,g); cpuComputed is contiguous
+        // [g, totalRows) when the race ran cleanly, so missing rows
+        // only occur on the aborted-race path handled below.
+        if (!raceOk) {
+            // Aborted race: rows outside the GPU head may be partially
+            // computed by the CPU. A conservative full CPU pass over the
+            // tail guarantees correctness (duplicates in ABORTED runs
+            // are re-zeroed first).
+            for (uint32_t r = gpuComputed; r < totalRows; ++r)
+                output[r] = 0.0f;
+            if (cpuKernel) {
+                cpuKernel(
+                    static_cast<const uint8_t*>(weight.data) +
+                        static_cast<size_t>(gpuComputed)*rowBytes,
+                    input, output + gpuComputed,
+                    totalRows - gpuComputed, weight.cols);
+            } else if (weight.type == 0) {
+                const float* w = static_cast<const float*>(weight.data);
+                for (uint32_t r = gpuComputed; r < totalRows; ++r) {
+                    float acc = 0.0f;
+                    const float* row =
+                        w + static_cast<size_t>(r)*weight.cols;
+                    for (uint32_t c = 0; c < weight.cols; ++c)
+                        acc += row[c]*input[c];
+                    output[r] = acc;
+                }
+            }
+        }
+    }
+
+    // ---- TRAP-3: promotion completeness. Rows the CPU computed for the
+    // current token still must reach the target before RCU publish. ----
+    if (raceOk && uploadedRows < totalRows) {
+        const uint32_t base = uploadedRows;
+        const uint32_t remaining = totalRows - base;
+        MaterialTicket tailTicket{};
+        if (!SubmitMaterialRangeAsync(
+                target,
+                static_cast<VkDeviceSize>(base)*rowBytes,
+                static_cast<const uint8_t*>(weight.data) +
+                    static_cast<size_t>(base)*rowBytes,
+                static_cast<size_t>(remaining)*rowBytes,
+                epoch, tailTicket)) {
+            if (tailTicket.submitted) {
+                (void)vkWaitForFences(
+                    device_, 1, &tailTicket.fence, VK_TRUE, UINT64_MAX);
+                vkDestroyFence(device_, tailTicket.fence, nullptr);
+                vkFreeCommandBuffers(
+                    device_, commandPool_, 1, &tailTicket.cmd);
+                if (tailTicket.query)
+                    vkDestroyQueryPool(
+                        device_, tailTicket.query, nullptr);
+            }
+            destroyBuffer(target);
+            return true; // current-token output complete; no publish
+        }
+        (void)vkWaitForFences(
+            device_, 1, &tailTicket.fence, VK_TRUE, UINT64_MAX);
+        vkDestroyFence(device_, tailTicket.fence, nullptr);
+        vkFreeCommandBuffers(device_, commandPool_, 1, &tailTicket.cmd);
+        if (tailTicket.query)
+            vkDestroyQueryPool(device_, tailTicket.query, nullptr);
+        ++coldRaceRangeSubmits_;
+        coldRaceRangeBytes_ +=
+            static_cast<uint64_t>(remaining)*rowBytes;
+        uploadedRows = totalRows;
+    }
+
+    if (!raceOk) {
+        destroyBuffer(target);
+        return true; // output was recovered on CPU above
+    }
+
+    // ---- Full-weight residency proof → heap-stable ResidentWeight
+    // object → lock-free RCU publish (weightCache_ is NOT the authority).
+    // ----
+    (void)PublishResidentTarget(target, weight.type, weight.key);
+    return true;
+}
+
+bool VulkanCompute::RunWeightAutoHot(
+    const GpuWeightView& weight,
+    const float* input, float* output,
+    uint64_t epoch)
+{
+    if (!weight.valid() || !input || !output)
+        return false;
+
+    // 1) RCU hot view: one acquire load; zero map/mutex/admission.
+    ResidentHotHandle* handle = GetHotHandle(weight.key);
+    if (!handle) return false;
+    ResidentWeight* hot = AcquireHotView(handle);
+    if (hot) {
+        // Direct resident dispatch on the lock-free lane if prepared and
+        // owned; otherwise the locked compatibility API.
+        bool dispatched = false;
+        if (hotLane_.initialized &&
+            hotLane_.ownerThreadId == hotLaneCurrentThreadId()) {
+            dispatched = RunWeightResidentHotDirect(
+                hotLane_, weight, hot->buffer, input, output, epoch);
+        }
+        if (!dispatched) {
+            std::lock_guard<std::recursive_mutex> lock(apiMu_);
+            dispatched = RunWeightResidentHot(
+                weight, &hot->buffer, input, output, epoch);
+        }
+        // Exactly one release per successful AcquireHotView.
+        ReleaseHotView();
+        return dispatched;
+    }
+
+    // 2) Cold miss → compute-on-miss race (promotion behind execution).
+    return RunWeightColdRowRace(weight, input, output, epoch);
+}
+
+bool VulkanCompute::PublishResidentTarget(
+    DeviceBuf& target, int type, uint64_t hotWeightKey)
+{
+    // FinalizeWeightPrime shape: transfer the completed promotion target
+    // directly into a heap-stable ResidentWeight and RCU-publish it.
+    // weightCache_ never becomes the publication authority. Assumes the
+    // caller holds apiMu_ and the transfer fence has completed.
+    if (!target || !hotWeightKey)
+        return false;
+
+    ResidentHotHandle* handle = GetHotHandle(hotWeightKey);
+    if (!handle) {
+        destroyBuffer(target);
+        return false;
+    }
+
+    // LRU eviction first (pointer removal before retirement).
+    if (!EvictResidentObjectsFor(target.size)) {
+        FailHotView(handle);
+        destroyBuffer(target);
+        return false;
+    }
+
+    auto obj = std::make_unique<ResidentWeight>();
+    obj->buffer = target;
+    obj->key = hotWeightKey;
+    obj->generation = deviceGeneration_;
+    obj->bytes = target.size;
+    obj->type = type;
+    obj->handle = handle;
+
+    PublishHotView(handle, obj.get());
+    residentObjectBytes_ += obj->bytes;
+    residentObjects_.push_back(std::move(obj));
+    ++coldRacePromotionsCompleted_;
+    return true;
+}
+
+uint32_t VulkanCompute::hotLaneCurrentThreadId() noexcept
+{
+#ifdef _WIN32
+    return static_cast<uint32_t>(GetCurrentThreadId());
+#else
+    return 0;
+#endif
+}
+
+bool VulkanCompute::PrepareHotLane(size_t maxInputFloats,
+                                   size_t maxOutputFloats,
+                                   size_t maxGroupOutputFloats)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!initialized_) return false;
+
+    auto mk = [&](DeviceBuf& b, size_t floats) -> bool {
+        if (!floats || floats > SIZE_MAX/sizeof(float))
+            return false;
+        return createBuffer(
+            floats*sizeof(float),
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, b);
+    };
+
+    if (!mk(hotLane_.input, maxInputFloats) ||
+        !mk(hotLane_.output, maxOutputFloats)) {
+        ResetHotLane();
+        return false;
+    }
+    for (int i = 0; i < 3; ++i) {
+        if (!mk(hotLane_.groupOutput[i], maxGroupOutputFloats)) {
+            ResetHotLane();
+            return false;
+        }
+    }
+
+    // Persistent mapped staging owned by the lane.
+    const size_t upBytes = maxInputFloats*sizeof(float);
+    const size_t downBytes = maxOutputFloats*sizeof(float);
+    if (!createBuffer(upBytes,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            hotLane_.upStaging) ||
+        vkMapMemory(device_, hotLane_.upStaging.memory, 0, upBytes, 0,
+                    &hotLane_.upMapped) != VK_SUCCESS) {
+        ResetHotLane();
+        return false;
+    }
+    if (!createBuffer(downBytes,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            hotLane_.downStaging) ||
+        vkMapMemory(device_, hotLane_.downStaging.memory, 0, downBytes, 0,
+                    &hotLane_.downMapped) != VK_SUCCESS) {
+        ResetHotLane();
+        return false;
+    }
+    hotLane_.upCapacity = upBytes;
+    hotLane_.downCapacity = downBytes;
+
+    // Lane-owned command buffer + fence + query pool.
+    VkCommandBufferAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    ai.commandPool = commandPool_;
+    ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    ai.commandBufferCount = 1;
+    if (vkAllocateCommandBuffers(
+            device_, &ai, &hotLane_.cmd) != VK_SUCCESS) {
+        ResetHotLane();
+        return false;
+    }
+    VkFenceCreateInfo fi{};
+    fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if (vkCreateFence(
+            device_, &fi, nullptr, &hotLane_.fence) != VK_SUCCESS) {
+        ResetHotLane();
+        return false;
+    }
+    if (timestampValidBits_) {
+        VkQueryPoolCreateInfo qi{};
+        qi.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        qi.queryType = VK_QUERY_TYPE_TIMESTAMP;
+        qi.queryCount = 2;
+        if (vkCreateQueryPool(
+                device_, &qi, nullptr, &hotLane_.query) != VK_SUCCESS) {
+            ResetHotLane();
+            return false;
+        }
+    }
+
+    hotLane_.gpuOrdinal = requestedOrdinal_;
+    hotLane_.generation = deviceGeneration_;
+    hotLane_.ownerThreadId = hotLaneCurrentThreadId();
+    hotLane_.initialized = true;
+    return true;
+}
+
+void VulkanCompute::ResetHotLane()
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (hotLane_.upMapped && hotLane_.upStaging.memory)
+        vkUnmapMemory(device_, hotLane_.upStaging.memory);
+    if (hotLane_.downMapped && hotLane_.downStaging.memory)
+        vkUnmapMemory(device_, hotLane_.downStaging.memory);
+    destroyBuffer(hotLane_.upStaging);
+    destroyBuffer(hotLane_.downStaging);
+    destroyBuffer(hotLane_.input);
+    destroyBuffer(hotLane_.output);
+    for (auto& b : hotLane_.groupOutput) destroyBuffer(b);
+    if (hotLane_.fence) vkDestroyFence(device_, hotLane_.fence, nullptr);
+    if (hotLane_.query)
+        vkDestroyQueryPool(device_, hotLane_.query, nullptr);
+    if (hotLane_.cmd && commandPool_)
+        vkFreeCommandBuffers(
+            device_, commandPool_, 1, &hotLane_.cmd);
+    hotLane_ = {};
+}
+
+bool VulkanCompute::RunWeightResidentHotDirect(
+    HotLaneContext& lane,
+    const GpuWeightView& meta,
+    DeviceBuf& residentWeight,
+    const float* input, float* output,
+    uint64_t epoch)
+{
+    // ZERO apiMu_ acquisition. Owner-thread confined.
+    if (!lane.initialized) return false;
+    if (lane.ownerThreadId != hotLaneCurrentThreadId()) {
+        ++laneOwnerViolations_;
+        return false;
+    }
+    if (!meta.valid() || !input || !output)
+        return false;
+
+    const size_t inBytes =
+        static_cast<size_t>(meta.cols)*sizeof(float);
+    const size_t outBytes =
+        static_cast<size_t>(meta.rows)*sizeof(float);
+    if (lane.input.size < inBytes || lane.output.size < outBytes)
+        return false;
+    if (lane.upCapacity < inBytes || lane.downCapacity < outBytes)
+        return false;
+
+    lane.epoch = epoch;
+    lane.q4kLaneTag = kQ4kLaneDual;
+
+    std::memcpy(lane.upMapped, input, inBytes);
+
+    if (vkResetCommandBuffer(lane.cmd, 0) != VK_SUCCESS)
+        return false;
+    VkCommandBufferBeginInfo bi{};
+    bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    bi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    if (vkBeginCommandBuffer(lane.cmd, &bi) != VK_SUCCESS)
+        return false;
+
+    if (lane.query) {
+        vkCmdResetQueryPool(lane.cmd, lane.query, 0, 2);
+        vkCmdWriteTimestamp(
+            lane.cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+            lane.query, 0);
+    }
+
+    if (!recordCopy(
+            lane.cmd, lane.upStaging, lane.input, inBytes) ||
+        !DispatchWeightResidentLane(
+            lane, meta, residentWeight,
+            lane.input, lane.output)) {
+        (void)vkEndCommandBuffer(lane.cmd);
+        return false;
+    }
+    if (!recordCopy(
+            lane.cmd, lane.output, lane.downStaging, outBytes)) {
+        (void)vkEndCommandBuffer(lane.cmd);
+        return false;
+    }
+
+    if (lane.query)
+        vkCmdWriteTimestamp(
+            lane.cmd, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            lane.query, 1);
+    if (vkEndCommandBuffer(lane.cmd) != VK_SUCCESS)
+        return false;
+    if (vkResetFences(device_, 1, &lane.fence) != VK_SUCCESS)
+        return false;
+
+    VkSubmitInfo si{};
+    si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers = &lane.cmd;
+    if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
+        return false;
+    ++lane.submits;
+    if (vkWaitForFences(
+            device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+        return false;
+
+    std::memcpy(output, lane.downMapped, outBytes);
+    ++lane.residentDispatches;
+    return true;
+}
+
+bool VulkanCompute::DispatchWeightResidentLane(
+    HotLaneContext& lane,
+    const GpuWeightView& meta,
+    DeviceBuf& residentWeight,
+    DeviceBuf& input, DeviceBuf& output)
+{
+    // Lane-local dispatch: no shared epoch/lanetag mutation, no mutex.
+    // Uses the per-submit range descriptor (never cached; freed after the
+    // fence wait in RunWeightResidentHotDirect's caller context).
+    if (meta.rows == 0 || meta.cols == 0)
+        return false;
+    if (!residentWeight || residentWeight.size < meta.bytes)
+        return false;
+    if (static_cast<size_t>(meta.cols)*sizeof(float) > input.size ||
+        static_cast<size_t>(meta.rows)*sizeof(float) > output.size)
+        return false;
+
+    if (meta.type == 0) {
+        OpsPush p{};
+        p.op = OP_GEMV_F32;
+        p.n = meta.rows;
+        p.p0 = meta.cols;
+        const VkDescriptorSet set = getOpsDescriptor(
+            residentWeight, input, output, output);
+        if (set == VK_NULL_HANDLE) return false;
+        vkCmdBindPipeline(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, opsPipeline_);
+        vkCmdBindDescriptorSets(
+            lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+            opsPipelineLayout_, 0, 1, &set, 0, nullptr);
+        vkCmdPushConstants(
+            lane.cmd, opsPipelineLayout_,
+            VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(p), &p);
+        vkCmdDispatch(lane.cmd, (meta.rows+63u)/64u, 1, 1);
+        recordComputeBarrier(lane.cmd);
+        ++residentDirectDispatches_;
+        ++lane.residentDispatches;
+        return true;
+    }
+
+    if (meta.bytes > std::numeric_limits<uint32_t>::max())
+        return false;
+    const size_t rowBytes = QuantPackedRowBytes(meta.type, meta.cols);
+    if (!rowBytes) return false;
+
+    const VkDescriptorSet set = getQuantDescriptorRange(
+        residentWeight, 0,
+        static_cast<VkDeviceSize>(meta.bytes),
+        input, output);
+    if (set == VK_NULL_HANDLE) return false;
+    lane.lastSet = set;
+    vkCmdBindPipeline(
+        lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE, qPipeline_);
+    vkCmdBindDescriptorSets(
+        lane.cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+        qPipelineLayout_, 0, 1, &set, 0, nullptr);
+    QPush push{};
+    push.type = static_cast<uint32_t>(meta.type);
+    push.rows = meta.rows;
+    push.cols = meta.cols;
+    push.weightBytes = static_cast<uint32_t>(meta.bytes);
+    vkCmdPushConstants(
+        lane.cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+        0, sizeof(push), &push);
+    vkCmdDispatch(lane.cmd, meta.rows, 1, 1);
+    recordComputeBarrier(lane.cmd);
+    ++residentDirectDispatches_;
+    ++lane.residentDispatches;
+    return true;
+}
+
+VulkanCompute::HotResidencyStats
+VulkanCompute::HotResidencyStatsReport() const noexcept
+{
+    HotResidencyStats s{};
+    s.residentDirectDispatches = residentDirectDispatches_;
+    s.residentLookupViolations = residentLookupViolations_;
+    s.rcuHotAcquires = rcuHotAcquires_;
+    s.rcuPublishes = rcuPublishes_;
+    s.rcuStaleRejects = rcuStaleRejects_;
+    s.coldRaceCalls = coldRaceCalls_;
+    s.coldRaceCpuOnlyCalls = coldRaceCpuOnlyCalls_;
+    s.coldRaceGpuRows = coldRaceGpuRows_;
+    s.coldRaceCpuRows = coldRaceCpuRows_;
+    s.coldRaceDuplicateRows = coldRaceDuplicateRows_;
+    s.coldRaceUncomputedRows = coldRaceUncomputedRows_;
+    s.coldRaceRangeSubmits = coldRaceRangeSubmits_;
+    s.coldRaceRangeBytes = coldRaceRangeBytes_;
+    s.coldRacePromotionsCompleted = coldRacePromotionsCompleted_;
+    s.laneOwnerViolations = laneOwnerViolations_;
+    s.laneResidentDispatches = hotLane_.residentDispatches;
+    s.laneSubmits = hotLane_.submits;
+    return s;
 }
 
 void VulkanCompute::ResetSpecBatchArena() {
@@ -4299,6 +5501,13 @@ void VulkanCompute::cleanup() {
     ResetResidentBatchInput();
     ResetResidentGroupOutputs();
     ResetResidentFullOutput();
+
+    // DEEP2_HOT_LANE_CONTEXT_001 / DEEP2_RCU_RESIDENCY_HANDLES_001:
+    // device idle — drop the lock-free lane and every heap-stable
+    // resident object without reader-grace spinning.
+    ResetHotLane();
+    ReclaimAllResidents();
+    ++deviceGeneration_; // stale async promotions can never publish
 
     if(device_ && reusableFusedFence_)
         vkDestroyFence(device_,reusableFusedFence_,nullptr);
