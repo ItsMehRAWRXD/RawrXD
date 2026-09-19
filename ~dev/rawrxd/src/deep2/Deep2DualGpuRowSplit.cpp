@@ -688,6 +688,46 @@ bool Deep2ProbeRowSplitViews(const WeightTensor& wt,
     return true;
 }
 
+// DEEP2_HOT_LANE_CONTEXT_001: lazily prepare/grow a device's lock-free
+// lane on first dual-row use (or when a later GEMV exceeds the prepared
+// sizes). Called from the PREP thread (before jobs dispatch), so apiMu_
+// acquisition here never contends the hot path. The permanent dual-row
+// workers claim the lanes at first job execution.
+static void ensureHotLaneFor(
+    VulkanCompute& g, uint32_t maxIn, uint32_t maxOut)
+{
+    auto& lane = g.hotLane();
+    const bool needsPrepare =
+        !lane.initialized ||
+        lane.input.size < (VkDeviceSize)maxIn * sizeof(float) ||
+        lane.output.size < (VkDeviceSize)maxOut * sizeof(float);
+    if (!needsPrepare) {
+        // Growth check for group outputs (3 slots share maxOut sizing).
+        bool groupOk = true;
+        for (int i = 0; i < 3; ++i)
+            if (lane.groupOutput[i].size <
+                (VkDeviceSize)maxOut * sizeof(float))
+                groupOk = false;
+        if (groupOk) return;
+    }
+    // (Re)prepare with generous growth margin so 64 layers of mixed
+    // geometry prepare once, not per unique shape.
+    const uint32_t inCap = std::max(maxIn, lane.initialized
+        ? (uint32_t)(lane.input.size / sizeof(float)) : 0u) * 2u;
+    const uint32_t outCap = std::max(maxOut, lane.initialized
+        ? (uint32_t)(lane.output.size / sizeof(float)) : 0u) * 2u;
+    if (!g.PrepareHotLane(inCap, outCap, outCap)) {
+        std::fprintf(stderr,
+            "[HOT_LANE_PREP_FAIL] ordinal=%u inCap=%u outCap=%u\n",
+            lane.gpuOrdinal, inCap, outCap);
+    } else {
+        std::fprintf(stderr,
+            "[HOT_LANE_PREP_OK] ordinal=%u inCap=%u outCap=%u\n",
+            lane.gpuOrdinal, inCap, outCap);
+    }
+    std::fflush(stderr);
+}
+
 bool Deep2RunDualGpuRowSplit(
     VulkanCompute& g0,VulkanCompute& g1,
     const WeightTensor& wt,const float* input,float* output,
@@ -706,24 +746,45 @@ bool Deep2RunDualGpuRowSplit(
        !Deep2BuildGpuWeightView(wt,plan.row1Begin,plan.row1Count,w1))
         return false;
 
+    // Lazy first-use lane preparation (prep thread, before job dispatch).
+    ensureHotLaneFor(g0, w0.cols, w0.rows);
+    ensureHotLaneFor(g1, w1.cols, w1.rows);
+
+    // DEEP2_HOT_RESIDENCY_RUNTIME_001 lane wiring: resolve the pointer-
+    // stable handle ONCE here (cold path). The worker jobs below then
+    // take the steady-state chain — atomic reader registration, atomic
+    // view load, direct DeviceBuf dispatch on the thread-confined hot
+    // lane — with NO unordered_map, NO apiMu_, NO cache admission on the
+    // hot path. Cold misses fall into the compute-on-miss race with the
+    // CPU AVX fallback (promotion behind execution).
+    auto* h0 = g0.GetHotHandle(w0.key);
+    auto* h1 = g1.GetHotHandle(w1.key);
+    if (!h0 || !h1) return false;
+
     // Batch2 #7: lanes write directly into the caller's disjoint final row
     // ranges — staging vectors and the host merge memcpy are gone.
     struct Ctx {
         unsigned lane;
         VulkanCompute* g;
         const GpuWeightView* w;
+        VulkanCompute::ResidentHotHandle* handle;
         const float* input;
         float* dst;
         uint64_t epoch;
         uint64_t hostEnvelopeNs;
         bool ok;
-    } c0{0,&g0,&w0,input,output+plan.row0Begin,epoch,0,false};
-    Ctx c1{1,&g1,&w1,input,output+plan.row1Begin,epoch,0,false};
+    } c0{0,&g0,&w0,h0,input,output+plan.row0Begin,epoch,0,false};
+    Ctx c1{1,&g1,&w1,h1,input,output+plan.row1Begin,epoch,0,false};
 
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<Ctx*>(p);
         const auto a = std::chrono::steady_clock::now();
-        const bool ok=c->g->RunWeightHostRoundTrip(*c->w,c->input,c->dst,c->epoch);
+        // DEEP2_HOT_LANE_CONTEXT_001: the permanent dual-row worker
+        // claims its device's lane on first use; the claim is a CAS and
+        // idempotent per thread, so steady state costs one atomic load.
+        (void)c->g->ClaimHotLaneForCurrentThread();
+        const bool ok=c->g->RunWeightAutoHot(
+            c->handle,*c->w,c->input,c->dst,c->epoch);
         const auto z = std::chrono::steady_clock::now();
         c->hostEnvelopeNs = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
@@ -839,22 +900,43 @@ bool Deep2RunDualGpuRowSplitGroup(
         }
     }
 
+    // Lazy first-use lane preparation (prep thread, before dispatch).
+    {
+        uint32_t maxIn = (uint32_t)weights[0]->cols;
+        uint32_t maxOut = 0;
+        for (size_t i = 0; i < count; ++i) {
+            maxIn = std::max(maxIn, (uint32_t)weights[i]->cols);
+            maxOut = std::max(maxOut,
+                std::max(wv[i][0].rows, wv[i][1].rows));
+        }
+        ensureHotLaneFor(g0, maxIn, maxOut);
+        ensureHotLaneFor(g1, maxIn, maxOut);
+    }
+
     // Batch2 #7: each lane writes its row range of each grouped output
     // directly — staging row buffers and the merge loop are gone.
     float* outs0[3]{};
     float* outs1[3]{};
     GpuWeightView views0[3]{};
     GpuWeightView views1[3]{};
+    VulkanCompute::ResidentHotHandle* handles0[3]{};
+    VulkanCompute::ResidentHotHandle* handles1[3]{};
     for(size_t i=0;i<count;++i){
         views0[i]=wv[i][0];
         views1[i]=wv[i][1];
         outs0[i]=outputs[i]+plans[i].row0Begin;
         outs1[i]=outputs[i]+plans[i].row1Begin;
+        // DEEP2_HOT_RESIDENCY_RUNTIME_001 lane wiring: pointer-stable
+        // handles resolved once in this cold/prep phase.
+        handles0[i]=g0.GetHotHandle(views0[i].key);
+        handles1[i]=g1.GetHotHandle(views1[i].key);
+        if(!handles0[i]||!handles1[i]) return false;
     }
 
     struct GroupCtx {
         VulkanCompute* g;
         GpuWeightView* views;
+        VulkanCompute::ResidentHotHandle** handles;
         float** outs;
         size_t count;
         const float* input;
@@ -866,15 +948,23 @@ bool Deep2RunDualGpuRowSplitGroup(
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<GroupCtx*>(p);
         const auto a = std::chrono::steady_clock::now();
-        c->ok=c->g->RunWeightGroupHostRoundTrip(
-            c->views,c->outs,c->count,c->input,c->inputCount,c->epoch);
+        // DEEP2_HOT_LANE_CONTEXT_001: permanent dual-row worker claims its
+        // device's lane (CAS, idempotent per thread).
+        (void)c->g->ClaimHotLaneForCurrentThread();
+        bool ok=true;
+        for(size_t i=0;i<c->count && ok;++i){
+            ok=c->g->RunWeightAutoHot(
+                c->handles[i],c->views[i],
+                c->input,c->outs[i],c->epoch);
+        }
         const auto z = std::chrono::steady_clock::now();
         c->hostEnvelopeNs = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
-        return c->ok;
+        c->ok=ok;
+        return ok;
     };
-    GroupCtx c0{&g0,views0,outs0,count,input,inputCount,epoch,0,false};
-    GroupCtx c1{&g1,views1,outs1,count,input,inputCount,epoch,0,false};
+    GroupCtx c0{&g0,views0,handles0,outs0,count,input,inputCount,epoch,0,false};
+    GroupCtx c1{&g1,views1,handles1,outs1,count,input,inputCount,epoch,0,false};
 
     const auto execStart = std::chrono::steady_clock::now();
     const bool both=rowExecutor().run(

@@ -4071,6 +4071,11 @@ VulkanCompute::ResidentWeight* VulkanCompute::AcquireHotView(
         return nullptr;
     }
     ++rcuHotAcquires_;
+    // DEEP2_HOT_RESIDENCY_RUNTIME_001: an RCU hot acquire IS resident
+    // reuse — count it in the same hit authority the decode gates read
+    // (RESIDENT_REUSE reads WeightHitCount). weightCache_ hits and RCU
+    // acquires are both "no upload happened" events.
+    ++weightHits_;
     return v;
 }
 
@@ -4937,36 +4942,46 @@ bool VulkanCompute::RunWeightAutoHot(
         return false;
 
     // 1) RCU hot view: register reader (seq_cst), then one atomic load.
+    //
+    // LIFETIME/LIVENESS PROTOCOL (certified by
+    // DEEP2_HOT_RESIDENCY_RUNTIME_001 + the two-thread stress gate):
+    //   - The reader count is held ONLY across the lock-free lane
+    //     dispatch, which never acquires apiMu_ — an evictor (which holds
+    //     apiMu_, detaches the victim, and never spins on the count
+    //     under the mutex) cannot deadlock with it.
+    //   - The locked fallback NEVER consumes the RCU snapshot after
+    //     releasing the count: it re-resolves residency with its own
+    //     acquire/release inside the critical section. Using the stale
+    //     snapshot would race retirement (UAF); re-resolving keeps
+    //     every buffer use under a live reader epoch.
     ResidentWeight* hot = AcquireHotView(handle);
     if (hot) {
-        // LIVENESS (review-hardened): snapshot the buffer while the
-        // reader count is held, then RELEASE the reader BEFORE taking
-        // apiMu_. The evictor holds apiMu_ and spins on the reader count
-        // in RetireResidentObject — a reader that waited on apiMu_ while
-        // holding the count would deadlock with it. The ResidentWeight
-        // object is heap-stable, so the buffer pointer outlives the
-        // release; the LRU vector slot keeps the buffer alive through
-        // the dispatch below (eviction removes the pointer first and
-        // then waits for readers — with the count already released and
-        // apiMu_ held by this call, no retire can interleave here).
         DeviceBuf* hotBuf = &hot->buffer;
-        ReleaseHotView();
-
-        // Direct resident dispatch on the lock-free lane if prepared and
-        // owned; otherwise the locked compatibility API.
+        // Hold the reader count across the LANE dispatch only.
         bool dispatched = false;
         if (hotLane_.initialized &&
-            hotLane_.ownerThreadId == hotLaneCurrentThreadId()) {
+            hotLane_.ownerThreadId.load(std::memory_order_acquire) ==
+                hotLaneCurrentThreadId()) {
             dispatched = RunWeightResidentHotDirect(
                 hotLane_, weight, *hotBuf, input, output, epoch);
         }
+        ReleaseHotView();
+
         if (!dispatched) {
+            // Locked compatibility path: re-resolve under apiMu_. The
+            // handle is pointer-stable, so this is one atomic re-load
+            // inside the critical section — never a stale snapshot.
             std::lock_guard<std::recursive_mutex> lock(apiMu_);
-            dispatched = RunWeightResidentHot(
-                weight, hotBuf, input, output, epoch);
+            ResidentWeight* again = AcquireHotView(handle);
+            if (again) {
+                DeviceBuf* againBuf = &again->buffer;
+                ReleaseHotView();
+                dispatched = RunWeightResidentHot(
+                    weight, againBuf, input, output, epoch);
+            }
         }
-        // Drain detached retirements lock-free (liveness architecture —
-        // the grace spin never happens under apiMu_).
+        // Drain detached retirements lock-free (the grace spin never
+        // happens under apiMu_).
         ProcessRetireQueue();
         return dispatched;
     }
@@ -5116,9 +5131,26 @@ bool VulkanCompute::PrepareHotLane(size_t maxInputFloats,
 
     hotLane_.gpuOrdinal = requestedOrdinal_;
     hotLane_.generation = deviceGeneration_;
-    hotLane_.ownerThreadId = hotLaneCurrentThreadId();
+    // Lanes start UNOWNED: exactly one dual-row worker claims each
+    // device's lane on first use (ClaimHotLaneForCurrentThread).
+    hotLane_.ownerThreadId.store(0, std::memory_order_release);
     hotLane_.initialized = true;
     return true;
+}
+
+bool VulkanCompute::ClaimHotLaneForCurrentThread() noexcept
+{
+    // CAS unowned->me; idempotent when this thread already owns it.
+    if (!hotLane_.initialized) return false;
+    const uint32_t me = hotLaneCurrentThreadId();
+    uint32_t expected = 0;
+    if (hotLane_.ownerThreadId.load(std::memory_order_acquire) == me)
+        return true;
+    if (hotLane_.ownerThreadId.compare_exchange_strong(
+            expected, me,
+            std::memory_order_acq_rel, std::memory_order_acquire))
+        return true;
+    return hotLane_.ownerThreadId.load(std::memory_order_acquire) == me;
 }
 
 void VulkanCompute::ResetHotLane()
@@ -5139,7 +5171,28 @@ void VulkanCompute::ResetHotLane()
     if (hotLane_.cmd && commandPool_)
         vkFreeCommandBuffers(
             device_, commandPool_, 1, &hotLane_.cmd);
-    hotLane_ = {};
+    // Atomic member: reset explicitly (aggregate zero-init is deleted).
+    hotLane_.ownerThreadId.store(0, std::memory_order_release);
+    hotLane_.gpuOrdinal = 0;
+    hotLane_.epoch = 0;
+    hotLane_.q4kLaneTag = 0;
+    hotLane_.generation = 0;
+    hotLane_.input = {};
+    hotLane_.output = {};
+    for (auto& b : hotLane_.groupOutput) b = {};
+    hotLane_.upStaging = {};
+    hotLane_.downStaging = {};
+    hotLane_.upMapped = nullptr;
+    hotLane_.downMapped = nullptr;
+    hotLane_.upCapacity = 0;
+    hotLane_.downCapacity = 0;
+    hotLane_.cmd = VK_NULL_HANDLE;
+    hotLane_.fence = VK_NULL_HANDLE;
+    hotLane_.query = VK_NULL_HANDLE;
+    hotLane_.lastSet = VK_NULL_HANDLE;
+    hotLane_.residentDispatches = 0;
+    hotLane_.submits = 0;
+    hotLane_.initialized = false;
 }
 
 bool VulkanCompute::RunWeightResidentHotDirect(
@@ -5151,7 +5204,8 @@ bool VulkanCompute::RunWeightResidentHotDirect(
 {
     // ZERO apiMu_ acquisition. Owner-thread confined.
     if (!lane.initialized) return false;
-    if (lane.ownerThreadId != hotLaneCurrentThreadId()) {
+    if (lane.ownerThreadId.load(std::memory_order_acquire) !=
+        hotLaneCurrentThreadId()) {
         ++laneOwnerViolations_;
         return false;
     }

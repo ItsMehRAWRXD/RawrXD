@@ -132,6 +132,34 @@ bool Deep2Engine::ensureGpuForwardArena(unsigned slot) {
     }
     acc(modelWeights.lmHead);
     if (maxB == 0) maxB = (size_t)H * (size_t)H * 4;
+    // DEEP2_HOT_LANE_CONTEXT_001: prepare the thread-confined lock-free
+    // lane now (device setup, under apiMu_ once). Sizing: input covers
+    // the largest activation width (hidden or intermediate), output
+    // covers the largest single-matrix row count (lmHead vocab, QKV, or
+    // FFN intermediate), group outputs match the output sizing. The
+    // dual-row workers claim these lanes at first decode use.
+    {
+        const uint32_t interW = inter ? inter : H * 4u;
+        const uint32_t maxIn = std::max(H, interW);
+        uint32_t maxRows = (uint32_t)modelWeights.vocabSize;
+        for (const auto& L : modelWeights.layers) {
+            maxRows = std::max(maxRows,
+                (uint32_t)std::max({L.wq.rows, L.wk.rows, L.wv.rows,
+                                    L.wo.rows, L.attnO.rows,
+                                    L.wGate.rows, L.wUp.rows}));
+        }
+        if (!vc->PrepareHotLane(maxIn, maxRows, maxRows)) {
+            std::fprintf(stderr,
+                "[HOT_LANE_PREP_FAIL] slot=%u maxIn=%u maxRows=%u\n",
+                slot, maxIn, maxRows);
+            // Non-fatal: decode falls back to the locked compatibility
+            // API until the next successful prepare.
+        } else {
+            std::fprintf(stderr,
+                "[HOT_LANE_PREP_OK] slot=%u maxIn=%u maxRows=%u\n",
+                slot, maxIn, maxRows);
+        }
+    }
     /* Hard parse: env set + FAIL → do not silently use 512. */
     // Dense 32B decode must remain resident after warmup.  A 512 MiB
     // default guarantees full-model cache churn.  Reserve 20% of VRAM for

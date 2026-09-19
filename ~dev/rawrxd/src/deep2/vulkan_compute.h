@@ -1186,7 +1186,7 @@ public:
     // the locked compatibility API.
     // ====================================================================
     struct HotLaneContext {
-        uint32_t ownerThreadId = 0;
+        std::atomic<uint32_t> ownerThreadId{0}; // 0 = unowned/claimable
         uint32_t gpuOrdinal = 0;
         uint64_t epoch = 0;
         uint32_t q4kLaneTag = 0;
@@ -1216,10 +1216,18 @@ public:
         bool initialized = false;
     };
     HotLaneContext hotLane_{};
+    HotLaneContext& hotLane() noexcept { return hotLane_; }
     bool PrepareHotLane(size_t maxInputFloats,
                         size_t maxOutputFloats,
                         size_t maxGroupOutputFloats);
     void ResetHotLane();
+    // DEEP2_HOT_LANE_CONTEXT_001: claim the lane for the CALLING thread
+    // (CAS unowned->me; idempotent when already owned by this thread).
+    // Ownership model: exactly ONE worker thread claims each device's
+    // lane (the dual-row executor pairs worker 0 with GPU0 and worker 1
+    // with GPU1, so claims are single-writer). A failed claim (owned by
+    // another thread) routes RunWeightAutoHot to the locked API.
+    bool ClaimHotLaneForCurrentThread() noexcept;
     // Zero-lock resident execution. Returns false when the lane is not
     // prepared or the calling thread is not the owner (caller falls back
     // to the locked API).
