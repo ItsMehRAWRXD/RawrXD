@@ -5270,12 +5270,14 @@ bool VulkanCompute::RunWeightResidentHotDirect(
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
+    const uint64_t submitNs = nowNs();
     if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
         return false;
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    const uint64_t completeNs = nowNs();
 
     // Endurance fix: the fence is signaled — the GPU is done with every
     // ranged descriptor set this submit bound. Free them all now (quant
@@ -5289,6 +5291,19 @@ bool VulkanCompute::RunWeightResidentHotDirect(
         for (uint32_t i = 0; i < lane.pendingSetCount; ++i)
             lane.pendingSets[i] = VK_NULL_HANDLE;
         lane.pendingSetCount = 0;
+    }
+
+    // DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: the lane owns its query
+    // pool; finalize its timestamp pair into the dense-row authority so
+    // GPU compute time remains attributed on the lock-free path (the
+    // fused path did this via lastFusedInterval; without it the receipts
+    // read DENSE_ROW_GPUx_COMPUTE_NS=0).
+    if (lane.query) {
+        GpuWorkInterval laneWi{};
+        if (finalizeInterval(
+                lane.query, submitNs, completeNs, epoch, 0,
+                GpuWorkKind::ModelCompute, laneWi))
+            RecordDenseRowGpuInterval(laneWi, /*isGroup=*/false);
     }
 
     std::memcpy(output, lane.downMapped, outBytes);
@@ -5459,12 +5474,14 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &lane.cmd;
+    const uint64_t groupSubmitNs = nowNs();
     if (vkQueueSubmit(queue_, 1, &si, lane.fence) != VK_SUCCESS)
         return false;
     ++lane.submits;
     if (vkWaitForFences(
             device_, 1, &lane.fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return false;
+    const uint64_t groupCompleteNs = nowNs();
 
     // Free every ranged set this submit bound.
     if (lane.pendingSetCount > 0 && descriptorPool_) {
@@ -5475,6 +5492,16 @@ bool VulkanCompute::RunWeightGroupResidentHotDirect(
         for (uint32_t i = 0; i < lane.pendingSetCount; ++i)
             lane.pendingSets[i] = VK_NULL_HANDLE;
         lane.pendingSetCount = 0;
+    }
+
+    // Dense-row authority accounting (see the single path): the group
+    // submit's GPU interval rides the lane's own query pool.
+    if (lane.query) {
+        GpuWorkInterval laneWi{};
+        if (finalizeInterval(
+                lane.query, groupSubmitNs, groupCompleteNs, epoch, 0,
+                GpuWorkKind::ModelCompute, laneWi))
+            RecordDenseRowGpuInterval(laneWi, /*isGroup=*/true);
     }
 
     // Scatter from the shared down staging into the member outputs.
