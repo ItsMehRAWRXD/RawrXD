@@ -24,6 +24,16 @@ long double envThroughput(const char* name) noexcept {
     return end!=s && v>0.0L ? v : 1.0L;
 }
 
+long double envRowThroughput(const char* rowName, const char* fallbackName) noexcept {
+    const char* s = std::getenv(rowName);
+    if (s && *s) {
+        char* end = nullptr;
+        const long double v = std::strtold(s, &end);
+        if (end != s && v > 0.0L) return v;
+    }
+    return envThroughput(fallbackName);
+}
+
 // Overlap-probe sampling period. The pairwise witness scan costs ~50us and
 // used to run after EVERY GEMV (~7% of dense-row wall at 32T). Authority or
 // cert runs that need full-rate calibrated overlap set
@@ -66,18 +76,18 @@ bool asyncSplitControl() noexcept {
     return !(e&&e[0]=='0');
 }
 
-void updateAsyncRowRatio(uint64_t ns0,uint64_t ns1) noexcept {
-    if(!asyncSplitControl()||!ns0||!ns1) return;
-    double r=gAsyncRowRatio.load(std::memory_order_relaxed);
-    // Faster GPU gets modestly more rows. Limit movement to avoid oscillation.
-    if(ns0+ns1) {
-        const double ideal=(double)ns1/(double)(ns0+ns1);
-        double target=r*0.875+ideal*0.125;
-        target=std::max(r-0.05,std::min(r+0.05,target));
-        target=std::max(0.20,std::min(0.80,target));
-        gAsyncRowRatio.store(target,std::memory_order_relaxed);
-        gAsyncSamples.fetch_add(1,std::memory_order_relaxed);
-    }
+void updateAsyncRowRatio(uint32_t rows0, uint64_t ns0, uint32_t rows1, uint64_t ns1) noexcept {
+    if (!asyncSplitControl() || !rows0 || !rows1 || !ns0 || !ns1) return;
+    const double speed0 = static_cast<double>(rows0) / static_cast<double>(ns0);
+    const double speed1 = static_cast<double>(rows1) / static_cast<double>(ns1);
+    if (!(speed0 > 0.0) || !(speed1 > 0.0)) return;
+    const double ideal = speed0 / (speed0 + speed1);
+    double r = gAsyncRowRatio.load(std::memory_order_relaxed);
+    double target = r * 0.875 + ideal * 0.125;
+    target = std::max(r - 0.05, std::min(r + 0.05, target));
+    target = std::max(0.20, std::min(0.80, target));
+    gAsyncRowRatio.store(target, std::memory_order_relaxed);
+    gAsyncSamples.fetch_add(1, std::memory_order_relaxed);
 }
 struct DualPlanKey {
     const void* data=nullptr;
@@ -102,8 +112,8 @@ struct DualPlanHash {
 const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
     const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1)
 {
-    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    const long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
+    const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
     const uint16_t pm=(uint16_t)std::max<long double>(
         1,std::min<long double>(999,s0/(s0+s1)*1000.0L+0.5L));
     const DualPlanKey key{
@@ -440,24 +450,39 @@ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
         uint32_t cols;
         uint32_t batch;
         uint64_t epoch;
+        uint64_t hostEnvelopeNs;
         bool ok;
     };
     auto runFn=[](void* p) noexcept -> bool {
         auto* c=static_cast<GroupQ4KCtx*>(p);
+        const auto a = std::chrono::steady_clock::now();
         c->ok=c->g->RunWeightGroupResidentInputQ4KSingleReturn(
             c->views,c->slab,c->offsets,
             c->weightCount,c->cols,c->batch,c->epoch);
+        const auto z = std::chrono::steady_clock::now();
+        c->hostEnvelopeNs = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(z - a).count());
         return c->ok;
     };
     GroupQ4KCtx c0{&g0,wv[0],slab0.data(),offsets0,
-        weightCount,(uint32_t)weights[0]->cols,batch,epoch,false};
+        weightCount,(uint32_t)weights[0]->cols,batch,epoch,0,false};
     GroupQ4KCtx c1{&g1,wv[1],slab1.data(),offsets1,
-        weightCount,(uint32_t)weights[0]->cols,batch,epoch,false};
+        weightCount,(uint32_t)weights[0]->cols,batch,epoch,0,false};
 
     const bool both=rowExecutor().run(
         DualRowJob{runFn,&c0},
         DualRowJob{runFn,&c1});
     if(!both||!c0.ok||!c1.ok) return false;
+
+    // Feed measured lane timing into the async ratio controller.
+    uint32_t bgRows0=0,bgRows1=0;
+    for(size_t i=0;i<weightCount;++i){
+        bgRows0+=plans[i].row0Count;
+        bgRows1+=plans[i].row1Count;
+    }
+    if(c0.hostEnvelopeNs>0&&c1.hostEnvelopeNs>0)
+        updateAsyncRowRatio(bgRows0,c0.hostEnvelopeNs,bgRows1,c1.hostEnvelopeNs);
+
     for(size_t i=0;i<weightCount;++i) {
         for(uint32_t t=0;t<batch;++t) {
             float* dst=outputs[i]+(size_t)t*weights[i]->rows;
@@ -522,8 +547,8 @@ struct SplitCacheHash {
 RowSplitPlan cachedThroughputSplit(
     const WeightTensor& wt,const VulkanCompute& g0,const VulkanCompute& g1)
 {
-    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    const long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
+    const long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
     const uint32_t m0=(uint32_t)(s0*1000.0L+0.5L);
     const uint32_t m1=(uint32_t)(s1*1000.0L+0.5L);
     const SplitCacheKey key{
@@ -586,8 +611,8 @@ RowSplitPlan chooseThroughputSplit(
         return p;
     }
     if(!g0.deviceLocalBytes()||!g1.deviceLocalBytes()) return {};
-    long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
-    long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
+    long double s0=envRowThroughput("DEEP2_ROW_GPU0_THROUGHPUT_WEIGHT","DEEP2_GPU0_THROUGHPUT_WEIGHT");
+    long double s1=envRowThroughput("DEEP2_ROW_GPU1_THROUGHPUT_WEIGHT","DEEP2_GPU1_THROUGHPUT_WEIGHT");
     if(autoSplitEnabled()){
         const double a0=gAutoSpeed0.load(std::memory_order_relaxed);
         const double a1=gAutoSpeed1.load(std::memory_order_relaxed);
@@ -758,7 +783,7 @@ bool Deep2RunDualGpuRowSplit(
     // 0, chooseThroughputSplit never left the static env-weight branch, and
     // both GPUs split rows 50/50 regardless of measured lane speed.
     if(lane0HostEnvelopeNs>0&&lane1HostEnvelopeNs>0)
-        updateAsyncRowRatio(lane0HostEnvelopeNs,lane1HostEnvelopeNs);
+        updateAsyncRowRatio(plan.row0Count, lane0HostEnvelopeNs, plan.row1Count, lane1HostEnvelopeNs);
 
     if(receipt){
         receipt->valid=true;
@@ -898,8 +923,13 @@ bool Deep2RunDualGpuRowSplitGroup(
 
     // Same live-ratio feed as the single-GEMV lane: measured group lane
     // envelopes drive the split controller instead of a static 50/50.
+    uint32_t groupRows0=0,groupRows1=0;
+    for(size_t i=0;i<count;++i){
+        groupRows0+=plans[i].row0Count;
+        groupRows1+=plans[i].row1Count;
+    }
     if(lane0HostEnvelopeNs>0&&lane1HostEnvelopeNs>0)
-        updateAsyncRowRatio(lane0HostEnvelopeNs,lane1HostEnvelopeNs);
+        updateAsyncRowRatio(groupRows0,lane0HostEnvelopeNs,groupRows1,lane1HostEnvelopeNs);
 
     if(receipt){
         receipt->valid=true;
