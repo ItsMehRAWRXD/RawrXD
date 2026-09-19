@@ -1137,7 +1137,17 @@ public:
         uint64_t epoch);
     // Full policy chain: RCU hot view -> direct resident dispatch,
     // else cold-row race (compute-on-miss + promotion-behind-execution).
+    // Key-based entry is the COLD/compatibility path: it resolves the
+    // stable handle (map + apiMu_) on every call.
     bool RunWeightAutoHot(
+        const GpuWeightView& weight,
+        const float* input, float* output,
+        uint64_t epoch);
+    // Steady-state entry: caller resolved the pointer-stable handle ONCE
+    // at layer/model preparation. Zero unordered_map, zero apiMu_, zero
+    // cache admission, zero allocation on this path.
+    bool RunWeightAutoHot(
+        ResidentHotHandle* handle,
         const GpuWeightView& weight,
         const float* input, float* output,
         uint64_t epoch);

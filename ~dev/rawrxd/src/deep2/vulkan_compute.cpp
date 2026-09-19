@@ -4013,16 +4013,26 @@ VulkanCompute::ResidentHotHandle* VulkanCompute::GetHotHandle(uint64_t weightKey
 VulkanCompute::ResidentWeight* VulkanCompute::AcquireHotView(
     ResidentHotHandle* handle)
 {
+    // RCU reader protocol (review fix): register the reader count BEFORE
+    // observing the pointer, both seq_cst. The evictor removes the pointer
+    // and then observes readerCount the same way; the seq_cst pairing
+    // makes the interleaving
+    //   reader load -> evictor null + count==0 -> destroy -> reader use
+    // impossible. Either the reader's registration is visible to the
+    // evictor before its count check (it waits), or the null is visible
+    // to the reader before its load (it sees cold). A hazard-pointer /
+    // epoch scheme can replace the global counter later without changing
+    // this external contract.
     if (!handle) return nullptr;
-    ResidentWeight* v = handle->view.load(std::memory_order_acquire);
-    if (v == ResidentHotHandle::Promoting() ||
-        v == ResidentHotHandle::Failed() ||
-        !v) {
+    residentReaderCount_.fetch_add(1, std::memory_order_seq_cst);
+
+    ResidentWeight* v = handle->view.load(std::memory_order_seq_cst);
+    if (!v ||
+        v == ResidentHotHandle::Promoting() ||
+        v == ResidentHotHandle::Failed()) {
+        residentReaderCount_.fetch_sub(1, std::memory_order_seq_cst);
         return nullptr;
     }
-    // Reader registration. The publisher never frees while readers hold
-    // the count above zero (see RetireResidentObject).
-    residentReaderCount_.fetch_add(1, std::memory_order_acq_rel);
     ++rcuHotAcquires_;
     return v;
 }
@@ -4174,7 +4184,12 @@ bool VulkanCompute::RunWeightGroupResidentHot(
 
     for(size_t i=0;i<count;++i){
         DeviceBuf& out=Scratch(63u+(unsigned)i);
-        if(!DispatchWeight(weights[i],in,out))
+        // DEEP2_DIRECT_RESIDENT_DISPATCH_001: consume the caller-resolved
+        // resident buffer per member — Q/K/V or gate/up/down members no
+        // longer rediscover residency through DispatchWeight (which
+        // re-enters ensureWeight*/weightCache_ admission).
+        if(!residentWeights[i] ||
+           !DispatchWeightResident(weights[i],*residentWeights[i],in,out))
             return abort();
         const VkDeviceSize b=
             static_cast<VkDeviceSize>(weights[i].rows)*sizeof(float);
@@ -4412,12 +4427,15 @@ bool VulkanCompute::EvictResidentObjectsFor(size_t incomingBytes)
         // LRU: front of vector is oldest.
         ResidentWeight* victim = residentObjects_.front().get();
         ResidentHotHandle* handle = victim->handle;
-        // Pointer removal first (atomic exchange); new readers see null.
+        // Pointer removal FIRST, seq_cst to pair with AcquireHotView's
+        // register-before-load (review fix): either a reader registered
+        // before this store became visible (it will be counted in the
+        // grace wait below), or the reader observes null and stays cold.
         if (handle) {
             ResidentWeight* expected = victim;
-            handle->view.compare_exchange_strong(
+            (void)handle->view.compare_exchange_strong(
                 expected, nullptr,
-                std::memory_order_acq_rel, std::memory_order_relaxed);
+                std::memory_order_seq_cst, std::memory_order_seq_cst);
         }
         residentObjectBytes_ -= victim->bytes;
         RetireResidentObject(std::move(residentObjects_.front()));
@@ -4431,8 +4449,9 @@ void VulkanCompute::RetireResidentObject(std::unique_ptr<ResidentWeight> obj)
 {
     // Called under apiMu_ with the hot pointer already removed. Wait for
     // the RCU reader grace period: every in-flight AcquireHotView holder
-    // must release before the buffer may be destroyed.
-    while (residentReaderCount_.load(std::memory_order_acquire) != 0) {
+    // must release before the buffer may be destroyed. seq_cst load pairs
+    // with AcquireHotView's seq_cst register-before-observe (review fix).
+    while (residentReaderCount_.load(std::memory_order_seq_cst) != 0) {
         std::this_thread::yield();
     }
     destroyBuffer(obj->buffer);
@@ -4779,9 +4798,28 @@ bool VulkanCompute::RunWeightAutoHot(
     if (!weight.valid() || !input || !output)
         return false;
 
-    // 1) RCU hot view: one acquire load; zero map/mutex/admission.
+    // Cold/compatibility entry: resolve the stable handle (map + apiMu_
+    // here only). Steady-state decode callers should resolve the handle
+    // ONCE at layer/model preparation and call the handle-taking
+    // overload — that path is genuinely zero-map/zero-mutex.
     ResidentHotHandle* handle = GetHotHandle(weight.key);
     if (!handle) return false;
+    return RunWeightAutoHot(handle, weight, input, output, epoch);
+}
+
+bool VulkanCompute::RunWeightAutoHot(
+    ResidentHotHandle* handle,
+    const GpuWeightView& weight,
+    const float* input, float* output,
+    uint64_t epoch)
+{
+    // Steady-state entry: the caller resolved the pointer-stable handle
+    // at preparation time. No unordered_map, no apiMu_, no cache
+    // admission, no allocation on this path.
+    if (!handle || !weight.valid() || !input || !output)
+        return false;
+
+    // 1) RCU hot view: register reader (seq_cst), then one atomic load.
     ResidentWeight* hot = AcquireHotView(handle);
     if (hot) {
         // Direct resident dispatch on the lock-free lane if prepared and
