@@ -544,6 +544,11 @@ public:
     uint64_t vulkanSlotOpsSampledNs(unsigned slot, uint32_t lane, uint32_t opKind) const;
     uint64_t vulkanSlotOpsSampledCount(unsigned slot, uint32_t lane, uint32_t opKind) const;
     uint64_t vulkanSlotOpsSampledUnits(unsigned slot, uint32_t lane, uint32_t opKind) const;
+    // DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: per-transition sampled
+    // kernel ns, dispatch count, and barrier ns.
+    uint64_t vulkanSlotTransitionKernelNs(unsigned slot, uint32_t lane, uint32_t transition) const;
+    uint64_t vulkanSlotTransitionKernelCount(unsigned slot, uint32_t lane, uint32_t transition) const;
+    uint64_t vulkanSlotTransitionBarrierNs(unsigned slot, uint32_t lane, uint32_t transition) const;
     // Reset the sampled parity/ops statistics on every slot (call between
     // warmup and measurement so admission-phase contention cannot
     // contaminate the receipt).

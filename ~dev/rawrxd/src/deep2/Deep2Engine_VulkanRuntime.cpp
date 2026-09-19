@@ -164,8 +164,12 @@ void Deep2Engine::enableVulkan(bool enable) {
             layerBytes.push_back(denseLayerResidentBytes(l));
 
         std::vector<double> speed(caps.size(), 1.0);
+        // DEEP2_ASYMMETRIC_SPLIT_001: default weights calibrated from
+        // dense-row host-envelope ratio on R9700 vs 7800 XT.
+        // Baseline 32/32 showed ~33.6s vs ~44.4s (1.32x imbalance).
+        // Target split ~37/27 layers.
         if (!speed.empty())
-            speed[0] = envPositiveDouble("DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.0);
+            speed[0] = envPositiveDouble("DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32);
         if (speed.size() > 1)
             speed[1] = envPositiveDouble("DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0);
 
@@ -622,6 +626,20 @@ uint64_t Deep2Engine::vulkanSlotOpsSampledCount(unsigned slot, uint32_t lane, ui
 uint64_t Deep2Engine::vulkanSlotOpsSampledUnits(unsigned slot, uint32_t lane, uint32_t opKind) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->OpsSampledUnits(lane,opKind):0;
+}
+// DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: transition-class sampled
+// kernel and barrier ns.
+uint64_t Deep2Engine::vulkanSlotTransitionKernelNs(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionKernelNs(lane,transition):0;
+}
+uint64_t Deep2Engine::vulkanSlotTransitionKernelCount(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionKernelCount(lane,transition):0;
+}
+uint64_t Deep2Engine::vulkanSlotTransitionBarrierNs(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionBarrierNs(lane,transition):0;
 }
 void Deep2Engine::vulkanResetQ4kParityStats() {
     for (unsigned s = 0; s < vulkanDevices_.size(); ++s) {

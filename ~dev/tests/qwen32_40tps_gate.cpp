@@ -679,6 +679,65 @@ int main(int argc, char** argv) {
         std::fflush(stderr);
     }
 
+    // DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: sampled GPU ns decomposed
+    // into kernel execution vs inter-dispatch barrier gap by transition
+    // class (Q4K\u2192Q4K, Q4K\u2192OPS, OPS\u2192Q4K, OPS\u2192OPS).
+    // With 3 timestamps per dispatch (begin, end-dispatch, post-barrier)
+    // we can attribute the resident range interior.
+    {
+        const uint64_t tokens = measured.generatedTokens ? measured.generatedTokens : 1;
+        constexpr uint32_t kResident = 2;
+        uint64_t totalKernel = 0, totalBarrier = 0, totalCount = 0;
+        uint64_t byTransKernel[9] = {}, byTransBarrier[9] = {}, byTransCount[9] = {};
+        const char* transName[9] = {
+            "None\u2192Q4K", "None\u2192OPS", "None\u2192None",
+            "Q4K\u2192Q4K", "Q4K\u2192OPS", "Q4K\u2192None",
+            "OPS\u2192Q4K", "OPS\u2192OPS", "OPS\u2192None"
+        };
+        for (uint32_t t = 0; t < 9; ++t) {
+            uint64_t k = 0, b = 0, c = 0;
+            for (unsigned s = 0; s < e.vulkanDeviceCount() && s < 2; ++s) {
+                k += e.vulkanSlotTransitionKernelNs(s, kResident, t);
+                b += e.vulkanSlotTransitionBarrierNs(s, kResident, t);
+                c += e.vulkanSlotTransitionKernelCount(s, kResident, t);
+            }
+            byTransKernel[t] = k;
+            byTransBarrier[t] = b;
+            byTransCount[t] = c;
+            totalKernel += k;
+            totalBarrier += b;
+            totalCount += c;
+        }
+        const double rangeWallMs = static_cast<double>(
+            gf.residentRangeGpuNs[0] + gf.residentRangeGpuNs[1]) / 1.0e6;
+        const double kernelMs = static_cast<double>(totalKernel) * 4.0 / 1.0e6;
+        const double barrierMs = static_cast<double>(totalBarrier) * 4.0 / 1.0e6;
+        const double accountedMs = kernelMs + barrierMs;
+        const double accountedPct = rangeWallMs > 0.0 ?
+            (accountedMs / rangeWallMs) * 100.0 : 0.0;
+        std::fprintf(stderr,
+            "DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001\n"
+            "RESIDENT_RANGE_WALL_MS=%.3f\n"
+            "RESIDENT_KERNEL_MS=%.3f\n"
+            "RESIDENT_BARRIER_GAP_MS=%.3f\n"
+            "RESIDENT_ACCOUNTED_MS=%.3f\n"
+            "RANGE_ACCOUNTED_PCT=%.2f\n"
+            "RESIDENT_SAMPLED_DISPATCHES=%llu\n",
+            rangeWallMs, kernelMs, barrierMs, accountedMs,
+            accountedPct,
+            static_cast<unsigned long long>(totalCount));
+        for (uint32_t t = 0; t < 9; ++t) {
+            if (byTransCount[t] == 0) continue;
+            std::fprintf(stderr,
+                "TRANS_%s_KERNEL_MS=%.3f BARRIER_MS=%.3f DISPATCHES=%llu\n",
+                transName[t],
+                static_cast<double>(byTransKernel[t]) * 4.0 / 1.0e6,
+                static_cast<double>(byTransBarrier[t]) * 4.0 / 1.0e6,
+                static_cast<unsigned long long>(byTransCount[t]));
+        }
+        std::fflush(stderr);
+    }
+
     std::fprintf(stderr,
         "DEEP2_DECODE_THROUGHPUT_BREAKDOWN_001=%s\n",
         pass ? "PASS" : "HOLD");

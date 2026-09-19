@@ -868,7 +868,13 @@ public:
                 opsSampledCount_[l][op] = 0;
                 opsSampledUnits_[l][op] = 0;
             }
+            for (uint32_t t = 0; t < 9; ++t) {
+                transitionKernelNs_[l][t] = 0;
+                transitionKernelCount_[l][t] = 0;
+                transitionBarrierNs_[l][t] = 0;
+            }
         }
+        prevPipelineType_ = kPipelineNone;
     }
     uint64_t Q4kParityDispatchCount(uint32_t lane) const noexcept {
         return lane < 3 ? q4kDispatchCount_[lane] : 0;
@@ -901,6 +907,18 @@ public:
     }
     uint64_t OpsSampledUnits(uint32_t lane, uint32_t opKind) const noexcept {
         return (lane<3 && opKind<8) ? opsSampledUnits_[lane][opKind] : 0;
+    }
+    // DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: per-transition sampled
+    // kernel ns / barrier ns / dispatch count.
+    // Transition index = prevPipeline*3 + currPipeline (0=None,1=Quant,2=Ops).
+    uint64_t TransitionKernelNs(uint32_t lane, uint32_t transition) const noexcept {
+        return (lane<3 && transition<9) ? transitionKernelNs_[lane][transition] : 0;
+    }
+    uint64_t TransitionKernelCount(uint32_t lane, uint32_t transition) const noexcept {
+        return (lane<3 && transition<9) ? transitionKernelCount_[lane][transition] : 0;
+    }
+    uint64_t TransitionBarrierNs(uint32_t lane, uint32_t transition) const noexcept {
+        return (lane<3 && transition<9) ? transitionBarrierNs_[lane][transition] : 0;
     }
 
     // ========== Spec accept ==========
@@ -1179,6 +1197,7 @@ private:
         uint32_t rows;
         uint32_t cols;
         uint32_t lane;
+        uint32_t prevPipeline; // 0=None,1=Quant,2=Ops
     };
     bool ensureQ4kParityPool();
     void accumulateQ4kParitySamples() noexcept;
@@ -1199,6 +1218,17 @@ private:
     uint64_t opsSampledNs_[3][8] = {};
     uint64_t opsSampledCount_[3][8] = {};
     uint64_t opsSampledUnits_[3][8] = {};
+
+    // DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: transition-class kernel
+    // and barrier timing.  prevPipelineType_ tracks the pipeline bound
+    // at the previous dispatch so recordComputeBarrier can tag the gap.
+    static constexpr uint32_t kPipelineNone = 0;
+    static constexpr uint32_t kPipelineQuant = 1;
+    static constexpr uint32_t kPipelineOps = 2;
+    uint32_t prevPipelineType_ = kPipelineNone;
+    uint64_t transitionKernelNs_[3][9] = {};
+    uint64_t transitionKernelCount_[3][9] = {};
+    uint64_t transitionBarrierNs_[3][9] = {};
 
     DeviceBuf uploadStaging_{};
     DeviceBuf downloadStaging_{};
