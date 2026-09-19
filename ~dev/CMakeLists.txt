@@ -129,6 +129,22 @@ target_include_directories(k2_parity_harness PRIVATE
 )
 
 #--------------------
+# Quant kernel parity gate (QUANT_KERNEL_PARITY_001)
+# Fail-closed scalar-vs-SIMD differential authority for promoted GEMV
+# kernels (F16 AVX512, Q8_0 AVX2). Unity-includes the registry TU so its
+# file-static kernels are testable; verifies actual dispatch pointers.
+#--------------------
+add_executable(quant_kernel_parity_gate
+    tests/quant_kernel_parity_gate.cpp
+)
+target_include_directories(quant_kernel_parity_gate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+)
+
+#--------------------
 # Smoke test (certification)
 #--------------------
 add_executable(k2_smoke_test

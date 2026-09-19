@@ -1258,53 +1258,60 @@ static void gemv_f16_avx2(
 }
 
 // --- Q8_0 GEMV (AVX2) ---
-// block_q8_0: 32 int8 weights + 1 float scale (34 bytes total)
-// Layout: float d; int8_t qs[32];
+// block_q8_0: 32 int8 weights + 1 fp16 scale (d) — 34 bytes total.
+// QUANT_KERNEL_PARITY_001 authority: every lane of every block is
+// accumulated (8-lane _mm256_cvtepi8_epi32 chunks — the intrinsic expands
+// 8 int8 values, not 16) and short final blocks are handled exactly like
+// the scalar reference (34-byte GGUF block stride).
 static void gemv_q8_0_avx2(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
+    constexpr size_t kBlk = 34;
+    const size_t blocksPerRow = (cols + 31) / 32;
+    const size_t rowBytes = blocksPerRow * kBlk;
 
     for (size_t r = 0; r < rows; ++r) {
-        __m256 acc = _mm256_setzero_ps();
-        const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
+        __m256 vacc = _mm256_setzero_ps();
+        float tailAcc = 0.0f;
+
+        const uint8_t* row = w + r * rowBytes;
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q8_0& blk = rowBlocks[b];
-            __m256 dVec = _mm256_set1_ps(f16_to_f32(blk.d));
+            const auto* blk =
+                reinterpret_cast<const block_q8_0*>(row + b * kBlk);
 
-            // Load 32 int8 weights
-            __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
-            
-            // Convert first 16 int8 to int32, then to float
-            __m128i qs_lo = _mm256_castsi256_si128(qs);
-            __m256i i32_lo = _mm256_cvtepi8_epi32(qs_lo);
-            __m256 wv_lo = _mm256_cvtepi32_ps(i32_lo);
-            
-            // Load first 16 activations and FMA
-            __m256 xv_lo = _mm256_loadu_ps(x + b * 32);
-            acc = _mm256_fmadd_ps(_mm256_mul_ps(wv_lo, dVec), xv_lo, acc);
-            
-            // Convert second 16 int8 to int32, then to float
-            __m128i qs_hi = _mm256_extracti128_si256(qs, 1);
-            __m256i i32_hi = _mm256_cvtepi8_epi32(qs_hi);
-            __m256 wv_hi = _mm256_cvtepi32_ps(i32_hi);
-            
-            // Load second 16 activations and FMA
-            __m256 xv_hi = _mm256_loadu_ps(x + b * 32 + 16);
-            acc = _mm256_fmadd_ps(_mm256_mul_ps(wv_hi, dVec), xv_hi, acc);
+            const float d = f16_to_f32(blk->d);
+            const __m256 dVec = _mm256_set1_ps(d);
+
+            const size_t base = b * 32;
+            const size_t n =
+                (base + 32 <= cols) ? static_cast<size_t>(32) : (cols - base);
+
+            size_t i = 0;
+            for (; i + 8 <= n; i += 8) {
+                const __m128i q8 = _mm_loadl_epi64(
+                    reinterpret_cast<const __m128i*>(blk->qs + i));
+                const __m256i q32 = _mm256_cvtepi8_epi32(q8);
+                const __m256 qv = _mm256_cvtepi32_ps(q32);
+                const __m256 xv = _mm256_loadu_ps(x + base + i);
+                vacc = _mm256_fmadd_ps(_mm256_mul_ps(qv, dVec), xv, vacc);
+            }
+            for (; i < n; ++i) {
+                tailAcc +=
+                    d * static_cast<float>(blk->qs[i]) * x[base + i];
+            }
         }
-        
-        // Horizontal sum
-        __m256 hsum = _mm256_hadd_ps(acc, acc);
-        hsum = _mm256_hadd_ps(hsum, hsum);
-        float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
-                    _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
-        y[r] += sum;
+
+        __m128 lo = _mm256_castps256_ps128(vacc);
+        __m128 hi = _mm256_extractf128_ps(vacc, 1);
+        __m128 sum4 = _mm_add_ps(lo, hi);
+        sum4 = _mm_hadd_ps(sum4, sum4);
+        sum4 = _mm_hadd_ps(sum4, sum4);
+
+        y[r] += _mm_cvtss_f32(sum4) + tailAcc;
     }
 }
 
@@ -1819,6 +1826,10 @@ static void gemv_q5_k_avx2(
     }
 }
 
+// The Q5_K AVX2 body above is KNOWN DEFECTIVE (it reorders nibbles vs
+// the ggml layout and only accumulates the lower _mm256_dp_ps half).
+// Keep it macro-aliased to the scalar reference; QUANT_KERNEL_PARITY_001
+// fails closed if this alias is removed without a passing parity gate.
 #define gemv_q2_k_avx2 gemv_q2_k_scalar
 #define gemv_q2_k_avx512 gemv_q2_k_scalar
 #define gemv_q3_k_avx2 gemv_q3_k_scalar
@@ -1855,7 +1866,8 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- F16 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_F16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_F16));
     RegisterDequant((int)GGMLType::GGML_TYPE_F16, dequant_f16);
-    if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
+    if (hasAVX512 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx512);
+    else if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
 
     // BF16 (ggml id 30) — common for lm_head / norms on newer GGUFs
@@ -1866,24 +1878,22 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
-    // MASM stubbed — use scalar reference until AVX2 kernel is verified
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
+    if (hasAVX2) RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx2);
+    else         RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    // MASM linked but unverified — use scalar reference until byte-level comparison passes
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
-    std::fprintf(stderr, "[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
-           (void*)(GEMVKernelFn)gemv_q4_k_scalar,
-           (void*)(DequantKernelFn)dequant_q4_k,
-           (void*)GetGEMV((int)GGMLType::GGML_TYPE_Q4_K),
-           (int)(GetGEMV((int)GGMLType::GGML_TYPE_Q4_K) == (GEMVKernelFn)gemv_q4_k_scalar));
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
-    // MASM stubbed — use scalar reference until AVX2 kernel is verified
+    // FAIL-CLOSED: the vector body below is KNOWN DEFECTIVE (nibble-order
+    // mismatch vs the scalar ggml reference + only the lower 128-bit half
+    // of _mm256_dp_ps is accumulated) and is macro-aliased to the scalar
+    // reference further below. It must stay unregistered until it passes
+    // its own Q5K_AVX2_PARITY_001 gate. Scalar only.
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---
@@ -1993,15 +2003,86 @@ BlockGeometry QuantKernelRegistry::GetGeometry(int quantType) const {
     return GetBlockGeometryForType(quantType);
 }
 
+// ---------------------------------------------------------------------------
+// Actual-dispatch telemetry (registry audit).
+// Label a registered GEMV pointer by FUNCTION-POINTER IDENTITY, never by
+// CPU capability: a scalar registration on an AVX512 CPU must print
+// "scalar". This makes DumpTable an authority check of the real dispatch
+// state instead of a mirror of the host ISA.
+//
+// NOTE: deliberately no comparisons against the gemv_*_masm wrappers.
+// They are never registered by RegisterBuiltins(), and referencing them
+// would drag the link-time-absent Deep2_Q*_K_GEMV externals into every
+// target that links this TU. A masm pointer therefore prints "unknown",
+// which is the correct fail-closed label.
+// ---------------------------------------------------------------------------
+static const char* KernelImplName(int type, GEMVKernelFn fn) {
+    if (!fn) return "none";
+    switch (static_cast<GGMLType>(type)) {
+    case GGMLType::GGML_TYPE_F32:
+        if (fn == gemv_f32_avx512) return "avx512";
+        if (fn == gemv_f32_avx2)    return "avx2";
+        if (fn == gemv_f32_scalar)  return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_F16:
+        if (fn == gemv_f16_avx512) return "avx512";
+        if (fn == gemv_f16_avx2)    return "avx2";
+        if (fn == gemv_f16_scalar)  return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_BF16:
+        if (fn == gemv_bf16_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q8_0:
+        if (fn == gemv_q8_0_avx512) return "avx512(scalar-delegate)";
+        if (fn == gemv_q8_0_avx2)   return "avx2";
+        if (fn == gemv_q8_0_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q4_K:
+        if (fn == gemv_q4_k_avx512) return "avx512(scalar-delegate)";
+        if (fn == gemv_q4_k_avx2)   return "avx2(scalar-delegate)";
+        if (fn == gemv_q4_k_scalar)  return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q5_K:
+        if (fn == gemv_q5_k_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q6_K:
+        if (fn == gemv_q6_k_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q2_K:
+        if (fn == gemv_q2_k_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q3_K:
+        if (fn == gemv_q3_k_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q4_0:
+        if (fn == gemv_q4_0_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q4_1:
+        if (fn == gemv_q4_1_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q5_0:
+        if (fn == gemv_q5_0_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q5_1:
+        if (fn == gemv_q5_1_scalar) return "scalar";
+        break;
+    case GGMLType::GGML_TYPE_Q8_K:
+        if (fn == gemv_q8_k_avx512) return "avx512";
+        if (fn == gemv_q8_k_scalar) return "scalar";
+        break;
+    default:
+        break;
+    }
+    return "unknown";
+}
+
 std::string QuantKernelRegistry::DumpTable() const {
     std::ostringstream oss;
     oss << "[QuantKernelRegistry] Dispatch Table:\n";
     for (const auto& [type, kernel] : gemvTable_) {
         const char* name = GGMLTypeName(type);
-        const char* impl = "scalar";
-        if (cpu_.avx512f && cpu_.avx512bw) impl = "avx512";
-        else if (cpu_.avx2) impl = "avx2";
-        oss << "  " << name << " (type=" << type << ") -> " << impl << "\n";
+        oss << "  " << name << " (type=" << type << ") -> "
+            << KernelImplName(type, kernel) << "\n";
     }
     return oss.str();
 }
