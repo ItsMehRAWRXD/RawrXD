@@ -345,11 +345,11 @@ void Deep2Engine::enableVulkan(bool enable) {
         bool samePtrGpu0 = false, samePtrGpu1 = false;
         bool bothImportable = false;
         bool cpuReads = false, cpuWrites = false;
+        void* hostAllocPtrForLog = nullptr; // capture before free for honest telemetry
 
         CPUInference::VulkanCompute::SharedHostImportResult r0{}, r1{};
         if (bothHostExt && commonAlign > 0) {
             sharedBytes = (size_t)commonAlign; // smallest legal allocation
-            // Use _aligned_malloc on Windows; already included in vulkan_compute.cpp
             sharedHostPtr = _aligned_malloc(sharedBytes, (size_t)commonAlign);
             if (sharedHostPtr) {
                 alignedOk = true;
@@ -372,6 +372,7 @@ void Deep2Engine::enableVulkan(bool enable) {
                 volatile unsigned char* p = reinterpret_cast<unsigned char*>(sharedHostPtr);
                 (void)p[0];
                 cpuReads = true;
+                hostAllocPtrForLog = sharedHostPtr; // capture for telemetry
                 _aligned_free(sharedHostPtr);
                 sharedHostPtr = nullptr;
             }
@@ -397,7 +398,7 @@ void Deep2Engine::enableVulkan(bool enable) {
             "CPU_PAYLOAD_READS=%d\n"
             "CPU_PAYLOAD_WRITES=%d\n"
             "B5_SHARED_HOST_IMPORT_001=%s\n",
-            (void*)((!bothHostExt || !alignedOk) ? nullptr : sharedHostPtr),
+            hostAllocPtrForLog,
             sharedBytes,
             static_cast<unsigned long long>(commonAlign),
             alignedOk ? 1 : 0,
