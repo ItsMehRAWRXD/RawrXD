@@ -538,6 +538,16 @@ public:
     uint64_t vulkanSlotQ4kParitySampledCount(unsigned slot, uint32_t lane) const;
     uint64_t vulkanSlotQ4kParitySampledRows(unsigned slot, uint32_t lane) const;
     uintptr_t vulkanSlotQ4kParityPipeline(unsigned slot, uint32_t lane) const;
+    // DEEP2_RESIDENT_OPS_BREAKDOWN_001 (lane: 1=dual-row, 2=resident;
+    // opKind: 0=probe,1=gemv_f32,2=rmsnorm,3=residual,4=swiglu,5=rope,
+    // 6=attn,7=mla_attn)
+    uint64_t vulkanSlotOpsSampledNs(unsigned slot, uint32_t lane, uint32_t opKind) const;
+    uint64_t vulkanSlotOpsSampledCount(unsigned slot, uint32_t lane, uint32_t opKind) const;
+    uint64_t vulkanSlotOpsSampledUnits(unsigned slot, uint32_t lane, uint32_t opKind) const;
+    // Reset the sampled parity/ops statistics on every slot (call between
+    // warmup and measurement so admission-phase contention cannot
+    // contaminate the receipt).
+    void vulkanResetQ4kParityStats();
     uint64_t vulkanSlotQ4KBatch4RowOps(unsigned slot) const;
     uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
     uint64_t vulkanSlotQ4KBatch8RowOps(unsigned slot) const;

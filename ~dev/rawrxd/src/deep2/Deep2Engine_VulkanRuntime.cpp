@@ -610,6 +610,25 @@ uintptr_t Deep2Engine::vulkanSlotQ4kParityPipeline(unsigned slot, uint32_t lane)
     auto* vc=getVulkanComputeSlot(slot);
     return vc?(uintptr_t)vc->Q4kParityPipeline(lane):0;
 }
+// DEEP2_RESIDENT_OPS_BREAKDOWN_001: sampled ops-pipeline GPU ns by op kind.
+uint64_t Deep2Engine::vulkanSlotOpsSampledNs(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledNs(lane,opKind):0;
+}
+uint64_t Deep2Engine::vulkanSlotOpsSampledCount(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledCount(lane,opKind):0;
+}
+uint64_t Deep2Engine::vulkanSlotOpsSampledUnits(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledUnits(lane,opKind):0;
+}
+void Deep2Engine::vulkanResetQ4kParityStats() {
+    for (unsigned s = 0; s < vulkanDevices_.size(); ++s) {
+        auto* vc=getVulkanComputeSlot(s);
+        if (vc) vc->ResetQ4kParityStats();
+    }
+}
 uint64_t Deep2Engine::vulkanSlotQ4KBatch4RowOps(unsigned slot) const {
     auto* vc=getVulkanComputeSlot(slot);
     return vc?vc->Q4KBatch4RowOps():0;

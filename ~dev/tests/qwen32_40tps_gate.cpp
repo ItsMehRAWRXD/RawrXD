@@ -156,6 +156,7 @@ int main(int argc, char** argv) {
     e.reset();
     e.resetGpuForwardCounters();
     Deep2::Deep2ResetDualRowTiming();
+    e.vulkanResetQ4kParityStats();
 
     LARGE_INTEGER freq{}, t0{}, t1{};
     QueryPerformanceFrequency(&freq);
@@ -629,6 +630,52 @@ int main(int argc, char** argv) {
             slowdown,
             shaderMatch ? 1u : 0u,
             shaderMatch ? 1u : 0u);
+        std::fflush(stderr);
+    }
+
+    // DEEP2_RESIDENT_OPS_BREAKDOWN_001: sampled GPU ns by op kind for the
+    // ops pipeline (deep2_ops.comp), resolving the resident range
+    // composition: Q4K GEMVs (quant pipeline) vs attention/norms/RoPE/
+    // SwiGLU (ops pipeline). Per-token normalization at 1-in-4 sampling
+    // (multiply by 4 to extrapolate).
+    {
+        const uint64_t tokens = measured.generatedTokens ?
+            measured.generatedTokens : 1;
+        static const char* const kOpsNames[8] = {
+            "PROBE", "GEMV_F32", "RMSNORM", "RESIDUAL",
+            "SWIGLU", "ROPE", "ATTN", "MLA_ATTN"};
+        std::fprintf(stderr,
+            "DEEP2_RESIDENT_OPS_BREAKDOWN_001\n"
+            "OPS_BREAKDOWN_TOKENS=%llu\n"
+            "OPS_BREAKDOWN_SAMPLING=1_IN_4\n",
+            static_cast<unsigned long long>(tokens));
+        for (uint32_t lane = 1; lane <= 2; ++lane) {
+            const char* laneName = lane == 1 ? "DUAL" : "RESIDENT";
+            uint64_t laneTotal = 0;
+            for (uint32_t op = 0; op < 8; ++op) {
+                uint64_t ns = 0, cnt = 0;
+                for (unsigned s = 0; s < e.vulkanDeviceCount() && s < 2; ++s) {
+                    ns += e.vulkanSlotOpsSampledNs(s, lane, op);
+                    cnt += e.vulkanSlotOpsSampledCount(s, lane, op);
+                }
+                laneTotal += ns;
+                if (ns)
+                    std::fprintf(stderr,
+                        "OPS_%s_%s_SAMPLED_NS=%llu SAMPLES=%llu "
+                        "MS_PER_TOKEN_EST=%.3f\n",
+                        laneName, kOpsNames[op],
+                        static_cast<unsigned long long>(ns),
+                        static_cast<unsigned long long>(cnt),
+                        static_cast<double>(ns) * 4.0 /
+                            (static_cast<double>(tokens) * 1.0e6));
+            }
+            std::fprintf(stderr,
+                "OPS_%s_TOTAL_SAMPLED_NS=%llu MS_PER_TOKEN_EST=%.3f\n",
+                laneName,
+                static_cast<unsigned long long>(laneTotal),
+                static_cast<double>(laneTotal) * 4.0 /
+                    (static_cast<double>(tokens) * 1.0e6));
+        }
         std::fflush(stderr);
     }
 

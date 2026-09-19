@@ -1652,6 +1652,24 @@ bool VulkanCompute::dispatchOps(
         if (!beginCommand(cmd, query, true)) return false;
     }
 
+    // DEEP2_RESIDENT_OPS_BREAKDOWN_001: sampled GPU timestamp pair around
+    // this ops dispatch, tagged by op kind + lane (1-in-N; post-fence
+    // collection reuses the parity pool). Op kinds: 0=probe,1=gemv_f32,
+    // 2=rmsnorm,3=residual,4=swiglu,5=rope,6=attn,7=mla_attn.
+    const uint32_t opKind = push.op & 15u;
+    const uint32_t sampleLane = q4kLane_;
+    // FUSED-ONLY sampling (see dispatchQuant): own=true dispatches are
+    // never collected — skip them so meta stays in lockstep with ticks.
+    const bool sampleOps = !own && q4kParityQuery_ && q4kParitySampleEvery_ &&
+        (q4kParitySeq_ % q4kParitySampleEvery_) == 0 &&
+        q4kParityNext_ < q4kParityCapacity_;
+    const uint32_t opsSlot = sampleOps ? q4kParityNext_ : 0u;
+    if (sampleOps) {
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                            q4kParityQuery_, opsSlot * 2u);
+    }
+    ++q4kParitySeq_;
+
     VkDescriptorSet set=getOpsDescriptor(aa,bb,cc,dd);
     if(set==VK_NULL_HANDLE) return false;
 
@@ -1662,6 +1680,17 @@ bool VulkanCompute::dispatchOps(
                        0, sizeof(push), &push);
     vkCmdDispatch(cmd, groupsX, 1, 1);
     recordComputeBarrier(cmd);
+
+    if (sampleOps) {
+        vkCmdWriteTimestamp(cmd, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                            q4kParityQuery_, opsSlot * 2u + 1u);
+        // Ops samples are recorded with lane = 16 + laneTag (the op kind
+        // rides in `rows`, the work-unit count in `cols`) so the shared
+        // accumulator can split them from Q4K samples (lanes 1/2).
+        q4kParityMeta_.push_back(
+            Q4kParitySample{opKind, push.n, 16u + sampleLane});
+        ++q4kParityNext_;
+    }
 
     if (!own) return true;
     return endSubmitWait(cmd, query, kind, 0, workEpoch_, nullptr);
@@ -1695,7 +1724,10 @@ bool VulkanCompute::dispatchQuant(
 
     // Sampled GPU timestamp pair around this dispatch (mid-buffer writes
     // into the parity pool; collected post-fence). 1-in-N to bound cost.
-    const bool sample = q4kParityQuery_ && q4kParitySampleEvery_ &&
+    // FUSED-ONLY: own=true dispatches run on a fresh command buffer whose
+    // samples would never be collected (accumulate runs in EndFusedLayer)
+    // — sampling them would desync meta from ticks, so skip them.
+    const bool sample = !own && q4kParityQuery_ && q4kParitySampleEvery_ &&
         (q4kParitySeq_ % q4kParitySampleEvery_) == 0 &&
         q4kParityNext_ < q4kParityCapacity_;
     const uint32_t slot = sample ? q4kParityNext_ : 0u;
@@ -2127,12 +2159,21 @@ void VulkanCompute::accumulateQ4kParitySamples() noexcept {
         for(size_t i=0;i<q4kParityMeta_.size();++i){
             const uint64_t s=ticks[i*2u],e=ticks[i*2u+1u];
             const Q4kParitySample& m=q4kParityMeta_[i];
-            if(!m.lane || m.lane>=3) continue;
+            if(e==s && !((e-s)&mask)) continue;
             const uint64_t gap=(e-s)&mask;
-            if(e!=s || gap){
-                const uint64_t ns=static_cast<uint64_t>(
-                    static_cast<long double>(gap)*
-                    static_cast<long double>(timestampPeriodNs_));
+            const uint64_t ns=static_cast<uint64_t>(
+                static_cast<long double>(gap)*
+                static_cast<long double>(timestampPeriodNs_));
+            if(m.lane>=16u){
+                // Ops-pipeline sample: lane = 16 + laneTag, rows = opKind.
+                const uint32_t lane=m.lane-16u;
+                const uint32_t opKind=m.rows & 15u;
+                if(lane && opKind<8){
+                    opsSampledNs_[lane][opKind]+=ns;
+                    ++opsSampledCount_[lane][opKind];
+                    opsSampledUnits_[lane][opKind]+=m.cols;
+                }
+            } else if(m.lane && m.lane<3){
                 q4kSampledNs_[m.lane]+=ns;
                 ++q4kSampledCount_[m.lane];
                 q4kSampledRows_[m.lane]+=m.rows;
@@ -2154,12 +2195,17 @@ bool VulkanCompute::BeginFusedLayer() {
     lastFusedIntervalValid_ = false;
 
     // DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: reset the sampled-slot
-    // cursor for this fused layer and reset the pool inside the new
-    // recording (the legal place for vkCmdResetQueryPool).
+    // cursor for this fused layer. The POOL reset must be recorded on
+    // the command buffer only AFTER vkBeginCommandBuffer (below) —
+    // recording into a non-recording command buffer is undefined
+    // behavior and killed the warmup run (log froze right after range
+    // pinning with no crash output). The reset is emitted with the
+    // existing reusableFusedQuery_ reset inside the recording.
+    // Stale meta entries from any un-collected sequence are discarded
+    // with the pool reset so meta.size() can never exceed the ticks
+    // vector in the accumulator (out-of-bounds read guard).
     q4kParityNext_ = 0;
-    if (q4kParityQuery_)
-        vkCmdResetQueryPool(reusableFusedCmd_, q4kParityQuery_,
-                             0, q4kParityCapacity_ * 2u);
+    q4kParityMeta_.clear();
 
     if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
         return false;
@@ -2168,6 +2214,10 @@ bool VulkanCompute::BeginFusedLayer() {
     bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     if(vkBeginCommandBuffer(reusableFusedCmd_,&bi)!=VK_SUCCESS)
         return false;
+
+    if(q4kParityQuery_)
+        vkCmdResetQueryPool(reusableFusedCmd_, q4kParityQuery_,
+                            0, q4kParityCapacity_ * 2u);
 
     if(reusableFusedQuery_){
         vkCmdResetQueryPool(reusableFusedCmd_,reusableFusedQuery_,0,2);

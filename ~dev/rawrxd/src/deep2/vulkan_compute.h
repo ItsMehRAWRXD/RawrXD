@@ -851,6 +851,25 @@ public:
     static constexpr uint32_t kQ4kLaneDual = 1;
     static constexpr uint32_t kQ4kLaneResident = 2;
     void SetQ4kLaneTag(uint32_t lane) noexcept { q4kLane_ = lane; }
+    // Reset all parity/ops sampled statistics. The gate calls this between
+    // warmup and measurement so warmup-phase samples (taken while ~18GB of
+    // weight admission transfers contend with compute) cannot contaminate
+    // the measured receipt.
+    void ResetQ4kParityStats() noexcept {
+        for (uint32_t l = 0; l < 3; ++l) {
+            q4kDispatchCount_[l] = 0;
+            q4kRows_[l] = 0;
+            q4kSampledNs_[l] = 0;
+            q4kSampledCount_[l] = 0;
+            q4kSampledRows_[l] = 0;
+            q4kPipelineSeen_[l] = VK_NULL_HANDLE;
+            for (uint32_t op = 0; op < 8; ++op) {
+                opsSampledNs_[l][op] = 0;
+                opsSampledCount_[l][op] = 0;
+                opsSampledUnits_[l][op] = 0;
+            }
+        }
+    }
     uint64_t Q4kParityDispatchCount(uint32_t lane) const noexcept {
         return lane < 3 ? q4kDispatchCount_[lane] : 0;
     }
@@ -870,6 +889,18 @@ public:
     // compute pipeline (Q4K_SHADER_MATCH / Q4K_LAYOUT_MATCH authority).
     VkPipeline Q4kParityPipeline(uint32_t lane) const noexcept {
         return lane < 3 ? q4kPipelineSeen_[lane] : VK_NULL_HANDLE;
+    }
+    // DEEP2_RESIDENT_OPS_BREAKDOWN_001: sampled ops-pipeline GPU ns by
+    // op kind (0=probe,1=gemv_f32,2=rmsnorm,3=residual,4=swiglu,5=rope,
+    // 6=attn,7=mla_attn) and lane (0=untagged,1=dual-row,2=resident).
+    uint64_t OpsSampledNs(uint32_t lane, uint32_t opKind) const noexcept {
+        return (lane<3 && opKind<8) ? opsSampledNs_[lane][opKind] : 0;
+    }
+    uint64_t OpsSampledCount(uint32_t lane, uint32_t opKind) const noexcept {
+        return (lane<3 && opKind<8) ? opsSampledCount_[lane][opKind] : 0;
+    }
+    uint64_t OpsSampledUnits(uint32_t lane, uint32_t opKind) const noexcept {
+        return (lane<3 && opKind<8) ? opsSampledUnits_[lane][opKind] : 0;
     }
 
     // ========== Spec accept ==========
@@ -1164,6 +1195,10 @@ private:
     uint64_t q4kSampledCount_[3] = {};
     uint64_t q4kSampledRows_[3] = {};
     VkPipeline q4kPipelineSeen_[3] = {};
+
+    uint64_t opsSampledNs_[3][8] = {};
+    uint64_t opsSampledCount_[3][8] = {};
+    uint64_t opsSampledUnits_[3][8] = {};
 
     DeviceBuf uploadStaging_{};
     DeviceBuf downloadStaging_{};
