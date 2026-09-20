@@ -707,7 +707,26 @@ The hub keeps model execution, agent reasoning, and tool execution connected thr
 # RawrXD vs. Other AI Development Stacks
 
 > This table compares **architecture and product scope**, not model intelligence, benchmark quality, market maturity, or overall product quality.
-Capability|RawrXDCursorVS Code + CopilotOllamaLM StudioCode editor / IDE**Native Win32 IDE**Integrated editorHost IDENoNoAutonomous coding workflow**Native agent engine**Built inBuilt inVia external coding toolsVia integrations / agent workflowsMulti-file editing**Yes**YesYesExternalExternalTerminal / command execution**Tool Authority**Agent toolsAgent toolsExternal agentExternal integrationBuild / test feedback loop**Native execution path**Agent workflowAgent workflowExternalExternalRepository research**Native agent research**YesYesExternalExternalBuilt-in local inference runtime**Deep2**Not coreNot core**Yes****Yes**Offline local model execution**Core design goal**Not core architectureNot core architectureYesYesNative GPU compute subsystem**Deep2 Vulkan**Not coreNot coreRuntime responsibilityRuntime responsibilityHeterogeneous GPU scheduler developed as product subsystem**Active v3 work**Not coreNot coreRuntime-specificRuntime-specificLive GPU admission / residency telemetry**Deep2**Not coreNot coreRuntime-specificRuntime-specificLocal API server**Native server**Not primary roleNot primary roleYesYesEditor + agent + owned inference runtime in one architecture**Yes**Editor + agentIDE + serviceRuntimeRuntime / model appNative Windows-first architecture**Yes**Cross-platform editor stackCross-platform IDE ecosystemCross-platformCross-platformControlled agent tool boundary**Tool Authority**Agent tool systemAgent tool systemExternal agentMCP / integration dependentRawrXD is therefore not trying to replace only one of these categories.
+
+| Capability | RawrXD | Cursor | VS Code + Copilot | Ollama | LM Studio |
+|---|---|---|---|---|---|
+| Code editor / IDE | **Native Win32 IDE** | Integrated editor | Host IDE | No | No |
+| Autonomous coding workflow | **Native agent engine** | Built in | Built in | Via external coding tools | Via integrations / agent workflows |
+| Multi-file editing | **Yes** | Yes | Yes | External | External |
+| Terminal / command execution | **Tool Authority** | Agent tools | Agent tools | External agent | External integration |
+| Build / test feedback loop | **Native execution path** | Agent workflow | Agent workflow | External | External |
+| Repository research | **Native agent research** | Yes | Yes | External | External |
+| Built-in local inference runtime | **Deep2** | Not core | Not core | **Yes** | **Yes** |
+| Offline local model execution | **Core design goal** | Not core architecture | Not core architecture | Yes | Yes |
+| Native GPU compute subsystem | **Deep2 Vulkan** | Not core | Not core | Runtime responsibility | Runtime responsibility |
+| Heterogeneous GPU scheduler | **Active v3 work** | Not core | Not core | Runtime-specific | Runtime-specific |
+| Live GPU admission / residency telemetry | **Deep2** | Not core | Not core | Runtime-specific | Runtime-specific |
+| Local API server | **Native server** | Not primary role | Not primary role | Yes | Yes |
+| Editor + agent + owned inference runtime | **Yes** | Editor + agent | IDE + service | Runtime | Runtime / model app |
+| Native Windows-first architecture | **Yes** | Cross-platform | Cross-platform | Cross-platform | Cross-platform |
+| Controlled agent tool boundary | **Tool Authority** | Agent tool system | Agent tool system | External agent | MCP / integration dependent |
+
+RawrXD is therefore not trying to replace only one of these categories.
 
 Its architecture overlaps several:
 
@@ -775,7 +794,12 @@ Verdict
 ```
 
 ### Current Sealed Example
-ModelQuantizationTokensExecutionDecode TPSVerdictQwen2.5-Coder-32B-InstructQ4_K_M256Deep2 dual-device baseline**5.142 TPS****PASS**This number represents a measured model execution receipt—not a projected roofline.
+
+| Model | Quantization | Tokens | Execution | Decode TPS | Verdict |
+|---|---|---:|---|---:|---|
+| Qwen2.5-Coder-32B-Instruct | Q4_K_M | 256 | Deep2 dual-device baseline | **5.142 TPS** | **PASS** |
+
+> This number represents a measured model execution receipt—not a projected roofline.
 
 Experimental routing paths are not promoted simply because they compile or because a shorter microbenchmark is faster.
 
@@ -1307,56 +1331,49 @@ A subsystem is not considered fully integrated until the actual IDE/CLI/product 
 
 ## Foundation
 
-- Native C++20 / Win32 product architecture
-- Native CLI infrastructure
-- AIIntegrationHub architecture
-- Deep2 model-loading infrastructure
-- Native CPU inference paths
-- Vulkan compute infrastructure
-- Streaming decode infrastructure
-- Runtime telemetry infrastructure
+- [x] Native C++20 / Win32 product architecture
+- [x] Native CLI infrastructure
+- [x] AIIntegrationHub architecture
+- [x] Deep2 model-loading infrastructure
+- [x] Native CPU inference paths
+- [x] Vulkan compute infrastructure
+- [x] Streaming decode infrastructure
+- [x] Runtime telemetry infrastructure
 
 ## Agentic Layer
 
-- Repository research infrastructure
-- Source modification infrastructure
-- Build/test execution infrastructure
-- Native patching workflows
-- [~] Unified Tool Authority across every autonomous path
-- [~] IDE / CLI / headless authority parity
-- [~] Full autonomous recovery certification
+- [x] Repository research infrastructure
+- [x] Source modification infrastructure
+- [x] Build/test execution infrastructure
+- [x] Native patching workflows
+- [ ] Unified Tool Authority across every autonomous path *(in progress)*
+- [ ] IDE / CLI / headless authority parity *(in progress)*
+- [ ] Full autonomous recovery certification *(in progress)*
 
 ## Deep2 Runtime
 
-- GGUF metadata discovery
-- Quantized CPU execution infrastructure
-- Native Vulkan execution infrastructure
-- Live Vulkan memory-budget support
-- Weight-residency infrastructure
-- Heterogeneous device discovery
-- [~] Progressive residency hardening
-- [~] Ranged resident execution
-- [~] Multi-GPU admission hardening
-- [~] Quantized-kernel parity validation
-- [~] Decode-path optimization
-- [~] Repeatable full-model performance certification
+- [x] GGUF metadata discovery
+- [x] Quantized CPU execution infrastructure
+- [x] Native Vulkan execution infrastructure
+- [x] Live Vulkan memory-budget support
+- [x] Weight-residency infrastructure
+- [x] Heterogeneous device discovery
+- [ ] Progressive residency hardening *(in progress)*
+- [ ] Ranged resident execution *(in progress)*
+- [ ] Multi-GPU admission hardening *(in progress)*
+- [ ] Quantized-kernel parity validation *(in progress)*
+- [ ] Decode-path optimization *(in progress)*
+- [ ] Repeatable full-model performance certification *(in progress)*
 
 ## Product Authority
 
-- [~] Complete IDE agent path
-- [~] Complete CLI agent path
-- [~] Complete headless agent path
-- [~] Unified model → planner → tool → observation loop
-- [~] End-to-end stub audit
-- Seal `rawr run <model> audit my IDE codebase for any stubs`
-- v3 release-candidate authority gate
-Legend:
-
-```
-[x] Operational
-[~] Active hardening / certification
-[ ] Pending certification
-```
+- [ ] Complete IDE agent path *(in progress)*
+- [ ] Complete CLI agent path *(in progress)*
+- [ ] Complete headless agent path *(in progress)*
+- [ ] Unified model → planner → tool → observation loop *(in progress)*
+- [ ] End-to-end stub audit *(in progress)*
+- [ ] Seal `rawr run <model> audit my IDE codebase for any stubs`
+- [ ] v3 release-candidate authority gate
 
 ---
 
@@ -1509,49 +1526,17 @@ without making cloud inference the architectural center of the system.
 
 ---
 
-# Screenshot / Demo Area
-Add product media under:
-
-```
-docs/assets/
-├── rawrxd-hero.png
-├── rawrxd-agent-demo.gif
-├── rawrxd-deep2-telemetry.png
-├── rawrxd-multigpu.png
-└── rawrxd-stub-audit.gif
-```
-Then enable:
-
-```
-## RawrXD in Action
+# RawrXD in Action
 
 ![RawrXD v3](docs/assets/rawrxd-hero.png)
 
-### Autonomous Repository Audit
+## Autonomous Repository Engineering
 
-![RawrXD Agent](docs/assets/rawrxd-agent-demo.gif)
+![RawrXD autonomous agent](docs/assets/rawrxd-agent-demo.gif)
 
-### Deep2 Runtime Telemetry
+## Deep2 Runtime Telemetry
 
-![Deep2 Telemetry](docs/assets/rawrxd-deep2-telemetry.png)
-```
-Recommended hero capture:
-
-```
-┌───────────────────────────────────────────────────────────────┐
-│ Explorer │ Editor                           │ RawrXD Agent     │
-│          │                                  │                 │
-│ src/     │ Deep2Engine.cpp                  │ AUDIT RUNNING   │
-│ tests/   │                                  │                 │
-│ deep2/   │ ...                              │ 143 files read  │
-│          │                                  │ 12 findings     │
-│          │                                  │ build: PASS     │
-│          │                                  │ tests: PASS     │
-├──────────┴──────────────────────────────────┴─────────────────┤
-│ Terminal / Build / Deep2 Telemetry                            │
-└───────────────────────────────────────────────────────────────┘
-```
-That screenshot immediately communicates that RawrXD is an engineering environment rather than merely a local model chat interface.
+![Deep2 runtime telemetry](docs/assets/rawrxd-deep2-telemetry.png)
 
 ---
 
@@ -1675,9 +1660,3 @@ Verified Result
 ```
 
 ---
-
-*RawrXD deliberately favors measurable evidence over unsupported completion or performance claims.*
-
-*A particularly strong part of this version is that the roadmap matches the README's existing engineering disclosure: Deep2 multi-GPU hardening, progressive residency, memory admission, kernel verification, Tool Authority consolidation, and full IDE/CLI/headless parity remain active certification items rather than being disguised as completed work.*
-
-*For the external comparison, Cursor's current Agent can search repositories, edit multiple files, run terminal commands, and self-correct; Copilot Agent similarly performs multi-step edits and terminal work. LM Studio currently supports fully offline local-model operation, a local API server, CLI, and MCP/tool workflows, while Ollama now spans local model execution and integrations with coding-agent products—so positioning RawrXD as **the unified IDE + agent + native inference stack**, rather than claiming those competitors lack agents or local capabilities, is the defensible differentiator.*
