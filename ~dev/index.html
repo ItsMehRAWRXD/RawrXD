@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RawrXD ScreenPilot — Desktop Preview</title>
+<style>
+  :root {
+    --bg: #0b0c0f;
+    --surface: #111318;
+    --surface-2: #161920;
+    --text: #e6e8ef;
+    --muted: #9aa0b5;
+    --accent: #4cc38a;
+    --accent-2: #5b8cff;
+    --danger: #ff6b6b;
+    --warn: #f0c040;
+    --border: #1e2230;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  html, body { background: var(--bg); color: var(--text); margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.55; }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 22px; }
+  .mono { font-family: var(--mono); }
+  .muted { color: var(--muted); }
+  .pass { color: var(--accent); }
+  .hold { color: var(--warn); }
+  .open { color: var(--accent-2); }
+
+  /* Nav */
+  nav { border-bottom: 1px solid var(--border); background: rgba(11,12,15,.85); backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 10; }
+  nav .container { display:flex; align-items:center; justify-content:space-between; height: 56px; }
+  .brand { font-weight: 700; letter-spacing:.3px; }
+  .brand span { color: var(--muted); font-weight:500; }
+  .nav-links a { margin-left: 18px; font-size: .95rem; }
+
+  /* Hero */
+  .hero { padding: 72px 0 52px; }
+  .eyebrow { text-transform: uppercase; letter-spacing:.18em; font-size:.78rem; color: var(--muted); margin-bottom: 10px; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); margin: 0 0 14px; line-height: 1.15; }
+  .hero .tagline { font-size: clamp(1.1rem, 2.4vw, 1.45rem); color: var(--muted); max-width: 780px; margin: 0 0 28px; }
+  .cta-row { display:flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding: 12px 18px; border-radius: 8px; border: 1px solid var(--border); font-size: .98rem; cursor:pointer; }
+  .btn-primary { background: var(--accent); color: #06120b; border-color: var(--accent); font-weight: 600; }
+  .btn-secondary { background: var(--surface); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--muted); border-color: transparent; }
+  .btn:hover { filter: brightness(1.08); text-decoration:none; }
+
+  .hero-meta { margin-top: 22px; display:flex; gap: 18px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); }
+  .hero-meta .chip { border:1px solid var(--border); padding: 6px 10px; border-radius: 6px; background: var(--surface); }
+
+  /* Sections */
+  section { padding: 56px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 1.6rem; margin: 0 0 18px; }
+  h3 { font-size: 1.15rem; margin: 0 0 8px; }
+
+  /* Visual */
+  .visual { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; overflow:auto; }
+  .visual pre { margin:0; font-family: var(--mono); font-size: .9rem; line-height: 1.45; color: var(--text); }
+  .visual .prompt { color: var(--accent); }
+  .visual .dim { color: var(--muted); }
+  .visual .accent { color: var(--accent-2); }
+
+  /* Why grid */
+  .why-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+  .why-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .why-card h3 { margin-top:0; }
+
+  /* Workflow */
+  .flow { display:flex; flex-direction:column; gap: 10px; }
+  .flow-step { display:flex; align-items:center; gap: 12px; }
+  .flow-step .arrow { color: var(--muted); }
+  .flow-step .label { background: var(--surface-2); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-family: var(--mono); font-size: .92rem; }
+
+  /* Capabilities */
+  .cap-list { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .cap-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display:flex; align-items:center; gap: 10px; }
+  .cap-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* Comparison */
+  table.compare { width:100%; border-collapse: collapse; font-size: .95rem; }
+  table.compare th, table.compare td { border: 1px solid var(--border); padding: 10px 12px; text-align:left; }
+  table.compare th { background: var(--surface-2); }
+  table.compare td:first-child { font-weight: 600; }
+  .tag { display:inline-block; padding: 2px 8px; border-radius: 4px; font-size: .82rem; font-family: var(--mono); }
+  .tag-pass { background: rgba(76,195,138,.12); color: var(--accent); }
+  .tag-partial { background: rgba(240,192,64,.12); color: var(--warn); }
+  .tag-no { background: rgba(255,107,107,.12); color: var(--danger); }
+
+  /* Certification */
+  .cert-list { display:flex; flex-direction:column; gap: 12px; }
+  .cert-row { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .cert-row .human { font-weight: 600; }
+  .cert-row .status { margin: 4px 0; }
+  .cert-row .id { font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+
+  /* Gaps */
+  .gap-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap: 10px; }
+  .gap-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+
+  /* Pricing */
+  .pricing { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; display:flex; flex-direction:column; }
+  .price-card h3 { margin-top:0; }
+  .price { font-size: 1.8rem; font-weight: 700; margin: 6px 0 14px; }
+  .price-features { list-style:none; padding:0; margin:0 0 18px; display:flex; flex-direction:column; gap: 8px; font-size: .95rem; }
+  .price-features li { display:flex; align-items:center; gap: 8px; }
+  .price-features li::before { content: "✓"; color: var(--accent); }
+
+  /* Footer */
+  footer { padding: 40px 0; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="brand">RAWRXD <span>ScreenPilot</span></div>
+    <div class="nav-links">
+      <a href="#product">Product</a>
+      <a href="#why">Why</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#compare">Compare</a>
+      <a href="#cert">Certification</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 1. HERO -->
+<section class="hero" id="top">
+  <div class="container">
+    <div class="eyebrow">Desktop Preview</div>
+    <h1>Your machine. Your models. Your agents. Any screen.</h1>
+    <p class="tagline">
+      A native, local-first agentic development environment that runs your own GGUF models.
+      Code, files, terminal, build/test, Git, and approval-controlled agent actions — all on your hardware.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#download">Get Desktop Preview</a>
+      <a class="btn btn-secondary" href="gui/ide_chatbot_standalone.html">Explore Browser Shell</a>
+      <a class="btn btn-ghost" href="#cert">View Certification</a>
+    </div>
+    <div class="hero-meta">
+      <span class="chip">Local-first</span>
+      <span class="chip">Native Win32</span>
+      <span class="chip">Local GGUF inference</span>
+      <span class="chip">Agentic</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2. PRODUCT PROOF / VISUAL -->
+<section id="product">
+  <div class="container">
+    <h2>See it work</h2>
+    <div class="visual">
+<pre>
+<span class="prompt">screenpilot — desktop preview shell</span>
+<span class="dim">[ workspace ] /projects/rawrxd</span>
+<span class="pass">● LOCAL_ONLY_001</span>
+<span class="hold">[!] P1PRA_002 / RC1 — HOLD</span>
+<span class="open">[+] EGRESS_001 — OPEN</span>
+
+<span class="dim">> Local Deep2 / GGUF model loaded</span>
+<span class="dim">> Agent loop: Plan / Build / Agent / Stop</span>
+<span class="dim">> Approval boundary active — tool calls require explicit sign-off</span>
+
+<span class="accent">chat</span>   <span class="dim">Ask questions, generate code, debug</span>
+<span class="accent">plan</span>   <span class="dim">Map changes before editing</span>
+<span class="accent">agent</span>  <span class="dim">Multi-file edits with human approval</span>
+<span class="accent">build</span>  <span class="dim">Compile, test, and verify locally</span>
+<span class="accent">files</span>  <span class="dim">Browse and edit workspace contents</span>
+<span class="accent">terminal</span> <span class="dim">Shell access in your environment</span>
+<span class="accent">git</span>    <span class="dim">Diff, commit, and review changes</span>
+</pre>
+    </div>
+    <p class="muted" style="margin-top:12px;">
+      The live agent interface exposes Chat, Audit, Swarm, Editor, Terminal, Model Manager, performance tools, compiler, files, Git, reverse engineering, and debug surfaces — all running locally.
+    </p>
+  </div>
+</section>
+
+<!-- 3. WHY SCREENPILOT -->
+<section id="why">
+  <div class="container">
+    <h2>Why ScreenPilot?</h2>
+    <div class="why-grid">
+      <div class="why-card">
+        <h3>Your code</h3>
+        <p class="muted">Stays in your workspace. Nothing ships to a hosted inference service by default.</p>
+      </div>
+      <div class="why-card">
+        <h3>Your models</h3>
+        <p class="muted">Run from local GGUF weights you own and control.</p>
+      </div>
+      <div class="why-card">
+        <h3>Your hardware</h3>
+        <p class="muted">Deep2 executes on your machine, using your GPU and CPU.</p>
+      </div>
+      <div class="why-card">
+        <h3>Your agents</h3>
+        <p class="muted">Act through controlled tool and approval boundaries — not autonomous web access.</p>
+      </div>
+      <div class="why-card">
+        <h3>Your choice</h3>
+        <p class="muted">No required hosted-model subscription. No cloud lock-in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. WORKFLOW -->
+<section id="workflow">
+  <div class="container">
+    <h2>See the workflow</h2>
+    <div class="flow">
+      <div class="flow-step"><span class="label">Open workspace</span><span class="arrow">→</span><span class="muted">Point ScreenPilot at your project</span></div>
+      <div class="flow-step"><span class="label">Load local model</span><span class="arrow">→</span><span class="muted">Select a local GGUF file</span></div>
+      <div class="flow-step"><span class="label">Ask / Plan</span><span class="arrow">→</span><span class="muted">Describe what you want; plan before building</span></div>
+      <div class="flow-step"><span class="label">Agent edits</span><span class="arrow">→</span><span class="muted">Multi-file edits with human approval</span></div>
+      <div class="flow-step"><span class="label">Build / Test</span><span class="arrow">→</span><span class="muted">Compile and verify locally</span></div>
+      <div class="flow-step"><span class="label">Review / Approve</span><span class="arrow">→</span><span class="muted">Diff, commit, and keep control</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. PRODUCT CAPABILITIES -->
+<section id="capabilities">
+  <div class="container">
+    <h2>What you get</h2>
+    <div class="cap-list">
+      <div class="cap-item"><span class="dot"></span> Local GGUF inference</div>
+      <div class="cap-item"><span class="dot"></span> Plan / Build / Agent modes</div>
+      <div class="cap-item"><span class="dot"></span> Multi-file edits</div>
+      <div class="cap-item"><span class="dot"></span> Terminal + build/test integration</div>
+      <div class="cap-item"><span class="dot"></span> Git and workspace context</div>
+      <div class="cap-item"><span class="dot"></span> Stop / cancel control</div>
+      <div class="cap-item"><span class="dot"></span> Approval boundary before tool execution</div>
+      <div class="cap-item"><span class="dot"></span> Explicit local-first operation</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. COMPARISON -->
+<section id="compare">
+  <div class="container">
+    <h2>How it compares</h2>
+    <p class="muted">Internal weighted comparison across local-inference, agent loop, approval boundaries, native tooling, and ownership model. Not an independent industry certification.</p>
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>ScreenPilot</th>
+          <th>Cursor</th>
+          <th>Windsurf</th>
+          <th>GitHub Copilot</th>
+          <th>Claude</th>
+          <th>Zed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Local GGUF inference</td>
+          <td><span class="tag tag-pass">YES</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+        </tr>
+        <tr>
+          <td>Agent loop with approval</td>
+          <td><span class="tag tag-pass">YES</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+        </tr>
+        <tr>
+          <td>Native terminal / build / Git</td>
+          <td><span class="tag tag-pass">YES</span></td>
+          <td><span class="tag tag-pass">YES</span></td>
+          <td><span class="tag tag-pass">YES</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-no">NO</span></td>
+          <td><span class="tag tag-pass">YES</span></td>
+        </tr>
+        <tr>
+          <td>Requires hosted model</td>
+          <td><span class="tag tag-pass">NO</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+          <td><span class="tag tag-no">YES</span></td>
+          <td><span class="tag tag-partial">Partial</span></td>
+        </tr>
+        <tr>
+          <td>Hardware ownership</td>
+          <td><span class="tag tag-pass">YOU</span></td>
+          <td><span class="tag tag-no">VENDOR</span></td>
+          <td><span class="tag tag-no">VENDOR</span></td>
+          <td><span class="tag tag-no">VENDOR</span></td>
+          <td><span class="tag tag-no">VENDOR</span></td>
+          <td><span class="tag tag-partial">MIXED</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 7. CERTIFICATION -->
+<section id="cert">
+  <div class="container">
+    <h2>Certification & engineering status</h2>
+    <p class="muted">Human-readable summary first. Internal certification ID second.</p>
+    <div class="cert-list">
+      <div class="cert-row">
+        <div class="human">Local inference</div>
+        <div class="status pass">Certified</div>
+        <div class="id">LOCAL_ONLY_001</div>
+      </div>
+      <div class="cert-row">
+        <div class="human">Token streaming</div>
+        <div class="status pass">10/10 certified</div>
+        <div class="id">STREAMER_CERT_001</div>
+      </div>
+      <div class="cert-row">
+        <div class="human">Agentic streaming (continue-ensure)</div>
+        <div class="status pass">Certified</div>
+        <div class="id">STREAMER_AGENTIC_CONTINUE_ENSURE</div>
+      </div>
+      <div class="cert-row">
+        <div class="human">Scoreboard scheduler</div>
+        <div class="status pass">Certified</div>
+        <div class="id">SCOREBOARD_SCHEDULER</div>
+      </div>
+      <div class="cert-row">
+        <div class="human">Release candidate</div>
+        <div class="status hold">Held pending final physical end-to-end inference witness</div>
+        <div class="id">P1PRA_002 / Finalize=0</div>
+      </div>
+      <div class="cert-row">
+        <div class="human">Network egress</div>
+        <div class="status open">Default-deny product certification still open</div>
+        <div class="id">EGRESS_001</div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:14px;">
+      Public copy lags sealed evidence — never leads it. Certification snapshot updated to 2026-09-10.
+    </p>
+  </div>
+</section>
+
+<!-- 8. HONEST GAPS -->
+<section id="gaps">
+  <div class="container">
+    <h2>Honest gaps vs leaders</h2>
+    <ul class="gap-list">
+      <li><strong>P1PRA Finalize=0</strong> — Final physical end-to-end inference certification is pending.</li>
+      <li><strong>RAG / context depth</strong> — Retrieval-augmented generation and deep context window polish are in progress.</li>
+      <li><strong>Edit → run → repair polish</strong> — The iterative fix loop is functional but not yet as smooth as established IDEs.</li>
+      <li><strong>Git / search / session UX</strong> — Source control, semantic search, and session management are present but still rough.</li>
+      <li><strong>Remote steering</strong> — Phone and web-based remote control of the desktop agent is planned, not live.</li>
+      <li><strong>Hosted agent parity</strong> — Cloud-hosted model and agent options are not offered today.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 9. PRICING -->
+<section id="pricing">
+  <div class="container">
+    <h2>Pricing</h2>
+    <div class="pricing">
+      <div class="price-card">
+        <h3>Sovereign Pro</h3>
+        <div class="price">$599 <span style="font-size:1rem; color:var(--muted); font-weight:400;">one-time</span></div>
+        <ul class="price-features">
+          <li>One user</li>
+          <li>Owned devices</li>
+          <li>Current major version</li>
+          <li>Local models</li>
+          <li>No required cloud account</li>
+          <li>No monthly IDE subscription</li>
+        </ul>
+        <p class="muted" style="margin-top:auto;">Optional future cloud inference and remote-control services are separate.</p>
+      </div>
+      <div class="price-card">
+        <h3>Team Deployment</h3>
+        <div class="price">$2,500 – $10,000</div>
+        <ul class="price-features">
+          <li>Multi-seat licenses</li>
+          <li>Shared workspace policies</li>
+          <li>Deployment support</li>
+          <li>Standard SLA</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <h3>Private / Sovereign Deployments</h3>
+        <div class="price">Custom engagements from $50k</div>
+        <ul class="price-features">
+          <li>Air-gapped or private-cloud setup</li>
+          <li>Custom model integration</li>
+          <li>Security review and hardening</li>
+          <li>Dedicated support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. FINAL CTA -->
+<section id="download">
+  <div class="container" style="text-align:center;">
+    <h2>Run your models. Control your agents. Keep the stack yours.</h2>
+    <div class="cta-row" style="justify-content:center;">
+      <a class="btn btn-primary" href="#download">Get Desktop Preview</a>
+      <a class="btn btn-secondary" href="gui/ide_chatbot_standalone.html">Explore Browser Shell</a>
+    </div>
+    <p class="muted" style="margin-top:18px;">Desktop Preview · Local-only · Remote steering coming next</p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    RawrXD ScreenPilot · Desktop Preview · Internal product snapshot · 2026-09-10
+  </div>
+</footer>
+
+</body>
+</html>
