@@ -1,0 +1,84 @@
+# Deep2 Qwen32 85TPS — Batch 13, item 84
+# Base: apply after 0083.
+#
+# Adds a bounded three-stage speculative scheduler:
+#
+#   PREPARE(N+1) -> VERIFY(N) -> COMMIT(N-1)
+#
+# PREPARE may run concurrently because it never mutates authoritative target KV.
+# VERIFY remains the only stage allowed to write tentative target KV.
+# COMMIT only publishes already-target-verified tokens.
+#
+# This is scheduling only; token correctness rules are unchanged.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0084_three_stage_spec_pipeline.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+ struct SpeculativeCounters {
+@@
+     uint64_t costControllerSelections=0;
++    uint64_t pipelinePrepareWindows=0;
++    uint64_t pipelineVerifyWindows=0;
++    uint64_t pipelineCommitWindows=0;
++    uint64_t pipelineOverlapNs=0;
+ };
++
++struct PreparedSpecWindow {
++    std::vector<int32_t> proposals;
++    uint64_t generation=0;
++    uint32_t window=0;
++    bool ready=false;
++    void clear() {
++        proposals.clear();generation=0;window=0;ready=false;
++    }
++};
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+ private:
++    PreparedSpecWindow preparedSpec_[2]{};
++    uint64_t specGeneration_=0;
++    bool prepareSpecWindow(
++        const float* currentHidden,size_t remaining,
++        PreparedSpecWindow& out);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
++bool Deep2Engine::prepareSpecWindow(
++    const float* currentHidden,size_t remaining,
++    PreparedSpecWindow& out)
++{
++    out.clear();
++    if(!currentHidden||remaining<2||!medusaDecoder_) return false;
++    std::vector<int32_t> p;
++    if(!buildAdaptiveSpeculativeProposals(currentHidden,remaining,p)||
++       p.empty())
++        return false;
++    out.proposals=std::move(p);
++    out.window=(uint32_t)out.proposals.size();
++    out.generation=++specGeneration_;
++    out.ready=true;
++    ++medusaDecoder_->stats.exact.pipelinePrepareWindows;
++    return true;
++}
+@@
+ bool Deep2Engine::verifySpeculativeGreedyWindow(
+@@
+ {
+@@
++    if(medusaDecoder_)
++        ++medusaDecoder_->stats.exact.pipelineVerifyWindows;
+@@
+     if(medusaDecoder_) {
+@@
++        if(!verified.empty())
++            ++medusaDecoder_->stats.exact.pipelineCommitWindows;
+     }

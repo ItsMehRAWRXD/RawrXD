@@ -1,0 +1,81 @@
+# Deep2 Qwen32 40TPS — Batch 2/5, item 7
+# Base: apply after 0006.
+# Goal: Q4_K hot path processes 4 aligned columns per lane iteration,
+# loading one packed uint for four nibbles and resolving scale/min once.
+#
+# Qwen2.5-Coder-32B Q4_K_M spends the overwhelming majority of dense
+# weight traffic in Q4_K matrices, so specialize the common format without
+# changing Q2_K/Q6_K/Q8_0 correctness paths.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0007_q4k_dot4_packed_vector.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+--- a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+@@
+ float q4k_weight(uint rowBase, uint col) {
+@@
+     return ds * float(sc) * float(q) - dm * float(mn);
+ }
+
++// Four-column Q4_K dot fragment.
++// colBase is always a multiple of four. Q4_K block/sub-block boundaries
++// are multiples of 32/256, so the 4-byte qs fetch cannot straddle either.
++float q4k_dot4(uint rowBase, uint colBase) {
++    uint block = colBase / 256u;
++    uint idx = colBase % 256u;
++    uint b = rowBase + block * 144u;
++
++    float ds = geth(b + 0u);
++    float dm = geth(b + 2u);
++
++    uint sb = idx / 32u;
++    uint l = idx % 32u;
++    uint sc, mn;
++    q4kScaleMin(b, sb, sc, mn);
++
++    uint pair = sb / 2u;
++    uint qsByte = b + 16u + pair * 32u + l;
++    // qsByte is 4-byte aligned for colBase=(lane*4 + k*1024).
++    uint packed4 = w[qsByte >> 2u];
++
++    float d = ds * float(sc);
++    float m = dm * float(mn);
++    float sum = 0.0;
++
++    for (uint k = 0u; k < 4u; ++k) {
++        uint col = colBase + k;
++        if (col >= pc.cols) break;
++        uint packed = (packed4 >> (k * 8u)) & 255u;
++        uint q = (sb & 1u) == 0u ? (packed & 15u) : (packed >> 4u);
++        sum += (d * float(q) - m) * x[col];
++    }
++    return sum;
++}
++
+ void main() {
+@@
+-    float acc = 0.0;
+-    for (uint j = lane; j < pc.cols; j += 256u) {
+-        float ww = 0.0;
+-        if (pc.type == 8u) ww = q8_0_weight(rb, j);
+-        else if (pc.type == 10u) ww = q2k_weight(rb, j);
+-        else if (pc.type == 12u) ww = q4k_weight(rb, j);
+-        else if (pc.type == 14u) ww = q6k_weight(rb, j);
+-        acc += ww * x[j];
+-    }
++    float acc = 0.0;
++    if (pc.type == 12u) {
++        // 256 lanes * 4 contiguous values = 1024 columns per sweep.
++        for (uint j = lane * 4u; j < pc.cols; j += 1024u)
++            acc += q4k_dot4(rb, j);
++    } else {
++        for (uint j = lane; j < pc.cols; j += 256u) {
++            float ww = 0.0;
++            if (pc.type == 8u) ww = q8_0_weight(rb, j);
++            else if (pc.type == 10u) ww = q2k_weight(rb, j);
++            else if (pc.type == 14u) ww = q6k_weight(rb, j);
++            acc += ww * x[j];
++        }
++    }

@@ -1,0 +1,147 @@
+# Deep2 Qwen32 85TPS — Batch 12, item 76
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-11
+#
+# Goal:
+#   remove immediate submit->wait behavior from hot resident Q4_K dispatches.
+#
+# Adds a reusable nonblocking submit ticket:
+#   BeginQ4KResidentAsync()
+#   WaitQ4KResidentAsync()
+#
+# No new runtime dependency; Vulkan only.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0076_nonblocking_q4k_submit_ticket.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct Q4KAsyncTicket {
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        VkFence fence=VK_NULL_HANDLE;
++        VkQueryPool query=VK_NULL_HANDLE;
++        uint64_t submitNs=0;
++        uint64_t completeNs=0;
++        uint64_t weightBytes=0;
++        bool active=false;
++    };
++    bool BeginQ4KResidentAsync(
++        const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++        uint32_t batch,uint64_t epoch,Q4KAsyncTicket& ticket);
++    bool WaitQ4KResidentAsync(Q4KAsyncTicket& ticket,uint64_t* gpuNs=nullptr);
++    void CancelQ4KAsync(Q4KAsyncTicket& ticket);
++    uint64_t Q4KAsyncSubmits() const noexcept { return q4kAsyncSubmits_; }
++    uint64_t Q4KAsyncWaitNs() const noexcept { return q4kAsyncWaitNs_; }
+@@
+ private:
++    uint64_t q4kAsyncSubmits_=0;
++    uint64_t q4kAsyncWaitNs_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::BeginQ4KResidentAsync(
++    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++    uint32_t batch,uint64_t epoch,Q4KAsyncTicket& t)
++{
++    if(t.active||!weight.valid()||weight.type!=12||!input||!output||
++       !batch||batch>4||fused_)
++        return false;
++    DeviceBuf* wb=nullptr;
++    if(!ensureWeightQuant(weight.type,weight.data,weight.bytes,wb))
++        return false;
++
++    Q4KBatchTile tile=SelectQ4KBatchTile(
++        weight.data,weight.bytes,input,output,
++        weight.rows,weight.cols,batch);
++    VkPipeline pipe=tile==Q4KBatchTile::Eight
++        ? qBatch8RowPipeline_:qBatch4RowPipeline_;
++    VkPipelineLayout layout=tile==Q4KBatchTile::Eight
++        ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
++    if(!pipe||!layout) return false;
++
++    VkCommandBufferAllocateInfo ai{};
++    ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++    ai.commandPool=commandPool_;
++    ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++    ai.commandBufferCount=1;
++    if(vkAllocateCommandBuffers(device_,&ai,&t.cmd)!=VK_SUCCESS)
++        return false;
++
++    VkCommandBufferBeginInfo bi{};
++    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
++    if(vkBeginCommandBuffer(t.cmd,&bi)!=VK_SUCCESS) {
++        CancelQ4KAsync(t); return false;
++    }
++    VkDescriptorSet set=getQuantDescriptor(*wb,input,output);
++    if(set==VK_NULL_HANDLE) {
++        CancelQ4KAsync(t); return false;
++    }
++    vkCmdBindPipeline(t.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
++    vkCmdBindDescriptorSets(
++        t.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
++        0,1,&set,0,nullptr);
++    QBatchPush p{};
++    p.type=12;p.rows=weight.rows;p.cols=weight.cols;
++    p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
++    vkCmdPushConstants(
++        t.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    const uint32_t tileN=(uint32_t)tile;
++    vkCmdDispatch(t.cmd,(weight.rows+tileN-1u)/tileN,1,1);
++    recordComputeBarrier(t.cmd);
++    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
++        CancelQ4KAsync(t); return false;
++    }
++    VkFenceCreateInfo fi{};
++    fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++    if(vkCreateFence(device_,&fi,nullptr,&t.fence)!=VK_SUCCESS) {
++        CancelQ4KAsync(t); return false;
++    }
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;
++    si.pCommandBuffers=&t.cmd;
++    const auto now=std::chrono::steady_clock::now();
++    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
++        CancelQ4KAsync(t); return false;
++    }
++    t.submitNs=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(now.time_since_epoch()).count();
++    t.weightBytes=weight.bytes;
++    t.active=true;
++    ++q4kAsyncSubmits_;
++    ++queueSubmitCount_;
++    SetWorkEpoch(epoch);
++    return true;
++}
++
++bool VulkanCompute::WaitQ4KResidentAsync(
++    Q4KAsyncTicket& t,uint64_t* gpuNs)
++{
++    if(!t.active) return false;
++    const auto w0=std::chrono::steady_clock::now();
++    if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    const auto w1=std::chrono::steady_clock::now();
++    q4kAsyncWaitNs_+=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(w1-w0).count();
++    t.completeNs=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(w1.time_since_epoch()).count();
++    if(gpuNs) *gpuNs=t.completeNs>t.submitNs
++        ? t.completeNs-t.submitNs:0;
++    CancelQ4KAsync(t);
++    return true;
++}
++
++void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
++    if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
++    if(t.cmd&&commandPool_)
++        vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
++    if(t.query) vkDestroyQueryPool(device_,t.query,nullptr);
++    t={};
++}

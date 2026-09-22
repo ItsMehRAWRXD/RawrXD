@@ -1,0 +1,123 @@
+# Deep2 Qwen32 85TPS — Batch 11, item 75
+# Base: apply after 0074.
+#
+# Authority v10:
+# - all previous gates remain
+# - both GPUs must execute the Q4_K autotuner
+# - both GPUs must submit pre-recorded hot Q4_K commands
+# - cost-driven speculative window controller must make selections
+# - reports 4-row vs 8-row operation counts per GPU
+# - still requires all three real verified steady-state runs >=85 TPS
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0075_85tps_authority_v10_autotune_recorded_cost.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
++    uint64_t vulkanSlotQ4KBatch8RowOps(unsigned slot) const;
++    uint64_t vulkanSlotQ4KAutotuneRuns(unsigned slot) const;
++    uint64_t vulkanSlotRecordedQ4KSubmits(unsigned slot) const;
++    uint64_t vulkanSlotRecordedQ4KBuilds(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotQ4KBatch8RowOps(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KBatch8RowOps():0;
++}
++uint64_t Deep2Engine::vulkanSlotQ4KAutotuneRuns(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KAutotuneRuns():0;
++}
++uint64_t Deep2Engine::vulkanSlotRecordedQ4KSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedQ4KSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotRecordedQ4KBuilds(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedQ4KBuilds():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t flipWarm=spec.vulkanSlotSpecArenaFlips(0);
++    const uint64_t at0Warm=spec.vulkanSlotQ4KAutotuneRuns(0);
++    const uint64_t at1Warm=spec.vulkanSlotQ4KAutotuneRuns(1);
++    const uint64_t rc0Warm=spec.vulkanSlotRecordedQ4KSubmits(0);
++    const uint64_t rc1Warm=spec.vulkanSlotRecordedQ4KSubmits(1);
++    const uint64_t rcb0Warm=spec.vulkanSlotRecordedQ4KBuilds(0);
++    const uint64_t rcb1Warm=spec.vulkanSlotRecordedQ4KBuilds(1);
++    const uint64_t k8o0Warm=spec.vulkanSlotQ4KBatch8RowOps(0);
++    const uint64_t k8o1Warm=spec.vulkanSlotQ4KBatch8RowOps(1);
+@@
+     const uint64_t flipEnd=spec.vulkanSlotSpecArenaFlips(0);
++    const uint64_t at0End=spec.vulkanSlotQ4KAutotuneRuns(0);
++    const uint64_t at1End=spec.vulkanSlotQ4KAutotuneRuns(1);
++    const uint64_t rc0End=spec.vulkanSlotRecordedQ4KSubmits(0);
++    const uint64_t rc1End=spec.vulkanSlotRecordedQ4KSubmits(1);
++    const uint64_t rcb0End=spec.vulkanSlotRecordedQ4KBuilds(0);
++    const uint64_t rcb1End=spec.vulkanSlotRecordedQ4KBuilds(1);
++    const uint64_t k8o0End=spec.vulkanSlotQ4KBatch8RowOps(0);
++    const uint64_t k8o1End=spec.vulkanSlotQ4KBatch8RowOps(1);
+@@
+     const bool pingpong=flipEnd>flipWarm;
++    const bool autotuned=
++        at0End>at0Warm && at1End>at1Warm;
++    const bool recordedHot=
++        rc0End>rc0Warm && rc1End>rc1Warm;
++    const bool costController=
++        sc.costControllerSelections>0 &&
++        sc.windowAttempts[2]>0 &&
++        sc.windowAttempts[3]>0 &&
++        sc.windowAttempts[4]>0;
+@@
+-                    tiledKernel&&pingpong;
++                    tiledKernel&&pingpong&&autotuned&&recordedHot&&
++                    costController;
+@@
+         "SPEC_PINGPONG=%.4s\n"
++        "GPU0_Q4K_AUTOTUNE_RUNS_DELTA=%llu\n"
++        "GPU1_Q4K_AUTOTUNE_RUNS_DELTA=%llu\n"
++        "GPU0_RECORDED_Q4K_SUBMITS_DELTA=%llu\n"
++        "GPU1_RECORDED_Q4K_SUBMITS_DELTA=%llu\n"
++        "GPU0_RECORDED_Q4K_BUILDS_DELTA=%llu\n"
++        "GPU1_RECORDED_Q4K_BUILDS_DELTA=%llu\n"
++        "GPU0_Q4K_8ROW_OPS_DELTA=%llu\n"
++        "GPU1_Q4K_8ROW_OPS_DELTA=%llu\n"
++        "WINDOW2_ATTEMPTS=%llu VERIFIED=%llu NS=%llu\n"
++        "WINDOW3_ATTEMPTS=%llu VERIFIED=%llu NS=%llu\n"
++        "WINDOW4_ATTEMPTS=%llu VERIFIED=%llu NS=%llu\n"
++        "COST_CONTROLLER_SELECTIONS=%llu\n"
++        "Q4K_AUTOTUNE=%s\n"
++        "RECORDED_Q4K_HOTPATH=%s\n"
++        "COST_DRIVEN_SPEC_WINDOW=%s\n"
+@@
+         pingpong?"PASS":"FAIL",
++        (unsigned long long)(at0End-at0Warm),
++        (unsigned long long)(at1End-at1Warm),
++        (unsigned long long)(rc0End-rc0Warm),
++        (unsigned long long)(rc1End-rc1Warm),
++        (unsigned long long)(rcb0End-rcb0Warm),
++        (unsigned long long)(rcb1End-rcb1Warm),
++        (unsigned long long)(k8o0End-k8o0Warm),
++        (unsigned long long)(k8o1End-k8o1Warm),
++        (unsigned long long)sc.windowAttempts[2],
++        (unsigned long long)sc.windowVerified[2],
++        (unsigned long long)sc.windowVerifyNs[2],
++        (unsigned long long)sc.windowAttempts[3],
++        (unsigned long long)sc.windowVerified[3],
++        (unsigned long long)sc.windowVerifyNs[3],
++        (unsigned long long)sc.windowAttempts[4],
++        (unsigned long long)sc.windowVerified[4],
++        (unsigned long long)sc.windowVerifyNs[4],
++        (unsigned long long)sc.costControllerSelections,
++        autotuned?"PASS":"FAIL",
++        recordedHot?"PASS":"FAIL",
++        costController?"PASS":"FAIL",

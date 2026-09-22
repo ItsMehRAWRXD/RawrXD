@@ -1,0 +1,89 @@
+# Deep2 Qwen32 85TPS — Batch 13, item 82
+# Base: apply after 0081.
+#
+# Moves the persistent secondary download ring onto transferQueue_ /
+# transferCommandPool_ when available. Each ring slot permanently owns its
+# command buffer as well as staging + fence.
+#
+# No allocation/free on the hot transfer path.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0082_transfer_queue_persistent_ring.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     struct TransferRingSlot {
+         DeviceBuf staging{};
+         void* mapped=nullptr;
+         VkFence fence=VK_NULL_HANDLE;
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
+         size_t capacity=0;
+         size_t bytes=0;
+         bool inFlight=false;
+     };
+@@
++    uint64_t TransferRingOverlapNs() const noexcept {
++        return transferRingOverlapNs_;
++    }
+@@
+ private:
++    uint64_t transferRingOverlapNs_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ void VulkanCompute::ResetDownloadRing() {
+@@
++        if(s.cmd&&transferCommandPool_)
++            vkFreeCommandBuffers(
++                device_,transferCommandPool_,1,&s.cmd);
+@@
+ }
+@@
+ bool VulkanCompute::EnsureDownloadRing(size_t bytes) {
+@@
+     for(auto& s:downloadRing_) {
+@@
+         if(vkCreateFence(device_,&fi,nullptr,&s.fence)!=VK_SUCCESS)
+             return false;
++        VkCommandBufferAllocateInfo ai{};
++        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++        ai.commandPool=transferCommandPool_
++            ? transferCommandPool_:commandPool_;
++        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++        ai.commandBufferCount=1;
++        if(vkAllocateCommandBuffers(device_,&ai,&s.cmd)!=VK_SUCCESS)
++            return false;
+         s.capacity=bytes;
+     }
+@@
+ bool VulkanCompute::SubmitDownloadRing(
+@@
+-    VkCommandBuffer cmd{};
+-    VkQueryPool query{};
+-    if(!beginCommand(cmd,query,false)) return false;
+-    if(!recordCopy(cmd,src,s.staging,bytes)) return false;
+-    if(vkEndCommandBuffer(cmd)!=VK_SUCCESS) return false;
++    if(vkResetCommandBuffer(s.cmd,0)!=VK_SUCCESS) return false;
++    VkCommandBufferBeginInfo bi{};
++    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
++    if(vkBeginCommandBuffer(s.cmd,&bi)!=VK_SUCCESS) return false;
++    if(!recordCopy(s.cmd,src,s.staging,bytes)) return false;
++    if(vkEndCommandBuffer(s.cmd)!=VK_SUCCESS) return false;
+     VkSubmitInfo si{};
+     si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
+-    si.commandBufferCount=1;si.pCommandBuffers=&cmd;
+-    if(vkQueueSubmit(queue_,1,&si,s.fence)!=VK_SUCCESS) return false;
++    si.commandBufferCount=1;si.pCommandBuffers=&s.cmd;
++    VkQueue tq=transferQueue_?transferQueue_:queue_;
++    if(vkQueueSubmit(tq,1,&si,s.fence)!=VK_SUCCESS) return false;
+@@
+     ++downloadRingSubmits_;
++    ++transferQueueSubmits_;
+     ++queueSubmitCount_;
+     return true;
+ }

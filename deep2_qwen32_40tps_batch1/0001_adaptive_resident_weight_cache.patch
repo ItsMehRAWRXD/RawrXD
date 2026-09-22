@@ -1,0 +1,125 @@
+# Deep2 Qwen32 40TPS — Batch 1/5, item 1
+# Base: RawrXD main @ 861a2ea99
+# Goal: stop 512-MiB/default cache thrash and stop whole-cache flushes.
+# Runtime deps: none beyond the existing Vulkan backend.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0001_adaptive_resident_weight_cache.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     struct WeightCacheEntry {
+         DeviceBuf buffer{};
+         size_t bytes = 0;
+         int type = 0;
++        uint64_t lastUse = 0;
+     };
+@@
+     bool ensureWeightF32(const float* weights, uint64_t key,
+                          size_t bytes, DeviceBuf*& out);
+     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
+                            DeviceBuf*& out);
++    bool evictWeightCacheUntil(size_t incomingBytes);
+     void clearWeightCache();
+@@
+     size_t weightBudgetBytes_ = 0;
+     size_t weightCacheBytes_ = 0;
++    uint64_t weightUseClock_ = 1;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ void VulkanCompute::clearWeightCache() {
+     for (auto& kv : weightCache_) destroyBuffer(kv.second.buffer);
+     weightCache_.clear();
+     weightCacheBytes_ = 0;
+ }
+
++bool VulkanCompute::evictWeightCacheUntil(size_t incomingBytes) {
++    if (!weightBudgetBytes_) return true;
++    if (incomingBytes > weightBudgetBytes_) return false;
++
++    while (weightCacheBytes_ + incomingBytes > weightBudgetBytes_) {
++        auto victim = weightCache_.end();
++        for (auto it = weightCache_.begin(); it != weightCache_.end(); ++it) {
++            if (victim == weightCache_.end() ||
++                it->second.lastUse < victim->second.lastUse) {
++                victim = it;
++            }
++        }
++        if (victim == weightCache_.end()) return false;
++
++        const size_t bytes = victim->second.bytes;
++        destroyBuffer(victim->second.buffer);
++        weightCache_.erase(victim);
++        weightCacheBytes_ = bytes <= weightCacheBytes_
++            ? weightCacheBytes_ - bytes : 0;
++    }
++    return true;
++}
++
+ bool VulkanCompute::ensureWeightF32(
+     const float* weights, uint64_t key, size_t bytes, DeviceBuf*& out)
+ {
+     out = nullptr;
+     auto it = weightCache_.find(key);
+     if (it != weightCache_.end()) {
+         ++weightHits_;
++        it->second.lastUse = weightUseClock_++;
+         out = &it->second.buffer;
+         return true;
+     }
+     if (!weights || !bytes) return false;
+     if (weightBudgetBytes_ && bytes > weightBudgetBytes_) return false;
+-    if (weightBudgetBytes_ && weightCacheBytes_ + bytes > weightBudgetBytes_)
+-        clearWeightCache();
++    if (!evictWeightCacheUntil(bytes)) return false;
+@@
+-    e.bytes=bytes; e.type=0;
++    e.bytes=bytes; e.type=0; e.lastUse=weightUseClock_++;
+@@
+ bool VulkanCompute::ensureWeightQuant(
+     int type, const void* weights, size_t bytes, DeviceBuf*& out)
+ {
+     const uint64_t key=quantWeightKey(weights,bytes,type);
+     auto it=weightCache_.find(key);
+     if(it!=weightCache_.end()){
+         ++weightHits_;
++        it->second.lastUse = weightUseClock_++;
+         out=&it->second.buffer;
+         return true;
+     }
+     if(!weights||!bytes) return false;
+     if(weightBudgetBytes_ && bytes>weightBudgetBytes_) return false;
+-    if(weightBudgetBytes_ && weightCacheBytes_+bytes>weightBudgetBytes_)
+-        clearWeightCache();
++    if(!evictWeightCacheUntil(bytes)) return false;
+@@
+-    e.bytes=bytes; e.type=type;
++    e.bytes=bytes; e.type=type; e.lastUse=weightUseClock_++;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+@@
+-    size_t budget = (size_t)512 << 20;
++    // Dense 32B decode must remain resident after warmup.  A 512 MiB
++    // default guarantees full-model cache churn.  Reserve 20% of VRAM for
++    // KV/arenas/driver allocations and let the packed layer weights use the
++    // remaining 80%.  Explicit env values still override this policy.
++    size_t budget = (size_t)512 << 20;
++    const uint64_t localBytes = vc->deviceLocalBytes();
++    if (localBytes >= (uint64_t(4) << 30)) {
++        const uint64_t autoBudget = (localBytes / 10u) * 8u;
++        if (autoBudget <= (uint64_t)SIZE_MAX)
++            budget = static_cast<size_t>(autoBudget);
++    }
+     if (const char* be = std::getenv("DEEP2_WEIGHT_BUDGET_MIB")) {
+         MibParseResult pr = ParseMibTokenEx(be);
+         EmitWeightBudgetReceipt(stderr, pr, "ENV");
+         if (!pr.ok) return false;
+         budget = (size_t)pr.bytes;
+     }

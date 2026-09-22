@@ -1,0 +1,594 @@
+
+=== THRESHOLD ntok=1 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_FILTER discrete=2 igpu=REJECTED
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+SPEC_VK_END initialized=1 devices=2
+SPEC_CONFIG_BEGIN
+SPEC_CONFIG_END
+SPEC_SETUP_EXIT
+THRESHOLD_SETUP_OK ntok=1
+THRESHOLD_GEN_BEGIN ntok=1
+RUN_TOKENIZE_BEGIN n=1
+RUN_TOKENIZE_OK tokens=19
+RUN_GENERATE_BEGIN prompt=19 out=1
+GEN_ENTER maxOut=1
+GEN_DECODE_LIMIT=1 specActive=1
+GEN_LOOP_TOP gen=0 rem=1 specActive=1
+[LOGITS] token=0 min=-20.3170 max=21.5677 mean=-2.7952 std=2.8943 argmax=198
+[LOGITS_HEAD] -0.234033 -2.222256 1.278841 -3.019772 -2.336701
+GEN_EXIT generated=1
+RUN_GENERATE_END got=1
+THRESHOLD_GEN_END ntok=1 got=1
+THRESHOLD_RESULT ntok=1 PASS
+
+=== THRESHOLD ntok=2 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_FILTER discrete=2 igpu=REJECTED
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+SPEC_VK_END initialized=1 devices=2
+SPEC_CONFIG_BEGIN
+SPEC_CONFIG_END
+SPEC_SETUP_EXIT
+THRESHOLD_SETUP_OK ntok=2
+THRESHOLD_GEN_BEGIN ntok=2
+RUN_TOKENIZE_BEGIN n=2
+RUN_TOKENIZE_OK tokens=19
+RUN_GENERATE_BEGIN prompt=19 out=2
+GEN_ENTER maxOut=2
+GEN_DECODE_LIMIT=2 specActive=1
+GEN_LOOP_TOP gen=0 rem=2 specActive=1
+SPEC_PATH_ENTER gen=0 rem=2
+SPEC_BUILD_PROPOSALS_BEGIN
+SPEC_BUILD_PROPOSALS_END count=1
+SPEC_VSGW_BEGIN proposals=1
+VSGW_ENTER proposals=1 maxEmit=2
+VSGW_LOGITS_0_BEGIN
+VSGW_LOGITS_0_END first=198
+VSGW_KV_BASE=19 B=1
+VSGW_ADVANCE_BY_BEGIN B=1
+VSGW_ADVANCE_BY_OK kv=20
+VSGW_FORWARD_BLOCK_BEGIN B=1 base=19
+FSB_EMBED_BEGIN B=1
+FSB_EMBED_OK
+FSB_L0_ENTER
+FSB_L0_ATTN_NORM_BEGIN
+FSB_L0_ATTN_NORM_END
+FSB_L0_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6589C0BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6578D6BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L0_QKV_END
+FSB_L0_ROPE_KV_BEGIN b=0
+FSB_L0_ROPE_KV_END
+FSB_L0_ATTN_BEGIN
+FSB_L0_ATTN_END
+FSB_L0_OPROJ_BEGIN
+FSB_L0_OPROJ_END
+FSB_L0_FFN_NORM_BEGIN
+FSB_L0_FFN_NORM_END
+FSB_L0_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B660AA9BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B66569EBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L0_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L0_SWIGLU_END
+FSB_L0_DOWN_BEGIN
+FSB_L0_DOWN_END
+FSB_L0_FFN_END
+FSB_L0_EXIT
+FSB_L1_ENTER
+FSB_L1_ATTN_NORM_BEGIN
+FSB_L1_ATTN_NORM_END
+FSB_L1_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B66B379BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B66A28FBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L1_QKV_END
+FSB_L1_ROPE_KV_BEGIN b=0
+FSB_L1_ROPE_KV_END
+FSB_L1_ATTN_BEGIN
+FSB_L1_ATTN_END
+FSB_L1_OPROJ_BEGIN
+FSB_L1_OPROJ_END
+FSB_L1_FFN_NORM_BEGIN
+FSB_L1_FFN_NORM_END
+FSB_L1_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B673462BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B678057BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L1_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L1_SWIGLU_END
+FSB_L1_DOWN_BEGIN
+FSB_L1_DOWN_END
+FSB_L1_FFN_END
+FSB_L1_EXIT
+FSB_L2_ENTER
+FSB_L2_ATTN_NORM_BEGIN
+FSB_L2_ATTN_NORM_END
+FSB_L2_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B67DD32BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B67CC48BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L2_QKV_END
+FSB_L2_ROPE_KV_BEGIN b=0
+FSB_L2_ROPE_KV_END
+FSB_L2_ATTN_BEGIN
+FSB_L2_ATTN_END
+FSB_L2_OPROJ_BEGIN
+FSB_L2_OPROJ_END
+FSB_L2_FFN_NORM_BEGIN
+FSB_L2_FFN_NORM_END
+FSB_L2_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B685E1BBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B68AA10BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L2_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L2_SWIGLU_END
+FSB_L2_DOWN_BEGIN
+FSB_L2_DOWN_END
+FSB_L2_FFN_END
+FSB_L2_EXIT
+FSB_L3_ENTER
+FSB_L3_ATTN_NORM_BEGIN
+FSB_L3_ATTN_NORM_END
+FSB_L3_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6906EBBE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B68F601BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L3_QKV_END
+FSB_L3_ROPE_KV_BEGIN b=0
+FSB_L3_ROPE_KV_END
+FSB_L3_ATTN_BEGIN
+FSB_L3_ATTN_END
+FSB_L3_OPROJ_BEGIN
+FSB_L3_OPROJ_END
+FSB_L3_FFN_NORM_BEGIN
+FSB_L3_FFN_NORM_END
+FSB_L3_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6987D4BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B69D3C9BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L3_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L3_SWIGLU_END
+FSB_L3_DOWN_BEGIN
+FSB_L3_DOWN_END
+FSB_L3_FFN_END
+FSB_L3_EXIT
+FSB_L4_ENTER
+FSB_L4_ATTN_NORM_BEGIN
+FSB_L4_ATTN_NORM_END
+FSB_L4_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6A30A4BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6A1FBABE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L4_QKV_END
+FSB_L4_ROPE_KV_BEGIN b=0
+FSB_L4_ROPE_KV_END
+FSB_L4_ATTN_BEGIN
+FSB_L4_ATTN_END
+FSB_L4_OPROJ_BEGIN
+FSB_L4_OPROJ_END
+FSB_L4_FFN_NORM_BEGIN
+FSB_L4_FFN_NORM_END
+FSB_L4_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6AB18DBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6AFD82BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L4_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L4_SWIGLU_END
+FSB_L4_DOWN_BEGIN
+FSB_L4_DOWN_END
+FSB_L4_FFN_END
+FSB_L4_EXIT
+FSB_L5_ENTER
+FSB_L5_ATTN_NORM_BEGIN
+FSB_L5_ATTN_NORM_END
+FSB_L5_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6B5A5DBE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6B4973BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L5_QKV_END
+FSB_L5_ROPE_KV_BEGIN b=0
+FSB_L5_ROPE_KV_END
+FSB_L5_ATTN_BEGIN
+FSB_L5_ATTN_END
+FSB_L5_OPROJ_BEGIN
+FSB_L5_OPROJ_END
+FSB_L5_FFN_NORM_BEGIN
+FSB_L5_FFN_NORM_END
+FSB_L5_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6BDB46BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6C273BBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L5_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L5_SWIGLU_END
+FSB_L5_DOWN_BEGIN
+FSB_L5_DOWN_END
+FSB_L5_FFN_END
+FSB_L5_EXIT
+FSB_L6_ENTER
+FSB_L6_ATTN_NORM_BEGIN
+FSB_L6_ATTN_NORM_END
+FSB_L6_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6C8416BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6C732CBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L6_QKV_END
+FSB_L6_ROPE_KV_BEGIN b=0
+FSB_L6_ROPE_KV_END
+FSB_L6_ATTN_BEGIN
+FSB_L6_ATTN_END
+FSB_L6_OPROJ_BEGIN
+FSB_L6_OPROJ_END
+FSB_L6_FFN_NORM_BEGIN
+FSB_L6_FFN_NORM_END
+FSB_L6_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6D04FFBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6D50F4BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L6_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L6_SWIGLU_END
+FSB_L6_DOWN_BEGIN
+FSB_L6_DOWN_END
+FSB_L6_FFN_END
+FSB_L6_EXIT
+FSB_L7_ENTER
+FSB_L7_ATTN_NORM_BEGIN
+FSB_L7_ATTN_NORM_END
+FSB_L7_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6DADCFBE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6D9CE5BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L7_QKV_END
+FSB_L7_ROPE_KV_BEGIN b=0
+FSB_L7_ROPE_KV_END
+FSB_L7_ATTN_BEGIN
+FSB_L7_ATTN_END
+FSB_L7_OPROJ_BEGIN
+FSB_L7_OPROJ_END
+FSB_L7_FFN_NORM_BEGIN
+FSB_L7_FFN_NORM_END
+FSB_L7_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6E2EB8BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6E7AADBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L7_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L7_SWIGLU_END
+FSB_L7_DOWN_BEGIN
+FSB_L7_DOWN_END
+FSB_L7_FFN_END
+FSB_L7_EXIT
+FSB_L8_ENTER
+FSB_L8_ATTN_NORM_BEGIN
+FSB_L8_ATTN_NORM_END
+FSB_L8_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6ED788BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6EC69EBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6EE599BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606667160 strict=1
+FSB_L8_QKV_END
+FSB_L8_ROPE_KV_BEGIN b=0
+FSB_L8_ROPE_KV_END
+FSB_L8_ATTN_BEGIN
+FSB_L8_ATTN_END
+FSB_L8_OPROJ_BEGIN
+FSB_L8_OPROJ_END
+FSB_L8_FFN_NORM_BEGIN
+FSB_L8_FFN_NORM_END
+FSB_L8_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6F3459BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6F804EBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L8_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L8_SWIGLU_END
+FSB_L8_DOWN_BEGIN
+FSB_L8_DOWN_END
+FSB_L8_FFN_END
+FSB_L8_EXIT
+FSB_L9_ENTER
+FSB_L9_ATTN_NORM_BEGIN
+FSB_L9_ATTN_NORM_END
+FSB_L9_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6FDD29BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6FCC3FBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B6FEB3ABE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606667160 strict=1
+FSB_L9_QKV_END
+FSB_L9_ROPE_KV_BEGIN b=0
+FSB_L9_ROPE_KV_END
+FSB_L9_ATTN_BEGIN
+FSB_L9_ATTN_END
+FSB_L9_OPROJ_BEGIN
+FSB_L9_OPROJ_END
+FSB_L9_FFN_NORM_BEGIN
+FSB_L9_FFN_NORM_END
+FSB_L9_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7039FABE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7085EFBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L9_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L9_SWIGLU_END
+FSB_L9_DOWN_BEGIN
+FSB_L9_DOWN_END
+FSB_L9_FFN_END
+FSB_L9_EXIT
+FSB_L10_ENTER
+FSB_L10_ATTN_NORM_BEGIN
+FSB_L10_ATTN_NORM_END
+FSB_L10_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B70E2CABE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B70D1E0BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L10_QKV_END
+FSB_L10_ROPE_KV_BEGIN b=0
+FSB_L10_ROPE_KV_END
+FSB_L10_ATTN_BEGIN
+FSB_L10_ATTN_END
+FSB_L10_OPROJ_BEGIN
+FSB_L10_OPROJ_END
+FSB_L10_FFN_NORM_BEGIN
+FSB_L10_FFN_NORM_END
+FSB_L10_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7163B3BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B71AFA8BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L10_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L10_SWIGLU_END
+FSB_L10_DOWN_BEGIN
+FSB_L10_DOWN_END
+FSB_L10_FFN_END
+FSB_L10_EXIT
+FSB_L11_ENTER
+FSB_L11_ATTN_NORM_BEGIN
+FSB_L11_ATTN_NORM_END
+FSB_L11_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B720C83BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B71FB99BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B721A94BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606667160 strict=1
+FSB_L11_QKV_END
+FSB_L11_ROPE_KV_BEGIN b=0
+FSB_L11_ROPE_KV_END
+FSB_L11_ATTN_BEGIN
+FSB_L11_ATTN_END
+FSB_L11_OPROJ_BEGIN
+FSB_L11_OPROJ_END
+FSB_L11_FFN_NORM_BEGIN
+FSB_L11_FFN_NORM_END
+FSB_L11_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B726954BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B72B549BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L11_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L11_SWIGLU_END
+FSB_L11_DOWN_BEGIN
+FSB_L11_DOWN_END
+FSB_L11_FFN_END
+FSB_L11_EXIT
+FSB_L12_ENTER
+FSB_L12_ATTN_NORM_BEGIN
+FSB_L12_ATTN_NORM_END
+FSB_L12_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B731224BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B73013ABE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B732035BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606667160 strict=1
+FSB_L12_QKV_END
+FSB_L12_ROPE_KV_BEGIN b=0
+FSB_L12_ROPE_KV_END
+FSB_L12_ATTN_BEGIN
+FSB_L12_ATTN_END
+FSB_L12_OPROJ_BEGIN
+FSB_L12_OPROJ_END
+FSB_L12_FFN_NORM_BEGIN
+FSB_L12_FFN_NORM_END
+FSB_L12_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B736EF5BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B73BAEABE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L12_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L12_SWIGLU_END
+FSB_L12_DOWN_BEGIN
+FSB_L12_DOWN_END
+FSB_L12_FFN_END
+FSB_L12_EXIT
+FSB_L13_ENTER
+FSB_L13_ATTN_NORM_BEGIN
+FSB_L13_ATTN_NORM_END
+FSB_L13_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7417C5BE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7406DBBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+FSB_L13_QKV_END
+FSB_L13_ROPE_KV_BEGIN b=0
+FSB_L13_ROPE_KV_END
+FSB_L13_ATTN_BEGIN
+FSB_L13_ATTN_END
+FSB_L13_OPROJ_BEGIN
+FSB_L13_OPROJ_END
+FSB_L13_FFN_NORM_BEGIN
+FSB_L13_FFN_NORM_END
+FSB_L13_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B7498AEBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B74E4A3BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L13_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L13_SWIGLU_END
+FSB_L13_DOWN_BEGIN
+FSB_L13_DOWN_END
+FSB_L13_FFN_END
+FSB_L13_EXIT
+FSB_L14_ENTER
+FSB_L14_ATTN_NORM_BEGIN
+FSB_L14_ATTN_NORM_END
+FSB_L14_QKV_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B75417EBE0 type=12 rows=5120 cols=5120 count=1 outDim=5120 input=000001B606662120 output=000001B60D696020 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B753094BE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606676960 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B754F8FBE0 type=12 rows=1024 cols=5120 count=1 outDim=1024 input=000001B606662120 output=000001B606667160 strict=1
+FSB_L14_QKV_END
+FSB_L14_ROPE_KV_BEGIN b=0
+FSB_L14_ROPE_KV_END
+FSB_L14_ATTN_BEGIN
+FSB_L14_ATTN_END
+FSB_L14_OPROJ_BEGIN
+FSB_L14_OPROJ_END
+FSB_L14_FFN_NORM_BEGIN
+FSB_L14_FFN_NORM_END
+FSB_L14_FFN_BEGIN
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B759E4FBE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B603C536C0 strict=1
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B75EA44BE0 type=12 rows=27648 cols=5120 count=1 outDim=27648 input=000001B606662120 output=000001B602D98F60 strict=1
+FSB_L14_SWIGLU_BEGIN
+[SwiGLU] width=27648 batch=1 n=27648 nbytes=110592
+[SwiGLU] buf g(id=609 size=110592) u(id=610 size=110592) o(id=611 size=110592) d(id=612 size=4)
+[SwiGLU] dispatch op=1 width=27648 batch=1
+[SwiGLU] download n=27648
+FSB_L14_SWIGLU_END
+FSB_L14_DOWN_BEGIN
+[CB_FAIL] vkAllocateMemory failed bytes=43499520 allocSize=43499520 mt=0 rc=-2
+[EWB_Q4K] FAIL4 createBuffer padded=43499520
+[RWHB_Q4K] FAIL3 ensureWeightQuant type=12 bytes=43499520
+Q4K_OPROJ_TRACE LinearWBatch4 wt=000001B75525FBE0 type=12 rows=5120 cols=27648 count=1 outDim=5120 input=000001B603C536C0 output=000001B60D6A50C0 strict=1
+[CB_FAIL] vkAllocateMemory failed bytes=39813120 allocSize=39813120 mt=0 rc=-2
+[EWB_Q4K] FAIL4 createBuffer padded=39813120
+[RWHB_Q4K] FAIL3 ensureWeightQuant type=12 bytes=39813120
+[BATCH4_FAIL] RunWeightHostBatchQ4K both=0 ok0=0 ok1=1
+FATAL_LINEAR_DOWN layer=14 exc=LinearWBatch4: Q4_K batch GPU path failed under strict mode
+VSGW_FORWARD_BLOCK_FAIL
+SPEC_VSGW_FAILED_OR_EMPTY
+[LOGITS] token=0 min=-20.3170 max=21.5677 mean=-2.7952 std=2.8943 argmax=198
+[LOGITS_HEAD] -0.234006 -2.222119 1.278849 -3.019720 -2.336684
+GEN_LOOP_TOP gen=1 rem=1 specActive=1
+[LOGITS] token=1 min=-27.8729 max=27.5757 mean=-0.6457 std=2.4578 argmax=198
+[LOGITS_HEAD] 5.492077 7.860389 11.995893 5.276824 4.208459
+GEN_EXIT generated=2
+RUN_GENERATE_END got=2
+THRESHOLD_GEN_END ntok=2 got=2
+THRESHOLD_RESULT ntok=2 FAIL got=2 strictGpuViolations=2
+FIRST_FAILING_THRESHOLD=2
+
+=== THRESHOLD LADDER COMPLETE ===
+STRICT_GPU_VIOLATIONS=2
+[QuantKernelRegistry] Q4_K GEMV=00007FF701E81780 dequant=00007FF701E7E8C0 GetGEMV(12)=00007FF701E81780 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1
+[QuantKernelRegistry] Q4_K GEMV=00007FF701E81780 dequant=00007FF701E7E8C0 GetGEMV(12)=00007FF701E81780 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1
+EXIT_CODE=0 

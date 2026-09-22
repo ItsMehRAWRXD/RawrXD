@@ -1,0 +1,35 @@
+#version 460
+// Batch 21: source kernel for pre-swizzled Q4 rows.
+// Production specialization should replace scale fetch/layout with actual GGUF block format.
+layout(local_size_x=256) in;
+layout(set=0,binding=0,std430) readonly buffer W { uint w[]; };
+layout(set=0,binding=1,std430) readonly buffer X { float x[]; };
+layout(set=0,binding=2,std430) readonly buffer S { float scale[]; };
+layout(set=0,binding=3,std430) writeonly buffer Y { float y[]; };
+layout(push_constant) uniform PC {
+    uint rows; uint cols; uint wordsPerRow; uint groupsPerRow; uint groupSize; uint rowBase;
+} pc;
+
+shared float red[256];
+
+float q4(uint word, uint nib) {
+    return float(int((word >> (nib*4u)) & 15u) - 8);
+}
+
+void main() {
+    uint row=pc.rowBase+gl_WorkGroupID.x;
+    if(row>=pc.rows) return;
+    uint lid=gl_LocalInvocationID.x;
+    float s=0.0;
+    for(uint c=lid;c<pc.cols;c+=256u) {
+        uint wi=row*pc.wordsPerRow+(c>>3u);
+        uint g=row*pc.groupsPerRow+(c/pc.groupSize);
+        s += q4(w[wi],c&7u)*scale[g]*x[c];
+    }
+    red[lid]=s; barrier();
+    for(uint stride=128u;stride>0u;stride>>=1u) {
+        if(lid<stride) red[lid]+=red[lid+stride];
+        barrier();
+    }
+    if(lid==0u) y[row]=red[0];
+}

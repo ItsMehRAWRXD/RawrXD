@@ -1,0 +1,109 @@
+# Deep2 Qwen32 40TPS — Batch 3/5, item 11
+# Base: RawrXD main @ 861a2ea99 + Batch 1 + Batch 2
+# Goal: simultaneous row-split arithmetic must be balanced by throughput,
+# not by VRAM capacity. The old 32GB:16GB rule makes GPU0 do ~2x the rows.
+#
+# Defaults to 1:1. Tune from measured per-stick GEMV throughput:
+#   DEEP2_GPU0_THROUGHPUT_WEIGHT=1.00
+#   DEEP2_GPU1_THROUGHPUT_WEIGHT=1.00
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0011_throughput_balanced_rowsplit.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2RowSplitPlan.hpp b/~dev/rawrxd/src/deep2/Deep2RowSplitPlan.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2RowSplitPlan.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2RowSplitPlan.hpp
+@@
+ struct RowSplitPlan {
+@@
+ };
+
++inline RowSplitPlan Deep2ChooseRowSplitWeighted(
++    uint32_t rows, long double throughput0, long double throughput1) noexcept
++{
++    RowSplitPlan p{};
++    if (rows < 2 || !(throughput0 > 0.0L) || !(throughput1 > 0.0L))
++        return p;
++    const long double total = throughput0 + throughput1;
++    if (!(total > 0.0L)) return p;
++
++    long double exact =
++        static_cast<long double>(rows) * throughput0 / total;
++    uint32_t n0 = static_cast<uint32_t>(exact + 0.5L);
++    n0 = std::max<uint32_t>(1, std::min<uint32_t>(rows - 1, n0));
++    const uint32_t n1 = rows - n0;
++
++    p.valid = n0 != 0 && n1 != 0;
++    p.row0Begin = 0;
++    p.row0Count = n0;
++    p.row1Begin = n0;
++    p.row1Count = n1;
++    return p;
++}
++
+ inline RowSplitPlan Deep2ChooseRowSplit(
+     uint32_t rows, uint64_t capacity0, uint64_t capacity1) noexcept
+ {
+-    RowSplitPlan p{};
+-    if (rows < 2 || capacity0 == 0 || capacity1 == 0) return p;
+-    if (capacity0 > std::numeric_limits<uint64_t>::max() - capacity1)
+-        return p;
+-    const uint64_t total = capacity0 + capacity1;
+-
+-    long double exact =
+-        static_cast<long double>(rows) *
+-        static_cast<long double>(capacity0) /
+-        static_cast<long double>(total);
+-    uint32_t n0 = static_cast<uint32_t>(exact + 0.5L);
+-    n0 = std::max<uint32_t>(1, std::min<uint32_t>(rows - 1, n0));
+-    const uint32_t n1 = rows - n0;
+-
+-    p.valid = n0 != 0 && n1 != 0;
+-    p.row0Begin = 0;
+-    p.row0Count = n0;
+-    p.row1Begin = n0;
+-    p.row1Count = n1;
+-    return p;
++    if (!capacity0 || !capacity1) return {};
++    return Deep2ChooseRowSplitWeighted(
++        rows,
++        static_cast<long double>(capacity0),
++        static_cast<long double>(capacity1));
+ }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include <algorithm>
++#include <cstdlib>
+@@
+ namespace {
++
++long double envThroughput(const char* name) noexcept {
++    const char* s=std::getenv(name);
++    if(!s||!*s) return 1.0L;
++    char* end=nullptr;
++    const long double v=std::strtold(s,&end);
++    return end!=s && v>0.0L ? v : 1.0L;
++}
++
++RowSplitPlan chooseThroughputSplit(
++    uint32_t rows,const VulkanCompute& g0,const VulkanCompute& g1) noexcept
++{
++    if(!g0.deviceLocalBytes()||!g1.deviceLocalBytes()) return {};
++    return Deep2ChooseRowSplitWeighted(
++        rows,
++        envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT"),
++        envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT"));
++}
+@@
+-    RowSplitPlan plan=Deep2ChooseRowSplit(
+-        (uint32_t)wt.rows,g0.deviceLocalBytes(),g1.deviceLocalBytes());
++    RowSplitPlan plan=chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
+@@
+-        items[i].p=Deep2ChooseRowSplit(
+-            (uint32_t)weights[i]->rows,
+-            g0.deviceLocalBytes(),g1.deviceLocalBytes());
++        items[i].p=chooseThroughputSplit(
++            (uint32_t)weights[i]->rows,g0,g1);

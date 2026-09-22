@@ -1,0 +1,187 @@
+# Deep2 Qwen32 85TPS — Batch 3/5, item 34
+# Base: apply after 0033 and previous Q4_K batch shader support.
+#
+# Eliminates the largest speculative-verification readback:
+# instead of downloading batch*vocab logits (~2.4 MiB for 4x152064 F32),
+# each GPU computes local argmax over its LM-head row slice and returns only
+# (value,index) per candidate. Host merges the two local winners exactly.
+#
+# Rebuild shaders after apply.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0034_dual_gpu_lmhead_top1.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_argmax.comp b/~dev/rawrxd/src/deep2/shaders/deep2_argmax.comp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_argmax.comp
+@@
++#version 450
++layout(local_size_x=256) in;
++layout(set=0,binding=0,std430) readonly buffer In0 { float x[]; };
++layout(set=0,binding=1,std430) writeonly buffer OutV { float maxv[]; };
++layout(set=0,binding=2,std430) writeonly buffer OutI { uint maxi[]; };
++layout(push_constant) uniform Push { uint rows; uint batch; } pc;
++
++shared float sv[256];
++shared uint si[256];
++
++void main() {
++    uint b=gl_WorkGroupID.x;
++    uint lane=gl_LocalInvocationID.x;
++    if(b>=pc.batch) return;
++    float best=-3.402823466e+38;
++    uint besti=0u;
++    uint base=b*pc.rows;
++    for(uint i=lane;i<pc.rows;i+=256u) {
++        float v=x[base+i];
++        if(v>best || (v==best && i<besti)) {best=v;besti=i;}
++    }
++    sv[lane]=best; si[lane]=besti;
++    barrier();
++    for(uint s=128u;s>0u;s>>=1u) {
++        if(lane<s) {
++            float ov=sv[lane+s];
++            uint oi=si[lane+s];
++            if(ov>sv[lane] || (ov==sv[lane]&&oi<si[lane])) {
++                sv[lane]=ov;si[lane]=oi;
++            }
++        }
++        barrier();
++    }
++    if(lane==0u){maxv[b]=sv[0];maxi[b]=si[0];}
++}
+
+diff --git a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1 b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+--- a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
++++ b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+@@
+ Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch.comp") `
+             (Join-Path $ShaderDir "deep2_qgemv_batch.spv")
++Compile-One (Join-Path $ShaderDir "deep2_argmax.comp") `
++            (Join-Path $ShaderDir "deep2_argmax.spv")
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightHostBatchQ4K(
+         const GpuWeightView& weight,
+         const float* inputBatch,float* outputBatch,
+         uint32_t batch,uint64_t epoch);
++    bool RunWeightBatchQ4KTop1(
++        const GpuWeightView& weight,
++        const float* inputBatch,uint32_t batch,
++        uint32_t rowBase,uint32_t* outIndex,float* outValue,
++        uint64_t epoch);
+@@
+     VkPipeline qBatchPipeline_ = VK_NULL_HANDLE;
+     VkPipelineLayout qBatchPipelineLayout_ = VK_NULL_HANDLE;
++    VkPipeline argmaxPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout argmaxPipelineLayout_ = VK_NULL_HANDLE;
++
++    struct ArgmaxPush { uint32_t rows=0,batch=0; };
++    bool DispatchArgmaxBatch(
++        DeviceBuf& logits,DeviceBuf& values,DeviceBuf& indices,
++        uint32_t rows,uint32_t batch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::createPipelines() {
+@@
+     const std::string qb = shaderPath("deep2_qgemv_batch.spv");
++    const std::string am = shaderPath("deep2_argmax.spv");
+@@
+     if(!qb.empty())
+         (void)createPipelineFromFile(
+             qb,qSetLayout_,sizeof(QBatchPush),
+             qBatchPipelineLayout_,qBatchPipeline_);
++    if(!am.empty())
++        (void)createPipelineFromFile(
++            am,qSetLayout_,sizeof(ArgmaxPush),
++            argmaxPipelineLayout_,argmaxPipeline_);
+@@
+ }
++
++bool VulkanCompute::DispatchArgmaxBatch(
++    DeviceBuf& logits,DeviceBuf& values,DeviceBuf& indices,
++    uint32_t rows,uint32_t batch)
++{
++    if(!argmaxPipeline_||!rows||!batch||batch>4) return false;
++    VkCommandBuffer cmd=fusedCmd_;
++    VkQueryPool query=fusedQuery_;
++    const bool own=!fused_;
++    if(own&&!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getQuantDescriptor(logits,values,indices);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,argmaxPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,argmaxPipelineLayout_,
++        0,1,&set,0,nullptr);
++    ArgmaxPush p{rows,batch};
++    vkCmdPushConstants(
++        cmd,argmaxPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    vkCmdDispatch(cmd,batch,1,1);
++    recordComputeBarrier(cmd);
++    if(!own) return true;
++    return endSubmitWait(
++        cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr);
++}
++
++bool VulkanCompute::RunWeightBatchQ4KTop1(
++    const GpuWeightView& weight,const float* inputBatch,uint32_t batch,
++    uint32_t rowBase,uint32_t* outIndex,float* outValue,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weight.valid()||weight.type!=12||!inputBatch||!outIndex||!outValue||
++       !batch||batch>4) return false;
++    SetWorkEpoch(epoch);
++    const size_t inCount=(size_t)batch*weight.cols;
++    const size_t logitCount=(size_t)batch*weight.rows;
++    if(!EnsureScratch(80,inCount)||!EnsureScratch(81,logitCount)||
++       !EnsureScratch(82,batch)||!EnsureScratch(83,batch))
++        return false;
++    auto& in=Scratch(80);auto& lg=Scratch(81);
++    auto& mv=Scratch(82);auto& mi=Scratch(83);
++    const size_t inBytes=inCount*sizeof(float);
++    const size_t retBytes=batch*(sizeof(float)+sizeof(uint32_t));
++    DeviceBuf* us=nullptr;DeviceBuf* ds=nullptr;
++    void* um=nullptr;void* dm=nullptr;
++    if(!ensureMappedStaging(true,inBytes,us,um)||
++       !ensureMappedStaging(false,retBytes,ds,dm))
++        return false;
++    std::memcpy(um,inputBatch,inBytes);
++    if(!BeginFusedLayer()) return false;
++    if(!recordCopy(fusedCmd_,*us,in,inBytes)||
++       !DispatchGemvQ4KBatch(
++           weight.data,weight.bytes,in,lg,weight.rows,weight.cols,batch)||
++       !DispatchArgmaxBatch(lg,mv,mi,weight.rows,batch)||
++       !recordCopy(fusedCmd_,mv,*ds,batch*sizeof(float),0,0)||
++       !recordCopy(fusedCmd_,mi,*ds,batch*sizeof(uint32_t),0,
++                   batch*sizeof(float))) {
++        if(FusedRecording()) (void)EndFusedLayer();
++        return false;
++    }
++    if(!EndFusedLayer()) return false;
++    const float* vals=(const float*)dm;
++    const uint32_t* idx=(const uint32_t*)(
++        (const uint8_t*)dm+batch*sizeof(float));
++    for(uint32_t b=0;b<batch;++b) {
++        outValue[b]=vals[b];
++        outIndex[b]=rowBase+idx[b];
++    }
++    return true;
++}
+@@
+     if(device_ && qBatchPipeline_)
+         vkDestroyPipeline(device_,qBatchPipeline_,nullptr);
++    if(device_ && argmaxPipeline_)
++        vkDestroyPipeline(device_,argmaxPipeline_,nullptr);
+@@
+     if(device_ && qBatchPipelineLayout_)
+         vkDestroyPipelineLayout(device_,qBatchPipelineLayout_,nullptr);
++    if(device_ && argmaxPipelineLayout_)
++        vkDestroyPipelineLayout(device_,argmaxPipelineLayout_,nullptr);

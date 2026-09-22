@@ -1,0 +1,141 @@
+# Deep2 Qwen32 85TPS — Batch 2/5, item 29
+# Base: apply after 0028.
+#
+# Adds exact greedy target verification:
+# - first proposed token is checked against current target logits
+# - if it matches, proposals are batch-forwarded by the 32B target
+# - longest exact argmax prefix is accepted
+# - mismatch emits the target argmax
+# - all-accepted window emits one target "bonus" token
+# - KV commits accepted draft prefix only
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0029_exact_greedy_verify_accept.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+ #include "MedusaDecoder.hpp"
++#include "KVSpecTransaction.hpp"
++#include "Deep2Speculative.hpp"
+@@
+     bool forwardSpeculativeBlock(const int* tokenIds,size_t count,
+                                  size_t basePos,float* finalHiddenBatch);
++    bool verifySpeculativeGreedyWindow(
++        float* currentHidden,
++        const std::vector<int32_t>& proposals,
++        size_t maxEmit,
++        std::vector<int32_t>& verified);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ namespace {
+@@
+ inline void softmaxLocal(float* x,size_t n) {
+@@
+ }
++inline int greedyArgmax(const float* p,size_t n) {
++    if(!p||!n) return -1;
++    size_t best=0;
++    for(size_t i=1;i<n;++i) if(p[i]>p[best]) best=i;
++    return (int)best;
++}
+ }
+@@
+ bool Deep2Engine::forwardSpeculativeBlock(
+@@
+ }
+
++bool Deep2Engine::verifySpeculativeGreedyWindow(
++    float* currentHidden,
++    const std::vector<int32_t>& proposals,
++    size_t maxEmit,
++    std::vector<int32_t>& verified)
++{
++    verified.clear();
++    if(!currentHidden||proposals.empty()||proposals.size()>4||
++       maxEmit==0||!deterministicGreedy_||!kvCache)
++        return false;
++
++    const size_t B=std::min<size_t>(proposals.size(),maxEmit);
++    if(B==0) return false;
++
++    // First proposal can be rejected before running any speculative block.
++    std::vector<float> currentLogits(modelWeights.vocabSize);
++    computeLogits(currentHidden,currentLogits.data());
++    const int first=greedyArgmax(currentLogits.data(),currentLogits.size());
++    if(first<0) return false;
++    if(proposals[0]!=first) {
++        verified.push_back(first);
++        if(medusaDecoder_) {
++            ++medusaDecoder_->stats.rejected;
++            ++medusaDecoder_->stats.exact.rejectedTokens;
++            ++medusaDecoder_->stats.exact.verifiedOutputTokens;
++        }
++        return true;
++    }
++
++    const size_t base=kvCache->currentLength();
++    KVSpecTransaction tx(*kvCache);
++    if(!kvCache->advanceBy(B)) return false;
++
++    std::vector<float> hiddenBatch(B*modelWeights.hiddenDim);
++    if(!forwardSpeculativeBlock(
++            reinterpret_cast<const int*>(proposals.data()),
++            B,base,hiddenBatch.data()))
++        return false; // RAII rollback
++
++    std::vector<float> logitsBatch(B*modelWeights.vocabSize);
++    computeLogitsBatch(hiddenBatch.data(),B,logitsBatch.data());
++
++    size_t accepted=1; // proposal[0] matched current target logits
++    int replacement=-1;
++    for(size_t j=1;j<B;++j) {
++        const float* lp=
++            logitsBatch.data()+(j-1)*modelWeights.vocabSize;
++        const int target=greedyArgmax(lp,modelWeights.vocabSize);
++        if(target<0) return false;
++        if(proposals[j]!=target) {
++            replacement=target;
++            break;
++        }
++        ++accepted;
++    }
++
++    verified.reserve(std::min(maxEmit,B+1));
++    for(size_t j=0;j<accepted&&verified.size()<maxEmit;++j)
++        verified.push_back(proposals[j]);
++
++    if(accepted<B) {
++        if(replacement<0) {
++            const float* lp=
++                logitsBatch.data()+(accepted-1)*modelWeights.vocabSize;
++            replacement=greedyArgmax(lp,modelWeights.vocabSize);
++        }
++        if(verified.size()<maxEmit)
++            verified.push_back(replacement);
++    } else if(verified.size()<maxEmit) {
++        const float* lp=
++            logitsBatch.data()+(B-1)*modelWeights.vocabSize;
++        const int bonus=greedyArgmax(lp,modelWeights.vocabSize);
++        if(bonus<0) return false;
++        verified.push_back(bonus);
++    }
++
++    if(!tx.commitAccepted(accepted)) return false;
++
++    // currentHidden must describe the last KV-committed token. The final
++    // replacement/bonus remains unforwarded, matching ordinary decode.
++    std::memcpy(currentHidden,
++                hiddenBatch.data()+(accepted-1)*modelWeights.hiddenDim,
++                modelWeights.hiddenDim*sizeof(float));
++
++    if(medusaDecoder_)
++        medusaDecoder_->recordVerification(B,accepted,verified.size());
++    return !verified.empty();
++}
++
+ } // namespace Deep2

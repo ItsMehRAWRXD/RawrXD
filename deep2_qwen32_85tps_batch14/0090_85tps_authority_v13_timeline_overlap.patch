@@ -1,0 +1,114 @@
+# Deep2 Qwen32 85TPS — Batch 14, item 90
+# Base: apply after 0089.
+#
+# Authority v13:
+# - keeps every previous predicate
+# - reports timeline capability per GPU
+# - when timeline is enabled, requires timeline compute->transfer chains
+# - requires async command-ring reuse
+# - timeline absence is not itself failure if driver/device does not expose it
+# - all three steady real verified runs must still be >=85 TPS
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0090_85tps_authority_v13_timeline_overlap.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotTransferRingOverlapNs(unsigned slot) const;
++    bool vulkanSlotTimelineSemaphoreEnabled(unsigned slot) const;
++    uint64_t vulkanSlotTimelineSignals(unsigned slot) const;
++    uint64_t vulkanSlotTimelineWaits(unsigned slot) const;
++    uint64_t vulkanSlotTimelineComputeTransferChains(unsigned slot) const;
++    uint64_t vulkanSlotAsyncCmdRingReuses(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++bool Deep2Engine::vulkanSlotTimelineSemaphoreEnabled(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc&&vc->TimelineSemaphoreEnabled();
++}
++uint64_t Deep2Engine::vulkanSlotTimelineSignals(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TimelineSignals():0;
++}
++uint64_t Deep2Engine::vulkanSlotTimelineWaits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TimelineWaits():0;
++}
++uint64_t Deep2Engine::vulkanSlotTimelineComputeTransferChains(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TimelineComputeTransferChains():0;
++}
++uint64_t Deep2Engine::vulkanSlotAsyncCmdRingReuses(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->AsyncCmdRingReuses():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t tq1Warm=spec.vulkanSlotTransferQueueSubmits(1);
++    const bool tl0=spec.vulkanSlotTimelineSemaphoreEnabled(0);
++    const bool tl1=spec.vulkanSlotTimelineSemaphoreEnabled(1);
++    const uint64_t tls0Warm=spec.vulkanSlotTimelineSignals(0);
++    const uint64_t tls1Warm=spec.vulkanSlotTimelineSignals(1);
++    const uint64_t tlw0Warm=spec.vulkanSlotTimelineWaits(0);
++    const uint64_t tlw1Warm=spec.vulkanSlotTimelineWaits(1);
++    const uint64_t tlc0Warm=spec.vulkanSlotTimelineComputeTransferChains(0);
++    const uint64_t tlc1Warm=spec.vulkanSlotTimelineComputeTransferChains(1);
++    const uint64_t acr0Warm=spec.vulkanSlotAsyncCmdRingReuses(0);
++    const uint64_t acr1Warm=spec.vulkanSlotAsyncCmdRingReuses(1);
+@@
+     const uint64_t tq1End=spec.vulkanSlotTransferQueueSubmits(1);
++    const uint64_t tls0End=spec.vulkanSlotTimelineSignals(0);
++    const uint64_t tls1End=spec.vulkanSlotTimelineSignals(1);
++    const uint64_t tlw0End=spec.vulkanSlotTimelineWaits(0);
++    const uint64_t tlw1End=spec.vulkanSlotTimelineWaits(1);
++    const uint64_t tlc0End=spec.vulkanSlotTimelineComputeTransferChains(0);
++    const uint64_t tlc1End=spec.vulkanSlotTimelineComputeTransferChains(1);
++    const uint64_t acr0End=spec.vulkanSlotAsyncCmdRingReuses(0);
++    const uint64_t acr1End=spec.vulkanSlotAsyncCmdRingReuses(1);
+@@
+     const bool threeStage=
+@@
+         sc.pipelineCommitWindows>0;
++    const bool timelineUsed=
++        (!tl0 || tlc0End>tlc0Warm) &&
++        (!tl1 || tlc1End>tlc1Warm);
++    const bool cmdRingLive=
++        acr0End>acr0Warm && acr1End>acr1Warm;
+@@
+-                    threeStage;
++                    threeStage&&timelineUsed&&cmdRingLive;
+@@
+         "THREE_STAGE_SPEC_PIPELINE=%s\n"
++        "GPU0_TIMELINE_ENABLED=%u\n"
++        "GPU1_TIMELINE_ENABLED=%u\n"
++        "GPU0_TIMELINE_SIGNALS_DELTA=%llu\n"
++        "GPU1_TIMELINE_SIGNALS_DELTA=%llu\n"
++        "GPU0_TIMELINE_WAITS_DELTA=%llu\n"
++        "GPU1_TIMELINE_WAITS_DELTA=%llu\n"
++        "GPU0_TIMELINE_CHAINS_DELTA=%llu\n"
++        "GPU1_TIMELINE_CHAINS_DELTA=%llu\n"
++        "GPU0_ASYNC_CMD_RING_REUSE_DELTA=%llu\n"
++        "GPU1_ASYNC_CMD_RING_REUSE_DELTA=%llu\n"
++        "TIMELINE_CHAIN_USED=%s\n"
++        "ASYNC_COMMAND_RING=%s\n"
+@@
+         threeStage?"PASS":"FAIL",
++        tl0?1u:0u,tl1?1u:0u,
++        (unsigned long long)(tls0End-tls0Warm),
++        (unsigned long long)(tls1End-tls1Warm),
++        (unsigned long long)(tlw0End-tlw0Warm),
++        (unsigned long long)(tlw1End-tlw1Warm),
++        (unsigned long long)(tlc0End-tlc0Warm),
++        (unsigned long long)(tlc1End-tlc1Warm),
++        (unsigned long long)(acr0End-acr0Warm),
++        (unsigned long long)(acr1End-acr1Warm),
++        timelineUsed?"PASS":"FAIL",
++        cmdRingLive?"PASS":"FAIL",

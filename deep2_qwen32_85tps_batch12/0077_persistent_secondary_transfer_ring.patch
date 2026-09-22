@@ -1,0 +1,137 @@
+# Deep2 Qwen32 85TPS — Batch 12, item 77
+# Base: apply after 0076.
+#
+# Goal:
+#   eliminate allocation/map/unmap from recurring GPU1 slice returns.
+#
+# Adds a 3-slot persistent host-visible transfer ring per Vulkan device.
+# Each slot owns:
+#   staging buffer
+#   persistent mapping
+#   fence
+#
+# Producer rotates slots; consumer waits only on the selected slot.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0077_persistent_secondary_transfer_ring.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct TransferRingSlot {
++        DeviceBuf staging{};
++        void* mapped=nullptr;
++        VkFence fence=VK_NULL_HANDLE;
++        size_t capacity=0;
++        size_t bytes=0;
++        bool inFlight=false;
++    };
++    bool EnsureDownloadRing(size_t bytes);
++    bool SubmitDownloadRing(DeviceBuf& src,size_t bytes,uint32_t& slotOut);
++    bool WaitDownloadRing(uint32_t slot,void* dst,size_t bytes);
++    void ResetDownloadRing();
++    uint64_t DownloadRingSubmits() const noexcept {
++        return downloadRingSubmits_;
++    }
++    uint64_t DownloadRingWaitNs() const noexcept {
++        return downloadRingWaitNs_;
++    }
+@@
+ private:
++    TransferRingSlot downloadRing_[3]{};
++    uint32_t downloadRingHead_=0;
++    uint64_t downloadRingSubmits_=0;
++    uint64_t downloadRingWaitNs_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++void VulkanCompute::ResetDownloadRing() {
++    for(auto& s:downloadRing_) {
++        if(s.inFlight&&s.fence)
++            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
++        if(s.mapped&&s.staging.memory)
++            vkUnmapMemory(device_,s.staging.memory);
++        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
++        destroyBuffer(s.staging);
++        s={};
++    }
++    downloadRingHead_=0;
++}
++
++bool VulkanCompute::EnsureDownloadRing(size_t bytes) {
++    if(!bytes) return false;
++    bool good=true;
++    for(const auto& s:downloadRing_)
++        good=good&&s.staging&&s.capacity>=bytes&&s.mapped&&s.fence;
++    if(good) return true;
++    ResetDownloadRing();
++    for(auto& s:downloadRing_) {
++        if(!createBuffer(
++                bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|
++                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,s.staging))
++            return false;
++        if(vkMapMemory(
++                device_,s.staging.memory,0,bytes,0,&s.mapped)!=VK_SUCCESS)
++            return false;
++        VkFenceCreateInfo fi{};
++        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
++        if(vkCreateFence(device_,&fi,nullptr,&s.fence)!=VK_SUCCESS)
++            return false;
++        s.capacity=bytes;
++    }
++    return true;
++}
++
++bool VulkanCompute::SubmitDownloadRing(
++    DeviceBuf& src,size_t bytes,uint32_t& slotOut)
++{
++    if(!src||!bytes||bytes>src.size||!EnsureDownloadRing(bytes))
++        return false;
++    const uint32_t idx=downloadRingHead_++%3u;
++    auto& s=downloadRing_[idx];
++    if(vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    if(vkResetFences(device_,1,&s.fence)!=VK_SUCCESS) return false;
++
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,false)) return false;
++    if(!recordCopy(cmd,src,s.staging,bytes)) return false;
++    if(vkEndCommandBuffer(cmd)!=VK_SUCCESS) return false;
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;si.pCommandBuffers=&cmd;
++    if(vkQueueSubmit(queue_,1,&si,s.fence)!=VK_SUCCESS) return false;
++    s.bytes=bytes;s.inFlight=true;
++    slotOut=idx;
++    ++downloadRingSubmits_;
++    ++queueSubmitCount_;
++    return true;
++}
++
++bool VulkanCompute::WaitDownloadRing(
++    uint32_t idx,void* dst,size_t bytes)
++{
++    if(idx>=3||!dst) return false;
++    auto& s=downloadRing_[idx];
++    if(!s.inFlight||bytes>s.bytes) return false;
++    const auto a=std::chrono::steady_clock::now();
++    if(vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    const auto b=std::chrono::steady_clock::now();
++    downloadRingWaitNs_+=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(b-a).count();
++    std::memcpy(dst,s.mapped,bytes);
++    s.inFlight=false;
++    return true;
++}
+@@
+ void VulkanCompute::cleanup() {
+     if (device_) vkDeviceWaitIdle(device_);
++    ResetDownloadRing();

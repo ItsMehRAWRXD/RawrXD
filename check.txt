@@ -1,0 +1,8 @@
+ Volume in drive F has no label.
+ Volume Serial Number is 66A3-7175
+
+ Directory of F:\~dev
+
+09/16/2026  02:47 AM             2,110 ntok4_baseline.txt
+               1 File(s)          2,110 bytes
+               0 Dir(s)  21,730,164,736 bytes free

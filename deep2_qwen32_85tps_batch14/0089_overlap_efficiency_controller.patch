@@ -1,0 +1,68 @@
+# Deep2 Qwen32 85TPS — Batch 14, item 89
+# Base: apply after 0088.
+#
+# Adds overlap-efficiency feedback:
+#
+#   overlap_eff = (gpu0_ns + gpu1_ns - wall_ns) / min(gpu0_ns,gpu1_ns)
+#
+# If overlap is poor, bias the row split toward the faster card and prefer the
+# kernel tile with the lower measured per-byte cost.
+# If overlap is strong, keep split stable to prevent oscillation.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0089_overlap_efficiency_controller.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ namespace {
++std::atomic<double> gOverlapEfficiency{0.0};
++std::atomic<uint64_t> gOverlapEfficiencySamples{0};
++
++void updateOverlapEfficiency(
++    uint64_t gpu0Ns,uint64_t gpu1Ns,uint64_t wallNs) noexcept
++{
++    if(!gpu0Ns||!gpu1Ns||!wallNs) return;
++    const uint64_t sum=gpu0Ns+gpu1Ns;
++    const uint64_t ov=sum>wallNs?sum-wallNs:0;
++    const uint64_t denom=std::min(gpu0Ns,gpu1Ns);
++    if(!denom) return;
++    const double e=std::max(0.0,std::min(1.0,(double)ov/(double)denom));
++    const double old=gOverlapEfficiency.load(std::memory_order_relaxed);
++    const uint64_t n=gOverlapEfficiencySamples.load(std::memory_order_relaxed);
++    gOverlapEfficiency.store(n?old*0.875+e*0.125:e,
++                             std::memory_order_relaxed);
++    gOverlapEfficiencySamples.fetch_add(1,std::memory_order_relaxed);
++}
+@@
+ bool Deep2WaitDualQ4KFanIn(
+@@
+     out.overlapNs=(n0+n1>out.wallNs)?n0+n1-out.wallNs:0;
++    updateOverlapEfficiency(n0,n1,out.wallNs);
+     return true;
+ }
+@@
+ RowSplitPlan chooseThroughputSplit(
+@@
+ {
++    if(asyncSplitControl() &&
++       gOverlapEfficiencySamples.load(std::memory_order_relaxed)>4) {
++        const double eff=gOverlapEfficiency.load(std::memory_order_relaxed);
++        // Poor concurrency: amplify the existing completion-based bias toward
++        // the faster lane. Strong concurrency: retain current learned ratio.
++        if(eff<0.50) {
++            double r=gAsyncRowRatio.load(std::memory_order_relaxed);
++            r=0.5+(r-0.5)*1.15;
++            r=std::max(0.20,std::min(0.80,r));
++            uint32_t n0=(uint32_t)std::llround((double)rows*r);
++            n0=std::max<uint32_t>(1,std::min<uint32_t>(rows-1,n0));
++            RowSplitPlan p{};
++            p.valid=true;
++            p.row0Begin=0;p.row0Count=n0;
++            p.row1Begin=n0;p.row1Count=rows-n0;
++            return p;
++        }
++    }
+@@
+ }

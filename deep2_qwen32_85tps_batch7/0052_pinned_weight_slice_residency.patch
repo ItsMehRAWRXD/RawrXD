@@ -1,0 +1,114 @@
+# Deep2 Qwen32 85TPS — Batch 7, item 52
+# Base: apply after 0051 + earlier adaptive LRU weight cache.
+#
+# Goal:
+#   row/column Q4_K slices used by the dense Qwen product lane become pinned
+#   cache residents after first materialization. LRU eviction may remove only
+#   unpinned entries.
+#
+# This converts warm steady-state target passes into zero-upload weight reads
+# when each card's assigned ~half-model slice fits VRAM.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0052_pinned_weight_slice_residency.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     struct WeightCacheEntry {
+         DeviceBuf buffer{};
+         size_t bytes = 0;
+         int type = 0;
++        bool pinned = false;
++        uint64_t lastUse = 0;
+     };
+@@
+     bool ensureWeightQuant(int type, const void* weights, size_t bytes,
+                            DeviceBuf*& out);
++    bool PinWeightView(const GpuWeightView& view);
++    void UnpinAllWeights();
++    uint64_t PinnedWeightBytes() const noexcept { return pinnedWeightBytes_; }
++    uint64_t PinnedWeightEntries() const noexcept { return pinnedWeightEntries_; }
+@@
+     std::unordered_map<uint64_t, WeightCacheEntry> weightCache_;
++    uint64_t weightUseClock_=0;
++    uint64_t pinnedWeightBytes_=0;
++    uint64_t pinnedWeightEntries_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::ensureWeightQuant(
+@@
+-    auto it = weightCache_.find(key);
++    auto it = weightCache_.find(key);
+     if (it != weightCache_.end()) {
++        it->second.lastUse=++weightUseClock_;
+         ++weightHits_;
+         out=&it->second.buffer;
+         return true;
+     }
+@@
+-    e.type = type;
++    e.type = type;
++    e.lastUse=++weightUseClock_;
+@@
+ }
++
++bool VulkanCompute::PinWeightView(const GpuWeightView& view) {
++    if(!view.valid()) return false;
++    DeviceBuf* b=nullptr;
++    if(view.type==0) {
++        const uint64_t key=view.key
++            ? view.key
++            : (uint64_t)(uintptr_t)view.data;
++        if(!ensureWeightF32(
++                (const float*)view.data,key,view.bytes,b))
++            return false;
++    } else {
++        if(!ensureWeightQuant(view.type,view.data,view.bytes,b))
++            return false;
++    }
++    const uint64_t key=view.key
++        ? view.key
++        : ((uint64_t)(uintptr_t)view.data ^
++           ((uint64_t)view.bytes<<1) ^
++           ((uint64_t)(uint32_t)view.type<<48));
++    auto it=weightCache_.find(key);
++    if(it==weightCache_.end()) {
++        // Fallback: locate by device buffer identity when key derivation differs.
++        for(auto jt=weightCache_.begin();jt!=weightCache_.end();++jt) {
++            if(&jt->second.buffer==b ||
++               jt->second.buffer.buffer==b->buffer) {
++                it=jt;break;
++            }
++        }
++    }
++    if(it==weightCache_.end()) return false;
++    if(!it->second.pinned) {
++        it->second.pinned=true;
++        pinnedWeightBytes_+=it->second.bytes;
++        ++pinnedWeightEntries_;
++    }
++    return true;
++}
++
++void VulkanCompute::UnpinAllWeights() {
++    for(auto& kv:weightCache_) kv.second.pinned=false;
++    pinnedWeightBytes_=0;
++    pinnedWeightEntries_=0;
++}
+@@
+ void VulkanCompute::clearWeightCache() {
+-    for (...) destroyBuffer(...);
+-    weightCache_.clear();
+-    weightCacheBytes_ = 0;
++    for(auto it=weightCache_.begin();it!=weightCache_.end();) {
++        if(it->second.pinned) { ++it; continue; }
++        weightCacheBytes_-=it->second.bytes;
++        destroyBuffer(it->second.buffer);
++        it=weightCache_.erase(it);
++    }
+ }

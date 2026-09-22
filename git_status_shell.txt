@@ -1,0 +1,13 @@
+﻿ M ~dev/.gitignore
+ M ~dev/rawrxd/CMakeLists.txt
+ M ~dev/rawrxd/cmake/Deep2BenchmarkCert.fragment.cmake
+ M ~dev/rawrxd/cmake/Deep2C1C9.fragment.cmake
+ M ~dev/rawrxd/cmake/Deep2GatewayCertStandalone.fragment.cmake
+ M ~dev/rawrxd/cmake/Deep2ProductLavapath.fragment.cmake
+ M ~dev/rawrxd/cmake/Deep2VwaB3B8.fragment.cmake
+ M ~dev/rawrxd/cmake/Deep2VwaConsumerGates.fragment.cmake
+ M ~dev/rawrxd/cmake/RawrAgenticCli.fragment.cmake
+ M ~dev/rawrxd/cmake/RawrBackgroundTerminals.fragment.cmake
+ M ~dev/rawrxd/cmake/RawrProductLayer.fragment.cmake
+ M ~dev/rawrxd/cmake/RawrRemainingStyleCli.fragment.cmake
+ M ~dev/rawrxd/cmake/RawrXD_Product100.cmake

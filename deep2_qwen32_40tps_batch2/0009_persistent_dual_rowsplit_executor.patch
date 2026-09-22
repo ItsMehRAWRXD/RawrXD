@@ -1,0 +1,118 @@
+# Deep2 Qwen32 40TPS — Batch 2/5, item 9
+# Base: apply after 0006-0008.
+# Goal: stop creating two std::async worker tasks for every GEMV.
+#
+# A dense 64-layer token performs hundreds of matrix multiplies. Repeated
+# task/thread creation becomes measurable even after GPU kernels are fast.
+# Keep two workers alive for the process and wake them for each row split.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0009_persistent_dual_rowsplit_executor.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include "Deep2DualGpuRowSplit.hpp"
+ #include <algorithm>
++#include <condition_variable>
+ #include <cstring>
+-#include <future>
++#include <functional>
+ #include <limits>
++#include <mutex>
++#include <thread>
+ #include <vector>
+@@
+ namespace Deep2 {
+ namespace {
++
++class DualRowExecutor {
++public:
++    DualRowExecutor() {
++        worker_[0] = std::thread([this]{ loop(0); });
++        worker_[1] = std::thread([this]{ loop(1); });
++    }
++    ~DualRowExecutor() {
++        {
++            std::lock_guard<std::mutex> g(mu_);
++            stop_ = true;
++            ++generation_;
++        }
++        cv_.notify_all();
++        for (auto& t : worker_) if (t.joinable()) t.join();
++    }
++
++    bool run(std::function<bool()> a, std::function<bool()> b) {
++        std::unique_lock<std::mutex> lk(mu_);
++        done_[0] = done_[1] = false;
++        result_[0] = result_[1] = false;
++        job_[0] = std::move(a);
++        job_[1] = std::move(b);
++        const uint64_t g = ++generation_;
++        cv_.notify_all();
++        doneCv_.wait(lk, [&] {
++            return stop_ || (done_[0] && done_[1] && completedGeneration_ == g);
++        });
++        return !stop_ && result_[0] && result_[1];
++    }
++
++private:
++    void loop(unsigned lane) {
++        uint64_t seen = 0;
++        for (;;) {
++            std::function<bool()> fn;
++            uint64_t g = 0;
++            {
++                std::unique_lock<std::mutex> lk(mu_);
++                cv_.wait(lk, [&]{ return stop_ || generation_ != seen; });
++                if (stop_) return;
++                seen = generation_;
++                g = seen;
++                fn = job_[lane];
++            }
++            const bool r = fn ? fn() : false;
++            {
++                std::lock_guard<std::mutex> lk(mu_);
++                result_[lane] = r;
++                done_[lane] = true;
++                if (done_[0] && done_[1]) {
++                    completedGeneration_ = g;
++                    doneCv_.notify_one();
++                }
++            }
++        }
++    }
++
++    std::mutex mu_;
++    std::condition_variable cv_;
++    std::condition_variable doneCv_;
++    std::thread worker_[2];
++    std::function<bool()> job_[2];
++    bool done_[2] = {false,false};
++    bool result_[2] = {false,false};
++    bool stop_ = false;
++    uint64_t generation_ = 0;
++    uint64_t completedGeneration_ = 0;
++};
++
++DualRowExecutor& rowExecutor() {
++    static DualRowExecutor ex;
++    return ex;
++}
+@@
+-    auto f0=std::async(std::launch::async,[&]{
+-        return run(g0,w0,y0.data());
+-    });
+-    auto f1=std::async(std::launch::async,[&]{
+-        return run(g1,w1,y1.data());
+-    });
+-
+-    const bool ok0=f0.get();
+-    const bool ok1=f1.get();
+-    if(!ok0||!ok1) return false;
++    bool ok0=false,ok1=false;
++    const bool both = rowExecutor().run(
++        [&]{ ok0=run(g0,w0,y0.data()); return ok0; },
++        [&]{ ok1=run(g1,w1,y1.data()); return ok1; });
++    if(!both||!ok0||!ok1) return false;

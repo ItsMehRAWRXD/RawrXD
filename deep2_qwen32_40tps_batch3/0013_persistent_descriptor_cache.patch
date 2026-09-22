@@ -1,0 +1,212 @@
+# Deep2 Qwen32 40TPS — Batch 3/5, item 13
+# Base: Batch 1-2 applied.
+# Goal: allocate/update each Vulkan descriptor set once per unique buffer tuple.
+# Current dispatchOps/dispatchQuant allocate and write descriptors on every
+# matrix/op dispatch even when all buffers are resident and unchanged.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0013_persistent_descriptor_cache.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ private:
++    struct DescriptorKey {
++        uint64_t b0=0,b1=0,b2=0,b3=0;
++        bool operator==(const DescriptorKey& o) const noexcept {
++            return b0==o.b0&&b1==o.b1&&b2==o.b2&&b3==o.b3;
++        }
++    };
++    struct DescriptorKeyHash {
++        size_t operator()(const DescriptorKey& k) const noexcept {
++            uint64_t h=14695981039346656037ull;
++            const uint64_t v[4]={k.b0,k.b1,k.b2,k.b3};
++            for(uint64_t x:v){
++                h^=x; h*=1099511628211ull;
++                h^=x>>32; h*=1099511628211ull;
++            }
++            return static_cast<size_t>(h);
++        }
++    };
++
++    VkDescriptorSet getOpsDescriptor(
++        DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d);
++    VkDescriptorSet getQuantDescriptor(
++        DeviceBuf& w,DeviceBuf& in,DeviceBuf& out);
+@@
+     VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
+@@
+     VkPipeline qPipeline_ = VK_NULL_HANDLE;
++    std::unordered_map<DescriptorKey,VkDescriptorSet,DescriptorKeyHash>
++        opsDescriptorCache_;
++    std::unordered_map<DescriptorKey,VkDescriptorSet,DescriptorKeyHash>
++        quantDescriptorCache_;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::recordCopy(
+@@
+     return true;
+ }
+
++VkDescriptorSet VulkanCompute::getOpsDescriptor(
++    DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d)
++{
++    DescriptorKey key{a.id,b.id,c.id,d.id};
++    auto hit=opsDescriptorCache_.find(key);
++    if(hit!=opsDescriptorCache_.end()) return hit->second;
++
++    VkDescriptorSetAllocateInfo ai{};
++    ai.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
++    ai.descriptorPool=descriptorPool_;
++    ai.descriptorSetCount=1;
++    ai.pSetLayouts=&opsSetLayout_;
++    VkDescriptorSet set=VK_NULL_HANDLE;
++    if(vkAllocateDescriptorSets(device_,&ai,&set)!=VK_SUCCESS)
++        return VK_NULL_HANDLE;
++
++    DeviceBuf* bufs[4]={&a,&b,&c,&d};
++    VkDescriptorBufferInfo bi[4]{};
++    VkWriteDescriptorSet wr[4]{};
++    for(uint32_t i=0;i<4;++i){
++        bi[i].buffer=bufs[i]->buffer;
++        bi[i].offset=0;
++        bi[i].range=bufs[i]->size;
++        wr[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
++        wr[i].dstSet=set;
++        wr[i].dstBinding=i;
++        wr[i].descriptorCount=1;
++        wr[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
++        wr[i].pBufferInfo=&bi[i];
++    }
++    vkUpdateDescriptorSets(device_,4,wr,0,nullptr);
++    opsDescriptorCache_.emplace(key,set);
++    return set;
++}
++
++VkDescriptorSet VulkanCompute::getQuantDescriptor(
++    DeviceBuf& w,DeviceBuf& in,DeviceBuf& out)
++{
++    DescriptorKey key{w.id,in.id,out.id,0};
++    auto hit=quantDescriptorCache_.find(key);
++    if(hit!=quantDescriptorCache_.end()) return hit->second;
++
++    VkDescriptorSetAllocateInfo ai{};
++    ai.sType=VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
++    ai.descriptorPool=descriptorPool_;
++    ai.descriptorSetCount=1;
++    ai.pSetLayouts=&qSetLayout_;
++    VkDescriptorSet set=VK_NULL_HANDLE;
++    if(vkAllocateDescriptorSets(device_,&ai,&set)!=VK_SUCCESS)
++        return VK_NULL_HANDLE;
++
++    DeviceBuf* bufs[3]={&w,&in,&out};
++    VkDescriptorBufferInfo bi[3]{};
++    VkWriteDescriptorSet wr[3]{};
++    for(uint32_t i=0;i<3;++i){
++        bi[i].buffer=bufs[i]->buffer;
++        bi[i].offset=0;
++        bi[i].range=bufs[i]->size;
++        wr[i].sType=VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
++        wr[i].dstSet=set;
++        wr[i].dstBinding=i;
++        wr[i].descriptorCount=1;
++        wr[i].descriptorType=VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
++        wr[i].pBufferInfo=&bi[i];
++    }
++    vkUpdateDescriptorSets(device_,3,wr,0,nullptr);
++    quantDescriptorCache_.emplace(key,set);
++    return set;
++}
++
+ bool VulkanCompute::dispatchOps(
+@@
+     const bool own = !fused_;
+     if (own) {
+-        vkResetDescriptorPool(device_, descriptorPool_, 0);
+         if (!beginCommand(cmd, query, true)) return false;
+     }
+
+-    VkDescriptorSetAllocateInfo ai{};
+-    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+-    ai.descriptorPool = descriptorPool_;
+-    ai.descriptorSetCount = 1;
+-    ai.pSetLayouts = &opsSetLayout_;
+-    VkDescriptorSet set = VK_NULL_HANDLE;
+-    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
+-        return false;
+-
+-    DeviceBuf* bufs[4] = {&aa,&bb,&cc,&dd};
+-    VkDescriptorBufferInfo bi[4]{};
+-    VkWriteDescriptorSet wr[4]{};
+-    for (uint32_t i = 0; i < 4; ++i) {
+-        bi[i].buffer = bufs[i]->buffer;
+-        bi[i].offset = 0;
+-        bi[i].range = bufs[i]->size;
+-        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+-        wr[i].dstSet = set;
+-        wr[i].dstBinding = i;
+-        wr[i].descriptorCount = 1;
+-        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+-        wr[i].pBufferInfo = &bi[i];
+-    }
+-    vkUpdateDescriptorSets(device_, 4, wr, 0, nullptr);
++    VkDescriptorSet set=getOpsDescriptor(aa,bb,cc,dd);
++    if(set==VK_NULL_HANDLE) return false;
+@@
+ bool VulkanCompute::dispatchQuant(
+@@
+     const bool own = !fused_;
+     if (own) {
+-        vkResetDescriptorPool(device_, descriptorPool_, 0);
+         if (!beginCommand(cmd, query, true)) return false;
+     }
+
+-    VkDescriptorSetAllocateInfo ai{};
+-    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+-    ai.descriptorPool = descriptorPool_;
+-    ai.descriptorSetCount = 1;
+-    ai.pSetLayouts = &qSetLayout_;
+-    VkDescriptorSet set = VK_NULL_HANDLE;
+-    if (vkAllocateDescriptorSets(device_, &ai, &set) != VK_SUCCESS)
+-        return false;
+-
+-    DeviceBuf* bufs[3] = {&weights,&input,&output};
+-    VkDescriptorBufferInfo bi[3]{};
+-    VkWriteDescriptorSet wr[3]{};
+-    for (uint32_t i = 0; i < 3; ++i) {
+-        bi[i].buffer = bufs[i]->buffer;
+-        bi[i].offset = 0;
+-        bi[i].range = bufs[i]->size;
+-        wr[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+-        wr[i].dstSet = set;
+-        wr[i].dstBinding = i;
+-        wr[i].descriptorCount = 1;
+-        wr[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+-        wr[i].pBufferInfo = &bi[i];
+-    }
+-    vkUpdateDescriptorSets(device_, 3, wr, 0, nullptr);
++    VkDescriptorSet set=getQuantDescriptor(weights,input,output);
++    if(set==VK_NULL_HANDLE) return false;
+@@
+ bool VulkanCompute::BeginFusedLayer() {
+     if (fused_ || !initialized_ || !opsPipeline_) return false;
+-    vkResetDescriptorPool(device_, descriptorPool_, 0);
+     if (!beginCommand(fusedCmd_, fusedQuery_, true)) return false;
+@@
+ bool VulkanCompute::EndFusedLayer() {
+@@
+-    vkResetDescriptorPool(device_, descriptorPool_, 0);
+     return ok;
+ }
+@@
+ void VulkanCompute::cleanup() {
+@@
+     for (auto& e : prefetch_) destroyBuffer(e.buffer);
+     prefetch_.clear();
+     clearWeightCache();
++    opsDescriptorCache_.clear();
++    quantDescriptorCache_.clear();

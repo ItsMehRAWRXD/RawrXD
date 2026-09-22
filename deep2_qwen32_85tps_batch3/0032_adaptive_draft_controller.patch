@@ -1,0 +1,137 @@
+# Deep2 Qwen32 85TPS — Batch 3/5, item 32
+# Base: apply after 0031.
+#
+# Adds acceptance-EWMA control:
+# - high acceptance: expand to window 4 / shallow depth 8
+# - medium: window 3 / depth 12
+# - low: window 2 / depth 16
+#
+# The proposal chooser prefers an n-gram proposal only when it agrees with the
+# exact first target token. Otherwise it uses the self-speculative draft.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0032_adaptive_draft_controller.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+ struct SpeculativeCounters {
+@@
+     uint64_t verifiedOutputTokens=0;
++    uint64_t ngramDraftWindows=0;
++    uint64_t selfDraftWindows=0;
++    uint64_t gpuTop1Batches=0;
++    double acceptanceEwma=0.50;
+@@
+     double verifiedPerTargetPass() const noexcept {
+@@
+     }
+ };
+
+diff --git a/~dev/rawrxd/src/deep2/MedusaDecoder.hpp b/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
+--- a/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
++++ b/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
+@@
+     void recordVerification(size_t proposed,size_t accepted,size_t emitted) {
+@@
+         stats.exact.verifiedOutputTokens+=emitted;
++        if(proposed) {
++            const double ratio=
++                static_cast<double>(accepted)/static_cast<double>(proposed);
++            stats.exact.acceptanceEwma=
++                stats.exact.acceptanceEwma*0.875+ratio*0.125;
++        }
+     }
++
++    uint32_t suggestedWindow() const noexcept {
++        const double a=stats.exact.acceptanceEwma;
++        if(a>=0.72) return 4;
++        if(a>=0.45) return 3;
++        return 2;
++    }
++    uint32_t suggestedSelfDraftLayers() const noexcept {
++        const double a=stats.exact.acceptanceEwma;
++        if(a>=0.72) return 8;
++        if(a>=0.45) return 12;
++        return 16;
++    }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool proposeSelfSpeculativeGreedy(
+         const float* currentHidden,size_t maxDraft,
+         std::vector<int32_t>& proposals,
+         uint32_t draftLayersOverride=0);
++    bool buildAdaptiveSpeculativeProposals(
++        const float* currentHidden,size_t remaining,
++        std::vector<int32_t>& proposals);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ bool Deep2Engine::proposeSelfSpeculativeGreedy(
+@@
+ }
++
++bool Deep2Engine::buildAdaptiveSpeculativeProposals(
++    const float* currentHidden,size_t remaining,
++    std::vector<int32_t>& proposals)
++{
++    proposals.clear();
++    if(!medusaDecoder_||!currentHidden||remaining<2)
++        return false;
++
++    const uint32_t win=std::min<uint32_t>(
++        medusaDecoder_->suggestedWindow(),
++        (uint32_t)std::min<size_t>(4,remaining-1));
++    if(!win) return false;
++
++    std::vector<int32_t> self;
++    if(!proposeSelfSpeculativeGreedy(
++            currentHidden,win,self,
++            medusaDecoder_->suggestedSelfDraftLayers()))
++        return false;
++
++    std::vector<int32_t> ng=medusaDecoder_->propose();
++    if(ng.size()>win) ng.resize(win);
++
++    // n-gram may be excellent for code/repeated structure, but it must at
++    // least agree with the exact first target token before being preferred.
++    if(!ng.empty()&&!self.empty()&&ng[0]==self[0]&&ng.size()>=2) {
++        size_t consensus=1;
++        while(consensus<ng.size()&&consensus<self.size()&&
++              ng[consensus]==self[consensus])
++            ++consensus;
++
++        // Strong consensus: keep the longer n-gram continuation. Weak
++        // consensus: use self-draft, whose first token is target-exact.
++        if(consensus>=2 || medusaDecoder_->stats.exact.acceptanceEwma>=0.80) {
++            proposals=std::move(ng);
++            ++medusaDecoder_->stats.exact.ngramDraftWindows;
++            return true;
++        }
++    }
++
++    proposals=std::move(self);
++    ++medusaDecoder_->stats.exact.selfDraftWindows;
++    return !proposals.empty();
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+         const size_t remaining=decodeLimit-generated;
+         if(specActive&&remaining>=2) {
+-            std::vector<int32_t> proposals=medusaDecoder_->propose();
+-            const size_t maxDraft=std::min<size_t>(
+-                medusaConfig_.window,remaining-1);
+-            if(proposals.size()>maxDraft) proposals.resize(maxDraft);
++            std::vector<int32_t> proposals;
++            (void)buildAdaptiveSpeculativeProposals(
++                hidden.data(),remaining,proposals);
+             if(!proposals.empty()) {

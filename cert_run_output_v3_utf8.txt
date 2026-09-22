@@ -1,0 +1,115 @@
+﻿﻿.\rawr_monolith.exe : [RAWR_AUDIT_E2E] SUBCOMMAND=agent-audit
+At line:1 char:171
++ ... E_PAIR="0"; .\rawr_monolith.exe agent-audit qwen32 "--workspace=F:\~d ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([RAWR_AUDIT_E2E] SUBCOMMAND=agent-a 
+   udit:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[RAWR_AUDIT_E2E] MODEL_ALIAS=qwen32
+[RAWR_AUDIT_E2E] MODEL_PATH=F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+[RAWR_AUDIT_E2E] WORKSPACE=F:\~dev
+[RAWR_AUDIT_E2E] BATCH_SIZE=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 
+AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 
+heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+VK_PHYS ordinal=0 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) 
+vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.72
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E 
+type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=2 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) 
+vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) 
+vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=Microsoft Direct3D12 (AMD Radeon AI 
+PRO R9700) vendor=0x1002 device=0x7551 discrete=1 localGB=31.72
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv 
+q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv 
+qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv 
+q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv 
+q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv 
+am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv 
+so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv 
+sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv 
+ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) 
+vendor=0x1002 vram=34054242304 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 
+batch8row=1 calibrated=0
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=Microsoft Direct3D12 (AMD Radeon AI PRO 
+R9700) vendor=0x1002 device=0x7551
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=63 speed_weight=1.320
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=1
+'C:\Program' is not recognized as an internal or external command,
+operable program or batch file.
+[RAWR_AUDIT_E2E] files_enumerated=2394
+[RAWR_AUDIT_E2E] source_git_sha=(no-git) dirty_at_start=1
+[RAWR_AUDIT] generation 5 LOADED from disk: candidates=4143 reviewed=0 
+epoch=e77cbddc955b82c5
+[RAWR_AUDIT_E2E] persisted generation stale ΓÇö archiving and starting fresh
+[RAWR_AUDIT] generation 5 archived reason=EPOCH_MISMATCH_AT_RESUME 
+epoch=e77cbddc955b82c5 candidates=4143 -> 
+F:\~dev\.rawr\gen_5_e77cbddc955b82c5.jsonl
+[RAWR_AUDIT_E2E] scan complete files_scanned=2394 candidates=4143 
+epoch=1116c578244fa4c8
+[RAWR_AUDIT_E2E] live epoch changed at batch boundary ΓÇö halting (STALE_SOURCE)
+'C:\Program' is not recognized as an internal or external command,
+operable program or batch file.
+RAWR_IDE_AUDIT_E2E_001_RECEIPT
+SCAN_EPOCH_SCHEMA=2
+SCAN_EPOCH_ALGO=FNV1A64_PATH_CONTENT
+GENERATION_ID=6
+GENERATION_LOADED=0
+GENERATION_ARCHIVED=1
+SOURCE_RESCAN=1
+LEGACY_CANDIDATES_MIGRATED=0
+SOURCE_GIT_SHA=(no-git)
+SOURCE_DIRTY_AT_SCAN_START=1
+SOURCE_DIRTY_AT_COMPLETION=1
+SCAN_CHANGE_HASH_START=1116c578244fa4c8
+SCAN_CHANGE_HASH_END=1116c578244fa4c8
+SCAN_EPOCH_MATCH=1
+FILES_ENUMERATED=2394
+FILES_SCANNED=2394
+SOURCE_SCAN_COMPLETE=1
+CANDIDATES_TOTAL=4143
+CANDIDATES_REVIEWED_BEFORE=0
+CANDIDATES_REVIEWED=0
+CANDIDATES_PENDING=4143
+CONFIRMED_DEFECTS=0
+FALSE_POSITIVES=0
+NEEDS_RUNTIME_PROOF=0
+INVALID_TOOL_ATTEMPTS=0
+RECOVERED_TOOL_ERRORS=0
+UNRECOVERED_TOOL_FAILURES=0
+FAKE_TOOL_RESULTS=0
+WRITE_ACTIONS=0
+MODEL_FALLBACK=0
+AUDIT_BATCHES=0
+NO_PROGRESS_BATCHES=0
+AUDIT_HALT_REASON=STALE_SOURCE
+REPORT_EMITTED=0
+COVERAGE_COMPLETE=0
+GEN_EXIT=1
+RAWR_IDE_AUDIT_E2E_001=FAIL_STALE_SOURCE
+

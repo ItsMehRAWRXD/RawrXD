@@ -1,0 +1,155 @@
+# Deep2 Qwen32 85TPS — Batch 14, item 87
+# Base: apply after 0086.
+#
+# Goal:
+#   chain GPU1 Q4_K compute -> GPU1 transfer-ring copy entirely on the GPU
+#   using timeline semaphore values.
+#
+# Host no longer has to wait for compute merely to submit the dependent copy.
+# Fallback is the Batch-13 fence path when timeline semaphores are unavailable.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0087_timeline_compute_transfer_chain.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct TimelineTicket {
++        uint64_t computeDone=0;
++        uint64_t transferDone=0;
++        uint32_t ringSlot=UINT32_MAX;
++        size_t bytes=0;
++        bool active=false;
++    };
++    bool SubmitQ4KThenDownloadTimeline(
++        const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++        uint32_t batch,uint64_t epoch,TimelineTicket& ticket);
++    bool WaitTimelineDownload(
++        TimelineTicket& ticket,void* dst,size_t bytes);
++    uint64_t TimelineComputeTransferChains() const noexcept {
++        return timelineComputeTransferChains_;
++    }
+@@
+ private:
++    uint64_t timelineComputeTransferChains_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::SubmitQ4KThenDownloadTimeline(
++    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++    uint32_t batch,uint64_t epoch,TimelineTicket& ticket)
++{
++    ticket={};
++    if(!TimelineSemaphoreEnabled()||!weight.valid()||weight.type!=12||
++       !input||!output||!batch||batch>4)
++        return false;
++
++    DeviceBuf* wb=nullptr;
++    if(!ensureWeightQuant(weight.type,weight.data,weight.bytes,wb))
++        return false;
++    const Q4KBatchTile tile=SelectQ4KBatchTile(
++        weight.data,weight.bytes,input,output,
++        weight.rows,weight.cols,batch);
++    VkPipeline pipe=tile==Q4KBatchTile::Eight
++        ? qBatch8RowPipeline_:qBatch4RowPipeline_;
++    VkPipelineLayout layout=tile==Q4KBatchTile::Eight
++        ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
++    if(!pipe||!layout) return false;
++
++    // Compute command.
++    VkCommandBuffer ccmd{};
++    VkCommandBufferAllocateInfo cai{};
++    cai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++    cai.commandPool=commandPool_;
++    cai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++    cai.commandBufferCount=1;
++    if(vkAllocateCommandBuffers(device_,&cai,&ccmd)!=VK_SUCCESS) return false;
++    VkCommandBufferBeginInfo bi{};
++    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
++    if(vkBeginCommandBuffer(ccmd,&bi)!=VK_SUCCESS) return false;
++    VkDescriptorSet set=getQuantDescriptor(*wb,input,output);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(ccmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
++    vkCmdBindDescriptorSets(
++        ccmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,0,1,&set,0,nullptr);
++    QBatchPush p{};
++    p.type=12;p.rows=weight.rows;p.cols=weight.cols;
++    p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
++    vkCmdPushConstants(
++        ccmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,0,sizeof(p),&p);
++    const uint32_t tileN=(uint32_t)tile;
++    vkCmdDispatch(ccmd,(weight.rows+tileN-1u)/tileN,1,1);
++    recordComputeBarrier(ccmd);
++    if(vkEndCommandBuffer(ccmd)!=VK_SUCCESS) return false;
++
++    const size_t bytes=(size_t)batch*weight.rows*sizeof(float);
++    if(!EnsureDownloadRing(bytes)) return false;
++    const uint32_t slot=downloadRingHead_++%3u;
++    auto& rs=downloadRing_[slot];
++    if(vkWaitForFences(device_,1,&rs.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    if(vkResetFences(device_,1,&rs.fence)!=VK_SUCCESS) return false;
++    if(vkResetCommandBuffer(rs.cmd,0)!=VK_SUCCESS) return false;
++    if(vkBeginCommandBuffer(rs.cmd,&bi)!=VK_SUCCESS) return false;
++    if(!recordCopy(rs.cmd,output,rs.staging,bytes)) return false;
++    if(vkEndCommandBuffer(rs.cmd)!=VK_SUCCESS) return false;
++
++    const uint64_t computeValue=NextTimelineValue();
++    const uint64_t transferValue=NextTimelineValue();
++    VkTimelineSemaphoreSubmitInfo ctsi{};
++    ctsi.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
++    ctsi.signalSemaphoreValueCount=1;
++    ctsi.pSignalSemaphoreValues=&computeValue;
++    VkSubmitInfo csi{};
++    csi.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    csi.pNext=&ctsi;
++    csi.commandBufferCount=1;csi.pCommandBuffers=&ccmd;
++    csi.signalSemaphoreCount=1;csi.pSignalSemaphores=&timelineSemaphore_;
++    if(vkQueueSubmit(queue_,1,&csi,VK_NULL_HANDLE)!=VK_SUCCESS) return false;
++    ++timelineSignals_;++queueSubmitCount_;
++
++    VkPipelineStageFlags waitStage=VK_PIPELINE_STAGE_TRANSFER_BIT;
++    VkTimelineSemaphoreSubmitInfo ttsi{};
++    ttsi.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
++    ttsi.waitSemaphoreValueCount=1;
++    ttsi.pWaitSemaphoreValues=&computeValue;
++    ttsi.signalSemaphoreValueCount=1;
++    ttsi.pSignalSemaphoreValues=&transferValue;
++    VkSubmitInfo tsi{};
++    tsi.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    tsi.pNext=&ttsi;
++    tsi.waitSemaphoreCount=1;tsi.pWaitSemaphores=&timelineSemaphore_;
++    tsi.pWaitDstStageMask=&waitStage;
++    tsi.commandBufferCount=1;tsi.pCommandBuffers=&rs.cmd;
++    tsi.signalSemaphoreCount=1;tsi.pSignalSemaphores=&timelineSemaphore_;
++    VkQueue tq=transferQueue_?transferQueue_:queue_;
++    if(vkQueueSubmit(tq,1,&tsi,rs.fence)!=VK_SUCCESS) return false;
++    ++timelineSignals_;++transferQueueSubmits_;++queueSubmitCount_;
++
++    rs.bytes=bytes;rs.inFlight=true;
++    ticket.computeDone=computeValue;
++    ticket.transferDone=transferValue;
++    ticket.ringSlot=slot;
++    ticket.bytes=bytes;
++    ticket.active=true;
++    ++timelineComputeTransferChains_;
++    SetWorkEpoch(epoch);
++    return true;
++}
++
++bool VulkanCompute::WaitTimelineDownload(
++    TimelineTicket& t,void* dst,size_t bytes)
++{
++    if(!t.active||!dst||bytes>t.bytes||t.ringSlot>=3) return false;
++    if(!WaitTimelineValue(t.transferDone)) return false;
++    auto& rs=downloadRing_[t.ringSlot];
++    std::memcpy(dst,rs.mapped,bytes);
++    rs.inFlight=false;
++    t={};
++    return true;
++}

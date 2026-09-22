@@ -1,0 +1,103 @@
+# Deep2 Qwen32 85TPS — Batch 6, item 48
+# Base: apply after 0047.
+#
+# Goal: column-split O/wDown no longer merge into a host activation that must
+# then be re-uploaded. GPU0 is the activation owner:
+#
+#   GPU0 partial stays resident.
+#   GPU1 partial uses persistent mapped staging.
+#   only GPU1 partial crosses host memory.
+#   GPU0 adds the incoming partial on-device.
+#
+# This does not require Vulkan peer/external-memory support.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0048_primary_gpu_partial_reduce_bridge.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool SpecBatchResidual(DeviceBuf& a,DeviceBuf& b,DeviceBuf& output,
+                            uint32_t width,uint32_t batch);
++    bool ReduceHostPartialInto(
++        DeviceBuf& primary,const float* partial,uint32_t count);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::ReduceHostPartialInto(
++    DeviceBuf& primary,const float* partial,uint32_t count)
++{
++    if(!primary||!partial||!count) return false;
++    if(!EnsureScratch(120,count)) return false;
++    auto& incoming=Scratch(120);
++    if(!UploadVector(incoming,partial,count)) return false;
++    OpsPush p{};
++    p.op=3; // existing OP_RESIDUAL
++    p.n=count;
++    return dispatchOps(
++        primary,incoming,specArena_.tmp,specArena_.tmp,
++        p,(count+63u)/64u,GpuWorkKind::ModelCompute);
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuColumnSplitBatch4(
+@@
+     uint32_t batch,uint64_t epoch);
++bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
++    VulkanCompute& primary,VulkanCompute& secondary,
++    const WeightTensor& wt,const float* inputBatch,
++    VulkanCompute::DeviceBuf& primaryOutput,
++    uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
++bool Deep2RunDualGpuColumnSplitBatch4PrimaryResident(
++    VulkanCompute& primary,VulkanCompute& secondary,
++    const WeightTensor& wt,const float* inputBatch,
++    VulkanCompute::DeviceBuf& primaryOutput,
++    uint32_t batch,uint64_t epoch)
++{
++    if(!inputBatch||!primaryOutput||!batch||batch>4) return false;
++    const Q4KColumnSlices* s=q4kColumnSlices(wt);
++    if(!s) return false;
++    const uint32_t rows=(uint32_t)wt.rows;
++    const size_t n=(size_t)batch*rows;
++
++    std::vector<float> x0((size_t)batch*s->cols0);
++    std::vector<float> x1((size_t)batch*s->cols1);
++    for(uint32_t b=0;b<batch;++b) {
++        const float* src=inputBatch+(size_t)b*wt.cols;
++        std::memcpy(x0.data()+(size_t)b*s->cols0,src,
++                    (size_t)s->cols0*sizeof(float));
++        std::memcpy(x1.data()+(size_t)b*s->cols1,src+s->cols0,
++                    (size_t)s->cols1*sizeof(float));
++    }
++
++    GpuWeightView w0{},w1{};
++    w0.data=s->w0.data();w0.bytes=s->w0.size();w0.type=12;
++    w0.rows=rows;w0.cols=s->cols0;
++    w1.data=s->w1.data();w1.bytes=s->w1.size();w1.type=12;
++    w1.rows=rows;w1.cols=s->cols1;
++
++    std::vector<float> y0(n),y1(n);
++    bool a=false,b=false;
++    const bool both=rowExecutor().run(
++        [&]{a=primary.RunWeightHostBatchQ4K(
++            w0,x0.data(),y0.data(),batch,epoch);return a;},
++        [&]{b=secondary.RunWeightHostBatchQ4K(
++            w1,x1.data(),y1.data(),batch,epoch);return b;});
++    if(!both||!a||!b) return false;
++
++    // One host->GPU0 materialization for the owner partial, then reduce only
++    // GPU1's partial into it. The next operation can remain on GPU0.
++    if(!primary.UploadVector(primaryOutput,y0.data(),n)) return false;
++    return primary.ReduceHostPartialInto(primaryOutput,y1.data(),(uint32_t)n);
++}

@@ -1,0 +1,93 @@
+# Deep2 Qwen32 85TPS — Batch 8, item 60
+# Base: apply after 0059.
+#
+# Authority v7:
+#   retains exact parity, 2 GPUs, no fallback, zero measured weight uploads,
+#   pinned residency, and 3x >=85 TPS.
+#
+# Adds hot-path overhead authority:
+#   - queue submits / verified token
+#   - resident batch input uploads / verified token
+#   - direct device KV append count
+#   - group-output reallocs must be zero after warmup
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0060_85tps_authority_v7_hotpath_budget.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotResidentBatchInputUploads(unsigned slot) const;
++    uint64_t vulkanSlotDirectSpecKvAppends(unsigned slot) const;
++    uint64_t vulkanSlotResidentGroupOutputReallocs(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotDirectSpecKvAppends(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->DirectSpecKvAppends():0;
++}
++uint64_t Deep2Engine::vulkanSlotResidentGroupOutputReallocs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->ResidentGroupOutputReallocs():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t in0Warm=spec.vulkanSlotResidentBatchInputUploads(0);
+     const uint64_t in1Warm=spec.vulkanSlotResidentBatchInputUploads(1);
++    const uint64_t q0Warm=spec.vulkanSlotQueueSubmits(0);
++    const uint64_t q1Warm=spec.vulkanSlotQueueSubmits(1);
++    const uint64_t re0Warm=spec.vulkanSlotResidentGroupOutputReallocs(0);
++    const uint64_t re1Warm=spec.vulkanSlotResidentGroupOutputReallocs(1);
++    const uint64_t kvdWarm=spec.vulkanSlotDirectSpecKvAppends(0);
+@@
+     const uint64_t in0End=spec.vulkanSlotResidentBatchInputUploads(0);
+     const uint64_t in1End=spec.vulkanSlotResidentBatchInputUploads(1);
++    const uint64_t q0End=spec.vulkanSlotQueueSubmits(0);
++    const uint64_t q1End=spec.vulkanSlotQueueSubmits(1);
++    const uint64_t re0End=spec.vulkanSlotResidentGroupOutputReallocs(0);
++    const uint64_t re1End=spec.vulkanSlotResidentGroupOutputReallocs(1);
++    const uint64_t kvdEnd=spec.vulkanSlotDirectSpecKvAppends(0);
+@@
+     const bool pinned=pin0>0&&pin1>0&&pinBytes0>0&&pinBytes1>0;
++    const uint64_t measuredVerified=
++        runCounters[0].verifiedOutputTokens+
++        runCounters[1].verifiedOutputTokens+
++        runCounters[2].verifiedOutputTokens;
++    const double submitPerToken=measuredVerified
++        ? (double)((q0End-q0Warm)+(q1End-q1Warm))/
++          (double)measuredVerified : 1.0e30;
++    const double inputUploadsPerToken=measuredVerified
++        ? (double)((in0End-in0Warm)+(in1End-in1Warm))/
++          (double)measuredVerified : 1.0e30;
++    const bool stableGroupArena=
++        re0End==re0Warm&&re1End==re1Warm;
++    const bool hotpathBounded=
++        submitPerToken<400.0 &&
++        inputUploadsPerToken<150.0 &&
++        stableGroupArena;
+@@
+-                    zeroMeasuredUploads&&pinned;
++                    zeroMeasuredUploads&&pinned&&hotpathBounded;
+@@
+         "ZERO_MEASURED_WEIGHT_UPLOADS=%s\n"
++        "QUEUE_SUBMITS_PER_VERIFIED_TOKEN=%.6f\n"
++        "BATCH_INPUT_UPLOADS_PER_VERIFIED_TOKEN=%.6f\n"
++        "DIRECT_SPEC_KV_APPENDS_DELTA=%llu\n"
++        "GROUP_OUTPUT_REALLOC_DELTA_SLOT0=%llu\n"
++        "GROUP_OUTPUT_REALLOC_DELTA_SLOT1=%llu\n"
++        "HOTPATH_OVERHEAD_BOUNDED=%s\n"
+@@
+         zeroMeasuredUploads?"PASS":"FAIL",
++        submitPerToken,
++        inputUploadsPerToken,
++        (unsigned long long)(kvdEnd-kvdWarm),
++        (unsigned long long)(re0End-re0Warm),
++        (unsigned long long)(re1End-re1Warm),
++        hotpathBounded?"PASS":"FAIL",

@@ -1,0 +1,78 @@
+# Deep2 Qwen32 85TPS — Batch 10, item 70
+# Base: apply after 0069.
+#
+# Authority v9:
+# - preserves every prior exactness / GPU / residency / host-byte / 3x85 gate
+# - proves the new 4-row kernel ran on BOTH GPUs
+# - reports measured effective batched Q4_K GB/s per card
+# - reports ping-pong arena flips
+#
+# A low kernel GB/s does NOT fail correctness; it keeps final 85 PASS at HOLD
+# naturally through the end-to-end TPS requirement.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0070_85tps_authority_v9_kernel_efficiency.patch
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t graphWarm=spec.vulkanSlotSpecLayerGraphSubmits(0);
++    const uint64_t kb0Warm=spec.vulkanSlotQ4KBatchWeightBytes(0);
++    const uint64_t kb1Warm=spec.vulkanSlotQ4KBatchWeightBytes(1);
++    const uint64_t kn0Warm=spec.vulkanSlotQ4KBatchGpuNs(0);
++    const uint64_t kn1Warm=spec.vulkanSlotQ4KBatchGpuNs(1);
++    const uint64_t ko0Warm=spec.vulkanSlotQ4KBatch4RowOps(0);
++    const uint64_t ko1Warm=spec.vulkanSlotQ4KBatch4RowOps(1);
++    const uint64_t flipWarm=spec.vulkanSlotSpecArenaFlips(0);
+@@
+     const uint64_t graphEnd=spec.vulkanSlotSpecLayerGraphSubmits(0);
++    const uint64_t kb0End=spec.vulkanSlotQ4KBatchWeightBytes(0);
++    const uint64_t kb1End=spec.vulkanSlotQ4KBatchWeightBytes(1);
++    const uint64_t kn0End=spec.vulkanSlotQ4KBatchGpuNs(0);
++    const uint64_t kn1End=spec.vulkanSlotQ4KBatchGpuNs(1);
++    const uint64_t ko0End=spec.vulkanSlotQ4KBatch4RowOps(0);
++    const uint64_t ko1End=spec.vulkanSlotQ4KBatch4RowOps(1);
++    const uint64_t flipEnd=spec.vulkanSlotSpecArenaFlips(0);
+@@
+     const bool hostTrafficBounded=hostBytesPerToken < 64.0*1024.0*1024.0;
++    const uint64_t b0=kb0End-kb0Warm;
++    const uint64_t b1=kb1End-kb1Warm;
++    const uint64_t n0=kn0End-kn0Warm;
++    const uint64_t n1=kn1End-kn1Warm;
++    const double gbps0=n0
++        ? ((double)b0/1.0e9)/((double)n0/1.0e9) : 0.0;
++    const double gbps1=n1
++        ? ((double)b1/1.0e9)/((double)n1/1.0e9) : 0.0;
++    const bool tiledKernel=
++        ko0End>ko0Warm && ko1End>ko1Warm;
++    const bool pingpong=flipEnd>flipWarm;
+@@
+-                    residentAssembly&&fusedGraphs&&hostTrafficBounded;
++                    residentAssembly&&fusedGraphs&&hostTrafficBounded&&
++                    tiledKernel&&pingpong;
+@@
+         "HOST_TRAFFIC_BOUNDED=%s\n"
++        "GPU0_Q4K_BATCH_BYTES=%llu\n"
++        "GPU1_Q4K_BATCH_BYTES=%llu\n"
++        "GPU0_Q4K_BATCH_GPU_NS=%llu\n"
++        "GPU1_Q4K_BATCH_GPU_NS=%llu\n"
++        "GPU0_Q4K_EFFECTIVE_GBPS=%.3f\n"
++        "GPU1_Q4K_EFFECTIVE_GBPS=%.3f\n"
++        "GPU0_Q4K_4ROW_OPS_DELTA=%llu\n"
++        "GPU1_Q4K_4ROW_OPS_DELTA=%llu\n"
++        "SPEC_ARENA_FLIPS_DELTA=%llu\n"
++        "TILED_Q4K_KERNEL=%.4s\n"
++        "SPEC_PINGPONG=%.4s\n"
+@@
+         hostTrafficBounded?"PASS":"FAIL",
++        (unsigned long long)b0,
++        (unsigned long long)b1,
++        (unsigned long long)n0,
++        (unsigned long long)n1,
++        gbps0,gbps1,
++        (unsigned long long)(ko0End-ko0Warm),
++        (unsigned long long)(ko1End-ko1Warm),
++        (unsigned long long)(flipEnd-flipWarm),
++        tiledKernel?"PASS":"FAIL",
++        pingpong?"PASS":"FAIL",

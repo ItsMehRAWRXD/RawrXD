@@ -1,0 +1,95 @@
+# Deep2 Qwen32 85TPS — Batch 9, item 61
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-8
+#
+# Goal:
+#   GPU0 owns a persistent FULL output vector for row-split GEMVs.
+#   GPU0's own rows are copied device->device into their final offsets.
+#   GPU1's rows are imported later by item 62 into their final offsets.
+#
+# This removes the CPU "concatenate row slices into a full vector" step.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0061_primary_resident_full_output_assembly.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool EnsureResidentFullOutput(uint32_t rows,uint32_t batch);
++    DeviceBuf& ResidentFullOutput() noexcept { return residentFullOutput_; }
++    bool CopyDeviceSliceIntoFullOutput(
++        DeviceBuf& src,uint32_t srcRows,uint32_t rowBegin,
++        uint32_t fullRows,uint32_t batch);
++    uint64_t ResidentFullOutputCopies() const noexcept {
++        return residentFullOutputCopies_;
++    }
+@@
+ private:
++    DeviceBuf residentFullOutput_{};
++    uint32_t residentFullOutputRows_=0;
++    uint32_t residentFullOutputBatch_=0;
++    uint64_t residentFullOutputCopies_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::EnsureResidentFullOutput(
++    uint32_t rows,uint32_t batch)
++{
++    if(!rows||!batch||batch>4) return false;
++    if(residentFullOutput_&&
++       residentFullOutputRows_>=rows&&
++       residentFullOutputBatch_>=batch)
++        return true;
++    destroyBuffer(residentFullOutput_);
++    residentFullOutputRows_=residentFullOutputBatch_=0;
++    const uint64_t elems=(uint64_t)rows*batch;
++    if(elems>SIZE_MAX/sizeof(float)) return false;
++    if(!createBuffer(
++            (size_t)elems*sizeof(float),
++            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++            VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
++            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
++            residentFullOutput_))
++        return false;
++    residentFullOutputRows_=rows;
++    residentFullOutputBatch_=batch;
++    return true;
++}
++
++bool VulkanCompute::CopyDeviceSliceIntoFullOutput(
++    DeviceBuf& src,uint32_t srcRows,uint32_t rowBegin,
++    uint32_t fullRows,uint32_t batch)
++{
++    if(!src||!srcRows||!fullRows||!batch||batch>4||
++       rowBegin>fullRows||srcRows>fullRows-rowBegin||
++       !EnsureResidentFullOutput(fullRows,batch))
++        return false;
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    const VkDeviceSize rowBytes=(VkDeviceSize)srcRows*sizeof(float);
++    for(uint32_t b=0;b<batch;++b) {
++        const VkDeviceSize so=(VkDeviceSize)b*rowBytes;
++        const VkDeviceSize doff=
++            ((VkDeviceSize)b*fullRows+rowBegin)*sizeof(float);
++        if(!recordCopy(
++                cmd,src,residentFullOutput_,rowBytes,so,doff))
++            return false;
++    }
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelTransfer,
++            (uint64_t)rowBytes*batch,workEpoch_,nullptr))
++        return false;
++    residentFullOutputCopies_+=batch;
++    return true;
++}
+@@
+ void VulkanCompute::cleanup() {
+@@
++    destroyBuffer(residentFullOutput_);
++    residentFullOutput_={};
++    residentFullOutputRows_=residentFullOutputBatch_=0;

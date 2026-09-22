@@ -1,0 +1,86 @@
+# Deep2 Qwen32 40TPS — Batch 2/5, item 6
+# Base: RawrXD main @ 861a2ea99 + Batch 1 patches 0001-0005
+# Goal: replace one-thread-per-row serial dot products with one 256-lane
+# workgroup per output row and an in-workgroup reduction.
+#
+# Rebuild shaders after applying:
+#   powershell -ExecutionPolicy Bypass -File rawrxd\src\deep2\build_batch9_shaders.ps1
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0006_parallel_qgemv_256lane.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+--- a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+@@
+ #version 450
+ // Batch 9 packed GGUF GEMV.
+ // Supported: Q8_0(8), Q2_K(10), Q4_K(12), Q6_K(14).
+-layout(local_size_x = 64) in;
++//
++// 40TPS_BATCH2:
++//   one workgroup = one output row
++//   256 lanes cooperatively consume input columns
++//   shared-memory tree reduction emits exactly one row result
++layout(local_size_x = 256) in;
+@@
+ layout(push_constant) uniform Push {
+@@
+ } pc;
+
++shared float partial[256];
++
+@@
+ void main() {
+-    uint row = gl_GlobalInvocationID.x;
++    uint row = gl_WorkGroupID.x;
++    uint lane = gl_LocalInvocationID.x;
+     if (row >= pc.rows) return;
+@@
+     uint rb = row * rowBytes;
+     if (rb + rowBytes > pc.weightBytes) {
+-        y[row] = uintBitsToFloat(0x7fc00000u);
++        if (lane == 0u) y[row] = uintBitsToFloat(0x7fc00000u);
+         return;
+     }
+
+     float acc = 0.0;
+-    for (uint j = 0u; j < pc.cols; ++j) {
++    for (uint j = lane; j < pc.cols; j += 256u) {
+         float ww = 0.0;
+         if (pc.type == 8u) ww = q8_0_weight(rb, j);
+         else if (pc.type == 10u) ww = q2k_weight(rb, j);
+         else if (pc.type == 12u) ww = q4k_weight(rb, j);
+         else if (pc.type == 14u) ww = q6k_weight(rb, j);
+         acc += ww * x[j];
+     }
+-    y[row] = acc;
++
++    partial[lane] = acc;
++    barrier();
++
++    for (uint stride = 128u; stride != 0u; stride >>= 1u) {
++        if (lane < stride)
++            partial[lane] += partial[lane + stride];
++        barrier();
++    }
++
++    if (lane == 0u)
++        y[row] = partial[0];
+ }
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::dispatchQuant(
+     DeviceBuf& weights, DeviceBuf& input, DeviceBuf& output,
+     const QPush& push)
+ {
+@@
+     vkCmdPushConstants(cmd, qPipelineLayout_, VK_SHADER_STAGE_COMPUTE_BIT,
+                        0, sizeof(push), &push);
+-    vkCmdDispatch(cmd, (push.rows + 63u) / 64u, 1, 1);
++    // deep2_qgemv.comp maps exactly one 256-lane workgroup to each row.
++    vkCmdDispatch(cmd, push.rows, 1, 1);
+     recordComputeBarrier(cmd);

@@ -1,0 +1,95 @@
+# Deep2 Qwen32 85TPS — Batch 15, item 93
+# Base: apply after 0092.
+#
+# Goal:
+#   when a speculative prefix is accepted, keep the hidden state of the last
+#   accepted proposal resident on GPU0 and make it the next-window starting
+#   hidden without a host->GPU re-upload.
+#
+# Host hidden remains available for parity/debug but is no longer required on
+# the hot path between accepted windows.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0093_resident_verified_hidden_handoff.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool CaptureVerifiedHidden(
++        DeviceBuf& hiddenBatch,uint32_t tokenIndex,
++        uint32_t hiddenWidth,uint32_t batch);
++    bool RestoreVerifiedHiddenToArena(uint32_t hiddenWidth);
++    bool DownloadVerifiedHidden(float* dst,uint32_t hiddenWidth);
++    uint64_t VerifiedHiddenHandoffs() const noexcept {
++        return verifiedHiddenHandoffs_;
++    }
+@@
+ private:
++    DeviceBuf verifiedHidden_{};
++    uint32_t verifiedHiddenWidth_=0;
++    uint64_t verifiedHiddenHandoffs_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::CaptureVerifiedHidden(
++    DeviceBuf& hiddenBatch,uint32_t tokenIndex,
++    uint32_t hiddenWidth,uint32_t batch)
++{
++    if(!hiddenBatch||!hiddenWidth||!batch||tokenIndex>=batch) return false;
++    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
++    if(!verifiedHidden_||verifiedHiddenWidth_<hiddenWidth) {
++        destroyBuffer(verifiedHidden_);
++        if(!createBuffer(
++                bytes,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
++                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,verifiedHidden_))
++            return false;
++        verifiedHiddenWidth_=hiddenWidth;
++    }
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    const VkDeviceSize src=(VkDeviceSize)tokenIndex*bytes;
++    if(!recordCopy(cmd,hiddenBatch,verifiedHidden_,bytes,src,0))
++        return false;
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelTransfer,
++            bytes,workEpoch_,nullptr))
++        return false;
++    ++verifiedHiddenHandoffs_;
++    return true;
++}
++
++bool VulkanCompute::RestoreVerifiedHiddenToArena(uint32_t hiddenWidth) {
++    if(!verifiedHidden_||hiddenWidth>verifiedHiddenWidth_||
++       !SpecArena().hidden)
++        return false;
++    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    if(!recordCopy(cmd,verifiedHidden_,SpecArena().hidden,bytes,0,0))
++        return false;
++    return endSubmitWait(
++        cmd,query,GpuWorkKind::ModelTransfer,
++        bytes,workEpoch_,nullptr);
++}
++
++bool VulkanCompute::DownloadVerifiedHidden(
++    float* dst,uint32_t hiddenWidth)
++{
++    if(!dst||!verifiedHidden_||hiddenWidth>verifiedHiddenWidth_) return false;
++    return downloadFromBuffer(
++        verifiedHidden_,dst,(size_t)hiddenWidth*sizeof(float));
++}
+@@
+ void VulkanCompute::cleanup() {
+@@
++    destroyBuffer(verifiedHidden_);
++    verifiedHidden_={};
++    verifiedHiddenWidth_=0;

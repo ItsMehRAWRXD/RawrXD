@@ -1,0 +1,93 @@
+# Deep2 Qwen32 85TPS — Batch 7, item 55
+# Base: apply after 0054.
+#
+# Authority v6:
+# - all previous exactness / GPU / 3-run >=85 requirements retained
+# - records resident batch-input uploads and pinned weight bytes
+# - measured steady-state must have ZERO new weight uploads on BOTH GPUs
+# - requires pinned weight entries on both GPUs
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0055_85tps_authority_v6_zero_weight_upload.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotWeightHits(unsigned slot) const;
+     uint64_t vulkanSlotQueueSubmits(unsigned slot) const;
++    uint64_t vulkanSlotPinnedWeightBytes(unsigned slot) const;
++    uint64_t vulkanSlotPinnedWeightEntries(unsigned slot) const;
++    uint64_t vulkanSlotResidentBatchInputUploads(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotPinnedWeightBytes(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->PinnedWeightBytes():0;
++}
++uint64_t Deep2Engine::vulkanSlotPinnedWeightEntries(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->PinnedWeightEntries():0;
++}
++uint64_t Deep2Engine::vulkanSlotResidentBatchInputUploads(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->ResidentBatchInputUploads():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     // Warm resident/speculative structures. Not part of measured authority.
+@@
+     (void)run(spec,prompt,32,warmStats);
++    const uint64_t up0Warm=spec.vulkanSlotWeightUploads(0);
++    const uint64_t up1Warm=spec.vulkanSlotWeightUploads(1);
++    const uint64_t in0Warm=spec.vulkanSlotResidentBatchInputUploads(0);
++    const uint64_t in1Warm=spec.vulkanSlotResidentBatchInputUploads(1);
+@@
+     for(int r=0;r<3;++r) {
+@@
+     }
++    const uint64_t up0End=spec.vulkanSlotWeightUploads(0);
++    const uint64_t up1End=spec.vulkanSlotWeightUploads(1);
++    const uint64_t in0End=spec.vulkanSlotResidentBatchInputUploads(0);
++    const uint64_t in1End=spec.vulkanSlotResidentBatchInputUploads(1);
++    const uint64_t pin0=spec.vulkanSlotPinnedWeightEntries(0);
++    const uint64_t pin1=spec.vulkanSlotPinnedWeightEntries(1);
++    const uint64_t pinBytes0=spec.vulkanSlotPinnedWeightBytes(0);
++    const uint64_t pinBytes1=spec.vulkanSlotPinnedWeightBytes(1);
++    const bool zeroMeasuredUploads=
++        up0End==up0Warm && up1End==up1Warm;
++    const bool pinned=pin0>0&&pin1>0&&pinBytes0>0&&pinBytes1>0;
+@@
+-    const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
+-                    batch4Gpu&&persistentKv&&gpu1Ready&&pipeline&&all85;
++    const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
++                    batch4Gpu&&persistentKv&&gpu1Ready&&pipeline&&all85&&
++                    zeroMeasuredUploads&&pinned;
+@@
+         "TARGET_BATCH_NS=%llu\n"
++        "SLOT0_WEIGHT_UPLOAD_DELTA_MEASURED=%llu\n"
++        "SLOT1_WEIGHT_UPLOAD_DELTA_MEASURED=%llu\n"
++        "SLOT0_PINNED_WEIGHT_ENTRIES=%llu\n"
++        "SLOT1_PINNED_WEIGHT_ENTRIES=%llu\n"
++        "SLOT0_PINNED_WEIGHT_BYTES=%llu\n"
++        "SLOT1_PINNED_WEIGHT_BYTES=%llu\n"
++        "SLOT0_BATCH_INPUT_UPLOADS=%llu\n"
++        "SLOT1_BATCH_INPUT_UPLOADS=%llu\n"
++        "ZERO_MEASURED_WEIGHT_UPLOADS=%s\n"
+@@
+         (unsigned long long)sc.targetBatchNs,
++        (unsigned long long)(up0End-up0Warm),
++        (unsigned long long)(up1End-up1Warm),
++        (unsigned long long)pin0,
++        (unsigned long long)pin1,
++        (unsigned long long)pinBytes0,
++        (unsigned long long)pinBytes1,
++        (unsigned long long)(in0End-in0Warm),
++        (unsigned long long)(in1End-in1Warm),
++        zeroMeasuredUploads?"PASS":"FAIL",

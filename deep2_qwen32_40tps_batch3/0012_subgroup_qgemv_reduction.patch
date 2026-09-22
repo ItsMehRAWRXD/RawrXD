@@ -1,0 +1,49 @@
+# Deep2 Qwen32 40TPS — Batch 3/5, item 12
+# Base: apply after Batch 2 item 0006/0007.
+# Goal: replace the 8-barrier 256-lane shared-memory tree reduction with
+# hardware subgroup arithmetic. On RDNA-class AMD this maps to wave ops.
+#
+# Rebuild deep2_qgemv.spv after applying.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0012_subgroup_qgemv_reduction.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+--- a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv.comp
+@@
+ #version 450
++#extension GL_KHR_shader_subgroup_basic : require
++#extension GL_KHR_shader_subgroup_arithmetic : require
+@@
+-shared float partial[256];
++// AMD target: 256-lane workgroup => at most 8 wave32 subgroups.
++shared float subgroupSums[8];
+@@
+-    partial[lane] = acc;
+-    barrier();
+-
+-    for (uint stride = 128u; stride != 0u; stride >>= 1u) {
+-        if (lane < stride)
+-            partial[lane] += partial[lane + stride];
+-        barrier();
+-    }
+-
+-    if (lane == 0u)
+-        y[row] = partial[0];
++    // First reduction is entirely register/wave based.
++    float wave = subgroupAdd(acc);
++    if (subgroupElect())
++        subgroupSums[gl_SubgroupID] = wave;
++    barrier();
++
++    // The first subgroup reduces one value per subgroup.
++    if (gl_SubgroupID == 0u) {
++        float v = gl_SubgroupInvocationID < gl_NumSubgroups
++            ? subgroupSums[gl_SubgroupInvocationID]
++            : 0.0;
++        float total = subgroupAdd(v);
++        if (subgroupElect())
++            y[row] = total;
++    }
+ 

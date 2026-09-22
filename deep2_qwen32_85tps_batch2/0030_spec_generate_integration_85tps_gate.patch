@@ -1,0 +1,274 @@
+# Deep2 Qwen32 85TPS — Batch 2/5, item 30
+# Base: apply after 0026-0029.
+#
+# Wires exact verified speculation into Deep2Engine::generate for greedy decode
+# and adds an end-to-end authority executable.
+#
+# The gate requires:
+# - baseline greedy == speculative greedy token-for-token
+# - real 32B target model
+# - real Vulkan GPU target path, strict no CPU fallback
+# - >= 85 measured VERIFIED output tokens/s
+# - >1 verified output token per target speculative pass
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0030_spec_generate_integration_85tps_gate.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     void enableMedusa(bool enable);
++    void enableVerifiedSpeculation(bool enable,uint32_t window=4);
++    const SpeculativeCounters& speculativeCounters() const;
+@@
+     bool medusaEnabled_ = false;
++    SpeculativeCounters speculativeEmpty_{};
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+ bool Deep2Engine::isDeterministicGreedy() const { return deterministicGreedy_; }
+
++void Deep2Engine::enableVerifiedSpeculation(bool enable,uint32_t window) {
++    medusaEnabled_=enable;
++    medusaConfig_.window=std::max<uint32_t>(1,std::min<uint32_t>(4,window));
++    if(enable) {
++        medusaDecoder_=std::make_unique<MedusaDecoder>(medusaConfig_);
++    } else {
++        medusaDecoder_.reset();
++    }
++}
++
++const SpeculativeCounters& Deep2Engine::speculativeCounters() const {
++    return medusaDecoder_?medusaDecoder_->stats.exact:speculativeEmpty_;
++}
++
+@@
+-    size_t generated = 0;
+-
+-    // First generated token comes from the final prompt hidden state. Every
+-    // later token consumes the previously generated token exactly once.
+-    for (size_t i = 0; i < decodeLimit; ++i) {
+-        if (cancelRequested_.load(std::memory_order_acquire)) break;
+-
+-        if (i > 0) {
+-            // The token forwarded in decode step i occupies KV position
+-            // promptLen + i - 1 (0-indexed) — label parity records by it.
+-            parityBeginStep(static_cast<int>(promptLen + i - 1));
+-            const int prev = outputTokens[i - 1];
+-            if (!embedToken(prev, hidden.data())) break;
+-            if (!forwardTokenAllLayers(hidden.data(), promptLen + i)) break;
+-            if (config.useKVCache && kvCache) kvCache->advance();
+-        }
+-
+-        computeLogits(hidden.data(), logits);
++    size_t generated = 0;
++    bool pendingForward=false;
++    int pendingToken=-1;
++    const bool specActive=
++        medusaEnabled_&&deterministicGreedy_&&medusaDecoder_&&
++        parityProbe_==nullptr&&!modelWeights.isMoE&&!modelWeights.useMLA;
++    if(specActive) {
++        medusaDecoder_->reset();
++        medusaDecoder_->observe(promptTokens,promptLen);
++    }
++
++    while(generated<decodeLimit) {
++        if(cancelRequested_.load(std::memory_order_acquire)) break;
++
++        // Exactly one emitted token remains unforwarded between decode
++        // transactions. Accepted speculative prefix tokens are already in KV.
++        if(pendingForward) {
++            parityBeginStep(static_cast<int>(
++                kvCache?kvCache->currentLength():promptLen+generated-1));
++            if(!embedToken(pendingToken,hidden.data())) break;
++            const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
++            if(!forwardTokenAllLayers(hidden.data(),seq)) break;
++            if(config.useKVCache&&kvCache&&!kvCache->advance()) break;
++            pendingForward=false;
++        }
++
++        const size_t remaining=decodeLimit-generated;
++        if(specActive&&remaining>=2) {
++            std::vector<int32_t> proposals=medusaDecoder_->propose();
++            const size_t maxDraft=std::min<size_t>(
++                medusaConfig_.window,remaining-1);
++            if(proposals.size()>maxDraft) proposals.resize(maxDraft);
++            if(!proposals.empty()) {
++                std::vector<int32_t> verified;
++                if(verifySpeculativeGreedyWindow(
++                        hidden.data(),proposals,remaining,verified)&&
++                   !verified.empty()) {
++                    bool stop=false;
++                    for(int32_t tok:verified) {
++                        if(generated>=decodeLimit) break;
++                        outputTokens[generated++]=tok;
++                        medusaDecoder_->observe(tok);
++                        if(onToken&&!onToken(tok)) {stop=true;break;}
++                    }
++                    if(!verified.empty()) {
++                        pendingToken=verified.back();
++                        pendingForward=true;
++                    }
++                    if(stop) break;
++                    continue;
++                }
++            }
++        }
++
++        computeLogits(hidden.data(), logits);
+@@
+-        const int nextTok = sampleToken(logits);
++        const int nextTok = sampleToken(logits);
+         if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) break;
+-
+-        outputTokens[i] = nextTok;
+-        generated++;
+-
+-        if (onToken && !onToken(nextTok)) break;
++
++        outputTokens[generated++] = nextTok;
++        if(specActive) medusaDecoder_->observe(nextTok);
++        pendingToken=nextTok;
++        pendingForward=true;
++        if (onToken && !onToken(nextTok)) break;
+     }
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+new file mode 100644
+--- /dev/null
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
++#include "deep2/Deep2Engine.h"
++#include "deep2/Deep2Speculative.hpp"
++#include <algorithm>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <string>
++#include <vector>
++
++using namespace Deep2;
++
++static bool setup(Deep2Engine& e,const char* model,bool spec) {
++    EngineConfig c{};
++    c.maxSeqLen=4096;
++    if(!e.initialize(c)||!e.loadModel(model)) return false;
++    const auto& g=e.getConfig();
++    if(g.numLayers!=64||g.hiddenDim!=5120||
++       g.numHeads!=40||g.numKVHeads!=8)
++        return false;
++    e.setVulkanStrictNoCpuFallback(true);
++    e.enableVulkan(true);
++    if(!e.isVulkanInitialized()||e.vulkanDeviceCount()<2) return false;
++    GenerationOptions o{};
++    o.temperature=0.0f;o.topK=1;o.topP=1.0f;o.seed=1;
++    e.configureGeneration(o);
++    e.enableVerifiedSpeculation(spec,4);
++    return true;
++}
++
++static std::vector<int> run(
++    Deep2Engine& e,const std::string& prompt,size_t n,InferenceStats& s)
++{
++    auto p=e.tokenize(prompt);
++    std::vector<int> out(n);
++    const size_t got=e.generate(
++        p.data(),p.size(),out.data(),out.size(),&s);
++    out.resize(got);
++    return out;
++}
++
++int main(int argc,char** argv) {
++    if(argc<2) {
++        std::fprintf(stderr,"usage: qwen32_85tps_gate model.gguf [tokens]\n");
++        return 2;
++    }
++    const char* model=argv[1];
++    size_t measure=128;
++    if(argc>2) {
++        long v=std::strtol(argv[2],nullptr,10);
++        if(v>=32&&v<=2048) measure=(size_t)v;
++    }
++    const std::string prompt=
++        "Implement a high performance C++ lock free queue and explain "
++        "the memory ordering guarantees in detail. ";
++
++    // Exact parity witness on a bounded sequence.
++    Deep2Engine ordinary;
++    if(!setup(ordinary,model,false)) {
++        std::fprintf(stderr,"DEEP2_QWEN25_32B_REAL_85TPS_001=HOLD setup_base\n");
++        return 10;
++    }
++    InferenceStats bs{};
++    auto base=run(ordinary,prompt,16,bs);
++    if(base.size()!=16) return 11;
++
++    Deep2Engine spec;
++    if(!setup(spec,model,true)) {
++        std::fprintf(stderr,"DEEP2_QWEN25_32B_REAL_85TPS_001=HOLD setup_spec\n");
++        return 12;
++    }
++    InferenceStats ps{};
++    auto probe=run(spec,prompt,16,ps);
++    const bool parity=probe==base;
++    if(!parity) {
++        std::fprintf(stderr,
++            "SPEC_GREEDY_PARITY=FAIL\n"
++            "DEEP2_QWEN25_32B_REAL_85TPS_001=HOLD\n");
++        return 13;
++    }
++
++    spec.reset();
++    spec.enableVerifiedSpeculation(true,4);
++    InferenceStats ms{};
++    auto measured=run(spec,prompt,measure,ms);
++    const auto& sc=spec.speculativeCounters();
++    const double tps=ms.decodeMs>0.0
++        ? (double)measured.size()/(ms.decodeMs*0.001):0.0;
++
++    const bool enough=measured.size()>=measure;
++    const bool gpu=spec.vulkanDeviceCount()>=2 &&
++                   !spec.vulkanStrictViolation() &&
++                   spec.vulkanUnplannedFallbacks()==0;
++    const bool amortized=sc.targetPasses>0 &&
++                         sc.verifiedPerTargetPass()>1.0;
++    const bool pass=parity&&enough&&gpu&&amortized&&tps>=85.0;
++
++    SpeculativeRoofline roof{};
++    Emit85TpsRoofline(stderr,roof,sc,tps,4);
++    std::fprintf(stderr,
++        "SPEC_GREEDY_PARITY=%s\n"
++        "GPU_DEVICES=%u\n"
++        "STRICT_VIOLATION=%u\n"
++        "UNPLANNED_FALLBACKS=%llu\n"
++        "DECODE_TPS_REAL_VERIFIED=%.6f\n"
++        "DEEP2_QWEN25_32B_REAL_85TPS_001=%s\n",
++        parity?"PASS":"FAIL",
++        spec.vulkanDeviceCount(),
++        spec.vulkanStrictViolation()?1u:0u,
++        (unsigned long long)spec.vulkanUnplannedFallbacks(),
++        tps,pass?"PASS":"HOLD");
++    return pass?0:1;
++}
+
+diff --git a/~dev/CMakeLists.txt b/~dev/CMakeLists.txt
+--- a/~dev/CMakeLists.txt
++++ b/~dev/CMakeLists.txt
+@@
++add_executable(qwen32_85tps_gate
++    tests/qwen32_85tps_gate.cpp
++    ${RAWRXD_DEEP2_SOURCES}
++)
++target_include_directories(qwen32_85tps_gate PRIVATE
++    ${CMAKE_CURRENT_SOURCE_DIR}
++    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
++    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
++    ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
++)
++find_package(Vulkan QUIET)
++if(Vulkan_FOUND)
++    target_link_libraries(qwen32_85tps_gate PRIVATE Vulkan::Vulkan)
++endif()

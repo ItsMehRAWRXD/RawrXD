@@ -1,0 +1,798 @@
+// ============================================================================
+// Deep2Engine_VulkanRuntime.cpp — Batch 9 physical-device runtime binding
+// ============================================================================
+#include "Deep2Engine.h"
+#include "Deep2GpuForward.hpp"
+#include "Deep2GpuOverlapWitness.hpp"
+#include "vulkan_compute.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <vector>
+#ifdef _WIN32
+#include <malloc.h>
+#endif
+
+namespace Deep2 {
+
+namespace {
+
+int deviceScore(const VulkanPhysicalInfo& d) {
+    int score = 0;
+    if (d.compute) score += 100000;
+    if (d.discrete) score += 10000;
+    if (d.vendorId == 0x1002) score += 1000; // rawr's AMD pair first
+    score += static_cast<int>(
+        std::min<uint64_t>(d.deviceLocalBytes >> 30, 512));
+    return score;
+}
+
+bool isDeep2RequiredNativeGpu(const VulkanPhysicalInfo& d) {
+    if (d.vendorId != 0x1002) return false;
+    if (!d.discrete) return false;
+    return d.deviceId == 0x7551 || d.deviceId == 0x747E;
+}
+
+uint64_t tensorResidentBytes(const WeightTensor& w) {
+    if (!w.data) return 0;
+    if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
+    const uint64_t n = static_cast<uint64_t>(w.numElements());
+    return n > UINT64_MAX / sizeof(float) ? 0 : n * sizeof(float);
+}
+
+uint64_t denseLayerResidentBytes(const LayerWeights& l) {
+    uint64_t n = 0;
+    auto add = [&](const WeightTensor& w) {
+        const uint64_t b = tensorResidentBytes(w);
+        if (UINT64_MAX - n >= b) n += b;
+    };
+    add(l.wq); add(l.wk); add(l.wv);
+    if (l.wo.data) add(l.wo); else add(l.attnO);
+    add(l.wGate); add(l.wUp); add(l.wDown);
+    add(l.attnNorm); add(l.ffnNorm);
+    add(l.bq); add(l.bk); add(l.bv);
+    return n;
+}
+
+double envPositiveDouble(const char* name, double fallback) {
+    const char* s = std::getenv(name);
+    if (!s || !*s) return fallback;
+    char* end = nullptr;
+    const double v = std::strtod(s, &end);
+    return end != s && v > 0.0 ? v : fallback;
+}
+
+} // namespace
+
+void Deep2Engine::enableVulkan(bool enable) {
+    if (!enable) {
+        vulkanDevices_.clear();
+        vulkanCompute_.reset();
+        multiGpuLayerPlan_.clear();
+        vulkanEnabled_ = false;
+        vulkanInitialized_ = false;
+        gpuFwdCommitted_ = false;
+        return;
+    }
+
+    vulkanEnabled_ = true;
+    vulkanInitialized_ = false;
+    vulkanStrictViolation_ = false;
+    vulkanDevices_.clear();
+    vulkanCompute_.reset();
+    multiGpuLayerPlan_.clear();
+
+    auto devs = VulkanCompute::EnumeratePhysicalDevices();
+    devs.erase(
+        std::remove_if(devs.begin(),devs.end(),
+            [](const VulkanPhysicalInfo& d){ return !d.compute; }),
+        devs.end());
+
+    // Only accept native AMD discrete GPUs: R9700 (0x7551) or RX 7800 XT (0x747E)
+    devs.erase(
+        std::remove_if(devs.begin(), devs.end(),
+            [](const VulkanPhysicalInfo& d){ return !isDeep2RequiredNativeGpu(d); }),
+        devs.end());
+
+    const bool strictNative = vulkanStrictNoCpuFallback_;
+    const bool primaryAvailable = !devs.empty();
+
+    // Environment knob to opt into dual-GPU requirement at runtime.
+    const char* dualEnv = std::getenv("DEEP2_REQUIRE_DUAL_GPU");
+    const bool dualRequested = dualEnv && (dualEnv[0] == '1' || dualEnv[0] == 't' || dualEnv[0] == 'T');
+    const bool dualAvailable = devs.size() >= 2;
+
+    bool found7551 = false, found747E = false;
+    for (const auto& d : devs) {
+        if (d.deviceId == 0x7551) found7551 = true;
+        if (d.deviceId == 0x747E) found747E = true;
+    }
+
+    const char* pairEnv = std::getenv("DEEP2_REQUIRE_REFERENCE_PAIR");
+    const bool pairRequested = pairEnv && (pairEnv[0] == '1' || pairEnv[0] == 't' || pairEnv[0] == 'T');
+
+    if (!primaryAvailable) {
+        std::fprintf(stderr,
+            "DEEP2_NO_SUPPORTED_AMD_GPU devices=%zu\n", devs.size());
+        vulkanStrictViolation_ = strictNative;
+        vulkanInitialized_ = false;
+        return;
+    }
+
+    if (dualRequested && !dualAvailable) {
+        std::fprintf(stderr,
+            "DEEP2_REQUIRED_DUAL_GPU_MISSING present=%zu requested_dual=1\n", devs.size());
+        vulkanStrictViolation_ = strictNative;
+        vulkanInitialized_ = false;
+        return;
+    }
+
+    if (pairRequested && !(found7551 && found747E)) {
+        std::fprintf(stderr,
+            "DEEP2_REQUIRED_DUAL_AMD_PAIR_MISSING r9700=%d rx7800xt=%d\n",
+            (int)found7551, (int)found747E);
+        vulkanStrictViolation_ = strictNative;
+        vulkanInitialized_ = false;
+        return;
+    }
+
+    std::stable_sort(devs.begin(),devs.end(),
+        [](const VulkanPhysicalInfo& a,const VulkanPhysicalInfo& b){
+            const int sa=deviceScore(a), sb=deviceScore(b);
+            if(sa!=sb) return sa>sb;
+            return a.ordinal<b.ordinal;
+        });
+
+    for (size_t i=0; i<devs.size(); ++i) {
+        std::fprintf(stderr,
+            "DEEP2_GPU_CANDIDATE rank=%zu ordinal=%u name=%s "
+            "vendor=0x%04X device=0x%04X discrete=%d localGB=%.2f\n",
+            i, devs[i].ordinal, devs[i].name.c_str(),
+            devs[i].vendorId, devs[i].deviceId,
+            devs[i].discrete ? 1 : 0,
+            (double)devs[i].deviceLocalBytes / (1024.0*1024.0*1024.0));
+    }
+
+    // Deep2 Batch 9 owns a maximum of two physical sticks because the current
+    // product plan and receipts are dual-stick authority.
+    for (size_t i=0; i<devs.size() && vulkanDevices_.size()<2; ++i) {
+        auto vc=std::make_unique<VulkanCompute>(devs[i].ordinal);
+        if (!vc->initialize()) {
+            std::fprintf(stderr,
+                "BATCH9_DEVICE_REJECT ordinal=%u name=%s reason=INITIALIZE_FAIL\n",
+                devs[i].ordinal,devs[i].name.c_str());
+            continue;
+        }
+        std::fprintf(stderr,
+            "DEEP2_GPU_SELECT slot=%zu ordinal=%u name=%s "
+            "vendor=0x%04X device=0x%04X\n",
+            vulkanDevices_.size(), devs[i].ordinal, devs[i].name.c_str(),
+            devs[i].vendorId, devs[i].deviceId);
+        vulkanDevices_.push_back(std::move(vc));
+    }
+
+    if (vulkanDevices_.empty()) {
+        vulkanStrictViolation_ = vulkanStrictNoCpuFallback_;
+        std::fprintf(stderr,
+            "BATCH9_VULKAN_INIT=HOLD no_compute_device_initialized\n");
+        return;
+    }
+
+    if (modelWeights.loaded && modelWeights.numLayers) {
+        std::vector<uint64_t> caps;
+        for (const auto& d : vulkanDevices_)
+            caps.push_back(d->deviceLocalBytes());
+
+        std::vector<uint64_t> layerBytes;
+        layerBytes.reserve(modelWeights.layers.size());
+        for (const auto& l : modelWeights.layers)
+            layerBytes.push_back(denseLayerResidentBytes(l));
+
+        std::vector<double> speed(caps.size(), 1.0);
+        // DEEP2_ASYMMETRIC_SPLIT_001: default weights calibrated from
+        // dense-row host-envelope ratio on R9700 vs 7800 XT.
+        // Baseline 32/32 showed ~33.6s vs ~44.4s (1.32x imbalance).
+        // Target split ~37/27 layers.
+        if (!speed.empty())
+            speed[0] = envPositiveDouble("DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.32);
+        if (speed.size() > 1)
+            speed[1] = envPositiveDouble("DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0);
+
+        if (!multiGpuLayerPlan_.configureThroughputBalanced(
+                layerBytes, caps, speed)) {
+            std::fprintf(stderr,"BATCH9_MULTIGPU_PLAN=HOLD\n");
+            if (vulkanStrictNoCpuFallback_) {
+                vulkanDevices_.clear();
+                vulkanStrictViolation_=true;
+                return;
+            }
+        }
+        if (multiGpuLayerPlan_.active) {
+            for (unsigned s = 0; s < multiGpuLayerPlan_.gpuSlotCount; ++s) {
+                std::fprintf(stderr,
+                    "DEEP2_DENSE_SLOT slot=%u lo=%u hi=%u speed_weight=%.3f\n",
+                    s,
+                    multiGpuLayerPlan_.rangeLo[s],
+                    multiGpuLayerPlan_.rangeHi[s],
+                    speed[s]);
+            }
+
+            // B5_SLOT1_RESIDENCY_ADMISSION_001: exact byte accounting for
+            // pinning the slot-1 resident layer range. Pinning is only legal
+            // when the full residency set fits the device with headroom.
+            if (multiGpuLayerPlan_.gpuSlotCount >= 2 &&
+                modelWeights.layers.size() > 0) {
+                const uint32_t lo1 = multiGpuLayerPlan_.rangeLo[1];
+                const uint32_t hi1 = multiGpuLayerPlan_.rangeHi[1];
+                uint64_t layerBytes = 0;
+                for (uint32_t L = lo1; L <= hi1 &&
+                     L < modelWeights.layers.size(); ++L) {
+                    const auto& lw = modelWeights.layers[L];
+                    layerBytes += tensorResidentBytes(lw.wq);
+                    layerBytes += tensorResidentBytes(lw.wk);
+                    layerBytes += tensorResidentBytes(lw.wv);
+                    layerBytes += tensorResidentBytes(lw.wo.data ? lw.wo : lw.attnO);
+                    layerBytes += tensorResidentBytes(lw.attnNorm);
+                    layerBytes += tensorResidentBytes(lw.ffnNorm);
+                    layerBytes += tensorResidentBytes(lw.wGate);
+                    layerBytes += tensorResidentBytes(lw.wUp);
+                    layerBytes += tensorResidentBytes(lw.wDown);
+                }
+                const uint64_t lmHeadBytes = tensorResidentBytes(modelWeights.lmHead);
+                const uint64_t kvBytes =
+                    CPUInference::VulkanCompute::ForwardArenaReserveBytes(
+                        (uint32_t)config.hiddenDim,
+                        (uint32_t)(modelWeights.intermediateDim
+                                        ? modelWeights.intermediateDim
+                                        : config.hiddenDim * 4),
+                        (uint32_t)modelWeights.numHeads,
+                        (uint32_t)modelWeights.numKVHeads,
+                        (uint32_t)modelWeights.headDim,
+                        (uint32_t)(config.maxSeqLen
+                                        ? config.maxSeqLen
+                                        : (size_t)128),
+                        (uint32_t)modelWeights.numLayers,
+                        hi1 - lo1 + 1);
+                auto* slot1 = getVulkanComputeSlot(1);
+                const uint64_t deviceBytes =
+                    slot1 ? slot1->deviceLocalBytes() : 0;
+                const uint64_t budgetBytes = (deviceBytes / 10ull) * 8ull;
+                const uint64_t handoffBytes =
+                    (uint64_t)config.hiddenDim * sizeof(float);
+                const uint64_t headroomBytes = (uint64_t)512 << 20;  // 512 MiB
+                const uint64_t totalRequired =
+                    layerBytes + lmHeadBytes + kvBytes +
+                    handoffBytes + headroomBytes;
+                const bool fits = totalRequired <= budgetBytes;
+                std::fprintf(stderr,
+                    "B5_SLOT1_RESIDENCY_ADMISSION_001\n"
+                    "SLOT1_DEVICE_LOCAL_BYTES=%llu\n"
+                    "SLOT1_BUDGET_BYTES=%llu\n"
+                    "LAYER_RANGE_BYTES=%llu (layers %u-%u)\n"
+                    "LMHEAD_SLICE_BYTES=%llu\n"
+                    "KV_ARENA_BYTES=%llu\n"
+                    "HANDOFF_BYTES=%llu\n"
+                    "RESERVED_HEADROOM_BYTES=%llu\n"
+                    "TOTAL_REQUIRED_BYTES=%llu\n"
+                    "ADMISSION_FITS=%d\n",
+                    static_cast<unsigned long long>(deviceBytes),
+                    static_cast<unsigned long long>(budgetBytes),
+                    static_cast<unsigned long long>(layerBytes),
+                    lo1, hi1,
+                    static_cast<unsigned long long>(lmHeadBytes),
+                    static_cast<unsigned long long>(kvBytes),
+                    static_cast<unsigned long long>(handoffBytes),
+                    static_cast<unsigned long long>(headroomBytes),
+                    static_cast<unsigned long long>(totalRequired),
+                    fits ? 1 : 0);
+            }
+        }
+    }
+
+    vulkanInitialized_=true;
+    std::fprintf(stderr,
+        "BATCH9_VULKAN_INIT=DEVICE_BACKED devices=%u plan_active=%u\n",
+        static_cast<unsigned>(vulkanDevices_.size()),
+        multiGpuLayerPlan_.active?1u:0u);
+
+    // B5.2a capability probe — before any peer-transfer implementation.
+    // EXTERNAL_MEMORY_API_SUPPORTED does NOT license cross-physical-device
+    // import (Vulkan restricts Win32 import to the same physical device as
+    // the exporter). The honest gate is SAME_DEVICE_GROUP: one
+    // VkPhysicalDeviceGroup logical device is the only native cross-GPU
+    // memory mechanism. Fails closed.
+    if (vulkanDevices_.size() >= 2) {
+        const auto& c0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& c1 = vulkanDevices_[1]->PeerHandoffCapability();
+        std::fprintf(stderr,
+            "B5_PEER_HANDOFF_PROBE\n"
+            "EXTERNAL_MEMORY_API_SUPPORTED=%d\n"
+            "EXTERNAL_SEMAPHORE_API_SUPPORTED=%d\n"
+            "DIRECT_CROSS_PHYSICAL_DEVICE_IMPORT=UNPROVEN\n"
+            "PHYSICAL_DEVICE_GROUP_COUNT=%u\n"
+            "SAME_DEVICE_GROUP=%d\n"
+            "SUBSET_ALLOCATION=%d\n"
+            "PEER_MEMORY_FEATURES=(device-group-bind-time)\n"
+            "PEER_HANDOFF_SUPPORTED=%d\n",
+            (c0.externalMemoryApiSupported &&
+             c1.externalMemoryApiSupported) ? 1 : 0,
+            (c0.externalSemaphore && c1.externalSemaphore) ? 1 : 0,
+            c0.groupCount,
+            (c0.sameDeviceGroup && c1.sameDeviceGroup) ? 1 : 0,
+            (c0.subsetAllocation || c1.subsetAllocation) ? 1 : 0,
+            (c0.peerHandoffSupported && c1.peerHandoffSupported) ? 1 : 0);
+    }
+
+    // B5_HOST_IMPORT_PROBE_001: VK_EXT_external_memory_host capability
+    // The extension presence + alignment query is safe at physical-device level.
+    // The actual host-import probe (B5_SHARED_HOST_IMPORT_001) is done below
+    // after device creation because vkGetMemoryHostPointerPropertiesEXT requires
+    // the extension to be enabled at device creation time (which we now do).
+    if (vulkanDevices_.size() >= 2) {
+        const auto& h0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& h1 = vulkanDevices_[1]->PeerHandoffCapability();
+        const bool bothHostExt = h0.externalMemoryHostSupported &&
+                                 h1.externalMemoryHostSupported;
+        const uint64_t commonAlign = bothHostExt
+            ? std::max(h0.minImportedHostPointerAlignment,
+                       h1.minImportedHostPointerAlignment)
+            : 0;
+        std::fprintf(stderr,
+            "B5_HOST_IMPORT_PROBE_001\n"
+            "GPU0_EXTERNAL_MEMORY_HOST=%d\n"
+            "GPU1_EXTERNAL_MEMORY_HOST=%d\n"
+            "GPU0_MIN_HOST_ALIGNMENT=%llu\n"
+            "GPU1_MIN_HOST_ALIGNMENT=%llu\n"
+            "COMMON_ALIGNMENT=%llu\n"
+            "B5_HOST_IMPORT_PROBE_001=%s\n",
+            h0.externalMemoryHostSupported ? 1 : 0,
+            h1.externalMemoryHostSupported ? 1 : 0,
+            static_cast<unsigned long long>(h0.minImportedHostPointerAlignment),
+            static_cast<unsigned long long>(h1.minImportedHostPointerAlignment),
+            static_cast<unsigned long long>(commonAlign),
+            (bothHostExt && commonAlign > 0) ? "PASS" : "FAIL");
+    }
+
+    // B5_SHARED_HOST_IMPORT_001: one host allocation imported into BOTH devices.
+    // This tests whether the SAME application-owned host pages can be bound
+    // simultaneously to two live VkDevices.  If PASS, the legal B5 transport
+    // is GPU0 device-local hidden → same shared imported host pages → GPU1
+    // device-local hidden, with CPU synchronization only (no CPU payload copy).
+    if (vulkanDevices_.size() >= 2) {
+        const auto& h0 = vulkanDevices_[0]->PeerHandoffCapability();
+        const auto& h1 = vulkanDevices_[1]->PeerHandoffCapability();
+        const bool bothHostExt = h0.externalMemoryHostSupported &&
+                                 h1.externalMemoryHostSupported;
+        const uint64_t commonAlign = bothHostExt
+            ? std::max(h0.minImportedHostPointerAlignment,
+                       h1.minImportedHostPointerAlignment)
+            : 0;
+
+        void* sharedHostPtr = nullptr;
+        size_t sharedBytes = 0;
+        bool alignedOk = false;
+        bool samePtrGpu0 = false, samePtrGpu1 = false;
+        bool bothImportable = false;
+        bool cpuReads = false, cpuWrites = false;
+        void* hostAllocPtrForLog = nullptr; // capture before free for honest telemetry
+
+        CPUInference::VulkanCompute::SharedHostImportResult r0{}, r1{};
+        if (bothHostExt && commonAlign > 0) {
+            sharedBytes = (size_t)commonAlign; // smallest legal allocation
+            sharedHostPtr = _aligned_malloc(sharedBytes, (size_t)commonAlign);
+            if (sharedHostPtr) {
+                alignedOk = true;
+                // Touch once so the OS commits physical pages before import.
+                std::memset(sharedHostPtr, 0, sharedBytes);
+                cpuWrites = true;
+                r0 = vulkanDevices_[0]->TestSharedHostImport(sharedBytes);
+                samePtrGpu0 = (r0.hostPointerQueryResult == VK_SUCCESS);
+                if (samePtrGpu0)
+                    r1 = vulkanDevices_[1]->TestSharedHostImport(sharedBytes);
+                samePtrGpu1 = (r1.hostPointerQueryResult == VK_SUCCESS);
+                bothImportable = (r0.importMemoryResult == VK_SUCCESS) &&
+                                 (r1.importMemoryResult == VK_SUCCESS);
+                if (bothImportable) {
+                    // Verify bind succeeded
+                    bothImportable = (r0.bindResult == VK_SUCCESS) &&
+                                     (r1.bindResult == VK_SUCCESS);
+                }
+                // Read back a byte to verify CPU can still access the allocation
+                volatile unsigned char* p = reinterpret_cast<unsigned char*>(sharedHostPtr);
+                (void)p[0];
+                cpuReads = true;
+                hostAllocPtrForLog = sharedHostPtr; // capture for telemetry
+                _aligned_free(sharedHostPtr);
+                sharedHostPtr = nullptr;
+            }
+        }
+
+        std::fprintf(stderr,
+            "B5_SHARED_HOST_IMPORT_001\n"
+            "HOST_ALLOC_PTR=%p\n"
+            "HOST_ALLOC_BYTES=%zu\n"
+            "COMMON_ALIGNMENT=%llu\n"
+            "HOST_ALLOC_ALIGNED=%d\n"
+            "GPU0_HOST_POINTER_QUERY_RESULT=%d\n"
+            "GPU0_MEMORY_TYPE_BITS=0x%X\n"
+            "GPU0_IMPORT_MEMORY_RESULT=%d\n"
+            "GPU0_BIND_RESULT=%d\n"
+            "GPU1_HOST_POINTER_QUERY_RESULT=%d\n"
+            "GPU1_MEMORY_TYPE_BITS=0x%X\n"
+            "GPU1_IMPORT_MEMORY_RESULT=%d\n"
+            "GPU1_BIND_RESULT=%d\n"
+            "SAME_HOST_POINTER_GPU0=%d\n"
+            "SAME_HOST_POINTER_GPU1=%d\n"
+            "SAME_HOST_PAYLOAD_IMPORTABLE_BOTH=%d\n"
+            "CPU_PAYLOAD_READS=%d\n"
+            "CPU_PAYLOAD_WRITES=%d\n"
+            "B5_SHARED_HOST_IMPORT_001=%s\n",
+            hostAllocPtrForLog,
+            sharedBytes,
+            static_cast<unsigned long long>(commonAlign),
+            alignedOk ? 1 : 0,
+            r0.hostPointerQueryResult,
+            r0.memoryTypeBits,
+            r0.importMemoryResult,
+            r0.bindResult,
+            r1.hostPointerQueryResult,
+            r1.memoryTypeBits,
+            r1.importMemoryResult,
+            r1.bindResult,
+            samePtrGpu0 ? 1 : 0,
+            samePtrGpu1 ? 1 : 0,
+            bothImportable ? 1 : 0,
+            cpuReads ? 1 : 0,
+            cpuWrites ? 1 : 0,
+            (bothHostExt && alignedOk && bothImportable) ? "PASS" : "FAIL");
+    }
+}
+
+VulkanCompute* Deep2Engine::getVulkanComputeSlot(unsigned slot) const {
+    if (slot>=vulkanDevices_.size()) return nullptr;
+    return vulkanDevices_[slot].get();
+}
+
+uint64_t Deep2Engine::vulkanSlotGemvSuccess(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->GemvSuccessCount():0;
+}
+
+uint64_t Deep2Engine::vulkanSlotWeightUploads(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->WeightUploadCount():0;
+}
+
+uint64_t Deep2Engine::vulkanSlotWeightHits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->WeightHitCount():0;
+}
+
+uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->QueueSubmitCount():0;
+}
+
+bool Deep2Engine::tryGpuTokenForward(float* hidden) {
+    if (!hidden || !modelWeights.loaded || !vulkanEnabled_ ||
+        !vulkanInitialized_ || vulkanDevices_.empty() ||
+        modelWeights.numLayers==0)
+        return false;
+
+    for (auto& d : vulkanDevices_) {
+        if (!d || !d->initialized() || !d->computeReady())
+            return false;
+        d->SetWorkEpoch(kvCache?kvCache->currentLength():0);
+    }
+
+    std::vector<float> out(config.hiddenDim,0.0f);
+    bool ok=false;
+
+    if (vulkanDevices_.size()>1 && multiGpuLayerPlan_.active) {
+        ok=forwardGpuMultiMap(hidden,out.data());
+    } else {
+        ok=forwardGpuContiguousRange(
+            0,0,static_cast<uint32_t>(modelWeights.numLayers-1),
+            hidden,out.data());
+    }
+
+    if (!ok) return false;
+    std::memcpy(hidden,out.data(),config.hiddenDim*sizeof(float));
+    gpuFwdCommitted_=true;
+    return true;
+}
+
+bool Deep2Engine::gpuResidentDecodeEnabled() const {
+    if (!vulkanEnabled_ || !vulkanInitialized_ || vulkanDevices_.empty())
+        return false;
+    for (const auto& d : vulkanDevices_)
+        if (!d || !d->computeReady()) return false;
+    return true;
+}
+
+void Deep2Engine::emitHotpathWitnesses() {
+    std::fprintf(stderr,
+        "BATCH9_GPU_HOTPATH device_backed=%u devices=%u real_forward=%u "
+        "host_materializations=%llu\n",
+        vulkanInitialized_?1u:0u,
+        static_cast<unsigned>(vulkanDevices_.size()),
+        isRealGpuForward()?1u:0u,
+        static_cast<unsigned long long>(gpuFwd_.hostMaterializations));
+
+    if (vulkanDevices_.size()>=2) {
+        const uint64_t epoch=kvCache?kvCache->currentLength():0;
+        auto w=Deep2Gpu_MeasureOverlap(
+            *vulkanDevices_[0],*vulkanDevices_[1],epoch);
+        std::fprintf(stderr,
+            "BATCH9_TEMPORAL_WITNESS epoch=%llu calibrated=%u overlap_ns=%llu "
+            "host_envelope_overlap_ns=%llu authority=%u\n",
+            static_cast<unsigned long long>(epoch),
+            w.calibrated?1u:0u,
+            static_cast<unsigned long long>(w.calibratedOverlapNs),
+            static_cast<unsigned long long>(w.hostEnvelopeOverlapNs),
+            w.authoritativeTemporalOverlap()?1u:0u);
+    }
+}
+
+void Deep2Engine::emitLiveDecodeWitnesses(FILE* f) {
+    FILE* o=f?f:stdout;
+    Deep2GpuForward_Emit(o,gpuFwd_,vulkanGemvFail_);
+    if(vulkanDevices_.size()>=2){
+        const uint64_t epoch=kvCache?kvCache->currentLength():0;
+        auto w=Deep2Gpu_MeasureOverlap(
+            *vulkanDevices_[0],*vulkanDevices_[1],epoch);
+        std::fprintf(o,
+            "GPU_TEMPORAL_CALIBRATED=%u\nGPU_TEMPORAL_OVERLAP_NS=%llu\n"
+            "GPU_HOST_ENVELOPE_OVERLAP_NS=%llu\nGPU_TEMPORAL_AUTHORITY=%u\n",
+            w.calibrated?1u:0u,
+            static_cast<unsigned long long>(w.calibratedOverlapNs),
+            static_cast<unsigned long long>(w.hostEnvelopeOverlapNs),
+            w.authoritativeTemporalOverlap()?1u:0u);
+    }
+}
+
+uint64_t Deep2Engine::vulkanSlotPinnedWeightBytes(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->PinnedWeightBytes():0;
+}
+uint64_t Deep2Engine::vulkanSlotPinnedWeightEntries(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->PinnedWeightEntries():0;
+}
+uint64_t Deep2Engine::vulkanSlotResidentBatchInputUploads(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->ResidentBatchInputUploads():0;
+}
+uint64_t Deep2Engine::vulkanSlotDirectSpecKvAppends(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DirectSpecKvAppends():0;
+}
+uint64_t Deep2Engine::vulkanSlotResidentGroupOutputReallocs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->ResidentGroupOutputReallocs():0;
+}
+uint64_t Deep2Engine::vulkanSlotSecondaryImportBytes(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SecondaryImportBytes():0;
+}
+uint64_t Deep2Engine::vulkanSlotFullOutputBoundaryBytes(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->FullOutputBoundaryBytes():0;
+}
+uint64_t Deep2Engine::vulkanSlotResidentFullOutputCopies(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->ResidentFullOutputCopies():0;
+}
+uint64_t Deep2Engine::vulkanSlotSpecLayerGraphSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SpecLayerGraphSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KBatchWeightBytes(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KBatchWeightBytes():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KBatchGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KBatchGpuNs():0;
+}
+// DEEP2_DENSE_ROW_GPU_TIMING_AUTHORITY_001: scoped dense-row GPU compute
+// authority (separate from the Q4K-batch counters, never overloaded).
+uint64_t Deep2Engine::vulkanSlotDenseRowGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowGpuNs():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowTimedOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowTimedOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowSingleGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowSingleGpuNs():0;
+}
+uint64_t Deep2Engine::vulkanSlotDenseRowGroupGpuNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DenseRowGroupGpuNs():0;
+}
+// DEEP2_RESIDENT_Q4K_KERNEL_PARITY_001: per-lane quant-dispatch parity
+// counters (lane: 1=dual-row, 2=resident).
+uint64_t Deep2Engine::vulkanSlotQ4kParityDispatchCount(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParityDispatchCount(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParityRows(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParityRows(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledNs(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledNs(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledCount(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledCount(lane):0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4kParitySampledRows(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4kParitySampledRows(lane):0;
+}
+uintptr_t Deep2Engine::vulkanSlotQ4kParityPipeline(unsigned slot, uint32_t lane) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?(uintptr_t)vc->Q4kParityPipeline(lane):0;
+}
+// DEEP2_RESIDENT_OPS_BREAKDOWN_001: sampled ops-pipeline GPU ns by op kind.
+uint64_t Deep2Engine::vulkanSlotOpsSampledNs(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledNs(lane,opKind):0;
+}
+uint64_t Deep2Engine::vulkanSlotOpsSampledCount(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledCount(lane,opKind):0;
+}
+uint64_t Deep2Engine::vulkanSlotOpsSampledUnits(unsigned slot, uint32_t lane, uint32_t opKind) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->OpsSampledUnits(lane,opKind):0;
+}
+// DEEP2_RESIDENT_RANGE_GAP_AUTHORITY_001: transition-class sampled
+// kernel and barrier ns.
+uint64_t Deep2Engine::vulkanSlotTransitionKernelNs(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionKernelNs(lane,transition):0;
+}
+uint64_t Deep2Engine::vulkanSlotTransitionKernelCount(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionKernelCount(lane,transition):0;
+}
+uint64_t Deep2Engine::vulkanSlotTransitionBarrierNs(unsigned slot, uint32_t lane, uint32_t transition) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransitionBarrierNs(lane,transition):0;
+}
+void Deep2Engine::vulkanResetQ4kParityStats() {
+    for (unsigned s = 0; s < vulkanDevices_.size(); ++s) {
+        auto* vc=getVulkanComputeSlot(s);
+        if (vc) vc->ResetQ4kParityStats();
+    }
+}
+uint64_t Deep2Engine::vulkanSlotQ4KBatch4RowOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KBatch4RowOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotSpecArenaFlips(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SpecArenaFlips():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KBatch8RowOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KBatch8RowOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KAutotuneRuns(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KAutotuneRuns():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedQ4KSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedQ4KSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedQ4KBuilds(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedQ4KBuilds():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KAsyncSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KAsyncSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotQ4KAsyncWaitNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->Q4KAsyncWaitNs():0;
+}
+uint64_t Deep2Engine::vulkanSlotDownloadRingSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DownloadRingSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotDownloadRingWaitNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->DownloadRingWaitNs():0;
+}
+bool Deep2Engine::vulkanSlotHasDedicatedTransferQueue(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc&&vc->HasDedicatedTransferQueue();
+}
+uint32_t Deep2Engine::vulkanSlotComputeQueueFamily(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->ComputeQueueFamily():UINT32_MAX;
+}
+uint32_t Deep2Engine::vulkanSlotTransferQueueFamily(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransferQueueFamily():UINT32_MAX;
+}
+uint64_t Deep2Engine::vulkanSlotTransferQueueSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransferQueueSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotTransferRingOverlapNs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TransferRingOverlapNs():0;
+}
+bool Deep2Engine::vulkanSlotTimelineSemaphoreEnabled(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc&&vc->TimelineSemaphoreEnabled();
+}
+uint64_t Deep2Engine::vulkanSlotTimelineSignals(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TimelineSignals():0;
+}
+uint64_t Deep2Engine::vulkanSlotTimelineWaits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TimelineWaits():0;
+}
+uint64_t Deep2Engine::vulkanSlotTimelineComputeTransferChains(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->TimelineComputeTransferChains():0;
+}
+uint64_t Deep2Engine::vulkanSlotAsyncCmdRingReuses(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->AsyncCmdRingReuses():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedGroupBuilds(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedGroupBuilds():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedGroupSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedGroupSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotSpecAcceptGpuOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SpecAcceptGpuOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotVerifiedHiddenHandoffs(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->VerifiedHiddenHandoffs():0;
+}
+uint64_t Deep2Engine::vulkanSlotLayerTimelineChains(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->LayerTimelineChains():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedGroupAsyncSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedGroupAsyncSubmits():0;
+}
+uint64_t Deep2Engine::vulkanSlotRecordedGroupSyncWaits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->RecordedGroupSyncWaits():0;
+}
+uint64_t Deep2Engine::vulkanSlotSpecAcceptResidentOps(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SpecAcceptResidentOps():0;
+}
+uint64_t Deep2Engine::vulkanSlotSpecAcceptInputUploadBytes(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->SpecAcceptInputUploadBytes():0;
+}
+uint64_t Deep2Engine::vulkanSlotHiddenTimelineSubmits(unsigned slot) const {
+    auto* vc=getVulkanComputeSlot(slot);
+    return vc?vc->HiddenTimelineSubmits():0;
+}
+
+} // namespace Deep2

@@ -1,0 +1,64 @@
+#version 450
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+layout(local_size_x=256) in;
+
+layout(set=0,binding=0,std430) buffer A0 { float a[]; };
+layout(set=0,binding=1,std430) buffer B0 { float b[]; };
+layout(set=0,binding=2,std430) buffer C0 { float c[]; };
+layout(set=0,binding=3,std430) buffer D0 { float d[]; };
+
+layout(push_constant) uniform Push {
+    uint op;       // 0 RMSNorm, 1 SwiGLU, 2 residual
+    uint width;
+    uint batch;
+    uint reserved;
+    float eps;
+} pc;
+
+shared float waveSum[8];
+
+void main() {
+    uint lane=gl_LocalInvocationID.x;
+    uint token=gl_WorkGroupID.x;
+    if(token>=pc.batch || pc.width==0u) return;
+    uint base=token*pc.width;
+
+    if(pc.op==0u) {
+        float ss=0.0;
+        for(uint i=lane;i<pc.width;i+=256u) {
+            float x=a[base+i];
+            ss+=x*x;
+        }
+        float w=subgroupAdd(ss);
+        if(subgroupElect()) waveSum[gl_SubgroupID]=w;
+        barrier();
+        float total=0.0;
+        if(gl_SubgroupID==0u) {
+            float v=gl_SubgroupInvocationID<gl_NumSubgroups
+                ? waveSum[gl_SubgroupInvocationID] : 0.0;
+            total=subgroupAdd(v);
+            if(subgroupElect()) waveSum[0]=total;
+        }
+        barrier();
+        float inv=inversesqrt(waveSum[0]/float(pc.width)+pc.eps);
+        for(uint i=lane;i<pc.width;i+=256u)
+            c[base+i]=a[base+i]*inv*b[i];
+        return;
+    }
+
+    if(pc.op==1u) {
+        for(uint i=lane;i<pc.width;i+=256u) {
+            float g=a[base+i];
+            float s=g>=0.0 ? g/(1.0+exp(-g))
+                           : g*exp(g)/(1.0+exp(g));
+            c[base+i]=s*b[base+i];
+        }
+        return;
+    }
+
+    if(pc.op==2u) {
+        for(uint i=lane;i<pc.width;i+=256u)
+            c[base+i]=a[base+i]+b[base+i];
+    }
+}

@@ -1,0 +1,212 @@
+# Deep2 Qwen32 40TPS — Batch 2/5, item 10
+# Base: apply after 0006-0009.
+# Goal: amortize dual-GPU row-split host transfer/wakeup overhead across
+# independent matrices that share the same activation input:
+#   attention Q + K + V : one two-worker wake, one input upload per GPU
+#   FFN gate + up       : one two-worker wake, one input upload per GPU
+#
+# The GPU queues still execute each matrix in order; this patch reduces CPU,
+# staging, and scheduling overhead without changing transformer math.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0010_grouped_qkv_gateup_rowsplit.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuRowSplit(
+@@
+     RowSplitReceipt* receipt = nullptr);
++
++// Group 2-3 independent GEMVs that share one input activation.
++// outputs[i] receives the full host-visible result for weights[i].
++bool Deep2RunDualGpuRowSplitGroup(
++    VulkanCompute& g0,
++    VulkanCompute& g1,
++    const WeightTensor* const* weights,
++    float* const* outputs,
++    size_t count,
++    const float* input,
++    uint32_t inputCount,
++    uint64_t epoch,
++    RowSplitReceipt* receipt = nullptr);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuRowSplit(
+@@
+     return true;
+ }
+
++bool Deep2RunDualGpuRowSplitGroup(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor* const* weights,float* const* outputs,size_t count,
++    const float* input,uint32_t inputCount,uint64_t epoch,
++    RowSplitReceipt* receipt)
++{
++    if(receipt) *receipt={};
++    if(!weights||!outputs||!input||!inputCount||count<2||count>3)
++        return false;
++
++    struct Item {
++        RowSplitPlan p{};
++        GpuWeightView w[2]{};
++        std::vector<float> y[2];
++    };
++    std::vector<Item> items(count);
++
++    for(size_t i=0;i<count;++i){
++        if(!weights[i]||!outputs[i]||weights[i]->cols!=inputCount||
++           weights[i]->rows<2||!supportedGpuType(weights[i]->type))
++            return false;
++        items[i].p=Deep2ChooseRowSplit(
++            (uint32_t)weights[i]->rows,
++            g0.deviceLocalBytes(),g1.deviceLocalBytes());
++        if(!items[i].p.valid) return false;
++        if(!Deep2BuildGpuWeightView(
++                *weights[i],items[i].p.row0Begin,items[i].p.row0Count,
++                items[i].w[0]) ||
++           !Deep2BuildGpuWeightView(
++                *weights[i],items[i].p.row1Begin,items[i].p.row1Count,
++                items[i].w[1]))
++            return false;
++        items[i].y[0].resize(items[i].p.row0Count);
++        items[i].y[1].resize(items[i].p.row1Count);
++    }
++
++    auto laneRun=[&](unsigned lane,VulkanCompute& g)->bool{
++        g.SetWorkEpoch(epoch);
++        if(!g.EnsureScratch(40,inputCount)) return false;
++        auto& in=g.Scratch(40);
++        if(!g.UploadVector(in,input,inputCount)) return false;
++
++        for(size_t i=0;i<count;++i){
++            const auto& w=items[i].w[lane];
++            const unsigned scratchIndex=41u+(unsigned)i;
++            if(!g.EnsureScratch(scratchIndex,w.rows)) return false;
++            auto& out=g.Scratch(scratchIndex);
++            if(!g.DispatchWeight(w,in,out)) return false;
++            if(!g.DownloadVector(out,items[i].y[lane].data(),w.rows))
++                return false;
++        }
++        return true;
++    };
++
++    bool ok0=false,ok1=false;
++    const bool both=rowExecutor().run(
++        [&]{ok0=laneRun(0,g0);return ok0;},
++        [&]{ok1=laneRun(1,g1);return ok1;});
++    if(!both||!ok0||!ok1) return false;
++
++    for(size_t i=0;i<count;++i){
++        std::memcpy(outputs[i]+items[i].p.row0Begin,items[i].y[0].data(),
++                    items[i].y[0].size()*sizeof(float));
++        std::memcpy(outputs[i]+items[i].p.row1Begin,items[i].y[1].data(),
++                    items[i].y[1].size()*sizeof(float));
++    }
++
++    if(receipt){
++        receipt->valid=true;
++        receipt->gpu0=true;
++        receipt->gpu1=true;
++        receipt->hostMerge=true;
++        for(size_t i=0;i<count;++i){
++            receipt->rows0+=items[i].p.row0Count;
++            receipt->rows1+=items[i].p.row1Count;
++        }
++        auto overlap=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
++        receipt->calibratedOverlapNs=overlap.calibratedOverlapNs;
++        receipt->hostEnvelopeOverlapNs=overlap.hostEnvelopeOverlapNs;
++    }
++    return true;
++}
++
+ } // namespace Deep2
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool tryVulkanHostGEMV(const WeightTensor& wt, const float* input,
+                            float* output, size_t outDim);
++    bool tryVulkanHostGEMVGroup(
++        const WeightTensor* const* weights,
++        float* const* outputs,
++        size_t count,
++        const float* input,
++        size_t inputCount);
+     bool computeMoEFFNGpu(size_t layer, const float* input, float* output);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+@@
+ bool Deep2Engine::tryVulkanHostGEMV(
+@@
+     return finiteVec(output,outDim);
+ }
+
++bool Deep2Engine::tryVulkanHostGEMVGroup(
++    const WeightTensor* const* weights,float* const* outputs,size_t count,
++    const float* input,size_t inputCount)
++{
++    if(!vulkanInitialized_||vulkanDevices_.size()<2||
++       !weights||!outputs||!input||count<2||count>3||
++       inputCount==0||inputCount>UINT32_MAX)
++        return false;
++
++    const uint64_t epoch=kvCache?kvCache->currentLength():0;
++    RowSplitReceipt r{};
++    if(!Deep2RunDualGpuRowSplitGroup(
++            *vulkanDevices_[0],*vulkanDevices_[1],
++            weights,outputs,count,input,(uint32_t)inputCount,epoch,&r))
++        return false;
++
++    ++gpuFwd_.dualRowSplitOps;
++    ++gpuFwd_.hostMergeOps;
++    ++gpuFwd_.hostMaterializations;
++    gpuFwd_.dualArithmeticOverlapNs=
++        std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
++    return true;
++}
++
+ bool Deep2Engine::computeMoEFFNGpu(
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+     if (lw.wq.data) {
+@@
+         const float* bv = lw.bv.data
+             ? reinterpret_cast<const float*>(lw.bv.data) : nullptr;
+-        LinearW(lw.wq, input, bq, qProj, H);
+-        LinearW(lw.wk, input, bk, kProj, kvDim);
+-        LinearW(lw.wv, input, bv, vProj, kvDim);
++        const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
++        float* qkvY[3]={qProj,kProj,vProj};
++        const bool grouped=tryVulkanHostGEMVGroup(
++            qkvW,qkvY,3,input,H);
++        if(grouped){
++            if(bq) for(size_t i=0;i<H;++i) qProj[i]+=bq[i];
++            if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
++            if(bv) for(size_t i=0;i<kvDim;++i) vProj[i]+=bv[i];
++        } else {
++            LinearW(lw.wq, input, bq, qProj, H);
++            LinearW(lw.wk, input, bk, kProj, kvDim);
++            LinearW(lw.wv, input, bv, vProj, kvDim);
++        }
+@@
+     if (lw.wGate.data && lw.wUp.data && lw.wDown.data) {
+         // Real SwiGLU: gate = Wg @ x, up = Wu @ x
+-        LinearW(lw.wGate, input, nullptr, gateBuf, I);
+-        LinearW(lw.wUp,   input, nullptr, upBuf,   I);
++        const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
++        float* guY[2]={gateBuf,upBuf};
++        if(!tryVulkanHostGEMVGroup(guW,guY,2,input,H)){
++            LinearW(lw.wGate, input, nullptr, gateBuf, I);
++            LinearW(lw.wUp,   input, nullptr, upBuf,   I);
++        }

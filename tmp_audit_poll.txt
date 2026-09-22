@@ -1,0 +1,6 @@
+﻿GEN_DECODE_LIMIT=192 specActive=0
+[RAWR_AUDIT_BATCH] batch=0 step=0 tool=audit.candidates exit=0 len=1253
+GEN_ENTER maxOut=192
+GEN_DECODE_LIMIT=192 specActive=0
+[RAWR_AUDIT_BATCH] batch=0 step=1 tool=audit.candidate.read exit=0 len=1386
+GEN_ENTER maxOut=192

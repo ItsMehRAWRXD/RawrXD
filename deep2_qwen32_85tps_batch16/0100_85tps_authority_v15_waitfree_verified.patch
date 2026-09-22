@@ -1,0 +1,121 @@
+# Deep2 Qwen32 85TPS — Batch 16, item 100
+# Base: apply after 0099.
+#
+# Authority v15:
+#   - every older parity/residency/dual-GPU predicate remains
+#   - recorded-group hot path must be nonblocking when timeline is enabled
+#   - resident speculative accept path must execute
+#   - verified-hidden timeline handoff must execute when timeline is enabled
+#   - speculative verification must demonstrate real multi-token amortization
+#   - three independent steady output runs must each remain >=85 verified TPS
+#
+# No benchmark number is minted by this patch itself.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0100_85tps_authority_v15_waitfree_verified.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotLayerTimelineChains(unsigned slot) const;
++    uint64_t vulkanSlotRecordedGroupAsyncSubmits(unsigned slot) const;
++    uint64_t vulkanSlotRecordedGroupSyncWaits(unsigned slot) const;
++    uint64_t vulkanSlotSpecAcceptResidentOps(unsigned slot) const;
++    uint64_t vulkanSlotSpecAcceptInputUploadBytes(unsigned slot) const;
++    uint64_t vulkanSlotHiddenTimelineSubmits(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotRecordedGroupAsyncSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedGroupAsyncSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotRecordedGroupSyncWaits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedGroupSyncWaits():0;
++}
++uint64_t Deep2Engine::vulkanSlotSpecAcceptResidentOps(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SpecAcceptResidentOps():0;
++}
++uint64_t Deep2Engine::vulkanSlotSpecAcceptInputUploadBytes(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SpecAcceptInputUploadBytes():0;
++}
++uint64_t Deep2Engine::vulkanSlotHiddenTimelineSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->HiddenTimelineSubmits():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t lgWarm=spec.vulkanSlotLayerTimelineChains(0);
++    const uint64_t rga0Warm=spec.vulkanSlotRecordedGroupAsyncSubmits(0);
++    const uint64_t rga1Warm=spec.vulkanSlotRecordedGroupAsyncSubmits(1);
++    const uint64_t rgw0Warm=spec.vulkanSlotRecordedGroupSyncWaits(0);
++    const uint64_t rgw1Warm=spec.vulkanSlotRecordedGroupSyncWaits(1);
++    const uint64_t sarWarm=spec.vulkanSlotSpecAcceptResidentOps(0);
++    const uint64_t sauWarm=spec.vulkanSlotSpecAcceptInputUploadBytes(0);
++    const uint64_t htsWarm=spec.vulkanSlotHiddenTimelineSubmits(0);
+@@
+     const uint64_t lgEnd=spec.vulkanSlotLayerTimelineChains(0);
++    const uint64_t rga0End=spec.vulkanSlotRecordedGroupAsyncSubmits(0);
++    const uint64_t rga1End=spec.vulkanSlotRecordedGroupAsyncSubmits(1);
++    const uint64_t rgw0End=spec.vulkanSlotRecordedGroupSyncWaits(0);
++    const uint64_t rgw1End=spec.vulkanSlotRecordedGroupSyncWaits(1);
++    const uint64_t sarEnd=spec.vulkanSlotSpecAcceptResidentOps(0);
++    const uint64_t sauEnd=spec.vulkanSlotSpecAcceptInputUploadBytes(0);
++    const uint64_t htsEnd=spec.vulkanSlotHiddenTimelineSubmits(0);
+@@
++    const bool recordedWaitFree=
++        (!tl0 || rga0End>rga0Warm) &&
++        (!tl1 || rga1End>rga1Warm) &&
++        (rgw0End-rgw0Warm)==0 &&
++        (rgw1End-rgw1Warm)==0;
++    const bool residentAccept=
++        sarEnd>sarWarm && (sauEnd-sauWarm)==0;
++    const bool hiddenTimeline=
++        !tl0 || htsEnd>htsWarm;
++    const bool realWindowAmortization=
++        sc.verifiedTargetWindows>0 &&
++        sc.acceptedVerifiedTokens>sc.verifiedTargetWindows;
+@@
+-                    recordedGroups&&gpuAccept&&hiddenHandoff&&layerTimeline;
++                    recordedGroups&&gpuAccept&&hiddenHandoff&&layerTimeline&&
++                    recordedWaitFree&&residentAccept&&hiddenTimeline&&
++                    realWindowAmortization;
+@@
++        "GPU0_RECORDED_GROUP_ASYNC_DELTA=%llu\n"
++        "GPU1_RECORDED_GROUP_ASYNC_DELTA=%llu\n"
++        "GPU0_RECORDED_GROUP_SYNC_WAITS_DELTA=%llu\n"
++        "GPU1_RECORDED_GROUP_SYNC_WAITS_DELTA=%llu\n"
++        "SPEC_ACCEPT_RESIDENT_OPS_DELTA=%llu\n"
++        "SPEC_ACCEPT_INPUT_UPLOAD_BYTES_DELTA=%llu\n"
++        "HIDDEN_TIMELINE_SUBMITS_DELTA=%llu\n"
++        "SPEC_PREPARED_TOKENS=%llu\n"
++        "SPEC_VERIFIED_TARGET_WINDOWS=%llu\n"
++        "SPEC_ACCEPTED_VERIFIED_TOKENS=%llu\n"
++        "RECORDED_GROUP_WAITFREE=%s\n"
++        "SPEC_ACCEPT_RESIDENT=%s\n"
++        "HIDDEN_TIMELINE_HANDOFF=%s\n"
++        "REAL_WINDOW_AMORTIZATION=%s\n"
+@@
++        (unsigned long long)(rga0End-rga0Warm),
++        (unsigned long long)(rga1End-rga1Warm),
++        (unsigned long long)(rgw0End-rgw0Warm),
++        (unsigned long long)(rgw1End-rgw1Warm),
++        (unsigned long long)(sarEnd-sarWarm),
++        (unsigned long long)(sauEnd-sauWarm),
++        (unsigned long long)(htsEnd-htsWarm),
++        (unsigned long long)sc.preparedSpecTokens,
++        (unsigned long long)sc.verifiedTargetWindows,
++        (unsigned long long)sc.acceptedVerifiedTokens,
++        recordedWaitFree?"PASS":"FAIL",
++        residentAccept?"PASS":"FAIL",
++        hiddenTimeline?"PASS":"FAIL",
++        realWindowAmortization?"PASS":"FAIL",

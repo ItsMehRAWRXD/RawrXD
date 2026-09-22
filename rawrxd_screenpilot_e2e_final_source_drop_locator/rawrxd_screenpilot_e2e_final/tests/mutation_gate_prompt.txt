@@ -1,0 +1,22 @@
+Operate in AGENT mode through canonical RawrXD Tool Authority only.
+
+Inside the current validated workspace:
+
+1. Create `.rawrxd_screenpilot_gate.txt`.
+2. Write exactly `SCREENPILOT_WRITE_PASS`.
+3. Read it back and verify exact content.
+4. Search the workspace for `SCREENPILOT_WRITE_PASS`.
+5. Delete ONLY `.rawrxd_screenpilot_gate.txt`.
+6. Verify that file no longer exists.
+
+Do not touch any other file.
+
+Emit these receipts only after each condition is genuinely proven:
+
+SCREENPILOT_TOOL_AUTHORITY=PASS
+SCREENPILOT_WORKSPACE_WRITE=PASS
+SCREENPILOT_WORKSPACE_READ=PASS
+SCREENPILOT_WORKSPACE_SEARCH=PASS
+SCREENPILOT_WORKSPACE_DELETE=PASS
+SCREENPILOT_MUTATION_CLEANUP=PASS
+SCREENPILOT_MUTATION_E2E=PASS

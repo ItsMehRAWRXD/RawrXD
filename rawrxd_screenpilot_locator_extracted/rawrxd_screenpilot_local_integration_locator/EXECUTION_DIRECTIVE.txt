@@ -1,0 +1,65 @@
+SCREENPILOT_LOCAL_AGENT_E2E_001 — CONTINUE WITHOUT ASKING
+
+Current state:
+- F:\ide_chatbot.html has already been backed up and replaced with the hardened E2E-final HTML.
+- Do NOT redo homepage/product-coherence work.
+- Do NOT use the temporary :11437 subprocess bridge as the shipping solution.
+- The target is the existing :11435 RawrXD LocalServer and the process-wide AgentToolRegistry.
+
+Execute in this order:
+
+1. Run:
+   powershell -ExecutionPolicy Bypass -File .\locate_screenpilot_server.ps1 -Root F:\~dev
+
+2. Read:
+   F:\~dev\evidence\SCREENPILOT_LOCAL_AGENT_E2E_001\locator_report.json
+   F:\~dev\evidence\SCREENPILOT_LOCAL_AGENT_E2E_001\SERVER_CANDIDATES.csv
+   F:\~dev\evidence\SCREENPILOT_LOCAL_AGENT_E2E_001\REFERENCED_SOURCE_STATUS.csv
+
+3. Resolve these P0 issues BEFORE wiring ScreenPilot:
+   A. rawr_agent.cpp must not BindAgentToolAuthority() to a stack-local AgentToolRegistry.
+   B. ScreenPilot dispatch must use AgentToolSurface::LocalServer.
+   C. ASK/PLAN/BUILD/AGENT permissions must be server-derived and checked per tool.
+   D. Any audit-tool providers stored in a process-wide registry must not capture a per-session AuditLedger pointer.
+   E. cancellation must stop both generation and tool execution.
+   F. generic AGENT must not use the loop-cert system prompt.
+   G. BUILD/AGENT must register/use the existing canonical CodeEdit/BuildProject/StaticAnalysis/GitOperation adapters.
+   H. legacy privileged browser routes must require the ScreenPilot session AND canonical Tool Authority, or be disabled.
+
+4. Locate the real :11435 listener. Patch that listener; do NOT create another production listener.
+   Add:
+     /screenpilot
+     /screenpilot/screenpilot_authority.js
+     /api/v1/screenpilot/health
+     /api/v1/screenpilot/session
+     /api/v1/screenpilot/capabilities
+     /api/v1/screenpilot/agent/run
+     /api/v1/screenpilot/agent/cancel
+     /api/v1/screenpilot/agent/approve
+
+5. Wire the run callback into the canonical long-lived AgentToolRegistry.
+   The request surface MUST be AgentToolSurface::LocalServer.
+   Do not dispatch through browser-owned /api/agent/execute-tool loops.
+
+6. Build the actual shipping RawrXD-Win32IDE.exe.
+
+7. Run:
+   python tests\static_audit.py
+   powershell -File tests\certify_screenpilot_e2e.ps1 -Base http://127.0.0.1:11435 -Workspace F:\~dev -Model <real local model>
+   powershell -File tests\certify_mutation.ps1 -Base http://127.0.0.1:11435 -Workspace F:\~dev -Model <real local model>
+
+8. Approval gate:
+   Run tests\approval_gate_prompt.txt in AGENT mode.
+   DENY the requested remote/network operation.
+   Require SCREENPILOT_APPROVAL_DENY_ENFORCED=PASS.
+
+9. Shipping manual gate:
+   Launch RawrXD-Win32IDE.exe with all RAWRXD_SMOKE_* variables absent.
+   Open /screenpilot.
+   Prove ASK, PLAN, BUILD, AGENT, cancel, mutation cleanup, and approval denial.
+   Record the AgentToolRegistry authoritySnapshot before/after and require:
+     local_server_dispatch_count > 0
+
+10. Only after every gate passes:
+    SCREENPILOT_LOCAL_AGENT_E2E=PASS
+    Disable/remove :11437.

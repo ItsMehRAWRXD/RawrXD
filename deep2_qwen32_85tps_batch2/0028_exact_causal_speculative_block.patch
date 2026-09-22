@@ -1,0 +1,194 @@
+# Deep2 Qwen32 85TPS — Batch 2/5, item 28
+# Base: apply after 0026-0027.
+#
+# Implements an exact dense Qwen speculative block forward for 1..4 candidate
+# tokens. All heavy Q4_K matrices use LinearWBatch4, while attention remains
+# causally exact: candidate b can see committed KV + candidates [0..b].
+#
+# This is target verification, not a draft approximation.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0028_exact_causal_speculative_block.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool forwardTokenAllLayers(float* hidden, size_t seqLen);
++    bool forwardSpeculativeBlock(const int* tokenIds,size_t count,
++                                 size_t basePos,float* finalHiddenBatch);
+@@
+     bool deterministicGreedy_ = false;
++    std::vector<float> speculativeHiddenScratch_;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
++#include "Deep2Engine.h"
++#include <algorithm>
++#include <cmath>
++#include <cstring>
++#include <stdexcept>
++#include <vector>
++
++namespace Deep2 {
++namespace {
++inline float specSilu(float x) {
++    return x/(1.0f+std::exp(-x));
++}
++inline bool finiteAll(const float* p,size_t n) {
++    if(!p) return false;
++    for(size_t i=0;i<n;++i) if(!std::isfinite(p[i])) return false;
++    return true;
++}
++inline void softmaxLocal(float* x,size_t n) {
++    float m=x[0];
++    for(size_t i=1;i<n;++i) m=std::max(m,x[i]);
++    double s=0.0;
++    for(size_t i=0;i<n;++i){x[i]=std::exp(x[i]-m);s+=x[i];}
++    const float inv=s>0.0?float(1.0/s):0.0f;
++    for(size_t i=0;i<n;++i)x[i]*=inv;
++}
++}
++
++bool Deep2Engine::forwardSpeculativeBlock(
++    const int* tokenIds,size_t count,size_t basePos,float* finalHiddenBatch)
++{
++    if(!tokenIds||!finalHiddenBatch||count==0||count>4||
++       !modelWeights.loaded||modelWeights.isMoE||modelWeights.useMLA||
++       !kvCache||!config.useKVCache)
++        return false;
++    const size_t H=modelWeights.hiddenDim;
++    const size_t NH=modelWeights.numHeads;
++    const size_t NK=modelWeights.numKVHeads;
++    const size_t HD=modelWeights.headDim;
++    const size_t KD=NK*HD;
++    const size_t I=modelWeights.intermediateDim;
++    if(!H||!NH||!NK||!HD||!I||NH%NK!=0||
++       basePos+count>kvCache->capacity()||
++       kvCache->currentLength()<basePos+count)
++        return false;
++
++    std::vector<float> hidden(count*H);
++    std::vector<float> norm(count*H);
++    std::vector<float> q(count*H);
++    std::vector<float> k(count*KD);
++    std::vector<float> v(count*KD);
++    std::vector<float> attn(count*H);
++    std::vector<float> proj(count*H);
++    std::vector<float> gate(count*I);
++    std::vector<float> up(count*I);
++    std::vector<float> down(count*H);
++    if(!embedTokensBatch(tokenIds,count,hidden.data()))
++        return false;
++
++    const size_t group=NH/NK;
++    for(size_t layer=0;layer<modelWeights.numLayers;++layer) {
++        const LayerWeights& lw=modelWeights.layers[layer];
++        if(!lw.attnNorm.data||!lw.ffnNorm.data||
++           !lw.wq.data||!lw.wk.data||!lw.wv.data||
++           (!lw.wo.data&&!lw.attnO.data)||
++           !lw.wGate.data||!lw.wUp.data||!lw.wDown.data)
++            return false;
++
++        for(size_t b=0;b<count;++b)
++            RMSNormW(lw.attnNorm,hidden.data()+b*H,
++                     norm.data()+b*H,H,modelWeights.normEps);
++
++        const float* bq=lw.bq.data
++            ? reinterpret_cast<const float*>(lw.bq.data):nullptr;
++        const float* bk=lw.bk.data
++            ? reinterpret_cast<const float*>(lw.bk.data):nullptr;
++        const float* bv=lw.bv.data
++            ? reinterpret_cast<const float*>(lw.bv.data):nullptr;
++        LinearWBatch4(lw.wq,norm.data(),count,bq,q.data(),H);
++        LinearWBatch4(lw.wk,norm.data(),count,bk,k.data(),KD);
++        LinearWBatch4(lw.wv,norm.data(),count,bv,v.data(),KD);
++
++        for(size_t b=0;b<count;++b) {
++            float* qb=q.data()+b*H;
++            float* kb=k.data()+b*KD;
++            if(lw.attnQNorm.data) {
++                for(size_t h=0;h<NH;++h)
++                    RMSNormW(lw.attnQNorm,qb+h*HD,qb+h*HD,
++                             HD,modelWeights.normEps);
++            }
++            if(lw.attnKNorm.data) {
++                for(size_t h=0;h<NK;++h)
++                    RMSNormW(lw.attnKNorm,kb+h*HD,kb+h*HD,
++                             HD,modelWeights.normEps);
++            }
++            if(config.useRoPE)
++                applyRoPE(qb,kb,HD,NH,NK,basePos+b,
++                          modelWeights.ropeTheta,
++                          modelWeights.ropeScaling>0.0f
++                              ? modelWeights.ropeScaling:1.0f);
++
++            for(size_t h=0;h<NK;++h) {
++                float* kd=kvCache->keyPtr(layer,h,basePos+b);
++                float* vd=kvCache->valuePtr(layer,h,basePos+b);
++                if(!kd||!vd) return false;
++                std::memcpy(kd,kb+h*HD,HD*sizeof(float));
++                std::memcpy(vd,v.data()+b*KD+h*HD,HD*sizeof(float));
++            }
++        }
++
++        const float scale=1.0f/std::sqrt((float)HD);
++        for(size_t b=0;b<count;++b) {
++            const size_t attend=basePos+b+1;
++            float* out=attn.data()+b*H;
++            std::fill(out,out+H,0.0f);
++            std::vector<float> scores(attend);
++            for(size_t h=0;h<NH;++h) {
++                const size_t kh=h/group;
++                const float* qq=q.data()+b*H+h*HD;
++                for(size_t t=0;t<attend;++t) {
++                    const float* kk=kvCache->keyPtr(layer,kh,t);
++                    if(!kk) return false;
++                    double dot=0.0;
++                    for(size_t d=0;d<HD;++d) dot+=(double)qq[d]*kk[d];
++                    scores[t]=(float)dot*scale;
++                }
++                softmaxLocal(scores.data(),scores.size());
++                float* ho=out+h*HD;
++                for(size_t t=0;t<attend;++t) {
++                    const float* vv=kvCache->valuePtr(layer,kh,t);
++                    if(!vv) return false;
++                    const float a=scores[t];
++                    for(size_t d=0;d<HD;++d) ho[d]+=a*vv[d];
++                }
++            }
++        }
++
++        const WeightTensor& wo=lw.wo.data?lw.wo:lw.attnO;
++        LinearWBatch4(wo,attn.data(),count,nullptr,proj.data(),H);
++        for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
++
++        for(size_t b=0;b<count;++b)
++            RMSNormW(lw.ffnNorm,hidden.data()+b*H,
++                     norm.data()+b*H,H,modelWeights.normEps);
++        LinearWBatch4(lw.wGate,norm.data(),count,nullptr,gate.data(),I);
++        LinearWBatch4(lw.wUp,norm.data(),count,nullptr,up.data(),I);
++        for(size_t i=0;i<count*I;++i)
++            gate[i]=specSilu(gate[i])*up[i];
++        LinearWBatch4(lw.wDown,gate.data(),count,nullptr,down.data(),H);
++        for(size_t i=0;i<count*H;++i) hidden[i]+=down[i];
++        if(!finiteAll(hidden.data(),hidden.size())) return false;
++    }
++
++    std::memcpy(finalHiddenBatch,hidden.data(),count*H*sizeof(float));
++    return true;
++}
++
++} // namespace Deep2
++
+diff --git a/~dev/CMakeLists.txt b/~dev/CMakeLists.txt
+--- a/~dev/CMakeLists.txt
++++ b/~dev/CMakeLists.txt
+@@
+ set(RAWRXD_DEEP2_SOURCES
+     rawrxd/src/deep2/Deep2Engine.cpp
++    rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+     rawrxd/src/deep2/Tokenizer.cpp

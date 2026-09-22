@@ -1,0 +1,214 @@
+# Deep2 Qwen32 85TPS — Batch 5/5, item 41
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-4
+#
+# Goal: stop re-uploading the entire committed KV prefix for every layer and
+# every speculative verification window.
+#
+# Adds per-layer persistent device K/V mirrors on the primary Vulkan device.
+# Layout: [kvHead][maxSeq][headDim]. Only newly committed positions are copied.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0041_persistent_device_spec_kv_mirror.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp b/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp
+--- a/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp
+@@
+ layout(push_constant) uniform Push {
+     uint headDim;
+     uint heads;
+     uint kvHeads;
+     uint seqLen;
++    uint capacity;
+     uint basePos;
+     uint batch;
+     float scale;
+ } pc;
+@@
+-        uint kb=(kh*pc.seqLen+t)*pc.headDim;
++        uint kb=(kh*pc.capacity+t)*pc.headDim;
+@@
+-        uint kb=(kh*pc.seqLen+t)*pc.headDim;
++        uint kb=(kh*pc.capacity+t)*pc.headDim;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunSpecAttentionHostBatch(
+         const float* q,const float* k,const float* v,float* output,
+         uint32_t heads,uint32_t kvHeads,uint32_t headDim,
+         uint32_t seqLen,uint32_t basePos,uint32_t batch,
+         uint64_t epoch);
++    bool EnsureSpecKvMirror(uint32_t layers,uint32_t kvHeads,
++                            uint32_t headDim,uint32_t maxSeq);
++    bool UploadSpecKvRange(uint32_t layer,uint32_t start,uint32_t count,
++                           const float* kTokenMajor,const float* vTokenMajor);
++    bool RunSpecAttentionResident(
++        uint32_t layer,const float* q,float* output,
++        uint32_t heads,uint32_t kvHeads,uint32_t headDim,
++        uint32_t seqLen,uint32_t basePos,uint32_t batch,
++        uint64_t epoch);
++    void ResetSpecKvMirror();
+@@
+     struct SpecAttnPush {
+         uint32_t headDim=0,heads=0,kvHeads=0,seqLen=0;
+-        uint32_t basePos=0,batch=0;
++        uint32_t capacity=0,basePos=0,batch=0;
+         float scale=1.0f;
+     };
++    std::vector<DeviceBuf> specKMirror_;
++    std::vector<DeviceBuf> specVMirror_;
++    uint32_t specKvLayers_=0,specKvHeads_=0,specKvHeadDim_=0;
++    uint32_t specKvCapacity_=0;
++    bool uploadToBufferRange(DeviceBuf& dst,const void* src,size_t bytes,
++                             VkDeviceSize dstOffset);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes) {
+@@
+ }
++
++bool VulkanCompute::uploadToBufferRange(
++    DeviceBuf& dst,const void* src,size_t bytes,VkDeviceSize dstOffset)
++{
++    if(!dst||!src||!bytes||dstOffset>dst.size||
++       bytes>dst.size-dstOffset)
++        return false;
++    DeviceBuf* staging=nullptr;
++    void* mapped=nullptr;
++    if(!ensureMappedStaging(true,bytes,staging,mapped)) return false;
++    std::memcpy(mapped,src,bytes);
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    return beginCommand(cmd,query,true) &&
++           recordCopy(cmd,*staging,dst,bytes,0,dstOffset) &&
++           endSubmitWait(cmd,query,GpuWorkKind::ModelTransfer,
++                         bytes,workEpoch_,nullptr);
++}
++
++void VulkanCompute::ResetSpecKvMirror() {
++    for(auto& b:specKMirror_) destroyBuffer(b);
++    for(auto& b:specVMirror_) destroyBuffer(b);
++    specKMirror_.clear();specVMirror_.clear();
++    specKvLayers_=specKvHeads_=specKvHeadDim_=specKvCapacity_=0;
++}
++
++bool VulkanCompute::EnsureSpecKvMirror(
++    uint32_t layers,uint32_t kvHeads,uint32_t headDim,uint32_t maxSeq)
++{
++    if(!layers||!kvHeads||!headDim||!maxSeq) return false;
++    if(specKvLayers_==layers&&specKvHeads_==kvHeads&&
++       specKvHeadDim_==headDim&&specKvCapacity_==maxSeq&&
++       specKMirror_.size()==layers&&specVMirror_.size()==layers)
++        return true;
++
++    ResetSpecKvMirror();
++    const uint64_t floats=(uint64_t)kvHeads*maxSeq*headDim;
++    if(floats>SIZE_MAX/sizeof(float)) return false;
++    const size_t bytes=(size_t)floats*sizeof(float);
++    specKMirror_.resize(layers);
++    specVMirror_.resize(layers);
++    for(uint32_t l=0;l<layers;++l) {
++        if(!createBuffer(
++                bytes,
++                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++                VK_BUFFER_USAGE_TRANSFER_DST_BIT|
++                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
++                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,specKMirror_[l])||
++           !createBuffer(
++                bytes,
++                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++                VK_BUFFER_USAGE_TRANSFER_DST_BIT|
++                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
++                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,specVMirror_[l])) {
++            ResetSpecKvMirror();
++            return false;
++        }
++    }
++    specKvLayers_=layers;specKvHeads_=kvHeads;
++    specKvHeadDim_=headDim;specKvCapacity_=maxSeq;
++    return true;
++}
++
++bool VulkanCompute::UploadSpecKvRange(
++    uint32_t layer,uint32_t start,uint32_t count,
++    const float* kTokenMajor,const float* vTokenMajor)
++{
++    if(layer>=specKMirror_.size()||!count||!kTokenMajor||!vTokenMajor||
++       start>specKvCapacity_||count>specKvCapacity_-start)
++        return false;
++    const size_t hd=specKvHeadDim_;
++    std::vector<float> tmp((size_t)count*hd);
++    for(uint32_t h=0;h<specKvHeads_;++h) {
++        for(uint32_t t=0;t<count;++t) {
++            const float* ks=kTokenMajor+
++                ((size_t)t*specKvHeads_+h)*hd;
++            std::memcpy(tmp.data()+(size_t)t*hd,ks,hd*sizeof(float));
++        }
++        const VkDeviceSize off=
++            ((VkDeviceSize)h*specKvCapacity_+start)*hd*sizeof(float);
++        if(!uploadToBufferRange(
++                specKMirror_[layer],tmp.data(),
++                tmp.size()*sizeof(float),off))
++            return false;
++        for(uint32_t t=0;t<count;++t) {
++            const float* vs=vTokenMajor+
++                ((size_t)t*specKvHeads_+h)*hd;
++            std::memcpy(tmp.data()+(size_t)t*hd,vs,hd*sizeof(float));
++        }
++        if(!uploadToBufferRange(
++                specVMirror_[layer],tmp.data(),
++                tmp.size()*sizeof(float),off))
++            return false;
++    }
++    return true;
++}
++
++bool VulkanCompute::RunSpecAttentionResident(
++    uint32_t layer,const float* q,float* output,
++    uint32_t heads,uint32_t kvHeads,uint32_t headDim,
++    uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
++{
++    if(layer>=specKMirror_.size()||!q||!output||!heads||!kvHeads||
++       !headDim||!seqLen||!batch||batch>4||seqLen>specKvCapacity_)
++        return false;
++    SetWorkEpoch(epoch);
++    const size_t qn=(size_t)batch*heads*headDim;
++    if(!EnsureScratch(104,qn)||!EnsureScratch(105,qn))
++        return false;
++    auto& qb=Scratch(104);auto& ob=Scratch(105);
++    if(!UploadVector(qb,q,qn)) return false;
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getOpsDescriptor(
++        qb,specKMirror_[layer],specVMirror_[layer],ob);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipelineLayout_,
++        0,1,&set,0,nullptr);
++    SpecAttnPush p{};
++    p.headDim=headDim;p.heads=heads;p.kvHeads=kvHeads;
++    p.seqLen=seqLen;p.capacity=specKvCapacity_;
++    p.basePos=basePos;p.batch=batch;
++    p.scale=1.0f/std::sqrt((float)headDim);
++    vkCmdPushConstants(
++        cmd,specAttnPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    const uint32_t total=batch*heads*headDim;
++    vkCmdDispatch(cmd,(total+63u)/64u,1,1);
++    recordComputeBarrier(cmd);
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
++        return false;
++    return DownloadVector(ob,output,qn);
++}
+@@
+ void VulkanCompute::cleanup() {
+     if (device_) vkDeviceWaitIdle(device_);
++    ResetSpecKvMirror();

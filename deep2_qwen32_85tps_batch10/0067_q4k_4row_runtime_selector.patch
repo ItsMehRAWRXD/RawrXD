@@ -1,0 +1,120 @@
+# Deep2 Qwen32 85TPS — Batch 10, item 67
+# Base: apply after 0066.
+#
+# Loads the 4-row kernel and automatically uses it for Q4_K batch matrices
+# with >=4 output rows. Small tails retain the previous exact kernel.
+#
+# Adds byte/time counters for measured effective weight bandwidth.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0067_q4k_4row_runtime_selector.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool DispatchGemvQ4KBatch(
+@@
+         uint32_t rows,uint32_t cols,uint32_t batch);
++    bool DispatchGemvQ4KBatch4Row(
++        const void* weights,size_t weightBytes,
++        DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++        uint32_t rows,uint32_t cols,uint32_t batch);
+@@
+     VkPipeline qBatchPipeline_ = VK_NULL_HANDLE;
+     VkPipelineLayout qBatchPipelineLayout_ = VK_NULL_HANDLE;
++    VkPipeline qBatch4RowPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout qBatch4RowPipelineLayout_ = VK_NULL_HANDLE;
+@@
+     uint64_t QueueSubmitCount() const noexcept { return queueSubmitCount_; }
++    uint64_t Q4KBatchWeightBytes() const noexcept {
++        return q4kBatchWeightBytes_;
++    }
++    uint64_t Q4KBatchGpuNs() const noexcept { return q4kBatchGpuNs_; }
++    uint64_t Q4KBatch4RowOps() const noexcept { return q4kBatch4RowOps_; }
+@@
+     uint64_t queueSubmitCount_ = 0;
++    uint64_t q4kBatchWeightBytes_=0;
++    uint64_t q4kBatchGpuNs_=0;
++    uint64_t q4kBatch4RowOps_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+     const std::string qb = shaderPath("deep2_qgemv_batch.spv");
++    const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
+@@
+     if(!qb.empty())
+         (void)createPipelineFromFile(
+             qb,qSetLayout_,sizeof(QBatchPush),
+             qBatchPipelineLayout_,qBatchPipeline_);
++    if(!q4r.empty())
++        (void)createPipelineFromFile(
++            q4r,qSetLayout_,sizeof(QBatchPush),
++            qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
+@@
+ }
++
++bool VulkanCompute::DispatchGemvQ4KBatch4Row(
++    const void* weights,size_t weightBytes,
++    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++    uint32_t rows,uint32_t cols,uint32_t batch)
++{
++    if(!qBatch4RowPipeline_||!weights||!weightBytes||
++       !rows||!cols||!batch||batch>4)
++        return false;
++    DeviceBuf* wb=nullptr;
++    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
++
++    VkCommandBuffer cmd=fusedCmd_;
++    VkQueryPool query=fusedQuery_;
++    const bool own=!fused_;
++    if(own&&!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getQuantDescriptor(*wb,inputBatch,outputBatch);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch4RowPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch4RowPipelineLayout_,
++        0,1,&set,0,nullptr);
++    QBatchPush p{};
++    p.type=12;p.rows=rows;p.cols=cols;
++    p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
++    vkCmdPushConstants(
++        cmd,qBatch4RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    vkCmdDispatch(cmd,(rows+3u)/4u,1,1);
++    recordComputeBarrier(cmd);
++    ++q4kBatch4RowOps_;
++    q4kBatchWeightBytes_+=weightBytes;
++    if(!own) return true;
++
++    uint64_t elapsed=0;
++    const bool ok=endSubmitWait(
++        cmd,query,GpuWorkKind::ModelCompute,
++        weightBytes,workEpoch_,&elapsed);
++    if(ok) q4kBatchGpuNs_+=elapsed;
++    return ok;
++}
+@@
+ bool VulkanCompute::DispatchGemvQ4KBatch(
+@@
+ {
++    if(type==12 && rows>=4 && qBatch4RowPipeline_)
++        return DispatchGemvQ4KBatch4Row(
++            weights,weightBytes,inputBatch,outputBatch,
++            rows,cols,batch);
+@@
+ }
+@@
+     if(device_ && qBatchPipeline_)
+         vkDestroyPipeline(device_,qBatchPipeline_,nullptr);
++    if(device_ && qBatch4RowPipeline_)
++        vkDestroyPipeline(device_,qBatch4RowPipeline_,nullptr);
+@@
+     if(device_ && qBatchPipelineLayout_)
+         vkDestroyPipelineLayout(device_,qBatchPipelineLayout_,nullptr);
++    if(device_ && qBatch4RowPipelineLayout_)
++        vkDestroyPipelineLayout(
++            device_,qBatch4RowPipelineLayout_,nullptr);

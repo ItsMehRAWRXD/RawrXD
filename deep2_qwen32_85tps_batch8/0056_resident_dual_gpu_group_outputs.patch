@@ -1,0 +1,64 @@
+# Deep2 Qwen32 85TPS — Batch 8, item 56
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-7
+#
+# Goal:
+#   grouped QKV / Gate-Up row-split outputs remain in persistent device buffers
+#   on each GPU until the entire group completes. No per-weight output staging.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0056_resident_dual_gpu_group_outputs.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool EnsureResidentGroupOutputs(const GpuWeightView* weights,
++                                    size_t weightCount,uint32_t batch);
++    DeviceBuf& ResidentGroupOutput(size_t index) noexcept {
++        return residentGroupOutputs_[index];
++    }
++    uint64_t ResidentGroupOutputReallocs() const noexcept {
++        return residentGroupOutputReallocs_;
++    }
+@@
+ private:
++    DeviceBuf residentGroupOutputs_[3]{};
++    size_t residentGroupOutputFloats_[3]{};
++    uint64_t residentGroupOutputReallocs_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::EnsureResidentGroupOutputs(
++    const GpuWeightView* weights,size_t weightCount,uint32_t batch)
++{
++    if(!weights||weightCount<2||weightCount>3||!batch||batch>4)
++        return false;
++    for(size_t i=0;i<weightCount;++i) {
++        if(!weights[i].valid()) return false;
++        const size_t need=(size_t)weights[i].rows*batch;
++        if(residentGroupOutputs_[i] &&
++           residentGroupOutputFloats_[i]>=need)
++            continue;
++        destroyBuffer(residentGroupOutputs_[i]);
++        residentGroupOutputFloats_[i]=0;
++        if(!createBuffer(
++                need*sizeof(float),
++                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
++                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
++                residentGroupOutputs_[i]))
++            return false;
++        residentGroupOutputFloats_[i]=need;
++        ++residentGroupOutputReallocs_;
++    }
++    return true;
++}
+@@
+ void VulkanCompute::cleanup() {
+@@
++    for(auto& b:residentGroupOutputs_) destroyBuffer(b);
++    for(auto& n:residentGroupOutputFloats_) n=0;

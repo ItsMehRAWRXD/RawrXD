@@ -1,0 +1,73 @@
+# Deep2 Qwen32 85TPS — Batch 16, item 96
+# Base: apply after Batch 15 / item 0095.
+#
+# Goal:
+#   eliminate the unconditional host wait after every pre-recorded QKV/Gate-Up
+#   group submission when Vulkan timeline semaphores are live.
+#
+# Correctness:
+#   - opt-in with DEEP2_RECORDED_GROUP_ASYNC=1
+#   - queue order + timeline value remain the dependency authority
+#   - old synchronous fence path remains exact fallback
+#   - no external dependency
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0096_recorded_group_nonblocking_timeline.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    uint64_t RecordedGroupAsyncSubmits() const noexcept {
++        return recordedGroupAsyncSubmits_;
++    }
++    uint64_t RecordedGroupSyncWaits() const noexcept {
++        return recordedGroupSyncWaits_;
++    }
++    uint64_t RecordedGroupLastSignal() const noexcept {
++        return recordedGroupLastSignal_;
++    }
+@@
+ private:
++    uint64_t recordedGroupAsyncSubmits_=0;
++    uint64_t recordedGroupSyncWaits_=0;
++    uint64_t recordedGroupLastSignal_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++static bool deep2RecordedGroupAsyncEnabled() noexcept {
++    const char* e=std::getenv("DEEP2_RECORDED_GROUP_ASYNC");
++    return e && *e && *e!='0';
++}
++
+@@
+ bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
+@@
+     auto& r=it->second;
++
++    // Timeline fast path. The command buffer was recorded with
++    // VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT in Batch 15, so no host
++    // completion wait is needed merely to submit the next immutable group.
++    // Same-queue ordering preserves transformer dependency order. The exposed
++    // last signal can be consumed by a cross-queue dependent stage.
++    if(deep2RecordedGroupAsyncEnabled() && TimelineSemaphoreEnabled()) {
++        const uint64_t signal=NextTimelineValue();
++        const uint64_t wait=recordedGroupLastSignal_;
++        if(!SubmitTimelineCommand(
++                r.cmd,queue_,wait,signal,VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT))
++            return false;
++        recordedGroupLastSignal_=signal;
++        ++recordedGroupAsyncSubmits_;
++        ++recordedGroupSubmits_;
++        SetWorkEpoch(epoch);
++        return true;
++    }
++
++    ++recordedGroupSyncWaits_;
+     if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
+         return false;
+@@
+ }

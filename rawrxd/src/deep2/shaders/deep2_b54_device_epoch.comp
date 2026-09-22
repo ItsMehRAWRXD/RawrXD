@@ -1,0 +1,27 @@
+#version 460
+layout(local_size_x=64) in;
+
+// Device epoch controller. It advances a persistent graph epoch only when
+// the required device timeline value is satisfied. Actual kernel dispatch is
+// provided by the existing Deep2 Vulkan command/persistent queue path.
+
+layout(set=0,binding=0,std430) buffer State {
+    uint epoch;
+    uint completed;
+    uint stop;
+    uint tokenSeq;
+} st;
+
+layout(push_constant) uniform PC {
+    uint expectedCompleted;
+    uint nextEpoch;
+} pc;
+
+void main(){
+    if(gl_GlobalInvocationID.x!=0u) return;
+    if(atomicAdd(st.stop,0u)!=0u) return;
+    if(atomicAdd(st.completed,0u)>=pc.expectedCompleted){
+        atomicExchange(st.epoch,pc.nextEpoch);
+        memoryBarrierBuffer();
+    }
+}

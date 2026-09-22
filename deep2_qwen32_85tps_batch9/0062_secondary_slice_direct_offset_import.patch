@@ -1,0 +1,144 @@
+# Deep2 Qwen32 85TPS — Batch 9, item 62
+# Base: apply after 0061.
+#
+# Goal:
+#   transfer ONLY GPU1's row slice through persistent mapped staging and import
+#   it directly into GPU0's ResidentFullOutput at the final row offset.
+#
+# No CPU concatenate, no complete-vector readback, no peer-memory requirement.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0062_secondary_slice_direct_offset_import.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool WaitDownloadAsync(
+         DownloadTicket& ticket,void* dst,size_t bytes);
+     void CancelDownloadTicket(DownloadTicket& ticket);
++    bool ImportHostRowsIntoFullOutput(
++        const float* rows,uint32_t rowCount,uint32_t rowBegin,
++        uint32_t fullRows,uint32_t batch);
++    uint64_t SecondaryImportBytes() const noexcept {
++        return secondaryImportBytes_;
++    }
+@@
+ private:
++    uint64_t secondaryImportBytes_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::ImportHostRowsIntoFullOutput(
++    const float* rows,uint32_t rowCount,uint32_t rowBegin,
++    uint32_t fullRows,uint32_t batch)
++{
++    if(!rows||!rowCount||!fullRows||!batch||batch>4||
++       rowBegin>fullRows||rowCount>fullRows-rowBegin||
++       !EnsureResidentFullOutput(fullRows,batch))
++        return false;
++    const size_t slab=(size_t)rowCount*batch;
++    DeviceBuf* staging=nullptr;
++    void* mapped=nullptr;
++    if(!ensureMappedStaging(
++            true,slab*sizeof(float),staging,mapped))
++        return false;
++    std::memcpy(mapped,rows,slab*sizeof(float));
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    const VkDeviceSize rowBytes=(VkDeviceSize)rowCount*sizeof(float);
++    for(uint32_t b=0;b<batch;++b) {
++        const VkDeviceSize so=(VkDeviceSize)b*rowBytes;
++        const VkDeviceSize doff=
++            ((VkDeviceSize)b*fullRows+rowBegin)*sizeof(float);
++        if(!recordCopy(
++                cmd,*staging,residentFullOutput_,rowBytes,so,doff))
++            return false;
++    }
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelTransfer,
++            slab*sizeof(float),workEpoch_,nullptr))
++        return false;
++    secondaryImportBytes_+=slab*sizeof(float);
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuRowSplitBatch4(
+@@
+     RowSplitReceipt* receipt=nullptr);
++bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
++    VulkanCompute& primary,VulkanCompute& secondary,
++    const WeightTensor& wt,const float* inputBatch,
++    uint32_t batch,uint64_t epoch,
++    VulkanCompute::DeviceBuf** fullOutput=nullptr);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
++bool Deep2RunDualGpuRowSplitBatch4PrimaryAssembled(
++    VulkanCompute& primary,VulkanCompute& secondary,
++    const WeightTensor& wt,const float* inputBatch,
++    uint32_t batch,uint64_t epoch,
++    VulkanCompute::DeviceBuf** fullOutput)
++{
++    if(!inputBatch||!batch||batch>4) return false;
++    const CachedDualRowPlan* cp=
++        Deep2GetCachedDualRowPlan(wt,primary,secondary);
++    if(!cp||!cp->valid) return false;
++    const auto& p=cp->split;
++    const auto& w0=cp->gpu0;
++    const auto& w1=cp->gpu1;
++
++    // One shared activation upload to each card.
++    if(!primary.UploadResidentBatchInput(
++            inputBatch,w0.cols,batch,epoch)||
++       !secondary.UploadResidentBatchInput(
++            inputBatch,w1.cols,batch,epoch))
++        return false;
++
++    if(!primary.EnsureScratch(140,(size_t)batch*w0.rows)||
++       !secondary.EnsureScratch(140,(size_t)batch*w1.rows))
++        return false;
++    auto& y0=primary.Scratch(140);
++    auto& y1=secondary.Scratch(140);
++
++    bool ok0=false,ok1=false;
++    const bool both=rowExecutor().run(
++        [&]{
++            ok0=primary.DispatchGemvQ4KBatch(
++                w0.data,w0.bytes,
++                primary.ResidentBatchInput(),y0,
++                w0.rows,w0.cols,batch);
++            return ok0;
++        },
++        [&]{
++            ok1=secondary.DispatchGemvQ4KBatch(
++                w1.data,w1.bytes,
++                secondary.ResidentBatchInput(),y1,
++                w1.rows,w1.cols,batch);
++            return ok1;
++        });
++    if(!both||!ok0||!ok1) return false;
++
++    if(!primary.CopyDeviceSliceIntoFullOutput(
++            y0,w0.rows,p.row0Begin,(uint32_t)wt.rows,batch))
++        return false;
++
++    std::vector<float> remote((size_t)batch*w1.rows);
++    if(!secondary.DownloadVector(y1,remote.data(),remote.size()))
++        return false;
++    if(!primary.ImportHostRowsIntoFullOutput(
++            remote.data(),w1.rows,p.row1Begin,(uint32_t)wt.rows,batch))
++        return false;
++
++    if(fullOutput) *fullOutput=&primary.ResidentFullOutput();
++    return true;
++}

@@ -1,0 +1,255 @@
+/*
+RawrXD ScreenPilot V2 — exact integration boundary
+
+This file intentionally does not invent RawrXD class names. Replace ONLY the
+three marked project-specific adapters:
+  A) HTTP request/sink translation
+  B) canonical Agent Coordinator entrypoint
+  C) static file serving
+
+Everything else should remain one authority path.
+
+===============================================================================
+1. STARTUP — existing LocalServer on 127.0.0.1:11435
+===============================================================================
+
+#include "rawrxd_screenpilot_agent_v2.h"
+#include "screenpilot_tool_policy_v2.h"
+
+static int ScreenPilotAuthorityRun(
+    void* user,
+    const RawrXD_SP_AgentRequestV2* wire,
+    RawrXD_SP_EmitFnV2 emit,
+    void* emit_user,
+    RawrXD_SP_IsCancelledFnV2 cancelled,
+    void* cancel_user,
+    RawrXD_SP_RequestApprovalFnV2 approval,
+    void* approval_user)
+{
+    auto* app = static_cast<RawrXDApp*>(user); // project-specific type
+
+    CanonicalAgentRequest req;
+    req.requestId = std::string(wire->request_id.data, wire->request_id.size);
+    req.mode      = std::string(wire->mode.data, wire->mode.size);
+    req.model     = std::string(wire->model.data, wire->model.size);
+    req.workspace = std::string(wire->workspace.data, wire->workspace.size);
+    req.prompt    = std::string(wire->prompt.data, wire->prompt.size);
+
+    req.permissionMask = wire->permission_mask;
+    req.approvalMask   = wire->approval_required_mask;
+    req.workspaceOnly  = wire->workspace_only != 0;
+
+    req.emit = [&](std::string_view type, std::string_view data) {
+        return emit(emit_user, type.data(), data.data(), data.size()) != 0;
+    };
+
+    req.isCancelled = [&] {
+        return cancelled(cancel_user) != 0;
+    };
+
+    req.requestApproval =
+        [&](std::string_view tool,
+            std::string_view summary,
+            std::string_view risk,
+            std::uint64_t permissionBit) {
+            return approval(
+                approval_user,
+                std::string(tool).c_str(),
+                std::string(summary).c_str(),
+                std::string(risk).c_str(),
+                permissionBit) != 0;
+        };
+
+    // PROJECT-SPECIFIC ADAPTER B:
+    //
+    // MUST be the exact same canonical entrypoint used by native IDE/CLI.
+    // No CreateProcess/system/direct filesystem execution here.
+    return app->CanonicalAgentCoordinator().Run(req);
+}
+
+std::string workspaceRoot = "F:\\~dev";
+
+RawrXD_SP_ConfigV2 spCfg{};
+spCfg.abi_version = RAWRXD_SCREENPILOT_ABI_V2;
+spCfg.port = 11435;
+spCfg.workspace_root = { workspaceRoot.data(), workspaceRoot.size() };
+spCfg.allow_null_origin = 0;
+spCfg.max_body_bytes = 8u * 1024u * 1024u;
+spCfg.max_prompt_bytes = 4u * 1024u * 1024u;
+spCfg.approval_timeout_ms = 120000;
+
+RawrXD_SP_AuthorityV2 spAuthority{};
+spAuthority.abi_version = RAWRXD_SCREENPILOT_ABI_V2;
+spAuthority.user = &app;
+spAuthority.run_agent = ScreenPilotAuthorityRun;
+
+if (!RawrXD_ScreenPilot_InitializeV2(&spCfg, &spAuthority)) {
+    // Fail closed: mark ScreenPilot unavailable.
+}
+
+===============================================================================
+2. ROUTER — BEFORE legacy /api/* mutating handlers
+===============================================================================
+
+// PROJECT-SPECIFIC ADAPTER A:
+// Translate your LocalServer request into RawrXD_SP_HttpRequestV2 and sink.
+// Header names shown conceptually.
+
+RawrXD_SP_HttpRequestV2 spReq{
+    {method.data(), method.size()},
+    {path.data(), path.size()},
+    {host.data(), host.size()},
+    {origin.data(), origin.size()},
+    {screenPilotSessionHeader.data(), screenPilotSessionHeader.size()},
+    {contentType.data(), contentType.size()},
+    {body.data(), body.size()}
+};
+
+RawrXD_SP_HttpSinkV2 spSink{
+    &response,
+    BeginResponse,
+    AddResponseHeader,
+    WriteResponse,
+    EndResponse
+};
+
+if (RawrXD_ScreenPilot_HandleHttpV2(&spReq, &spSink)) {
+    return;
+}
+
+===============================================================================
+3. SESSION-GUARD LEGACY PRIVILEGED BROWSER ROUTES
+===============================================================================
+
+The final HTML still contains many specialty panels that hit historical /api/*
+routes. Until each specialty endpoint is moved into the canonical registry,
+do NOT allow an arbitrary web page to call them.
+
+For browser-originated privileged routes:
+
+bool sessionOk = RawrXD_ScreenPilot_ValidateBrowserSessionV2(
+    {host.data(), host.size()},
+    {origin.data(), origin.size()},
+    {screenPilotSessionHeader.data(), screenPilotSessionHeader.size()}) != 0;
+
+if (IsPrivilegedBrowserRoute(path) && !sessionOk) {
+    return Json(401, R"({"ok":false,"error":"ScreenPilot session required"})");
+}
+
+IMPORTANT:
+Session authentication is not Tool Authority. Every mutating legacy endpoint
+must either:
+  1) call the canonical Tool Authority internally, OR
+  2) be disabled for browser callers.
+
+Do not keep a second direct execution implementation merely because the caller
+has a valid ScreenPilot session.
+
+===============================================================================
+4. TOOL AUTHORITY — ENFORCE FOR EVERY TOOL CALL
+===============================================================================
+
+ToolResult CanonicalToolAuthority::Invoke(
+    const CanonicalAgentRequest& req,
+    const ToolCall& call)
+{
+    using namespace rawrxd::screenpilot;
+
+    const ToolClass cls = ClassifyTool(call.name);
+    const std::uint64_t permission = PermissionBit(cls);
+
+    // Unknown tools fail closed.
+    if (cls == ToolClass::Unknown || permission == 0) {
+        return Denied("unknown/unclassified tool");
+    }
+
+    if ((req.permissionMask & permission) == 0) {
+        return Denied("tool denied in current ASK/PLAN/BUILD/AGENT mode");
+    }
+
+    // Enforce workspace confinement on EACH path-bearing parameter.
+    for (const auto& path : ExtractFilesystemPaths(call)) {
+        if (req.workspaceOnly &&
+            !PathUnderWorkspace(req.workspace, path)) {
+            return Denied("path outside ScreenPilot workspace");
+        }
+    }
+
+    // Shell/process tools need their own command policy. Never assume cwd
+    // confines a process: absolute paths, '..', shell redirection, child
+    // processes, scripts and environment variables can escape it.
+    if (cls == ToolClass::ProcessGeneral) {
+        if (!ValidateCommandAgainstWorkspacePolicy(req, call)) {
+            return Denied("process command violates workspace policy");
+        }
+    }
+
+    if ((req.approvalMask & permission) != 0) {
+        if (!req.requestApproval(
+                call.name,
+                SummarizeToolCall(call),
+                RiskLabel(call),
+                permission)) {
+            return Denied("user denied or approval timed out");
+        }
+    }
+
+    // The ONE canonical executor:
+    return registry_.Invoke(call);
+}
+
+===============================================================================
+5. STATIC SAME-ORIGIN UI
+===============================================================================
+
+// PROJECT-SPECIFIC ADAPTER C:
+GET /screenpilot
+  -> web/ide_chatbot_screenpilot_final.html
+  Content-Type: text/html; charset=utf-8
+
+GET /screenpilot/screenpilot_authority.js
+  -> web/screenpilot_authority.js
+  Content-Type: text/javascript; charset=utf-8
+
+Recommended response headers:
+  Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    font-src 'self' data:;
+    connect-src 'self';
+    img-src 'self' data: blob:;
+    media-src 'self' blob:;
+    frame-src 'self' http: https:;
+    object-src 'none';
+    base-uri 'none';
+    form-action 'self';
+    frame-ancestors 'self';
+
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Cross-Origin-Resource-Policy: same-origin
+
+The remaining 'unsafe-inline' is caused by the 30k-line legacy single-file HTML.
+Removing it requires extracting ALL inline scripts/styles/onclick handlers.
+This drop removes 'unsafe-eval', which is the critical privileged-agent blocker.
+
+===============================================================================
+6. SHUTDOWN
+===============================================================================
+
+RawrXD_ScreenPilot_ShutdownV2();
+
+===============================================================================
+7. AFTER CERTIFICATION
+===============================================================================
+
+Delete/disable:
+  * temporary standalone :11437 bridge
+  * file:// privileged mode
+  * direct Ollama fallback for ScreenPilot agent requests
+  * browser-owned agent tool loop as a shipping authority path
+
+Legacy chat code may remain for non-agent compatibility, but the shipping
+ScreenPilot send path must fail closed when canonical authority is unavailable.
+*/

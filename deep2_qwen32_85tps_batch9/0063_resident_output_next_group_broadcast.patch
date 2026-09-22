@@ -1,0 +1,47 @@
+# Deep2 Qwen32 85TPS — Batch 9, item 63
+# Base: apply after 0062.
+#
+# Goal:
+#   after GPU0 assembles the full row-split output, the next dual-GPU group
+#   consumes that device-resident vector without CPU materialization.
+#
+# Since peer copy is not proven, GPU0 performs ONE bounded readback of the full
+# next input and the existing resident-input mirrors broadcast it once/card.
+# This replaces many per-matrix materializations with one group boundary.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0063_resident_output_next_group_broadcast.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool ImportHostRowsIntoFullOutput(
+@@
+         uint32_t fullRows,uint32_t batch);
++    bool DownloadResidentFullOutput(
++        float* dst,uint32_t rows,uint32_t batch);
++    uint64_t FullOutputBoundaryBytes() const noexcept {
++        return fullOutputBoundaryBytes_;
++    }
+@@
+ private:
++    uint64_t fullOutputBoundaryBytes_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::DownloadResidentFullOutput(
++    float* dst,uint32_t rows,uint32_t batch)
++{
++    if(!dst||!residentFullOutput_||
++       rows>residentFullOutputRows_||
++       batch>residentFullOutputBatch_)
++        return false;
++    const size_t bytes=(size_t)rows*batch*sizeof(float);
++    if(!downloadFromBuffer(residentFullOutput_,dst,bytes))
++        return false;
++    fullOutputBoundaryBytes_+=bytes;
++    return true;
++}

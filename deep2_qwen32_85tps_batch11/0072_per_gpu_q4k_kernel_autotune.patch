@@ -1,0 +1,195 @@
+# Deep2 Qwen32 85TPS — Batch 11, item 72
+# Base: apply after 0071.
+#
+# Adds per-device/per-geometry warmup autotuning between:
+#   4-row tiled kernel
+#   8-row tiled kernel
+#
+# The winner is cached by (rows, cols, batch). Normal decode never performs
+# repeated benchmarking after a choice is sealed.
+#
+# Env:
+#   DEEP2_Q4K_AUTOTUNE=0       disable autotune, retain 4-row path
+#   DEEP2_Q4K_FORCE_TILE=4|8   force one optimized kernel for diagnostics
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0072_per_gpu_q4k_kernel_autotune.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    enum class Q4KBatchTile : uint8_t { Four=4, Eight=8 };
++    struct Q4KTileKey {
++        uint32_t rows=0,cols=0,batch=0;
++        bool operator==(const Q4KTileKey& o) const noexcept {
++            return rows==o.rows&&cols==o.cols&&batch==o.batch;
++        }
++    };
++    struct Q4KTileKeyHash {
++        size_t operator()(const Q4KTileKey& k) const noexcept {
++            return ((size_t)k.rows<<32)^((size_t)k.cols<<5)^k.batch;
++        }
++    };
++    struct Q4KTileChoice {
++        Q4KBatchTile tile=Q4KBatchTile::Four;
++        uint64_t fourNs=0,eightNs=0;
++    };
+@@
+     bool DispatchGemvQ4KBatch4Row(
+@@
+         uint32_t rows,uint32_t cols,uint32_t batch);
++    bool DispatchGemvQ4KBatch8Row(
++        const void* weights,size_t weightBytes,
++        DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++        uint32_t rows,uint32_t cols,uint32_t batch);
++    Q4KBatchTile SelectQ4KBatchTile(
++        const void* weights,size_t weightBytes,
++        DeviceBuf& inputBatch,DeviceBuf& scratchOutput,
++        uint32_t rows,uint32_t cols,uint32_t batch);
+@@
+     VkPipeline qBatch4RowPipeline_ = VK_NULL_HANDLE;
+     VkPipelineLayout qBatch4RowPipelineLayout_ = VK_NULL_HANDLE;
++    VkPipeline qBatch8RowPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout qBatch8RowPipelineLayout_ = VK_NULL_HANDLE;
++    std::unordered_map<Q4KTileKey,Q4KTileChoice,Q4KTileKeyHash>
++        q4kTileChoices_;
+@@
+     uint64_t Q4KBatch4RowOps() const noexcept { return q4kBatch4RowOps_; }
++    uint64_t Q4KBatch8RowOps() const noexcept { return q4kBatch8RowOps_; }
++    uint64_t Q4KAutotuneRuns() const noexcept { return q4kAutotuneRuns_; }
+@@
+     uint64_t q4kBatch4RowOps_=0;
++    uint64_t q4kBatch8RowOps_=0;
++    uint64_t q4kAutotuneRuns_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+     const std::string q4r = shaderPath("deep2_qgemv_batch4row.spv");
++    const std::string q8r = shaderPath("deep2_qgemv_batch8row.spv");
+@@
+     if(!q4r.empty())
+         (void)createPipelineFromFile(
+             q4r,qSetLayout_,sizeof(QBatchPush),
+             qBatch4RowPipelineLayout_,qBatch4RowPipeline_);
++    if(!q8r.empty())
++        (void)createPipelineFromFile(
++            q8r,qSetLayout_,sizeof(QBatchPush),
++            qBatch8RowPipelineLayout_,qBatch8RowPipeline_);
+@@
+ }
++
++bool VulkanCompute::DispatchGemvQ4KBatch8Row(
++    const void* weights,size_t weightBytes,
++    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++    uint32_t rows,uint32_t cols,uint32_t batch)
++{
++    if(!qBatch8RowPipeline_||!weights||!weightBytes||
++       !rows||!cols||!batch||batch>4) return false;
++    DeviceBuf* wb=nullptr;
++    if(!ensureWeightQuant(12,weights,weightBytes,wb)) return false;
++    VkCommandBuffer cmd=fusedCmd_;
++    VkQueryPool query=fusedQuery_;
++    const bool own=!fused_;
++    if(own&&!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getQuantDescriptor(*wb,inputBatch,outputBatch);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch8RowPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatch8RowPipelineLayout_,
++        0,1,&set,0,nullptr);
++    QBatchPush p{};
++    p.type=12;p.rows=rows;p.cols=cols;
++    p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
++    vkCmdPushConstants(
++        cmd,qBatch8RowPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    vkCmdDispatch(cmd,(rows+7u)/8u,1,1);
++    recordComputeBarrier(cmd);
++    ++q4kBatch8RowOps_;
++    q4kBatchWeightBytes_+=weightBytes;
++    if(!own) return true;
++    uint64_t elapsed=0;
++    const bool ok=endSubmitWait(
++        cmd,query,GpuWorkKind::ModelCompute,
++        weightBytes,workEpoch_,&elapsed);
++    if(ok) q4kBatchGpuNs_+=elapsed;
++    return ok;
++}
++
++VulkanCompute::Q4KBatchTile VulkanCompute::SelectQ4KBatchTile(
++    const void* weights,size_t weightBytes,
++    DeviceBuf& inputBatch,DeviceBuf& scratchOutput,
++    uint32_t rows,uint32_t cols,uint32_t batch)
++{
++    const char* force=std::getenv("DEEP2_Q4K_FORCE_TILE");
++    if(force&&force[0]=='8') return Q4KBatchTile::Eight;
++    if(force&&force[0]=='4') return Q4KBatchTile::Four;
++    const char* at=std::getenv("DEEP2_Q4K_AUTOTUNE");
++    if(at&&at[0]=='0') return Q4KBatchTile::Four;
++
++    Q4KTileKey key{rows,cols,batch};
++    auto it=q4kTileChoices_.find(key);
++    if(it!=q4kTileChoices_.end()) return it->second.tile;
++
++    // Autotune is warmup-only and only when not inside an existing fused cmd.
++    // If called during fused execution, defer the choice to 4-row until a
++    // standalone warmup call seals this geometry.
++    if(fused_||!qBatch8RowPipeline_) return Q4KBatchTile::Four;
++
++    auto timeOne=[&](Q4KBatchTile t)->uint64_t {
++        uint64_t before=q4kBatchGpuNs_;
++        bool ok=t==Q4KBatchTile::Eight
++            ? DispatchGemvQ4KBatch8Row(
++                weights,weightBytes,inputBatch,scratchOutput,
++                rows,cols,batch)
++            : DispatchGemvQ4KBatch4Row(
++                weights,weightBytes,inputBatch,scratchOutput,
++                rows,cols,batch);
++        if(!ok) return UINT64_MAX;
++        return q4kBatchGpuNs_-before;
++    };
++    const uint64_t n4=timeOne(Q4KBatchTile::Four);
++    const uint64_t n8=timeOne(Q4KBatchTile::Eight);
++    Q4KTileChoice c{};
++    c.fourNs=n4;c.eightNs=n8;
++    c.tile=(n8<n4)?Q4KBatchTile::Eight:Q4KBatchTile::Four;
++    q4kTileChoices_[key]=c;
++    ++q4kAutotuneRuns_;
++    return c.tile;
++}
+@@
+ bool VulkanCompute::DispatchGemvQ4KBatch(
+@@
+ {
+-    if(type==12 && rows>=4 && qBatch4RowPipeline_)
+-        return DispatchGemvQ4KBatch4Row(
+-            weights,weightBytes,inputBatch,outputBatch,
+-            rows,cols,batch);
++    if(type==12 && rows>=4 && qBatch4RowPipeline_) {
++        const Q4KBatchTile tile=SelectQ4KBatchTile(
++            weights,weightBytes,inputBatch,outputBatch,
++            rows,cols,batch);
++        if(tile==Q4KBatchTile::Eight && rows>=8 && qBatch8RowPipeline_)
++            return DispatchGemvQ4KBatch8Row(
++                weights,weightBytes,inputBatch,outputBatch,
++                rows,cols,batch);
++        return DispatchGemvQ4KBatch4Row(
++            weights,weightBytes,inputBatch,outputBatch,
++            rows,cols,batch);
++    }
+@@
+     if(device_ && qBatch4RowPipeline_)
+         vkDestroyPipeline(device_,qBatch4RowPipeline_,nullptr);
++    if(device_ && qBatch8RowPipeline_)
++        vkDestroyPipeline(device_,qBatch8RowPipeline_,nullptr);
+@@
+     if(device_ && qBatch4RowPipelineLayout_)
+         vkDestroyPipelineLayout(
+             device_,qBatch4RowPipelineLayout_,nullptr);
++    if(device_ && qBatch8RowPipelineLayout_)
++        vkDestroyPipelineLayout(
++            device_,qBatch8RowPipelineLayout_,nullptr);

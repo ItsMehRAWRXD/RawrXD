@@ -1,0 +1,88 @@
+# Deep2 Qwen32 85TPS — Batch 16, item 97
+# Base: apply after 0096.
+#
+# Goal:
+#   remove the two host->device uploads from Batch-15 speculative acceptance
+#   when target top-1 IDs and proposal IDs already exist in device buffers.
+#
+# The existing shader is reused. Only the compact 3xuint32 result is read back.
+# Greedy token semantics are unchanged.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0097_device_resident_spec_accept.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool RunSpecAcceptPrefixResident(
++        DeviceBuf& targetIds,DeviceBuf& proposalIds,
++        uint32_t count,SpecAcceptResult& result);
++    uint64_t SpecAcceptResidentOps() const noexcept {
++        return specAcceptResidentOps_;
++    }
++    uint64_t SpecAcceptInputUploadBytes() const noexcept {
++        return specAcceptInputUploadBytes_;
++    }
+@@
+ private:
++    uint64_t specAcceptResidentOps_=0;
++    uint64_t specAcceptInputUploadBytes_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::RunSpecAcceptPrefix(
+     const uint32_t* target,const uint32_t* proposal,
+     uint32_t count,SpecAcceptResult& result)
+ {
+@@
+     if(!UploadVector(t,target,count)||!UploadVector(p,proposal,count))
+         return false;
++    specAcceptInputUploadBytes_ +=
++        (uint64_t)count*sizeof(uint32_t)*2ull;
+@@
+ }
++
++bool VulkanCompute::RunSpecAcceptPrefixResident(
++    DeviceBuf& targetIds,DeviceBuf& proposalIds,
++    uint32_t count,SpecAcceptResult& result)
++{
++    result={};
++    if(!targetIds||!proposalIds||!count||count>4||!specAcceptPipeline_)
++        return false;
++    if(!EnsureScratch(162,3)||!EnsureScratch(163,1))
++        return false;
++    auto& o=Scratch(162);
++    auto& d=Scratch(163);
++
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getOpsDescriptor(targetIds,proposalIds,o,d);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAcceptPipelineLayout_,
++        0,1,&set,0,nullptr);
++    vkCmdPushConstants(
++        cmd,specAcceptPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(count),&count);
++    vkCmdDispatch(cmd,1,1,1);
++    recordComputeBarrier(cmd);
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr))
++        return false;
++
++    uint32_t h[3]{};
++    if(!DownloadVector(o,h,3)) return false;
++    result.accepted=h[0];
++    result.replacement=h[1];
++    result.bonus=h[2];
++    ++specAcceptGpuOps_;
++    ++specAcceptResidentOps_;
++    return true;
++}

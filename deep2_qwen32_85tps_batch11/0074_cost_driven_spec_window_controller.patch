@@ -1,0 +1,88 @@
+# Deep2 Qwen32 85TPS — Batch 11, item 74
+# Base: apply after 0073.
+#
+# Replaces coarse acceptance thresholds with measured window economics.
+#
+# For windows 2/3/4 the controller records:
+#   verified output tokens
+#   target verification nanoseconds
+#   attempts
+#
+# After one sample/window, choose the window with the highest observed
+# VERIFIED TOKENS / TARGET SECOND. This automatically accounts for both
+# acceptance rate and how efficiently the selected Q4_K kernel handles batch N.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0074_cost_driven_spec_window_controller.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+ struct SpeculativeCounters {
+@@
+     uint64_t pipelineWindows=0;
++    uint64_t windowAttempts[5]{};
++    uint64_t windowVerified[5]{};
++    uint64_t windowVerifyNs[5]{};
++    uint64_t costControllerSelections=0;
+ };
+
+diff --git a/~dev/rawrxd/src/deep2/MedusaDecoder.hpp b/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
+--- a/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
++++ b/~dev/rawrxd/src/deep2/MedusaDecoder.hpp
+@@
+     uint32_t suggestedWindow() const noexcept {
+@@
+     }
++    uint32_t suggestedWindowByMeasuredCost() noexcept {
++        // Explore each legal window once before exploiting the measured best.
++        for(uint32_t w=2;w<=4;++w)
++            if(stats.exact.windowAttempts[w]==0)
++                return w;
++
++        uint32_t best=2;
++        long double bestRate=-1.0L;
++        for(uint32_t w=2;w<=4;++w) {
++            const uint64_t ns=stats.exact.windowVerifyNs[w];
++            const uint64_t tok=stats.exact.windowVerified[w];
++            if(!ns) continue;
++            const long double rate=
++                (long double)tok*1000000000.0L/(long double)ns;
++            if(rate>bestRate) {bestRate=rate;best=w;}
++        }
++        ++stats.exact.costControllerSelections;
++        return best;
++    }
++    void recordWindowCost(uint32_t window,uint64_t verified,uint64_t ns) {
++        if(window<2||window>4||!ns) return;
++        ++stats.exact.windowAttempts[window];
++        stats.exact.windowVerified[window]+=verified;
++        stats.exact.windowVerifyNs[window]+=ns;
++    }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+-    const uint32_t win=std::min<uint32_t>(
+-        medusaDecoder_->suggestedWindow(),
++    const uint32_t win=std::min<uint32_t>(
++        medusaDecoder_->suggestedWindowByMeasuredCost(),
+         (uint32_t)std::min<size_t>(4,remaining-1));
+@@
+ bool Deep2Engine::verifySpeculativeGreedyWindow(
+@@
+-    if(medusaDecoder_) {
+-        medusaDecoder_->stats.exact.verifyNs += (uint64_t)
+-            std::chrono::duration_cast<std::chrono::nanoseconds>(
+-                std::chrono::steady_clock::now()-__v0).count();
++    if(medusaDecoder_) {
++        const uint64_t __verifyNs=(uint64_t)
++            std::chrono::duration_cast<std::chrono::nanoseconds>(
++                std::chrono::steady_clock::now()-__v0).count();
++        medusaDecoder_->stats.exact.verifyNs += __verifyNs;
++        medusaDecoder_->recordWindowCost(
++            (uint32_t)B,(uint64_t)verified.size(),__verifyNs);
+         ++medusaDecoder_->stats.exact.pipelineWindows;
+     }

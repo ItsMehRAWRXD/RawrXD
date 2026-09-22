@@ -1,0 +1,2 @@
+#pragma once
+// [RAWRXD_BUILD_AUTHORITY_BASELINE_001] stub

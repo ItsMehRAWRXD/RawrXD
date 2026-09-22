@@ -1,0 +1,77 @@
+# Deep2 Qwen32 40TPS — Batch 1/5, item 2
+# Base: apply after 0001.
+# Goal: upload Qwen attn_norm + ffn_norm once, not twice per layer per token.
+#
+# Current path calls UploadNormWeight(), which creates a staging buffer,
+# submits a transfer, waits, and destroys staging every call.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0002_resident_norm_weights.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool UploadNormWeight(DeviceBuf& dst, const float* src, size_t count);
++
++    // Resolve an F32 tensor into the persistent device weight cache.
++    // The returned pointer remains valid until cache eviction/cleanup.
++    DeviceBuf* ResolveResidentF32(const float* src, uint64_t key, size_t count);
+
+     bool BeginFusedLayer();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::UploadNormWeight(
+     DeviceBuf& dst, const float* src, size_t count)
+ {
+     return src && count*sizeof(float) <= dst.size &&
+            uploadToBuffer(dst, src, count*sizeof(float));
+ }
+
++VulkanCompute::DeviceBuf* VulkanCompute::ResolveResidentF32(
++    const float* src, uint64_t key, size_t count)
++{
++    if (!src || !count ||
++        count > std::numeric_limits<size_t>::max() / sizeof(float))
++        return nullptr;
++    DeviceBuf* out = nullptr;
++    if (!ensureWeightF32(src, key, count * sizeof(float), out))
++        return nullptr;
++    return out;
++}
++
+ bool VulkanCompute::BeginFusedLayer() {
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+@@
+     if (attnW)
+         DualStickAcquire(slot, attnW, (size_t)H * sizeof(float), 0, layer, 0);
+     else
+         DualStickResolve(slot, layer);
+-    if (!attnW || !vc->UploadNormWeight(vc->ArenaAttnW(), attnW, H)) return fail();
++    if (!attnW) return fail();
++    auto* attnNormBuf =
++        vc->ResolveResidentF32(attnW, WeightKey(lw.attnNorm), H);
++    if (!attnNormBuf) return fail();
++
+     const float* ffnW = EnsureF32(*this, lw.ffnNorm, vulkanWeightF32_);
+-    if (!ffnW || !vc->UploadNormWeight(vc->ArenaFfnW(), ffnW, H)) return fail();
++    if (!ffnW) return fail();
++    auto* ffnNormBuf =
++        vc->ResolveResidentF32(ffnW, WeightKey(lw.ffnNorm), H);
++    if (!ffnNormBuf) return fail();
+@@
+-    if (!vc->DispatchRmsNorm(vc->ArenaHidden(), vc->ArenaAttnW(), vc->ArenaNormed(),
++    if (!vc->DispatchRmsNorm(vc->ArenaHidden(), *attnNormBuf, vc->ArenaNormed(),
+                              H, modelWeights.normEps))
+         return fail();
+@@
+-    if (!vc->DispatchRmsNorm(vc->ArenaResidual(), vc->ArenaFfnW(), vc->ArenaNormed(),
++    if (!vc->DispatchRmsNorm(vc->ArenaResidual(), *ffnNormBuf, vc->ArenaNormed(),
+                              H, modelWeights.normEps))
+         return fail();

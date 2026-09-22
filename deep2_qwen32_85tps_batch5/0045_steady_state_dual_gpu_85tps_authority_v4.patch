@@ -1,0 +1,112 @@
+# Deep2 Qwen32 85TPS — Batch 5/5, item 45
+# Base: apply after 0044.
+#
+# Closure authority:
+# - explicitly reports GPU1 readiness
+# - warmup run is excluded
+# - two independent >=128-token measured runs
+# - BOTH runs must retain exact 16-token ordinary-greedy parity witness
+# - BOTH measured runs must be >=85 verified output TPS
+# - requires persistent KV mirror evidence
+#
+# No PASS is minted if GPU1 device creation still fails.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0045_steady_state_dual_gpu_85tps_authority_v4.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+         "DUAL_COLUMN_SPLIT_OPS=%llu\n"
++        "KV_MIRROR_PREFIX_UPLOADS=%llu\n"
++        "KV_MIRROR_DELTA_TOKENS=%llu\n"
++        "KV_MIRROR_RESIDENT_ATTN=%llu\n"
+@@
+         (unsigned long long)c.dualColumnSplitOps,
++        (unsigned long long)c.kvMirrorPrefixUploads,
++        (unsigned long long)c.kvMirrorDeltaTokens,
++        (unsigned long long)c.kvMirrorResidentAttn,
+@@
+         measuredOutputTPS);
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+ int main(int argc,char** argv) {
+@@
+-    size_t measure=128;
++    size_t measure=256;
+     if(argc>2) {
+         long v=std::strtol(argv[2],nullptr,10);
+-        if(v>=32&&v<=2048) measure=(size_t)v;
++        if(v>=128&&v<=2048) measure=(size_t)v;
+@@
+-    spec.reset();
+-    spec.enableVerifiedSpeculation(true,4);
+-    InferenceStats ms{};
+-    auto measured=run(spec,prompt,measure,ms);
+-    const auto& sc=spec.speculativeCounters();
+-    const double tps=ms.decodeMs>0.0
+-        ? (double)measured.size()/(ms.decodeMs*0.001):0.0;
++    // Warm resident/speculative structures. Not part of measured authority.
++    spec.reset();
++    spec.enableVerifiedSpeculation(true,4);
++    InferenceStats warmStats{};
++    (void)run(spec,prompt,32,warmStats);
++
++    double tpsRun[2]={0.0,0.0};
++    SpeculativeCounters runCounters[2]{};
++    bool runEnough[2]={false,false};
++    for(int r=0;r<2;++r) {
++        spec.reset();
++        spec.enableVerifiedSpeculation(true,4);
++        InferenceStats ms{};
++        auto measured=run(spec,prompt,measure,ms);
++        runCounters[r]=spec.speculativeCounters();
++        runEnough[r]=measured.size()>=measure;
++        tpsRun[r]=ms.decodeMs>0.0
++            ? (double)measured.size()/(ms.decodeMs*0.001):0.0;
++    }
++    const auto& sc=runCounters[1];
++    const double tps=std::min(tpsRun[0],tpsRun[1]);
+@@
+-    const bool enough=measured.size()>=measure;
++    const bool enough=runEnough[0]&&runEnough[1];
+     const bool gpu=spec.vulkanDeviceCount()>=2 &&
+                    !spec.vulkanStrictViolation() &&
+                    spec.vulkanUnplannedFallbacks()==0;
++    const bool gpu1Ready=spec.vulkanDeviceCount()>=2;
+@@
+     const bool batch4Gpu=
+@@
+         sc.dualColumnSplitOps>0;
++    const bool persistentKv=
++        sc.kvMirrorResidentAttn>0 &&
++        sc.kvMirrorDeltaTokens>0;
++    const bool both85=tpsRun[0]>=85.0&&tpsRun[1]>=85.0;
+     const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
+-                    batch4Gpu&&tps>=85.0;
++                    batch4Gpu&&persistentKv&&gpu1Ready&&both85;
+@@
+         "GPU_DEVICES=%u\n"
++        "GPU1_DEVICE_READY=%u\n"
+@@
+         "BATCH4_GPU_STRUCTURES=%s\n"
+-        "DECODE_TPS_REAL_VERIFIED=%.6f\n"
++        "KV_MIRROR_PERSISTENT=%s\n"
++        "STEADY_RUN0_TPS=%.6f\n"
++        "STEADY_RUN1_TPS=%.6f\n"
++        "DECODE_TPS_REAL_VERIFIED_MIN=%.6f\n"
+@@
+         spec.vulkanDeviceCount(),
++        gpu1Ready?1u:0u,
+@@
+         batch4Gpu?"PASS":"FAIL",
+-        tps,pass?"PASS":"HOLD");
++        persistentKv?"PASS":"FAIL",
++        tpsRun[0],tpsRun[1],tps,
++        pass?"PASS":"HOLD");
+     return pass?0:1;
+ }

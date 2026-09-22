@@ -1,0 +1,60 @@
+# Deep2 Qwen32 85TPS — Batch 4/5, item 40
+# Base: apply after 0039.
+#
+# Strengthens the REAL 85 TPS gate. A run cannot PASS merely because a fast
+# fallback path generated tokens: it must prove the new Batch-4 structures
+# actually executed.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0040_85tps_authority_v3_structural_counters.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+         "VERIFIED_OUTPUT_TOKENS=%llu\n"
++        "GPU_BATCH_NORM_OPS=%llu\n"
++        "GPU_BATCH_SWIGLU_OPS=%llu\n"
++        "GPU_BATCH_ATTENTION_OPS=%llu\n"
++        "DUAL_COLUMN_SPLIT_OPS=%llu\n"
+@@
+         (unsigned long long)c.verifiedOutputTokens,
++        (unsigned long long)c.gpuBatchNormOps,
++        (unsigned long long)c.gpuBatchSwiGLUOps,
++        (unsigned long long)c.gpuBatchAttentionOps,
++        (unsigned long long)c.dualColumnSplitOps,
+@@
+         c.acceptedPerTargetPass(),c.verifiedPerTargetPass(),
+         measuredOutputTPS);
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const bool top1Gpu=sc.gpuTop1Batches>0;
+     const bool realDraft=sc.selfDraftWindows>0||sc.ngramDraftWindows>0;
+-    const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
+-                    tps>=85.0;
++    const bool batch4Gpu=
++        sc.gpuBatchNormOps>0 &&
++        sc.gpuBatchSwiGLUOps>0 &&
++        sc.gpuBatchAttentionOps>0 &&
++        sc.dualColumnSplitOps>0;
++    const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
++                    batch4Gpu&&tps>=85.0;
+@@
+         "ACCEPTANCE_EWMA=%.6f\n"
++        "GPU_BATCH_NORM_OPS=%llu\n"
++        "GPU_BATCH_SWIGLU_OPS=%llu\n"
++        "GPU_BATCH_ATTENTION_OPS=%llu\n"
++        "DUAL_COLUMN_SPLIT_OPS=%llu\n"
++        "BATCH4_GPU_STRUCTURES=%s\n"
+         "DECODE_TPS_REAL_VERIFIED=%.6f\n"
+@@
+         sc.acceptanceEwma,
++        (unsigned long long)sc.gpuBatchNormOps,
++        (unsigned long long)sc.gpuBatchSwiGLUOps,
++        (unsigned long long)sc.gpuBatchAttentionOps,
++        (unsigned long long)sc.dualColumnSplitOps,
++        batch4Gpu?"PASS":"FAIL",
+         tps,pass?"PASS":"HOLD");

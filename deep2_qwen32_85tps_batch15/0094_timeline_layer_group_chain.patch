@@ -1,0 +1,75 @@
+# Deep2 Qwen32 85TPS — Batch 15, item 94
+# Base: apply after 0093.
+#
+# Goal:
+#   use timeline values to chain coarse layer groups on the primary GPU:
+#
+#   QKV-group -> attention/O -> GateUp-group -> Down/residual -> next layer
+#
+# This does not reorder transformer dependencies. It removes host waits between
+# groups whose dependencies can be expressed by the device timeline.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0094_timeline_layer_group_chain.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct LayerTimelineState {
++        uint64_t qkvDone=0;
++        uint64_t attnDone=0;
++        uint64_t gateUpDone=0;
++        uint64_t layerDone=0;
++    };
++    bool SubmitTimelineCommand(
++        VkCommandBuffer cmd,VkQueue q,
++        uint64_t waitValue,uint64_t signalValue,
++        VkPipelineStageFlags waitStage);
++    uint64_t LayerTimelineChains() const noexcept {
++        return layerTimelineChains_;
++    }
+@@
+ private:
++    uint64_t layerTimelineChains_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::SubmitTimelineCommand(
++    VkCommandBuffer cmd,VkQueue q,
++    uint64_t waitValue,uint64_t signalValue,
++    VkPipelineStageFlags waitStage)
++{
++    if(!TimelineSemaphoreEnabled()||cmd==VK_NULL_HANDLE||q==VK_NULL_HANDLE||
++       !signalValue)
++        return false;
++    VkTimelineSemaphoreSubmitInfo ti{};
++    ti.sType=VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
++    if(waitValue) {
++        ti.waitSemaphoreValueCount=1;
++        ti.pWaitSemaphoreValues=&waitValue;
++    }
++    ti.signalSemaphoreValueCount=1;
++    ti.pSignalSemaphoreValues=&signalValue;
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.pNext=&ti;
++    if(waitValue) {
++        si.waitSemaphoreCount=1;
++        si.pWaitSemaphores=&timelineSemaphore_;
++        si.pWaitDstStageMask=&waitStage;
++    }
++    si.commandBufferCount=1;
++    si.pCommandBuffers=&cmd;
++    si.signalSemaphoreCount=1;
++    si.pSignalSemaphores=&timelineSemaphore_;
++    if(vkQueueSubmit(q,1,&si,VK_NULL_HANDLE)!=VK_SUCCESS)
++        return false;
++    ++timelineSignals_;
++    ++queueSubmitCount_;
++    ++layerTimelineChains_;
++    return true;
++}

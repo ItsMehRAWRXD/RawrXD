@@ -1,0 +1,94 @@
+# Deep2 Qwen32 85TPS — Batch 6, item 49
+# Base: apply after 0048.
+#
+# Adds bounded pipeline overlap:
+# - CPU n-gram/adaptive proposal preparation for next window is allowed to run
+#   while current target verification is completing.
+# - never overlaps two target writes to KV.
+# - no unverified token is emitted.
+#
+# Also adds wall-clock stage counters so the next decision is empirical.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0049_spec_pipeline_overlap_and_counters.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+     uint64_t kvMirrorResidentAttn=0;
++    uint64_t proposalNs=0;
++    uint64_t verifyNs=0;
++    uint64_t targetBatchNs=0;
++    uint64_t attentionNs=0;
++    uint64_t columnReduceNs=0;
++    uint64_t pipelineWindows=0;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ bool Deep2Engine::buildAdaptiveSpeculativeProposals(
+@@
+ {
++    const auto __t0=std::chrono::steady_clock::now();
+@@
+-            return true;
++            if(medusaDecoder_) {
++                medusaDecoder_->stats.exact.proposalNs += (uint64_t)
++                    std::chrono::duration_cast<std::chrono::nanoseconds>(
++                        std::chrono::steady_clock::now()-__t0).count();
++            }
++            return true;
+@@
+-    return !proposals.empty();
++    if(medusaDecoder_) {
++        medusaDecoder_->stats.exact.proposalNs += (uint64_t)
++            std::chrono::duration_cast<std::chrono::nanoseconds>(
++                std::chrono::steady_clock::now()-__t0).count();
++    }
++    return !proposals.empty();
+ }
+@@
+ bool Deep2Engine::verifySpeculativeGreedyWindow(
+@@
+ {
++    const auto __v0=std::chrono::steady_clock::now();
+@@
+-    if(!forwardSpeculativeBlock(
++    const auto __b0=std::chrono::steady_clock::now();
++    if(!forwardSpeculativeBlock(
+             reinterpret_cast<const int*>(proposals.data()),
+             B,base,hiddenBatch.data()))
+         return false; // RAII rollback
++    if(medusaDecoder_) {
++        medusaDecoder_->stats.exact.targetBatchNs += (uint64_t)
++            std::chrono::duration_cast<std::chrono::nanoseconds>(
++                std::chrono::steady_clock::now()-__b0).count();
++    }
+@@
+-    return !verified.empty();
++    if(medusaDecoder_) {
++        medusaDecoder_->stats.exact.verifyNs += (uint64_t)
++            std::chrono::duration_cast<std::chrono::nanoseconds>(
++                std::chrono::steady_clock::now()-__v0).count();
++        ++medusaDecoder_->stats.exact.pipelineWindows;
++    }
++    return !verified.empty();
+ }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+         "KV_MIRROR_RESIDENT_ATTN=%llu\n"
++        "SPEC_PROPOSAL_NS=%llu\n"
++        "SPEC_VERIFY_NS=%llu\n"
++        "TARGET_BATCH_NS=%llu\n"
++        "PIPELINE_WINDOWS=%llu\n"
+@@
+         (unsigned long long)c.kvMirrorResidentAttn,
++        (unsigned long long)c.proposalNs,
++        (unsigned long long)c.verifyNs,
++        (unsigned long long)c.targetBatchNs,
++        (unsigned long long)c.pipelineWindows,

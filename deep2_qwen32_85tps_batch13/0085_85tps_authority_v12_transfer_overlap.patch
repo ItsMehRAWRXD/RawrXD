@@ -1,0 +1,110 @@
+# Deep2 Qwen32 85TPS — Batch 13, item 85
+# Base: apply after 0084.
+#
+# Authority v12:
+# - retains all earlier parity/residency/kernel/3x85 predicates
+# - reports compute vs transfer queue families
+# - requires transfer ring activity
+# - requires three-stage speculative scheduler activity
+# - if a dedicated transfer queue is exposed, it must actually submit work
+#
+# Dedicated transfer queue is NOT required when hardware/driver exposes only
+# the compute queue; the receipt makes this explicit.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0085_85tps_authority_v12_transfer_overlap.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotDownloadRingWaitNs(unsigned slot) const;
++    bool vulkanSlotHasDedicatedTransferQueue(unsigned slot) const;
++    uint32_t vulkanSlotComputeQueueFamily(unsigned slot) const;
++    uint32_t vulkanSlotTransferQueueFamily(unsigned slot) const;
++    uint64_t vulkanSlotTransferQueueSubmits(unsigned slot) const;
++    uint64_t vulkanSlotTransferRingOverlapNs(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++bool Deep2Engine::vulkanSlotHasDedicatedTransferQueue(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc&&vc->HasDedicatedTransferQueue();
++}
++uint32_t Deep2Engine::vulkanSlotComputeQueueFamily(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->ComputeQueueFamily():UINT32_MAX;
++}
++uint32_t Deep2Engine::vulkanSlotTransferQueueFamily(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TransferQueueFamily():UINT32_MAX;
++}
++uint64_t Deep2Engine::vulkanSlotTransferQueueSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TransferQueueSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotTransferRingOverlapNs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->TransferRingOverlapNs():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t dwWarm=spec.vulkanSlotDownloadRingWaitNs(1);
++    const bool dtq0=spec.vulkanSlotHasDedicatedTransferQueue(0);
++    const bool dtq1=spec.vulkanSlotHasDedicatedTransferQueue(1);
++    const uint32_t cqf0=spec.vulkanSlotComputeQueueFamily(0);
++    const uint32_t cqf1=spec.vulkanSlotComputeQueueFamily(1);
++    const uint32_t tqf0=spec.vulkanSlotTransferQueueFamily(0);
++    const uint32_t tqf1=spec.vulkanSlotTransferQueueFamily(1);
++    const uint64_t tq0Warm=spec.vulkanSlotTransferQueueSubmits(0);
++    const uint64_t tq1Warm=spec.vulkanSlotTransferQueueSubmits(1);
+@@
+     const uint64_t dwEnd=spec.vulkanSlotDownloadRingWaitNs(1);
++    const uint64_t tq0End=spec.vulkanSlotTransferQueueSubmits(0);
++    const uint64_t tq1End=spec.vulkanSlotTransferQueueSubmits(1);
+@@
+     const bool asyncOverlapPath=
+@@
+         asyncWaitNs>0;
++    const bool transferQueueUsed=
++        (!dtq0 || tq0End>tq0Warm) &&
++        (!dtq1 || tq1End>tq1Warm);
++    const bool threeStage=
++        sc.pipelinePrepareWindows>0 &&
++        sc.pipelineVerifyWindows>0 &&
++        sc.pipelineCommitWindows>0;
+@@
+-                    costController&&asyncOverlapPath;
++                    costController&&asyncOverlapPath&&transferQueueUsed&&
++                    threeStage;
+@@
+         "ASYNC_DUAL_GPU_PATH=%s\n"
++        "GPU0_COMPUTE_QUEUE_FAMILY=%u\n"
++        "GPU1_COMPUTE_QUEUE_FAMILY=%u\n"
++        "GPU0_TRANSFER_QUEUE_FAMILY=%u\n"
++        "GPU1_TRANSFER_QUEUE_FAMILY=%u\n"
++        "GPU0_DEDICATED_TRANSFER_QUEUE=%u\n"
++        "GPU1_DEDICATED_TRANSFER_QUEUE=%u\n"
++        "GPU0_TRANSFER_QUEUE_SUBMITS_DELTA=%llu\n"
++        "GPU1_TRANSFER_QUEUE_SUBMITS_DELTA=%llu\n"
++        "PIPELINE_PREPARE_WINDOWS=%llu\n"
++        "PIPELINE_VERIFY_WINDOWS=%llu\n"
++        "PIPELINE_COMMIT_WINDOWS=%llu\n"
++        "TRANSFER_QUEUE_USED=%s\n"
++        "THREE_STAGE_SPEC_PIPELINE=%s\n"
+@@
+         asyncOverlapPath?"PASS":"FAIL",
++        cqf0,cqf1,tqf0,tqf1,
++        dtq0?1u:0u,dtq1?1u:0u,
++        (unsigned long long)(tq0End-tq0Warm),
++        (unsigned long long)(tq1End-tq1Warm),
++        (unsigned long long)sc.pipelinePrepareWindows,
++        (unsigned long long)sc.pipelineVerifyWindows,
++        (unsigned long long)sc.pipelineCommitWindows,
++        transferQueueUsed?"PASS":"FAIL",
++        threeStage?"PASS":"FAIL",

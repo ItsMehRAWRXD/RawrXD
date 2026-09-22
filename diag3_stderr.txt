@@ -1,0 +1,9 @@
+
+=== THRESHOLD ntok=1 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+[Deep2Engine] GGUF load failed: CreateFileA failed for --model
+SPEC_LOAD_END ok=0
+THRESHOLD_SETUP_FAIL ntok=1

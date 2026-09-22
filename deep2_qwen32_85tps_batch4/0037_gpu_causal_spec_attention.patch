@@ -1,0 +1,180 @@
+# Deep2 Qwen32 85TPS — Batch 4/5, item 37
+# Base: apply after 0036.
+# Goal: replace CPU score/softmax/value loops in speculative verification with
+# a causal 1..4-token Vulkan attention kernel. Host KV remains authority.
+#
+# Active KV is gathered in exact head-major order once per layer/window.
+# This is deliberately correctness-first; a later batch can keep that mirror
+# persistent on device.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0037_gpu_causal_spec_attention.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp b/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_spec_attn.comp
+@@
++#version 450
++layout(local_size_x=64) in;
++
++// Q [batch][heads][headDim]
++layout(set=0,binding=0,std430) readonly buffer Q0 { float q[]; };
++// K/V [kvHeads][seqLen][headDim], including speculative positions.
++layout(set=0,binding=1,std430) readonly buffer K0 { float k[]; };
++layout(set=0,binding=2,std430) readonly buffer V0 { float v[]; };
++// O [batch][heads][headDim]
++layout(set=0,binding=3,std430) writeonly buffer O0 { float o[]; };
++
++layout(push_constant) uniform Push {
++    uint headDim;
++    uint heads;
++    uint kvHeads;
++    uint seqLen;
++    uint basePos;
++    uint batch;
++    float scale;
++} pc;
++
++void main() {
++    uint gid=gl_GlobalInvocationID.x;
++    uint width=pc.heads*pc.headDim;
++    uint total=pc.batch*width;
++    if(gid>=total||pc.kvHeads==0u||pc.heads%pc.kvHeads!=0u) return;
++
++    uint token=gid/width;
++    uint rem=gid-token*width;
++    uint h=rem/pc.headDim;
++    uint od=rem-h*pc.headDim;
++    uint group=pc.heads/pc.kvHeads;
++    uint kh=h/group;
++    uint visible=min(pc.seqLen,pc.basePos+token+1u);
++    uint qb=token*width+h*pc.headDim;
++
++    float maxScore=-3.402823466e+38;
++    for(uint t=0u;t<visible;++t) {
++        uint kb=(kh*pc.seqLen+t)*pc.headDim;
++        float s=0.0;
++        for(uint d=0u;d<pc.headDim;++d)
++            s+=q[qb+d]*k[kb+d];
++        maxScore=max(maxScore,s*pc.scale);
++    }
++    float denom=0.0;
++    float numer=0.0;
++    for(uint t=0u;t<visible;++t) {
++        uint kb=(kh*pc.seqLen+t)*pc.headDim;
++        float s=0.0;
++        for(uint d=0u;d<pc.headDim;++d)
++            s+=q[qb+d]*k[kb+d];
++        float e=exp(s*pc.scale-maxScore);
++        denom+=e;
++        numer+=e*v[kb+od];
++    }
++    o[gid]=denom>0.0 ? numer/denom : 0.0;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1 b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+--- a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
++++ b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+@@
+ Compile-One (Join-Path $ShaderDir "deep2_spec_ops.comp") `
+             (Join-Path $ShaderDir "deep2_spec_ops.spv")
++Compile-One (Join-Path $ShaderDir "deep2_spec_attn.comp") `
++            (Join-Path $ShaderDir "deep2_spec_attn.spv")
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunSpecSwiGLUHostBatch(
+         const float* gate,const float* up,float* output,
+         uint32_t width,uint32_t batch,uint64_t epoch);
++    bool RunSpecAttentionHostBatch(
++        const float* q,const float* k,const float* v,float* output,
++        uint32_t heads,uint32_t kvHeads,uint32_t headDim,
++        uint32_t seqLen,uint32_t basePos,uint32_t batch,
++        uint64_t epoch);
+@@
+     VkPipeline specOpsPipeline_ = VK_NULL_HANDLE;
+     VkPipelineLayout specOpsPipelineLayout_ = VK_NULL_HANDLE;
++    VkPipeline specAttnPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout specAttnPipelineLayout_ = VK_NULL_HANDLE;
++    struct SpecAttnPush {
++        uint32_t headDim=0,heads=0,kvHeads=0,seqLen=0;
++        uint32_t basePos=0,batch=0;
++        float scale=1.0f;
++    };
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+     const std::string so = shaderPath("deep2_spec_ops.spv");
++    const std::string sa = shaderPath("deep2_spec_attn.spv");
+@@
+     if(!so.empty())
+         (void)createPipelineFromFile(
+             so,opsSetLayout_,sizeof(SpecOpsPush),
+             specOpsPipelineLayout_,specOpsPipeline_);
++    if(!sa.empty())
++        (void)createPipelineFromFile(
++            sa,opsSetLayout_,sizeof(SpecAttnPush),
++            specAttnPipelineLayout_,specAttnPipeline_);
+@@
+ }
++
++bool VulkanCompute::RunSpecAttentionHostBatch(
++    const float* q,const float* k,const float* v,float* output,
++    uint32_t heads,uint32_t kvHeads,uint32_t headDim,
++    uint32_t seqLen,uint32_t basePos,uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!q||!k||!v||!output||!heads||!kvHeads||!headDim||
++       !seqLen||!batch||batch>4||heads%kvHeads!=0)
++        return false;
++    SetWorkEpoch(epoch);
++    const size_t qn=(size_t)batch*heads*headDim;
++    const size_t kvn=(size_t)kvHeads*seqLen*headDim;
++    if(!EnsureScratch(100,qn)||!EnsureScratch(101,kvn)||
++       !EnsureScratch(102,kvn)||!EnsureScratch(103,qn))
++        return false;
++    auto& qb=Scratch(100);auto& kb=Scratch(101);
++    auto& vb=Scratch(102);auto& ob=Scratch(103);
++    if(!UploadVector(qb,q,qn)||!UploadVector(kb,k,kvn)||
++       !UploadVector(vb,v,kvn))
++        return false;
++
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getOpsDescriptor(qb,kb,vb,ob);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specAttnPipelineLayout_,
++        0,1,&set,0,nullptr);
++    SpecAttnPush p{};
++    p.headDim=headDim;p.heads=heads;p.kvHeads=kvHeads;
++    p.seqLen=seqLen;p.basePos=basePos;p.batch=batch;
++    p.scale=1.0f/std::sqrt((float)headDim);
++    vkCmdPushConstants(
++        cmd,specAttnPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    const uint32_t total=batch*heads*headDim;
++    vkCmdDispatch(cmd,(total+63u)/64u,1,1);
++    recordComputeBarrier(cmd);
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelCompute,0,epoch,nullptr))
++        return false;
++    return DownloadVector(ob,output,qn);
++}
+@@
+     if(device_ && specOpsPipeline_)
+         vkDestroyPipeline(device_,specOpsPipeline_,nullptr);
++    if(device_ && specAttnPipeline_)
++        vkDestroyPipeline(device_,specAttnPipeline_,nullptr);
+@@
+     if(device_ && specOpsPipelineLayout_)
+         vkDestroyPipelineLayout(device_,specOpsPipelineLayout_,nullptr);
++    if(device_ && specAttnPipelineLayout_)
++        vkDestroyPipelineLayout(device_,specAttnPipelineLayout_,nullptr);

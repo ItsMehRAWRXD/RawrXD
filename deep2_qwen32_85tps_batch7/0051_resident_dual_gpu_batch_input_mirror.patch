@@ -1,0 +1,78 @@
+# Deep2 Qwen32 85TPS — Batch 7, item 51
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-6
+#
+# Goal:
+#   upload one batch activation ONCE per GPU and reuse it across grouped
+#   Q/K/V or Gate/Up weight dispatches.
+#
+# No peer-memory requirement. Each GPU owns a persistent resident input mirror.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0051_resident_dual_gpu_batch_input_mirror.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool EnsureResidentBatchInput(uint32_t cols,uint32_t batch);
++    bool UploadResidentBatchInput(const float* input,uint32_t cols,
++                                  uint32_t batch,uint64_t epoch);
++    DeviceBuf& ResidentBatchInput() noexcept { return residentBatchInput_; }
++    uint64_t ResidentBatchInputUploads() const noexcept {
++        return residentBatchInputUploads_;
++    }
+@@
+ private:
++    DeviceBuf residentBatchInput_{};
++    uint32_t residentBatchCols_=0;
++    uint32_t residentBatchCapacity_=0;
++    uint64_t residentBatchInputUploads_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::EnsureResidentBatchInput(
++    uint32_t cols,uint32_t batch)
++{
++    if(!cols||!batch||batch>4) return false;
++    if(residentBatchInput_ &&
++       residentBatchCols_>=cols &&
++       residentBatchCapacity_>=batch)
++        return true;
++
++    destroyBuffer(residentBatchInput_);
++    residentBatchCols_=0;
++    residentBatchCapacity_=0;
++    const uint64_t elems=(uint64_t)cols*batch;
++    if(elems>SIZE_MAX/sizeof(float)) return false;
++    if(!createBuffer(
++            (size_t)elems*sizeof(float),
++            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++            VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
++            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
++            residentBatchInput_))
++        return false;
++    residentBatchCols_=cols;
++    residentBatchCapacity_=batch;
++    return true;
++}
++
++bool VulkanCompute::UploadResidentBatchInput(
++    const float* input,uint32_t cols,uint32_t batch,uint64_t epoch)
++{
++    if(!input||!EnsureResidentBatchInput(cols,batch)) return false;
++    SetWorkEpoch(epoch);
++    const size_t bytes=(size_t)cols*batch*sizeof(float);
++    if(!uploadToBuffer(residentBatchInput_,input,bytes)) return false;
++    ++residentBatchInputUploads_;
++    return true;
++}
+@@
+ void VulkanCompute::cleanup() {
+@@
++    destroyBuffer(residentBatchInput_);
++    residentBatchInput_={};
++    residentBatchCols_=residentBatchCapacity_=0;

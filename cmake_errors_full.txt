@@ -1,0 +1,402 @@
+> CMake Error at CMakeLists.txt:3409 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:3770 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:5457 (target_sources):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:7387 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9439 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9452 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9494 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9535 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9554 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9644 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9664 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9685 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9703 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9722 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9741 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9764 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9783 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9802 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9822 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9842 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9861 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9881 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9901 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9921 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9941 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9961 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9981 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10001 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10020 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10039 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10058 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10076 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10095 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10113 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10132 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10150 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10168 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10208 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10283 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10301 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10321 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10341 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10361 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10381 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10401 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10419 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10460 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10475 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10489 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10503 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10542 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10562 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10587 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10612 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10637 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10661 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10687 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10734 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10752 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10767 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10782 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10797 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10812 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10826 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15149 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15279 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15582 (add_executable):
+    Cannot find source file:
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:3409 (add_executable):
+    No SOURCES given to target: RawrEngine
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:3770 (add_executable):
+    No SOURCES given to target: RawrXD_Gold
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9439 (add_executable):
+    No SOURCES given to target: deep2_r1_decode_smoke
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9452 (add_executable):
+    No SOURCES given to target: deep2_outer_smoke
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9494 (add_executable):
+    No SOURCES given to target: deep2_live_path_effectiveness_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9535 (add_executable):
+    No SOURCES given to target: deep2_live_path_interaction_bounds_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9554 (add_executable):
+    No SOURCES given to target: deep2_k2_full_depth_effectiveness_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9644 (add_executable):
+    No SOURCES given to target: deep2_k2_trampoline_full_depth_opt_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9664 (add_executable):
+    No SOURCES given to target: deep2_k2_auto_workload_policy_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9685 (add_executable):
+    No SOURCES given to target: deep2_k2_e2e_model_size_matrix_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9703 (add_executable):
+    No SOURCES given to target: deep2_k2_live_generate_policy_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9722 (add_executable):
+    No SOURCES given to target: deep2_k2_live_policy_split_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9741 (add_executable):
+    No SOURCES given to target: deep2_k2_policy_hysteresis_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9764 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_rebench_promote_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9783 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_reuse_promote_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9802 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_full_depth_soak_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9822 (add_executable):
+    No SOURCES given to target: deep2_k2_live_decode_mla_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9842 (add_executable):
+    No SOURCES given to target: mla_cert_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9861 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_fused_q4kt_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9881 (add_executable):
+    No SOURCES given to target: deep2_k2_shard_attn_residency_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9901 (add_executable):
+    No SOURCES given to target: deep2_k2_logits_q6k_resident_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9921 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_kv_expand_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9941 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_kv_expand_opt_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9961 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_qkv_proj_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:9981 (add_executable):
+    No SOURCES given to target: deep2_k2_mla_qa_critical_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10001 (add_executable):
+    No SOURCES given to target: deep2_ucf_bounce_smoke
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10020 (add_executable):
+    No SOURCES given to target: deep2_ucf_no_stale_dispatch_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10039 (add_executable):
+    No SOURCES given to target: deep2_ucf_read_converge_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10058 (add_executable):
+    No SOURCES given to target: deep2_ucf_logits_range_bounce_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10076 (add_executable):
+    No SOURCES given to target: deep2_ucf_semantic_abi_v1_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10095 (add_executable):
+    No SOURCES given to target: deep2_ucf_generation_ticket_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10113 (add_executable):
+    No SOURCES given to target: deep2_ucf_gpu_ready_e2e
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10132 (add_executable):
+    No SOURCES given to target: deep2_ucf_bouncehouse_example
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10150 (add_executable):
+    No SOURCES given to target: deep2_ucf_halo_spark_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10168 (add_executable):
+    No SOURCES given to target: deep2_rmv_mount_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10208 (add_executable):
+    No SOURCES given to target: deep2_vwa_range_contract_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10283 (add_executable):
+    No SOURCES given to target: deep2_ucf_mobility_fault_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10301 (add_executable):
+    No SOURCES given to target: deep2_k2_semantic_seal_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10321 (add_executable):
+    No SOURCES given to target: deep2_k2_serverless_stream_latency_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10341 (add_executable):
+    No SOURCES given to target: deep2_k2_live_decode_sustained_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10361 (add_executable):
+    No SOURCES given to target: deep2_k2_wall_attribution_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10381 (add_executable):
+    No SOURCES given to target: deep2_k2_logits_climb_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10401 (add_executable):
+    No SOURCES given to target: deep2_k2_trygpu_logits_split_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10419 (add_executable):
+    No SOURCES given to target: deep2_k2_logits_gpu_range_attribution_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10460 (add_executable):
+    No SOURCES given to target: rawrxd_run_modelname_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10475 (add_executable):
+    No SOURCES given to target: rawr
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10489 (add_executable):
+    No SOURCES given to target: deep2_k2_useful_tps_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10503 (add_executable):
+    No SOURCES given to target: rawrxd_normal_gguf_final_001
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10542 (add_executable):
+    No SOURCES given to target: deep2_k2_tps_rainbow_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10562 (add_executable):
+    No SOURCES given to target: deep2_k2_gpu_mla_slot_reuse_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10587 (add_executable):
+    No SOURCES given to target: deep2_nu_live_consumer_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10612 (add_executable):
+    No SOURCES given to target: deep2_k2_gpu_mla_nu_bridge_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10637 (add_executable):
+    No SOURCES given to target: deep2_nu_perf_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10661 (add_executable):
+    No SOURCES given to target: deep2_nu_gemv_parity_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10687 (add_executable):
+    No SOURCES given to target: deep2_nu_gpu_gemv_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10734 (add_executable):
+    No SOURCES given to target: rkc_deep2_model_authority_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10752 (add_executable):
+    No SOURCES given to target: rkc_model_inventory_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10767 (add_executable):
+    No SOURCES given to target: rkc_negative_knowledge_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10782 (add_executable):
+    No SOURCES given to target: rkc_minimal_source_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10797 (add_executable):
+    No SOURCES given to target: rkc_code_world_cert
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10812 (add_executable):
+    No SOURCES given to target: rkc_smoke
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:10826 (add_executable):
+    No SOURCES given to target: rkc_product_context_smoke
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15149 (add_executable):
+    No SOURCES given to target: test_generation
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15279 (add_executable):
+    No SOURCES given to target: test_quant_dequant_crosscheck
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:15582 (add_executable):
+    No SOURCES given to target: k2_007a_tokenizer_metadata
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:16034 (add_executable):
+    No SOURCES given to target: b005_canonical_model_certification
+  System.Management.Automation.RemoteException
+> CMake Error at CMakeLists.txt:16219 (add_executable):
+    No SOURCES given to target: b008_ci_integration
+  System.Management.Automation.RemoteException

@@ -1,0 +1,2 @@
+51552877b docs: fix competitor table, performance table, roadmap checkboxes, demo area, trim meta-commentary
+done 

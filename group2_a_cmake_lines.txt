@@ -1,0 +1,80 @@
+Group 2 (Class A stubs in CMake - need to remove add_executable targets):
+================================================================================
+
+Deep2Engine_IntegrationTest_Minimal.cpp
+  Line 7194:         src/tests/Deep2Engine_IntegrationTest_Minimal.cpp
+
+SovereignTest_AntiHallucination.cpp
+  Line 13201:         src/sovereign/tests/SovereignTest_AntiHallucination.cpp
+
+SovereignTest_AtomicRollback.cpp
+  Line 8052:         src/sovereign/tests/SovereignTest_AtomicRollback.cpp
+
+SovereignTest_AutonomousAgent.cpp
+  Line 13153:         src/sovereign/tests/SovereignTest_AutonomousAgent.cpp
+
+SovereignTest_CacheCoherency.cpp
+  Line 8053:         src/sovereign/tests/SovereignTest_CacheCoherency.cpp
+
+SovereignTest_Correctness.cpp
+  Line 8054:         src/sovereign/tests/SovereignTest_Correctness.cpp
+
+SovereignTest_Deep2_Batch.cpp
+  Line 8115:         src/sovereign/tests/SovereignTest_Deep2_Batch.cpp
+
+SovereignTest_HotPatcher.cpp
+  Line 13116:         src/sovereign/tests/SovereignTest_HotPatcher.cpp
+
+SovereignTest_Main.cpp
+  Line 8051:         src/sovereign/tests/SovereignTest_Main.cpp
+
+SovereignTest_PatchRegistry.cpp
+  Line 13082:         src/sovereign/tests/SovereignTest_PatchRegistry.cpp
+
+SovereignTest_VAL038_E2E.cpp
+  Line 8084:         src/sovereign/tests/SovereignTest_VAL038_E2E.cpp
+
+SwarmSmokeTest.cpp
+  Line 14177:         src/tests/SwarmSmokeTest.cpp
+
+b008_ci_integration.cpp
+  Line 16203:     tests/b008_ci_integration.cpp
+
+backend_orchestrator_shard_smoke.cpp
+  Line 14201:     src/tests/backend_orchestrator_shard_smoke.cpp
+
+backend_orchestrator_shard_smoke_stubs.cpp
+  Line 14202:     # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
+
+deep2_link_stubs.cpp
+  Line 15137: add_executable(test_generation tests/test_generation.cpp src/generation/integration/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/core/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
+  Line 15174:     tests/deep2_link_stubs.cpp
+  Line 15361:     tests/deep2_link_stubs.cpp
+  Line 15411:     tests/deep2_link_stubs.cpp
+  Line 15493:     tests/deep2_link_stubs.cpp
+
+gguf_link_impl.cpp
+  Line 3891:     tests/gguf_link_impl.cpp
+
+inference_routing_test.cpp
+  Line 13272:     src/tests/inference_routing_test.cpp
+
+k2_007a_tokenizer_metadata.cpp
+  Line 15570: add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
+
+k2_useful_tps_001.cpp
+  Line 10477:     add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
+
+mla_cert_001.cpp
+  Line 9830:     add_executable(mla_cert_001 certs/mla_cert_001.cpp)
+
+swarm_smoke_stubs.cpp
+  Line 14183:         # REMOVED: src/tests/swarm_smoke_stubs.cpp - stub file deleted
+  Line 14195:     message(STATUS "SwarmSmokeTest skipped in strict production strip mode (uses swarm_smoke_stubs.cpp)")
+
+test_generation.cpp
+  Line 15137: add_executable(test_generation tests/test_generation.cpp src/generation/integration/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/core/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
+
+test_quant_dequant_crosscheck.cpp
+  Line 15267: add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
+

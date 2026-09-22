@@ -1,0 +1,142 @@
+# Deep2 Qwen32 85TPS — Batch 5/5, item 42
+# Base: apply after 0041.
+#
+# Binds the persistent device KV mirror with exact committed-prefix semantics.
+# Only host KV positions not already committed on device are uploaded.
+# Candidate K/V is written into the speculative tail, but becomes "committed"
+# in mirror bookkeeping only after the target accepts that prefix.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0042_bind_committed_prefix_kv_delta.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+     uint64_t dualColumnSplitOps=0;
++    uint64_t kvMirrorPrefixUploads=0;
++    uint64_t kvMirrorDeltaTokens=0;
++    uint64_t kvMirrorResidentAttn=0;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     SpecWorkspace specWs_{};
++    std::vector<size_t> specKvMirrorCommittedLen_;
++    void specKvMirrorCommit(size_t newLen);
++    void specKvMirrorReset();
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+ void Deep2Engine::reset() {
+@@
++    specKvMirrorReset();
+@@
+ }
+@@
+ void Deep2Engine::unloadModel() {
+@@
+     specWs_.clear();
++    specKvMirrorReset();
+@@
+ }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ namespace Deep2 {
+@@
++void Deep2Engine::specKvMirrorReset() {
++    specKvMirrorCommittedLen_.assign(modelWeights.numLayers,0);
++    if(auto* vc=getVulkanComputeSlot(0)) vc->ResetSpecKvMirror();
++}
++
++void Deep2Engine::specKvMirrorCommit(size_t newLen) {
++    if(specKvMirrorCommittedLen_.size()!=modelWeights.numLayers)
++        specKvMirrorCommittedLen_.assign(modelWeights.numLayers,0);
++    for(auto& n:specKvMirrorCommittedLen_)
++        n=std::max(n,newLen);
++}
++
+@@
+ bool Deep2Engine::trySpecAttentionBatch(
+@@
+-    const size_t seq=basePos+count;
++    const size_t seq=basePos+count;
+     if(!NK||!HD||seq>UINT32_MAX) return false;
+-    auto& kp=specWs_.kPacked;auto& vp=specWs_.vPacked;
+-    kp.resize(NK*seq*HD);vp.resize(NK*seq*HD);
+-    for(size_t h=0;h<NK;++h) {
+-        for(size_t t=0;t<basePos;++t) {
+-            const float* ks=kvCache->keyPtr(layer,h,t);
+-            const float* vs=kvCache->valuePtr(layer,h,t);
+-            if(!ks||!vs) return false;
+-            float* kd=kp.data()+(h*seq+t)*HD;
+-            float* vd=vp.data()+(h*seq+t)*HD;
+-            std::memcpy(kd,ks,HD*sizeof(float));
+-            std::memcpy(vd,vs,HD*sizeof(float));
+-        }
+-        for(size_t b=0;b<count;++b) {
+-            std::memcpy(kp.data()+(h*seq+basePos+b)*HD,
+-                        k+b*KD+h*HD,HD*sizeof(float));
+-            std::memcpy(vp.data()+(h*seq+basePos+b)*HD,
+-                        v+b*KD+h*HD,HD*sizeof(float));
+-        }
+-    }
+-    const bool ok=vc->RunSpecAttentionHostBatch(
+-        q,kp.data(),vp.data(),out,
+-        (uint32_t)modelWeights.numHeads,(uint32_t)NK,(uint32_t)HD,
+-        (uint32_t)seq,(uint32_t)basePos,(uint32_t)count,
+-        kvCache->currentLength());
++    if(specKvMirrorCommittedLen_.size()!=modelWeights.numLayers)
++        specKvMirrorCommittedLen_.assign(modelWeights.numLayers,0);
++    if(!vc->EnsureSpecKvMirror(
++            (uint32_t)modelWeights.numLayers,(uint32_t)NK,(uint32_t)HD,
++            (uint32_t)config.maxSeqLen))
++        return false;
++
++    size_t synced=specKvMirrorCommittedLen_[layer];
++    if(synced>basePos) synced=basePos;
++    if(synced<basePos) {
++        const size_t miss=basePos-synced;
++        auto& kp=specWs_.kPacked;auto& vp=specWs_.vPacked;
++        kp.resize(miss*NK*HD);vp.resize(miss*NK*HD);
++        for(size_t t=0;t<miss;++t) {
++            for(size_t h=0;h<NK;++h) {
++                const float* ks=kvCache->keyPtr(layer,h,synced+t);
++                const float* vs=kvCache->valuePtr(layer,h,synced+t);
++                if(!ks||!vs) return false;
++                std::memcpy(kp.data()+(t*NK+h)*HD,ks,HD*sizeof(float));
++                std::memcpy(vp.data()+(t*NK+h)*HD,vs,HD*sizeof(float));
++            }
++        }
++        if(!vc->UploadSpecKvRange(
++                (uint32_t)layer,(uint32_t)synced,(uint32_t)miss,
++                kp.data(),vp.data()))
++            return false;
++        if(medusaDecoder_) {
++            ++medusaDecoder_->stats.exact.kvMirrorPrefixUploads;
++            medusaDecoder_->stats.exact.kvMirrorDeltaTokens+=miss;
++        }
++    }
++
++    if(!vc->UploadSpecKvRange(
++            (uint32_t)layer,(uint32_t)basePos,(uint32_t)count,k,v))
++        return false;
++    const bool ok=vc->RunSpecAttentionResident(
++        (uint32_t)layer,q,out,
++        (uint32_t)modelWeights.numHeads,(uint32_t)NK,(uint32_t)HD,
++        (uint32_t)seq,(uint32_t)basePos,(uint32_t)count,
++        kvCache->currentLength());
+     if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.gpuBatchAttentionOps;
++    if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.kvMirrorResidentAttn;
+     return ok;
+ }
+@@
+-    if(!tx.commitAccepted(accepted)) return false;
++    if(!tx.commitAccepted(accepted)) return false;
++    specKvMirrorCommit(base+accepted);

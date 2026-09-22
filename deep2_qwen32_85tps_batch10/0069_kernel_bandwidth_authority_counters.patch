@@ -1,0 +1,42 @@
+# Deep2 Qwen32 85TPS — Batch 10, item 69
+# Base: apply after 0068.
+#
+# Exposes per-card Q4_K batched effective bandwidth:
+#     bytes of resident Q4_K weights consumed / GPU timestamp nanoseconds
+#
+# This is an internal kernel-efficiency metric, NOT a replacement for measured
+# end-to-end verified TPS.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0069_kernel_bandwidth_authority_counters.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotSpecLayerGraphSubmits(unsigned slot) const;
++    uint64_t vulkanSlotQ4KBatchWeightBytes(unsigned slot) const;
++    uint64_t vulkanSlotQ4KBatchGpuNs(unsigned slot) const;
++    uint64_t vulkanSlotQ4KBatch4RowOps(unsigned slot) const;
++    uint64_t vulkanSlotSpecArenaFlips(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotQ4KBatchWeightBytes(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KBatchWeightBytes():0;
++}
++uint64_t Deep2Engine::vulkanSlotQ4KBatchGpuNs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KBatchGpuNs():0;
++}
++uint64_t Deep2Engine::vulkanSlotQ4KBatch4RowOps(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KBatch4RowOps():0;
++}
++uint64_t Deep2Engine::vulkanSlotSpecArenaFlips(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SpecArenaFlips():0;
++}

@@ -1,0 +1,57 @@
+# Deep2 Qwen32 85TPS — Batch 12, item 79
+# Base: apply after 0078.
+#
+# Uses measured async overlap + lane completion to adjust row split.
+#
+# Previous controllers used capacity/throughput estimates. This controller
+# measures actual asynchronous completion and applies a bounded +/-5% shift
+# toward the lane that finishes earlier. It never changes split inside a token.
+#
+# Env:
+#   DEEP2_ASYNC_SPLIT_CONTROL=0  disables this controller.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0079_overlap_driven_rowsplit_controller.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ namespace {
++std::atomic<double> gAsyncRowRatio{0.50};
++std::atomic<uint64_t> gAsyncSamples{0};
++
++bool asyncSplitControl() noexcept {
++    const char* e=std::getenv("DEEP2_ASYNC_SPLIT_CONTROL");
++    return !(e&&e[0]=='0');
++}
++
++void updateAsyncRowRatio(uint64_t ns0,uint64_t ns1) noexcept {
++    if(!asyncSplitControl()||!ns0||!ns1) return;
++    double r=gAsyncRowRatio.load(std::memory_order_relaxed);
++    // Faster GPU gets modestly more rows. Limit movement to avoid oscillation.
++    if(ns0+ns1) {
++        const double ideal=(double)ns1/(double)(ns0+ns1);
++        double target=r*0.875+ideal*0.125;
++        target=std::max(r-0.05,std::min(r+0.05,target));
++        target=std::max(0.20,std::min(0.80,target));
++        gAsyncRowRatio.store(target,std::memory_order_relaxed);
++        gAsyncSamples.fetch_add(1,std::memory_order_relaxed);
++    }
++}
+@@
+ RowSplitPlan chooseThroughputSplit(
+@@
+ {
++    if(asyncSplitControl()&&gAsyncSamples.load(std::memory_order_relaxed)>0) {
++        const double r=gAsyncRowRatio.load(std::memory_order_relaxed);
++        uint32_t n0=(uint32_t)std::llround((double)rows*r);
++        n0=std::max<uint32_t>(1,std::min<uint32_t>(rows-1,n0));
++        RowSplitPlan p{};
++        p.valid=true;
++        p.row0Begin=0;p.row0Count=n0;
++        p.row1Begin=n0;p.row1Count=rows-n0;
++        return p;
++    }
+@@
+ }

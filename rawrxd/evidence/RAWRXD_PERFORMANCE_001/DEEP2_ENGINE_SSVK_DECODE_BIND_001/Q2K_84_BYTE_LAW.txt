@@ -1,0 +1,28 @@
+GATE=DEEP2_ENGINE_SSVK_DECODE_BIND_001
+LAW=Q2K_84_BYTE
+
+GGUF_block_q2_K=84
+elems_per_block=256
+# llama3.2-3b example: 8192×(3072/256)×84 = 8257536 bytes
+
+PRODUCT_KERNEL=
+  vulkan gemv_q2k.comp / gemv_q2k.spv  (rowOff = nblk * 84)
+  evidence q2k_gemv.comp               (rowOff = nblk * 84)
+  QuantTypeTable GGML_TYPE_Q2_K blockBytes=84
+
+FORBIDDEN=
+  rawrxd/src/deep2/sovereign_q2_k_gemv.asm Deep2_Q2_K_GEMV stride=72
+  Any host Expand-F32 warehouse as product decode Q2_K path when
+  RAWRXD_Q2K_PRODUCT_DECODE=1
+
+ENV_GATE=
+  RAWRXD_Q2K_PRODUCT_DECODE=1  → soft-fail any 72-byte MASM dispatch;
+                                 refuse EnsureF32 expand for Q2_K GEMV
+
+SAME_KERNEL_FAMILY_AS=
+  DEEP2_PACKED_Q2K_PRODUCT_DUAL_AGGREGATE_001 ABI
+  include/d2_product_packed_dual_q2k.h → d2_product_packed_dual_q2k_run
+  (aggregate PASS uses 84-byte packed dual; product decode invokes
+   in-process DispatchGemvQuant/Q2_K on DualStick when armed)
+
+PROMOTE=0

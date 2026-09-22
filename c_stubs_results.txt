@@ -1,0 +1,25 @@
+Total C-class stubs identified: 20
+
+C-class stubs FOUND in CMakeLists.txt source lists (0):
+
+C-class stubs NOT in CMakeLists.txt (20):
+  STUB: F:\~dev\rawrxd\src\adapter\RawrXDEngineAdapter.cpp
+  STUB: F:\~dev\rawrxd\src\agent\DiskRecoveryAgent.cpp
+  STUB: F:\~dev\rawrxd\src\agentic\DiskRecoveryAgent.cpp
+  STUB: F:\~dev\rawrxd\src\agentic\ToolRegistry.cpp
+  STUB: F:\~dev\rawrxd\src\backend\vulkan_compute.cpp
+  STUB: F:\~dev\rawrxd\src\deep2\ModelRegistry.cpp
+  STUB: F:\~dev\rawrxd\src\embeddings\embedding_engine.cpp
+  STUB: F:\~dev\rawrxd\src\inference\Deep2Engine.cpp
+  STUB: F:\~dev\rawrxd\src\journal\checkpoint_manager.cpp
+  STUB: F:\~dev\rawrxd\src\kernels\flash_attention.cpp
+  STUB: F:\~dev\rawrxd\src\main.cpp
+  STUB: F:\~dev\rawrxd\src\model_registry.cpp
+  STUB: F:\~dev\rawrxd\src\model_trainer.cpp
+  STUB: F:\~dev\rawrxd\src\multimodal_engine\vision_encoder.cpp
+  STUB: F:\~dev\rawrxd\src\soloide\main.cpp
+  STUB: F:\~dev\rawrxd\src\sovereign\tool\ToolRegistry.cpp
+  STUB: F:\~dev\rawrxd\src\swarm\IDEIntegration.cpp
+  STUB: F:\~dev\rawrxd\src\universal_model_router.cpp
+  STUB: F:\~dev\rawrxd\src\vulkan_compute.cpp
+  STUB: F:\~dev\rawrxd\tests\test_generation.cpp

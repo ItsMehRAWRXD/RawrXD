@@ -1,0 +1,53 @@
+[QuantKernelRegistry] Q4_K GEMV=00007FF664FC2710 dequant=00007FF664FBF850 GetGEMV(12)=00007FF664FC2710 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 vram=17163091968 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+B5_SLOT1_RESIDENCY_ADMISSION_001
+SLOT1_DEVICE_LOCAL_BYTES=17163091968
+SLOT1_BUDGET_BYTES=13730473568
+LAYER_RANGE_BYTES=9383444480 (layers 32-63)
+LMHEAD_SLICE_BYTES=638668800
+KV_ARENA_BYTES=1074245632
+HANDOFF_BYTES=20480
+RESERVED_HEADROOM_BYTES=536870912
+TOTAL_REQUIRED_BYTES=11633250304
+ADMISSION_FITS=1
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1

@@ -1,0 +1,174 @@
+# Deep2 Qwen32 40TPS — Batch 2/5, item 8
+# Base: apply after 0006-0007.
+# Goal: remove vkCreateBuffer/vkAllocateMemory/vkMapMemory/free churn from
+# every row-split UploadVector/DownloadVector operation.
+#
+# Each VulkanCompute gets one grow-only, persistently mapped upload staging
+# buffer and one download staging buffer. HOST_COHERENT means no explicit
+# flush/invalidate is required.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0008_persistent_mapped_transfer_staging.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool createBuffer(VkDeviceSize bytes, VkBufferUsageFlags usage,
+                       VkMemoryPropertyFlags required,
+                       DeviceBuf& out);
+     void destroyBuffer(DeviceBuf& b);
++    bool ensureMappedStaging(bool upload, size_t bytes,
++                             DeviceBuf*& buffer, void*& mapped);
+@@
+     DeviceBuf arenaKCache_{}, arenaVCache_{};
++
++    // Persistent host-visible transfer staging.  Row-split decode moves
++    // small activation vectors frequently; allocating Vulkan memory for
++    // every move is far more expensive than the copies themselves.
++    DeviceBuf uploadStaging_{};
++    DeviceBuf downloadStaging_{};
++    void* uploadMapped_ = nullptr;
++    void* downloadMapped_ = nullptr;
++    size_t uploadStagingBytes_ = 0;
++    size_t downloadStagingBytes_ = 0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ void VulkanCompute::destroyBuffer(DeviceBuf& b) {
+@@
+     b = {};
+ }
+
++bool VulkanCompute::ensureMappedStaging(
++    bool upload, size_t bytes, DeviceBuf*& buffer, void*& mapped)
++{
++    buffer = upload ? &uploadStaging_ : &downloadStaging_;
++    void*& mapRef = upload ? uploadMapped_ : downloadMapped_;
++    size_t& cap = upload ? uploadStagingBytes_ : downloadStagingBytes_;
++
++    if (buffer->buffer && cap >= bytes && mapRef) {
++        mapped = mapRef;
++        return true;
++    }
++
++    if (mapRef && buffer->memory) {
++        vkUnmapMemory(device_, buffer->memory);
++        mapRef = nullptr;
++    }
++    destroyBuffer(*buffer);
++    cap = 0;
++
++    // Geometric growth prevents repeated realloc when activation dimensions
++    // alternate between hidden and FFN widths.
++    size_t want = 4096;
++    while (want < bytes && want <= std::numeric_limits<size_t>::max() / 2u)
++        want *= 2u;
++    if (want < bytes) want = bytes;
++
++    const VkBufferUsageFlags usage = upload
++        ? VK_BUFFER_USAGE_TRANSFER_SRC_BIT
++        : VK_BUFFER_USAGE_TRANSFER_DST_BIT;
++    if (!createBuffer(
++            want, usage,
++            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
++            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
++            *buffer))
++        return false;
++
++    if (vkMapMemory(device_, buffer->memory, 0, want, 0, &mapRef) != VK_SUCCESS) {
++        destroyBuffer(*buffer);
++        mapRef = nullptr;
++        return false;
++    }
++    cap = want;
++    mapped = mapRef;
++    return true;
++}
++
+ bool VulkanCompute::uploadToBuffer(DeviceBuf& dst, const void* src, size_t bytes) {
+     if (!dst || !src || !bytes || bytes > dst.size) return false;
+
+-    DeviceBuf staging{};
+-    if (!createBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging))
+-        return false;
+-
+-    void* mapped = nullptr;
+-    bool ok = vkMapMemory(device_, staging.memory, 0, bytes, 0, &mapped) == VK_SUCCESS;
+-    if (ok) {
+-        std::memcpy(mapped, src, bytes);
+-        vkUnmapMemory(device_, staging.memory);
+-
+-        VkCommandBuffer cmd{};
+-        VkQueryPool query{};
+-        ok = beginCommand(cmd, query, true) &&
+-             recordCopy(cmd, staging, dst, bytes) &&
+-             endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+-                           bytes, workEpoch_, nullptr);
+-    }
+-    destroyBuffer(staging);
+-    return ok;
++    DeviceBuf* staging = nullptr;
++    void* mapped = nullptr;
++    if (!ensureMappedStaging(true, bytes, staging, mapped)) return false;
++    std::memcpy(mapped, src, bytes);
++
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    return beginCommand(cmd, query, true) &&
++           recordCopy(cmd, *staging, dst, bytes) &&
++           endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
++                         bytes, workEpoch_, nullptr);
+ }
+
+ bool VulkanCompute::downloadFromBuffer(
+     const DeviceBuf& src, void* dst, size_t bytes)
+ {
+     if (!src || !dst || !bytes || bytes > src.size) return false;
+
+-    DeviceBuf staging{};
+-    if (!createBuffer(bytes, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+-                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, staging))
+-        return false;
++    DeviceBuf* staging = nullptr;
++    void* mapped = nullptr;
++    if (!ensureMappedStaging(false, bytes, staging, mapped)) return false;
+
+     VkCommandBuffer cmd{};
+     VkQueryPool query{};
+     bool ok = beginCommand(cmd, query, true) &&
+-              recordCopy(cmd, src, staging, bytes) &&
++              recordCopy(cmd, src, *staging, bytes) &&
+               endSubmitWait(cmd, query, GpuWorkKind::ModelTransfer,
+                             bytes, workEpoch_, nullptr);
+-    if (ok) {
+-        void* mapped = nullptr;
+-        ok = vkMapMemory(device_, staging.memory, 0, bytes, 0, &mapped) == VK_SUCCESS;
+-        if (ok) {
+-            std::memcpy(dst, mapped, bytes);
+-            vkUnmapMemory(device_, staging.memory);
+-        }
+-    }
+-    destroyBuffer(staging);
++    if (ok) std::memcpy(dst, mapped, bytes);
+     return ok;
+ }
+@@
+ void VulkanCompute::cleanup() {
+     if (device_) vkDeviceWaitIdle(device_);
++
++    if (device_ && uploadMapped_ && uploadStaging_.memory)
++        vkUnmapMemory(device_, uploadStaging_.memory);
++    if (device_ && downloadMapped_ && downloadStaging_.memory)
++        vkUnmapMemory(device_, downloadStaging_.memory);
++    uploadMapped_ = downloadMapped_ = nullptr;
++    destroyBuffer(uploadStaging_);
++    destroyBuffer(downloadStaging_);
++    uploadStagingBytes_ = downloadStagingBytes_ = 0;
+
+     for (auto& e : prefetch_) destroyBuffer(e.buffer);

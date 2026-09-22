@@ -1,0 +1,49 @@
+# Deep2 Qwen32 85TPS — Batch 9, item 64
+# Base: apply after 0063.
+#
+# Goal:
+#   primary GPU non-weight speculative math is one fused command recording per
+#   transformer layer:
+#     RMSNorm -> attention -> O residual -> FFN norm -> SwiGLU -> down residual
+#
+# Heavy dual-GPU Q4_K GEMVs still synchronize where dependencies require them.
+# This patch removes primary-side submit/wait churn around the cheap ops.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0064_fused_primary_spec_layer_submit.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool BeginSpecLayerGraph(uint64_t epoch);
++    bool EndSpecLayerGraph();
++    bool SpecLayerGraphActive() const noexcept { return specLayerGraphActive_; }
++    uint64_t SpecLayerGraphSubmits() const noexcept {
++        return specLayerGraphSubmits_;
++    }
+@@
+ private:
++    bool specLayerGraphActive_=false;
++    uint64_t specLayerGraphSubmits_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::BeginSpecLayerGraph(uint64_t epoch) {
++    if(specLayerGraphActive_||fused_) return false;
++    SetWorkEpoch(epoch);
++    if(!BeginFusedLayer()) return false;
++    specLayerGraphActive_=true;
++    return true;
++}
++
++bool VulkanCompute::EndSpecLayerGraph() {
++    if(!specLayerGraphActive_) return false;
++    const bool ok=EndFusedLayer();
++    specLayerGraphActive_=false;
++    if(ok) ++specLayerGraphSubmits_;
++    return ok;
++}

@@ -1,0 +1,130 @@
+# Deep2 Qwen32 85TPS — Batch 4/5, item 38
+# Base: apply after 0037.
+#
+# Adds simultaneous dual-GPU COLUMN split for Q4_K batch projections.
+# This is aimed at O projection and FFN down projection:
+#
+#   GPU0: W[:, 0:C0]  * X[0:C0]  -> partial Y0
+#   GPU1: W[:, C0:C]  * X[C0:C]  -> partial Y1
+#   Y = Y0 + Y1
+#
+# Q4_K column split is legal only on 256-element K-block boundaries.
+# Packed slices are cached once per immutable GGUF tensor.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0038_q4k_column_split_batch_projection.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuRowSplitBatchTop1(
+@@
+     uint32_t* outToken,float* outValue,uint64_t epoch);
++bool Deep2RunDualGpuColumnSplitBatch4(
++    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
++    const float* inputBatch,float* outputBatch,
++    uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include <unordered_map>
+@@
+ namespace {
++
++struct Q4KColumnSlices {
++    uint32_t cols0=0,cols1=0;
++    std::vector<uint8_t> w0,w1;
++};
++struct ColKey {
++    const void* p=nullptr;size_t bytes=0;uint32_t rows=0,cols=0;
++    bool operator==(const ColKey& o) const noexcept {
++        return p==o.p&&bytes==o.bytes&&rows==o.rows&&cols==o.cols;
++    }
++};
++struct ColHash {
++    size_t operator()(const ColKey& k) const noexcept {
++        return (size_t)(uintptr_t)k.p ^ k.bytes ^
++               ((size_t)k.rows<<32) ^ k.cols;
++    }
++};
++
++const Q4KColumnSlices* q4kColumnSlices(const WeightTensor& wt) {
++    if(wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||!wt.data||
++       !wt.rows||!wt.cols||wt.cols%256u!=0u) return nullptr;
++    static std::mutex mu;
++    static std::unordered_map<ColKey,Q4KColumnSlices,ColHash> cache;
++    const ColKey key{wt.data,wt.sizeBytes,(uint32_t)wt.rows,(uint32_t)wt.cols};
++    std::lock_guard<std::mutex> g(mu);
++    auto it=cache.find(key);
++    if(it!=cache.end()) return &it->second;
++
++    const uint32_t blocks=(uint32_t)wt.cols/256u;
++    if(blocks<2) return nullptr;
++    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
++    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
++    uint32_t b0=(uint32_t)(
++        (long double)blocks*s0/(s0+s1)+0.5L);
++    b0=std::max<uint32_t>(1,std::min<uint32_t>(blocks-1,b0));
++    const uint32_t b1=blocks-b0;
++    constexpr size_t QB=144;
++    const size_t rowBytes=(size_t)blocks*QB;
++    const size_t row0=(size_t)b0*QB;
++    const size_t row1=(size_t)b1*QB;
++    if(wt.sizeBytes<(size_t)wt.rows*rowBytes) return nullptr;
++
++    Q4KColumnSlices s{};
++    s.cols0=b0*256u;s.cols1=b1*256u;
++    s.w0.resize((size_t)wt.rows*row0);
++    s.w1.resize((size_t)wt.rows*row1);
++    const auto* src=(const uint8_t*)wt.data;
++    for(size_t r=0;r<wt.rows;++r) {
++        std::memcpy(s.w0.data()+r*row0,src+r*rowBytes,row0);
++        std::memcpy(s.w1.data()+r*row1,src+r*rowBytes+row0,row1);
++    }
++    auto ins=cache.emplace(key,std::move(s));
++    return &ins.first->second;
++}
+@@
+ }
++
++bool Deep2RunDualGpuColumnSplitBatch4(
++    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
++    const float* inputBatch,float* outputBatch,
++    uint32_t batch,uint64_t epoch)
++{
++    if(!inputBatch||!outputBatch||!batch||batch>4) return false;
++    const Q4KColumnSlices* s=q4kColumnSlices(wt);
++    if(!s) return false;
++    const uint32_t rows=(uint32_t)wt.rows;
++    std::vector<float> x0((size_t)batch*s->cols0);
++    std::vector<float> x1((size_t)batch*s->cols1);
++    for(uint32_t b=0;b<batch;++b) {
++        const float* src=inputBatch+(size_t)b*wt.cols;
++        std::memcpy(x0.data()+(size_t)b*s->cols0,src,
++                    (size_t)s->cols0*sizeof(float));
++        std::memcpy(x1.data()+(size_t)b*s->cols1,src+s->cols0,
++                    (size_t)s->cols1*sizeof(float));
++    }
++    std::vector<float> y0((size_t)batch*rows);
++    std::vector<float> y1((size_t)batch*rows);
++    GpuWeightView w0{},w1{};
++    w0.data=s->w0.data();w0.bytes=s->w0.size();w0.type=12;
++    w0.rows=rows;w0.cols=s->cols0;
++    w1.data=s->w1.data();w1.bytes=s->w1.size();w1.type=12;
++    w1.rows=rows;w1.cols=s->cols1;
++
++    bool ok0=false,ok1=false;
++    const bool both=rowExecutor().run(
++        [&]{ok0=g0.RunWeightHostBatchQ4K(
++            w0,x0.data(),y0.data(),batch,epoch);return ok0;},
++        [&]{ok1=g1.RunWeightHostBatchQ4K(
++            w1,x1.data(),y1.data(),batch,epoch);return ok1;});
++    if(!both||!ok0||!ok1) return false;
++
++    const size_t n=(size_t)batch*rows;
++    for(size_t i=0;i<n;++i) outputBatch[i]=y0[i]+y1[i];
++    return true;
++}

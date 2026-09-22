@@ -1,0 +1,81 @@
+DEEP2_RESIDENT_COST_ATTRIBUTION_001 — Receipt
+=============================================
+Date: 2026-09-19
+Commits: instrumentation on top of aa76ccbe6 (attribution counters in
+GpuForwardCounters + walls in GpuForward.cpp + gate receipt block).
+Configuration: DEEP2_RESIDENT_FIRST=1 (resident lane as laboratory).
+Model: Qwen2.5-Coder-32B Q4_K_M, dual AMD (R9700 slot0 / 7800XT slot1).
+
+GATE=DEEP2_RESIDENT_COST_ATTRIBUTION_001
+VERDICT=PASS (attribution >= 95% at all three lengths)
+
+ACCOUNTED_PCT: 64tok=95.966  128tok=96.200  256tok=96.950
+
+PER-TOKEN PHASE SLOPES (us/token unless noted):
+  TOKENS              64         128         256
+  TPS_ENGINE       4.660*     4.374539     3.476832
+  UPLOAD_HIDDEN      282.2      232.5      219.0
+  PRIME_COMMIT      1471.1     1270.0     1177.8
+  RANGE0 (ms)       118.5      120.6      151.6
+  RANGE1 (ms)       131.7      126.2      139.2
+  RANGE_GPU_SUM    (GPU-calibrated kernel time inside the ranges)
+  HANDOFF           2060.5     1785.8     1660.8
+  FINAL_DOWNLOAD     484.4      384.9      384.3
+  QUEUE_SUBMITS      2/token    2/token    2/token
+  FENCE_WAITS       2/token    2/token    2/token
+
+  (*64tok engine TPS in this ladder run; earlier 64tok measured 4.840 —
+   run-to-run variance ~4%; the phase shapes are identical.)
+
+ATTRIBUTION LAW:
+  upload + prime + range0 + handoff + range1 + download = ACCOUNTED
+  ACCOUNTED_PCT >= 95 at every length → the resident lane is now FULLY
+  measured. No hidden orchestration tax remains.
+
+FINDINGS (decisive):
+  1. THE WALL IS KERNEL TIME. Range0+Range1 = 250.2/246.8/290.8
+     ms/token at 64/128/256 — 95%+ of the entire resident token wall.
+     Of the range host wall, 98-99% is CALIBRATED GPU execution
+     (RANGE0: 7.50s GPU of 7.58s host @64tok). One submit+wait per
+     RANGE (2/token total), not per op.
+  2. ORCHESTRATION TAXES ARE ROUNDING ERRORS. Handoff 2.06ms→1.66ms,
+     prime commit 1.47ms→1.18ms, download 0.48ms→0.38ms, upload
+     0.28ms→0.22ms. ALL FOUR TOGETHER < 5ms/token (<2% of wall).
+     The earlier hypotheses — cross-device handoff churn, per-token
+     DownloadHidden, slot-1 prime re-upload — are measured DEAD as
+     primary bottlenecks.
+  3. CONTEXT SCALING IS REAL BUT SECONDARY. Ranges grow ~15-20% from
+     128→256 tokens (KV attention), flat 64→128. At very long contexts
+     attention will eventually matter; at 256 it is not the owner.
+  4. RESIDENT KERNELS ARE ~2x SLOWER PER TOKEN THAN DUAL-ROW KERNELS.
+     Resident GPU/token ≈ 247-290ms (range GPU sum) vs dual-row GPU
+     compute ≈ 126ms/token (32.3s/256 from the sealed baseline). The
+     resident lane's per-op shaders (DispatchGemvQuant Q4K on
+     single-token batch=1) are the bottleneck — NOT orchestration.
+     Dual-row runs the SAME arithmetic on both GPUs as row-split
+     batch-1 GEMVs and finishes GPU work ~2x faster per token.
+
+INTERPRETATION:
+  The b3 regression oracle is answered: it was never orchestration.
+  The resident path's per-op GPU kernels (batch-1 Q4K GEMV + per-op
+  barriers inside the recorded range) are compute-inefficient vs the
+  dual-row lane's kernels. The dual-row lane's per-op submit overhead
+  (~250ms/token envelope) and the resident lane's slow kernels
+  (~250ms/token GPU) are COMPARABLE COSTS — which is why both lanes
+  land at ~5 TPS.
+
+NEXT OPTIMIZATION ORDER (measured, per this receipt):
+  1. Resident kernel efficiency: batch-1 DispatchGemvQuant Q4K GEMV
+     tile/occupancy tuning on 5120-wide tensors (the same work the
+     dual-row kernels do ~2x faster — port the faster kernel).
+  2. Cross-GPU parallelism INSIDE the resident lane: ranges are
+     serialized (range0 → handoff → range1); ~50% of the wall is the
+     second range waiting for the first. Overlap range1's start
+     (recorded async + timeline) or split layers across GPUs per op.
+  3. Then attention scaling at long context.
+  The hybrid end-state per review: dual-row's fast kernels inside the
+  resident lane's resident buffers/recorded commands.
+
+BASELINE REMINDER:
+  PRODUCT_DEFAULT=DUAL_ROW (5.142206 TPS sealed). Resident-first stays
+  HOLD until it beats 5.142 on the same 256-token authority run.

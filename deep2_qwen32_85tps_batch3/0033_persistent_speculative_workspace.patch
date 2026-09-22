@@ -1,0 +1,135 @@
+# Deep2 Qwen32 85TPS — Batch 3/5, item 33
+# Base: apply after 0032.
+#
+# Removes hot-window heap churn from forwardSpeculativeBlock:
+# persistent vectors live on the engine and grow only when geometry/context
+# grows. Also removes per-head score-vector allocations.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0033_persistent_speculative_workspace.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     std::vector<float> speculativeHiddenScratch_;
++    struct SpecWorkspace {
++        std::vector<float> hidden,norm,q,k,v,attn,proj,gate,up,down;
++        std::vector<float> logits,scores;
++        void clear() {
++            hidden.clear();norm.clear();q.clear();k.clear();v.clear();
++            attn.clear();proj.clear();gate.clear();up.clear();down.clear();
++            logits.clear();scores.clear();
++        }
++    };
++    SpecWorkspace specWs_{};
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+ void Deep2Engine::unloadModel() {
+@@
+     modelWeights = {};
++    specWs_.clear();
+@@
+ }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+-    std::vector<float> hidden(count*H);
+-    std::vector<float> norm(count*H);
+-    std::vector<float> q(count*H);
+-    std::vector<float> k(count*KD);
+-    std::vector<float> v(count*KD);
+-    std::vector<float> attn(count*H);
+-    std::vector<float> proj(count*H);
+-    std::vector<float> gate(count*I);
+-    std::vector<float> up(count*I);
+-    std::vector<float> down(count*H);
++    auto& ws=specWs_;
++    ws.hidden.resize(count*H);
++    ws.norm.resize(count*H);
++    ws.q.resize(count*H);
++    ws.k.resize(count*KD);
++    ws.v.resize(count*KD);
++    ws.attn.resize(count*H);
++    ws.proj.resize(count*H);
++    ws.gate.resize(count*I);
++    ws.up.resize(count*I);
++    ws.down.resize(count*H);
++    float* hidden=ws.hidden.data();
++    float* norm=ws.norm.data();
++    float* q=ws.q.data();
++    float* k=ws.k.data();
++    float* v=ws.v.data();
++    float* attn=ws.attn.data();
++    float* proj=ws.proj.data();
++    float* gate=ws.gate.data();
++    float* up=ws.up.data();
++    float* down=ws.down.data();
+     if(!embedTokensBatch(tokenIds,count,hidden.data()))
+         return false;
+@@
+-            RMSNormW(lw.attnNorm,hidden.data()+b*H,
+-                     norm.data()+b*H,H,modelWeights.normEps);
++            RMSNormW(lw.attnNorm,hidden+b*H,
++                     norm+b*H,H,modelWeights.normEps);
+@@
+-        LinearWBatch4(lw.wq,norm.data(),count,bq,q.data(),H);
+-        LinearWBatch4(lw.wk,norm.data(),count,bk,k.data(),KD);
+-        LinearWBatch4(lw.wv,norm.data(),count,bv,v.data(),KD);
++        LinearWBatch4(lw.wq,norm,count,bq,q,H);
++        LinearWBatch4(lw.wk,norm,count,bk,k,KD);
++        LinearWBatch4(lw.wv,norm,count,bv,v,KD);
+@@
+-            float* qb=q.data()+b*H;
+-            float* kb=k.data()+b*KD;
++            float* qb=q+b*H;
++            float* kb=k+b*KD;
+@@
+-                std::memcpy(vd,v.data()+b*KD+h*HD,HD*sizeof(float));
++                std::memcpy(vd,v+b*KD+h*HD,HD*sizeof(float));
+@@
+-            float* out=attn.data()+b*H;
++            float* out=attn+b*H;
+             std::fill(out,out+H,0.0f);
+-            std::vector<float> scores(attend);
++            ws.scores.resize(attend);
++            float* scores=ws.scores.data();
+             for(size_t h=0;h<NH;++h) {
+@@
+-                    scores[t]=(float)dot*scale;
++                    scores[t]=(float)dot*scale;
+                 }
+-                softmaxLocal(scores.data(),scores.size());
++                softmaxLocal(scores,attend);
+@@
+-                    const float a=scores[t];
++                    const float a=scores[t];
+@@
+-        LinearWBatch4(wo,attn.data(),count,nullptr,proj.data(),H);
+-        for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
++        LinearWBatch4(wo,attn,count,nullptr,proj,H);
++        for(size_t i=0;i<count*H;++i) hidden[i]+=proj[i];
+@@
+-            RMSNormW(lw.ffnNorm,hidden.data()+b*H,
+-                     norm.data()+b*H,H,modelWeights.normEps);
+-        LinearWBatch4(lw.wGate,norm.data(),count,nullptr,gate.data(),I);
+-        LinearWBatch4(lw.wUp,norm.data(),count,nullptr,up.data(),I);
++            RMSNormW(lw.ffnNorm,hidden+b*H,
++                     norm+b*H,H,modelWeights.normEps);
++        LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
++        LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
+         for(size_t i=0;i<count*I;++i)
+             gate[i]=specSilu(gate[i])*up[i];
+-        LinearWBatch4(lw.wDown,gate.data(),count,nullptr,down.data(),H);
++        LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
+         for(size_t i=0;i<count*H;++i) hidden[i]+=down[i];
+-        if(!finiteAll(hidden.data(),hidden.size())) return false;
++        if(!finiteAll(hidden,count*H)) return false;
+@@
+-    std::memcpy(finalHiddenBatch,hidden.data(),count*H*sizeof(float));
++    std::memcpy(finalHiddenBatch,hidden,count*H*sizeof(float));

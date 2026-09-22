@@ -1,0 +1,225 @@
+# Deep2 Qwen32 85TPS — Batch 5/5, item 44
+# Base: apply after 0043.
+#
+# Q/K/V share the same normalized hidden input.
+# Gate/Up share the same normalized FFN input.
+#
+# Before this patch LinearWBatch4 uploads the same batch 3x for QKV and 2x
+# for Gate/Up. This adds a grouped Q4_K batch primitive:
+# one input upload per GPU -> 2/3 resident GEMVs -> individual result copies.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0044_grouped_batch_qkv_gateup_one_upload.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightHostBatchQ4K(
+@@
+         uint32_t batch,uint64_t epoch);
++    bool RunWeightGroupHostBatchQ4K(
++        const GpuWeightView* weights,float* const* outputs,size_t weightCount,
++        const float* inputBatch,uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::RunWeightHostBatchQ4K(
+@@
+ }
++
++bool VulkanCompute::RunWeightGroupHostBatchQ4K(
++    const GpuWeightView* weights,float* const* outputs,size_t weightCount,
++    const float* inputBatch,uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weights||!outputs||!inputBatch||weightCount<2||weightCount>3||
++       !batch||batch>4) return false;
++    const uint32_t cols=weights[0].cols;
++    if(!cols) return false;
++    for(size_t i=0;i<weightCount;++i)
++        if(!weights[i].valid()||weights[i].type!=12||
++           weights[i].cols!=cols||!outputs[i])
++            return false;
++
++    SetWorkEpoch(epoch);
++    const size_t inCount=(size_t)batch*cols;
++    if(!EnsureScratch(110,inCount)) return false;
++    auto& in=Scratch(110);
++    DeviceBuf* us=nullptr;void* um=nullptr;
++    const size_t inBytes=inCount*sizeof(float);
++    if(!ensureMappedStaging(true,inBytes,us,um)) return false;
++    std::memcpy(um,inputBatch,inBytes);
++
++    size_t totalOutBytes=0;
++    size_t offsets[3]{};
++    for(size_t i=0;i<weightCount;++i) {
++        offsets[i]=totalOutBytes;
++        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
++        if(totalOutBytes>SIZE_MAX-b) return false;
++        totalOutBytes+=b;
++        if(!EnsureScratch(111u+(unsigned)i,(size_t)batch*weights[i].rows))
++            return false;
++    }
++    DeviceBuf* ds=nullptr;void* dm=nullptr;
++    if(!ensureMappedStaging(false,totalOutBytes,ds,dm)) return false;
++
++    if(!BeginFusedLayer()) return false;
++    auto abort=[&]{if(FusedRecording())(void)EndFusedLayer();return false;};
++    if(!recordCopy(fusedCmd_,*us,in,inBytes)) return abort();
++    for(size_t i=0;i<weightCount;++i) {
++        auto& out=Scratch(111u+(unsigned)i);
++        if(!DispatchGemvQ4KBatch(
++                weights[i].data,weights[i].bytes,in,out,
++                weights[i].rows,weights[i].cols,batch))
++            return abort();
++        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
++        if(!recordCopy(
++                fusedCmd_,out,*ds,b,0,(VkDeviceSize)offsets[i]))
++            return abort();
++    }
++    if(!EndFusedLayer()) return false;
++    for(size_t i=0;i<weightCount;++i) {
++        const size_t b=(size_t)batch*weights[i].rows*sizeof(float);
++        std::memcpy(outputs[i],(const uint8_t*)dm+offsets[i],b);
++    }
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuColumnSplitBatch4(
+@@
+     uint32_t batch,uint64_t epoch);
++bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor* const* weights,float* const* outputs,size_t weightCount,
++    const float* inputBatch,uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuColumnSplitBatch4(
+@@
+ }
++
++bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor* const* weights,float* const* outputs,size_t weightCount,
++    const float* inputBatch,uint32_t batch,uint64_t epoch)
++{
++    if(!weights||!outputs||!inputBatch||weightCount<2||weightCount>3||
++       !batch||batch>4) return false;
++    struct Item {
++        RowSplitPlan p{};
++        GpuWeightView w[2]{};
++        std::vector<float> y[2];
++    };
++    std::vector<Item> it(weightCount);
++    for(size_t i=0;i<weightCount;++i) {
++        if(!weights[i]||!outputs[i]||
++           weights[i]->type!=(int)GGMLType::GGML_TYPE_Q4_K)
++            return false;
++        it[i].p=cachedThroughputSplit(*weights[i],g0,g1);
++        if(!it[i].p.valid||
++           !Deep2BuildGpuWeightView(
++               *weights[i],it[i].p.row0Begin,it[i].p.row0Count,it[i].w[0])||
++           !Deep2BuildGpuWeightView(
++               *weights[i],it[i].p.row1Begin,it[i].p.row1Count,it[i].w[1]))
++            return false;
++        it[i].y[0].resize((size_t)batch*it[i].p.row0Count);
++        it[i].y[1].resize((size_t)batch*it[i].p.row1Count);
++    }
++    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
++        GpuWeightView views[3]{};
++        float* outs[3]{};
++        for(size_t i=0;i<weightCount;++i) {
++            views[i]=it[i].w[s];
++            outs[i]=it[i].y[s].data();
++        }
++        return g.RunWeightGroupHostBatchQ4K(
++            views,outs,weightCount,inputBatch,batch,epoch);
++    };
++    bool a=false,b=false;
++    const bool both=rowExecutor().run(
++        [&]{a=lane(0,g0);return a;},
++        [&]{b=lane(1,g1);return b;});
++    if(!both||!a||!b) return false;
++    for(size_t i=0;i<weightCount;++i) {
++        for(uint32_t t=0;t<batch;++t) {
++            float* dst=outputs[i]+(size_t)t*weights[i]->rows;
++            std::memcpy(
++                dst+it[i].p.row0Begin,
++                it[i].y[0].data()+(size_t)t*it[i].p.row0Count,
++                (size_t)it[i].p.row0Count*sizeof(float));
++            std::memcpy(
++                dst+it[i].p.row1Begin,
++                it[i].y[1].data()+(size_t)t*it[i].p.row1Count,
++                (size_t)it[i].p.row1Count*sizeof(float));
++        }
++    }
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool trySpecColumnSplitBatch(const WeightTensor& wt,const float* in,
+                                  float* out,size_t count);
++    bool trySpecQ4KGroup(
++        const WeightTensor* const* w,float* const* out,size_t weightCount,
++        const float* input,size_t count);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ bool Deep2Engine::trySpecColumnSplitBatch(
+@@
+ }
++
++bool Deep2Engine::trySpecQ4KGroup(
++    const WeightTensor* const* w,float* const* out,size_t weightCount,
++    const float* input,size_t count)
++{
++    if(vulkanDevices_.size()<2||!w||!out||!input||
++       weightCount<2||weightCount>3||count==0||count>4)
++        return false;
++    return Deep2RunDualGpuRowSplitBatchGroupQ4K(
++        *vulkanDevices_[0],*vulkanDevices_[1],
++        w,out,weightCount,input,(uint32_t)count,
++        kvCache?kvCache->currentLength():0);
++}
+@@
+-        LinearWBatch4(lw.wq,norm,count,bq,q,H);
+-        LinearWBatch4(lw.wk,norm,count,bk,k,KD);
+-        LinearWBatch4(lw.wv,norm,count,bv,v,KD);
++        const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
++        float* qkvO[3]={q,k,v};
++        if(!trySpecQ4KGroup(qkvW,qkvO,3,norm,count)) {
++            LinearWBatch4(lw.wq,norm,count,bq,q,H);
++            LinearWBatch4(lw.wk,norm,count,bk,k,KD);
++            LinearWBatch4(lw.wv,norm,count,bv,v,KD);
++        } else {
++            if(bq) for(size_t t=0;t<count;++t)
++                for(size_t i=0;i<H;++i) q[t*H+i]+=bq[i];
++            if(bk) for(size_t t=0;t<count;++t)
++                for(size_t i=0;i<KD;++i) k[t*KD+i]+=bk[i];
++            if(bv) for(size_t t=0;t<count;++t)
++                for(size_t i=0;i<KD;++i) v[t*KD+i]+=bv[i];
++        }
+@@
+-        LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
+-        LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
++        const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
++        float* guO[2]={gate,up};
++        if(!trySpecQ4KGroup(guW,guO,2,norm,count)) {
++            LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
++            LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
++        }

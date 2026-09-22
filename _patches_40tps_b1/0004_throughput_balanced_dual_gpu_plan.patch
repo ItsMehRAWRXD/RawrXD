@@ -1,0 +1,206 @@
+# Deep2 Qwen32 40TPS — Batch 1/5, item 4
+# Base: apply after 0001-0003.
+# Goal: split dense sequential layers by throughput, constrained by VRAM,
+# rather than by VRAM capacity alone.
+#
+# For the user's 32GB R9700 + 16GB RX7800XT, Qwen2.5-Coder-32B Q4_K_M
+# fits approximately half-and-half. Default throughput weights are 1:1.
+# Override with:
+#   DEEP2_GPU0_THROUGHPUT_WEIGHT=1.05
+#   DEEP2_GPU1_THROUGHPUT_WEIGHT=1.00
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0004_throughput_balanced_dual_gpu_plan.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2MultiGpuLayerPlan.hpp b/~dev/rawrxd/src/deep2/Deep2MultiGpuLayerPlan.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2MultiGpuLayerPlan.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2MultiGpuLayerPlan.hpp
+@@
+ struct Deep2MultiGpuLayerPlan {
+@@
+     bool configure(size_t layers,
+                    const std::vector<uint64_t>& gpuCapacityBytes,
+                    bool allowCpuTail = false,
+                    uint32_t cpuTailLayers = 0) {
+@@
+         return active && cursor <= layers;
+     }
++
++    // Dense decode is sequential across layers, so capacity-proportional
++    // assignment can badly imbalance cards with similar bandwidth but
++    // different VRAM sizes.  This planner targets equal *time* using
++    // throughput weights, while refusing assignments that exceed the
++    // supplied per-GPU resident byte capacities.
++    bool configureThroughputBalanced(
++        const std::vector<uint64_t>& layerBytes,
++        const std::vector<uint64_t>& gpuCapacityBytes,
++        const std::vector<double>& throughputWeight)
++    {
++        clear();
++        const size_t layers = layerBytes.size();
++        if (!layers || gpuCapacityBytes.empty()) return false;
++
++        const size_t gpuN = std::min(layers, gpuCapacityBytes.size());
++        if (!gpuN) return false;
++
++        std::vector<double> speed(gpuN, 1.0);
++        for (size_t i = 0; i < gpuN && i < throughputWeight.size(); ++i)
++            if (throughputWeight[i] > 0.0) speed[i] = throughputWeight[i];
++
++        long double totalSpeed = 0.0L;
++        uint64_t bytesTotal = 0;
++        for (size_t i = 0; i < gpuN; ++i) totalSpeed += speed[i];
++        for (uint64_t b : layerBytes) {
++            if (bytesTotal > std::numeric_limits<uint64_t>::max() - b)
++                return false;
++            bytesTotal += b;
++        }
++        if (totalSpeed <= 0.0L || !bytesTotal) return false;
++
++        gpuSlotCount = static_cast<unsigned>(gpuN);
++        plannedCount = gpuSlotCount;
++        active = true;
++        hybrid = false;
++        totalLayers = layers;
++        totalWeight = bytesTotal;
++        rangeLo.resize(gpuN);
++        rangeHi.resize(gpuN);
++        slotKind.assign(gpuN, MultiGpuSlotKind::GPU);
++        layerSlot.assign(layers, UINT32_MAX);
++        layerExecuted.assign(layers, 0);
++
++        size_t cursor = 0;
++        uint64_t prefixBytes = 0;
++        long double prefixSpeed = 0.0L;
++
++        for (size_t s = 0; s < gpuN; ++s) {
++            rangeLo[s] = static_cast<uint32_t>(cursor);
++
++            if (s + 1 == gpuN) {
++                rangeHi[s] = static_cast<uint32_t>(layers - 1);
++            } else {
++                prefixSpeed += speed[s];
++                const long double target =
++                    static_cast<long double>(bytesTotal) *
++                    prefixSpeed / totalSpeed;
++
++                const size_t maxEnd = layers - (gpuN - s - 1) - 1;
++                size_t end = cursor;
++                uint64_t running = prefixBytes;
++                while (end < maxEnd &&
++                       static_cast<long double>(running + layerBytes[end]) < target) {
++                    running += layerBytes[end];
++                    ++end;
++                }
++
++                // Choose the nearer side of the target when legal.
++                if (end > cursor) {
++                    const long double before =
++                        static_cast<long double>(running);
++                    const long double after =
++                        static_cast<long double>(running + layerBytes[end]);
++                    if ((target - before) <= (after - target))
++                        --end;
++                }
++                rangeHi[s] = static_cast<uint32_t>(end);
++            }
++
++            uint64_t slotBytes = 0;
++            for (uint32_t l = rangeLo[s]; l <= rangeHi[s]; ++l) {
++                layerSlot[l] = static_cast<uint32_t>(s);
++                slotBytes += layerBytes[l];
++            }
++
++            // 80% resident budget matches the default GPU cache policy.
++            const uint64_t cap = (gpuCapacityBytes[s] / 10u) * 8u;
++            if (slotBytes > cap) {
++                clear();
++                return false;
++            }
++
++            prefixBytes += slotBytes;
++            cursor = static_cast<size_t>(rangeHi[s]) + 1;
++        }
++        return cursor == layers;
++    }
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
+ #include <algorithm>
++#include <cstdlib>
+ #include <cstdio>
+ #include <cstring>
+ #include <vector>
+@@
+ int deviceScore(const VulkanPhysicalInfo& d) {
+@@
+ }
++
++uint64_t tensorResidentBytes(const WeightTensor& w) {
++    if (!w.data) return 0;
++    if (w.sizeBytes) return static_cast<uint64_t>(w.sizeBytes);
++    const uint64_t n = static_cast<uint64_t>(w.numElements());
++    return n > UINT64_MAX / sizeof(float) ? 0 : n * sizeof(float);
++}
++
++uint64_t denseLayerResidentBytes(const LayerWeights& l) {
++    uint64_t n = 0;
++    auto add = [&](const WeightTensor& w) {
++        const uint64_t b = tensorResidentBytes(w);
++        if (UINT64_MAX - n >= b) n += b;
++    };
++    add(l.wq); add(l.wk); add(l.wv);
++    if (l.wo.data) add(l.wo); else add(l.attnO);
++    add(l.wGate); add(l.wUp); add(l.wDown);
++    add(l.attnNorm); add(l.ffnNorm);
++    add(l.bq); add(l.bk); add(l.bv);
++    return n;
++}
++
++double envPositiveDouble(const char* name, double fallback) {
++    const char* s = std::getenv(name);
++    if (!s || !*s) return fallback;
++    char* end = nullptr;
++    const double v = std::strtod(s, &end);
++    return end != s && v > 0.0 ? v : fallback;
++}
+@@
+     if (modelWeights.loaded && modelWeights.numLayers) {
+         std::vector<uint64_t> caps;
+         for (const auto& d : vulkanDevices_)
+             caps.push_back(d->deviceLocalBytes());
+-        if (!multiGpuLayerPlan_.configure(modelWeights.numLayers,caps,false,0)) {
++
++        std::vector<uint64_t> layerBytes;
++        layerBytes.reserve(modelWeights.layers.size());
++        for (const auto& l : modelWeights.layers)
++            layerBytes.push_back(denseLayerResidentBytes(l));
++
++        std::vector<double> speed(caps.size(), 1.0);
++        if (!speed.empty())
++            speed[0] = envPositiveDouble("DEEP2_GPU0_THROUGHPUT_WEIGHT", 1.0);
++        if (speed.size() > 1)
++            speed[1] = envPositiveDouble("DEEP2_GPU1_THROUGHPUT_WEIGHT", 1.0);
++
++        if (!multiGpuLayerPlan_.configureThroughputBalanced(
++                layerBytes, caps, speed)) {
+             std::fprintf(stderr,"BATCH9_MULTIGPU_PLAN=HOLD\n");
+             if (vulkanStrictNoCpuFallback_) {
+                 vulkanDevices_.clear();
+                 vulkanStrictViolation_=true;
+                 return;
+             }
+         }
++        if (multiGpuLayerPlan_.active) {
++            for (unsigned s = 0; s < multiGpuLayerPlan_.gpuSlotCount; ++s) {
++                std::fprintf(stdout,
++                    "DEEP2_DENSE_SLOT slot=%u lo=%u hi=%u speed_weight=%.3f\n",
++                    s,
++                    multiGpuLayerPlan_.rangeLo[s],
++                    multiGpuLayerPlan_.rangeHi[s],
++                    speed[s]);
++            }
++        }
+     }

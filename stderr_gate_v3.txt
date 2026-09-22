@@ -1,0 +1,8 @@
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_OK
+VK_PHYS ordinal=0 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.72
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=2 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_REQUIRED_DUAL_AMD_PAIR_MISSING r9700=1 rx7800xt=0
+SETUP_FAIL

@@ -1,0 +1,77 @@
+# Deep2 Qwen32 85TPS — Batch 8, item 59
+# Base: apply after 0058.
+#
+# Goal:
+#   speculative K/V tail can be appended directly from resident GPU buffers
+#   into the persistent device KV mirror.
+#
+# This removes host roundtrip for newly-generated speculative K/V when the
+# resident chain is active. Host KV remains the correctness authority and is
+# still committed/rewound exactly as before.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0059_direct_spec_kv_device_tail_append.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool UploadSpecKvRange(uint32_t layer,uint32_t start,uint32_t count,
+                            const float* kTokenMajor,const float* vTokenMajor);
++    bool AppendSpecKvFromDevice(
++        uint32_t layer,uint32_t start,uint32_t count,
++        DeviceBuf& kTokenMajor,DeviceBuf& vTokenMajor);
+@@
+     uint64_t ResidentBatchInputUploads() const noexcept {
+         return residentBatchInputUploads_;
+     }
++    uint64_t DirectSpecKvAppends() const noexcept {
++        return directSpecKvAppends_;
++    }
+@@
+     uint64_t residentBatchInputUploads_=0;
++    uint64_t directSpecKvAppends_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::AppendSpecKvFromDevice(
++    uint32_t layer,uint32_t start,uint32_t count,
++    DeviceBuf& kTokenMajor,DeviceBuf& vTokenMajor)
++{
++    if(layer>=specKMirror_.size()||!count||
++       !kTokenMajor||!vTokenMajor||
++       start>specKvCapacity_||count>specKvCapacity_-start)
++        return false;
++
++    // Device source is token-major [token][kvHead][headDim].
++    // Mirror is head-major [kvHead][capacity][headDim].
++    // Use small device copies per head/token; no host materialization.
++    VkCommandBuffer cmd{};
++    VkQueryPool query{};
++    if(!beginCommand(cmd,query,true)) return false;
++    const VkDeviceSize hdBytes=(VkDeviceSize)specKvHeadDim_*sizeof(float);
++    for(uint32_t t=0;t<count;++t) {
++        for(uint32_t h=0;h<specKvHeads_;++h) {
++            const VkDeviceSize src=
++                ((VkDeviceSize)t*specKvHeads_+h)*hdBytes;
++            const VkDeviceSize dst=
++                ((VkDeviceSize)h*specKvCapacity_+start+t)*hdBytes;
++            if(!recordCopy(
++                    cmd,kTokenMajor,specKMirror_[layer],
++                    hdBytes,src,dst)||
++               !recordCopy(
++                    cmd,vTokenMajor,specVMirror_[layer],
++                    hdBytes,src,dst))
++                return false;
++        }
++    }
++    if(!endSubmitWait(
++            cmd,query,GpuWorkKind::ModelTransfer,
++            (uint64_t)count*specKvHeads_*hdBytes*2,
++            workEpoch_,nullptr))
++        return false;
++    directSpecKvAppends_+=count;
++    return true;
++}

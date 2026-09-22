@@ -1,0 +1,90 @@
+# Deep2 Qwen32 85TPS — Batch 9, item 65
+# Base: apply after 0064.
+#
+# Authority v8:
+# - retains exact parity / 2 GPUs / zero fallback / 3x >=85 / zero weight upload
+# - adds host-transfer-byte accounting per verified token
+# - requires resident full-output assembly activity
+# - requires fused primary speculative layer graph activity
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0065_85tps_authority_v8_host_byte_budget.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotResidentGroupOutputReallocs(unsigned slot) const;
++    uint64_t vulkanSlotSecondaryImportBytes(unsigned slot) const;
++    uint64_t vulkanSlotFullOutputBoundaryBytes(unsigned slot) const;
++    uint64_t vulkanSlotResidentFullOutputCopies(unsigned slot) const;
++    uint64_t vulkanSlotSpecLayerGraphSubmits(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotSecondaryImportBytes(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SecondaryImportBytes():0;
++}
++uint64_t Deep2Engine::vulkanSlotFullOutputBoundaryBytes(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->FullOutputBoundaryBytes():0;
++}
++uint64_t Deep2Engine::vulkanSlotResidentFullOutputCopies(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->ResidentFullOutputCopies():0;
++}
++uint64_t Deep2Engine::vulkanSlotSpecLayerGraphSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SpecLayerGraphSubmits():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t kvdWarm=spec.vulkanSlotDirectSpecKvAppends(0);
++    const uint64_t impWarm=spec.vulkanSlotSecondaryImportBytes(0);
++    const uint64_t bndWarm=spec.vulkanSlotFullOutputBoundaryBytes(0);
++    const uint64_t asmWarm=spec.vulkanSlotResidentFullOutputCopies(0);
++    const uint64_t graphWarm=spec.vulkanSlotSpecLayerGraphSubmits(0);
+@@
+     const uint64_t kvdEnd=spec.vulkanSlotDirectSpecKvAppends(0);
++    const uint64_t impEnd=spec.vulkanSlotSecondaryImportBytes(0);
++    const uint64_t bndEnd=spec.vulkanSlotFullOutputBoundaryBytes(0);
++    const uint64_t asmEnd=spec.vulkanSlotResidentFullOutputCopies(0);
++    const uint64_t graphEnd=spec.vulkanSlotSpecLayerGraphSubmits(0);
+@@
+     const bool hotpathBounded=
+         submitPerToken<400.0 &&
+         inputUploadsPerToken<150.0 &&
+         stableGroupArena;
++    const uint64_t hostBytes=(impEnd-impWarm)+(bndEnd-bndWarm);
++    const double hostBytesPerToken=measuredVerified
++        ? (double)hostBytes/(double)measuredVerified : 1.0e30;
++    const bool residentAssembly=(asmEnd>asmWarm);
++    const bool fusedGraphs=(graphEnd>graphWarm);
++    // This is intentionally a generous bound. It catches regressions back to
++    // full-weight or repeated full-activation materialization without
++    // pretending host traffic can already be zero on non-peer Vulkan devices.
++    const bool hostTrafficBounded=hostBytesPerToken < 64.0*1024.0*1024.0;
+@@
+-                    zeroMeasuredUploads&&pinned&&hotpathBounded;
++                    zeroMeasuredUploads&&pinned&&hotpathBounded&&
++                    residentAssembly&&fusedGraphs&&hostTrafficBounded;
+@@
+         "HOTPATH_OVERHEAD_BOUNDED=%s\n"
++        "HOST_TRANSFER_BYTES_MEASURED=%llu\n"
++        "HOST_TRANSFER_BYTES_PER_VERIFIED_TOKEN=%.3f\n"
++        "RESIDENT_FULL_OUTPUT_COPIES_DELTA=%llu\n"
++        "SPEC_LAYER_GRAPH_SUBMITS_DELTA=%llu\n"
++        "HOST_TRAFFIC_BOUNDED=%s\n"
+@@
+         hotpathBounded?"PASS":"FAIL",
++        (unsigned long long)hostBytes,
++        hostBytesPerToken,
++        (unsigned long long)(asmEnd-asmWarm),
++        (unsigned long long)(graphEnd-graphWarm),
++        hostTrafficBounded?"PASS":"FAIL",

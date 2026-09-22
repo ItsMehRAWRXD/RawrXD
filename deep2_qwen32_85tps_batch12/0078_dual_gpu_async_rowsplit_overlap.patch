@@ -1,0 +1,101 @@
+# Deep2 Qwen32 85TPS — Batch 12, item 78
+# Base: apply after 0077.
+#
+# Goal:
+#   submit GPU0 and GPU1 row slices without blocking, then overlap:
+#
+#   t0: submit GPU0 GEMV
+#   t0: submit GPU1 GEMV
+#   while both run: host prepares fixed metadata / next descriptor-free state
+#   wait GPU0
+#   submit GPU1 row-slice transfer ring immediately when its compute completes
+#   assemble into GPU0 full-output target only at the dependency boundary
+#
+# Adds measured arithmetic-overlap counters.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0078_dual_gpu_async_rowsplit_overlap.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp b/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
+@@
+ struct GpuForwardCounters {
+@@
+     uint64_t dualArithmeticOverlapNs=0;
++    uint64_t dualAsyncWindows=0;
++    uint64_t dualAsyncOverlapNs=0;
++    uint64_t dualAsyncWallNs=0;
+ };
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
++bool Deep2RunDualGpuRowSplitBatch4Async(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor& wt,const float* inputBatch,
++    float* outputBatch,uint32_t batch,uint64_t epoch,
++    uint64_t* overlapNs,uint64_t* wallNs)
++{
++    if(overlapNs) *overlapNs=0;
++    if(wallNs) *wallNs=0;
++    if(!inputBatch||!outputBatch||!batch||batch>4) return false;
++    const CachedDualRowPlan* cp=Deep2GetCachedDualRowPlan(wt,g0,g1);
++    if(!cp||!cp->valid) return false;
++    const auto& p=cp->split;
++    const auto& w0=cp->gpu0;
++    const auto& w1=cp->gpu1;
++
++    if(!g0.UploadResidentBatchInput(inputBatch,w0.cols,batch,epoch)||
++       !g1.UploadResidentBatchInput(inputBatch,w1.cols,batch,epoch))
++        return false;
++    if(!g0.EnsureScratch(150,(size_t)batch*w0.rows)||
++       !g1.EnsureScratch(150,(size_t)batch*w1.rows))
++        return false;
++    auto& y0=g0.Scratch(150);
++    auto& y1=g1.Scratch(150);
++
++    VulkanCompute::Q4KAsyncTicket a0{},a1{};
++    const auto start=std::chrono::steady_clock::now();
++    if(!g0.BeginQ4KResidentAsync(w0,g0.ResidentBatchInput(),y0,batch,epoch,a0))
++        return false;
++    if(!g1.BeginQ4KResidentAsync(w1,g1.ResidentBatchInput(),y1,batch,epoch,a1)) {
++        g0.CancelQ4KAsync(a0);
++        return false;
++    }
++
++    uint64_t n0=0,n1=0;
++    if(!g0.WaitQ4KResidentAsync(a0,&n0)) {
++        g1.CancelQ4KAsync(a1); return false;
++    }
++    if(!g1.WaitQ4KResidentAsync(a1,&n1)) return false;
++
++    // Launch secondary transfer through persistent ring after arithmetic.
++    uint32_t ringSlot=0;
++    const size_t bytes1=(size_t)batch*w1.rows*sizeof(float);
++    if(!g1.SubmitDownloadRing(y1,bytes1,ringSlot)) return false;
++
++    // GPU0 slice can be returned/placed while the secondary transfer is live.
++    std::vector<float> h0((size_t)batch*w0.rows);
++    if(!g0.DownloadVector(y0,h0.data(),h0.size())) return false;
++
++    std::vector<float> h1((size_t)batch*w1.rows);
++    if(!g1.WaitDownloadRing(ringSlot,h1.data(),bytes1)) return false;
++    for(uint32_t b=0;b<batch;++b) {
++        float* dst=outputBatch+(size_t)b*wt.rows;
++        std::memcpy(
++            dst+p.row0Begin,h0.data()+(size_t)b*w0.rows,
++            (size_t)w0.rows*sizeof(float));
++        std::memcpy(
++            dst+p.row1Begin,h1.data()+(size_t)b*w1.rows,
++            (size_t)w1.rows*sizeof(float));
++    }
++    const auto finish=std::chrono::steady_clock::now();
++    const uint64_t wall=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(finish-start).count();
++    const uint64_t ov=n0+n1>wall ? n0+n1-wall : 0;
++    if(overlapNs) *overlapNs=ov;
++    if(wallNs) *wallNs=wall;
++    return true;
++}

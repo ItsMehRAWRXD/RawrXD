@@ -1,0 +1,87 @@
+# Deep2 Qwen32 85TPS — speculative campaign Batch 1/5, item 23
+# Base: apply after 0021-0022.
+#
+# Adds explicit KV speculative transactions. KVCache already supports rewind;
+# this turns it into a fail-safe RAII transaction:
+#   begin at committed length
+#   tentatively advance/write proposed positions
+#   commit accepted prefix OR auto-rollback on failure/mismatch
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0023_kv_spec_transaction.patch
+
+diff --git a/~dev/rawrxd/src/deep2/KVCache.h b/~dev/rawrxd/src/deep2/KVCache.h
+--- a/~dev/rawrxd/src/deep2/KVCache.h
++++ b/~dev/rawrxd/src/deep2/KVCache.h
+@@
+     bool advance() {
+         if (!allocated_ || currentLen_ >= config_.maxSeqLen) return false;
+         ++currentLen_;
+         return true;
+     }
++
++    bool advanceBy(size_t count) {
++        if(!allocated_||count>config_.maxSeqLen-currentLen_) return false;
++        currentLen_+=count;
++        return true;
++    }
++
++    size_t checkpoint() const noexcept { return currentLen_; }
+@@
+     size_t currentLength() const { return currentLen_; }
+
+diff --git a/~dev/rawrxd/src/deep2/KVSpecTransaction.hpp b/~dev/rawrxd/src/deep2/KVSpecTransaction.hpp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/KVSpecTransaction.hpp
+@@
++#pragma once
++#include "KVCache.h"
++#include <cstddef>
++
++namespace Deep2 {
++
++class KVSpecTransaction {
++public:
++    explicit KVSpecTransaction(KVCache& kv)
++        :kv_(&kv),base_(kv.checkpoint()){}
++    KVSpecTransaction(const KVSpecTransaction&)=delete;
++    KVSpecTransaction& operator=(const KVSpecTransaction&)=delete;
++
++    ~KVSpecTransaction() {
++        if(kv_&&!committed_)
++            (void)kv_->rewind(base_,false);
++    }
++
++    size_t base() const noexcept { return base_; }
++    size_t current() const noexcept {
++        return kv_?kv_->currentLength():base_;
++    }
++
++    bool commitAccepted(size_t accepted) {
++        if(!kv_) return false;
++        const size_t want=base_+accepted;
++        if(want>kv_->currentLength()) return false;
++        if(!kv_->rewind(want,false)) return false;
++        committed_=true;
++        return true;
++    }
++
++    bool commitAll() {
++        if(!kv_) return false;
++        committed_=true;
++        return true;
++    }
++
++    void rollback() {
++        if(kv_) (void)kv_->rewind(base_,false);
++        committed_=true;
++    }
++
++private:
++    KVCache* kv_=nullptr;
++    size_t base_=0;
++    bool committed_=false;
++};
++
++} // namespace Deep2

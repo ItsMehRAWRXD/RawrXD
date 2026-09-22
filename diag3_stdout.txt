@@ -1,0 +1,3 @@
+[QuantKernelRegistry] Q4_K GEMV=00007FF668191660 dequant=00007FF66818E7A0 GetGEMV(12)=00007FF668191660 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels

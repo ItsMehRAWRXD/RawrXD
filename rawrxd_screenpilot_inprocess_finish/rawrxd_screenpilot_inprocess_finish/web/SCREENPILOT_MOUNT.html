@@ -1,0 +1,37 @@
+<!-- Merge this into ide_chatbot.html and SERVE THE RESULT FROM:
+     http://127.0.0.1:11435/screenpilot
+     Do not use file:// in the final configuration.
+-->
+<section id="rawrAgentSurface">
+  <div class="mode-switcher" role="group" aria-label="Agent mode">
+    <button type="button" data-rawr-mode="ask">ASK</button>
+    <button type="button" data-rawr-mode="plan">PLAN</button>
+    <button type="button" data-rawr-mode="build">BUILD</button>
+    <button type="button" data-rawr-mode="agent" class="active">AGENT</button>
+  </div>
+
+  <label>
+    Model
+    <input id="rawrModel" value="qwen2.5-coder:32b" autocomplete="off">
+  </label>
+
+  <label>
+    Workspace
+    <input id="rawrWorkspace" value="F:\~dev" autocomplete="off">
+  </label>
+
+  <textarea
+    id="rawrPrompt"
+    rows="8"
+    placeholder="audit my IDE codebase for any stubs"></textarea>
+
+  <div>
+    <button id="rawrSend" type="button">Run</button>
+    <button id="rawrStop" type="button" disabled>Stop</button>
+    <span id="rawrStatus">checking local authority…</span>
+  </div>
+
+  <pre id="rawrOutput" aria-live="polite"></pre>
+</section>
+
+<script src="/screenpilot/screenpilot_client.js"></script>

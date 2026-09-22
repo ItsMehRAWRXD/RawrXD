@@ -1,0 +1,3365 @@
+Group 3a: Fix reference (real counterpart exists)
+================================================================================
+
+Group 3b: Remove from CMake (no real counterpart)
+================================================================================
+ANSIColorParser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\ANSIColorParser.cpp']
+
+ANSIParser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ANSIParser.cpp']
+
+AdvancedAgentCoordinator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AdvancedAgentCoordinator.cpp']
+
+AdvancedCodingAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\AI\\AdvancedCodingAgent.cpp']
+
+AgentGraphRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\agent\\AgentGraphRuntime.cpp']
+
+AgentKernel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernel\\AgentKernel.cpp']
+
+AgentOllamaClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgentOllamaClient.cpp']
+
+AgentOllamaClient_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgentOllamaClient_stubs.cpp']
+
+AgentOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgentOrchestrator.cpp']
+
+AgentToolHandlers.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgentToolHandlers.cpp']
+
+AgenticBrowserLayer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\AgenticBrowserLayer.cpp']
+
+AgenticDeepThinkingEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgenticDeepThinkingEngine.cpp']
+
+AgenticEngineSovereignHook.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\AgenticEngineSovereignHook.cpp']
+
+AgenticIOCPBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\full_agentic_ide\\AgenticIOCPBridge.cpp']
+
+AgenticNavigator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AgenticNavigator.cpp']
+
+AgenticPlanningOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\full_agentic_ide\\AgenticPlanningOrchestrator.cpp']
+
+AntiPatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\AntiPatcher.cpp']
+
+ArchitectAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\ArchitectAgent.cpp']
+
+AttnCertProbe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\AttnCertProbe.cpp']
+
+AutoRepair.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\AutoRepair.cpp']
+
+AutoRepairEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\AutoRepairEngine.cpp']
+
+AutonomousAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\agent\\AutonomousAgent.cpp', 'F:\\~dev\\rawrxd\\src\\win32app\\AutonomousAgent.cpp']
+
+AutonomousFixOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\AutonomousFixOrchestrator.cpp']
+
+AutonomousRecovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\recovery\\AutonomousRecovery.cpp']
+
+BP16Extractor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\BP16Extractor.cpp']
+
+BP16Streamer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\BP16Streamer.cpp']
+
+BP1BraidIndex.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\shared\\BP1BraidIndex.cpp']
+
+BP1BraidStreamer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\shared\\BP1BraidStreamer.cpp']
+
+BackendCore.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\BackendCore.cpp']
+
+BackendEmissionService.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\BackendEmissionService.cpp']
+
+BackendOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\BackendOrchestrator.cpp']
+
+BeaconBus.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\bus\\BeaconBus.cpp']
+
+Beaconism.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\Beaconism.cpp']
+
+BenchmarkMenu.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\BenchmarkMenu.cpp']
+
+BottleTTL.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\BottleTTL.cpp']
+
+BoundedAgentLoop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\BoundedAgentLoop.cpp']
+
+BuildIntelligence.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\build\\BuildIntelligence.cpp']
+
+BuildStateGraph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\build\\BuildStateGraph.cpp']
+
+Bus.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\Core\\Bus.cpp']
+
+CICDSettings.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\CICDSettings.cpp']
+
+CPUFrequency.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\CPUFrequency.cpp']
+
+CapabilityBus.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\bus\\CapabilityBus.cpp']
+
+CapabilityProfile.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\command\\CapabilityProfile.cpp']
+
+CapabilityTierMatrix.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\CapabilityTierMatrix.cpp']
+
+Chamber.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Chamber.cpp']
+
+ChatPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\ChatPanel.cpp']
+
+ChatTemplate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ChatTemplate.cpp']
+
+CinematicVibeEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\CinematicVibeEngine.cpp']
+
+CommandBroker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\command\\CommandBroker.cpp']
+
+CommandEventJournal.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\command\\CommandEventJournal.cpp']
+
+CompletionEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\AI\\CompletionEngine.cpp']
+
+CompressedKVCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\CompressedKVCache.cpp']
+
+ConsentPrompt.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\ConsentPrompt.cpp']
+
+CrashRecovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\CrashRecovery.cpp']
+
+CycloneScheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\CycloneScheduler.cpp']
+
+DAPClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\Debug\\DAPClient.cpp']
+
+DebugPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\DebugPanel.cpp']
+
+Deep2APIServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2APIServer.cpp']
+
+Deep2APIServer_Complete.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2APIServer_Complete.cpp']
+
+Deep2Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Benchmark.cpp']
+
+Deep2Bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Bridge.cpp', 'F:\\~dev\\rawrxd\\src\\ide\\Deep2Bridge.cpp']
+
+Deep2Determinism.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Determinism.cpp']
+
+Deep2DeviceManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2DeviceManager.cpp']
+
+Deep2Discovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Discovery.cpp']
+
+Deep2Engine_GpuToken.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Engine_GpuToken.cpp']
+
+Deep2Engine_KernelTest.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Engine_KernelTest.cpp']
+
+Deep2Engine_MetadataRegressionTest.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Engine_MetadataRegressionTest.cpp']
+
+Deep2ExecutionGraph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2ExecutionGraph.cpp']
+
+Deep2ExecutionTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\Deep2ExecutionTelemetry.cpp']
+
+Deep2GPUBackend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\gpu\\Deep2GPUBackend.cpp']
+
+Deep2GenerationCert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2GenerationCert.cpp']
+
+Deep2IDEIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2IDEIntegration.cpp']
+
+Deep2InferenceEndpoint.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2InferenceEndpoint.cpp']
+
+Deep2InferenceGateway.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2InferenceGateway.cpp']
+
+Deep2InferenceWrapper.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\Deep2InferenceWrapper.cpp']
+
+Deep2Integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Integration.cpp']
+
+Deep2LivePath.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath.cpp']
+
+Deep2LivePath_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_Emit.cpp']
+
+Deep2LivePath_Gate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_Gate.cpp']
+
+Deep2LivePath_Mech.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_Mech.cpp']
+
+Deep2LivePath_MechEnd.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_MechEnd.cpp']
+
+Deep2LivePath_Pinball.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_Pinball.cpp']
+
+Deep2LivePath_Thermal.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LivePath_Thermal.cpp']
+
+Deep2LocalServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2LocalServer.cpp']
+
+Deep2ModelRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2ModelRuntime.cpp']
+
+Deep2MultiGpu_CostCut.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2MultiGpu_CostCut.cpp']
+
+Deep2OuterEngineBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2OuterEngineBridge.cpp']
+
+Deep2ProductionCert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2ProductionCert.cpp']
+
+Deep2ProductionRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\production\\Deep2ProductionRuntime.cpp']
+
+Deep2QuantCert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2QuantCert.cpp']
+
+Deep2Server_Minimal.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Server_Minimal.cpp']
+
+Deep2Server_Sovereign.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2Server_Sovereign.cpp']
+
+Deep2SovereignInferenceGateway.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\Deep2SovereignInferenceGateway.cpp']
+
+Deep2StreamApi.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\Deep2StreamApi.cpp']
+
+DeepContextManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\DeepContextManager.cpp']
+
+DeepSeekMoELoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\DeepSeekMoELoader.cpp']
+
+DeterministicReplayEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\DeterministicReplayEngine.cpp']
+
+Diagnostics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\utils\\Diagnostics.cpp']
+
+DiagnosticsEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\diagnostics\\DiagnosticsEngine.cpp']
+
+DiffEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\DiffEngine.cpp']
+
+DirectFIM.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\DirectFIM.cpp']
+
+DiskRecoveryToolHandler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\DiskRecoveryToolHandler.cpp']
+
+DistributedKV.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\DistributedKV.cpp']
+
+DualGPUBackend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mars\\DualGPUBackend.cpp']
+
+DualGPUHook.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\DualGPUHook.cpp']
+
+DualGpuPipeline.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\DualGpuPipeline.cpp']
+
+DualLaneChoreographer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\DualLaneChoreographer.cpp']
+
+DualStickEnvSnap.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\DualStickEnvSnap.cpp']
+
+DualStickStreamWindow.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\DualStickStreamWindow.cpp']
+
+DualStickStreamWindow_Acquire.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\DualStickStreamWindow_Acquire.cpp']
+
+DualStickStreamWindow_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\DualStickStreamWindow_Emit.cpp']
+
+EditorOperations.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\EditorOperations.cpp']
+
+EditorPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\EditorPanel.cpp']
+
+ElasticArchitectureDetector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\elastic\\ElasticArchitectureDetector.cpp']
+
+ElasticDecoder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\elastic\\ElasticDecoder.cpp']
+
+ElasticDynamicBudget.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ElasticDynamicBudget.cpp']
+
+ElasticEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\elastic\\ElasticEngine.cpp']
+
+ElasticGGUFIndex.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\elastic\\ElasticGGUFIndex.cpp']
+
+ElasticResidencyManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ElasticResidencyManager.cpp', 'F:\\~dev\\rawrxd\\src\\runtime\\elastic\\ElasticResidencyManager.cpp']
+
+Engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\hotpatch\\Engine.cpp']
+
+Ensemble58Governor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\Ensemble58Governor.cpp']
+
+ErrorRecoveryManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\ErrorRecoveryManager.cpp']
+
+ErrorReporter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\utils\\ErrorReporter.cpp']
+
+ExchangeObjectLedger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\ExchangeObjectLedger.cpp']
+
+ExecPipeline.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\ExecPipeline.cpp']
+
+ExecutionCapsule.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\capsule\\ExecutionCapsule.cpp']
+
+ExecutionContract.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\ExecutionContract.cpp']
+
+ExecutionPolicy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\execution_policy\\ExecutionPolicy.cpp']
+
+ExecutionPolicyApply.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\execution_policy\\ExecutionPolicyApply.cpp']
+
+ExecutionPolicyStore.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\execution_policy\\ExecutionPolicyStore.cpp']
+
+ExecutionSpine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\spine\\ExecutionSpine.cpp']
+
+ExpertSharding.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\ExpertSharding.cpp']
+
+ExportBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\ExportBridge.cpp']
+
+FIMPromptBuilder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\FIMPromptBuilder.cpp']
+
+FabricTensorTable.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FabricTensorTable.cpp']
+
+FindReplaceDialog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\FindReplaceDialog.cpp']
+
+Fix3_NHWC_Benchmark_Stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\Fix3_NHWC_Benchmark_Stub.cpp']
+
+Fix4_FlashAttention_Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\Fix4_FlashAttention_Benchmark.cpp']
+
+Fix5_FusedQuantized_Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\Fix5_FusedQuantized_Benchmark.cpp']
+
+FreeTokenMicroZone.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FreeTokenMicroZone.cpp']
+
+FreeTokenMicroZone_Query.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FreeTokenMicroZone_Query.cpp']
+
+FrontendSquad.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\FrontendSquad.cpp']
+
+FullAgenticIDE.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\full_agentic_ide\\FullAgenticIDE.cpp']
+
+FusedInferenceKernel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedInferenceKernel.cpp']
+
+FusedLiveController.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedLiveController.cpp']
+
+FusedLiveController_Cheap.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedLiveController_Cheap.cpp']
+
+FusedLiveController_Decide.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedLiveController_Decide.cpp']
+
+FusedLiveController_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedLiveController_Emit.cpp']
+
+FusedLiveController_Law.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\FusedLiveController_Law.cpp']
+
+FutureConsumer_Advance.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Advance.cpp']
+
+FutureConsumer_Chair.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Chair.cpp']
+
+FutureConsumer_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Emit.cpp']
+
+FutureConsumer_EmitExec.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_EmitExec.cpp']
+
+FutureConsumer_Notes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Notes.cpp']
+
+FutureConsumer_Register.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Register.cpp']
+
+FutureConsumer_Space.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\FutureConsumer_Space.cpp']
+
+GGMLAgenticEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\GGMLAgenticEngine.cpp']
+
+GGUFDiagnostics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GGUFDiagnostics.cpp']
+
+GGUFLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\GGUFLoader.cpp', 'F:\\~dev\\rawrxd\\src\\deep2\\GGUFLoader.cpp']
+
+GGUFLoader_Fixed.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GGUFLoader_Fixed.cpp']
+
+GGUFModelRegistry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ModelRegistry\\GGUFModelRegistry.cpp']
+
+GGUFRunner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\GGUFRunner.cpp']
+
+GGUFVerifier.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GGUFVerifier.cpp']
+
+GPUDeviceRegistry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MultiGPU\\GPUDeviceRegistry.cpp']
+
+GenerationBouncer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\GenerationBouncer.cpp']
+
+GenerationStopwatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime_surface\\GenerationStopwatch.cpp']
+
+GgmlEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\GgmlEngine.cpp']
+
+GgufDynamicGeometry_arrays.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\GgufDynamicGeometry_arrays.cpp']
+
+GgufDynamicGeometry_finalize.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\GgufDynamicGeometry_finalize.cpp']
+
+GgufDynamicGeometry_io.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\GgufDynamicGeometry_io.cpp']
+
+GgufDynamicGeometry_keys.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\GgufDynamicGeometry_keys.cpp']
+
+GgufDynamicGeometry_resolve.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\GgufDynamicGeometry_resolve.cpp']
+
+GhostCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GhostCache.cpp']
+
+GhostTextRenderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32ide\\GhostTextRenderer.cpp']
+
+GitCommitDialog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\GitCommitDialog.cpp']
+
+GitDiffViewer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\GitDiffViewer.cpp']
+
+GoalSystem.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GoalSystem.cpp']
+
+GpuTransfer_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\GpuTransfer_Emit.cpp']
+
+HardwareCapabilityProbe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\HardwareCapabilityProbe.cpp']
+
+HardwareGovernor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\HardwareGovernor.cpp']
+
+HeadlessIDE.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\HeadlessIDE.cpp']
+
+HeadlessIDE_FileAliases.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\HeadlessIDE_FileAliases.cpp']
+
+HeadlessIDE_GuiRoutes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\HeadlessIDE_GuiRoutes.cpp']
+
+HeadlessIDE_ToolRoutes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\HeadlessIDE_ToolRoutes.cpp']
+
+HealthReport.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\HealthReport.cpp']
+
+HostExchangeDiscover.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\HostExchangeDiscover.cpp']
+
+HostFutureConsumerPrefetch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch.cpp']
+
+HostFutureConsumerPrefetch_KnO3.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch_KnO3.cpp']
+
+HostFutureConsumerPrefetch_Move.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch_Move.cpp']
+
+HostFutureConsumerPrefetch_Nvme.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch_Nvme.cpp']
+
+HostFutureConsumerPrefetch_Seal.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch_Seal.cpp']
+
+HostFutureConsumerPrefetch_Worker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\HostFutureConsumerPrefetch_Worker.cpp']
+
+HotPatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\HotPatcher.cpp', 'F:\\~dev\\rawrxd\\src\\sovereign\\patcher\\HotPatcher.cpp']
+
+HotPatcherSafety.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\HotPatcherSafety.cpp']
+
+IDEConfig.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\config\\IDEConfig.cpp']
+
+IDEDiagnosticAutoHealer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\IDEDiagnosticAutoHealer.cpp']
+
+IDEShell.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\IDEShell.cpp']
+
+IDE_Lifecycle_Hook.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\IDE_Lifecycle_Hook.cpp']
+
+IMultiFileSearchWidget.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\IMultiFileSearchWidget.cpp']
+
+IOCPGGUFLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\IOCPGGUFLoader.cpp']
+
+IQQuantKernels.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\IQQuantKernels.cpp']
+
+IV280Bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\IV280Bridge.cpp']
+
+ImportBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\ImportBridge.cpp']
+
+InferenceProfiler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\InferenceProfiler.cpp']
+
+InferenceSession.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\InferenceSession.cpp']
+
+InfinitePerfectionEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\infinite\\InfinitePerfectionEngine.cpp']
+
+InfinitePerfectionTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\InfinitePerfectionTelemetry.cpp']
+
+InfinitePerfectionTelemetrySQLite.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\InfinitePerfectionTelemetrySQLite.cpp']
+
+InputSanitizer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\InputSanitizer.cpp']
+
+IntegrityChecker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\IntegrityChecker.cpp']
+
+IntentCompression.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\compression\\IntentCompression.cpp']
+
+IntentExecutionPipeline.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernel\\IntentExecutionPipeline.cpp']
+
+IntentReplayEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernel\\IntentReplayEngine.cpp']
+
+IocpFileWatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\IocpFileWatcher.cpp']
+
+K2BraidExecutionPolicy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2BraidExecutionPolicy.cpp']
+
+K2FullDepthCombined_Arm.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2FullDepthCombined_Arm.cpp']
+
+K2FullDepthCombined_Proof.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2FullDepthCombined_Proof.cpp']
+
+K2GlobalTensorIndex.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2GlobalTensorIndex.cpp']
+
+K2GpuStreamCopy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2GpuStreamCopy.cpp']
+
+K2GpuStreamCopy_Overlap.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2GpuStreamCopy_Overlap.cpp']
+
+K2LivePathTensorCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePathTensorCache.cpp']
+
+K2LivePathTensorCache_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePathTensorCache_Emit.cpp']
+
+K2LivePathTensorCache_Prefetch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePathTensorCache_Prefetch.cpp']
+
+K2LivePolicy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePolicy.cpp']
+
+K2LivePolicy_Apply.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePolicy_Apply.cpp']
+
+K2LivePolicy_Hysteresis.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LivePolicy_Hysteresis.cpp']
+
+K2LogitsClimb.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LogitsClimb.cpp']
+
+K2LogitsLineage.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LogitsLineage.cpp']
+
+K2LogitsSplit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2LogitsSplit.cpp']
+
+K2MLAAttention.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLAAttention.cpp']
+
+K2MLAWeights.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLAWeights.cpp']
+
+K2MLA_FusedQ4KT.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_FusedQ4KT.cpp']
+
+K2MLA_GpuGemv.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_GpuGemv.cpp']
+
+K2MLA_KvExpand_Fused.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_KvExpand_Fused.cpp']
+
+K2MLA_PathB.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_PathB.cpp']
+
+K2MLA_PathB_Attn.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_PathB_Attn.cpp']
+
+K2MLA_QPathDevice.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_QPathDevice.cpp']
+
+K2MLA_QPathDevice_Emit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_QPathDevice_Emit.cpp']
+
+K2MLA_QaCritical.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MLA_QaCritical.cpp']
+
+K2MoEWeights.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2MoEWeights.cpp']
+
+K2NativeStreamGate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2NativeStreamGate.cpp']
+
+K2QbHostShrinkD2h.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2QbHostShrinkD2h.cpp']
+
+K2ShardIo.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2ShardIo.cpp']
+
+K2TimeLimitedServing.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2TimeLimitedServing.cpp']
+
+K2TokenEmbedding.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2TokenEmbedding.cpp']
+
+K2WeightResolve.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\K2WeightResolve.cpp']
+
+KVCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\KVCache.cpp']
+
+KimiK2Config.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\KimiK2Config.cpp']
+
+KimiSwarmOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\KimiSwarmOrchestrator.cpp']
+
+KnowledgeGraph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\KnowledgeGraph.cpp']
+
+LSPClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\LSP\\LSPClient.cpp']
+
+LanguageServerIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\LanguageServerIntegration.cpp']
+
+LearningSimulator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\LearningSimulator.cpp']
+
+LegacyRefactorModule.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\LegacyRefactorModule.cpp']
+
+LivePathEffect.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\LivePathEffect.cpp']
+
+LivePathFusedCert_Arm.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\LivePathFusedCert_Arm.cpp']
+
+LivePath_FusedTick.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\LivePath_FusedTick.cpp']
+
+LlamaNativeBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\LlamaNativeBridge.cpp']
+
+Logger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\observability\\Logger.cpp']
+
+MARSController.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mars\\MARSController.cpp']
+
+MASMKernelStubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MASMKernelStubs.cpp']
+
+MedusaDecoder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MedusaDecoder.cpp']
+
+MemoryPressureGuard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\MemoryPressureGuard.cpp']
+
+MlaCertAuthority.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MlaCertAuthority.cpp']
+
+MlaCertProbe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MlaCertProbe.cpp']
+
+MoEArchitectureParser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MoEArchitectureParser.cpp']
+
+MoEEliminate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MoEEliminate.cpp']
+
+MoERouter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MoERouter.cpp']
+
+MoEWeightProxy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MoEWeightProxy.cpp']
+
+MoEWeightsLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MoEWeightsLoader.cpp']
+
+ModelLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ModelLoader.cpp']
+
+MultiGPUScheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MultiGPU\\MultiGPUScheduler.cpp']
+
+MultiModalModelRouter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\AI\\MultiModalModelRouter.cpp']
+
+NUFusedPacker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\NUFusedPacker.cpp']
+
+NUGemv.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\NUGemv.cpp']
+
+NULiveConsumer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\NULiveConsumer.cpp']
+
+NVMeStream.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\NVMeStream.cpp']
+
+NativeInferenceClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\NativeInferenceClient.cpp']
+
+OSExplorerInterceptor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\OSExplorerInterceptor.cpp']
+
+OllamaProvider.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\OllamaProvider.cpp']
+
+Omega1Engine_Server.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\Omega1Engine_Server.cpp']
+
+Omega1IDEIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32ide\\Omega1IDEIntegration.cpp']
+
+Omega1IPCClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32ide\\Omega1IPCClient.cpp']
+
+OmegaPowerShellBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\omega1_modules\\OmegaPowerShellBridge.cpp']
+
+OpenClawBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\OpenClawBridge.cpp']
+
+OrchestratorBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\OrchestratorBridge.cpp']
+
+OutOfCoreRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\OutOfCoreRuntime.cpp']
+
+OutOfCoreScheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\OutOfCoreScheduler.cpp']
+
+PatchCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\PatchCache.cpp']
+
+PatchValidator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\validation\\PatchValidator.cpp']
+
+PerformanceMonitor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\PerformanceMonitor.cpp']
+
+Phase3_Agent_Kernel_Bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\Phase3_Agent_Kernel_Bridge.cpp']
+
+PlacementPlan.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\execution_policy\\PlacementPlan.cpp']
+
+PlacementPolicy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\memory\\PlacementPolicy.cpp']
+
+PlasmaGovernor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\PlasmaGovernor.cpp']
+
+PressedStateEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\PressedStateEngine.cpp']
+
+ProductionBenchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ProductionBenchmark.cpp']
+
+ProductionProfiler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ProductionProfiler.cpp']
+
+Profiler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\Profiler.cpp']
+
+ProjectPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\ProjectPanel.cpp']
+
+ProviderKeyStore.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\ProviderKeyStore.cpp']
+
+ProviderKeyStore_get.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\ProviderKeyStore_get.cpp']
+
+ProviderKeyStore_misc.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\ProviderKeyStore_misc.cpp']
+
+PuppeteerAPI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\puppeteer\\PuppeteerAPI.cpp']
+
+Q4WeightPreprocess.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\memory\\Q4WeightPreprocess.cpp']
+
+QAHive.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\QAHive.cpp']
+
+QbHostReadbackWindow.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\QbHostReadbackWindow.cpp']
+
+QuantBackend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\QuantBackend.cpp']
+
+QuantKernelMASM.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\QuantKernelMASM.cpp']
+
+QuantumAuthUI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\auth\\QuantumAuthUI.cpp']
+
+RAWRXD_ThermalDashboard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\thermal\\RAWRXD_ThermalDashboard.cpp']
+
+RDNA3_GpuDispatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernels\\rdna3\\RDNA3_GpuDispatcher.cpp']
+
+RKCCodeWorld.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCCodeWorld.cpp']
+
+RKCCompiler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCCompiler.cpp']
+
+RKCDeep2Authority.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCDeep2Authority.cpp']
+
+RKCEmit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCEmit.cpp']
+
+RKCGapEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCGapEngine.cpp']
+
+RKCMinimalSource.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCMinimalSource.cpp']
+
+RKCModelInventory.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCModelInventory.cpp']
+
+RKCNegativeKnowledge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCNegativeKnowledge.cpp']
+
+RKCProductContext.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCProductContext.cpp']
+
+RKCRecipes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCRecipes.cpp']
+
+RKCSession.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCSession.cpp']
+
+RKCValidator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCValidator.cpp']
+
+RKCWorld.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKCWorld.cpp']
+
+RKC_C_ABI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\RKC_C_ABI.cpp']
+
+RawrRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\RawrRuntime.cpp', 'F:\\~dev\\rawrxd\\src\\runtime\\RawrRuntime.cpp']
+
+RawrXDInferenceAdapter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\RawrXDInferenceAdapter.cpp']
+
+RawrXD_AgentHost.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_AgentHost.cpp']
+
+RawrXD_AgentLoop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_AgentLoop.cpp']
+
+RawrXD_AutonomousCoordinator_Final.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_AutonomousCoordinator_Final.cpp']
+
+RawrXD_AutonomousFlow.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_AutonomousFlow.cpp']
+
+RawrXD_GoogleDork_Scanner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\RawrXD_GoogleDork_Scanner.cpp']
+
+RawrXD_LSPServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp\\RawrXD_LSPServer.cpp']
+
+RawrXD_LlamaNative.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\RawrXD_LlamaNative.cpp']
+
+RawrXD_MainLoop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\RawrXD_MainLoop.cpp']
+
+RawrXD_RewardModel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_RewardModel.cpp']
+
+RawrXD_SovereignStatusPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\RawrXD_SovereignStatusPanel.cpp']
+
+RawrXD_SymbolHealer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_SymbolHealer.cpp']
+
+RawrXD_ToolRegistry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RawrXD_ToolRegistry.cpp']
+
+RawrXD_TpsSmoke.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\RawrXD_TpsSmoke.cpp']
+
+RawrXD_Universal_Dorker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\RawrXD_Universal_Dorker.cpp']
+
+RealityValidator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\validator\\RealityValidator.cpp']
+
+RefactoringEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\refactoring\\RefactoringEngine.cpp']
+
+RepositoryIndexer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RepositoryIndexer.cpp']
+
+ResidencyLease.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ResidencyLease.cpp']
+
+ResidencyManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ResidencyManager.cpp']
+
+ReverseEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\reverse\\ReverseEngine.cpp']
+
+ReverseEngineering.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\ReverseEngineering.cpp']
+
+ReverseHotpatchEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ReverseHotpatchEngine.cpp']
+
+ReverseIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ReverseIntegration.cpp']
+
+ReverseModelLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\reverse\\ReverseModelLoader.cpp']
+
+ReverseTensorRecovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ReverseTensorRecovery.cpp']
+
+ReviewerAgents.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\ReviewerAgents.cpp']
+
+RobustOllamaParser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\RobustOllamaParser.cpp']
+
+RouterOperations.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\RouterOperations.cpp']
+
+RouterPredictiveMemoryBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\memory\\RouterPredictiveMemoryBridge.cpp']
+
+RouterPrefetchTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\RouterPrefetchTelemetry.cpp']
+
+RuntimePlanner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\RuntimePlanner.cpp']
+
+RuntimeSurfaceModule.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime_surface\\RuntimeSurfaceModule.cpp']
+
+ScaleQuality.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ScaleQuality.cpp']
+
+ScreenPilotModelHub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\ScreenPilotModelHub.cpp']
+
+SecurityHardening.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\SecurityHardening.cpp']
+
+SelfImprovement.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SelfImprovement.cpp']
+
+SequentialBlowoffValve.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\memory\\SequentialBlowoffValve.cpp']
+
+SessionBinder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\command\\SessionBinder.cpp']
+
+SessionStore.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\session\\SessionStore.cpp']
+
+ShardRouterIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ShardRouterIntegration.cpp']
+
+SharedModelRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\shared\\SharedModelRuntime.cpp']
+
+SlidingWindowEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\SlidingWindowEngine.cpp']
+
+SoloIDE.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\SoloIDE.cpp']
+
+SovereignAgentRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignAgentRuntime.cpp']
+
+SovereignAssembler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SovereignAssembler.cpp']
+
+SovereignAssembler_HotPatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SovereignAssembler_HotPatch.cpp']
+
+SovereignBlackboard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignBlackboard.cpp']
+
+SovereignCheckpoint.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignCheckpoint.cpp']
+
+SovereignCodeGenerator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SovereignCodeGenerator.cpp']
+
+SovereignControlPlane.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\control\\SovereignControlPlane.cpp']
+
+SovereignCoreWrapper.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignCoreWrapper.cpp']
+
+SovereignCritic.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignCritic.cpp']
+
+SovereignDenseEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignDenseEngine.cpp']
+
+SovereignEventBus.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignEventBus.cpp']
+
+SovereignIDEIntegration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\ide\\SovereignIDEIntegration.cpp']
+
+SovereignMissionPlanner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignMissionPlanner.cpp']
+
+SovereignOutOfCoreRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\SovereignOutOfCoreRuntime.cpp']
+
+SovereignRPC_Scheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rpc\\SovereignRPC_Scheduler.cpp']
+
+SovereignRPC_Simulator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rpc\\SovereignRPC_Simulator.cpp']
+
+SovereignReflectionEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignReflectionEngine.cpp']
+
+SovereignRuntime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignRuntime.cpp']
+
+SovereignSharedMemoryBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\SovereignSharedMemoryBridge.cpp']
+
+SovereignStandaloneClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SovereignStandaloneClient.cpp']
+
+SovereignSwarm.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\SovereignSwarm.cpp']
+
+SovereignTaskGraph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign_autonomy\\SovereignTaskGraph.cpp']
+
+SovereignVCS.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignVCS.cpp']
+
+SovereignWatchdog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\SovereignWatchdog.cpp']
+
+Sovereign_KernelBridge_CPP.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\Sovereign_KernelBridge_CPP.cpp']
+
+Sovereign_RingTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\Sovereign_RingTelemetry.cpp']
+
+SsmCertProbe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\SsmCertProbe.cpp']
+
+StatusBarTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32ide\\StatusBarTelemetry.cpp']
+
+StatusPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\StatusPanel.cpp']
+
+StreamEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamEngine.cpp']
+
+StreamRouter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamRouter.cpp']
+
+StreamerGpuSoloGate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamerGpuSoloGate.cpp']
+
+StreamerGpuSoloVk.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamerGpuSoloVk.cpp']
+
+StreamerParity_Harness.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamerParity_Harness.cpp']
+
+StreamerParity_Post.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\StreamerParity_Post.cpp']
+
+StreamingResultChannel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\StreamingResultChannel.cpp']
+
+StressTester.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\StressTester.cpp']
+
+SubAgentManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\SubAgentManager.cpp']
+
+SwarmIATRegistration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\bridge\\SwarmIATRegistration.cpp']
+
+SwarmOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\SwarmOrchestrator.cpp']
+
+SymbolTableGenerator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\introspection\\SymbolTableGenerator.cpp', 'F:\\~dev\\rawrxd\\src\\sovereign\\puppeteer\\SymbolTableGenerator.cpp']
+
+SystemAwareness.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\awareness\\SystemAwareness.cpp']
+
+TLSInstructionGate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\TLSInstructionGate.cpp']
+
+TelemetryDashboardServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm\\TelemetryDashboardServer.cpp']
+
+TelemetryInjector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernel\\TelemetryInjector.cpp']
+
+TensorHop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\TensorHop.cpp']
+
+TensorHotpatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mars\\TensorHotpatch.cpp']
+
+TerminalOwnership.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\terminal\\TerminalOwnership.cpp']
+
+TerminalPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\soloide\\UI\\Panels\\TerminalPanel.cpp']
+
+TheDualityExample.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\TheDualityExample.cpp']
+
+ThreadPool.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ThreadPool.cpp']
+
+TitanLoaderDiagnostics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\TitanLoaderDiagnostics.cpp']
+
+Titan_Sovereign_Bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\Titan_Sovereign_Bridge.cpp']
+
+TodoManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\TodoManager.cpp']
+
+ToolDispatchTable.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\ToolDispatchTable.cpp']
+
+ToolDispatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\ToolDispatcher.cpp']
+
+ToroidalKVCache.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ToroidalKVCache.cpp']
+
+TpsScaleHotpatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\TpsScaleHotpatch.cpp']
+
+TrailBrake.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\TrailBrake.cpp']
+
+TransparentRenderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\TransparentRenderer.cpp']
+
+UnifiedMemoryPool.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\memory\\UnifiedMemoryPool.cpp']
+
+UnifiedModelMetadata.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\bridge\\UnifiedModelMetadata.cpp']
+
+UnifiedTelemetryCore.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\UnifiedTelemetryCore.cpp']
+
+UnifiedTriggerOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\governance\\UnifiedTriggerOrchestrator.cpp']
+
+UniversalModelLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\UniversalModelLoader.cpp']
+
+VAL032_AVX512_Benchmark_Clean.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\VAL032_AVX512_Benchmark_Clean.cpp']
+
+VAL032_SpeculativeDecoding_Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\VAL032_SpeculativeDecoding_Benchmark.cpp']
+
+VAL038_Benchmark_Harness.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\VAL038_Benchmark_Harness.cpp']
+
+VAL038_FusedAttention_Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\VAL038_FusedAttention_Benchmark.cpp']
+
+VAL038_Validation_Benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\VAL038_Validation_Benchmark.cpp']
+
+VAL0517BaselineFixture.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\VAL0517BaselineFixture.cpp']
+
+VAL063_Deep2Certification.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\VAL063_Deep2Certification.cpp']
+
+VEH_Watchdog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\puppeteer\\VEH_Watchdog.cpp']
+
+VRAMAllocator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\MultiGPU\\VRAMAllocator.cpp']
+
+VRAMManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mars\\VRAMManager.cpp']
+
+VSCodeMarketplaceAPI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\VSCodeMarketplaceAPI.cpp']
+
+VulkanComputeKernels.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernels\\VulkanComputeKernels.cpp']
+
+VulkanGemmDispatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\backend\\VulkanGemmDispatcher.cpp']
+
+VulkanRenderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\VulkanRenderer.cpp']
+
+VulkanTensorResidencyBackend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\elastic\\VulkanTensorResidencyBackend.cpp']
+
+VwaScheduler_Fulfill.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\vwa\\VwaScheduler_Fulfill.cpp']
+
+VwaScheduler_Lease.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\vwa\\VwaScheduler_Lease.cpp']
+
+WarmupScheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\WarmupScheduler.cpp']
+
+Win32IDE.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE.cpp']
+
+Win32IDE_AIBackend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AIBackend.cpp']
+
+Win32IDE_AIReverseEngineering.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AIReverseEngineering.cpp']
+
+Win32IDE_Accelerators.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Accelerators.cpp']
+
+Win32IDE_AgentCommands.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgentCommands.cpp']
+
+Win32IDE_AgentHistory.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgentHistory.cpp']
+
+Win32IDE_AgentOllamaClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgentOllamaClient.cpp']
+
+Win32IDE_AgentPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgentPanel.cpp']
+
+Win32IDE_AgentStreamingBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgentStreamingBridge.cpp']
+
+Win32IDE_AgenticBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgenticBridge.cpp']
+
+Win32IDE_AgenticBrowser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgenticBrowser.cpp']
+
+Win32IDE_AgenticComposerUX.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgenticComposerUX.cpp']
+
+Win32IDE_AgenticPlanningPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AgenticPlanningPanel.cpp']
+
+Win32IDE_AirgappedEnterprise.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AirgappedEnterprise.cpp']
+
+Win32IDE_Annotations.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Annotations.cpp']
+
+Win32IDE_AsmSemantic.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AsmSemantic.cpp']
+
+Win32IDE_AuditDashboard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AuditDashboard.cpp']
+
+Win32IDE_AutoSave.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AutoSave.cpp']
+
+Win32IDE_AutonomousAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AutonomousAgent.cpp']
+
+Win32IDE_AutonomousCommunicator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AutonomousCommunicator.cpp']
+
+Win32IDE_AutonomousDebugger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_AutonomousDebugger.cpp']
+
+Win32IDE_Autonomy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Autonomy.cpp']
+
+Win32IDE_BackendSwitcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_BackendSwitcher.cpp']
+
+Win32IDE_Breadcrumbs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Breadcrumbs.cpp']
+
+Win32IDE_BuildRunner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_BuildRunner.cpp']
+
+Win32IDE_CaretAnimation.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CaretAnimation.cpp']
+
+Win32IDE_ChatMessageRenderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ChatMessageRenderer.cpp']
+
+Win32IDE_ChatPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ChatPanel.cpp']
+
+Win32IDE_ChatPanel_Ollama.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ChatPanel_Ollama.cpp']
+
+Win32IDE_CodeLens.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CodeLens.cpp']
+
+Win32IDE_Collab.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Collab.cpp']
+
+Win32IDE_ColorPicker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ColorPicker.cpp']
+
+Win32IDE_CommandFlight.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CommandFlight.cpp']
+
+Win32IDE_CommandSurface.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CommandSurface.cpp']
+
+Win32IDE_Commands.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Commands.cpp']
+
+Win32IDE_ConsentPrompt.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ConsentPrompt.cpp']
+
+Win32IDE_ContextMentionParser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ContextMentionParser.cpp']
+
+Win32IDE_CopilotGapPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CopilotGapPanel.cpp']
+
+Win32IDE_Core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Core.cpp']
+
+Win32IDE_CoreRuntimeSpine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CoreRuntimeSpine.cpp']
+
+Win32IDE_CrashReporter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CrashReporter.cpp']
+
+Win32IDE_CruciblePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CruciblePanel.cpp']
+
+Win32IDE_CursorParity.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CursorParity.cpp']
+
+Win32IDE_CursorParityBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_CursorParityBridge.cpp']
+
+Win32IDE_Debugger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Debugger.cpp']
+
+Win32IDE_DecompilerView.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_DecompilerView.cpp']
+
+Win32IDE_DiffView.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_DiffView.cpp']
+
+Win32IDE_DiskRecovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_DiskRecovery.cpp']
+
+Win32IDE_DualAgentPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_DualAgentPanel.cpp']
+
+Win32IDE_EditorEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_EditorEngine.cpp']
+
+Win32IDE_EmojiSupport.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_EmojiSupport.cpp']
+
+Win32IDE_EnterpriseStressTests.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_EnterpriseStressTests.cpp']
+
+Win32IDE_ExecutionGovernor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ExecutionGovernor.cpp']
+
+Win32IDE_FailureDetector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FailureDetector.cpp']
+
+Win32IDE_FailureIntelligence.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FailureIntelligence.cpp']
+
+Win32IDE_FeatureManifest.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FeatureManifest.cpp']
+
+Win32IDE_FileOps.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FileOps.cpp']
+
+Win32IDE_FlagshipFeatures.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FlagshipFeatures.cpp']
+
+Win32IDE_FlightRecorder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FlightRecorder.cpp']
+
+Win32IDE_FuzzySearch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_FuzzySearch.cpp']
+
+Win32IDE_GGUFInspector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GGUFInspector.cpp']
+
+Win32IDE_GUILayoutHotpatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GUILayoutHotpatch.cpp']
+
+Win32IDE_GameEnginePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GameEnginePanel.cpp']
+
+Win32IDE_Gauntlet.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Gauntlet.cpp']
+
+Win32IDE_GhostText.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GhostText.cpp']
+
+Win32IDE_GitPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_GitPanel.cpp']
+
+Win32IDE_HandleExtensionCommand.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HandleExtensionCommand.cpp']
+
+Win32IDE_HardwareSynthesizer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HardwareSynthesizer.cpp']
+
+Win32IDE_HexMagCopilotRoute.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HexMagCopilotRoute.cpp']
+
+Win32IDE_HotpatchCtrlPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HotpatchCtrlPanel.cpp']
+
+Win32IDE_HotpatchPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HotpatchPanel.cpp']
+
+Win32IDE_HoverTooltips.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_HoverTooltips.cpp']
+
+Win32IDE_IDEDiagnosticAutoHealer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_IDEDiagnosticAutoHealer.cpp']
+
+Win32IDE_IOCPFileWatcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_IOCPFileWatcher.cpp']
+
+Win32IDE_IRCBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_IRCBridge.cpp']
+
+Win32IDE_IRCBridgeCommands.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_IRCBridgeCommands.cpp']
+
+Win32IDE_InlayHints.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_InlayHints.cpp']
+
+Win32IDE_Instructions.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Instructions.cpp']
+
+Win32IDE_LLMRouter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LLMRouter.cpp']
+
+Win32IDE_LSPClient.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSPClient.cpp']
+
+Win32IDE_LSPServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSPServer.cpp']
+
+Win32IDE_LSP_AI_Bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LSP_AI_Bridge.cpp']
+
+Win32IDE_LanguagePlugin.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LanguagePlugin.cpp']
+
+Win32IDE_LayerEviction.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LayerEviction.cpp']
+
+Win32IDE_LicenseCreator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LicenseCreator.cpp']
+
+Win32IDE_LocalServer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_LocalServer.cpp']
+
+Win32IDE_Logger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Logger.cpp']
+
+Win32IDE_MCP.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MCP.cpp']
+
+Win32IDE_MCPHooks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MCPHooks.cpp']
+
+Win32IDE_MarketplacePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MarketplacePanel.cpp']
+
+Win32IDE_MenuE2eProbe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MenuE2eProbe.cpp']
+
+Win32IDE_MeshBrain.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MeshBrain.cpp']
+
+Win32IDE_Minimap.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Minimap.cpp']
+
+Win32IDE_ModelAnatomy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ModelAnatomy.cpp']
+
+Win32IDE_ModelDiscovery.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ModelDiscovery.cpp']
+
+Win32IDE_MonacoThemes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MonacoThemes.cpp']
+
+Win32IDE_MultiCursor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MultiCursor.cpp']
+
+Win32IDE_MultiResponse.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_MultiResponse.cpp']
+
+Win32IDE_NativeDebugPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_NativeDebugPanel.cpp']
+
+Win32IDE_NativePipeline.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_NativePipeline.cpp']
+
+Win32IDE_NetworkPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_NetworkPanel.cpp']
+
+Win32IDE_NeuralBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_NeuralBridge.cpp']
+
+Win32IDE_OSExplorerInterceptor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_OSExplorerInterceptor.cpp']
+
+Win32IDE_Omega1Integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32ide\\Win32IDE_Omega1Integration.cpp']
+
+Win32IDE_OmegaOrchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_OmegaOrchestrator.cpp']
+
+Win32IDE_OutlinePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_OutlinePanel.cpp']
+
+Win32IDE_PDBSymbols.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PDBSymbols.cpp']
+
+Win32IDE_PeekOverlay.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PeekOverlay.cpp']
+
+Win32IDE_PeekView.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PeekView.cpp']
+
+Win32IDE_PerfTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PerfTelemetry.cpp']
+
+Win32IDE_PipelinePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PipelinePanel.cpp']
+
+Win32IDE_PlanExecutor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PlanExecutor.cpp']
+
+Win32IDE_PluginSignature.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PluginSignature.cpp']
+
+Win32IDE_Plugins.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Plugins.cpp']
+
+Win32IDE_PowerShell.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PowerShell.cpp']
+
+Win32IDE_PowerShellPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_PowerShellPanel.cpp']
+
+Win32IDE_ProblemsPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ProblemsPanel.cpp']
+
+Win32IDE_ProvableAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ProvableAgent.cpp']
+
+Win32IDE_QuickWins.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_QuickWins.cpp']
+
+Win32IDE_Refactor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Refactor.cpp']
+
+Win32IDE_RefactoringPlugin.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_RefactoringPlugin.cpp']
+
+Win32IDE_RenamePreview.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_RenamePreview.cpp']
+
+Win32IDE_ResourceGenerator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ResourceGenerator.cpp']
+
+Win32IDE_ReverseEngineering.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ReverseEngineering.cpp']
+
+Win32IDE_SQLite3Core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SQLite3Core.cpp']
+
+Win32IDE_SearchPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SearchPanel.cpp']
+
+Win32IDE_SecurityScans.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SecurityScans.cpp']
+
+Win32IDE_SelfHostEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SelfHostEngine.cpp']
+
+Win32IDE_SemanticIndex.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SemanticIndex.cpp']
+
+Win32IDE_SemanticPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SemanticPanel.cpp']
+
+Win32IDE_Session.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Session.cpp']
+
+Win32IDE_Settings.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Settings.cpp']
+
+Win32IDE_SettingsGUI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SettingsGUI.cpp']
+
+Win32IDE_ShellLayout.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ShellLayout.cpp']
+
+Win32IDE_ShortcutEditor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ShortcutEditor.cpp']
+
+Win32IDE_Sidebar.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Sidebar.cpp']
+
+Win32IDE_SnippetEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SnippetEngine.cpp']
+
+Win32IDE_SpeciatorEngine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SpeciatorEngine.cpp']
+
+Win32IDE_StaticAnalysisPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_StaticAnalysisPanel.cpp']
+
+Win32IDE_StreamingUX.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_StreamingUX.cpp']
+
+Win32IDE_SubAgent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SubAgent.cpp']
+
+Win32IDE_SwarmModelSelector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SwarmModelSelector.cpp']
+
+Win32IDE_SwarmPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SwarmPanel.cpp']
+
+Win32IDE_SyntaxHighlight.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_SyntaxHighlight.cpp']
+
+Win32IDE_TabManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TabManager.cpp']
+
+Win32IDE_Tasks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tasks.cpp']
+
+Win32IDE_Telemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Telemetry.cpp']
+
+Win32IDE_TelemetryDashboard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TelemetryDashboard.cpp']
+
+Win32IDE_TelemetryExport.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TelemetryExport.cpp']
+
+Win32IDE_TelemetryPanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TelemetryPanel.cpp']
+
+Win32IDE_TerminalSplit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TerminalSplit.cpp']
+
+Win32IDE_TestExplorerTree.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TestExplorerTree.cpp']
+
+Win32IDE_Themes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Themes.cpp']
+
+Win32IDE_Tier1Cosmetics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tier1Cosmetics.cpp']
+
+Win32IDE_Tier2Cosmetics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tier2Cosmetics.cpp']
+
+Win32IDE_Tier3Cosmetics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tier3Cosmetics.cpp']
+
+Win32IDE_Tier3Polish.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tier3Polish.cpp']
+
+Win32IDE_Tier5Cosmetics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Tier5Cosmetics.cpp']
+
+Win32IDE_ToolActionStatus.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_ToolActionStatus.cpp']
+
+Win32IDE_TranscendenceCoordinator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TranscendenceCoordinator.cpp']
+
+Win32IDE_TranscendencePanel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_TranscendencePanel.cpp']
+
+Win32IDE_UnifiedTelemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_UnifiedTelemetry.cpp']
+
+Win32IDE_UpdateSignature.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_UpdateSignature.cpp']
+
+Win32IDE_VSCodeExtAPI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VSCodeExtAPI.cpp']
+
+Win32IDE_VSCodeUI.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VSCodeUI.cpp']
+
+Win32IDE_VisionEncoder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VisionEncoder.cpp']
+
+Win32IDE_VoiceAutomation.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VoiceAutomation.cpp']
+
+Win32IDE_VoiceChat.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VoiceChat.cpp']
+
+Win32IDE_VulkanRenderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_VulkanRenderer.cpp']
+
+Win32IDE_Watchdog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_Watchdog.cpp']
+
+Win32IDE_WebView2.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_WebView2.cpp']
+
+Win32IDE_WindowOwnership.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_WindowOwnership.cpp']
+
+Win32IDE_headless_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_headless_stubs.cpp']
+
+Win32IDE_logMessage.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_logMessage.cpp']
+
+Win32IDE_private_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32IDE_private_stubs.cpp']
+
+Win32SwarmBridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\bridge\\Win32SwarmBridge.cpp']
+
+Win32TerminalManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\Win32TerminalManager.cpp']
+
+WindowManager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\WindowManager.cpp']
+
+ZlibRuntimeLoader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\ZlibRuntimeLoader.cpp']
+
+advanced_sampler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sampling\\advanced_sampler.cpp']
+
+agent_explainability.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent_explainability.cpp']
+
+agent_history.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent_history.cpp']
+
+agent_policy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent_policy.cpp']
+
+agent_runtime_batch1_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agent_runtime_batch1_cert.cpp']
+
+agent_self_healing_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agent_self_healing_orchestrator.cpp']
+
+agent_self_repair.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agent_self_repair.cpp']
+
+agent_tool_quantize.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agent_tool_quantize.cpp']
+
+agent_workflow_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agent_workflow_orchestrator.cpp']
+
+agentic_agent_coordinator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_agent_coordinator.cpp']
+
+agentic_audit_sink.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_audit_sink.cpp']
+
+agentic_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\agentic_bridge.cpp']
+
+agentic_bridge_headless.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\agentic_bridge_headless.cpp']
+
+agentic_composer_ux.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_composer_ux.cpp']
+
+agentic_controller.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_controller.cpp']
+
+agentic_decision_tree.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\agentic_decision_tree.cpp']
+
+agentic_deep_thinking_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agentic_deep_thinking_engine.cpp']
+
+agentic_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_engine.cpp']
+
+agentic_executor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_executor.cpp']
+
+agentic_executor_link_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\agentic_executor_link_stub.cpp']
+
+agentic_failure_detector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agentic_failure_detector.cpp']
+
+agentic_hotpatch_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agentic_hotpatch_orchestrator.cpp']
+
+agentic_loop_state.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_loop_state.cpp']
+
+agentic_model_streamer_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_model_streamer_bridge.cpp']
+
+agentic_observability.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic_observability.cpp']
+
+agentic_orchestrator_integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_orchestrator_integration.cpp']
+
+agentic_orchestrator_smoke_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_orchestrator_smoke_test.cpp']
+
+agentic_planning_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_planning_orchestrator.cpp']
+
+agentic_puppeteer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\agentic_puppeteer.cpp']
+
+agentic_transaction.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\agentic_transaction.cpp']
+
+ai_completion_real.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai_completion_real.cpp']
+
+ai_model_caller.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai_model_caller.cpp']
+
+ai_model_caller_real.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\ai_model_caller_real.cpp']
+
+ai_workers_queue.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\ai_workers_queue.cpp']
+
+arch_cert_tensor_inventory.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\arch_cert_tensor_inventory.cpp']
+
+asm_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\asm_stubs.cpp']
+
+asm_symbols_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\asm_symbols_stub.cpp']
+
+auto_feature_stub_impl.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\auto_feature_stub_impl.cpp']
+
+autonomous_agentic_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\autonomous_agentic_orchestrator.cpp']
+
+autonomous_background_daemon.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\autonomous_background_daemon.cpp']
+
+autonomous_communicator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\autonomous_communicator.cpp']
+
+autonomous_feature_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\autonomous_feature_engine.cpp']
+
+autonomous_intelligence_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\autonomous_intelligence_orchestrator.cpp']
+
+autonomous_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\autonomous_orchestrator.cpp', 'F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\autonomous_orchestrator.cpp']
+
+autonomous_recovery_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\autonomous_recovery_orchestrator.cpp']
+
+autonomous_subagent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\autonomous_subagent.cpp']
+
+autonomous_verification_loop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\autonomous_verification_loop.cpp']
+
+beacon_link_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\beacon_link_stub.cpp']
+
+benchmark_menu_widget.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark_menu_widget.cpp']
+
+benchmark_runner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark_runner.cpp']
+
+bpe_tokenizer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\bpe_tokenizer.cpp']
+
+brutal_gzip.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\codec\\brutal_gzip.cpp']
+
+capability_policy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\guardrails\\capability_policy.cpp']
+
+chain_of_thought.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\chain_of_thought.cpp']
+
+change_impact_analyzer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\change_impact_analyzer.cpp']
+
+chat_message_renderer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\chat_message_renderer.cpp']
+
+chat_panel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\chat_panel.cpp']
+
+cli_autonomy_loop.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\cli_autonomy_loop.cpp']
+
+cli_entrypoint.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\app\\cli_entrypoint.cpp']
+
+cli_headless_systems.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\cli_headless_systems.cpp']
+
+cli_main_headless.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\cli_main_headless.cpp']
+
+cloud_api_client.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cloud_api_client.cpp']
+
+codebase_rag.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\codebase_rag.cpp']
+
+codex_ultimate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\codex_ultimate.cpp']
+
+cognitive_types.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\cognitive_types.cpp']
+
+collab_cursor_fallbacks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\collab_cursor_fallbacks.cpp']
+
+collab_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\collab_stubs.cpp']
+
+complete_server.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\complete_server.cpp']
+
+completion_feedback.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\completion_feedback.cpp']
+
+compression.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\codec\\compression.cpp']
+
+compression_interface.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\compression_interface.cpp']
+
+context_assembler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\context_assembler.cpp']
+
+context_mention_parser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\context_mention_parser.cpp', 'F:\\~dev\\rawrxd\\src\\context\\context_mention_parser.cpp']
+
+copilot_gap_closer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\copilot_gap_closer.cpp']
+
+core_generator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\core_generator.cpp']
+
+cpu_inference_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cpu_inference_engine.cpp']
+
+cpu_inference_engine_autofix_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cpu_inference_engine_autofix_stub.cpp']
+
+crdt_buffer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\collab\\crdt_buffer.cpp']
+
+crucible_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\crucible_engine.cpp']
+
+cursor_widget.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\collab\\cursor_widget.cpp']
+
+debugger_core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\debugger_core.cpp']
+
+deep2_benchmark_main.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_benchmark_main.cpp']
+
+deep2_deepseek_live_gen_perf_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_deepseek_live_gen_perf_cert.cpp']
+
+deep2_end_to_end_bench.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_end_to_end_bench.cpp']
+
+deep2_execution_policy_smoke.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_execution_policy_smoke.cpp']
+
+deep2_giant_moe_paragraph_perf_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_giant_moe_paragraph_perf_cert.cpp']
+
+deep2_gpu_dynamic_window_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_dynamic_window_cert.cpp']
+
+deep2_gpu_forward_ops_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_forward_ops_cert.cpp']
+
+deep2_gpu_numeric_parity_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_numeric_parity_cert.cpp']
+
+deep2_gpu_packed_forward_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_packed_forward_cert.cpp']
+
+deep2_gpu_q4k_gemv_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_q4k_gemv_cert.cpp']
+
+deep2_gpu_q6k_gemv_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_q6k_gemv_cert.cpp']
+
+deep2_gpu_quant_family_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_quant_family_cert.cpp']
+
+deep2_gpu_resident_decode_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_resident_decode_cert.cpp']
+
+deep2_gpu_solo_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_solo_cert.cpp']
+
+deep2_gpu_solo_decode_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_solo_decode_cert.cpp']
+
+deep2_gpu_transfer_counter_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_transfer_counter_cert.cpp']
+
+deep2_gpu_transfer_overlap_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_transfer_overlap_cert.cpp']
+
+deep2_gpu_weight_prefetch_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_weight_prefetch_cert.cpp']
+
+deep2_gpu_weight_window_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_gpu_weight_window_cert.cpp']
+
+deep2_http_gateway.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_http_gateway.cpp']
+
+deep2_hybrid_all_hw_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_hybrid_all_hw_cert.cpp']
+
+deep2_k2_auto_workload_policy_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_auto_workload_policy_cert.cpp']
+
+deep2_k2_e2e_model_size_matrix_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_e2e_model_size_matrix_cert.cpp']
+
+deep2_k2_full_depth_combined_policy_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_full_depth_combined_policy_cert.cpp']
+
+deep2_k2_full_depth_effectiveness_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_full_depth_effectiveness_cert.cpp']
+
+deep2_k2_full_depth_fused_rebench_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_full_depth_fused_rebench_cert.cpp']
+
+deep2_k2_full_depth_trampoline_promotion_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_full_depth_trampoline_promotion_cert.cpp']
+
+deep2_k2_gpu_copy_compute_overlap_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_copy_compute_overlap_cert.cpp']
+
+deep2_k2_gpu_mla_full_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_mla_full_cert.cpp']
+
+deep2_k2_gpu_mla_full_depth_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_mla_full_depth_cert.cpp']
+
+deep2_k2_gpu_mla_nu_bridge_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_mla_nu_bridge_cert.cpp']
+
+deep2_k2_gpu_mla_re_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_mla_re_cert.cpp']
+
+deep2_k2_gpu_mla_slot_reuse_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_mla_slot_reuse_cert.cpp']
+
+deep2_k2_gpu_stream_compute_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_stream_compute_cert.cpp']
+
+deep2_k2_gpu_stream_copy_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_stream_copy_cert.cpp']
+
+deep2_k2_gpu_stream_mla_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_gpu_stream_mla_cert.cpp']
+
+deep2_k2_live_decode_mla_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_decode_mla_cert.cpp']
+
+deep2_k2_live_decode_sustained_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_decode_sustained_cert.cpp']
+
+deep2_k2_live_gen_perf_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_gen_perf_cert.cpp']
+
+deep2_k2_live_generate_policy_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_generate_policy_cert.cpp']
+
+deep2_k2_live_gpu_stream_e2e_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_gpu_stream_e2e_cert.cpp']
+
+deep2_k2_live_policy_crossover_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_policy_crossover_cert.cpp']
+
+deep2_k2_live_policy_e2e_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_policy_e2e_cert.cpp']
+
+deep2_k2_live_policy_split_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_live_policy_split_cert.cpp']
+
+deep2_k2_logits_climb_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_logits_climb_cert.cpp']
+
+deep2_k2_logits_gpu_range_attribution_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_logits_gpu_range_attribution_001.cpp']
+
+deep2_k2_logits_q6k_resident_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_logits_q6k_resident_cert.cpp']
+
+deep2_k2_logits_vwa_lineage_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_logits_vwa_lineage_001.cpp']
+
+deep2_k2_mla_full_depth_soak_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_full_depth_soak_cert.cpp']
+
+deep2_k2_mla_fused_q4kt_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_fused_q4kt_cert.cpp']
+
+deep2_k2_mla_kv_expand_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_kv_expand_cert.cpp']
+
+deep2_k2_mla_kv_expand_opt_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_kv_expand_opt_cert.cpp']
+
+deep2_k2_mla_qa_critical_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_qa_critical_cert.cpp']
+
+deep2_k2_mla_qkv_proj_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_qkv_proj_cert.cpp']
+
+deep2_k2_mla_rebench_promote_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_rebench_promote_cert.cpp']
+
+deep2_k2_mla_reuse_promote_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_mla_reuse_promote_cert.cpp']
+
+deep2_k2_policy_hysteresis_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_policy_hysteresis_cert.cpp']
+
+deep2_k2_semantic_seal_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_semantic_seal_cert.cpp']
+
+deep2_k2_serverless_stream_latency_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_serverless_stream_latency_cert.cpp']
+
+deep2_k2_shard_attn_residency_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_shard_attn_residency_cert.cpp']
+
+deep2_k2_stream_miss_reality_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_stream_miss_reality_cert.cpp']
+
+deep2_k2_tps_rainbow_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_tps_rainbow_cert.cpp']
+
+deep2_k2_trampoline_full_depth_opt_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_trampoline_full_depth_opt_cert.cpp']
+
+deep2_k2_trygpu_logits_split_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_trygpu_logits_split_cert.cpp']
+
+deep2_k2_useful_tps_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_useful_tps_001.cpp']
+
+deep2_k2_wall_attribution_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_k2_wall_attribution_cert.cpp']
+
+deep2_live_path_effectiveness_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_live_path_effectiveness_cert.cpp']
+
+deep2_live_path_fused_control_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_live_path_fused_control_cert.cpp']
+
+deep2_live_path_interaction_bounds_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_live_path_interaction_bounds_cert.cpp']
+
+deep2_local_agent_audit_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_local_agent_audit_001.cpp']
+
+deep2_mars_e2e.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_mars_e2e.cpp']
+
+deep2_moe_bench_standalone.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_moe_bench_standalone.cpp']
+
+deep2_multi_gpu_layer_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_multi_gpu_layer_cert.cpp']
+
+deep2_nu_gemv_parity_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_nu_gemv_parity_cert.cpp']
+
+deep2_nu_gpu_gemv_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_nu_gpu_gemv_cert.cpp']
+
+deep2_nu_live_consumer_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_nu_live_consumer_cert.cpp']
+
+deep2_nu_pack_format_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_nu_pack_format_cert.cpp']
+
+deep2_nu_perf_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_nu_perf_cert.cpp']
+
+deep2_outer_engine_bridge_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_outer_engine_bridge_cert.cpp']
+
+deep2_parity_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_parity_cert.cpp']
+
+deep2_placement_cost_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_placement_cost_cert.cpp']
+
+deep2_rmv_mount_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_rmv_mount_001.cpp']
+
+deep2_runtime_batch1_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_runtime_batch1_cert.cpp']
+
+deep2_runtime_batch2_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_runtime_batch2_cert.cpp']
+
+deep2_runtime_batch3_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_runtime_batch3_cert.cpp']
+
+deep2_server_main.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_server_main.cpp']
+
+deep2_streamer_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_streamer_cert.cpp']
+
+deep2_streamer_parity.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_streamer_parity.cpp']
+
+deep2_topology_portability_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_topology_portability_cert.cpp']
+
+deep2_ucf_bounce_smoke.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_bounce_smoke.cpp']
+
+deep2_ucf_bouncehouse_example.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_bouncehouse_example.cpp']
+
+deep2_ucf_generation_ticket_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_generation_ticket_001.cpp']
+
+deep2_ucf_gpu_ready_e2e.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_gpu_ready_e2e.cpp']
+
+deep2_ucf_halo_spark_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_halo_spark_001.cpp']
+
+deep2_ucf_logits_range_bounce_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_logits_range_bounce_001.cpp']
+
+deep2_ucf_mobility_fault_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_mobility_fault_001.cpp']
+
+deep2_ucf_no_stale_dispatch_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_no_stale_dispatch_001.cpp']
+
+deep2_ucf_read_converge_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_read_converge_001.cpp']
+
+deep2_ucf_semantic_abi_v1_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_ucf_semantic_abi_v1_cert.cpp']
+
+deep2_vwa_e2e_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_vwa_e2e_001.cpp']
+
+deep2_vwa_iocp_range_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_vwa_iocp_range_001.cpp']
+
+deep2_vwa_poc_1_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_vwa_poc_1_001.cpp']
+
+deep2_vwa_range_contract_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\deep2_vwa_range_contract_001.cpp']
+
+deep_iteration_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\deep_iteration_engine.cpp']
+
+dependency_audit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\dependency_audit.cpp']
+
+diagnostic_consumer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp\\diagnostic_consumer.cpp']
+
+dml_inference_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\dml_inference_engine.cpp']
+
+dump_qwen35_meta.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\dump_qwen35_meta.cpp']
+
+dump_tensors.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\dump_tensors.cpp']
+
+dynamic_planner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\dynamic_planner.cpp']
+
+embedded_terminal.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\terminal\\embedded_terminal.cpp']
+
+engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine.cpp']
+
+engine_manager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\engine_manager.cpp']
+
+enhanced_blackboard.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\enhanced_blackboard.cpp']
+
+entry_point.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\entry_point.cpp']
+
+eval_framework.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\eval_framework.cpp']
+
+extension_marketplace.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\marketplace\\extension_marketplace.cpp']
+
+extension_package_local.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\marketplace\\extension_package_local.cpp']
+
+failure_intelligence_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\failure_intelligence_orchestrator.cpp']
+
+feature_flags_runtime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\feature_flags_runtime.cpp']
+
+feature_registry_panel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\feature_registry_panel.cpp', 'F:\\~dev\\rawrxd\\src\\win32app\\feature_registry_panel.cpp']
+
+flame_graph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\profiling\\flame_graph.cpp']
+
+fused_layer_benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\fused_layer_benchmark.cpp']
+
+fwd_cert_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\fwd_cert_001.cpp']
+
+game_engine_manager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\game_engine_manager.cpp']
+
+generate_cli.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\generate_cli.cpp']
+
+ggml_nanoquant.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ggml\\ggml_nanoquant.cpp']
+
+gguf_adapter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\canonical\\gguf_adapter.cpp']
+
+gguf_core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\gguf_core.cpp']
+
+gguf_d3d12_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gguf_d3d12_bridge.cpp']
+
+gguf_d3d12_bridge_link_fallback.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\gguf_d3d12_bridge_link_fallback.cpp']
+
+gguf_diagnostic_provider.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp\\gguf_diagnostic_provider.cpp']
+
+gguf_k_quants.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\gguf_k_quants.cpp']
+
+gguf_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gguf\\gguf_loader.cpp']
+
+gguf_masm_weight_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gguf_masm_weight_bridge.cpp']
+
+gguf_server_hotpatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\server\\gguf_server_hotpatch.cpp']
+
+gguf_tensor_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime\\gguf_tensor_loader.cpp']
+
+gguf_types.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\gguf_types.cpp']
+
+ggufrunner_link_fallbacks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\ggufrunner_link_fallbacks.cpp']
+
+ggufrunner_link_kernels.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\ggufrunner_link_kernels.cpp']
+
+git_context.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\git\\git_context.cpp']
+
+gold_link_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gold_stubs\\gold_link_stubs.cpp']
+
+gold_patch_symbol_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\gold_patch_symbol_stubs.cpp']
+
+gpu_backend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gpu\\gpu_backend.cpp']
+
+gpu_benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\gpu_benchmark.cpp']
+
+gpu_dispatch_gate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\gpu_dispatch_gate.cpp']
+
+gpu_enforcement.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gpu_enforcement.cpp']
+
+gzip_brutal_inflate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\codec\\gzip_brutal_inflate.cpp']
+
+hexmag_client.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\hexmag_client.cpp']
+
+hot_patcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\hot_patcher.cpp']
+
+hotpatch_e2e_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\hotpatch_e2e_test.cpp']
+
+hotpatch_stress_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\hotpatch_stress_test.cpp']
+
+hotpatch_symbol_provider.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp\\hotpatch_symbol_provider.cpp']
+
+hotpatch_telemetry_safety.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\hotpatch_telemetry_safety.cpp']
+
+hybrid_cloud_manager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\hybrid_cloud_manager.cpp']
+
+ide_agent_loop_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\ide_agent_loop_cert.cpp']
+
+inference_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\inference_engine.cpp']
+
+inference_engine_real.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\inference_engine_real.cpp']
+
+inference_kernels.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\inference_kernels.cpp']
+
+inference_plugin_backend.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\inference_plugin_backend.cpp']
+
+inference_standalone_link_shims.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\inference_standalone_link_shims.cpp']
+
+inference_standalone_main.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\inference_standalone_main.cpp']
+
+intelligent_codebase_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\intelligent_codebase_engine.cpp']
+
+intent_abi.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\intent\\intent_abi.cpp']
+
+intent_config.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\intent\\intent_config.cpp']
+
+interpretability_panel.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\interpretability_panel.cpp']
+
+interpretability_panel_enhanced.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\interpretability_panel_enhanced.cpp']
+
+k3c_token.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\lavapath\\k3c_token.cpp']
+
+kv_cache_benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\kv_cache_benchmark.cpp']
+
+kv_cache_optimizer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gpu\\kv_cache_optimizer.cpp']
+
+language_plugin.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\language_plugin.cpp']
+
+layer_harness.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\layer_harness.cpp']
+
+license_enforcement.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\license_enforcement.cpp']
+
+license_validator_manifest.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\license_validator_manifest.cpp']
+
+link_stubs_final.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\link_stubs_final.cpp']
+
+link_stubs_gate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\link_stubs_gate.cpp']
+
+link_stubs_remaining_classes.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\link_stubs_remaining_classes.cpp']
+
+llm_http_client.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\llm_http_client.cpp']
+
+local_reasoning_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\local_reasoning_engine.cpp']
+
+logger.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\logger.cpp']
+
+lsp_client.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp_client.cpp']
+
+lsp_hotpatch_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\lsp\\lsp_hotpatch_bridge.cpp']
+
+main_win32.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\main_win32.cpp']
+
+mcp_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mcp_bridge.cpp']
+
+mcp_integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\mcp_integration.cpp']
+
+memory_core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\memory_core.cpp']
+
+meta_planner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\meta_planner.cpp']
+
+minimal_dap_server.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\script\\debug\\minimal_dap_server.cpp']
+
+missing_handler_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\missing_handler_stubs.cpp']
+
+mission_director.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\mission_director.cpp']
+
+model_analysis_cli.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\model_analysis_cli.cpp']
+
+model_cascade.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\model_cascade.cpp']
+
+model_config.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\model_config.cpp']
+
+model_invoker.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\model_invoker.cpp']
+
+model_loader_asm_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\model_loader_asm_stubs.cpp']
+
+model_loader_fallbacks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\model_loader_fallbacks.cpp']
+
+model_name_utils.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\model_name_utils.cpp']
+
+model_source_resolver.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\model_source_resolver.cpp']
+
+moe_microbench.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\moe_microbench.cpp']
+
+moe_simple_bench.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\moe_simple_bench.cpp']
+
+moe_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\moe_test.cpp']
+
+moe_validation_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\moe_validation_test.cpp']
+
+monaco_gen.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\monaco_gen.cpp']
+
+monaco_settings_dialog.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\monaco_settings_dialog.cpp']
+
+multi_file_reasoning.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\multi_file_reasoning.cpp']
+
+multi_file_search.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\multi_file_search.cpp']
+
+multi_file_transaction.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\multi_file_transaction.cpp']
+
+multi_model_benchmark.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tools\\multi_model_benchmark.cpp']
+
+nevm_execution_plan.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\nevm\\nevm_execution_plan.cpp']
+
+nevm_kernel_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\nevm\\nevm_kernel_bridge.cpp']
+
+nevm_mmu.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\nevm\\nevm_mmu.cpp']
+
+nevm_tensor_descriptor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\nevm\\nevm_tensor_descriptor.cpp']
+
+ollama_blob_parser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\ollama_blob_parser.cpp']
+
+ollama_client.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ollama_client.cpp']
+
+ollama_provider_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\ollama_provider_stub.cpp']
+
+orchestrator_cli_handler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\orchestrator_cli_handler.cpp']
+
+p0_process_alive_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p0_process_alive_001.cpp']
+
+p1_ide_exec_policy_apply_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_ide_exec_policy_apply_001.cpp']
+
+p1_ide_exec_policy_live_gguf_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_ide_exec_policy_live_gguf_001.cpp']
+
+p1_policy_sha_lifecycle_diag_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_policy_sha_lifecycle_diag_001.cpp']
+
+p1_real_speedup_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_real_speedup_001.cpp']
+
+p1_repeatability_state_drift_diag_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_repeatability_state_drift_diag_001.cpp']
+
+p1_repeatability_trial_validity_diag_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\p1_repeatability_trial_validity_diag_001.cpp']
+
+p1_ui_encoding_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\p1_ui_encoding_cert.cpp']
+
+p1_ui_menu_e2e_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\p1_ui_menu_e2e_cert.cpp']
+
+p1_ui_menu_lifetime_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\p1_ui_menu_lifetime_cert.cpp']
+
+p1_ui_sidebar_encoding_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\p1_ui_sidebar_encoding_cert.cpp']
+
+patch_firewall.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\guardrails\\patch_firewall.cpp']
+
+patch_transaction.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\hotpatch\\patch_transaction.cpp']
+
+phase2_integration_example.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\phase2_integration_example.cpp']
+
+plan_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\plan_orchestrator.cpp']
+
+planner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\planner.cpp']
+
+pmc_profiler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\profiling\\pmc_profiler.cpp']
+
+polymorphic_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\polymorphic_loader.cpp']
+
+production_config_manager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\production_config_manager.cpp']
+
+project_context.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\project_context.cpp']
+
+pyre_compute.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\pyre_compute.cpp']
+
+quantum_agent_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_agent_orchestrator.cpp']
+
+quantum_autonomous_todo_system.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_autonomous_todo_system.cpp']
+
+quantum_dynamic_time_manager.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_dynamic_time_manager.cpp']
+
+quantum_dynamic_time_manager_impl.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_dynamic_time_manager_impl.cpp']
+
+quantum_missing_impl.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_missing_impl.cpp']
+
+quantum_multi_model_agent_cycling.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_multi_model_agent_cycling.cpp']
+
+quantum_production_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\quantum_production_orchestrator.cpp']
+
+quickjs_extension_host.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\quickjs_extension_host.cpp']
+
+quickjs_node_shims.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\quickjs_node_shims.cpp']
+
+quickjs_vscode_bindings.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\quickjs_vscode_bindings.cpp']
+
+qwen35_attn_contract.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\qwen35_attn_contract.cpp']
+
+rawr_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\rawr_engine.cpp']
+
+rawr_run.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\rawr_run.cpp']
+
+rawr_transport_strict.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\rawr_transport_strict.cpp']
+
+rawrengine_link_closure.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\link_stubs\\rawrengine_link_closure.cpp']
+
+rawrengine_missing_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\rawrengine_missing_stubs.cpp']
+
+rawrxd.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\rawrxd.cpp']
+
+rawrxd_agentic_runtime_all.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\rawrxd_agentic_runtime_all.cpp']
+
+rawrxd_cli_link_shims.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\rawrxd_cli_link_shims.cpp']
+
+rawrxd_deep_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\cli\\rawrxd_deep_stubs.cpp']
+
+rawrxd_ggufrunner_signals.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\llm_adapter\\rawrxd_ggufrunner_signals.cpp']
+
+rawrxd_inference.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rawrxd_inference.cpp']
+
+rawrxd_link_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rawrxd_link_stubs.cpp']
+
+rawrxd_model_registry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\rawrxd_model_registry.cpp']
+
+rawrxd_native_log_impl.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\rawrxd_native_log_impl.cpp']
+
+rawrxd_normal_gguf_final_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\rawrxd_normal_gguf_final_001.cpp']
+
+rawrxd_pipe_server.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\rawrxd_pipe_server.cpp']
+
+rawrxd_pipe_server_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\rawrxd_pipe_server_stubs.cpp']
+
+rawrxd_run_modelname_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\rawrxd_run_modelname_001.cpp']
+
+rawrxd_serve.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\rawrxd_serve.cpp']
+
+rawrxd_serve_inference_plugin.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\serve\\rawrxd_serve_inference_plugin.cpp']
+
+rbac_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\auth\\rbac_engine.cpp']
+
+rdna3_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rdna3_bridge.cpp']
+
+react_ide_generator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\react_ide_generator.cpp']
+
+real_time_completion_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\real_time_completion_engine.cpp']
+
+refactoring_plugin.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\refactoring_plugin.cpp']
+
+reflection_agent.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\cognitive\\reflection_agent.cpp']
+
+replay_fixture.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\replay_fixture.cpp']
+
+replay_harness.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\replay_harness.cpp']
+
+replay_mock_inference.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\replay_mock_inference.cpp']
+
+replay_oracle.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\replay_oracle.cpp']
+
+replay_reporter.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_harness\\replay_reporter.cpp']
+
+replay_telemetry_fusion.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\replay_telemetry_fusion.cpp']
+
+repo_refactor_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\repo_refactor_engine.cpp']
+
+resource_generator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\resource_generator.cpp']
+
+rkc_code_world_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_code_world_cert.cpp']
+
+rkc_deep2_model_authority_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_deep2_model_authority_cert.cpp']
+
+rkc_minimal_source_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_minimal_source_cert.cpp']
+
+rkc_model_inventory_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_model_inventory_cert.cpp']
+
+rkc_negative_knowledge_cert.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_negative_knowledge_cert.cpp']
+
+rkc_product_context_smoke.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_product_context_smoke.cpp']
+
+rkc_smoke.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rkc\\rkc_smoke.cpp']
+
+router_bench.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\router_bench.cpp']
+
+router_latency_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\router_latency_test.cpp']
+
+rtp_protocol_fallback.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\rtp_protocol_fallback.cpp']
+
+runtime.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime.cpp']
+
+runtime_core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime_core.cpp']
+
+runtime_patcher.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\runtime_patcher.cpp']
+
+sampler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\sampler.cpp']
+
+sast_rule_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\sast_rule_engine.cpp']
+
+sbom_export.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\sbom_export.cpp']
+
+secrets_scanner.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\secrets_scanner.cpp']
+
+semantic_code_search.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\semantic_code_search.cpp']
+
+semantic_index.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\context\\semantic_index.cpp']
+
+slash_command_parser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\slash_command_parser.cpp']
+
+sovereign_engines.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\sovereign_engines.cpp']
+
+sovereign_gpu_link_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\sovereign_gpu_link_stubs.cpp']
+
+speculative_decoder.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gpu\\speculative_decoder.cpp']
+
+speculative_decoder_v2.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gpu\\speculative_decoder_v2.cpp']
+
+speculative_tree_attention_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\speculative_tree_attention_bridge.cpp']
+
+spengine_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\spengine_bridge.cpp']
+
+streaming_command_handler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\streaming_command_handler.cpp']
+
+streaming_gguf_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\streaming_gguf_loader.cpp']
+
+streaming_inference_engine.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\streaming_inference_engine.cpp']
+
+stress_memory.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\debug\\stress_memory.cpp']
+
+stress_target.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\debug\\stress_target.cpp']
+
+stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\stubs.cpp', 'F:\\~dev\\rawrxd\\src\\core\\stubs.cpp']
+
+subagent_core.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\subagent_core.cpp']
+
+subsystem_mode_fallbacks.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\subsystem_mode_fallbacks.cpp']
+
+swarm_orchestrator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\swarm_orchestrator.cpp', 'F:\\~dev\\rawrxd\\src\\cli\\swarm_orchestrator.cpp']
+
+symbol_graph_indexer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\symbol_graph_indexer.cpp']
+
+task_executor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\task_executor.cpp']
+
+task_graph.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\task_graph.cpp']
+
+task_scheduler.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\task_scheduler.cpp']
+
+telemetry_collector.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agent\\telemetry_collector.cpp']
+
+telemetry_export.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\telemetry\\telemetry_export.cpp']
+
+test_api_server.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_api_server.cpp']
+
+test_chat_template.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_chat_template.cpp']
+
+test_chat_template_unit.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_chat_template_unit.cpp']
+
+test_debugbridge_telemetry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\debug\\test_debugbridge_telemetry.cpp']
+
+test_deterministic_replay.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_deterministic_replay.cpp']
+
+test_embed_q4k_token.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_embed_q4k_token.cpp']
+
+test_generate_one_token.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_generate_one_token.cpp']
+
+test_l10_ffn_inp_same_source.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_l10_ffn_inp_same_source.cpp']
+
+test_mars_controller.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\mars\\test_mars_controller.cpp']
+
+test_masm_inference.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\test_masm_inference.cpp']
+
+test_q4_0_gemv_certification.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_q4_0_gemv_certification.cpp']
+
+test_q4k_gemv_parity.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_q4k_gemv_parity.cpp']
+
+test_q_elemdiff.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_q_elemdiff.cpp']
+
+test_real_gguf_load.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_real_gguf_load.cpp']
+
+test_real_gguf_validate.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_real_gguf_validate.cpp']
+
+test_simulator.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\rpc\\test_simulator.cpp']
+
+test_sovereign_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ide\\test_sovereign_bridge.cpp']
+
+test_streaming.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_streaming.cpp']
+
+test_tool_limit_hotpatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_tool_limit_hotpatch.cpp']
+
+test_val_051_3_multi_token.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\test_val_051_3_multi_token.cpp']
+
+tool_action_status.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\tool_action_status.cpp']
+
+tool_call_parser.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\tool_call_parser.cpp']
+
+tool_executor.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\tool_executor.cpp']
+
+tool_registry.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tool_registry.cpp', 'F:\\~dev\\rawrxd\\src\\agentic\\tool_registry.cpp']
+
+tool_registry_advanced.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\tool_registry_advanced.cpp']
+
+transformer.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\engine\\transformer.cpp']
+
+tree_attention_aligned.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_aligned.cpp']
+
+tree_attention_avx2.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernels\\tree_attention_avx2.cpp']
+
+tree_attention_avx512_intrinsics.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_avx512_intrinsics.cpp', 'F:\\~dev\\rawrxd\\src\\kernels\\tree_attention_avx512_intrinsics.cpp']
+
+tree_attention_bench_simple.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_bench_simple.cpp']
+
+tree_attention_dispatch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernels\\tree_attention_dispatch.cpp']
+
+tree_attention_fused_sparse.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_fused_sparse.cpp']
+
+tree_attention_masm_val038_wrapper.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_masm_val038_wrapper.cpp']
+
+tree_attention_profiled.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_profiled.cpp']
+
+tree_attention_scalar.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\kernels\\tree_attention_scalar.cpp']
+
+tree_attention_sparse.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_sparse.cpp']
+
+tree_attention_tiled.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_tiled.cpp']
+
+tree_attention_tree_specialized.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_tree_specialized.cpp']
+
+tree_attention_vectorized.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\benchmark\\tree_attention_vectorized.cpp']
+
+uac_bypass_impl_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\security\\uac_bypass_impl_stub.cpp']
+
+ultra_fast_inference.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\inference\\ultra_fast_inference.cpp']
+
+unified_model_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\canonical\\unified_model_loader.cpp']
+
+unity_engine_integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\unity_engine_integration.cpp']
+
+universal_stub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\universal_stub.cpp']
+
+unreal_engine_integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\unreal_engine_integration.cpp']
+
+v280_link_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\win32app\\v280_link_bridge.cpp']
+
+verify_integration.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\sovereign\\verify_integration.cpp']
+
+vocab_resolver.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\gguf\\vocab_resolver.cpp']
+
+vscode_extension_api.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\vscode_extension_api.cpp']
+
+vsix_loader_win32.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\modules\\vsix_loader_win32.cpp']
+
+vulkan_compute_real.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\agentic\\vulkan_compute_real.cpp']
+
+vulkan_fwd_attn_mla.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_attn_mla.cpp']
+
+vulkan_fwd_cmdpool.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_cmdpool.cpp']
+
+vulkan_fwd_fused.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_fused.cpp']
+
+vulkan_fwd_hostops.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_hostops.cpp']
+
+vulkan_fwd_q4k.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q4k.cpp']
+
+vulkan_fwd_q4k_act.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q4k_act.cpp']
+
+vulkan_fwd_q4k_climb.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q4k_climb.cpp']
+
+vulkan_fwd_q4k_fused.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q4k_fused.cpp']
+
+vulkan_fwd_q4k_host.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q4k_host.cpp']
+
+vulkan_fwd_q6k.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q6k.cpp']
+
+vulkan_fwd_q6k_host.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q6k_host.cpp']
+
+vulkan_fwd_q8_kva_climb.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_q8_kva_climb.cpp']
+
+vulkan_fwd_quant.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_quant.cpp']
+
+vulkan_fwd_quant_host.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_quant_host.cpp']
+
+vulkan_fwd_quant_pipe.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_quant_pipe.cpp']
+
+vulkan_fwd_resident.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_resident.cpp']
+
+vulkan_fwd_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_stubs.cpp']
+
+vulkan_fwd_tune.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_fwd_tune.cpp']
+
+vulkan_kernel_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_kernel_bridge.cpp']
+
+vulkan_weight_policy.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_weight_policy.cpp']
+
+vulkan_weight_prefetch.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_weight_prefetch.cpp']
+
+vulkan_weight_window.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\vulkan_weight_window.cpp']
+
+vwa_address_contract_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\vwa_address_contract_001.cpp']
+
+vwa_poc_1_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\vwa_poc_1_001.cpp']
+
+vwa_range_contract_001.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\deep2\\vwa_range_contract_001.cpp']
+
+websocket_hub.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\collab\\websocket_hub.cpp']
+
+webview2_bridge.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ui\\webview2_bridge.cpp']
+
+win32_plugin_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\plugin_system\\win32_plugin_loader.cpp']
+
+win32ide_link_stubs.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\core\\win32ide_link_stubs.cpp']
+
+witness_system_test.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\validation\\witness_system_test.cpp']
+
+workspace_embeddings.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\ai\\workspace_embeddings.cpp']
+
+zlib_runtime_loader.cpp
+  Stub: ['F:\\~dev\\rawrxd\\src\\compression\\zlib_runtime_loader.cpp']
+

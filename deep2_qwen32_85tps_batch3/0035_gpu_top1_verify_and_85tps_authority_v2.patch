@@ -1,0 +1,165 @@
+# Deep2 Qwen32 85TPS — Batch 3/5, item 35
+# Base: apply after 0034.
+#
+# Binds dual-GPU LM-head top1 into the exact verifier and strengthens the
+# authority receipt with proposal source, acceptance EWMA and GPU-top1 counts.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0035_gpu_top1_verify_and_85tps_authority_v2.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuRowSplitBatch4(
+@@
+     RowSplitReceipt* receipt=nullptr);
++bool Deep2RunDualGpuRowSplitBatchTop1(
++    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
++    const float* inputBatch,uint32_t batch,
++    uint32_t* outToken,float* outValue,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuRowSplitBatch4(
+@@
+ }
++
++bool Deep2RunDualGpuRowSplitBatchTop1(
++    VulkanCompute& g0,VulkanCompute& g1,const WeightTensor& wt,
++    const float* inputBatch,uint32_t batch,
++    uint32_t* outToken,float* outValue,uint64_t epoch)
++{
++    if(!inputBatch||!outToken||!outValue||!batch||batch>4||
++       wt.type!=(int)GGMLType::GGML_TYPE_Q4_K) return false;
++    RowSplitPlan p=cachedThroughputSplit(wt,g0,g1);
++    if(!p.valid) return false;
++    GpuWeightView w0{},w1{};
++    if(!Deep2BuildGpuWeightView(wt,p.row0Begin,p.row0Count,w0)||
++       !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1))
++        return false;
++    uint32_t i0[4]{},i1[4]{};
++    float v0[4]{},v1[4]{};
++    bool a=false,b=false;
++    const bool both=rowExecutor().run(
++        [&]{a=g0.RunWeightBatchQ4KTop1(
++            w0,inputBatch,batch,p.row0Begin,i0,v0,epoch);return a;},
++        [&]{b=g1.RunWeightBatchQ4KTop1(
++            w1,inputBatch,batch,p.row1Begin,i1,v1,epoch);return b;});
++    if(!both||!a||!b) return false;
++    for(uint32_t n=0;n<batch;++n) {
++        if(v1[n]>v0[n] || (v1[n]==v0[n]&&i1[n]<i0[n])) {
++            outToken[n]=i1[n];outValue[n]=v1[n];
++        } else {
++            outToken[n]=i0[n];outValue[n]=v0[n];
++        }
++    }
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     void computeLogitsBatch(const float* hiddenBatch, size_t count,
+                             float* logitsBatch);
++    bool computeGreedyTop1Batch(const float* hiddenBatch,size_t count,
++                                int32_t* outTokens);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ bool Deep2Engine::buildAdaptiveSpeculativeProposals(
+@@
+ }
++
++bool Deep2Engine::computeGreedyTop1Batch(
++    const float* hiddenBatch,size_t count,int32_t* outTokens)
++{
++    if(!hiddenBatch||!outTokens||count==0||count>4||
++       !vulkanInitialized_||vulkanDevices_.size()<2||
++       modelWeights.lmHead.type!=(int)GGMLType::GGML_TYPE_Q4_K)
++        return false;
++    const size_t H=modelWeights.hiddenDim;
++    auto& norm=specWs_.norm;
++    norm.resize(count*H);
++    for(size_t b=0;b<count;++b)
++        RMSNormW(modelWeights.finalNorm,hiddenBatch+b*H,
++                 norm.data()+b*H,H,modelWeights.normEps);
++    uint32_t tok[4]{};
++    float val[4]{};
++    const uint64_t epoch=kvCache?kvCache->currentLength():0;
++    if(!Deep2RunDualGpuRowSplitBatchTop1(
++            *vulkanDevices_[0],*vulkanDevices_[1],modelWeights.lmHead,
++            norm.data(),(uint32_t)count,tok,val,epoch))
++        return false;
++    for(size_t b=0;b<count;++b) outTokens[b]=(int32_t)tok[b];
++    if(medusaDecoder_) ++medusaDecoder_->stats.exact.gpuTop1Batches;
++    return true;
++}
+@@
+-    std::vector<float> logitsBatch(B*modelWeights.vocabSize);
+-    computeLogitsBatch(hiddenBatch.data(),B,logitsBatch.data());
++    int32_t top1[4]{};
++    if(!computeGreedyTop1Batch(hiddenBatch.data(),B,top1)) {
++        // Exact fallback retains correctness; strict 85 authority will expose
++        // zero GPU-top1 batches rather than silently minting the optimization.
++        std::vector<float> logitsBatch(B*modelWeights.vocabSize);
++        computeLogitsBatch(hiddenBatch.data(),B,logitsBatch.data());
++        for(size_t j=0;j<B;++j)
++            top1[j]=greedyArgmax(
++                logitsBatch.data()+j*modelWeights.vocabSize,
++                modelWeights.vocabSize);
++    }
+@@
+     for(size_t j=1;j<B;++j) {
+-        const float* lp=
+-            logitsBatch.data()+(j-1)*modelWeights.vocabSize;
+-        const int target=greedyArgmax(lp,modelWeights.vocabSize);
++        const int target=top1[j-1];
+@@
+     if(accepted<B) {
+         if(replacement<0) {
+-            const float* lp=
+-                logitsBatch.data()+(accepted-1)*modelWeights.vocabSize;
+-            replacement=greedyArgmax(lp,modelWeights.vocabSize);
++            replacement=top1[accepted-1];
+         }
+@@
+     } else if(verified.size()<maxEmit) {
+-        const float* lp=
+-            logitsBatch.data()+(B-1)*modelWeights.vocabSize;
+-        const int bonus=greedyArgmax(lp,modelWeights.vocabSize);
++        const int bonus=top1[B-1];
+         if(bonus<0) return false;
+         verified.push_back(bonus);
+     }
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const bool amortized=sc.targetPasses>0 &&
+                          sc.verifiedPerTargetPass()>1.0;
+-    const bool pass=parity&&enough&&gpu&&amortized&&tps>=85.0;
++    const bool top1Gpu=sc.gpuTop1Batches>0;
++    const bool realDraft=sc.selfDraftWindows>0||sc.ngramDraftWindows>0;
++    const bool pass=parity&&enough&&gpu&&amortized&&top1Gpu&&realDraft&&
++                    tps>=85.0;
+@@
+         "UNPLANNED_FALLBACKS=%llu\n"
++        "SELF_DRAFT_WINDOWS=%llu\n"
++        "NGRAM_DRAFT_WINDOWS=%llu\n"
++        "GPU_TOP1_BATCHES=%llu\n"
++        "ACCEPTANCE_EWMA=%.6f\n"
+         "DECODE_TPS_REAL_VERIFIED=%.6f\n"
+@@
+         (unsigned long long)spec.vulkanUnplannedFallbacks(),
++        (unsigned long long)sc.selfDraftWindows,
++        (unsigned long long)sc.ngramDraftWindows,
++        (unsigned long long)sc.gpuTop1Batches,
++        sc.acceptanceEwma,
+         tps,pass?"PASS":"HOLD");

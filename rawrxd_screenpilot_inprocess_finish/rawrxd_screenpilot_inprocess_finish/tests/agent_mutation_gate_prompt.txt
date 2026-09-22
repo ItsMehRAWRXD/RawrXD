@@ -1,0 +1,19 @@
+Use canonical RawrXD Tool Authority only.
+
+Inside the current workspace:
+
+1. Create a disposable file named `.rawrxd_screenpilot_gate.txt`.
+2. Write exactly:
+   SCREENPILOT_WRITE_PASS
+3. Read the file back.
+4. Search the workspace for `SCREENPILOT_WRITE_PASS`.
+5. Delete ONLY `.rawrxd_screenpilot_gate.txt`.
+6. Confirm the file no longer exists.
+7. Return these exact receipt lines only after each condition is genuinely proven:
+
+SCREENPILOT_TOOL_AUTHORITY=PASS
+SCREENPILOT_WRITE=PASS
+SCREENPILOT_READ=PASS
+SCREENPILOT_SEARCH=PASS
+SCREENPILOT_DELETE=PASS
+SCREENPILOT_MUTATION_E2E=PASS

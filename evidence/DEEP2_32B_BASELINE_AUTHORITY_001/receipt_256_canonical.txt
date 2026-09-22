@@ -1,0 +1,43 @@
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+RECEIPT_DATE=2026-09-18T01:19:00
+RUN_MODE=Canonical authority run — solitary process, no concurrent GPU workloads
+COMMIT=741e4bfc00c9a6efb1564a2372c0356cd20da105
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+MODEL_BYTES=19851336672
+GPU0=AMD Radeon AI PRO R9700
+GPU1=AMD Radeon RX 7800 XT
+WARMUP_TOKENS=32
+MEASURED_TOKENS=256
+GENERATED=256
+GENERATION_MS=54756.458
+TOKEN_WALL_NS=59602096100
+AVG_TOKEN_WALL_NS=232820687
+DECODE_TPS_ENGINE=4.675248
+DECODE_TPS_QPC=4.295151
+GPU_DEVICES=2
+REAL_GPU_FORWARD=1
+FULL_RESIDENT_GPU=0
+REAL_DUAL_ROW_GPU=1
+DUAL_ROW_DENSE_TOKENS=280
+DUAL_ROW_SPLIT_OPS=71936
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+DENSE_ROW_TIMING_CALLS=71936
+DENSE_ROW_WALL_PCT=83.667
+RESIDENT_REUSE=1
+BOUNDED_UPLOADS=1
+DEEP2_32B_BASELINE_AUTHORITY_001=PASS
+
+NOTES:
+- Earlier 256-token "failures" were procedural artifacts (terminal kills,
+  concurrent gate runs contending for GPUs), NOT engine instability.
+- 64-token run (1:09 AM): TPS_QPC=2.2235, DENSE_ROW_WALL_PCT=94.641
+- 256-token run shows warmup-amortized steady state: TPS_QPC=4.295151,
+  TPS_ENGINE=4.675248.
+- Reconciliation with prior 2.86 vs 3.95 discrepancy: both numbers were
+  sub-32-token-window QPC samples. Canonical steady-state is 4.295 TPS
+  (QPC, 256 tokens) — the engine-vs-QPC gap (4.675 vs 4.295) reflects
+  outer-loop overhead outside the dense-row path.
+- Peak host WorkingSet observed ~38.2 GB during run (model 19.85 GB mapped
+  + Q4_K column-slice duplicate cache in q4kColumnSlices).

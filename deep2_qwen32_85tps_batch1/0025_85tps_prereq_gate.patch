@@ -1,0 +1,96 @@
+# Deep2 Qwen32 85TPS — speculative campaign Batch 1/5, item 25
+# Base: apply after 0021-0024.
+#
+# Adds a prerequisite authority executable. It does NOT claim 85 TPS.
+# It proves:
+#   - 85 > single-pass physical roofline for current model/hardware
+#   - a speculative window of 4 is mathematically capable of amortizing enough
+#   - the build has the new speculative controller + KV transaction primitives
+#
+# End-to-end 85 PASS remains reserved for measured verified output TPS.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0025_85tps_prereq_gate.patch
+
+diff --git a/~dev/tests/qwen32_85tps_prereq.cpp b/~dev/tests/qwen32_85tps_prereq.cpp
+new file mode 100644
+--- /dev/null
++++ b/~dev/tests/qwen32_85tps_prereq.cpp
+@@
++#include "deep2/Deep2Speculative.hpp"
++#include "deep2/MedusaDecoder.hpp"
++#include "deep2/KVSpecTransaction.hpp"
++#include <cstdio>
++
++int main() {
++    Deep2::SpeculativeRoofline r{};
++    r.targetModelGB=18.49;
++    r.gpu0GBps=640.0;
++    r.gpu1GBps=624.0;
++    r.efficiency=0.80;
++    r.targetOutputTPS=85.0;
++
++    Deep2::MedusaConfig mc{};
++    mc.window=4;
++    Deep2::MedusaDecoder draft(mc);
++    const int prompt[]={1,2,3,4,1,2,3,4,1,2,3};
++    draft.observe(prompt,sizeof(prompt)/sizeof(prompt[0]));
++    const auto p=draft.propose();
++
++    Deep2::KVCache kv;
++    Deep2::KVCacheConfig kc{};
++    kc.numLayers=1;kc.numHeads=1;kc.headDim=4;kc.maxSeqLen=32;
++    if(!kv.allocate(kc)) {
++        std::fprintf(stderr,"DEEP2_QWEN25_32B_85TPS_PREREQ=HOLD kv_alloc\n");
++        return 2;
++    }
++    (void)kv.advanceBy(5);
++    {
++        Deep2::KVSpecTransaction tx(kv);
++        (void)kv.advanceBy(4);
++        if(!tx.commitAccepted(2) || kv.currentLength()!=7) {
++            std::fprintf(stderr,"DEEP2_QWEN25_32B_85TPS_PREREQ=HOLD kv_tx\n");
++            return 3;
++        }
++    }
++
++    const bool singlePassInsufficient=
++        r.rawTargetPassTPS()<r.targetOutputTPS;
++    const bool windowEnough=r.physicallyReachableWithWindow(mc.window);
++    const bool drafterLive=!p.empty();
++
++    std::fprintf(stdout,
++        "GATE=DEEP2_QWEN25_32B_85TPS_PREREQ_001\n"
++        "RAW_SINGLE_PASS_TPS=%.6f\n"
++        "EFF_SINGLE_PASS_TPS=%.6f\n"
++        "MIN_ACCEPTED_PER_PASS=%.6f\n"
++        "SPEC_WINDOW=%u\n"
++        "DRAFTER_PROPOSALS=%zu\n"
++        "KV_TRANSACTION=PASS\n"
++        "SINGLE_PASS_INSUFFICIENT=%u\n"
++        "WINDOW_PHYSICALLY_SUFFICIENT=%u\n",
++        r.rawTargetPassTPS(),r.effectiveTargetPassTPS(),
++        r.minimumAcceptedPerPass(),mc.window,p.size(),
++        singlePassInsufficient?1u:0u,
++        windowEnough?1u:0u);
++
++    const bool pass=
++        singlePassInsufficient&&windowEnough&&drafterLive;
++    std::fprintf(stdout,
++        "DEEP2_QWEN25_32B_85TPS_PREREQ_001=%s\n",
++        pass?"PASS":"HOLD");
++    return pass?0:1;
++}
+
+diff --git a/~dev/CMakeLists.txt b/~dev/CMakeLists.txt
+--- a/~dev/CMakeLists.txt
++++ b/~dev/CMakeLists.txt
+@@
++add_executable(qwen32_85tps_prereq
++    tests/qwen32_85tps_prereq.cpp
++)
++target_include_directories(qwen32_85tps_prereq PRIVATE
++    ${CMAKE_CURRENT_SOURCE_DIR}
++    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
++    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
++)

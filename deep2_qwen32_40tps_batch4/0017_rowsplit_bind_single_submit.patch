@@ -1,0 +1,35 @@
+# Deep2 Qwen32 40TPS — Batch 4/5, item 17
+# Base: apply after 0016.
+# Goal: bind the simultaneous dual-GPU row split to the one-submit primitive.
+#
+# Before:
+#   UploadVector  -> submit/wait
+#   DispatchWeight -> submit/wait
+#   DownloadVector -> submit/wait
+# per GPU, per matrix.
+#
+# After:
+#   RunWeightHostRoundTrip -> one submit/wait
+# per GPU, per matrix.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0017_rowsplit_bind_single_submit.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+     auto run=[&](VulkanCompute& g,const GpuWeightView& w,
+                  float* dst)->bool{
+-        g.SetWorkEpoch(epoch);
+-        if(!g.EnsureScratch(20,w.cols) ||
+-           !g.EnsureScratch(21,w.rows))
+-            return false;
+-        auto& in=g.Scratch(20);
+-        auto& out=g.Scratch(21);
+-        if(!g.UploadVector(in,input,w.cols)) return false;
+-        if(!g.DispatchWeight(w,in,out)) return false;
+-        return g.DownloadVector(out,dst,w.rows);
++        return g.RunWeightHostRoundTrip(
++            w,input,dst,epoch);
+     };

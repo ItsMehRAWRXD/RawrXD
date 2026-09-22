@@ -1,0 +1,345 @@
+=== LINE 3409 ===
+3408: 
+3409: add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
+3410: 
+3411: if(WIN32)
+=== LINE 3770 ===
+3769: 
+3770: add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
+3771: 
+3772: if(WIN32)
+=== LINE 5457 ===
+5456:     set_source_files_properties(${INFERENCE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+5457:     target_sources(InferenceEngine PRIVATE ${INFERENCE_ASM_SOURCES})
+5458: 
+5459:     target_link_libraries(InferenceEngine PRIVATE ${ASM_DEFLATE_BRUTAL_OBJ})
+=== LINE 7387 ===
+7386:     if(WIN32IDE_SOURCES OR _WIN32IDE_ASM OR WIN32IDE_EXTRA_ASM)
+7387:         add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
+7388:         rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
+7389:     else()
+=== LINE 9439 ===
+9438: if(BUILD_DEEP2_R1_DECODE_SMOKE)
+9439:     add_executable(deep2_r1_decode_smoke ${DEEP2_R1_DECODE_ASM} src/asm/Deep2R1_Smoke.asm)
+9440:     target_link_libraries(deep2_r1_decode_smoke PRIVATE kernel32)
+9441:     set_target_properties(deep2_r1_decode_smoke PROPERTIES
+=== LINE 9452 ===
+9451: if(BUILD_DEEP2_OUTER_SMOKE)
+9452:     add_executable(deep2_outer_smoke ${DEEP2_OUTER_RUNTIME_ASM} src/asm/Deep2OuterSmoke.asm)
+9453:     target_link_libraries(deep2_outer_smoke PRIVATE kernel32)
+9454:     set_target_properties(deep2_outer_smoke PROPERTIES
+=== LINE 9494 ===
+9493: if(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT)
+9494:     add_executable(deep2_live_path_effectiveness_cert
+9495:         src/deep2/deep2_live_path_effectiveness_cert.cpp)
+9496:     target_link_libraries(deep2_live_path_effectiveness_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9535 ===
+9534: if(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT)
+9535:     add_executable(deep2_live_path_interaction_bounds_cert
+9536:         src/deep2/deep2_live_path_interaction_bounds_cert.cpp)
+9537:     target_link_libraries(deep2_live_path_interaction_bounds_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9554 ===
+9553: if(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT)
+9554:     add_executable(deep2_k2_full_depth_effectiveness_cert
+9555:         src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp)
+9556:     target_link_libraries(deep2_k2_full_depth_effectiveness_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9644 ===
+9643: if(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT)
+9644:     add_executable(deep2_k2_trampoline_full_depth_opt_cert
+9645:         src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp)
+9646:     target_link_libraries(deep2_k2_trampoline_full_depth_opt_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9664 ===
+9663: if(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT)
+9664:     add_executable(deep2_k2_auto_workload_policy_cert
+9665:         src/deep2/deep2_k2_auto_workload_policy_cert.cpp)
+9666:     target_link_libraries(deep2_k2_auto_workload_policy_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9685 ===
+9684: if(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT)
+9685:     add_executable(deep2_k2_e2e_model_size_matrix_cert
+9686:         src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp)
+9687:     target_link_libraries(deep2_k2_e2e_model_size_matrix_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9703 ===
+9702: if(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT)
+9703:     add_executable(deep2_k2_live_generate_policy_cert
+9704:         src/deep2/deep2_k2_live_generate_policy_cert.cpp)
+9705:     target_link_libraries(deep2_k2_live_generate_policy_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9722 ===
+9721: if(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT)
+9722:     add_executable(deep2_k2_live_policy_split_cert
+9723:         src/deep2/deep2_k2_live_policy_split_cert.cpp)
+9724:     target_link_libraries(deep2_k2_live_policy_split_cert PRIVATE InferenceEngine)
+=== LINE 9741 ===
+9740: if(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT)
+9741:     add_executable(deep2_k2_policy_hysteresis_cert
+9742:         src/deep2/deep2_k2_policy_hysteresis_cert.cpp)
+9743:     target_link_libraries(deep2_k2_policy_hysteresis_cert PRIVATE InferenceEngine)
+=== LINE 9764 ===
+9763: if(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT)
+9764:     add_executable(deep2_k2_mla_rebench_promote_cert
+9765:         src/deep2/deep2_k2_mla_rebench_promote_cert.cpp)
+9766:     target_link_libraries(deep2_k2_mla_rebench_promote_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9783 ===
+9782: if(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT)
+9783:     add_executable(deep2_k2_mla_reuse_promote_cert
+9784:         src/deep2/deep2_k2_mla_reuse_promote_cert.cpp)
+9785:     target_link_libraries(deep2_k2_mla_reuse_promote_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9802 ===
+9801: if(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT)
+9802:     add_executable(deep2_k2_mla_full_depth_soak_cert
+9803:         src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp)
+9804:     target_link_libraries(deep2_k2_mla_full_depth_soak_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9822 ===
+9821: if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
+9822:     add_executable(deep2_k2_live_decode_mla_cert
+9823:         src/deep2/deep2_k2_live_decode_mla_cert.cpp)
+9824:     target_link_libraries(deep2_k2_live_decode_mla_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9842 ===
+9841: if(BUILD_MLA_CERT_001)
+9842:     add_executable(mla_cert_001 certs/mla_cert_001.cpp)
+9843:     target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
+9844:     if(MSVC)
+=== LINE 9861 ===
+9860: if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
+9861:     add_executable(deep2_k2_mla_fused_q4kt_cert
+9862:         src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp)
+9863:     target_link_libraries(deep2_k2_mla_fused_q4kt_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9881 ===
+9880: if(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT)
+9881:     add_executable(deep2_k2_shard_attn_residency_cert
+9882:         src/deep2/deep2_k2_shard_attn_residency_cert.cpp)
+9883:     target_link_libraries(deep2_k2_shard_attn_residency_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9901 ===
+9900: if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
+9901:     add_executable(deep2_k2_logits_q6k_resident_cert
+9902:         src/deep2/deep2_k2_logits_q6k_resident_cert.cpp)
+9903:     target_link_libraries(deep2_k2_logits_q6k_resident_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9921 ===
+9920: if(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT)
+9921:     add_executable(deep2_k2_mla_kv_expand_cert
+9922:         src/deep2/deep2_k2_mla_kv_expand_cert.cpp)
+9923:     target_link_libraries(deep2_k2_mla_kv_expand_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9941 ===
+9940: if(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT)
+9941:     add_executable(deep2_k2_mla_kv_expand_opt_cert
+9942:         src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp)
+9943:     target_link_libraries(deep2_k2_mla_kv_expand_opt_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9961 ===
+9960: if(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT)
+9961:     add_executable(deep2_k2_mla_qkv_proj_cert
+9962:         src/deep2/deep2_k2_mla_qkv_proj_cert.cpp)
+9963:     target_link_libraries(deep2_k2_mla_qkv_proj_cert PRIVATE InferenceEngine dxgi)
+=== LINE 9981 ===
+9980: if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
+9981:     add_executable(deep2_k2_mla_qa_critical_cert
+9982:         src/deep2/deep2_k2_mla_qa_critical_cert.cpp)
+9983:     target_link_libraries(deep2_k2_mla_qa_critical_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10001 ===
+10000: if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
+10001:     add_executable(deep2_ucf_bounce_smoke
+10002:         src/deep2/deep2_ucf_bounce_smoke.cpp)
+10003:     if(MSVC)
+=== LINE 10020 ===
+10019: if(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001)
+10020:     add_executable(deep2_ucf_no_stale_dispatch_001
+10021:         src/deep2/deep2_ucf_no_stale_dispatch_001.cpp)
+10022:     if(MSVC)
+=== LINE 10039 ===
+10038: if(BUILD_DEEP2_UCF_READ_CONVERGE_001)
+10039:     add_executable(deep2_ucf_read_converge_001
+10040:         src/deep2/deep2_ucf_read_converge_001.cpp)
+10041:     if(MSVC)
+=== LINE 10058 ===
+10057: if(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001)
+10058:     add_executable(deep2_ucf_logits_range_bounce_001
+10059:         src/deep2/deep2_ucf_logits_range_bounce_001.cpp)
+10060:     if(MSVC)
+=== LINE 10076 ===
+10075: if(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1)
+10076:     add_executable(deep2_ucf_semantic_abi_v1_cert
+10077:         src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp)
+10078:     if(MSVC)
+=== LINE 10095 ===
+10094: if(BUILD_DEEP2_UCF_GENERATION_TICKET_001)
+10095:     add_executable(deep2_ucf_generation_ticket_001
+10096:         src/deep2/deep2_ucf_generation_ticket_001.cpp)
+10097:     if(MSVC)
+=== LINE 10113 ===
+10112: if(BUILD_DEEP2_UCF_GPU_READY_E2E)
+10113:     add_executable(deep2_ucf_gpu_ready_e2e
+10114:         src/deep2/deep2_ucf_gpu_ready_e2e.cpp)
+10115:     if(MSVC)
+=== LINE 10132 ===
+10131: if(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE)
+10132:     add_executable(deep2_ucf_bouncehouse_example
+10133:         src/deep2/deep2_ucf_bouncehouse_example.cpp)
+10134:     if(MSVC)
+=== LINE 10150 ===
+10149: if(BUILD_DEEP2_UCF_HALO_SPARK_001)
+10150:     add_executable(deep2_ucf_halo_spark_001
+10151:         src/deep2/deep2_ucf_halo_spark_001.cpp)
+10152:     if(MSVC)
+=== LINE 10168 ===
+10167: if(BUILD_DEEP2_RMV_MOUNT_001)
+10168:     add_executable(deep2_rmv_mount_001
+10169:         src/deep2/deep2_rmv_mount_001.cpp)
+10170:     if(MSVC)
+=== LINE 10208 ===
+10207: if(BUILD_DEEP2_VWA_RANGE_CONTRACT_001)
+10208:     add_executable(deep2_vwa_range_contract_001
+10209:         src/deep2/deep2_vwa_range_contract_001.cpp)
+10210:     if(MSVC)
+=== LINE 10283 ===
+10282: if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
+10283:     add_executable(deep2_ucf_mobility_fault_001
+10284:         src/deep2/deep2_ucf_mobility_fault_001.cpp)
+10285:     if(MSVC)
+=== LINE 10301 ===
+10300: if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
+10301:     add_executable(deep2_k2_semantic_seal_cert
+10302:         src/deep2/deep2_k2_semantic_seal_cert.cpp)
+10303:     target_link_libraries(deep2_k2_semantic_seal_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10321 ===
+10320: if(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT)
+10321:     add_executable(deep2_k2_serverless_stream_latency_cert
+10322:         src/deep2/deep2_k2_serverless_stream_latency_cert.cpp)
+10323:     target_link_libraries(deep2_k2_serverless_stream_latency_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10341 ===
+10340: if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
+10341:     add_executable(deep2_k2_live_decode_sustained_cert
+10342:         src/deep2/deep2_k2_live_decode_sustained_cert.cpp)
+10343:     target_link_libraries(deep2_k2_live_decode_sustained_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10361 ===
+10360: if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
+10361:     add_executable(deep2_k2_wall_attribution_cert
+10362:         src/deep2/deep2_k2_wall_attribution_cert.cpp)
+10363:     target_link_libraries(deep2_k2_wall_attribution_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10381 ===
+10380: if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
+10381:     add_executable(deep2_k2_logits_climb_cert
+10382:         src/deep2/deep2_k2_logits_climb_cert.cpp)
+10383:     target_link_libraries(deep2_k2_logits_climb_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10401 ===
+10400: if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
+10401:     add_executable(deep2_k2_trygpu_logits_split_cert
+10402:         src/deep2/deep2_k2_trygpu_logits_split_cert.cpp)
+10403:     target_link_libraries(deep2_k2_trygpu_logits_split_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10419 ===
+10418:     # C1 live â fulfilledâTryGpuHot range attribution under BOUNDED_STREAM
+10419:     add_executable(deep2_k2_logits_gpu_range_attribution_001
+10420:         src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
+10421:     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
+=== LINE 10460 ===
+10459: if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
+10460:     add_executable(rawrxd_run_modelname_001
+10461:         src/deep2/rawrxd_run_modelname_001.cpp)
+10462:     target_link_libraries(rawrxd_run_modelname_001 PRIVATE InferenceEngine dxgi)
+=== LINE 10475 ===
+10474: 
+10475:     add_executable(rawr src/deep2/rawr_run.cpp)
+10476:     target_link_libraries(rawr PRIVATE InferenceEngine dxgi)
+10477:     if(MSVC)
+=== LINE 10489 ===
+10488: 
+10489:     add_executable(deep2_k2_useful_tps_001 src/deep2/deep2_k2_useful_tps_001.cpp)
+10490:     target_link_libraries(deep2_k2_useful_tps_001 PRIVATE InferenceEngine dxgi)
+10491:     if(MSVC)
+=== LINE 10503 ===
+10502: 
+10503:     add_executable(rawrxd_normal_gguf_final_001
+10504:         src/deep2/rawrxd_normal_gguf_final_001.cpp)
+10505:     target_link_libraries(rawrxd_normal_gguf_final_001 PRIVATE InferenceEngine dxgi)
+=== LINE 10542 ===
+10541: if(BUILD_DEEP2_K2_TPS_RAINBOW_CERT)
+10542:     add_executable(deep2_k2_tps_rainbow_cert
+10543:         src/deep2/deep2_k2_tps_rainbow_cert.cpp)
+10544:     target_link_libraries(deep2_k2_tps_rainbow_cert PRIVATE InferenceEngine dxgi)
+=== LINE 10562 ===
+10561: if(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT)
+10562:     add_executable(deep2_k2_gpu_mla_slot_reuse_cert
+10563:         src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp)
+10564:     target_link_libraries(deep2_k2_gpu_mla_slot_reuse_cert PRIVATE InferenceEngine)
+=== LINE 10587 ===
+10586: if(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT)
+10587:     add_executable(deep2_nu_live_consumer_cert
+10588:         src/deep2/deep2_nu_live_consumer_cert.cpp)
+10589:     target_link_libraries(deep2_nu_live_consumer_cert PRIVATE InferenceEngine)
+=== LINE 10612 ===
+10611: if(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT)
+10612:     add_executable(deep2_k2_gpu_mla_nu_bridge_cert
+10613:         src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp)
+10614:     target_link_libraries(deep2_k2_gpu_mla_nu_bridge_cert PRIVATE InferenceEngine)
+=== LINE 10637 ===
+10636: if(BUILD_DEEP2_NU_PERF_CERT)
+10637:     add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
+10638:     target_link_libraries(deep2_nu_perf_cert PRIVATE InferenceEngine)
+10639:     if(MSVC)
+=== LINE 10661 ===
+10660: if(BUILD_DEEP2_NU_GEMV_PARITY_CERT)
+10661:     add_executable(deep2_nu_gemv_parity_cert
+10662:         src/deep2/deep2_nu_gemv_parity_cert.cpp)
+10663:     target_link_libraries(deep2_nu_gemv_parity_cert PRIVATE InferenceEngine)
+=== LINE 10687 ===
+10686: if(BUILD_DEEP2_NU_GPU_GEMV_CERT)
+10687:     add_executable(deep2_nu_gpu_gemv_cert
+10688:         src/deep2/deep2_nu_gpu_gemv_cert.cpp)
+10689:     target_link_libraries(deep2_nu_gpu_gemv_cert PRIVATE InferenceEngine)
+=== LINE 10734 ===
+10733: if(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT)
+10734:     add_executable(rkc_deep2_model_authority_cert
+10735:         src/rkc/rkc_deep2_model_authority_cert.cpp)
+10736:     target_link_libraries(rkc_deep2_model_authority_cert PRIVATE InferenceEngine)
+=== LINE 10752 ===
+10751: if(BUILD_RKC_MODEL_INVENTORY_CERT)
+10752:     add_executable(rkc_model_inventory_cert src/rkc/rkc_model_inventory_cert.cpp)
+10753:     target_link_libraries(rkc_model_inventory_cert PRIVATE InferenceEngine)
+10754:     if(MSVC)
+=== LINE 10767 ===
+10766: if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
+10767:     add_executable(rkc_negative_knowledge_cert src/rkc/rkc_negative_knowledge_cert.cpp)
+10768:     target_link_libraries(rkc_negative_knowledge_cert PRIVATE InferenceEngine)
+10769:     if(MSVC)
+=== LINE 10782 ===
+10781: if(BUILD_RKC_MINIMAL_SOURCE_CERT)
+10782:     add_executable(rkc_minimal_source_cert src/rkc/rkc_minimal_source_cert.cpp)
+10783:     target_link_libraries(rkc_minimal_source_cert PRIVATE InferenceEngine)
+10784:     if(MSVC)
+=== LINE 10797 ===
+10796: if(BUILD_RKC_CODE_WORLD_CERT)
+10797:     add_executable(rkc_code_world_cert src/rkc/rkc_code_world_cert.cpp)
+10798:     target_link_libraries(rkc_code_world_cert PRIVATE InferenceEngine)
+10799:     if(MSVC)
+=== LINE 10812 ===
+10811: if(BUILD_RKC_SMOKE)
+10812:     add_executable(rkc_smoke src/rkc/rkc_smoke.cpp)
+10813:     target_link_libraries(rkc_smoke PRIVATE InferenceEngine)
+10814:     if(MSVC)
+=== LINE 10826 ===
+10825:     )
+10826:     add_executable(rkc_product_context_smoke src/rkc/rkc_product_context_smoke.cpp)
+10827:     target_link_libraries(rkc_product_context_smoke PRIVATE InferenceEngine)
+10828:     if(MSVC)
+=== LINE 15149 ===
+15148: endif()
+15149: add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
+15150: set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+15151: target_link_libraries(test_generation PRIVATE InferenceEngine)
+=== LINE 15279 ===
+15278: endif()
+15279: add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
+15280: set_target_properties(test_quant_dequant_crosscheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+15281: add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosscheck WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+=== LINE 15582 ===
+15581: endif()
+15582: add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
+15583: set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+15584: add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+=== LINE 16034 ===
+16033: 
+16034: add_executable(b005_canonical_model_certification EXCLUDE_FROM_ALL
+16035:     ${B005_CANONICAL_MODEL_SOURCES}
+16036: )
+=== LINE 16219 ===
+16218: 
+16219: add_executable(b008_ci_integration EXCLUDE_FROM_ALL
+16220:     ${B008_CI_SOURCES}
+16221: )

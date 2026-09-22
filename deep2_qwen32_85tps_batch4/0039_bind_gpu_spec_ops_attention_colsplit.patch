@@ -1,0 +1,181 @@
+# Deep2 Qwen32 85TPS — Batch 4/5, item 39
+# Base: apply after 0036-0038.
+#
+# Binds the new primitives into exact speculative verification:
+#   attn RMSNorm -> GPU batch
+#   causal attention -> GPU
+#   O projection -> dual-GPU column split
+#   FFN RMSNorm -> GPU batch
+#   SwiGLU -> GPU batch
+#   wDown -> dual-GPU column split
+#
+# Host fallbacks retain correctness. Final 85-TPS gate will require the
+# optimized counters so a fallback run cannot mint performance authority.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0039_bind_gpu_spec_ops_attention_colsplit.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+     uint64_t gpuTop1Batches=0;
++    uint64_t gpuBatchNormOps=0;
++    uint64_t gpuBatchSwiGLUOps=0;
++    uint64_t gpuBatchAttentionOps=0;
++    uint64_t dualColumnSplitOps=0;
+@@
+ diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool computeGreedyTop1Batch(const float* hiddenBatch,size_t count,
+                                 int32_t* outTokens);
++    bool trySpecRmsNormBatch(const WeightTensor& w,const float* in,
++                             float* out,size_t width,size_t count);
++    bool trySpecSwiGLUBatch(const float* gate,const float* up,float* out,
++                            size_t width,size_t count);
++    bool trySpecAttentionBatch(size_t layer,const float* q,
++                               const float* k,const float* v,float* out,
++                               size_t basePos,size_t count);
++    bool trySpecColumnSplitBatch(const WeightTensor& wt,const float* in,
++                                 float* out,size_t count);
+@@
+     struct SpecWorkspace {
+         std::vector<float> hidden,norm,q,k,v,attn,proj,gate,up,down;
+         std::vector<float> logits,scores;
++        std::vector<float> kPacked,vPacked;
+@@
+             logits.clear();scores.clear();
++            kPacked.clear();vPacked.clear();
+         }
+     };
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ bool Deep2Engine::computeGreedyTop1Batch(
+@@
+ }
++
++bool Deep2Engine::trySpecRmsNormBatch(
++    const WeightTensor& w,const float* in,float* out,
++    size_t width,size_t count)
++{
++    if(!in||!out||!w.data||w.type!=(int)GGMLType::GGML_TYPE_F32||
++       width>UINT32_MAX||count==0||count>4)
++        return false;
++    auto* vc=getVulkanComputeSlot(0);
++    if(!vc) return false;
++    const bool ok=vc->RunSpecRmsNormHostBatch(
++        in,(const float*)w.data,out,(uint32_t)width,(uint32_t)count,
++        modelWeights.normEps,kvCache?kvCache->currentLength():0);
++    if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.gpuBatchNormOps;
++    return ok;
++}
++
++bool Deep2Engine::trySpecSwiGLUBatch(
++    const float* gate,const float* up,float* out,size_t width,size_t count)
++{
++    auto* vc=getVulkanComputeSlot(0);
++    if(!vc||!gate||!up||!out||width>UINT32_MAX||count==0||count>4)
++        return false;
++    const bool ok=vc->RunSpecSwiGLUHostBatch(
++        gate,up,out,(uint32_t)width,(uint32_t)count,
++        kvCache?kvCache->currentLength():0);
++    if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.gpuBatchSwiGLUOps;
++    return ok;
++}
++
++bool Deep2Engine::trySpecAttentionBatch(
++    size_t layer,const float* q,const float* k,const float* v,float* out,
++    size_t basePos,size_t count)
++{
++    if(!kvCache||!q||!k||!v||!out||count==0||count>4||
++       layer>=modelWeights.numLayers)
++        return false;
++    auto* vc=getVulkanComputeSlot(0);
++    if(!vc) return false;
++    const size_t NK=modelWeights.numKVHeads;
++    const size_t HD=modelWeights.headDim;
++    const size_t KD=NK*HD;
++    const size_t seq=basePos+count;
++    if(!NK||!HD||seq>UINT32_MAX) return false;
++    auto& kp=specWs_.kPacked;auto& vp=specWs_.vPacked;
++    kp.resize(NK*seq*HD);vp.resize(NK*seq*HD);
++    for(size_t h=0;h<NK;++h) {
++        for(size_t t=0;t<basePos;++t) {
++            const float* ks=kvCache->keyPtr(layer,h,t);
++            const float* vs=kvCache->valuePtr(layer,h,t);
++            if(!ks||!vs) return false;
++            float* kd=kp.data()+(h*seq+t)*HD;
++            float* vd=vp.data()+(h*seq+t)*HD;
++            std::memcpy(kd,ks,HD*sizeof(float));
++            std::memcpy(vd,vs,HD*sizeof(float));
++        }
++        for(size_t b=0;b<count;++b) {
++            std::memcpy(kp.data()+(h*seq+basePos+b)*HD,
++                        k+b*KD+h*HD,HD*sizeof(float));
++            std::memcpy(vp.data()+(h*seq+basePos+b)*HD,
++                        v+b*KD+h*HD,HD*sizeof(float));
++        }
++    }
++    const bool ok=vc->RunSpecAttentionHostBatch(
++        q,kp.data(),vp.data(),out,
++        (uint32_t)modelWeights.numHeads,(uint32_t)NK,(uint32_t)HD,
++        (uint32_t)seq,(uint32_t)basePos,(uint32_t)count,
++        kvCache->currentLength());
++    if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.gpuBatchAttentionOps;
++    return ok;
++}
++
++bool Deep2Engine::trySpecColumnSplitBatch(
++    const WeightTensor& wt,const float* in,float* out,size_t count)
++{
++    if(vulkanDevices_.size()<2||!in||!out||count==0||count>4) return false;
++    const bool ok=Deep2RunDualGpuColumnSplitBatch4(
++        *vulkanDevices_[0],*vulkanDevices_[1],wt,in,out,
++        (uint32_t)count,kvCache?kvCache->currentLength():0);
++    if(ok&&medusaDecoder_) ++medusaDecoder_->stats.exact.dualColumnSplitOps;
++    return ok;
++}
+@@
+-        for(size_t b=0;b<count;++b)
+-            RMSNormW(lw.attnNorm,hidden+b*H,
+-                     norm+b*H,H,modelWeights.normEps);
++        if(!trySpecRmsNormBatch(lw.attnNorm,hidden,norm,H,count)) {
++            for(size_t b=0;b<count;++b)
++                RMSNormW(lw.attnNorm,hidden+b*H,
++                         norm+b*H,H,modelWeights.normEps);
++        }
+@@
+-        const float scale=1.0f/std::sqrt((float)HD);
+-        for(size_t b=0;b<count;++b) {
++        const bool gpuAttn=trySpecAttentionBatch(
++            layer,q,k,v,attn,basePos,count);
++        const float scale=1.0f/std::sqrt((float)HD);
++        if(!gpuAttn) for(size_t b=0;b<count;++b) {
+@@
+-        LinearWBatch4(wo,attn,count,nullptr,proj,H);
++        if(!trySpecColumnSplitBatch(wo,attn,proj,count))
++            LinearWBatch4(wo,attn,count,nullptr,proj,H);
+@@
+-        for(size_t b=0;b<count;++b)
+-            RMSNormW(lw.ffnNorm,hidden+b*H,
+-                     norm+b*H,H,modelWeights.normEps);
++        if(!trySpecRmsNormBatch(lw.ffnNorm,hidden,norm,H,count)) {
++            for(size_t b=0;b<count;++b)
++                RMSNormW(lw.ffnNorm,hidden+b*H,
++                         norm+b*H,H,modelWeights.normEps);
++        }
+         LinearWBatch4(lw.wGate,norm,count,nullptr,gate,I);
+         LinearWBatch4(lw.wUp,norm,count,nullptr,up,I);
+-        for(size_t i=0;i<count*I;++i)
+-            gate[i]=specSilu(gate[i])*up[i];
+-        LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);
++        if(!trySpecSwiGLUBatch(gate,up,gate,I,count))
++            for(size_t i=0;i<count*I;++i)
++                gate[i]=specSilu(gate[i])*up[i];
++        if(!trySpecColumnSplitBatch(lw.wDown,gate,down,count))
++            LinearWBatch4(lw.wDown,gate,count,nullptr,down,H);

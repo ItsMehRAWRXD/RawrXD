@@ -1,0 +1,90 @@
+# Deep2 Qwen32 85TPS — Batch 7, item 54
+# Base: apply after 0053.
+#
+# Goal:
+#   overlap GPU1 slice readback with GPU0 compute completion.
+#
+# Adds persistent asynchronous download tickets for small/medium row-split
+# outputs. No extra dependency and no assumption of peer-copy support.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0054_async_secondary_slice_return.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct DownloadTicket {
++        DeviceBuf staging{};
++        void* mapped=nullptr;
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        VkFence fence=VK_NULL_HANDLE;
++        VkQueryPool query=VK_NULL_HANDLE;
++        size_t bytes=0;
++        bool active=false;
++    };
++    bool SubmitDownloadAsync(
++        DeviceBuf& src,size_t bytes,DownloadTicket& ticket);
++    bool WaitDownloadAsync(
++        DownloadTicket& ticket,void* dst,size_t bytes);
++    void CancelDownloadTicket(DownloadTicket& ticket);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::SubmitDownloadAsync(
++    DeviceBuf& src,size_t bytes,DownloadTicket& t)
++{
++    if(t.active||!src||!bytes||bytes>src.size) return false;
++    if(!createBuffer(
++            bytes,VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|
++            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,t.staging))
++        return false;
++    if(vkMapMemory(
++            device_,t.staging.memory,0,bytes,0,&t.mapped)!=VK_SUCCESS) {
++        destroyBuffer(t.staging);return false;
++    }
++    if(!beginCommand(t.cmd,t.query,true)||
++       !recordCopy(t.cmd,src,t.staging,bytes)) {
++        CancelDownloadTicket(t);return false;
++    }
++    if(vkEndCommandBuffer(t.cmd)!=VK_SUCCESS) {
++        CancelDownloadTicket(t);return false;
++    }
++    VkFenceCreateInfo fi{};
++    fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++    if(vkCreateFence(device_,&fi,nullptr,&t.fence)!=VK_SUCCESS) {
++        CancelDownloadTicket(t);return false;
++    }
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;si.pCommandBuffers=&t.cmd;
++    if(vkQueueSubmit(queue_,1,&si,t.fence)!=VK_SUCCESS) {
++        CancelDownloadTicket(t);return false;
++    }
++    t.bytes=bytes;t.active=true;
++    return true;
++}
++
++bool VulkanCompute::WaitDownloadAsync(
++    DownloadTicket& t,void* dst,size_t bytes)
++{
++    if(!t.active||!dst||bytes>t.bytes) return false;
++    if(vkWaitForFences(device_,1,&t.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    std::memcpy(dst,t.mapped,bytes);
++    CancelDownloadTicket(t);
++    return true;
++}
++
++void VulkanCompute::CancelDownloadTicket(DownloadTicket& t) {
++    if(t.mapped&&t.staging.memory) vkUnmapMemory(device_,t.staging.memory);
++    if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
++    if(t.cmd&&commandPool_) vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
++    if(t.query) vkDestroyQueryPool(device_,t.query,nullptr);
++    destroyBuffer(t.staging);
++    t={};
++}

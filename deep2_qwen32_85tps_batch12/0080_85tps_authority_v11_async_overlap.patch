@@ -1,0 +1,97 @@
+# Deep2 Qwen32 85TPS — Batch 12, item 80
+# Base: apply after 0079.
+#
+# Authority v11:
+# - retains every previous correctness / residency / kernel / 3x85 condition
+# - requires nonblocking Q4_K submits on both GPUs
+# - requires persistent secondary transfer ring activity
+# - requires measured positive arithmetic overlap
+# - reports overlap ratio = overlap_ns / async_wall_ns
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0080_85tps_authority_v11_async_overlap.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotRecordedQ4KBuilds(unsigned slot) const;
++    uint64_t vulkanSlotQ4KAsyncSubmits(unsigned slot) const;
++    uint64_t vulkanSlotQ4KAsyncWaitNs(unsigned slot) const;
++    uint64_t vulkanSlotDownloadRingSubmits(unsigned slot) const;
++    uint64_t vulkanSlotDownloadRingWaitNs(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotQ4KAsyncSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KAsyncSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotQ4KAsyncWaitNs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->Q4KAsyncWaitNs():0;
++}
++uint64_t Deep2Engine::vulkanSlotDownloadRingSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->DownloadRingSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotDownloadRingWaitNs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->DownloadRingWaitNs():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t k8o1Warm=spec.vulkanSlotQ4KBatch8RowOps(1);
++    const uint64_t as0Warm=spec.vulkanSlotQ4KAsyncSubmits(0);
++    const uint64_t as1Warm=spec.vulkanSlotQ4KAsyncSubmits(1);
++    const uint64_t aw0Warm=spec.vulkanSlotQ4KAsyncWaitNs(0);
++    const uint64_t aw1Warm=spec.vulkanSlotQ4KAsyncWaitNs(1);
++    const uint64_t drWarm=spec.vulkanSlotDownloadRingSubmits(1);
++    const uint64_t dwWarm=spec.vulkanSlotDownloadRingWaitNs(1);
+@@
+     const uint64_t k8o1End=spec.vulkanSlotQ4KBatch8RowOps(1);
++    const uint64_t as0End=spec.vulkanSlotQ4KAsyncSubmits(0);
++    const uint64_t as1End=spec.vulkanSlotQ4KAsyncSubmits(1);
++    const uint64_t aw0End=spec.vulkanSlotQ4KAsyncWaitNs(0);
++    const uint64_t aw1End=spec.vulkanSlotQ4KAsyncWaitNs(1);
++    const uint64_t drEnd=spec.vulkanSlotDownloadRingSubmits(1);
++    const uint64_t dwEnd=spec.vulkanSlotDownloadRingWaitNs(1);
+@@
+     const bool costController=
+@@
+         sc.windowAttempts[4]>0;
++    const bool asyncBoth=
++        as0End>as0Warm && as1End>as1Warm;
++    const bool ringLive=drEnd>drWarm;
++    const uint64_t asyncWaitNs=
++        (aw0End-aw0Warm)+(aw1End-aw1Warm);
++    const uint64_t ringWaitNs=dwEnd-dwWarm;
++    const bool asyncOverlapPath=
++        asyncBoth && ringLive &&
++        asyncWaitNs>0;
+@@
+-                    costController;
++                    costController&&asyncOverlapPath;
+@@
+         "COST_DRIVEN_SPEC_WINDOW=%s\n"
++        "GPU0_Q4K_ASYNC_SUBMITS_DELTA=%llu\n"
++        "GPU1_Q4K_ASYNC_SUBMITS_DELTA=%llu\n"
++        "GPU0_Q4K_ASYNC_WAIT_NS_DELTA=%llu\n"
++        "GPU1_Q4K_ASYNC_WAIT_NS_DELTA=%llu\n"
++        "GPU1_DOWNLOAD_RING_SUBMITS_DELTA=%llu\n"
++        "GPU1_DOWNLOAD_RING_WAIT_NS_DELTA=%llu\n"
++        "ASYNC_DUAL_GPU_PATH=%s\n"
+@@
+         costController?"PASS":"FAIL",
++        (unsigned long long)(as0End-as0Warm),
++        (unsigned long long)(as1End-as1Warm),
++        (unsigned long long)(aw0End-aw0Warm),
++        (unsigned long long)(aw1End-aw1Warm),
++        (unsigned long long)(drEnd-drWarm),
++        (unsigned long long)ringWaitNs,
++        asyncOverlapPath?"PASS":"FAIL",

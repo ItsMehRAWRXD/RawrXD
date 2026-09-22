@@ -1,0 +1,52 @@
+# Deep2 Qwen32 85TPS — Batch 6, item 47
+# Base: apply after 0046.
+#
+# Goal: execute the non-weight math of one speculative layer directly against
+# the resident SpecBatchArena. No host readback between norm/attention/residual/
+# SwiGLU/residual. Heavy Q4_K projections may still use both GPUs.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0047_device_resident_spec_layer_chain.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool DownloadSpecHidden(float* dst,uint32_t hidden,uint32_t batch);
++    bool SpecBatchRmsNorm(DeviceBuf& input,DeviceBuf& weight,DeviceBuf& output,
++                          uint32_t width,uint32_t batch,float eps);
++    bool SpecBatchSwiGLU(DeviceBuf& gate,DeviceBuf& up,DeviceBuf& output,
++                         uint32_t width,uint32_t batch);
++    bool SpecBatchResidual(DeviceBuf& a,DeviceBuf& b,DeviceBuf& output,
++                           uint32_t width,uint32_t batch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::SpecBatchRmsNorm(
++    DeviceBuf& input,DeviceBuf& weight,DeviceBuf& output,
++    uint32_t width,uint32_t batch,float eps)
++{
++    if(!input||!weight||!output||!width||!batch||batch>4) return false;
++    SpecOpsPush p{};p.op=0;p.width=width;p.batch=batch;p.eps=eps;
++    return dispatchSpecOps(input,weight,output,specArena_.tmp,p);
++}
++
++bool VulkanCompute::SpecBatchSwiGLU(
++    DeviceBuf& gate,DeviceBuf& up,DeviceBuf& output,
++    uint32_t width,uint32_t batch)
++{
++    if(!gate||!up||!output||!width||!batch||batch>4) return false;
++    SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
++    return dispatchSpecOps(gate,up,output,specArena_.tmp,p);
++}
++
++bool VulkanCompute::SpecBatchResidual(
++    DeviceBuf& a,DeviceBuf& b,DeviceBuf& output,
++    uint32_t width,uint32_t batch)
++{
++    if(!a||!b||!output||!width||!batch||batch>4) return false;
++    SpecOpsPush p{};p.op=2;p.width=width;p.batch=batch;
++    return dispatchSpecOps(a,b,output,specArena_.tmp,p);
++}

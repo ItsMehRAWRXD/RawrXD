@@ -1,0 +1,120 @@
+# Deep2 Qwen32 85TPS — Batch 10, item 68
+# Base: apply after 0067.
+#
+# Adds two resident speculative arenas and ping-pongs verification windows.
+# The inactive arena can receive embeddings / normalized input for the next
+# window while the current arena is still being consumed.
+#
+# This patch does not emit tokens early and does not allow concurrent target-KV
+# writes. It only overlaps preparation of immutable next-window activations.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0068_pingpong_spec_window_arenas.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+-    SpecBatchArena& SpecArena() noexcept { return specArena_; }
++    SpecBatchArena& SpecArena() noexcept {
++        return specArenas_[specArenaIndex_&1u];
++    }
++    SpecBatchArena& InactiveSpecArena() noexcept {
++        return specArenas_[(specArenaIndex_^1u)&1u];
++    }
++    void FlipSpecArena() noexcept { specArenaIndex_^=1u; }
++    uint64_t SpecArenaFlips() const noexcept { return specArenaFlips_; }
+@@
+ private:
+-    SpecBatchArena specArena_{};
++    SpecBatchArena specArenas_[2]{};
++    uint32_t specArenaIndex_=0;
++    uint64_t specArenaFlips_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ void VulkanCompute::ResetSpecBatchArena() {
+-    destroyBuffer(specArena_.hidden); destroyBuffer(specArena_.norm);
+-    destroyBuffer(specArena_.q);      destroyBuffer(specArena_.k);
+-    destroyBuffer(specArena_.v);      destroyBuffer(specArena_.attn);
+-    destroyBuffer(specArena_.proj);   destroyBuffer(specArena_.gate);
+-    destroyBuffer(specArena_.up);     destroyBuffer(specArena_.act);
+-    destroyBuffer(specArena_.down);   destroyBuffer(specArena_.tmp);
+-    specArena_={};
++    for(auto& a:specArenas_) {
++        destroyBuffer(a.hidden); destroyBuffer(a.norm);
++        destroyBuffer(a.q);      destroyBuffer(a.k);
++        destroyBuffer(a.v);      destroyBuffer(a.attn);
++        destroyBuffer(a.proj);   destroyBuffer(a.gate);
++        destroyBuffer(a.up);     destroyBuffer(a.act);
++        destroyBuffer(a.down);   destroyBuffer(a.tmp);
++        a={};
++    }
++    specArenaIndex_=0;
+ }
+@@
+ bool VulkanCompute::EnsureSpecBatchArena(
+@@
+-    if(specArena_.valid()&&specArena_.hiddenWidth>=hidden&&
+-       specArena_.kvWidth>=kvWidth&&specArena_.intermediate>=intermediate&&
+-       specArena_.batchCapacity>=batch)
++    if(specArenas_[0].valid()&&specArenas_[1].valid()&&
++       specArenas_[0].hiddenWidth>=hidden&&
++       specArenas_[0].kvWidth>=kvWidth&&
++       specArenas_[0].intermediate>=intermediate&&
++       specArenas_[0].batchCapacity>=batch)
+         return true;
+@@
+-    auto mk=[&](DeviceBuf& b,uint64_t floats)->bool {
++    auto mk=[&](DeviceBuf& b,uint64_t floats)->bool {
+@@
+-    const uint64_t B=batch;
+-    if(!mk(specArena_.hidden,B*hidden) ||
+-       !mk(specArena_.norm,B*hidden)   ||
+-       !mk(specArena_.q,B*hidden)      ||
+-       !mk(specArena_.k,B*kvWidth)     ||
+-       !mk(specArena_.v,B*kvWidth)     ||
+-       !mk(specArena_.attn,B*hidden)   ||
+-       !mk(specArena_.proj,B*hidden)   ||
+-       !mk(specArena_.gate,B*intermediate) ||
+-       !mk(specArena_.up,B*intermediate)   ||
+-       !mk(specArena_.act,B*intermediate)  ||
+-       !mk(specArena_.down,B*hidden)   ||
+-       !mk(specArena_.tmp,B*std::max(hidden,intermediate))) {
+-        ResetSpecBatchArena();
+-        return false;
++    const uint64_t B=batch;
++    for(auto& a:specArenas_) {
++        if(!mk(a.hidden,B*hidden) ||
++           !mk(a.norm,B*hidden)   ||
++           !mk(a.q,B*hidden)      ||
++           !mk(a.k,B*kvWidth)     ||
++           !mk(a.v,B*kvWidth)     ||
++           !mk(a.attn,B*hidden)   ||
++           !mk(a.proj,B*hidden)   ||
++           !mk(a.gate,B*intermediate) ||
++           !mk(a.up,B*intermediate)   ||
++           !mk(a.act,B*intermediate)  ||
++           !mk(a.down,B*hidden)   ||
++           !mk(a.tmp,B*std::max(hidden,intermediate))) {
++            ResetSpecBatchArena();
++            return false;
++        }
++        a.hiddenWidth=hidden;a.kvWidth=kvWidth;
++        a.intermediate=intermediate;a.batchCapacity=batch;
+     }
+-    specArena_.hiddenWidth=hidden;
+-    specArena_.kvWidth=kvWidth;
+-    specArena_.intermediate=intermediate;
+-    specArena_.batchCapacity=batch;
+     return true;
+ }
++
++// Call after immutable next-window preparation has completed and before the
++// target verifier begins consuming it.
++void VulkanCompute::FlipSpecArena() noexcept {
++    specArenaIndex_^=1u;
++    ++specArenaFlips_;
++}

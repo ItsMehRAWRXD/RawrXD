@@ -1,0 +1,187 @@
+# Deep2 Qwen32 85TPS — Batch 15, item 91
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-14
+#
+# Goal:
+#   pre-record the hot grouped QKV and Gate/Up resident-input command streams.
+#
+# The recorded bundle is valid only when:
+#   - resident batch input buffer identity is unchanged
+#   - pinned weight buffers are unchanged
+#   - resident group output buffers are unchanged
+#   - rows/cols/batch are unchanged
+#
+# No external dependency.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0091_prerecorded_qkv_gateup_group_commands.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct RecordedGroupKey {
++        VkBuffer input=VK_NULL_HANDLE;
++        VkBuffer weight[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
++        VkBuffer output[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
++        uint32_t rows[3]{};
++        uint32_t cols=0,batch=0,count=0;
++        bool operator==(const RecordedGroupKey& o) const noexcept {
++            if(input!=o.input||cols!=o.cols||batch!=o.batch||count!=o.count)
++                return false;
++            for(uint32_t i=0;i<count;++i)
++                if(weight[i]!=o.weight[i]||output[i]!=o.output[i]||
++                   rows[i]!=o.rows[i]) return false;
++            return true;
++        }
++    };
++    struct RecordedGroupKeyHash {
++        size_t operator()(const RecordedGroupKey& k) const noexcept {
++            size_t h=(size_t)(uintptr_t)k.input;
++            h^=((size_t)k.cols<<17)^((size_t)k.batch<<3)^k.count;
++            for(uint32_t i=0;i<k.count;++i) {
++                h^=(size_t)(uintptr_t)k.weight[i]>>4;
++                h^=(size_t)(uintptr_t)k.output[i]<<5;
++                h^=(size_t)k.rows[i]<<(i+7);
++            }
++            return h;
++        }
++    };
++    struct RecordedGroup {
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        VkFence fence=VK_NULL_HANDLE;
++        VkDescriptorSet set[3]{VK_NULL_HANDLE,VK_NULL_HANDLE,VK_NULL_HANDLE};
++    };
++    bool SubmitRecordedResidentGroupQ4K(
++        const GpuWeightView* weights,size_t weightCount,
++        uint32_t cols,uint32_t batch,uint64_t epoch);
++    uint64_t RecordedGroupBuilds() const noexcept {
++        return recordedGroupBuilds_;
++    }
++    uint64_t RecordedGroupSubmits() const noexcept {
++        return recordedGroupSubmits_;
++    }
+@@
+ private:
++    std::unordered_map<
++        RecordedGroupKey,RecordedGroup,RecordedGroupKeyHash> recordedGroups_;
++    uint64_t recordedGroupBuilds_=0;
++    uint64_t recordedGroupSubmits_=0;
++    void clearRecordedGroups();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++void VulkanCompute::clearRecordedGroups() {
++    for(auto& kv:recordedGroups_) {
++        auto& r=kv.second;
++        if(r.fence) vkDestroyFence(device_,r.fence,nullptr);
++        if(r.cmd&&commandPool_)
++            vkFreeCommandBuffers(device_,commandPool_,1,&r.cmd);
++    }
++    recordedGroups_.clear();
++}
++
++bool VulkanCompute::SubmitRecordedResidentGroupQ4K(
++    const GpuWeightView* weights,size_t weightCount,
++    uint32_t cols,uint32_t batch,uint64_t epoch)
++{
++    if(!weights||weightCount<2||weightCount>3||
++       !residentBatchInput_||!batch||batch>4)
++        return false;
++    if(!EnsureResidentGroupOutputs(weights,weightCount,batch))
++        return false;
++
++    DeviceBuf* wb[3]{};
++    RecordedGroupKey key{};
++    key.input=residentBatchInput_.buffer;
++    key.cols=cols;key.batch=batch;key.count=(uint32_t)weightCount;
++    for(size_t i=0;i<weightCount;++i) {
++        if(!weights[i].valid()||weights[i].type!=12||
++           weights[i].cols!=cols||!PinWeightView(weights[i])||
++           !ensureWeightQuant(
++               weights[i].type,weights[i].data,weights[i].bytes,wb[i]))
++            return false;
++        key.weight[i]=wb[i]->buffer;
++        key.output[i]=residentGroupOutputs_[i].buffer;
++        key.rows[i]=weights[i].rows;
++    }
++
++    auto it=recordedGroups_.find(key);
++    if(it==recordedGroups_.end()) {
++        RecordedGroup r{};
++        VkCommandBufferAllocateInfo ai{};
++        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++        ai.commandPool=commandPool_;
++        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++        ai.commandBufferCount=1;
++        if(vkAllocateCommandBuffers(device_,&ai,&r.cmd)!=VK_SUCCESS)
++            return false;
++        VkCommandBufferBeginInfo bi{};
++        bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++        bi.flags=VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
++        if(vkBeginCommandBuffer(r.cmd,&bi)!=VK_SUCCESS) return false;
++
++        for(size_t i=0;i<weightCount;++i) {
++            const Q4KBatchTile tile=SelectQ4KBatchTile(
++                weights[i].data,weights[i].bytes,
++                residentBatchInput_,residentGroupOutputs_[i],
++                weights[i].rows,cols,batch);
++            VkPipeline pipe=tile==Q4KBatchTile::Eight
++                ? qBatch8RowPipeline_:qBatch4RowPipeline_;
++            VkPipelineLayout layout=tile==Q4KBatchTile::Eight
++                ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
++            r.set[i]=getQuantDescriptor(
++                *wb[i],residentBatchInput_,residentGroupOutputs_[i]);
++            if(r.set[i]==VK_NULL_HANDLE) return false;
++            vkCmdBindPipeline(
++                r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
++            vkCmdBindDescriptorSets(
++                r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
++                0,1,&r.set[i],0,nullptr);
++            QBatchPush p{};
++            p.type=12;p.rows=weights[i].rows;p.cols=cols;
++            p.weightBytes=(uint32_t)weights[i].bytes;p.batch=batch;
++            vkCmdPushConstants(
++                r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
++                0,sizeof(p),&p);
++            const uint32_t tileN=(uint32_t)tile;
++            vkCmdDispatch(
++                r.cmd,(weights[i].rows+tileN-1u)/tileN,1,1);
++            recordComputeBarrier(r.cmd);
++        }
++        if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
++        VkFenceCreateInfo fi{};
++        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
++        if(vkCreateFence(device_,&fi,nullptr,&r.fence)!=VK_SUCCESS)
++            return false;
++        it=recordedGroups_.emplace(key,r).first;
++        ++recordedGroupBuilds_;
++    }
++
++    auto& r=it->second;
++    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    if(vkResetFences(device_,1,&r.fence)!=VK_SUCCESS) return false;
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;si.pCommandBuffers=&r.cmd;
++    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
++    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    ++recordedGroupSubmits_;
++    ++queueSubmitCount_;
++    SetWorkEpoch(epoch);
++    return true;
++}
+@@
+ void VulkanCompute::clearWeightCache() {
++    clearRecordedGroups();
+@@
+ }
+@@
+ void VulkanCompute::cleanup() {
+@@
++    clearRecordedGroups();

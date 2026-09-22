@@ -1,0 +1,196 @@
+# Deep2 Qwen32 85TPS — Batch 2/5, item 27
+# Base: apply after 0026 and 85TPS Batch 1 item 0024.
+# Goal: bind the 1..4-vector Q4_K shader to simultaneous dual-GPU row slices.
+# Each GPU reads its resident weight slice once and computes up to four tokens.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0027_dual_gpu_q4k_batch_target_pass.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool DispatchGemvQ4KBatch(
+         const void* weights,size_t weightBytes,
+         DeviceBuf& inputBatch,DeviceBuf& outputBatch,
+         uint32_t rows,uint32_t cols,uint32_t batch);
++
++    bool RunWeightHostBatchQ4K(
++        const GpuWeightView& weight,
++        const float* inputBatch,float* outputBatch,
++        uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::DispatchGemvQ4KBatch(
+@@
+     return ok;
+ }
+
++bool VulkanCompute::RunWeightHostBatchQ4K(
++    const GpuWeightView& weight,
++    const float* inputBatch,float* outputBatch,
++    uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weight.valid()||weight.type!=12||!inputBatch||!outputBatch||
++       batch==0||batch>4||!initialized_)
++        return false;
++
++    SetWorkEpoch(epoch);
++    const size_t inCount=(size_t)batch*weight.cols;
++    const size_t outCount=(size_t)batch*weight.rows;
++    if(!EnsureScratch(70,inCount)||!EnsureScratch(71,outCount))
++        return false;
++    DeviceBuf& in=Scratch(70);
++    DeviceBuf& out=Scratch(71);
++
++    DeviceBuf* resident=nullptr;
++    if(!ensureWeightQuant(
++            weight.type,weight.data,weight.bytes,resident))
++        return false;
++
++    const size_t inBytes=inCount*sizeof(float);
++    const size_t outBytes=outCount*sizeof(float);
++    DeviceBuf* upStage=nullptr;
++    DeviceBuf* downStage=nullptr;
++    void* upMap=nullptr;
++    void* downMap=nullptr;
++    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
++       !ensureMappedStaging(false,outBytes,downStage,downMap))
++        return false;
++    std::memcpy(upMap,inputBatch,inBytes);
++
++    if(!BeginFusedLayer()) return false;
++    auto abort=[&]{
++        if(FusedRecording()) (void)EndFusedLayer();
++        return false;
++    };
++    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
++        return abort();
++    if(!DispatchGemvQ4KBatch(
++            weight.data,weight.bytes,in,out,
++            weight.rows,weight.cols,batch))
++        return abort();
++    if(!recordCopy(fusedCmd_,out,*downStage,outBytes))
++        return abort();
++    if(!EndFusedLayer()) return false;
++
++    std::memcpy(outputBatch,downMap,outBytes);
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ bool Deep2RunDualGpuRowSplitGroup(
+@@
+     RowSplitReceipt* receipt = nullptr);
++
++bool Deep2RunDualGpuRowSplitBatch4(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor& wt,
++    const float* inputBatch,float* outputBatch,
++    uint32_t batch,uint64_t epoch,
++    RowSplitReceipt* receipt=nullptr);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuRowSplitGroup(
+@@
+     return true;
+ }
+
++bool Deep2RunDualGpuRowSplitBatch4(
++    VulkanCompute& g0,VulkanCompute& g1,
++    const WeightTensor& wt,
++    const float* inputBatch,float* outputBatch,
++    uint32_t batch,uint64_t epoch,
++    RowSplitReceipt* receipt)
++{
++    if(receipt) *receipt={};
++    if(!inputBatch||!outputBatch||batch==0||batch>4||
++       wt.type!=(int)GGMLType::GGML_TYPE_Q4_K||
++       wt.rows<2||!wt.cols)
++        return false;
++
++    RowSplitPlan p=cachedThroughputSplit(wt,g0,g1);
++    if(!p.valid) return false;
++    GpuWeightView w0{},w1{};
++    if(!Deep2BuildGpuWeightView(wt,p.row0Begin,p.row0Count,w0)||
++       !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1))
++        return false;
++
++    std::vector<float> y0((size_t)batch*p.row0Count);
++    std::vector<float> y1((size_t)batch*p.row1Count);
++    bool ok0=false,ok1=false;
++    const bool both=rowExecutor().run(
++        [&]{
++            ok0=g0.RunWeightHostBatchQ4K(
++                w0,inputBatch,y0.data(),batch,epoch);
++            return ok0;
++        },
++        [&]{
++            ok1=g1.RunWeightHostBatchQ4K(
++                w1,inputBatch,y1.data(),batch,epoch);
++            return ok1;
++        });
++    if(!both||!ok0||!ok1) return false;
++
++    for(uint32_t b=0;b<batch;++b) {
++        float* dst=outputBatch+(size_t)b*wt.rows;
++        std::memcpy(dst+p.row0Begin,
++                    y0.data()+(size_t)b*p.row0Count,
++                    (size_t)p.row0Count*sizeof(float));
++        std::memcpy(dst+p.row1Begin,
++                    y1.data()+(size_t)b*p.row1Count,
++                    (size_t)p.row1Count*sizeof(float));
++    }
++
++    if(receipt) {
++        receipt->valid=true;receipt->gpu0=true;receipt->gpu1=true;
++        receipt->hostMerge=true;
++        receipt->rows0=p.row0Count;receipt->rows1=p.row1Count;
++        auto ov=Deep2Gpu_MeasureArithmeticOverlap(g0,g1,epoch);
++        receipt->calibratedOverlapNs=ov.calibratedOverlapNs;
++        receipt->hostEnvelopeOverlapNs=ov.hostEnvelopeOverlapNs;
++    }
++    return true;
++}
++
+ } // namespace Deep2
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+@@
+ bool Deep2Engine::tryVulkanHostGEMV(
+@@
+ }
+
++bool Deep2Engine::tryVulkanHostGEMVBatch4(
++    const WeightTensor& wt,const float* inputBatch,size_t count,
++    float* outputBatch,size_t outDim)
++{
++    if(!vulkanInitialized_||vulkanDevices_.size()<2||
++       !inputBatch||!outputBatch||count==0||count>4||
++       wt.rows!=outDim||wt.type!=(int)GGMLType::GGML_TYPE_Q4_K)
++        return false;
++    const uint64_t epoch=kvCache?kvCache->currentLength():0;
++    RowSplitReceipt r{};
++    if(!Deep2RunDualGpuRowSplitBatch4(
++            *vulkanDevices_[0],*vulkanDevices_[1],
++            wt,inputBatch,outputBatch,(uint32_t)count,epoch,&r))
++        return false;
++    ++gpuFwd_.dualRowSplitOps;
++    ++gpuFwd_.hostMergeOps;
++    gpuFwd_.dualArithmeticOverlapNs=
++        std::max(gpuFwd_.dualArithmeticOverlapNs,r.calibratedOverlapNs);
++    return true;
++}
++

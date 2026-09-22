@@ -1,0 +1,3 @@
++ copilot-worktree-2026-02-17T05-43-21 56adf109d (D:/.worktrees/copilot-worktree-2026-02-17T05-43-21) Finalizing Win32IDE: Wired generateResponseAsync to AgenticBridge, ensuring GUI/CLI parity for all native agent features
+* main                                 dc0ed969e [origin/main] Ignore stray vulkan_compute_tmp.cpp scratch file (local-only, unreferenced)
+  production-lazy-init                 82930d46e [origin/production-lazy-init: behind 32] Fix CMake cache cleaning: ensure build directory exists after cleanup

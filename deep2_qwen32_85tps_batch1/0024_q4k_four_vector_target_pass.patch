@@ -1,0 +1,248 @@
+# Deep2 Qwen32 85TPS — speculative campaign Batch 1/5, item 24
+# Base: 40TPS Batches 1-4 + 0021-0023.
+#
+# Adds a Q4_K 1..4-vector GEMV shader. One packed Q4_K weight is loaded once
+# and multiplied against up to four activation vectors. This is the primitive
+# that makes speculative verification beat the one-weight-read/output-token
+# bandwidth ceiling.
+#
+# Rebuild shaders after apply.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0024_q4k_four_vector_target_pass.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch.comp b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch.comp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch.comp
+@@
++#version 450
++#extension GL_KHR_shader_subgroup_basic : require
++#extension GL_KHR_shader_subgroup_arithmetic : require
++layout(local_size_x=256) in;
++
++layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
++// X layout: [batch][cols]
++layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
++// Y layout: [batch][rows]
++layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
++
++layout(push_constant) uniform Push {
++    uint type;
++    uint rows;
++    uint cols;
++    uint weightBytes;
++    uint batch;
++} pc;
++
++shared float wave0[8];
++shared float wave1[8];
++shared float wave2[8];
++shared float wave3[8];
++
++uint getb(uint byteIndex) {
++    uint word=w[byteIndex>>2u];
++    return (word>>((byteIndex&3u)*8u))&255u;
++}
++float geth(uint byteIndex) {
++    uint h=getb(byteIndex)|(getb(byteIndex+1u)<<8u);
++    return unpackHalf2x16(h).x;
++}
++void q4kScaleMin(uint base,uint sb,out uint sc,out uint mn) {
++    if(sb<4u){
++        sc=getb(base+4u+sb)&63u;
++        mn=getb(base+8u+sb)&63u;
++    }else{
++        uint j=sb-4u;
++        sc=(getb(base+12u+j)&15u)|((getb(base+4u+j)>>6u)<<4u);
++        mn=(getb(base+12u+j)>>4u)|((getb(base+8u+j)>>6u)<<4u);
++    }
++}
++float q4k(uint rb,uint col) {
++    uint block=col/256u;
++    uint idx=col%256u;
++    uint b=rb+block*144u;
++    float ds=geth(b);
++    float dm=geth(b+2u);
++    uint sb=idx/32u;
++    uint l=idx%32u;
++    uint sc,mn;
++    q4kScaleMin(b,sb,sc,mn);
++    uint pair=sb/2u;
++    uint packed=getb(b+16u+pair*32u+l);
++    uint q=(sb&1u)==0u ? (packed&15u) : (packed>>4u);
++    return ds*float(sc)*float(q)-dm*float(mn);
++}
++
++void main() {
++    uint row=gl_WorkGroupID.x;
++    uint lane=gl_LocalInvocationID.x;
++    if(row>=pc.rows||pc.batch==0u||pc.batch>4u) return;
++    if(pc.type!=12u) {
++        if(lane==0u) {
++            for(uint b=0u;b<pc.batch;++b)
++                y[b*pc.rows+row]=uintBitsToFloat(0x7fc00000u);
++        }
++        return;
++    }
++
++    uint rowBytes=((pc.cols+255u)/256u)*144u;
++    uint rb=row*rowBytes;
++    if(rb+rowBytes>pc.weightBytes) return;
++
++    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
++    for(uint j=lane;j<pc.cols;j+=256u) {
++        float ww=q4k(rb,j); // one packed weight decode, up to 4 FMAs
++        a0+=ww*x[j];
++        if(pc.batch>1u) a1+=ww*x[pc.cols+j];
++        if(pc.batch>2u) a2+=ww*x[2u*pc.cols+j];
++        if(pc.batch>3u) a3+=ww*x[3u*pc.cols+j];
++    }
++
++    float s0=subgroupAdd(a0);
++    float s1=subgroupAdd(a1);
++    float s2=subgroupAdd(a2);
++    float s3=subgroupAdd(a3);
++    if(subgroupElect()) {
++        uint sg=gl_SubgroupID;
++        wave0[sg]=s0; wave1[sg]=s1; wave2[sg]=s2; wave3[sg]=s3;
++    }
++    barrier();
++    if(gl_SubgroupID==0u) {
++        uint li=gl_SubgroupInvocationID;
++        float v0=li<gl_NumSubgroups?wave0[li]:0.0;
++        float v1=li<gl_NumSubgroups?wave1[li]:0.0;
++        float v2=li<gl_NumSubgroups?wave2[li]:0.0;
++        float v3=li<gl_NumSubgroups?wave3[li]:0.0;
++        v0=subgroupAdd(v0); v1=subgroupAdd(v1);
++        v2=subgroupAdd(v2); v3=subgroupAdd(v3);
++        if(subgroupElect()) {
++            y[row]=v0;
++            if(pc.batch>1u) y[pc.rows+row]=v1;
++            if(pc.batch>2u) y[2u*pc.rows+row]=v2;
++            if(pc.batch>3u) y[3u*pc.rows+row]=v3;
++        }
++    }
++}
+
+diff --git a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1 b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+--- a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
++++ b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+@@
+ Compile-One (Join-Path $ShaderDir "deep2_qgemv.comp") `
+             (Join-Path $ShaderDir "deep2_qgemv.spv")
++Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch.comp") `
++            (Join-Path $ShaderDir "deep2_qgemv_batch.spv")
+
+ Write-Host "BATCH9_SHADER_BUILD=PASS"
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool DispatchGemvQuant(int type, const void* weights, size_t weightBytes,
+                            DeviceBuf& input, DeviceBuf& output,
+                            uint32_t rows, uint32_t cols);
++    bool DispatchGemvQ4KBatch(
++        const void* weights,size_t weightBytes,
++        DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++        uint32_t rows,uint32_t cols,uint32_t batch);
+@@
+     struct QPush {
+         uint32_t type = 0;
+         uint32_t rows = 0;
+         uint32_t cols = 0;
+         uint32_t weightBytes = 0;
+     };
++    struct QBatchPush {
++        uint32_t type=12;
++        uint32_t rows=0;
++        uint32_t cols=0;
++        uint32_t weightBytes=0;
++        uint32_t batch=1;
++    };
+@@
+     VkPipeline qPipeline_ = VK_NULL_HANDLE;
++    VkPipeline qBatchPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout qBatchPipelineLayout_ = VK_NULL_HANDLE;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::createPipelines() {
+     const std::string ops = shaderPath("deep2_ops.spv");
+     const std::string q = shaderPath("deep2_qgemv.spv");
++    const std::string qb = shaderPath("deep2_qgemv_batch.spv");
+@@
+     if (!q.empty())
+         (void)createPipelineFromFile(
+             q, qSetLayout_, sizeof(QPush), qPipelineLayout_, qPipeline_);
++    if(!qb.empty())
++        (void)createPipelineFromFile(
++            qb,qSetLayout_,sizeof(QBatchPush),
++            qBatchPipelineLayout_,qBatchPipeline_);
+     return opsPipeline_ != VK_NULL_HANDLE;
+ }
+@@
+ bool VulkanCompute::DispatchGemvQuant(
+@@
+     return ok;
+ }
++
++bool VulkanCompute::DispatchGemvQ4KBatch(
++    const void* weights,size_t weightBytes,
++    DeviceBuf& inputBatch,DeviceBuf& outputBatch,
++    uint32_t rows,uint32_t cols,uint32_t batch)
++{
++    if(!qBatchPipeline_||!weights||!weightBytes||
++       !rows||!cols||batch==0||batch>4)
++        return false;
++    if(inputBatch.size < (size_t)batch*cols*sizeof(float) ||
++       outputBatch.size < (size_t)batch*rows*sizeof(float))
++        return false;
++
++    DeviceBuf* w=nullptr;
++    if(!ensureWeightQuant(12,weights,weightBytes,w)) return false;
++
++    VkCommandBuffer cmd=fusedCmd_;
++    VkQueryPool query=fusedQuery_;
++    const bool own=!fused_;
++    if(own){
++        if(!beginCommand(cmd,query,true)) return false;
++    }
++
++    VkDescriptorSet set=getQuantDescriptor(*w,inputBatch,outputBatch);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatchPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,qBatchPipelineLayout_,
++        0,1,&set,0,nullptr);
++    QBatchPush p{};
++    p.rows=rows;p.cols=cols;p.weightBytes=(uint32_t)weightBytes;p.batch=batch;
++    vkCmdPushConstants(
++        cmd,qBatchPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    vkCmdDispatch(cmd,rows,1,1);
++    recordComputeBarrier(cmd);
++    if(!own) return true;
++    const bool ok=endSubmitWait(
++        cmd,query,GpuWorkKind::ModelCompute,
++        weightBytes,workEpoch_,nullptr);
++    if(ok) ++gemvSuccess_;
++    return ok;
++}
+@@
+ void VulkanCompute::cleanup() {
+@@
+     if(device_ && qPipeline_) vkDestroyPipeline(device_,qPipeline_,nullptr);
++    if(device_ && qBatchPipeline_)
++        vkDestroyPipeline(device_,qBatchPipeline_,nullptr);
+@@
+     if(device_ && qPipelineLayout_) vkDestroyPipelineLayout(device_,qPipelineLayout_,nullptr);
++    if(device_ && qBatchPipelineLayout_)
++        vkDestroyPipelineLayout(device_,qBatchPipelineLayout_,nullptr);
+@@
+-    opsPipeline_=qPipeline_=VK_NULL_HANDLE;
++    opsPipeline_=qPipeline_=qBatchPipeline_=VK_NULL_HANDLE;
++    qBatchPipelineLayout_=VK_NULL_HANDLE;

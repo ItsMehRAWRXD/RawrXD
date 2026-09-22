@@ -1,0 +1,158 @@
+# Deep2 Qwen32 40TPS — Batch 4/5, item 18
+# Base: apply after 0016-0017 and Batch 2 grouped row split.
+#
+# Goal: Q/K/V and gate/up groups use one submit PER GPU for the entire group:
+# input copy -> GEMV0 -> output0 copy -> GEMV1 -> output1 copy -> ...
+#
+# This cuts warm steady-state queue waits:
+#   QKV:    6 GPU submits -> 2
+#   GateUp: 4 GPU submits -> 2
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0018_group_single_submit_qkv_gateup.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightHostRoundTrip(
+         const GpuWeightView& weight,
+         const float* input,
+         float* output,
+         uint64_t epoch);
++
++    bool RunWeightGroupHostRoundTrip(
++        const GpuWeightView* weights,
++        float* const* outputs,
++        size_t count,
++        const float* input,
++        uint32_t inputCount,
++        uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::RunWeightHostRoundTrip(
+@@
+     return true;
+ }
++
++bool VulkanCompute::RunWeightGroupHostRoundTrip(
++    const GpuWeightView* weights,
++    float* const* outputs,
++    size_t count,
++    const float* input,
++    uint32_t inputCount,
++    uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weights||!outputs||!input||count<2||count>3||!inputCount)
++        return false;
++
++    SetWorkEpoch(epoch);
++    if(!EnsureScratch(62,inputCount)) return false;
++    DeviceBuf& in=Scratch(62);
++
++    size_t totalOutBytes=0;
++    size_t offsets[3]{};
++    DeviceBuf* resident[3]{};
++
++    for(size_t i=0;i<count;++i){
++        const auto& w=weights[i];
++        if(!w.valid()||w.cols!=inputCount||!outputs[i])
++            return false;
++        if(!EnsureScratch(63u+(unsigned)i,w.rows))
++            return false;
++
++        offsets[i]=totalOutBytes;
++        const size_t b=static_cast<size_t>(w.rows)*sizeof(float);
++        if(totalOutBytes>std::numeric_limits<size_t>::max()-b)
++            return false;
++        totalOutBytes+=b;
++
++        if(w.type==0){
++            const uint64_t key=w.key
++                ? w.key
++                : static_cast<uint64_t>(
++                    reinterpret_cast<uintptr_t>(w.data));
++            if(!ensureWeightF32(
++                    static_cast<const float*>(w.data),key,
++                    w.bytes,resident[i]))
++                return false;
++        }else{
++            if(!ensureWeightQuant(
++                    w.type,w.data,w.bytes,resident[i]))
++                return false;
++        }
++    }
++
++    const size_t inBytes=static_cast<size_t>(inputCount)*sizeof(float);
++    DeviceBuf* upStage=nullptr;
++    DeviceBuf* downStage=nullptr;
++    void* upMap=nullptr;
++    void* downMap=nullptr;
++    if(!ensureMappedStaging(true,inBytes,upStage,upMap)||
++       !ensureMappedStaging(false,totalOutBytes,downStage,downMap))
++        return false;
++    std::memcpy(upMap,input,inBytes);
++
++    if(!BeginFusedLayer()) return false;
++    auto abort=[&]{
++        if(FusedRecording()) (void)EndFusedLayer();
++        return false;
++    };
++    if(!recordCopy(fusedCmd_,*upStage,in,inBytes))
++        return abort();
++
++    for(size_t i=0;i<count;++i){
++        DeviceBuf& out=Scratch(63u+(unsigned)i);
++        if(!DispatchWeight(weights[i],in,out))
++            return abort();
++        const VkDeviceSize b=
++            static_cast<VkDeviceSize>(weights[i].rows)*sizeof(float);
++        if(!recordCopy(
++                fusedCmd_,out,*downStage,b,0,
++                static_cast<VkDeviceSize>(offsets[i])))
++            return abort();
++    }
++    if(!EndFusedLayer()) return false;
++
++    for(size_t i=0;i<count;++i){
++        std::memcpy(
++            outputs[i],
++            static_cast<const uint8_t*>(downMap)+offsets[i],
++            static_cast<size_t>(weights[i].rows)*sizeof(float));
++    }
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+     auto laneRun=[&](unsigned lane,VulkanCompute& g)->bool{
+-        g.SetWorkEpoch(epoch);
+-        if(!g.EnsureScratch(40,inputCount)) return false;
+-        auto& in=g.Scratch(40);
+-        if(!g.UploadVector(in,input,inputCount)) return false;
+-
+-        for(size_t i=0;i<count;++i){
+-            const auto& w=items[i].w[lane];
+-            const unsigned scratchIndex=41u+(unsigned)i;
+-            if(!g.EnsureScratch(scratchIndex,w.rows)) return false;
+-            auto& out=g.Scratch(scratchIndex);
+-            if(!g.DispatchWeight(w,in,out)) return false;
+-            if(!g.DownloadVector(out,items[i].y[lane].data(),w.rows))
+-                return false;
+-        }
+-        return true;
++        GpuWeightView views[3]{};
++        float* outs[3]{};
++        for(size_t i=0;i<count;++i){
++            views[i]=items[i].w[lane];
++            outs[i]=items[i].y[lane].data();
++        }
++        return g.RunWeightGroupHostRoundTrip(
++            views,outs,count,input,inputCount,epoch);
+     };

@@ -1,0 +1,1939 @@
+﻿-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- Using the multi-header code from F:/~dev/rawrxd/build_p1pra_ninja/_deps/nlohmann_json-src/include/
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 41 missing sources from ASM_KERNEL_SOURCES:
+--   MISSING: src/asm/rawr_globals.asm
+--   MISSING: src/asm/rawr_cpu_features.asm
+--   MISSING: src/asm/inference_core.asm
+--   MISSING: src/asm/FlashAttention_AVX512.asm
+--   MISSING: src/asm/quant_avx2.asm
+--   MISSING: src/asm/RawrXD_KQuant_Dequant.asm
+--   MISSING: src/asm/RawrXD_AVX512_Dequant_BPE.asm
+--   MISSING: src/asm/RawrXD_PDBKernel_v3.asm
+--   MISSING: src/asm/RawrXD_ModuleEngine.asm
+--   MISSING: src/asm/request_patch.asm
+--   MISSING: src/asm/inference_kernels.asm
+--   MISSING: src/asm/model_bridge_x64.asm
+--   MISSING: src/asm/model_streamer_x64.asm
+--   MISSING: src/asm/RawrXD_DualAgent_Orchestrator.asm
+--   MISSING: src/asm/RawrXD_DiskRecoveryAgent.asm
+--   MISSING: src/asm/disk_recovery_scsi.asm
+--   MISSING: src/asm/RawrXD_Telemetry_Kernel.asm
+--   MISSING: src/asm/RawrXD_Prometheus_Exporter.asm
+--   MISSING: src/asm/RawrXD_SelfPatch_Agent.asm
+--   MISSING: src/asm/RawrXD_SourceEdit_Kernel.asm
+--   MISSING: src/asm/feature_dispatch_bridge.asm
+--   MISSING: src/asm/gui_dispatch_bridge.asm
+--   MISSING: src/asm/VulkanKernel_DispatchRaw.asm
+--   MISSING: src/masm/rawrxd_math_masm.asm
+--   MISSING: src/masm/rawrxd_transformer_masm_fixed.asm
+--   MISSING: src/masm/rawrxd_transformer_full.asm
+--   MISSING: src/asm/Sovereign_KernelBridge_MASM.asm
+--   MISSING: src/asm/RawrXD_OverclockGov_Pure.asm
+--   MISSING: src/asm/RawrXD_Emitter_v1.asm
+--   MISSING: src/asm/RawrXD_IPC_Dispatcher.asm
+--   MISSING: src/asm/RawrXD_AuditSystem_Pure.asm
+--   MISSING: src/asm/Advanced_Code_Deobfuscator.asm
+--   MISSING: src/asm/Code_Pattern_Reconstructor.asm
+--   MISSING: src/asm/agentic_deep_thinking_kernels.asm
+--   MISSING: src/deep2/sovereign_deep2_kernels.asm
+--   MISSING: src/deep2/sovereign_q4k_gemv.asm
+--   MISSING: src/deep2/sovereign_q4k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_q2k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_q3k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_moe_fused.asm
+--   MISSING: src/sovereign/puppeteer/Puppeteer_CaptureState.asm
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 304 missing source files from SOURCES:
+--   MISSING: src/main.cpp
+--   MISSING: src/memory_core.cpp
+--   MISSING: src/hot_patcher.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/RawrRuntime.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/Deep2ExecutionTelemetry.cpp
+--   MISSING: src/runtime/gguf_tensor_loader.cpp
+--   MISSING: src/runtime/elastic/ElasticEngine.cpp
+--   MISSING: src/runtime/elastic/ElasticGGUFIndex.cpp
+--   MISSING: src/runtime/elastic/ElasticResidencyManager.cpp
+--   MISSING: src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+--   MISSING: src/runtime/elastic/ElasticDecoder.cpp
+--   MISSING: src/runtime/governance/HardwareCapabilityProbe.cpp
+--   MISSING: src/runtime/governance/CapabilityTierMatrix.cpp
+--   MISSING: src/runtime/governance/HardwareGovernor.cpp
+--   MISSING: src/runtime/governance/PressedStateEngine.cpp
+--   MISSING: src/runtime/governance/Ensemble58Governor.cpp
+--   MISSING: src/runtime/governance/TLSInstructionGate.cpp
+--   MISSING: src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+--   MISSING: src/complete_server.cpp
+--   MISSING: src/agentic_engine.cpp
+--   MISSING: src/subagent_core.cpp
+--   MISSING: src/agent_history.cpp
+--   MISSING: src/agent_policy.cpp
+--   MISSING: src/agent_explainability.cpp
+--   MISSING: src/streaming_gguf_loader.cpp
+--   MISSING: src/utils/Diagnostics.cpp
+--   MISSING: src/compression_interface.cpp
+--   MISSING: src/vulkan_kernel_bridge.cpp
+--   MISSING: src/reverse/ReverseEngine.cpp
+--   MISSING: src/reverse/ReverseModelLoader.cpp
+--   MISSING: src/compression/zlib_runtime_loader.cpp
+--   MISSING: src/deep2/MASMKernelStubs.cpp
+--   MISSING: src/deep2/IQQuantKernels.cpp
+--   MISSING: src/engine/gguf_core.cpp
+--   MISSING: src/engine/inference_kernels.cpp
+--   MISSING: src/engine/transformer.cpp
+--   MISSING: src/engine/bpe_tokenizer.cpp
+--   MISSING: src/engine/sampler.cpp
+--   MISSING: src/engine/rawr_engine.cpp
+--   MISSING: src/engine/core_generator.cpp
+--   MISSING: src/engine/pyre_compute.cpp
+--   MISSING: src/engine/sovereign_engines.cpp
+--   MISSING: src/cli/agentic_decision_tree.cpp
+--   MISSING: src/cli/cli_autonomy_loop.cpp
+--   MISSING: src/cli/deep_iteration_engine.cpp
+--   MISSING: src/cli/cli_headless_systems.cpp
+--   MISSING: src/server/gguf_server_hotpatch.cpp
+--   MISSING: src/agent/agentic_hotpatch_orchestrator.cpp
+--   MISSING: src/marketplace/extension_marketplace.cpp
+--   MISSING: src/auth/rbac_engine.cpp
+--   MISSING: src/agentic_loop_state.cpp
+--   MISSING: src/agent/autonomous_subagent.cpp
+--   MISSING: src/agent/agentic_failure_detector.cpp
+--   MISSING: src/agent/agentic_puppeteer.cpp
+--   MISSING: src/sovereign/introspection/SymbolTableGenerator.cpp
+--   MISSING: src/sovereign/puppeteer/PuppeteerAPI.cpp
+--   MISSING: src/sovereign/puppeteer/VEH_Watchdog.cpp
+--   MISSING: src/intent/intent_config.cpp
+--   MISSING: src/intent/intent_abi.cpp
+--   MISSING: src/guardrails/capability_policy.cpp
+--   MISSING: src/guardrails/patch_firewall.cpp
+--   MISSING: src/hotpatch/patch_transaction.cpp
+--   MISSING: src/kernel/AgentKernel.cpp
+--   MISSING: src/kernel/TelemetryInjector.cpp
+--   MISSING: src/kernel/IntentExecutionPipeline.cpp
+--   MISSING: src/kernel/IntentReplayEngine.cpp
+--   MISSING: src/agent/llm_http_client.cpp
+--   MISSING: src/agent/model_invoker.cpp
+--   MISSING: src/agent/planner.cpp
+--   MISSING: src/agent/eval_framework.cpp
+--   MISSING: src/agent/local_reasoning_engine.cpp
+--   MISSING: src/agent/agent_self_repair.cpp
+--   MISSING: src/agent/agent_self_healing_orchestrator.cpp
+--   MISSING: src/agentic/DeterministicReplayEngine.cpp
+--   MISSING: src/agentic/AgentToolHandlers.cpp
+--   MISSING: src/agentic/autonomous_recovery_orchestrator.cpp
+--   MISSING: src/agentic/AgenticDeepThinkingEngine.cpp
+--   MISSING: validation/fault_injection/FaultInjector.cpp
+--   MISSING: validation/fault_injection/WorkerCrashInjector.cpp
+--   MISSING: validation/fault_injection/MemoryPressureInjector.cpp
+--   MISSING: validation/fault_injection/ServiceKillInjector.cpp
+--   MISSING: validation/fault_injection/StateCorruptionInjector.cpp
+--   MISSING: validation/fault_injection/ExceptionStormInjector.cpp
+--   MISSING: validation/recovery_telemetry/RecoveryTelemetry.cpp
+--   MISSING: src/agentic/AgentOrchestrator.cpp
+--   MISSING: src/agentic/OrchestratorBridge.cpp
+--   MISSING: src/agentic/AgenticNavigator.cpp
+--   MISSING: src/agentic/RawrXD_ToolRegistry.cpp
+--   MISSING: src/agentic/ToolRegistry.cpp
+--   MISSING: src/agentic/RawrXD_AgentLoop.cpp
+--   MISSING: src/agentic/agentic_executor.cpp
+--   MISSING: src/agent/DiskRecoveryAgent.cpp
+--   MISSING: src/build/BuildIntelligence.cpp
+--   MISSING: src/diagnostics/DiagnosticsEngine.cpp
+--   MISSING: src/refactoring/RefactoringEngine.cpp
+--   MISSING: src/validation/PatchValidator.cpp
+--   MISSING: src/ide/IDEShell.cpp
+--   MISSING: src/runtime_surface/GenerationStopwatch.cpp
+--   MISSING: src/tool_registry.cpp
+--   MISSING: src/license_enforcement.cpp
+--   MISSING: src/feature_flags_runtime.cpp
+--   MISSING: src/tools/license_validator_manifest.cpp
+--   MISSING: src/model_name_utils.cpp
+--   MISSING: src/model_config.cpp
+--   MISSING: src/agent/telemetry_collector.cpp
+--   MISSING: src/agentic_observability.cpp
+--   MISSING: src/agentic/BoundedAgentLoop.cpp
+--   MISSING: src/agentic/FIMPromptBuilder.cpp
+--   MISSING: src/config/IDEConfig.cpp
+--   MISSING: src/agentic/DiskRecoveryAgent.cpp
+--   MISSING: src/agentic/DiskRecoveryToolHandler.cpp
+--   MISSING: src/win32app/agentic_bridge_headless.cpp
+--   MISSING: src/lsp/lsp_hotpatch_bridge.cpp
+--   MISSING: src/lsp/hotpatch_symbol_provider.cpp
+--   MISSING: src/lsp/gguf_diagnostic_provider.cpp
+--   MISSING: src/lsp/RawrXD_LSPServer.cpp
+--   MISSING: src/modules/vscode_extension_api.cpp
+--   MISSING: src/model_source_resolver.cpp
+--   MISSING: src/modules/ReverseEngineering.cpp
+--   MISSING: src/agent/agentic_deep_thinking_engine.cpp
+--   MISSING: src/agent/quantum_autonomous_todo_system.cpp
+--   MISSING: src/agent/quantum_multi_model_agent_cycling.cpp
+--   MISSING: src/agent/quantum_dynamic_time_manager.cpp
+--   MISSING: src/agent/quantum_missing_impl.cpp
+--   MISSING: src/agent/quantum_production_orchestrator.cpp
+--   MISSING: src/agent/quantum_agent_orchestrator.cpp
+--   MISSING: src/win32app/Win32IDE_logMessage.cpp
+--   MISSING: src/cli/swarm_orchestrator.cpp
+--   MISSING: src/swarm_orchestrator.cpp
+--   MISSING: src/dml_inference_engine.cpp
+--   MISSING: src/vulkan_compute.cpp
+--   MISSING: src/backend/VulkanGemmDispatcher.cpp
+--   MISSING: src/agentic/multi_file_transaction.cpp
+--   MISSING: src/agentic/agentic_transaction.cpp
+--   MISSING: src/agentic/agent_workflow_orchestrator.cpp
+--   MISSING: src/agentic/model_cascade.cpp
+--   MISSING: src/agentic/context_assembler.cpp
+--   MISSING: src/ui/chat_message_renderer.cpp
+--   MISSING: src/ui/tool_action_status.cpp
+--   MISSING: src/ui/chat_panel.cpp
+--   MISSING: src/git/git_context.cpp
+--   MISSING: src/lsp/diagnostic_consumer.cpp
+--   MISSING: src/gpu/speculative_decoder_v2.cpp
+--   MISSING: src/ai/streaming_inference_engine.cpp
+--   MISSING: src/ai/speculative_tree_attention_bridge.cpp
+--   MISSING: src/kernels/tree_attention_dispatch.cpp
+--   MISSING: src/kernels/tree_attention_scalar.cpp
+--   MISSING: src/kernels/tree_attention_avx2.cpp
+--   MISSING: src/kernels/tree_attention_avx512_intrinsics.cpp
+--   MISSING: src/inference/ultra_fast_inference.cpp
+--   MISSING: src/telemetry/completion_feedback.cpp
+--   MISSING: src/telemetry/replay_telemetry_fusion.cpp
+--   MISSING: src/telemetry/hotpatch_telemetry_safety.cpp
+--   MISSING: src/telemetry/UnifiedTelemetryCore.cpp
+--   MISSING: src/gpu/gpu_backend.cpp
+--   MISSING: src/gpu/kv_cache_optimizer.cpp
+--   MISSING: src/gpu/speculative_decoder.cpp
+--   MISSING: src/agentic_controller.cpp
+--   MISSING: src/ui/phase2_integration_example.cpp
+--   MISSING: src/agentic_agent_coordinator.cpp
+--   MISSING: src/production_config_manager.cpp
+--   MISSING: src/test_harness/replay_fixture.cpp
+--   MISSING: src/test_harness/replay_oracle.cpp
+--   MISSING: src/test_harness/replay_mock_inference.cpp
+--   MISSING: src/test_harness/replay_harness.cpp
+--   MISSING: src/test_harness/replay_reporter.cpp
+--   MISSING: src/security/secrets_scanner.cpp
+--   MISSING: src/security/dependency_audit.cpp
+--   MISSING: src/security/sbom_export.cpp
+--   MISSING: src/security/sast_rule_engine.cpp
+--   MISSING: src/security/RawrXD_GoogleDork_Scanner.cpp
+--   MISSING: src/security/RawrXD_Universal_Dorker.cpp
+--   MISSING: src/security/SecurityHardening.cpp
+--   MISSING: src/agentic/autonomous_verification_loop.cpp
+--   MISSING: src/agentic/autonomous_background_daemon.cpp
+--   MISSING: src/agentic/autonomous_communicator.cpp
+--   MISSING: src/telemetry/telemetry_export.cpp
+--   MISSING: src/agentic/agentic_composer_ux.cpp
+--   MISSING: src/context/context_mention_parser.cpp
+--   MISSING: src/multimodal_engine/vision_encoder.cpp
+--   MISSING: src/ide/refactoring_plugin.cpp
+--   MISSING: src/ide/language_plugin.cpp
+--   MISSING: src/context/semantic_index.cpp
+--   MISSING: src/ide/resource_generator.cpp
+--   MISSING: src/ai/codebase_rag.cpp
+--   MISSING: src/ai/symbol_graph_indexer.cpp
+--   MISSING: src/ai/semantic_code_search.cpp
+--   MISSING: src/ai/multi_file_reasoning.cpp
+--   MISSING: src/ai/workspace_embeddings.cpp
+--   MISSING: src/ai/repo_refactor_engine.cpp
+--   MISSING: src/ai/streaming_inference_engine.cpp
+--   MISSING: src/ai/speculative_tree_attention_bridge.cpp
+--   MISSING: src/kernels/tree_attention_dispatch.cpp
+--   MISSING: src/kernels/tree_attention_scalar.cpp
+--   MISSING: src/kernels/tree_attention_avx2.cpp
+--   MISSING: src/kernels/tree_attention_avx512_intrinsics.cpp
+--   MISSING: src/agentic/cognitive/cognitive_types.cpp
+--   MISSING: src/agentic/cognitive/enhanced_blackboard.cpp
+--   MISSING: src/agentic/cognitive/mission_director.cpp
+--   MISSING: src/agentic/cognitive/reflection_agent.cpp
+--   MISSING: src/agentic/cognitive/dynamic_planner.cpp
+--   MISSING: src/agentic/cognitive/autonomous_orchestrator.cpp
+--   MISSING: src/deep2/TrailBrake.cpp
+--   MISSING: src/deep2/HotPatcher.cpp
+--   MISSING: src/deep2/HotPatcherSafety.cpp
+--   MISSING: src/deep2/AntiPatcher.cpp
+--   MISSING: src/deep2/GoalSystem.cpp
+--   MISSING: src/deep2/PatchCache.cpp
+--   MISSING: src/deep2/BottleTTL.cpp
+--   MISSING: src/deep2/CPUFrequency.cpp
+--   MISSING: src/deep2/DualGPUHook.cpp
+--   MISSING: src/deep2/ReverseTensorRecovery.cpp
+--   MISSING: src/deep2/StreamEngine.cpp
+--   MISSING: src/deep2/execution_policy/ExecutionPolicy.cpp
+--   MISSING: src/deep2/execution_policy/ExecutionPolicyStore.cpp
+--   MISSING: src/deep2/ShardRouterIntegration.cpp
+--   MISSING: src/deep2/Deep2IDEIntegration.cpp
+--   MISSING: src/deep2/Deep2ModelRuntime.cpp
+--   MISSING: src/deep2/FabricTensorTable.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+--   MISSING: src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
+--   MISSING: src/deep2/ElasticResidencyManager.cpp
+--   MISSING: src/deep2/ElasticDynamicBudget.cpp
+--   MISSING: src/deep2/CycloneScheduler.cpp
+--   MISSING: src/deep2/Deep2LivePath.cpp
+--   MISSING: src/deep2/Deep2LivePath_Gate.cpp
+--   MISSING: src/deep2/Deep2LivePath_Pinball.cpp
+--   MISSING: src/deep2/Deep2LivePath_Mech.cpp
+--   MISSING: src/deep2/Deep2LivePath_Emit.cpp
+--   MISSING: src/deep2/GpuTransfer_Emit.cpp
+--   MISSING: src/deep2/LivePathEffect.cpp
+--   MISSING: src/deep2/K2LivePolicy.cpp
+--   MISSING: src/deep2/K2LivePolicy_Apply.cpp
+--   MISSING: src/deep2/K2LivePolicy_Hysteresis.cpp
+--   MISSING: src/deep2/FusedLiveController.cpp
+--   MISSING: src/deep2/FusedLiveController_Decide.cpp
+--   MISSING: src/deep2/FusedLiveController_Cheap.cpp
+--   MISSING: src/deep2/FusedLiveController_Law.cpp
+--   MISSING: src/deep2/FusedLiveController_Emit.cpp
+--   MISSING: src/deep2/LivePath_FusedTick.cpp
+--   MISSING: src/deep2/Deep2LivePath_MechEnd.cpp
+--   MISSING: src/deep2/Deep2LivePath_Thermal.cpp
+--   MISSING: src/rkc/RKCValidator.cpp
+--   MISSING: src/rkc/RKCWorld.cpp
+--   MISSING: src/rkc/RKCCodeWorld.cpp
+--   MISSING: src/rkc/RKCMinimalSource.cpp
+--   MISSING: src/rkc/RKCNegativeKnowledge.cpp
+--   MISSING: src/rkc/RKCModelInventory.cpp
+--   MISSING: src/rkc/RKCDeep2Authority.cpp
+--   MISSING: src/rkc/RKCCompiler.cpp
+--   MISSING: src/rkc/RKCRecipes.cpp
+--   MISSING: src/rkc/RKCGapEngine.cpp
+--   MISSING: src/rkc/RKCEmit.cpp
+--   MISSING: src/rkc/RKCSession.cpp
+--   MISSING: src/rkc/RKCProductContext.cpp
+--   MISSING: src/rkc/RKC_C_ABI.cpp
+--   MISSING: src/deep2/ProductionProfiler.cpp
+--   MISSING: src/deep2/KimiK2Config.cpp
+--   MISSING: src/deep2/K2MLAWeights.cpp
+--   MISSING: src/deep2/K2MoEWeights.cpp
+--   MISSING: src/deep2/K2GlobalTensorIndex.cpp
+--   MISSING: src/deep2/Deep2Bridge.cpp
+--   MISSING: src/deep2/InferenceSession.cpp
+--   MISSING: src/deep2/ThreadPool.cpp
+--   MISSING: src/deep2/KVCache.cpp
+--   MISSING: src/deep2/GGUFLoader.cpp
+--   MISSING: src/deep2/ReverseIntegration.cpp
+--   MISSING: src/deep2/ReverseHotpatchEngine.cpp
+--   MISSING: src/deep2/MoERouter.cpp
+--   MISSING: src/deep2/MoEWeightProxy.cpp
+--   MISSING: src/deep2/MoEEliminate.cpp
+--   MISSING: src/deep2/MoEWeightsLoader.cpp
+--   MISSING: src/deep2/MoEArchitectureParser.cpp
+--   MISSING: src/deep2/TensorHop.cpp
+--   MISSING: src/deep2/DeepSeekMoELoader.cpp
+--   MISSING: src/deep2/Deep2ExecutionGraph.cpp
+--   MISSING: src/deep2/StreamRouter.cpp
+--   MISSING: src/deep2/FusedInferenceKernel.cpp
+--   MISSING: src/deep2/UniversalModelLoader.cpp
+--   MISSING: src/deep2/ModelLoader.cpp
+--   MISSING: src/deep2/ModelRegistry.cpp
+--   MISSING: src/deep2/RuntimePlanner.cpp
+--   MISSING: src/deep2/WarmupScheduler.cpp
+--   MISSING: src/deep2/NUFusedPacker.cpp
+--   MISSING: src/deep2/CompressedKVCache.cpp
+--   MISSING: src/deep2/NVMeStream.cpp
+--   MISSING: src/deep2/SlidingWindowEngine.cpp
+--   MISSING: src/deep2/MedusaDecoder.cpp
+--   MISSING: src/deep2/RawrXDInferenceAdapter.cpp
+--   MISSING: src/deep2/IOCPGGUFLoader.cpp
+--   MISSING: src/inference/RawrXD_LlamaNative.cpp
+--   MISSING: src/deep2/mars/VRAMManager.cpp
+--   MISSING: src/deep2/mars/TensorHotpatch.cpp
+--   MISSING: src/deep2/mars/DualGPUBackend.cpp
+--   MISSING: src/deep2/mars/MARSController.cpp
+--   MISSING: src/sampling/advanced_sampler.cpp
+--   MISSING: src/runtime/Sovereign_RingTelemetry.cpp
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- ├Ä┬ô├é┬ú├â┬┤ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found ΓÇö Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+cmake : CMake Warning at CMakeLists.txt:4324 (message):
+At line:1 char:40
++ ... pra_ninja"; cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release 
+-DRAWRXD_BUI ...
++                 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (CMake Warning a...4324 (me 
+   ssage)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  [MASM] RDNA3 kernels not found.  GPU acceleration disabled.
+
+
+-- [NanoQuant] DISABLED ├Ä┬ô├â┬ç├â┬╢ enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] Γ£à Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 329 missing sources from INFERENCE_ENGINE_LIBRARY_SOURCES:
+--   MISSING: src/inference/inference_standalone_main.cpp
+--   MISSING: src/inference/ultra_fast_inference.cpp
+--   MISSING: src/inference/polymorphic_loader.cpp
+--   MISSING: src/inference/ollama_blob_parser.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/streaming_gguf_loader.cpp
+--   MISSING: src/compression_interface.cpp
+--   MISSING: src/memory_core.cpp
+--   MISSING: src/license_enforcement.cpp
+--   MISSING: src/feature_flags_runtime.cpp
+--   MISSING: src/tools/license_validator_manifest.cpp
+--   MISSING: src/InferenceProfiler.cpp
+--   MISSING: src/engine/gguf_core.cpp
+--   MISSING: src/engine/inference_kernels.cpp
+--   MISSING: src/engine/transformer.cpp
+--   MISSING: src/engine/bpe_tokenizer.cpp
+--   MISSING: src/engine/sampler.cpp
+--   MISSING: src/engine/rawr_engine.cpp
+--   MISSING: src/engine/core_generator.cpp
+--   MISSING: src/engine/pyre_compute.cpp
+--   MISSING: src/engine/sovereign_engines.cpp
+--   MISSING: src/utils/Diagnostics.cpp
+--   MISSING: src/inference/TitanLoaderDiagnostics.cpp
+--   MISSING: src/inference/MemoryPressureGuard.cpp
+--   MISSING: src/agentic/ErrorRecoveryManager.cpp
+--   MISSING: src/inference/PerformanceMonitor.cpp
+--   MISSING: src/runtime/Deep2ExecutionTelemetry.cpp
+--   MISSING: src/backend/VulkanGemmDispatcher.cpp
+--   MISSING: src/kernels/VulkanComputeKernels.cpp
+--   MISSING: src/vulkan_compute.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+--   MISSING: src/runtime/GenerationBouncer.cpp
+--   MISSING: src/runtime/Sovereign_KernelBridge_CPP.cpp
+--   MISSING: src/sampling/advanced_sampler.cpp
+--   MISSING: src/runtime/RawrRuntime.cpp
+--   MISSING: src/runtime/governance/HardwareCapabilityProbe.cpp
+--   MISSING: src/runtime/governance/CapabilityTierMatrix.cpp
+--   MISSING: src/runtime/governance/HardwareGovernor.cpp
+--   MISSING: src/runtime/governance/PressedStateEngine.cpp
+--   MISSING: src/runtime/governance/Ensemble58Governor.cpp
+--   MISSING: src/runtime/governance/TLSInstructionGate.cpp
+--   MISSING: src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+--   MISSING: src/deep2/K2TimeLimitedServing.cpp
+--   MISSING: src/runtime/elastic/ElasticGGUFIndex.cpp
+--   MISSING: src/runtime/elastic/ElasticResidencyManager.cpp
+--   MISSING: src/runtime/elastic/ElasticDecoder.cpp
+--   MISSING: src/runtime/elastic/ElasticEngine.cpp
+--   MISSING: src/runtime/elastic/ElasticArchitectureDetector.cpp
+--   MISSING: src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+--   MISSING: src/runtime/gguf_tensor_loader.cpp
+--   MISSING: src/codec/compression.cpp
+--   MISSING: src/codec/brutal_gzip.cpp
+--   MISSING: src/codec/gzip_brutal_inflate.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+--   MISSING: src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+--   MISSING: src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
+--   MISSING: src/deep2/ChatTemplate.cpp
+--   MISSING: src/deep2/GGUFLoader.cpp
+--   MISSING: src/deep2/InferenceSession.cpp
+--   MISSING: src/deep2/QuantKernelMASM.cpp
+--   MISSING: src/deep2/IQQuantKernels.cpp
+--   MISSING: src/deep2/GhostCache.cpp
+--   MISSING: src/deep2/ThreadPool.cpp
+--   MISSING: src/deep2/KVCache.cpp
+--   MISSING: src/deep2/AttnCertProbe.cpp
+--   MISSING: src/deep2/MlaCertProbe.cpp
+--   MISSING: src/deep2/SsmCertProbe.cpp
+--   MISSING: src/deep2/MoERouter.cpp
+--   MISSING: src/deep2/MoEWeightProxy.cpp
+--   MISSING: src/deep2/MoEEliminate.cpp
+--   MISSING: src/deep2/MoEWeightsLoader.cpp
+--   MISSING: src/deep2/MoEArchitectureParser.cpp
+--   MISSING: src/deep2/TensorHop.cpp
+--   MISSING: src/deep2/DeepSeekMoELoader.cpp
+--   MISSING: src/deep2/Deep2ExecutionGraph.cpp
+--   MISSING: src/deep2/StreamRouter.cpp
+--   MISSING: src/deep2/FusedInferenceKernel.cpp
+--   MISSING: src/deep2/UniversalModelLoader.cpp
+--   MISSING: src/deep2/ModelLoader.cpp
+--   MISSING: src/deep2/ModelRegistry.cpp
+--   MISSING: src/deep2/RuntimePlanner.cpp
+--   MISSING: src/deep2/WarmupScheduler.cpp
+--   MISSING: src/deep2/NUFusedPacker.cpp
+--   MISSING: src/deep2/NUGemv.cpp
+--   MISSING: src/deep2/NULiveConsumer.cpp
+--   MISSING: src/deep2/TpsScaleHotpatch.cpp
+--   MISSING: src/deep2/ElasticDynamicBudget.cpp
+--   MISSING: src/deep2/CompressedKVCache.cpp
+--   MISSING: src/deep2/NVMeStream.cpp
+--   MISSING: src/deep2/SlidingWindowEngine.cpp
+--   MISSING: src/deep2/MedusaDecoder.cpp
+--   MISSING: src/deep2/RawrXDInferenceAdapter.cpp
+--   MISSING: src/deep2/KimiK2Config.cpp
+--   MISSING: src/deep2/K2MLAWeights.cpp
+--   MISSING: src/deep2/K2MLA_KvExpand_Fused.cpp
+--   MISSING: src/deep2/K2MLAAttention.cpp
+--   MISSING: src/deep2/K2TokenEmbedding.cpp
+--   MISSING: src/deep2/K2NativeStreamGate.cpp
+--   MISSING: src/deep2/MlaCertAuthority.cpp
+--   MISSING: src/deep2/K2LogitsClimb.cpp
+--   MISSING: src/deep2/K2LogitsSplit.cpp
+--   MISSING: src/deep2/K2LogitsLineage.cpp
+--   MISSING: src/deep2/K2GpuStreamCopy.cpp
+--   MISSING: src/deep2/K2GpuStreamCopy_Overlap.cpp
+--   MISSING: src/deep2/K2MLA_GpuGemv.cpp
+--   MISSING: src/deep2/K2BraidExecutionPolicy.cpp
+--   MISSING: src/deep2/K2MLA_FusedQ4KT.cpp
+--   MISSING: src/deep2/K2MLA_QPathDevice.cpp
+--   MISSING: src/deep2/K2MLA_QPathDevice_Emit.cpp
+--   MISSING: src/deep2/K2MLA_PathB.cpp
+--   MISSING: src/deep2/K2MLA_PathB_Attn.cpp
+--   MISSING: src/deep2/K2QbHostShrinkD2h.cpp
+--   MISSING: src/runtime/QbHostReadbackWindow.cpp
+--   MISSING: src/runtime/ExchangeObjectLedger.cpp
+--   MISSING: src/deep2/HostExchangeDiscover.cpp
+--   MISSING: src/deep2/K2MLA_QaCritical.cpp
+--   MISSING: src/deep2/K2WeightResolve.cpp
+--   MISSING: src/deep2/K2ShardIo.cpp
+--   MISSING: src/deep2/K2LivePathTensorCache.cpp
+--   MISSING: src/deep2/K2LivePathTensorCache_Prefetch.cpp
+--   MISSING: src/deep2/K2LivePathTensorCache_Emit.cpp
+--   MISSING: src/deep2/Deep2DeviceManager.cpp
+--   MISSING: src/deep2/DualLaneChoreographer.cpp
+--   MISSING: src/deep2/Deep2MultiGpu_CostCut.cpp
+--   MISSING: src/deep2/Deep2Engine_GpuToken.cpp
+--   MISSING: src/deep2/lavapath/DualStickStreamWindow.cpp
+--   MISSING: src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+--   MISSING: src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
+--   MISSING: src/deep2/lavapath/DualStickEnvSnap.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Space.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Emit.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_EmitExec.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Advance.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Chair.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Register.cpp
+--   MISSING: src/deep2/lavapath/FutureConsumer_Notes.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
+--   MISSING: src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
+--   MISSING: src/deep2/lavapath/KN_O3KKEN.asm
+--   MISSING: src/deep2/lavapath/r25_productopen_masm.asm
+--   MISSING: src/deep2/lavapath/k3c_token.cpp
+--   MISSING: src/deep2/lavapath/FreeTokenMicroZone.cpp
+--   MISSING: src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
+--   MISSING: src/vulkan_fwd_resident.cpp
+--   MISSING: src/vulkan_fwd_fused.cpp
+--   MISSING: src/vulkan_weight_window.cpp
+--   MISSING: src/vulkan_weight_policy.cpp
+--   MISSING: src/vulkan_weight_prefetch.cpp
+--   MISSING: src/vulkan_fwd_q4k.cpp
+--   MISSING: src/vulkan_fwd_q4k_host.cpp
+--   MISSING: src/vulkan_fwd_q4k_fused.cpp
+--   MISSING: src/vulkan_fwd_q4k_climb.cpp
+--   MISSING: src/vulkan_fwd_q8_kva_climb.cpp
+--   MISSING: src/vulkan_fwd_q4k_act.cpp
+--   MISSING: src/vulkan_fwd_attn_mla.cpp
+--   MISSING: src/vulkan_fwd_q6k.cpp
+--   MISSING: src/vulkan_fwd_q6k_host.cpp
+--   MISSING: src/vulkan_fwd_quant_pipe.cpp
+--   MISSING: src/vulkan_fwd_quant.cpp
+--   MISSING: src/vulkan_fwd_quant_host.cpp
+--   MISSING: src/vulkan_fwd_cmdpool.cpp
+--   MISSING: src/vulkan_fwd_tune.cpp
+--   MISSING: src/vulkan_fwd_hostops.cpp
+--   MISSING: src/vulkan_fwd_stubs.cpp
+--   MISSING: src/deep2/K2MoEWeights.cpp
+--   MISSING: src/deep2/K2GlobalTensorIndex.cpp
+--   MISSING: src/deep2/Deep2Bridge.cpp
+--   MISSING: src/deep2/ProductionProfiler.cpp
+--   MISSING: src/deep2/TrailBrake.cpp
+--   MISSING: src/deep2/HotPatcher.cpp
+--   MISSING: src/deep2/HotPatcherSafety.cpp
+--   MISSING: src/deep2/AntiPatcher.cpp
+--   MISSING: src/deep2/GoalSystem.cpp
+--   MISSING: src/deep2/PatchCache.cpp
+--   MISSING: src/deep2/BottleTTL.cpp
+--   MISSING: src/deep2/CPUFrequency.cpp
+--   MISSING: src/deep2/DualGPUHook.cpp
+--   MISSING: src/deep2/ReverseTensorRecovery.cpp
+--   MISSING: src/deep2/StreamEngine.cpp
+--   MISSING: src/deep2/execution_policy/ExecutionPolicy.cpp
+--   MISSING: src/deep2/execution_policy/ExecutionPolicyStore.cpp
+--   MISSING: src/deep2/execution_policy/PlacementPlan.cpp
+--   MISSING: src/deep2/execution_policy/ExecutionPolicyApply.cpp
+--   MISSING: src/deep2/ShardRouterIntegration.cpp
+--   MISSING: src/deep2/Deep2IDEIntegration.cpp
+--   MISSING: src/deep2/IOCPGGUFLoader.cpp
+--   MISSING: src/deep2/Deep2ModelRuntime.cpp
+--   MISSING: src/deep2/FabricTensorTable.cpp
+--   MISSING: src/deep2/ReverseIntegration.cpp
+--   MISSING: src/deep2/ReverseHotpatchEngine.cpp
+--   MISSING: src/reverse/ReverseEngine.cpp
+--   MISSING: src/reverse/ReverseModelLoader.cpp
+--   MISSING: src/deep2/Chamber.cpp
+--   MISSING: src/deep2/ToroidalKVCache.cpp
+--   MISSING: src/deep2/PlasmaGovernor.cpp
+--   MISSING: src/deep2/OutOfCoreRuntime.cpp
+--   MISSING: src/deep2/SovereignOutOfCoreRuntime.cpp
+--   MISSING: src/deep2/BP16Streamer.cpp
+--   MISSING: src/deep2/ResidencyManager.cpp
+--   MISSING: src/deep2/ElasticResidencyManager.cpp
+--   MISSING: src/deep2/CycloneScheduler.cpp
+--   MISSING: src/deep2/Deep2LivePath.cpp
+--   MISSING: src/deep2/Deep2LivePath_Gate.cpp
+--   MISSING: src/deep2/Deep2LivePath_Pinball.cpp
+--   MISSING: src/deep2/Deep2LivePath_Mech.cpp
+--   MISSING: src/deep2/Deep2LivePath_Emit.cpp
+--   MISSING: src/deep2/GpuTransfer_Emit.cpp
+--   MISSING: src/deep2/LivePathEffect.cpp
+--   MISSING: src/deep2/K2LivePolicy.cpp
+--   MISSING: src/deep2/K2LivePolicy_Apply.cpp
+--   MISSING: src/deep2/K2LivePolicy_Hysteresis.cpp
+--   MISSING: src/deep2/FusedLiveController.cpp
+--   MISSING: src/deep2/FusedLiveController_Decide.cpp
+--   MISSING: src/deep2/FusedLiveController_Cheap.cpp
+--   MISSING: src/deep2/FusedLiveController_Law.cpp
+--   MISSING: src/deep2/FusedLiveController_Emit.cpp
+--   MISSING: src/deep2/LivePath_FusedTick.cpp
+--   MISSING: src/deep2/Deep2LivePath_MechEnd.cpp
+--   MISSING: src/deep2/Deep2LivePath_Thermal.cpp
+--   MISSING: src/rkc/RKCValidator.cpp
+--   MISSING: src/rkc/RKCWorld.cpp
+--   MISSING: src/rkc/RKCCodeWorld.cpp
+--   MISSING: src/rkc/RKCMinimalSource.cpp
+--   MISSING: src/rkc/RKCNegativeKnowledge.cpp
+--   MISSING: src/rkc/RKCModelInventory.cpp
+--   MISSING: src/rkc/RKCDeep2Authority.cpp
+--   MISSING: src/rkc/RKCCompiler.cpp
+--   MISSING: src/rkc/RKCRecipes.cpp
+--   MISSING: src/rkc/RKCGapEngine.cpp
+--   MISSING: src/rkc/RKCEmit.cpp
+--   MISSING: src/rkc/RKCSession.cpp
+--   MISSING: src/rkc/RKCProductContext.cpp
+--   MISSING: src/rkc/RKC_C_ABI.cpp
+--   MISSING: src/deep2/RouterPrefetchTelemetry.cpp
+--   MISSING: src/deep2/mars/VRAMManager.cpp
+--   MISSING: src/deep2/mars/TensorHotpatch.cpp
+--   MISSING: src/deep2/mars/DualGPUBackend.cpp
+--   MISSING: src/deep2/mars/MARSController.cpp
+--   MISSING: src/BackendOrchestrator.cpp
+--   MISSING: src/agentic/BoundedAgentLoop.cpp
+--   MISSING: src/agentic/OrchestratorBridge.cpp
+--   MISSING: src/agentic/ToolRegistry.cpp
+--   MISSING: src/agentic/AgentOrchestrator.cpp
+--   MISSING: src/agentic/AgentOllamaClient.cpp
+--   MISSING: src/agentic/hotpatch/Engine.cpp
+--   MISSING: src/agentic/AgentToolHandlers.cpp
+--   MISSING: src/agentic/AutonomousFixOrchestrator.cpp
+--   MISSING: src/agentic/RawrXD_AgentLoop.cpp
+--   MISSING: src/agentic/RawrXD_AgentHost.cpp
+--   MISSING: src/agentic/RawrXD_RewardModel.cpp
+--   MISSING: src/agentic/RawrXD_SymbolHealer.cpp
+--   MISSING: src/agentic/RawrXD_ToolRegistry.cpp
+--   MISSING: src/agentic/DeterministicReplayEngine.cpp
+--   MISSING: src/agentic/DiffEngine.cpp
+--   MISSING: src/agentic/DirectFIM.cpp
+--   MISSING: src/agentic/FIMPromptBuilder.cpp
+--   MISSING: src/agentic/GGMLAgenticEngine.cpp
+--   MISSING: src/agentic/GgmlEngine.cpp
+--   MISSING: src/agentic/gguf_types.cpp
+--   MISSING: src/agentic/GGUFLoader.cpp
+--   MISSING: src/agentic/KnowledgeGraph.cpp
+--   MISSING: src/agentic/chain_of_thought.cpp
+--   MISSING: src/agentic/change_impact_analyzer.cpp
+--   MISSING: src/agentic/context_assembler.cpp
+--   MISSING: src/agentic/context_mention_parser.cpp
+--   MISSING: src/agentic/RepositoryIndexer.cpp
+--   MISSING: src/agentic/RobustOllamaParser.cpp
+--   MISSING: src/agentic/SelfImprovement.cpp
+--   MISSING: src/agentic/slash_command_parser.cpp
+--   MISSING: src/agentic/SubAgentManager.cpp
+--   MISSING: src/agentic/task_executor.cpp
+--   MISSING: src/agentic/task_graph.cpp
+--   MISSING: src/agentic/task_scheduler.cpp
+--   MISSING: src/agentic/NativeInferenceClient.cpp
+--   MISSING: src/agentic/Deep2SovereignInferenceGateway.cpp
+--   MISSING: src/agentic/SovereignStandaloneClient.cpp
+--   MISSING: src/agentic/SovereignAssembler.cpp
+--   MISSING: src/agentic/SovereignAssembler_HotPatch.cpp
+--   MISSING: src/agentic/Titan_Sovereign_Bridge.cpp
+--   MISSING: src/agentic/Phase3_Agent_Kernel_Bridge.cpp
+--   MISSING: src/agentic/BackendEmissionService.cpp
+--   MISSING: src/agentic/ExecPipeline.cpp
+--   MISSING: src/agentic/StreamingResultChannel.cpp
+--   MISSING: src/agentic/streaming_command_handler.cpp
+--   MISSING: src/agentic/ToolDispatcher.cpp
+--   MISSING: src/agentic/ToolDispatchTable.cpp
+--   MISSING: src/agentic/tool_call_parser.cpp
+--   MISSING: src/agentic/tool_executor.cpp
+--   MISSING: src/agentic/tool_registry.cpp
+--   MISSING: src/agentic/vulkan_compute_real.cpp
+--   MISSING: src/sovereign/SovereignRuntime.cpp
+--   MISSING: src/sovereign/ExecutionContract.cpp
+--   MISSING: src/sovereign/SovereignCoreWrapper.cpp
+--   MISSING: src/sovereign/SovereignDenseEngine.cpp
+--   MISSING: src/sovereign/SovereignEventBus.cpp
+--   MISSING: src/sovereign/SovereignCheckpoint.cpp
+--   MISSING: src/sovereign/SovereignVCS.cpp
+--   MISSING: src/sovereign/SovereignWatchdog.cpp
+--   MISSING: src/sovereign/Deep2InferenceWrapper.cpp
+--   MISSING: src/sovereign/AgenticEngineSovereignHook.cpp
+--   MISSING: src/sovereign/IDE_Lifecycle_Hook.cpp
+--   MISSING: src/sovereign/RawrXD_SovereignStatusPanel.cpp
+--   MISSING: src/sovereign/IntegrityChecker.cpp
+--   MISSING: src/sovereign/HealthReport.cpp
+--   MISSING: src/sovereign/AutoRepair.cpp
+--   MISSING: src/sovereign/AutoRepairEngine.cpp
+--   MISSING: src/sovereign/CrashRecovery.cpp
+--   MISSING: src/sovereign/StressTester.cpp
+--   MISSING: src/sovereign/Profiler.cpp
+--   MISSING: src/sovereign/DistributedKV.cpp
+--   MISSING: src/sovereign/ExpertSharding.cpp
+--   MISSING: src/sovereign/Beaconism.cpp
+--   MISSING: src/sovereign/rawr_transport_strict.cpp
+--   MISSING: src/deep2/sovereign_deep2_kernels.asm
+--   MISSING: src/deep2/sovereign_q4k_gemv.asm
+--   MISSING: src/deep2/sovereign_q4_1_gemv.asm
+--   MISSING: src/deep2/sovereign_q5_k_gemv.asm
+CMake Warning at CMakeLists.txt:6706 (message):
+  [Win32IDE] Optional fallback unit missing, skipping:
+  src/modules/quickjs_node_shims.cpp
+
+
+CMake Warning at CMakeLists.txt:6766 (message):
+  [Win32IDE] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF strips 
+fallback/shim TUs
+  (strict lane).  The IDE usually will not link unless every ASM symbol 
+is
+  provided elsewhere.  For a normal dev link:
+  -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.
+
+
+--   MISSING: src/deep2/sovereign_q6_k_gemv.asm
+--   MISSING: src/deep2/sovereign_q8_0_gemv.asm
+--   MISSING: src/deep2/sovereign_fp16_gemv.asm
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from RawrXD_Generate_SOURCES:
+--   MISSING: src/cli/generate_cli.cpp
+--   MISSING: src/runtime/GenerationBouncer.cpp
+--   MISSING: src/runtime/shared/SharedModelRuntime.cpp
+--   MISSING: src/runtime/shared/BP1BraidIndex.cpp
+--   MISSING: src/runtime/shared/BP1BraidStreamer.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 2 missing sources from rawrxd_monaco_gen_SOURCES:
+--   MISSING: src/monaco_gen.cpp
+--   MISSING: src/engine/react_ide_generator.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 33 missing sources from WIN32IDE_SOURCES:
+--   MISSING: src/win32app/main_win32.cpp
+--   MISSING: src/win32app/HeadlessIDE.cpp
+--   MISSING: src/win32app/HeadlessIDE_ToolRoutes.cpp
+--   MISSING: src/win32app/HeadlessIDE_GuiRoutes.cpp
+--   MISSING: src/win32app/HeadlessIDE_FileAliases.cpp
+--   MISSING: src/agent/quantum_agent_orchestrator.cpp
+--   MISSING: src/agent/quantum_autonomous_todo_system.cpp
+--   MISSING: src/agent/quantum_multi_model_agent_cycling.cpp
+--   MISSING: src/agent/quantum_dynamic_time_manager.cpp
+--   MISSING: src/agent/quantum_missing_impl.cpp
+--   MISSING: src/agent/quantum_production_orchestrator.cpp
+--   MISSING: src/agent/autonomous_orchestrator.cpp
+--   MISSING: src/agent/orchestrator_cli_handler.cpp
+--   MISSING: src/ui/RawrXD_MainLoop.cpp
+--   MISSING: src/ui/webview2_bridge.cpp
+--   MISSING: src/ui/debugger_core.cpp
+--   MISSING: src/ui/agentic_bridge.cpp
+--   MISSING: src/win32app/RawrXD-Win32IDE.rc
+--   MISSING: src/bridge/Win32SwarmBridge.cpp
+--   MISSING: src/bridge/SwarmIATRegistration.cpp
+--   MISSING: src/bridge/UnifiedModelMetadata.cpp
+--   MISSING: src/subagent_core.cpp
+--   MISSING: src/agentic/SubAgentManager.cpp
+--   MISSING: src/agentic/RobustOllamaParser.cpp
+--   MISSING: src/agentic/ErrorRecoveryManager.cpp
+--   MISSING: src/gpu/speculative_decoder_v2.cpp
+--   MISSING: src/inference/MemoryPressureGuard.cpp
+--   MISSING: src/inference/gpu_dispatch_gate.cpp
+--   MISSING: src/inference/ai_model_caller_real.cpp
+--   MISSING: src/inference/inference_engine_real.cpp
+--   MISSING: src/gguf_masm_weight_bridge.cpp
+--   MISSING: src/codec/brutal_gzip.cpp
+--   MISSING: src/codec/gzip_brutal_inflate.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] RawrXD_MultiWindow_Kernel skipped: source files missing
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] RawrXD_DynamicPromptEngine skipped: source files missing
+-- Win32IDE: Real lane - using isolated handlers + runtime handlers
+-- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
+-- [Win32IDE] Sovereign GPU ASM disabled ├Ä┬ô├â┬ç├â┬╢ fraudulent claims removed
+-- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/agentic_model_streamer_bridge.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2NativeStreamGate.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2GpuStreamCopy.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2LivePathTensorCache.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2WeightResolve.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping: 
+src/deep2/K2LogitsClimb.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2LivePathTensorCache_Prefetch.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2LivePathTensorCache_Emit.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2MLAAttention.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/deep2/K2TokenEmbedding.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/win32app/ScreenPilotModelHub.cpp
+
+
+CMake Warning at CMakeLists.txt:6960 (message):
+  [Win32IDE] Link-closure unit missing, skipping:
+  src/marketplace/extension_package_local.cpp
+
+
+-- Deep2Engine Metadata Regression Test configured
+-- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
+-- [Win32IDE] ATL static lib: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/atlmfc/lib/x64
+-- ├Ä┬ô├é┬ú├â┬┤ RawrXD-Win32IDE: No stub policy violations
+-- QuickJS not found at F:/~dev/rawrxd/3rdparty/quickjs ├Ä┬ô├â┬ç├â┬╢ JS extension host uses stubs
+-- [Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/RawrXD_Product100.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wire.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave3.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/win32app/Win32IDE_Product100Wave4.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/asm/RawrXD_Product100_x64.asm
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 skipping missing source: F:/~dev/rawrxd/cmake/../src/product/gateway/product_deep2_infer.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Product100 overlay skipped: no sources or target
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)
+-- [Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E
+-- [Sovereign] Deep2 batch test: Deep2_Batch_Test
+-- [Deep2] One-token validation gate: test_generate_one_token
+-- [Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity
+-- [Deep2] Q element-diff harness: test_q_elemdiff
+-- [Deep2] EMBED-Q4K-001 harness: test_embed_q4k_token
+-- [Deep2] Chat template test: test_chat_template
+-- [Deep2] Chat template unit tests: test_chat_template_unit
+-- [Deep2] Streaming test: test_streaming
+-- [Deep2] Streamer certification harness: deep2_streamer_cert
+-- [Deep2] Ollama-parity streamer: deep2_streamer_parity
+-- [Deep2] GPU solo gate: deep2_gpu_solo_cert
+-- [Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert
+-- [Deep2] Topology portability cert: deep2_topology_portability_cert
+-- [Deep2] Multi-GPU layer cert: deep2_multi_gpu_layer_cert
+-- [Deep2] Hybrid all-HW cert: deep2_hybrid_all_hw_cert
+-- [Deep2] GPU forward ops cert: deep2_gpu_forward_ops_cert
+-- [Deep2] GPU resident decode cert: deep2_gpu_resident_decode_cert
+-- [Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert
+-- [Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert
+-- [Deep2] GPU weight window cert: deep2_gpu_weight_window_cert
+-- [Deep2] GPU weight prefetch cert: deep2_gpu_weight_prefetch_cert
+-- [Deep2] GPU numeric parity cert: deep2_gpu_numeric_parity_cert
+-- [Deep2] GPU Q4_K GEMV cert: deep2_gpu_q4k_gemv_cert
+-- [Deep2] GPU Q6_K GEMV cert: deep2_gpu_q6k_gemv_cert
+-- [Deep2] GPU quant family cert: deep2_gpu_quant_family_cert
+-- [Deep2] GPU packed-forward cert: deep2_gpu_packed_forward_cert
+-- [Deep2] SsVk decode bind cert: deep2_engine_ssvk_decode_bind_cert
+-- [Deep2] GPU dynamic-window cert: deep2_gpu_dynamic_window_cert
+-- [Deep2] Runtime batch-1 cert: deep2_runtime_batch1_cert
+-- [Deep2] Runtime batch-2 cert: deep2_runtime_batch2_cert
+-- [Deep2] Runtime batch-3 cert: deep2_runtime_batch3_cert
+-- [Deep2] K2 live policy crossover: deep2_k2_live_policy_crossover_cert
+-- [Deep2] K2 live policy E2E: deep2_k2_live_policy_e2e_cert
+-- [Deep2] K2 GPU stream copy: deep2_k2_gpu_stream_copy_cert
+-- [Deep2] K2 GPU copy/compute overlap: deep2_k2_gpu_copy_compute_overlap_cert
+-- [Deep2] K2 live GPU stream E2E: deep2_k2_live_gpu_stream_e2e_cert
+-- [Deep2] K2 GPU stream compute: deep2_k2_gpu_stream_compute_cert
+-- [Deep2] K2 GPU stream MLA: deep2_k2_gpu_stream_mla_cert
+-- [Deep2] K2 GPU MLA full: deep2_k2_gpu_mla_full_cert
+-- [Deep2] K2 GPU MLA full-depth: deep2_k2_gpu_mla_full_depth_cert
+-- [Deep2] K2 GPU MLA RE: deep2_k2_gpu_mla_re_cert
+-- [Deep2] K2 STREAM_MISS reality: deep2_k2_stream_miss_reality_cert
+-- [Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001
+-- [Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001
+-- [Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001
+-- [Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001
+-- [Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001
+-- [Deep2] VWA_POC_1_001: vwa_poc_1_001 (MASM fulfill)
+-- [Deep2] K2 MLA full-depth soak: deep2_k2_mla_full_depth_soak_cert
+-- [Deep2] K2 live decode MLA: deep2_k2_live_decode_mla_cert
+-- [Deep2] MLA-CERT-001: mla_cert_001
+-- [Deep2] K2 MLA fused Q4KT: deep2_k2_mla_fused_q4kt_cert
+-- [Deep2] K2 SHARD_ATTN residency: deep2_k2_shard_attn_residency_cert
+-- [Deep2] K2 LOGITS Q6K resident: deep2_k2_logits_q6k_resident_cert
+-- [Deep2] K2 MLA KV expand attrib: deep2_k2_mla_kv_expand_cert
+-- [Deep2] K2 MLA KV expand OPT: deep2_k2_mla_kv_expand_opt_cert
+-- [Deep2] K2 MLA QKV proj attrib: deep2_k2_mla_qkv_proj_cert
+-- [Deep2] K2 MLA q_a critical: deep2_k2_mla_qa_critical_cert
+-- [Deep2] UCF bounce smoke: deep2_ucf_bounce_smoke
+-- [Deep2] UCF no-stale dispatch: deep2_ucf_no_stale_dispatch_001
+-- [Deep2] UCF read converge: deep2_ucf_read_converge_001
+-- [Deep2] UCF logits range bounce: deep2_ucf_logits_range_bounce_001
+-- [Deep2] UCF semantic ABI v1: deep2_ucf_semantic_abi_v1_cert
+-- [Deep2] UCF generation ticket: deep2_ucf_generation_ticket_001
+-- [Deep2] UCF GPU ready E2E: deep2_ucf_gpu_ready_e2e
+-- [Deep2] UCF bouncehouse trace: deep2_ucf_bouncehouse_example
+-- [Deep2] UCF Halo/Spark: deep2_ucf_halo_spark_001
+-- [Deep2] RMV mount gate: deep2_rmv_mount_001
+-- [Deep2] VWA range contract: deep2_vwa_range_contract_001
+-- [Deep2] VWA POC-1: deep2_vwa_poc_1_001
+-- [Deep2] VWA IOCP range: deep2_vwa_iocp_range_001
+-- [Deep2] UCF mobility fault: deep2_ucf_mobility_fault_001
+-- [Deep2] K2 semantic seal: deep2_k2_semantic_seal_cert
+-- [Deep2] K2 serverless latency: deep2_k2_serverless_stream_latency_cert
+-- [Deep2] K2 live decode sustained: deep2_k2_live_decode_sustained_cert
+-- [Deep2] K2 wall attribution: deep2_k2_wall_attribution_cert
+-- [Deep2] K2 logits climb: deep2_k2_logits_climb_cert
+-- [Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert
+-- [Deep2] C1 logits GPU range attribution: deep2_k2_logits_gpu_range_attribution_001
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
+-- [Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping agentic rawr CLI: missing src/cli/rawr_main.cpp and other agentic sources
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agentic_cli_001: missing certs/rawrxd_agentic_cli_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_session_001: missing certs/rawrxd_agent_session_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_tools_001: missing certs/rawrxd_agent_tools_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_patch_001: missing certs/rawrxd_agent_patch_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_build_test_001: missing certs/rawrxd_agent_build_test_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_001: missing certs/rawrxd_agent_steer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_safety_001: missing certs/rawrxd_agent_safety_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_resume_001: missing certs/rawrxd_agent_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_run_quality_001: missing certs/rawrxd_run_quality_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_k2_prefetch_overlap_001_src: missing certs/vwa_k2_prefetch_overlap_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_bounded_k2_001: missing certs/vwa_bounded_k2_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001_src: missing certs/k2_useful_tps_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_stdout_clean_001: missing certs/rawrxd_stdout_clean_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_no_ollama_contract_001: missing certs/rawrxd_no_ollama_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_dual_lane_contract_001: missing certs/rawrxd_dual_lane_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_auto_ladder_001: missing certs/rawrxd_auto_ladder_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_chat_repl_001: missing certs/rawrxd_chat_repl_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_frontdoor_001: missing certs/rawrxd_product_frontdoor_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_embed_norm_guard_001: missing certs/rawrxd_embed_norm_guard_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_decode_carry_001: missing certs/rawrxd_decode_carry_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_workspace_live_001: missing certs/rawrxd_agent_workspace_live_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_loop_e2e_001: missing certs/rawrxd_agent_loop_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_resume_001: missing certs/rawrxd_agent_steer_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_second_model_001: missing certs/rawrxd_second_model_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_llama32_prefill_divergence_001: missing certs/rawrxd_llama32_prefill_divergence_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_e2e_001: missing certs/rawrxd_autocomplete_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_model_compat_001: missing certs/rawrxd_local_model_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_live_second_001: missing certs/rawrxd_autocomplete_live_second_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_k2_product_e2e_001: missing certs/rawrxd_k2_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_e2e_001: missing certs/rawrxd_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_lavapath_001: missing certs/rawrxd_product_lavapath_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_mount_001: missing certs/rawrxd_mount_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_ge_probe_001: missing certs/rawrxd_ge_probe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_capability_solve_001: missing certs/rawrxd_capability_solve_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_qkv_rows_measure_001: missing certs/rawrxd_qkv_rows_measure_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_kernel_tune_001: missing certs/rawrxd_kernel_tune_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_streamer_vocab_ext_001: missing certs/rawrxd_streamer_vocab_ext_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_actual_e2e_generation_001: missing certs/rawrxd_actual_e2e_generation_001.cpp
+-- [Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping Deep2_Gateway_Runtime_Certification: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_benchmark: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001: missing certs/k2_useful_tps_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target mla_cert_001: missing certs/mla_cert_001.cpp
+-- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_product_lavapath: missing source files
+-- [Deep2] RAWRXD_BACKGROUND_TERMINALS kitchen-sink wired
+-- [Deep2] RAWRXD_REMAINING_STYLE_CLI wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_001: missing certs/rawrxd_product_layer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_002: missing certs/rawrxd_product_layer_002.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_win32_editor_surface_001: missing certs/rawrxd_win32_editor_surface_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_rawr_pipe_001: missing certs/rawrxd_rawr_pipe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_editor_agent_e2e_001: missing certs/rawrxd_editor_agent_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_ghost_bind_001: missing certs/rawrxd_product_ghost_bind_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_cancel_001: missing certs/rawrxd_autocomplete_cancel_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_installer_clean_machine_001: missing certs/rawrxd_installer_clean_machine_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_offline_demo_001: missing certs/rawrxd_offline_demo_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_repeatable_demo_record_001: missing certs/rawrxd_repeatable_demo_record_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_runtime_001: missing certs/rawrxd_product_runtime_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_api_compat_001: missing certs/rawrxd_local_api_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_003: missing certs/rawrxd_product_layer_003.cpp
+-- [Deep2] RAWRXD_PRODUCT_LAYER wired
+-- [Interstellar] sources missing ΓÇö skipping (BUILD_INTERSTELLAR gated)
+-- [Deep2] K2 TPS byteless rainbow: deep2_k2_tps_rainbow_cert
+-- [Deep2] NU GEMV parity cert: deep2_nu_gemv_parity_cert
+-- [Deep2] NU GPU GEMV cert: deep2_nu_gpu_gemv_cert
+-- [Deep2] NU pack format cert: deep2_nu_pack_format_cert
+-- [RKC] smoke: rkc_smoke + rkc_product_context_smoke
+-- [Deep2] Giant MoE paragraph perf: deep2_giant_moe_paragraph_perf_cert
+-- [Agent] Runtime batch-1 cert: agent_runtime_batch1_cert
+-- [Deep2] Placement cost cert: deep2_placement_cost_cert
+-- [Deep2] MARS E2E smoke harness: deep2_mars_e2e
+-- [Deep2] MARS controller unit smoke: test_mars_controller
+-- [Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke
+-- [Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001
+-- [Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001
+-- [Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001
+-- [Deep2] P1 repeatability trial validity diag
+-- [Deep2] P1 policy SHA lifecycle diag
+-- [Deep2] P1 repeatability state drift diag
+-- [Win32] UI encoding cert: p1_ui_encoding_cert
+-- [Win32] UI menu E2E cert: p1_ui_menu_e2e_cert
+-- [Win32] UI sidebar encoding cert: p1_ui_sidebar_encoding_cert
+-- [Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert
+-- [Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)
+-- [Agentic] IDE agent loop cert: ide_agent_loop_cert
+-- [Deep2] Deterministic replay gate: test_deterministic_replay
+-- [Deep2] Qwen3.5 metadata dump: dump_qwen35_meta
+-- [Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)
+-- [Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert
+-- [Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert
+-- [Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert
+-- [Deep2] Single-layer harness: layer_harness
+-- [Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source
+-- [Deep2] Qwen3.5 attention contract: qwen35_attn_contract
+-- [Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token
+-- [Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token
+-- [Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token
+-- [Deep2] BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 integration test: val_bp16_int_1_token
+-- [Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic
+-- [Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer
+-- [Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e
+-- [Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare
+-- [Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights
+-- [Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify
+-- [Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits
+-- [Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf
+-- [Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile
+-- [Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile
+-- [Deep2] Minimal 1-token profiler: minimal_1token_profiler
+-- [Deep2] Quick 1-layer profiler: quick_1layer_profiler
+-- [Deep2] Q4_K GEMV bench: q4k_gemv_bench
+-- [Deep2] Q5_K GEMV bench: q5k_gemv_bench
+-- [Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag
+-- [Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench
+-- [Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench
+-- [Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify
+-- [Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench
+-- [Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify
+-- [Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench
+-- [Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify
+-- [Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench
+-- [Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench
+-- [Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling
+-- [Deep2] Layer profiler: val_051_8_layer_profile
+-- [Deep2] Q2_K profile: val_051_5_q2k_profile
+-- [Sovereign] PatchRegistry test: SovereignTest_PatchRegistry
+-- [Sovereign] HotPatcher test: SovereignTest_HotPatcher
+-- [Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent
+-- [Sovereign] AntiHallucination test: SovereignTest_AntiHallucination
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (B├Ä┬ô├â┬Ñ├â┬åC├Ä┬ô├â┬Ñ├â┬åA): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [Analysis] Win32IDE linked to RawrXD-ModelAnalysisLib (RAWR_HAS_MODEL_ANATOMY)
+-- SwarmSmokeTest skipped in strict production strip mode (uses swarm_smoke_stubs.cpp)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B004_TRANSFORMER_ROUTER_STREAMING_SOURCES:
+--   MISSING: tests/b004_transformer_router_streaming_integration.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B012_AMORTIZATION_SOURCES:
+--   MISSING: B012/build/amortization_test.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B013_STABILITY_SOURCES:
+--   MISSING: B013/build/stability_test.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 8 missing sources from B014_COMPUTE_SOURCES:
+--   MISSING: B014/build/compute_decomposition.cpp
+--   MISSING: B014/build/B014_RingAdapter.cpp
+--   MISSING: src/runtime/Sovereign_RingTelemetry.cpp
+--   MISSING: src/runtime/Sovereign_KernelBridge_CPP.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B014_BOUNDARY_SOURCES:
+--   MISSING: B014/build/b014_boundary_probe.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B014_SINGLE_SOURCES:
+--   MISSING: B014/build/b014_single_boundary.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 5 missing sources from B014_LIFETIME_SOURCES:
+--   MISSING: B014/build/b014_lifetime_probe.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+--   MISSING: src/runtime/memory/PlacementPolicy.cpp
+--   MISSING: src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 3 missing sources from B005_CANONICAL_MODEL_SOURCES:
+--   MISSING: tests/b005_canonical_model_certification.cpp
+--   MISSING: src/canonical/gguf_adapter.cpp
+--   MISSING: src/canonical/unified_model_loader.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 3 missing sources from B006_KV_CACHE_SOURCES:
+--   MISSING: tests/b006_kv_cache_verification.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 3 missing sources from B007_PERF_BASELINE_SOURCES:
+--   MISSING: tests/b007_performance_baseline.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 1 missing sources from B008_CI_SOURCES:
+--   MISSING: tests/b008_ci_integration.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 2 missing sources from B010_RESIDENCY_SOURCES:
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 3 missing sources from B011_RESIDENCY_OPT_SOURCES:
+--   MISSING: tests/b011_weight_residency_optimization.cpp
+--   MISSING: src/cpu_inference_engine.cpp
+--   MISSING: src/rawrxd_inference.cpp
+-- [RAWRXD_BUILD_AUTHORITY_BASELINE_001] Removing 49 missing sources from CERTIFICATION_HARNESS_SOURCES:
+--   MISSING: src/deep2/K2GlobalTensorIndex.cpp
+--   MISSING: src/deep2/GGUFLoader.cpp
+--   MISSING: src/deep2/ThreadPool.cpp
+--   MISSING: src/deep2/KVCache.cpp
+--   MISSING: src/deep2/MoERouter.cpp
+--   MISSING: src/deep2/MoEWeightProxy.cpp
+--   MISSING: src/deep2/MoEEliminate.cpp
+--   MISSING: src/deep2/MoEWeightsLoader.cpp
+--   MISSING: src/deep2/DeepSeekMoELoader.cpp
+--   MISSING: src/deep2/TensorHop.cpp
+--   MISSING: src/deep2/MoEArchitectureParser.cpp
+--   MISSING: src/deep2/Deep2ExecutionGraph.cpp
+--   MISSING: src/deep2/ReverseHotpatchEngine.cpp
+--   MISSING: src/deep2/ReverseIntegration.cpp
+--   MISSING: src/deep2/DualGPUHook.cpp
+--   MISSING: src/deep2/ReverseTensorRecovery.cpp
+--   MISSING: src/deep2/StreamEngine.cpp
+--   MISSING: src/deep2/StreamRouter.cpp
+--   MISSING: src/deep2/FusedInferenceKernel.cpp
+--   MISSING: src/deep2/MedusaDecoder.cpp
+--   MISSING: src/deep2/WarmupScheduler.cpp
+--   MISSING: src/deep2/NUFusedPacker.cpp
+--   MISSING: src/deep2/CompressedKVCache.cpp
+--   MISSING: src/deep2/NVMeStream.cpp
+--   MISSING: src/deep2/SlidingWindowEngine.cpp
+--   MISSING: src/deep2/HotPatcher.cpp
+--   MISSING: src/deep2/HotPatcherSafety.cpp
+--   MISSING: src/deep2/AntiPatcher.cpp
+--   MISSING: src/deep2/TrailBrake.cpp
+--   MISSING: src/deep2/PatchCache.cpp
+--   MISSING: src/deep2/BottleTTL.cpp
+--   MISSING: src/deep2/GoalSystem.cpp
+--   MISSING: src/deep2/CPUFrequency.cpp
+--   MISSING: src/deep2/mars/VRAMManager.cpp
+--   MISSING: src/deep2/mars/TensorHotpatch.cpp
+--   MISSING: src/deep2/mars/DualGPUBackend.cpp
+--   MISSING: src/deep2/mars/MARSController.cpp
+--   MISSING: src/reverse/ReverseEngine.cpp
+--   MISSING: src/reverse/ReverseModelLoader.cpp
+--   MISSING: src/deep2/sovereign_deep2_kernels.asm
+--   MISSING: src/deep2/sovereign_q4k_gemv.asm
+--   MISSING: src/deep2/sovereign_q4k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_q2k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_q3k_gemv_v2.asm
+--   MISSING: src/deep2/sovereign_moe_fused.asm
+--   MISSING: src/sampling/advanced_sampler.cpp
+--   MISSING: src/deep2/ProductionProfiler.cpp
+--   MISSING: src/deep2/BP16Streamer.cpp
+--   MISSING: src/deep2/ResidencyManager.cpp
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- Configuring done (0.7s)
+CMake Error at CMakeLists.txt:3409 (add_executable):
+  Cannot find source file:
+
+    src/security/InputSanitizer.cpp
+
+
+CMake Error at CMakeLists.txt:3770 (add_executable):
+  Cannot find source file:
+
+    src/reverse/ReverseEngine.cpp
+
+
+CMake Error at CMakeLists.txt:5457 (target_sources):
+  Cannot find source file:
+
+    src/asm/rawr_globals.asm
+
+
+CMake Error at CMakeLists.txt:7387 (add_executable):
+  Cannot find source file:
+
+    src/modules/ReverseEngineering.cpp
+
+
+CMake Error at CMakeLists.txt:9439 (add_executable):
+  Cannot find source file:
+
+    src/asm/Deep2R1_StrEq.asm
+
+
+CMake Error at CMakeLists.txt:9452 (add_executable):
+  Cannot find source file:
+
+    src/asm/Deep2OuterStr.asm
+
+
+CMake Error at CMakeLists.txt:9494 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_live_path_effectiveness_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9535 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_live_path_interaction_bounds_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9554 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9644 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9664 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_auto_workload_policy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9685 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9703 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_generate_policy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9722 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_policy_split_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9741 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_policy_hysteresis_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9764 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_rebench_promote_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9783 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_reuse_promote_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9802 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9822 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_decode_mla_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9842 (add_executable):
+  Cannot find source file:
+
+    certs/mla_cert_001.cpp
+
+
+CMake Error at CMakeLists.txt:9861 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9881 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_shard_attn_residency_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9901 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_q6k_resident_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9921 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_kv_expand_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9941 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9961 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_qkv_proj_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9981 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_qa_critical_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10001 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_bounce_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:10020 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_no_stale_dispatch_001.cpp
+
+
+CMake Error at CMakeLists.txt:10039 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_read_converge_001.cpp
+
+
+CMake Error at CMakeLists.txt:10058 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_logits_range_bounce_001.cpp
+
+
+CMake Error at CMakeLists.txt:10076 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10095 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_generation_ticket_001.cpp
+
+
+CMake Error at CMakeLists.txt:10113 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_gpu_ready_e2e.cpp
+
+
+CMake Error at CMakeLists.txt:10132 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_bouncehouse_example.cpp
+
+
+CMake Error at CMakeLists.txt:10150 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_halo_spark_001.cpp
+
+
+CMake Error at CMakeLists.txt:10168 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_rmv_mount_001.cpp
+
+
+CMake Error at CMakeLists.txt:10208 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_vwa_range_contract_001.cpp
+
+
+CMake Error at CMakeLists.txt:10283 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_mobility_fault_001.cpp
+
+
+CMake Error at CMakeLists.txt:10301 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_semantic_seal_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10321 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_serverless_stream_latency_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10341 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_decode_sustained_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10361 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_wall_attribution_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10381 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_climb_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10401 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_trygpu_logits_split_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10419 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp
+
+
+CMake Error at CMakeLists.txt:10460 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawrxd_run_modelname_001.cpp
+
+
+CMake Error at CMakeLists.txt:10475 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawr_run.cpp
+
+
+CMake Error at CMakeLists.txt:10489 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_useful_tps_001.cpp
+
+
+CMake Error at CMakeLists.txt:10503 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawrxd_normal_gguf_final_001.cpp
+
+
+CMake Error at CMakeLists.txt:10542 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_tps_rainbow_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10562 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10587 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_live_consumer_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10612 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10637 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_perf_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10661 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_gemv_parity_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10687 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_gpu_gemv_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10734 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_deep2_model_authority_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10752 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_model_inventory_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10767 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_negative_knowledge_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10782 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_minimal_source_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10797 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_code_world_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10812 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:10826 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_product_context_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:15149 (add_executable):
+  Cannot find source file:
+
+    tests/test_generation.cpp
+
+
+CMake Error at CMakeLists.txt:15279 (add_executable):
+  Cannot find source file:
+
+    tests/test_quant_dequant_crosscheck.cpp
+
+
+CMake Error at CMakeLists.txt:15582 (add_executable):
+  Cannot find source file:
+
+    tests/k2_007a_tokenizer_metadata.cpp
+
+
+CMake Error at CMakeLists.txt:3409 (add_executable):
+  No SOURCES given to target: RawrEngine
+
+
+CMake Error at CMakeLists.txt:3770 (add_executable):
+  No SOURCES given to target: RawrXD_Gold
+
+
+CMake Error at CMakeLists.txt:9439 (add_executable):
+  No SOURCES given to target: deep2_r1_decode_smoke
+
+
+CMake Error at CMakeLists.txt:9452 (add_executable):
+  No SOURCES given to target: deep2_outer_smoke
+
+
+CMake Error at CMakeLists.txt:9494 (add_executable):
+  No SOURCES given to target: deep2_live_path_effectiveness_cert
+
+
+CMake Error at CMakeLists.txt:9535 (add_executable):
+  No SOURCES given to target: deep2_live_path_interaction_bounds_cert
+
+
+CMake Error at CMakeLists.txt:9554 (add_executable):
+  No SOURCES given to target: deep2_k2_full_depth_effectiveness_cert
+
+
+CMake Error at CMakeLists.txt:9644 (add_executable):
+  No SOURCES given to target: deep2_k2_trampoline_full_depth_opt_cert
+
+
+CMake Error at CMakeLists.txt:9664 (add_executable):
+  No SOURCES given to target: deep2_k2_auto_workload_policy_cert
+
+
+CMake Error at CMakeLists.txt:9685 (add_executable):
+  No SOURCES given to target: deep2_k2_e2e_model_size_matrix_cert
+
+
+CMake Error at CMakeLists.txt:9703 (add_executable):
+  No SOURCES given to target: deep2_k2_live_generate_policy_cert
+
+
+CMake Error at CMakeLists.txt:9722 (add_executable):
+  No SOURCES given to target: deep2_k2_live_policy_split_cert
+
+
+CMake Error at CMakeLists.txt:9741 (add_executable):
+  No SOURCES given to target: deep2_k2_policy_hysteresis_cert
+
+
+CMake Error at CMakeLists.txt:9764 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_rebench_promote_cert
+
+
+CMake Error at CMakeLists.txt:9783 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_reuse_promote_cert
+
+
+CMake Error at CMakeLists.txt:9802 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_full_depth_soak_cert
+
+
+CMake Error at CMakeLists.txt:9822 (add_executable):
+  No SOURCES given to target: deep2_k2_live_decode_mla_cert
+
+
+CMake Error at CMakeLists.txt:9842 (add_executable):
+  No SOURCES given to target: mla_cert_001
+
+
+CMake Error at CMakeLists.txt:9861 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_fused_q4kt_cert
+
+
+CMake Error at CMakeLists.txt:9881 (add_executable):
+  No SOURCES given to target: deep2_k2_shard_attn_residency_cert
+
+
+CMake Error at CMakeLists.txt:9901 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_q6k_resident_cert
+
+
+CMake Error at CMakeLists.txt:9921 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_kv_expand_cert
+
+
+CMake Error at CMakeLists.txt:9941 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_kv_expand_opt_cert
+
+
+CMake Error at CMakeLists.txt:9961 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_qkv_proj_cert
+
+
+CMake Error at CMakeLists.txt:9981 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_qa_critical_cert
+
+
+CMake Error at CMakeLists.txt:10001 (add_executable):
+  No SOURCES given to target: deep2_ucf_bounce_smoke
+
+
+CMake Error at CMakeLists.txt:10020 (add_executable):
+  No SOURCES given to target: deep2_ucf_no_stale_dispatch_001
+
+
+CMake Error at CMakeLists.txt:10039 (add_executable):
+  No SOURCES given to target: deep2_ucf_read_converge_001
+
+
+CMake Error at CMakeLists.txt:10058 (add_executable):
+  No SOURCES given to target: deep2_ucf_logits_range_bounce_001
+
+
+CMake Error at CMakeLists.txt:10076 (add_executable):
+  No SOURCES given to target: deep2_ucf_semantic_abi_v1_cert
+
+
+CMake Error at CMakeLists.txt:10095 (add_executable):
+  No SOURCES given to target: deep2_ucf_generation_ticket_001
+
+
+CMake Error at CMakeLists.txt:10113 (add_executable):
+  No SOURCES given to target: deep2_ucf_gpu_ready_e2e
+
+
+CMake Error at CMakeLists.txt:10132 (add_executable):
+  No SOURCES given to target: deep2_ucf_bouncehouse_example
+
+
+CMake Error at CMakeLists.txt:10150 (add_executable):
+  No SOURCES given to target: deep2_ucf_halo_spark_001
+
+
+CMake Error at CMakeLists.txt:10168 (add_executable):
+  No SOURCES given to target: deep2_rmv_mount_001
+
+
+CMake Error at CMakeLists.txt:10208 (add_executable):
+  No SOURCES given to target: deep2_vwa_range_contract_001
+
+
+CMake Error at CMakeLists.txt:10283 (add_executable):
+  No SOURCES given to target: deep2_ucf_mobility_fault_001
+
+
+CMake Error at CMakeLists.txt:10301 (add_executable):
+  No SOURCES given to target: deep2_k2_semantic_seal_cert
+
+
+CMake Error at CMakeLists.txt:10321 (add_executable):
+  No SOURCES given to target: deep2_k2_serverless_stream_latency_cert
+
+
+CMake Error at CMakeLists.txt:10341 (add_executable):
+  No SOURCES given to target: deep2_k2_live_decode_sustained_cert
+
+
+CMake Error at CMakeLists.txt:10361 (add_executable):
+  No SOURCES given to target: deep2_k2_wall_attribution_cert
+
+
+CMake Error at CMakeLists.txt:10381 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_climb_cert
+
+
+CMake Error at CMakeLists.txt:10401 (add_executable):
+  No SOURCES given to target: deep2_k2_trygpu_logits_split_cert
+
+
+CMake Error at CMakeLists.txt:10419 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_gpu_range_attribution_001
+
+
+CMake Error at CMakeLists.txt:10460 (add_executable):
+  No SOURCES given to target: rawrxd_run_modelname_001
+
+
+CMake Error at CMakeLists.txt:10475 (add_executable):
+  No SOURCES given to target: rawr
+
+
+CMake Error at CMakeLists.txt:10489 (add_executable):
+  No SOURCES given to target: deep2_k2_useful_tps_001
+
+
+CMake Error at CMakeLists.txt:10503 (add_executable):
+  No SOURCES given to target: rawrxd_normal_gguf_final_001
+
+
+CMake Error at CMakeLists.txt:10542 (add_executable):
+  No SOURCES given to target: deep2_k2_tps_rainbow_cert
+
+
+CMake Error at CMakeLists.txt:10562 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_slot_reuse_cert
+
+
+CMake Error at CMakeLists.txt:10587 (add_executable):
+  No SOURCES given to target: deep2_nu_live_consumer_cert
+
+
+CMake Error at CMakeLists.txt:10612 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_nu_bridge_cert
+
+
+CMake Error at CMakeLists.txt:10637 (add_executable):
+  No SOURCES given to target: deep2_nu_perf_cert
+
+
+CMake Error at CMakeLists.txt:10661 (add_executable):
+  No SOURCES given to target: deep2_nu_gemv_parity_cert
+
+
+CMake Error at CMakeLists.txt:10687 (add_executable):
+  No SOURCES given to target: deep2_nu_gpu_gemv_cert
+
+
+CMake Error at CMakeLists.txt:10734 (add_executable):
+  No SOURCES given to target: rkc_deep2_model_authority_cert
+
+
+CMake Error at CMakeLists.txt:10752 (add_executable):
+  No SOURCES given to target: rkc_model_inventory_cert
+
+
+CMake Error at CMakeLists.txt:10767 (add_executable):
+  No SOURCES given to target: rkc_negative_knowledge_cert
+
+
+CMake Error at CMakeLists.txt:10782 (add_executable):
+  No SOURCES given to target: rkc_minimal_source_cert
+
+
+CMake Error at CMakeLists.txt:10797 (add_executable):
+  No SOURCES given to target: rkc_code_world_cert
+
+
+CMake Error at CMakeLists.txt:10812 (add_executable):
+  No SOURCES given to target: rkc_smoke
+
+
+CMake Error at CMakeLists.txt:10826 (add_executable):
+  No SOURCES given to target: rkc_product_context_smoke
+
+
+CMake Error at CMakeLists.txt:15149 (add_executable):
+  No SOURCES given to target: test_generation
+
+
+CMake Error at CMakeLists.txt:15279 (add_executable):
+  No SOURCES given to target: test_quant_dequant_crosscheck
+
+
+CMake Error at CMakeLists.txt:15582 (add_executable):
+  No SOURCES given to target: k2_007a_tokenizer_metadata
+
+
+CMake Error at CMakeLists.txt:16034 (add_executable):
+  No SOURCES given to target: b005_canonical_model_certification
+
+
+CMake Error at CMakeLists.txt:16219 (add_executable):
+  No SOURCES given to target: b008_ci_integration
+
+
+CMake Generate step failed.  Build files cannot be regenerated 
+correctly.

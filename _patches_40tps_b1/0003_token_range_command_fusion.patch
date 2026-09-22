@@ -1,0 +1,91 @@
+# Deep2 Qwen32 40TPS — Batch 1/5, item 3
+# Base: apply after 0001-0002.
+# Goal: one queue submit/wait per GPU layer range per token instead of one
+# submit/wait per transformer layer.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0003_token_range_command_fusion.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool BeginFusedLayer();
+     bool EndFusedLayer();
++    bool FusedRecording() const noexcept { return fused_; }
+     bool FlushWeightComputes();
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+@@
+     const bool prefetch = vc->WeightPrefetchActive() ||
+         (std::getenv("DEEP2_WEIGHT_PREFETCH") &&
+          std::getenv("DEEP2_WEIGHT_PREFETCH")[0] != '0');
+     const bool fuse = !prefetch;
+-    if (fuse && !vc->BeginFusedLayer()) return false;
++    // A caller may already own a token/range-wide command buffer.
++    // Only create/submit a per-layer command when no outer fusion exists.
++    const bool ownFusion = fuse && !vc->FusedRecording();
++    if (ownFusion && !vc->BeginFusedLayer()) return false;
+     auto fail = [&]() -> bool {
+-        if (fuse) (void)vc->EndFusedLayer();
++        if (ownFusion) (void)vc->EndFusedLayer();
+         (void)vc->FlushWeightComputes();
+         return false;
+     };
+@@
+-    if (fuse && !vc->EndFusedLayer()) return false;
++    if (ownFusion && !vc->EndFusedLayer()) return false;
+     {
+         DEEP2_GPU_CHILD_SCOPE(syncScope, SyncWait);
+         if (!vc->FlushWeightComputes()) return false;
+     }
+     if (!fuse) vc->ResetWeightWindowLayerCursor();
+-    if (fuse) ++c.layerSubmits;
++    if (ownFusion) ++c.layerSubmits;
+@@
+ bool Deep2Engine::forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
+                                             const float* hostIn, float* hostOut) {
+@@
+     if (!vc || !ensureGpuForwardArena(slot)) return false;
+     const uint32_t H = (uint32_t)config.hiddenDim;
+     if (!vc->UploadHidden(hostIn, H)) return false;
+     ++gpuFwd_.hostSyncBoundaries;
++
++    const bool rangeFuse = !vc->WeightPrefetchActive();
++    if (rangeFuse && !vc->BeginFusedLayer()) return false;
+     for (uint32_t L = lo; L <= hi; ++L) {
+-        if (!forwardLayerGpuResident(L, slot, false, false)) return false;
++        if (!forwardLayerGpuResident(L, slot, false, false)) {
++            if (rangeFuse && vc->FusedRecording())
++                (void)vc->EndFusedLayer();
++            return false;
++        }
+     }
++    if (rangeFuse && !vc->EndFusedLayer()) return false;
++    if (rangeFuse) ++gpuFwd_.layerSubmits;
+     {
+         DEEP2_GPU_CHILD_SCOPE(rbScope, ReadbackD2H);
+         if (!vc->DownloadHidden(hostOut, H)) return false;
+@@
+     for (unsigned s = 0; s < gpuN; ++s) {
+         auto* vc = getVulkanComputeSlot(s);
+@@
+         if (!vc) return false;
+         const uint32_t lo = multiGpuLayerPlan_.rangeLo[s];
+         const uint32_t hi = multiGpuLayerPlan_.rangeHi[s];
++
++        const bool rangeFuse = !vc->WeightPrefetchActive();
++        if (rangeFuse && !vc->BeginFusedLayer()) return false;
+         for (uint32_t L = lo; L <= hi; ++L) {
+-            if (!forwardLayerGpuResident(L, s, false, false)) return false;
++            if (!forwardLayerGpuResident(L, s, false, false)) {
++                if (rangeFuse && vc->FusedRecording())
++                    (void)vc->EndFusedLayer();
++                return false;
++            }
+         }
++        if (rangeFuse && !vc->EndFusedLayer()) return false;
++        if (rangeFuse) ++gpuFwd_.layerSubmits;
+         if (s + 1 < gpuN) {

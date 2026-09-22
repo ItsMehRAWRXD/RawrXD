@@ -1,0 +1,165 @@
+# Deep2 Qwen32 85TPS — Batch 11, item 73
+# Base: apply after 0072.
+#
+# Adds pre-recorded command buffers for hot resident Q4_K GEMVs.
+#
+# Legal because the hot lane has immutable:
+#   resident pinned weight buffer
+#   resident batch input buffer
+#   resident output buffer
+#   rows/cols/batch after warmup
+#
+# The cached command buffer is submitted repeatedly with a reusable fence.
+# No command re-record, descriptor update, or push-constant rebuild per token.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0073_prerecorded_resident_q4k_commands.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct RecordedQ4KKey {
++        VkBuffer weight=VK_NULL_HANDLE;
++        VkBuffer input=VK_NULL_HANDLE;
++        VkBuffer output=VK_NULL_HANDLE;
++        uint32_t rows=0,cols=0,batch=0,tile=4;
++        bool operator==(const RecordedQ4KKey& o) const noexcept {
++            return weight==o.weight&&input==o.input&&output==o.output&&
++                   rows==o.rows&&cols==o.cols&&batch==o.batch&&tile==o.tile;
++        }
++    };
++    struct RecordedQ4KKeyHash {
++        size_t operator()(const RecordedQ4KKey& k) const noexcept {
++            size_t h=(size_t)(uintptr_t)k.weight;
++            h^=(size_t)(uintptr_t)k.input>>4;
++            h^=(size_t)(uintptr_t)k.output<<3;
++            h^=((size_t)k.rows<<32)^((size_t)k.cols<<7)^k.batch^k.tile;
++            return h;
++        }
++    };
++    struct RecordedQ4K {
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        VkFence fence=VK_NULL_HANDLE;
++        VkDescriptorSet set=VK_NULL_HANDLE;
++    };
++    bool SubmitRecordedResidentQ4K(
++        const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++        uint32_t batch,uint64_t epoch);
++    uint64_t RecordedQ4KSubmits() const noexcept {
++        return recordedQ4KSubmits_;
++    }
++    uint64_t RecordedQ4KBuilds() const noexcept {
++        return recordedQ4KBuilds_;
++    }
+@@
+ private:
++    std::unordered_map<
++        RecordedQ4KKey,RecordedQ4K,RecordedQ4KKeyHash> recordedQ4K_;
++    uint64_t recordedQ4KSubmits_=0;
++    uint64_t recordedQ4KBuilds_=0;
++    void clearRecordedQ4K();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++void VulkanCompute::clearRecordedQ4K() {
++    for(auto& kv:recordedQ4K_) {
++        auto& r=kv.second;
++        if(r.fence) vkDestroyFence(device_,r.fence,nullptr);
++        if(r.cmd&&commandPool_)
++            vkFreeCommandBuffers(device_,commandPool_,1,&r.cmd);
++    }
++    recordedQ4K_.clear();
++}
++
++bool VulkanCompute::SubmitRecordedResidentQ4K(
++    const GpuWeightView& weight,DeviceBuf& input,DeviceBuf& output,
++    uint32_t batch,uint64_t epoch)
++{
++    if(!weight.valid()||weight.type!=12||!input||!output||
++       !batch||batch>4||fused_)
++        return false;
++    DeviceBuf* wb=nullptr;
++    if(!ensureWeightQuant(
++            weight.type,weight.data,weight.bytes,wb))
++        return false;
++    const Q4KBatchTile tile=SelectQ4KBatchTile(
++        weight.data,weight.bytes,input,output,
++        weight.rows,weight.cols,batch);
++    const uint32_t tileN=(uint32_t)tile;
++    RecordedQ4KKey key{
++        wb->buffer,input.buffer,output.buffer,
++        weight.rows,weight.cols,batch,tileN};
++    auto it=recordedQ4K_.find(key);
++    if(it==recordedQ4K_.end()) {
++        RecordedQ4K r{};
++        VkCommandBufferAllocateInfo ai{};
++        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++        ai.commandPool=commandPool_;
++        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++        ai.commandBufferCount=1;
++        if(vkAllocateCommandBuffers(device_,&ai,&r.cmd)!=VK_SUCCESS)
++            return false;
++        VkCommandBufferBeginInfo bi{};
++        bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++        bi.flags=VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
++        if(vkBeginCommandBuffer(r.cmd,&bi)!=VK_SUCCESS) return false;
++        r.set=getQuantDescriptor(*wb,input,output);
++        if(r.set==VK_NULL_HANDLE) return false;
++        VkPipeline pipe=tile==Q4KBatchTile::Eight
++            ? qBatch8RowPipeline_:qBatch4RowPipeline_;
++        VkPipelineLayout layout=tile==Q4KBatchTile::Eight
++            ? qBatch8RowPipelineLayout_:qBatch4RowPipelineLayout_;
++        vkCmdBindPipeline(
++            r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,pipe);
++        vkCmdBindDescriptorSets(
++            r.cmd,VK_PIPELINE_BIND_POINT_COMPUTE,layout,
++            0,1,&r.set,0,nullptr);
++        QBatchPush p{};
++        p.type=12;p.rows=weight.rows;p.cols=weight.cols;
++        p.weightBytes=(uint32_t)weight.bytes;p.batch=batch;
++        vkCmdPushConstants(
++            r.cmd,layout,VK_SHADER_STAGE_COMPUTE_BIT,
++            0,sizeof(p),&p);
++        vkCmdDispatch(
++            r.cmd,
++            (weight.rows+(tileN-1u))/tileN,1,1);
++        recordComputeBarrier(r.cmd);
++        if(vkEndCommandBuffer(r.cmd)!=VK_SUCCESS) return false;
++        VkFenceCreateInfo fi{};
++        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        if(vkCreateFence(device_,&fi,nullptr,&r.fence)!=VK_SUCCESS)
++            return false;
++        it=recordedQ4K_.emplace(key,r).first;
++        ++recordedQ4KBuilds_;
++    }
++    auto& r=it->second;
++    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    if(vkResetFences(device_,1,&r.fence)!=VK_SUCCESS) return false;
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;
++    si.pCommandBuffers=&r.cmd;
++    if(vkQueueSubmit(queue_,1,&si,r.fence)!=VK_SUCCESS) return false;
++    if(vkWaitForFences(device_,1,&r.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    ++recordedQ4KSubmits_;
++    ++queueSubmitCount_;
++    SetWorkEpoch(epoch);
++    return true;
++}
+@@
+ void VulkanCompute::clearWeightCache() {
++    // Recorded commands reference resident weight buffers.
++    // Drop command cache before any unpinned weight buffers are destroyed.
++    clearRecordedQ4K();
+@@
+ }
+@@
+ void VulkanCompute::cleanup() {
+     if (device_) vkDeviceWaitIdle(device_);
++    clearRecordedQ4K();

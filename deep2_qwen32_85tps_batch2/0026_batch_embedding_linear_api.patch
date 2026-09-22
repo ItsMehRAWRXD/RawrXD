@@ -1,0 +1,122 @@
+# Deep2 Qwen32 85TPS — Batch 2/5, item 26
+# Base: 40TPS Batches 1-4 + 85TPS Batch 1 (0021-0025)
+# Goal: add exact 1..4 token batch embedding / linear / logits APIs.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0026_batch_embedding_linear_api.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool embedToken(int tokenId, float* output);
++    bool embedTokensBatch(const int* tokenIds, size_t count, float* outputBatch);
+
+     // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
+     void computeLogits(const float* hiddenState, float* logits);
++    void computeLogitsBatch(const float* hiddenBatch, size_t count,
++                            float* logitsBatch);
+@@
+     void LinearW(const WeightTensor& wt, const float* input, const float* bias,
+                  float* output, size_t outDim);
++    void LinearWBatch4(const WeightTensor& wt,
++                       const float* inputBatch, size_t count,
++                       const float* bias, float* outputBatch,
++                       size_t outDim);
+@@
+     bool tryVulkanHostGEMV(const WeightTensor& wt, const float* input,
+                            float* output, size_t outDim);
++    bool tryVulkanHostGEMVBatch4(const WeightTensor& wt,
++                                 const float* inputBatch, size_t count,
++                                 float* outputBatch, size_t outDim);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+ bool Deep2Engine::embedToken(int tokenId, float* output) {
+@@
+     return finiteVector(output, H);
+ }
+
++bool Deep2Engine::embedTokensBatch(
++    const int* tokenIds,size_t count,float* outputBatch)
++{
++    if(!tokenIds||!outputBatch||count==0||count>4||
++       modelWeights.hiddenDim==0)
++        return false;
++    const size_t H=modelWeights.hiddenDim;
++    for(size_t b=0;b<count;++b) {
++        if(!embedToken(tokenIds[b],outputBatch+b*H))
++            return false;
++    }
++    return true;
++}
++
+ // =================== COMPUTE LOGITS (FINAL NORM + REAL LM HEAD) ====================
+ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
+@@
+     parityEmit(ParityCheckpoint::Logits, logitsOut, V);
+ }
+
++void Deep2Engine::computeLogitsBatch(
++    const float* hiddenBatch,size_t count,float* logitsBatch)
++{
++    if(!hiddenBatch||!logitsBatch||count==0||count>4)
++        throw std::runtime_error("computeLogitsBatch: invalid batch");
++    const size_t H=modelWeights.hiddenDim;
++    const size_t V=modelWeights.vocabSize;
++    if(!H||!V||!modelWeights.finalNorm.data||!modelWeights.lmHead.data)
++        throw std::runtime_error("computeLogitsBatch: model tensors missing");
++
++    std::vector<float> normed(count*H);
++    for(size_t b=0;b<count;++b)
++        RMSNormW(modelWeights.finalNorm,
++                 hiddenBatch+b*H,normed.data()+b*H,
++                 H,modelWeights.normEps);
++    LinearWBatch4(modelWeights.lmHead,normed.data(),count,nullptr,
++                  logitsBatch,V);
++}
++
+@@
+ void Deep2Engine::LinearW(const WeightTensor& wt,
+@@
+ }
+
++void Deep2Engine::LinearWBatch4(
++    const WeightTensor& wt,const float* inputBatch,size_t count,
++    const float* bias,float* outputBatch,size_t outDim)
++{
++    if(!inputBatch||!outputBatch||count==0||count>4||outDim==0)
++        throw std::runtime_error("LinearWBatch4: invalid arguments");
++
++    size_t rows=0,cols=0;
++    if(!matrixShape(wt,rows,cols)||rows!=outDim)
++        throw std::runtime_error("LinearWBatch4: geometry mismatch");
++
++    // Q4_K is the target amortized path. Other types retain exactness by
++    // using the already GPU-backed single-vector LinearW path.
++    if(wt.type==(int)GGMLType::GGML_TYPE_Q4_K &&
++       vulkanInitialized_&&vulkanDevices_.size()>=2) {
++        std::memset(outputBatch,0,count*outDim*sizeof(float));
++        if(tryVulkanHostGEMVBatch4(
++                wt,inputBatch,count,outputBatch,outDim)) {
++            if(bias) {
++                for(size_t b=0;b<count;++b)
++                    for(size_t i=0;i<outDim;++i)
++                        outputBatch[b*outDim+i]+=bias[i];
++            }
++            if(!finiteVector(outputBatch,count*outDim))
++                throw std::runtime_error(
++                    "LinearWBatch4: non-finite GPU batch output");
++            return;
++        }
++        if(vulkanStrictNoCpuFallback_)
++            throw std::runtime_error(
++                "LinearWBatch4: Q4_K batch GPU path failed under strict mode");
++    }
++
++    for(size_t b=0;b<count;++b)
++        LinearW(wt,inputBatch+b*cols,bias,
++                outputBatch+b*outDim,outDim);
++}

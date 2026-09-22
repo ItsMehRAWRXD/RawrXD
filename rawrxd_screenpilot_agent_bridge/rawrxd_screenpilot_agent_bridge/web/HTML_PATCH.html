@@ -1,0 +1,40 @@
+<!--
+Drop this into the existing ScreenPilot/ide_chatbot.html at the point where the
+agent composer belongs. Rename IDs only if you also update screenpilot_agent.js.
+-->
+<section id="rawrAgentSurface">
+  <div class="mode-switcher" role="group" aria-label="Agent mode">
+    <button type="button" data-rawr-mode="ask">ASK</button>
+    <button type="button" data-rawr-mode="plan">PLAN</button>
+    <button type="button" data-rawr-mode="build">BUILD</button>
+    <button type="button" data-rawr-mode="agent" class="active">AGENT</button>
+  </div>
+
+  <div class="rawr-agent-config">
+    <label>
+      Model
+      <input id="rawrModel" value="qwen2.5-coder:32b" autocomplete="off">
+    </label>
+
+    <label>
+      Workspace
+      <input id="rawrWorkspace" value="F:\~dev" autocomplete="off">
+    </label>
+  </div>
+
+  <textarea
+    id="rawrPrompt"
+    rows="7"
+    placeholder="rawr run modelname audit my IDE codebase for any stubs"></textarea>
+
+  <div class="rawr-agent-actions">
+    <button id="rawrSend" type="button">Run</button>
+    <button id="rawrStop" type="button" disabled>Stop</button>
+    <span id="rawrStatus">local bridge checking…</span>
+  </div>
+
+  <pre id="rawrOutput" aria-live="polite"></pre>
+</section>
+
+<!-- Put the JS file next to the HTML or change this path. -->
+<script src="./screenpilot_agent.js"></script>

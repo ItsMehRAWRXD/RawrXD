@@ -1,0 +1,106 @@
+# Deep2 Qwen32 85TPS — Batch 5/5, item 43
+# Base: apply after 0042.
+#
+# Replaces static column split with measured EWMA partial throughput.
+# Each card's observed Q4_K columns/sec determines future block ownership.
+# Split stays aligned to legal 256-element Q4_K blocks.
+#
+# Env:
+#   DEEP2_COLUMN_SPLIT_AUTO=0  disables adaptation
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0043_adaptive_column_split_ewma.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include <atomic>
+ #include <chrono>
+@@
+ namespace {
++
++std::atomic<double> gColSpeed0{0.0};
++std::atomic<double> gColSpeed1{0.0};
++
++bool autoColumnSplit() noexcept {
++    const char* e=std::getenv("DEEP2_COLUMN_SPLIT_AUTO");
++    return !(e&&e[0]=='0');
++}
++
++void updateColSpeed(unsigned lane,uint32_t cols,uint64_t ns) noexcept {
++    if(!autoColumnSplit()||!cols||!ns) return;
++    const double sample=(double)cols*1.0e9/(double)ns;
++    auto& a=lane==0?gColSpeed0:gColSpeed1;
++    const double old=a.load(std::memory_order_relaxed);
++    a.store(old>0.0?old*0.875+sample*0.125:sample,
++            std::memory_order_relaxed);
++}
+@@
+ struct ColKey {
+     const void* p=nullptr;size_t bytes=0;uint32_t rows=0,cols=0;
++    uint16_t ratioPermille=500;
+     bool operator==(const ColKey& o) const noexcept {
+-        return p==o.p&&bytes==o.bytes&&rows==o.rows&&cols==o.cols;
++        return p==o.p&&bytes==o.bytes&&rows==o.rows&&cols==o.cols&&
++               ratioPermille==o.ratioPermille;
+     }
+ };
+@@
+-        return (size_t)(uintptr_t)k.p ^ k.bytes ^
+-               ((size_t)k.rows<<32) ^ k.cols;
++        return (size_t)(uintptr_t)k.p ^ k.bytes ^
++               ((size_t)k.rows<<32) ^ k.cols ^
++               ((size_t)k.ratioPermille<<11);
+     }
+ };
+@@
+-    const ColKey key{wt.data,wt.sizeBytes,(uint32_t)wt.rows,(uint32_t)wt.cols};
++    long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
++    long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
++    if(autoColumnSplit()) {
++        const double a0=gColSpeed0.load(std::memory_order_relaxed);
++        const double a1=gColSpeed1.load(std::memory_order_relaxed);
++        if(a0>0.0&&a1>0.0){s0=a0;s1=a1;}
++    }
++    const long double ratio=s0/(s0+s1);
++    const uint16_t pm=(uint16_t)std::max<long double>(
++        1.0L,std::min<long double>(999.0L,ratio*1000.0L+0.5L));
++    const ColKey key{
++        wt.data,wt.sizeBytes,(uint32_t)wt.rows,(uint32_t)wt.cols,pm};
+@@
+-    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
+-    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
+     uint32_t b0=(uint32_t)(
+         (long double)blocks*s0/(s0+s1)+0.5L);
+@@
+ bool Deep2RunDualGpuColumnSplitBatch4(
+@@
+-    const bool both=rowExecutor().run(
+-        [&]{ok0=g0.RunWeightHostBatchQ4K(
+-            w0,x0.data(),y0.data(),batch,epoch);return ok0;},
+-        [&]{ok1=g1.RunWeightHostBatchQ4K(
+-            w1,x1.data(),y1.data(),batch,epoch);return ok1;});
++    uint64_t ns0=0,ns1=0;
++    const bool both=rowExecutor().run(
++        [&]{
++            const auto a=std::chrono::steady_clock::now();
++            ok0=g0.RunWeightHostBatchQ4K(
++                w0,x0.data(),y0.data(),batch,epoch);
++            const auto z=std::chrono::steady_clock::now();
++            ns0=(uint64_t)std::chrono::duration_cast<
++                std::chrono::nanoseconds>(z-a).count();
++            return ok0;
++        },
++        [&]{
++            const auto a=std::chrono::steady_clock::now();
++            ok1=g1.RunWeightHostBatchQ4K(
++                w1,x1.data(),y1.data(),batch,epoch);
++            const auto z=std::chrono::steady_clock::now();
++            ns1=(uint64_t)std::chrono::duration_cast<
++                std::chrono::nanoseconds>(z-a).count();
++            return ok1;
++        });
+     if(!both||!ok0||!ok1) return false;
++    updateColSpeed(0,s->cols0,ns0);
++    updateColSpeed(1,s->cols1,ns1);

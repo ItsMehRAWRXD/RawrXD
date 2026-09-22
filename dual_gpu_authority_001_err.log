@@ -1,0 +1,88 @@
+GATE_ONLY_MODE ntok=1
+
+=== THRESHOLD ntok=1 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS_DEDUP ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_FILTER discrete=2 igpu=REJECTED
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+DEEP2_GPU_SELECT slot=1 ordinal=2 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E
+SPEC_VK_END initialized=1 devices=2
+SPEC_CONFIG_BEGIN
+SPEC_CONFIG_END
+SPEC_SETUP_EXIT
+THRESHOLD_SETUP_OK ntok=1
+THRESHOLD_GEN_BEGIN ntok=1
+RUN_TOKENIZE_BEGIN n=1
+RUN_TOKENIZE_OK tokens=19
+RUN_GENERATE_BEGIN prompt=19 out=1
+GEN_ENTER maxOut=1
+GEN_DECODE_LIMIT=1 specActive=1
+GEN_LOOP_TOP gen=0 rem=1 specActive=1
+[LOGITS] token=0 min=-20.3170 max=21.5677 mean=-2.7952 std=2.8943 argmax=198
+[LOGITS_HEAD] -0.234006 -2.222119 1.278849 -3.019720 -2.336684
+GEN_EXIT generated=1
+RUN_GENERATE_END got=1
+THRESHOLD_GEN_END ntok=1 got=1
+DEEP2_GPU_RMSNORM_OPS=0
+DEEP2_GPU_QKV_OPS=0
+DEEP2_GPU_ROPE_OPS=0
+DEEP2_GPU_ATTN_SCORE_OPS=0
+DEEP2_GPU_SOFTMAX_OPS=0
+DEEP2_GPU_ATTN_VALUE_OPS=0
+DEEP2_GPU_O_PROJ_OPS=0
+DEEP2_GPU_RESIDUAL_OPS=0
+DEEP2_GPU_FFN_NORM_OPS=0
+DEEP2_GPU_FFN_ACT_OPS=0
+DEEP2_GPU_FFN_RESIDUAL_OPS=0
+DEEP2_GPU_FORWARD_LAYERS=0
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_SYNC_BOUNDARIES=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=4865
+DEEP2_GPU_OWNERSHIP_TRANSFERS=0
+DEEP2_INTRA_SLOT_HOST_TRANSFERS=0
+LIVE_DECODE_RESIDENT_FORWARD=0
+TOKENS_DECODED=0
+GPU_FORWARD_LAYERS_PER_TOKEN=0
+HOST_FORWARD_LAYER_CALLS=1216
+PLANNED_CPU_LAYER_CALLS=0
+DEEP2_GPU_RESIDENT_FORWARD=0
+DEEP2_GPU_FORWARD_FALLBACKS=1216
+DEEP2_GPU_LAYER_SUBMITS=0
+DEEP2_GPU_OP_SUBMITS=0
+DEEP2_GPU_HOST_SYNC=0
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_Q4K_PACKED_OPS=0
+DEEP2_GPU_Q6K_PACKED_OPS=0
+DEEP2_GPU_Q2K_PACKED_OPS=0
+DEEP2_GPU_CPU_F32_EXPANDS=0
+DEEP2_GPU_DUAL_ROW_SPLIT_OPS=2432
+DEEP2_GPU_DUAL_ARITH_OVERLAP_NS=5319640
+DEEP2_GPU_HOST_MERGE_OPS=2432
+DEEP2_DUAL_ROW_DENSE_TOKENS=19
+DEEP2_DUAL_ROW_SLOT_0=2432
+DEEP2_DUAL_ROW_SLOT_1=2432
+DEEP2_GPU_EXPERT_DISPATCHES=0
+DEEP2_GPU_MLA_ATTN_OPS=0
+DEEP2_DUAL_PHYSICAL_GPU_FORWARD=1
+THRESHOLD_RESULT ntok=1 PASS
+
+=== THRESHOLD LADDER COMPLETE ===
+STRICT_GPU_VIOLATIONS=0

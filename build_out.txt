@@ -1,0 +1,4489 @@
+CMake is re-running because F:/~dev/rawrxd/build_p2/CMakeFiles/generate.stamp dependency file is missing.
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- Using the multi-header code from F:/~dev/rawrxd/build_p2/_deps/nlohmann_json-src/include/
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- ÎÂ£Ã´ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found — Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+CMake Warning at CMakeLists.txt:4249 (message):
+  [MASM] RDNA3 kernels not found.  GPU acceleration disabled.
+
+
+-- [NanoQuant] DISABLED ÎÃÃ¶ enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix — Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] ✅ Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)
+-- [Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E
+-- [Sovereign] Deep2 batch test: Deep2_Batch_Test
+-- [Deep2] One-token validation gate: test_generate_one_token
+-- [Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity
+-- [Deep2] Q element-diff harness: test_q_elemdiff
+-- [Deep2] EMBED-Q4K-001 harness: test_embed_q4k_token
+-- [Deep2] Chat template test: test_chat_template
+-- [Deep2] Chat template unit tests: test_chat_template_unit
+-- [Deep2] Streaming test: test_streaming
+-- [Deep2] Streamer certification harness: deep2_streamer_cert
+-- [Deep2] Ollama-parity streamer: deep2_streamer_parity
+-- [Deep2] GPU solo gate: deep2_gpu_solo_cert
+-- [Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert
+-- [Deep2] Topology portability cert: deep2_topology_portability_cert
+-- [Deep2] Multi-GPU layer cert: deep2_multi_gpu_layer_cert
+-- [Deep2] Hybrid all-HW cert: deep2_hybrid_all_hw_cert
+-- [Deep2] GPU forward ops cert: deep2_gpu_forward_ops_cert
+-- [Deep2] GPU resident decode cert: deep2_gpu_resident_decode_cert
+-- [Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert
+-- [Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert
+-- [Deep2] GPU weight window cert: deep2_gpu_weight_window_cert
+-- [Deep2] GPU weight prefetch cert: deep2_gpu_weight_prefetch_cert
+-- [Deep2] GPU numeric parity cert: deep2_gpu_numeric_parity_cert
+-- [Deep2] GPU Q4_K GEMV cert: deep2_gpu_q4k_gemv_cert
+-- [Deep2] GPU Q6_K GEMV cert: deep2_gpu_q6k_gemv_cert
+-- [Deep2] GPU quant family cert: deep2_gpu_quant_family_cert
+-- [Deep2] GPU packed-forward cert: deep2_gpu_packed_forward_cert
+-- [Deep2] SsVk decode bind cert: deep2_engine_ssvk_decode_bind_cert
+-- [Deep2] GPU dynamic-window cert: deep2_gpu_dynamic_window_cert
+-- [Deep2] Runtime batch-1 cert: deep2_runtime_batch1_cert
+-- [Deep2] Runtime batch-2 cert: deep2_runtime_batch2_cert
+-- [Deep2] Runtime batch-3 cert: deep2_runtime_batch3_cert
+-- [Deep2] K2 live policy crossover: deep2_k2_live_policy_crossover_cert
+-- [Deep2] K2 live policy E2E: deep2_k2_live_policy_e2e_cert
+-- [Deep2] K2 GPU stream copy: deep2_k2_gpu_stream_copy_cert
+-- [Deep2] K2 GPU copy/compute overlap: deep2_k2_gpu_copy_compute_overlap_cert
+-- [Deep2] K2 live GPU stream E2E: deep2_k2_live_gpu_stream_e2e_cert
+-- [Deep2] K2 GPU stream compute: deep2_k2_gpu_stream_compute_cert
+-- [Deep2] K2 GPU stream MLA: deep2_k2_gpu_stream_mla_cert
+-- [Deep2] K2 GPU MLA full: deep2_k2_gpu_mla_full_cert
+-- [Deep2] K2 GPU MLA full-depth: deep2_k2_gpu_mla_full_depth_cert
+-- [Deep2] K2 GPU MLA RE: deep2_k2_gpu_mla_re_cert
+-- [Deep2] K2 STREAM_MISS reality: deep2_k2_stream_miss_reality_cert
+-- [Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001
+-- [Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001
+-- [Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001
+-- [Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001
+-- [Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001
+-- [Deep2] VWA_POC_1_001: vwa_poc_1_001 (MASM fulfill)
+-- [Deep2] K2 MLA full-depth soak: deep2_k2_mla_full_depth_soak_cert
+-- [Deep2] K2 live decode MLA: deep2_k2_live_decode_mla_cert
+-- [Deep2] MLA-CERT-001: mla_cert_001
+-- [Deep2] K2 MLA fused Q4KT: deep2_k2_mla_fused_q4kt_cert
+-- [Deep2] K2 SHARD_ATTN residency: deep2_k2_shard_attn_residency_cert
+-- [Deep2] K2 LOGITS Q6K resident: deep2_k2_logits_q6k_resident_cert
+-- [Deep2] K2 MLA KV expand attrib: deep2_k2_mla_kv_expand_cert
+-- [Deep2] K2 MLA KV expand OPT: deep2_k2_mla_kv_expand_opt_cert
+-- [Deep2] K2 MLA QKV proj attrib: deep2_k2_mla_qkv_proj_cert
+-- [Deep2] K2 MLA q_a critical: deep2_k2_mla_qa_critical_cert
+-- [Deep2] UCF bounce smoke: deep2_ucf_bounce_smoke
+-- [Deep2] UCF no-stale dispatch: deep2_ucf_no_stale_dispatch_001
+-- [Deep2] UCF read converge: deep2_ucf_read_converge_001
+-- [Deep2] UCF logits range bounce: deep2_ucf_logits_range_bounce_001
+-- [Deep2] UCF semantic ABI v1: deep2_ucf_semantic_abi_v1_cert
+-- [Deep2] UCF generation ticket: deep2_ucf_generation_ticket_001
+-- [Deep2] UCF GPU ready E2E: deep2_ucf_gpu_ready_e2e
+-- [Deep2] UCF bouncehouse trace: deep2_ucf_bouncehouse_example
+-- [Deep2] UCF Halo/Spark: deep2_ucf_halo_spark_001
+-- [Deep2] RMV mount gate: deep2_rmv_mount_001
+-- [Deep2] VWA range contract: deep2_vwa_range_contract_001
+-- [Deep2] VWA POC-1: deep2_vwa_poc_1_001
+-- [Deep2] VWA IOCP range: deep2_vwa_iocp_range_001
+-- [Deep2] UCF mobility fault: deep2_ucf_mobility_fault_001
+-- [Deep2] K2 semantic seal: deep2_k2_semantic_seal_cert
+-- [Deep2] K2 serverless latency: deep2_k2_serverless_stream_latency_cert
+-- [Deep2] K2 live decode sustained: deep2_k2_live_decode_sustained_cert
+-- [Deep2] K2 wall attribution: deep2_k2_wall_attribution_cert
+-- [Deep2] K2 logits climb: deep2_k2_logits_climb_cert
+-- [Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert
+-- [Deep2] C1 logits GPU range attribution: deep2_k2_logits_gpu_range_attribution_001
+-- [Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine
+-- [Deep2] VWA file coalesce: deep2_vwa_file_coalesce_001
+-- [Deep2] VWA consumer: deep2_vwa_elastic_range_001
+-- [Deep2] VWA consumer: deep2_vwa_elastic_lease_001
+-- [Deep2] VWA consumer: deep2_vwa_gpu_stage_001
+-- [Deep2] VWA consumer: deep2_vwa_gpu_transfer_parity_001
+-- [Deep2] VWA consumer: deep2_vwa_expert_slice_001
+-- [Deep2] C-ladder consumer: deep2_vwa_moe_prefetch_001
+-- [Deep2] C-ladder consumer: deep2_vwa_bounded_k2_001
+-- [Deep2] C-ladder consumer: deep2_k2_logits_range_sweep_001
+-- [Deep2] C-ladder consumer: deep2_k2_logits_range_freeze_001
+-- [Deep2] C-ladder consumer: deep2_vwa_async_file_range_001
+-- [Deep2] C-ladder consumer: deep2_vwa_gpu_transfer_001
+-- [Deep2] C-ladder consumer: deep2_vwa_k2_expert_selective_001
+-- [Deep2] C-ladder consumer: deep2_vwa_k2_prefetch_overlap_001
+-- [Deep2] C-ladder consumer: deep2_vwa_k2_full_e2e_001
+-- [Deep2] VWA B3-B8 range core: deep2_vwa_range_core
+-- [Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL
+-- [Deep2] rawr -> agentic CLI sources
+-- [Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired
+-- [Deep2] Gateway cert island: Deep2_Gateway_Runtime_Certification
+-- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
+-- [Product] lavapath: deep2_product_lavapath (ChoreographOut)
+-- [Deep2] RAWRXD_BACKGROUND_TERMINALS kitchen-sink wired
+-- [Deep2] RAWRXD_REMAINING_STYLE_CLI wired
+-- [Deep2] RAWRXD_PRODUCT_LAYER wired
+-- [Interstellar] sources missing — skipping (BUILD_INTERSTELLAR gated)
+-- [Deep2] K2 TPS byteless rainbow: deep2_k2_tps_rainbow_cert
+-- [Deep2] NU GEMV parity cert: deep2_nu_gemv_parity_cert
+-- [Deep2] NU GPU GEMV cert: deep2_nu_gpu_gemv_cert
+-- [Deep2] NU pack format cert: deep2_nu_pack_format_cert
+-- [RKC] smoke: rkc_smoke + rkc_product_context_smoke
+-- [Deep2] Giant MoE paragraph perf: deep2_giant_moe_paragraph_perf_cert
+-- [Agent] Runtime batch-1 cert: agent_runtime_batch1_cert
+-- [Deep2] Placement cost cert: deep2_placement_cost_cert
+-- [Deep2] MARS E2E smoke harness: deep2_mars_e2e
+-- [Deep2] MARS controller unit smoke: test_mars_controller
+-- [Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke
+-- [Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001
+-- [Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001
+-- [Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001
+-- [Deep2] P1 repeatability trial validity diag
+-- [Deep2] P1 policy SHA lifecycle diag
+-- [Deep2] P1 repeatability state drift diag
+-- [Win32] UI encoding cert: p1_ui_encoding_cert
+-- [Win32] UI menu E2E cert: p1_ui_menu_e2e_cert
+-- [Win32] UI sidebar encoding cert: p1_ui_sidebar_encoding_cert
+-- [Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert
+-- [Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)
+-- [Agentic] IDE agent loop cert: ide_agent_loop_cert
+-- [Deep2] Deterministic replay gate: test_deterministic_replay
+-- [Deep2] Qwen3.5 metadata dump: dump_qwen35_meta
+-- [Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)
+-- [Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert
+-- [Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert
+-- [Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert
+-- [Deep2] Single-layer harness: layer_harness
+-- [Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source
+-- [Deep2] Qwen3.5 attention contract: qwen35_attn_contract
+-- [Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token
+-- [Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token
+-- [Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token
+-- [Deep2] BP16 ÎÃ¥Ã Deep2 integration test: val_bp16_int_1_token
+-- [Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic
+-- [Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer
+-- [Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e
+-- [Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare
+-- [Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights
+-- [Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify
+-- [Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits
+-- [Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf
+-- [Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile
+-- [Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile
+-- [Deep2] Minimal 1-token profiler: minimal_1token_profiler
+-- [Deep2] Quick 1-layer profiler: quick_1layer_profiler
+-- [Deep2] Q4_K GEMV bench: q4k_gemv_bench
+-- [Deep2] Q5_K GEMV bench: q5k_gemv_bench
+-- [Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag
+-- [Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench
+-- [Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench
+-- [Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify
+-- [Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench
+-- [Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify
+-- [Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench
+-- [Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify
+-- [Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench
+-- [Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench
+-- [Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling
+-- [Deep2] Layer profiler: val_051_8_layer_profile
+-- [Deep2] Q2_K profile: val_051_5_q2k_profile
+-- [Sovereign] PatchRegistry test: SovereignTest_PatchRegistry
+-- [Sovereign] HotPatcher test: SovereignTest_HotPatcher
+-- [Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent
+-- [Sovereign] AntiHallucination test: SovereignTest_AntiHallucination
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (BÎÃ¥ÃCÎÃ¥ÃA): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON ÎÃÃ¶ runtime tensor dumping enabled
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- Configuring done (1.0s)
+CMake Error at CMakeLists.txt:933 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_2_a_real_token.cpp
+
+
+CMake Error at CMakeLists.txt:987 (add_executable):
+  Cannot find source file:
+
+    evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
+
+
+CMake Error at CMakeLists.txt:1030 (add_executable):
+  Cannot find source file:
+
+    tools/p1_cpu_loadmodel_harness.cpp
+
+
+CMake Error at CMakeLists.txt:1082 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_32_token_kv_stability.cpp
+
+
+CMake Error at CMakeLists.txt:1135 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_6_15_token_kv.cpp
+
+
+CMake Error at CMakeLists.txt:1188 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_7_residency_baseline.cpp
+
+
+CMake Error at CMakeLists.txt:1242 (add_executable):
+  Cannot find source file:
+
+    tests/residency_ab_cert.cpp
+
+
+CMake Error at CMakeLists.txt:1294 (add_executable):
+  Cannot find source file:
+
+    tests/validate_val051_evidence.cpp
+
+
+CMake Error at CMakeLists.txt:1317 (add_executable):
+  Cannot find source file:
+
+    tests/test_gguf_tokenizer_bounds.cpp
+
+
+CMake Error at CMakeLists.txt:1349 (add_executable):
+  Cannot find source file:
+
+    tests/test_parseheader_bounds.cpp
+
+
+CMake Error at CMakeLists.txt:1456 (add_executable):
+  Cannot find source file:
+
+    tests/dual_gpu_smoke_test.cpp
+
+
+CMake Error at CMakeLists.txt:1507 (add_executable):
+  Cannot find source file:
+
+    tools/gguf_inspector.cpp
+
+
+CMake Error at CMakeLists.txt:1524 (add_executable):
+  Cannot find source file:
+
+    tests/comprehensive_dual_gpu_test.cpp
+
+
+CMake Error at CMakeLists.txt:1575 (add_executable):
+  Cannot find source file:
+
+    tests/test_omega1_bridge.cpp
+
+
+CMake Error at CMakeLists.txt:1633 (add_executable):
+  Cannot find source file:
+
+    src/deep2/Deep2Engine_RouterSmokeTest.cpp
+
+
+CMake Error at CMakeLists.txt:1678 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_gguf_alignment_diagnostic.cpp
+
+
+CMake Error at CMakeLists.txt:1721 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_q4_0_gemv_certification.cpp
+
+
+CMake Error at CMakeLists.txt:3238 (add_library):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/omega1_modules/OmegaPowerShellBridge.cpp
+
+
+CMake Error at CMakeLists.txt:3268 (add_library):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/compression/zlib_runtime_loader.cpp
+
+
+CMake Error at CMakeLists.txt:3334 (add_executable):
+  Cannot find source file:
+
+    src/main.cpp
+
+
+CMake Error at CMakeLists.txt:5199 (add_library):
+  Cannot find source file:
+
+    src/inference/ultra_fast_inference.cpp
+
+
+CMake Error at CMakeLists.txt:5222 (add_executable):
+  Cannot find source file:
+
+    src/inference/inference_standalone_main.cpp
+
+
+CMake Error at CMakeLists.txt:5234 (add_executable):
+  Cannot find source file:
+
+    src/cli/generate_cli.cpp
+
+
+CMake Error at CMakeLists.txt:5412 (add_executable):
+  Cannot find source file:
+
+    src/monaco_gen.cpp
+
+
+CMake Error at CMakeLists.txt:7934 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/tests/SovereignTest_Main.cpp
+
+
+CMake Error at CMakeLists.txt:7965 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/tests/SovereignTest_VAL038_E2E.cpp
+
+
+CMake Error at CMakeLists.txt:7994 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/tests/SovereignTest_Deep2_Batch.cpp
+
+
+CMake Error at CMakeLists.txt:8022 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_generate_one_token.cpp
+
+
+CMake Error at CMakeLists.txt:8046 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_q4k_gemv_parity.cpp
+
+
+CMake Error at CMakeLists.txt:8064 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_q_elemdiff.cpp
+
+
+CMake Error at CMakeLists.txt:8082 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_embed_q4k_token.cpp
+
+
+CMake Error at CMakeLists.txt:8104 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_chat_template.cpp
+
+
+CMake Error at CMakeLists.txt:8128 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_chat_template_unit.cpp
+
+
+CMake Error at CMakeLists.txt:8150 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_streaming.cpp
+
+
+CMake Error at CMakeLists.txt:8175 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_streamer_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8200 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_streamer_parity.cpp
+
+
+CMake Error at CMakeLists.txt:8227 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_solo_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8264 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_solo_decode_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8287 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_topology_portability_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8310 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_multi_gpu_layer_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8333 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_hybrid_all_hw_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8356 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_forward_ops_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8379 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_resident_decode_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8402 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_transfer_counter_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8420 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_transfer_overlap_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8442 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_weight_window_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8465 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_weight_prefetch_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8488 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_numeric_parity_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8511 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_q4k_gemv_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8534 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_q6k_gemv_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8557 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_quant_family_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8580 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_packed_forward_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8627 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_gpu_dynamic_window_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8650 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_runtime_batch1_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8673 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_runtime_batch2_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8696 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_runtime_batch3_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8712 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_gen_perf_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8734 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_policy_crossover_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8760 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_policy_e2e_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8786 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8812 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8838 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8864 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8890 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8916 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_full_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8942 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8968 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_re_cert.cpp
+
+
+CMake Error at CMakeLists.txt:8994 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_stream_miss_reality_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9020 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9042 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_local_agent_audit_001.cpp
+
+
+CMake Error at CMakeLists.txt:9066 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p0_process_alive_001.cpp
+
+
+CMake Error at CMakeLists.txt:9083 (add_executable):
+  Cannot find source file:
+
+    src/deep2/vwa_range_contract_001.cpp
+
+
+CMake Error at CMakeLists.txt:9103 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
+
+
+CMake Error at CMakeLists.txt:9126 (add_executable):
+  Cannot find source file:
+
+    src/deep2/vwa_address_contract_001.cpp
+
+
+CMake Error at CMakeLists.txt:9155 (add_executable):
+  Cannot find source file:
+
+    src/deep2/vwa_poc_1_001.cpp
+
+
+CMake Error at CMakeLists.txt:9210 (add_executable):
+  Cannot find source file:
+
+    src/asm/Deep2R1_StrEq.asm
+
+
+CMake Error at CMakeLists.txt:9223 (add_executable):
+  Cannot find source file:
+
+    src/asm/Deep2OuterStr.asm
+
+
+CMake Error at CMakeLists.txt:9236 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_outer_engine_bridge_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9263 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_live_path_effectiveness_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9282 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_live_path_fused_control_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9302 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_live_path_interaction_bounds_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9321 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9340 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9362 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9384 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9405 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9425 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_auto_workload_policy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9446 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9464 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_generate_policy_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9483 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_policy_split_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9502 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_policy_hysteresis_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9525 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_rebench_promote_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9544 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_reuse_promote_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9563 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9583 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_decode_mla_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9603 (add_executable):
+  Cannot find source file:
+
+    certs/mla_cert_001.cpp
+
+
+CMake Error at CMakeLists.txt:9622 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9642 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_shard_attn_residency_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9662 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_q6k_resident_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9682 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_kv_expand_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9702 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9722 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_qkv_proj_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9742 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_mla_qa_critical_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9762 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_bounce_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:9781 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_no_stale_dispatch_001.cpp
+
+
+CMake Error at CMakeLists.txt:9800 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_read_converge_001.cpp
+
+
+CMake Error at CMakeLists.txt:9819 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_logits_range_bounce_001.cpp
+
+
+CMake Error at CMakeLists.txt:9837 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp
+
+
+CMake Error at CMakeLists.txt:9856 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_generation_ticket_001.cpp
+
+
+CMake Error at CMakeLists.txt:9874 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_gpu_ready_e2e.cpp
+
+
+CMake Error at CMakeLists.txt:9893 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_bouncehouse_example.cpp
+
+
+CMake Error at CMakeLists.txt:9911 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_halo_spark_001.cpp
+
+
+CMake Error at CMakeLists.txt:9929 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_rmv_mount_001.cpp
+
+
+CMake Error at CMakeLists.txt:9967 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_vwa_range_contract_001.cpp
+
+
+CMake Error at CMakeLists.txt:9994 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_vwa_poc_1_001.cpp
+
+
+CMake Error at CMakeLists.txt:10017 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_vwa_iocp_range_001.cpp
+
+
+CMake Error at CMakeLists.txt:10038 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_ucf_mobility_fault_001.cpp
+
+
+CMake Error at CMakeLists.txt:10056 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_semantic_seal_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10076 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_serverless_stream_latency_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10096 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_live_decode_sustained_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10116 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_wall_attribution_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10136 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_climb_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10156 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_trygpu_logits_split_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10174 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp
+
+
+CMake Error at cmake/Deep2C1C9.fragment.cmake:7 (add_library):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/K2C1C9.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10194 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:7 (add_library):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/VwaRangeX64.asm
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:25 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_core_poc_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:41 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_file_coalesce_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_elastic_range_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:84 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_elastic_lease_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:90 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_gpu_stage_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:96 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:50 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_gpu_transfer_parity_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:105 (rawrxd_add_vwa_header_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:50 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_expert_slice_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:111 (rawrxd_add_vwa_header_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_moe_prefetch_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:114 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_bounded_k2_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:116 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_k2_logits_range_sweep_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:123 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_k2_logits_range_freeze_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:125 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_async_file_range_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:127 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_gpu_transfer_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:129 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_k2_expert_selective_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:134 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_k2_prefetch_overlap_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:136 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/deep2_vwa_k2_full_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:138 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at CMakeLists.txt:10215 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawrxd_run_modelname_001.cpp
+
+
+CMake Error at CMakeLists.txt:10230 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawr_run.cpp
+
+
+CMake Error at CMakeLists.txt:10244 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_useful_tps_001.cpp
+
+
+CMake Error at CMakeLists.txt:10258 (add_executable):
+  Cannot find source file:
+
+    src/deep2/rawrxd_normal_gguf_final_001.cpp
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agentic_cli_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:141 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_session_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:142 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_tools_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:143 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_patch_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:144 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_build_test_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:145 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_steer_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:146 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_safety_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:147 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_resume_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:148 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_run_quality_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:149 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/vwa_k2_prefetch_overlap_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:150 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/vwa_bounded_k2_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:151 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/certs/k2_useful_tps_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:152 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_stdout_clean_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:172 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_no_ollama_contract_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:173 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_dual_lane_contract_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:174 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_auto_ladder_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:175 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_chat_repl_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:176 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_frontdoor_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:177 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_embed_norm_guard_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:178 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_decode_carry_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:179 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_workspace_live_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:182 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_loop_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:183 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_agent_steer_resume_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:184 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_second_model_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:185 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_llama32_prefill_divergence_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:186 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_autocomplete_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:187 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_local_model_compat_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:188 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_autocomplete_live_second_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:189 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_k2_product_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:190 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:191 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_lavapath_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:192 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_mount_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:193 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_ge_probe_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:194 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:210 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_capability_solve_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:225 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_qkv_rows_measure_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:239 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_kernel_tune_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_streamer_vocab_ext_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:253 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:256 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_actual_e2e_generation_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/Deep2GatewayCertStandalone.fragment.cmake:8 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/certification/Deep2_Cert_Main.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10279 (include)
+
+
+CMake Error at cmake/Deep2BenchmarkCert.fragment.cmake:11 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/Deep2Benchmark.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10280 (include)
+
+
+CMake Error at cmake/Deep2ProductLavapath.fragment.cmake:4 (add_executable):
+  Cannot find source file:
+
+    F:/~dev/rawrxd/src/deep2/lavapath/Deep2ProductLavapath.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10281 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:27 (add_executable):
+  Cannot find source file:
+
+    src/cli/terminal/rawr_term_host_main.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:29 (add_executable):
+  Cannot find source file:
+
+    src/cli/terminal/rawr_termctl_main.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:31 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_background_terminals_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrRemainingStyleCli.fragment.cmake:21 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_remaining_style_cli_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10284 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:28 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_layer_001.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:42 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_layer_002.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_win32_editor_surface_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:81 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_rawr_pipe_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:83 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_editor_agent_e2e_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:84 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_ghost_bind_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:86 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_autocomplete_cancel_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:88 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_installer_clean_machine_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:90 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_offline_demo_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:92 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_repeatable_demo_record_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:94 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_runtime_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:96 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_local_api_compat_001.cpp
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:98 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:101 (add_executable):
+  Cannot find source file:
+
+    certs/rawrxd_product_layer_003.cpp
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at CMakeLists.txt:10297 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_tps_rainbow_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10317 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10342 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_live_consumer_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10367 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10392 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_perf_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10416 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_gemv_parity_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10442 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_gpu_gemv_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10467 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_nu_pack_format_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10487 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_deep2_model_authority_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10505 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_model_inventory_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10520 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_negative_knowledge_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10535 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_minimal_source_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10550 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_code_world_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10565 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:10579 (add_executable):
+  Cannot find source file:
+
+    src/rkc/rkc_product_context_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:10598 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10621 (add_executable):
+  Cannot find source file:
+
+    src/agentic/agent_runtime_batch1_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10644 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_placement_cost_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10669 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_mars_e2e.cpp
+
+
+CMake Error at CMakeLists.txt:10690 (add_executable):
+  Cannot find source file:
+
+    src/deep2/mars/test_mars_controller.cpp
+
+
+CMake Error at CMakeLists.txt:10714 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_execution_policy_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:10738 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_ide_exec_policy_apply_001.cpp
+
+
+CMake Error at CMakeLists.txt:10761 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
+
+
+CMake Error at CMakeLists.txt:10784 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_real_speedup_001.cpp
+
+
+CMake Error at CMakeLists.txt:10808 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_repeatability_trial_validity_diag_001.cpp
+
+
+CMake Error at CMakeLists.txt:10831 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
+
+
+CMake Error at CMakeLists.txt:10854 (add_executable):
+  Cannot find source file:
+
+    src/deep2/p1_repeatability_state_drift_diag_001.cpp
+
+
+CMake Error at CMakeLists.txt:10877 (add_executable):
+  Cannot find source file:
+
+    src/win32app/p1_ui_encoding_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10899 (add_executable):
+  Cannot find source file:
+
+    src/win32app/p1_ui_menu_e2e_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10918 (add_executable):
+  Cannot find source file:
+
+    src/win32app/p1_ui_sidebar_encoding_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10936 (add_executable):
+  Cannot find source file:
+
+    src/win32app/p1_ui_menu_lifetime_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10957 (add_executable):
+  Cannot find source file:
+
+    src/deep2/deep2_parity_cert.cpp
+
+
+CMake Error at CMakeLists.txt:10980 (add_executable):
+  Cannot find source file:
+
+    src/agentic/ide_agent_loop_cert.cpp
+
+
+CMake Error at CMakeLists.txt:11012 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_deterministic_replay.cpp
+
+
+CMake Error at CMakeLists.txt:11035 (add_executable):
+  Cannot find source file:
+
+    src/deep2/dump_qwen35_meta.cpp
+
+
+CMake Error at CMakeLists.txt:11060 (add_library):
+  Cannot find source file:
+
+    src/asm/RawrXD_HexMag_RepeatTuner.asm
+
+
+CMake Error at CMakeLists.txt:11070 (add_executable):
+  Cannot find source file:
+
+    src/agentic/rawrxd_agentic_runtime_all.cpp
+
+
+CMake Error at CMakeLists.txt:11090 (add_executable):
+  Cannot find source file:
+
+    tests/hexmag_repeat_tuner_cert.cpp
+
+
+CMake Error at CMakeLists.txt:11107 (add_executable):
+  Cannot find source file:
+
+    tests/hexmag_ide_e2e_cert.cpp
+
+
+CMake Error at CMakeLists.txt:11132 (add_executable):
+  Cannot find source file:
+
+    tests/hexmag_runtime_controller_cert.cpp
+
+
+CMake Error at CMakeLists.txt:11161 (add_executable):
+  Cannot find source file:
+
+    src/deep2/layer_harness.cpp
+
+
+CMake Error at CMakeLists.txt:11179 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_l10_ffn_inp_same_source.cpp
+
+
+CMake Error at CMakeLists.txt:11201 (add_executable):
+  Cannot find source file:
+
+    src/deep2/qwen35_attn_contract.cpp
+
+
+CMake Error at CMakeLists.txt:11225 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_val_051_3_multi_token.cpp
+
+
+CMake Error at CMakeLists.txt:11252 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_fifteen_token.cpp
+
+
+CMake Error at CMakeLists.txt:11279 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_diag_1_token.cpp
+
+
+CMake Error at CMakeLists.txt:11359 (add_executable):
+  Cannot find source file:
+
+    tests/val_bp16_int_1_token.cpp
+
+
+CMake Error at CMakeLists.txt:11435 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q6k_synthetic.cpp
+
+
+CMake Error at CMakeLists.txt:11457 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_streamer.cpp
+
+
+CMake Error at CMakeLists.txt:11481 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_e2e.cpp
+
+
+CMake Error at CMakeLists.txt:11557 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_compare.cpp
+
+
+CMake Error at CMakeLists.txt:11640 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_weights.cpp
+
+
+CMake Error at CMakeLists.txt:11716 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_verify.cpp
+
+
+CMake Error at CMakeLists.txt:11745 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_logits.cpp
+
+
+CMake Error at CMakeLists.txt:11821 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_6_bp16_perf.cpp
+
+
+CMake Error at CMakeLists.txt:11897 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_7_bp16_profile.cpp
+
+
+CMake Error at CMakeLists.txt:11973 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_7_bp16_lightweight_profile.cpp
+
+
+CMake Error at CMakeLists.txt:12048 (add_executable):
+  Cannot find source file:
+
+    tests/minimal_1token_profiler.cpp
+
+
+CMake Error at CMakeLists.txt:12123 (add_executable):
+  Cannot find source file:
+
+    tests/quick_1layer_profiler.cpp
+
+
+CMake Error at CMakeLists.txt:12199 (add_executable):
+  Cannot find source file:
+
+    tests/q4k_gemv_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12221 (add_executable):
+  Cannot find source file:
+
+    tests/q5k_gemv_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12243 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_diag.cpp
+
+
+CMake Error at CMakeLists.txt:12320 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12397 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_bp16_loadbench.cpp
+
+
+CMake Error at CMakeLists.txt:12427 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q4k_fused_verify.cpp
+
+
+CMake Error at CMakeLists.txt:12445 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q4k_gemv_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12466 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q2k_gemv_verify.cpp
+
+
+CMake Error at CMakeLists.txt:12484 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q2k_gemv_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12502 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q5k_gemv_verify.cpp
+
+
+CMake Error at CMakeLists.txt:12520 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q5k_gemv_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12538 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q5k_forward_bench.cpp
+
+
+CMake Error at CMakeLists.txt:12556 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_8_linearw_thread_scaling.cpp
+
+
+CMake Error at CMakeLists.txt:12632 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_8_layer_profile.cpp
+
+
+CMake Error at CMakeLists.txt:12708 (add_executable):
+  Cannot find source file:
+
+    tests/val_051_5_q2k_profile.cpp
+
+
+CMake Error at CMakeLists.txt:12727 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/tests/SovereignTest_PatchRegistry.cpp
+
+
+CMake Error at CMakeLists.txt:12758 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/patcher/HotPatcher.cpp
+
+
+CMake Error at CMakeLists.txt:12790 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/session/SessionStore.cpp
+
+
+CMake Error at CMakeLists.txt:12840 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/tests/SovereignTest_AntiHallucination.cpp
+
+
+CMake Error at CMakeLists.txt:12909 (add_executable):
+  Cannot find source file:
+
+    src/tests/inference_routing_test.cpp
+
+
+CMake Error at CMakeLists.txt:12926 (add_executable):
+  Cannot find source file:
+
+    tests/test_autonomous_pipeline.cpp
+
+
+CMake Error at CMakeLists.txt:12972 (add_executable):
+  Cannot find source file:
+
+    src/test_harness/hotpatch_stress_test.cpp
+
+
+CMake Error at CMakeLists.txt:12992 (add_executable):
+  Cannot find source file:
+
+    src/test_harness/hotpatch_e2e_test.cpp
+
+
+CMake Error at CMakeLists.txt:13014 (add_executable):
+  Cannot find source file:
+
+    src/test_harness/arch_cert_tensor_inventory.cpp
+
+
+CMake Error at CMakeLists.txt:13025 (add_executable):
+  Cannot find source file:
+
+    src/test_harness/fwd_cert_001.cpp
+
+
+CMake Error at CMakeLists.txt:13040 (add_executable):
+  Cannot find source file:
+
+    src/deep2/Deep2QuantCert.cpp
+
+
+CMake Error at CMakeLists.txt:13163 (add_executable):
+  Cannot find source file:
+
+    tests/test_deep2_production.cpp
+
+
+CMake Error at CMakeLists.txt:13190 (add_executable):
+  Cannot find source file:
+
+    src/tools/gpu_benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13235 (add_executable):
+  Cannot find source file:
+
+    src/tools/fused_layer_benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13266 (add_executable):
+  Cannot find source file:
+
+    src/tools/kv_cache_benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13303 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/Fix4_FlashAttention_Benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13330 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13357 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13384 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
+
+
+CMake Error at CMakeLists.txt:13412 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_avx512_intrinsics.cpp
+
+
+CMake Error at CMakeLists.txt:13435 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_profiled.cpp
+
+
+CMake Error at CMakeLists.txt:13457 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_aligned.cpp
+
+
+CMake Error at CMakeLists.txt:13479 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_tiled.cpp
+
+
+CMake Error at CMakeLists.txt:13501 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_vectorized.cpp
+
+
+CMake Error at CMakeLists.txt:13523 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_sparse.cpp
+
+
+CMake Error at CMakeLists.txt:13545 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_fused_sparse.cpp
+
+
+CMake Error at CMakeLists.txt:13567 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_tree_specialized.cpp
+
+
+CMake Error at CMakeLists.txt:13590 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/tree_attention_masm_val038_wrapper.cpp
+
+
+CMake Error at CMakeLists.txt:13616 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/VAL038_FusedAttention_Benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13642 (add_executable):
+  Cannot find source file:
+
+    src/benchmark/VAL038_Validation_Benchmark.cpp
+
+
+CMake Error at CMakeLists.txt:13666 (add_executable):
+  Cannot find source file:
+
+    src/tools/RawrXD_TpsSmoke.cpp
+
+
+CMake Error at CMakeLists.txt:13722 (add_executable):
+  Cannot find source file:
+
+    src/tools/model_analysis_cli.cpp
+
+
+CMake Error at CMakeLists.txt:13756 (add_executable):
+  Cannot find source file:
+
+    src/tests/SwarmSmokeTest.cpp
+
+
+CMake Error at CMakeLists.txt:13778 (add_executable):
+  Cannot find source file:
+
+    src/tests/backend_orchestrator_shard_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:13799 (add_executable):
+  Cannot find source file:
+
+    src/agentic/agentic_planning_orchestrator.cpp
+
+
+CMake Error at CMakeLists.txt:13833 (add_executable):
+  Cannot find source file:
+
+    tests/autonomy/recovery/GoldenRecoveryTests.cpp
+
+
+CMake Error at CMakeLists.txt:13874 (add_executable):
+  Cannot find source file:
+
+    src/sovereign/rawrxd.cpp
+
+
+CMake Error at CMakeLists.txt:14161 (add_executable):
+  Cannot find source file:
+
+    src/ide/test_sovereign_bridge.cpp
+
+
+CMake Error at CMakeLists.txt:14183 (add_executable):
+  Cannot find source file:
+
+    src/debug/test_debugbridge_telemetry.cpp
+
+
+CMake Error at CMakeLists.txt:14195 (add_executable):
+  Cannot find source file:
+
+    src/test_masm_inference.cpp
+
+
+CMake Error at CMakeLists.txt:14230 (add_executable):
+  Cannot find source file:
+
+    src/debug/stress_target.cpp
+
+
+CMake Error at CMakeLists.txt:14238 (add_executable):
+  Cannot find source file:
+
+    src/debug/stress_memory.cpp
+
+
+CMake Error at CMakeLists.txt:14251 (add_executable):
+  Cannot find source file:
+
+    src/rpc/test_simulator.cpp
+
+
+CMake Error at CMakeLists.txt:14388 (add_executable):
+  Cannot find source file:
+
+    src/validation/witness_system_test.cpp
+
+
+CMake Error at CMakeLists.txt:14662 (add_executable):
+  Cannot find source file:
+
+    tests/test_generation.cpp
+
+
+CMake Error at CMakeLists.txt:14667 (add_executable):
+  Cannot find source file:
+
+    tests/test_llama_native.cpp
+
+
+CMake Error at CMakeLists.txt:14713 (add_executable):
+  Cannot find source file:
+
+    tests/k2_runtime_validation.cpp
+
+
+CMake Error at CMakeLists.txt:14765 (add_executable):
+  Cannot find source file:
+
+    tests/test_q4k_decoder.cpp
+
+
+CMake Error at CMakeLists.txt:14777 (add_executable):
+  Cannot find source file:
+
+    tests/test_q6k_asm_certification.cpp
+
+
+CMake Error at CMakeLists.txt:14784 (add_executable):
+  Cannot find source file:
+
+    tests/test_quant_dequant_crosscheck.cpp
+
+
+CMake Error at CMakeLists.txt:14790 (add_executable):
+  Cannot find source file:
+
+    tests/k2_native_smoke_test.cpp
+
+
+CMake Error at CMakeLists.txt:14837 (add_executable):
+  Cannot find source file:
+
+    tests/k2_002_tensor_streaming.cpp
+
+
+CMake Error at CMakeLists.txt:14885 (add_executable):
+  Cannot find source file:
+
+    tests/k2_003_layer_execution.cpp
+
+
+CMake Error at CMakeLists.txt:14934 (add_executable):
+  Cannot find source file:
+
+    tests/k2_003b_native_gemv_validation.cpp
+
+
+CMake Error at CMakeLists.txt:14948 (add_executable):
+  Cannot find source file:
+
+    tests/k2_003c_single_layer_forward.cpp
+
+
+CMake Error at CMakeLists.txt:14961 (add_executable):
+  Cannot find source file:
+
+    tests/k2_004_bounded_prefill.cpp
+
+
+CMake Error at CMakeLists.txt:15010 (add_executable):
+  Cannot find source file:
+
+    tests/k2_004_bounded_multi_layer_prefill.cpp
+
+
+CMake Error at CMakeLists.txt:15024 (add_executable):
+  Cannot find source file:
+
+    tests/k2_005_autoregressive_kv_cache.cpp
+
+
+CMake Error at CMakeLists.txt:15039 (add_executable):
+  Cannot find source file:
+
+    tests/k2_006_bounded_token_generation.cpp
+
+
+CMake Error at CMakeLists.txt:15055 (add_executable):
+  Cannot find source file:
+
+    tests/k2_007_real_output_projection.cpp
+
+
+CMake Error at CMakeLists.txt:15067 (add_executable):
+  Cannot find source file:
+
+    tests/k2_007a_tokenizer_metadata.cpp
+
+
+CMake Error at CMakeLists.txt:15074 (add_executable):
+  Cannot find source file:
+
+    tests/k2_007b_projection_logits_interface.cpp
+
+
+CMake Error at CMakeLists.txt:15088 (add_executable):
+  Cannot find source file:
+
+    tests/k2_008_end_to_end_semantic_generation.cpp
+
+
+CMake Error at CMakeLists.txt:15103 (add_executable):
+  Cannot find source file:
+
+    tests/k2_tls_smoke_test.cpp
+
+
+CMake Error at CMakeLists.txt:15112 (add_executable):
+  Cannot find source file:
+
+    tests/k2_009_token_embedding_lookup.cpp
+
+
+CMake Error at CMakeLists.txt:15162 (add_executable):
+  Cannot find source file:
+
+    tests/b004_transformer_router_streaming_integration.cpp
+
+
+CMake Error at CMakeLists.txt:15226 (add_executable):
+  Cannot find source file:
+
+    B012/build/amortization_test.cpp
+
+
+CMake Error at CMakeLists.txt:15281 (add_executable):
+  Cannot find source file:
+
+    B013/build/stability_test.cpp
+
+
+CMake Error at CMakeLists.txt:15332 (add_executable):
+  Cannot find source file:
+
+    B014/build/compute_decomposition.cpp
+
+
+CMake Error at CMakeLists.txt:15380 (add_executable):
+  Cannot find source file:
+
+    B014/build/b014_boundary_probe.cpp
+
+
+CMake Error at CMakeLists.txt:15428 (add_executable):
+  Cannot find source file:
+
+    B014/build/b014_single_boundary.cpp
+
+
+CMake Error at CMakeLists.txt:15476 (add_executable):
+  Cannot find source file:
+
+    B014/build/b014_lifetime_probe.cpp
+
+
+CMake Error at CMakeLists.txt:15503 (add_executable):
+  Cannot find source file:
+
+    tests/b005_canonical_model_certification.cpp
+
+
+CMake Error at CMakeLists.txt:15546 (add_executable):
+  Cannot find source file:
+
+    tests/b006_kv_cache_verification.cpp
+
+
+CMake Error at CMakeLists.txt:15626 (add_executable):
+  Cannot find source file:
+
+    tests/b007_performance_baseline.cpp
+
+
+CMake Error at CMakeLists.txt:15685 (add_executable):
+  Cannot find source file:
+
+    tests/b008_ci_integration.cpp
+
+
+CMake Error at CMakeLists.txt:15729 (add_executable):
+  Cannot find source file:
+
+    tests/b010/b010_weight_residency_profile.cpp
+
+
+CMake Error at CMakeLists.txt:15806 (add_executable):
+  Cannot find source file:
+
+    tests/b011_weight_residency_optimization.cpp
+
+
+CMake Error at CMakeLists.txt:15883 (add_executable):
+  Cannot find source file:
+
+    tests/b015/b015_residency_validation.cpp
+
+
+CMake Error at CMakeLists.txt:15935 (add_executable):
+  Cannot find source file:
+
+    tests/b015/b015_pool_microbench.cpp
+
+
+CMake Error at CMakeLists.txt:16002 (add_executable):
+  Cannot find source file:
+
+    tests/b015/b015_pool_direct_test.cpp
+
+
+CMake Error at CMakeLists.txt:16052 (add_executable):
+  Cannot find source file:
+
+    B015/build/b015_cert_test.cpp
+
+
+CMake Error at CMakeLists.txt:16085 (add_executable):
+  Cannot find source file:
+
+    tests/b010_b011_fast_experiment.cpp
+
+
+CMake Error at CMakeLists.txt:16162 (add_executable):
+  Cannot find source file:
+
+    tests/b009/b009_batched_prefill_certification.cpp
+
+
+CMake Error at CMakeLists.txt:16205 (add_executable):
+  Cannot find source file:
+
+    tests/b009/b009a_fast_validation.cpp
+
+
+CMake Error at CMakeLists.txt:16270 (add_executable):
+  Cannot find source file:
+
+    tests/b009/b009_t128_certification.cpp
+
+
+CMake Error at CMakeLists.txt:16338 (add_executable):
+  Cannot find source file:
+
+    tests/b016/b016_gemm_efficiency_probe.cpp
+
+
+CMake Error at CMakeLists.txt:16407 (add_executable):
+  Cannot find source file:
+
+    tests/b009/b009_t128_instrumented.cpp
+
+
+CMake Error at CMakeLists.txt:16471 (add_executable):
+  Cannot find source file:
+
+    certification/CertificationHarness.cpp
+
+
+CMake Error at CMakeLists.txt:16572 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_v_proj_parity.cpp
+
+
+CMake Error at CMakeLists.txt:16590 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_attn_out_bisect.cpp
+
+
+CMake Error at CMakeLists.txt:16600 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_o_proj_gemv.cpp
+
+
+CMake Error at CMakeLists.txt:16610 (add_executable):
+  Cannot find source file:
+
+    src/deep2/test_o_proj_mulmat_002.cpp
+
+
+CMake Error at CMakeLists.txt:16622 (add_executable):
+  Cannot find source file:
+
+    src/deep2/_probe_chat_quality.cpp
+
+
+CMake Error at CMakeLists.txt:16631 (add_executable):
+  Cannot find source file:
+
+    tools/ev512_ide_gui_lifecycle_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:16650 (add_executable):
+  Cannot find source file:
+
+    tools/ev512_ops_remaining_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:16668 (add_executable):
+  Cannot find source file:
+
+    tools/ev512_ide_workflow_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:16686 (add_executable):
+  Cannot find source file:
+
+    tools/ev512_ide_restore_reload_fault_smoke.cpp
+
+
+CMake Error at CMakeLists.txt:933 (add_executable):
+  No SOURCES given to target: val_051_2_a_real_token
+
+
+CMake Error at CMakeLists.txt:987 (add_executable):
+  No SOURCES given to target: smoke_k3c_e2e
+
+
+CMake Error at CMakeLists.txt:1030 (add_executable):
+  No SOURCES given to target: p1_cpu_loadmodel_harness
+
+
+CMake Error at CMakeLists.txt:1082 (add_executable):
+  No SOURCES given to target: val_051_5_32_token_kv_stability
+
+
+CMake Error at CMakeLists.txt:1135 (add_executable):
+  No SOURCES given to target: val_051_6_15_token_kv
+
+
+CMake Error at CMakeLists.txt:1188 (add_executable):
+  No SOURCES given to target: val_051_7_residency_baseline
+
+
+CMake Error at CMakeLists.txt:1242 (add_executable):
+  No SOURCES given to target: residency_ab_cert
+
+
+CMake Error at CMakeLists.txt:1294 (add_executable):
+  No SOURCES given to target: validate_val051_evidence
+
+
+CMake Error at CMakeLists.txt:1317 (add_executable):
+  No SOURCES given to target: test_gguf_tokenizer_bounds
+
+
+CMake Error at CMakeLists.txt:1349 (add_executable):
+  No SOURCES given to target: test_parseheader_bounds
+
+
+CMake Error at CMakeLists.txt:1456 (add_executable):
+  No SOURCES given to target: dual_gpu_smoke_test
+
+
+CMake Error at CMakeLists.txt:1507 (add_executable):
+  No SOURCES given to target: gguf_inspector
+
+
+CMake Error at CMakeLists.txt:1524 (add_executable):
+  No SOURCES given to target: comprehensive_dual_gpu_test
+
+
+CMake Error at CMakeLists.txt:1575 (add_executable):
+  No SOURCES given to target: test_omega1_bridge
+
+
+CMake Error at CMakeLists.txt:1633 (add_executable):
+  No SOURCES given to target: Deep2Engine_RouterSmokeTest
+
+
+CMake Error at CMakeLists.txt:1678 (add_executable):
+  No SOURCES given to target: GGUF_Alignment_Diagnostic
+
+
+CMake Error at CMakeLists.txt:1721 (add_executable):
+  No SOURCES given to target: Q4_0_GEMV_Certification
+
+
+CMake Error at CMakeLists.txt:3238 (add_library):
+  No SOURCES given to target: Omega1Engine
+
+
+CMake Error at CMakeLists.txt:3268 (add_library):
+  No SOURCES given to target: RawrXD_Compression
+
+
+CMake Error at CMakeLists.txt:3334 (add_executable):
+  No SOURCES given to target: RawrEngine
+
+
+CMake Error at CMakeLists.txt:3695 (add_executable):
+  No SOURCES given to target: RawrXD_Gold
+
+
+CMake Error at CMakeLists.txt:5199 (add_library):
+  No SOURCES given to target: InferenceEngine
+
+
+CMake Error at CMakeLists.txt:5222 (add_executable):
+  No SOURCES given to target: RawrXD-InferenceEngine
+
+
+CMake Error at CMakeLists.txt:5234 (add_executable):
+  No SOURCES given to target: RawrXD-Generate
+
+
+CMake Error at CMakeLists.txt:5412 (add_executable):
+  No SOURCES given to target: rawrxd-monaco-gen
+
+
+CMake Error at CMakeLists.txt:7934 (add_executable):
+  No SOURCES given to target: SovereignTest_Suite
+
+
+CMake Error at CMakeLists.txt:7965 (add_executable):
+  No SOURCES given to target: SovereignTest_VAL038_E2E
+
+
+CMake Error at CMakeLists.txt:7994 (add_executable):
+  No SOURCES given to target: Deep2_Batch_Test
+
+
+CMake Error at CMakeLists.txt:8022 (add_executable):
+  No SOURCES given to target: test_generate_one_token
+
+
+CMake Error at CMakeLists.txt:8046 (add_executable):
+  No SOURCES given to target: test_q4k_gemv_parity
+
+
+CMake Error at CMakeLists.txt:8064 (add_executable):
+  No SOURCES given to target: test_q_elemdiff
+
+
+CMake Error at CMakeLists.txt:8082 (add_executable):
+  No SOURCES given to target: test_embed_q4k_token
+
+
+CMake Error at CMakeLists.txt:8104 (add_executable):
+  No SOURCES given to target: test_chat_template
+
+
+CMake Error at CMakeLists.txt:8128 (add_executable):
+  No SOURCES given to target: test_chat_template_unit
+
+
+CMake Error at CMakeLists.txt:8150 (add_executable):
+  No SOURCES given to target: test_streaming
+
+
+CMake Error at CMakeLists.txt:8175 (add_executable):
+  No SOURCES given to target: deep2_streamer_cert
+
+
+CMake Error at CMakeLists.txt:8200 (add_executable):
+  No SOURCES given to target: deep2_streamer_parity
+
+
+CMake Error at CMakeLists.txt:8227 (add_executable):
+  No SOURCES given to target: deep2_gpu_solo_cert
+
+
+CMake Error at CMakeLists.txt:8264 (add_executable):
+  No SOURCES given to target: deep2_gpu_solo_decode_cert
+
+
+CMake Error at CMakeLists.txt:8287 (add_executable):
+  No SOURCES given to target: deep2_topology_portability_cert
+
+
+CMake Error at CMakeLists.txt:8310 (add_executable):
+  No SOURCES given to target: deep2_multi_gpu_layer_cert
+
+
+CMake Error at CMakeLists.txt:8333 (add_executable):
+  No SOURCES given to target: deep2_hybrid_all_hw_cert
+
+
+CMake Error at CMakeLists.txt:8356 (add_executable):
+  No SOURCES given to target: deep2_gpu_forward_ops_cert
+
+
+CMake Error at CMakeLists.txt:8379 (add_executable):
+  No SOURCES given to target: deep2_gpu_resident_decode_cert
+
+
+CMake Error at CMakeLists.txt:8402 (add_executable):
+  No SOURCES given to target: deep2_gpu_transfer_counter_cert
+
+
+CMake Error at CMakeLists.txt:8420 (add_executable):
+  No SOURCES given to target: deep2_gpu_transfer_overlap_cert
+
+
+CMake Error at CMakeLists.txt:8442 (add_executable):
+  No SOURCES given to target: deep2_gpu_weight_window_cert
+
+
+CMake Error at CMakeLists.txt:8465 (add_executable):
+  No SOURCES given to target: deep2_gpu_weight_prefetch_cert
+
+
+CMake Error at CMakeLists.txt:8488 (add_executable):
+  No SOURCES given to target: deep2_gpu_numeric_parity_cert
+
+
+CMake Error at CMakeLists.txt:8511 (add_executable):
+  No SOURCES given to target: deep2_gpu_q4k_gemv_cert
+
+
+CMake Error at CMakeLists.txt:8534 (add_executable):
+  No SOURCES given to target: deep2_gpu_q6k_gemv_cert
+
+
+CMake Error at CMakeLists.txt:8557 (add_executable):
+  No SOURCES given to target: deep2_gpu_quant_family_cert
+
+
+CMake Error at CMakeLists.txt:8580 (add_executable):
+  No SOURCES given to target: deep2_gpu_packed_forward_cert
+
+
+CMake Error at CMakeLists.txt:8627 (add_executable):
+  No SOURCES given to target: deep2_gpu_dynamic_window_cert
+
+
+CMake Error at CMakeLists.txt:8650 (add_executable):
+  No SOURCES given to target: deep2_runtime_batch1_cert
+
+
+CMake Error at CMakeLists.txt:8673 (add_executable):
+  No SOURCES given to target: deep2_runtime_batch2_cert
+
+
+CMake Error at CMakeLists.txt:8696 (add_executable):
+  No SOURCES given to target: deep2_runtime_batch3_cert
+
+
+CMake Error at CMakeLists.txt:8712 (add_executable):
+  No SOURCES given to target: deep2_k2_live_gen_perf_cert
+
+
+CMake Error at CMakeLists.txt:8734 (add_executable):
+  No SOURCES given to target: deep2_k2_live_policy_crossover_cert
+
+
+CMake Error at CMakeLists.txt:8760 (add_executable):
+  No SOURCES given to target: deep2_k2_live_policy_e2e_cert
+
+
+CMake Error at CMakeLists.txt:8786 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_stream_copy_cert
+
+
+CMake Error at CMakeLists.txt:8812 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_copy_compute_overlap_cert
+
+
+CMake Error at CMakeLists.txt:8838 (add_executable):
+  No SOURCES given to target: deep2_k2_live_gpu_stream_e2e_cert
+
+
+CMake Error at CMakeLists.txt:8864 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_stream_compute_cert
+
+
+CMake Error at CMakeLists.txt:8890 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_stream_mla_cert
+
+
+CMake Error at CMakeLists.txt:8916 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_full_cert
+
+
+CMake Error at CMakeLists.txt:8942 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_full_depth_cert
+
+
+CMake Error at CMakeLists.txt:8968 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_re_cert
+
+
+CMake Error at CMakeLists.txt:8994 (add_executable):
+  No SOURCES given to target: deep2_k2_stream_miss_reality_cert
+
+
+CMake Error at CMakeLists.txt:9020 (add_executable):
+  No SOURCES given to target: deep2_deepseek_live_gen_perf_cert
+
+
+CMake Error at CMakeLists.txt:9042 (add_executable):
+  No SOURCES given to target: deep2_local_agent_audit_001
+
+
+CMake Error at CMakeLists.txt:9066 (add_executable):
+  No SOURCES given to target: p0_process_alive_001
+
+
+CMake Error at CMakeLists.txt:9083 (add_executable):
+  No SOURCES given to target: vwa_range_contract_001
+
+
+CMake Error at CMakeLists.txt:9103 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_vwa_lineage_001
+
+
+CMake Error at CMakeLists.txt:9126 (add_executable):
+  No SOURCES given to target: vwa_address_contract_001
+
+
+CMake Error at CMakeLists.txt:9155 (add_executable):
+  No SOURCES given to target: vwa_poc_1_001
+
+
+CMake Error at CMakeLists.txt:9210 (add_executable):
+  No SOURCES given to target: deep2_r1_decode_smoke
+
+
+CMake Error at CMakeLists.txt:9223 (add_executable):
+  No SOURCES given to target: deep2_outer_smoke
+
+
+CMake Error at CMakeLists.txt:9236 (add_executable):
+  No SOURCES given to target: deep2_outer_engine_bridge_cert
+
+
+CMake Error at CMakeLists.txt:9263 (add_executable):
+  No SOURCES given to target: deep2_live_path_effectiveness_cert
+
+
+CMake Error at CMakeLists.txt:9282 (add_executable):
+  No SOURCES given to target: deep2_live_path_fused_control_cert
+
+
+CMake Error at CMakeLists.txt:9302 (add_executable):
+  No SOURCES given to target: deep2_live_path_interaction_bounds_cert
+
+
+CMake Error at CMakeLists.txt:9321 (add_executable):
+  No SOURCES given to target: deep2_k2_full_depth_effectiveness_cert
+
+
+CMake Error at CMakeLists.txt:9340 (add_executable):
+  No SOURCES given to target: deep2_k2_full_depth_combined_policy_cert
+
+
+CMake Error at CMakeLists.txt:9362 (add_executable):
+  No SOURCES given to target: deep2_k2_full_depth_trampoline_promotion_cert
+
+
+CMake Error at CMakeLists.txt:9384 (add_executable):
+  No SOURCES given to target: deep2_k2_full_depth_fused_rebench_cert
+
+
+CMake Error at CMakeLists.txt:9405 (add_executable):
+  No SOURCES given to target: deep2_k2_trampoline_full_depth_opt_cert
+
+
+CMake Error at CMakeLists.txt:9425 (add_executable):
+  No SOURCES given to target: deep2_k2_auto_workload_policy_cert
+
+
+CMake Error at CMakeLists.txt:9446 (add_executable):
+  No SOURCES given to target: deep2_k2_e2e_model_size_matrix_cert
+
+
+CMake Error at CMakeLists.txt:9464 (add_executable):
+  No SOURCES given to target: deep2_k2_live_generate_policy_cert
+
+
+CMake Error at CMakeLists.txt:9483 (add_executable):
+  No SOURCES given to target: deep2_k2_live_policy_split_cert
+
+
+CMake Error at CMakeLists.txt:9502 (add_executable):
+  No SOURCES given to target: deep2_k2_policy_hysteresis_cert
+
+
+CMake Error at CMakeLists.txt:9525 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_rebench_promote_cert
+
+
+CMake Error at CMakeLists.txt:9544 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_reuse_promote_cert
+
+
+CMake Error at CMakeLists.txt:9563 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_full_depth_soak_cert
+
+
+CMake Error at CMakeLists.txt:9583 (add_executable):
+  No SOURCES given to target: deep2_k2_live_decode_mla_cert
+
+
+CMake Error at CMakeLists.txt:9603 (add_executable):
+  No SOURCES given to target: mla_cert_001
+
+
+CMake Error at CMakeLists.txt:9622 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_fused_q4kt_cert
+
+
+CMake Error at CMakeLists.txt:9642 (add_executable):
+  No SOURCES given to target: deep2_k2_shard_attn_residency_cert
+
+
+CMake Error at CMakeLists.txt:9662 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_q6k_resident_cert
+
+
+CMake Error at CMakeLists.txt:9682 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_kv_expand_cert
+
+
+CMake Error at CMakeLists.txt:9702 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_kv_expand_opt_cert
+
+
+CMake Error at CMakeLists.txt:9722 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_qkv_proj_cert
+
+
+CMake Error at CMakeLists.txt:9742 (add_executable):
+  No SOURCES given to target: deep2_k2_mla_qa_critical_cert
+
+
+CMake Error at CMakeLists.txt:9762 (add_executable):
+  No SOURCES given to target: deep2_ucf_bounce_smoke
+
+
+CMake Error at CMakeLists.txt:9781 (add_executable):
+  No SOURCES given to target: deep2_ucf_no_stale_dispatch_001
+
+
+CMake Error at CMakeLists.txt:9800 (add_executable):
+  No SOURCES given to target: deep2_ucf_read_converge_001
+
+
+CMake Error at CMakeLists.txt:9819 (add_executable):
+  No SOURCES given to target: deep2_ucf_logits_range_bounce_001
+
+
+CMake Error at CMakeLists.txt:9837 (add_executable):
+  No SOURCES given to target: deep2_ucf_semantic_abi_v1_cert
+
+
+CMake Error at CMakeLists.txt:9856 (add_executable):
+  No SOURCES given to target: deep2_ucf_generation_ticket_001
+
+
+CMake Error at CMakeLists.txt:9874 (add_executable):
+  No SOURCES given to target: deep2_ucf_gpu_ready_e2e
+
+
+CMake Error at CMakeLists.txt:9893 (add_executable):
+  No SOURCES given to target: deep2_ucf_bouncehouse_example
+
+
+CMake Error at CMakeLists.txt:9911 (add_executable):
+  No SOURCES given to target: deep2_ucf_halo_spark_001
+
+
+CMake Error at CMakeLists.txt:9929 (add_executable):
+  No SOURCES given to target: deep2_rmv_mount_001
+
+
+CMake Error at CMakeLists.txt:9967 (add_executable):
+  No SOURCES given to target: deep2_vwa_range_contract_001
+
+
+CMake Error at CMakeLists.txt:9994 (add_executable):
+  No SOURCES given to target: deep2_vwa_poc_1_001
+
+
+CMake Error at CMakeLists.txt:10017 (add_executable):
+  No SOURCES given to target: deep2_vwa_iocp_range_001
+
+
+CMake Error at CMakeLists.txt:10038 (add_executable):
+  No SOURCES given to target: deep2_ucf_mobility_fault_001
+
+
+CMake Error at CMakeLists.txt:10056 (add_executable):
+  No SOURCES given to target: deep2_k2_semantic_seal_cert
+
+
+CMake Error at CMakeLists.txt:10076 (add_executable):
+  No SOURCES given to target: deep2_k2_serverless_stream_latency_cert
+
+
+CMake Error at CMakeLists.txt:10096 (add_executable):
+  No SOURCES given to target: deep2_k2_live_decode_sustained_cert
+
+
+CMake Error at CMakeLists.txt:10116 (add_executable):
+  No SOURCES given to target: deep2_k2_wall_attribution_cert
+
+
+CMake Error at CMakeLists.txt:10136 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_climb_cert
+
+
+CMake Error at CMakeLists.txt:10156 (add_executable):
+  No SOURCES given to target: deep2_k2_trygpu_logits_split_cert
+
+
+CMake Error at CMakeLists.txt:10174 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_gpu_range_attribution_001
+
+
+CMake Error at cmake/Deep2C1C9.fragment.cmake:7 (add_library):
+  No SOURCES given to target: deep2_c1_c9
+Call Stack (most recent call first):
+  CMakeLists.txt:10194 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:7 (add_library):
+  No SOURCES given to target: deep2_vwa_range_core
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:25 (add_executable):
+  No SOURCES given to target: deep2_vwa_core_poc_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaB3B8.fragment.cmake:41 (add_executable):
+  No SOURCES given to target: deep2_vwa_file_coalesce_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10205 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  No SOURCES given to target: deep2_vwa_elastic_range_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:84 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  No SOURCES given to target: deep2_vwa_elastic_lease_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:90 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:33 (add_executable):
+  No SOURCES given to target: deep2_vwa_gpu_stage_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:96 (rawrxd_add_vwa_elastic_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:50 (add_executable):
+  No SOURCES given to target: deep2_vwa_gpu_transfer_parity_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:105 (rawrxd_add_vwa_header_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:50 (add_executable):
+  No SOURCES given to target: deep2_vwa_expert_slice_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:111 (rawrxd_add_vwa_header_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_moe_prefetch_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:114 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_bounded_k2_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:116 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_range_sweep_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:123 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_k2_logits_range_freeze_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:125 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_async_file_range_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:127 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_gpu_transfer_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:129 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_k2_expert_selective_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:134 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_k2_prefetch_overlap_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:136 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at cmake/Deep2VwaConsumerGates.fragment.cmake:66 (add_executable):
+  No SOURCES given to target: deep2_vwa_k2_full_e2e_001
+Call Stack (most recent call first):
+  cmake/Deep2VwaConsumerGates.fragment.cmake:138 (rawrxd_add_c1c9_cert)
+  CMakeLists.txt:10206 (include)
+
+
+CMake Error at CMakeLists.txt:10215 (add_executable):
+  No SOURCES given to target: rawrxd_run_modelname_001
+
+
+CMake Error at CMakeLists.txt:10230 (add_executable):
+  No SOURCES given to target: rawr
+
+
+CMake Error at CMakeLists.txt:10244 (add_executable):
+  No SOURCES given to target: deep2_k2_useful_tps_001
+
+
+CMake Error at CMakeLists.txt:10258 (add_executable):
+  No SOURCES given to target: rawrxd_normal_gguf_final_001
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agentic_cli_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:141 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_session_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:142 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_tools_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:143 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_patch_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:144 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_build_test_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:145 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_steer_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:146 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_safety_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:147 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_resume_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:148 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_run_quality_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:149 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: vwa_k2_prefetch_overlap_001_src
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:150 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: vwa_bounded_k2_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:151 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: k2_useful_tps_001_src
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:152 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_stdout_clean_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:172 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_no_ollama_contract_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:173 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_dual_lane_contract_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:174 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_auto_ladder_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:175 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_chat_repl_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:176 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_product_frontdoor_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:177 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_embed_norm_guard_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:178 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_decode_carry_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:179 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_workspace_live_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:182 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_loop_e2e_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:183 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_agent_steer_resume_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:184 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_second_model_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:185 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_llama32_prefill_divergence_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:186 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_autocomplete_e2e_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:187 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_local_model_compat_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:188 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_autocomplete_live_second_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:189 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:156 (add_executable):
+  No SOURCES given to target: rawrxd_k2_product_e2e_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:190 (rawr_ie_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_product_e2e_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:191 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_product_lavapath_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:192 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_mount_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:193 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_ge_probe_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:194 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:210 (add_executable):
+  No SOURCES given to target: rawrxd_capability_solve_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:225 (add_executable):
+  No SOURCES given to target: rawrxd_qkv_rows_measure_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:239 (add_executable):
+  No SOURCES given to target: rawrxd_kernel_tune_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:127 (add_executable):
+  No SOURCES given to target: rawrxd_streamer_vocab_ext_001
+Call Stack (most recent call first):
+  cmake/RawrAgenticCli.fragment.cmake:253 (rawr_agent_cert)
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/RawrAgenticCli.fragment.cmake:256 (add_executable):
+  No SOURCES given to target: rawrxd_actual_e2e_generation_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10276 (include)
+
+
+CMake Error at cmake/Deep2GatewayCertStandalone.fragment.cmake:8 (add_executable):
+  No SOURCES given to target: Deep2_Gateway_Runtime_Certification
+Call Stack (most recent call first):
+  CMakeLists.txt:10279 (include)
+
+
+CMake Error at cmake/Deep2BenchmarkCert.fragment.cmake:11 (add_executable):
+  No SOURCES given to target: deep2_benchmark
+Call Stack (most recent call first):
+  CMakeLists.txt:10280 (include)
+
+
+CMake Error at cmake/Deep2BenchmarkCert.fragment.cmake:30 (add_executable):
+  No SOURCES given to target: k2_useful_tps_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10280 (include)
+
+
+CMake Error at cmake/Deep2ProductLavapath.fragment.cmake:4 (add_executable):
+  No SOURCES given to target: deep2_product_lavapath
+Call Stack (most recent call first):
+  CMakeLists.txt:10281 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:27 (add_executable):
+  No SOURCES given to target: rawr_terminal_host
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:29 (add_executable):
+  No SOURCES given to target: rawr_termctl
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrBackgroundTerminals.fragment.cmake:31 (add_executable):
+  No SOURCES given to target: rawrxd_background_terminals_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10283 (include)
+
+
+CMake Error at cmake/RawrRemainingStyleCli.fragment.cmake:21 (add_executable):
+  No SOURCES given to target: rawrxd_remaining_style_cli_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10284 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:28 (add_executable):
+  No SOURCES given to target: rawrxd_product_layer_001
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:42 (add_executable):
+  No SOURCES given to target: rawrxd_product_layer_002
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_win32_editor_surface_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:81 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_rawr_pipe_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:83 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_editor_agent_e2e_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:84 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_product_ghost_bind_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:86 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_autocomplete_cancel_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:88 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_installer_clean_machine_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:90 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_offline_demo_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:92 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_repeatable_demo_record_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:94 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_product_runtime_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:96 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:59 (add_executable):
+  No SOURCES given to target: rawrxd_local_api_compat_001
+Call Stack (most recent call first):
+  cmake/RawrProductLayer.fragment.cmake:98 (rawr_product_cert)
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at cmake/RawrProductLayer.fragment.cmake:101 (add_executable):
+  No SOURCES given to target: rawrxd_product_layer_003
+Call Stack (most recent call first):
+  CMakeLists.txt:10285 (include)
+
+
+CMake Error at CMakeLists.txt:10297 (add_executable):
+  No SOURCES given to target: deep2_k2_tps_rainbow_cert
+
+
+CMake Error at CMakeLists.txt:10317 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_slot_reuse_cert
+
+
+CMake Error at CMakeLists.txt:10342 (add_executable):
+  No SOURCES given to target: deep2_nu_live_consumer_cert
+
+
+CMake Error at CMakeLists.txt:10367 (add_executable):
+  No SOURCES given to target: deep2_k2_gpu_mla_nu_bridge_cert
+
+
+CMake Error at CMakeLists.txt:10392 (add_executable):
+  No SOURCES given to target: deep2_nu_perf_cert
+
+
+CMake Error at CMakeLists.txt:10416 (add_executable):
+  No SOURCES given to target: deep2_nu_gemv_parity_cert
+
+
+CMake Error at CMakeLists.txt:10442 (add_executable):
+  No SOURCES given to target: deep2_nu_gpu_gemv_cert
+
+
+CMake Error at CMakeLists.txt:10467 (add_executable):
+  No SOURCES given to target: deep2_nu_pack_format_cert
+
+
+CMake Error at CMakeLists.txt:10487 (add_executable):
+  No SOURCES given to target: rkc_deep2_model_authority_cert
+
+
+CMake Error at CMakeLists.txt:10505 (add_executable):
+  No SOURCES given to target: rkc_model_inventory_cert
+
+
+CMake Error at CMakeLists.txt:10520 (add_executable):
+  No SOURCES given to target: rkc_negative_knowledge_cert
+
+
+CMake Error at CMakeLists.txt:10535 (add_executable):
+  No SOURCES given to target: rkc_minimal_source_cert
+
+
+CMake Error at CMakeLists.txt:10550 (add_executable):
+  No SOURCES given to target: rkc_code_world_cert
+
+
+CMake Error at CMakeLists.txt:10565 (add_executable):
+  No SOURCES given to target: rkc_smoke
+
+
+CMake Error at CMakeLists.txt:10579 (add_executable):
+  No SOURCES given to target: rkc_product_context_smoke
+
+
+CMake Error at CMakeLists.txt:10598 (add_executable):
+  No SOURCES given to target: deep2_giant_moe_paragraph_perf_cert
+
+
+CMake Error at CMakeLists.txt:10621 (add_executable):
+  No SOURCES given to target: agent_runtime_batch1_cert
+
+
+CMake Error at CMakeLists.txt:10644 (add_executable):
+  No SOURCES given to target: deep2_placement_cost_cert
+
+
+CMake Error at CMakeLists.txt:10669 (add_executable):
+  No SOURCES given to target: deep2_mars_e2e
+
+
+CMake Error at CMakeLists.txt:10690 (add_executable):
+  No SOURCES given to target: test_mars_controller
+
+
+CMake Error at CMakeLists.txt:10714 (add_executable):
+  No SOURCES given to target: deep2_execution_policy_smoke
+
+
+CMake Error at CMakeLists.txt:10738 (add_executable):
+  No SOURCES given to target: p1_ide_exec_policy_apply_001
+
+
+CMake Error at CMakeLists.txt:10761 (add_executable):
+  No SOURCES given to target: p1_ide_exec_policy_live_gguf_001
+
+
+CMake Error at CMakeLists.txt:10784 (add_executable):
+  No SOURCES given to target: p1_real_speedup_001
+
+
+CMake Error at CMakeLists.txt:10808 (add_executable):
+  No SOURCES given to target: p1_repeatability_trial_validity_diag_001
+
+
+CMake Error at CMakeLists.txt:10831 (add_executable):
+  No SOURCES given to target: p1_policy_sha_lifecycle_diag_001
+
+
+CMake Error at CMakeLists.txt:10854 (add_executable):
+  No SOURCES given to target: p1_repeatability_state_drift_diag_001
+
+
+CMake Error at CMakeLists.txt:10877 (add_executable):
+  No SOURCES given to target: p1_ui_encoding_cert
+
+
+CMake Error at CMakeLists.txt:10899 (add_executable):
+  No SOURCES given to target: p1_ui_menu_e2e_cert
+
+
+CMake Error at CMakeLists.txt:10918 (add_executable):
+  No SOURCES given to target: p1_ui_sidebar_encoding_cert
+
+
+CMake Error at CMakeLists.txt:10936 (add_executable):
+  No SOURCES given to target: p1_ui_menu_lifetime_cert
+
+
+CMake Error at CMakeLists.txt:10957 (add_executable):
+  No SOURCES given to target: deep2_parity_cert
+
+
+CMake Error at CMakeLists.txt:10980 (add_executable):
+  No SOURCES given to target: ide_agent_loop_cert
+
+
+CMake Error at CMakeLists.txt:11012 (add_executable):
+  No SOURCES given to target: test_deterministic_replay
+
+
+CMake Error at CMakeLists.txt:11035 (add_executable):
+  No SOURCES given to target: dump_qwen35_meta
+
+
+CMake Error at CMakeLists.txt:11060 (add_library):
+  No SOURCES given to target: rawrxd_hexmag_repeat
+
+
+CMake Error at CMakeLists.txt:11070 (add_executable):
+  No SOURCES given to target: RawrXD-Agentic
+
+
+CMake Error at CMakeLists.txt:11090 (add_executable):
+  No SOURCES given to target: hexmag_repeat_tuner_cert
+
+
+CMake Error at CMakeLists.txt:11107 (add_executable):
+  No SOURCES given to target: hexmag_ide_e2e_cert
+
+
+CMake Error at CMakeLists.txt:11132 (add_executable):
+  No SOURCES given to target: hexmag_runtime_controller_cert
+
+
+CMake Error at CMakeLists.txt:11161 (add_executable):
+  No SOURCES given to target: layer_harness
+
+
+CMake Error at CMakeLists.txt:11179 (add_executable):
+  No SOURCES given to target: test_l10_ffn_inp_same_source
+
+
+CMake Error at CMakeLists.txt:11201 (add_executable):
+  No SOURCES given to target: qwen35_attn_contract
+
+
+CMake Error at CMakeLists.txt:11225 (add_executable):
+  No SOURCES given to target: test_val_051_3_multi_token
+
+
+CMake Error at CMakeLists.txt:11252 (add_executable):
+  No SOURCES given to target: val_051_5_fifteen_token
+
+
+CMake Error at CMakeLists.txt:11279 (add_executable):
+  No SOURCES given to target: val_051_5_diag_1_token
+
+
+CMake Error at CMakeLists.txt:11359 (add_executable):
+  No SOURCES given to target: val_bp16_int_1_token
+
+
+CMake Error at CMakeLists.txt:11435 (add_executable):
+  No SOURCES given to target: val_051_5_q6k_synthetic
+
+
+CMake Error at CMakeLists.txt:11457 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_streamer
+
+
+CMake Error at CMakeLists.txt:11481 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_e2e
+
+
+CMake Error at CMakeLists.txt:11557 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_compare
+
+
+CMake Error at CMakeLists.txt:11640 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_weights
+
+
+CMake Error at CMakeLists.txt:11716 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_verify
+
+
+CMake Error at CMakeLists.txt:11745 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_logits
+
+
+CMake Error at CMakeLists.txt:11821 (add_executable):
+  No SOURCES given to target: val_051_6_bp16_perf
+
+
+CMake Error at CMakeLists.txt:11897 (add_executable):
+  No SOURCES given to target: val_051_7_bp16_profile
+
+
+CMake Error at CMakeLists.txt:11973 (add_executable):
+  No SOURCES given to target: val_051_7_bp16_lightweight_profile
+
+
+CMake Error at CMakeLists.txt:12048 (add_executable):
+  No SOURCES given to target: minimal_1token_profiler
+
+
+CMake Error at CMakeLists.txt:12123 (add_executable):
+  No SOURCES given to target: quick_1layer_profiler
+
+
+CMake Error at CMakeLists.txt:12199 (add_executable):
+  No SOURCES given to target: q4k_gemv_bench
+
+
+CMake Error at CMakeLists.txt:12221 (add_executable):
+  No SOURCES given to target: q5k_gemv_bench
+
+
+CMake Error at CMakeLists.txt:12243 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_diag
+
+
+CMake Error at CMakeLists.txt:12320 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_bench
+
+
+CMake Error at CMakeLists.txt:12397 (add_executable):
+  No SOURCES given to target: val_051_5_bp16_loadbench
+
+
+CMake Error at CMakeLists.txt:12427 (add_executable):
+  No SOURCES given to target: val_051_5_q4k_fused_verify
+
+
+CMake Error at CMakeLists.txt:12445 (add_executable):
+  No SOURCES given to target: val_051_5_q4k_gemv_bench
+
+
+CMake Error at CMakeLists.txt:12466 (add_executable):
+  No SOURCES given to target: val_051_5_q2k_gemv_verify
+
+
+CMake Error at CMakeLists.txt:12484 (add_executable):
+  No SOURCES given to target: val_051_5_q2k_gemv_bench
+
+
+CMake Error at CMakeLists.txt:12502 (add_executable):
+  No SOURCES given to target: val_051_5_q5k_gemv_verify
+
+
+CMake Error at CMakeLists.txt:12520 (add_executable):
+  No SOURCES given to target: val_051_5_q5k_gemv_bench
+
+
+CMake Error at CMakeLists.txt:12538 (add_executable):
+  No SOURCES given to target: val_051_5_q5k_forward_bench
+
+
+CMake Error at CMakeLists.txt:12556 (add_executable):
+  No SOURCES given to target: val_051_8_linearw_thread_scaling
+
+
+CMake Error at CMakeLists.txt:12632 (add_executable):
+  No SOURCES given to target: val_051_8_layer_profile
+
+
+CMake Error at CMakeLists.txt:12708 (add_executable):
+  No SOURCES given to target: val_051_5_q2k_profile
+
+
+CMake Error at CMakeLists.txt:12727 (add_executable):
+  No SOURCES given to target: SovereignTest_PatchRegistry
+
+
+CMake Error at CMakeLists.txt:12758 (add_executable):
+  No SOURCES given to target: SovereignTest_HotPatcher
+
+
+CMake Error at CMakeLists.txt:12790 (add_executable):
+  No SOURCES given to target: SovereignTest_AutonomousAgent
+
+
+CMake Error at CMakeLists.txt:12840 (add_executable):
+  No SOURCES given to target: SovereignTest_AntiHallucination
+
+
+CMake Error at CMakeLists.txt:12909 (add_executable):
+  No SOURCES given to target: RawrXD-InferenceRoutingTest
+
+
+CMake Error at CMakeLists.txt:12926 (add_executable):
+  No SOURCES given to target: test_autonomous_pipeline
+
+
+CMake Error at CMakeLists.txt:12972 (add_executable):
+  No SOURCES given to target: hotpatch_stress_test
+
+
+CMake Error at CMakeLists.txt:12992 (add_executable):
+  No SOURCES given to target: hotpatch_e2e_test
+
+
+CMake Error at CMakeLists.txt:13014 (add_executable):
+  No SOURCES given to target: arch_cert_tensor_inventory
+
+
+CMake Error at CMakeLists.txt:13025 (add_executable):
+  No SOURCES given to target: fwd_cert_001
+
+
+CMake Error at CMakeLists.txt:13040 (add_executable):
+  No SOURCES given to target: RawrXD-ProductionBenchmark
+
+
+CMake Error at CMakeLists.txt:13163 (add_executable):
+  No SOURCES given to target: RawrXD-ProductionCertTest
+
+
+CMake Error at CMakeLists.txt:13190 (add_executable):
+  No SOURCES given to target: RawrXD-Benchmark
+
+
+CMake Error at CMakeLists.txt:13235 (add_executable):
+  No SOURCES given to target: RawrXD-FusedBenchmark
+
+
+CMake Error at CMakeLists.txt:13266 (add_executable):
+  No SOURCES given to target: RawrXD-KVBenchmark
+
+
+CMake Error at CMakeLists.txt:13303 (add_executable):
+  No SOURCES given to target: Fix4_FlashAttention_Benchmark
+
+
+CMake Error at CMakeLists.txt:13330 (add_executable):
+  No SOURCES given to target: Fix5_FusedQuantized_Benchmark
+
+
+CMake Error at CMakeLists.txt:13357 (add_executable):
+  No SOURCES given to target: VAL032_SpeculativeDecoding_Benchmark
+
+
+CMake Error at CMakeLists.txt:13384 (add_executable):
+  No SOURCES given to target: VAL032_AVX512_Benchmark
+
+
+CMake Error at CMakeLists.txt:13412 (add_executable):
+  No SOURCES given to target: tree_attention_bench_simple
+
+
+CMake Error at CMakeLists.txt:13435 (add_executable):
+  No SOURCES given to target: tree_attention_profiled
+
+
+CMake Error at CMakeLists.txt:13457 (add_executable):
+  No SOURCES given to target: tree_attention_aligned
+
+
+CMake Error at CMakeLists.txt:13479 (add_executable):
+  No SOURCES given to target: tree_attention_tiled
+
+
+CMake Error at CMakeLists.txt:13501 (add_executable):
+  No SOURCES given to target: tree_attention_vectorized
+
+
+CMake Error at CMakeLists.txt:13523 (add_executable):
+  No SOURCES given to target: tree_attention_sparse
+
+
+CMake Error at CMakeLists.txt:13545 (add_executable):
+  No SOURCES given to target: tree_attention_fused_sparse
+
+
+CMake Error at CMakeLists.txt:13567 (add_executable):
+  No SOURCES given to target: tree_attention_tree_specialized
+
+
+CMake Error at CMakeLists.txt:13590 (add_executable):
+  No SOURCES given to target: tree_attention_masm_val038
+
+
+CMake Error at CMakeLists.txt:13616 (add_executable):
+  No SOURCES given to target: VAL038_FusedAttention_Benchmark
+
+
+CMake Error at CMakeLists.txt:13642 (add_executable):
+  No SOURCES given to target: VAL038_Validation_Benchmark
+
+
+CMake Error at CMakeLists.txt:13666 (add_executable):
+  No SOURCES given to target: RawrXD-TpsSmoke
+
+
+CMake Error at CMakeLists.txt:13722 (add_executable):
+  No SOURCES given to target: RawrXD-ModelAnalysis
+
+
+CMake Error at CMakeLists.txt:13756 (add_executable):
+  No SOURCES given to target: SwarmSmokeTest
+
+
+CMake Error at CMakeLists.txt:13778 (add_executable):
+  No SOURCES given to target: BackendOrchestratorShardSmoke
+
+
+CMake Error at CMakeLists.txt:13799 (add_executable):
+  No SOURCES given to target: agentic_orchestrator_smoke_test
+
+
+CMake Error at CMakeLists.txt:13833 (add_executable):
+  No SOURCES given to target: RawrXD-GoldenRecoveryTests
+
+
+CMake Error at CMakeLists.txt:13874 (add_executable):
+  No SOURCES given to target: rawrxd
+
+
+CMake Error at CMakeLists.txt:14161 (add_executable):
+  No SOURCES given to target: TestSovereignBridge
+
+
+CMake Error at CMakeLists.txt:14183 (add_executable):
+  No SOURCES given to target: TestDebugBridgeTelemetry
+
+
+CMake Error at CMakeLists.txt:14195 (add_executable):
+  No SOURCES given to target: TestMASMInference
+
+
+CMake Error at CMakeLists.txt:14230 (add_executable):
+  No SOURCES given to target: stress_target
+
+
+CMake Error at CMakeLists.txt:14238 (add_executable):
+  No SOURCES given to target: stress_memory
+
+
+CMake Error at CMakeLists.txt:14251 (add_executable):
+  No SOURCES given to target: test_simulator
+
+
+CMake Error at CMakeLists.txt:14388 (add_executable):
+  No SOURCES given to target: witness_system_test
+
+
+CMake Error at CMakeLists.txt:14662 (add_executable):
+  No SOURCES given to target: test_generation
+
+
+CMake Error at CMakeLists.txt:14667 (add_executable):
+  No SOURCES given to target: test_llama_native
+
+
+CMake Error at CMakeLists.txt:14713 (add_executable):
+  No SOURCES given to target: k2_runtime_validation
+
+
+CMake Error at CMakeLists.txt:14765 (add_executable):
+  No SOURCES given to target: test_q4k_decoder
+
+
+CMake Error at CMakeLists.txt:14777 (add_executable):
+  No SOURCES given to target: test_q6k_asm_certification
+
+
+CMake Error at CMakeLists.txt:14784 (add_executable):
+  No SOURCES given to target: test_quant_dequant_crosscheck
+
+
+CMake Error at CMakeLists.txt:14790 (add_executable):
+  No SOURCES given to target: k2_native_smoke_test
+
+
+CMake Error at CMakeLists.txt:14837 (add_executable):
+  No SOURCES given to target: k2_002_tensor_streaming
+
+
+CMake Error at CMakeLists.txt:14885 (add_executable):
+  No SOURCES given to target: k2_003_layer_execution
+
+
+CMake Error at CMakeLists.txt:14934 (add_executable):
+  No SOURCES given to target: k2_003b_native_gemv_validation
+
+
+CMake Error at CMakeLists.txt:14948 (add_executable):
+  No SOURCES given to target: k2_003c_single_layer_forward
+
+
+CMake Error at CMakeLists.txt:14961 (add_executable):
+  No SOURCES given to target: k2_004_bounded_prefill
+
+
+CMake Error at CMakeLists.txt:15010 (add_executable):
+  No SOURCES given to target: k2_004_bounded_multi_layer_prefill
+
+
+CMake Error at CMakeLists.txt:15024 (add_executable):
+  No SOURCES given to target: k2_005_autoregressive_kv_cache
+
+
+CMake Error at CMakeLists.txt:15039 (add_executable):
+  No SOURCES given to target: k2_006_bounded_token_generation
+
+
+CMake Error at CMakeLists.txt:15055 (add_executable):
+  No SOURCES given to target: k2_007_real_output_projection
+
+
+CMake Error at CMakeLists.txt:15067 (add_executable):
+  No SOURCES given to target: k2_007a_tokenizer_metadata
+
+
+CMake Error at CMakeLists.txt:15074 (add_executable):
+  No SOURCES given to target: k2_007b_projection_logits_interface
+
+
+CMake Error at CMakeLists.txt:15088 (add_executable):
+  No SOURCES given to target: k2_008_end_to_end_semantic_generation
+
+
+CMake Error at CMakeLists.txt:15103 (add_executable):
+  No SOURCES given to target: k2_tls_smoke_test
+
+
+CMake Error at CMakeLists.txt:15112 (add_executable):
+  No SOURCES given to target: k2_009_token_embedding_lookup
+
+
+CMake Error at CMakeLists.txt:15162 (add_executable):
+  No SOURCES given to target: b004_transformer_router_streaming_integration
+
+
+CMake Error at CMakeLists.txt:15179 (add_executable):
+  No SOURCES given to target:
+  b004_transformer_router_streaming_integration_cpu
+
+
+CMake Error at CMakeLists.txt:15226 (add_executable):
+  No SOURCES given to target: b012_amortization_test
+
+
+CMake Error at CMakeLists.txt:15281 (add_executable):
+  No SOURCES given to target: b013_stability_test
+
+
+CMake Error at CMakeLists.txt:15332 (add_executable):
+  No SOURCES given to target: b014_compute_decomposition
+
+
+CMake Error at CMakeLists.txt:15380 (add_executable):
+  No SOURCES given to target: b014_boundary_probe
+
+
+CMake Error at CMakeLists.txt:15428 (add_executable):
+  No SOURCES given to target: b014_single_boundary
+
+
+CMake Error at CMakeLists.txt:15476 (add_executable):
+  No SOURCES given to target: b014_lifetime_probe
+
+
+CMake Error at CMakeLists.txt:15503 (add_executable):
+  No SOURCES given to target: b005_canonical_model_certification
+
+
+CMake Error at CMakeLists.txt:15546 (add_executable):
+  No SOURCES given to target: b006_kv_cache_verification
+
+
+CMake Error at CMakeLists.txt:15626 (add_executable):
+  No SOURCES given to target: b007_performance_baseline
+
+
+CMake Error at CMakeLists.txt:15685 (add_executable):
+  No SOURCES given to target: b008_ci_integration
+
+
+CMake Error at CMakeLists.txt:15729 (add_executable):
+  No SOURCES given to target: b010_weight_residency_profile
+
+
+CMake Error at CMakeLists.txt:15806 (add_executable):
+  No SOURCES given to target: b011_weight_residency_optimization
+
+
+CMake Error at CMakeLists.txt:15883 (add_executable):
+  No SOURCES given to target: b015_residency_validation
+
+
+CMake Error at CMakeLists.txt:15935 (add_executable):
+  No SOURCES given to target: b015_pool_microbench
+
+
+CMake Error at CMakeLists.txt:16002 (add_executable):
+  No SOURCES given to target: b015_pool_direct_test
+
+
+CMake Error at CMakeLists.txt:16052 (add_executable):
+  No SOURCES given to target: b015_dequant_certification
+
+
+CMake Error at CMakeLists.txt:16085 (add_executable):
+  No SOURCES given to target: b010_b011_fast_experiment
+
+
+CMake Error at CMakeLists.txt:16162 (add_executable):
+  No SOURCES given to target: b009_batched_prefill_certification
+
+
+CMake Error at CMakeLists.txt:16205 (add_executable):
+  No SOURCES given to target: b009a_fast_validation
+
+
+CMake Error at CMakeLists.txt:16270 (add_executable):
+  No SOURCES given to target: b009_t128_certification
+
+
+CMake Error at CMakeLists.txt:16338 (add_executable):
+  No SOURCES given to target: b016_gemm_efficiency_probe
+
+
+CMake Error at CMakeLists.txt:16407 (add_executable):
+  No SOURCES given to target: b009_t128_instrumented
+
+
+CMake Error at CMakeLists.txt:16471 (add_executable):
+  No SOURCES given to target: certification_harness
+
+
+CMake Error at CMakeLists.txt:16572 (add_executable):
+  No SOURCES given to target: test_v_proj_parity
+
+
+CMake Error at CMakeLists.txt:16590 (add_executable):
+  No SOURCES given to target: test_attn_out_bisect
+
+
+CMake Error at CMakeLists.txt:16600 (add_executable):
+  No SOURCES given to target: test_o_proj_gemv
+
+
+CMake Error at CMakeLists.txt:16610 (add_executable):
+  No SOURCES given to target: test_o_proj_mulmat_002
+
+
+CMake Error at CMakeLists.txt:16622 (add_executable):
+  No SOURCES given to target: _probe_chat_quality
+
+
+CMake Error at CMakeLists.txt:16631 (add_executable):
+  No SOURCES given to target: ev512_ide_gui_lifecycle_smoke
+
+
+CMake Error at CMakeLists.txt:16650 (add_executable):
+  No SOURCES given to target: ev512_ops_remaining_smoke
+
+
+CMake Error at CMakeLists.txt:16668 (add_executable):
+  No SOURCES given to target: ev512_ide_workflow_smoke
+
+
+CMake Error at CMakeLists.txt:16686 (add_executable):
+  No SOURCES given to target: ev512_ide_restore_reload_fault_smoke
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

@@ -1,0 +1,116 @@
+# Deep2 Qwen32 85TPS — Batch 3/5, item 31
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-2
+#
+# Adds a no-extra-model self-speculative drafter:
+#   token0 = exact current Qwen target argmax
+#   token1..N = shallow first-D-layer Qwen predictions
+#
+# Draft future KV is written transactionally and always rolled back before the
+# full target verifier runs. Therefore draft errors cannot corrupt target state.
+#
+# Env:
+#   DEEP2_SELF_DRAFT_LAYERS=8   (default 8, clamped 1..numLayers-1)
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0031_shallow_self_speculative_drafter.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     bool verifySpeculativeGreedyWindow(
+         float* currentHidden,
+         const std::vector<int32_t>& proposals,
+         size_t maxEmit,
+         std::vector<int32_t>& verified);
++    bool proposeSelfSpeculativeGreedy(
++        const float* currentHidden,size_t maxDraft,
++        std::vector<int32_t>& proposals,
++        uint32_t draftLayersOverride=0);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
+ #include <algorithm>
+ #include <cmath>
++#include <cstdlib>
+ #include <cstring>
+@@
+ inline int greedyArgmax(const float* p,size_t n) {
+@@
+ }
++
++uint32_t selfDraftDepth(const ModelWeights& m,uint32_t overrideDepth) {
++    uint32_t d=overrideDepth;
++    if(!d) {
++        d=8;
++        if(const char* e=std::getenv("DEEP2_SELF_DRAFT_LAYERS")) {
++            const long v=std::strtol(e,nullptr,10);
++            if(v>0) d=(uint32_t)v;
++        }
++    }
++    if(m.numLayers<=1) return 0;
++    return std::max<uint32_t>(
++        1,std::min<uint32_t>(d,(uint32_t)m.numLayers-1));
++}
+ }
++
++bool Deep2Engine::proposeSelfSpeculativeGreedy(
++    const float* currentHidden,size_t maxDraft,
++    std::vector<int32_t>& proposals,uint32_t draftLayersOverride)
++{
++    proposals.clear();
++    if(!currentHidden||!kvCache||!deterministicGreedy_||
++       maxDraft==0||maxDraft>4||modelWeights.isMoE||modelWeights.useMLA)
++        return false;
++
++    const uint32_t depth=selfDraftDepth(modelWeights,draftLayersOverride);
++    if(!depth) return false;
++
++    // First proposal is exact: it comes from the current FULL target hidden.
++    std::vector<float> lg(modelWeights.vocabSize);
++    computeLogits(currentHidden,lg.data());
++    int tok=greedyArgmax(lg.data(),lg.size());
++    if(tok<0) return false;
++    proposals.push_back(tok);
++    if(maxDraft==1) return true;
++
++    const size_t base=kvCache->currentLength();
++    KVSpecTransaction tx(*kvCache);
++    std::vector<float> h(modelWeights.hiddenDim);
++
++    while(proposals.size()<maxDraft) {
++        const int prev=proposals.back();
++        if(!embedToken(prev,h.data())) {
++            tx.rollback(); return false;
++        }
++
++        // Draft only the first D target layers. Those layers see the exact
++        // committed KV prefix and previously-drafted shallow KV positions.
++        const size_t seq=kvCache->currentLength()+1;
++        try {
++            for(uint32_t l=0;l<depth;++l) {
++                forwardLayer(l,h.data(),layerOut,seq);
++                std::memcpy(
++                    h.data(),layerOut,modelWeights.hiddenDim*sizeof(float));
++            }
++        } catch(...) {
++            tx.rollback(); return false;
++        }
++        if(!kvCache->advance()) {
++            tx.rollback(); return false;
++        }
++
++        computeLogits(h.data(),lg.data());
++        tok=greedyArgmax(lg.data(),lg.size());
++        if(tok<0) {
++            tx.rollback(); return false;
++        }
++        proposals.push_back(tok);
++    }
++
++    // Draft KV is never authoritative.
++    tx.rollback();
++    return !proposals.empty() && kvCache->currentLength()==base;
++}

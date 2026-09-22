@@ -1,0 +1,14 @@
+﻿
+Length LastWriteTime       
+------ -------------       
+    11 9/18/2026 4:38:56 AM
+
+
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1
+[RAWR_AGENT] audit files_enumerated=1855
+GEN_ENTER maxOut=128
+GEN_DECODE_LIMIT=128 specActive=0
+[RAWR_AGENT] step=0 tool=audit.coverage exit=0 len=171
+GEN_ENTER maxOut=128

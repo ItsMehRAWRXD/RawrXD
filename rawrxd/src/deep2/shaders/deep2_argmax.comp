@@ -1,0 +1,35 @@
+#version 450
+layout(local_size_x=256) in;
+layout(set=0,binding=0,std430) readonly buffer In0 { float x[]; };
+layout(set=0,binding=1,std430) writeonly buffer OutV { float maxv[]; };
+layout(set=0,binding=2,std430) writeonly buffer OutI { uint maxi[]; };
+layout(push_constant) uniform Push { uint rows; uint batch; } pc;
+
+shared float sv[256];
+shared uint si[256];
+
+void main() {
+    uint b=gl_WorkGroupID.x;
+    uint lane=gl_LocalInvocationID.x;
+    if(b>=pc.batch) return;
+    float best=-3.402823466e+38;
+    uint besti=0u;
+    uint base=b*pc.rows;
+    for(uint i=lane;i<pc.rows;i+=256u) {
+        float v=x[base+i];
+        if(v>best || (v==best && i<besti)) {best=v;besti=i;}
+    }
+    sv[lane]=best; si[lane]=besti;
+    barrier();
+    for(uint s=128u;s>0u;s>>=1u) {
+        if(lane<s) {
+            float ov=sv[lane+s];
+            uint oi=si[lane+s];
+            if(ov>sv[lane] || (ov==sv[lane]&&oi<si[lane])) {
+                sv[lane]=ov;si[lane]=oi;
+            }
+        }
+        barrier();
+    }
+    if(lane==0u){maxv[b]=sv[0];maxi[b]=si[0];}
+}

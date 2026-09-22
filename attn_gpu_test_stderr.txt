@@ -1,0 +1,14 @@
+GATE_ONLY_MODE ntok=4
+
+=== THRESHOLD ntok=4 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_ALIAS_REJECT raw=1 driver=23 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) canonical_raw=0 canonical_driver=1 canonical_name=AMD Radeon AI PRO R9700
+VK_ALIAS_REJECT raw=3 driver=23 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) canonical_raw=2 canonical_driver=1 canonical_name=AMD Radeon(TM) Graphics
+VK_ALIAS_REJECT raw=5 driver=23 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) canonical_raw=4 canonical_driver=1 canonical_name=AMD Radeon RX 7800 XT
+DEEP2_GPU_FILTER discrete=2 igpu=REJECTED
+FSB_EMBED_OK

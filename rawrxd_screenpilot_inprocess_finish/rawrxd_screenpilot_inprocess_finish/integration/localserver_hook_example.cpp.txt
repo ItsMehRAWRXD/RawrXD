@@ -1,0 +1,109 @@
+/*
+THIS FILE IS AN INTEGRATION MAP, NOT A SECOND SERVER.
+
+1) During RawrXD LocalServer startup on 127.0.0.1:11435:
+
+#include "rawrxd_screenpilot_agent.h"
+
+static int AuthorityRun(
+    void* user,
+    const RawrXD_SP_AgentRequestV1* r,
+    RawrXD_SP_EmitFn emit,
+    void* emitUser,
+    RawrXD_SP_IsCancelledFn cancelled,
+    void* cancelUser)
+{
+    auto* app = static_cast<RawrXDApp*>(user);
+
+    AgentRequest req;
+    req.id        = std::string(r->request_id.data, r->request_id.size);
+    req.mode      = std::string(r->mode.data,       r->mode.size);
+    req.model     = std::string(r->model.data,      r->model.size);
+    req.workspace = std::string(r->workspace.data,  r->workspace.size);
+    req.prompt    = std::string(r->prompt.data,     r->prompt.size);
+
+    // CRITICAL:
+    // This must be your canonical coordinator/registry entrypoint.
+    // Do NOT call CreateProcess/system()/direct filesystem tools here.
+    return app->agentCoordinator.Run(
+        req,
+        [&](std::string_view type, std::string_view data) {
+            return emit(
+                emitUser,
+                std::string(type).c_str(),
+                data.data(),
+                data.size()) != 0;
+        },
+        [&] {
+            return cancelled(cancelUser) != 0;
+        });
+}
+
+RawrXD_SP_ConfigV1 cfg{};
+cfg.abi_version = RAWRXD_SCREENPILOT_ABI_V1;
+cfg.port = 11435;
+std::string root = "F:\\~dev";
+cfg.workspace_root = {root.data(), root.size()};
+cfg.allow_null_origin = 0;
+
+RawrXD_SP_AuthorityV1 auth{};
+auth.abi_version = RAWRXD_SCREENPILOT_ABI_V1;
+auth.user = &app;
+auth.run_agent = AuthorityRun;
+
+if (!RawrXD_ScreenPilot_Initialize(&cfg, &auth)) {
+    // fail startup or disable ScreenPilot explicitly
+}
+
+2) In the EXISTING LocalServer request router:
+
+RawrXD_SP_HttpRequestV1 rq {
+    {method.data(), method.size()},
+    {path.data(), path.size()},
+    {host.data(), host.size()},
+    {origin.data(), origin.size()},
+    {sessionHeader.data(), sessionHeader.size()},
+    {contentType.data(), contentType.size()},
+    {body.data(), body.size()}
+};
+
+RawrXD_SP_HttpSinkV1 sink {
+    &response,
+    BeginResponse,
+    AddHeader,
+    WriteResponse,
+    EndResponse
+};
+
+if (RawrXD_ScreenPilot_HandleHttp(&rq, &sink)) {
+    return; // route consumed
+}
+
+3) Serve the existing HTML + client JS from the SAME server:
+
+GET /screenpilot
+    -> F:\ide_chatbot.html
+GET /screenpilot/screenpilot_client.js
+    -> screenpilot_client.js
+
+Recommended static response headers:
+
+Content-Security-Policy:
+  default-src 'self';
+  connect-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;
+  object-src 'none';
+  base-uri 'none';
+  frame-ancestors 'none'
+
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+
+4) On shutdown:
+
+RawrXD_ScreenPilot_Shutdown();
+
+5) DELETE/disable the temporary :11437 subprocess bridge after this path passes.
+*/

@@ -1,0 +1,82 @@
+# Deep2 Qwen32 85TPS — Batch 8, item 58
+# Base: apply after 0057.
+#
+# Goal:
+#   cache immutable geometry/row-split metadata for every GGUF weight once.
+# Removes repeated:
+#   - row-split selection
+#   - weight-view construction
+#   - output slab geometry
+#
+# Does NOT cache VkCommandBuffer execution itself (buffers/epochs still change).
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0058_immutable_dispatch_plan_cache.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ namespace Deep2 {
++struct CachedDualRowPlan {
++    RowSplitPlan split{};
++    GpuWeightView gpu0{};
++    GpuWeightView gpu1{};
++    bool valid=false;
++};
++
++const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
++    const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ namespace {
++struct DualPlanKey {
++    const void* data=nullptr;
++    uint32_t rows=0,cols=0;
++    int type=0;
++    uint16_t ratioPermille=500;
++    bool operator==(const DualPlanKey& o) const noexcept {
++        return data==o.data&&rows==o.rows&&cols==o.cols&&
++               type==o.type&&ratioPermille==o.ratioPermille;
++    }
++};
++struct DualPlanHash {
++    size_t operator()(const DualPlanKey& k) const noexcept {
++        uint64_t h=(uint64_t)(uintptr_t)k.data;
++        h^=(uint64_t)k.rows<<32;h^=k.cols;
++        h^=(uint64_t)(uint32_t)k.type*0x9e3779b185ebca87ull;
++        h^=(uint64_t)k.ratioPermille<<7;
++        return (size_t)h;
++    }
++};
++}
++
++const CachedDualRowPlan* Deep2GetCachedDualRowPlan(
++    const WeightTensor& wt,VulkanCompute& g0,VulkanCompute& g1)
++{
++    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
++    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
++    const uint16_t pm=(uint16_t)std::max<long double>(
++        1,std::min<long double>(999,s0/(s0+s1)*1000.0L+0.5L));
++    const DualPlanKey key{
++        wt.data,(uint32_t)wt.rows,(uint32_t)wt.cols,wt.type,pm};
++    static std::mutex mu;
++    static std::unordered_map<
++        DualPlanKey,CachedDualRowPlan,DualPlanHash> cache;
++    std::lock_guard<std::mutex> lock(mu);
++    auto it=cache.find(key);
++    if(it!=cache.end()) return &it->second;
++
++    CachedDualRowPlan p{};
++    p.split=chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
++    p.valid=p.split.valid &&
++        Deep2BuildGpuWeightView(
++            wt,p.split.row0Begin,p.split.row0Count,p.gpu0) &&
++        Deep2BuildGpuWeightView(
++            wt,p.split.row1Begin,p.split.row1Count,p.gpu1);
++    auto ins=cache.emplace(key,std::move(p));
++    return &ins.first->second;
+ }

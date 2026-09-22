@@ -1,0 +1,108 @@
+# Deep2 Qwen32 85TPS — Batch 7, item 53
+# Base: apply after 0052.
+#
+# Goal:
+#   grouped QKV / Gate-Up row-split dispatch reuses the resident batch input
+#   mirror and pins each row slice on first use.
+#
+# Warm behavior:
+#   activation upload: 1 per GPU / group
+#   weight upload: 0 after warmup
+#   QKV dispatches: 3 resident weights / one resident input
+#   Gate-Up dispatches: 2 resident weights / one resident input
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0053_resident_grouped_qkv_gateup_dispatch.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightGroupHostBatchQ4K(
+         const GpuWeightView* weights,float* const* outputs,size_t weightCount,
+         const float* inputBatch,uint32_t batch,uint64_t epoch);
++    bool RunWeightGroupResidentInputQ4K(
++        const GpuWeightView* weights,float* const* outputs,size_t weightCount,
++        uint32_t cols,uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::RunWeightGroupResidentInputQ4K(
++    const GpuWeightView* weights,float* const* outputs,size_t weightCount,
++    uint32_t cols,uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weights||!outputs||weightCount<2||weightCount>3||
++       !residentBatchInput_||cols>residentBatchCols_||
++       batch>residentBatchCapacity_||!batch)
++        return false;
++    SetWorkEpoch(epoch);
++
++    size_t totalBytes=0, offsets[3]{};
++    for(size_t i=0;i<weightCount;++i) {
++        if(!weights[i].valid()||weights[i].type!=12||
++           weights[i].cols!=cols||!outputs[i])
++            return false;
++        if(!PinWeightView(weights[i])) return false;
++        offsets[i]=totalBytes;
++        totalBytes+=(size_t)batch*weights[i].rows*sizeof(float);
++        if(!EnsureScratch(
++                130u+(unsigned)i,
++                (size_t)batch*weights[i].rows))
++            return false;
++    }
++    DeviceBuf* ds=nullptr;void* dm=nullptr;
++    if(!ensureMappedStaging(false,totalBytes,ds,dm)) return false;
++    if(!BeginFusedLayer()) return false;
++    auto abort=[&]{
++        if(FusedRecording()) (void)EndFusedLayer();
++        return false;
++    };
++    for(size_t i=0;i<weightCount;++i) {
++        auto& out=Scratch(130u+(unsigned)i);
++        if(!DispatchGemvQ4KBatch(
++                weights[i].data,weights[i].bytes,
++                residentBatchInput_,out,
++                weights[i].rows,cols,batch))
++            return abort();
++        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
++        if(!recordCopy(
++                fusedCmd_,out,*ds,bytes,0,(VkDeviceSize)offsets[i]))
++            return abort();
++    }
++    if(!EndFusedLayer()) return false;
++    for(size_t i=0;i<weightCount;++i) {
++        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
++        std::memcpy(outputs[i],(const uint8_t*)dm+offsets[i],bytes);
++    }
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
+@@
+-    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
++    // Both cards receive the shared activation ONCE.
++    if(!g0.UploadResidentBatchInput(
++            inputBatch,weights[0]->cols,batch,epoch)||
++       !g1.UploadResidentBatchInput(
++            inputBatch,weights[0]->cols,batch,epoch))
++        return false;
++
++    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
+         GpuWeightView views[3]{};
+         float* outs[3]{};
+         for(size_t i=0;i<weightCount;++i) {
+             views[i]=it[i].w[s];
+             outs[i]=it[i].y[s].data();
+         }
+-        return g.RunWeightGroupHostBatchQ4K(
+-            views,outs,weightCount,inputBatch,batch,epoch);
++        return g.RunWeightGroupResidentInputQ4K(
++            views,outs,weightCount,weights[0]->cols,batch,epoch);
+     };

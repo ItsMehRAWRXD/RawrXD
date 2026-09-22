@@ -1,0 +1,61 @@
+﻿
+=== THRESHOLD ntok=1 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.72
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=4 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.80
+VK_PHYS ordinal=6 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_FILTER discrete=4 igpu=REJECTED
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 discrete=1 localGB=31.72
+DEEP2_GPU_CANDIDATE rank=2 ordinal=4 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+DEEP2_GPU_CANDIDATE rank=3 ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E discrete=1 localGB=15.80
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+DEEP2_GPU_SELECT slot=1 ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551
+SPEC_VK_END initialized=1 devices=2
+SPEC_CONFIG_BEGIN
+SPEC_CONFIG_END
+SPEC_SETUP_EXIT
+THRESHOLD_SETUP_OK ntok=1
+THRESHOLD_GEN_BEGIN ntok=1
+RUN_TOKENIZE_BEGIN n=1
+RUN_TOKENIZE_OK tokens=19
+RUN_GENERATE_BEGIN prompt=19 out=1
+GEN_ENTER maxOut=1
+GEN_DECODE_LIMIT=1 specActive=1
+GEN_LOOP_TOP gen=0 rem=1 specActive=1
+[LOGITS] token=0 min=-20.3170 max=21.5677 mean=-2.7952 std=2.8943 argmax=198
+[LOGITS_HEAD] -0.234033 -2.222256 1.278841 -3.019772 -2.336701
+GEN_EXIT generated=1
+RUN_GENERATE_END got=1
+THRESHOLD_GEN_END ntok=1 got=1
+THRESHOLD_RESULT ntok=1 PASS
+
+=== THRESHOLD ntok=2 ===
+SPEC_SETUP_ENTER spec=1
+SPEC_INIT_BEGIN
+SPEC_INIT_OK
+SPEC_LOAD_BEGIN
+SPEC_LOAD_END ok=1
+SPEC_VK_BEGIN spec=1
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.72
+VK_PHYS ordinal=2 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=47.08
+VK_PHYS ordinal=4 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.98
+VK_PHYS ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E type=2 discrete=1 compute=1 localGB=15.80
+VK_PHYS ordinal=6 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_FILTER discrete=4 igpu=REJECTED
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+DEEP2_GPU_CANDIDATE rank=1 ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 discrete=1 localGB=31.72
+DEEP2_GPU_CANDIDATE rank=2 ordinal=4 name=AMD Radeon RX 7800 XT vendor=0x1002 device=0x747E discrete=1 localGB=15.98
+DEEP2_GPU_CANDIDATE rank=3 ordinal=5 name=Microsoft Direct3D12 (AMD Radeon RX 7800 XT) vendor=0x1002 device=0x747E discrete=1 localGB=15.80
+

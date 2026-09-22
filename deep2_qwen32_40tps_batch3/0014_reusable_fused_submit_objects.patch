@@ -1,0 +1,136 @@
+# Deep2 Qwen32 40TPS — Batch 3/5, item 14
+# Base: apply after 0013.
+# Goal: fused range submission reuses one VkCommandBuffer, VkFence and
+# VkQueryPool per device instead of allocate/create/destroy/free every token.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0014_reusable_fused_submit_objects.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool fused_ = false;
+     VkCommandBuffer fusedCmd_ = VK_NULL_HANDLE;
+     VkQueryPool fusedQuery_ = VK_NULL_HANDLE;
+     uint64_t fusedHostSubmitNs_ = 0;
++    VkCommandBuffer reusableFusedCmd_ = VK_NULL_HANDLE;
++    VkQueryPool reusableFusedQuery_ = VK_NULL_HANDLE;
++    VkFence reusableFusedFence_ = VK_NULL_HANDLE;
++    bool ensureReusableFusedSubmitObjects();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+ bool VulkanCompute::UploadNormWeight(
+@@
+ }
+
++bool VulkanCompute::ensureReusableFusedSubmitObjects() {
++    if(!device_||!commandPool_) return false;
++
++    if(reusableFusedCmd_==VK_NULL_HANDLE){
++        VkCommandBufferAllocateInfo ai{};
++        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++        ai.commandPool=commandPool_;
++        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++        ai.commandBufferCount=1;
++        if(vkAllocateCommandBuffers(device_,&ai,&reusableFusedCmd_)!=VK_SUCCESS)
++            return false;
++    }
++    if(reusableFusedFence_==VK_NULL_HANDLE){
++        VkFenceCreateInfo fi{};
++        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        if(vkCreateFence(device_,&fi,nullptr,&reusableFusedFence_)!=VK_SUCCESS)
++            return false;
++    }
++    if(timestampValidBits_ && reusableFusedQuery_==VK_NULL_HANDLE){
++        VkQueryPoolCreateInfo qi{};
++        qi.sType=VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
++        qi.queryType=VK_QUERY_TYPE_TIMESTAMP;
++        qi.queryCount=2;
++        if(vkCreateQueryPool(device_,&qi,nullptr,&reusableFusedQuery_)!=VK_SUCCESS)
++            return false;
++    }
++    return true;
++}
++
+ bool VulkanCompute::BeginFusedLayer() {
+     if (fused_ || !initialized_ || !opsPipeline_) return false;
+-    if (!beginCommand(fusedCmd_, fusedQuery_, true)) return false;
++    if(!ensureReusableFusedSubmitObjects()) return false;
++
++    if(vkResetCommandBuffer(reusableFusedCmd_,0)!=VK_SUCCESS)
++        return false;
++    VkCommandBufferBeginInfo bi{};
++    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
++    if(vkBeginCommandBuffer(reusableFusedCmd_,&bi)!=VK_SUCCESS)
++        return false;
++
++    if(reusableFusedQuery_){
++        vkCmdResetQueryPool(reusableFusedCmd_,reusableFusedQuery_,0,2);
++        vkCmdWriteTimestamp(
++            reusableFusedCmd_,VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
++            reusableFusedQuery_,0);
++    }
++
++    fusedCmd_=reusableFusedCmd_;
++    fusedQuery_=reusableFusedQuery_;
+     fused_ = true;
+-    fusedHostSubmitNs_ = 0;
++    fusedHostSubmitNs_=0;
+     return true;
+ }
+
+ bool VulkanCompute::EndFusedLayer() {
+     if (!fused_) return false;
+     VkCommandBuffer cmd = fusedCmd_;
+     VkQueryPool q = fusedQuery_;
+     fused_ = false;
+     fusedCmd_ = VK_NULL_HANDLE;
+     fusedQuery_ = VK_NULL_HANDLE;
+-    bool ok = endSubmitWait(
+-        cmd, q, GpuWorkKind::ModelCompute, 0, workEpoch_, nullptr);
+-    return ok;
++
++    if(q)
++        vkCmdWriteTimestamp(cmd,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,q,1);
++    if(vkEndCommandBuffer(cmd)!=VK_SUCCESS) return false;
++    if(vkResetFences(device_,1,&reusableFusedFence_)!=VK_SUCCESS)
++        return false;
++
++    VkSubmitInfo si{};
++    si.sType=VK_STRUCTURE_TYPE_SUBMIT_INFO;
++    si.commandBufferCount=1;
++    si.pCommandBuffers=&cmd;
++
++    const uint64_t submitNs=nowNs();
++    if(vkQueueSubmit(queue_,1,&si,reusableFusedFence_)!=VK_SUCCESS)
++        return false;
++    if(vkWaitForFences(
++            device_,1,&reusableFusedFence_,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    const uint64_t completeNs=nowNs();
++
++    GpuWorkInterval wi{};
++    if(finalizeInterval(
++            q,submitNs,completeNs,workEpoch_,0,
++            GpuWorkKind::ModelCompute,wi))
++        recordInterval(wi);
++    return true;
+ }
+@@
+ void VulkanCompute::cleanup() {
+     if (device_) vkDeviceWaitIdle(device_);
++
++    if(device_ && reusableFusedFence_)
++        vkDestroyFence(device_,reusableFusedFence_,nullptr);
++    if(device_ && reusableFusedQuery_)
++        vkDestroyQueryPool(device_,reusableFusedQuery_,nullptr);
++    if(device_ && reusableFusedCmd_ && commandPool_)
++        vkFreeCommandBuffers(device_,commandPool_,1,&reusableFusedCmd_);
++    reusableFusedFence_=VK_NULL_HANDLE;
++    reusableFusedQuery_=VK_NULL_HANDLE;
++    reusableFusedCmd_=VK_NULL_HANDLE;

@@ -1,0 +1,118 @@
+# Deep2 Qwen32 40TPS — Batch 3/5, item 15
+# Base: Batch 1 + Batch 2 + 0011-0014.
+#
+# Goal:
+#   - dense two-GPU models default to simultaneous row-split weight GEMVs,
+#     instead of sequential contiguous layer ranges;
+#   - CPU handles only cheap orchestration (RMSNorm/RoPE/softmax/SwiGLU/KV),
+#     while strict mode guarantees every LinearW weight GEMV stayed on GPU;
+#   - authority gate distinguishes FULL_RESIDENT_GPU from REAL_DUAL_ROW_GPU.
+#
+# To force old sequential resident lane:
+#   DEEP2_DENSE_EXEC=LAYER_SPLIT
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0015_dense_dualrow_product_lane_and_gate.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp b/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2GpuForward.hpp
+@@
+     uint64_t dualRowSplitOps = 0;
+     uint64_t dualArithmeticOverlapNs = 0;
+     uint64_t hostMergeOps = 0;
++    uint64_t dualRowDenseTokens = 0;
+@@
+         fprintf(o, "DEEP2_GPU_HOST_MERGE_OPS=%llu\n",
+                 (unsigned long long)c.hostMergeOps);
++        fprintf(o, "DEEP2_DUAL_ROW_DENSE_TOKENS=%llu\n",
++                (unsigned long long)c.dualRowDenseTokens);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.cpp b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.cpp
+@@
+ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
+@@
+     if (vulkanEnabled_ && vulkanInitialized_ &&
+         (modelWeights.isMoE || modelWeights.useMLA)) {
+@@
+     }
+
++    // 40TPS dense lane:
++    // A contiguous layer split keeps activations resident but executes GPU0's
++    // dependent range before GPU1's range, so bandwidth does not aggregate.
++    // For dense two-stick models, run the normal mathematically-verified
++    // host orchestration while LinearW's strict dual-row backend sends every
++    // heavy weight GEMV to both GPUs simultaneously.
++    //
++    // This is deliberately classified separately from FULL_RESIDENT_GPU:
++    // activations/KV orchestration are host-visible, weight arithmetic is not.
++    const char* denseExec=std::getenv("DEEP2_DENSE_EXEC");
++    const bool forceLayerSplit=
++        denseExec && std::strcmp(denseExec,"LAYER_SPLIT")==0;
++    const bool dualRowDense=
++        !forceLayerSplit &&
++        vulkanEnabled_ && vulkanInitialized_ &&
++        vulkanDevices_.size()>=2 &&
++        !modelWeights.isMoE && !modelWeights.useMLA;
++
++    if(dualRowDense){
++        try {
++            for(size_t l=0;l<modelWeights.numLayers;++l){
++                forwardLayer(l,hidden,layerOut,seqLen);
++                std::memcpy(
++                    hidden,layerOut,config.hiddenDim*sizeof(float));
++                ++gpuFwd_.hostForwardLayerCalls; // planned orchestration
++            }
++            ++gpuFwd_.dualRowDenseTokens;
++            gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
++            return true;
++        } catch(const std::exception& ex) {
++            std::fprintf(stderr,
++                "[Deep2Engine] dual-row dense forward failed: %s\n",
++                ex.what());
++            if(vulkanStrictNoCpuFallback_){
++                vulkanStrictViolation_=true;
++                return false;
++            }
++            // Non-strict callers may continue into the resident layer-split
++            // lane below; strict 40-TPS authority never takes this fallback.
++        }
++    }
++
+     // Dense Batch9 resident path.
+     if (vulkanEnabled_ && vulkanInitialized_) {
+
+diff --git a/~dev/tests/qwen32_40tps_gate.cpp b/~dev/tests/qwen32_40tps_gate.cpp
+--- a/~dev/tests/qwen32_40tps_gate.cpp
++++ b/~dev/tests/qwen32_40tps_gate.cpp
+@@
+-    const bool realGpu = e.isRealGpuForward();
++    const auto& gf=e.gpuForwardCounters();
++    const bool fullResidentGpu=e.isRealGpuForward();
++    // dualRowSplitOps increments only after both physical GPU row slices
++    // completed successfully. Strict mode makes a failed GPU LinearW fatal.
++    const bool realDualRowGpu=
++        gf.dualRowDenseTokens>0 &&
++        gf.dualRowSplitOps>0 &&
++        gf.hostMergeOps>0;
++    const bool realGpu=fullResidentGpu||realDualRowGpu;
+@@
+         "GPU_DEVICES=%u\n"
+         "REAL_GPU_FORWARD=%u\n"
++        "FULL_RESIDENT_GPU=%u\n"
++        "REAL_DUAL_ROW_GPU=%u\n"
++        "DUAL_ROW_DENSE_TOKENS=%llu\n"
++        "DUAL_ROW_SPLIT_OPS=%llu\n"
++        "DUAL_ARITH_OVERLAP_NS=%llu\n"
+         "UNPLANNED_FALLBACKS=%llu\n"
+@@
+         e.vulkanDeviceCount(),
+         realGpu ? 1u : 0u,
++        fullResidentGpu ? 1u : 0u,
++        realDualRowGpu ? 1u : 0u,
++        static_cast<unsigned long long>(gf.dualRowDenseTokens),
++        static_cast<unsigned long long>(gf.dualRowSplitOps),
++        static_cast<unsigned long long>(gf.dualArithmeticOverlapNs),
+         static_cast<unsigned long long>(e.vulkanUnplannedFallbacks()),

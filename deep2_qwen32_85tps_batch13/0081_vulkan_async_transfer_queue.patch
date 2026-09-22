@@ -1,0 +1,127 @@
+# Deep2 Qwen32 85TPS — Batch 13, item 81
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-12
+#
+# Goal:
+#   discover and use a dedicated Vulkan transfer queue when exposed.
+#
+# Selection:
+#   1) prefer queue family with VK_QUEUE_TRANSFER_BIT and WITHOUT COMPUTE
+#   2) else prefer second queue from compute family when queueCount >= 2
+#   3) else fall back to existing compute queue
+#
+# Correctness never depends on a dedicated queue.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0081_vulkan_async_transfer_queue.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool HasDedicatedTransferQueue() const noexcept {
++        return transferQueue_!=VK_NULL_HANDLE &&
++               (transferQueue_!=queue_ ||
++                transferQueueFamilyIndex_!=queueFamilyIndex_);
++    }
++    uint32_t ComputeQueueFamily() const noexcept { return queueFamilyIndex_; }
++    uint32_t TransferQueueFamily() const noexcept {
++        return transferQueueFamilyIndex_;
++    }
++    uint64_t TransferQueueSubmits() const noexcept {
++        return transferQueueSubmits_;
++    }
+@@
+ private:
+     VkQueue queue_ = VK_NULL_HANDLE;
++    VkQueue transferQueue_ = VK_NULL_HANDLE;
+     uint32_t queueFamilyIndex_ = UINT32_MAX;
++    uint32_t transferQueueFamilyIndex_ = UINT32_MAX;
++    uint32_t transferQueueIndex_ = 0;
++    VkCommandPool transferCommandPool_ = VK_NULL_HANDLE;
++    uint64_t transferQueueSubmits_ = 0;
++    bool discoverTransferQueue(
++        VkPhysicalDevice physical,
++        uint32_t computeFamily,
++        uint32_t& transferFamily,
++        uint32_t& transferQueueIndex) const;
++    bool createTransferCommandPool();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::discoverTransferQueue(
++    VkPhysicalDevice physical,uint32_t computeFamily,
++    uint32_t& outFamily,uint32_t& outIndex) const
++{
++    outFamily=computeFamily;
++    outIndex=0;
++    uint32_t n=0;
++    vkGetPhysicalDeviceQueueFamilyProperties(physical,&n,nullptr);
++    if(!n) return false;
++    std::vector<VkQueueFamilyProperties> q(n);
++    vkGetPhysicalDeviceQueueFamilyProperties(physical,&n,q.data());
++
++    // Best: transfer-only family.
++    for(uint32_t i=0;i<n;++i) {
++        const auto flags=q[i].queueFlags;
++        if(q[i].queueCount &&
++           (flags&VK_QUEUE_TRANSFER_BIT) &&
++           !(flags&VK_QUEUE_COMPUTE_BIT)) {
++            outFamily=i;outIndex=0;return true;
++        }
++    }
++    // Next best: second queue in compute family.
++    if(computeFamily<n && q[computeFamily].queueCount>=2) {
++        outFamily=computeFamily;outIndex=1;return true;
++    }
++    // Fallback: same compute queue.
++    outFamily=computeFamily;outIndex=0;return true;
++}
++
++bool VulkanCompute::createTransferCommandPool() {
++    if(device_==VK_NULL_HANDLE||
++       transferQueueFamilyIndex_==UINT32_MAX)
++        return false;
++    if(transferCommandPool_) return true;
++    VkCommandPoolCreateInfo ci{};
++    ci.sType=VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
++    ci.queueFamilyIndex=transferQueueFamilyIndex_;
++    ci.flags=VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
++             VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
++    return vkCreateCommandPool(
++        device_,&ci,nullptr,&transferCommandPool_)==VK_SUCCESS;
++}
+@@
+ bool VulkanCompute::createDevice() {
+@@
+-    // existing compute queue discovery populates queueFamilyIndex_
++    // Existing compute queue discovery populates queueFamilyIndex_.
++    uint32_t transferFamily=queueFamilyIndex_;
++    uint32_t transferIndex=0;
++    (void)discoverTransferQueue(
++        physicalDevice_,queueFamilyIndex_,transferFamily,transferIndex);
++    transferQueueFamilyIndex_=transferFamily;
++    transferQueueIndex_=transferIndex;
+@@
+-    vkGetDeviceQueue(device_, queueFamilyIndex_, 0, &queue_);
++    vkGetDeviceQueue(device_, queueFamilyIndex_, 0, &queue_);
++    // If device creation exposes only one queue, this resolves to queue_.
++    vkGetDeviceQueue(
++        device_,transferQueueFamilyIndex_,transferQueueIndex_,&transferQueue_);
++    if(transferQueue_==VK_NULL_HANDLE) {
++        transferQueue_=queue_;
++        transferQueueFamilyIndex_=queueFamilyIndex_;
++        transferQueueIndex_=0;
++    }
++    (void)createTransferCommandPool();
+@@
+ }
+@@
+ void VulkanCompute::cleanup() {
+@@
++    if(device_&&transferCommandPool_)
++        vkDestroyCommandPool(device_,transferCommandPool_,nullptr);
++    transferCommandPool_=VK_NULL_HANDLE;
++    transferQueue_=VK_NULL_HANDLE;

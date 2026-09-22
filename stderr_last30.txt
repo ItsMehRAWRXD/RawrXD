@@ -1,0 +1,30 @@
+DUAL_ROW_EXEC lane=1 rows=2560 cols=27648 type=14
+DUAL_ROW_EXEC lane=1 ok=0
+DUAL_ROW_AFTER_RUN both=0 ok0=0 ok1=0
+LINEARW_RESULT=DUAL_GPU name=blk.63.ffn_down.weight
+FWD_LAYER layer=63 DONE
+GEN_LOOP_TOP gen=31 rem=1 specActive=1
+LINEARW name=output.weight rows=152064 cols=5120 type=14
+LINEARW_TRY_GPU name=output.weight
+DUAL_ROW name=output.weight rows=152064 cols=5120 type=14
+DUAL_ROW plan valid=1 r0=0..76032 r1=76032..76032
+DUAL_ROW_BEFORE_RUN
+DUAL_ROW_EXEC lane=1 rows=76032 cols=5120 type=14
+DUAL_ROW_EXEC lane=0 rows=76032 cols=5120 type=14
+DUAL_ROW_EXEC lane=1 ok=0
+DUAL_ROW_EXEC lane=0 ok=0
+DUAL_ROW_AFTER_RUN both=0 ok0=0 ok1=0
+LINEARW_RESULT=DUAL_GPU name=output.weight
+[LOGITS] token=31 min=-17.7117 max=26.9819 mean=-2.2985 std=2.6981 argmax=315
+[LOGITS_HEAD] 4.266326 3.199667 2.833630 3.326604 2.042019
+GEN_EXIT generated=32
+WARMUP_END got=32
+MEASURED_BEGIN n=256
+GEN_ENTER maxOut=256
+FWD_LAYER layer=0 seqLen=1
+FWD_LAYER layer=0 ATTENTION
+[Deep2Engine] dual-row dense forward failed: attention: sequence/KV position 
+mismatch
+GEN_PREFILL_FORWARD_FAIL p=0
+MEASURED_END got=0
+MEASURED_FAIL got=0 expected=256

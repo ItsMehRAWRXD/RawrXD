@@ -1,0 +1,75 @@
+# Deep2 Qwen32 85TPS — Batch 13, item 83
+# Base: apply after 0082.
+#
+# Adds a two-GPU fence fan-in helper. Both Q4_K tickets are submitted before
+# waiting; fan-in polls completion so host work can execute while either GPU
+# remains active. It returns per-card completion timestamps + overlap.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0083_dual_gpu_fence_fanin.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.hpp
+@@
+ namespace Deep2 {
++struct DualAsyncFanIn {
++    uint64_t wallNs=0;
++    uint64_t gpu0Ns=0;
++    uint64_t gpu1Ns=0;
++    uint64_t overlapNs=0;
++    uint64_t hostSpinNs=0;
++};
++
++bool Deep2WaitDualQ4KFanIn(
++    VulkanCompute& g0,VulkanCompute::Q4KAsyncTicket& t0,
++    VulkanCompute& g1,VulkanCompute::Q4KAsyncTicket& t1,
++    DualAsyncFanIn& out);
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
++bool Deep2WaitDualQ4KFanIn(
++    VulkanCompute& g0,VulkanCompute::Q4KAsyncTicket& t0,
++    VulkanCompute& g1,VulkanCompute::Q4KAsyncTicket& t1,
++    DualAsyncFanIn& out)
++{
++    out={};
++    if(!t0.active||!t1.active) return false;
++    const auto begin=std::chrono::steady_clock::now();
++
++    // Polling interval is deliberately coarse enough not to burn a CPU core.
++    // Actual GPU completion still uses Vulkan fences as authority.
++    bool d0=false,d1=false;
++    auto done=[&](VkDevice dev,VkFence f)->bool {
++        const VkResult r=vkGetFenceStatus(dev,f);
++        return r==VK_SUCCESS;
++    };
++    while(!(d0&&d1)) {
++        d0=d0||done(g0.DeviceHandle(),t0.fence);
++        d1=d1||done(g1.DeviceHandle(),t1.fence);
++        if(!(d0&&d1))
++            std::this_thread::yield();
++    }
++    const auto ready=std::chrono::steady_clock::now();
++    out.hostSpinNs=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(ready-begin).count();
++
++    uint64_t n0=0,n1=0;
++    if(!g0.WaitQ4KResidentAsync(t0,&n0)) return false;
++    if(!g1.WaitQ4KResidentAsync(t1,&n1)) return false;
++    const auto finish=std::chrono::steady_clock::now();
++    out.gpu0Ns=n0;out.gpu1Ns=n1;
++    out.wallNs=(uint64_t)std::chrono::duration_cast<
++        std::chrono::nanoseconds>(finish-begin).count();
++    out.overlapNs=(n0+n1>out.wallNs)?n0+n1-out.wallNs:0;
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    VkDevice DeviceHandle() const noexcept { return device_; }

@@ -1,0 +1,110 @@
+# Deep2 Qwen32 85TPS — Batch 15, item 95
+# Base: apply after 0094.
+#
+# Authority v14:
+# - preserves every earlier PASS predicate
+# - grouped pre-recorded QKV/GateUp path must run
+# - GPU speculative accept-prefix path must run
+# - resident verified-hidden handoff must run
+# - timeline layer-group chain required when timeline is enabled
+# - still requires three independent >=85 verified output TPS runs
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0095_85tps_authority_v14_layer_graph_accept.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotAsyncCmdRingReuses(unsigned slot) const;
++    uint64_t vulkanSlotRecordedGroupBuilds(unsigned slot) const;
++    uint64_t vulkanSlotRecordedGroupSubmits(unsigned slot) const;
++    uint64_t vulkanSlotSpecAcceptGpuOps(unsigned slot) const;
++    uint64_t vulkanSlotVerifiedHiddenHandoffs(unsigned slot) const;
++    uint64_t vulkanSlotLayerTimelineChains(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
++uint64_t Deep2Engine::vulkanSlotRecordedGroupBuilds(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedGroupBuilds():0;
++}
++uint64_t Deep2Engine::vulkanSlotRecordedGroupSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->RecordedGroupSubmits():0;
++}
++uint64_t Deep2Engine::vulkanSlotSpecAcceptGpuOps(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->SpecAcceptGpuOps():0;
++}
++uint64_t Deep2Engine::vulkanSlotVerifiedHiddenHandoffs(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->VerifiedHiddenHandoffs():0;
++}
++uint64_t Deep2Engine::vulkanSlotLayerTimelineChains(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->LayerTimelineChains():0;
++}
+
+diff --git a/~dev/tests/qwen32_85tps_gate.cpp b/~dev/tests/qwen32_85tps_gate.cpp
+--- a/~dev/tests/qwen32_85tps_gate.cpp
++++ b/~dev/tests/qwen32_85tps_gate.cpp
+@@
+     const uint64_t acr1Warm=spec.vulkanSlotAsyncCmdRingReuses(1);
++    const uint64_t rgb0Warm=spec.vulkanSlotRecordedGroupBuilds(0);
++    const uint64_t rgb1Warm=spec.vulkanSlotRecordedGroupBuilds(1);
++    const uint64_t rgs0Warm=spec.vulkanSlotRecordedGroupSubmits(0);
++    const uint64_t rgs1Warm=spec.vulkanSlotRecordedGroupSubmits(1);
++    const uint64_t acWarm=spec.vulkanSlotSpecAcceptGpuOps(0);
++    const uint64_t vhWarm=spec.vulkanSlotVerifiedHiddenHandoffs(0);
++    const uint64_t lgWarm=spec.vulkanSlotLayerTimelineChains(0);
+@@
+     const uint64_t acr1End=spec.vulkanSlotAsyncCmdRingReuses(1);
++    const uint64_t rgb0End=spec.vulkanSlotRecordedGroupBuilds(0);
++    const uint64_t rgb1End=spec.vulkanSlotRecordedGroupBuilds(1);
++    const uint64_t rgs0End=spec.vulkanSlotRecordedGroupSubmits(0);
++    const uint64_t rgs1End=spec.vulkanSlotRecordedGroupSubmits(1);
++    const uint64_t acEnd=spec.vulkanSlotSpecAcceptGpuOps(0);
++    const uint64_t vhEnd=spec.vulkanSlotVerifiedHiddenHandoffs(0);
++    const uint64_t lgEnd=spec.vulkanSlotLayerTimelineChains(0);
+@@
+     const bool cmdRingLive=
+         acr0End>acr0Warm && acr1End>acr1Warm;
++    const bool recordedGroups=
++        rgs0End>rgs0Warm && rgs1End>rgs1Warm;
++    const bool gpuAccept=acEnd>acWarm;
++    const bool hiddenHandoff=vhEnd>vhWarm;
++    const bool layerTimeline=
++        !tl0 || lgEnd>lgWarm;
+@@
+-                    threeStage&&timelineUsed&&cmdRingLive;
++                    threeStage&&timelineUsed&&cmdRingLive&&recordedGroups&&
++                    gpuAccept&&hiddenHandoff&&layerTimeline;
+@@
+         "ASYNC_COMMAND_RING=%s\n"
++        "GPU0_RECORDED_GROUP_BUILDS_DELTA=%llu\n"
++        "GPU1_RECORDED_GROUP_BUILDS_DELTA=%llu\n"
++        "GPU0_RECORDED_GROUP_SUBMITS_DELTA=%llu\n"
++        "GPU1_RECORDED_GROUP_SUBMITS_DELTA=%llu\n"
++        "GPU_SPEC_ACCEPT_OPS_DELTA=%llu\n"
++        "VERIFIED_HIDDEN_HANDOFFS_DELTA=%llu\n"
++        "LAYER_TIMELINE_CHAINS_DELTA=%llu\n"
++        "RECORDED_GROUP_HOTPATH=%s\n"
++        "GPU_ACCEPT_PREFIX=%s\n"
++        "RESIDENT_HIDDEN_HANDOFF=%s\n"
++        "LAYER_TIMELINE_CHAIN=%s\n"
+@@
+         cmdRingLive?"PASS":"FAIL",
++        (unsigned long long)(rgb0End-rgb0Warm),
++        (unsigned long long)(rgb1End-rgb1Warm),
++        (unsigned long long)(rgs0End-rgs0Warm),
++        (unsigned long long)(rgs1End-rgs1Warm),
++        (unsigned long long)(acEnd-acWarm),
++        (unsigned long long)(vhEnd-vhWarm),
++        (unsigned long long)(lgEnd-lgWarm),
++        recordedGroups?"PASS":"FAIL",
++        gpuAccept?"PASS":"FAIL",
++        hiddenHandoff?"PASS":"FAIL",
++        layerTimeline?"PASS":"FAIL",

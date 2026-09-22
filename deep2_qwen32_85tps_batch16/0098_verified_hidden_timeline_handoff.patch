@@ -1,0 +1,125 @@
+# Deep2 Qwen32 85TPS — Batch 16, item 98
+# Base: apply after 0097.
+#
+# Goal:
+#   make verified-hidden capture/restore submit without an immediate CPU wait.
+#   A timeline ticket owns the transient command buffer until WaitHiddenCopy().
+#
+# This turns the Batch-15 hidden-state handoff into an actual overlap-capable
+# device-side dependency instead of an endSubmitWait boundary.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0098_verified_hidden_timeline_handoff.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct HiddenCopyTicket {
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        uint64_t signalValue=0;
++        bool active=false;
++    };
++    bool CaptureVerifiedHiddenTimeline(
++        DeviceBuf& hiddenBatch,uint32_t tokenIndex,
++        uint32_t hiddenWidth,uint32_t batch,
++        uint64_t waitValue,HiddenCopyTicket& ticket);
++    bool RestoreVerifiedHiddenTimeline(
++        uint32_t hiddenWidth,uint64_t waitValue,
++        HiddenCopyTicket& ticket);
++    bool WaitHiddenCopy(HiddenCopyTicket& ticket);
++    uint64_t HiddenTimelineSubmits() const noexcept {
++        return hiddenTimelineSubmits_;
++    }
+@@
+ private:
++    uint64_t hiddenTimelineSubmits_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++static bool deep2BeginOneShot(
++    VkDevice device,VkCommandPool pool,VkCommandBuffer& cmd)
++{
++    VkCommandBufferAllocateInfo ai{};
++    ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++    ai.commandPool=pool;
++    ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++    ai.commandBufferCount=1;
++    if(vkAllocateCommandBuffers(device,&ai,&cmd)!=VK_SUCCESS) return false;
++    VkCommandBufferBeginInfo bi{};
++    bi.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
++    bi.flags=VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
++    return vkBeginCommandBuffer(cmd,&bi)==VK_SUCCESS;
++}
++
++bool VulkanCompute::CaptureVerifiedHiddenTimeline(
++    DeviceBuf& hiddenBatch,uint32_t tokenIndex,
++    uint32_t hiddenWidth,uint32_t batch,
++    uint64_t waitValue,HiddenCopyTicket& ticket)
++{
++    ticket={};
++    if(!TimelineSemaphoreEnabled()||!hiddenBatch||!hiddenWidth||
++       !batch||tokenIndex>=batch)
++        return false;
++    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
++    if(!verifiedHidden_||verifiedHiddenWidth_<hiddenWidth) {
++        destroyBuffer(verifiedHidden_);
++        if(!createBuffer(
++                bytes,VK_BUFFER_USAGE_STORAGE_BUFFER_BIT|
++                VK_BUFFER_USAGE_TRANSFER_SRC_BIT|
++                VK_BUFFER_USAGE_TRANSFER_DST_BIT,
++                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,verifiedHidden_))
++            return false;
++        verifiedHiddenWidth_=hiddenWidth;
++    }
++    if(!deep2BeginOneShot(device_,commandPool_,ticket.cmd)) return false;
++    const VkDeviceSize src=(VkDeviceSize)tokenIndex*bytes;
++    if(!recordCopy(ticket.cmd,hiddenBatch,verifiedHidden_,bytes,src,0))
++        return false;
++    if(vkEndCommandBuffer(ticket.cmd)!=VK_SUCCESS) return false;
++    ticket.signalValue=NextTimelineValue();
++    if(!SubmitTimelineCommand(
++            ticket.cmd,queue_,waitValue,ticket.signalValue,
++            VK_PIPELINE_STAGE_TRANSFER_BIT))
++        return false;
++    ticket.active=true;
++    ++hiddenTimelineSubmits_;
++    ++verifiedHiddenHandoffs_;
++    return true;
++}
++
++bool VulkanCompute::RestoreVerifiedHiddenTimeline(
++    uint32_t hiddenWidth,uint64_t waitValue,
++    HiddenCopyTicket& ticket)
++{
++    ticket={};
++    if(!TimelineSemaphoreEnabled()||!verifiedHidden_||
++       hiddenWidth>verifiedHiddenWidth_||!SpecArena().hidden)
++        return false;
++    const size_t bytes=(size_t)hiddenWidth*sizeof(float);
++    if(!deep2BeginOneShot(device_,commandPool_,ticket.cmd)) return false;
++    if(!recordCopy(
++            ticket.cmd,verifiedHidden_,SpecArena().hidden,bytes,0,0))
++        return false;
++    if(vkEndCommandBuffer(ticket.cmd)!=VK_SUCCESS) return false;
++    ticket.signalValue=NextTimelineValue();
++    if(!SubmitTimelineCommand(
++            ticket.cmd,queue_,waitValue,ticket.signalValue,
++            VK_PIPELINE_STAGE_TRANSFER_BIT))
++        return false;
++    ticket.active=true;
++    ++hiddenTimelineSubmits_;
++    return true;
++}
++
++bool VulkanCompute::WaitHiddenCopy(HiddenCopyTicket& ticket) {
++    if(!ticket.active) return true;
++    const bool ok=WaitTimelineValue(ticket.signalValue);
++    if(ticket.cmd&&commandPool_)
++        vkFreeCommandBuffers(device_,commandPool_,1,&ticket.cmd);
++    ticket={};
++    return ok;
++}

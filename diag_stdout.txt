@@ -1,0 +1,52 @@
+[QuantKernelRegistry] Q4_K GEMV=00007FF6B3C01530 dequant=00007FF6B3BFE670 GetGEMV(12)=00007FF6B3C01530 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 calibrated=1
+BATCH9_VK_DEVICE ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 vram=34054242304 compute_pipeline=1 qgemv_pipeline=1 calibrated=0
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1
+[QuantKernelRegistry] Q4_K GEMV=00007FF6B3C01530 dequant=00007FF6B3BFE670 GetGEMV(12)=00007FF6B3C01530 match=1
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] GGUF mapped: arch=qwen2 shards=1 tensors=771 layers=64 hidden=5120 heads=40 kv_heads=8 vocab=152064
+ARCH=qwen2
+HIDDEN=5120
+LAYERS=64
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=27648
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=128
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=present
+K_BIAS=present
+V_BIAS=present
+TIE_EMBED=0
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 calibrated=1
+BATCH9_VK_DEVICE ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 vram=34054242304 compute_pipeline=1 qgemv_pipeline=1 calibrated=0
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=31 speed_weight=1.000
+DEEP2_DENSE_SLOT slot=1 lo=32 hi=63 speed_weight=1.000
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=2 plan_active=1

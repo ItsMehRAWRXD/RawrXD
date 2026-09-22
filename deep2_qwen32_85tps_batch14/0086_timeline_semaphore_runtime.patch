@@ -1,0 +1,107 @@
+# Deep2 Qwen32 85TPS — Batch 14, item 86
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-13
+#
+# Goal:
+#   enable Vulkan timeline semaphores when the device supports them.
+#
+# Vulkan 1.2 feature; no external dependency.
+# If unsupported/not enabled, runtime falls back to the fence path.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0086_timeline_semaphore_runtime.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    bool TimelineSemaphoreEnabled() const noexcept {
++        return timelineEnabled_ && timelineSemaphore_!=VK_NULL_HANDLE;
++    }
++    uint64_t NextTimelineValue() noexcept { return ++timelineNextValue_; }
++    uint64_t TimelineSignals() const noexcept { return timelineSignals_; }
++    uint64_t TimelineWaits() const noexcept { return timelineWaits_; }
++    VkSemaphore TimelineSemaphore() const noexcept { return timelineSemaphore_; }
++    bool WaitTimelineValue(uint64_t value,uint64_t timeoutNs=UINT64_MAX);
+@@
+ private:
++    bool timelineEnabled_=false;
++    VkSemaphore timelineSemaphore_=VK_NULL_HANDLE;
++    uint64_t timelineNextValue_=0;
++    uint64_t timelineSignals_=0;
++    uint64_t timelineWaits_=0;
++    bool createTimelineSemaphore();
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::createTimelineSemaphore() {
++    if(device_==VK_NULL_HANDLE) return false;
++    VkSemaphoreTypeCreateInfo type{};
++    type.sType=VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO;
++    type.semaphoreType=VK_SEMAPHORE_TYPE_TIMELINE;
++    type.initialValue=0;
++    VkSemaphoreCreateInfo ci{};
++    ci.sType=VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
++    ci.pNext=&type;
++    if(vkCreateSemaphore(device_,&ci,nullptr,&timelineSemaphore_)!=VK_SUCCESS) {
++        timelineSemaphore_=VK_NULL_HANDLE;
++        timelineEnabled_=false;
++        return false;
++    }
++    timelineEnabled_=true;
++    timelineNextValue_=0;
++    return true;
++}
++
++bool VulkanCompute::WaitTimelineValue(uint64_t value,uint64_t timeoutNs) {
++    if(!TimelineSemaphoreEnabled()) return false;
++    VkSemaphoreWaitInfo wi{};
++    wi.sType=VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
++    wi.semaphoreCount=1;
++    wi.pSemaphores=&timelineSemaphore_;
++    wi.pValues=&value;
++    const VkResult r=vkWaitSemaphores(device_,&wi,timeoutNs);
++    if(r==VK_SUCCESS) ++timelineWaits_;
++    return r==VK_SUCCESS;
++}
+@@
+ bool VulkanCompute::createDevice() {
+@@
++    // Add timeline feature to the device feature chain when supported.
++    VkPhysicalDeviceTimelineSemaphoreFeatures timelineQuery{};
++    timelineQuery.sType=
++        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
++    VkPhysicalDeviceFeatures2 features2{};
++    features2.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
++    features2.pNext=&timelineQuery;
++    vkGetPhysicalDeviceFeatures2(physicalDevice_,&features2);
++    VkPhysicalDeviceTimelineSemaphoreFeatures timelineEnable{};
++    timelineEnable.sType=
++        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
++    timelineEnable.timelineSemaphore=timelineQuery.timelineSemaphore;
++    // Merge timelineEnable into the existing VkDeviceCreateInfo pNext chain.
++    // If local createDevice() already owns a feature chain, append rather than
++    // replacing it.
++    if(timelineEnable.timelineSemaphore==VK_TRUE) {
++        timelineEnable.pNext=(void*)deviceCreateInfo.pNext;
++        deviceCreateInfo.pNext=&timelineEnable;
++    }
+@@
+-    if (vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_)
++    if (vkCreateDevice(physicalDevice_, &deviceCreateInfo, nullptr, &device_)
+         != VK_SUCCESS) {
+@@
+     }
++    if(timelineEnable.timelineSemaphore==VK_TRUE)
++        (void)createTimelineSemaphore();
+@@
+ }
+@@
+ void VulkanCompute::cleanup() {
+@@
++    if(device_&&timelineSemaphore_)
++        vkDestroySemaphore(device_,timelineSemaphore_,nullptr);
++    timelineSemaphore_=VK_NULL_HANDLE;
++    timelineEnabled_=false;

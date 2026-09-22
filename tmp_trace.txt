@@ -1,0 +1,15 @@
+﻿
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:5:    + CategoryInfo          : 
+NotSpecified: ([RAWR_AGENT_PARSE] SUBCOMMAND=age 
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:9:[RAWR_AGENT_PARSE] MODEL_ALIAS=qwen32
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:10:[RAWR_AGENT_PARSE] 
+MODEL_PATH=F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:11:[RAWR_AGENT_PARSE] REQUEST_LEN=100
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:12:[RAWR_AGENT_PARSE] MAX_STEPS=2
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:13:[RAWR_AGENT_PARSE] WORKSPACE=F:\~dev
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:91:[RAWR_AGENT] audit 
+files_enumerated=1855
+evidence\RAWR_AGENT_LOOP_001\stderr.txt:94:[RAWR_AGENT] step=0 
+tool=audit.coverage exit=0 len=171
+
+

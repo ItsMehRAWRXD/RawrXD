@@ -1,0 +1,206 @@
+# Deep2 Qwen32 85TPS — Batch 4/5, item 36
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-3
+# Goal: GPU batch RMSNorm / SwiGLU for 1..4 verification tokens.
+# No external runtime dependency; uses existing Vulkan backend.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0036_gpu_spec_batch_norm_swiglu.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_spec_ops.comp b/~dev/rawrxd/src/deep2/shaders/deep2_spec_ops.comp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_spec_ops.comp
+@@
++#version 450
++#extension GL_KHR_shader_subgroup_basic : require
++#extension GL_KHR_shader_subgroup_arithmetic : require
++layout(local_size_x=256) in;
++
++layout(set=0,binding=0,std430) buffer A0 { float a[]; };
++layout(set=0,binding=1,std430) buffer B0 { float b[]; };
++layout(set=0,binding=2,std430) buffer C0 { float c[]; };
++layout(set=0,binding=3,std430) buffer D0 { float d[]; };
++
++layout(push_constant) uniform Push {
++    uint op;       // 0 RMSNorm, 1 SwiGLU, 2 residual
++    uint width;
++    uint batch;
++    uint reserved;
++    float eps;
++} pc;
++
++shared float waveSum[8];
++
++void main() {
++    uint lane=gl_LocalInvocationID.x;
++    uint token=gl_WorkGroupID.x;
++    if(token>=pc.batch || pc.width==0u) return;
++    uint base=token*pc.width;
++
++    if(pc.op==0u) {
++        float ss=0.0;
++        for(uint i=lane;i<pc.width;i+=256u) {
++            float x=a[base+i];
++            ss+=x*x;
++        }
++        float w=subgroupAdd(ss);
++        if(subgroupElect()) waveSum[gl_SubgroupID]=w;
++        barrier();
++        float total=0.0;
++        if(gl_SubgroupID==0u) {
++            float v=gl_SubgroupInvocationID<gl_NumSubgroups
++                ? waveSum[gl_SubgroupInvocationID] : 0.0;
++            total=subgroupAdd(v);
++            if(subgroupElect()) waveSum[0]=total;
++        }
++        barrier();
++        float inv=inversesqrt(waveSum[0]/float(pc.width)+pc.eps);
++        for(uint i=lane;i<pc.width;i+=256u)
++            c[base+i]=a[base+i]*inv*b[i];
++        return;
++    }
++
++    if(pc.op==1u) {
++        for(uint i=lane;i<pc.width;i+=256u) {
++            float g=a[base+i];
++            float s=g>=0.0 ? g/(1.0+exp(-g))
++                           : g*exp(g)/(1.0+exp(g));
++            c[base+i]=s*b[base+i];
++        }
++        return;
++    }
++
++    if(pc.op==2u) {
++        for(uint i=lane;i<pc.width;i+=256u)
++            c[base+i]=a[base+i]+b[base+i];
++    }
++}
+
+diff --git a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1 b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+--- a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
++++ b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+@@
+ Compile-One (Join-Path $ShaderDir "deep2_argmax.comp") `
+             (Join-Path $ShaderDir "deep2_argmax.spv")
++Compile-One (Join-Path $ShaderDir "deep2_spec_ops.comp") `
++            (Join-Path $ShaderDir "deep2_spec_ops.spv")
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightBatchQ4KTop1(
+         const GpuWeightView& weight,
+         const float* inputBatch,uint32_t batch,
+         uint32_t rowBase,uint32_t* outIndex,float* outValue,
+         uint64_t epoch);
++    bool RunSpecRmsNormHostBatch(
++        const float* input,const float* weight,float* output,
++        uint32_t width,uint32_t batch,float eps,uint64_t epoch);
++    bool RunSpecSwiGLUHostBatch(
++        const float* gate,const float* up,float* output,
++        uint32_t width,uint32_t batch,uint64_t epoch);
+@@
+     VkPipeline argmaxPipeline_ = VK_NULL_HANDLE;
+     VkPipelineLayout argmaxPipelineLayout_ = VK_NULL_HANDLE;
++    VkPipeline specOpsPipeline_ = VK_NULL_HANDLE;
++    VkPipelineLayout specOpsPipelineLayout_ = VK_NULL_HANDLE;
++    struct SpecOpsPush {
++        uint32_t op=0,width=0,batch=0,reserved=0;
++        float eps=0.0f;
++    };
++    bool dispatchSpecOps(
++        DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d,
++        const SpecOpsPush& p);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
+     const std::string am = shaderPath("deep2_argmax.spv");
++    const std::string so = shaderPath("deep2_spec_ops.spv");
+@@
+     if(!am.empty())
+         (void)createPipelineFromFile(
+             am,qSetLayout_,sizeof(ArgmaxPush),
+             argmaxPipelineLayout_,argmaxPipeline_);
++    if(!so.empty())
++        (void)createPipelineFromFile(
++            so,opsSetLayout_,sizeof(SpecOpsPush),
++            specOpsPipelineLayout_,specOpsPipeline_);
+@@
+ }
++
++bool VulkanCompute::dispatchSpecOps(
++    DeviceBuf& a,DeviceBuf& b,DeviceBuf& c,DeviceBuf& d,
++    const SpecOpsPush& p)
++{
++    if(!specOpsPipeline_||!p.width||!p.batch||p.batch>4) return false;
++    VkCommandBuffer cmd=fusedCmd_;
++    VkQueryPool query=fusedQuery_;
++    const bool own=!fused_;
++    if(own&&!beginCommand(cmd,query,true)) return false;
++    VkDescriptorSet set=getOpsDescriptor(a,b,c,d);
++    if(set==VK_NULL_HANDLE) return false;
++    vkCmdBindPipeline(cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specOpsPipeline_);
++    vkCmdBindDescriptorSets(
++        cmd,VK_PIPELINE_BIND_POINT_COMPUTE,specOpsPipelineLayout_,
++        0,1,&set,0,nullptr);
++    vkCmdPushConstants(
++        cmd,specOpsPipelineLayout_,VK_SHADER_STAGE_COMPUTE_BIT,
++        0,sizeof(p),&p);
++    vkCmdDispatch(cmd,p.batch,1,1);
++    recordComputeBarrier(cmd);
++    if(!own) return true;
++    return endSubmitWait(
++        cmd,query,GpuWorkKind::ModelCompute,0,workEpoch_,nullptr);
++}
++
++bool VulkanCompute::RunSpecRmsNormHostBatch(
++    const float* input,const float* weight,float* output,
++    uint32_t width,uint32_t batch,float eps,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!input||!weight||!output||!width||!batch||batch>4) return false;
++    SetWorkEpoch(epoch);
++    const size_t n=(size_t)width*batch;
++    if(!EnsureScratch(90,n)||!EnsureScratch(91,width)||
++       !EnsureScratch(92,n)||!EnsureScratch(93,1))
++        return false;
++    auto& in=Scratch(90);auto& w=Scratch(91);
++    auto& out=Scratch(92);auto& dummy=Scratch(93);
++    if(!UploadVector(in,input,n)||!UploadVector(w,weight,width))
++        return false;
++    SpecOpsPush p{};p.op=0;p.width=width;p.batch=batch;p.eps=eps;
++    if(!dispatchSpecOps(in,w,out,dummy,p)) return false;
++    return DownloadVector(out,output,n);
++}
++
++bool VulkanCompute::RunSpecSwiGLUHostBatch(
++    const float* gate,const float* up,float* output,
++    uint32_t width,uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!gate||!up||!output||!width||!batch||batch>4) return false;
++    SetWorkEpoch(epoch);
++    const size_t n=(size_t)width*batch;
++    if(!EnsureScratch(94,n)||!EnsureScratch(95,n)||
++       !EnsureScratch(96,n)||!EnsureScratch(97,1))
++        return false;
++    auto& g=Scratch(94);auto& u=Scratch(95);
++    auto& o=Scratch(96);auto& d=Scratch(97);
++    if(!UploadVector(g,gate,n)||!UploadVector(u,up,n)) return false;
++    SpecOpsPush p{};p.op=1;p.width=width;p.batch=batch;
++    if(!dispatchSpecOps(g,u,o,d,p)) return false;
++    return DownloadVector(o,output,n);
++}
+@@
+     if(device_ && argmaxPipeline_)
+         vkDestroyPipeline(device_,argmaxPipeline_,nullptr);
++    if(device_ && specOpsPipeline_)
++        vkDestroyPipeline(device_,specOpsPipeline_,nullptr);
+@@
+     if(device_ && argmaxPipelineLayout_)
+         vkDestroyPipelineLayout(device_,argmaxPipelineLayout_,nullptr);
++    if(device_ && specOpsPipelineLayout_)
++        vkDestroyPipelineLayout(device_,specOpsPipelineLayout_,nullptr);

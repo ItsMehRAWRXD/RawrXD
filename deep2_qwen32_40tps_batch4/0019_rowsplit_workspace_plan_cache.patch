@@ -1,0 +1,81 @@
+# Deep2 Qwen32 40TPS — Batch 4/5, item 19
+# Base: Batches 1-3 + 0016-0018.
+# Goal: no heap allocation and no row-plan recomputation in the common
+# single-matrix row-split hot path.
+#
+# Weight tensor pointer + rows + cols + type identify immutable GGUF matrices
+# for a loaded model session. The cache is process-local and bounded.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0019_rowsplit_workspace_plan_cache.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include <mutex>
+ #include <thread>
++#include <unordered_map>
+ #include <vector>
+@@
+ namespace {
++
++struct SplitCacheKey {
++    const void* data=nullptr;
++    uint32_t rows=0;
++    uint32_t cols=0;
++    int type=0;
++    uint32_t speed0m=0;
++    uint32_t speed1m=0;
++    bool operator==(const SplitCacheKey& o) const noexcept {
++        return data==o.data&&rows==o.rows&&cols==o.cols&&type==o.type&&
++               speed0m==o.speed0m&&speed1m==o.speed1m;
++    }
++};
++struct SplitCacheHash {
++    size_t operator()(const SplitCacheKey& k) const noexcept {
++        uint64_t h=(uint64_t)(uintptr_t)k.data;
++        h^=(uint64_t)k.rows<<32;
++        h^=k.cols;
++        h^=(uint64_t)(uint32_t)k.type*0x9e3779b185ebca87ull;
++        h^=(uint64_t)k.speed0m<<17;
++        h^=(uint64_t)k.speed1m<<3;
++        return (size_t)h;
++    }
++};
++
++RowSplitPlan cachedThroughputSplit(
++    const WeightTensor& wt,const VulkanCompute& g0,const VulkanCompute& g1)
++{
++    const long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
++    const long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
++    const uint32_t m0=(uint32_t)(s0*1000.0L+0.5L);
++    const uint32_t m1=(uint32_t)(s1*1000.0L+0.5L);
++    const SplitCacheKey key{
++        wt.data,(uint32_t)wt.rows,(uint32_t)wt.cols,wt.type,m0,m1};
++    static std::mutex mu;
++    static std::unordered_map<SplitCacheKey,RowSplitPlan,SplitCacheHash> cache;
++    {
++        std::lock_guard<std::mutex> g(mu);
++        auto it=cache.find(key);
++        if(it!=cache.end()) return it->second;
++    }
++    RowSplitPlan p=chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
++    {
++        std::lock_guard<std::mutex> g(mu);
++        if(cache.size()>4096) cache.clear();
++        cache.emplace(key,p);
++    }
++    return p;
++}
+@@
+-    RowSplitPlan plan=chooseThroughputSplit((uint32_t)wt.rows,g0,g1);
++    RowSplitPlan plan=cachedThroughputSplit(wt,g0,g1);
+@@
+-    std::vector<float> y0(plan.row0Count,0.0f);
+-    std::vector<float> y1(plan.row1Count,0.0f);
++    // Reuse caller-thread buffers across all matrices/tokens.
++    static thread_local std::vector<float> y0;
++    static thread_local std::vector<float> y1;
++    y0.resize(plan.row0Count);
++    y1.resize(plan.row1Count);

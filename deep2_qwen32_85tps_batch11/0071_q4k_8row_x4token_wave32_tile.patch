@@ -1,0 +1,147 @@
+# Deep2 Qwen32 85TPS — Batch 11, item 71
+# Base: 40TPS Batches 1-4 + 85TPS Batches 1-10
+#
+# Adds an 8-output-row x up-to-4-token Q4_K tiled kernel.
+#
+# 256-thread workgroup:
+#   8 independent 32-thread row cohorts.
+#   Each cohort computes one output row.
+#   The whole group cooperatively loads one 256-column activation tile/token.
+#
+# It is wave32-friendly on RDNA, but correctness does NOT depend on subgroup
+# width because reduction is explicit shared-memory + whole-workgroup barriers.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0071_q4k_8row_x4token_wave32_tile.patch
+
+diff --git a/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/shaders/deep2_qgemv_batch8row.comp
+@@
++#version 450
++layout(local_size_x=256) in;
++
++layout(set=0,binding=0,std430) readonly buffer W0 { uint w[]; };
++layout(set=0,binding=1,std430) readonly buffer X0 { float x[]; };
++layout(set=0,binding=2,std430) writeonly buffer Y0 { float y[]; };
++
++layout(push_constant) uniform Push {
++    uint type;
++    uint rows;
++    uint cols;
++    uint weightBytes;
++    uint batch;
++} pc;
++
++shared float xs[4][256];
++shared float red0[256];
++shared float red1[256];
++shared float red2[256];
++shared float red3[256];
++
++uint getb(uint byteIndex) {
++    uint word=w[byteIndex>>2u];
++    return (word>>((byteIndex&3u)*8u))&255u;
++}
++float geth(uint byteIndex) {
++    uint h=getb(byteIndex)|(getb(byteIndex+1u)<<8u);
++    return unpackHalf2x16(h).x;
++}
++void q4kScaleMin(uint base,uint sb,out uint sc,out uint mn) {
++    if(sb<4u) {
++        sc=getb(base+4u+sb)&63u;
++        mn=getb(base+8u+sb)&63u;
++    } else {
++        uint j=sb-4u;
++        sc=(getb(base+12u+j)&15u) |
++           ((getb(base+4u+j)>>6u)<<4u);
++        mn=(getb(base+12u+j)>>4u) |
++           ((getb(base+8u+j)>>6u)<<4u);
++    }
++}
++float q4kWeight(uint rowBase,uint col) {
++    uint block=col>>8u;
++    uint idx=col&255u;
++    uint b=rowBase+block*144u;
++    float d=geth(b);
++    float dm=geth(b+2u);
++    uint sb=idx>>5u;
++    uint l=idx&31u;
++    uint sc,mn;
++    q4kScaleMin(b,sb,sc,mn);
++    uint pair=sb>>1u;
++    uint packed=getb(b+16u+pair*32u+l);
++    uint q=(sb&1u)==0u ? (packed&15u) : (packed>>4u);
++    return d*float(sc)*float(q)-dm*float(mn);
++}
++
++void main() {
++    if(pc.type!=12u||pc.batch==0u||pc.batch>4u||pc.cols==0u) return;
++
++    uint lid=gl_LocalInvocationID.x;
++    uint cohort=lid>>5u; // /32 => 0..7
++    uint lane=lid&31u;
++    uint row=gl_WorkGroupID.x*8u+cohort;
++    uint blocks=(pc.cols+255u)>>8u;
++    uint rowBytes=blocks*144u;
++
++    float a0=0.0,a1=0.0,a2=0.0,a3=0.0;
++    for(uint blk=0u;blk<blocks;++blk) {
++        uint colBase=blk*256u;
++        uint c=colBase+lid;
++        if(c<pc.cols) {
++            xs[0][lid]=x[c];
++            xs[1][lid]=pc.batch>1u?x[pc.cols+c]:0.0;
++            xs[2][lid]=pc.batch>2u?x[2u*pc.cols+c]:0.0;
++            xs[3][lid]=pc.batch>3u?x[3u*pc.cols+c]:0.0;
++        } else {
++            xs[0][lid]=xs[1][lid]=xs[2][lid]=xs[3][lid]=0.0;
++        }
++        barrier();
++
++        if(row<pc.rows) {
++            uint rb=row*rowBytes;
++            // 32 lanes x 8 elements = one complete 256-column Q4_K tile.
++            for(uint k=0u;k<8u;++k) {
++                uint lc=lane+k*32u;
++                uint gc=colBase+lc;
++                if(gc>=pc.cols) continue;
++                float ww=q4kWeight(rb,gc);
++                a0+=ww*xs[0][lc];
++                if(pc.batch>1u) a1+=ww*xs[1][lc];
++                if(pc.batch>2u) a2+=ww*xs[2][lc];
++                if(pc.batch>3u) a3+=ww*xs[3][lc];
++            }
++        }
++        barrier();
++    }
++
++    red0[lid]=a0;red1[lid]=a1;red2[lid]=a2;red3[lid]=a3;
++    barrier();
++    for(uint stride=16u;stride>0u;stride>>=1u) {
++        if(lane<stride) {
++            uint j=lid+stride;
++            red0[lid]+=red0[j];
++            red1[lid]+=red1[j];
++            red2[lid]+=red2[j];
++            red3[lid]+=red3[j];
++        }
++        barrier();
++    }
++    if(lane==0u&&row<pc.rows) {
++        y[row]=red0[lid];
++        if(pc.batch>1u)y[pc.rows+row]=red1[lid];
++        if(pc.batch>2u)y[2u*pc.rows+row]=red2[lid];
++        if(pc.batch>3u)y[3u*pc.rows+row]=red3[lid];
++    }
++}
+
+diff --git a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1 b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+--- a/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
++++ b/~dev/rawrxd/src/deep2/build_batch9_shaders.ps1
+@@
+ Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch4row.comp") `
+             (Join-Path $ShaderDir "deep2_qgemv_batch4row.spv")
++Compile-One (Join-Path $ShaderDir "deep2_qgemv_batch8row.comp") `
++            (Join-Path $ShaderDir "deep2_qgemv_batch8row.spv")

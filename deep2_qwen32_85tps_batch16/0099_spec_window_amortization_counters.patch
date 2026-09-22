@@ -1,0 +1,75 @@
+# Deep2 Qwen32 85TPS — Batch 16, item 99
+# Base: apply after 0098.
+#
+# Goal:
+#   make verified-token-per-target-window amortization an explicit authority
+#   metric. 85 TPS from speculative decode must come from real target-verified
+#   multi-token windows, not from a misleading inner-kernel rate.
+#
+# This also exposes an environment cap:
+#   DEEP2_SPEC_WINDOW_CAP=1..4  (default 4)
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0099_spec_window_amortization_counters.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+--- a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
+ struct SpeculativeCounters {
+@@
++    uint64_t preparedSpecTokens=0;
++    uint64_t verifiedTargetWindows=0;
++    uint64_t acceptedVerifiedTokens=0;
++    uint64_t rejectedSpecWindows=0;
+ };
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_Speculative.cpp
+@@
++static uint32_t deep2SpecWindowCap() noexcept {
++    const char* e=std::getenv("DEEP2_SPEC_WINDOW_CAP");
++    if(!e||!*e) return 4u;
++    const long v=std::strtol(e,nullptr,10);
++    return (uint32_t)std::max<long>(1,std::min<long>(4,v));
++}
++
+ bool Deep2Engine::prepareSpecWindow(
+     const float* currentHidden,size_t remaining,
+     PreparedSpecWindow& out)
+ {
+@@
+     if(!buildAdaptiveSpeculativeProposals(currentHidden,remaining,p)||
+        p.empty())
+         return false;
++    const uint32_t cap=deep2SpecWindowCap();
++    if(p.size()>cap) p.resize(cap);
+     out.proposals=std::move(p);
+     out.window=(uint32_t)out.proposals.size();
+@@
+     ++medusaDecoder_->stats.exact.pipelinePrepareWindows;
++    medusaDecoder_->stats.exact.preparedSpecTokens += out.window;
+     return true;
+ }
+@@
+ bool Deep2Engine::verifySpeculativeGreedyWindow(
+@@
+ {
++    const size_t verifiedBefore=verified.size();
+     if(medusaDecoder_)
+         ++medusaDecoder_->stats.exact.pipelineVerifyWindows;
+@@
+     if(medusaDecoder_) {
++        auto& c=medusaDecoder_->stats.exact;
++        ++c.verifiedTargetWindows;
++        const uint64_t acceptedNow=
++            verified.size()>=verifiedBefore
++                ? (uint64_t)(verified.size()-verifiedBefore) : 0ull;
++        c.acceptedVerifiedTokens += acceptedNow;
++        if(!acceptedNow) ++c.rejectedSpecWindows;
+         if(!verified.empty())
+-            ++medusaDecoder_->stats.exact.pipelineCommitWindows;
++            ++c.pipelineCommitWindows;
+     }
+ }

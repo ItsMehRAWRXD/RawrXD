@@ -1,0 +1,122 @@
+# Deep2 Qwen32 85TPS — Batch 8, item 57
+# Base: apply after 0056.
+#
+# Goal:
+#   QKV or Gate-Up group gets ONE contiguous mapped readback per GPU instead of
+#   one readback per matrix. Host merge walks that single slab.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0057_single_group_return_merge.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+     bool RunWeightGroupResidentInputQ4K(
+         const GpuWeightView* weights,float* const* outputs,size_t weightCount,
+         uint32_t cols,uint32_t batch,uint64_t epoch);
++    bool RunWeightGroupResidentInputQ4KSingleReturn(
++        const GpuWeightView* weights,float* contiguousOutput,
++        size_t* outputOffsets,size_t weightCount,
++        uint32_t cols,uint32_t batch,uint64_t epoch);
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++bool VulkanCompute::RunWeightGroupResidentInputQ4KSingleReturn(
++    const GpuWeightView* weights,float* contiguousOutput,
++    size_t* outputOffsets,size_t weightCount,
++    uint32_t cols,uint32_t batch,uint64_t epoch)
++{
++    std::lock_guard<std::recursive_mutex> lock(apiMu_);
++    if(!weights||!contiguousOutput||!outputOffsets||
++       weightCount<2||weightCount>3||!batch||batch>4||
++       !residentBatchInput_)
++        return false;
++    if(!EnsureResidentGroupOutputs(weights,weightCount,batch))
++        return false;
++
++    size_t totalBytes=0;
++    for(size_t i=0;i<weightCount;++i) {
++        if(!PinWeightView(weights[i])||weights[i].cols!=cols)
++            return false;
++        outputOffsets[i]=totalBytes/sizeof(float);
++        totalBytes+=(size_t)batch*weights[i].rows*sizeof(float);
++    }
++
++    DeviceBuf* ds=nullptr;void* dm=nullptr;
++    if(!ensureMappedStaging(false,totalBytes,ds,dm)) return false;
++    if(!BeginFusedLayer()) return false;
++    auto abort=[&]{
++        if(FusedRecording()) (void)EndFusedLayer();
++        return false;
++    };
++
++    size_t byteOffset=0;
++    for(size_t i=0;i<weightCount;++i) {
++        auto& out=residentGroupOutputs_[i];
++        if(!DispatchGemvQ4KBatch(
++                weights[i].data,weights[i].bytes,
++                residentBatchInput_,out,
++                weights[i].rows,cols,batch))
++            return abort();
++        const size_t bytes=(size_t)batch*weights[i].rows*sizeof(float);
++        if(!recordCopy(
++                fusedCmd_,out,*ds,bytes,0,(VkDeviceSize)byteOffset))
++            return abort();
++        byteOffset+=bytes;
++    }
++    if(!EndFusedLayer()) return false;
++    std::memcpy(contiguousOutput,dm,totalBytes);
++    return true;
++}
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ bool Deep2RunDualGpuRowSplitBatchGroupQ4K(
+@@
+-    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
++    std::vector<float> slab[2];
++    size_t offsets[2][3]{};
++    for(unsigned s=0;s<2;++s) {
++        size_t total=0;
++        for(size_t i=0;i<weightCount;++i)
++            total+=(size_t)batch*it[i].w[s].rows;
++        slab[s].resize(total);
++    }
++
++    auto lane=[&](unsigned s,VulkanCompute& g)->bool {
+         GpuWeightView views[3]{};
+-        float* outs[3]{};
+         for(size_t i=0;i<weightCount;++i) {
+             views[i]=it[i].w[s];
+-            outs[i]=it[i].y[s].data();
+         }
+-        return g.RunWeightGroupResidentInputQ4K(
+-            views,outs,weightCount,weights[0]->cols,batch,epoch);
++        return g.RunWeightGroupResidentInputQ4KSingleReturn(
++            views,slab[s].data(),offsets[s],
++            weightCount,weights[0]->cols,batch,epoch);
+     };
+@@
+     if(!both||!a||!b) return false;
+     for(size_t i=0;i<weightCount;++i) {
+         for(uint32_t t=0;t<batch;++t) {
+             float* dst=outputs[i]+(size_t)t*weights[i]->rows;
+             std::memcpy(
+                 dst+it[i].p.row0Begin,
+-                it[i].y[0].data()+(size_t)t*it[i].p.row0Count,
++                slab[0].data()+offsets[0][i]+
++                    (size_t)t*it[i].p.row0Count,
+                 (size_t)it[i].p.row0Count*sizeof(float));
+             std::memcpy(
+                 dst+it[i].p.row1Begin,
+-                it[i].y[1].data()+(size_t)t*it[i].p.row1Count,
++                slab[1].data()+offsets[1][i]+
++                    (size_t)t*it[i].p.row1Count,
+                 (size_t)it[i].p.row1Count*sizeof(float));
+         }
+     }

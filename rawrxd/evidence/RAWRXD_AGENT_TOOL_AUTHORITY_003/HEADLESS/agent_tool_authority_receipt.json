@@ -1,0 +1,131 @@
+{
+  "certification": "RAWRXD_AGENT_TOOL_AUTHORITY_003",
+  "surface": "HEADLESS",
+  "workflow_id": "tool-authority-headless-batch-2-2026-09-19",
+  "produced_at": "2026-09-19T00:00:00Z",
+  "engine": "RawrXD_v3.0",
+
+  "registry_identity": {
+    "canonical_class": "AgentToolRegistry",
+    "singleton_pattern": "std::shared_ptr\u003cAgentToolRegistry\u003e",
+    "dispatch_boundary": "AgentToolRegistry::invoke(ToolRequest, ToolContext)",
+    "authority_binding": "BindAgentToolAuthority() / RequireAgentToolAuthority()",
+    "legacy_registry_fail_closed": true,
+    "legacy_compile_guard": "RAWRXD_LEGACY_TOOL_REGISTRY_ALLOWED#error"
+  },
+
+  "provider_set_parity": {
+    "file_provider": {
+      "tools": ["read-file", "write-file", "list-dir", "workspace.list", "file.read"],
+      "accounted_in": "file_calls_",
+      "status": "REGISTERED"
+    },
+    "search_provider": {
+      "tools": ["code.search", "symbol.find", "symbol.references"],
+      "accounted_in": "search_calls_",
+      "status": "REGISTERED"
+    },
+    "shell_provider": {
+      "tools": ["run-shell", "run-command"],
+      "accounted_in": "shell_calls_",
+      "status": "REGISTERED"
+    },
+    "build_provider": {
+      "tools": ["build.target", "build.project"],
+      "accounted_in": "build_calls_",
+      "status": "REGISTERED"
+    },
+    "test_provider": {
+      "tools": ["test.run", "test.suite"],
+      "accounted_in": "test_calls_",
+      "status": "REGISTERED"
+    },
+    "git_provider": {
+      "tools": ["git.status", "git.diff", "git.log", "git.add", "git.commit"],
+      "accounted_in": "git_calls_",
+      "status": "REGISTERED"
+    },
+    "process_provider": {
+      "tools": ["process.spawn", "process.exec"],
+      "accounted_in": "process_calls_",
+      "status": "REGISTERED"
+    }
+  },
+
+  "observation_parity": {
+    "dispatch_count": 0,
+    "headless_dispatch_count": 0,
+    "cli_dispatch_count": 0,
+    "gui_dispatch_count": 0,
+    "agent_core_dispatch_count": 0,
+    "local_server_dispatch_count": 0,
+    "registry_invocations": 0,
+    "successful_invocations": 0,
+    "failed_invocations": 0,
+    "file_calls": 0,
+    "search_calls": 0,
+    "shell_calls": 0,
+    "build_calls": 0,
+    "test_calls": 0,
+    "git_calls": 0,
+    "process_calls": 0,
+    "rejected_tool_count": 0
+  },
+
+  "bypass_invariants": {
+    "direct_agent_bypasses": 0,
+    "legacy_bypasses": 0,
+    "assertion": "DIRECT_AGENT_BYPASSES == 0 \u0026\u0026 LEGACY_BYPASSES == 0"
+  },
+
+  "surface_classification": {
+    "HEADLESS": "Automation / CI / background worker surfaces. All invocations route through AgentToolRegistry::invoke().",
+    "CLI": "Command-line interface. Expected parity with HEADLESS.",
+    "IDE": "Win32 IDE with GUI event loop. Expected parity with HEADLESS.",
+    "AgentCore": "Internal agent DAG engine. Already audited; zero bypasses in agentic_task_graph.cpp and autonomous_workflow_engine.cpp.",
+    "LocalServer": "Local API server surface. Expected parity with HEADLESS."
+  },
+
+  "batch_1_status": {
+    "direct_bypasses_fixed": 7,
+    "files_zero_bypasses": [
+      "rawrxd/src/core/agentic_task_graph.cpp",
+      "rawrxd/src/core/autonomous_workflow_engine.cpp"
+    ],
+    "legacy_registry_compile_guard": "PASS",
+    "full_product_build": "BLOCKED_PREEXISTING_CMAKE"
+  },
+
+  "batch_2_status": {
+    "counter_relocation": "PASS",
+    "g_agentToolInvocations_moved_to": "AgentToolRegistry::invoke()",
+    "per_tool_type_counters_added": true,
+    "AgentToolAuthoritySnapshot_expanded": true,
+    "AgentToolAuthorityReceipt_struct_added": true,
+    "toReceipt_method_added": true,
+    "Headless_receipt_produced": true
+  },
+
+  "verification_commands": {
+    "build_target": "RawrXD_Win32IDE (blocked by pre-existing CMake)",
+    "unit_test_target": "rawr_test_tool_authority",
+    "audit_command": "grep -r 'std::system|CreateProcessA|popen|_popen|ShellExecute' rawrxd/src/**/*.cpp",
+    "remaining_occurrences": 205,
+    "next_action": "Classify remaining 205 occurrences into AGENT_ACTION / PRODUCT_INFRASTRUCTURE / DEAD_LEGACY buckets."
+  },
+
+  "result": {
+    "authority_bound": true,
+    "fail_closed": true,
+    "pass": false,
+    "certification_status": "PARTIAL_PASS",
+    "disposition": "RAWRXD_AGENT_TOOL_AUTHORITY_003_HEADLESS_RECEIPT_PRODUCED",
+    "structural_binding": "PASS",
+    "fail_closed_policy": "PASS",
+    "headless_receipt_generation": "PASS",
+    "runtime_tool_dispatch": "PENDING",
+    "direct_execution_classification": "PENDING",
+    "cli_parity": "PENDING",
+    "ide_parity": "PENDING"
+  }
+}

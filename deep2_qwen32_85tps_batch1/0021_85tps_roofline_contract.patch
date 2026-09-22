@@ -1,0 +1,109 @@
+# Deep2 Qwen32 85TPS — speculative campaign Batch 1/5, item 21
+# Base: RawrXD main @ 861a2ea99 + 40TPS Batches 1-4
+#
+# 85 real output TPS cannot come from one dense 18.49GB target pass/token:
+#   R9700 640 GB/s + RX7800XT 624 GB/s = 1264 GB/s raw peak
+#   1264 / 18.49 = 68.36 target passes/s at impossible 100% utilization
+#
+# Therefore this gate defines 85 TPS as VERIFIED OUTPUT TPS and requires
+# multi-token target-pass amortization. No projection may mint PASS.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0021_85tps_roofline_contract.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Speculative.hpp b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+new file mode 100644
+--- /dev/null
++++ b/~dev/rawrxd/src/deep2/Deep2Speculative.hpp
+@@
++#pragma once
++#include <algorithm>
++#include <cmath>
++#include <cstddef>
++#include <cstdint>
++#include <cstdio>
++
++namespace Deep2 {
++
++struct SpeculativeRoofline {
++    double targetModelGB = 18.49;
++    double gpu0GBps = 640.0;
++    double gpu1GBps = 624.0;
++    double efficiency = 0.80;
++    double targetOutputTPS = 85.0;
++
++    double aggregateGBps() const noexcept {
++        return gpu0GBps + gpu1GBps;
++    }
++    double rawTargetPassTPS() const noexcept {
++        return targetModelGB > 0.0 ? aggregateGBps() / targetModelGB : 0.0;
++    }
++    double effectiveTargetPassTPS() const noexcept {
++        return rawTargetPassTPS() * efficiency;
++    }
++    double minimumAcceptedPerPass() const noexcept {
++        const double p=effectiveTargetPassTPS();
++        return p>0.0 ? targetOutputTPS/p : 1.0e300;
++    }
++    bool physicallyReachableWithWindow(uint32_t window) const noexcept {
++        return window>0 &&
++               minimumAcceptedPerPass() <= static_cast<double>(window);
++    }
++};
++
++struct SpeculativeCounters {
++    uint64_t draftWindows=0;
++    uint64_t proposedTokens=0;
++    uint64_t acceptedTokens=0;
++    uint64_t rejectedTokens=0;
++    uint64_t targetPasses=0;
++    uint64_t verifiedOutputTokens=0;
++
++    double acceptedPerTargetPass() const noexcept {
++        return targetPasses
++            ? static_cast<double>(acceptedTokens)/static_cast<double>(targetPasses)
++            : 0.0;
++    }
++    double verifiedPerTargetPass() const noexcept {
++        return targetPasses
++            ? static_cast<double>(verifiedOutputTokens)/
++              static_cast<double>(targetPasses)
++            : 0.0;
++    }
++};
++
++inline void Emit85TpsRoofline(
++    FILE* f,const SpeculativeRoofline& r,const SpeculativeCounters& c,
++    double measuredOutputTPS,uint32_t window) noexcept
++{
++    FILE* o=f?f:stderr;
++    std::fprintf(o,
++        "GATE=DEEP2_QWEN25_32B_REAL_85TPS_001\n"
++        "TARGET_MODEL_GB=%.3f\n"
++        "GPU0_PEAK_GBPS=%.3f\n"
++        "GPU1_PEAK_GBPS=%.3f\n"
++        "AGGREGATE_PEAK_GBPS=%.3f\n"
++        "ASSUMED_BW_EFFICIENCY=%.6f\n"
++        "RAW_TARGET_PASS_TPS=%.6f\n"
++        "EFFECTIVE_TARGET_PASS_TPS=%.6f\n"
++        "MIN_ACCEPTED_PER_TARGET_PASS_FOR_85=%.6f\n"
++        "SPEC_WINDOW=%u\n"
++        "TARGET_PASSES=%llu\n"
++        "PROPOSED_TOKENS=%llu\n"
++        "ACCEPTED_TOKENS=%llu\n"
++        "VERIFIED_OUTPUT_TOKENS=%llu\n"
++        "ACCEPTED_PER_TARGET_PASS=%.6f\n"
++        "VERIFIED_PER_TARGET_PASS=%.6f\n"
++        "MEASURED_OUTPUT_TPS=%.6f\n",
++        r.targetModelGB,r.gpu0GBps,r.gpu1GBps,r.aggregateGBps(),
++        r.efficiency,r.rawTargetPassTPS(),r.effectiveTargetPassTPS(),
++        r.minimumAcceptedPerPass(),window,
++        (unsigned long long)c.targetPasses,
++        (unsigned long long)c.proposedTokens,
++        (unsigned long long)c.acceptedTokens,
++        (unsigned long long)c.verifiedOutputTokens,
++        c.acceptedPerTargetPass(),c.verifiedPerTargetPass(),
++        measuredOutputTPS);
++}
++
++} // namespace Deep2

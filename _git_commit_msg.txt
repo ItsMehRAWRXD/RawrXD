@@ -1,0 +1,6 @@
+Reconstruct CMakeLists + integrate ScreenPilot V2 e2e static library + apply browser shell patch from locator drop
+
+- Recovered top-level CMakeLists.txt with rawr_monolith target and V2 static library.
+- Added rawrxd_screenpilot_e2e STATIC linked into rawr_monolith.
+- Applied browser CSP hardening, Agent OFF default, input guard 4MiB ceiling.
+- Verified: cmake configure PASS, rawr_monolith build PASS, static_audit PASS.

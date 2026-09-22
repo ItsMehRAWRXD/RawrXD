@@ -1,0 +1,133 @@
+# Deep2 Qwen32 40TPS — Batch 4/5, item 20
+# Base: Batches 1-3 + 0016-0019.
+#
+# Goal:
+# 1) auto-tune row ratio from observed completion times instead of assuming 1:1;
+# 2) expose queue-submit counts to prove single-submit warm GEMVs;
+# 3) do NOT change the >=40 TPS PASS requirement.
+#
+# Environment:
+#   DEEP2_ROW_SPLIT_AUTO=0   disables EWMA adaptation.
+# Explicit DEEP2_GPU{0,1}_THROUGHPUT_WEIGHT still seeds the controller.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0020_adaptive_rowsplit_and_submit_authority.patch
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
+@@
+ #include <algorithm>
++#include <atomic>
++#include <chrono>
+@@
+ namespace {
++
++std::atomic<double> gAutoSpeed0{0.0};
++std::atomic<double> gAutoSpeed1{0.0};
++
++bool autoSplitEnabled() noexcept {
++    const char* e=std::getenv("DEEP2_ROW_SPLIT_AUTO");
++    return !(e && e[0]=='0');
++}
++
++void updateAutoSpeed(unsigned lane,uint32_t rows,uint64_t ns) noexcept {
++    if(!autoSplitEnabled()||!rows||!ns) return;
++    const double sample=
++        static_cast<double>(rows)*1.0e9/static_cast<double>(ns);
++    auto& a=lane==0?gAutoSpeed0:gAutoSpeed1;
++    double old=a.load(std::memory_order_relaxed);
++    const double next=old>0.0 ? old*0.875+sample*0.125 : sample;
++    a.store(next,std::memory_order_relaxed);
++}
+@@
+ RowSplitPlan chooseThroughputSplit(
+     uint32_t rows,const VulkanCompute& g0,const VulkanCompute& g1) noexcept
+ {
+     if(!g0.deviceLocalBytes()||!g1.deviceLocalBytes()) return {};
+-    return Deep2ChooseRowSplitWeighted(
+-        rows,
+-        envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT"),
+-        envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT"));
++    long double s0=envThroughput("DEEP2_GPU0_THROUGHPUT_WEIGHT");
++    long double s1=envThroughput("DEEP2_GPU1_THROUGHPUT_WEIGHT");
++    if(autoSplitEnabled()){
++        const double a0=gAutoSpeed0.load(std::memory_order_relaxed);
++        const double a1=gAutoSpeed1.load(std::memory_order_relaxed);
++        if(a0>0.0&&a1>0.0){
++            s0=(long double)a0;
++            s1=(long double)a1;
++        }
++    }
++    return Deep2ChooseRowSplitWeighted(rows,s0,s1);
+ }
+@@
+-    auto run=[&](VulkanCompute& g,const GpuWeightView& w,
+-                 float* dst)->bool{
+-        return g.RunWeightHostRoundTrip(
+-            w,input,dst,epoch);
++    auto run=[&](unsigned lane,VulkanCompute& g,const GpuWeightView& w,
++                 float* dst)->bool{
++        const auto t0=std::chrono::steady_clock::now();
++        const bool ok=g.RunWeightHostRoundTrip(w,input,dst,epoch);
++        const auto t1=std::chrono::steady_clock::now();
++        if(ok){
++            const uint64_t ns=(uint64_t)
++                std::chrono::duration_cast<std::chrono::nanoseconds>(
++                    t1-t0).count();
++            updateAutoSpeed(lane,w.rows,ns);
++        }
++        return ok;
+     };
+@@
+     const bool both = rowExecutor().run(
+-        [&]{ ok0=run(g0,w0,y0.data()); return ok0; },
+-        [&]{ ok1=run(g1,w1,y1.data()); return ok1; });
++        [&]{ ok0=run(0,g0,w0,y0.data()); return ok0; },
++        [&]{ ok1=run(1,g1,w1,y1.data()); return ok1; });
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine.h b/~dev/rawrxd/src/deep2/Deep2Engine.h
+--- a/~dev/rawrxd/src/deep2/Deep2Engine.h
++++ b/~dev/rawrxd/src/deep2/Deep2Engine.h
+@@
+     uint64_t vulkanSlotWeightHits(unsigned slot) const;
++    uint64_t vulkanSlotQueueSubmits(unsigned slot) const;
+
+diff --git a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+--- a/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
++++ b/~dev/rawrxd/src/deep2/Deep2Engine_VulkanRuntime.cpp
+@@
+ uint64_t Deep2Engine::vulkanSlotWeightHits(unsigned slot) const {
+@@
+ }
++
++uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
++    auto* vc=getVulkanComputeSlot(slot);
++    return vc?vc->QueueSubmitCount():0;
++}
+
+diff --git a/~dev/tests/qwen32_40tps_gate.cpp b/~dev/tests/qwen32_40tps_gate.cpp
+--- a/~dev/tests/qwen32_40tps_gate.cpp
++++ b/~dev/tests/qwen32_40tps_gate.cpp
+@@
+     const uint64_t hits0a = e.vulkanSlotWeightHits(0);
+     const uint64_t hits1a = e.vulkanSlotWeightHits(1);
++    const uint64_t submit0a=e.vulkanSlotQueueSubmits(0);
++    const uint64_t submit1a=e.vulkanSlotQueueSubmits(1);
+@@
+     const uint64_t hits0b = e.vulkanSlotWeightHits(0);
+     const uint64_t hits1b = e.vulkanSlotWeightHits(1);
++    const uint64_t submit0b=e.vulkanSlotQueueSubmits(0);
++    const uint64_t submit1b=e.vulkanSlotQueueSubmits(1);
+@@
+         "SLOT0_HIT_DELTA=%llu\n"
+         "SLOT1_HIT_DELTA=%llu\n"
++        "SLOT0_QUEUE_SUBMIT_DELTA=%llu\n"
++        "SLOT1_QUEUE_SUBMIT_DELTA=%llu\n"
+         "RESIDENT_REUSE=%u\n"
+@@
+         static_cast<unsigned long long>(hits0b - hits0a),
+         static_cast<unsigned long long>(hits1b - hits1a),
++        static_cast<unsigned long long>(submit0b-submit0a),
++        static_cast<unsigned long long>(submit1b-submit1a),
+         residentReuse ? 1u : 0u,

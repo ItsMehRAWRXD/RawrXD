@@ -1,0 +1,112 @@
+# Deep2 Qwen32 85TPS — Batch 14, item 88
+# Base: apply after 0087.
+#
+# Goal:
+#   preallocate a small ring of compute command buffers for asynchronous Q4_K
+#   submits so Batch-12 async tickets no longer allocate/free command buffers.
+#
+# Apply:
+#   git -C F:\~dev apply --3way 0088_async_command_bundle_ring.patch
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.h b/~dev/rawrxd/src/deep2/vulkan_compute.h
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.h
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.h
+@@
+ public:
++    struct AsyncCmdSlot {
++        VkCommandBuffer cmd=VK_NULL_HANDLE;
++        VkFence fence=VK_NULL_HANDLE;
++        bool inFlight=false;
++    };
++    bool EnsureAsyncCmdRing();
++    void ResetAsyncCmdRing();
++    uint64_t AsyncCmdRingReuses() const noexcept { return asyncCmdRingReuses_; }
+@@
+ private:
++    AsyncCmdSlot asyncCmdRing_[4]{};
++    uint32_t asyncCmdRingHead_=0;
++    uint64_t asyncCmdRingReuses_=0;
+
+diff --git a/~dev/rawrxd/src/deep2/vulkan_compute.cpp b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+--- a/~dev/rawrxd/src/deep2/vulkan_compute.cpp
++++ b/~dev/rawrxd/src/deep2/vulkan_compute.cpp
+@@
++void VulkanCompute::ResetAsyncCmdRing() {
++    for(auto& s:asyncCmdRing_) {
++        if(s.inFlight&&s.fence)
++            (void)vkWaitForFences(device_,1,&s.fence,VK_TRUE,UINT64_MAX);
++        if(s.fence) vkDestroyFence(device_,s.fence,nullptr);
++        if(s.cmd&&commandPool_)
++            vkFreeCommandBuffers(device_,commandPool_,1,&s.cmd);
++        s={};
++    }
++    asyncCmdRingHead_=0;
++}
++
++bool VulkanCompute::EnsureAsyncCmdRing() {
++    bool good=true;
++    for(const auto& s:asyncCmdRing_)
++        good=good&&s.cmd&&s.fence;
++    if(good) return true;
++    ResetAsyncCmdRing();
++    for(auto& s:asyncCmdRing_) {
++        VkCommandBufferAllocateInfo ai{};
++        ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
++        ai.commandPool=commandPool_;
++        ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
++        ai.commandBufferCount=1;
++        if(vkAllocateCommandBuffers(device_,&ai,&s.cmd)!=VK_SUCCESS)
++            return false;
++        VkFenceCreateInfo fi{};
++        fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
++        fi.flags=VK_FENCE_CREATE_SIGNALED_BIT;
++        if(vkCreateFence(device_,&fi,nullptr,&s.fence)!=VK_SUCCESS)
++            return false;
++    }
++    return true;
++}
+@@
+ bool VulkanCompute::BeginQ4KResidentAsync(
+@@
+-    VkCommandBufferAllocateInfo ai{};
+-    ai.sType=VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+-    ai.commandPool=commandPool_;
+-    ai.level=VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+-    ai.commandBufferCount=1;
+-    if(vkAllocateCommandBuffers(device_,&ai,&t.cmd)!=VK_SUCCESS)
+-        return false;
++    if(!EnsureAsyncCmdRing()) return false;
++    auto& slot=asyncCmdRing_[asyncCmdRingHead_++%4u];
++    if(vkWaitForFences(device_,1,&slot.fence,VK_TRUE,UINT64_MAX)!=VK_SUCCESS)
++        return false;
++    if(vkResetFences(device_,1,&slot.fence)!=VK_SUCCESS) return false;
++    if(vkResetCommandBuffer(slot.cmd,0)!=VK_SUCCESS) return false;
++    t.cmd=slot.cmd;
++    t.fence=slot.fence;
++    slot.inFlight=true;
++    ++asyncCmdRingReuses_;
+@@
+-    VkFenceCreateInfo fi{};
+-    fi.sType=VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+-    if(vkCreateFence(device_,&fi,nullptr,&t.fence)!=VK_SUCCESS) {
+-        CancelQ4KAsync(t); return false;
+-    }
+@@
+ void VulkanCompute::CancelQ4KAsync(Q4KAsyncTicket& t) {
+-    if(t.fence) vkDestroyFence(device_,t.fence,nullptr);
+-    if(t.cmd&&commandPool_)
+-        vkFreeCommandBuffers(device_,commandPool_,1,&t.cmd);
++    // Ring owns cmd/fence. Locate and release logical in-flight state only.
++    for(auto& s:asyncCmdRing_) {
++        if(s.cmd==t.cmd&&s.fence==t.fence) {
++            s.inFlight=false;
++            break;
++        }
++    }
+@@
+     t={};
+ }
+@@
+ void VulkanCompute::cleanup() {
+@@
++    ResetAsyncCmdRing();
