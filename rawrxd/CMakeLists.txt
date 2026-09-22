@@ -250,19 +250,7 @@ if(RAWRXD_BUILD_CLI)
 
     add_executable(rawrxd
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
-        src/win32app/cli_main_headless.cpp
-        src/win32app/HeadlessIDE.cpp
-        src/win32app/HeadlessIDE_ToolRoutes.cpp
-        src/win32app/HeadlessIDE_GuiRoutes.cpp
-        src/win32app/HeadlessIDE_FileAliases.cpp
-        src/asm/RawrXD_IPC_Dispatcher.asm
-        src/asm/RawrXD_Disasm_Kernel.asm
-        src/asm/rawr_cpu_features.asm
-        src/cli/rawrxd_cli_link_shims.cpp
-        src/res/Resource.rc
-        src/rawrxd_link_stubs.cpp
         # Core inference components for dual GPU testing
-        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
@@ -282,40 +270,15 @@ if(RAWRXD_BUILD_CLI)
         src/core/enterprise_license.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/license_enforcement.cpp
-        src/feature_flags_runtime.cpp
         src/core/agentic_autonomous_config.cpp
-        src/InferenceProfiler.cpp
-        src/subagent_core.cpp
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
-        src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/runtime/Sovereign_KernelBridge_CPP.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
-        src/backend/VulkanGemmDispatcher.cpp
-        src/vulkan_compute.cpp
-        src/runtime/gguf_tensor_loader.cpp
+        src/deep2/vulkan_compute.cpp
         # Elastic runtime for predictive tensor residency
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
         # Shared model runtime
-        src/runtime/shared/SharedModelRuntime.cpp
-        src/runtime/shared/BP1BraidIndex.cpp
-        src/runtime/shared/BP1BraidStreamer.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -324,49 +287,20 @@ if(RAWRXD_BUILD_CLI)
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
         # Agentic stack ÎÃÃ¶ headless CLI parity (no Win32IDE GUI dependencies)
-        src/agentic_engine.cpp
-        src/agent_history.cpp
-        src/agent_policy.cpp
-        src/agent_explainability.cpp
-        src/cli/swarm_orchestrator.cpp
-        src/full_agentic_ide/AgenticIOCPBridge.cpp
-        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         # src/full_agentic_ide/FullAgenticIDE.cpp  # excluded: depends on Win32IDE
         # Agentic components for CLI Ollama testing
-        src/agentic/FIMPromptBuilder.cpp
-        src/agentic/RobustOllamaParser.cpp
-        src/agentic/AgentOllamaClient.cpp
         # HeadlessIDE dependencies
-        src/streaming_gguf_loader.cpp
         src/model_source_resolver.cpp
-        src/modules/engine_manager.cpp
-        src/modules/codex_ultimate.cpp
-        src/deep2/Deep2IDEIntegration.cpp
-        src/deep2/IOCPGGUFLoader.cpp
         # Missing utilities required by agentic stack
-        src/security/InputSanitizer.cpp
-        src/config/IDEConfig.cpp
-        src/inference/PerformanceMonitor.cpp
         # HeadlessIDE agentic dependencies
-        src/agentic/SubAgentManager.cpp
         src/core/chain_of_thought_engine.cpp
-        src/lsp/RawrXD_LSPServer.cpp
         # Missing implementations for unresolved externals
-        src/BackendOrchestrator.cpp
         src/core/enterprise_telemetry_compliance.cpp
         src/core/enterprise_licensev2_impl.cpp
-        src/deep2/FabricTensorTable.cpp
-        src/utils/Diagnostics.cpp
-        src/cli/rawrxd_deep_stubs.cpp
         rguf_source/RGUFWriter.cpp
         rguf_source/RGUFLoader.cpp
         rguf_source/RGUFPlatform.cpp
         rguf_source/RGUFQuant.cpp
-        src/agent/autonomous_subagent.cpp
-        src/agent/agentic_failure_detector.cpp
-        src/agent/agentic_puppeteer.cpp
-        src/agent/autonomous_orchestrator.cpp
-        src/agent/orchestrator_cli_handler.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
@@ -457,36 +391,14 @@ if(RAWRXD_BUILD_CLI)
     # =============================================================================
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
-        src/serve/rawrxd_serve.cpp
-        src/serve/rawrxd_model_registry.cpp
-        src/serve/rawrxd_serve_inference_plugin.cpp
-        src/serve/inference_plugin_backend.cpp
-        src/serve/rawrxd_pipe_server.cpp
-        src/serve/rawrxd_pipe_server_stubs.cpp
-        src/runtime/GenerationBouncer.cpp
-        src/runtime/shared/SharedModelRuntime.cpp
-        src/runtime/shared/BP1BraidIndex.cpp
-        src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/runtime/Sovereign_KernelBridge_CPP.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
-        src/backend/VulkanGemmDispatcher.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
-        src/gpu_enforcement.cpp
     )
     set_target_properties(rawrxd-serve PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -548,11 +460,7 @@ if(RAWRXD_BUILD_CLI)
     # =============================================================================
     add_executable(bp1_smoke_test
         tests/bp1_smoke_test.cpp
-        src/runtime/shared/SharedModelRuntime.cpp
-        src/runtime/shared/BP1BraidIndex.cpp
-        src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -690,7 +598,7 @@ if(RAWRXD_BUILD_CLI)
         # =====================================================================
         add_executable(vulkan_gemv_isolated_test
             tests/vulkan_gemv_isolated_test.cpp
-            src/vulkan_compute.cpp
+            src/deep2/vulkan_compute.cpp
         )
         set_target_properties(vulkan_gemv_isolated_test PROPERTIES
             EXCLUDE_FROM_ALL TRUE
@@ -1186,7 +1094,6 @@ if(WIN32)
     # VAL-051.7: Residency Baseline / Fixture Gate
     # =====================================================================
     add_executable(val_051_7_residency_baseline
-        tests/val_051_7_residency_baseline.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(val_051_7_residency_baseline PRIVATE InferenceEngine)
@@ -1423,7 +1330,6 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
     add_executable(test_gguf_tensor_bounds
         tests/test_gguf_tensor_bounds.cpp
-        src/runtime/gguf_tensor_loader.cpp
     )
     set_target_properties(test_gguf_tensor_bounds PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1574,7 +1480,6 @@ endif()
 if(WIN32)
     add_executable(test_omega1_bridge
         tests/test_omega1_bridge.cpp
-        src/omega1_modules/OmegaPowerShellBridge.cpp
     )
     set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     target_include_directories(test_omega1_bridge PRIVATE
@@ -1632,8 +1537,6 @@ endif()
 if(WIN32)
     add_executable(Deep2Engine_RouterSmokeTest
         src/deep2/Deep2Engine_RouterSmokeTest.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/MoERouter.cpp
     )
     set_target_properties(Deep2Engine_RouterSmokeTest PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1677,7 +1580,6 @@ endif()
 if(WIN32)
     add_executable(GGUF_Alignment_Diagnostic
         src/deep2/test_gguf_alignment_diagnostic.cpp
-        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(GGUF_Alignment_Diagnostic PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1719,8 +1621,6 @@ endif()
 # =============================================================================
 if(WIN32)
     add_executable(Q4_0_GEMV_Certification
-        src/deep2/test_q4_0_gemv_certification.cpp
-        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(Q4_0_GEMV_Certification PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1878,31 +1778,8 @@ endif()
 # ASM kernel sources (shared between RawrEngine and Win32IDE)
 if(RAWR_HAS_MASM)
     set(ASM_KERNEL_SOURCES
-        src/asm/rawr_globals.asm
-        src/asm/rawr_cpu_features.asm
-        src/asm/inference_core.asm
-        src/asm/FlashAttention_AVX512.asm
-        src/asm/quant_avx2.asm
-        src/asm/RawrXD_KQuant_Dequant.asm
-        src/asm/RawrXD_AVX512_Dequant_BPE.asm
-        src/asm/RawrXD_PDBKernel_v3.asm
-        src/asm/RawrXD_ModuleEngine.asm
-        src/asm/request_patch.asm
-        src/asm/inference_kernels.asm
-        src/asm/model_bridge_x64.asm
-        src/asm/model_streamer_x64.asm
-        src/asm/RawrXD_DualAgent_Orchestrator.asm
-        src/asm/RawrXD_DiskRecoveryAgent.asm
-        src/asm/disk_recovery_scsi.asm
         # src/asm/RawrXD-AnalyzerDistiller.asm      # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
         # src/asm/RawrXD-StreamingOrchestrator.asm  # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
-        src/asm/RawrXD_Telemetry_Kernel.asm
-        src/asm/RawrXD_Prometheus_Exporter.asm
-        src/asm/RawrXD_SelfPatch_Agent.asm
-        src/asm/RawrXD_SourceEdit_Kernel.asm
-        src/asm/feature_dispatch_bridge.asm
-        src/asm/gui_dispatch_bridge.asm
-        src/asm/VulkanKernel_DispatchRaw.asm
         # src/asm/RawrXD_CopilotGapCloser.asm   # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/native_speed_kernels.asm      # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/DirectML_Bridge.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
@@ -1910,31 +1787,13 @@ if(RAWR_HAS_MASM)
         # src/asm/RawrXD_Snapshot.asm           # handled separately below
         # src/asm/RawrXD_Pyre_Compute.asm       # handled separately below
         # Pure MASM inference kernels (zero dependencies, no GGML)
-        src/masm/rawrxd_math_masm.asm
-        src/masm/rawrxd_transformer_masm_fixed.asm
-        src/masm/rawrxd_transformer_full.asm
         # Sovereign ABI bridge ÎÃÃ¶ stable C++/MASM execution plane seam
-        src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_Pure.asm    # excluded: ml64 errors (operand size mismatch)
-        src/asm/RawrXD_OverclockGov_Pure.asm
-        src/asm/RawrXD_Emitter_v1.asm
-        src/asm/RawrXD_IPC_Dispatcher.asm
-        src/asm/RawrXD_AuditSystem_Pure.asm
-        src/asm/Advanced_Code_Deobfuscator.asm
-        src/asm/Code_Pattern_Reconstructor.asm
-        src/asm/agentic_deep_thinking_kernels.asm
         # Deep2 MoE kernels (2K TPS path)
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_q4k_gemv_v2.asm
-        src/deep2/sovereign_q2k_gemv_v2.asm
-        src/deep2/sovereign_q3k_gemv_v2.asm
-        src/deep2/sovereign_moe_fused.asm
         # Sovereign Puppeteer Architecture - Self-Modification System
-        src/sovereign/puppeteer/Puppeteer_CaptureState.asm
         # src/asm/RawrXD_MissingSymbols.asm  # excluded: duplicates symbols from gold_link_stubs.cpp
         # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
@@ -2016,16 +1875,10 @@ endif()
 find_package(Threads REQUIRED)
 
 set(SOURCES 
-    src/main.cpp
-    src/memory_core.cpp
-    src/hot_patcher.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
+    src/ceo/main.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/RawrRuntime.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TransferScheduler.cpp
@@ -2033,34 +1886,11 @@ set(SOURCES
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
-    src/runtime/gguf_tensor_loader.cpp
-    src/runtime/elastic/ElasticEngine.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
-    src/complete_server.cpp
-    src/agentic_engine.cpp
-    src/subagent_core.cpp
-    src/agent_history.cpp
-    src/agent_policy.cpp
-    src/agent_explainability.cpp
-    src/streaming_gguf_loader.cpp
-    src/utils/Diagnostics.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    src/compression_interface.cpp
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/rawrxd_linker_closure.cpp
@@ -2068,33 +1898,14 @@ set(SOURCES
     # src/swarm/SovereignSwarm.cpp  # excluded: large file, use linker stubs instead
     src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
-    src/vulkan_kernel_bridge.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
-    src/compression/zlib_runtime_loader.cpp
-    src/deep2/MASMKernelStubs.cpp
-    src/deep2/IQQuantKernels.cpp
     src/inference/NegativeSpaceProfiler.cpp
     
-    src/engine/gguf_core.cpp
-    src/engine/inference_kernels.cpp
-    src/engine/transformer.cpp
-    src/engine/bpe_tokenizer.cpp
-    src/engine/sampler.cpp
-    src/engine/rawr_engine.cpp
-    src/engine/core_generator.cpp
-    src/engine/pyre_compute.cpp
-    src/engine/sovereign_engines.cpp
     
     src/core/execution_scheduler.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
-    src/cli/agentic_decision_tree.cpp
-    src/cli/cli_autonomy_loop.cpp
-    src/cli/deep_iteration_engine.cpp
     
     # Headless CLI Systems (Phase 20: Safety, Confidence, Replay, Governor, Multi-Response, History, Policy, Explainability)
-    src/cli/cli_headless_systems.cpp
     src/core/agent_safety_contract.cpp
     src/core/confidence_gate.cpp
     src/core/deterministic_replay.cpp
@@ -2117,8 +1928,6 @@ set(SOURCES
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
-    src/server/gguf_server_hotpatch.cpp
-    src/agent/agentic_hotpatch_orchestrator.cpp
 
     # Singleton subsystems referenced by UnifiedHotpatchManager
     src/core/agentic_task_graph.cpp
@@ -2132,96 +1941,56 @@ set(SOURCES
     src/core/vision_quantized_encoder.cpp
     src/core/vision_gpu_staging.cpp
 
-    src/marketplace/extension_marketplace.cpp
-    src/auth/rbac_engine.cpp
 
     # Shadow-Page Detour + Sentinel Watchdog (Layer 6)
     src/core/shadow_page_detour.cpp
     src/core/sentinel_watchdog.cpp
 
     # Agentic Loop State (iterative reasoning state machine)
-    src/agentic_loop_state.cpp
 
     # Autonomous SubAgents ÎÃÃ¶ Bulk Fix Orchestration for models/swarms
-    src/agent/autonomous_subagent.cpp
-    src/agent/agentic_failure_detector.cpp
-    src/agent/agentic_puppeteer.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Sovereign Puppeteer Architecture ÎÃÃ¶ Self-Modification System
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/sovereign/introspection/SymbolTableGenerator.cpp
-    src/sovereign/puppeteer/PuppeteerAPI.cpp
-    src/sovereign/puppeteer/VEH_Watchdog.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Intent-to-Execution Guardrails ÎÃÃ¶ Model Control Plane
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/intent/intent_config.cpp
-    src/intent/intent_abi.cpp
-    src/guardrails/capability_policy.cpp
-    src/guardrails/patch_firewall.cpp
-    src/hotpatch/patch_transaction.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Sovereign Agent Kernel ÎÃÃ¶ Orchestration Layer
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/kernel/AgentKernel.cpp
-    src/kernel/TelemetryInjector.cpp
-    src/kernel/IntentExecutionPipeline.cpp
-    src/kernel/IntentReplayEngine.cpp
 
     # HTTP Client ÎÃÃ¶ WinHTTP/curl async with future retention
-    src/agent/llm_http_client.cpp
     src/agent/model_invoker.cpp
-    src/agent/planner.cpp
-    src/agent/eval_framework.cpp
     # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
     # LocalReasoningEngine ÎÃÃ¶ API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
 
     # Agent Self-Repair (MASM64 self-patching kernel bridge)
-    src/agent/agent_self_repair.cpp
-    src/agent/agent_self_healing_orchestrator.cpp
 
     # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
-    src/agentic/DeterministicReplayEngine.cpp
-    src/agentic/AgentToolHandlers.cpp
 
     # T4: Autonomous Recovery Orchestrator (FailureClass ÎÃ¥Ã recovery ÎÃ¥Ã verify ÎÃ¥Ã commit)
-    src/agentic/autonomous_recovery_orchestrator.cpp
 
     # CoT Fallback System (required by unified_hotpatch_manager.cpp)
     src/core/cot_fallback_system.cpp
     
     # T4.5: Agentic Deep Thinking Engine ÎÃÃ¶ Autonomous monitoring, recovery, and orchestration
-    src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
-    validation/fault_injection/FaultInjector.cpp
-    validation/fault_injection/WorkerCrashInjector.cpp
-    validation/fault_injection/MemoryPressureInjector.cpp
-    validation/fault_injection/ServiceKillInjector.cpp
-    validation/fault_injection/StateCorruptionInjector.cpp
-    validation/fault_injection/ExceptionStormInjector.cpp
-    validation/recovery_telemetry/RecoveryTelemetry.cpp
 
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
-    src/agentic/AgentOrchestrator.cpp
-    src/agentic/OrchestratorBridge.cpp
-    src/agentic/AgenticNavigator.cpp
-    src/agentic/RawrXD_ToolRegistry.cpp
-    src/agentic/ToolRegistry.cpp
-    src/agentic/RawrXD_AgentLoop.cpp
-    src/agentic/agentic_executor.cpp
+    src/core/ToolRegistry.cpp
 
     # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
     src/core/auto_repair_orchestrator.cpp
     src/core/agent_memory_indexer.cpp
 
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
-    src/agent/DiskRecoveryAgent.cpp
+    src/core/DiskRecoveryAgent.cpp
     
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # IDE Subsystems ÎÃÃ¶ Repository Intelligence, Build, Diagnostics, etc.
@@ -2234,11 +2003,6 @@ set(SOURCES
     src/repo/IncludeGraph.cpp
     src/repo/SearchIndex.cpp
     src/repo/EmbeddingIndex.cpp
-    src/build/BuildIntelligence.cpp
-    src/diagnostics/DiagnosticsEngine.cpp
-    src/refactoring/RefactoringEngine.cpp
-    src/validation/PatchValidator.cpp
-    src/ide/IDEShell.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -2260,7 +2024,6 @@ set(SOURCES
     src/core/amd_gpu_accelerator.cpp
     src/core/unified_memory_executor.cpp
     src/core/model_runtime_gate.cpp
-    src/runtime_surface/GenerationStopwatch.cpp
     
     # Accelerator implementations (required by accelerator_router.cpp)
     src/core/intel_gpu_accelerator.cpp
@@ -2285,18 +2048,12 @@ set(SOURCES
     src/core/camellia256_bridge.cpp
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
-    src/tool_registry.cpp
 
     # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) ÎÃÃ¶ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
-    src/license_enforcement.cpp
-    src/feature_flags_runtime.cpp
-    src/tools/license_validator_manifest.cpp
 
     # Agentic config + enterprise feature manager + model name utils ÎÃÃ¶ required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
-    src/model_name_utils.cpp
-    src/model_config.cpp
 
     # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) ÎÃÃ¶ required by complete_server, execution_scheduler, local_ai_core
     src/core/multi_gpu.cpp
@@ -2306,32 +2063,24 @@ set(SOURCES
 
     # Telemetry + observability ÎÃÃ¶ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
-    src/agentic_observability.cpp
 
     # BoundedAgentLoop + FIMPromptBuilder ÎÃÃ¶ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
-    src/agentic/BoundedAgentLoop.cpp
-    src/agentic/FIMPromptBuilder.cpp
 
     # Subsystem registry ÎÃÃ¶ required by AgentOrchestrator, ToolRegistry, feature_handlers
     src/core/rawrxd_subsystem_api.cpp
 
     # IDEConfig ÎÃÃ¶ required by OrchestratorBridge
-    src/config/IDEConfig.cpp
 
     # Disk recovery ASM agent + tool handler ÎÃÃ¶ required by ToolRegistry
-    src/agentic/DiskRecoveryAgent.cpp
-    src/agentic/DiskRecoveryToolHandler.cpp
+    src/core/DiskRecoveryAgent.cpp
 
     # Agentic bridge (ExecuteAgentCommand) ÎÃÃ¶ headless stub for RawrEngine
-    src/win32app/agentic_bridge_headless.cpp
 
     # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) ÎÃÃ¶ required by agentic_failure_detector
     src/core/ai_agent_masm_core_impl.cpp
 
     # Context deterioration hotpatch + LSP hotpatch + symbol provider ÎÃÃ¶ required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
-    src/lsp/lsp_hotpatch_bridge.cpp
-    src/lsp/hotpatch_symbol_provider.cpp
 
     # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) ÎÃÃ¶ required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
@@ -2351,12 +2100,9 @@ set(SOURCES
     src/core/menu_auditor.cpp
 
     # GGUF diagnostic provider + LSP server ÎÃÃ¶ required by lsp_hotpatch_bridge
-    src/lsp/gguf_diagnostic_provider.cpp
-    src/lsp/RawrXD_LSPServer.cpp
 
     # Extension polyfill engine + VSCode API ÎÃÃ¶ required by js_extension_host
     src/core/extension_polyfill_engine.cpp
-    src/modules/vscode_extension_api.cpp
 
     # JS extension host ÎÃÃ¶ required by ssot_handlers_ext
     src/core/js_extension_host.cpp
@@ -2365,21 +2111,13 @@ set(SOURCES
     src/model_source_resolver.cpp
 
     # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ÎÃÃ¶ required by auto_feature_registry
-    src/modules/ReverseEngineering.cpp
 
     # AgenticDeepThinkingEngine full implementation
     src/agent/agentic_deep_thinking_engine.cpp
 
     # Quantum Autonomous Systems - Real implementations (required by agentic_deep_thinking_engine)
-    src/agent/quantum_autonomous_todo_system.cpp
-    src/agent/quantum_multi_model_agent_cycling.cpp
-    src/agent/quantum_dynamic_time_manager.cpp
-    src/agent/quantum_missing_impl.cpp
-    src/agent/quantum_production_orchestrator.cpp
-    src/agent/quantum_agent_orchestrator.cpp
 
     # Win32IDE::logMessage fallback (for RawrEngine / Gold when linking TranscendencePanel without full IDE)
-    src/win32app/Win32IDE_logMessage.cpp
     # Win32IDE output/copilot/tree stubs (for RawrEngine / Gold when linking vscode_extension_api without full IDE)
 
     # Stubgen: AnalyzerDistiller + StreamingOrchestrator (C++ fallbacks, guarded by RAWR_HAS_MASM)
@@ -2388,8 +2126,6 @@ set(SOURCES
     src/core/pt_driver_contract.cpp
 
     # Phase 21: Distributed Swarm Inference Orchestrator
-    src/cli/swarm_orchestrator.cpp
-    src/swarm_orchestrator.cpp
 
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
@@ -2402,7 +2138,6 @@ set(SOURCES
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
-    src/dml_inference_engine.cpp
 
     # Agentic Watchdog ÎÃÃ¶ .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
@@ -2440,8 +2175,7 @@ set(SOURCES
     src/core/rawrxd_state_mmf.cpp
 
     # Phase 46: VulkanKernel ÎÃÃ¶ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
-    src/vulkan_compute.cpp
-    src/backend/VulkanGemmDispatcher.cpp
+    src/deep2/vulkan_compute.cpp
 
     # Phase 46: Live Binary Patcher ÎÃÃ¶ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
     src/core/live_binary_patcher.cpp
@@ -2460,7 +2194,6 @@ set(SOURCES
 
     # META 1: SQLite RAII Wrapper + Real Amalgamation
     src/core/sqlite_wrapper.cpp
-    src/core/sqlite3.c           # Real sqlite3 amalgamation (sqlite.org 3.47.2)
 
     # META 2: Work-Stealing Thread Pool
     src/core/thread_pool.cpp
@@ -2472,28 +2205,20 @@ set(SOURCES
     src/core/jsonrpc_parser.cpp
 
     # GAP 1: Multi-File Atomic Transactions + WAL Journal
-    src/agentic/multi_file_transaction.cpp
     src/core/transaction_journal.cpp
 
     # GAP 1.5: Agentic Transaction Layer (Cursor-Composer-class orchestration)
-    src/agentic/agentic_transaction.cpp
 
     # P6: Agent Workflow Orchestrator (DAG-based planÎÃ¥ÃexecuteÎÃ¥ÃvalidateÎÃ¥Ãcommit)
-    src/agentic/agent_workflow_orchestrator.cpp
 
     # GAP 2: HNSW Vector Index
     src/core/vector_index.cpp
 
     # GAP 3: Model Cascade Router (Thompson Sampling)
-    src/agentic/model_cascade.cpp
 
     # GAP 4: Ghost-Text Context Assembler
-    src/agentic/context_assembler.cpp
 
     # GAP 5: Chat Message Renderer (Markdown ÎÃ¥Ã HTML)
-    src/ui/chat_message_renderer.cpp
-    src/ui/tool_action_status.cpp
-    src/ui/chat_panel.cpp
 
     # Cathedral Hardening (5.0 Readiness) - REAL IMPLEMENTATIONS ONLY
     src/core/crash_containment.cpp
@@ -2502,67 +2227,46 @@ set(SOURCES
     src/core/perf_telemetry.cpp
 
     # GAP 6: Git Context Provider (CLI subprocess)
-    src/git/git_context.cpp
 
     # GAP 7: LSP Diagnostic Consumer + Quick-Fix
-    src/lsp/diagnostic_consumer.cpp
 
     # GAP 8: Jinja2-Style Prompt Template Engine
     src/core/prompt_template_engine.cpp
 
     # GAP 9: Speculative Decoder v2 (Draft-Verify-Accept)
-    src/gpu/speculative_decoder_v2.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
-    src/ai/streaming_inference_engine.cpp
-    src/ai/speculative_tree_attention_bridge.cpp
-    src/kernels/tree_attention_dispatch.cpp
-    src/kernels/tree_attention_scalar.cpp
-    src/kernels/tree_attention_avx2.cpp
-    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
-    src/inference/ultra_fast_inference.cpp
 
     # GAP 10: Completion Feedback (Online Logistic Regression)
-    src/telemetry/completion_feedback.cpp
 
     # T3-D: Replay + Telemetry Fusion Engine
-    src/telemetry/replay_telemetry_fusion.cpp
 
     # T3-D: Hotpatch Telemetry Safety Layer
-    src/telemetry/hotpatch_telemetry_safety.cpp
 
     # Unified Telemetry Core ÎÃÃ¶ single entry point for all telemetry layers
-    src/telemetry/UnifiedTelemetryCore.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # GPU + Agentic + UI Integration (STL/Win32 native)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
 
     # GPU Backend ÎÃÃ¶ Vulkan/CUDA/CPU fallback chain (fprintf logging)
-    src/gpu/gpu_backend.cpp
 
     # KV-Cache Optimizer ÎÃÃ¶ sliding-window eviction, std::chrono timing
-    src/gpu/kv_cache_optimizer.cpp
 
     # Speculative Decoder v1 ÎÃÃ¶ draft/verify with std::mt19937 RNG
-    src/gpu/speculative_decoder.cpp
 
     # Agentic Controller ÎÃÃ¶ callback-based event loop (no QObject/signals)
-    src/agentic_controller.cpp
 
     # Phase 2 UI Integration ÎÃÃ¶ Win32 MessageBox, std::filesystem, std::function callbacks
-    src/ui/phase2_integration_example.cpp
 
     # Multi-Model Benchmark Tool ÎÃÃ¶ has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
 
     # Agentic Agent Coordinator ÎÃÃ¶ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
-    src/agentic_agent_coordinator.cpp
 
     # Production Config Manager ÎÃÃ¶ singleton config loader (instance, loadConfig, value)
-    src/production_config_manager.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Core Production Subsystems (Verified Working)
@@ -2579,11 +2283,6 @@ set(SOURCES
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/test_harness/replay_fixture.cpp
-    src/test_harness/replay_oracle.cpp
-    src/test_harness/replay_mock_inference.cpp
-    src/test_harness/replay_harness.cpp
-    src/test_harness/replay_reporter.cpp
 
     # Phase 34: Instructions Context Provider ÎÃÃ¶ Read tools.instructions.md (All Lines)
     src/core/instructions_provider.cpp
@@ -2601,25 +2300,18 @@ set(SOURCES
     src/core/problems_aggregator.cpp
 
     # Top-50: Secrets scanning (API keys, high-entropy) ÎÃÃ¶ Security
-    src/security/secrets_scanner.cpp
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
-    src/security/dependency_audit.cpp
 
     # Top-50: SBOM export (CycloneDX 1.4, in-house)
-    src/security/sbom_export.cpp
 
     # Top-50: In-house SAST (regex/source rules, no external SAST lib)
-    src/security/sast_rule_engine.cpp
 
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
-    src/security/RawrXD_GoogleDork_Scanner.cpp
 
     # Universal Dorker ÎÃÃ¶ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
-    src/security/RawrXD_Universal_Dorker.cpp
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
-    src/security/SecurityHardening.cpp
 
     # Phase 15b: Code Linter ÎÃÃ¶ Real-time syntax/semantic linting (C++, ASM, Python, JS)
     src/core/code_linter.cpp
@@ -2680,10 +2372,8 @@ set(SOURCES
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
 
     # Phase A: Closed-Loop Verification (Write ÎÃ¥Ã Compile ÎÃ¥Ã Test ÎÃ¥Ã Fix)
-    src/agentic/autonomous_verification_loop.cpp
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-    src/agentic/autonomous_background_daemon.cpp
 
     # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
     src/core/knowledge_graph_core.cpp
@@ -2695,46 +2385,26 @@ set(SOURCES
     src/core/autonomous_debugger.cpp
 
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-    src/agentic/autonomous_communicator.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/telemetry/telemetry_export.cpp
-    src/agentic/agentic_composer_ux.cpp
-    src/context/context_mention_parser.cpp
-    src/multimodal_engine/vision_encoder.cpp
-    src/ide/refactoring_plugin.cpp
-    src/ide/language_plugin.cpp
-    src/context/semantic_index.cpp
-    src/ide/resource_generator.cpp
+    src/core/vision_encoder.cpp
 
     # P0: Codebase RAG (in-house TF-IDF)
-    src/ai/codebase_rag.cpp
 
     # P1: Symbol Graph Indexer (cross-file navigation, Copilot/Cursor parity)
-    src/ai/symbol_graph_indexer.cpp
 
     # P2: Semantic Code Search (TF-IDF + fuzzy ranking)
-    src/ai/semantic_code_search.cpp
 
     # P3: Multi-File Reasoning (cross-file context & dependency analysis)
-    src/ai/multi_file_reasoning.cpp
 
     # P4: Workspace Embeddings (LSH vector index, incremental)
-    src/ai/workspace_embeddings.cpp
 
     # P5: Repo-Wide Refactor Engine (rename, extract, move, change-sig)
-    src/ai/repo_refactor_engine.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
-    src/ai/streaming_inference_engine.cpp
-    src/ai/speculative_tree_attention_bridge.cpp
-    src/kernels/tree_attention_dispatch.cpp
-    src/kernels/tree_attention_scalar.cpp
-    src/kernels/tree_attention_avx2.cpp
-    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # NOTE: Removed Transcendence fiction (self_host_engine, hardware_synthesizer,
     # mesh_brain, speciator_engine, neural_bridge, omega_orchestrator, transcendence_coordinator)
@@ -2748,120 +2418,16 @@ set(SOURCES
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Cognitive Architecture ÎÃÃ¶ Autonomous Reverse Engineering OS
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/agentic/cognitive/cognitive_types.cpp
-    src/agentic/cognitive/enhanced_blackboard.cpp
-    src/agentic/cognitive/mission_director.cpp
-    src/agentic/cognitive/reflection_agent.cpp
-    src/agentic/cognitive/dynamic_planner.cpp
-    src/agentic/cognitive/autonomous_orchestrator.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # TrailBrake / HotPatcher / AntiPatcher Safety System
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/deep2/TrailBrake.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/AntiPatcher.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/CPUFrequency.cpp
     # Dual GPU / Reverse Recovery / Streaming
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
-    src/deep2/StreamEngine.cpp
-    src/deep2/execution_policy/ExecutionPolicy.cpp
-    src/deep2/execution_policy/ExecutionPolicyStore.cpp
-    src/deep2/ShardRouterIntegration.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/Deep2ModelRuntime.cpp
-    src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
-    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
-    src/deep2/ElasticResidencyManager.cpp
-    src/deep2/ElasticDynamicBudget.cpp
-    src/deep2/CycloneScheduler.cpp
-    src/deep2/Deep2LivePath.cpp
-    src/deep2/Deep2LivePath_Gate.cpp
-    src/deep2/Deep2LivePath_Pinball.cpp
-    src/deep2/Deep2LivePath_Mech.cpp
-    src/deep2/Deep2LivePath_Emit.cpp
-    src/deep2/GpuTransfer_Emit.cpp
-    src/deep2/LivePathEffect.cpp
-    src/deep2/K2LivePolicy.cpp
-    src/deep2/K2LivePolicy_Apply.cpp
-    src/deep2/K2LivePolicy_Hysteresis.cpp
-    src/deep2/FusedLiveController.cpp
-    src/deep2/FusedLiveController_Decide.cpp
-    src/deep2/FusedLiveController_Cheap.cpp
-    src/deep2/FusedLiveController_Law.cpp
-    src/deep2/FusedLiveController_Emit.cpp
-    src/deep2/LivePath_FusedTick.cpp
-    src/deep2/Deep2LivePath_MechEnd.cpp
-    src/deep2/Deep2LivePath_Thermal.cpp
-    src/rkc/RKCValidator.cpp
-    src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-    src/rkc/RKCCompiler.cpp
-    src/rkc/RKCRecipes.cpp
-    src/rkc/RKCGapEngine.cpp
-    src/rkc/RKCEmit.cpp
-    src/rkc/RKCSession.cpp
-    src/rkc/RKCProductContext.cpp
-    src/rkc/RKC_C_ABI.cpp
-    src/deep2/ProductionProfiler.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/Deep2Bridge.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/DeepSeekMoELoader.cpp
-    src/deep2/Deep2ExecutionGraph.cpp
-    src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/UniversalModelLoader.cpp
-    src/deep2/ModelLoader.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/RuntimePlanner.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/IOCPGGUFLoader.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/MARSController.cpp
-    src/sampling/advanced_sampler.cpp
+    src/core/ModelRegistry.cpp
 
     # Sovereign ABI runtime ÎÃÃ¶ stable C++/MASM execution plane seam
-    src/runtime/Sovereign_RingTelemetry.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -2892,11 +2458,6 @@ if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
         src/core/masm_stress_harness.cpp
         src/core/convergence_stress_harness.cpp
         src/core/enterprise_stress_tests.cpp
-        src/test_harness/replay_fixture.cpp
-        src/test_harness/replay_oracle.cpp
-        src/test_harness/replay_mock_inference.cpp
-        src/test_harness/replay_harness.cpp
-        src/test_harness/replay_reporter.cpp
     )
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -2905,7 +2466,6 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
     list(REMOVE_ITEM SOURCES
         src/core/cot_fallback_system.cpp
-        src/win32app/Win32IDE_logMessage.cpp
     )
     # NOTE: agentic_bridge_headless.cpp is NOT a stub - it provides headless AgenticBridge implementation
     # Required by RawrXD_AgentLoop.cpp when Win32IDE is not built
@@ -2962,12 +2522,8 @@ endif()
 if(RAWR_REPLACE_MASM_FALLBACKS)
     if(RAWR_HAS_MASM)
         list(APPEND ASM_KERNEL_SOURCES
-            src/asm/memory_patch.asm
-            src/asm/byte_search.asm
         )
         set_source_files_properties(
-            src/asm/memory_patch.asm
-            src/asm/byte_search.asm
             PROPERTIES LANGUAGE ASM_MASM
         )
         message(STATUS "[ReplacementPass] MASM: promoted memory_patch/byte_search ASM; analyzer/streaming remain on C++ fallbacks pending asm include fixes")
@@ -2982,38 +2538,21 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/auto_feature_registry.cpp
-    src/lsp/RawrXD_LSPServer.cpp
-    src/lsp/lsp_hotpatch_bridge.cpp
     # Swarm files that reference symbols not available in RawrEngine target
-    src/swarm/InfinitePerfectionTelemetry.cpp
-    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
-    src/swarm/TelemetryDashboardServer.cpp
-    src/swarm/IDEIntegration.cpp
-    src/swarm/LearningSimulator.cpp
-    src/agentic_agent_coordinator.cpp
+    src/ceo/IDEIntegration.cpp
     # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
     src/core/streaming_orchestrator.cpp
     src/core/analyzer_distiller.cpp
     # Remove streaming_inference_engine.cpp - references KernelArbiter and Vulkan APIs not available in RawrEngine
-    src/ai/streaming_inference_engine.cpp
-    src/ai/speculative_tree_attention_bridge.cpp
     # Remove unified_command_dispatch.cpp and agentic_transaction.cpp - reference voice command handlers not in RawrEngine
     src/core/unified_command_dispatch.cpp
-    src/agentic/agentic_transaction.cpp
     # Remove files referencing SubsystemRegistry (not available in RawrEngine)
-    src/agentic/ToolRegistry.cpp
+    src/core/ToolRegistry.cpp
     src/core/feature_handlers.cpp
-    src/agentic/AgentOrchestrator.cpp
     # Remove model_config.cpp - references OllamaClient which is not linked in RawrEngine
-    src/model_config.cpp
     # Remove LSP providers referencing direct_read (byte_level_hotpatcher.cpp excluded)
-    src/lsp/hotpatch_symbol_provider.cpp
-    src/lsp/gguf_diagnostic_provider.cpp
     # Remove quantum_agent_orchestrator.cpp - references GPUDispatchGate which has no implementation
-    src/agent/quantum_agent_orchestrator.cpp
     # Remove RawrXD_AgentLoop.cpp and DiskRecoveryToolHandler.cpp - reference AgentToolRegistry from excluded ToolRegistry.cpp
-    src/agentic/RawrXD_AgentLoop.cpp
-    src/agentic/DiskRecoveryToolHandler.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -3122,11 +2661,7 @@ endif()
 # in headless mode.
 list(APPEND RAWR_ENGINE_SOURCES
     src/logging/Logger.cpp
-    src/security/InputSanitizer.cpp
-    src/security/SecurityHardening.cpp
     src/core/ConfigurationValidator.cpp
-    src/inference/PerformanceMonitor.cpp
-    src/agentic/ErrorRecoveryManager.cpp
     # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # REMOVED: src/link_stubs/rawrengine_link_closure.cpp - stub file deleted
 
@@ -3140,57 +2675,27 @@ message(STATUS "[SSOT Ownership] RawrEngine provider=${RAWR_SSOT_PROVIDER_UPPER}
 
 # RawrEngine is headless; don't hard-depend on the Win32IDE VSCode API bridge.
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
-    src/modules/vscode_extension_api.cpp
-    src/win32app/Win32IDE_VSCodeExtAPI.cpp
     src/core/js_extension_host.cpp
     src/core/extension_polyfill_engine.cpp
-    src/modules/quickjs_extension_host.cpp
-    src/modules/quickjs_vscode_bindings.cpp
-    src/engine/pyre_compute.cpp
 )
 
 # RawrEngine is headless; exclude Win32IDE GUI translation units.
 list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX "^src/win32app/Win32IDE_.*\\.cpp$")
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
-    src/win32app/Win32IDE.cpp
-    src/win32app/main_win32.cpp
 )
 
 list(APPEND RAWR_ENGINE_SOURCES
-    src/BackendOrchestrator.cpp
-    src/agentic/AdvancedAgentCoordinator.cpp
-    src/agentic/hotpatch/Engine.cpp
-    src/InferenceProfiler.cpp
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
     # ÎÃ¶ÃÎÃ¶Ã Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ÎÃ¶ÃÎÃ¶Ã
-    src/deep2/Chamber.cpp
-    src/deep2/PlasmaGovernor.cpp
-    src/deep2/SovereignOutOfCoreRuntime.cpp
-    src/deep2/OutOfCoreRuntime.cpp
-    src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
-    src/deep2/ToroidalKVCache.cpp
-    src/deep2/IQQuantKernels.cpp
-    src/vulkan_compute.cpp
+    src/deep2/vulkan_compute.cpp
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Kimi K2.6 300-Agent Swarm Architecture (subset ÎÃÃ¶ excluded files
     # reference symbols not available in RawrEngine target)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/swarm/SwarmOrchestrator.cpp
-    src/swarm/KimiSwarmOrchestrator.cpp
-    src/swarm/ArchitectAgent.cpp
-    src/swarm/FrontendSquad.cpp
-    src/swarm/BackendCore.cpp
-    src/swarm/QAHive.cpp
-    src/swarm/ReviewerAgents.cpp
-    src/swarm/CinematicVibeEngine.cpp
-    src/swarm/DeepContextManager.cpp
-    src/swarm/OpenClawBridge.cpp
-    src/swarm/LegacyRefactorModule.cpp
     # src/swarm/IDEIntegration.cpp           # excluded: references ReviewerAgents methods not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetry.cpp    # excluded: references InfinitePerfectionEngine not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetrySQLite.cpp # excluded: same
@@ -3321,13 +2826,6 @@ add_subdirectory(rguf_source)
 if(RAWRXD_BUILD_RAWRENGINE)
 # RawrEngine needs specific ASM kernels for Deep2 and Sovereign Q4K
 set(RAWR_ENGINE_ASM_SOURCES
-    src/deep2/sovereign_deep2_kernels.asm
-    src/deep2/sovereign_q4k_gemv.asm
-    src/deep2/sovereign_q4_1_gemv.asm
-    src/deep2/sovereign_q5_k_gemv.asm
-    src/deep2/sovereign_q6_k_gemv.asm
-    src/deep2/sovereign_q8_0_gemv.asm
-    src/deep2/sovereign_fp16_gemv.asm
 )
 set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
@@ -3425,7 +2923,6 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        src/agentic/AgentOllamaClient.cpp
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -3559,17 +3056,10 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
 # Fix: Case-sensitive regex misses mixed-case files ÎÃÃ¶ use explicit REMOVE_ITEM
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-    src/agentic/AgenticDeepThinkingEngine.cpp
-    src/agentic/DeterministicReplayEngine.cpp
-    src/agentic/RawrXD_AgentLoop.cpp
-    src/agentic/DiskRecoveryToolHandler.cpp
-    src/agentic_agent_coordinator.cpp
-    src/model_config.cpp
 )
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-        src/core/missing_handler_stubs.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
         src/core/ssot_handlers_ext_isolated.cpp
     )
@@ -3584,8 +3074,6 @@ else()
         src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
-        src/core/auto_feature_stub_impl.cpp
-        src/core/missing_handler_stubs.cpp
     )
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
 endif()
@@ -3638,10 +3126,7 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
 endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-    src/complete_server.cpp
-    src/modules/vscode_extension_api.cpp
     src/core/js_extension_host.cpp
-    src/ui/entry_point.cpp
 )
 
 # Add Gold stub implementations for excluded files
@@ -3656,35 +3141,10 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/gold_link_closure.cpp
     src/core/link_symbols_impl.cpp
     # REMOVED: src/core/link_stubs_gold.cpp - superseded by gold_link_closure.cpp + link_symbols_impl.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
-    src/compression/zlib_runtime_loader.cpp
-    src/deep2/MASMKernelStubs.cpp
     B014/build/b014_profiler.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
-    src/vulkan_kernel_bridge.cpp
-    src/runtime/elastic/ElasticEngine.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/gguf_tensor_loader.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
     # Real Deep2 implementations (not stubs)
-    src/deep2/BP16Streamer.cpp
-    src/deep2/Chamber.cpp
-    src/deep2/PlasmaGovernor.cpp
-    src/deep2/ResidencyManager.cpp
-    src/deep2/SovereignOutOfCoreRuntime.cpp
-    src/deep2/ToroidalKVCache.cpp
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
@@ -3812,21 +3272,12 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/js_extension_host_headless_impl.cpp
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
-    src/agentic/AgentOllamaClient.cpp
     src/logging/Logger.cpp
-    src/security/InputSanitizer.cpp
     src/core/ConfigurationValidator.cpp
-    src/inference/PerformanceMonitor.cpp
-    src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
-    tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
-    src/agent/quantum_dynamic_time_manager_impl.cpp
     src/core/native_gguf_loader_link_impl.cpp
-    src/agentic/AdvancedAgentCoordinator.cpp
-    src/BackendOrchestrator.cpp
     src/core/gold_inference_profiler_minimal.cpp
-    src/agentic/hotpatch/Engine.cpp
     src/core/gold_enterprise_devunlock_impl.cpp
     src/core/gold_beacon_handlers.cpp
     src/core/neural_bridge.cpp
@@ -3836,12 +3287,7 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/self_host_engine.cpp
     src/core/hardware_synthesizer.cpp
     # src/ui/entry_point.cpp  # Removed - conflicts with minimal_gold_main.cpp
-    src/ui/webview2_bridge.cpp
     # REMOVED: src/ui/RawrXD_MainLoop.cpp - references AgentSelfHealingOrchestrator (unresolved)
-    src/ui/debugger_core.cpp
-    src/inference/gpu_dispatch_gate.cpp
-    src/gguf_d3d12_bridge.cpp
-    src/asm/RawrXD_PE_Exporter.asm
 )
 
 # Vulkan SDK for Gold build ÎÃÃ¶ linked later after find_package(Vulkan)
@@ -4659,8 +4105,6 @@ if(MSVC)
     )
 
     add_library(RawrXD_NanoQuant STATIC
-        src/ggml/ggml_nanoquant.cpp
-        src/agentic/agent_tool_quantize.cpp
     )
     # Set MSVC runtime library to match RawrEngine (static CRT)
     set_property(TARGET RawrXD_NanoQuant PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -4769,395 +4213,65 @@ endif()
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-    src/inference/inference_standalone_main.cpp
-    src/inference/ultra_fast_inference.cpp
-    src/inference/polymorphic_loader.cpp
-    src/inference/ollama_blob_parser.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
-    src/rawrxd_model_loader.cpp
+        src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    src/streaming_gguf_loader.cpp
-    src/compression_interface.cpp
-    src/memory_core.cpp
-    src/license_enforcement.cpp
-    src/feature_flags_runtime.cpp
     src/core/enterprise_licensev2_impl.cpp
     src/core/license_anti_tampering.cpp
-    src/tools/license_validator_manifest.cpp
     src/core/ignite_800b.cpp
     src/core/ConfigurationValidator.cpp
-    src/InferenceProfiler.cpp
-    src/engine/gguf_core.cpp
-    src/engine/inference_kernels.cpp
-    src/engine/transformer.cpp
-    src/engine/bpe_tokenizer.cpp
-    src/engine/sampler.cpp
-    src/engine/rawr_engine.cpp
-    src/engine/core_generator.cpp
-    src/engine/pyre_compute.cpp
-    src/engine/sovereign_engines.cpp
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
-    src/utils/Diagnostics.cpp
-    src/inference/TitanLoaderDiagnostics.cpp
-    src/inference/MemoryPressureGuard.cpp
-    src/agentic/ErrorRecoveryManager.cpp
-    src/inference/PerformanceMonitor.cpp
     src/inference/NegativeSpaceProfiler.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
-    src/backend/VulkanGemmDispatcher.cpp
-    src/kernels/VulkanComputeKernels.cpp
-    src/vulkan_compute.cpp
+    src/deep2/vulkan_compute.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/CapacityManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
-    src/runtime/GenerationBouncer.cpp
     src/runtime/StreamRouterAdapter.cpp
-    src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/logging/Logger.cpp
-    src/sampling/advanced_sampler.cpp
-    src/runtime/RawrRuntime.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-    src/deep2/K2TimeLimitedServing.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/elastic/ElasticEngine.cpp
-    src/runtime/elastic/ElasticArchitectureDetector.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
     # Codec implementations (deflate/inflate/compress)
-    src/codec/compression.cpp
-    src/codec/brutal_gzip.cpp
-    src/codec/gzip_brutal_inflate.cpp
     # Deep2 core ÎÃÃ¶ unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
-    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
-    src/deep2/ChatTemplate.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/QuantKernelMASM.cpp
-    src/deep2/IQQuantKernels.cpp
-    src/deep2/GhostCache.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/AttnCertProbe.cpp
-    src/deep2/MlaCertProbe.cpp
-    src/deep2/SsmCertProbe.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/DeepSeekMoELoader.cpp
-    src/deep2/Deep2ExecutionGraph.cpp
-    src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/UniversalModelLoader.cpp
-    src/deep2/ModelLoader.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/RuntimePlanner.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/NUGemv.cpp
-    src/deep2/NULiveConsumer.cpp
-    src/deep2/TpsScaleHotpatch.cpp
-    src/deep2/ElasticDynamicBudget.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/core/ModelRegistry.cpp
     # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
-    src/deep2/K2MLAAttention.cpp
-    src/deep2/K2TokenEmbedding.cpp
-    src/deep2/K2NativeStreamGate.cpp
-    src/deep2/MlaCertAuthority.cpp
-    src/deep2/K2LogitsClimb.cpp
-    src/deep2/K2LogitsSplit.cpp
-    src/deep2/K2LogitsLineage.cpp
-    src/deep2/K2GpuStreamCopy.cpp
-    src/deep2/K2GpuStreamCopy_Overlap.cpp
-    src/deep2/K2MLA_GpuGemv.cpp
-    src/deep2/K2BraidExecutionPolicy.cpp
-    src/deep2/K2MLA_FusedQ4KT.cpp
-    src/deep2/K2MLA_QPathDevice.cpp
-    src/deep2/K2MLA_QPathDevice_Emit.cpp
-    src/deep2/K2MLA_PathB.cpp
-    src/deep2/K2MLA_PathB_Attn.cpp
-    src/deep2/K2QbHostShrinkD2h.cpp
-    src/runtime/QbHostReadbackWindow.cpp
-    src/runtime/ExchangeObjectLedger.cpp
-    src/deep2/HostExchangeDiscover.cpp
-    src/deep2/K2MLA_QaCritical.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/K2WeightResolve.cpp
-    src/deep2/K2ShardIo.cpp
-        src/deep2/K2LivePathTensorCache.cpp
-        src/deep2/K2LivePathTensorCache_Prefetch.cpp
-    src/deep2/K2LivePathTensorCache_Emit.cpp
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
-    src/deep2/Deep2DeviceManager.cpp
-    src/deep2/DualLaneChoreographer.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
-    src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/vulkan_compute.cpp
     src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2DualGpuRowSplit.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
-    src/deep2/Deep2Engine_GpuToken.cpp
     src/deep2/Deep2Engine_SsVkDecodeBind.cpp
-    src/deep2/d2_engine_ssvk_decode_bind.c
-    src/deep2/lavapath/DualStickStreamWindow.cpp
-    src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
-    src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
-    src/deep2/lavapath/DualStickEnvSnap.cpp
-    src/deep2/lavapath/FutureConsumer_Space.cpp
-    src/deep2/lavapath/FutureConsumer_Emit.cpp
-    src/deep2/lavapath/FutureConsumer_EmitExec.cpp
-    src/deep2/lavapath/FutureConsumer_Advance.cpp
-    src/deep2/lavapath/FutureConsumer_Chair.cpp
-    src/deep2/lavapath/FutureConsumer_Register.cpp
-    src/deep2/lavapath/FutureConsumer_Notes.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
-    src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
-    src/deep2/lavapath/KN_O3KKEN.asm
-    src/deep2/lavapath/r25_productopen_masm.asm
-    src/deep2/lavapath/k3c_token.cpp
-    src/deep2/lavapath/FreeTokenMicroZone.cpp
-    src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
-    src/vulkan_fwd_resident.cpp
-    src/vulkan_fwd_fused.cpp
-    src/vulkan_weight_window.cpp
-    src/vulkan_weight_policy.cpp
-    src/vulkan_weight_prefetch.cpp
-    src/vulkan_fwd_q4k.cpp
-    src/vulkan_fwd_q4k_host.cpp
-    src/vulkan_fwd_q4k_fused.cpp
-src/vulkan_fwd_q4k_climb.cpp
-src/vulkan_fwd_q8_kva_climb.cpp
-src/vulkan_fwd_q4k_act.cpp
-    src/vulkan_fwd_attn_mla.cpp
-    src/vulkan_fwd_q6k.cpp
-    src/vulkan_fwd_q6k_host.cpp
-    src/vulkan_fwd_quant_pipe.cpp
-    src/vulkan_fwd_quant.cpp
-    src/vulkan_fwd_quant_host.cpp
-    src/vulkan_fwd_cmdpool.cpp
-    src/vulkan_fwd_tune.cpp
-    src/vulkan_fwd_hostops.cpp
-    src/vulkan_fwd_stubs.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/Deep2Bridge.cpp
-    src/deep2/ProductionProfiler.cpp
-    src/deep2/TrailBrake.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/AntiPatcher.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/CPUFrequency.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
-    src/deep2/StreamEngine.cpp
-    src/deep2/execution_policy/ExecutionPolicy.cpp
-    src/deep2/execution_policy/ExecutionPolicyStore.cpp
-    src/deep2/execution_policy/PlacementPlan.cpp
-    src/deep2/execution_policy/ExecutionPolicyApply.cpp
-    src/deep2/ShardRouterIntegration.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/IOCPGGUFLoader.cpp
-    src/deep2/Deep2ModelRuntime.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
-    src/deep2/Chamber.cpp
-    src/deep2/ToroidalKVCache.cpp
-    src/deep2/PlasmaGovernor.cpp
-    src/deep2/OutOfCoreRuntime.cpp
-    src/deep2/SovereignOutOfCoreRuntime.cpp
-    src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
-    src/deep2/ElasticResidencyManager.cpp
-    src/deep2/ElasticDynamicBudget.cpp
-    src/deep2/CycloneScheduler.cpp
-    src/deep2/Deep2LivePath.cpp
-    src/deep2/Deep2LivePath_Gate.cpp
-    src/deep2/Deep2LivePath_Pinball.cpp
-    src/deep2/Deep2LivePath_Mech.cpp
-    src/deep2/Deep2LivePath_Emit.cpp
-    src/deep2/GpuTransfer_Emit.cpp
-    src/deep2/LivePathEffect.cpp
-    src/deep2/K2LivePolicy.cpp
-    src/deep2/K2LivePolicy_Apply.cpp
-    src/deep2/K2LivePolicy_Hysteresis.cpp
-    src/deep2/FusedLiveController.cpp
-    src/deep2/FusedLiveController_Decide.cpp
-    src/deep2/FusedLiveController_Cheap.cpp
-    src/deep2/FusedLiveController_Law.cpp
-    src/deep2/FusedLiveController_Emit.cpp
-    src/deep2/LivePath_FusedTick.cpp
-    src/deep2/Deep2LivePath_MechEnd.cpp
-    src/deep2/Deep2LivePath_Thermal.cpp
     # Reverse Knowledge Compiler (RKC) â proof-state before LLM
-    src/rkc/RKCValidator.cpp
-    src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-    src/rkc/RKCCompiler.cpp
-    src/rkc/RKCRecipes.cpp
-    src/rkc/RKCGapEngine.cpp
-    src/rkc/RKCEmit.cpp
-    src/rkc/RKCSession.cpp
-    src/rkc/RKCProductContext.cpp
-    src/rkc/RKC_C_ABI.cpp
-    src/deep2/RouterPrefetchTelemetry.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
-    src/BackendOrchestrator.cpp
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Agentic Core ÎÃÃ¶ minimal verified set (add more after individual validation)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/agentic/ErrorRecoveryManager.cpp
-    src/agentic/BoundedAgentLoop.cpp
-    src/agentic/OrchestratorBridge.cpp
-    src/agentic/ToolRegistry.cpp
-    src/agentic/AgentOrchestrator.cpp
-    src/agentic/AgentOllamaClient.cpp
-    src/agentic/hotpatch/Engine.cpp
-    src/agentic/AgentToolHandlers.cpp
-    src/agentic/AutonomousFixOrchestrator.cpp
-    src/agentic/RawrXD_AgentLoop.cpp
+    src/core/ToolRegistry.cpp
     # src/agentic/RawrXD_AutonomousFlow.cpp  # excluded: defines main() - standalone executable only
     # src/agentic/RawrXD_AutonomousCoordinator_Final.cpp  # excluded: defines main() - standalone executable only
-    src/agentic/RawrXD_AgentHost.cpp
-    src/agentic/RawrXD_RewardModel.cpp
-    src/agentic/RawrXD_SymbolHealer.cpp
-    src/agentic/RawrXD_ToolRegistry.cpp
-    src/agentic/DeterministicReplayEngine.cpp
-    src/agentic/DiffEngine.cpp
-    src/agentic/DirectFIM.cpp
-    src/agentic/FIMPromptBuilder.cpp
-    src/agentic/GGMLAgenticEngine.cpp
-    src/agentic/GgmlEngine.cpp
-    src/agentic/gguf_types.cpp
-    src/agentic/GGUFLoader.cpp
-    src/agentic/KnowledgeGraph.cpp
-    src/agentic/chain_of_thought.cpp
-    src/agentic/change_impact_analyzer.cpp
-    src/agentic/context_assembler.cpp
-    src/agentic/context_mention_parser.cpp
-    src/agentic/RepositoryIndexer.cpp
-    src/agentic/RobustOllamaParser.cpp
-    src/agentic/SelfImprovement.cpp
-    src/agentic/slash_command_parser.cpp
-    src/agentic/SubAgentManager.cpp
-    src/agentic/task_executor.cpp
-    src/agentic/task_graph.cpp
-    src/agentic/task_scheduler.cpp
-    src/agentic/NativeInferenceClient.cpp
-    src/agentic/Deep2SovereignInferenceGateway.cpp
-    src/agentic/SovereignStandaloneClient.cpp
-    src/agentic/SovereignAssembler.cpp
-    src/agentic/SovereignAssembler_HotPatch.cpp
     # src/agentic/SovereignCodeGenerator.cpp  # excluded: defines main() - standalone executable only
-    src/agentic/Titan_Sovereign_Bridge.cpp
-    src/agentic/Phase3_Agent_Kernel_Bridge.cpp
-    src/agentic/BackendEmissionService.cpp
-    src/agentic/ExecPipeline.cpp
-    src/agentic/StreamingResultChannel.cpp
-    src/agentic/streaming_command_handler.cpp
-    src/agentic/ToolDispatcher.cpp
-    src/agentic/ToolDispatchTable.cpp
-    src/agentic/tool_call_parser.cpp
-    src/agentic/tool_executor.cpp
-    src/agentic/tool_registry.cpp
-    src/agentic/vulkan_compute_real.cpp
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Sovereign Runtime ÎÃÃ¶ verified .cpp files only
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/sovereign/SovereignRuntime.cpp
-    src/sovereign/ExecutionContract.cpp
-    src/sovereign/SovereignCoreWrapper.cpp
-    src/sovereign/SovereignDenseEngine.cpp
-    src/sovereign/SovereignEventBus.cpp
-    src/sovereign/SovereignCheckpoint.cpp
-    src/sovereign/SovereignVCS.cpp
-    src/sovereign/SovereignWatchdog.cpp
-    src/sovereign/Deep2InferenceWrapper.cpp
-    src/sovereign/AgenticEngineSovereignHook.cpp
-    src/sovereign/IDE_Lifecycle_Hook.cpp
-    src/sovereign/RawrXD_SovereignStatusPanel.cpp
-    src/sovereign/IntegrityChecker.cpp
-    src/sovereign/HealthReport.cpp
-    src/sovereign/AutoRepair.cpp
-    src/sovereign/AutoRepairEngine.cpp
-    src/sovereign/CrashRecovery.cpp
-    src/sovereign/StressTester.cpp
-    src/sovereign/Profiler.cpp
-    src/sovereign/DistributedKV.cpp
-    src/sovereign/ExpertSharding.cpp
-    src/sovereign/Beaconism.cpp
-    src/sovereign/rawr_transport_strict.cpp
     # src/sovereign/verify_integration.cpp  # excluded: C++20 format header conflicts with MSVC 14.44
     # MASM GEMV kernels
-    src/deep2/sovereign_deep2_kernels.asm
-    src/deep2/sovereign_q4k_gemv.asm
-    src/deep2/sovereign_q4_1_gemv.asm
-    src/deep2/sovereign_q5_k_gemv.asm
-    src/deep2/sovereign_q6_k_gemv.asm
-    src/deep2/sovereign_q8_0_gemv.asm
-    src/deep2/sovereign_fp16_gemv.asm
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -5193,7 +4307,6 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/deep2/K2LivePathTensorCache_Emit.cpp)
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
-    src/inference/inference_standalone_main.cpp
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
@@ -5220,7 +4333,6 @@ if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
 endif()
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
-    src/inference/inference_standalone_main.cpp
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -5232,11 +4344,6 @@ endif()
 
 # Unified Generation CLI - uses GenerationBouncer
 add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
-    src/cli/generate_cli.cpp
-    src/runtime/GenerationBouncer.cpp
-    src/runtime/shared/SharedModelRuntime.cpp
-    src/runtime/shared/BP1BraidIndex.cpp
-    src/runtime/shared/BP1BraidStreamer.cpp
 )
 target_link_libraries(RawrXD-Generate PRIVATE
     InferenceEngine
@@ -5304,60 +4411,8 @@ endif()
     if(RAWR_HAS_MASM)
         # Link quantization + telemetry kernels into inference engine
         set(INFERENCE_ASM_SOURCES
-            src/asm/rawr_globals.asm
-            src/asm/rawr_cpu_features.asm
-            src/asm/inference_core.asm
-            src/asm/inference_kernels.asm
-            src/asm/quant_avx2.asm
-            src/asm/RawrXD_KQuant_Dequant.asm
-            src/asm/RawrXD_KQuant_Kernel.asm
-            src/asm/FlashAttention_AVX512.asm
-            src/asm/RawrXD_Telemetry_Kernel.asm
             # Pure MASM inference kernels (zero dependencies, no GGML)
-            src/masm/rawrxd_math_masm.asm
-            src/masm/rawrxd_transformer_masm_fixed.asm
             # Deep2 sovereign GEMV kernels
-            src/deep2/sovereign_deep2_kernels.asm
-            src/deep2/sovereign_q4k_gemv.asm
-            src/deep2/sovereign_q4_1_gemv.asm
-            src/deep2/sovereign_q5_k_gemv.asm
-            src/deep2/sovereign_q6_k_gemv.asm
-            src/deep2/sovereign_q8_0_gemv.asm
-            src/deep2/sovereign_fp16_gemv.asm
-            src/deep2/QuantKB.asm
-            src/asm/Deep2Device_Score.asm
-            src/asm/Deep2Device_Pick.asm
-            src/asm/Deep2R1_StrEq.asm
-            src/asm/Deep2R1_IsArch.asm
-            src/asm/Deep2R1_GlobData.asm
-            src/asm/Deep2R1_MlaData.asm
-            src/asm/Deep2R1_MoeData.asm
-            src/asm/Deep2R1_Scan.asm
-            src/asm/Deep2R1_Decode.asm
-            src/asm/Deep2R1_Validate.asm
-            src/asm/Deep2R1_LayerKind.asm
-            src/asm/Deep2R1_SplitKVB.asm
-            src/asm/Deep2ThreadAffinity.asm
-            src/asm/Deep2OuterStr.asm
-            src/asm/Deep2OuterEnv.asm
-            src/asm/Deep2OuterParse.asm
-            src/asm/Deep2OuterParseIdx.asm
-            src/asm/Deep2OuterGGUF.asm
-            src/asm/Deep2OuterPath.asm
-            src/asm/Deep2OuterShardApply.asm
-            src/asm/Deep2OuterShardScan.asm
-            src/asm/Deep2OuterShardCheck.asm
-            src/asm/Deep2OuterPrintIO.asm
-            src/asm/Deep2OuterPrint.asm
-            src/asm/Deep2OuterEvidence.asm
-            src/asm/Deep2OuterResolve.asm
-            src/asm/Deep2OuterCallEngine.asm
-            src/asm/Deep2OuterHost.asm
-            src/asm/RuntimeEvidence512_Core.asm
-            src/asm/RuntimeEvidence512_Emit.asm
-            src/asm/RuntimeEvidence512_Collect.asm
-            src/asm/RuntimeEvidence512_IDEEmit.asm
-            src/asm/RuntimeEvidence512_IDECollect.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -5410,8 +4465,6 @@ endif()
 message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
 
 add_executable(rawrxd-monaco-gen
-    src/monaco_gen.cpp
-    src/engine/react_ide_generator.cpp
 )
 
 target_include_directories(rawrxd-monaco-gen PRIVATE
@@ -5430,67 +4483,45 @@ set_target_properties(rawrxd-monaco-gen PROPERTIES
 # Previously entry_point.cpp (wWinMain) created a minimal window and could leave it hidden (nCmdShow=SW_HIDE).
 if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     set(WIN32IDE_SOURCES
-        src/win32app/main_win32.cpp
-        src/win32app/HeadlessIDE.cpp
-        src/win32app/HeadlessIDE_ToolRoutes.cpp
-        src/win32app/HeadlessIDE_GuiRoutes.cpp
-        src/win32app/HeadlessIDE_FileAliases.cpp
-        src/agent/quantum_agent_orchestrator.cpp
-        src/agent/quantum_autonomous_todo_system.cpp
-        src/agent/quantum_multi_model_agent_cycling.cpp
-        src/agent/quantum_dynamic_time_manager.cpp
-        src/agent/quantum_missing_impl.cpp
-        src/agent/quantum_production_orchestrator.cpp
-        src/agent/autonomous_orchestrator.cpp
-        src/agent/orchestrator_cli_handler.cpp
-        src/ui/RawrXD_MainLoop.cpp
-        src/ui/webview2_bridge.cpp
-        src/ui/debugger_core.cpp
-        src/ui/agentic_bridge.cpp
-        src/win32app/RawrXD-Win32IDE.rc
-        src/bridge/Win32SwarmBridge.cpp
-        src/bridge/SwarmIATRegistration.cpp
-        src/bridge/UnifiedModelMetadata.cpp
-        src/subagent_core.cpp
-        src/agentic/SubAgentManager.cpp
-        src/agentic/RobustOllamaParser.cpp
-        src/agentic/ErrorRecoveryManager.cpp
-        src/gpu/speculative_decoder_v2.cpp
-        src/inference/MemoryPressureGuard.cpp
-        src/inference/gpu_dispatch_gate.cpp
-        src/inference/ai_model_caller_real.cpp
-        src/inference/inference_engine_real.cpp
-        src/gguf_masm_weight_bridge.cpp
-        src/codec/brutal_gzip.cpp
-        src/codec/gzip_brutal_inflate.cpp
+        
     )
 
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
-        list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
+        list(APPEND WIN32IDE_SOURCES
+src/core/auto_feature_registry.cpp
+)
         # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ÎÃÃ¶ required by auto_feature_registry
-        list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
+        list(APPEND WIN32IDE_SOURCES
+
+)
     endif()
 
     # MASM64 UI Dispatcher (MSVC/MASM-only).
     if(RAWR_HAS_MASM)
         set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
         set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
+        list(APPEND WIN32IDE_SOURCES
+${WEBVIEW2_DISPATCHER}
+)
     endif()
 
     # MASM64 ViewState - Enterprise-grade lock-free UI state management
     if(RAWR_HAS_MASM)
         set(VIEWSTATE_MASM src/asm/view_state_x64.asm)
         set_source_files_properties(${VIEWSTATE_MASM} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES ${VIEWSTATE_MASM})
+        list(APPEND WIN32IDE_SOURCES
+${VIEWSTATE_MASM}
+)
     endif()
 
     # MASM64 Tensor Operations - Pure x64 assembly inference kernels
     if(RAWR_HAS_MASM)
         set(TENSOR_OPS_MASM src/asm/tensor_masm.asm)
         set_source_files_properties(${TENSOR_OPS_MASM} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES ${TENSOR_OPS_MASM})
+        list(APPEND WIN32IDE_SOURCES
+${TENSOR_OPS_MASM}
+)
     endif()
 
     # NOTE:
@@ -5498,171 +4529,40 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # (single add_executable + full source/link configuration).
 
     list(APPEND WIN32IDE_SOURCES
-        # Core Win32IDE implementation units (required for real GUI command/menu behavior)
-        src/win32app/Win32IDE.cpp
-        src/win32app/Win32IDE_Core.cpp
-        src/win32app/Win32IDE_CoreRuntimeSpine.cpp
-        src/win32app/Win32IDE_Commands.cpp
-        src/win32app/Win32IDE_CommandSurface.cpp
-        src/command/CommandBroker.cpp
-        src/command/CommandEventJournal.cpp
-        src/command/SessionBinder.cpp
-        src/command/CapabilityProfile.cpp
-        src/win32app/Win32IDE_VSCodeUI.cpp
+# Core Win32IDE implementation units (required for real GUI command/menu behavior
+)
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
         # fought Core via /FORCE:MULTIPLE and risked a second product shell.
-        src/win32app/Win32IDE_WindowOwnership.cpp
-        src/win32app/Win32IDE_Accelerators.cpp
-        src/win32app/IV280Bridge.cpp
-        src/win32app/IMultiFileSearchWidget.cpp
-        src/win32app/CICDSettings.cpp
-        src/win32app/BenchmarkMenu.cpp
-            src/win32app/WindowManager.cpp
-            src/win32app/EditorOperations.cpp
-            src/win32app/RouterOperations.cpp
-                    src/win32app/Win32IDE_Watchdog.cpp
-        src/win32app/Win32IDE_SyntaxHighlight.cpp
-        src/win32app/Win32IDE_VisionEncoder.cpp
-        src/win32app/Win32IDE_Themes.cpp
-        src/win32app/Win32IDE_StreamingUX.cpp
-        src/win32app/Win32IDE_Sidebar.cpp
-        src/win32app/Win32IDE_Debugger.cpp
-        src/win32app/Win32IDE_AutonomousDebugger.cpp
-        src/win32app/Win32IDE_Annotations.cpp
-        src/win32app/Win32IDE_ReverseEngineering.cpp
-        src/win32app/Win32IDE_Logger.cpp
-        src/win32app/Win32IDE_AgenticBridge.cpp
-        src/full_agentic_ide/FullAgenticIDE.cpp
-        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
-        src/full_agentic_ide/AgenticIOCPBridge.cpp
-        src/win32app/Win32IDE_AgentCommands.cpp
-        src/win32app/Win32IDE_TabManager.cpp
-        src/win32app/Win32IDE_Settings.cpp
-        src/win32app/Win32IDE_AutonomousCommunicator.cpp
-        src/win32app/Win32IDE_AgenticComposerUX.cpp
-        src/win32app/Win32IDE_ContextMentionParser.cpp
-        src/win32app/Win32IDE_UnifiedTelemetry.cpp
-        src/win32app/Win32IDE_Autonomy.cpp
-        src/win32app/Win32IDE_PowerShell.cpp
-        src/win32app/Win32IDE_PowerShellPanel.cpp
-        src/win32app/Win32IDE_CommandFlight.cpp
-        src/win32app/Win32IDE_ShellLayout.cpp
-        src/win32app/Win32IDE_MenuE2eProbe.cpp
-        src/win32app/Win32IDE_Session.cpp
-        src/win32app/Win32IDE_GGUFInspector.cpp
-        src/win32app/Win32IDE_FileOps.cpp
-        src/win32app/Win32IDE_DecompilerView.cpp
-        src/win32app/Win32IDE_NativePipeline.cpp
-        src/win32app/Win32IDE_ModelAnatomy.cpp
-        src/sampling/advanced_sampler.cpp
-        src/runtime/RawrRuntime.cpp
-        src/compression/zlib_runtime_loader.cpp
-        src/deep2/Deep2APIServer.cpp
-        src/deep2/production/Deep2ProductionRuntime.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
-        src/win32app/Win32IDE_FeatureManifest.cpp
-        src/win32app/Win32IDE_GhostText.cpp
         # Deep2 completion provider and bridge ÎÃÃ¶ real local inference for ghost text
-        src/ai_completion_real.cpp
-        src/ide/Deep2Bridge.cpp
-        src/ide/SovereignSharedMemoryBridge.cpp
-        src/ide/ANSIColorParser.cpp
-        src/ide/FindReplaceDialog.cpp
-        src/ide/GitCommitDialog.cpp
-        src/ide/GitDiffViewer.cpp
-        src/win32app/Win32IDE_OutlinePanel.cpp
-        src/win32app/Win32IDE_RenamePreview.cpp
-        src/win32app/Win32IDE_Tier2Cosmetics.cpp
-        src/win32app/Win32IDE_Tier1Cosmetics.cpp
-        src/win32app/Win32IDE_Breadcrumbs.cpp
-        src/win32app/Win32IDE_PlanExecutor.cpp
-        src/agentic/agentic_planning_orchestrator.cpp
-        src/agentic/failure_intelligence_orchestrator.cpp
-        src/agentic/agentic_orchestrator_integration.cpp
-        src/agentic/agentic_audit_sink.cpp
-        src/agentic/change_impact_analyzer.cpp
 
-        src/win32app/Win32IDE_AgenticPlanningPanel.cpp
-        src/win32app/Win32IDE_FailureDetector.cpp
-        src/win32app/Win32IDE_FailureIntelligence.cpp
-        src/win32app/Win32IDE_Settings.cpp
-        src/win32app/Win32IDE_LocalServer.cpp
-        src/win32app/Win32IDE_BackendSwitcher.cpp
-        src/security/ProviderKeyStore.cpp
-        src/security/ProviderKeyStore_get.cpp
-        src/security/ProviderKeyStore_misc.cpp
-        src/win32app/Win32IDE_AIBackend.cpp
-        src/win32app/Win32IDE_LLMRouter.cpp
-        src/win32app/Win32IDE_LSPClient.cpp
-        src/win32app/Win32IDE_PeekOverlay.cpp
-        src/win32app/Win32IDE_CaretAnimation.cpp
         # src/win32app/Win32IDE_AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
-        src/win32app/Win32IDE_ModelDiscovery.cpp
-        src/win32app/Win32IDE_SwarmModelSelector.cpp
-        src/win32app/Win32IDE_AsmSemantic.cpp
-        src/win32app/Win32IDE_LSP_AI_Bridge.cpp
-        src/win32app/Win32IDE_MultiResponse.cpp
-        src/win32app/Win32IDE_ExecutionGovernor.cpp
-        src/win32app/Win32IDE_LayerEviction.cpp
-        src/win32app/Win32IDE_SubAgent.cpp
-        src/win32app/Win32IDE_AgentHistory.cpp
-        src/win32app/Win32IDE_AgentPanel.cpp
-        src/win32app/Win32IDE_DiskRecovery.cpp
-        src/win32app/Win32TerminalManager.cpp
-        src/win32app/TransparentRenderer.cpp
 
         # Plugin System ÎÃÃ¶ Phase 43: Native Win32 DLL loading (C ABI)
-        src/plugin_system/win32_plugin_loader.cpp
-        src/win32app/Win32IDE_Plugins.cpp
-        src/win32app/Win32IDE_HandleExtensionCommand.cpp
 
         # Configuration management
-        src/config/IDEConfig.cpp
 
         # LLM adapter + Auth (Win32/STL only; Ship/StdReplacements.hpp + Ship/RawrCompatIo.hpp when needed)
-        src/llm_adapter/QuantBackend.cpp
-        src/llm_adapter/GGUFRunner.cpp
-        src/llm_adapter/gguf_k_quants.cpp
-        src/auth/QuantumAuthUI.cpp
         
         # Core engine files needed by IDE
-        src/agentic_engine.cpp
-        src/subagent_core.cpp
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
-        src/backend/vulkan_compute.cpp
-        src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
+        src/deep2/vulkan_compute.cpp
 
         # Bounded Agent Loop + FIM Provider (AgentÎÃ¥ÃIDE Pivot)
-        src/agentic/AgentToolHandlers.cpp
-        src/agentic/BoundedAgentLoop.cpp
-        src/agentic/OllamaProvider.cpp
-        src/agentic/DiffEngine.cpp
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
-        src/agentic/DeterministicReplayEngine.cpp
 
         # T4: Autonomous Recovery Orchestrator (FailureClass ÎÃ¥Ã recovery ÎÃ¥Ã verify ÎÃ¥Ã commit)
-        src/agentic/autonomous_recovery_orchestrator.cpp
         
         # T4.5: Agentic Deep Thinking Engine ÎÃÃ¶ Autonomous monitoring, recovery, and orchestration
-        src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
-        src/agentic/AgentOrchestrator.cpp
-        src/agentic/OrchestratorBridge.cpp
-        src/agentic/AgenticNavigator.cpp
-        src/agentic/ToolRegistry.cpp
-        src/agentic/RawrXD_AgentLoop.cpp
-        src/agentic/agentic_executor.cpp
-        src/agentic/FIMPromptBuilder.cpp
-        src/agentic/AgentOllamaClient.cpp
+        src/core/ToolRegistry.cpp
 
         # Unlinked symbols batches - provide real implementations for link closure
         # batch_004 excluded: duplicates RawrXD_Hotpatch_Kernel / Snapshot / Watchdog ASM.
@@ -5684,14 +4584,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/unlinked_symbols_batch_019.cpp
         # src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp
-        src/ANSIParser.cpp
-        src/vulkan_kernel_bridge.cpp
 
-        src/gguf_d3d12_bridge.cpp
-        src/rdna3_bridge.cpp
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
-        src/llm_adapter/rawrxd_ggufrunner_signals.cpp
         # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
         # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
         # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
@@ -5704,24 +4599,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
         # src/core/spengine_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp (asm_spengine_cpu_optimize)
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
-        src/collab/cursor_widget.cpp
-        src/collab/crdt_buffer.cpp
         # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
-        src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
-        src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
         # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations ÎÃÃ¶ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
         
-        src/agentic_observability.cpp
         src/core/rawrxd_subsystem_api.cpp
-        src/runtime_core.cpp
-        src/tool_registry.cpp
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -5729,60 +4617,29 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/agent_memory_indexer.cpp
 
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
-        src/agentic/agentic_transaction.cpp
 
         # P6: Agent Workflow Orchestrator (DAG-based planÎÃ¥ÃexecuteÎÃ¥ÃvalidateÎÃ¥Ãcommit)
-        src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
-        src/ai/symbol_graph_indexer.cpp
-        src/ai/semantic_code_search.cpp
-        src/ai/multi_file_reasoning.cpp
-        src/ai/workspace_embeddings.cpp
-        src/ai/repo_refactor_engine.cpp
 
         # AgenticObservability + SubsystemRegistry (required by AgentOrchestrator, ToolRegistry, feature_handlers)
         # already added above in this block; keep single provider per file
 
         # Disk Recovery Agent (C++ implementation) + Tool handler + ASM wrapper
-        src/agent/DiskRecoveryAgent.cpp
-        src/agentic/DiskRecoveryAgent.cpp
-        src/agentic/DiskRecoveryToolHandler.cpp
-        src/agent_history.cpp
-        src/agent_policy.cpp
-        src/agent_explainability.cpp
-        src/utils/ErrorReporter.cpp
+        src/core/DiskRecoveryAgent.cpp
+        src/core/DiskRecoveryAgent.cpp
         # Observability + validation + perf telemetry (link-time required)
         src/logging/Logger.cpp
-        src/security/InputSanitizer.cpp
         src/core/ConfigurationValidator.cpp
-        src/inference/PerformanceMonitor.cpp
-        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_sampler.cpp
-        src/modules/engine_manager.cpp
-        src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
-        src/memory_core.cpp
-        src/hot_patcher.cpp
-        src/streaming_gguf_loader.cpp
-        src/utils/Diagnostics.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/model_source_resolver.cpp
-        src/compression_interface.cpp
-        src/engine/gguf_core.cpp
-        src/engine/inference_kernels.cpp
-        src/engine/transformer.cpp
-        src/engine/bpe_tokenizer.cpp
-        src/engine/sampler.cpp
-        src/engine/rawr_engine.cpp
-        src/engine/core_generator.cpp
-        src/engine/pyre_compute.cpp
-        src/engine/sovereign_engines.cpp
         # Streaming engine registry (Phase 9)
         src/core/streaming_engine_registry.cpp
         src/core/gpu_backend_bridge.cpp
@@ -5790,7 +4647,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/enterprise_licensev2_impl.cpp
         src/core/enterprise_devunlock_bridge.cpp
         src/core/monolithic_heap_globals.cpp
-        src/tools/license_validator_manifest.cpp
         src/core/license_anti_tampering.cpp
         src/core/camellia256_bridge.cpp
         src/core/watchdog_service.cpp
@@ -5821,15 +4677,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Distributed Swarm Compilation (Phase 11)
         src/core/swarm_coordinator.cpp
         src/core/swarm_worker.cpp
-        src/win32app/Win32IDE_SwarmPanel.cpp
         
         # Dual-Agent Orchestrator (Phase 41)
-        src/win32app/Win32IDE_DualAgentPanel.cpp
         
         # Native Debugger Engine (Phase 12) + P0 source-level symbols (dbghelp)
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        src/win32app/Win32IDE_NativeDebugPanel.cpp
         
         # Three-Layer Hotpatch System (Phase 14.2)
         src/core/model_memory_hotpatch.cpp
@@ -5837,23 +4690,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unified_hotpatch_manager.cpp
         src/core/proxy_hotpatcher.cpp
         src/core/model_bruteforce_engine.cpp
-        src/server/gguf_server_hotpatch.cpp
         src/core/pt_driver_contract.cpp
         src/core/shadow_page_detour.cpp
         src/core/sentinel_watchdog.cpp
-        src/win32app/Win32IDE_HotpatchPanel.cpp
         
         # Agent-Driven Hotpatch Orchestration (Phase 18)
-        src/agent/agentic_hotpatch_orchestrator.cpp
 
         # HTTP Client ÎÃÃ¶ WinHTTP async with future retention (CLI+GUI)
-        src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
-        src/agent/planner.cpp
-        src/agent/meta_planner.cpp
-        src/agent/eval_framework.cpp
-        src/agent/autonomous_subagent.cpp
-        src/agent/agentic_failure_detector.cpp
         src/agent/agentic_deep_thinking_engine.cpp
         
         # Quantum Autonomous Systems - Real implementations (DUPLICATED - see main SOURCES)
@@ -5865,23 +4709,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/agent/quantum_agent_orchestrator.cpp
         
         src/core/ai_agent_masm_core_impl.cpp
-        src/agent/agentic_puppeteer.cpp
-        src/cloud_api_client.cpp
 
         # LocalReasoningEngine ÎÃÃ¶ API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
         # Agent Self-Repair ÎÃÃ¶ MASM64 self-patching kernel bridge
-        src/agent/agent_self_repair.cpp
-        src/agent/agent_self_healing_orchestrator.cpp
         
         # Module implementations
-        src/modules/vsix_loader_win32.cpp
-        src/modules/codex_ultimate.cpp
 
         # Phase 29: VS Code Extension API Compatibility Layer
-        src/modules/vscode_extension_api.cpp
-        src/win32app/Win32IDE_VSCodeExtAPI.cpp
         
         # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
         src/core/swarm_decision_bridge.cpp
@@ -5924,53 +4760,37 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/pdb_reference_provider.cpp
         
         # Phase 26: WebView2 + Monaco Editor Integration
-        src/win32app/Win32IDE_WebView2.cpp
-        src/win32app/AgenticBrowserLayer.cpp
-        src/win32app/Win32IDE_AgenticBrowser.cpp
-        src/win32app/Win32IDE_MonacoThemes.cpp
 
         # Phase 27: Embedded LSP Server (JSON-RPC 2.0)
-        src/lsp/RawrXD_LSPServer.cpp
-        src/win32app/Win32IDE_LSPServer.cpp
 
         # Phase 27b: LSP ÎÃ¥Ã¶ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
-        src/lsp/lsp_hotpatch_bridge.cpp
-        src/lsp/hotpatch_symbol_provider.cpp
-        src/lsp/gguf_diagnostic_provider.cpp
 
         # Phase 28: MonacoCore Native Editor Engine ÎÃÃ¶ Toggleable Engine System
         src/core/MonacoCoreEngine.cpp
         src/core/WebView2EditorEngine.cpp
         src/core/RichEditEditorEngine.cpp
         src/core/EditorEngineFactory.cpp
-        src/win32app/Win32IDE_EditorEngine.cpp
 
         # Phase 29: Native PDB Symbol Server ÎÃÃ¶ MSF v7.00 Parser + Symbol Cache
         src/core/pdb_native.cpp
         src/core/pdb_lsp_bridge.cpp
-        src/win32app/Win32IDE_PDBSymbols.cpp
 
         # Phase 31: IDE Self-Audit & Verification System
         src/core/feature_registry.cpp
         src/core/menu_auditor.cpp
         src/core/auto_discovery.cpp
-        src/win32app/Win32IDE_AuditDashboard.cpp
 
         # Phase 32: The Final Gauntlet ÎÃÃ¶ Pre-Packaging Runtime Verification
         src/core/final_gauntlet.cpp
-        src/win32app/Win32IDE_Gauntlet.cpp
 
         # Phase 33: Voice Chat Engine
         src/core/voice_chat.cpp
         src/core/voice_automation.cpp
-        src/win32app/Win32IDE_VoiceChat.cpp
-        src/win32app/Win32IDE_VoiceAutomation.cpp
 
         # Phase 33: Quick-Win Ports
         src/core/shortcut_manager.cpp
         src/core/backup_manager.cpp
         src/core/alert_system.cpp
-        src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
         # NOTE: shared_feature_dispatch.cpp REMOVED ÎÃÃ¶ duplicated by unified_command_dispatch.cpp
@@ -5979,21 +4799,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # auto_feature_registry excluded for Win32 IDE ÎÃÃ¶ use ssot_handlers (lightweight stubs)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
-        src/model_trainer.cpp
+        src/core/model_trainer.cpp
         # REMOVED: src/agentic/AgentOllamaClient.cpp - Ollama backend replaced with native GGUF loader
         # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
-        src/agentic/hotpatch/Engine.cpp
-        src/agentic/observability/Logger.cpp
-        src/agentic/AdvancedAgentCoordinator.cpp
-        src/modules/autonomous_agentic_orchestrator.cpp
+        src/logging/Logger.cpp
         src/core/native_gguf_loader_link_impl.cpp
-        src/codec/compression.cpp
-        src/codec/brutal_gzip.cpp
-        src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
-        src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
         # Unified Command Dispatch ÎÃÃ¶ Zero-drift SSOT dispatch (replaces manual registration)
@@ -6005,24 +4818,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/jsonrpc_parser.cpp
 
         # Phase 21: Distributed Swarm Inference Orchestrator
-        src/cli/swarm_orchestrator.cpp
 
         # Phase 32A: Chain-of-Thought Multi-Model Review Engine
         src/core/chain_of_thought_engine.cpp
 
         # Phase 34: Telemetry Export
-        src/win32app/Win32IDE_Telemetry.cpp
 
         # Phase 36: MCP Integration â Model Context Protocol Server + Client
-        src/mcp_integration.cpp
-        src/win32app/Win32IDE_MCP.cpp
 
         # Phase 36: Flight Recorder ÎÃÃ¶ memory-mapped binary ring-buffer logger
-        src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
-        src/modules/quickjs_extension_host.cpp
-        src/modules/quickjs_vscode_bindings.cpp
 
         # Phase 36: Cross-Process MMF State Synchronization
         src/core/rawrxd_state_mmf.cpp
@@ -6032,7 +4838,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/extension_polyfill_engine.cpp
 
         # Phase 46: VulkanKernel ÎÃÃ¶ Full GPU Compute Engine
-        src/vulkan_compute.cpp
+        src/deep2/vulkan_compute.cpp
 
         # Phase 46: Live Binary Patcher ÎÃÃ¶ Layer 5 Hotpatch
         src/core/live_binary_patcher.cpp
@@ -6044,8 +4850,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/core/input_guard_slicer.cpp
-        src/agentic_agent_coordinator.cpp
-        src/production_config_manager.cpp
 
         # Singleton subsystems referenced by UnifiedHotpatchManager
         src/core/agentic_task_graph.cpp
@@ -6060,82 +4864,42 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/vision_quantized_encoder.cpp
         src/core/vision_gpu_staging.cpp
 
-        src/marketplace/extension_marketplace.cpp
-        src/auth/rbac_engine.cpp
 
         # Agentic Loop State (iterative reasoning state machine)
-        src/agentic_loop_state.cpp
 
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
 
         # Instructions Provider ÎÃÃ¶ unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
-        src/win32app/Win32IDE_Instructions.cpp
 
         # Phase 45: Game Engine Integration (Unity + Unreal)
-        src/modules/unity_engine_integration.cpp
-        src/modules/unreal_engine_integration.cpp
-        src/modules/game_engine_manager.cpp
-        src/win32app/Win32IDE_GameEnginePanel.cpp
 
         # Phase 48: The Final Crucible (Unified Stress-Test Harness)
-        src/modules/crucible_engine.cpp
-        src/win32app/Win32IDE_CruciblePanel.cpp
 
         # Phase 49: Copilot Gap Closer (HNSW + Composer + CRDT + Git Context)
-        src/modules/copilot_gap_closer.cpp
-        src/win32app/Win32IDE_CopilotGapPanel.cpp
 
         # Phase 13: Distributed Pipeline Orchestrator
         src/core/distributed_pipeline_orchestrator.cpp
-        src/win32app/Win32IDE_PipelinePanel.cpp
 
         # Phase 14: Hotpatch Control Plane
         src/core/hotpatch_control_plane.cpp
-        src/win32app/Win32IDE_HotpatchCtrlPanel.cpp
 
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
         src/core/code_linter.cpp
-        src/lsp/diagnostic_consumer.cpp
-        src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
         # P0: Unified Problems Panel (LSP, SAST, SCA, Secrets, Build)
-        src/win32app/Win32IDE_ProblemsPanel.cpp
-        src/win32app/Win32IDE_BuildRunner.cpp
-        src/win32app/Win32IDE_SecurityScans.cpp
         src/core/problems_panel_bridge.cpp
         src/core/problems_aggregator.cpp
-        src/security/secrets_scanner.cpp
-        src/security/sast_rule_engine.cpp
-        src/security/dependency_audit.cpp
-        src/win32app/Win32IDE_AgentStreamingBridge.cpp
 
         # Phase 16: Semantic Code Intelligence
         src/core/semantic_code_intelligence.cpp
-        src/win32app/Win32IDE_SemanticPanel.cpp
 
         # Phase 17: Enterprise Telemetry & Compliance
         src/core/enterprise_telemetry_compliance.cpp
-        src/win32app/Win32IDE_TelemetryPanel.cpp
-        src/win32app/Win32IDE_Tier3Polish.cpp
-        src/win32app/Win32IDE_Tier3Cosmetics.cpp
-        src/win32app/Win32IDE_Tier5Cosmetics.cpp
-        src/win32app/Win32IDE_CrashReporter.cpp
-        src/win32app/Win32IDE_ColorPicker.cpp
-        src/win32app/Win32IDE_EmojiSupport.cpp
-        src/win32app/Win32IDE_ShortcutEditor.cpp
-        src/win32app/Win32IDE_TelemetryDashboard.cpp
-        src/win32app/Win32IDE_MarketplacePanel.cpp
-        src/win32app/Win32IDE_Collab.cpp
 
         # Phase 51: mIRC Control Bridge ÎÃÃ¶ IRC bot for remote IDE control
-        src/win32app/Win32IDE_IRCBridge.cpp
-        src/win32app/Win32IDE_IRCBridgeCommands.cpp
-        src/collab/websocket_hub.cpp
-        src/win32app/Win32IDE_TestExplorerTree.cpp
-        src/win32app/Win32IDE_NetworkPanel.cpp
         # NOTE: Experimental features removed from production build
         src/core/omega_orchestrator.cpp
         src/core/omega_asm_native_kernel.cpp
@@ -6153,19 +4917,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/reasoning_profile.cpp
         # src/core/win32ide_link_stubs.cpp  # Conflicts with existing fallbacks
         # src/win32app/Win32IDE_TranscendencePanel.cpp
-        src/win32app/VulkanRenderer.cpp
-        src/win32app/OSExplorerInterceptor.cpp
-        src/win32app/Win32IDE_MCPHooks.cpp
-        src/win32app/TodoManager.cpp
-        src/win32app/IocpFileWatcher.cpp
-        src/win32app/IDEDiagnosticAutoHealer.cpp
-        src/win32app/ConsentPrompt.cpp
-        src/win32app/AutonomousAgent.cpp
 
         # UI Rendering ÎÃÃ¶ Chat message renderer + tool action status + chat panel
-        src/ui/chat_message_renderer.cpp
-        src/ui/tool_action_status.cpp
-        src/ui/chat_panel.cpp
 
         # Cathedral Hardening (5.0 Readiness)
         src/core/crash_containment.cpp
@@ -6191,13 +4944,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
 
         # Phase A: Closed-Loop Verification (Write ÎÃ¥Ã Compile ÎÃ¥Ã Test ÎÃ¥Ã Fix)
-        src/agentic/autonomous_verification_loop.cpp
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-        src/agentic/autonomous_background_daemon.cpp
 
         # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
-        src/core/sqlite3.c
         src/core/knowledge_graph_core.cpp
 
         # Phase D: Multi-Agent Conflict Resolution (merge negotiation, consensus)
@@ -6207,59 +4957,31 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/autonomous_debugger.cpp
 
         # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-        src/agentic/autonomous_communicator.cpp
 
         # Unified Telemetry Core
-        src/telemetry/UnifiedTelemetryCore.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Cursor/JB-Parity Feature Modules
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/telemetry/telemetry_export.cpp
-        src/agentic/agentic_composer_ux.cpp
-        src/context/context_mention_parser.cpp
-        src/multimodal_engine/vision_encoder.cpp
-        src/ide/refactoring_plugin.cpp
-        src/ide/language_plugin.cpp
-        src/context/semantic_index.cpp
-        src/ide/resource_generator.cpp
-        src/win32app/Win32IDE_CursorParity.cpp
-        src/win32app/Win32IDE_GUILayoutHotpatch.cpp
+        src/core/vision_encoder.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/win32app/Win32IDE_Tasks.cpp
-        src/win32app/Win32IDE_GitPanel.cpp
-        src/win32app/Win32IDE_Refactor.cpp
-        src/win32app/Win32IDE_SearchPanel.cpp
-        src/win32app/Win32IDE_FuzzySearch.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/win32app/Win32IDE_Minimap.cpp
-        src/win32app/Win32IDE_DiffView.cpp
-        src/win32app/Win32IDE_SettingsGUI.cpp
-        src/win32app/Win32IDE_CodeLens.cpp
-        src/win32app/Win32IDE_InlayHints.cpp
-        src/win32app/Win32IDE_HoverTooltips.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/win32app/Win32IDE_ProvableAgent.cpp
-        src/win32app/Win32IDE_AIReverseEngineering.cpp
-        src/win32app/Win32IDE_AirgappedEnterprise.cpp
-        src/win32app/Win32IDE_FlagshipFeatures.cpp
 
         # Linker deps: ProjectContext, UniversalModelRouter, ModelRegistry, CheckpointManager
-        src/project_context.cpp
-        src/universal_model_router.cpp
-        src/model_registry.cpp
-        src/model_name_utils.cpp
+        src/core/universal_model_router.cpp
+        src/core/model_registry.cpp
         src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
         src/core/agentic_autonomous_config.cpp
@@ -6267,40 +4989,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/context_deterioration_hotpatch.cpp
         # src/core/model_loader_asm_stubs.cpp  # Conflicts with model_loader_fallbacks.cpp
         # Win32 panels and dialogs
-        src/ui/interpretability_panel.cpp
         # Advanced feature modules (src scope)
-        src/real_time_completion_engine.cpp
-        src/LanguageServerIntegration.cpp
-        src/interpretability_panel_enhanced.cpp
-        src/feature_registry_panel.cpp
-        src/autonomous_feature_engine.cpp
-        src/autonomous_intelligence_orchestrator.cpp
         # Advanced feature module deps
-        src/plan_orchestrator.cpp
-        src/tool_registry_advanced.cpp
-        src/lsp_client.cpp
-        src/intelligent_codebase_engine.cpp
-        src/ai_model_caller.cpp
-        src/hybrid_cloud_manager.cpp
         # Benchmarks (real implementation; replaces earlier IDE stubs)
-        src/benchmark_menu_widget.cpp
-        src/benchmark_runner.cpp
-        src/win32app/feature_registry_panel.cpp
-        src/ui/monaco_settings_dialog.cpp
-        src/thermal/RAWRXD_ThermalDashboard.cpp
-        src/win32app/VSCodeMarketplaceAPI.cpp
         # Multi-file search (real implementation; replaces earlier IDE stub)
-        src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
         src/core/license_manager_panel.cpp
         # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
         # src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
-        src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
-        src/license_enforcement.cpp
-        src/feature_flags_runtime.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
@@ -6309,44 +5008,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/win32app/Win32IDE_PeekView.cpp
-        src/win32app/Win32IDE_AutoSave.cpp
-        src/win32app/Win32IDE_TerminalSplit.cpp
-        src/win32app/Win32IDE_SnippetEngine.cpp
-        src/win32app/Win32IDE_MultiCursor.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # Cognitive Architecture ÎÃÃ¶ Autonomous Reverse Engineering OS
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/agentic/cognitive/cognitive_types.cpp
-        src/agentic/cognitive/enhanced_blackboard.cpp
-        src/agentic/cognitive/mission_director.cpp
-        src/agentic/cognitive/reflection_agent.cpp
-        src/agentic/cognitive/dynamic_planner.cpp
-        src/agentic/cognitive/autonomous_orchestrator.cpp
 
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
         # TrailBrake / HotPatcher / AntiPatcher Safety System
         # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/deep2/TrailBrake.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/CPUFrequency.cpp
         # Dual GPU / Reverse Recovery / Streaming
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/execution_policy/ExecutionPolicy.cpp
-        src/deep2/execution_policy/ExecutionPolicyStore.cpp
-        src/deep2/ShardRouterIntegration.cpp
-        src/deep2/Deep2IDEIntegration.cpp
-        src/deep2/IOCPGGUFLoader.cpp
-        src/deep2/Deep2ModelRuntime.cpp
-        src/deep2/FabricTensorTable.cpp
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -6364,20 +5034,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/core/native_debugger_engine.cpp
             src/core/native_debugger_symbols.cpp
-            src/win32app/Win32IDE_NativeDebugPanel.cpp
             src/core/shadow_page_detour.cpp
             src/agent/agentic_deep_thinking_engine.cpp
             # NOTE: Quantum fiction files already removed from SOURCES
-            src/vulkan_compute.cpp
+            src/deep2/vulkan_compute.cpp
             src/runtime/TensorExecutionRouter.cpp
             src/core/embedding_engine.cpp
             src/core/vector_index.cpp
             src/core/agentic_task_graph.cpp
             src/core/vision_encoder.cpp
-            src/win32app/Win32IDE_Minimap.cpp
-            src/win32app/Win32IDE_SettingsGUI.cpp
-            src/win32app/VulkanRenderer.cpp
-            src/win32app/OSExplorerInterceptor.cpp
         )
     endif()
      
@@ -6499,8 +5164,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/core/win32ide_missing_handlers.cpp
         )
         list(APPEND WIN32IDE_SOURCES
-            src/core/ssot_missing_handlers_provider.cpp
-        )
+src/core/ssot_missing_handlers_provider.cpp
+        
+)
         message(STATUS "[SSOT] Win32IDE: STUBS lane enabled (excluding ssot_handlers.cpp + ssot_handlers_ext_isolated.cpp; adding ssot_missing_handlers_provider.cpp)")
     else()
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -6518,8 +5184,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # AgenticExecutor real implementation now provides these members.
     # Keep the link stub out of Win32IDE to avoid duplicate definitions.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/core/agentic_executor_link_stub.cpp
-        src/core/beacon_link_stub.cpp
     )
 
     # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp both define
@@ -6531,11 +5195,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/core/subsystem_mode_fallbacks.cpp
-            src/core/model_loader_fallbacks.cpp
-            src/core/rawrxd_native_log_impl.cpp
-            src/llm_adapter/ggufrunner_link_fallbacks.cpp
-            src/win32app/collab_cursor_fallbacks.cpp
         )
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
@@ -6563,12 +5222,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Avoid mixing parallel GGUF engine stacks in this lane.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/engine/sovereign_engines.cpp
-        src/engine/rawr_engine.cpp
-        src/engine/gguf_core.cpp
     )
     # Re-wire providers needed by this target's link graph.
-    list(APPEND WIN32IDE_SOURCES src/core/local_parity_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES
+src/core/local_parity_bridge.cpp
+)
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
             # Link closure: fallbacks for Win32IDE (rawrengine_missing_stubs.cpp is already in RawrEngine)
@@ -6582,11 +5240,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                 # REMOVED: src/inference/gguf_d3d12_bridge_link_fallback.cpp - stub file deleted
                 # REMOVED: src/win32app/collab_cursor_fallbacks.cpp - stub file deleted
                 # REMOVED: src/win32app/rtp_protocol_fallback.cpp - stub file deleted
-                src/modules/quickjs_node_shims.cpp
             )
             foreach(_rawr_fallback IN LISTS _RAWRXD_WIN32IDE_FALLBACK_UNITS)
                 if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawr_fallback}")
-                    list(APPEND WIN32IDE_SOURCES "${_rawr_fallback}")
+                    list(APPEND WIN32IDE_SOURCES
+"${_rawr_fallback}"
+)
                 else()
                     message(WARNING "[Win32IDE] Optional fallback unit missing, skipping: ${_rawr_fallback}")
                 endif()
@@ -6599,31 +5258,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     list(APPEND WIN32IDE_SOURCES
-        src/win32app/ai_workers_queue.cpp
         # v14.7.0 Native Track B Modules
-        src/ui/ImportBridge.cpp
-        src/ui/ExportBridge.cpp
-        src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
         # HEXMAG_IDE_ROUTE ÎÃÃ¶ controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
-        src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
         src/core/hexmag_runtime_controller.cpp
-        src/agent/hexmag_client.cpp
-    )
+    
+)
 
     set(WIN32IDE_EXTRA_ASM "")
     if(RAWR_HAS_MASM)
         set(WIN32IDE_EXTRA_ASM
-            src/asm/RawrXD_PE_Importer.asm
-            src/asm/RawrXD_PE_Exporter.asm
-            src/asm/ghost_text_ranker.asm
-            src/asm/diff_engine.asm
-            src/asm/RawrXD_HexMag_Swarm.asm
-            src/asm/RawrXD_HexMag_RepeatTuner.asm
         )
         message(STATUS "[Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)")
 
@@ -6684,14 +5332,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
 
         list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/win32app/agentic_bridge_headless.cpp
-            src/win32app/Win32IDE_headless_stubs.cpp
             src/core/ignite_800b.cpp
-            src/stubs.cpp
-            src/core/stubs.cpp
-            src/core/universal_stub.cpp
-            src/core/link_stubs_final.cpp
-            src/core/link_stubs_remaining_classes.cpp
         )
         message(STATUS "[Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)")
     endif()
@@ -6819,28 +5460,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         message(FATAL_ERROR "[ProductionLane] Required MASM bridge provider src/core/ai_agent_masm_core_impl.cpp is missing.")
     endif()
     list(REMOVE_ITEM WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
-    list(APPEND WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
+    list(APPEND WIN32IDE_SOURCES
+src/core/ai_agent_masm_core_impl.cpp
+)
 
     # Post-filter link closure: real production TUs excluded by strict *_fallback* / *_stub* regex.
     foreach(_rawrxd_link_closure IN ITEMS
         src/core/cot_fallback_system.cpp
-        src/agentic_model_streamer_bridge.cpp
         src/core/GpuDecodeEfficiency.cpp
         src/core/AmdGpuPowerBackend.cpp
-        src/deep2/K2NativeStreamGate.cpp
-    src/deep2/K2GpuStreamCopy.cpp
-        src/deep2/K2LivePathTensorCache.cpp
-        src/deep2/K2WeightResolve.cpp
-        src/deep2/K2LogitsClimb.cpp
-        src/deep2/K2LivePathTensorCache_Prefetch.cpp
-    src/deep2/K2LivePathTensorCache_Emit.cpp
-        src/deep2/K2MLAAttention.cpp
-        src/deep2/K2TokenEmbedding.cpp
-        src/win32app/ScreenPilotModelHub.cpp
-        src/marketplace/extension_package_local.cpp
     )
         if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawrxd_link_closure}")
-            list(APPEND WIN32IDE_SOURCES "${_rawrxd_link_closure}")
+            list(APPEND WIN32IDE_SOURCES
+"${_rawrxd_link_closure}"
+)
         else()
             message(WARNING "[Win32IDE] Link-closure unit missing, skipping: ${_rawrxd_link_closure}")
         endif()
@@ -6885,7 +5518,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # NOTE: Command handlers are in rawrengine_command_handlers.cpp
     # Removing duplicate handler files to avoid LNK2005 errors
     list(APPEND WIN32IDE_SOURCES
-        # src/win32app/Win32IDE_CursorParityBridge.cpp  # Handlers in rawrengine_command_handlers.cpp
+# src/win32app/Win32IDE_CursorParityBridge.cpp  # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_OmegaOrchestrator.cpp   # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_MeshBrain.cpp           # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_SpeciatorEngine.cpp     # Handlers in rawrengine_command_handlers.cpp
@@ -6893,38 +5526,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/win32app/Win32IDE_SelfHostEngine.cpp      # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_HardwareSynthesizer.cpp # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_TranscendenceCoordinator.cpp # Handlers in rawrengine_command_handlers.cpp
-        src/win32app/Win32IDE_TranscendencePanel.cpp
-    )
+    
+)
 
     # Add UI & infrastructure handler files for batch 50-56
     list(APPEND WIN32IDE_SOURCES
-        # NOTE: Win32IDE_CommandHandlers.cpp removed - CommandResult handlers already in rawrengine_command_handlers.cpp
-        src/win32app/Win32IDE_AutonomousAgent.cpp
-        src/win32app/Win32IDE_ChatMessageRenderer.cpp
-        src/win32app/Win32IDE_ToolActionStatus.cpp
-        src/win32app/Win32IDE_ChatPanel.cpp
-        src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # RESTORED: Required for HandleCopilotSend_Ollama and initializeChatPanelOllama
-        src/win32app/Win32IDE_VulkanRenderer.cpp
-        src/win32app/Win32IDE_OSExplorerInterceptor.cpp
-        src/win32app/Win32IDE_IOCPFileWatcher.cpp
-        src/win32app/Win32IDE_IDEDiagnosticAutoHealer.cpp
-        src/win32app/Win32IDE_ConsentPrompt.cpp
-        src/win32app/Win32IDE_PerfTelemetry.cpp
-        src/win32app/Win32IDE_UpdateSignature.cpp
-        src/win32app/Win32IDE_PluginSignature.cpp
-        src/win32app/Win32IDE_EnterpriseStressTests.cpp
-        src/win32app/Win32IDE_SQLite3Core.cpp
-        src/win32app/Win32IDE_TelemetryExport.cpp
-        src/win32app/Win32IDE_RefactoringPlugin.cpp
-        src/win32app/Win32IDE_LanguagePlugin.cpp
-        src/win32app/Win32IDE_ResourceGenerator.cpp
-    )
+# NOTE: Win32IDE_CommandHandlers.cpp removed - CommandResult handlers already in rawrengine_command_handlers.cpp
+    
+)
 
     # Runtime surface ÎÃÃ¶ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
-        src/runtime_surface/RuntimeSurfaceModule.cpp
-        src/runtime_surface/GenerationStopwatch.cpp
-    )
+    
+)
 
     # ÎÃ¶ÃÎÃ¶Ã Performance-optimization batches 3ÎÃÃ´6 ÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶Ã
     # Batch 3: Unified tiered memory pool (CPU / GPU / disk / compressed)
@@ -6932,15 +5546,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Batch 5: InferenceProfiler ÎÃÃ¶ per-layer profiling + Prometheus export
     # Batch 6: BackendOrchestrator ÎÃÃ¶ dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
-        src/memory/UnifiedMemoryPool.cpp
-        src/memory/SequentialBlowoffValve.cpp
-        src/inference/OutOfCoreScheduler.cpp
-        src/inference/DualGpuPipeline.cpp
-        src/inference/Deep2Engine.cpp
-        src/kernels/VulkanComputeKernels.cpp
-        src/InferenceProfiler.cpp
-        src/BackendOrchestrator.cpp
-        # --- Missing sources causing LNK2001 (added 2026-08-10) ---
+        src/deep2/Deep2Engine.cpp
+        # --- Missing sources causing LNK2001 (added 2026-08-10
+) ---
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -6951,148 +5559,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/memory/TensorPlacementManager.cpp
         B014/build/b014_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/CycloneScheduler.cpp
-        src/deep2/Deep2LivePath.cpp
-        src/deep2/Deep2LivePath_Gate.cpp
-        src/deep2/Deep2LivePath_Pinball.cpp
-        src/deep2/Deep2LivePath_Mech.cpp
-        src/deep2/Deep2LivePath_Emit.cpp
-        src/deep2/GpuTransfer_Emit.cpp
-        src/deep2/LivePathEffect.cpp
-        src/deep2/K2LivePolicy.cpp
-        src/deep2/K2LivePolicy_Apply.cpp
-        src/deep2/K2LivePolicy_Hysteresis.cpp
-        src/deep2/FusedLiveController.cpp
-        src/deep2/FusedLiveController_Decide.cpp
-        src/deep2/FusedLiveController_Cheap.cpp
-        src/deep2/FusedLiveController_Law.cpp
-        src/deep2/FusedLiveController_Emit.cpp
-        src/deep2/LivePath_FusedTick.cpp
-        src/deep2/Deep2LivePath_MechEnd.cpp
-        src/deep2/Deep2LivePath_Thermal.cpp
-        src/deep2/PlasmaGovernor.cpp
-        src/deep2/ElasticResidencyManager.cpp
-        src/rkc/RKCValidator.cpp
-        src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-        src/rkc/RKCCompiler.cpp
-        src/rkc/RKCRecipes.cpp
-        src/rkc/RKCGapEngine.cpp
-        src/rkc/RKCEmit.cpp
-        src/rkc/RKCSession.cpp
-        src/rkc/RKCProductContext.cpp
-        src/rkc/RKC_C_ABI.cpp
-        src/deep2/KimiK2Config.cpp
-        src/deep2/K2MLAWeights.cpp
-        src/deep2/K2MLA_KvExpand_Fused.cpp
-        src/deep2/K2MoEWeights.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
         # Deep2 component files required by Deep2Engine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/Deep2Bridge.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/ShardRouterIntegration.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/RuntimePlanner.cpp
-        src/deep2/ModelLoader.cpp
-        src/deep2/ModelRegistry.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/UniversalModelLoader.cpp
-        src/deep2/RawrXDInferenceAdapter.cpp
-        src/inference/RawrXD_LlamaNative.cpp
-        src/deep2/InferenceSession.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/FabricTensorTable.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/ScaleQuality.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/TheDualityExample.cpp
-        src/deep2/Deep2Discovery.cpp
-        src/deep2/Deep2Benchmark.cpp
-        src/deep2/Deep2InferenceEndpoint.cpp
-        src/deep2/Deep2InferenceGateway.cpp
-        src/deep2/Deep2Integration.cpp
-        src/deep2/Deep2LocalServer.cpp
-        src/deep2/Deep2Server_Minimal.cpp
-        src/deep2/Deep2Server_Sovereign.cpp
-        src/deep2/Deep2APIServer.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
-        src/deep2/GGUFDiagnostics.cpp
-        src/deep2/GGUFLoader_Fixed.cpp
-        src/deep2/GGUFVerifier.cpp
-        src/deep2/IQQuantKernels.cpp
-        src/deep2/MASMKernelStubs.cpp
-        src/deep2/mcp_bridge.cpp
-        src/deep2/gpu/Deep2GPUBackend.cpp
-        src/deep2/MultiGPU/GPUDeviceRegistry.cpp
-        src/deep2/MultiGPU/MultiGPUScheduler.cpp
-        src/deep2/MultiGPU/VRAMAllocator.cpp
-        src/deep2/production/Deep2ProductionRuntime.cpp
-        src/deep2/dump_tensors.cpp
-        src/deep2/deep2_http_gateway.cpp
-        src/deep2/Deep2Engine_KernelTest.cpp
-        src/deep2/moe_microbench.cpp
-        src/deep2/moe_simple_bench.cpp
-        src/deep2/moe_test.cpp
-        src/deep2/moe_validation_test.cpp
-        src/deep2/router_bench.cpp
-        src/deep2/router_latency_test.cpp
-        src/deep2/test_api_server.cpp
-        src/deep2/test_real_gguf_load.cpp
-        src/deep2/test_real_gguf_validate.cpp
-        src/deep2/test_tool_limit_hotpatch.cpp
-        src/deep2/VAL063_Deep2Certification.cpp
-        src/deep2/VAL038_Benchmark_Harness.cpp
-        src/deep2/deep2_end_to_end_bench.cpp
-        src/deep2/deep2_moe_bench_standalone.cpp
-        src/deep2/deep2_benchmark_main.cpp
-        src/deep2/deep2_server_main.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
-        src/deep2/ModelRegistry/GGUFModelRegistry.cpp
+        src/core/ModelRegistry.cpp
     )
 
     # Deep2Engine Integration Test
     add_executable(Deep2Engine_IntegrationTest
-        src/tests/Deep2Engine_IntegrationTest_Minimal.cpp
-        src/memory/SequentialBlowoffValve.cpp
-        src/inference/OutOfCoreScheduler.cpp
-        src/inference/DualGpuPipeline.cpp
-        src/inference/Deep2Engine.cpp
-        src/kernels/VulkanComputeKernels.cpp
+        src/deep2/Deep2Engine.cpp
     )
     target_include_directories(Deep2Engine_IntegrationTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -7113,8 +5587,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Must pass before K2-002 bounded tensor execution.
     # ============================================================================
     add_executable(Deep2Engine_MetadataRegressionTest
-        src/deep2/Deep2Engine_MetadataRegressionTest.cpp
-        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -7132,96 +5604,56 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
     # sdma_ring_allocator: O(1) tensor slot bitmap allocator with spinlock
     list(APPEND WIN32IDE_SOURCES
-        src/core/sdma/sdma_scheduler.cpp
+src/core/sdma/sdma_scheduler.cpp
         src/core/sdma/sdma_ring_allocator.cpp
-    )
+    
+)
 
     # Core workflow/reasoning engines required by unified_hotpatch_manager and agentic_task_graph
     list(APPEND WIN32IDE_SOURCES
-        src/core/autonomous_workflow_engine.cpp
+src/core/autonomous_workflow_engine.cpp
         src/core/workspace_reasoning_profiles.cpp
         src/core/reasoning_schema_versioning.cpp
         src/core/safe_refactor_engine.cpp
-    )
+    
+)
 
     # Sovereign Coordination System - 10 primitives + Execution Capsule
     list(APPEND WIN32IDE_SOURCES
-        src/sovereign/spine/ExecutionSpine.cpp
-        src/sovereign/build/BuildStateGraph.cpp
-        src/sovereign/ide/SovereignIDEIntegration.cpp
-        src/sovereign/terminal/TerminalOwnership.cpp
-        src/sovereign/bus/CapabilityBus.cpp
-        src/sovereign/bus/BeaconBus.cpp
-        src/sovereign/awareness/SystemAwareness.cpp
-        src/sovereign/validator/RealityValidator.cpp
-        src/sovereign/recovery/AutonomousRecovery.cpp
-        src/sovereign/control/SovereignControlPlane.cpp
-        src/sovereign/compression/IntentCompression.cpp
-        src/sovereign/capsule/ExecutionCapsule.cpp
-    )
+    
+)
 
     # Sovereign Autonomy Stack - Blackboard, TaskGraph, MissionPlanner, Reflection, Critic, Runtime
     list(APPEND WIN32IDE_SOURCES
-        src/sovereign_autonomy/SovereignBlackboard.cpp
-        src/sovereign_autonomy/SovereignTaskGraph.cpp
-        src/sovereign_autonomy/SovereignMissionPlanner.cpp
-        src/sovereign_autonomy/SovereignReflectionEngine.cpp
-        src/sovereign_autonomy/SovereignCritic.cpp
-        src/sovereign_autonomy/SovereignAgentRuntime.cpp
-    )
+    
+)
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     list(APPEND WIN32IDE_SOURCES
-        src/win32ide/Omega1IPCClient.cpp
-        src/win32ide/GhostTextRenderer.cpp
-        src/win32ide/StatusBarTelemetry.cpp
-        src/win32ide/Omega1IDEIntegration.cpp
-        src/win32ide/Win32IDE_Omega1Integration.cpp
-    )
+    
+)
     
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Elastic Engine ÎÃÃ¶ Predictive tensor residency + governance
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     list(APPEND WIN32IDE_SOURCES
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
-        src/runtime/elastic/ElasticArchitectureDetector.cpp
-        src/runtime/shared/SharedModelRuntime.cpp
-        src/runtime/shared/BP1BraidIndex.cpp
-        src/runtime/shared/BP1BraidStreamer.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
-        src/backend/VulkanGemmDispatcher.cpp
-        src/runtime/gguf_tensor_loader.cpp
-        src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/runtime/Sovereign_KernelBridge_CPP.cpp
-    )
+    
+)
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # OMEGA-1 Engine Server - IPC Server for IDE integration
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     list(APPEND RAWR_ENGINE_SOURCES
-        src/engine/Omega1Engine_Server.cpp
     )
 
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
@@ -7230,31 +5662,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # LNK1120âÃ¹334; those need symbol-level dedupe, not TU deletion.
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/deep2/TheDualityExample.cpp
-        src/deep2/Deep2Server_Minimal.cpp
-        src/deep2/Deep2Server_Sovereign.cpp
-        src/deep2/Deep2APIServer_Complete.cpp
-        src/deep2/GGUFVerifier.cpp
-        src/deep2/GGUFLoader_Fixed.cpp
         # keep MASMKernelStubs.cpp ÎÃÃ¶ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
-        src/deep2/dump_tensors.cpp
-        src/deep2/Deep2Engine_KernelTest.cpp
-        src/deep2/moe_microbench.cpp
-        src/deep2/moe_simple_bench.cpp
-        src/deep2/moe_test.cpp
-        src/deep2/moe_validation_test.cpp
-        src/deep2/router_bench.cpp
-        src/deep2/router_latency_test.cpp
-        src/deep2/test_api_server.cpp
-        src/deep2/test_real_gguf_load.cpp
-        src/deep2/test_real_gguf_validate.cpp
-        src/deep2/test_tool_limit_hotpatch.cpp
-        src/deep2/VAL063_Deep2Certification.cpp
-        src/deep2/VAL038_Benchmark_Harness.cpp
-        src/deep2/deep2_end_to_end_bench.cpp
-        src/deep2/deep2_moe_bench_standalone.cpp
-        src/deep2/deep2_benchmark_main.cpp
-        src/deep2/deep2_server_main.cpp
     )
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
@@ -7262,7 +5670,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # ProductOpenSession â R01). Drop them from IDE; feature flags already gate calls.
     set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
     list(REMOVE_ITEM _WIN32IDE_ASM
-        src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
@@ -7754,11 +6161,8 @@ endif()
 #   language by adding a tiny C++ TU and setting LINKER_LANGUAGE.
 if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_library(RawrXD-Crypto SHARED
-        src/crypto_masm.asm
-        src/security/uac_bypass_impl_stub.cpp
     )
     set_source_files_properties(
-        src/crypto_masm.asm
         PROPERTIES LANGUAGE ASM_MASM
     )
     target_link_options(RawrXD-Crypto PRIVATE
@@ -7932,10 +6336,6 @@ endif()
 option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" ON)
 if(BUILD_SOVEREIGN_TEST_SUITE)
     add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
-        src/sovereign/tests/SovereignTest_Main.cpp
-        src/sovereign/tests/SovereignTest_AtomicRollback.cpp
-        src/sovereign/tests/SovereignTest_CacheCoherency.cpp
-        src/sovereign/tests/SovereignTest_Correctness.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_Suite PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -7963,7 +6363,6 @@ endif()
 option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" ON)
 if(BUILD_SOVEREIGN_VAL038_E2E)
     add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
-        src/sovereign/tests/SovereignTest_VAL038_E2E.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_VAL038_E2E PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -7992,7 +6391,6 @@ endif()
 option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" ON)
 if(BUILD_DEEP2_BATCH_TEST)
     add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
-        src/sovereign/tests/SovereignTest_Deep2_Batch.cpp
     )
     if(MSVC)
         target_compile_options(Deep2_Batch_Test PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -8020,7 +6418,6 @@ endif()
 option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" ON)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
-        src/deep2/test_generate_one_token.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_generate_one_token PRIVATE InferenceEngine)
@@ -8044,7 +6441,6 @@ endif()
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" ON)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
-        src/deep2/test_q4k_gemv_parity.cpp
     )
     target_link_libraries(test_q4k_gemv_parity PRIVATE InferenceEngine)
     if(MSVC)
@@ -8062,7 +6458,6 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity")
 
     add_executable(test_q_elemdiff
-        src/deep2/test_q_elemdiff.cpp
     )
     target_link_libraries(test_q_elemdiff PRIVATE InferenceEngine)
     if(MSVC)
@@ -8080,7 +6475,6 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q element-diff harness: test_q_elemdiff")
 
     add_executable(test_embed_q4k_token
-        src/deep2/test_embed_q4k_token.cpp
     )
     target_link_libraries(test_embed_q4k_token PRIVATE InferenceEngine)
     if(MSVC)
@@ -8102,7 +6496,6 @@ endif()
 option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" ON)
 if(BUILD_DEEP2_CHAT_TEMPLATE)
     add_executable(test_chat_template
-        src/deep2/test_chat_template.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_chat_template PRIVATE InferenceEngine)
@@ -8126,7 +6519,6 @@ endif()
 option(BUILD_DEEP2_CHAT_TEMPLATE_UNIT "Build chat template unit tests" ON)
 if(BUILD_DEEP2_CHAT_TEMPLATE_UNIT)
     add_executable(test_chat_template_unit
-        src/deep2/test_chat_template_unit.cpp
     )
     target_link_libraries(test_chat_template_unit PRIVATE InferenceEngine)
     if(MSVC)
@@ -8148,7 +6540,6 @@ endif()
 option(BUILD_DEEP2_STREAMING "Build streaming generation test" ON)
 if(BUILD_DEEP2_STREAMING)
     add_executable(test_streaming
-        src/deep2/test_streaming.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_streaming PRIVATE InferenceEngine)
@@ -8173,8 +6564,6 @@ endif()
 option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
-        src/deep2/deep2_streamer_cert.cpp
-        src/deep2/StreamerGpuSoloGate.cpp
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8198,10 +6587,6 @@ endif()
 option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" ON)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
-        src/deep2/deep2_streamer_parity.cpp
-        src/deep2/StreamerParity_Harness.cpp
-        src/deep2/StreamerParity_Post.cpp
-        src/deep2/Deep2StreamApi.cpp
     )
     target_link_libraries(deep2_streamer_parity PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8225,13 +6610,6 @@ endif()
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" ON)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
-        src/deep2/deep2_gpu_solo_cert.cpp
-        src/deep2/StreamerGpuSoloGate.cpp
-        src/deep2/StreamerGpuSoloVk.cpp
-        src/deep2/Deep2DeviceManager.cpp
-    src/deep2/DualLaneChoreographer.cpp
-        src/asm/Deep2Device_Score.asm
-        src/asm/Deep2Device_Pick.asm
     )
     target_link_libraries(deep2_gpu_solo_cert PRIVATE dxgi)
     if(MSVC)
@@ -8262,7 +6640,6 @@ endif()
 option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build SingleGpu GGUF decode cert" ON)
 if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     add_executable(deep2_gpu_solo_decode_cert
-        src/deep2/deep2_gpu_solo_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_solo_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8285,7 +6662,6 @@ endif()
 option(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT "Build 0/1/N DeviceManager portability cert" ON)
 if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
     add_executable(deep2_topology_portability_cert
-        src/deep2/deep2_topology_portability_cert.cpp
     )
     target_link_libraries(deep2_topology_portability_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8308,7 +6684,6 @@ endif()
 option(BUILD_DEEP2_MULTI_GPU_LAYER_CERT "Build contiguous multi-GPU layer placement cert" ON)
 if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
     add_executable(deep2_multi_gpu_layer_cert
-        src/deep2/deep2_multi_gpu_layer_cert.cpp
     )
     target_link_libraries(deep2_multi_gpu_layer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8331,7 +6706,6 @@ endif()
 option(BUILD_DEEP2_HYBRID_ALL_HW_CERT "Build CPU+GPU hybrid planned-layer cert" ON)
 if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
     add_executable(deep2_hybrid_all_hw_cert
-        src/deep2/deep2_hybrid_all_hw_cert.cpp
     )
     target_link_libraries(deep2_hybrid_all_hw_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8354,7 +6728,6 @@ endif()
 option(BUILD_DEEP2_GPU_FORWARD_OPS_CERT "Build STREAMER_GPU_FORWARD_OPS_001 cert" ON)
 if(BUILD_DEEP2_GPU_FORWARD_OPS_CERT)
     add_executable(deep2_gpu_forward_ops_cert
-        src/deep2/deep2_gpu_forward_ops_cert.cpp
     )
     target_link_libraries(deep2_gpu_forward_ops_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8377,7 +6750,6 @@ endif()
 option(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT "Build STREAMER_GPU_RESIDENT_DECODE_001 cert" ON)
 if(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT)
     add_executable(deep2_gpu_resident_decode_cert
-        src/deep2/deep2_gpu_resident_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_resident_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8400,7 +6772,6 @@ endif()
 option(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT "Build STREAMER_GPU_WEIGHT_WINDOW_001 cert" ON)
 if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     add_executable(deep2_gpu_transfer_counter_cert
-        src/deep2/deep2_gpu_transfer_counter_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_counter_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8418,7 +6789,6 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert")
 
     add_executable(deep2_gpu_transfer_overlap_cert
-        src/deep2/deep2_gpu_transfer_overlap_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8440,7 +6810,6 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert")
 
     add_executable(deep2_gpu_weight_window_cert
-        src/deep2/deep2_gpu_weight_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8463,7 +6832,6 @@ endif()
 option(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT "Build STREAMER_GPU_WEIGHT_PREFETCH_001 cert" ON)
 if(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT)
     add_executable(deep2_gpu_weight_prefetch_cert
-        src/deep2/deep2_gpu_weight_prefetch_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_prefetch_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8486,7 +6854,6 @@ endif()
 option(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT "Build STREAMER_GPU_NUMERIC_PARITY_001 cert" ON)
 if(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT)
     add_executable(deep2_gpu_numeric_parity_cert
-        src/deep2/deep2_gpu_numeric_parity_cert.cpp
     )
     target_link_libraries(deep2_gpu_numeric_parity_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8509,7 +6876,6 @@ endif()
 option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" ON)
 if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
     add_executable(deep2_gpu_q4k_gemv_cert
-        src/deep2/deep2_gpu_q4k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8532,7 +6898,6 @@ endif()
 option(BUILD_DEEP2_GPU_Q6K_GEMV_CERT "Build STREAMER_GPU_Q6K_GEMV_001 cert" ON)
 if(BUILD_DEEP2_GPU_Q6K_GEMV_CERT)
     add_executable(deep2_gpu_q6k_gemv_cert
-        src/deep2/deep2_gpu_q6k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q6k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8555,7 +6920,6 @@ endif()
 option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV cert" ON)
 if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
     add_executable(deep2_gpu_quant_family_cert
-        src/deep2/deep2_gpu_quant_family_cert.cpp
     )
     target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8578,7 +6942,6 @@ endif()
 option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward gates 6-15" ON)
 if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
     add_executable(deep2_gpu_packed_forward_cert
-        src/deep2/deep2_gpu_packed_forward_cert.cpp
     )
     target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8625,7 +6988,6 @@ endif()
 option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" ON)
 if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
     add_executable(deep2_gpu_dynamic_window_cert
-        src/deep2/deep2_gpu_dynamic_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_dynamic_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8648,7 +7010,6 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH1_CERT "Build DEEP2_RUNTIME batch-1 cert (loader..policy)" ON)
 if(BUILD_DEEP2_RUNTIME_BATCH1_CERT)
     add_executable(deep2_runtime_batch1_cert
-        src/deep2/deep2_runtime_batch1_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch1_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8671,7 +7032,6 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH2_CERT "Build DEEP2_RUNTIME batch-2 cert (large/k2/ds/soak)" ON)
 if(BUILD_DEEP2_RUNTIME_BATCH2_CERT)
     add_executable(deep2_runtime_batch2_cert
-        src/deep2/deep2_runtime_batch2_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch2_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8694,7 +7054,6 @@ endif()
 option(BUILD_DEEP2_RUNTIME_BATCH3_CERT "Build DEEP2_RUNTIME batch-3 cert (quant/fusion/window)" ON)
 if(BUILD_DEEP2_RUNTIME_BATCH3_CERT)
     add_executable(deep2_runtime_batch3_cert
-        src/deep2/deep2_runtime_batch3_cert.cpp
     )
     if(MSVC)
         target_compile_options(deep2_runtime_batch3_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -8710,7 +7069,6 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT "Build DEEP2_K2_LIVE_GEN_PERF_001 cert" ON)
 if(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT)
     add_executable(deep2_k2_live_gen_perf_cert
-        src/deep2/deep2_k2_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8732,7 +7090,6 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT "Build K2_LIVE_POLICY_CROSSOVER_001" ON)
 if(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT)
     add_executable(deep2_k2_live_policy_crossover_cert
-        src/deep2/deep2_k2_live_policy_crossover_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_crossover_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8758,7 +7115,6 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT "Build K2_LIVE_POLICY_E2E_001" ON)
 if(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT)
     add_executable(deep2_k2_live_policy_e2e_cert
-        src/deep2/deep2_k2_live_policy_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8784,7 +7140,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT "Build K2_GPU_STREAM_COPY_001" ON)
 if(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT)
     add_executable(deep2_k2_gpu_stream_copy_cert
-        src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_copy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8810,7 +7165,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT "Build K2_GPU_COPY_COMPUTE_OVERLAP_001" ON)
 if(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT)
     add_executable(deep2_k2_gpu_copy_compute_overlap_cert
-        src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8836,7 +7190,6 @@ endif()
 option(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT "Build K2_LIVE_GPU_STREAM_E2E_001" ON)
 if(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT)
     add_executable(deep2_k2_live_gpu_stream_e2e_cert
-        src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gpu_stream_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8862,7 +7215,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT "Build K2_GPU_STREAM_COMPUTE_001" ON)
 if(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT)
     add_executable(deep2_k2_gpu_stream_compute_cert
-        src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_compute_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8888,7 +7240,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT "Build K2_GPU_STREAM_MLA_001" ON)
 if(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT)
     add_executable(deep2_k2_gpu_stream_mla_cert
-        src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_mla_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8914,7 +7265,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT "Build K2_GPU_MLA_FULL_001" ON)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT)
     add_executable(deep2_k2_gpu_mla_full_cert
-        src/deep2/deep2_k2_gpu_mla_full_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8940,7 +7290,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT "Build K2_GPU_MLA_FULL_DEPTH_001" ON)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT)
     add_executable(deep2_k2_gpu_mla_full_depth_cert
-        src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_depth_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8966,7 +7315,6 @@ endif()
 option(BUILD_DEEP2_K2_GPU_MLA_RE_CERT "Build K2_GPU_MLA_RE_001" ON)
 if(BUILD_DEEP2_K2_GPU_MLA_RE_CERT)
     add_executable(deep2_k2_gpu_mla_re_cert
-        src/deep2/deep2_k2_gpu_mla_re_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_re_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8992,7 +7340,6 @@ endif()
 option(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT "Build K2_STREAM_MISS_REALITY_001" ON)
 if(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT)
     add_executable(deep2_k2_stream_miss_reality_cert
-        src/deep2/deep2_k2_stream_miss_reality_cert.cpp
     )
     target_link_libraries(deep2_k2_stream_miss_reality_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9018,7 +7365,6 @@ endif()
 option(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT "Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert" ON)
 if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
     add_executable(deep2_deepseek_live_gen_perf_cert
-        src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_deepseek_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9040,7 +7386,6 @@ endif()
 option(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001 "Build LOCAL_AGENT_AUDIT_001 cert" ON)
 if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     add_executable(deep2_local_agent_audit_001
-        src/deep2/deep2_local_agent_audit_001.cpp
     )
     target_link_libraries(deep2_local_agent_audit_001 PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9064,7 +7409,6 @@ endif()
 option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" ON)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
-        src/deep2/p0_process_alive_001.cpp
     )
     if(MSVC)
         target_compile_options(p0_process_alive_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -9081,7 +7425,6 @@ endif()
 option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" ON)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
-        src/deep2/vwa_range_contract_001.cpp
     )
     target_include_directories(vwa_range_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9101,8 +7444,6 @@ endif()
 option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" ON)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
-        src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
-        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9124,7 +7465,6 @@ endif()
 option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" ON)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
-        src/deep2/vwa_address_contract_001.cpp
     )
     target_include_directories(vwa_address_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9153,8 +7493,6 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm (POC-1)"
         VERBATIM)
     add_executable(vwa_poc_1_001
-        src/deep2/vwa_poc_1_001.cpp
-        src/deep2/GGUFLoader.cpp
         ${_VWA_POC_ASM_OBJ}
     )
     target_include_directories(vwa_poc_1_001 PRIVATE
@@ -9173,33 +7511,8 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
 endif()
 
 set(DEEP2_R1_DECODE_ASM
-    src/asm/Deep2R1_StrEq.asm
-    src/asm/Deep2R1_IsArch.asm
-    src/asm/Deep2R1_GlobData.asm
-    src/asm/Deep2R1_MlaData.asm
-    src/asm/Deep2R1_MoeData.asm
-    src/asm/Deep2R1_Scan.asm
-    src/asm/Deep2R1_Decode.asm
-    src/asm/Deep2R1_Validate.asm
-    src/asm/Deep2R1_LayerKind.asm
-    src/asm/Deep2R1_SplitKVB.asm
 )
 set(DEEP2_OUTER_RUNTIME_ASM
-    src/asm/Deep2OuterStr.asm
-    src/asm/Deep2OuterEnv.asm
-    src/asm/Deep2OuterParse.asm
-    src/asm/Deep2OuterParseIdx.asm
-    src/asm/Deep2OuterGGUF.asm
-    src/asm/Deep2OuterPath.asm
-    src/asm/Deep2OuterShardApply.asm
-    src/asm/Deep2OuterShardScan.asm
-    src/asm/Deep2OuterShardCheck.asm
-    src/asm/Deep2OuterPrintIO.asm
-    src/asm/Deep2OuterPrint.asm
-    src/asm/Deep2OuterEvidence.asm
-    src/asm/Deep2OuterResolve.asm
-    src/asm/Deep2OuterCallEngine.asm
-    src/asm/Deep2OuterHost.asm
 )
 set_source_files_properties(${DEEP2_R1_DECODE_ASM} ${DEEP2_OUTER_RUNTIME_ASM}
     src/asm/Deep2R1_Smoke.asm src/asm/Deep2OuterSmoke.asm
@@ -9234,8 +7547,6 @@ endif()
 option(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT "Build DEEP2_OUTER_ENGINE_BRIDGE_001" ON)
 if(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT)
     add_executable(deep2_outer_engine_bridge_cert
-        src/deep2/deep2_outer_engine_bridge_cert.cpp
-        src/deep2/Deep2OuterEngineBridge.cpp
         ${DEEP2_OUTER_RUNTIME_ASM}
     )
     target_link_libraries(deep2_outer_engine_bridge_cert PRIVATE InferenceEngine dxgi kernel32)
@@ -9280,8 +7591,6 @@ endif()
 option(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT "Build LIVE_PATH_FUSED_CONTROL_001" ON)
 if(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT)
     add_executable(deep2_live_path_fused_control_cert
-        src/deep2/deep2_live_path_fused_control_cert.cpp
-        src/deep2/LivePathFusedCert_Arm.cpp
         src/deep2/K2LivePathTensorCache_Emit.cpp)
     target_link_libraries(deep2_live_path_fused_control_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9338,8 +7647,6 @@ endif()
 option(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT "Build K2_FULL_DEPTH_COMBINED_POLICY_001" ON)
 if(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT)
     add_executable(deep2_k2_full_depth_combined_policy_cert
-        src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
-        src/deep2/K2FullDepthCombined_Arm.cpp
         src/deep2/K2FullDepthCombined_Proof.cpp)
     target_link_libraries(deep2_k2_full_depth_combined_policy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -9360,7 +7667,6 @@ option(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT
        "Build K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001" ON)
 if(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT)
     add_executable(deep2_k2_full_depth_trampoline_promotion_cert
-        src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_trampoline_promotion_cert
         PRIVATE InferenceEngine dxgi)
@@ -9382,7 +7688,6 @@ option(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT
        "Build K2_FULL_DEPTH_FUSED_REBENCH_001" ON)
 if(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT)
     add_executable(deep2_k2_full_depth_fused_rebench_cert
-        src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_fused_rebench_cert
         PRIVATE InferenceEngine dxgi)
@@ -9946,8 +8251,6 @@ endif()
 option(BUILD_DEEP2_VWA_E2E_001 "Build legacy VWA_E2E_001 (non-authority)" OFF)
 if(BUILD_DEEP2_VWA_E2E_001)
     add_executable(deep2_vwa_e2e_001
-        src/deep2/deep2_vwa_e2e_001.cpp
-        src/deep2/vwa/VwaScheduler_Fulfill.cpp
         src/deep2/vwa/VwaScheduler_Lease.cpp)
     if(MSVC)
         target_compile_options(deep2_vwa_e2e_001 PRIVATE
@@ -9992,7 +8295,6 @@ if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm"
         VERBATIM)
     add_executable(deep2_vwa_poc_1_001
-        src/deep2/deep2_vwa_poc_1_001.cpp
         ${_VWA_ASM_OBJ})
     target_compile_options(deep2_vwa_poc_1_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -10015,8 +8317,6 @@ endif()
 option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" ON)
 if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
-        src/deep2/deep2_vwa_iocp_range_001.cpp
-        src/deep2/IOCPGGUFLoader.cpp
         src/deep2/GGUFLoader.cpp)
     target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
     target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
@@ -10465,7 +8765,6 @@ endif()
 option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" ON)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
-        src/deep2/deep2_nu_pack_format_cert.cpp
         src/deep2/NUFusedPacker.cpp)
     if(MSVC)
         target_compile_options(deep2_nu_pack_format_cert PRIVATE
@@ -10596,7 +8895,6 @@ endif()
 option(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT "Build DEEP2_GIANT_MOE_PARAGRAPH_PERF_001" ON)
 if(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT)
     add_executable(deep2_giant_moe_paragraph_perf_cert
-        src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
     )
     target_link_libraries(deep2_giant_moe_paragraph_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -10619,7 +8917,6 @@ endif()
 option(BUILD_AGENT_RUNTIME_BATCH1_CERT "Build AGENT_RUNTIME batch-1 tool cert" ON)
 if(BUILD_AGENT_RUNTIME_BATCH1_CERT)
     add_executable(agent_runtime_batch1_cert
-        src/agentic/agent_runtime_batch1_cert.cpp
     )
     target_link_libraries(agent_runtime_batch1_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -10642,7 +8939,6 @@ endif()
 option(BUILD_DEEP2_PLACEMENT_COST_CERT "Build STREAMER_PLACEMENT_COST_001 cert" ON)
 if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     add_executable(deep2_placement_cost_cert
-        src/deep2/deep2_placement_cost_cert.cpp
     )
     target_link_libraries(deep2_placement_cost_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -10667,7 +8963,6 @@ endif()
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" ON)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
-        src/deep2/deep2_mars_e2e.cpp
     )
     target_link_libraries(deep2_mars_e2e PRIVATE InferenceEngine)
     if(MSVC)
@@ -10688,11 +8983,6 @@ endif()
 option(BUILD_TEST_MARS_CONTROLLER "Build standalone MARS controller unit smoke" ON)
 if(BUILD_TEST_MARS_CONTROLLER)
     add_executable(test_mars_controller
-        src/deep2/mars/test_mars_controller.cpp
-        src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
     )
     if(MSVC)
         target_compile_options(test_mars_controller PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10712,11 +9002,6 @@ endif()
 option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" ON)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
-        src/deep2/deep2_execution_policy_smoke.cpp
-        src/deep2/execution_policy/ExecutionPolicy.cpp
-        src/deep2/execution_policy/ExecutionPolicyStore.cpp
-        src/deep2/execution_policy/PlacementPlan.cpp
-        src/deep2/execution_policy/ExecutionPolicyApply.cpp
     )
     if(MSVC)
         target_compile_options(deep2_execution_policy_smoke PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10736,7 +9021,6 @@ endif()
 option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" ON)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
-        src/deep2/p1_ide_exec_policy_apply_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_apply_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10759,7 +9043,6 @@ endif()
 option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" ON)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
-        src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_live_gguf_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10782,7 +9065,6 @@ endif()
 option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" ON)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
-        src/deep2/p1_real_speedup_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_real_speedup_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10806,7 +9088,6 @@ option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
     "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" ON)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
     add_executable(p1_repeatability_trial_validity_diag_001
-        src/deep2/p1_repeatability_trial_validity_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_trial_validity_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10829,7 +9110,6 @@ option(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG
     "Build P1_POLICY_SHA_LIFECYCLE_DIAG_001" ON)
 if(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG)
     add_executable(p1_policy_sha_lifecycle_diag_001
-        src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_policy_sha_lifecycle_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10852,7 +9132,6 @@ option(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG
     "Build P1_REPEATABILITY_STATE_DRIFT_DIAG_001" ON)
 if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     add_executable(p1_repeatability_state_drift_diag_001
-        src/deep2/p1_repeatability_state_drift_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_state_drift_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10875,7 +9154,6 @@ endif()
 option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" ON)
 if(BUILD_P1_UI_ENCODING_CERT)
     add_executable(p1_ui_encoding_cert
-        src/win32app/p1_ui_encoding_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -10897,7 +9175,6 @@ endif()
 option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" ON)
 if(BUILD_P1_UI_MENU_E2E_CERT)
     add_executable(p1_ui_menu_e2e_cert
-        src/win32app/p1_ui_menu_e2e_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_menu_e2e_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -10916,7 +9193,6 @@ endif()
 option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" ON)
 if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     add_executable(p1_ui_sidebar_encoding_cert
-        src/win32app/p1_ui_sidebar_encoding_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_sidebar_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -10934,7 +9210,6 @@ endif()
 option(BUILD_P1_UI_MENU_LIFETIME_CERT "Build UI menu lifetime certification harness" ON)
 if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     add_executable(p1_ui_menu_lifetime_cert
-        src/win32app/p1_ui_menu_lifetime_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_menu_lifetime_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -10955,7 +9230,6 @@ endif()
 option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" ON)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
-        src/deep2/deep2_parity_cert.cpp
     )
     target_link_libraries(deep2_parity_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -10978,11 +9252,7 @@ endif()
 option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" ON)
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
-        src/agentic/ide_agent_loop_cert.cpp
-        src/security/InputSanitizer.cpp
-        src/agent/agentic_hotpatch_orchestrator.cpp
         src/core/proxy_hotpatcher.cpp
-        src/deep2/IOCPGGUFLoader.cpp
     )
     target_link_libraries(ide_agent_loop_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -11010,7 +9280,6 @@ endif()
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" ON)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
-        src/deep2/test_deterministic_replay.cpp
     )
     target_link_libraries(test_deterministic_replay PRIVATE InferenceEngine)
     if(MSVC)
@@ -11033,8 +9302,6 @@ endif()
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" ON)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
-        src/deep2/dump_qwen35_meta.cpp
-        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
     if(MSVC)
@@ -11058,7 +9325,6 @@ option(BUILD_RAWRXD_AGENTIC "Build RawrXD sovereign agentic runtime" ON)
 if(BUILD_RAWRXD_AGENTIC)
     # HexMag polymorphic repeat tuner (MASM) ? Q_BLOCKING singleton state
     add_library(rawrxd_hexmag_repeat OBJECT
-        src/asm/RawrXD_HexMag_RepeatTuner.asm
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_RepeatTuner.asm PROPERTIES LANGUAGE ASM_MASM)
     if(MSVC)
@@ -11068,7 +9334,6 @@ if(BUILD_RAWRXD_AGENTIC)
     endif()
 
     add_executable(RawrXD-Agentic
-        src/agentic/rawrxd_agentic_runtime_all.cpp
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_link_libraries(RawrXD-Agentic PRIVATE InferenceEngine)
@@ -11088,7 +9353,6 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)")
 
     add_executable(hexmag_repeat_tuner_cert
-        tests/hexmag_repeat_tuner_cert.cpp
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_include_directories(hexmag_repeat_tuner_cert PRIVATE
@@ -11105,12 +9369,9 @@ if(BUILD_RAWRXD_AGENTIC)
 
     # HEXMAG_IDE_E2E_001 ÎÃÃ¶ Copilot send path ÎÃ¥Ã controller ÎÃ¥Ã tuner ÎÃ¥Ã FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
-        tests/hexmag_ide_e2e_cert.cpp
         src/core/hexmag_runtime_controller.cpp
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
-        src/agent/hexmag_client.cpp
-        src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
@@ -11130,12 +9391,9 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert")
 
     add_executable(hexmag_runtime_controller_cert
-        tests/hexmag_runtime_controller_cert.cpp
         src/core/hexmag_runtime_controller.cpp
-        src/agent/hexmag_client.cpp
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
-        src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
@@ -11159,7 +9417,6 @@ endif()
 option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" ON)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
-        src/deep2/layer_harness.cpp
     )
     target_link_libraries(layer_harness PRIVATE InferenceEngine)
     if(MSVC)
@@ -11177,8 +9434,6 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] Single-layer harness: layer_harness")
 
     add_executable(test_l10_ffn_inp_same_source
-        src/deep2/test_l10_ffn_inp_same_source.cpp
-        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(test_l10_ffn_inp_same_source PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -11199,8 +9454,6 @@ endif()
 option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" ON)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
-        src/deep2/qwen35_attn_contract.cpp
-        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
     if(MSVC)
@@ -11223,7 +9476,6 @@ endif()
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" ON)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
-        src/deep2/test_val_051_3_multi_token.cpp
     )
     if(MSVC)
         target_compile_options(test_val_051_3_multi_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11250,7 +9502,6 @@ endif()
 option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" ON)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
-        tests/val_051_5_fifteen_token.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_fifteen_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11277,61 +9528,8 @@ endif()
 option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" ON)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
-        tests/val_051_5_diag_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/ProductionProfiler.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_q4k_gemv_v2.asm
-        src/deep2/sovereign_q2k_gemv_v2.asm
-        src/deep2/sovereign_q3k_gemv_v2.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_diag_1_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11357,57 +9555,8 @@ endif()
 option(BUILD_VAL_BP16_INT "Build BP16 ÎÃ¥Ã Deep2 integration test" ON)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
-        tests/val_bp16_int_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_bp16_int_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11433,7 +9582,6 @@ endif()
 option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" ON)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
-        tests/val_051_5_q6k_synthetic.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q6k_synthetic PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11455,9 +9603,6 @@ endif()
 option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" ON)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
-        tests/val_051_5_bp16_streamer.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_streamer PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11479,57 +9624,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" ON)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
-        tests/val_051_5_bp16_e2e.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_e2e PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11555,64 +9651,9 @@ endif()
 option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" ON)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
-        tests/val_051_5_bp16_compare.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_compare PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11638,57 +9679,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" ON)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
-        tests/val_051_5_bp16_weights.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_weights PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11714,10 +9706,6 @@ endif()
 option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" ON)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
-        tests/val_051_5_bp16_verify.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/GGUFLoader.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11743,57 +9731,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" ON)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
-        tests/val_051_5_bp16_logits.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_logits PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11819,57 +9758,8 @@ endif()
 option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" ON)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
-        tests/val_051_6_bp16_perf.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_6_bp16_perf PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11895,57 +9785,8 @@ endif()
 option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" ON)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
-        tests/val_051_7_bp16_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_7_bp16_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11971,57 +9812,8 @@ endif()
 option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" ON)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
-        tests/val_051_7_bp16_lightweight_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_7_bp16_lightweight_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12046,57 +9838,8 @@ endif()
 option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" ON)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
-        tests/minimal_1token_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(minimal_1token_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12121,57 +9864,8 @@ endif()
 option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" ON)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
-        tests/quick_1layer_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(quick_1layer_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12197,7 +9891,6 @@ endif()
 option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
-        tests/q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12219,7 +9912,6 @@ endif()
 option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
-        tests/q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12241,57 +9933,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" ON)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
-        tests/val_051_5_bp16_diag.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_diag PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12318,57 +9961,8 @@ endif()
 option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" ON)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
-        tests/val_051_5_bp16_bench.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12395,10 +9989,6 @@ endif()
 option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" ON)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
-        tests/val_051_5_bp16_loadbench.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_loadbench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12425,7 +10015,6 @@ endif()
 option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" ON)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
-        tests/val_051_5_q4k_fused_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_fused_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12443,7 +10032,6 @@ endif()
 option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
-        tests/val_051_5_q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12464,7 +10052,6 @@ endif()
 option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" ON)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
-        tests/val_051_5_q2k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12482,7 +10069,6 @@ endif()
 option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" ON)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
-        tests/val_051_5_q2k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12500,7 +10086,6 @@ endif()
 option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" ON)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
-        tests/val_051_5_q5k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12518,7 +10103,6 @@ endif()
 option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
-        tests/val_051_5_q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12536,7 +10120,6 @@ endif()
 option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" ON)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
-        tests/val_051_5_q5k_forward_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_forward_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12554,57 +10137,8 @@ endif()
 option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" ON)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
-        tests/val_051_8_linearw_thread_scaling.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_linearw_thread_scaling PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12630,57 +10164,8 @@ endif()
 option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" ON)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
-        tests/val_051_8_layer_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_layer_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12706,7 +10191,6 @@ endif()
 option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" ON)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
-        tests/val_051_5_q2k_profile.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12725,7 +10209,6 @@ endif()
 option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" ON)
 if(BUILD_PATCHREGISTRY_TEST)
     add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
-        src/sovereign/tests/SovereignTest_PatchRegistry.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_PatchRegistry PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -12756,8 +10239,6 @@ endif()
 option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" ON)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
-        src/sovereign/patcher/HotPatcher.cpp
-        src/sovereign/tests/SovereignTest_HotPatcher.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_HotPatcher PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -12788,11 +10269,7 @@ endif()
 option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" ON)
 if(BUILD_AUTONOMOUS_AGENT_TEST)
     add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
-        src/sovereign/session/SessionStore.cpp
-        src/sovereign/agent/AgentGraphRuntime.cpp
-        src/sovereign/agent/AutonomousAgent.cpp
-        src/sovereign/tool/ToolRegistry.cpp
-        src/sovereign/tests/SovereignTest_AutonomousAgent.cpp
+        src/core/ToolRegistry.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_AutonomousAgent PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -12838,7 +10315,6 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
     add_custom_target(AntiHallucinationASM DEPENDS ${ASM_OBJECT})
     
     add_executable(SovereignTest_AntiHallucination EXCLUDE_FROM_ALL
-        src/sovereign/tests/SovereignTest_AntiHallucination.cpp
         ${ASM_OBJECT}
     )
     add_dependencies(SovereignTest_AntiHallucination AntiHallucinationASM)
@@ -12907,7 +10383,6 @@ endif()
 # Build: cmake --build . --target RawrXD-InferenceRoutingTest
 # Run:   .\bin\RawrXD-InferenceRoutingTest.exe
 add_executable(RawrXD-InferenceRoutingTest
-    src/tests/inference_routing_test.cpp
 )
 set_target_properties(RawrXD-InferenceRoutingTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY bin
@@ -12924,7 +10399,6 @@ message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local
 # Autonomous Agentic Pipeline unit test (Task 5 ÎÃÃ¶ buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
-        tests/test_autonomous_pipeline.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
     )
     target_include_directories(test_autonomous_pipeline PRIVATE
@@ -12938,12 +10412,7 @@ if(WIN32)
 
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
-            src/app/cli_entrypoint.cpp
             # NOTE: Removed quantum_agent_orchestrator.cpp - marketing fiction
-            src/agentic/AgentOllamaClient.cpp
-            src/inference/gpu_dispatch_gate.cpp
-            src/cpu_inference_engine_autofix_stub.cpp
-            src/gguf_d3d12_bridge.cpp
         )
         target_include_directories(RawrXD-AutoFixCLI PRIVATE
             ${CMAKE_SOURCE_DIR}/src
@@ -12970,12 +10439,9 @@ if(WIN32)
     # Hotpatch Stress Test ÎÃÃ¶ Acquisition-grade memory hotpatch validation
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
-        src/test_harness/hotpatch_stress_test.cpp
         src/core/model_memory_hotpatch.cpp
-        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_stress_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -12990,12 +10456,9 @@ if(WIN32)
     # Hotpatch E2E Test ÎÃÃ¶ Real GGUF tensor ÎÃ¥Ã hotpatch ÎÃ¥Ã inference ÎÃ¥Ã rollback
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
-        src/test_harness/hotpatch_e2e_test.cpp
         src/core/model_memory_hotpatch.cpp
-        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_e2e_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13012,7 +10475,6 @@ if(WIN32)
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
-        src/test_harness/arch_cert_tensor_inventory.cpp
     )
     target_include_directories(arch_cert_tensor_inventory PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13023,7 +10485,6 @@ if(WIN32)
     # FWD-CERT-001: Deterministic Forward-Pass Certification
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
-        src/test_harness/fwd_cert_001.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(fwd_cert_001 PRIVATE InferenceEngine bcrypt.lib)
@@ -13038,98 +10499,10 @@ if(WIN32)
     # Production Benchmark ÎÃÃ¶ Batch 1: Repeatable 1/10/32/128 token benchmark
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
-        src/deep2/Deep2QuantCert.cpp
-        src/deep2/Deep2Determinism.cpp
-        src/deep2/Deep2GenerationCert.cpp
-        src/deep2/Deep2ProductionCert.cpp
-        src/deep2/ProductionBenchmark.cpp
-        src/deep2/ProductionProfiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/KimiK2Config.cpp
-        src/deep2/K2MLAWeights.cpp
-        src/deep2/K2MLA_KvExpand_Fused.cpp
-        src/deep2/K2MoEWeights.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/Deep2Bridge.cpp
-        src/deep2/InferenceSession.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/RouterPrefetchTelemetry.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/UniversalModelLoader.cpp
-        src/deep2/ModelLoader.cpp
-        src/deep2/ModelRegistry.cpp
-        src/deep2/RuntimePlanner.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/RawrXDInferenceAdapter.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/sampling/advanced_sampler.cpp
-        src/deep2/ResidencyTrace.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_q4k_gemv_v2.asm
-        src/deep2/sovereign_q2k_gemv_v2.asm
-        src/deep2/sovereign_q3k_gemv_v2.asm
-        src/deep2/sovereign_q4_0_gemv.asm
-        src/deep2/sovereign_q4_1_gemv.asm
-        src/deep2/sovereign_q5_k_gemv.asm
-        src/deep2/sovereign_q6_k_gemv.asm
-        src/deep2/sovereign_q8_0_gemv.asm
-        src/deep2/sovereign_fp16_gemv.asm
-        src/deep2/sovereign_fp8_gemv.asm
-        src/deep2/sovereign_iq2_xxs_gemv.asm
-        src/deep2/sovereign_iq3_xxs_gemv.asm
-        src/deep2/sovereign_iq4_nl_gemv.asm
-        src/deep2/sovereign_q2_k_gemv.asm
-        src/deep2/sovereign_q3_k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/deep2/Sovereign_Attention_KV_AVX512.asm
-        src/deep2/Chamber.cpp
-        src/deep2/ToroidalKVCache.cpp
-        src/deep2/PlasmaGovernor.cpp
-        src/deep2/OutOfCoreRuntime.cpp
-        src/deep2/SovereignOutOfCoreRuntime.cpp
-        src/deep2/BP16Streamer.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/GhostCache.cpp
-        src/deep2/ElasticResidencyManager.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/LlamaNativeBridge.cpp
-        src/deep2/RawrRuntime.cpp
-        src/inference/ollama_blob_parser.cpp
-        src/deep2/ZlibRuntimeLoader.cpp
-        src/deep2/DualGPUHook.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/asm_stubs.cpp
-        src/vulkan_compute.cpp
+        src/core/ModelRegistry.cpp
+        src/deep2/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13161,11 +10534,6 @@ if(WIN32)
     # Production Certification Test ÎÃÃ¶ validates certification framework
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
-        tests/test_deep2_production.cpp
-        src/deep2/Deep2QuantCert.cpp
-        src/deep2/Deep2Determinism.cpp
-        src/deep2/Deep2GenerationCert.cpp
-        src/deep2/Deep2ProductionCert.cpp
     )
     target_include_directories(RawrXD-ProductionCertTest PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13188,9 +10556,7 @@ if(WIN32)
     # GPU Inference Benchmark ÎÃÃ¶ v16.2-GPU-HYBRID Phase C
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
-        src/tools/gpu_benchmark.cpp
-        src/gguf_d3d12_bridge.cpp
-        src/kernels/flash_attention.cpp
+        src/core/flash_attention.cpp
     )
     target_include_directories(RawrXD-Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13233,8 +10599,6 @@ if(WIN32)
     # Fused Layer Benchmark ÎÃÃ¶ v16.3 Phase D Layer Fusion
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
-        src/tools/fused_layer_benchmark.cpp
-        src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-FusedBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13264,8 +10628,6 @@ if(WIN32)
     # KV Cache Benchmark ÎÃÃ¶ v16.4 Phase E GPU-Resident KV Cache
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
-        src/tools/kv_cache_benchmark.cpp
-        src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-KVBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13301,7 +10663,6 @@ if(WIN32)
     # Fix #4 Flash Attention v2 Benchmark ÎÃÃ¶ Memory-efficient attention
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix4_FlashAttention_Benchmark.cpp
     )
     target_include_directories(Fix4_FlashAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13328,7 +10689,6 @@ if(WIN32)
     # Fix #5 Fused Quantized Kernels ÎÃÃ¶ Q4_0/Q8_0 fused dequantize+GEMM
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
     )
     target_include_directories(Fix5_FusedQuantized_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13355,7 +10715,6 @@ if(WIN32)
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
     )
     target_include_directories(VAL032_SpeculativeDecoding_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13382,7 +10741,6 @@ if(WIN32)
     # VAL-032: AVX-512 Assembly Kernel Benchmark
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
     )
     target_include_directories(VAL032_AVX512_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13410,8 +10768,6 @@ if(WIN32)
     # VAL-032 Simple Intrinsics Benchmark ÎÃÃ¶ Direct AVX-512 performance measurement
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_avx512_intrinsics.cpp
-        src/benchmark/tree_attention_bench_simple.cpp
     )
     target_include_directories(tree_attention_bench_simple PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13433,7 +10789,6 @@ if(WIN32)
     # VAL-033 Profiling Instrumentation ÎÃÃ¶ Per-stage cycle-accurate timing
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_profiled.cpp
     )
     target_include_directories(tree_attention_profiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13455,7 +10810,6 @@ if(WIN32)
     # VAL-034 Q@K^T Alignment Optimization ÎÃÃ¶ 64-byte aligned loads
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_aligned.cpp
     )
     target_include_directories(tree_attention_aligned PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13477,7 +10831,6 @@ if(WIN32)
     # VAL-035 Tiled Q@K^T ÎÃÃ¶ Register-resident Q, streaming K
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_tiled.cpp
     )
     target_include_directories(tree_attention_tiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13499,7 +10852,6 @@ if(WIN32)
     # VAL-036 Vectorized Softmax ÎÃÃ¶ AVX-512 polynomial exp approximation
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_vectorized.cpp
     )
     target_include_directories(tree_attention_vectorized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13521,7 +10873,6 @@ if(WIN32)
     # VAL-037 Tree Sparsity ÎÃÃ¶ Exploit tree structure to reduce computation
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_sparse.cpp
     )
     target_include_directories(tree_attention_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13543,7 +10894,6 @@ if(WIN32)
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_fused_sparse.cpp
     )
     target_include_directories(tree_attention_fused_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13565,7 +10915,6 @@ if(WIN32)
     # VAL-037.2 Tree-Specialized Fused Attention ÎÃÃ¶ Exploit 4x4 tree topology
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_tree_specialized.cpp
     )
     target_include_directories(tree_attention_tree_specialized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13588,8 +10937,6 @@ if(WIN32)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_masm_val038_wrapper.cpp
-        src/benchmark/tree_attention_masm_val038.asm
     )
     target_include_directories(tree_attention_masm_val038 PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13614,7 +10961,6 @@ if(WIN32)
     # VAL-038 Fused Attention ÎÃÃ¶ Q@K^T ÎÃ¥Ã Softmax ÎÃ¥Ã A@V in single kernel
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL038_FusedAttention_Benchmark.cpp
     )
     target_include_directories(VAL038_FusedAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13640,7 +10986,6 @@ if(WIN32)
     # Step C: Numerical correctness vs scalar reference
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL038_Validation_Benchmark.cpp
     )
     target_include_directories(VAL038_Validation_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13664,15 +11009,8 @@ if(WIN32)
     # TPS smoke ÎÃÃ¶ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
-        src/tools/RawrXD_TpsSmoke.cpp
-        src/llm_adapter/GGUFRunner.cpp
-        src/llm_adapter/gguf_k_quants.cpp
-        src/llm_adapter/QuantBackend.cpp
-        src/llm_adapter/ggufrunner_link_kernels.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
-        src/runtime_surface/GenerationStopwatch.cpp
-        src/runtime_surface/RuntimeSurfaceModule.cpp
         src/logging/Logger.cpp
     )
     target_include_directories(RawrXD-TpsSmoke PRIVATE
@@ -13720,8 +11058,6 @@ if(WIN32)
     )
 
     add_executable(RawrXD-ModelAnalysis EXCLUDE_FROM_ALL
-        src/tools/model_analysis_cli.cpp
-        src/llm_adapter/gguf_k_quants.cpp
     )
     target_include_directories(RawrXD-ModelAnalysis PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13754,12 +11090,6 @@ endif()
 # Swarm smoke test (manual)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
-        src/tests/SwarmSmokeTest.cpp
-        src/bridge/Win32SwarmBridge.cpp
-        src/bridge/SwarmIATRegistration.cpp
-        src/agentic/SubAgentManager.cpp
-        src/agentic/RobustOllamaParser.cpp
-        src/runtime_patcher.cpp
         # REMOVED: src/tests/swarm_smoke_stubs.cpp - stub file deleted
     )
     target_include_directories(SwarmSmokeTest PRIVATE
@@ -13776,10 +11106,7 @@ endif()
 
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
-    src/tests/backend_orchestrator_shard_smoke.cpp
     # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
-    src/BackendOrchestrator.cpp
-    src/InferenceProfiler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
 )
@@ -13797,11 +11124,7 @@ message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShar
 # Agentic Planning Orchestrator Smoke Tests
 # ============================================================================
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
-    src/agentic/agentic_planning_orchestrator.cpp
-    src/agentic/agentic_orchestrator_integration.cpp
-    src/agentic/agentic_audit_sink.cpp
-    src/agentic/agentic_orchestrator_smoke_test.cpp
-    src/agentic/observability/Logger.cpp
+    src/logging/Logger.cpp
     src/core/execution_governor.cpp
     src/core/agent_safety_contract.cpp
 )
@@ -13831,14 +11154,6 @@ message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_sm
 # Golden Recovery Tests (Mission 2.3: Validation Framework)
 # ============================================================================
 add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
-    tests/autonomy/recovery/GoldenRecoveryTests.cpp
-    validation/fault_injection/FaultInjector.cpp
-    validation/fault_injection/WorkerCrashInjector.cpp
-    validation/fault_injection/MemoryPressureInjector.cpp
-    validation/fault_injection/ServiceKillInjector.cpp
-    validation/fault_injection/StateCorruptionInjector.cpp
-    validation/fault_injection/ExceptionStormInjector.cpp
-    validation/recovery_telemetry/RecoveryTelemetry.cpp
 )
 
 target_include_directories(RawrXD-GoldenRecoveryTests PRIVATE
@@ -13872,12 +11187,6 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 # Only add sovereign runtime if CLI version not already defined
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
-        src/sovereign/rawrxd.cpp
-        src/sovereign/SovereignRuntime.cpp
-        src/sovereign/ExecutionContract.cpp
-        src/sovereign/Deep2InferenceWrapper.cpp
-        src/cpu_inference_engine.cpp
-        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
@@ -13892,20 +11201,6 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/runtime/gguf_tensor_loader.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
         src/inference/NegativeSpaceProfiler.cpp
     )
 
@@ -13958,14 +11253,12 @@ if(TARGET rawrxd_runtime)
 else()
     target_sources(rawrxd PRIVATE
         src/runtime/TensorExecutionRouter.cpp
-        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
-        src/runtime/memory/RouterPredictiveMemoryBridge.cpp
     )
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_SOURCE_DIR}/src/runtime
@@ -14095,7 +11388,6 @@ option(RAWRXD_BUILD_LSP_SERVER "Build RawrXD-Script LSP server for VS Code exten
 if(RAWRXD_BUILD_LSP_SERVER AND EXISTS "${CMAKE_SOURCE_DIR}/src/lsp/RawrXD_LSPServer.cpp")
     # Minimal LSP server - core functionality only (avoid hotpatch dependencies)
     add_executable(RawrXD_LSPServer
-        src/lsp/RawrXD_LSPServer.cpp
     )
     target_compile_features(RawrXD_LSPServer PRIVATE cxx_std_20)
     target_include_directories(RawrXD_LSPServer BEFORE PRIVATE
@@ -14123,7 +11415,6 @@ endif()
 option(RAWRXD_BUILD_DAP_ADAPTER "Build RawrXD-Script DAP adapter for VS Code extension" ON)
 if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/minimal_dap_server.cpp")
     add_executable(RawrXDScriptDAPAdapter
-        src/script/debug/minimal_dap_server.cpp
     )
     target_compile_features(RawrXDScriptDAPAdapter PRIVATE cxx_std_20)
     target_include_directories(RawrXDScriptDAPAdapter BEFORE PRIVATE
@@ -14159,8 +11450,6 @@ endif()
 # Sovereign Bridge Test Harness
 # ============================================================================
 add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
-    src/ide/test_sovereign_bridge.cpp
-    src/ide/SovereignSharedMemoryBridge.cpp
 )
 target_compile_features(TestSovereignBridge PRIVATE cxx_std_17)
 target_include_directories(TestSovereignBridge PRIVATE
@@ -14181,7 +11470,6 @@ message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build
 # DebugBridge Telemetry Test
 # ============================================================================
 add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
-    src/debug/test_debugbridge_telemetry.cpp
 )
 target_compile_features(TestDebugBridgeTelemetry PRIVATE cxx_std_17)
 set_target_properties(TestDebugBridgeTelemetry PROPERTIES
@@ -14193,8 +11481,6 @@ message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
 # Pure MASM Inference Test
 # ============================================================================
 add_executable(TestMASMInference EXCLUDE_FROM_ALL
-    src/test_masm_inference.cpp
-    src/gguf_masm_weight_bridge.cpp
 )
 target_compile_features(TestMASMInference PRIVATE cxx_std_17)
 target_include_directories(TestMASMInference PRIVATE
@@ -14205,14 +11491,8 @@ target_include_directories(TestMASMInference PRIVATE
 )
 if(RAWR_HAS_MASM)
     target_sources(TestMASMInference PRIVATE
-        src/masm/rawrxd_math_masm.asm
-        src/masm/rawrxd_transformer_masm_fixed.asm
-        src/masm/rawrxd_transformer_full.asm
     )
     set_source_files_properties(
-        src/masm/rawrxd_math_masm.asm
-        src/masm/rawrxd_transformer_masm_fixed.asm
-        src/masm/rawrxd_transformer_full.asm
         PROPERTIES LANGUAGE ASM_MASM
     )
 endif()
@@ -14228,7 +11508,6 @@ message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 # Debugger Stress Tests
 # ============================================================================
 add_executable(stress_target EXCLUDE_FROM_ALL
-    src/debug/stress_target.cpp
 )
 target_compile_features(stress_target PRIVATE cxx_std_17)
 set_target_properties(stress_target PROPERTIES
@@ -14236,7 +11515,6 @@ set_target_properties(stress_target PROPERTIES
 )
 
 add_executable(stress_memory EXCLUDE_FROM_ALL
-    src/debug/stress_memory.cpp
 )
 target_compile_features(stress_memory PRIVATE cxx_std_17)
 set_target_properties(stress_memory PROPERTIES
@@ -14249,9 +11527,6 @@ message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
 # SovereignRPC Simulator Test
 # ============================================================================
 add_executable(test_simulator EXCLUDE_FROM_ALL
-    src/rpc/test_simulator.cpp
-    src/rpc/SovereignRPC_Simulator.cpp
-    src/rpc/SovereignRPC_Scheduler.cpp
 )
 target_compile_features(test_simulator PRIVATE cxx_std_17)
 target_include_directories(test_simulator PRIVATE
@@ -14271,8 +11546,6 @@ message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake
 # ============================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
     add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
-        tests/test_q4_fused_pipeline.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
     target_include_directories(test_q4_fused_pipeline PRIVATE
@@ -14292,8 +11565,6 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
-        tests/test_q4_cache_alignment.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
     target_include_directories(test_q4_cache_alignment PRIVATE
@@ -14313,8 +11584,6 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
     add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
-        tests/test_q4_asm_debug.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
     target_include_directories(test_q4_asm_debug PRIVATE
@@ -14336,7 +11605,6 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm")
     enable_language(ASM_MASM)
     add_library(q4_preprocessed_avx512 STATIC
-        src/kernels/q4_preprocessed_avx512.asm
     )
     set_target_properties(q4_preprocessed_avx512 PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -14357,8 +11625,6 @@ endif()
 # Scalar SIMD simulation test (no ASM dependency)
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
     add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
-        tests/test_q4_scalar_simd.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
     target_include_directories(test_q4_scalar_simd PRIVATE
@@ -14386,7 +11652,6 @@ endif()
 # VAL-051 Witness System Test
 # =============================================================================
 add_executable(witness_system_test EXCLUDE_FROM_ALL
-    src/validation/witness_system_test.cpp
     src/core/inference_witness.cpp
 )
 target_include_directories(witness_system_test PRIVATE
@@ -14404,10 +11669,6 @@ message(STATUS "========================================")
 # 1. Dispatch Overhead Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
     add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
-        tests/benchmark_dispatch_overhead.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
-        src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_overhead PRIVATE
@@ -14427,9 +11688,6 @@ endif()
 # 2. Planner Amortization Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
     add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
-        tests/benchmark_planner_amortization.cpp
-        src/nevm/nevm_execution_plan.cpp
-        src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
     target_include_directories(benchmark_planner_amortization PRIVATE
@@ -14448,11 +11706,6 @@ endif()
 # 3. End-to-End Validation (Four Gates)
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
     add_executable(validate_end_to_end EXCLUDE_FROM_ALL
-        tests/validate_end_to_end.cpp
-        src/nevm/nevm_execution_plan.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
-        src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
     target_include_directories(validate_end_to_end PRIVATE
@@ -14472,9 +11725,6 @@ endif()
 # 4. NEVM Determinism Validation
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
     add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
-        tests/nevm_determinism_validation.cpp
-        src/nevm/nevm_execution_plan.cpp
-        src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
     target_include_directories(nevm_determinism_validation PRIVATE
@@ -14496,9 +11746,6 @@ endif()
 # 5. NEVM Stress Test
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
     add_executable(nevm_stress_test EXCLUDE_FROM_ALL
-        tests/nevm_stress_test.cpp
-        src/nevm/nevm_execution_plan.cpp
-        src/nevm/nevm_mmu.cpp
     )
     target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
     target_include_directories(nevm_stress_test PRIVATE
@@ -14519,7 +11766,6 @@ endif()
 # 6. PMC Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp")
     add_library(pmc_profiler STATIC
-        src/profiling/pmc_profiler.cpp
     )
     target_compile_features(pmc_profiler PRIVATE cxx_std_20)
     target_include_directories(pmc_profiler PUBLIC
@@ -14533,7 +11779,6 @@ endif()
 # 6b. Flame Graph Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
     add_library(flame_graph_profiler STATIC
-        src/profiling/flame_graph.cpp
     )
     target_compile_features(flame_graph_profiler PRIVATE cxx_std_20)
     target_include_directories(flame_graph_profiler PUBLIC
@@ -14550,10 +11795,6 @@ endif()
 # 7. PMC Dispatch Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
     add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
-        tests/benchmark_dispatch_pmc.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
-        src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_pmc PRIVATE
@@ -14592,20 +11833,7 @@ endif()
 # SoloIDE ÎÃÃ¶ Sovereign Agentic Desktop Environment
 # =============================================================================
 set(SOLOIDE_SOURCES
-    src/soloide/main.cpp
-    src/soloide/Core/Bus.cpp
-    src/soloide/UI/SoloIDE.cpp
-    src/soloide/UI/Panels/EditorPanel.cpp
-    src/soloide/UI/Panels/ChatPanel.cpp
-    src/soloide/UI/Panels/DebugPanel.cpp
-    src/soloide/UI/Panels/TerminalPanel.cpp
-    src/soloide/UI/Panels/ProjectPanel.cpp
-    src/soloide/UI/Panels/StatusPanel.cpp
-    src/soloide/AI/CompletionEngine.cpp
-    src/soloide/AI/AdvancedCodingAgent.cpp
-    src/soloide/AI/MultiModalModelRouter.cpp
-    src/soloide/Debug/DAPClient.cpp
-    src/soloide/LSP/LSPClient.cpp
+    src/ceo/main.cpp
 )
 
 set(SOLOIDE_HEADERS
@@ -14665,45 +11893,11 @@ target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 add_executable(test_llama_native tests/test_llama_native.cpp
-    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    src/deep2/InferenceSession.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    tests/deep2_link_stubs.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
-    src/deep2/BP16Streamer.cpp
-    src/deep2/BP16Extractor.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_llama_native PRIVATE InferenceEngine)
@@ -14711,50 +11905,12 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
 
 # K2-001 Runtime Validation Gate
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
-    src/adapter/RawrXDEngineAdapter.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/Deep2Bridge.cpp
+    src/generation/integration/RawrXDEngineAdapter.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/MASMKernelStubs.cpp
-    src/deep2/sovereign_q4k_gemv.asm
-    src/deep2/sovereign_deep2_kernels.asm
-    src/inference/RawrXD_LlamaNative.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
@@ -14763,9 +11919,6 @@ add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECT
 # Q4_K Block Decoder Verification Test
 # Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
 add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14788,46 +11941,11 @@ add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosschec
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
 add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/MASMKernelStubs.cpp
-    src/deep2/sovereign_q4k_gemv.asm
-    src/deep2/sovereign_deep2_kernels.asm
-    src/inference/RawrXD_LlamaNative.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
@@ -14835,47 +11953,11 @@ add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTOR
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    tests/deep2_link_stubs.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
@@ -14883,47 +11965,11 @@ add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DI
 
 # K2-003: Native Deep2 Layer Execution
 add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    tests/deep2_link_stubs.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
@@ -14932,11 +11978,6 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 # K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
 # Must pass after K2-003A (Q4_K decoder certified) before full layer execution
 add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14946,11 +11987,6 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 # K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
 # Proves one complete transformer layer executes on real Q4_K weights
 add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003c_single_layer_forward PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14959,47 +11995,11 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
 
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    tests/deep2_link_stubs.cpp
+    src/core/ModelRegistry.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
@@ -15008,11 +12008,6 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 # K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
 # Proves scalability from 003C single-layer to multi-layer with bounded memory
 add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15022,12 +12017,6 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 # K2-005: Bounded Autoregressive Decode with KV Cache
 # Proves KV cache correctly stores/retrieves K/V across decode steps
 add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_005_autoregressive_kv_cache PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15037,12 +12026,6 @@ add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_ca
 # K2-006: Bounded Autoregressive Token Generation
 # Proves logits ÎÃ¥Ã argmax ÎÃ¥Ã token ÎÃ¥Ã decode ÎÃ¥Ã repeat pipeline works
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_006_bounded_token_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15053,9 +12036,6 @@ add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_gener
 # Proves output.weight can be streamed row-by-row to produce logits
 # without unbounded allocation. Independent of K2-006 synthetic baseline.
 add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007_real_output_projection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15072,9 +12052,6 @@ add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORK
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
 add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007b_projection_logits_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15086,12 +12063,6 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 # text ÎÃ¥Ã tokens ÎÃ¥Ã real K2 inference ÎÃ¥Ã logits ÎÃ¥Ã argmax ÎÃ¥Ã token ÎÃ¥Ã text.
 # Independent of K2-006 synthetic baseline.
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15110,10 +12081,6 @@ add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${C
 # Proves token_embd.weight can be streamed row-by-row without loading
 # the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
 add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
-    src/deep2/K2TokenEmbedding.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_009_token_embedding_lookup PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15121,9 +12088,6 @@ target_link_libraries(k2_009_token_embedding_lookup PRIVATE InferenceEngine)
 add_test(NAME k2_009_token_embedding_lookup COMMAND k2_009_token_embedding_lookup WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
-    tests/b004_transformer_router_streaming_integration.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15137,14 +12101,12 @@ set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 
 function(rawrxd_configure_b004_target target_name)
@@ -15199,8 +12161,6 @@ endif()
 # ============================================================================
 set(B012_AMORTIZATION_SOURCES
     B012/build/amortization_test.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15214,14 +12174,12 @@ set(B012_AMORTIZATION_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b012_amortization_test EXCLUDE_FROM_ALL
     ${B012_AMORTIZATION_SOURCES}
@@ -15254,8 +12212,6 @@ endif()
 set(B013_STABILITY_SOURCES
     B013/build/stability_test.cpp
     B014/build/b014_profiler.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15269,14 +12225,12 @@ set(B013_STABILITY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b013_stability_test EXCLUDE_FROM_ALL
     ${B013_STABILITY_SOURCES}
@@ -15300,13 +12254,7 @@ endif()
 # B014: Compute Decomposition Measurement
 # ============================================================================
 set(B014_COMPUTE_SOURCES
-    B014/build/compute_decomposition.cpp
     B014/build/b014_profiler.cpp
-    B014/build/B014_RingAdapter.cpp
-    src/runtime/Sovereign_RingTelemetry.cpp
-    src/runtime/Sovereign_KernelBridge_CPP.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15320,14 +12268,12 @@ set(B014_COMPUTE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_compute_decomposition EXCLUDE_FROM_ALL
     ${B014_COMPUTE_SOURCES}
@@ -15351,10 +12297,7 @@ endif()
 # B014-BoundaryProbe: Isolate first failure point
 # ============================================================================
 set(B014_BOUNDARY_SOURCES
-    B014/build/b014_boundary_probe.cpp
     B014/build/b014_profiler.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15368,14 +12311,12 @@ set(B014_BOUNDARY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_boundary_probe EXCLUDE_FROM_ALL
     ${B014_BOUNDARY_SOURCES}
@@ -15399,10 +12340,7 @@ endif()
 # B014-SingleBoundary: Test one boundary per invocation
 # ============================================================================
 set(B014_SINGLE_SOURCES
-    B014/build/b014_single_boundary.cpp
     B014/build/b014_profiler.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15416,14 +12354,12 @@ set(B014_SINGLE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_single_boundary EXCLUDE_FROM_ALL
     ${B014_SINGLE_SOURCES}
@@ -15447,10 +12383,7 @@ endif()
 # B014-LifetimeProbe: Pinpoint exact destructor/cleanup failure
 # ============================================================================
 set(B014_LIFETIME_SOURCES
-    B014/build/b014_lifetime_probe.cpp
     B014/build/b014_profiler.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15464,14 +12397,12 @@ set(B014_LIFETIME_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_lifetime_probe EXCLUDE_FROM_ALL
     ${B014_LIFETIME_SOURCES}
@@ -15495,9 +12426,7 @@ endif()
 # B005: Canonical Model Certification
 # ============================================================================
 set(B005_CANONICAL_MODEL_SOURCES
-    tests/b005_canonical_model_certification.cpp
-    src/canonical/gguf_adapter.cpp
-    src/canonical/unified_model_loader.cpp
+    tests/b005/b005_canonical_model_certification.cpp
 )
 
 add_executable(b005_canonical_model_certification EXCLUDE_FROM_ALL
@@ -15519,9 +12448,7 @@ endif()
 # B006: KV Cache Verification
 # ============================================================================
 set(B006_KV_CACHE_SOURCES
-    tests/b006_kv_cache_verification.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
+    tests/b006/b006_kv_cache_verification.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15599,9 +12526,7 @@ endif()
 # B007: Performance Baseline Certification
 # ============================================================================
 set(B007_PERF_BASELINE_SOURCES
-    tests/b007_performance_baseline.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
+    tests/b007/b007_performance_baseline.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15679,7 +12604,7 @@ endif()
 # B008: Build / CI Integration Gate
 # ============================================================================
 set(B008_CI_SOURCES
-    tests/b008_ci_integration.cpp
+    tests/b008/b008_ci_integration.cpp
 )
 
 add_executable(b008_ci_integration EXCLUDE_FROM_ALL
@@ -15703,8 +12628,6 @@ endif()
 # ============================================================================
 set(B010_RESIDENCY_SOURCES
     tests/b010/b010_weight_residency_profile.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -15779,9 +12702,7 @@ endif()
 # B011: Targeted Weight Residency Optimization
 # ============================================================================
 set(B011_RESIDENCY_OPT_SOURCES
-    tests/b011_weight_residency_optimization.cpp
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
+    tests/b011/b011_weight_residency_optimization.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -16472,56 +13393,7 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/DeepSeekMoELoader.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/Deep2ExecutionGraph.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
-    src/deep2/StreamEngine.cpp
-    src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/CompressedKVCache.cpp
-    src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/AntiPatcher.cpp
-    src/deep2/TrailBrake.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/CPUFrequency.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/MARSController.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
-    src/deep2/sovereign_deep2_kernels.asm
-    src/deep2/sovereign_q4k_gemv.asm
-    src/deep2/sovereign_q4k_gemv_v2.asm
-    src/deep2/sovereign_q2k_gemv_v2.asm
-    src/deep2/sovereign_q3k_gemv_v2.asm
-    src/deep2/sovereign_moe_fused.asm
-    src/sampling/advanced_sampler.cpp
-    src/deep2/ProductionProfiler.cpp
-    src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(certification_harness PROPERTIES
     EXCLUDE_FROM_ALL TRUE
