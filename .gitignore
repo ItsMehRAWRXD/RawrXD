@@ -1,6 +1,9 @@
 # RawrXD runtime-generated state (audit ledger, agent session state)
 .rawr/
 
+# Certification run outputs
+cert_run_output*.txt
+
 # CMake build trees
 build*/
 !build_p2/Release/rawr_monolith.exe
