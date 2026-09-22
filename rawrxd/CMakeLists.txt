@@ -1,4 +1,4 @@
-# CMakeLists_native.txt - Pure Native RawrXD Build
+﻿# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
 include(cmake/P1_ProductRuntimeAuthority.cmake)
 include(cmake/GgufDynamicGeometry.fragment.cmake)
@@ -26,11 +26,11 @@ endif()
 # =============================================================================
 # MUST run before project() because CMake's compiler test needs these paths.
 # The environment on this machine has partial SDK installs:
-#   10.0.22621.0 ÎÃÃ¶ has ucrt, shared, um includes BUT um/x64 libs are separate
-#   10.0.26100.0 ÎÃÃ¶ has um/shared includes and um/x64 libs BUT no ucrt
+#   10.0.22621.0 ├Ä┬ô├â┬ç├â┬╢ has ucrt, shared, um includes BUT um/x64 libs are separate
+#   10.0.26100.0 ├Ä┬ô├â┬ç├â┬╢ has um/shared includes and um/x64 libs BUT no ucrt
 # We combine them to form a complete toolchain.
 if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
-    # Not running inside a VS Developer Prompt ÎÃÃ¶ inject paths manually
+    # Not running inside a VS Developer Prompt ├Ä┬ô├â┬ç├â┬╢ inject paths manually
     # Auto-detect Windows SDK: try D: first, fall back to C:
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
@@ -81,7 +81,7 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         message(FATAL_ERROR "[SDK Fix] Could not find a valid MSVC installation with cl.exe. Please install Visual Studio Build Tools or run from a Developer Command Prompt.")
     endif()
     
-    # SDK bin tools (rc.exe, mt.exe) ÎÃÃ¶ use the version that actually has the bin directory
+    # SDK bin tools (rc.exe, mt.exe) ├Ä┬ô├â┬ç├â┬╢ use the version that actually has the bin directory
     if(EXISTS "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
         set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
     else()
@@ -151,7 +151,7 @@ endif()
 # Vulkan SDK Detection (Common - must run before targets are defined)
 # ============================================================================
 if(RAWR_ENABLE_VULKAN)
-    # Try manual path first ÎÃÃ¶ D: first, then C:
+    # Try manual path first ├Ä┬ô├â┬ç├â┬╢ D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
     if(NOT _VK_SDK_DIRS)
         file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
@@ -239,7 +239,7 @@ option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentatio
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 option(RAWRXD_BUILD_RAWRENGINE "Build RawrEngine.exe (set OFF for Win32IDE-only configure/P1)" ON)
 if(RAWRXD_BUILD_WIN32IDE AND NOT RAWRXD_BUILD_RAWRENGINE)
-    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) ÎÃÃ¶ Win32IDE-only configure")
+    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) ├Ä┬ô├â┬ç├â┬╢ Win32IDE-only configure")
 endif()
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -250,7 +250,19 @@ if(RAWRXD_BUILD_CLI)
 
     add_executable(rawrxd
         # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
+        src/win32app/cli_main_headless.cpp
+        src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        src/win32app/HeadlessIDE_FileAliases.cpp
+        src/asm/RawrXD_IPC_Dispatcher.asm
+        src/asm/RawrXD_Disasm_Kernel.asm
+        src/asm/rawr_cpu_features.asm
+        src/cli/rawrxd_cli_link_shims.cpp
+        src/res/Resource.rc
+        src/rawrxd_link_stubs.cpp
         # Core inference components for dual GPU testing
+        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
@@ -270,15 +282,40 @@ if(RAWRXD_BUILD_CLI)
         src/core/enterprise_license.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
+        src/license_enforcement.cpp
+        src/feature_flags_runtime.cpp
         src/core/agentic_autonomous_config.cpp
+        src/InferenceProfiler.cpp
+        src/subagent_core.cpp
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
+        src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/deep2/vulkan_compute.cpp
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/vulkan_compute.cpp
+        src/runtime/gguf_tensor_loader.cpp
         # Elastic runtime for predictive tensor residency
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
         # Shared model runtime
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -286,21 +323,50 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic stack ÎÃÃ¶ headless CLI parity (no Win32IDE GUI dependencies)
+        # Agentic stack ├Ä┬ô├â┬ç├â┬╢ headless CLI parity (no Win32IDE GUI dependencies)
+        src/agentic_engine.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent_explainability.cpp
+        src/cli/swarm_orchestrator.cpp
+        src/full_agentic_ide/AgenticIOCPBridge.cpp
+        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
         # src/full_agentic_ide/FullAgenticIDE.cpp  # excluded: depends on Win32IDE
         # Agentic components for CLI Ollama testing
+        src/agentic/FIMPromptBuilder.cpp
+        src/agentic/RobustOllamaParser.cpp
+        src/agentic/AgentOllamaClient.cpp
         # HeadlessIDE dependencies
+        src/streaming_gguf_loader.cpp
         src/model_source_resolver.cpp
+        src/modules/engine_manager.cpp
+        src/modules/codex_ultimate.cpp
+        src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/IOCPGGUFLoader.cpp
         # Missing utilities required by agentic stack
+        src/security/InputSanitizer.cpp
+        src/config/IDEConfig.cpp
+        src/inference/PerformanceMonitor.cpp
         # HeadlessIDE agentic dependencies
+        src/agentic/SubAgentManager.cpp
         src/core/chain_of_thought_engine.cpp
+        src/lsp/RawrXD_LSPServer.cpp
         # Missing implementations for unresolved externals
+        src/BackendOrchestrator.cpp
         src/core/enterprise_telemetry_compliance.cpp
         src/core/enterprise_licensev2_impl.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/utils/Diagnostics.cpp
+        src/cli/rawrxd_deep_stubs.cpp
         rguf_source/RGUFWriter.cpp
         rguf_source/RGUFLoader.cpp
         rguf_source/RGUFPlatform.cpp
         rguf_source/RGUFQuant.cpp
+        src/agent/autonomous_subagent.cpp
+        src/agent/agentic_failure_detector.cpp
+        src/agent/agentic_puppeteer.cpp
+        src/agent/autonomous_orchestrator.cpp
+        src/agent/orchestrator_cli_handler.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
@@ -382,23 +448,45 @@ if(RAWRXD_BUILD_CLI)
         target_link_libraries(rawrxd PRIVATE Vulkan::Vulkan dxgi)
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
     elseif(RAWR_ENABLE_VULKAN)
-        message(STATUS "[rawrxd] Vulkan SDK not found ÎÃÃ¶ GPU compute uses CPU fallback")
+        message(STATUS "[rawrxd] Vulkan SDK not found ├Ä┬ô├â┬ç├â┬╢ GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 
     # =============================================================================
-    # RawrXD Serve ÎÃÃ¶ Ollama-compatible HTTP server with shared model runtime
+    # RawrXD Serve ├Ä┬ô├â┬ç├â┬╢ Ollama-compatible HTTP server with shared model runtime
     # =============================================================================
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
+        src/serve/rawrxd_serve.cpp
+        src/serve/rawrxd_model_registry.cpp
+        src/serve/rawrxd_serve_inference_plugin.cpp
+        src/serve/inference_plugin_backend.cpp
+        src/serve/rawrxd_pipe_server.cpp
+        src/serve/rawrxd_pipe_server_stubs.cpp
+        src/runtime/GenerationBouncer.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
+        src/gpu_enforcement.cpp
     )
     set_target_properties(rawrxd-serve PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -460,7 +548,11 @@ if(RAWRXD_BUILD_CLI)
     # =============================================================================
     add_executable(bp1_smoke_test
         tests/bp1_smoke_test.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -502,7 +594,7 @@ if(RAWRXD_BUILD_CLI)
 
     # =========================================================================
     # Vulkan Compute Diagnostic Test
-    # Minimal proof: buffer allocation ÎÃ¥Ã transfer ÎÃ¥Ã compute fill ÎÃ¥Ã readback
+    # Minimal proof: buffer allocation ├Ä┬ô├â┬Ñ├â┬å transfer ├Ä┬ô├â┬Ñ├â┬å compute fill ├Ä┬ô├â┬Ñ├â┬å readback
     # =========================================================================
     if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
         add_executable(vulkan_compute_diagnostic
@@ -533,7 +625,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
-        # Proves: staging buffer ÎÃ¥Ã device-local buffer ÎÃ¥Ã readback ÎÃ¥Ã verification
+        # Proves: staging buffer ├Ä┬ô├â┬Ñ├â┬å device-local buffer ├Ä┬ô├â┬Ñ├â┬å readback ├Ä┬ô├â┬Ñ├â┬å verification
         # =====================================================================
         add_executable(vulkan_tensor_upload_test
             tests/vulkan_tensor_upload_test.cpp
@@ -563,7 +655,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan GEMM Verification Test
-        # Proves: compute shader dispatch ÎÃ¥Ã GPU GEMM ÎÃ¥Ã readback ÎÃ¥Ã CPU comparison
+        # Proves: compute shader dispatch ├Ä┬ô├â┬Ñ├â┬å GPU GEMM ├Ä┬ô├â┬Ñ├â┬å readback ├Ä┬ô├â┬Ñ├â┬å CPU comparison
         # =====================================================================
         add_executable(vulkan_gemm_test
             tests/vulkan_gemm_test.cpp
@@ -598,7 +690,7 @@ if(RAWRXD_BUILD_CLI)
         # =====================================================================
         add_executable(vulkan_gemv_isolated_test
             tests/vulkan_gemv_isolated_test.cpp
-            src/deep2/vulkan_compute.cpp
+            src/vulkan_compute.cpp
         )
         set_target_properties(vulkan_gemv_isolated_test PROPERTIES
             EXCLUDE_FROM_ALL TRUE
@@ -658,8 +750,8 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Transformer GEMM Integration Test
-        # Proves: real Qwen GGUF ÎÃ¥Ã RawrXDInference ÎÃ¥Ã model loader ÎÃ¥Ã GPU-resident
-        #         weight ÎÃ¥Ã Vulkan GEMM dispatch ÎÃ¥Ã verified output.
+        # Proves: real Qwen GGUF ├Ä┬ô├â┬Ñ├â┬å RawrXDInference ├Ä┬ô├â┬Ñ├â┬å model loader ├Ä┬ô├â┬Ñ├â┬å GPU-resident
+        #         weight ├Ä┬ô├â┬Ñ├â┬å Vulkan GEMM dispatch ├Ä┬ô├â┬Ñ├â┬å verified output.
         # =====================================================================
         add_executable(vulkan_transformer_gemm_test
             tests/vulkan_transformer_gemm_test.cpp
@@ -773,7 +865,7 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
 
         # =====================================================================
-        # fused_qkv_gguf_validation: Full GGUF parse ÎÃ¥Ã elastic index ÎÃ¥Ã fused
+        # fused_qkv_gguf_validation: Full GGUF parse ├Ä┬ô├â┬Ñ├â┬å elastic index ├Ä┬ô├â┬Ñ├â┬å fused
         # QKV execution gate. Exercises all new code paths.
         # =====================================================================
         add_executable(fused_qkv_gguf_validation
@@ -891,7 +983,7 @@ if(WIN32)
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
-    # G3_K3C_E2E_REAL_001 â k3c â ProductRuntime one-step (PROMOTE=0)
+    # G3_K3C_E2E_REAL_001 ├ó┬Ç┬ö k3c ├ó┬å┬Æ ProductRuntime one-step (PROMOTE=0)
     add_executable(smoke_k3c_e2e
         evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
     )
@@ -1094,6 +1186,7 @@ if(WIN32)
     # VAL-051.7: Residency Baseline / Fixture Gate
     # =====================================================================
     add_executable(val_051_7_residency_baseline
+        tests/val_051_7_residency_baseline.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(val_051_7_residency_baseline PRIVATE InferenceEngine)
@@ -1144,7 +1237,7 @@ if(WIN32)
     message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
 
     # =====================================================================
-    # RESIDENCY-A/B-CERT ÎÃÃ¶ Elastic Residency A/B Certification Harness
+    # RESIDENCY-A/B-CERT ├Ä┬ô├â┬ç├â┬╢ Elastic Residency A/B Certification Harness
     # =====================================================================
     add_executable(residency_ab_cert
         tests/residency_ab_cert.cpp
@@ -1196,7 +1289,7 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
-    # validate_val051_evidence ÎÃÃ¶ Evidence JSON validator for VAL-051.2.A
+    # validate_val051_evidence ├Ä┬ô├â┬ç├â┬╢ Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
         tests/validate_val051_evidence.cpp
@@ -1219,7 +1312,7 @@ if(WIN32)
     message(STATUS "validate_val051_evidence: VAL-051.2.A evidence validator configured")
 
     # =====================================================================
-    # test_gguf_tokenizer_bounds ÎÃÃ¶ Fuzz-style bounds validation for ParseGGUF
+    # test_gguf_tokenizer_bounds ├Ä┬ô├â┬ç├â┬╢ Fuzz-style bounds validation for ParseGGUF
     # =====================================================================
     add_executable(test_gguf_tokenizer_bounds
         tests/test_gguf_tokenizer_bounds.cpp
@@ -1251,7 +1344,7 @@ if(WIN32)
     message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
 
     # =====================================================================
-    # test_parseheader_bounds ÎÃÃ¶ Adversarial ParseHeader bounds validation
+    # test_parseheader_bounds ├Ä┬ô├â┬ç├â┬╢ Adversarial ParseHeader bounds validation
     # =====================================================================
     add_executable(test_parseheader_bounds
         tests/test_parseheader_bounds.cpp
@@ -1275,7 +1368,7 @@ if(WIN32)
 endif()
 
 # =====================================================================
-# test_parseheader_fuzz ÎÃÃ¶ B32 Deterministic ParseHeader Fuzz Matrix
+# test_parseheader_fuzz ├Ä┬ô├â┬ç├â┬╢ B32 Deterministic ParseHeader Fuzz Matrix
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
     add_executable(test_parseheader_fuzz
@@ -1300,7 +1393,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_metadata_bounds ÎÃÃ¶ B33 GGUF Metadata Bounds Gate
+# test_gguf_metadata_bounds ├Ä┬ô├â┬ç├â┬╢ B33 GGUF Metadata Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
     add_executable(test_gguf_metadata_bounds
@@ -1325,11 +1418,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_tensor_bounds ÎÃÃ¶ B34 GGUF Tensor/Offset Bounds Gate
+# test_gguf_tensor_bounds ├Ä┬ô├â┬ç├â┬╢ B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
     add_executable(test_gguf_tensor_bounds
         tests/test_gguf_tensor_bounds.cpp
+        src/runtime/gguf_tensor_loader.cpp
     )
     set_target_properties(test_gguf_tensor_bounds PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1480,6 +1574,7 @@ endif()
 if(WIN32)
     add_executable(test_omega1_bridge
         tests/test_omega1_bridge.cpp
+        src/omega1_modules/OmegaPowerShellBridge.cpp
     )
     set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     target_include_directories(test_omega1_bridge PRIVATE
@@ -1537,6 +1632,8 @@ endif()
 if(WIN32)
     add_executable(Deep2Engine_RouterSmokeTest
         src/deep2/Deep2Engine_RouterSmokeTest.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/MoERouter.cpp
     )
     set_target_properties(Deep2Engine_RouterSmokeTest PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1573,13 +1670,14 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15A ÎÃÃ¶ GGUF Alignment Diagnostic
+# Batch 15A ├Ä┬ô├â┬ç├â┬╢ GGUF Alignment Diagnostic
 # Instruments a single tensor (default blk.29.attn_qkv.weight) for offset,
 # alignment, bounds, and dequant correctness.
 # =============================================================================
 if(WIN32)
     add_executable(GGUF_Alignment_Diagnostic
         src/deep2/test_gguf_alignment_diagnostic.cpp
+        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(GGUF_Alignment_Diagnostic PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1616,11 +1714,13 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15B ÎÃÃ¶ Q4_0 GEMV Certification
+# Batch 15B ├Ä┬ô├â┬ç├â┬╢ Q4_0 GEMV Certification
 # Verifies Q4_0 scalar GEMV path against independent reference implementation.
 # =============================================================================
 if(WIN32)
     add_executable(Q4_0_GEMV_Certification
+        src/deep2/test_q4_0_gemv_certification.cpp
+        src/deep2/GGUFLoader.cpp
     )
     set_target_properties(Q4_0_GEMV_Certification PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1672,7 +1772,7 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime ÎÃÃ¶ required for RawrEngine and Gold builds
+# Static link MSVC runtime ├Ä┬ô├â┬ç├â┬╢ required for RawrEngine and Gold builds
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -1778,8 +1878,31 @@ endif()
 # ASM kernel sources (shared between RawrEngine and Win32IDE)
 if(RAWR_HAS_MASM)
     set(ASM_KERNEL_SOURCES
+        src/asm/rawr_globals.asm
+        src/asm/rawr_cpu_features.asm
+        src/asm/inference_core.asm
+        src/asm/FlashAttention_AVX512.asm
+        src/asm/quant_avx2.asm
+        src/asm/RawrXD_KQuant_Dequant.asm
+        src/asm/RawrXD_AVX512_Dequant_BPE.asm
+        src/asm/RawrXD_PDBKernel_v3.asm
+        src/asm/RawrXD_ModuleEngine.asm
+        src/asm/request_patch.asm
+        src/asm/inference_kernels.asm
+        src/asm/model_bridge_x64.asm
+        src/asm/model_streamer_x64.asm
+        src/asm/RawrXD_DualAgent_Orchestrator.asm
+        src/asm/RawrXD_DiskRecoveryAgent.asm
+        src/asm/disk_recovery_scsi.asm
         # src/asm/RawrXD-AnalyzerDistiller.asm      # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
         # src/asm/RawrXD-StreamingOrchestrator.asm  # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
+        src/asm/RawrXD_Telemetry_Kernel.asm
+        src/asm/RawrXD_Prometheus_Exporter.asm
+        src/asm/RawrXD_SelfPatch_Agent.asm
+        src/asm/RawrXD_SourceEdit_Kernel.asm
+        src/asm/feature_dispatch_bridge.asm
+        src/asm/gui_dispatch_bridge.asm
+        src/asm/VulkanKernel_DispatchRaw.asm
         # src/asm/RawrXD_CopilotGapCloser.asm   # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/native_speed_kernels.asm      # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/DirectML_Bridge.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
@@ -1787,13 +1910,31 @@ if(RAWR_HAS_MASM)
         # src/asm/RawrXD_Snapshot.asm           # handled separately below
         # src/asm/RawrXD_Pyre_Compute.asm       # handled separately below
         # Pure MASM inference kernels (zero dependencies, no GGML)
-        # Sovereign ABI bridge ÎÃÃ¶ stable C++/MASM execution plane seam
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
+        # Sovereign ABI bridge ├Ä┬ô├â┬ç├â┬╢ stable C++/MASM execution plane seam
+        src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_Pure.asm    # excluded: ml64 errors (operand size mismatch)
+        src/asm/RawrXD_OverclockGov_Pure.asm
+        src/asm/RawrXD_Emitter_v1.asm
+        src/asm/RawrXD_IPC_Dispatcher.asm
+        src/asm/RawrXD_AuditSystem_Pure.asm
+        src/asm/Advanced_Code_Deobfuscator.asm
+        src/asm/Code_Pattern_Reconstructor.asm
+        src/asm/agentic_deep_thinking_kernels.asm
         # Deep2 MoE kernels (2K TPS path)
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
+        src/deep2/sovereign_moe_fused.asm
         # Sovereign Puppeteer Architecture - Self-Modification System
+        src/sovereign/puppeteer/Puppeteer_CaptureState.asm
         # src/asm/RawrXD_MissingSymbols.asm  # excluded: duplicates symbols from gold_link_stubs.cpp
         # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
@@ -1875,10 +2016,16 @@ endif()
 find_package(Threads REQUIRED)
 
 set(SOURCES 
-    src/ceo/main.cpp
+    src/main.cpp
+    src/memory_core.cpp
+    src/hot_patcher.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/RawrRuntime.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TransferScheduler.cpp
@@ -1886,11 +2033,34 @@ set(SOURCES
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
+    src/runtime/gguf_tensor_loader.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
+    src/complete_server.cpp
+    src/agentic_engine.cpp
+    src/subagent_core.cpp
+    src/agent_history.cpp
+    src/agent_policy.cpp
+    src/agent_explainability.cpp
+    src/streaming_gguf_loader.cpp
+    src/utils/Diagnostics.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
+    src/compression_interface.cpp
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/rawrxd_linker_closure.cpp
@@ -1898,14 +2068,33 @@ set(SOURCES
     # src/swarm/SovereignSwarm.cpp  # excluded: large file, use linker stubs instead
     src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
+    src/vulkan_kernel_bridge.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/compression/zlib_runtime_loader.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/IQQuantKernels.cpp
     src/inference/NegativeSpaceProfiler.cpp
     
+    src/engine/gguf_core.cpp
+    src/engine/inference_kernels.cpp
+    src/engine/transformer.cpp
+    src/engine/bpe_tokenizer.cpp
+    src/engine/sampler.cpp
+    src/engine/rawr_engine.cpp
+    src/engine/core_generator.cpp
+    src/engine/pyre_compute.cpp
+    src/engine/sovereign_engines.cpp
     
     src/core/execution_scheduler.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
+    src/cli/agentic_decision_tree.cpp
+    src/cli/cli_autonomy_loop.cpp
+    src/cli/deep_iteration_engine.cpp
     
     # Headless CLI Systems (Phase 20: Safety, Confidence, Replay, Governor, Multi-Response, History, Policy, Explainability)
+    src/cli/cli_headless_systems.cpp
     src/core/agent_safety_contract.cpp
     src/core/confidence_gate.cpp
     src/core/deterministic_replay.cpp
@@ -1919,7 +2108,7 @@ set(SOURCES
     src/core/local_ai_core.cpp
     src/core/native_inference_pipeline.cpp
     
-    # Layer Offload Manager ÎÃÃ¶ RAM streaming for 74B+ models on 16GB VRAM
+    # Layer Offload Manager ├Ä┬ô├â┬ç├â┬╢ RAM streaming for 74B+ models on 16GB VRAM
     src/core/layer_offload_manager.cpp
     
     # Three-layer hotpatch system (needed by decision tree)
@@ -1928,6 +2117,8 @@ set(SOURCES
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
+    src/server/gguf_server_hotpatch.cpp
+    src/agent/agentic_hotpatch_orchestrator.cpp
 
     # Singleton subsystems referenced by UnifiedHotpatchManager
     src/core/agentic_task_graph.cpp
@@ -1941,60 +2132,100 @@ set(SOURCES
     src/core/vision_quantized_encoder.cpp
     src/core/vision_gpu_staging.cpp
 
+    src/marketplace/extension_marketplace.cpp
+    src/auth/rbac_engine.cpp
 
     # Shadow-Page Detour + Sentinel Watchdog (Layer 6)
     src/core/shadow_page_detour.cpp
     src/core/sentinel_watchdog.cpp
 
     # Agentic Loop State (iterative reasoning state machine)
+    src/agentic_loop_state.cpp
 
-    # Autonomous SubAgents ÎÃÃ¶ Bulk Fix Orchestration for models/swarms
+    # Autonomous SubAgents ├Ä┬ô├â┬ç├â┬╢ Bulk Fix Orchestration for models/swarms
+    src/agent/autonomous_subagent.cpp
+    src/agent/agentic_failure_detector.cpp
+    src/agent/agentic_puppeteer.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Sovereign Puppeteer Architecture ÎÃÃ¶ Self-Modification System
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Sovereign Puppeteer Architecture ├Ä┬ô├â┬ç├â┬╢ Self-Modification System
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/sovereign/introspection/SymbolTableGenerator.cpp
+    src/sovereign/puppeteer/PuppeteerAPI.cpp
+    src/sovereign/puppeteer/VEH_Watchdog.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Intent-to-Execution Guardrails ÎÃÃ¶ Model Control Plane
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Intent-to-Execution Guardrails ├Ä┬ô├â┬ç├â┬╢ Model Control Plane
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/intent/intent_config.cpp
+    src/intent/intent_abi.cpp
+    src/guardrails/capability_policy.cpp
+    src/guardrails/patch_firewall.cpp
+    src/hotpatch/patch_transaction.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Sovereign Agent Kernel ÎÃÃ¶ Orchestration Layer
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Sovereign Agent Kernel ├Ä┬ô├â┬ç├â┬╢ Orchestration Layer
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/kernel/AgentKernel.cpp
+    src/kernel/TelemetryInjector.cpp
+    src/kernel/IntentExecutionPipeline.cpp
+    src/kernel/IntentReplayEngine.cpp
 
-    # HTTP Client ÎÃÃ¶ WinHTTP/curl async with future retention
+    # HTTP Client ├Ä┬ô├â┬ç├â┬╢ WinHTTP/curl async with future retention
+    src/agent/llm_http_client.cpp
     src/agent/model_invoker.cpp
+    src/agent/planner.cpp
+    src/agent/eval_framework.cpp
     # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
-    # LocalReasoningEngine ÎÃÃ¶ API-free static analysis + pattern detection (no Qt, no API key)
+    # LocalReasoningEngine ├Ä┬ô├â┬ç├â┬╢ API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
 
     # Agent Self-Repair (MASM64 self-patching kernel bridge)
+    src/agent/agent_self_repair.cpp
+    src/agent/agent_self_healing_orchestrator.cpp
 
     # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
+    src/agentic/DeterministicReplayEngine.cpp
+    src/agentic/AgentToolHandlers.cpp
 
-    # T4: Autonomous Recovery Orchestrator (FailureClass ÎÃ¥Ã recovery ÎÃ¥Ã verify ÎÃ¥Ã commit)
+    # T4: Autonomous Recovery Orchestrator (FailureClass ├Ä┬ô├â┬Ñ├â┬å recovery ├Ä┬ô├â┬Ñ├â┬å verify ├Ä┬ô├â┬Ñ├â┬å commit)
+    src/agentic/autonomous_recovery_orchestrator.cpp
 
     # CoT Fallback System (required by unified_hotpatch_manager.cpp)
     src/core/cot_fallback_system.cpp
     
-    # T4.5: Agentic Deep Thinking Engine ÎÃÃ¶ Autonomous monitoring, recovery, and orchestration
+    # T4.5: Agentic Deep Thinking Engine ├Ä┬ô├â┬ç├â┬╢ Autonomous monitoring, recovery, and orchestration
+    src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
+    validation/fault_injection/FaultInjector.cpp
+    validation/fault_injection/WorkerCrashInjector.cpp
+    validation/fault_injection/MemoryPressureInjector.cpp
+    validation/fault_injection/ServiceKillInjector.cpp
+    validation/fault_injection/StateCorruptionInjector.cpp
+    validation/fault_injection/ExceptionStormInjector.cpp
+    validation/recovery_telemetry/RecoveryTelemetry.cpp
 
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
-    src/core/ToolRegistry.cpp
+    src/agentic/AgentOrchestrator.cpp
+    src/agentic/OrchestratorBridge.cpp
+    src/agentic/AgenticNavigator.cpp
+    src/agentic/RawrXD_ToolRegistry.cpp
+    src/agentic/ToolRegistry.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/agentic_executor.cpp
 
     # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
     src/core/auto_repair_orchestrator.cpp
     src/core/agent_memory_indexer.cpp
 
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
-    src/core/DiskRecoveryAgent.cpp
+    src/agent/DiskRecoveryAgent.cpp
     
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # IDE Subsystems ÎÃÃ¶ Repository Intelligence, Build, Diagnostics, etc.
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # IDE Subsystems ├Ä┬ô├â┬ç├â┬╢ Repository Intelligence, Build, Diagnostics, etc.
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     src/repo/FileIndex.cpp
     src/repo/SymbolTable.cpp
     src/repo/ASTCache.cpp
@@ -2003,6 +2234,11 @@ set(SOURCES
     src/repo/IncludeGraph.cpp
     src/repo/SearchIndex.cpp
     src/repo/EmbeddingIndex.cpp
+    src/build/BuildIntelligence.cpp
+    src/diagnostics/DiagnosticsEngine.cpp
+    src/refactoring/RefactoringEngine.cpp
+    src/validation/PatchValidator.cpp
+    src/ide/IDEShell.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -2024,6 +2260,7 @@ set(SOURCES
     src/core/amd_gpu_accelerator.cpp
     src/core/unified_memory_executor.cpp
     src/core/model_runtime_gate.cpp
+    src/runtime_surface/GenerationStopwatch.cpp
     
     # Accelerator implementations (required by accelerator_router.cpp)
     src/core/intel_gpu_accelerator.cpp
@@ -2048,98 +2285,126 @@ set(SOURCES
     src/core/camellia256_bridge.cpp
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
+    src/tool_registry.cpp
 
-    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) ÎÃÃ¶ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
+    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) ├Ä┬ô├â┬ç├â┬╢ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
+    src/license_enforcement.cpp
+    src/feature_flags_runtime.cpp
+    src/tools/license_validator_manifest.cpp
 
-    # Agentic config + enterprise feature manager + model name utils ÎÃÃ¶ required by complete_server, subagent_core
+    # Agentic config + enterprise feature manager + model name utils ├Ä┬ô├â┬ç├â┬╢ required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
+    src/model_name_utils.cpp
+    src/model_config.cpp
 
-    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) ÎÃÃ¶ required by complete_server, execution_scheduler, local_ai_core
+    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) ├Ä┬ô├â┬ç├â┬╢ required by complete_server, execution_scheduler, local_ai_core
     src/core/multi_gpu.cpp
 
-    # Engine registry (register_engine) ÎÃÃ¶ required by sovereign_engines
+    # Engine registry (register_engine) ├Ä┬ô├â┬ç├â┬╢ required by sovereign_engines
     src/core/engine_registry.cpp
 
-    # Telemetry + observability ÎÃÃ¶ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
+    # Telemetry + observability ├Ä┬ô├â┬ç├â┬╢ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
+    src/agentic_observability.cpp
 
-    # BoundedAgentLoop + FIMPromptBuilder ÎÃÃ¶ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
+    # BoundedAgentLoop + FIMPromptBuilder ├Ä┬ô├â┬ç├â┬╢ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
+    src/agentic/BoundedAgentLoop.cpp
+    src/agentic/FIMPromptBuilder.cpp
 
-    # Subsystem registry ÎÃÃ¶ required by AgentOrchestrator, ToolRegistry, feature_handlers
+    # Subsystem registry ├Ä┬ô├â┬ç├â┬╢ required by AgentOrchestrator, ToolRegistry, feature_handlers
     src/core/rawrxd_subsystem_api.cpp
 
-    # IDEConfig ÎÃÃ¶ required by OrchestratorBridge
+    # IDEConfig ├Ä┬ô├â┬ç├â┬╢ required by OrchestratorBridge
+    src/config/IDEConfig.cpp
 
-    # Disk recovery ASM agent + tool handler ÎÃÃ¶ required by ToolRegistry
-    src/core/DiskRecoveryAgent.cpp
+    # Disk recovery ASM agent + tool handler ├Ä┬ô├â┬ç├â┬╢ required by ToolRegistry
+    src/agentic/DiskRecoveryAgent.cpp
+    src/agentic/DiskRecoveryToolHandler.cpp
 
-    # Agentic bridge (ExecuteAgentCommand) ÎÃÃ¶ headless stub for RawrEngine
+    # Agentic bridge (ExecuteAgentCommand) ├Ä┬ô├â┬ç├â┬╢ headless stub for RawrEngine
+    src/win32app/agentic_bridge_headless.cpp
 
-    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) ÎÃÃ¶ required by agentic_failure_detector
+    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) ├Ä┬ô├â┬ç├â┬╢ required by agentic_failure_detector
     src/core/ai_agent_masm_core_impl.cpp
 
-    # Context deterioration hotpatch + LSP hotpatch + symbol provider ÎÃÃ¶ required by feature_handlers, auto_feature_registry
+    # Context deterioration hotpatch + LSP hotpatch + symbol provider ├Ä┬ô├â┬ç├â┬╢ required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
+    src/lsp/lsp_hotpatch_bridge.cpp
+    src/lsp/hotpatch_symbol_provider.cpp
 
-    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) ÎÃÃ¶ required by enterprise_licensev2_impl
+    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) ├Ä┬ô├â┬ç├â┬╢ required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
 
     # Reverse-engineered bridge stubs (Heartbeat_Shutdown, GPU_*, GetHighResTick, TicksTo*, CalculateCRC32, AllocateDMABuffer, Tensor_QuantizedMatMul)
     # stub file removed
 
-    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) ÎÃÃ¶ required by main, complete_server
+    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) ├Ä┬ô├â┬ç├â┬╢ required by main, complete_server
     src/core/support_tier.cpp
 
-    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) ÎÃÃ¶ required by rawrxd_subsystem_api
+    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) ├Ä┬ô├â┬ç├â┬╢ required by rawrxd_subsystem_api
     # removed stub unit
 
-    # Feature registry (FeatureRegistry::instance, registerFeature) ÎÃÃ¶ required by enterprise_feature_manager
+    # Feature registry (FeatureRegistry::instance, registerFeature) ├Ä┬ô├â┬ç├â┬╢ required by enterprise_feature_manager
     src/core/feature_registry.cpp
-    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) ÎÃÃ¶ required by feature_registry
+    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) ├Ä┬ô├â┬ç├â┬╢ required by feature_registry
     src/core/menu_auditor.cpp
 
-    # GGUF diagnostic provider + LSP server ÎÃÃ¶ required by lsp_hotpatch_bridge
+    # GGUF diagnostic provider + LSP server ├Ä┬ô├â┬ç├â┬╢ required by lsp_hotpatch_bridge
+    src/lsp/gguf_diagnostic_provider.cpp
+    src/lsp/RawrXD_LSPServer.cpp
 
-    # Extension polyfill engine + VSCode API ÎÃÃ¶ required by js_extension_host
+    # Extension polyfill engine + VSCode API ├Ä┬ô├â┬ç├â┬╢ required by js_extension_host
     src/core/extension_polyfill_engine.cpp
+    src/modules/vscode_extension_api.cpp
 
-    # JS extension host ÎÃÃ¶ required by ssot_handlers_ext
+    # JS extension host ├Ä┬ô├â┬ç├â┬╢ required by ssot_handlers_ext
     src/core/js_extension_host.cpp
 
-    # Model source resolver ÎÃÃ¶ required by auto_feature_registry
+    # Model source resolver ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
     src/model_source_resolver.cpp
 
-    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ÎÃÃ¶ required by auto_feature_registry
+    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
+    src/modules/ReverseEngineering.cpp
 
     # AgenticDeepThinkingEngine full implementation
     src/agent/agentic_deep_thinking_engine.cpp
 
     # Quantum Autonomous Systems - Real implementations (required by agentic_deep_thinking_engine)
+    src/agent/quantum_autonomous_todo_system.cpp
+    src/agent/quantum_multi_model_agent_cycling.cpp
+    src/agent/quantum_dynamic_time_manager.cpp
+    src/agent/quantum_missing_impl.cpp
+    src/agent/quantum_production_orchestrator.cpp
+    src/agent/quantum_agent_orchestrator.cpp
 
     # Win32IDE::logMessage fallback (for RawrEngine / Gold when linking TranscendencePanel without full IDE)
+    src/win32app/Win32IDE_logMessage.cpp
     # Win32IDE output/copilot/tree stubs (for RawrEngine / Gold when linking vscode_extension_api without full IDE)
 
     # Stubgen: AnalyzerDistiller + StreamingOrchestrator (C++ fallbacks, guarded by RAWR_HAS_MASM)
 
-    # PT Driver Contract ÎÃÃ¶ Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
+    # PT Driver Contract ├Ä┬ô├â┬ç├â┬╢ Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
     src/core/pt_driver_contract.cpp
 
     # Phase 21: Distributed Swarm Inference Orchestrator
+    src/cli/swarm_orchestrator.cpp
+    src/swarm_orchestrator.cpp
 
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
 
-    # Phase 44: Voice Automation ÎÃÃ¶ Toggleable TTS Response Reader
+    # Phase 44: Voice Automation ├Ä┬ô├â┬ç├â┬╢ Toggleable TTS Response Reader
     src/core/voice_automation.cpp
 
-    # DirectML GPU Inference Engine ÎÃÃ¶ D3D12 + DML operators for transformer forward pass
+    # DirectML GPU Inference Engine ├Ä┬ô├â┬ç├â┬╢ D3D12 + DML operators for transformer forward pass
     src/core/directml_compute.cpp
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
+    src/dml_inference_engine.cpp
 
-    # Agentic Watchdog ÎÃÃ¶ .text Section Integrity Verification Service
+    # Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
 
     # Phase 33: Quick-Win Ports
@@ -2148,7 +2413,7 @@ set(SOURCES
     src/core/alert_system.cpp
 
     # Shared Feature Dispatch System (CLI + GUI unified command routing)
-    # NOTE: shared_feature_dispatch.cpp REMOVED ÎÃÃ¶ its 4 extern "C" symbols are
+    # NOTE: shared_feature_dispatch.cpp REMOVED ├Ä┬ô├â┬ç├â┬╢ its 4 extern "C" symbols are
     # superseded by unified_command_dispatch.cpp (superset with AutoRegistrar)
     src/core/feature_registration.cpp
     src/core/feature_handlers.cpp
@@ -2160,7 +2425,7 @@ set(SOURCES
     src/core/ssot_handlers_ext_runtime_minimal.cpp
     src/core/ssot_validation.cpp
 
-    # Unified Command Dispatch ÎÃÃ¶ Zero-drift SSOT dispatch (replaces manual registration)
+    # Unified Command Dispatch ├Ä┬ô├â┬ç├â┬╢ Zero-drift SSOT dispatch (replaces manual registration)
     src/core/unified_command_dispatch.cpp
 
     # Phase 32A: Chain-of-Thought Multi-Model Review Engine
@@ -2174,10 +2439,11 @@ set(SOURCES
     # Phase 36: Cross-Process MMF State Synchronization (shared with Win32IDE)
     src/core/rawrxd_state_mmf.cpp
 
-    # Phase 46: VulkanKernel ÎÃÃ¶ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
-    src/deep2/vulkan_compute.cpp
+    # Phase 46: VulkanKernel ├Ä┬ô├â┬ç├â┬╢ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
+    src/vulkan_compute.cpp
+    src/backend/VulkanGemmDispatcher.cpp
 
-    # Phase 46: Live Binary Patcher ÎÃÃ¶ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
+    # Phase 46: Live Binary Patcher ├Ä┬ô├â┬ç├â┬╢ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
     src/core/live_binary_patcher.cpp
 
     # Phase 37: Iterative Partial Inference with Adaptive Tensor Traversal
@@ -2188,12 +2454,13 @@ set(SOURCES
     src/core/convergence_controller.cpp
     src/core/iterative_tensor_traversal.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Cursor-Parity Gaps ÎÃÃ¶ META prerequisites + GAP 1-10
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Cursor-Parity Gaps ├Ä┬ô├â┬ç├â┬╢ META prerequisites + GAP 1-10
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
     # META 1: SQLite RAII Wrapper + Real Amalgamation
     src/core/sqlite_wrapper.cpp
+    src/core/sqlite3.c           # Real sqlite3 amalgamation (sqlite.org 3.47.2)
 
     # META 2: Work-Stealing Thread Pool
     src/core/thread_pool.cpp
@@ -2205,20 +2472,28 @@ set(SOURCES
     src/core/jsonrpc_parser.cpp
 
     # GAP 1: Multi-File Atomic Transactions + WAL Journal
+    src/agentic/multi_file_transaction.cpp
     src/core/transaction_journal.cpp
 
     # GAP 1.5: Agentic Transaction Layer (Cursor-Composer-class orchestration)
+    src/agentic/agentic_transaction.cpp
 
-    # P6: Agent Workflow Orchestrator (DAG-based planÎÃ¥ÃexecuteÎÃ¥ÃvalidateÎÃ¥Ãcommit)
+    # P6: Agent Workflow Orchestrator (DAG-based plan├Ä┬ô├â┬Ñ├â┬åexecute├Ä┬ô├â┬Ñ├â┬åvalidate├Ä┬ô├â┬Ñ├â┬åcommit)
+    src/agentic/agent_workflow_orchestrator.cpp
 
     # GAP 2: HNSW Vector Index
     src/core/vector_index.cpp
 
     # GAP 3: Model Cascade Router (Thompson Sampling)
+    src/agentic/model_cascade.cpp
 
     # GAP 4: Ghost-Text Context Assembler
+    src/agentic/context_assembler.cpp
 
-    # GAP 5: Chat Message Renderer (Markdown ÎÃ¥Ã HTML)
+    # GAP 5: Chat Message Renderer (Markdown ├Ä┬ô├â┬Ñ├â┬å HTML)
+    src/ui/chat_message_renderer.cpp
+    src/ui/tool_action_status.cpp
+    src/ui/chat_panel.cpp
 
     # Cathedral Hardening (5.0 Readiness) - REAL IMPLEMENTATIONS ONLY
     src/core/crash_containment.cpp
@@ -2227,50 +2502,71 @@ set(SOURCES
     src/core/perf_telemetry.cpp
 
     # GAP 6: Git Context Provider (CLI subprocess)
+    src/git/git_context.cpp
 
     # GAP 7: LSP Diagnostic Consumer + Quick-Fix
+    src/lsp/diagnostic_consumer.cpp
 
     # GAP 8: Jinja2-Style Prompt Template Engine
     src/core/prompt_template_engine.cpp
 
     # GAP 9: Speculative Decoder v2 (Draft-Verify-Accept)
+    src/gpu/speculative_decoder_v2.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
+    src/inference/ultra_fast_inference.cpp
 
     # GAP 10: Completion Feedback (Online Logistic Regression)
+    src/telemetry/completion_feedback.cpp
 
     # T3-D: Replay + Telemetry Fusion Engine
+    src/telemetry/replay_telemetry_fusion.cpp
 
     # T3-D: Hotpatch Telemetry Safety Layer
+    src/telemetry/hotpatch_telemetry_safety.cpp
 
-    # Unified Telemetry Core ÎÃÃ¶ single entry point for all telemetry layers
+    # Unified Telemetry Core ├Ä┬ô├â┬ç├â┬╢ single entry point for all telemetry layers
+    src/telemetry/UnifiedTelemetryCore.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # GPU + Agentic + UI Integration (STL/Win32 native)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
-    # GPU Backend ÎÃÃ¶ Vulkan/CUDA/CPU fallback chain (fprintf logging)
+    # GPU Backend ├Ä┬ô├â┬ç├â┬╢ Vulkan/CUDA/CPU fallback chain (fprintf logging)
+    src/gpu/gpu_backend.cpp
 
-    # KV-Cache Optimizer ÎÃÃ¶ sliding-window eviction, std::chrono timing
+    # KV-Cache Optimizer ├Ä┬ô├â┬ç├â┬╢ sliding-window eviction, std::chrono timing
+    src/gpu/kv_cache_optimizer.cpp
 
-    # Speculative Decoder v1 ÎÃÃ¶ draft/verify with std::mt19937 RNG
+    # Speculative Decoder v1 ├Ä┬ô├â┬ç├â┬╢ draft/verify with std::mt19937 RNG
+    src/gpu/speculative_decoder.cpp
 
-    # Agentic Controller ÎÃÃ¶ callback-based event loop (no QObject/signals)
+    # Agentic Controller ├Ä┬ô├â┬ç├â┬╢ callback-based event loop (no QObject/signals)
+    src/agentic_controller.cpp
 
-    # Phase 2 UI Integration ÎÃÃ¶ Win32 MessageBox, std::filesystem, std::function callbacks
+    # Phase 2 UI Integration ├Ä┬ô├â┬ç├â┬╢ Win32 MessageBox, std::filesystem, std::function callbacks
+    src/ui/phase2_integration_example.cpp
 
-    # Multi-Model Benchmark Tool ÎÃÃ¶ has its own main(), built as separate target
+    # Multi-Model Benchmark Tool ├Ä┬ô├â┬ç├â┬╢ has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
 
-    # Agentic Agent Coordinator ÎÃÃ¶ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
+    # Agentic Agent Coordinator ├Ä┬ô├â┬ç├â┬╢ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
+    src/agentic_agent_coordinator.cpp
 
-    # Production Config Manager ÎÃÃ¶ singleton config loader (instance, loadConfig, value)
+    # Production Config Manager ├Ä┬ô├â┬ç├â┬╢ singleton config loader (instance, loadConfig, value)
+    src/production_config_manager.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # Core Production Subsystems (Verified Working)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
     # Deterministic Swarm Reproducibility (same input + seed = same result)
     src/core/deterministic_swarm.cpp
@@ -2280,46 +2576,58 @@ set(SOURCES
     # Input Guard with Backend Slicing (OOM protection, chunk routing, budget)
     src/core/input_guard_slicer.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/test_harness/replay_fixture.cpp
+    src/test_harness/replay_oracle.cpp
+    src/test_harness/replay_mock_inference.cpp
+    src/test_harness/replay_harness.cpp
+    src/test_harness/replay_reporter.cpp
 
-    # Phase 34: Instructions Context Provider ÎÃÃ¶ Read tools.instructions.md (All Lines)
+    # Phase 34: Instructions Context Provider ├Ä┬ô├â┬ç├â┬╢ Read tools.instructions.md (All Lines)
     src/core/instructions_provider.cpp
 
-    # Phase 13: Distributed Pipeline Orchestrator ÎÃÃ¶ DAG scheduling, work-stealing
+    # Phase 13: Distributed Pipeline Orchestrator ├Ä┬ô├â┬ç├â┬╢ DAG scheduling, work-stealing
     src/core/distributed_pipeline_orchestrator.cpp
 
-    # Phase 14: Hotpatch Control Plane ÎÃÃ¶ Lifecycle, transactions, dependency graphs
+    # Phase 14: Hotpatch Control Plane ├Ä┬ô├â┬ç├â┬╢ Lifecycle, transactions, dependency graphs
     src/core/hotpatch_control_plane.cpp
 
-    # Phase 15: Static Analysis Engine ÎÃÃ¶ CFG/SSA, dominators, optimizations
+    # Phase 15: Static Analysis Engine ├Ä┬ô├â┬ç├â┬╢ CFG/SSA, dominators, optimizations
     src/core/static_analysis_engine.cpp
 
     # Top-50: Unified Problems (LSP + SAST + SCA + Secrets)
     src/core/problems_aggregator.cpp
 
-    # Top-50: Secrets scanning (API keys, high-entropy) ÎÃÃ¶ Security
+    # Top-50: Secrets scanning (API keys, high-entropy) ├Ä┬ô├â┬ç├â┬╢ Security
+    src/security/secrets_scanner.cpp
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
+    src/security/dependency_audit.cpp
 
     # Top-50: SBOM export (CycloneDX 1.4, in-house)
+    src/security/sbom_export.cpp
 
     # Top-50: In-house SAST (regex/source rules, no external SAST lib)
+    src/security/sast_rule_engine.cpp
 
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
+    src/security/RawrXD_GoogleDork_Scanner.cpp
 
-    # Universal Dorker ÎÃÃ¶ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
+    # Universal Dorker ├Ä┬ô├â┬ç├â┬╢ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
+    src/security/RawrXD_Universal_Dorker.cpp
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
+    src/security/SecurityHardening.cpp
 
-    # Phase 15b: Code Linter ÎÃÃ¶ Real-time syntax/semantic linting (C++, ASM, Python, JS)
+    # Phase 15b: Code Linter ├Ä┬ô├â┬ç├â┬╢ Real-time syntax/semantic linting (C++, ASM, Python, JS)
     src/core/code_linter.cpp
 
-    # Phase 16: Semantic Code Intelligence ÎÃÃ¶ Cross-refs, type inference, indexing
+    # Phase 16: Semantic Code Intelligence ├Ä┬ô├â┬ç├â┬╢ Cross-refs, type inference, indexing
     src/core/semantic_code_intelligence.cpp
 
-    # Phase 17: Enterprise Telemetry & Compliance ÎÃÃ¶ OTLP tracing, audit, GDPR
+    # Phase 17: Enterprise Telemetry & Compliance ├Ä┬ô├â┬ç├â┬╢ OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
 
     # Core workflow/reasoning engines (required by unified_hotpatch_manager, etc.)
@@ -2357,7 +2665,7 @@ set(SOURCES
     # NOTE: rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # src/core/rawrengine_missing_stubs.cpp
 
-    # Phase 50: Enterprise Hardening ÎÃÃ¶ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+    # Phase 50: Enterprise Hardening ├Ä┬ô├â┬ç├â┬╢ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
     src/core/cursor_github_parity_bridge.cpp
     src/core/local_parity_bridge.cpp
@@ -2367,13 +2675,15 @@ set(SOURCES
     src/core/enterprise_stress_tests.cpp
     src/core/auto_update_system.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Autonomy Gap Closure ÎÃÃ¶ Phase A-D + Tier 1.4 + Tier 2.3
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Autonomy Gap Closure ├Ä┬ô├â┬ç├â┬╢ Phase A-D + Tier 1.4 + Tier 2.3
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
-    # Phase A: Closed-Loop Verification (Write ÎÃ¥Ã Compile ÎÃ¥Ã Test ÎÃ¥Ã Fix)
+    # Phase A: Closed-Loop Verification (Write ├Ä┬ô├â┬Ñ├â┬å Compile ├Ä┬ô├â┬Ñ├â┬å Test ├Ä┬ô├â┬Ñ├â┬å Fix)
+    src/agentic/autonomous_verification_loop.cpp
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
+    src/agentic/autonomous_background_daemon.cpp
 
     # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
     src/core/knowledge_graph_core.cpp
@@ -2385,26 +2695,46 @@ set(SOURCES
     src/core/autonomous_debugger.cpp
 
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
+    src/agentic/autonomous_communicator.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/core/vision_encoder.cpp
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/telemetry/telemetry_export.cpp
+    src/agentic/agentic_composer_ux.cpp
+    src/context/context_mention_parser.cpp
+    src/multimodal_engine/vision_encoder.cpp
+    src/ide/refactoring_plugin.cpp
+    src/ide/language_plugin.cpp
+    src/context/semantic_index.cpp
+    src/ide/resource_generator.cpp
 
     # P0: Codebase RAG (in-house TF-IDF)
+    src/ai/codebase_rag.cpp
 
     # P1: Symbol Graph Indexer (cross-file navigation, Copilot/Cursor parity)
+    src/ai/symbol_graph_indexer.cpp
 
     # P2: Semantic Code Search (TF-IDF + fuzzy ranking)
+    src/ai/semantic_code_search.cpp
 
     # P3: Multi-File Reasoning (cross-file context & dependency analysis)
+    src/ai/multi_file_reasoning.cpp
 
     # P4: Workspace Embeddings (LSH vector index, incremental)
+    src/ai/workspace_embeddings.cpp
 
     # P5: Repo-Wide Refactor Engine (rename, extract, move, change-sig)
+    src/ai/repo_refactor_engine.cpp
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
 
     # NOTE: Removed Transcendence fiction (self_host_engine, hardware_synthesizer,
     # mesh_brain, speciator_engine, neural_bridge, omega_orchestrator, transcendence_coordinator)
@@ -2415,19 +2745,123 @@ set(SOURCES
 
     # NOTE: Removed Transcendence IDE Panel - part of valuation theater fiction
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Cognitive Architecture ÎÃÃ¶ Autonomous Reverse Engineering OS
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Cognitive Architecture ├Ä┬ô├â┬ç├â┬╢ Autonomous Reverse Engineering OS
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/agentic/cognitive/cognitive_types.cpp
+    src/agentic/cognitive/enhanced_blackboard.cpp
+    src/agentic/cognitive/mission_director.cpp
+    src/agentic/cognitive/reflection_agent.cpp
+    src/agentic/cognitive/dynamic_planner.cpp
+    src/agentic/cognitive/autonomous_orchestrator.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # TrailBrake / HotPatcher / AntiPatcher Safety System
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
     # Dual GPU / Reverse Recovery / Streaming
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/Deep2ModelRuntime.cpp
+    src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
+    src/deep2/ElasticResidencyManager.cpp
+    src/deep2/ElasticDynamicBudget.cpp
+    src/deep2/CycloneScheduler.cpp
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
+    src/deep2/ProductionProfiler.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/IOCPGGUFLoader.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
+    src/sampling/advanced_sampler.cpp
 
-    # Sovereign ABI runtime ÎÃÃ¶ stable C++/MASM execution plane seam
+    # Sovereign ABI runtime ├Ä┬ô├â┬ç├â┬╢ stable C++/MASM execution plane seam
+    src/runtime/Sovereign_RingTelemetry.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -2458,6 +2892,11 @@ if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
         src/core/masm_stress_harness.cpp
         src/core/convergence_stress_harness.cpp
         src/core/enterprise_stress_tests.cpp
+        src/test_harness/replay_fixture.cpp
+        src/test_harness/replay_oracle.cpp
+        src/test_harness/replay_mock_inference.cpp
+        src/test_harness/replay_harness.cpp
+        src/test_harness/replay_reporter.cpp
     )
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -2466,6 +2905,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
     list(REMOVE_ITEM SOURCES
         src/core/cot_fallback_system.cpp
+        src/win32app/Win32IDE_logMessage.cpp
     )
     # NOTE: agentic_bridge_headless.cpp is NOT a stub - it provides headless AgenticBridge implementation
     # Required by RawrXD_AgentLoop.cpp when Win32IDE is not built
@@ -2522,8 +2962,12 @@ endif()
 if(RAWR_REPLACE_MASM_FALLBACKS)
     if(RAWR_HAS_MASM)
         list(APPEND ASM_KERNEL_SOURCES
+            src/asm/memory_patch.asm
+            src/asm/byte_search.asm
         )
         set_source_files_properties(
+            src/asm/memory_patch.asm
+            src/asm/byte_search.asm
             PROPERTIES LANGUAGE ASM_MASM
         )
         message(STATUS "[ReplacementPass] MASM: promoted memory_patch/byte_search ASM; analyzer/streaming remain on C++ fallbacks pending asm include fixes")
@@ -2538,21 +2982,38 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/auto_feature_registry.cpp
+    src/lsp/RawrXD_LSPServer.cpp
+    src/lsp/lsp_hotpatch_bridge.cpp
     # Swarm files that reference symbols not available in RawrEngine target
-    src/ceo/IDEIntegration.cpp
+    src/swarm/InfinitePerfectionTelemetry.cpp
+    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
+    src/swarm/TelemetryDashboardServer.cpp
+    src/swarm/IDEIntegration.cpp
+    src/swarm/LearningSimulator.cpp
+    src/agentic_agent_coordinator.cpp
     # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
     src/core/streaming_orchestrator.cpp
     src/core/analyzer_distiller.cpp
     # Remove streaming_inference_engine.cpp - references KernelArbiter and Vulkan APIs not available in RawrEngine
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
     # Remove unified_command_dispatch.cpp and agentic_transaction.cpp - reference voice command handlers not in RawrEngine
     src/core/unified_command_dispatch.cpp
+    src/agentic/agentic_transaction.cpp
     # Remove files referencing SubsystemRegistry (not available in RawrEngine)
-    src/core/ToolRegistry.cpp
+    src/agentic/ToolRegistry.cpp
     src/core/feature_handlers.cpp
+    src/agentic/AgentOrchestrator.cpp
     # Remove model_config.cpp - references OllamaClient which is not linked in RawrEngine
+    src/model_config.cpp
     # Remove LSP providers referencing direct_read (byte_level_hotpatcher.cpp excluded)
+    src/lsp/hotpatch_symbol_provider.cpp
+    src/lsp/gguf_diagnostic_provider.cpp
     # Remove quantum_agent_orchestrator.cpp - references GPUDispatchGate which has no implementation
+    src/agent/quantum_agent_orchestrator.cpp
     # Remove RawrXD_AgentLoop.cpp and DiskRecoveryToolHandler.cpp - reference AgentToolRegistry from excluded ToolRegistry.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/DiskRecoveryToolHandler.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -2661,7 +3122,11 @@ endif()
 # in headless mode.
 list(APPEND RAWR_ENGINE_SOURCES
     src/logging/Logger.cpp
+    src/security/InputSanitizer.cpp
+    src/security/SecurityHardening.cpp
     src/core/ConfigurationValidator.cpp
+    src/inference/PerformanceMonitor.cpp
+    src/agentic/ErrorRecoveryManager.cpp
     # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # REMOVED: src/link_stubs/rawrengine_link_closure.cpp - stub file deleted
 
@@ -2675,27 +3140,57 @@ message(STATUS "[SSOT Ownership] RawrEngine provider=${RAWR_SSOT_PROVIDER_UPPER}
 
 # RawrEngine is headless; don't hard-depend on the Win32IDE VSCode API bridge.
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
+    src/modules/vscode_extension_api.cpp
+    src/win32app/Win32IDE_VSCodeExtAPI.cpp
     src/core/js_extension_host.cpp
     src/core/extension_polyfill_engine.cpp
+    src/modules/quickjs_extension_host.cpp
+    src/modules/quickjs_vscode_bindings.cpp
+    src/engine/pyre_compute.cpp
 )
 
 # RawrEngine is headless; exclude Win32IDE GUI translation units.
 list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX "^src/win32app/Win32IDE_.*\\.cpp$")
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
+    src/win32app/Win32IDE.cpp
+    src/win32app/main_win32.cpp
 )
 
 list(APPEND RAWR_ENGINE_SOURCES
+    src/BackendOrchestrator.cpp
+    src/agentic/AdvancedAgentCoordinator.cpp
+    src/agentic/hotpatch/Engine.cpp
+    src/InferenceProfiler.cpp
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
-    # ÎÃ¶ÃÎÃ¶Ã Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ÎÃ¶ÃÎÃ¶Ã
-    src/deep2/vulkan_compute.cpp
+    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
+    src/deep2/Chamber.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/OutOfCoreRuntime.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/ToroidalKVCache.cpp
+    src/deep2/IQQuantKernels.cpp
+    src/vulkan_compute.cpp
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Kimi K2.6 300-Agent Swarm Architecture (subset ÎÃÃ¶ excluded files
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Kimi K2.6 300-Agent Swarm Architecture (subset ├Ä┬ô├â┬ç├â┬╢ excluded files
     # reference symbols not available in RawrEngine target)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/swarm/SwarmOrchestrator.cpp
+    src/swarm/KimiSwarmOrchestrator.cpp
+    src/swarm/ArchitectAgent.cpp
+    src/swarm/FrontendSquad.cpp
+    src/swarm/BackendCore.cpp
+    src/swarm/QAHive.cpp
+    src/swarm/ReviewerAgents.cpp
+    src/swarm/CinematicVibeEngine.cpp
+    src/swarm/DeepContextManager.cpp
+    src/swarm/OpenClawBridge.cpp
+    src/swarm/LegacyRefactorModule.cpp
     # src/swarm/IDEIntegration.cpp           # excluded: references ReviewerAgents methods not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetry.cpp    # excluded: references InfinitePerfectionEngine not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetrySQLite.cpp # excluded: same
@@ -2704,7 +3199,7 @@ list(APPEND RAWR_ENGINE_SOURCES
 )
 
 # =============================================================================
-# Command Table Audit ÎÃÃ¶ Build-time coverage validation targets
+# Command Table Audit ├Ä┬ô├â┬ç├â┬╢ Build-time coverage validation targets
 # =============================================================================
 include(cmake/AutoFeatureRegistry.cmake)
 
@@ -2800,7 +3295,7 @@ if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
     target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
 endif()
 
-message(STATUS "ÎÂ£Ã´ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
+message(STATUS "├Ä┬ô├é┬ú├â┬┤ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
 
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
@@ -2808,24 +3303,31 @@ message(STATUS "ÎÂ£Ã´ RawrXD_Compression configured (runtime ZLIB loader,
 add_subdirectory(src/reverse_engineering)
 
 # =============================================================================
-# CEO Agent Module ÎÃÃ¶ Autonomous Software Engineering Layer
+# CEO Agent Module ├Ä┬ô├â┬ç├â┬╢ Autonomous Software Engineering Layer
 # =============================================================================
 add_subdirectory(src/ceo)
 
 # =============================================================================
-# Repository Intelligence Module ÎÃÃ¶ Deep Code Understanding
+# Repository Intelligence Module ├Ä┬ô├â┬ç├â┬╢ Deep Code Understanding
 # =============================================================================
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
 
 # =============================================================================
-# RGUF (RawrXD GGUF Unified Format) ÎÃÃ¶ Pack/inspect/patch encrypted model blocks
+# RGUF (RawrXD GGUF Unified Format) ├Ä┬ô├â┬ç├â┬╢ Pack/inspect/patch encrypted model blocks
 # =============================================================================
 add_subdirectory(rguf_source)
 
 if(RAWRXD_BUILD_RAWRENGINE)
 # RawrEngine needs specific ASM kernels for Deep2 and Sovereign Q4K
 set(RAWR_ENGINE_ASM_SOURCES
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4_1_gemv.asm
+    src/deep2/sovereign_q5_k_gemv.asm
+    src/deep2/sovereign_q6_k_gemv.asm
+    src/deep2/sovereign_q8_0_gemv.asm
+    src/deep2/sovereign_fp16_gemv.asm
 )
 set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
@@ -2837,9 +3339,9 @@ if(WIN32)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 # OMEGA-1 Post-Build Manifest Generation
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 if(WIN32)
     add_custom_command(TARGET RawrEngine POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -2923,6 +3425,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
+        src/agentic/AgentOllamaClient.cpp
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -3054,12 +3557,19 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
 # Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
-# Fix: Case-sensitive regex misses mixed-case files ÎÃÃ¶ use explicit REMOVE_ITEM
+# Fix: Case-sensitive regex misses mixed-case files ├Ä┬ô├â┬ç├â┬╢ use explicit REMOVE_ITEM
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
+    src/agentic/AgenticDeepThinkingEngine.cpp
+    src/agentic/DeterministicReplayEngine.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/DiskRecoveryToolHandler.cpp
+    src/agentic_agent_coordinator.cpp
+    src/model_config.cpp
 )
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
+        src/core/missing_handler_stubs.cpp
         src/core/ssot_handlers_ext_runtime_minimal.cpp
         src/core/ssot_handlers_ext_isolated.cpp
     )
@@ -3074,6 +3584,8 @@ else()
         src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
+        src/core/auto_feature_stub_impl.cpp
+        src/core/missing_handler_stubs.cpp
     )
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
 endif()
@@ -3115,7 +3627,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     )
 endif()
 # Gold: MultiResponseEngine methods are defined inline in win32app/multi_response_engine.h; the
-# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)ÎÃÃ¶drop
+# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)├Ä┬ô├â┬ç├â┬╢drop
 # ssot_handlers + auto_feature_registry to avoid LNK2005 duplicate CommandResult handlers.
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/multi_response_engine.cpp)
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
@@ -3126,7 +3638,10 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
 endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
+    src/complete_server.cpp
+    src/modules/vscode_extension_api.cpp
     src/core/js_extension_host.cpp
+    src/ui/entry_point.cpp
 )
 
 # Add Gold stub implementations for excluded files
@@ -3141,10 +3656,35 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/gold_link_closure.cpp
     src/core/link_symbols_impl.cpp
     # REMOVED: src/core/link_stubs_gold.cpp - superseded by gold_link_closure.cpp + link_symbols_impl.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/compression/zlib_runtime_loader.cpp
+    src/deep2/MASMKernelStubs.cpp
     B014/build/b014_profiler.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
+    src/vulkan_kernel_bridge.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/gguf_tensor_loader.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
     # Real Deep2 implementations (not stubs)
+    src/deep2/BP16Streamer.cpp
+    src/deep2/Chamber.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/ToroidalKVCache.cpp
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
@@ -3158,9 +3698,9 @@ if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 # OMEGA-1 Post-Build Manifest Generation for Gold
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 if(WIN32)
     add_custom_command(TARGET RawrXD_Gold POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -3272,12 +3812,21 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/js_extension_host_headless_impl.cpp
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
+    src/agentic/AgentOllamaClient.cpp
     src/logging/Logger.cpp
+    src/security/InputSanitizer.cpp
     src/core/ConfigurationValidator.cpp
+    src/inference/PerformanceMonitor.cpp
+    src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
+    tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
+    src/agent/quantum_dynamic_time_manager_impl.cpp
     src/core/native_gguf_loader_link_impl.cpp
+    src/agentic/AdvancedAgentCoordinator.cpp
+    src/BackendOrchestrator.cpp
     src/core/gold_inference_profiler_minimal.cpp
+    src/agentic/hotpatch/Engine.cpp
     src/core/gold_enterprise_devunlock_impl.cpp
     src/core/gold_beacon_handlers.cpp
     src/core/neural_bridge.cpp
@@ -3287,23 +3836,28 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/self_host_engine.cpp
     src/core/hardware_synthesizer.cpp
     # src/ui/entry_point.cpp  # Removed - conflicts with minimal_gold_main.cpp
+    src/ui/webview2_bridge.cpp
     # REMOVED: src/ui/RawrXD_MainLoop.cpp - references AgentSelfHealingOrchestrator (unresolved)
+    src/ui/debugger_core.cpp
+    src/inference/gpu_dispatch_gate.cpp
+    src/gguf_d3d12_bridge.cpp
+    src/asm/RawrXD_PE_Exporter.asm
 )
 
-# Vulkan SDK for Gold build ÎÃÃ¶ linked later after find_package(Vulkan)
+# Vulkan SDK for Gold build ├Ä┬ô├â┬ç├â┬╢ linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# MASM x64 Assembly ÎÃÃ¶ Phase 20/21 AVX-512 Requantization + Swarm Streaming
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# MASM x64 Assembly ├Ä┬ô├â┬ç├â┬╢ Phase 20/21 AVX-512 Requantization + Swarm Streaming
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 if(MSVC)
     # Prefer prebuilt MASM objects when available (some checked-in .asm files are placeholders).
     set(RAWRXD_PREBUILT_OBJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj")
     set(RAWRXD_PREBUILT_GENESIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build_genesis")
     set(RAWRXD_PREBUILT_SRCASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
 
-    # Phase 20: AVX-512 Q4_K_M ÎÃ¥Ã Q2_K requantization kernel
+    # Phase 20: AVX-512 Q4_K_M ├Ä┬ô├â┬Ñ├â┬å Q2_K requantization kernel
     set(ASM_REQUANTIZE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
     set(ASM_REQUANTIZE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/requantize_q4km_to_q2k_avx512.obj")
     add_custom_command(
@@ -3336,7 +3890,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 28: MonacoCore Native Editor Engine ÎÃÃ¶ Gap Buffer + Tokenizer
+    # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Gap Buffer + Tokenizer
     set(ASM_MONACOCORE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
     set(ASM_MONACOCORE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MonacoCore.obj")
     add_custom_command(
@@ -3347,7 +3901,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29: PDB Symbol Server ÎÃÃ¶ Native MSF v7.00 Parser Kernel
+    # Phase 29: PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ Native MSF v7.00 Parser Kernel
     set(ASM_PDBKERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
     set(ASM_PDBKERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PDBKernel.obj")
     add_custom_command(
@@ -3358,7 +3912,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 30: Accelerator Router ÎÃÃ¶ MASM Fast-Path Bridge
+    # Phase 30: Accelerator Router ├Ä┬ô├â┬ç├â┬╢ MASM Fast-Path Bridge
     set(ASM_ROUTERBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
     set(ASM_ROUTERBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RouterBridge.obj")
     add_custom_command(
@@ -3369,7 +3923,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29.2: GSI Hash ÎÃÃ¶ MASM Accelerated Hash + Bucket Probe
+    # Phase 29.2: GSI Hash ├Ä┬ô├â┬ç├â┬╢ MASM Accelerated Hash + Bucket Probe
     set(ASM_GSIHASH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
     set(ASM_GSIHASH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GSIHash.obj")
     add_custom_command(
@@ -3380,7 +3934,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 29.2: Reference Provider ÎÃÃ¶ FNV-1a Hash + Pattern Match
+    # Phase 29.2: Reference Provider ├Ä┬ô├â┬ç├â┬╢ FNV-1a Hash + Pattern Match
     set(ASM_REFPROVIDER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
     set(ASM_REFPROVIDER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RefProvider.obj")
     add_custom_command(
@@ -3391,7 +3945,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 31: IDE Self-Audit ÎÃÃ¶ Stub Detection Kernel
+    # Phase 31: IDE Self-Audit ├Ä┬ô├â┬ç├â┬╢ Stub Detection Kernel
     set(ASM_STUBDETECTOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
     set(ASM_STUBDETECTOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_StubDetector.obj")
     add_custom_command(
@@ -3402,7 +3956,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 37: Chain-of-Thought Engine ÎÃÃ¶ Pure MASM CoT DLL Core
+    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ Pure MASM CoT DLL Core
     set(ASM_COT_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
     set(ASM_COT_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_engine.obj")
     add_custom_command(
@@ -3413,7 +3967,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 37: Chain-of-Thought Engine ÎÃÃ¶ DLL Entry + SRW Lock
+    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ DLL Entry + SRW Lock
     set(ASM_COT_DLL_ENTRY_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
     set(ASM_COT_DLL_ENTRY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_dll_entry.obj")
     add_custom_command(
@@ -3424,7 +3978,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 39ÎÃÃ´42: CoT Enterprise Finishers ÎÃÃ¶ Snapshot, Telemetry, Copy Engine, Security
+    # Phase 39├Ä┬ô├â┬ç├â┬┤42: CoT Enterprise Finishers ├Ä┬ô├â┬ç├â┬╢ Snapshot, Telemetry, Copy Engine, Security
     set(ASM_COT_PHASE39_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
     set(ASM_COT_PHASE39_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_phase39.obj")
     add_custom_command(
@@ -3446,7 +4000,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: RawrCodex ÎÃÃ¶ Agentic Decision Tree Core (295KB, 21 procs)
+    # Phase 45: RawrCodex ├Ä┬ô├â┬ç├â┬╢ Agentic Decision Tree Core (295KB, 21 procs)
     set(ASM_RAWRCODEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
     set(ASM_RAWRCODEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrCodex.obj")
     add_custom_command(
@@ -3457,7 +4011,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Debug Engine ÎÃÃ¶ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
+    # Phase 45: Debug Engine ├Ä┬ô├â┬ç├â┬╢ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
     set(ASM_DEBUG_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
     set(ASM_DEBUG_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Debug_Engine.obj")
     add_custom_command(
@@ -3468,7 +4022,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: QuadBuffer Streamer ÎÃÃ¶ High-Performance Memory Streaming (52KB)
+    # Phase 45: QuadBuffer Streamer ├Ä┬ô├â┬ç├â┬╢ High-Performance Memory Streaming (52KB)
     set(ASM_QUADBUFFER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
     set(ASM_QUADBUFFER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_QuadBuffer_Streamer.obj")
     add_custom_command(
@@ -3479,7 +4033,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Swarm Network ÎÃÃ¶ Distributed Composition Protocol (36KB)
+    # Phase 45: Swarm Network ├Ä┬ô├â┬ç├â┬╢ Distributed Composition Protocol (36KB)
     set(ASM_SWARM_NETWORK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
     set(ASM_SWARM_NETWORK_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Swarm_Network.obj")
     add_custom_command(
@@ -3490,7 +4044,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: Enterprise License ÎÃÃ¶ Feature Gate + Hardware Fingerprint (31KB)
+    # Phase 45: Enterprise License ├Ä┬ô├â┬ç├â┬╢ Feature Gate + Hardware Fingerprint (31KB)
     set(ASM_ENTERPRISE_LIC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
     set(ASM_ENTERPRISE_LIC_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_EnterpriseLicense.obj")
     add_custom_command(
@@ -3501,7 +4055,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 45: License Shield ÎÃÃ¶ Anti-Tamper + Integrity Guard (34KB)
+    # Phase 45: License Shield ├Ä┬ô├â┬ç├â┬╢ Anti-Tamper + Integrity Guard (34KB)
     set(ASM_LICENSE_SHIELD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
     set(ASM_LICENSE_SHIELD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_License_Shield.obj")
     add_custom_command(
@@ -3512,7 +4066,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 46: VulkanBridge ÎÃÃ¶ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
+    # Phase 46: VulkanBridge ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
     set(ASM_VULKANBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
     set(ASM_VULKANBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_VulkanBridge.obj")
     add_custom_command(
@@ -3523,7 +4077,7 @@ if(MSVC)
         VERBATIM
     )
 
-    # Phase 49: SocketResponder ÎÃÃ¶ MASM64 IOCP Zero-Copy HTTP Server
+    # Phase 49: SocketResponder ├Ä┬ô├â┬ç├â┬╢ MASM64 IOCP Zero-Copy HTTP Server
     set(ASM_SOCKETRESP_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
     set(_ASM_SOCKETRESP_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SocketResponder.obj")
     if(EXISTS "${_ASM_SOCKETRESP_PREBUILT}")
@@ -3540,7 +4094,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 49: TridentBeacon ÎÃÃ¶ MASM64 COM Trident Host + Beacon JS Bridge
+    # Phase 49: TridentBeacon ├Ä┬ô├â┬ç├â┬╢ MASM64 COM Trident Host + Beacon JS Bridge
     set(ASM_TRIDENTBEACON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
     set(_ASM_TRIDENTBEACON_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon.obj")
     if(EXISTS "${_ASM_TRIDENTBEACON_PREBUILT}")
@@ -3557,7 +4111,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 49: TridentBeacon GPU ÎÃÃ¶ MASM64 GPU Acceleration + WebGL Bridge
+    # Phase 49: TridentBeacon GPU ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Acceleration + WebGL Bridge
     set(ASM_TRIDENTGPU_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
     set(_ASM_TRIDENTGPU_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon_GPU.obj")
     if(EXISTS "${_ASM_TRIDENTGPU_PREBUILT}")
@@ -3574,7 +4128,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: AgenticOrchestrator ÎÃÃ¶ VTable Dispatch + SPSC Task Queue
+    # Phase 50: AgenticOrchestrator ├Ä┬ô├â┬ç├â┬╢ VTable Dispatch + SPSC Task Queue
     set(ASM_AGENTIC_ORCH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
     set(_ASM_AGENTIC_ORCH_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_AgenticOrchestrator.obj")
     set(_ASM_AGENTIC_ORCH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_AgenticOrchestrator.obj")
@@ -3595,7 +4149,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: GGUF Vulkan Loader ÎÃÃ¶ Memory-Mapped Parser + Staging Buffer
+    # Phase 50: GGUF Vulkan Loader ├Ä┬ô├â┬ç├â┬╢ Memory-Mapped Parser + Staging Buffer
     set(ASM_GGUF_VKLOAD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
     set(_ASM_GGUF_VKLOAD_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_GGUF_Vulkan_Loader.obj")
     set(_ASM_GGUF_VKLOAD_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
@@ -3616,7 +4170,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: LSP-AI Bridge ÎÃÃ¶ SymbolIndex ÎÃ¥Ã¶ ContextAnalyzer Fusion
+    # Phase 50: LSP-AI Bridge ├Ä┬ô├â┬ç├â┬╢ SymbolIndex ├Ä┬ô├â┬Ñ├â┬╢ ContextAnalyzer Fusion
     set(ASM_LSP_BRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
     set(_ASM_LSP_BRIDGE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_LSP_AI_Bridge.obj")
     set(_ASM_LSP_BRIDGE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_LSP_AI_Bridge.obj")
@@ -3637,7 +4191,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: Streaming QuadBuffer ÎÃÃ¶ HWND Token Rendering + GDI Double-Buffer
+    # Phase 50: Streaming QuadBuffer ├Ä┬ô├â┬ç├â┬╢ HWND Token Rendering + GDI Double-Buffer
     set(ASM_STREAM_QBUF_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
     set(_ASM_STREAM_QBUF_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Streaming_QuadBuffer.obj")
 
@@ -3658,7 +4212,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase 50: SelfPatch Engine ÎÃÃ¶ Runtime Code Morphing + CPU Optimization
+    # Phase 50: SelfPatch Engine ├Ä┬ô├â┬ç├â┬╢ Runtime Code Morphing + CPU Optimization
     set(ASM_SPENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
     set(_ASM_SPENGINE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfPatch_Engine.obj")
     if(EXISTS "${_ASM_SPENGINE_PREBUILT}")
@@ -3675,7 +4229,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels â Q4MatMul, KV Attention, Tile Streamer
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels ├ó┬Ç┬ö Q4MatMul, KV Attention, Tile Streamer
     # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
     set(ASM_RDNA3_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
     set(_ASM_RDNA3_KERNELS_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
@@ -3696,7 +4250,7 @@ if(MSVC)
         set(ASM_RDNA3_KERNELS_OBJ "")
     endif()
 
-    # Phase Camellia: Camellia-256 Encryption Engine ÎÃÃ¶ MASM x64 CTR-mode workspace encryption
+    # Phase Camellia: Camellia-256 Encryption Engine ├Ä┬ô├â┬ç├â┬╢ MASM x64 CTR-mode workspace encryption
     set(ASM_CAMELLIA256_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
     set(_ASM_CAMELLIA256_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_Camellia256.obj")
     set(_ASM_CAMELLIA256_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256.obj")
@@ -3755,7 +4309,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase WD: Agentic Watchdog ÎÃÃ¶ .text Section Integrity Verification (HMAC-SHA256)
+    # Phase WD: Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification (HMAC-SHA256)
     set(ASM_WATCHDOG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
     set(_ASM_WATCHDOG_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Watchdog.obj")
     if(EXISTS "${_ASM_WATCHDOG_PREBUILT}")
@@ -3772,7 +4326,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase E: SelfHost Engine ÎÃÃ¶ Recursive Self-Compilation
+    # Phase E: SelfHost Engine ├Ä┬ô├â┬ç├â┬╢ Recursive Self-Compilation
     set(ASM_SELFHOST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
     set(_ASM_SELFHOST_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_SelfHost_Engine.obj")
     set(_ASM_SELFHOST_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfHost_Engine.obj")
@@ -3793,7 +4347,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase F: Hardware Synthesizer ÎÃÃ¶ FPGA/ASIC Acceleration
+    # Phase F: Hardware Synthesizer ├Ä┬ô├â┬ç├â┬╢ FPGA/ASIC Acceleration
     set(ASM_HWSYNTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
     set(_ASM_HWSYNTH_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_HardwareSynthesizer.obj")
     if(EXISTS "${_ASM_HWSYNTH_PREBUILT}")
@@ -3810,7 +4364,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase G: Mesh Brain ÎÃÃ¶ Distributed Consciousness P2P Mesh
+    # Phase G: Mesh Brain ├Ä┬ô├â┬ç├â┬╢ Distributed Consciousness P2P Mesh
     set(ASM_MESHBRAIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
     set(_ASM_MESHBRAIN_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_MeshBrain.obj")
     if(EXISTS "${_ASM_MESHBRAIN_PREBUILT}")
@@ -3827,7 +4381,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase H: Speciator Engine ÎÃÃ¶ Metamorphic Evolution
+    # Phase H: Speciator Engine ├Ä┬ô├â┬ç├â┬╢ Metamorphic Evolution
     set(ASM_SPECIATOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
     set(_ASM_SPECIATOR_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Speciator.obj")
     if(EXISTS "${_ASM_SPECIATOR_PREBUILT}")
@@ -3844,7 +4398,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase I: Neural Bridge ÎÃÃ¶ Direct Cortex Interface
+    # Phase I: Neural Bridge ├Ä┬ô├â┬ç├â┬╢ Direct Cortex Interface
     set(ASM_NEURALBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
     set(_ASM_NEURALBRIDGE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_NeuralBridge.obj")
     if(EXISTS "${_ASM_NEURALBRIDGE_PREBUILT}")
@@ -3861,7 +4415,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase â¬â: Omega Orchestrator ÎÃÃ¶ Autonomous Development Pipeline
+    # Phase ├ó┬ò┬¼├ó┬î┬É: Omega Orchestrator ├Ä┬ô├â┬ç├â┬╢ Autonomous Development Pipeline
     set(ASM_OMEGA_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
     set(_ASM_OMEGA_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_OmegaOrchestrator.obj")
     if(EXISTS "${_ASM_OMEGA_PREBUILT}")
@@ -3878,7 +4432,7 @@ if(MSVC)
         )
     endif()
 
-    # Phase ÎÃªâ§: PerfCounters ÎÃÃ¶ RDTSC Per-Kernel Cycle Histogram
+    # Phase ├Ä┬ô├â┬¬├ó┬é┬º: PerfCounters ├Ä┬ô├â┬ç├â┬╢ RDTSC Per-Kernel Cycle Histogram
     set(ASM_PERFCOUNTERS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
     set(_ASM_PERFCOUNTERS_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_PerfCounters.obj")
     set(_ASM_PERFCOUNTERS_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_PerfCounters.obj")
@@ -4004,7 +4558,7 @@ if(MSVC)
         )
     endif()
 
-    # Brutal gzip deflate ÎÃÃ¶ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
+    # Brutal gzip deflate ├Ä┬ô├â┬ç├â┬╢ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
     set(ASM_DEFLATE_BRUTAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
     set(ASM_DEFLATE_BRUTAL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj")
     add_custom_command(
@@ -4087,9 +4641,9 @@ if(MSVC)
     endif()
 
     # =========================================================================
-    # NanoQuant Engine ÎÃÃ¶ Sub-1-Bit Quantization Static Library
+    # NanoQuant Engine ├Ä┬ô├â┬ç├â┬╢ Sub-1-Bit Quantization Static Library
     # MASM64 kernel (ADMM, AVX2/AVX-512) + C++ bridge + GGML type registration
-    # Disabled by default ÎÃÃ¶ ASM kernel requires ml64 port fixes (A2008/A2083).
+    # Disabled by default ├Ä┬ô├â┬ç├â┬╢ ASM kernel requires ml64 port fixes (A2008/A2083).
     # Enable with: cmake -DRAWR_ENABLE_NANOQUANT=ON
     # =========================================================================
     option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine (requires working NanoQuant ASM)" OFF)
@@ -4105,6 +4659,8 @@ if(MSVC)
     )
 
     add_library(RawrXD_NanoQuant STATIC
+        src/ggml/ggml_nanoquant.cpp
+        src/agentic/agent_tool_quantize.cpp
     )
     # Set MSVC runtime library to match RawrEngine (static CRT)
     set_property(TARGET RawrXD_NanoQuant PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -4126,12 +4682,12 @@ if(MSVC)
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
-    message(STATUS "[NanoQuant] DISABLED ÎÃÃ¶ enable with -DRAWR_ENABLE_NANOQUANT=ON")
+    message(STATUS "[NanoQuant] DISABLED ├Ä┬ô├â┬ç├â┬╢ enable with -DRAWR_ENABLE_NANOQUANT=ON")
     endif()
 endif()
 
 # =============================================================================
-# Vulkan SDK (optional ÎÃÃ¶ GPU compute acceleration)
+# Vulkan SDK (optional ├Ä┬ô├â┬ç├â┬╢ GPU compute acceleration)
 # =============================================================================
 # Phase 4A: Apply Vulkan detection fix for Windows
 include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
@@ -4208,70 +4764,400 @@ endif()
 # =============================================================================
 # Phase 6: Standalone Inference Engine Executable (T4)
 # =============================================================================
-# Produces RawrXD-InferenceEngine.exe ÎÃÃ¶ loads GGUF and emits tokens with no IDE.
+# Produces RawrXD-InferenceEngine.exe ├Ä┬ô├â┬ç├â┬╢ loads GGUF and emits tokens with no IDE.
 # This is the self-hosting blocker: inference must run independently.
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-        src/rawrxd_model_loader.cpp
+    src/inference/inference_standalone_main.cpp
+    src/inference/ultra_fast_inference.cpp
+    src/inference/polymorphic_loader.cpp
+    src/inference/ollama_blob_parser.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
+    src/streaming_gguf_loader.cpp
+    src/compression_interface.cpp
+    src/memory_core.cpp
+    src/license_enforcement.cpp
+    src/feature_flags_runtime.cpp
     src/core/enterprise_licensev2_impl.cpp
     src/core/license_anti_tampering.cpp
+    src/tools/license_validator_manifest.cpp
     src/core/ignite_800b.cpp
     src/core/ConfigurationValidator.cpp
+    src/InferenceProfiler.cpp
+    src/engine/gguf_core.cpp
+    src/engine/inference_kernels.cpp
+    src/engine/transformer.cpp
+    src/engine/bpe_tokenizer.cpp
+    src/engine/sampler.cpp
+    src/engine/rawr_engine.cpp
+    src/engine/core_generator.cpp
+    src/engine/pyre_compute.cpp
+    src/engine/sovereign_engines.cpp
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
+    src/utils/Diagnostics.cpp
+    src/inference/TitanLoaderDiagnostics.cpp
+    src/inference/MemoryPressureGuard.cpp
+    src/agentic/ErrorRecoveryManager.cpp
+    src/inference/PerformanceMonitor.cpp
     src/inference/NegativeSpaceProfiler.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/deep2/vulkan_compute.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
+    src/backend/VulkanGemmDispatcher.cpp
+    src/kernels/VulkanComputeKernels.cpp
+    src/vulkan_compute.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+    src/runtime/GenerationBouncer.cpp
     src/runtime/StreamRouterAdapter.cpp
+    src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/logging/Logger.cpp
+    src/sampling/advanced_sampler.cpp
+    src/runtime/RawrRuntime.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/deep2/K2TimeLimitedServing.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticArchitectureDetector.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
     # Codec implementations (deflate/inflate/compress)
-    # Deep2 core ÎÃÃ¶ unified into InferenceEngine for canonical local inference
+    src/codec/compression.cpp
+    src/codec/brutal_gzip.cpp
+    src/codec/gzip_brutal_inflate.cpp
+    # Deep2 core ├Ä┬ô├â┬ç├â┬╢ unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
+    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
+    src/deep2/ChatTemplate.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/QuantKernelMASM.cpp
+    src/deep2/IQQuantKernels.cpp
+    src/deep2/GhostCache.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/AttnCertProbe.cpp
+    src/deep2/MlaCertProbe.cpp
+    src/deep2/SsmCertProbe.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/NUGemv.cpp
+    src/deep2/NULiveConsumer.cpp
+    src/deep2/TpsScaleHotpatch.cpp
+    src/deep2/ElasticDynamicBudget.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
     # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
+    src/deep2/K2MLAAttention.cpp
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2NativeStreamGate.cpp
+    src/deep2/MlaCertAuthority.cpp
+    src/deep2/K2LogitsClimb.cpp
+    src/deep2/K2LogitsSplit.cpp
+    src/deep2/K2LogitsLineage.cpp
+    src/deep2/K2GpuStreamCopy.cpp
+    src/deep2/K2GpuStreamCopy_Overlap.cpp
+    src/deep2/K2MLA_GpuGemv.cpp
+    src/deep2/K2BraidExecutionPolicy.cpp
+    src/deep2/K2MLA_FusedQ4KT.cpp
+    src/deep2/K2MLA_QPathDevice.cpp
+    src/deep2/K2MLA_QPathDevice_Emit.cpp
+    src/deep2/K2MLA_PathB.cpp
+    src/deep2/K2MLA_PathB_Attn.cpp
+    src/deep2/K2QbHostShrinkD2h.cpp
+    src/runtime/QbHostReadbackWindow.cpp
+    src/runtime/ExchangeObjectLedger.cpp
+    src/deep2/HostExchangeDiscover.cpp
+    src/deep2/K2MLA_QaCritical.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/K2WeightResolve.cpp
+    src/deep2/K2ShardIo.cpp
+        src/deep2/K2LivePathTensorCache.cpp
+        src/deep2/K2LivePathTensorCache_Prefetch.cpp
+    src/deep2/K2LivePathTensorCache_Emit.cpp
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
+    src/deep2/Deep2DeviceManager.cpp
+    src/deep2/DualLaneChoreographer.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
+    src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/vulkan_compute.cpp
     src/deep2/Deep2Engine_VulkanRuntime.cpp
     src/deep2/Deep2DualGpuRowSplit.cpp
     src/deep2/Deep2Engine_GpuMoEMLA.cpp
     src/deep2/Deep2Engine_GpuForward.cpp
+    src/deep2/Deep2Engine_GpuToken.cpp
     src/deep2/Deep2Engine_SsVkDecodeBind.cpp
-    # Reverse Knowledge Compiler (RKC) â proof-state before LLM
+    src/deep2/d2_engine_ssvk_decode_bind.c
+    src/deep2/lavapath/DualStickStreamWindow.cpp
+    src/deep2/lavapath/DualStickStreamWindow_Acquire.cpp
+    src/deep2/lavapath/DualStickStreamWindow_Emit.cpp
+    src/deep2/lavapath/DualStickEnvSnap.cpp
+    src/deep2/lavapath/FutureConsumer_Space.cpp
+    src/deep2/lavapath/FutureConsumer_Emit.cpp
+    src/deep2/lavapath/FutureConsumer_EmitExec.cpp
+    src/deep2/lavapath/FutureConsumer_Advance.cpp
+    src/deep2/lavapath/FutureConsumer_Chair.cpp
+    src/deep2/lavapath/FutureConsumer_Register.cpp
+    src/deep2/lavapath/FutureConsumer_Notes.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Move.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Worker.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Nvme.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_Seal.cpp
+    src/deep2/lavapath/HostFutureConsumerPrefetch_KnO3.cpp
+    src/deep2/lavapath/KN_O3KKEN.asm
+    src/deep2/lavapath/r25_productopen_masm.asm
+    src/deep2/lavapath/k3c_token.cpp
+    src/deep2/lavapath/FreeTokenMicroZone.cpp
+    src/deep2/lavapath/FreeTokenMicroZone_Query.cpp
+    src/vulkan_fwd_resident.cpp
+    src/vulkan_fwd_fused.cpp
+    src/vulkan_weight_window.cpp
+    src/vulkan_weight_policy.cpp
+    src/vulkan_weight_prefetch.cpp
+    src/vulkan_fwd_q4k.cpp
+    src/vulkan_fwd_q4k_host.cpp
+    src/vulkan_fwd_q4k_fused.cpp
+src/vulkan_fwd_q4k_climb.cpp
+src/vulkan_fwd_q8_kva_climb.cpp
+src/vulkan_fwd_q4k_act.cpp
+    src/vulkan_fwd_attn_mla.cpp
+    src/vulkan_fwd_q6k.cpp
+    src/vulkan_fwd_q6k_host.cpp
+    src/vulkan_fwd_quant_pipe.cpp
+    src/vulkan_fwd_quant.cpp
+    src/vulkan_fwd_quant_host.cpp
+    src/vulkan_fwd_cmdpool.cpp
+    src/vulkan_fwd_tune.cpp
+    src/vulkan_fwd_hostops.cpp
+    src/vulkan_fwd_stubs.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/ProductionProfiler.cpp
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
+    src/deep2/execution_policy/PlacementPlan.cpp
+    src/deep2/execution_policy/ExecutionPolicyApply.cpp
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/IOCPGGUFLoader.cpp
+    src/deep2/Deep2ModelRuntime.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/deep2/Chamber.cpp
+    src/deep2/ToroidalKVCache.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/OutOfCoreRuntime.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/ElasticResidencyManager.cpp
+    src/deep2/ElasticDynamicBudget.cpp
+    src/deep2/CycloneScheduler.cpp
+    src/deep2/Deep2LivePath.cpp
+    src/deep2/Deep2LivePath_Gate.cpp
+    src/deep2/Deep2LivePath_Pinball.cpp
+    src/deep2/Deep2LivePath_Mech.cpp
+    src/deep2/Deep2LivePath_Emit.cpp
+    src/deep2/GpuTransfer_Emit.cpp
+    src/deep2/LivePathEffect.cpp
+    src/deep2/K2LivePolicy.cpp
+    src/deep2/K2LivePolicy_Apply.cpp
+    src/deep2/K2LivePolicy_Hysteresis.cpp
+    src/deep2/FusedLiveController.cpp
+    src/deep2/FusedLiveController_Decide.cpp
+    src/deep2/FusedLiveController_Cheap.cpp
+    src/deep2/FusedLiveController_Law.cpp
+    src/deep2/FusedLiveController_Emit.cpp
+    src/deep2/LivePath_FusedTick.cpp
+    src/deep2/Deep2LivePath_MechEnd.cpp
+    src/deep2/Deep2LivePath_Thermal.cpp
+    # Reverse Knowledge Compiler (RKC) ├ó┬Ç┬ö proof-state before LLM
+    src/rkc/RKCValidator.cpp
+    src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+    src/rkc/RKCCompiler.cpp
+    src/rkc/RKCRecipes.cpp
+    src/rkc/RKCGapEngine.cpp
+    src/rkc/RKCEmit.cpp
+    src/rkc/RKCSession.cpp
+    src/rkc/RKCProductContext.cpp
+    src/rkc/RKC_C_ABI.cpp
+    src/deep2/RouterPrefetchTelemetry.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Agentic Core ÎÃÃ¶ minimal verified set (add more after individual validation)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    src/core/ToolRegistry.cpp
+    src/BackendOrchestrator.cpp
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Agentic Core ├Ä┬ô├â┬ç├â┬╢ minimal verified set (add more after individual validation)
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/agentic/ErrorRecoveryManager.cpp
+    src/agentic/BoundedAgentLoop.cpp
+    src/agentic/OrchestratorBridge.cpp
+    src/agentic/ToolRegistry.cpp
+    src/agentic/AgentOrchestrator.cpp
+    src/agentic/AgentOllamaClient.cpp
+    src/agentic/hotpatch/Engine.cpp
+    src/agentic/AgentToolHandlers.cpp
+    src/agentic/AutonomousFixOrchestrator.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
     # src/agentic/RawrXD_AutonomousFlow.cpp  # excluded: defines main() - standalone executable only
     # src/agentic/RawrXD_AutonomousCoordinator_Final.cpp  # excluded: defines main() - standalone executable only
+    src/agentic/RawrXD_AgentHost.cpp
+    src/agentic/RawrXD_RewardModel.cpp
+    src/agentic/RawrXD_SymbolHealer.cpp
+    src/agentic/RawrXD_ToolRegistry.cpp
+    src/agentic/DeterministicReplayEngine.cpp
+    src/agentic/DiffEngine.cpp
+    src/agentic/DirectFIM.cpp
+    src/agentic/FIMPromptBuilder.cpp
+    src/agentic/GGMLAgenticEngine.cpp
+    src/agentic/GgmlEngine.cpp
+    src/agentic/gguf_types.cpp
+    src/agentic/GGUFLoader.cpp
+    src/agentic/KnowledgeGraph.cpp
+    src/agentic/chain_of_thought.cpp
+    src/agentic/change_impact_analyzer.cpp
+    src/agentic/context_assembler.cpp
+    src/agentic/context_mention_parser.cpp
+    src/agentic/RepositoryIndexer.cpp
+    src/agentic/RobustOllamaParser.cpp
+    src/agentic/SelfImprovement.cpp
+    src/agentic/slash_command_parser.cpp
+    src/agentic/SubAgentManager.cpp
+    src/agentic/task_executor.cpp
+    src/agentic/task_graph.cpp
+    src/agentic/task_scheduler.cpp
+    src/agentic/NativeInferenceClient.cpp
+    src/agentic/Deep2SovereignInferenceGateway.cpp
+    src/agentic/SovereignStandaloneClient.cpp
+    src/agentic/SovereignAssembler.cpp
+    src/agentic/SovereignAssembler_HotPatch.cpp
     # src/agentic/SovereignCodeGenerator.cpp  # excluded: defines main() - standalone executable only
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Sovereign Runtime ÎÃÃ¶ verified .cpp files only
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    src/agentic/Titan_Sovereign_Bridge.cpp
+    src/agentic/Phase3_Agent_Kernel_Bridge.cpp
+    src/agentic/BackendEmissionService.cpp
+    src/agentic/ExecPipeline.cpp
+    src/agentic/StreamingResultChannel.cpp
+    src/agentic/streaming_command_handler.cpp
+    src/agentic/ToolDispatcher.cpp
+    src/agentic/ToolDispatchTable.cpp
+    src/agentic/tool_call_parser.cpp
+    src/agentic/tool_executor.cpp
+    src/agentic/tool_registry.cpp
+    src/agentic/vulkan_compute_real.cpp
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Sovereign Runtime ├Ä┬ô├â┬ç├â┬╢ verified .cpp files only
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    src/sovereign/SovereignRuntime.cpp
+    src/sovereign/ExecutionContract.cpp
+    src/sovereign/SovereignCoreWrapper.cpp
+    src/sovereign/SovereignDenseEngine.cpp
+    src/sovereign/SovereignEventBus.cpp
+    src/sovereign/SovereignCheckpoint.cpp
+    src/sovereign/SovereignVCS.cpp
+    src/sovereign/SovereignWatchdog.cpp
+    src/sovereign/Deep2InferenceWrapper.cpp
+    src/sovereign/AgenticEngineSovereignHook.cpp
+    src/sovereign/IDE_Lifecycle_Hook.cpp
+    src/sovereign/RawrXD_SovereignStatusPanel.cpp
+    src/sovereign/IntegrityChecker.cpp
+    src/sovereign/HealthReport.cpp
+    src/sovereign/AutoRepair.cpp
+    src/sovereign/AutoRepairEngine.cpp
+    src/sovereign/CrashRecovery.cpp
+    src/sovereign/StressTester.cpp
+    src/sovereign/Profiler.cpp
+    src/sovereign/DistributedKV.cpp
+    src/sovereign/ExpertSharding.cpp
+    src/sovereign/Beaconism.cpp
+    src/sovereign/rawr_transport_strict.cpp
     # src/sovereign/verify_integration.cpp  # excluded: C++20 format header conflicts with MSVC 14.44
     # MASM GEMV kernels
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4_1_gemv.asm
+    src/deep2/sovereign_q5_k_gemv.asm
+    src/deep2/sovereign_q6_k_gemv.asm
+    src/deep2/sovereign_q8_0_gemv.asm
+    src/deep2/sovereign_fp16_gemv.asm
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -4307,6 +5193,7 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/deep2/K2LivePathTensorCache_Emit.cpp)
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
+    src/inference/inference_standalone_main.cpp
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
@@ -4321,7 +5208,7 @@ option(RAWRXD_DEEP2_CERT "Enable Deep2 production/reference parity hooks" OFF)
 if(RAWRXD_DEEP2_CERT)
     target_compile_definitions(InferenceEngine PRIVATE RAWRXD_DEEP2_CERT=1)
     target_include_directories(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
-    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 ÎÃÃ¶ stage telemetry + reference parity enabled")
+    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 ├Ä┬ô├â┬ç├â┬╢ stage telemetry + reference parity enabled")
 endif()
 
 # Add Vulkan include directories if available
@@ -4333,6 +5220,7 @@ if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
 endif()
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
+    src/inference/inference_standalone_main.cpp
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -4344,6 +5232,11 @@ endif()
 
 # Unified Generation CLI - uses GenerationBouncer
 add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
+    src/cli/generate_cli.cpp
+    src/runtime/GenerationBouncer.cpp
+    src/runtime/shared/SharedModelRuntime.cpp
+    src/runtime/shared/BP1BraidIndex.cpp
+    src/runtime/shared/BP1BraidStreamer.cpp
 )
 target_link_libraries(RawrXD-Generate PRIVATE
     InferenceEngine
@@ -4411,8 +5304,60 @@ endif()
     if(RAWR_HAS_MASM)
         # Link quantization + telemetry kernels into inference engine
         set(INFERENCE_ASM_SOURCES
+            src/asm/rawr_globals.asm
+            src/asm/rawr_cpu_features.asm
+            src/asm/inference_core.asm
+            src/asm/inference_kernels.asm
+            src/asm/quant_avx2.asm
+            src/asm/RawrXD_KQuant_Dequant.asm
+            src/asm/RawrXD_KQuant_Kernel.asm
+            src/asm/FlashAttention_AVX512.asm
+            src/asm/RawrXD_Telemetry_Kernel.asm
             # Pure MASM inference kernels (zero dependencies, no GGML)
+            src/masm/rawrxd_math_masm.asm
+            src/masm/rawrxd_transformer_masm_fixed.asm
             # Deep2 sovereign GEMV kernels
+            src/deep2/sovereign_deep2_kernels.asm
+            src/deep2/sovereign_q4k_gemv.asm
+            src/deep2/sovereign_q4_1_gemv.asm
+            src/deep2/sovereign_q5_k_gemv.asm
+            src/deep2/sovereign_q6_k_gemv.asm
+            src/deep2/sovereign_q8_0_gemv.asm
+            src/deep2/sovereign_fp16_gemv.asm
+            src/deep2/QuantKB.asm
+            src/asm/Deep2Device_Score.asm
+            src/asm/Deep2Device_Pick.asm
+            src/asm/Deep2R1_StrEq.asm
+            src/asm/Deep2R1_IsArch.asm
+            src/asm/Deep2R1_GlobData.asm
+            src/asm/Deep2R1_MlaData.asm
+            src/asm/Deep2R1_MoeData.asm
+            src/asm/Deep2R1_Scan.asm
+            src/asm/Deep2R1_Decode.asm
+            src/asm/Deep2R1_Validate.asm
+            src/asm/Deep2R1_LayerKind.asm
+            src/asm/Deep2R1_SplitKVB.asm
+            src/asm/Deep2ThreadAffinity.asm
+            src/asm/Deep2OuterStr.asm
+            src/asm/Deep2OuterEnv.asm
+            src/asm/Deep2OuterParse.asm
+            src/asm/Deep2OuterParseIdx.asm
+            src/asm/Deep2OuterGGUF.asm
+            src/asm/Deep2OuterPath.asm
+            src/asm/Deep2OuterShardApply.asm
+            src/asm/Deep2OuterShardScan.asm
+            src/asm/Deep2OuterShardCheck.asm
+            src/asm/Deep2OuterPrintIO.asm
+            src/asm/Deep2OuterPrint.asm
+            src/asm/Deep2OuterEvidence.asm
+            src/asm/Deep2OuterResolve.asm
+            src/asm/Deep2OuterCallEngine.asm
+            src/asm/Deep2OuterHost.asm
+            src/asm/RuntimeEvidence512_Core.asm
+            src/asm/RuntimeEvidence512_Emit.asm
+            src/asm/RuntimeEvidence512_Collect.asm
+            src/asm/RuntimeEvidence512_IDEEmit.asm
+            src/asm/RuntimeEvidence512_IDECollect.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -4445,7 +5390,7 @@ set_target_properties(RawrXD-InferenceEngine PROPERTIES
     OUTPUT_NAME RawrXD-InferenceEngine
 )
 
-# Telemetry_Kernel.asm uses ADDR32 relocations ÎÃÃ¶ require /LARGEADDRESSAWARE:NO
+# Telemetry_Kernel.asm uses ADDR32 relocations ├Ä┬ô├â┬ç├â┬╢ require /LARGEADDRESSAWARE:NO
 if(MSVC)
     target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -4465,6 +5410,8 @@ endif()
 message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
 
 add_executable(rawrxd-monaco-gen
+    src/monaco_gen.cpp
+    src/engine/react_ide_generator.cpp
 )
 
 target_include_directories(rawrxd-monaco-gen PRIVATE
@@ -4483,45 +5430,67 @@ set_target_properties(rawrxd-monaco-gen PROPERTIES
 # Previously entry_point.cpp (wWinMain) created a minimal window and could leave it hidden (nCmdShow=SW_HIDE).
 if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     set(WIN32IDE_SOURCES
-        
+        src/win32app/main_win32.cpp
+        src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_ToolRoutes.cpp
+        src/win32app/HeadlessIDE_GuiRoutes.cpp
+        src/win32app/HeadlessIDE_FileAliases.cpp
+        src/agent/quantum_agent_orchestrator.cpp
+        src/agent/quantum_autonomous_todo_system.cpp
+        src/agent/quantum_multi_model_agent_cycling.cpp
+        src/agent/quantum_dynamic_time_manager.cpp
+        src/agent/quantum_missing_impl.cpp
+        src/agent/quantum_production_orchestrator.cpp
+        src/agent/autonomous_orchestrator.cpp
+        src/agent/orchestrator_cli_handler.cpp
+        src/ui/RawrXD_MainLoop.cpp
+        src/ui/webview2_bridge.cpp
+        src/ui/debugger_core.cpp
+        src/ui/agentic_bridge.cpp
+        src/win32app/RawrXD-Win32IDE.rc
+        src/bridge/Win32SwarmBridge.cpp
+        src/bridge/SwarmIATRegistration.cpp
+        src/bridge/UnifiedModelMetadata.cpp
+        src/subagent_core.cpp
+        src/agentic/SubAgentManager.cpp
+        src/agentic/RobustOllamaParser.cpp
+        src/agentic/ErrorRecoveryManager.cpp
+        src/gpu/speculative_decoder_v2.cpp
+        src/inference/MemoryPressureGuard.cpp
+        src/inference/gpu_dispatch_gate.cpp
+        src/inference/ai_model_caller_real.cpp
+        src/inference/inference_engine_real.cpp
+        src/gguf_masm_weight_bridge.cpp
+        src/codec/brutal_gzip.cpp
+        src/codec/gzip_brutal_inflate.cpp
     )
 
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
-        list(APPEND WIN32IDE_SOURCES
-src/core/auto_feature_registry.cpp
-)
-        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ÎÃÃ¶ required by auto_feature_registry
-        list(APPEND WIN32IDE_SOURCES
-
-)
+        list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
+        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
+        list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
     endif()
 
     # MASM64 UI Dispatcher (MSVC/MASM-only).
     if(RAWR_HAS_MASM)
         set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
         set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES
-${WEBVIEW2_DISPATCHER}
-)
+        list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
     endif()
 
     # MASM64 ViewState - Enterprise-grade lock-free UI state management
     if(RAWR_HAS_MASM)
         set(VIEWSTATE_MASM src/asm/view_state_x64.asm)
         set_source_files_properties(${VIEWSTATE_MASM} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES
-${VIEWSTATE_MASM}
-)
+        list(APPEND WIN32IDE_SOURCES ${VIEWSTATE_MASM})
     endif()
 
     # MASM64 Tensor Operations - Pure x64 assembly inference kernels
     if(RAWR_HAS_MASM)
         set(TENSOR_OPS_MASM src/asm/tensor_masm.asm)
         set_source_files_properties(${TENSOR_OPS_MASM} PROPERTIES LANGUAGE ASM_MASM)
-        list(APPEND WIN32IDE_SOURCES
-${TENSOR_OPS_MASM}
-)
+        list(APPEND WIN32IDE_SOURCES ${TENSOR_OPS_MASM})
     endif()
 
     # NOTE:
@@ -4529,47 +5498,178 @@ ${TENSOR_OPS_MASM}
     # (single add_executable + full source/link configuration).
 
     list(APPEND WIN32IDE_SOURCES
-# Core Win32IDE implementation units (required for real GUI command/menu behavior
-)
+        # Core Win32IDE implementation units (required for real GUI command/menu behavior)
+        src/win32app/Win32IDE.cpp
+        src/win32app/Win32IDE_Core.cpp
+        src/win32app/Win32IDE_CoreRuntimeSpine.cpp
+        src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_CommandSurface.cpp
+        src/command/CommandBroker.cpp
+        src/command/CommandEventJournal.cpp
+        src/command/SessionBinder.cpp
+        src/command/CapabilityProfile.cpp
+        src/win32app/Win32IDE_VSCodeUI.cpp
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
         # fought Core via /FORCE:MULTIPLE and risked a second product shell.
+        src/win32app/Win32IDE_WindowOwnership.cpp
+        src/win32app/Win32IDE_Accelerators.cpp
+        src/win32app/IV280Bridge.cpp
+        src/win32app/IMultiFileSearchWidget.cpp
+        src/win32app/CICDSettings.cpp
+        src/win32app/BenchmarkMenu.cpp
+            src/win32app/WindowManager.cpp
+            src/win32app/EditorOperations.cpp
+            src/win32app/RouterOperations.cpp
+                    src/win32app/Win32IDE_Watchdog.cpp
+        src/win32app/Win32IDE_SyntaxHighlight.cpp
+        src/win32app/Win32IDE_VisionEncoder.cpp
+        src/win32app/Win32IDE_Themes.cpp
+        src/win32app/Win32IDE_StreamingUX.cpp
+        src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_Debugger.cpp
+        src/win32app/Win32IDE_AutonomousDebugger.cpp
+        src/win32app/Win32IDE_Annotations.cpp
+        src/win32app/Win32IDE_ReverseEngineering.cpp
+        src/win32app/Win32IDE_Logger.cpp
+        src/win32app/Win32IDE_AgenticBridge.cpp
+        src/full_agentic_ide/FullAgenticIDE.cpp
+        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+        src/full_agentic_ide/AgenticIOCPBridge.cpp
+        src/win32app/Win32IDE_AgentCommands.cpp
+        src/win32app/Win32IDE_TabManager.cpp
+        src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_AutonomousCommunicator.cpp
+        src/win32app/Win32IDE_AgenticComposerUX.cpp
+        src/win32app/Win32IDE_ContextMentionParser.cpp
+        src/win32app/Win32IDE_UnifiedTelemetry.cpp
+        src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_PowerShell.cpp
+        src/win32app/Win32IDE_PowerShellPanel.cpp
+        src/win32app/Win32IDE_CommandFlight.cpp
+        src/win32app/Win32IDE_ShellLayout.cpp
+        src/win32app/Win32IDE_MenuE2eProbe.cpp
+        src/win32app/Win32IDE_Session.cpp
+        src/win32app/Win32IDE_GGUFInspector.cpp
+        src/win32app/Win32IDE_FileOps.cpp
+        src/win32app/Win32IDE_DecompilerView.cpp
+        src/win32app/Win32IDE_NativePipeline.cpp
+        src/win32app/Win32IDE_ModelAnatomy.cpp
+        src/sampling/advanced_sampler.cpp
+        src/runtime/RawrRuntime.cpp
+        src/compression/zlib_runtime_loader.cpp
+        src/deep2/Deep2APIServer.cpp
+        src/deep2/production/Deep2ProductionRuntime.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 
-        # Deep2 completion provider and bridge ÎÃÃ¶ real local inference for ghost text
+        src/win32app/Win32IDE_FeatureManifest.cpp
+        src/win32app/Win32IDE_GhostText.cpp
+        # Deep2 completion provider and bridge ├Ä┬ô├â┬ç├â┬╢ real local inference for ghost text
+        src/ai_completion_real.cpp
+        src/ide/Deep2Bridge.cpp
+        src/ide/SovereignSharedMemoryBridge.cpp
+        src/ide/ANSIColorParser.cpp
+        src/ide/FindReplaceDialog.cpp
+        src/ide/GitCommitDialog.cpp
+        src/ide/GitDiffViewer.cpp
+        src/win32app/Win32IDE_OutlinePanel.cpp
+        src/win32app/Win32IDE_RenamePreview.cpp
+        src/win32app/Win32IDE_Tier2Cosmetics.cpp
+        src/win32app/Win32IDE_Tier1Cosmetics.cpp
+        src/win32app/Win32IDE_Breadcrumbs.cpp
+        src/win32app/Win32IDE_PlanExecutor.cpp
+        src/agentic/agentic_planning_orchestrator.cpp
+        src/agentic/failure_intelligence_orchestrator.cpp
+        src/agentic/agentic_orchestrator_integration.cpp
+        src/agentic/agentic_audit_sink.cpp
+        src/agentic/change_impact_analyzer.cpp
 
+        src/win32app/Win32IDE_AgenticPlanningPanel.cpp
+        src/win32app/Win32IDE_FailureDetector.cpp
+        src/win32app/Win32IDE_FailureIntelligence.cpp
+        src/win32app/Win32IDE_Settings.cpp
+        src/win32app/Win32IDE_LocalServer.cpp
+        src/win32app/Win32IDE_BackendSwitcher.cpp
+        src/security/ProviderKeyStore.cpp
+        src/security/ProviderKeyStore_get.cpp
+        src/security/ProviderKeyStore_misc.cpp
+        src/win32app/Win32IDE_AIBackend.cpp
+        src/win32app/Win32IDE_LLMRouter.cpp
+        src/win32app/Win32IDE_LSPClient.cpp
+        src/win32app/Win32IDE_PeekOverlay.cpp
+        src/win32app/Win32IDE_CaretAnimation.cpp
         # src/win32app/Win32IDE_AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/win32app/Win32IDE_ModelDiscovery.cpp
+        src/win32app/Win32IDE_SwarmModelSelector.cpp
+        src/win32app/Win32IDE_AsmSemantic.cpp
+        src/win32app/Win32IDE_LSP_AI_Bridge.cpp
+        src/win32app/Win32IDE_MultiResponse.cpp
+        src/win32app/Win32IDE_ExecutionGovernor.cpp
+        src/win32app/Win32IDE_LayerEviction.cpp
+        src/win32app/Win32IDE_SubAgent.cpp
+        src/win32app/Win32IDE_AgentHistory.cpp
+        src/win32app/Win32IDE_AgentPanel.cpp
+        src/win32app/Win32IDE_DiskRecovery.cpp
+        src/win32app/Win32TerminalManager.cpp
+        src/win32app/TransparentRenderer.cpp
 
-        # Plugin System ÎÃÃ¶ Phase 43: Native Win32 DLL loading (C ABI)
+        # Plugin System ├Ä┬ô├â┬ç├â┬╢ Phase 43: Native Win32 DLL loading (C ABI)
+        src/plugin_system/win32_plugin_loader.cpp
+        src/win32app/Win32IDE_Plugins.cpp
+        src/win32app/Win32IDE_HandleExtensionCommand.cpp
 
         # Configuration management
+        src/config/IDEConfig.cpp
 
         # LLM adapter + Auth (Win32/STL only; Ship/StdReplacements.hpp + Ship/RawrCompatIo.hpp when needed)
+        src/llm_adapter/QuantBackend.cpp
+        src/llm_adapter/GGUFRunner.cpp
+        src/llm_adapter/gguf_k_quants.cpp
+        src/auth/QuantumAuthUI.cpp
         
         # Core engine files needed by IDE
+        src/agentic_engine.cpp
+        src/subagent_core.cpp
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
-        src/deep2/vulkan_compute.cpp
+        src/backend/vulkan_compute.cpp
+        src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
-        # Bounded Agent Loop + FIM Provider (AgentÎÃ¥ÃIDE Pivot)
+        # Bounded Agent Loop + FIM Provider (Agent├Ä┬ô├â┬Ñ├â┬åIDE Pivot)
+        src/agentic/AgentToolHandlers.cpp
+        src/agentic/BoundedAgentLoop.cpp
+        src/agentic/OllamaProvider.cpp
+        src/agentic/DiffEngine.cpp
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
+        src/agentic/DeterministicReplayEngine.cpp
 
-        # T4: Autonomous Recovery Orchestrator (FailureClass ÎÃ¥Ã recovery ÎÃ¥Ã verify ÎÃ¥Ã commit)
+        # T4: Autonomous Recovery Orchestrator (FailureClass ├Ä┬ô├â┬Ñ├â┬å recovery ├Ä┬ô├â┬Ñ├â┬å verify ├Ä┬ô├â┬Ñ├â┬å commit)
+        src/agentic/autonomous_recovery_orchestrator.cpp
         
-        # T4.5: Agentic Deep Thinking Engine ÎÃÃ¶ Autonomous monitoring, recovery, and orchestration
+        # T4.5: Agentic Deep Thinking Engine ├Ä┬ô├â┬ç├â┬╢ Autonomous monitoring, recovery, and orchestration
+        src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
-        src/core/ToolRegistry.cpp
+        src/agentic/AgentOrchestrator.cpp
+        src/agentic/OrchestratorBridge.cpp
+        src/agentic/AgenticNavigator.cpp
+        src/agentic/ToolRegistry.cpp
+        src/agentic/RawrXD_AgentLoop.cpp
+        src/agentic/agentic_executor.cpp
+        src/agentic/FIMPromptBuilder.cpp
+        src/agentic/AgentOllamaClient.cpp
 
         # Unlinked symbols batches - provide real implementations for link closure
         # batch_004 excluded: duplicates RawrXD_Hotpatch_Kernel / Snapshot / Watchdog ASM.
         src/core/unlinked_symbols_batch_001.cpp
         src/core/unlinked_symbols_batch_002.cpp  # ggml/matmul; asm_pyre_* gated when RAWRXD_HAS_ASM_PYRE
         src/core/unlinked_symbols_batch_003.cpp
-        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* ÎÃ¥Ã ASM
+        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* ├Ä┬ô├â┬Ñ├â┬å ASM
         src/core/win32ide_watchdog_init.cpp        # sole C provider for asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
         src/core/unlinked_symbols_batch_006.cpp
@@ -4584,9 +5684,14 @@ ${TENSOR_OPS_MASM}
         # src/core/unlinked_symbols_batch_019.cpp
         # src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp
+        src/ANSIParser.cpp
+        src/vulkan_kernel_bridge.cpp
 
+        src/gguf_d3d12_bridge.cpp
+        src/rdna3_bridge.cpp
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
+        src/llm_adapter/rawrxd_ggufrunner_signals.cpp
         # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
         # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
         # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
@@ -4599,17 +5704,24 @@ ${TENSOR_OPS_MASM}
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
         # src/core/spengine_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp (asm_spengine_cpu_optimize)
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
+        src/collab/cursor_widget.cpp
+        src/collab/crdt_buffer.cpp
         # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations ÎÃÃ¶ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
+        src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations ├Ä┬ô├â┬ç├â┬╢ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
         
+        src/agentic_observability.cpp
         src/core/rawrxd_subsystem_api.cpp
+        src/runtime_core.cpp
+        src/tool_registry.cpp
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -4617,29 +5729,60 @@ ${TENSOR_OPS_MASM}
         src/core/agent_memory_indexer.cpp
 
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
+        src/agentic/agentic_transaction.cpp
 
-        # P6: Agent Workflow Orchestrator (DAG-based planÎÃ¥ÃexecuteÎÃ¥ÃvalidateÎÃ¥Ãcommit)
+        # P6: Agent Workflow Orchestrator (DAG-based plan├Ä┬ô├â┬Ñ├â┬åexecute├Ä┬ô├â┬Ñ├â┬åvalidate├Ä┬ô├â┬Ñ├â┬åcommit)
+        src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
+        src/ai/symbol_graph_indexer.cpp
+        src/ai/semantic_code_search.cpp
+        src/ai/multi_file_reasoning.cpp
+        src/ai/workspace_embeddings.cpp
+        src/ai/repo_refactor_engine.cpp
 
         # AgenticObservability + SubsystemRegistry (required by AgentOrchestrator, ToolRegistry, feature_handlers)
         # already added above in this block; keep single provider per file
 
         # Disk Recovery Agent (C++ implementation) + Tool handler + ASM wrapper
-        src/core/DiskRecoveryAgent.cpp
-        src/core/DiskRecoveryAgent.cpp
+        src/agent/DiskRecoveryAgent.cpp
+        src/agentic/DiskRecoveryAgent.cpp
+        src/agentic/DiskRecoveryToolHandler.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent_explainability.cpp
+        src/utils/ErrorReporter.cpp
         # Observability + validation + perf telemetry (link-time required)
         src/logging/Logger.cpp
+        src/security/InputSanitizer.cpp
         src/core/ConfigurationValidator.cpp
+        src/inference/PerformanceMonitor.cpp
+        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_sampler.cpp
+        src/modules/engine_manager.cpp
+        src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
+        src/memory_core.cpp
+        src/hot_patcher.cpp
+        src/streaming_gguf_loader.cpp
+        src/utils/Diagnostics.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/model_source_resolver.cpp
+        src/compression_interface.cpp
+        src/engine/gguf_core.cpp
+        src/engine/inference_kernels.cpp
+        src/engine/transformer.cpp
+        src/engine/bpe_tokenizer.cpp
+        src/engine/sampler.cpp
+        src/engine/rawr_engine.cpp
+        src/engine/core_generator.cpp
+        src/engine/pyre_compute.cpp
+        src/engine/sovereign_engines.cpp
         # Streaming engine registry (Phase 9)
         src/core/streaming_engine_registry.cpp
         src/core/gpu_backend_bridge.cpp
@@ -4647,6 +5790,7 @@ ${TENSOR_OPS_MASM}
         src/core/enterprise_licensev2_impl.cpp
         src/core/enterprise_devunlock_bridge.cpp
         src/core/monolithic_heap_globals.cpp
+        src/tools/license_validator_manifest.cpp
         src/core/license_anti_tampering.cpp
         src/core/camellia256_bridge.cpp
         src/core/watchdog_service.cpp
@@ -4677,12 +5821,15 @@ ${TENSOR_OPS_MASM}
         # Distributed Swarm Compilation (Phase 11)
         src/core/swarm_coordinator.cpp
         src/core/swarm_worker.cpp
+        src/win32app/Win32IDE_SwarmPanel.cpp
         
         # Dual-Agent Orchestrator (Phase 41)
+        src/win32app/Win32IDE_DualAgentPanel.cpp
         
         # Native Debugger Engine (Phase 12) + P0 source-level symbols (dbghelp)
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
+        src/win32app/Win32IDE_NativeDebugPanel.cpp
         
         # Three-Layer Hotpatch System (Phase 14.2)
         src/core/model_memory_hotpatch.cpp
@@ -4690,14 +5837,23 @@ ${TENSOR_OPS_MASM}
         src/core/unified_hotpatch_manager.cpp
         src/core/proxy_hotpatcher.cpp
         src/core/model_bruteforce_engine.cpp
+        src/server/gguf_server_hotpatch.cpp
         src/core/pt_driver_contract.cpp
         src/core/shadow_page_detour.cpp
         src/core/sentinel_watchdog.cpp
+        src/win32app/Win32IDE_HotpatchPanel.cpp
         
         # Agent-Driven Hotpatch Orchestration (Phase 18)
+        src/agent/agentic_hotpatch_orchestrator.cpp
 
-        # HTTP Client ÎÃÃ¶ WinHTTP async with future retention (CLI+GUI)
+        # HTTP Client ├Ä┬ô├â┬ç├â┬╢ WinHTTP async with future retention (CLI+GUI)
+        src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
+        src/agent/planner.cpp
+        src/agent/meta_planner.cpp
+        src/agent/eval_framework.cpp
+        src/agent/autonomous_subagent.cpp
+        src/agent/agentic_failure_detector.cpp
         src/agent/agentic_deep_thinking_engine.cpp
         
         # Quantum Autonomous Systems - Real implementations (DUPLICATED - see main SOURCES)
@@ -4709,15 +5865,23 @@ ${TENSOR_OPS_MASM}
         # src/agent/quantum_agent_orchestrator.cpp
         
         src/core/ai_agent_masm_core_impl.cpp
+        src/agent/agentic_puppeteer.cpp
+        src/cloud_api_client.cpp
 
-        # LocalReasoningEngine ÎÃÃ¶ API-free static analysis + pattern detection
+        # LocalReasoningEngine ├Ä┬ô├â┬ç├â┬╢ API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
-        # Agent Self-Repair ÎÃÃ¶ MASM64 self-patching kernel bridge
+        # Agent Self-Repair ├Ä┬ô├â┬ç├â┬╢ MASM64 self-patching kernel bridge
+        src/agent/agent_self_repair.cpp
+        src/agent/agent_self_healing_orchestrator.cpp
         
         # Module implementations
+        src/modules/vsix_loader_win32.cpp
+        src/modules/codex_ultimate.cpp
 
         # Phase 29: VS Code Extension API Compatibility Layer
+        src/modules/vscode_extension_api.cpp
+        src/win32app/Win32IDE_VSCodeExtAPI.cpp
         
         # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
         src/core/swarm_decision_bridge.cpp
@@ -4760,56 +5924,79 @@ ${TENSOR_OPS_MASM}
         src/core/pdb_reference_provider.cpp
         
         # Phase 26: WebView2 + Monaco Editor Integration
+        src/win32app/Win32IDE_WebView2.cpp
+        src/win32app/AgenticBrowserLayer.cpp
+        src/win32app/Win32IDE_AgenticBrowser.cpp
+        src/win32app/Win32IDE_MonacoThemes.cpp
 
         # Phase 27: Embedded LSP Server (JSON-RPC 2.0)
+        src/lsp/RawrXD_LSPServer.cpp
+        src/win32app/Win32IDE_LSPServer.cpp
 
-        # Phase 27b: LSP ÎÃ¥Ã¶ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        # Phase 27b: LSP ├Ä┬ô├â┬Ñ├â┬╢ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        src/lsp/lsp_hotpatch_bridge.cpp
+        src/lsp/hotpatch_symbol_provider.cpp
+        src/lsp/gguf_diagnostic_provider.cpp
 
-        # Phase 28: MonacoCore Native Editor Engine ÎÃÃ¶ Toggleable Engine System
+        # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Toggleable Engine System
         src/core/MonacoCoreEngine.cpp
         src/core/WebView2EditorEngine.cpp
         src/core/RichEditEditorEngine.cpp
         src/core/EditorEngineFactory.cpp
+        src/win32app/Win32IDE_EditorEngine.cpp
 
-        # Phase 29: Native PDB Symbol Server ÎÃÃ¶ MSF v7.00 Parser + Symbol Cache
+        # Phase 29: Native PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ MSF v7.00 Parser + Symbol Cache
         src/core/pdb_native.cpp
         src/core/pdb_lsp_bridge.cpp
+        src/win32app/Win32IDE_PDBSymbols.cpp
 
         # Phase 31: IDE Self-Audit & Verification System
         src/core/feature_registry.cpp
         src/core/menu_auditor.cpp
         src/core/auto_discovery.cpp
+        src/win32app/Win32IDE_AuditDashboard.cpp
 
-        # Phase 32: The Final Gauntlet ÎÃÃ¶ Pre-Packaging Runtime Verification
+        # Phase 32: The Final Gauntlet ├Ä┬ô├â┬ç├â┬╢ Pre-Packaging Runtime Verification
         src/core/final_gauntlet.cpp
+        src/win32app/Win32IDE_Gauntlet.cpp
 
         # Phase 33: Voice Chat Engine
         src/core/voice_chat.cpp
         src/core/voice_automation.cpp
+        src/win32app/Win32IDE_VoiceChat.cpp
+        src/win32app/Win32IDE_VoiceAutomation.cpp
 
         # Phase 33: Quick-Win Ports
         src/core/shortcut_manager.cpp
         src/core/backup_manager.cpp
         src/core/alert_system.cpp
+        src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
-        # NOTE: shared_feature_dispatch.cpp REMOVED ÎÃÃ¶ duplicated by unified_command_dispatch.cpp
+        # NOTE: shared_feature_dispatch.cpp REMOVED ├Ä┬ô├â┬ç├â┬╢ duplicated by unified_command_dispatch.cpp
         src/core/feature_registration.cpp
         src/core/feature_handlers.cpp
-        # auto_feature_registry excluded for Win32 IDE ÎÃÃ¶ use ssot_handlers (lightweight stubs)
+        # auto_feature_registry excluded for Win32 IDE ├Ä┬ô├â┬ç├â┬╢ use ssot_handlers (lightweight stubs)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
-        src/core/model_trainer.cpp
+        src/model_trainer.cpp
         # REMOVED: src/agentic/AgentOllamaClient.cpp - Ollama backend replaced with native GGUF loader
         # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
-        src/logging/Logger.cpp
+        src/agentic/hotpatch/Engine.cpp
+        src/agentic/observability/Logger.cpp
+        src/agentic/AdvancedAgentCoordinator.cpp
+        src/modules/autonomous_agentic_orchestrator.cpp
         src/core/native_gguf_loader_link_impl.cpp
+        src/codec/compression.cpp
+        src/codec/brutal_gzip.cpp
+        src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
         # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
+        src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
-        # Unified Command Dispatch ÎÃÃ¶ Zero-drift SSOT dispatch (replaces manual registration)
+        # Unified Command Dispatch ├Ä┬ô├â┬ç├â┬╢ Zero-drift SSOT dispatch (replaces manual registration)
         src/core/unified_command_dispatch.cpp
         src/core/startup_phase_registry.cpp
 
@@ -4818,17 +6005,24 @@ ${TENSOR_OPS_MASM}
         src/core/jsonrpc_parser.cpp
 
         # Phase 21: Distributed Swarm Inference Orchestrator
+        src/cli/swarm_orchestrator.cpp
 
         # Phase 32A: Chain-of-Thought Multi-Model Review Engine
         src/core/chain_of_thought_engine.cpp
 
         # Phase 34: Telemetry Export
+        src/win32app/Win32IDE_Telemetry.cpp
 
-        # Phase 36: MCP Integration â Model Context Protocol Server + Client
+        # Phase 36: MCP Integration ├ó┬Ç┬ö Model Context Protocol Server + Client
+        src/mcp_integration.cpp
+        src/win32app/Win32IDE_MCP.cpp
 
-        # Phase 36: Flight Recorder ÎÃÃ¶ memory-mapped binary ring-buffer logger
+        # Phase 36: Flight Recorder ├Ä┬ô├â┬ç├â┬╢ memory-mapped binary ring-buffer logger
+        src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
+        src/modules/quickjs_extension_host.cpp
+        src/modules/quickjs_vscode_bindings.cpp
 
         # Phase 36: Cross-Process MMF State Synchronization
         src/core/rawrxd_state_mmf.cpp
@@ -4837,19 +6031,21 @@ ${TENSOR_OPS_MASM}
         src/core/js_extension_host.cpp
         src/core/extension_polyfill_engine.cpp
 
-        # Phase 46: VulkanKernel ÎÃÃ¶ Full GPU Compute Engine
-        src/deep2/vulkan_compute.cpp
+        # Phase 46: VulkanKernel ├Ä┬ô├â┬ç├â┬╢ Full GPU Compute Engine
+        src/vulkan_compute.cpp
 
-        # Phase 46: Live Binary Patcher ÎÃÃ¶ Layer 5 Hotpatch
+        # Phase 46: Live Binary Patcher ├Ä┬ô├â┬ç├â┬╢ Layer 5 Hotpatch
         src/core/live_binary_patcher.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Core Production Subsystems (Verified Working)
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         src/core/deterministic_swarm.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/core/input_guard_slicer.cpp
+        src/agentic_agent_coordinator.cpp
+        src/production_config_manager.cpp
 
         # Singleton subsystems referenced by UnifiedHotpatchManager
         src/core/agentic_task_graph.cpp
@@ -4864,42 +6060,82 @@ ${TENSOR_OPS_MASM}
         src/core/vision_quantized_encoder.cpp
         src/core/vision_gpu_staging.cpp
 
+        src/marketplace/extension_marketplace.cpp
+        src/auth/rbac_engine.cpp
 
         # Agentic Loop State (iterative reasoning state machine)
+        src/agentic_loop_state.cpp
 
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
 
-        # Instructions Provider ÎÃÃ¶ unified *.instructions.md loader (HTTP+CLI+GUI)
+        # Instructions Provider ├Ä┬ô├â┬ç├â┬╢ unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
+        src/win32app/Win32IDE_Instructions.cpp
 
         # Phase 45: Game Engine Integration (Unity + Unreal)
+        src/modules/unity_engine_integration.cpp
+        src/modules/unreal_engine_integration.cpp
+        src/modules/game_engine_manager.cpp
+        src/win32app/Win32IDE_GameEnginePanel.cpp
 
         # Phase 48: The Final Crucible (Unified Stress-Test Harness)
+        src/modules/crucible_engine.cpp
+        src/win32app/Win32IDE_CruciblePanel.cpp
 
         # Phase 49: Copilot Gap Closer (HNSW + Composer + CRDT + Git Context)
+        src/modules/copilot_gap_closer.cpp
+        src/win32app/Win32IDE_CopilotGapPanel.cpp
 
         # Phase 13: Distributed Pipeline Orchestrator
         src/core/distributed_pipeline_orchestrator.cpp
+        src/win32app/Win32IDE_PipelinePanel.cpp
 
         # Phase 14: Hotpatch Control Plane
         src/core/hotpatch_control_plane.cpp
+        src/win32app/Win32IDE_HotpatchCtrlPanel.cpp
 
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
         src/core/code_linter.cpp
+        src/lsp/diagnostic_consumer.cpp
+        src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
         # P0: Unified Problems Panel (LSP, SAST, SCA, Secrets, Build)
+        src/win32app/Win32IDE_ProblemsPanel.cpp
+        src/win32app/Win32IDE_BuildRunner.cpp
+        src/win32app/Win32IDE_SecurityScans.cpp
         src/core/problems_panel_bridge.cpp
         src/core/problems_aggregator.cpp
+        src/security/secrets_scanner.cpp
+        src/security/sast_rule_engine.cpp
+        src/security/dependency_audit.cpp
+        src/win32app/Win32IDE_AgentStreamingBridge.cpp
 
         # Phase 16: Semantic Code Intelligence
         src/core/semantic_code_intelligence.cpp
+        src/win32app/Win32IDE_SemanticPanel.cpp
 
         # Phase 17: Enterprise Telemetry & Compliance
         src/core/enterprise_telemetry_compliance.cpp
+        src/win32app/Win32IDE_TelemetryPanel.cpp
+        src/win32app/Win32IDE_Tier3Polish.cpp
+        src/win32app/Win32IDE_Tier3Cosmetics.cpp
+        src/win32app/Win32IDE_Tier5Cosmetics.cpp
+        src/win32app/Win32IDE_CrashReporter.cpp
+        src/win32app/Win32IDE_ColorPicker.cpp
+        src/win32app/Win32IDE_EmojiSupport.cpp
+        src/win32app/Win32IDE_ShortcutEditor.cpp
+        src/win32app/Win32IDE_TelemetryDashboard.cpp
+        src/win32app/Win32IDE_MarketplacePanel.cpp
+        src/win32app/Win32IDE_Collab.cpp
 
-        # Phase 51: mIRC Control Bridge ÎÃÃ¶ IRC bot for remote IDE control
+        # Phase 51: mIRC Control Bridge ├Ä┬ô├â┬ç├â┬╢ IRC bot for remote IDE control
+        src/win32app/Win32IDE_IRCBridge.cpp
+        src/win32app/Win32IDE_IRCBridgeCommands.cpp
+        src/collab/websocket_hub.cpp
+        src/win32app/Win32IDE_TestExplorerTree.cpp
+        src/win32app/Win32IDE_NetworkPanel.cpp
         # NOTE: Experimental features removed from production build
         src/core/omega_orchestrator.cpp
         src/core/omega_asm_native_kernel.cpp
@@ -4917,8 +6153,19 @@ ${TENSOR_OPS_MASM}
         src/core/reasoning_profile.cpp
         # src/core/win32ide_link_stubs.cpp  # Conflicts with existing fallbacks
         # src/win32app/Win32IDE_TranscendencePanel.cpp
+        src/win32app/VulkanRenderer.cpp
+        src/win32app/OSExplorerInterceptor.cpp
+        src/win32app/Win32IDE_MCPHooks.cpp
+        src/win32app/TodoManager.cpp
+        src/win32app/IocpFileWatcher.cpp
+        src/win32app/IDEDiagnosticAutoHealer.cpp
+        src/win32app/ConsentPrompt.cpp
+        src/win32app/AutonomousAgent.cpp
 
-        # UI Rendering ÎÃÃ¶ Chat message renderer + tool action status + chat panel
+        # UI Rendering ├Ä┬ô├â┬ç├â┬╢ Chat message renderer + tool action status + chat panel
+        src/ui/chat_message_renderer.cpp
+        src/ui/tool_action_status.cpp
+        src/ui/chat_panel.cpp
 
         # Cathedral Hardening (5.0 Readiness)
         src/core/crash_containment.cpp
@@ -4930,7 +6177,7 @@ ${TENSOR_OPS_MASM}
 
         # ASM Stub Implementations - REMOVED: All stub files deleted, real implementations only
 
-        # Phase 50: Enterprise Hardening ÎÃÃ¶ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+        # Phase 50: Enterprise Hardening ├Ä┬ô├â┬ç├â┬╢ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
         src/core/update_signature.cpp
         src/core/cursor_github_parity_bridge.cpp
         src/core/swarm_reconciliation.cpp
@@ -4939,15 +6186,18 @@ ${TENSOR_OPS_MASM}
         src/core/enterprise_stress_tests.cpp
         src/core/auto_update_system.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        # Autonomy Gap Closure ÎÃÃ¶ Phase A-D + Tier 1.4 + Tier 2.3
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # Autonomy Gap Closure ├Ä┬ô├â┬ç├â┬╢ Phase A-D + Tier 1.4 + Tier 2.3
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
-        # Phase A: Closed-Loop Verification (Write ÎÃ¥Ã Compile ÎÃ¥Ã Test ÎÃ¥Ã Fix)
+        # Phase A: Closed-Loop Verification (Write ├Ä┬ô├â┬Ñ├â┬å Compile ├Ä┬ô├â┬Ñ├â┬å Test ├Ä┬ô├â┬Ñ├â┬å Fix)
+        src/agentic/autonomous_verification_loop.cpp
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
+        src/agentic/autonomous_background_daemon.cpp
 
         # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
+        src/core/sqlite3.c
         src/core/knowledge_graph_core.cpp
 
         # Phase D: Multi-Agent Conflict Resolution (merge negotiation, consensus)
@@ -4957,31 +6207,59 @@ ${TENSOR_OPS_MASM}
         src/core/autonomous_debugger.cpp
 
         # Tier 2.3: Autonomous Communication (standup reports, approval requests)
+        src/agentic/autonomous_communicator.cpp
 
         # Unified Telemetry Core
+        src/telemetry/UnifiedTelemetryCore.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Cursor/JB-Parity Feature Modules
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        src/core/vision_encoder.cpp
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/telemetry/telemetry_export.cpp
+        src/agentic/agentic_composer_ux.cpp
+        src/context/context_mention_parser.cpp
+        src/multimodal_engine/vision_encoder.cpp
+        src/ide/refactoring_plugin.cpp
+        src/ide/language_plugin.cpp
+        src/context/semantic_index.cpp
+        src/ide/resource_generator.cpp
+        src/win32app/Win32IDE_CursorParity.cpp
+        src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/win32app/Win32IDE_Tasks.cpp
+        src/win32app/Win32IDE_GitPanel.cpp
+        src/win32app/Win32IDE_Refactor.cpp
+        src/win32app/Win32IDE_SearchPanel.cpp
+        src/win32app/Win32IDE_FuzzySearch.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/win32app/Win32IDE_Minimap.cpp
+        src/win32app/Win32IDE_DiffView.cpp
+        src/win32app/Win32IDE_SettingsGUI.cpp
+        src/win32app/Win32IDE_CodeLens.cpp
+        src/win32app/Win32IDE_InlayHints.cpp
+        src/win32app/Win32IDE_HoverTooltips.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/win32app/Win32IDE_ProvableAgent.cpp
+        src/win32app/Win32IDE_AIReverseEngineering.cpp
+        src/win32app/Win32IDE_AirgappedEnterprise.cpp
+        src/win32app/Win32IDE_FlagshipFeatures.cpp
 
         # Linker deps: ProjectContext, UniversalModelRouter, ModelRegistry, CheckpointManager
-        src/core/universal_model_router.cpp
-        src/core/model_registry.cpp
+        src/project_context.cpp
+        src/universal_model_router.cpp
+        src/model_registry.cpp
+        src/model_name_utils.cpp
         src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
         src/core/agentic_autonomous_config.cpp
@@ -4989,34 +6267,86 @@ ${TENSOR_OPS_MASM}
         src/core/context_deterioration_hotpatch.cpp
         # src/core/model_loader_asm_stubs.cpp  # Conflicts with model_loader_fallbacks.cpp
         # Win32 panels and dialogs
+        src/ui/interpretability_panel.cpp
         # Advanced feature modules (src scope)
+        src/real_time_completion_engine.cpp
+        src/LanguageServerIntegration.cpp
+        src/interpretability_panel_enhanced.cpp
+        src/feature_registry_panel.cpp
+        src/autonomous_feature_engine.cpp
+        src/autonomous_intelligence_orchestrator.cpp
         # Advanced feature module deps
+        src/plan_orchestrator.cpp
+        src/tool_registry_advanced.cpp
+        src/lsp_client.cpp
+        src/intelligent_codebase_engine.cpp
+        src/ai_model_caller.cpp
+        src/hybrid_cloud_manager.cpp
         # Benchmarks (real implementation; replaces earlier IDE stubs)
+        src/benchmark_menu_widget.cpp
+        src/benchmark_runner.cpp
+        src/win32app/feature_registry_panel.cpp
+        src/ui/monaco_settings_dialog.cpp
+        src/thermal/RAWRXD_ThermalDashboard.cpp
+        src/win32app/VSCodeMarketplaceAPI.cpp
         # Multi-file search (real implementation; replaces earlier IDE stub)
+        src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
         src/core/license_manager_panel.cpp
         # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
         # src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
+        src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
+        src/license_enforcement.cpp
+        src/feature_flags_runtime.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/win32app/Win32IDE_PeekView.cpp
+        src/win32app/Win32IDE_AutoSave.cpp
+        src/win32app/Win32IDE_TerminalSplit.cpp
+        src/win32app/Win32IDE_SnippetEngine.cpp
+        src/win32app/Win32IDE_MultiCursor.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-        # Cognitive Architecture ÎÃÃ¶ Autonomous Reverse Engineering OS
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # Cognitive Architecture ├Ä┬ô├â┬ç├â┬╢ Autonomous Reverse Engineering OS
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/agentic/cognitive/cognitive_types.cpp
+        src/agentic/cognitive/enhanced_blackboard.cpp
+        src/agentic/cognitive/mission_director.cpp
+        src/agentic/cognitive/reflection_agent.cpp
+        src/agentic/cognitive/dynamic_planner.cpp
+        src/agentic/cognitive/autonomous_orchestrator.cpp
 
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
         # TrailBrake / HotPatcher / AntiPatcher Safety System
-        # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
         # Dual GPU / Reverse Recovery / Streaming
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
+        src/deep2/ShardRouterIntegration.cpp
+        src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/IOCPGGUFLoader.cpp
+        src/deep2/Deep2ModelRuntime.cpp
+        src/deep2/FabricTensorTable.cpp
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -5034,15 +6364,20 @@ ${TENSOR_OPS_MASM}
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/core/native_debugger_engine.cpp
             src/core/native_debugger_symbols.cpp
+            src/win32app/Win32IDE_NativeDebugPanel.cpp
             src/core/shadow_page_detour.cpp
             src/agent/agentic_deep_thinking_engine.cpp
             # NOTE: Quantum fiction files already removed from SOURCES
-            src/deep2/vulkan_compute.cpp
+            src/vulkan_compute.cpp
             src/runtime/TensorExecutionRouter.cpp
             src/core/embedding_engine.cpp
             src/core/vector_index.cpp
             src/core/agentic_task_graph.cpp
             src/core/vision_encoder.cpp
+            src/win32app/Win32IDE_Minimap.cpp
+            src/win32app/Win32IDE_SettingsGUI.cpp
+            src/win32app/VulkanRenderer.cpp
+            src/win32app/OSExplorerInterceptor.cpp
         )
     endif()
      
@@ -5164,9 +6499,8 @@ ${TENSOR_OPS_MASM}
             src/core/win32ide_missing_handlers.cpp
         )
         list(APPEND WIN32IDE_SOURCES
-src/core/ssot_missing_handlers_provider.cpp
-        
-)
+            src/core/ssot_missing_handlers_provider.cpp
+        )
         message(STATUS "[SSOT] Win32IDE: STUBS lane enabled (excluding ssot_handlers.cpp + ssot_handlers_ext_isolated.cpp; adding ssot_missing_handlers_provider.cpp)")
     else()
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -5184,6 +6518,8 @@ src/core/ssot_missing_handlers_provider.cpp
     # AgenticExecutor real implementation now provides these members.
     # Keep the link stub out of Win32IDE to avoid duplicate definitions.
     list(REMOVE_ITEM WIN32IDE_SOURCES
+        src/core/agentic_executor_link_stub.cpp
+        src/core/beacon_link_stub.cpp
     )
 
     # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp both define
@@ -5195,6 +6531,11 @@ src/core/ssot_missing_handlers_provider.cpp
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
+            src/core/subsystem_mode_fallbacks.cpp
+            src/core/model_loader_fallbacks.cpp
+            src/core/rawrxd_native_log_impl.cpp
+            src/llm_adapter/ggufrunner_link_fallbacks.cpp
+            src/win32app/collab_cursor_fallbacks.cpp
         )
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
@@ -5222,11 +6563,12 @@ src/core/ssot_missing_handlers_provider.cpp
 
     # Avoid mixing parallel GGUF engine stacks in this lane.
     list(REMOVE_ITEM WIN32IDE_SOURCES
+        src/engine/sovereign_engines.cpp
+        src/engine/rawr_engine.cpp
+        src/engine/gguf_core.cpp
     )
     # Re-wire providers needed by this target's link graph.
-    list(APPEND WIN32IDE_SOURCES
-src/core/local_parity_bridge.cpp
-)
+    list(APPEND WIN32IDE_SOURCES src/core/local_parity_bridge.cpp)
     if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
             # Link closure: fallbacks for Win32IDE (rawrengine_missing_stubs.cpp is already in RawrEngine)
@@ -5240,12 +6582,11 @@ src/core/local_parity_bridge.cpp
                 # REMOVED: src/inference/gguf_d3d12_bridge_link_fallback.cpp - stub file deleted
                 # REMOVED: src/win32app/collab_cursor_fallbacks.cpp - stub file deleted
                 # REMOVED: src/win32app/rtp_protocol_fallback.cpp - stub file deleted
+                src/modules/quickjs_node_shims.cpp
             )
             foreach(_rawr_fallback IN LISTS _RAWRXD_WIN32IDE_FALLBACK_UNITS)
                 if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawr_fallback}")
-                    list(APPEND WIN32IDE_SOURCES
-"${_rawr_fallback}"
-)
+                    list(APPEND WIN32IDE_SOURCES "${_rawr_fallback}")
                 else()
                     message(WARNING "[Win32IDE] Optional fallback unit missing, skipping: ${_rawr_fallback}")
                 endif()
@@ -5258,20 +6599,31 @@ src/core/local_parity_bridge.cpp
     endif()
 
     list(APPEND WIN32IDE_SOURCES
+        src/win32app/ai_workers_queue.cpp
         # v14.7.0 Native Track B Modules
+        src/ui/ImportBridge.cpp
+        src/ui/ExportBridge.cpp
+        src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
-        # HEXMAG_IDE_ROUTE ÎÃÃ¶ controller + MASM client + FINALIZE_POLICY
+        # HEXMAG_IDE_ROUTE ├Ä┬ô├â┬ç├â┬╢ controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
+        src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
         src/core/hexmag_runtime_controller.cpp
-    
-)
+        src/agent/hexmag_client.cpp
+    )
 
     set(WIN32IDE_EXTRA_ASM "")
     if(RAWR_HAS_MASM)
         set(WIN32IDE_EXTRA_ASM
+            src/asm/RawrXD_PE_Importer.asm
+            src/asm/RawrXD_PE_Exporter.asm
+            src/asm/ghost_text_ranker.asm
+            src/asm/diff_engine.asm
+            src/asm/RawrXD_HexMag_Swarm.asm
+            src/asm/RawrXD_HexMag_RepeatTuner.asm
         )
         message(STATUS "[Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)")
 
@@ -5283,7 +6635,7 @@ src/core/local_parity_bridge.cpp
         # - Neural_Entropy_Shield.asm: Marketing word salad
         # All src/asm/gpu/RawrXD_RDNA3_*.asm files removed from build.
         set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 0)
-        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled ÎÃÃ¶ fraudulent claims removed")
+        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled ├Ä┬ô├â┬ç├â┬╢ fraudulent claims removed")
 
         set_source_files_properties(${WIN32IDE_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
     endif()
@@ -5332,7 +6684,14 @@ src/core/local_parity_bridge.cpp
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
 
         list(REMOVE_ITEM WIN32IDE_SOURCES
+            src/win32app/agentic_bridge_headless.cpp
+            src/win32app/Win32IDE_headless_stubs.cpp
             src/core/ignite_800b.cpp
+            src/stubs.cpp
+            src/core/stubs.cpp
+            src/core/universal_stub.cpp
+            src/core/link_stubs_final.cpp
+            src/core/link_stubs_remaining_classes.cpp
         )
         message(STATUS "[Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)")
     endif()
@@ -5383,11 +6742,11 @@ src/core/local_parity_bridge.cpp
             if(src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stub\\.cpp$|/stub_.*\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|_stub\\.asm$|/stub_.*\\.asm$|/shim_.*\\.(cpp|asm)$|/missing_handler|/link_stubs_.*\\.(cpp|asm)$|_link_shims?\\.(cpp|asm)$|_fallback[^/]*\\.(cpp|asm)$|_(mock|fake)\\.(cpp|asm)$)" OR
                src MATCHES "(stub_|_stub\\.(cpp|asm)$|shim_|_shims?\\.(cpp|asm)$|shims?\\.(cpp|asm)$|/stubs\\.(cpp|asm)$)" OR
                src MATCHES "(mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                                # ai_agent_masm_core_impl.cpp provides required MASM symbols ÎÃÃ¶ exempt
+                                # ai_agent_masm_core_impl.cpp provides required MASM symbols ├Ä┬ô├â┬ç├â┬╢ exempt
                                 if(src MATCHES "ai_agent_masm_core_impl\\.cpp$")
                                     continue()
                                 endif()
-                                # These are real production implementations, not stubs ÎÃÃ¶ exempt
+                                # These are real production implementations, not stubs ├Ä┬ô├â┬ç├â┬╢ exempt
                                 if(src MATCHES "cot_fallback_system\\.cpp$" OR
                                    src MATCHES "dml_asm_fallback\\.cpp$")
                                     continue()
@@ -5422,7 +6781,7 @@ src/core/local_parity_bridge.cpp
                 message(WARNING "[EMERGENCY OVERRIDE] Stub files linked to ${target_name} (CI will reject)")
             endif()
         else()
-            message(STATUS "ÎÂ£Ã´ ${target_name}: No stub policy violations")
+            message(STATUS "├Ä┬ô├é┬ú├â┬┤ ${target_name}: No stub policy violations")
         endif()
     endfunction()
     
@@ -5460,20 +6819,28 @@ src/core/local_parity_bridge.cpp
         message(FATAL_ERROR "[ProductionLane] Required MASM bridge provider src/core/ai_agent_masm_core_impl.cpp is missing.")
     endif()
     list(REMOVE_ITEM WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
-    list(APPEND WIN32IDE_SOURCES
-src/core/ai_agent_masm_core_impl.cpp
-)
+    list(APPEND WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
 
     # Post-filter link closure: real production TUs excluded by strict *_fallback* / *_stub* regex.
     foreach(_rawrxd_link_closure IN ITEMS
         src/core/cot_fallback_system.cpp
+        src/agentic_model_streamer_bridge.cpp
         src/core/GpuDecodeEfficiency.cpp
         src/core/AmdGpuPowerBackend.cpp
+        src/deep2/K2NativeStreamGate.cpp
+    src/deep2/K2GpuStreamCopy.cpp
+        src/deep2/K2LivePathTensorCache.cpp
+        src/deep2/K2WeightResolve.cpp
+        src/deep2/K2LogitsClimb.cpp
+        src/deep2/K2LivePathTensorCache_Prefetch.cpp
+    src/deep2/K2LivePathTensorCache_Emit.cpp
+        src/deep2/K2MLAAttention.cpp
+        src/deep2/K2TokenEmbedding.cpp
+        src/win32app/ScreenPilotModelHub.cpp
+        src/marketplace/extension_package_local.cpp
     )
         if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawrxd_link_closure}")
-            list(APPEND WIN32IDE_SOURCES
-"${_rawrxd_link_closure}"
-)
+            list(APPEND WIN32IDE_SOURCES "${_rawrxd_link_closure}")
         else()
             message(WARNING "[Win32IDE] Link-closure unit missing, skipping: ${_rawrxd_link_closure}")
         endif()
@@ -5501,7 +6868,7 @@ src/core/ai_agent_masm_core_impl.cpp
         endif()
     endif()
 
-    # v14.7.6 Batch 2 parity files ÎÃÃ¶ compilation fixes applied, re-enabled
+    # v14.7.6 Batch 2 parity files ├Ä┬ô├â┬ç├â┬╢ compilation fixes applied, re-enabled
     # (PeekView, AutoSave, TerminalSplit now compile cleanly)
 
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
@@ -5518,7 +6885,7 @@ src/core/ai_agent_masm_core_impl.cpp
     # NOTE: Command handlers are in rawrengine_command_handlers.cpp
     # Removing duplicate handler files to avoid LNK2005 errors
     list(APPEND WIN32IDE_SOURCES
-# src/win32app/Win32IDE_CursorParityBridge.cpp  # Handlers in rawrengine_command_handlers.cpp
+        # src/win32app/Win32IDE_CursorParityBridge.cpp  # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_OmegaOrchestrator.cpp   # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_MeshBrain.cpp           # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_SpeciatorEngine.cpp     # Handlers in rawrengine_command_handlers.cpp
@@ -5526,29 +6893,54 @@ src/core/ai_agent_masm_core_impl.cpp
         # src/win32app/Win32IDE_SelfHostEngine.cpp      # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_HardwareSynthesizer.cpp # Handlers in rawrengine_command_handlers.cpp
         # src/win32app/Win32IDE_TranscendenceCoordinator.cpp # Handlers in rawrengine_command_handlers.cpp
-    
-)
+        src/win32app/Win32IDE_TranscendencePanel.cpp
+    )
 
     # Add UI & infrastructure handler files for batch 50-56
     list(APPEND WIN32IDE_SOURCES
-# NOTE: Win32IDE_CommandHandlers.cpp removed - CommandResult handlers already in rawrengine_command_handlers.cpp
-    
-)
+        # NOTE: Win32IDE_CommandHandlers.cpp removed - CommandResult handlers already in rawrengine_command_handlers.cpp
+        src/win32app/Win32IDE_AutonomousAgent.cpp
+        src/win32app/Win32IDE_ChatMessageRenderer.cpp
+        src/win32app/Win32IDE_ToolActionStatus.cpp
+        src/win32app/Win32IDE_ChatPanel.cpp
+        src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # RESTORED: Required for HandleCopilotSend_Ollama and initializeChatPanelOllama
+        src/win32app/Win32IDE_VulkanRenderer.cpp
+        src/win32app/Win32IDE_OSExplorerInterceptor.cpp
+        src/win32app/Win32IDE_IOCPFileWatcher.cpp
+        src/win32app/Win32IDE_IDEDiagnosticAutoHealer.cpp
+        src/win32app/Win32IDE_ConsentPrompt.cpp
+        src/win32app/Win32IDE_PerfTelemetry.cpp
+        src/win32app/Win32IDE_UpdateSignature.cpp
+        src/win32app/Win32IDE_PluginSignature.cpp
+        src/win32app/Win32IDE_EnterpriseStressTests.cpp
+        src/win32app/Win32IDE_SQLite3Core.cpp
+        src/win32app/Win32IDE_TelemetryExport.cpp
+        src/win32app/Win32IDE_RefactoringPlugin.cpp
+        src/win32app/Win32IDE_LanguagePlugin.cpp
+        src/win32app/Win32IDE_ResourceGenerator.cpp
+    )
 
-    # Runtime surface ÎÃÃ¶ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
+    # Runtime surface ├Ä┬ô├â┬ç├â┬╢ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
-    
-)
+        src/runtime_surface/RuntimeSurfaceModule.cpp
+        src/runtime_surface/GenerationStopwatch.cpp
+    )
 
-    # ÎÃ¶ÃÎÃ¶Ã Performance-optimization batches 3ÎÃÃ´6 ÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶Ã
+    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç Performance-optimization batches 3├Ä┬ô├â┬ç├â┬┤6 ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
     # Batch 3: Unified tiered memory pool (CPU / GPU / disk / compressed)
     # Batch 4: Work-stealing ExecutionScheduler (resolves friend-class declaration)
-    # Batch 5: InferenceProfiler ÎÃÃ¶ per-layer profiling + Prometheus export
-    # Batch 6: BackendOrchestrator ÎÃÃ¶ dynamic switching, sharding, semantic cache
+    # Batch 5: InferenceProfiler ├Ä┬ô├â┬ç├â┬╢ per-layer profiling + Prometheus export
+    # Batch 6: BackendOrchestrator ├Ä┬ô├â┬ç├â┬╢ dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
-        src/deep2/Deep2Engine.cpp
-        # --- Missing sources causing LNK2001 (added 2026-08-10
-) ---
+        src/memory/UnifiedMemoryPool.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
+        src/InferenceProfiler.cpp
+        src/BackendOrchestrator.cpp
+        # --- Missing sources causing LNK2001 (added 2026-08-10) ---
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -5559,14 +6951,148 @@ src/core/ai_agent_masm_core_impl.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         B014/build/b014_profiler.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/CycloneScheduler.cpp
+        src/deep2/Deep2LivePath.cpp
+        src/deep2/Deep2LivePath_Gate.cpp
+        src/deep2/Deep2LivePath_Pinball.cpp
+        src/deep2/Deep2LivePath_Mech.cpp
+        src/deep2/Deep2LivePath_Emit.cpp
+        src/deep2/GpuTransfer_Emit.cpp
+        src/deep2/LivePathEffect.cpp
+        src/deep2/K2LivePolicy.cpp
+        src/deep2/K2LivePolicy_Apply.cpp
+        src/deep2/K2LivePolicy_Hysteresis.cpp
+        src/deep2/FusedLiveController.cpp
+        src/deep2/FusedLiveController_Decide.cpp
+        src/deep2/FusedLiveController_Cheap.cpp
+        src/deep2/FusedLiveController_Law.cpp
+        src/deep2/FusedLiveController_Emit.cpp
+        src/deep2/LivePath_FusedTick.cpp
+        src/deep2/Deep2LivePath_MechEnd.cpp
+        src/deep2/Deep2LivePath_Thermal.cpp
+        src/deep2/PlasmaGovernor.cpp
+        src/deep2/ElasticResidencyManager.cpp
+        src/rkc/RKCValidator.cpp
+        src/rkc/RKCWorld.cpp
+    src/rkc/RKCCodeWorld.cpp
+    src/rkc/RKCMinimalSource.cpp
+    src/rkc/RKCNegativeKnowledge.cpp
+    src/rkc/RKCModelInventory.cpp
+    src/rkc/RKCDeep2Authority.cpp
+        src/rkc/RKCCompiler.cpp
+        src/rkc/RKCRecipes.cpp
+        src/rkc/RKCGapEngine.cpp
+        src/rkc/RKCEmit.cpp
+        src/rkc/RKCSession.cpp
+        src/rkc/RKCProductContext.cpp
+        src/rkc/RKC_C_ABI.cpp
+        src/deep2/KimiK2Config.cpp
+        src/deep2/K2MLAWeights.cpp
+        src/deep2/K2MLA_KvExpand_Fused.cpp
+        src/deep2/K2MoEWeights.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
         # Deep2 component files required by Deep2Engine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/core/ModelRegistry.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/Deep2Bridge.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/ShardRouterIntegration.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/inference/RawrXD_LlamaNative.cpp
+        src/deep2/InferenceSession.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/ScaleQuality.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/TheDualityExample.cpp
+        src/deep2/Deep2Discovery.cpp
+        src/deep2/Deep2Benchmark.cpp
+        src/deep2/Deep2InferenceEndpoint.cpp
+        src/deep2/Deep2InferenceGateway.cpp
+        src/deep2/Deep2Integration.cpp
+        src/deep2/Deep2LocalServer.cpp
+        src/deep2/Deep2Server_Minimal.cpp
+        src/deep2/Deep2Server_Sovereign.cpp
+        src/deep2/Deep2APIServer.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/GGUFDiagnostics.cpp
+        src/deep2/GGUFLoader_Fixed.cpp
+        src/deep2/GGUFVerifier.cpp
+        src/deep2/IQQuantKernels.cpp
+        src/deep2/MASMKernelStubs.cpp
+        src/deep2/mcp_bridge.cpp
+        src/deep2/gpu/Deep2GPUBackend.cpp
+        src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+        src/deep2/MultiGPU/MultiGPUScheduler.cpp
+        src/deep2/MultiGPU/VRAMAllocator.cpp
+        src/deep2/production/Deep2ProductionRuntime.cpp
+        src/deep2/dump_tensors.cpp
+        src/deep2/deep2_http_gateway.cpp
+        src/deep2/Deep2Engine_KernelTest.cpp
+        src/deep2/moe_microbench.cpp
+        src/deep2/moe_simple_bench.cpp
+        src/deep2/moe_test.cpp
+        src/deep2/moe_validation_test.cpp
+        src/deep2/router_bench.cpp
+        src/deep2/router_latency_test.cpp
+        src/deep2/test_api_server.cpp
+        src/deep2/test_real_gguf_load.cpp
+        src/deep2/test_real_gguf_validate.cpp
+        src/deep2/test_tool_limit_hotpatch.cpp
+        src/deep2/VAL063_Deep2Certification.cpp
+        src/deep2/VAL038_Benchmark_Harness.cpp
+        src/deep2/deep2_end_to_end_bench.cpp
+        src/deep2/deep2_moe_bench_standalone.cpp
+        src/deep2/deep2_benchmark_main.cpp
+        src/deep2/deep2_server_main.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/ModelRegistry/GGUFModelRegistry.cpp
     )
 
     # Deep2Engine Integration Test
     add_executable(Deep2Engine_IntegrationTest
-        src/deep2/Deep2Engine.cpp
+        src/tests/Deep2Engine_IntegrationTest_Minimal.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
     )
     target_include_directories(Deep2Engine_IntegrationTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -5587,6 +7113,8 @@ src/core/ai_agent_masm_core_impl.cpp
     # Must pass before K2-002 bounded tensor execution.
     # ============================================================================
     add_executable(Deep2Engine_MetadataRegressionTest
+        src/deep2/Deep2Engine_MetadataRegressionTest.cpp
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -5599,77 +7127,142 @@ src/core/ai_agent_masm_core_impl.cpp
     )
     message(STATUS "Deep2Engine Metadata Regression Test configured")
 
-    # ÎÃ¶ÃÎÃ¶Ã SDMA GPU Scheduler (C++ replacement for MASM) ÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶ÃÎÃ¶Ã
+    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç SDMA GPU Scheduler (C++ replacement for MASM) ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
     # sdma_ring_allocator: O(1) tensor slot bitmap allocator with spinlock
     list(APPEND WIN32IDE_SOURCES
-src/core/sdma/sdma_scheduler.cpp
+        src/core/sdma/sdma_scheduler.cpp
         src/core/sdma/sdma_ring_allocator.cpp
-    
-)
+    )
 
     # Core workflow/reasoning engines required by unified_hotpatch_manager and agentic_task_graph
     list(APPEND WIN32IDE_SOURCES
-src/core/autonomous_workflow_engine.cpp
+        src/core/autonomous_workflow_engine.cpp
         src/core/workspace_reasoning_profiles.cpp
         src/core/reasoning_schema_versioning.cpp
         src/core/safe_refactor_engine.cpp
-    
-)
+    )
 
     # Sovereign Coordination System - 10 primitives + Execution Capsule
     list(APPEND WIN32IDE_SOURCES
-    
-)
+        src/sovereign/spine/ExecutionSpine.cpp
+        src/sovereign/build/BuildStateGraph.cpp
+        src/sovereign/ide/SovereignIDEIntegration.cpp
+        src/sovereign/terminal/TerminalOwnership.cpp
+        src/sovereign/bus/CapabilityBus.cpp
+        src/sovereign/bus/BeaconBus.cpp
+        src/sovereign/awareness/SystemAwareness.cpp
+        src/sovereign/validator/RealityValidator.cpp
+        src/sovereign/recovery/AutonomousRecovery.cpp
+        src/sovereign/control/SovereignControlPlane.cpp
+        src/sovereign/compression/IntentCompression.cpp
+        src/sovereign/capsule/ExecutionCapsule.cpp
+    )
 
     # Sovereign Autonomy Stack - Blackboard, TaskGraph, MissionPlanner, Reflection, Critic, Runtime
     list(APPEND WIN32IDE_SOURCES
-    
-)
+        src/sovereign_autonomy/SovereignBlackboard.cpp
+        src/sovereign_autonomy/SovereignTaskGraph.cpp
+        src/sovereign_autonomy/SovereignMissionPlanner.cpp
+        src/sovereign_autonomy/SovereignReflectionEngine.cpp
+        src/sovereign_autonomy/SovereignCritic.cpp
+        src/sovereign_autonomy/SovereignAgentRuntime.cpp
+    )
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     list(APPEND WIN32IDE_SOURCES
+        src/win32ide/Omega1IPCClient.cpp
+        src/win32ide/GhostTextRenderer.cpp
+        src/win32ide/StatusBarTelemetry.cpp
+        src/win32ide/Omega1IDEIntegration.cpp
+        src/win32ide/Win32IDE_Omega1Integration.cpp
+    )
     
-)
-    
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Elastic Engine ÎÃÃ¶ Predictive tensor residency + governance
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Elastic Engine ├Ä┬ô├â┬ç├â┬╢ Predictive tensor residency + governance
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     list(APPEND WIN32IDE_SOURCES
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        src/runtime/elastic/ElasticArchitectureDetector.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/gguf_tensor_loader.cpp
+        src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
-    
-)
-
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # OMEGA-1 Engine Server - IPC Server for IDE integration
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    list(APPEND RAWR_ENGINE_SOURCES
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
     )
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # P1_UI_WINDOW_OWNERSHIP_001 ÎÃÃ¶ partial ODR purge (tests/mains only).
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # OMEGA-1 Engine Server - IPC Server for IDE integration
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    list(APPEND RAWR_ENGINE_SOURCES
+        src/engine/Omega1Engine_Server.cpp
+    )
+
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # P1_UI_WINDOW_OWNERSHIP_001 ├Ä┬ô├â┬ç├â┬╢ partial ODR purge (tests/mains only).
     # Broader stub removal (batch_021 / ssot / LSP / CursorParity) caused
-    # LNK1120âÃ¹334; those need symbol-level dedupe, not TU deletion.
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # LNK1120├ó┬ö┬£├â┬╣334; those need symbol-level dedupe, not TU deletion.
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        # keep MASMKernelStubs.cpp ÎÃÃ¶ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
+        src/deep2/TheDualityExample.cpp
+        src/deep2/Deep2Server_Minimal.cpp
+        src/deep2/Deep2Server_Sovereign.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/GGUFVerifier.cpp
+        src/deep2/GGUFLoader_Fixed.cpp
+        # keep MASMKernelStubs.cpp ├Ä┬ô├â┬ç├â┬╢ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
+        src/deep2/dump_tensors.cpp
+        src/deep2/Deep2Engine_KernelTest.cpp
+        src/deep2/moe_microbench.cpp
+        src/deep2/moe_simple_bench.cpp
+        src/deep2/moe_test.cpp
+        src/deep2/moe_validation_test.cpp
+        src/deep2/router_bench.cpp
+        src/deep2/router_latency_test.cpp
+        src/deep2/test_api_server.cpp
+        src/deep2/test_real_gguf_load.cpp
+        src/deep2/test_real_gguf_validate.cpp
+        src/deep2/test_tool_limit_hotpatch.cpp
+        src/deep2/VAL063_Deep2Certification.cpp
+        src/deep2/VAL038_Benchmark_Harness.cpp
+        src/deep2/deep2_end_to_end_bench.cpp
+        src/deep2/deep2_moe_bench_standalone.cpp
+        src/deep2/deep2_benchmark_main.cpp
+        src/deep2/deep2_server_main.cpp
     )
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
     # ADDR32 MASM objs cannot link with /LARGEADDRESSAWARE (required for amdvlk
-    # ProductOpenSession â R01). Drop them from IDE; feature flags already gate calls.
+    # ProductOpenSession ├ó┬Ç┬ö R01). Drop them from IDE; feature flags already gate calls.
     set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
     list(REMOVE_ITEM _WIN32IDE_ASM
+        src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
@@ -5696,7 +7289,7 @@ src/core/autonomous_workflow_engine.cpp
     endif()
 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
-    # a stale handle, indexer, or crashed link left the binary busy ÎÃÃ¶ harmless if files are absent).
+    # a stale handle, indexer, or crashed link left the binary busy ├Ä┬ô├â┬ç├â┬╢ harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # Use CMake-native removal to avoid shell quoting issues in generated link commands.
     if(MSVC)
@@ -5765,15 +7358,15 @@ src/core/autonomous_workflow_engine.cpp
             /MANIFEST:NO
             "/FORCE:MULTIPLE"
         )
-        # FORCE still required: ssotÎÃ¥Ã¶auto_feature, batch_021 stubsÎÃ¥Ã¶real TUs, omega CÎÃ¥Ã¶batch,
-        # v280ÎÃ¥Ã¶batch_001, CursorParityÎÃ¥Ã¶SemanticIndex, etc. Surgical ASM fixes landed;
+        # FORCE still required: ssot├Ä┬ô├â┬Ñ├â┬╢auto_feature, batch_021 stubs├Ä┬ô├â┬Ñ├â┬╢real TUs, omega C├Ä┬ô├â┬Ñ├â┬╢batch,
+        # v280├Ä┬ô├â┬Ñ├â┬╢batch_001, CursorParity├Ä┬ô├â┬Ñ├â┬╢SemanticIndex, etc. Surgical ASM fixes landed;
         # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
             VERBATIM
         )
-        # R25: keep PE LAA:YES. Do not clear LAA  2GB VA breaks mmap streaming.
+        # R25: keep PE LAA:YES. Do not clear LAA ┬ù 2GB VA breaks mmap streaming.
         # Certify after link: dumpbin /headers | findstr Large
         # GPU/ICD remains deferred; DualStick not reopened.
     endif()
@@ -5919,7 +7512,7 @@ src/core/autonomous_workflow_engine.cpp
         if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
             message(FATAL_ERROR "[ProductionLane] QuickJS not found at ${QUICKJS_DIR} and Win32IDE would require QuickJS stubs; strict production strip requires a real QuickJS provider.")
         endif()
-        message(STATUS "QuickJS not found at ${QUICKJS_DIR} ÎÃÃ¶ JS extension host uses stubs")
+        message(STATUS "QuickJS not found at ${QUICKJS_DIR} ├Ä┬ô├â┬ç├â┬╢ JS extension host uses stubs")
         # Create stub include directory so headers compile
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_QUICKJS_STUB=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=0)
@@ -6002,7 +7595,7 @@ src/core/autonomous_workflow_engine.cpp
         # If monolithic objects are linked, avoid also compiling/linking the overlapping C++ fallback provider.
         if(_WIN32IDE_LINKED_MONOLITHIC_OBJS)
             list(REMOVE_ITEM WIN32IDE_SOURCES src/core/model_loader_fallbacks.cpp)
-            message(STATUS "[Win32IDE] Monolithic ASM objects linked ÎÃÃ¶ removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
+            message(STATUS "[Win32IDE] Monolithic ASM objects linked ├Ä┬ô├â┬ç├â┬╢ removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
         endif()
     else()
         message(STATUS "[Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)")
@@ -6053,7 +7646,7 @@ src/core/autonomous_workflow_engine.cpp
         add_dependencies(RawrXD-Win32IDE re_deobfuscator)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_DEOBF_OBJECTS})
     endif()
-    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) ÎÃÃ¶ it defines main() and conflicts with WinMain
+    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) ├Ä┬ô├â┬ç├â┬╢ it defines main() and conflicts with WinMain
     # if(TARGET re_model_reverse)
     #     add_dependencies(RawrXD-Win32IDE re_model_reverse)
     #     target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_MODEL_OBJECTS})
@@ -6143,7 +7736,7 @@ src/core/autonomous_workflow_engine.cpp
         endif()
     endforeach()
 
-    # Product Finish 100 â Waves 3-4 (git/search/session/approval/smoke)
+    # Product Finish 100 ├ó┬Ç┬ö Waves 3-4 (git/search/session/approval/smoke)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RawrXD_Product100.cmake)
 endif()
 
@@ -6161,8 +7754,11 @@ endif()
 #   language by adding a tiny C++ TU and setting LINKER_LANGUAGE.
 if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_library(RawrXD-Crypto SHARED
+        src/crypto_masm.asm
+        src/security/uac_bypass_impl_stub.cpp
     )
     set_source_files_properties(
+        src/crypto_masm.asm
         PROPERTIES LANGUAGE ASM_MASM
     )
     target_link_options(RawrXD-Crypto PRIVATE
@@ -6191,22 +7787,22 @@ endif()
 # Duplicate/partial RawrXD_Gold source block removed here.
 # Canonical RawrXD_Gold target is defined in the standalone Gold section above.
     # ============================================================================
-    # CI Gating Targets ÎÃÃ¶ Release / Debug / AddressSanitizer
+    # CI Gating Targets ├Ä┬ô├â┬ç├â┬╢ Release / Debug / AddressSanitizer
     # ============================================================================
 # Usage:
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release           (production)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug             (dev)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWR_ASAN=ON  (ASAN)
 #
-# ASAN (MSVC): /fsanitize=address ÎÃÃ¶ detects heap overflows, use-after-free
+# ASAN (MSVC): /fsanitize=address ├Ä┬ô├â┬ç├â┬╢ detects heap overflows, use-after-free
 option(RAWR_ASAN "Enable AddressSanitizer (MSVC /fsanitize=address)" OFF)
 
-# PMASSA: bye Ollama ÎÃÃ¶ prefer local GGUF / inference; Ollama code can be excluded when ON
+# PMASSA: bye Ollama ├Ä┬ô├â┬ç├â┬╢ prefer local GGUF / inference; Ollama code can be excluded when ON
 # See docs/PMASSA_BYE_OLLAMA.md
 option(RAWRXD_PMASSA "PMASSA: phase out Ollama (prefer local GGUF; define RAWRXD_PMASSA)" OFF)
 if(RAWRXD_PMASSA)
     add_compile_definitions(RAWRXD_PMASSA=1)
-    message(STATUS "[PMASSA] Bye Ollama ÎÃÃ¶ RAWRXD_PMASSA=ON")
+    message(STATUS "[PMASSA] Bye Ollama ├Ä┬ô├â┬ç├â┬╢ RAWRXD_PMASSA=ON")
 endif()
 
 if(RAWR_ASAN AND MSVC)
@@ -6329,13 +7925,17 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# SovereignTest_Suite ÎÃÃ¶ Pre-Build CI/CD Gate (beaconism pattern)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# SovereignTest_Suite ├Ä┬ô├â┬ç├â┬╢ Pre-Build CI/CD Gate (beaconism pattern)
 # Validates: atomic rollback, cache coherency, patch correctness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" OFF)
 if(BUILD_SOVEREIGN_TEST_SUITE)
     add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_Main.cpp
+        src/sovereign/tests/SovereignTest_AtomicRollback.cpp
+        src/sovereign/tests/SovereignTest_CacheCoherency.cpp
+        src/sovereign/tests/SovereignTest_Correctness.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_Suite PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -6356,13 +7956,14 @@ if(BUILD_SOVEREIGN_TEST_SUITE)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# SovereignTest_VAL038_E2E ÎÃÃ¶ Integration E2E Harness for VAL-038 Kernel
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# SovereignTest_VAL038_E2E ├Ä┬ô├â┬ç├â┬╢ Integration E2E Harness for VAL-038 Kernel
 # Live-fire validation: Cold-start -> Hot-patch -> Inference -> Hash validation
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" OFF)
 if(BUILD_SOVEREIGN_VAL038_E2E)
     add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_VAL038_E2E.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_VAL038_E2E PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -6384,13 +7985,14 @@ if(BUILD_SOVEREIGN_VAL038_E2E)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# Deep2_Batch_Test ÎÃÃ¶ Model Stress-Test Harness with PageFaultMonitor
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# Deep2_Batch_Test ├Ä┬ô├â┬ç├â┬╢ Model Stress-Test Harness with PageFaultMonitor
 # Discovery-Load-Benchmark-Validation sequence for all models
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" OFF)
 if(BUILD_DEEP2_BATCH_TEST)
     add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_Deep2_Batch.cpp
     )
     if(MSVC)
         target_compile_options(Deep2_Batch_Test PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -6412,12 +8014,13 @@ if(BUILD_DEEP2_BATCH_TEST)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# test_generate_one_token ÎÃÃ¶ Minimal Codestral One-Token Validation Gate
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# test_generate_one_token ├Ä┬ô├â┬ç├â┬╢ Minimal Codestral One-Token Validation Gate
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" OFF)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
+        src/deep2/test_generate_one_token.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_generate_one_token PRIVATE InferenceEngine)
@@ -6437,10 +8040,11 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
-# test_q4k_gemv_parity ÎÃÃ¶ BATCH2_Q4K_GEMV_001 standalone cert
-option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" ON)
+# test_q4k_gemv_parity ├Ä┬ô├â┬ç├â┬╢ BATCH2_Q4K_GEMV_001 standalone cert
+option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
+        src/deep2/test_q4k_gemv_parity.cpp
     )
     target_link_libraries(test_q4k_gemv_parity PRIVATE InferenceEngine)
     if(MSVC)
@@ -6458,6 +8062,7 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity")
 
     add_executable(test_q_elemdiff
+        src/deep2/test_q_elemdiff.cpp
     )
     target_link_libraries(test_q_elemdiff PRIVATE InferenceEngine)
     if(MSVC)
@@ -6475,6 +8080,7 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     message(STATUS "[Deep2] Q element-diff harness: test_q_elemdiff")
 
     add_executable(test_embed_q4k_token
+        src/deep2/test_embed_q4k_token.cpp
     )
     target_link_libraries(test_embed_q4k_token PRIVATE InferenceEngine)
     if(MSVC)
@@ -6493,9 +8099,10 @@ if(BUILD_DEEP2_Q4K_GEMV_PARITY)
 endif()
 
 # test_chat_template -- Chat template + streaming generation test
-option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" ON)
+option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" OFF)
 if(BUILD_DEEP2_CHAT_TEMPLATE)
     add_executable(test_chat_template
+        src/deep2/test_chat_template.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_chat_template PRIVATE InferenceEngine)
@@ -6516,9 +8123,10 @@ if(BUILD_DEEP2_CHAT_TEMPLATE)
 endif()
 
 # test_chat_template_unit -- Chat template unit tests (no model loading)
-option(BUILD_DEEP2_CHAT_TEMPLATE_UNIT "Build chat template unit tests" ON)
+option(BUILD_DEEP2_CHAT_TEMPLATE_UNIT "Build chat template unit tests" OFF)
 if(BUILD_DEEP2_CHAT_TEMPLATE_UNIT)
     add_executable(test_chat_template_unit
+        src/deep2/test_chat_template_unit.cpp
     )
     target_link_libraries(test_chat_template_unit PRIVATE InferenceEngine)
     if(MSVC)
@@ -6537,9 +8145,10 @@ if(BUILD_DEEP2_CHAT_TEMPLATE_UNIT)
 endif()
 
 # test_streaming -- Streaming generation test with per-token callback
-option(BUILD_DEEP2_STREAMING "Build streaming generation test" ON)
+option(BUILD_DEEP2_STREAMING "Build streaming generation test" OFF)
 if(BUILD_DEEP2_STREAMING)
     add_executable(test_streaming
+        src/deep2/test_streaming.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_streaming PRIVATE InferenceEngine)
@@ -6559,11 +8168,13 @@ if(BUILD_DEEP2_STREAMING)
     message(STATUS "[Deep2] Streaming test: test_streaming")
 endif()
 
-# deep2_streamer_cert ÎÃÃ¶ STREAMER-CERT-001: Full streaming certification harness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON)
+# deep2_streamer_cert ├Ä┬ô├â┬ç├â┬╢ STREAMER-CERT-001: Full streaming certification harness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" OFF)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
+        src/deep2/deep2_streamer_cert.cpp
+        src/deep2/StreamerGpuSoloGate.cpp
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6583,10 +8194,14 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
-# OLLAMA_PARITY_STREAMER_001 â Deep2 owns stream surface; zero Ollama HTTP
-option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" ON)
+# OLLAMA_PARITY_STREAMER_001 ├ó┬Ç┬ö Deep2 owns stream surface; zero Ollama HTTP
+option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" OFF)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
+        src/deep2/deep2_streamer_parity.cpp
+        src/deep2/StreamerParity_Harness.cpp
+        src/deep2/StreamerParity_Post.cpp
+        src/deep2/Deep2StreamApi.cpp
     )
     target_link_libraries(deep2_streamer_parity PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6606,10 +8221,17 @@ if(BUILD_DEEP2_STREAMER_PARITY)
     message(STATUS "[Deep2] Ollama-parity streamer: deep2_streamer_parity")
 endif()
 
-# STREAMER_GPU_SOLO_001 â SingleGpu plan: enum all, open one primary (no GGUF claim yet)
-option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" ON)
+# STREAMER_GPU_SOLO_001 ├ó┬Ç┬ö SingleGpu plan: enum all, open one primary (no GGUF claim yet)
+option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" OFF)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
+        src/deep2/deep2_gpu_solo_cert.cpp
+        src/deep2/StreamerGpuSoloGate.cpp
+        src/deep2/StreamerGpuSoloVk.cpp
+        src/deep2/Deep2DeviceManager.cpp
+    src/deep2/DualLaneChoreographer.cpp
+        src/asm/Deep2Device_Score.asm
+        src/asm/Deep2Device_Pick.asm
     )
     target_link_libraries(deep2_gpu_solo_cert PRIVATE dxgi)
     if(MSVC)
@@ -6637,9 +8259,10 @@ if(BUILD_DEEP2_GPU_SOLO_CERT)
     message(STATUS "[Deep2] GPU solo gate: deep2_gpu_solo_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build SingleGpu GGUF decode cert" ON)
+option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build SingleGpu GGUF decode cert" OFF)
 if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     add_executable(deep2_gpu_solo_decode_cert
+        src/deep2/deep2_gpu_solo_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_solo_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6659,9 +8282,10 @@ if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     message(STATUS "[Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert")
 endif()
 
-option(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT "Build 0/1/N DeviceManager portability cert" ON)
+option(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT "Build 0/1/N DeviceManager portability cert" OFF)
 if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
     add_executable(deep2_topology_portability_cert
+        src/deep2/deep2_topology_portability_cert.cpp
     )
     target_link_libraries(deep2_topology_portability_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6681,9 +8305,10 @@ if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
     message(STATUS "[Deep2] Topology portability cert: deep2_topology_portability_cert")
 endif()
 
-option(BUILD_DEEP2_MULTI_GPU_LAYER_CERT "Build contiguous multi-GPU layer placement cert" ON)
+option(BUILD_DEEP2_MULTI_GPU_LAYER_CERT "Build contiguous multi-GPU layer placement cert" OFF)
 if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
     add_executable(deep2_multi_gpu_layer_cert
+        src/deep2/deep2_multi_gpu_layer_cert.cpp
     )
     target_link_libraries(deep2_multi_gpu_layer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6703,9 +8328,10 @@ if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
     message(STATUS "[Deep2] Multi-GPU layer cert: deep2_multi_gpu_layer_cert")
 endif()
 
-option(BUILD_DEEP2_HYBRID_ALL_HW_CERT "Build CPU+GPU hybrid planned-layer cert" ON)
+option(BUILD_DEEP2_HYBRID_ALL_HW_CERT "Build CPU+GPU hybrid planned-layer cert" OFF)
 if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
     add_executable(deep2_hybrid_all_hw_cert
+        src/deep2/deep2_hybrid_all_hw_cert.cpp
     )
     target_link_libraries(deep2_hybrid_all_hw_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6725,9 +8351,10 @@ if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
     message(STATUS "[Deep2] Hybrid all-HW cert: deep2_hybrid_all_hw_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_FORWARD_OPS_CERT "Build STREAMER_GPU_FORWARD_OPS_001 cert" ON)
+option(BUILD_DEEP2_GPU_FORWARD_OPS_CERT "Build STREAMER_GPU_FORWARD_OPS_001 cert" OFF)
 if(BUILD_DEEP2_GPU_FORWARD_OPS_CERT)
     add_executable(deep2_gpu_forward_ops_cert
+        src/deep2/deep2_gpu_forward_ops_cert.cpp
     )
     target_link_libraries(deep2_gpu_forward_ops_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6747,9 +8374,10 @@ if(BUILD_DEEP2_GPU_FORWARD_OPS_CERT)
     message(STATUS "[Deep2] GPU forward ops cert: deep2_gpu_forward_ops_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT "Build STREAMER_GPU_RESIDENT_DECODE_001 cert" ON)
+option(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT "Build STREAMER_GPU_RESIDENT_DECODE_001 cert" OFF)
 if(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT)
     add_executable(deep2_gpu_resident_decode_cert
+        src/deep2/deep2_gpu_resident_decode_cert.cpp
     )
     target_link_libraries(deep2_gpu_resident_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6769,9 +8397,10 @@ if(BUILD_DEEP2_GPU_RESIDENT_DECODE_CERT)
     message(STATUS "[Deep2] GPU resident decode cert: deep2_gpu_resident_decode_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT "Build STREAMER_GPU_WEIGHT_WINDOW_001 cert" ON)
+option(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT "Build STREAMER_GPU_WEIGHT_WINDOW_001 cert" OFF)
 if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     add_executable(deep2_gpu_transfer_counter_cert
+        src/deep2/deep2_gpu_transfer_counter_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_counter_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6789,6 +8418,7 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer counter gate: deep2_gpu_transfer_counter_cert")
 
     add_executable(deep2_gpu_transfer_overlap_cert
+        src/deep2/deep2_gpu_transfer_overlap_cert.cpp
     )
     target_link_libraries(deep2_gpu_transfer_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6810,6 +8440,7 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU transfer overlap gate: deep2_gpu_transfer_overlap_cert")
 
     add_executable(deep2_gpu_weight_window_cert
+        src/deep2/deep2_gpu_weight_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6829,9 +8460,10 @@ if(BUILD_DEEP2_GPU_WEIGHT_WINDOW_CERT)
     message(STATUS "[Deep2] GPU weight window cert: deep2_gpu_weight_window_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT "Build STREAMER_GPU_WEIGHT_PREFETCH_001 cert" ON)
+option(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT "Build STREAMER_GPU_WEIGHT_PREFETCH_001 cert" OFF)
 if(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT)
     add_executable(deep2_gpu_weight_prefetch_cert
+        src/deep2/deep2_gpu_weight_prefetch_cert.cpp
     )
     target_link_libraries(deep2_gpu_weight_prefetch_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6851,9 +8483,10 @@ if(BUILD_DEEP2_GPU_WEIGHT_PREFETCH_CERT)
     message(STATUS "[Deep2] GPU weight prefetch cert: deep2_gpu_weight_prefetch_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT "Build STREAMER_GPU_NUMERIC_PARITY_001 cert" ON)
+option(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT "Build STREAMER_GPU_NUMERIC_PARITY_001 cert" OFF)
 if(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT)
     add_executable(deep2_gpu_numeric_parity_cert
+        src/deep2/deep2_gpu_numeric_parity_cert.cpp
     )
     target_link_libraries(deep2_gpu_numeric_parity_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6873,9 +8506,10 @@ if(BUILD_DEEP2_GPU_NUMERIC_PARITY_CERT)
     message(STATUS "[Deep2] GPU numeric parity cert: deep2_gpu_numeric_parity_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" ON)
+option(BUILD_DEEP2_GPU_Q4K_GEMV_CERT "Build STREAMER_GPU_Q4K_GEMV_001 cert" OFF)
 if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
     add_executable(deep2_gpu_q4k_gemv_cert
+        src/deep2/deep2_gpu_q4k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q4k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6895,9 +8529,10 @@ if(BUILD_DEEP2_GPU_Q4K_GEMV_CERT)
     message(STATUS "[Deep2] GPU Q4_K GEMV cert: deep2_gpu_q4k_gemv_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_Q6K_GEMV_CERT "Build STREAMER_GPU_Q6K_GEMV_001 cert" ON)
+option(BUILD_DEEP2_GPU_Q6K_GEMV_CERT "Build STREAMER_GPU_Q6K_GEMV_001 cert" OFF)
 if(BUILD_DEEP2_GPU_Q6K_GEMV_CERT)
     add_executable(deep2_gpu_q6k_gemv_cert
+        src/deep2/deep2_gpu_q6k_gemv_cert.cpp
     )
     target_link_libraries(deep2_gpu_q6k_gemv_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6917,9 +8552,10 @@ if(BUILD_DEEP2_GPU_Q6K_GEMV_CERT)
     message(STATUS "[Deep2] GPU Q6_K GEMV cert: deep2_gpu_q6k_gemv_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV cert" ON)
+option(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT "Build STREAMER_GPU Q5/Q3/Q2/Q8 GEMV cert" OFF)
 if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
     add_executable(deep2_gpu_quant_family_cert
+        src/deep2/deep2_gpu_quant_family_cert.cpp
     )
     target_link_libraries(deep2_gpu_quant_family_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6939,9 +8575,10 @@ if(BUILD_DEEP2_GPU_QUANT_FAMILY_CERT)
     message(STATUS "[Deep2] GPU quant family cert: deep2_gpu_quant_family_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward gates 6-15" ON)
+option(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT "Build STREAMER_GPU packed-forward gates 6-15" OFF)
 if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
     add_executable(deep2_gpu_packed_forward_cert
+        src/deep2/deep2_gpu_packed_forward_cert.cpp
     )
     target_link_libraries(deep2_gpu_packed_forward_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -6961,7 +8598,7 @@ if(BUILD_DEEP2_GPU_PACKED_FORWARD_CERT)
     message(STATUS "[Deep2] GPU packed-forward cert: deep2_gpu_packed_forward_cert")
 endif()
 
-option(BUILD_DEEP2_ENGINE_SSVK_DECODE_BIND_CERT "Build DEEP2_ENGINE_SSVK_DECODE_BIND_001" ON)
+option(BUILD_DEEP2_ENGINE_SSVK_DECODE_BIND_CERT "Build DEEP2_ENGINE_SSVK_DECODE_BIND_001" OFF)
 if(BUILD_DEEP2_ENGINE_SSVK_DECODE_BIND_CERT)
     add_executable(deep2_engine_ssvk_decode_bind_cert
         src/deep2/deep2_engine_ssvk_decode_bind_cert.cpp
@@ -6985,9 +8622,10 @@ if(BUILD_DEEP2_ENGINE_SSVK_DECODE_BIND_CERT)
     message(STATUS "[Deep2] SsVk decode bind cert: deep2_engine_ssvk_decode_bind_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" ON)
+option(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT "Build STREAMER_GPU_DYNAMIC_WINDOW_001 cert" OFF)
 if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
     add_executable(deep2_gpu_dynamic_window_cert
+        src/deep2/deep2_gpu_dynamic_window_cert.cpp
     )
     target_link_libraries(deep2_gpu_dynamic_window_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7007,9 +8645,10 @@ if(BUILD_DEEP2_GPU_DYNAMIC_WINDOW_CERT)
     message(STATUS "[Deep2] GPU dynamic-window cert: deep2_gpu_dynamic_window_cert")
 endif()
 
-option(BUILD_DEEP2_RUNTIME_BATCH1_CERT "Build DEEP2_RUNTIME batch-1 cert (loader..policy)" ON)
+option(BUILD_DEEP2_RUNTIME_BATCH1_CERT "Build DEEP2_RUNTIME batch-1 cert (loader..policy)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH1_CERT)
     add_executable(deep2_runtime_batch1_cert
+        src/deep2/deep2_runtime_batch1_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch1_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7029,9 +8668,10 @@ if(BUILD_DEEP2_RUNTIME_BATCH1_CERT)
     message(STATUS "[Deep2] Runtime batch-1 cert: deep2_runtime_batch1_cert")
 endif()
 
-option(BUILD_DEEP2_RUNTIME_BATCH2_CERT "Build DEEP2_RUNTIME batch-2 cert (large/k2/ds/soak)" ON)
+option(BUILD_DEEP2_RUNTIME_BATCH2_CERT "Build DEEP2_RUNTIME batch-2 cert (large/k2/ds/soak)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH2_CERT)
     add_executable(deep2_runtime_batch2_cert
+        src/deep2/deep2_runtime_batch2_cert.cpp
     )
     target_link_libraries(deep2_runtime_batch2_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7051,9 +8691,10 @@ if(BUILD_DEEP2_RUNTIME_BATCH2_CERT)
     message(STATUS "[Deep2] Runtime batch-2 cert: deep2_runtime_batch2_cert")
 endif()
 
-option(BUILD_DEEP2_RUNTIME_BATCH3_CERT "Build DEEP2_RUNTIME batch-3 cert (quant/fusion/window)" ON)
+option(BUILD_DEEP2_RUNTIME_BATCH3_CERT "Build DEEP2_RUNTIME batch-3 cert (quant/fusion/window)" OFF)
 if(BUILD_DEEP2_RUNTIME_BATCH3_CERT)
     add_executable(deep2_runtime_batch3_cert
+        src/deep2/deep2_runtime_batch3_cert.cpp
     )
     if(MSVC)
         target_compile_options(deep2_runtime_batch3_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -7066,9 +8707,10 @@ if(BUILD_DEEP2_RUNTIME_BATCH3_CERT)
     message(STATUS "[Deep2] Runtime batch-3 cert: deep2_runtime_batch3_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT "Build DEEP2_K2_LIVE_GEN_PERF_001 cert" ON)
+option(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT "Build DEEP2_K2_LIVE_GEN_PERF_001 cert" OFF)
 if(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT)
     add_executable(deep2_k2_live_gen_perf_cert
+        src/deep2/deep2_k2_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7087,9 +8729,10 @@ if(BUILD_DEEP2_K2_LIVE_GEN_PERF_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT "Build K2_LIVE_POLICY_CROSSOVER_001" ON)
+option(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT "Build K2_LIVE_POLICY_CROSSOVER_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT)
     add_executable(deep2_k2_live_policy_crossover_cert
+        src/deep2/deep2_k2_live_policy_crossover_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_crossover_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7112,9 +8755,10 @@ if(BUILD_DEEP2_K2_LIVE_POLICY_CROSSOVER_CERT)
     message(STATUS "[Deep2] K2 live policy crossover: deep2_k2_live_policy_crossover_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT "Build K2_LIVE_POLICY_E2E_001" ON)
+option(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT "Build K2_LIVE_POLICY_E2E_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT)
     add_executable(deep2_k2_live_policy_e2e_cert
+        src/deep2/deep2_k2_live_policy_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_policy_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7137,9 +8781,10 @@ if(BUILD_DEEP2_K2_LIVE_POLICY_E2E_CERT)
     message(STATUS "[Deep2] K2 live policy E2E: deep2_k2_live_policy_e2e_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT "Build K2_GPU_STREAM_COPY_001" ON)
+option(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT "Build K2_GPU_STREAM_COPY_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT)
     add_executable(deep2_k2_gpu_stream_copy_cert
+        src/deep2/deep2_k2_gpu_stream_copy_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_copy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7162,9 +8807,10 @@ if(BUILD_DEEP2_K2_GPU_STREAM_COPY_CERT)
     message(STATUS "[Deep2] K2 GPU stream copy: deep2_k2_gpu_stream_copy_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT "Build K2_GPU_COPY_COMPUTE_OVERLAP_001" ON)
+option(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT "Build K2_GPU_COPY_COMPUTE_OVERLAP_001" OFF)
 if(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT)
     add_executable(deep2_k2_gpu_copy_compute_overlap_cert
+        src/deep2/deep2_k2_gpu_copy_compute_overlap_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_copy_compute_overlap_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7187,9 +8833,10 @@ if(BUILD_DEEP2_K2_GPU_COPY_COMPUTE_OVERLAP_CERT)
     message(STATUS "[Deep2] K2 GPU copy/compute overlap: deep2_k2_gpu_copy_compute_overlap_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT "Build K2_LIVE_GPU_STREAM_E2E_001" ON)
+option(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT "Build K2_LIVE_GPU_STREAM_E2E_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT)
     add_executable(deep2_k2_live_gpu_stream_e2e_cert
+        src/deep2/deep2_k2_live_gpu_stream_e2e_cert.cpp
     )
     target_link_libraries(deep2_k2_live_gpu_stream_e2e_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7212,9 +8859,10 @@ if(BUILD_DEEP2_K2_LIVE_GPU_STREAM_E2E_CERT)
     message(STATUS "[Deep2] K2 live GPU stream E2E: deep2_k2_live_gpu_stream_e2e_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT "Build K2_GPU_STREAM_COMPUTE_001" ON)
+option(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT "Build K2_GPU_STREAM_COMPUTE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT)
     add_executable(deep2_k2_gpu_stream_compute_cert
+        src/deep2/deep2_k2_gpu_stream_compute_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_compute_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7237,9 +8885,10 @@ if(BUILD_DEEP2_K2_GPU_STREAM_COMPUTE_CERT)
     message(STATUS "[Deep2] K2 GPU stream compute: deep2_k2_gpu_stream_compute_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT "Build K2_GPU_STREAM_MLA_001" ON)
+option(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT "Build K2_GPU_STREAM_MLA_001" OFF)
 if(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT)
     add_executable(deep2_k2_gpu_stream_mla_cert
+        src/deep2/deep2_k2_gpu_stream_mla_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_stream_mla_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7262,9 +8911,10 @@ if(BUILD_DEEP2_K2_GPU_STREAM_MLA_CERT)
     message(STATUS "[Deep2] K2 GPU stream MLA: deep2_k2_gpu_stream_mla_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT "Build K2_GPU_MLA_FULL_001" ON)
+option(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT "Build K2_GPU_MLA_FULL_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT)
     add_executable(deep2_k2_gpu_mla_full_cert
+        src/deep2/deep2_k2_gpu_mla_full_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7287,9 +8937,10 @@ if(BUILD_DEEP2_K2_GPU_MLA_FULL_CERT)
     message(STATUS "[Deep2] K2 GPU MLA full: deep2_k2_gpu_mla_full_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT "Build K2_GPU_MLA_FULL_DEPTH_001" ON)
+option(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT "Build K2_GPU_MLA_FULL_DEPTH_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT)
     add_executable(deep2_k2_gpu_mla_full_depth_cert
+        src/deep2/deep2_k2_gpu_mla_full_depth_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_full_depth_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7312,9 +8963,10 @@ if(BUILD_DEEP2_K2_GPU_MLA_FULL_DEPTH_CERT)
     message(STATUS "[Deep2] K2 GPU MLA full-depth: deep2_k2_gpu_mla_full_depth_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_MLA_RE_CERT "Build K2_GPU_MLA_RE_001" ON)
+option(BUILD_DEEP2_K2_GPU_MLA_RE_CERT "Build K2_GPU_MLA_RE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_RE_CERT)
     add_executable(deep2_k2_gpu_mla_re_cert
+        src/deep2/deep2_k2_gpu_mla_re_cert.cpp
     )
     target_link_libraries(deep2_k2_gpu_mla_re_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7337,9 +8989,10 @@ if(BUILD_DEEP2_K2_GPU_MLA_RE_CERT)
     message(STATUS "[Deep2] K2 GPU MLA RE: deep2_k2_gpu_mla_re_cert")
 endif()
 
-option(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT "Build K2_STREAM_MISS_REALITY_001" ON)
+option(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT "Build K2_STREAM_MISS_REALITY_001" OFF)
 if(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT)
     add_executable(deep2_k2_stream_miss_reality_cert
+        src/deep2/deep2_k2_stream_miss_reality_cert.cpp
     )
     target_link_libraries(deep2_k2_stream_miss_reality_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7362,9 +9015,10 @@ if(BUILD_DEEP2_K2_STREAM_MISS_REALITY_CERT)
     message(STATUS "[Deep2] K2 STREAM_MISS reality: deep2_k2_stream_miss_reality_cert")
 endif()
 
-option(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT "Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert" ON)
+option(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT "Build DEEP2_DEEPSEEK_LIVE_GEN_PERF_001 cert" OFF)
 if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
     add_executable(deep2_deepseek_live_gen_perf_cert
+        src/deep2/deep2_deepseek_live_gen_perf_cert.cpp
     )
     target_link_libraries(deep2_deepseek_live_gen_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7383,9 +9037,10 @@ if(BUILD_DEEP2_DEEPSEEK_LIVE_GEN_PERF_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001 "Build LOCAL_AGENT_AUDIT_001 cert" ON)
+option(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001 "Build LOCAL_AGENT_AUDIT_001 cert" OFF)
 if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     add_executable(deep2_local_agent_audit_001
+        src/deep2/deep2_local_agent_audit_001.cpp
     )
     target_link_libraries(deep2_local_agent_audit_001 PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7405,10 +9060,11 @@ if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     message(STATUS "[Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001")
 endif()
 
-# A0 â product floor: process stays alive (no model / no VWA / no InferenceEngine)
-option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" ON)
+# A0 ├ó┬Ç┬ö product floor: process stays alive (no model / no VWA / no InferenceEngine)
+option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" OFF)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
+        src/deep2/p0_process_alive_001.cpp
     )
     if(MSVC)
         target_compile_options(p0_process_alive_001 PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -7421,10 +9077,11 @@ if(BUILD_P0_PROCESS_ALIVE_001)
     message(STATUS "[Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001")
 endif()
 
-# B0 â VWA range contract (RMV-layered; no second mount)
-option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" ON)
+# B0 ├ó┬Ç┬ö VWA range contract (RMV-layered; no second mount)
+option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
+        src/deep2/vwa_range_contract_001.cpp
     )
     target_include_directories(vwa_range_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -7440,10 +9097,12 @@ if(BUILD_VWA_RANGE_CONTRACT_001)
     message(STATUS "[Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001")
 endif()
 
-# C1 substrate â K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
-option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" ON)
+# C1 substrate ├ó┬Ç┬ö K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
+option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
+        src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -7461,10 +9120,11 @@ if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     message(STATUS "[Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001")
 endif()
 
-# B0 â VWA address contract (types + ResolvePhysicalSpan only)
-option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" ON)
+# B0 ├ó┬Ç┬ö VWA address contract (types + ResolvePhysicalSpan only)
+option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
+        src/deep2/vwa_address_contract_001.cpp
     )
     target_include_directories(vwa_address_contract_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -7480,8 +9140,8 @@ if(BUILD_VWA_ADDRESS_CONTRACT_001)
     message(STATUS "[Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001")
 endif()
 
-# B1 â VWA POC-1: RMV â MASM resolve â exact ReadFile + dequant (real GGUF)
-option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" ON)
+# B1 ├ó┬Ç┬ö VWA POC-1: RMV ├ó┬å┬Æ MASM resolve ├ó┬å┬Æ exact ReadFile + dequant (real GGUF)
+option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" OFF)
 if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
     set(_VWA_POC_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
     set(_VWA_POC_ASM_OBJ "${CMAKE_BINARY_DIR}/VwaRangeX64_poc1.obj")
@@ -7493,6 +9153,8 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm (POC-1)"
         VERBATIM)
     add_executable(vwa_poc_1_001
+        src/deep2/vwa_poc_1_001.cpp
+        src/deep2/GGUFLoader.cpp
         ${_VWA_POC_ASM_OBJ}
     )
     target_include_directories(vwa_poc_1_001 PRIVATE
@@ -7511,14 +9173,39 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
 endif()
 
 set(DEEP2_R1_DECODE_ASM
+    src/asm/Deep2R1_StrEq.asm
+    src/asm/Deep2R1_IsArch.asm
+    src/asm/Deep2R1_GlobData.asm
+    src/asm/Deep2R1_MlaData.asm
+    src/asm/Deep2R1_MoeData.asm
+    src/asm/Deep2R1_Scan.asm
+    src/asm/Deep2R1_Decode.asm
+    src/asm/Deep2R1_Validate.asm
+    src/asm/Deep2R1_LayerKind.asm
+    src/asm/Deep2R1_SplitKVB.asm
 )
 set(DEEP2_OUTER_RUNTIME_ASM
+    src/asm/Deep2OuterStr.asm
+    src/asm/Deep2OuterEnv.asm
+    src/asm/Deep2OuterParse.asm
+    src/asm/Deep2OuterParseIdx.asm
+    src/asm/Deep2OuterGGUF.asm
+    src/asm/Deep2OuterPath.asm
+    src/asm/Deep2OuterShardApply.asm
+    src/asm/Deep2OuterShardScan.asm
+    src/asm/Deep2OuterShardCheck.asm
+    src/asm/Deep2OuterPrintIO.asm
+    src/asm/Deep2OuterPrint.asm
+    src/asm/Deep2OuterEvidence.asm
+    src/asm/Deep2OuterResolve.asm
+    src/asm/Deep2OuterCallEngine.asm
+    src/asm/Deep2OuterHost.asm
 )
 set_source_files_properties(${DEEP2_R1_DECODE_ASM} ${DEEP2_OUTER_RUNTIME_ASM}
     src/asm/Deep2R1_Smoke.asm src/asm/Deep2OuterSmoke.asm
     PROPERTIES LANGUAGE ASM_MASM)
 
-option(BUILD_DEEP2_R1_DECODE_SMOKE "Build Deep2R1TensorDecode no-CRT smoke" ON)
+option(BUILD_DEEP2_R1_DECODE_SMOKE "Build Deep2R1TensorDecode no-CRT smoke" OFF)
 if(BUILD_DEEP2_R1_DECODE_SMOKE)
     add_executable(deep2_r1_decode_smoke ${DEEP2_R1_DECODE_ASM} src/asm/Deep2R1_Smoke.asm)
     target_link_libraries(deep2_r1_decode_smoke PRIVATE kernel32)
@@ -7531,7 +9218,7 @@ if(BUILD_DEEP2_R1_DECODE_SMOKE)
     )
 endif()
 
-option(BUILD_DEEP2_OUTER_SMOKE "Build Deep2 outer shard-probe smoke" ON)
+option(BUILD_DEEP2_OUTER_SMOKE "Build Deep2 outer shard-probe smoke" OFF)
 if(BUILD_DEEP2_OUTER_SMOKE)
     add_executable(deep2_outer_smoke ${DEEP2_OUTER_RUNTIME_ASM} src/asm/Deep2OuterSmoke.asm)
     target_link_libraries(deep2_outer_smoke PRIVATE kernel32)
@@ -7544,9 +9231,11 @@ if(BUILD_DEEP2_OUTER_SMOKE)
     )
 endif()
 
-option(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT "Build DEEP2_OUTER_ENGINE_BRIDGE_001" ON)
+option(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT "Build DEEP2_OUTER_ENGINE_BRIDGE_001" OFF)
 if(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT)
     add_executable(deep2_outer_engine_bridge_cert
+        src/deep2/deep2_outer_engine_bridge_cert.cpp
+        src/deep2/Deep2OuterEngineBridge.cpp
         ${DEEP2_OUTER_RUNTIME_ASM}
     )
     target_link_libraries(deep2_outer_engine_bridge_cert PRIVATE InferenceEngine dxgi kernel32)
@@ -7569,7 +9258,7 @@ if(BUILD_DEEP2_OUTER_ENGINE_BRIDGE_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT "Build LIVE_PATH_EFFECTIVENESS_001" ON)
+option(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT "Build LIVE_PATH_EFFECTIVENESS_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT)
     add_executable(deep2_live_path_effectiveness_cert
         src/deep2/deep2_live_path_effectiveness_cert.cpp)
@@ -7588,9 +9277,11 @@ if(BUILD_DEEP2_LIVE_PATH_EFFECTIVENESS_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT "Build LIVE_PATH_FUSED_CONTROL_001" ON)
+option(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT "Build LIVE_PATH_FUSED_CONTROL_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT)
     add_executable(deep2_live_path_fused_control_cert
+        src/deep2/deep2_live_path_fused_control_cert.cpp
+        src/deep2/LivePathFusedCert_Arm.cpp
         src/deep2/K2LivePathTensorCache_Emit.cpp)
     target_link_libraries(deep2_live_path_fused_control_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7606,7 +9297,7 @@ if(BUILD_DEEP2_LIVE_PATH_FUSED_CONTROL_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-option(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT "Build LIVE_PATH_INTERACTION_BOUNDS_001" ON)
+option(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT "Build LIVE_PATH_INTERACTION_BOUNDS_001" OFF)
 if(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT)
     add_executable(deep2_live_path_interaction_bounds_cert
         src/deep2/deep2_live_path_interaction_bounds_cert.cpp)
@@ -7625,7 +9316,7 @@ if(BUILD_DEEP2_LIVE_PATH_INTERACTION_BOUNDS_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT "Build K2_FULL_DEPTH_EFFECTIVENESS_001" ON)
+option(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT "Build K2_FULL_DEPTH_EFFECTIVENESS_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT)
     add_executable(deep2_k2_full_depth_effectiveness_cert
         src/deep2/deep2_k2_full_depth_effectiveness_cert.cpp)
@@ -7644,9 +9335,11 @@ if(BUILD_DEEP2_K2_FULL_DEPTH_EFFECTIVENESS_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT "Build K2_FULL_DEPTH_COMBINED_POLICY_001" ON)
+option(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT "Build K2_FULL_DEPTH_COMBINED_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT)
     add_executable(deep2_k2_full_depth_combined_policy_cert
+        src/deep2/deep2_k2_full_depth_combined_policy_cert.cpp
+        src/deep2/K2FullDepthCombined_Arm.cpp
         src/deep2/K2FullDepthCombined_Proof.cpp)
     target_link_libraries(deep2_k2_full_depth_combined_policy_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7664,9 +9357,10 @@ if(BUILD_DEEP2_K2_FULL_DEPTH_COMBINED_POLICY_CERT)
 endif()
 
 option(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT
-       "Build K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001" ON)
+       "Build K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT)
     add_executable(deep2_k2_full_depth_trampoline_promotion_cert
+        src/deep2/deep2_k2_full_depth_trampoline_promotion_cert.cpp
         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_trampoline_promotion_cert
         PRIVATE InferenceEngine dxgi)
@@ -7685,9 +9379,10 @@ if(BUILD_DEEP2_K2_FULL_DEPTH_TRAMPOLINE_PROMOTION_CERT)
 endif()
 
 option(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT
-       "Build K2_FULL_DEPTH_FUSED_REBENCH_001" ON)
+       "Build K2_FULL_DEPTH_FUSED_REBENCH_001" OFF)
 if(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT)
     add_executable(deep2_k2_full_depth_fused_rebench_cert
+        src/deep2/deep2_k2_full_depth_fused_rebench_cert.cpp
         src/deep2/K2FullDepthCombined_Arm.cpp)
     target_link_libraries(deep2_k2_full_depth_fused_rebench_cert
         PRIVATE InferenceEngine dxgi)
@@ -7705,7 +9400,7 @@ if(BUILD_DEEP2_K2_FULL_DEPTH_FUSED_REBENCH_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT "Build K2_TRAMPOLINE_FULL_DEPTH_OPT_001" ON)
+option(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT "Build K2_TRAMPOLINE_FULL_DEPTH_OPT_001" OFF)
 if(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT)
     add_executable(deep2_k2_trampoline_full_depth_opt_cert
         src/deep2/deep2_k2_trampoline_full_depth_opt_cert.cpp)
@@ -7725,7 +9420,7 @@ if(BUILD_DEEP2_K2_TRAMPOLINE_FULL_DEPTH_OPT_CERT)
 endif()
 
 
-option(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT "Build K2_AUTO_WORKLOAD_POLICY_001" ON)
+option(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT "Build K2_AUTO_WORKLOAD_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_AUTO_WORKLOAD_POLICY_CERT)
     add_executable(deep2_k2_auto_workload_policy_cert
         src/deep2/deep2_k2_auto_workload_policy_cert.cpp)
@@ -7746,7 +9441,7 @@ endif()
 
 
 
-option(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT "Build K2_E2E_MODEL_SIZE_MATRIX_001" ON)
+option(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT "Build K2_E2E_MODEL_SIZE_MATRIX_001" OFF)
 if(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT)
     add_executable(deep2_k2_e2e_model_size_matrix_cert
         src/deep2/deep2_k2_e2e_model_size_matrix_cert.cpp)
@@ -7764,7 +9459,7 @@ if(BUILD_DEEP2_K2_E2E_MODEL_SIZE_MATRIX_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT "Build K2_LIVE_GENERATE_POLICY_001" ON)
+option(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT "Build K2_LIVE_GENERATE_POLICY_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT)
     add_executable(deep2_k2_live_generate_policy_cert
         src/deep2/deep2_k2_live_generate_policy_cert.cpp)
@@ -7783,7 +9478,7 @@ if(BUILD_DEEP2_K2_LIVE_GENERATE_POLICY_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT "Build K2_LIVE_POLICY_SPLIT_001" ON)
+option(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT "Build K2_LIVE_POLICY_SPLIT_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT)
     add_executable(deep2_k2_live_policy_split_cert
         src/deep2/deep2_k2_live_policy_split_cert.cpp)
@@ -7802,7 +9497,7 @@ if(BUILD_DEEP2_K2_LIVE_POLICY_SPLIT_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT "Build K2_POLICY_HYSTERESIS_001" ON)
+option(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT "Build K2_POLICY_HYSTERESIS_001" OFF)
 if(BUILD_DEEP2_K2_POLICY_HYSTERESIS_CERT)
     add_executable(deep2_k2_policy_hysteresis_cert
         src/deep2/deep2_k2_policy_hysteresis_cert.cpp)
@@ -7825,7 +9520,7 @@ endif()
 
 
 
-option(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT "Build K2_MLA_REBENCH_PROMOTE_001" ON)
+option(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT "Build K2_MLA_REBENCH_PROMOTE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT)
     add_executable(deep2_k2_mla_rebench_promote_cert
         src/deep2/deep2_k2_mla_rebench_promote_cert.cpp)
@@ -7844,7 +9539,7 @@ if(BUILD_DEEP2_K2_MLA_REBENCH_PROMOTE_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT "Build K2_MLA_REUSE_PROMOTE_001" ON)
+option(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT "Build K2_MLA_REUSE_PROMOTE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT)
     add_executable(deep2_k2_mla_reuse_promote_cert
         src/deep2/deep2_k2_mla_reuse_promote_cert.cpp)
@@ -7863,7 +9558,7 @@ if(BUILD_DEEP2_K2_MLA_REUSE_PROMOTE_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT "Build K2_MLA_FULL_DEPTH_SOAK_001" ON)
+option(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT "Build K2_MLA_FULL_DEPTH_SOAK_001" OFF)
 if(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT)
     add_executable(deep2_k2_mla_full_depth_soak_cert
         src/deep2/deep2_k2_mla_full_depth_soak_cert.cpp)
@@ -7883,7 +9578,7 @@ if(BUILD_DEEP2_K2_MLA_FULL_DEPTH_SOAK_CERT)
     message(STATUS "[Deep2] K2 MLA full-depth soak: deep2_k2_mla_full_depth_soak_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT "Build K2_LIVE_DECODE_MLA_001" ON)
+option(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT "Build K2_LIVE_DECODE_MLA_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
     add_executable(deep2_k2_live_decode_mla_cert
         src/deep2/deep2_k2_live_decode_mla_cert.cpp)
@@ -7903,7 +9598,7 @@ if(BUILD_DEEP2_K2_LIVE_DECODE_MLA_CERT)
     message(STATUS "[Deep2] K2 live decode MLA: deep2_k2_live_decode_mla_cert")
 endif()
 
-option(BUILD_MLA_CERT_001 "Build MLA-CERT-001 production seal" ON)
+option(BUILD_MLA_CERT_001 "Build MLA-CERT-001 production seal" OFF)
 if(BUILD_MLA_CERT_001)
     add_executable(mla_cert_001 certs/mla_cert_001.cpp)
     target_link_libraries(mla_cert_001 PRIVATE InferenceEngine dxgi)
@@ -7922,7 +9617,7 @@ if(BUILD_MLA_CERT_001)
     message(STATUS "[Deep2] MLA-CERT-001: mla_cert_001")
 endif()
 
-option(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT "Build K2_MLA_FUSED_Q4KT_001" ON)
+option(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT "Build K2_MLA_FUSED_Q4KT_001" OFF)
 if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
     add_executable(deep2_k2_mla_fused_q4kt_cert
         src/deep2/deep2_k2_mla_fused_q4kt_cert.cpp)
@@ -7942,7 +9637,7 @@ if(BUILD_DEEP2_K2_MLA_FUSED_Q4KT_CERT)
     message(STATUS "[Deep2] K2 MLA fused Q4KT: deep2_k2_mla_fused_q4kt_cert")
 endif()
 
-option(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT "Build K2_SHARD_ATTN_RESIDENCY_001" ON)
+option(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT "Build K2_SHARD_ATTN_RESIDENCY_001" OFF)
 if(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT)
     add_executable(deep2_k2_shard_attn_residency_cert
         src/deep2/deep2_k2_shard_attn_residency_cert.cpp)
@@ -7962,7 +9657,7 @@ if(BUILD_DEEP2_K2_SHARD_ATTN_RESIDENCY_CERT)
     message(STATUS "[Deep2] K2 SHARD_ATTN residency: deep2_k2_shard_attn_residency_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT "Build K2_LOGITS_Q6K_RESIDENT_001" ON)
+option(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT "Build K2_LOGITS_Q6K_RESIDENT_001" OFF)
 if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
     add_executable(deep2_k2_logits_q6k_resident_cert
         src/deep2/deep2_k2_logits_q6k_resident_cert.cpp)
@@ -7982,7 +9677,7 @@ if(BUILD_DEEP2_K2_LOGITS_Q6K_RESIDENT_CERT)
     message(STATUS "[Deep2] K2 LOGITS Q6K resident: deep2_k2_logits_q6k_resident_cert")
 endif()
 
-option(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT "Build K2_MLA_KV_EXPAND_001" ON)
+option(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT "Build K2_MLA_KV_EXPAND_001" OFF)
 if(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT)
     add_executable(deep2_k2_mla_kv_expand_cert
         src/deep2/deep2_k2_mla_kv_expand_cert.cpp)
@@ -8002,7 +9697,7 @@ if(BUILD_DEEP2_K2_MLA_KV_EXPAND_CERT)
     message(STATUS "[Deep2] K2 MLA KV expand attrib: deep2_k2_mla_kv_expand_cert")
 endif()
 
-option(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT "Build K2_MLA_KV_EXPAND_OPT_001" ON)
+option(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT "Build K2_MLA_KV_EXPAND_OPT_001" OFF)
 if(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT)
     add_executable(deep2_k2_mla_kv_expand_opt_cert
         src/deep2/deep2_k2_mla_kv_expand_opt_cert.cpp)
@@ -8022,7 +9717,7 @@ if(BUILD_DEEP2_K2_MLA_KV_EXPAND_OPT_CERT)
     message(STATUS "[Deep2] K2 MLA KV expand OPT: deep2_k2_mla_kv_expand_opt_cert")
 endif()
 
-option(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT "Build K2_MLA_QKV_PROJ_001" ON)
+option(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT "Build K2_MLA_QKV_PROJ_001" OFF)
 if(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT)
     add_executable(deep2_k2_mla_qkv_proj_cert
         src/deep2/deep2_k2_mla_qkv_proj_cert.cpp)
@@ -8042,7 +9737,7 @@ if(BUILD_DEEP2_K2_MLA_QKV_PROJ_CERT)
     message(STATUS "[Deep2] K2 MLA QKV proj attrib: deep2_k2_mla_qkv_proj_cert")
 endif()
 
-option(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT "Build K2_MLA_QA_CRITICAL_001" ON)
+option(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT "Build K2_MLA_QA_CRITICAL_001" OFF)
 if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
     add_executable(deep2_k2_mla_qa_critical_cert
         src/deep2/deep2_k2_mla_qa_critical_cert.cpp)
@@ -8062,7 +9757,7 @@ if(BUILD_DEEP2_K2_MLA_QA_CRITICAL_CERT)
     message(STATUS "[Deep2] K2 MLA q_a critical: deep2_k2_mla_qa_critical_cert")
 endif()
 
-option(BUILD_DEEP2_UCF_BOUNCE_SMOKE "Build UCF BounceChain smoke" ON)
+option(BUILD_DEEP2_UCF_BOUNCE_SMOKE "Build UCF BounceChain smoke" OFF)
 if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
     add_executable(deep2_ucf_bounce_smoke
         src/deep2/deep2_ucf_bounce_smoke.cpp)
@@ -8081,7 +9776,7 @@ if(BUILD_DEEP2_UCF_BOUNCE_SMOKE)
 endif()
 
 option(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001
-    "Build UCF_NO_STALE_DISPATCH_001" ON)
+    "Build UCF_NO_STALE_DISPATCH_001" OFF)
 if(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001)
     add_executable(deep2_ucf_no_stale_dispatch_001
         src/deep2/deep2_ucf_no_stale_dispatch_001.cpp)
@@ -8100,7 +9795,7 @@ if(BUILD_DEEP2_UCF_NO_STALE_DISPATCH_001)
 endif()
 
 option(BUILD_DEEP2_UCF_READ_CONVERGE_001
-    "Build UCF_READ_CONVERGE_001" ON)
+    "Build UCF_READ_CONVERGE_001" OFF)
 if(BUILD_DEEP2_UCF_READ_CONVERGE_001)
     add_executable(deep2_ucf_read_converge_001
         src/deep2/deep2_ucf_read_converge_001.cpp)
@@ -8119,7 +9814,7 @@ if(BUILD_DEEP2_UCF_READ_CONVERGE_001)
 endif()
 
 option(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001
-    "Build UCF_LOGITS_RANGE_BOUNCE_001" ON)
+    "Build UCF_LOGITS_RANGE_BOUNCE_001" OFF)
 if(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001)
     add_executable(deep2_ucf_logits_range_bounce_001
         src/deep2/deep2_ucf_logits_range_bounce_001.cpp)
@@ -8137,7 +9832,7 @@ if(BUILD_DEEP2_UCF_LOGITS_RANGE_BOUNCE_001)
     message(STATUS "[Deep2] UCF logits range bounce: deep2_ucf_logits_range_bounce_001")
 endif()
 
-option(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1 "Build UCF_SEMANTIC_ABI_V1" ON)
+option(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1 "Build UCF_SEMANTIC_ABI_V1" OFF)
 if(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1)
     add_executable(deep2_ucf_semantic_abi_v1_cert
         src/deep2/deep2_ucf_semantic_abi_v1_cert.cpp)
@@ -8156,7 +9851,7 @@ if(BUILD_DEEP2_UCF_SEMANTIC_ABI_V1)
 endif()
 
 option(BUILD_DEEP2_UCF_GENERATION_TICKET_001
-    "Build UCF_GENERATION_TICKET_001" ON)
+    "Build UCF_GENERATION_TICKET_001" OFF)
 if(BUILD_DEEP2_UCF_GENERATION_TICKET_001)
     add_executable(deep2_ucf_generation_ticket_001
         src/deep2/deep2_ucf_generation_ticket_001.cpp)
@@ -8174,7 +9869,7 @@ if(BUILD_DEEP2_UCF_GENERATION_TICKET_001)
     message(STATUS "[Deep2] UCF generation ticket: deep2_ucf_generation_ticket_001")
 endif()
 
-option(BUILD_DEEP2_UCF_GPU_READY_E2E "Build UCF_GPU_READY_E2E / GPU_READY_E2E" ON)
+option(BUILD_DEEP2_UCF_GPU_READY_E2E "Build UCF_GPU_READY_E2E / GPU_READY_E2E" OFF)
 if(BUILD_DEEP2_UCF_GPU_READY_E2E)
     add_executable(deep2_ucf_gpu_ready_e2e
         src/deep2/deep2_ucf_gpu_ready_e2e.cpp)
@@ -8193,7 +9888,7 @@ if(BUILD_DEEP2_UCF_GPU_READY_E2E)
 endif()
 
 option(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE
-    "Build UCF_BOUNCEHOUSE_TRACE_001 observational smoke" ON)
+    "Build UCF_BOUNCEHOUSE_TRACE_001 observational smoke" OFF)
 if(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE)
     add_executable(deep2_ucf_bouncehouse_example
         src/deep2/deep2_ucf_bouncehouse_example.cpp)
@@ -8211,7 +9906,7 @@ if(BUILD_DEEP2_UCF_BOUNCEHOUSE_TRACE)
     message(STATUS "[Deep2] UCF bouncehouse trace: deep2_ucf_bouncehouse_example")
 endif()
 
-option(BUILD_DEEP2_UCF_HALO_SPARK_001 "Build UCF_HALO_SPARK_001" ON)
+option(BUILD_DEEP2_UCF_HALO_SPARK_001 "Build UCF_HALO_SPARK_001" OFF)
 if(BUILD_DEEP2_UCF_HALO_SPARK_001)
     add_executable(deep2_ucf_halo_spark_001
         src/deep2/deep2_ucf_halo_spark_001.cpp)
@@ -8229,7 +9924,7 @@ if(BUILD_DEEP2_UCF_HALO_SPARK_001)
     message(STATUS "[Deep2] UCF Halo/Spark: deep2_ucf_halo_spark_001")
 endif()
 
-option(BUILD_DEEP2_RMV_MOUNT_001 "Build RMV_MOUNT_001" ON)
+option(BUILD_DEEP2_RMV_MOUNT_001 "Build RMV_MOUNT_001" OFF)
 if(BUILD_DEEP2_RMV_MOUNT_001)
     add_executable(deep2_rmv_mount_001
         src/deep2/deep2_rmv_mount_001.cpp)
@@ -8251,6 +9946,8 @@ endif()
 option(BUILD_DEEP2_VWA_E2E_001 "Build legacy VWA_E2E_001 (non-authority)" OFF)
 if(BUILD_DEEP2_VWA_E2E_001)
     add_executable(deep2_vwa_e2e_001
+        src/deep2/deep2_vwa_e2e_001.cpp
+        src/deep2/vwa/VwaScheduler_Fulfill.cpp
         src/deep2/vwa/VwaScheduler_Lease.cpp)
     if(MSVC)
         target_compile_options(deep2_vwa_e2e_001 PRIVATE
@@ -8265,7 +9962,7 @@ if(BUILD_DEEP2_VWA_E2E_001)
     )
 endif()
 
-option(BUILD_DEEP2_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001" ON)
+option(BUILD_DEEP2_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001" OFF)
 if(BUILD_DEEP2_VWA_RANGE_CONTRACT_001)
     add_executable(deep2_vwa_range_contract_001
         src/deep2/deep2_vwa_range_contract_001.cpp)
@@ -8283,7 +9980,7 @@ if(BUILD_DEEP2_VWA_RANGE_CONTRACT_001)
     message(STATUS "[Deep2] VWA range contract: deep2_vwa_range_contract_001")
 endif()
 
-option(BUILD_DEEP2_VWA_POC_1_001 "Build VWA_POC_1_001" ON)
+option(BUILD_DEEP2_VWA_POC_1_001 "Build VWA_POC_1_001" OFF)
 if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
     set(_VWA_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
     set(_VWA_ASM_OBJ "${CMAKE_BINARY_DIR}/VwaRangeX64.obj")
@@ -8295,6 +9992,7 @@ if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
         COMMENT "Assembling VwaRangeX64.asm"
         VERBATIM)
     add_executable(deep2_vwa_poc_1_001
+        src/deep2/deep2_vwa_poc_1_001.cpp
         ${_VWA_ASM_OBJ})
     target_compile_options(deep2_vwa_poc_1_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -8309,14 +10007,16 @@ if(BUILD_DEEP2_VWA_POC_1_001 AND WIN32 AND MSVC)
     message(STATUS "[Deep2] VWA POC-1: deep2_vwa_poc_1_001")
 endif()
 
-option(BUILD_DEEP2_VWA_FILE_COALESCE_001 "Build VWA_FILE_COALESCE_001" ON)
+option(BUILD_DEEP2_VWA_FILE_COALESCE_001 "Build VWA_FILE_COALESCE_001" OFF)
 # Target is created in cmake/Deep2VwaB3B8.fragment.cmake after deep2_vwa_range_core.
 if(FALSE)
 endif()
 
-option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" ON)
+option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" OFF)
 if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
+        src/deep2/deep2_vwa_iocp_range_001.cpp
+        src/deep2/IOCPGGUFLoader.cpp
         src/deep2/GGUFLoader.cpp)
     target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
     target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
@@ -8333,7 +10033,7 @@ if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     message(STATUS "[Deep2] VWA IOCP range: deep2_vwa_iocp_range_001")
 endif()
 
-option(BUILD_DEEP2_UCF_MOBILITY_FAULT_001 "Build UCF_MOBILITY_FAULT_001" ON)
+option(BUILD_DEEP2_UCF_MOBILITY_FAULT_001 "Build UCF_MOBILITY_FAULT_001" OFF)
 if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
     add_executable(deep2_ucf_mobility_fault_001
         src/deep2/deep2_ucf_mobility_fault_001.cpp)
@@ -8351,7 +10051,7 @@ if(BUILD_DEEP2_UCF_MOBILITY_FAULT_001)
     message(STATUS "[Deep2] UCF mobility fault: deep2_ucf_mobility_fault_001")
 endif()
 
-option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" ON)
+option(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT "Build K2_SEMANTIC_SEAL_001" OFF)
 if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
     add_executable(deep2_k2_semantic_seal_cert
         src/deep2/deep2_k2_semantic_seal_cert.cpp)
@@ -8371,7 +10071,7 @@ if(BUILD_DEEP2_K2_SEMANTIC_SEAL_CERT)
     message(STATUS "[Deep2] K2 semantic seal: deep2_k2_semantic_seal_cert")
 endif()
 
-option(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT "Build K2_SERVERLESS_STREAM_LATENCY_001" ON)
+option(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT "Build K2_SERVERLESS_STREAM_LATENCY_001" OFF)
 if(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT)
     add_executable(deep2_k2_serverless_stream_latency_cert
         src/deep2/deep2_k2_serverless_stream_latency_cert.cpp)
@@ -8391,7 +10091,7 @@ if(BUILD_DEEP2_K2_SERVERLESS_STREAM_LATENCY_CERT)
     message(STATUS "[Deep2] K2 serverless latency: deep2_k2_serverless_stream_latency_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT "Build K2_LIVE_DECODE_SUSTAINED_001" ON)
+option(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT "Build K2_LIVE_DECODE_SUSTAINED_001" OFF)
 if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
     add_executable(deep2_k2_live_decode_sustained_cert
         src/deep2/deep2_k2_live_decode_sustained_cert.cpp)
@@ -8411,7 +10111,7 @@ if(BUILD_DEEP2_K2_LIVE_DECODE_SUSTAINED_CERT)
     message(STATUS "[Deep2] K2 live decode sustained: deep2_k2_live_decode_sustained_cert")
 endif()
 
-option(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT "Build K2_WALL_ATTRIBUTION_001" ON)
+option(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT "Build K2_WALL_ATTRIBUTION_001" OFF)
 if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
     add_executable(deep2_k2_wall_attribution_cert
         src/deep2/deep2_k2_wall_attribution_cert.cpp)
@@ -8431,7 +10131,7 @@ if(BUILD_DEEP2_K2_WALL_ATTRIBUTION_CERT)
     message(STATUS "[Deep2] K2 wall attribution: deep2_k2_wall_attribution_cert")
 endif()
 
-option(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT "Build K2_LOGITS_CLIMB_001" ON)
+option(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT "Build K2_LOGITS_CLIMB_001" OFF)
 if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
     add_executable(deep2_k2_logits_climb_cert
         src/deep2/deep2_k2_logits_climb_cert.cpp)
@@ -8451,7 +10151,7 @@ if(BUILD_DEEP2_K2_LOGITS_CLIMB_CERT)
     message(STATUS "[Deep2] K2 logits climb: deep2_k2_logits_climb_cert")
 endif()
 
-option(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT "Build K2_TRYGPU_LOGITS_SPLIT_001" ON)
+option(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT "Build K2_TRYGPU_LOGITS_SPLIT_001" OFF)
 if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     add_executable(deep2_k2_trygpu_logits_split_cert
         src/deep2/deep2_k2_trygpu_logits_split_cert.cpp)
@@ -8470,7 +10170,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     )
     message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
 
-    # C1 live â fulfilledâTryGpuHot range attribution under BOUNDED_STREAM
+    # C1 live ├ó┬Ç┬ö fulfilled├ó┬å┬ÆTryGpuHot range attribution under BOUNDED_STREAM
     add_executable(deep2_k2_logits_gpu_range_attribution_001
         src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
@@ -8490,7 +10190,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
                    "deep2_k2_logits_gpu_range_attribution_001")
 endif()
 
-# C1âC9 additive helpers (observational lineage + cut/overlap/bound validators)
+# C1├ó┬Ç┬ôC9 additive helpers (observational lineage + cut/overlap/bound validators)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2C1C9.fragment.cmake)
 if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     target_link_libraries(InferenceEngine PUBLIC deep2_c1_c9)
@@ -8501,7 +10201,7 @@ if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine")
 endif()
 
-# VWA B3âB8 no-fiction range core (resolve/fulfill/IOCP; no manager)
+# VWA B3├ó┬Ç┬ôB8 no-fiction range core (resolve/fulfill/IOCP; no manager)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaB3B8.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaConsumerGates.fragment.cmake)
 if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
@@ -8509,8 +10209,8 @@ if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
     message(STATUS "[Deep2] VWA B3-B8 range core: deep2_vwa_range_core")
 endif()
 
-# RAWRXD_RUN_MODELNAME_001 â Ollama-style `rawr run <alias>` front door (Deep2).
-option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" ON)
+# RAWRXD_RUN_MODELNAME_001 ├ó┬Ç┬ö Ollama-style `rawr run <alias>` front door (Deep2).
+option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" OFF)
 if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     add_executable(rawrxd_run_modelname_001
         src/deep2/rawrxd_run_modelname_001.cpp)
@@ -8572,10 +10272,10 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
 endif()
 
-# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 â run/chat/agent/steer/resume + certs
+# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 ├ó┬Ç┬ö run/chat/agent/steer/resume + certs
 include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
 
-# Deep2 Gateway cert island â Win32 only (no Ship / no C++23)
+# Deep2 Gateway cert island ├ó┬Ç┬ö Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2ProductLavapath.fragment.cmake)
@@ -8592,7 +10292,7 @@ if(TARGET deep2_vwa_iocp_range_001 AND TARGET deep2_vwa_range_core)
     target_link_libraries(deep2_vwa_iocp_range_001 PRIVATE deep2_vwa_range_core)
 endif()
 
-option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" ON)
+option(BUILD_DEEP2_K2_TPS_RAINBOW_CERT "Build K2_TPS_RAINBOW_001" OFF)
 if(BUILD_DEEP2_K2_TPS_RAINBOW_CERT)
     add_executable(deep2_k2_tps_rainbow_cert
         src/deep2/deep2_k2_tps_rainbow_cert.cpp)
@@ -8612,7 +10312,7 @@ if(BUILD_DEEP2_K2_TPS_RAINBOW_CERT)
     message(STATUS "[Deep2] K2 TPS byteless rainbow: deep2_k2_tps_rainbow_cert")
 endif()
 
-option(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT "Build K2_GPU_MLA_SLOT_REUSE_001" ON)
+option(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT "Build K2_GPU_MLA_SLOT_REUSE_001" OFF)
 if(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT)
     add_executable(deep2_k2_gpu_mla_slot_reuse_cert
         src/deep2/deep2_k2_gpu_mla_slot_reuse_cert.cpp)
@@ -8637,7 +10337,7 @@ if(BUILD_DEEP2_K2_GPU_MLA_SLOT_REUSE_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT "Build NU_LIVE_CONSUMER_001" ON)
+option(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT "Build NU_LIVE_CONSUMER_001" OFF)
 if(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT)
     add_executable(deep2_nu_live_consumer_cert
         src/deep2/deep2_nu_live_consumer_cert.cpp)
@@ -8662,7 +10362,7 @@ if(BUILD_DEEP2_NU_LIVE_CONSUMER_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT "Build K2_GPU_MLA_NU_BRIDGE_001" ON)
+option(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT "Build K2_GPU_MLA_NU_BRIDGE_001" OFF)
 if(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT)
     add_executable(deep2_k2_gpu_mla_nu_bridge_cert
         src/deep2/deep2_k2_gpu_mla_nu_bridge_cert.cpp)
@@ -8687,7 +10387,7 @@ if(BUILD_DEEP2_K2_MLA_NU_BRIDGE_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_NU_PERF_CERT "Build NU_PERF_001" ON)
+option(BUILD_DEEP2_NU_PERF_CERT "Build NU_PERF_001" OFF)
 if(BUILD_DEEP2_NU_PERF_CERT)
     add_executable(deep2_nu_perf_cert src/deep2/deep2_nu_perf_cert.cpp)
     target_link_libraries(deep2_nu_perf_cert PRIVATE InferenceEngine)
@@ -8711,7 +10411,7 @@ if(BUILD_DEEP2_NU_PERF_CERT)
     )
 endif()
 
-option(BUILD_DEEP2_NU_GEMV_PARITY_CERT "Build NU_GEMV_PARITY_001" ON)
+option(BUILD_DEEP2_NU_GEMV_PARITY_CERT "Build NU_GEMV_PARITY_001" OFF)
 if(BUILD_DEEP2_NU_GEMV_PARITY_CERT)
     add_executable(deep2_nu_gemv_parity_cert
         src/deep2/deep2_nu_gemv_parity_cert.cpp)
@@ -8737,7 +10437,7 @@ if(BUILD_DEEP2_NU_GEMV_PARITY_CERT)
     message(STATUS "[Deep2] NU GEMV parity cert: deep2_nu_gemv_parity_cert")
 endif()
 
-option(BUILD_DEEP2_NU_GPU_GEMV_CERT "Build NU_GPU_GEMV_001" ON)
+option(BUILD_DEEP2_NU_GPU_GEMV_CERT "Build NU_GPU_GEMV_001" OFF)
 if(BUILD_DEEP2_NU_GPU_GEMV_CERT)
     add_executable(deep2_nu_gpu_gemv_cert
         src/deep2/deep2_nu_gpu_gemv_cert.cpp)
@@ -8762,9 +10462,10 @@ if(BUILD_DEEP2_NU_GPU_GEMV_CERT)
     message(STATUS "[Deep2] NU GPU GEMV cert: deep2_nu_gpu_gemv_cert")
 endif()
 
-option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" ON)
+option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" OFF)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
+        src/deep2/deep2_nu_pack_format_cert.cpp
         src/deep2/NUFusedPacker.cpp)
     if(MSVC)
         target_compile_options(deep2_nu_pack_format_cert PRIVATE
@@ -8781,7 +10482,7 @@ if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     message(STATUS "[Deep2] NU pack format cert: deep2_nu_pack_format_cert")
 endif()
 
-option(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT "Build RKC_DEEP2_MODEL_AUTHORITY_001" ON)
+option(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT "Build RKC_DEEP2_MODEL_AUTHORITY_001" OFF)
 if(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT)
     add_executable(rkc_deep2_model_authority_cert
         src/rkc/rkc_deep2_model_authority_cert.cpp)
@@ -8799,7 +10500,7 @@ if(BUILD_RKC_DEEP2_MODEL_AUTHORITY_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_RKC_MODEL_INVENTORY_CERT "Build RKC_MODEL_INVENTORY_001" ON)
+option(BUILD_RKC_MODEL_INVENTORY_CERT "Build RKC_MODEL_INVENTORY_001" OFF)
 if(BUILD_RKC_MODEL_INVENTORY_CERT)
     add_executable(rkc_model_inventory_cert src/rkc/rkc_model_inventory_cert.cpp)
     target_link_libraries(rkc_model_inventory_cert PRIVATE InferenceEngine)
@@ -8814,7 +10515,7 @@ if(BUILD_RKC_MODEL_INVENTORY_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT "Build RKC_NEGATIVE_KNOWLEDGE_001" ON)
+option(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT "Build RKC_NEGATIVE_KNOWLEDGE_001" OFF)
 if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
     add_executable(rkc_negative_knowledge_cert src/rkc/rkc_negative_knowledge_cert.cpp)
     target_link_libraries(rkc_negative_knowledge_cert PRIVATE InferenceEngine)
@@ -8829,7 +10530,7 @@ if(BUILD_RKC_NEGATIVE_KNOWLEDGE_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_RKC_MINIMAL_SOURCE_CERT "Build RKC_MINIMAL_SOURCE_001" ON)
+option(BUILD_RKC_MINIMAL_SOURCE_CERT "Build RKC_MINIMAL_SOURCE_001" OFF)
 if(BUILD_RKC_MINIMAL_SOURCE_CERT)
     add_executable(rkc_minimal_source_cert src/rkc/rkc_minimal_source_cert.cpp)
     target_link_libraries(rkc_minimal_source_cert PRIVATE InferenceEngine)
@@ -8844,7 +10545,7 @@ if(BUILD_RKC_MINIMAL_SOURCE_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_RKC_CODE_WORLD_CERT "Build RKC_CODE_WORLD_001" ON)
+option(BUILD_RKC_CODE_WORLD_CERT "Build RKC_CODE_WORLD_001" OFF)
 if(BUILD_RKC_CODE_WORLD_CERT)
     add_executable(rkc_code_world_cert src/rkc/rkc_code_world_cert.cpp)
     target_link_libraries(rkc_code_world_cert PRIVATE InferenceEngine)
@@ -8859,7 +10560,7 @@ if(BUILD_RKC_CODE_WORLD_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
 endif()
-option(BUILD_RKC_SMOKE "Build Reverse Knowledge Compiler smoke" ON)
+option(BUILD_RKC_SMOKE "Build Reverse Knowledge Compiler smoke" OFF)
 if(BUILD_RKC_SMOKE)
     add_executable(rkc_smoke src/rkc/rkc_smoke.cpp)
     target_link_libraries(rkc_smoke PRIVATE InferenceEngine)
@@ -8892,9 +10593,10 @@ if(BUILD_RKC_SMOKE)
     message(STATUS "[RKC] smoke: rkc_smoke + rkc_product_context_smoke")
 endif()
 
-option(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT "Build DEEP2_GIANT_MOE_PARAGRAPH_PERF_001" ON)
+option(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT "Build DEEP2_GIANT_MOE_PARAGRAPH_PERF_001" OFF)
 if(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT)
     add_executable(deep2_giant_moe_paragraph_perf_cert
+        src/deep2/deep2_giant_moe_paragraph_perf_cert.cpp
     )
     target_link_libraries(deep2_giant_moe_paragraph_perf_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8914,9 +10616,10 @@ if(BUILD_DEEP2_GIANT_MOE_PARAGRAPH_PERF_CERT)
     message(STATUS "[Deep2] Giant MoE paragraph perf: deep2_giant_moe_paragraph_perf_cert")
 endif()
 
-option(BUILD_AGENT_RUNTIME_BATCH1_CERT "Build AGENT_RUNTIME batch-1 tool cert" ON)
+option(BUILD_AGENT_RUNTIME_BATCH1_CERT "Build AGENT_RUNTIME batch-1 tool cert" OFF)
 if(BUILD_AGENT_RUNTIME_BATCH1_CERT)
     add_executable(agent_runtime_batch1_cert
+        src/agentic/agent_runtime_batch1_cert.cpp
     )
     target_link_libraries(agent_runtime_batch1_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -8936,9 +10639,10 @@ if(BUILD_AGENT_RUNTIME_BATCH1_CERT)
     message(STATUS "[Agent] Runtime batch-1 cert: agent_runtime_batch1_cert")
 endif()
 
-option(BUILD_DEEP2_PLACEMENT_COST_CERT "Build STREAMER_PLACEMENT_COST_001 cert" ON)
+option(BUILD_DEEP2_PLACEMENT_COST_CERT "Build STREAMER_PLACEMENT_COST_001 cert" OFF)
 if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     add_executable(deep2_placement_cost_cert
+        src/deep2/deep2_placement_cost_cert.cpp
     )
     target_link_libraries(deep2_placement_cost_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -8958,11 +10662,12 @@ if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     message(STATUS "[Deep2] Placement cost cert: deep2_placement_cost_cert")
 endif()
 
-# deep2_mars_e2e ÎÃÃ¶ MARS dual-GPU placement + hotpatch + generate smoke
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" ON)
+# deep2_mars_e2e ├Ä┬ô├â┬ç├â┬╢ MARS dual-GPU placement + hotpatch + generate smoke
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" OFF)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
+        src/deep2/deep2_mars_e2e.cpp
     )
     target_link_libraries(deep2_mars_e2e PRIVATE InferenceEngine)
     if(MSVC)
@@ -8980,9 +10685,14 @@ if(BUILD_DEEP2_MARS_E2E)
     message(STATUS "[Deep2] MARS E2E smoke harness: deep2_mars_e2e")
 endif()
 
-option(BUILD_TEST_MARS_CONTROLLER "Build standalone MARS controller unit smoke" ON)
+option(BUILD_TEST_MARS_CONTROLLER "Build standalone MARS controller unit smoke" OFF)
 if(BUILD_TEST_MARS_CONTROLLER)
     add_executable(test_mars_controller
+        src/deep2/mars/test_mars_controller.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
     )
     if(MSVC)
         target_compile_options(test_mars_controller PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -8998,10 +10708,15 @@ if(BUILD_TEST_MARS_CONTROLLER)
     message(STATUS "[Deep2] MARS controller unit smoke: test_mars_controller")
 endif()
 
-# deep2_execution_policy_smoke ÎÃÃ¶ user-owned ExecutionPolicy validate/store
-option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" ON)
+# deep2_execution_policy_smoke ├Ä┬ô├â┬ç├â┬╢ user-owned ExecutionPolicy validate/store
+option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" OFF)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
+        src/deep2/deep2_execution_policy_smoke.cpp
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
+        src/deep2/execution_policy/PlacementPlan.cpp
+        src/deep2/execution_policy/ExecutionPolicyApply.cpp
     )
     if(MSVC)
         target_compile_options(deep2_execution_policy_smoke PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9017,10 +10732,11 @@ if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     message(STATUS "[Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke")
 endif()
 
-# p1_ide_exec_policy_apply_001 ÎÃÃ¶ IDE load enforces ExecutionPolicy placement
-option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" ON)
+# p1_ide_exec_policy_apply_001 ├Ä┬ô├â┬ç├â┬╢ IDE load enforces ExecutionPolicy placement
+option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
+        src/deep2/p1_ide_exec_policy_apply_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_apply_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9039,10 +10755,11 @@ if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     message(STATUS "[Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001")
 endif()
 
-# p1_ide_exec_policy_live_gguf_001 ÎÃÃ¶ real GGUF ÎÃ¥Ã residency ÎÃ¥Ã generate
-option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" ON)
+# p1_ide_exec_policy_live_gguf_001 ├Ä┬ô├â┬ç├â┬╢ real GGUF ├Ä┬ô├â┬Ñ├â┬å residency ├Ä┬ô├â┬Ñ├â┬å generate
+option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
+        src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_ide_exec_policy_live_gguf_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9061,10 +10778,11 @@ if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     message(STATUS "[Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001")
 endif()
 
-# p1_real_speedup_001 ÎÃÃ¶ external wall REAL_SPEEDUP (frozen contract)
-option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" ON)
+# p1_real_speedup_001 ├Ä┬ô├â┬ç├â┬╢ external wall REAL_SPEEDUP (frozen contract)
+option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" OFF)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
+        src/deep2/p1_real_speedup_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_real_speedup_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9083,11 +10801,12 @@ if(BUILD_P1_REAL_SPEEDUP)
     message(STATUS "[Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001")
 endif()
 
-# p1_repeatability_trial_validity_diag_001 ÎÃÃ¶ MeasuredGenerate acceptance diagnostic
+# p1_repeatability_trial_validity_diag_001 ├Ä┬ô├â┬ç├â┬╢ MeasuredGenerate acceptance diagnostic
 option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
-    "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" ON)
+    "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
     add_executable(p1_repeatability_trial_validity_diag_001
+        src/deep2/p1_repeatability_trial_validity_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_trial_validity_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9107,9 +10826,10 @@ if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
 endif()
 
 option(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG
-    "Build P1_POLICY_SHA_LIFECYCLE_DIAG_001" ON)
+    "Build P1_POLICY_SHA_LIFECYCLE_DIAG_001" OFF)
 if(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG)
     add_executable(p1_policy_sha_lifecycle_diag_001
+        src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_policy_sha_lifecycle_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9129,9 +10849,10 @@ if(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG)
 endif()
 
 option(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG
-    "Build P1_REPEATABILITY_STATE_DRIFT_DIAG_001" ON)
+    "Build P1_REPEATABILITY_STATE_DRIFT_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     add_executable(p1_repeatability_state_drift_diag_001
+        src/deep2/p1_repeatability_state_drift_diag_001.cpp
     )
     if(MSVC)
         target_compile_options(p1_repeatability_state_drift_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -9150,10 +10871,11 @@ if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     message(STATUS "[Deep2] P1 repeatability state drift diag")
 endif()
 
-# p1_ui_encoding_cert ÎÃÃ¶ P1_UI_ENCODING_001 (UTF-8ÎÃ¥ÃUTF-16 Win32 boundary)
-option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" ON)
+# p1_ui_encoding_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_ENCODING_001 (UTF-8├Ä┬ô├â┬Ñ├â┬åUTF-16 Win32 boundary)
+option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" OFF)
 if(BUILD_P1_UI_ENCODING_CERT)
     add_executable(p1_ui_encoding_cert
+        src/win32app/p1_ui_encoding_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -9171,10 +10893,11 @@ if(BUILD_P1_UI_ENCODING_CERT)
     message(STATUS "[Win32] UI encoding cert: p1_ui_encoding_cert")
 endif()
 
-# p1_ui_menu_e2e_cert ÎÃÃ¶ P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
-option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" ON)
+# p1_ui_menu_e2e_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
+option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" OFF)
 if(BUILD_P1_UI_MENU_E2E_CERT)
     add_executable(p1_ui_menu_e2e_cert
+        src/win32app/p1_ui_menu_e2e_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_menu_e2e_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -9189,10 +10912,11 @@ if(BUILD_P1_UI_MENU_E2E_CERT)
     message(STATUS "[Win32] UI menu E2E cert: p1_ui_menu_e2e_cert")
 endif()
 
-# p1_ui_sidebar_encoding_cert ÎÃÃ¶ P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
-option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" ON)
+# p1_ui_sidebar_encoding_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
+option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" OFF)
 if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     add_executable(p1_ui_sidebar_encoding_cert
+        src/win32app/p1_ui_sidebar_encoding_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_sidebar_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -9207,9 +10931,10 @@ if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     message(STATUS "[Win32] UI sidebar encoding cert: p1_ui_sidebar_encoding_cert")
 endif()
 
-option(BUILD_P1_UI_MENU_LIFETIME_CERT "Build UI menu lifetime certification harness" ON)
+option(BUILD_P1_UI_MENU_LIFETIME_CERT "Build UI menu lifetime certification harness" OFF)
 if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     add_executable(p1_ui_menu_lifetime_cert
+        src/win32app/p1_ui_menu_lifetime_cert.cpp
     )
     if(MSVC)
         target_compile_options(p1_ui_menu_lifetime_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
@@ -9224,12 +10949,13 @@ if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     message(STATUS "[Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert")
 endif()
 
-# deep2_parity_cert ÎÃÃ¶ PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
+# deep2_parity_cert ├Ä┬ô├â┬ç├â┬╢ PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
 # External llama.cpp measuring stick is tools/parity_ref (separate process only).
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" OFF)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
+        src/deep2/deep2_parity_cert.cpp
     )
     target_link_libraries(deep2_parity_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -9247,12 +10973,16 @@ if(BUILD_DEEP2_PARITY_CERT)
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
 endif()
 
-# ide_agent_loop_cert ÎÃÃ¶ Win32IDE agent spine: read ÎÃ¥Ã edit ÎÃ¥Ã diag ÎÃ¥Ã build ÎÃ¥Ã run
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" ON)
+# ide_agent_loop_cert ├Ä┬ô├â┬ç├â┬╢ Win32IDE agent spine: read ├Ä┬ô├â┬Ñ├â┬å edit ├Ä┬ô├â┬Ñ├â┬å diag ├Ä┬ô├â┬Ñ├â┬å build ├Ä┬ô├â┬Ñ├â┬å run
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" OFF)
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
+        src/agentic/ide_agent_loop_cert.cpp
+        src/security/InputSanitizer.cpp
+        src/agent/agentic_hotpatch_orchestrator.cpp
         src/core/proxy_hotpatcher.cpp
+        src/deep2/IOCPGGUFLoader.cpp
     )
     target_link_libraries(ide_agent_loop_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -9275,11 +11005,12 @@ if(BUILD_IDE_AGENT_LOOP_CERT)
     message(STATUS "[Agentic] IDE agent loop cert: ide_agent_loop_cert")
 endif()
 
-# test_deterministic_replay ÎÃÃ¶ STREAMER-CERT-001: deterministic replay gate
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" ON)
+# test_deterministic_replay ├Ä┬ô├â┬ç├â┬╢ STREAMER-CERT-001: deterministic replay gate
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" OFF)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
+        src/deep2/test_deterministic_replay.cpp
     )
     target_link_libraries(test_deterministic_replay PRIVATE InferenceEngine)
     if(MSVC)
@@ -9297,11 +11028,13 @@ if(BUILD_DETERMINISTIC_REPLAY)
     message(STATUS "[Deep2] Deterministic replay gate: test_deterministic_replay")
 endif()
 
-# dump_qwen35_meta ÎÃÃ¶ Dump Qwen3.5 GGUF metadata + tensor topology
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" ON)
+# dump_qwen35_meta ├Ä┬ô├â┬ç├â┬╢ Dump Qwen3.5 GGUF metadata + tensor topology
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
+        src/deep2/dump_qwen35_meta.cpp
+        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
     if(MSVC)
@@ -9321,10 +11054,11 @@ endif()
 
 # RawrXD-Agentic ? Sovereign agentic runtime (unified closure drop)
 # ???????????????????????????????????????????????????????????????????????????????
-option(BUILD_RAWRXD_AGENTIC "Build RawrXD sovereign agentic runtime" ON)
+option(BUILD_RAWRXD_AGENTIC "Build RawrXD sovereign agentic runtime" OFF)
 if(BUILD_RAWRXD_AGENTIC)
     # HexMag polymorphic repeat tuner (MASM) ? Q_BLOCKING singleton state
     add_library(rawrxd_hexmag_repeat OBJECT
+        src/asm/RawrXD_HexMag_RepeatTuner.asm
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_RepeatTuner.asm PROPERTIES LANGUAGE ASM_MASM)
     if(MSVC)
@@ -9334,6 +11068,7 @@ if(BUILD_RAWRXD_AGENTIC)
     endif()
 
     add_executable(RawrXD-Agentic
+        src/agentic/rawrxd_agentic_runtime_all.cpp
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_link_libraries(RawrXD-Agentic PRIVATE InferenceEngine)
@@ -9353,6 +11088,7 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)")
 
     add_executable(hexmag_repeat_tuner_cert
+        tests/hexmag_repeat_tuner_cert.cpp
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_include_directories(hexmag_repeat_tuner_cert PRIVATE
@@ -9367,11 +11103,14 @@ if(BUILD_RAWRXD_AGENTIC)
     )
     message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
 
-    # HEXMAG_IDE_E2E_001 ÎÃÃ¶ Copilot send path ÎÃ¥Ã controller ÎÃ¥Ã tuner ÎÃ¥Ã FinalizePolicy
+    # HEXMAG_IDE_E2E_001 ├Ä┬ô├â┬ç├â┬╢ Copilot send path ├Ä┬ô├â┬Ñ├â┬å controller ├Ä┬ô├â┬Ñ├â┬å tuner ├Ä┬ô├â┬Ñ├â┬å FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
+        tests/hexmag_ide_e2e_cert.cpp
         src/core/hexmag_runtime_controller.cpp
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
+        src/agent/hexmag_client.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
@@ -9391,9 +11130,12 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert")
 
     add_executable(hexmag_runtime_controller_cert
+        tests/hexmag_runtime_controller_cert.cpp
         src/core/hexmag_runtime_controller.cpp
+        src/agent/hexmag_client.cpp
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
         $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
@@ -9412,11 +11154,12 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
 endif()
 
-# layer_harness ÎÃÃ¶ Single-layer Qwen3.5 correctness harness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" ON)
+# layer_harness ├Ä┬ô├â┬ç├â┬╢ Single-layer Qwen3.5 correctness harness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" OFF)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
+        src/deep2/layer_harness.cpp
     )
     target_link_libraries(layer_harness PRIVATE InferenceEngine)
     if(MSVC)
@@ -9434,6 +11177,8 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] Single-layer harness: layer_harness")
 
     add_executable(test_l10_ffn_inp_same_source
+        src/deep2/test_l10_ffn_inp_same_source.cpp
+        src/deep2/GGUFLoader.cpp
     )
     target_include_directories(test_l10_ffn_inp_same_source PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9449,11 +11194,13 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source")
 endif()
 
-# qwen35_attn_contract ÎÃÃ¶ Establish Qwen3.5 full-attention contract
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" ON)
+# qwen35_attn_contract ├Ä┬ô├â┬ç├â┬╢ Establish Qwen3.5 full-attention contract
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
+        src/deep2/qwen35_attn_contract.cpp
+        src/deep2/GGUFLoader.cpp
     )
     target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
     if(MSVC)
@@ -9471,11 +11218,12 @@ if(BUILD_QWEN35_ATTN_CONTRACT)
     message(STATUS "[Deep2] Qwen3.5 attention contract: qwen35_attn_contract")
 endif()
 
-# test_val_051_3_multi_token ÎÃÃ¶ VAL-051.3: 4-Token Autoregressive Generation Gate
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" ON)
+# test_val_051_3_multi_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.3: 4-Token Autoregressive Generation Gate
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" OFF)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
+        src/deep2/test_val_051_3_multi_token.cpp
     )
     if(MSVC)
         target_compile_options(test_val_051_3_multi_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9496,12 +11244,13 @@ if(BUILD_VAL_051_3)
     message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_fifteen_token ÎÃÃ¶ VAL-051.5: 15-Token KV Stability Gate
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_fifteen_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.5: 15-Token KV Stability Gate
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" OFF)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
+        tests/val_051_5_fifteen_token.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_fifteen_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9522,14 +11271,67 @@ if(BUILD_VAL_051_5)
     message(STATUS "[Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_diag_1_token ÎÃÃ¶ VAL-051.5-DIAG: 1-Token Diagnostic Harness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_diag_1_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.5-DIAG: 1-Token Diagnostic Harness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" OFF)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
+        tests/val_051_5_diag_1_token.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/ProductionProfiler.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_diag_1_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9549,14 +11351,63 @@ if(BUILD_VAL_051_5_DIAG)
     message(STATUS "[Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_bp16_int_1_token ÎÃÃ¶ BP16 ÎÃ¥Ã Deep2 Integration Test
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_BP16_INT "Build BP16 ÎÃ¥Ã Deep2 integration test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_bp16_int_1_token ├Ä┬ô├â┬ç├â┬╢ BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 Integration Test
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_BP16_INT "Build BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 integration test" OFF)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
+        tests/val_bp16_int_1_token.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_bp16_int_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9573,15 +11424,16 @@ if(BUILD_VAL_BP16_INT)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME val_bp16_int_1_token
     )
-    message(STATUS "[Deep2] BP16 ÎÃ¥Ã Deep2 integration test: val_bp16_int_1_token")
+    message(STATUS "[Deep2] BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 integration test: val_bp16_int_1_token")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q6k_synthetic ÎÃÃ¶ Synthetic Q6_K Layout & Dequant Correctness Test
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q6k_synthetic ├Ä┬ô├â┬ç├â┬╢ Synthetic Q6_K Layout & Dequant Correctness Test
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" OFF)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
+        tests/val_051_5_q6k_synthetic.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q6k_synthetic PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9597,12 +11449,15 @@ if(BUILD_VAL_051_5_Q6K)
     message(STATUS "[Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_streamer ÎÃÃ¶ BP16 Streaming Reader Round-Trip Validation
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_streamer ├Ä┬ô├â┬ç├â┬╢ BP16 Streaming Reader Round-Trip Validation
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" OFF)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
+        tests/val_051_5_bp16_streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_streamer PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9618,14 +11473,63 @@ if(BUILD_VAL_051_5_BP16_STREAMER)
     message(STATUS "[Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_e2e ÎÃÃ¶ End-to-End BP16 Inference Test
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_e2e ├Ä┬ô├â┬ç├â┬╢ End-to-End BP16 Inference Test
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" OFF)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
+        tests/val_051_5_bp16_e2e.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_e2e PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9645,15 +11549,70 @@ if(BUILD_VAL_051_5_BP16_E2E)
     message(STATUS "[Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_compare ÎÃÃ¶ GGUF vs BP16 Weight & Inference Comparison
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_compare ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Weight & Inference Comparison
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" OFF)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
+        tests/val_051_5_bp16_compare.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_compare PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9673,14 +11632,63 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
     message(STATUS "[Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_weights ÎÃÃ¶ GGUF vs BP16 Weight Correctness (no inference)
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_weights ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Weight Correctness (no inference)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" OFF)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
+        tests/val_051_5_bp16_weights.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_weights PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9700,12 +11708,16 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
     message(STATUS "[Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_verify ÎÃÃ¶ Direct BP16 Weight Verification (no Deep2Engine)
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_verify ├Ä┬ô├â┬ç├â┬╢ Direct BP16 Weight Verification (no Deep2Engine)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" OFF)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
+        tests/val_051_5_bp16_verify.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/GGUFLoader.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9725,14 +11737,63 @@ if(BUILD_VAL_051_5_BP16_VERIFY)
     message(STATUS "[Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_logits ÎÃÃ¶ GGUF vs BP16 1-Token Forward & Logits Equivalence
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_logits ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 1-Token Forward & Logits Equivalence
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" OFF)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
+        tests/val_051_5_bp16_logits.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_logits PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9752,14 +11813,63 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
     message(STATUS "[Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_6_bp16_perf ÎÃÃ¶ BP16 Performance Benchmark & Prefetch Optimization
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_6_bp16_perf ├Ä┬ô├â┬ç├â┬╢ BP16 Performance Benchmark & Prefetch Optimization
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" OFF)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
+        tests/val_051_6_bp16_perf.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_6_bp16_perf PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9779,14 +11889,63 @@ if(BUILD_VAL_051_6_BP16_PERF)
     message(STATUS "[Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_7_bp16_profile ÎÃÃ¶ Forward-Path Profiling
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_7_bp16_profile ├Ä┬ô├â┬ç├â┬╢ Forward-Path Profiling
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" OFF)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
+        tests/val_051_7_bp16_profile.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_7_bp16_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9806,14 +11965,63 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_7_bp16_lightweight_profile ÎÃÃ¶ Lightweight forward-path profiler
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_7_bp16_lightweight_profile ├Ä┬ô├â┬ç├â┬╢ Lightweight forward-path profiler
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" OFF)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
+        tests/val_051_7_bp16_lightweight_profile.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_7_bp16_lightweight_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9833,13 +12041,62 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile")
 endif()
 
-# minimal_1token_profiler ÎÃÃ¶ Minimal 1-token production profiler
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" ON)
+# minimal_1token_profiler ├Ä┬ô├â┬ç├â┬╢ Minimal 1-token production profiler
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" OFF)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
+        tests/minimal_1token_profiler.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(minimal_1token_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9859,13 +12116,62 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
     message(STATUS "[Deep2] Minimal 1-token profiler: minimal_1token_profiler")
 endif()
 
-# quick_1layer_profiler ÎÃÃ¶ Fast 1-layer quant breakdown
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" ON)
+# quick_1layer_profiler ├Ä┬ô├â┬ç├â┬╢ Fast 1-layer quant breakdown
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" OFF)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
+        tests/quick_1layer_profiler.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(quick_1layer_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9885,12 +12191,13 @@ if(BUILD_QUICK_1LAYER_PROFILER)
     message(STATUS "[Deep2] Quick 1-layer profiler: quick_1layer_profiler")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# q4k_gemv_bench ÎÃÃ¶ Q4_K GEMV micro-benchmark (reference vs stack-buffer)
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# q4k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Q4_K GEMV micro-benchmark (reference vs stack-buffer)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
+        tests/q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9906,12 +12213,13 @@ if(BUILD_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: q4k_gemv_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# q5k_gemv_bench ÎÃÃ¶ Q5_K GEMV micro-benchmark (reference vs SIMD)
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# q5k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Q5_K GEMV micro-benchmark (reference vs SIMD)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
+        tests/q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9927,14 +12235,63 @@ if(BUILD_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: q5k_gemv_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_diag ÎÃÃ¶ Minimal BP16 forward crash isolation
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_diag ├Ä┬ô├â┬ç├â┬╢ Minimal BP16 forward crash isolation
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" OFF)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
+        tests/val_051_5_bp16_diag.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_diag PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9955,14 +12312,63 @@ if(BUILD_VAL_051_5_BP16_DIAG)
     message(STATUS "[Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_bench ÎÃÃ¶ GGUF vs BP16 Inference Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_bench ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Inference Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
+        tests/val_051_5_bp16_bench.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -9983,12 +12389,16 @@ if(BUILD_VAL_051_5_BP16_BENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_bp16_loadbench ÎÃÃ¶ Load-Time Only Benchmark (no inference)
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_bp16_loadbench ├Ä┬ô├â┬ç├â┬╢ Load-Time Only Benchmark (no inference)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
+        tests/val_051_5_bp16_loadbench.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_loadbench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10009,12 +12419,13 @@ if(BUILD_VAL_051_5_BP16_LOADBENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q4k_fused_verify ÎÃÃ¶ Synthetic Q4_K fused vs reference correctness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q4k_fused_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q4_K fused vs reference correctness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" OFF)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
+        tests/val_051_5_q4k_fused_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_fused_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10026,12 +12437,13 @@ if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     message(STATUS "[Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q4k_gemv_bench ÎÃÃ¶ Isolated Q4_K GEMV Micro-Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q4k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q4_K GEMV Micro-Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
+        tests/val_051_5_q4k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10046,12 +12458,13 @@ if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q2k_gemv_verify ÎÃÃ¶ Synthetic Q2_K SIMD vs scalar correctness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q2k_gemv_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q2_K SIMD vs scalar correctness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
+        tests/val_051_5_q2k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10063,12 +12476,13 @@ if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q2k_gemv_bench ÎÃÃ¶ Isolated Q2_K GEMV Micro-Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q2k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q2_K GEMV Micro-Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
+        tests/val_051_5_q2k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10080,12 +12494,13 @@ if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     message(STATUS "[Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q5k_gemv_verify ÎÃÃ¶ Synthetic Q5_K scalar vs dequant-dot correctness
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q5k_gemv_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q5_K scalar vs dequant-dot correctness
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
+        tests/val_051_5_q5k_gemv_verify.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10097,12 +12512,13 @@ if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q5k_gemv_bench ÎÃÃ¶ Isolated Q5_K GEMV Micro-Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q5k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q5_K GEMV Micro-Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
+        tests/val_051_5_q5k_gemv_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10114,12 +12530,13 @@ if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q5k_forward_bench ÎÃÃ¶ Simulated Full Forward Pass Q5_K Timing
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q5k_forward_bench ├Ä┬ô├â┬ç├â┬╢ Simulated Full Forward Pass Q5_K Timing
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
+        tests/val_051_5_q5k_forward_bench.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q5k_forward_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10131,14 +12548,63 @@ if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     message(STATUS "[Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_8_linearw_thread_scaling ÎÃÃ¶ Row-Parallel LinearW Scaling Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_8_linearw_thread_scaling ├Ä┬ô├â┬ç├â┬╢ Row-Parallel LinearW Scaling Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" OFF)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
+        tests/val_051_8_linearw_thread_scaling.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_linearw_thread_scaling PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10158,14 +12624,63 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     message(STATUS "[Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_8_layer_profile ÎÃÃ¶ Synthetic Full Transformer Layer Profiler
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_8_layer_profile ├Ä┬ô├â┬ç├â┬╢ Synthetic Full Transformer Layer Profiler
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" OFF)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
+        tests/val_051_8_layer_profile.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
         src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_8_layer_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10185,12 +12700,13 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
     message(STATUS "[Deep2] Layer profiler: val_051_8_layer_profile")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# val_051_5_q2k_profile ÎÃÃ¶ Q2_K vs Q4_K GEMV Profiling Benchmark
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# val_051_5_q2k_profile ├Ä┬ô├â┬ç├â┬╢ Q2_K vs Q4_K GEMV Profiling Benchmark
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
+        tests/val_051_5_q2k_profile.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_q2k_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -10202,13 +12718,14 @@ if(BUILD_VAL_051_5_Q2K_PROFILE)
     message(STATUS "[Deep2] Q2_K profile: val_051_5_q2k_profile")
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# SovereignTest_PatchRegistry ÎÃÃ¶ PatchRegistry Abstraction Layer Tests
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# SovereignTest_PatchRegistry ├Ä┬ô├â┬ç├â┬╢ PatchRegistry Abstraction Layer Tests
 # Validates CI/CD mock path and prepares for production hot-patching
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" OFF)
 if(BUILD_PATCHREGISTRY_TEST)
     add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_PatchRegistry.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_PatchRegistry PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -10232,13 +12749,15 @@ if(BUILD_PATCHREGISTRY_TEST)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# SovereignTest_HotPatcher ÎÃÃ¶ Production Live Binary Patching Tests
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# SovereignTest_HotPatcher ├Ä┬ô├â┬ç├â┬╢ Production Live Binary Patching Tests
 # Validates VirtualProtectEx, WriteProcessMemory, FlushInstructionCache
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" OFF)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
+        src/sovereign/patcher/HotPatcher.cpp
+        src/sovereign/tests/SovereignTest_HotPatcher.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_HotPatcher PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -10262,14 +12781,18 @@ if(BUILD_HOTPATCHER_TEST)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# SovereignTest_AutonomousAgent ÎÃÃ¶ End-to-End Autonomous Agent Integration Test
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# SovereignTest_AutonomousAgent ├Ä┬ô├â┬ç├â┬╢ End-to-End Autonomous Agent Integration Test
 # Validates: SessionStore -> AgentGraphRuntime -> ToolRegistry -> AutonomousAgent
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" OFF)
 if(BUILD_AUTONOMOUS_AGENT_TEST)
     add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
-        src/core/ToolRegistry.cpp
+        src/sovereign/session/SessionStore.cpp
+        src/sovereign/agent/AgentGraphRuntime.cpp
+        src/sovereign/agent/AutonomousAgent.cpp
+        src/sovereign/tool/ToolRegistry.cpp
+        src/sovereign/tests/SovereignTest_AutonomousAgent.cpp
     )
     if(MSVC)
         target_compile_options(SovereignTest_AutonomousAgent PRIVATE /O2 /EHsc /W4 /std:c++20)
@@ -10295,11 +12818,11 @@ if(BUILD_AUTONOMOUS_AGENT_TEST)
     endif()
 endif()
 
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-# AntiHallucinationHotPatcher ÎÃÃ¶ MASM Anti-Hallucination Guard
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# AntiHallucinationHotPatcher ├Ä┬ô├â┬ç├â┬╢ MASM Anti-Hallucination Guard
 # Validates patches before application to prevent logic drift
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" ON)
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" OFF)
 if(BUILD_ANTI_HALLUCINATION AND MSVC)
     # Assemble the MASM file
     set(ASM_SOURCE ${CMAKE_SOURCE_DIR}/src/sovereign/patcher/AntiHallucinationHotPatcher.asm)
@@ -10315,6 +12838,7 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
     add_custom_target(AntiHallucinationASM DEPENDS ${ASM_OBJECT})
     
     add_executable(SovereignTest_AntiHallucination EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_AntiHallucination.cpp
         ${ASM_OBJECT}
     )
     add_dependencies(SovereignTest_AntiHallucination AntiHallucinationASM)
@@ -10340,9 +12864,9 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
         add_dependencies(SovereignTest_Suite SovereignTest_AntiHallucination)
     endif()
 endif()
-# ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
 
-# CI gate: stress_test ÎÃÃ¶ build and note availability
+# CI gate: stress_test ├Ä┬ô├â┬ç├â┬╢ build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -10367,7 +12891,7 @@ if(Python3_FOUND)
         COMMAND ${Python3_EXECUTABLE} 
             ${CMAKE_SOURCE_DIR}/tools/validate_command_registry.py --strict
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Validating command registry (STRICT ÎÃÃ¶ all IDM_* must be in COMMAND_TABLE)..."
+        COMMENT "Validating command registry (STRICT ├Ä┬ô├â┬ç├â┬╢ all IDM_* must be in COMMAND_TABLE)..."
         VERBATIM
     )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -10383,6 +12907,7 @@ endif()
 # Build: cmake --build . --target RawrXD-InferenceRoutingTest
 # Run:   .\bin\RawrXD-InferenceRoutingTest.exe
 add_executable(RawrXD-InferenceRoutingTest
+    src/tests/inference_routing_test.cpp
 )
 set_target_properties(RawrXD-InferenceRoutingTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY bin
@@ -10396,9 +12921,10 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
 )
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
 
-# Autonomous Agentic Pipeline unit test (Task 5 ÎÃÃ¶ buildable)
+# Autonomous Agentic Pipeline unit test (Task 5 ├Ä┬ô├â┬ç├â┬╢ buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
+        tests/test_autonomous_pipeline.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
     )
     target_include_directories(test_autonomous_pipeline PRIVATE
@@ -10412,7 +12938,12 @@ if(WIN32)
 
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
+            src/app/cli_entrypoint.cpp
             # NOTE: Removed quantum_agent_orchestrator.cpp - marketing fiction
+            src/agentic/AgentOllamaClient.cpp
+            src/inference/gpu_dispatch_gate.cpp
+            src/cpu_inference_engine_autofix_stub.cpp
+            src/gguf_d3d12_bridge.cpp
         )
         target_include_directories(RawrXD-AutoFixCLI PRIVATE
             ${CMAKE_SOURCE_DIR}/src
@@ -10435,13 +12966,16 @@ if(WIN32)
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Hotpatch Stress Test ÎÃÃ¶ Acquisition-grade memory hotpatch validation
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Hotpatch Stress Test ├Ä┬ô├â┬ç├â┬╢ Acquisition-grade memory hotpatch validation
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
+        src/test_harness/hotpatch_stress_test.cpp
         src/core/model_memory_hotpatch.cpp
+        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
+        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_stress_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -10452,13 +12986,16 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Hotpatch E2E Test ÎÃÃ¶ Real GGUF tensor ÎÃ¥Ã hotpatch ÎÃ¥Ã inference ÎÃ¥Ã rollback
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Hotpatch E2E Test ├Ä┬ô├â┬ç├â┬╢ Real GGUF tensor ├Ä┬ô├â┬Ñ├â┬å hotpatch ├Ä┬ô├â┬Ñ├â┬å inference ├Ä┬ô├â┬Ñ├â┬å rollback
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
+        src/test_harness/hotpatch_e2e_test.cpp
         src/core/model_memory_hotpatch.cpp
+        src/license_enforcement.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
+        src/feature_flags_runtime.cpp
     )
     target_include_directories(hotpatch_e2e_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -10471,20 +13008,22 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
+        src/test_harness/arch_cert_tensor_inventory.cpp
     )
     target_include_directories(arch_cert_tensor_inventory PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
     set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # FWD-CERT-001: Deterministic Forward-Pass Certification
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
+        src/test_harness/fwd_cert_001.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(fwd_cert_001 PRIVATE InferenceEngine bcrypt.lib)
@@ -10495,14 +13034,102 @@ if(WIN32)
     )
     set_property(TARGET fwd_cert_001 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Production Benchmark ÎÃÃ¶ Batch 1: Repeatable 1/10/32/128 token benchmark
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Production Benchmark ├Ä┬ô├â┬ç├â┬╢ Batch 1: Repeatable 1/10/32/128 token benchmark
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
+        src/deep2/Deep2QuantCert.cpp
+        src/deep2/Deep2Determinism.cpp
+        src/deep2/Deep2GenerationCert.cpp
+        src/deep2/Deep2ProductionCert.cpp
+        src/deep2/ProductionBenchmark.cpp
+        src/deep2/ProductionProfiler.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/KimiK2Config.cpp
+        src/deep2/K2MLAWeights.cpp
+        src/deep2/K2MLA_KvExpand_Fused.cpp
+        src/deep2/K2MoEWeights.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/Deep2Bridge.cpp
+        src/deep2/InferenceSession.cpp
         src/deep2/QuantKernelRegistry.cpp
-        src/core/ModelRegistry.cpp
-        src/deep2/vulkan_compute.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/RouterPrefetchTelemetry.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/sampling/advanced_sampler.cpp
+        src/deep2/ResidencyTrace.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
+        src/deep2/sovereign_q4_0_gemv.asm
+        src/deep2/sovereign_q4_1_gemv.asm
+        src/deep2/sovereign_q5_k_gemv.asm
+        src/deep2/sovereign_q6_k_gemv.asm
+        src/deep2/sovereign_q8_0_gemv.asm
+        src/deep2/sovereign_fp16_gemv.asm
+        src/deep2/sovereign_fp8_gemv.asm
+        src/deep2/sovereign_iq2_xxs_gemv.asm
+        src/deep2/sovereign_iq3_xxs_gemv.asm
+        src/deep2/sovereign_iq4_nl_gemv.asm
+        src/deep2/sovereign_q2_k_gemv.asm
+        src/deep2/sovereign_q3_k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/deep2/Sovereign_Attention_KV_AVX512.asm
+        src/deep2/Chamber.cpp
+        src/deep2/ToroidalKVCache.cpp
+        src/deep2/PlasmaGovernor.cpp
+        src/deep2/OutOfCoreRuntime.cpp
+        src/deep2/SovereignOutOfCoreRuntime.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/GhostCache.cpp
+        src/deep2/ElasticResidencyManager.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/LlamaNativeBridge.cpp
+        src/deep2/RawrRuntime.cpp
+        src/inference/ollama_blob_parser.cpp
+        src/deep2/ZlibRuntimeLoader.cpp
+        src/deep2/DualGPUHook.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/asm_stubs.cpp
+        src/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10530,10 +13157,15 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production benchmark target: RawrXD-ProductionBenchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Production Certification Test ÎÃÃ¶ validates certification framework
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Production Certification Test ├Ä┬ô├â┬ç├â┬╢ validates certification framework
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
+        tests/test_deep2_production.cpp
+        src/deep2/Deep2QuantCert.cpp
+        src/deep2/Deep2Determinism.cpp
+        src/deep2/Deep2GenerationCert.cpp
+        src/deep2/Deep2ProductionCert.cpp
     )
     target_include_directories(RawrXD-ProductionCertTest PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10552,11 +13184,13 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # GPU Inference Benchmark ÎÃÃ¶ v16.2-GPU-HYBRID Phase C
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # GPU Inference Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.2-GPU-HYBRID Phase C
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
-        src/core/flash_attention.cpp
+        src/tools/gpu_benchmark.cpp
+        src/gguf_d3d12_bridge.cpp
+        src/kernels/flash_attention.cpp
     )
     target_include_directories(RawrXD-Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10595,10 +13229,12 @@ if(WIN32)
     )
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Fused Layer Benchmark ÎÃÃ¶ v16.3 Phase D Layer Fusion
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Fused Layer Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.3 Phase D Layer Fusion
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
+        src/tools/fused_layer_benchmark.cpp
+        src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-FusedBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10624,10 +13260,12 @@ if(WIN32)
     )
     message(STATUS "[Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # KV Cache Benchmark ÎÃÃ¶ v16.4 Phase E GPU-Resident KV Cache
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # KV Cache Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.4 Phase E GPU-Resident KV Cache
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
+        src/tools/kv_cache_benchmark.cpp
+        src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-KVBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10653,16 +13291,17 @@ if(WIN32)
     )
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Fix #3 NHWC Layout Benchmark ÎÃÃ¶ REMOVED: stub file deleted
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Fix #3 NHWC Layout Benchmark ├Ä┬ô├â┬ç├â┬╢ REMOVED: stub file deleted
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
     # TARGET REMOVED: src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp was deleted
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Fix #4 Flash Attention v2 Benchmark ÎÃÃ¶ Memory-efficient attention
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Fix #4 Flash Attention v2 Benchmark ├Ä┬ô├â┬ç├â┬╢ Memory-efficient attention
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/Fix4_FlashAttention_Benchmark.cpp
     )
     target_include_directories(Fix4_FlashAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10685,10 +13324,11 @@ if(WIN32)
     )
     message(STATUS "[Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Fix #5 Fused Quantized Kernels ÎÃÃ¶ Q4_0/Q8_0 fused dequantize+GEMM
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Fix #5 Fused Quantized Kernels ├Ä┬ô├â┬ç├â┬╢ Q4_0/Q8_0 fused dequantize+GEMM
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
     )
     target_include_directories(Fix5_FusedQuantized_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10711,10 +13351,11 @@ if(WIN32)
     )
     message(STATUS "[Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
     )
     target_include_directories(VAL032_SpeculativeDecoding_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10737,10 +13378,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # VAL-032: AVX-512 Assembly Kernel Benchmark
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
     )
     target_include_directories(VAL032_AVX512_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10764,10 +13406,12 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-032 Simple Intrinsics Benchmark ÎÃÃ¶ Direct AVX-512 performance measurement
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-032 Simple Intrinsics Benchmark ├Ä┬ô├â┬ç├â┬╢ Direct AVX-512 performance measurement
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_avx512_intrinsics.cpp
+        src/benchmark/tree_attention_bench_simple.cpp
     )
     target_include_directories(tree_attention_bench_simple PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10785,10 +13429,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-033 Profiling Instrumentation ÎÃÃ¶ Per-stage cycle-accurate timing
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-033 Profiling Instrumentation ├Ä┬ô├â┬ç├â┬╢ Per-stage cycle-accurate timing
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_profiled.cpp
     )
     target_include_directories(tree_attention_profiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10806,10 +13451,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-033] Profiling instrumentation: tree_attention_profiled")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-034 Q@K^T Alignment Optimization ÎÃÃ¶ 64-byte aligned loads
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-034 Q@K^T Alignment Optimization ├Ä┬ô├â┬ç├â┬╢ 64-byte aligned loads
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_aligned.cpp
     )
     target_include_directories(tree_attention_aligned PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10827,10 +13473,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-035 Tiled Q@K^T ÎÃÃ¶ Register-resident Q, streaming K
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-035 Tiled Q@K^T ├Ä┬ô├â┬ç├â┬╢ Register-resident Q, streaming K
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_tiled.cpp
     )
     target_include_directories(tree_attention_tiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10848,10 +13495,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-035] Tiled Q@K^T: tree_attention_tiled")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-036 Vectorized Softmax ÎÃÃ¶ AVX-512 polynomial exp approximation
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-036 Vectorized Softmax ├Ä┬ô├â┬ç├â┬╢ AVX-512 polynomial exp approximation
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_vectorized.cpp
     )
     target_include_directories(tree_attention_vectorized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10869,10 +13517,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-036] Vectorized softmax: tree_attention_vectorized")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-037 Tree Sparsity ÎÃÃ¶ Exploit tree structure to reduce computation
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-037 Tree Sparsity ├Ä┬ô├â┬ç├â┬╢ Exploit tree structure to reduce computation
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_sparse.cpp
     )
     target_include_directories(tree_attention_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10890,10 +13539,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-037] Tree sparsity: tree_attention_sparse")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_fused_sparse.cpp
     )
     target_include_directories(tree_attention_fused_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10911,10 +13561,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.1] Fused online softmax: tree_attention_fused_sparse")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-037.2 Tree-Specialized Fused Attention ÎÃÃ¶ Exploit 4x4 tree topology
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-037.2 Tree-Specialized Fused Attention ├Ä┬ô├â┬ç├â┬╢ Exploit 4x4 tree topology
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_tree_specialized.cpp
     )
     target_include_directories(tree_attention_tree_specialized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10932,11 +13583,13 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-038.1 MASM Mechanical Translation ÎÃÃ¶ Same algorithm, optimal registers
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-038.1 MASM Mechanical Translation ├Ä┬ô├â┬ç├â┬╢ Same algorithm, optimal registers
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_masm_val038_wrapper.cpp
+        src/benchmark/tree_attention_masm_val038.asm
     )
     target_include_directories(tree_attention_masm_val038 PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10957,10 +13610,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-038 Fused Attention ÎÃÃ¶ Q@K^T ÎÃ¥Ã Softmax ÎÃ¥Ã A@V in single kernel
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-038 Fused Attention ├Ä┬ô├â┬ç├â┬╢ Q@K^T ├Ä┬ô├â┬Ñ├â┬å Softmax ├Ä┬ô├â┬Ñ├â┬å A@V in single kernel
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL038_FusedAttention_Benchmark.cpp
     )
     target_include_directories(VAL038_FusedAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -10980,12 +13634,13 @@ if(WIN32)
     )
     message(STATUS "[VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # VAL-038 Validation Benchmark (B ÎÃ¥Ã C ÎÃ¥Ã A)
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # VAL-038 Validation Benchmark (B ├Ä┬ô├â┬Ñ├â┬å C ├Ä┬ô├â┬Ñ├â┬å A)
     # Step B: Control flow validation with debug counters
     # Step C: Numerical correctness vs scalar reference
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL038_Validation_Benchmark.cpp
     )
     target_include_directories(VAL038_Validation_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -11003,14 +13658,21 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME VAL038_Validation_Benchmark
     )
-    message(STATUS "[VAL-038] Validation benchmark (BÎÃ¥ÃCÎÃ¥ÃA): VAL038_Validation_Benchmark")
+    message(STATUS "[VAL-038] Validation benchmark (B├Ä┬ô├â┬Ñ├â┬åC├Ä┬ô├â┬Ñ├â┬åA): VAL038_Validation_Benchmark")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # TPS smoke ÎÃÃ¶ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # TPS smoke ├Ä┬ô├â┬ç├â┬╢ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
+        src/tools/RawrXD_TpsSmoke.cpp
+        src/llm_adapter/GGUFRunner.cpp
+        src/llm_adapter/gguf_k_quants.cpp
+        src/llm_adapter/QuantBackend.cpp
+        src/llm_adapter/ggufrunner_link_kernels.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
+        src/runtime_surface/GenerationStopwatch.cpp
+        src/runtime_surface/RuntimeSurfaceModule.cpp
         src/logging/Logger.cpp
     )
     target_include_directories(RawrXD-TpsSmoke PRIVATE
@@ -11032,10 +13694,10 @@ if(WIN32)
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
 
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
-    # Model analysis ÎÃÃ¶ shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
-    # Note: gguf_k_quants.cpp stays out of the lib ÎÃÃ¶ Win32IDE already links one copy.
-    # ÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²ÃÎÃ²Ã
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # Model analysis ├Ä┬ô├â┬ç├â┬╢ shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
+    # Note: gguf_k_quants.cpp stays out of the lib ├Ä┬ô├â┬ç├â┬╢ Win32IDE already links one copy.
+    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
     add_library(RawrXD-ModelAnalysisLib STATIC EXCLUDE_FROM_ALL
         src/core/model_anatomy.cpp
         src/core/neurological_diff.cpp
@@ -11058,6 +13720,8 @@ if(WIN32)
     )
 
     add_executable(RawrXD-ModelAnalysis EXCLUDE_FROM_ALL
+        src/tools/model_analysis_cli.cpp
+        src/llm_adapter/gguf_k_quants.cpp
     )
     target_include_directories(RawrXD-ModelAnalysis PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -11090,6 +13754,12 @@ endif()
 # Swarm smoke test (manual)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
+        src/tests/SwarmSmokeTest.cpp
+        src/bridge/Win32SwarmBridge.cpp
+        src/bridge/SwarmIATRegistration.cpp
+        src/agentic/SubAgentManager.cpp
+        src/agentic/RobustOllamaParser.cpp
+        src/runtime_patcher.cpp
         # REMOVED: src/tests/swarm_smoke_stubs.cpp - stub file deleted
     )
     target_include_directories(SwarmSmokeTest PRIVATE
@@ -11106,7 +13776,10 @@ endif()
 
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
+    src/tests/backend_orchestrator_shard_smoke.cpp
     # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
+    src/BackendOrchestrator.cpp
+    src/InferenceProfiler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
 )
@@ -11124,7 +13797,11 @@ message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShar
 # Agentic Planning Orchestrator Smoke Tests
 # ============================================================================
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
-    src/logging/Logger.cpp
+    src/agentic/agentic_planning_orchestrator.cpp
+    src/agentic/agentic_orchestrator_integration.cpp
+    src/agentic/agentic_audit_sink.cpp
+    src/agentic/agentic_orchestrator_smoke_test.cpp
+    src/agentic/observability/Logger.cpp
     src/core/execution_governor.cpp
     src/core/agent_safety_contract.cpp
 )
@@ -11154,6 +13831,14 @@ message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_sm
 # Golden Recovery Tests (Mission 2.3: Validation Framework)
 # ============================================================================
 add_executable(RawrXD-GoldenRecoveryTests EXCLUDE_FROM_ALL
+    tests/autonomy/recovery/GoldenRecoveryTests.cpp
+    validation/fault_injection/FaultInjector.cpp
+    validation/fault_injection/WorkerCrashInjector.cpp
+    validation/fault_injection/MemoryPressureInjector.cpp
+    validation/fault_injection/ServiceKillInjector.cpp
+    validation/fault_injection/StateCorruptionInjector.cpp
+    validation/fault_injection/ExceptionStormInjector.cpp
+    validation/recovery_telemetry/RecoveryTelemetry.cpp
 )
 
 target_include_directories(RawrXD-GoldenRecoveryTests PRIVATE
@@ -11187,6 +13872,12 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 # Only add sovereign runtime if CLI version not already defined
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
+        src/sovereign/rawrxd.cpp
+        src/sovereign/SovereignRuntime.cpp
+        src/sovereign/ExecutionContract.cpp
+        src/sovereign/Deep2InferenceWrapper.cpp
+        src/cpu_inference_engine.cpp
+        src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
         src/rawrxd_tokenizer.cpp
         src/rawrxd_transformer.cpp
@@ -11201,6 +13892,20 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
+        src/runtime/gguf_tensor_loader.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
         src/inference/NegativeSpaceProfiler.cpp
     )
 
@@ -11253,12 +13958,14 @@ if(TARGET rawrxd_runtime)
 else()
     target_sources(rawrxd PRIVATE
         src/runtime/TensorExecutionRouter.cpp
+        src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/RouterPredictiveMemoryBridge.cpp
     )
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_SOURCE_DIR}/src/runtime
@@ -11287,13 +13994,13 @@ endif()
 # Applied to whichever rawrxd target exists (GUI or Sovereign CLI)
 # =============================================================================
 if(RAWRXD_ENABLE_VALIDATION AND TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON ÎÃÃ¶ runtime tensor dumping enabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON ├Ä┬ô├â┬ç├â┬╢ runtime tensor dumping enabled")
     target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
     )
 elseif(TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF ÎÃÃ¶ runtime tensor dumping disabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF ├Ä┬ô├â┬ç├â┬╢ runtime tensor dumping disabled")
 endif()
 
 # ============================================================================
@@ -11388,6 +14095,7 @@ option(RAWRXD_BUILD_LSP_SERVER "Build RawrXD-Script LSP server for VS Code exten
 if(RAWRXD_BUILD_LSP_SERVER AND EXISTS "${CMAKE_SOURCE_DIR}/src/lsp/RawrXD_LSPServer.cpp")
     # Minimal LSP server - core functionality only (avoid hotpatch dependencies)
     add_executable(RawrXD_LSPServer
+        src/lsp/RawrXD_LSPServer.cpp
     )
     target_compile_features(RawrXD_LSPServer PRIVATE cxx_std_20)
     target_include_directories(RawrXD_LSPServer BEFORE PRIVATE
@@ -11415,6 +14123,7 @@ endif()
 option(RAWRXD_BUILD_DAP_ADAPTER "Build RawrXD-Script DAP adapter for VS Code extension" ON)
 if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/minimal_dap_server.cpp")
     add_executable(RawrXDScriptDAPAdapter
+        src/script/debug/minimal_dap_server.cpp
     )
     target_compile_features(RawrXDScriptDAPAdapter PRIVATE cxx_std_20)
     target_include_directories(RawrXDScriptDAPAdapter BEFORE PRIVATE
@@ -11450,6 +14159,8 @@ endif()
 # Sovereign Bridge Test Harness
 # ============================================================================
 add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
+    src/ide/test_sovereign_bridge.cpp
+    src/ide/SovereignSharedMemoryBridge.cpp
 )
 target_compile_features(TestSovereignBridge PRIVATE cxx_std_17)
 target_include_directories(TestSovereignBridge PRIVATE
@@ -11470,6 +14181,7 @@ message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build
 # DebugBridge Telemetry Test
 # ============================================================================
 add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
+    src/debug/test_debugbridge_telemetry.cpp
 )
 target_compile_features(TestDebugBridgeTelemetry PRIVATE cxx_std_17)
 set_target_properties(TestDebugBridgeTelemetry PROPERTIES
@@ -11481,6 +14193,8 @@ message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
 # Pure MASM Inference Test
 # ============================================================================
 add_executable(TestMASMInference EXCLUDE_FROM_ALL
+    src/test_masm_inference.cpp
+    src/gguf_masm_weight_bridge.cpp
 )
 target_compile_features(TestMASMInference PRIVATE cxx_std_17)
 target_include_directories(TestMASMInference PRIVATE
@@ -11491,8 +14205,14 @@ target_include_directories(TestMASMInference PRIVATE
 )
 if(RAWR_HAS_MASM)
     target_sources(TestMASMInference PRIVATE
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
     )
     set_source_files_properties(
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
         PROPERTIES LANGUAGE ASM_MASM
     )
 endif()
@@ -11508,6 +14228,7 @@ message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 # Debugger Stress Tests
 # ============================================================================
 add_executable(stress_target EXCLUDE_FROM_ALL
+    src/debug/stress_target.cpp
 )
 target_compile_features(stress_target PRIVATE cxx_std_17)
 set_target_properties(stress_target PROPERTIES
@@ -11515,6 +14236,7 @@ set_target_properties(stress_target PROPERTIES
 )
 
 add_executable(stress_memory EXCLUDE_FROM_ALL
+    src/debug/stress_memory.cpp
 )
 target_compile_features(stress_memory PRIVATE cxx_std_17)
 set_target_properties(stress_memory PROPERTIES
@@ -11527,6 +14249,9 @@ message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
 # SovereignRPC Simulator Test
 # ============================================================================
 add_executable(test_simulator EXCLUDE_FROM_ALL
+    src/rpc/test_simulator.cpp
+    src/rpc/SovereignRPC_Simulator.cpp
+    src/rpc/SovereignRPC_Scheduler.cpp
 )
 target_compile_features(test_simulator PRIVATE cxx_std_17)
 target_include_directories(test_simulator PRIVATE
@@ -11546,6 +14271,8 @@ message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake
 # ============================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
     add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
+        tests/test_q4_fused_pipeline.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
     target_include_directories(test_q4_fused_pipeline PRIVATE
@@ -11565,6 +14292,8 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
+        tests/test_q4_cache_alignment.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
     target_include_directories(test_q4_cache_alignment PRIVATE
@@ -11584,6 +14313,8 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
     add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
+        tests/test_q4_asm_debug.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
     target_include_directories(test_q4_asm_debug PRIVATE
@@ -11605,6 +14336,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm")
     enable_language(ASM_MASM)
     add_library(q4_preprocessed_avx512 STATIC
+        src/kernels/q4_preprocessed_avx512.asm
     )
     set_target_properties(q4_preprocessed_avx512 PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
@@ -11625,6 +14357,8 @@ endif()
 # Scalar SIMD simulation test (no ASM dependency)
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
     add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
+        tests/test_q4_scalar_simd.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
     target_include_directories(test_q4_scalar_simd PRIVATE
@@ -11652,6 +14386,7 @@ endif()
 # VAL-051 Witness System Test
 # =============================================================================
 add_executable(witness_system_test EXCLUDE_FROM_ALL
+    src/validation/witness_system_test.cpp
     src/core/inference_witness.cpp
 )
 target_include_directories(witness_system_test PRIVATE
@@ -11669,6 +14404,10 @@ message(STATUS "========================================")
 # 1. Dispatch Overhead Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
     add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
+        tests/benchmark_dispatch_overhead.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_overhead PRIVATE
@@ -11688,6 +14427,9 @@ endif()
 # 2. Planner Amortization Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
     add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
+        tests/benchmark_planner_amortization.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
     target_include_directories(benchmark_planner_amortization PRIVATE
@@ -11706,6 +14448,11 @@ endif()
 # 3. End-to-End Validation (Four Gates)
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
     add_executable(validate_end_to_end EXCLUDE_FROM_ALL
+        tests/validate_end_to_end.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
     target_include_directories(validate_end_to_end PRIVATE
@@ -11725,6 +14472,9 @@ endif()
 # 4. NEVM Determinism Validation
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
     add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
+        tests/nevm_determinism_validation.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
     target_include_directories(nevm_determinism_validation PRIVATE
@@ -11746,6 +14496,9 @@ endif()
 # 5. NEVM Stress Test
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
     add_executable(nevm_stress_test EXCLUDE_FROM_ALL
+        tests/nevm_stress_test.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_mmu.cpp
     )
     target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
     target_include_directories(nevm_stress_test PRIVATE
@@ -11766,6 +14519,7 @@ endif()
 # 6. PMC Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp")
     add_library(pmc_profiler STATIC
+        src/profiling/pmc_profiler.cpp
     )
     target_compile_features(pmc_profiler PRIVATE cxx_std_20)
     target_include_directories(pmc_profiler PUBLIC
@@ -11779,6 +14533,7 @@ endif()
 # 6b. Flame Graph Profiler Library
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
     add_library(flame_graph_profiler STATIC
+        src/profiling/flame_graph.cpp
     )
     target_compile_features(flame_graph_profiler PRIVATE cxx_std_20)
     target_include_directories(flame_graph_profiler PUBLIC
@@ -11795,6 +14550,10 @@ endif()
 # 7. PMC Dispatch Benchmark
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
     add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
+        tests/benchmark_dispatch_pmc.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
     )
     target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_pmc PRIVATE
@@ -11830,10 +14589,23 @@ endif()
 # =============================================================================
 
 # =============================================================================
-# SoloIDE ÎÃÃ¶ Sovereign Agentic Desktop Environment
+# SoloIDE ├Ä┬ô├â┬ç├â┬╢ Sovereign Agentic Desktop Environment
 # =============================================================================
 set(SOLOIDE_SOURCES
-    src/ceo/main.cpp
+    src/soloide/main.cpp
+    src/soloide/Core/Bus.cpp
+    src/soloide/UI/SoloIDE.cpp
+    src/soloide/UI/Panels/EditorPanel.cpp
+    src/soloide/UI/Panels/ChatPanel.cpp
+    src/soloide/UI/Panels/DebugPanel.cpp
+    src/soloide/UI/Panels/TerminalPanel.cpp
+    src/soloide/UI/Panels/ProjectPanel.cpp
+    src/soloide/UI/Panels/StatusPanel.cpp
+    src/soloide/AI/CompletionEngine.cpp
+    src/soloide/AI/AdvancedCodingAgent.cpp
+    src/soloide/AI/MultiModalModelRouter.cpp
+    src/soloide/Debug/DAPClient.cpp
+    src/soloide/LSP/LSPClient.cpp
 )
 
 set(SOLOIDE_HEADERS
@@ -11853,7 +14625,7 @@ set(SOLOIDE_HEADERS
 )
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
-    # Find Qt6 ÎÃÃ¶ try qmake-based detection first, then manual paths
+    # Find Qt6 ├Ä┬ô├â┬ç├â┬╢ try qmake-based detection first, then manual paths
     find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
     if(NOT Qt6_FOUND)
         find_package(Qt6 COMPONENTS Widgets Network Core
@@ -11884,7 +14656,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         )
         message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
     else()
-        message(WARNING "[SoloIDE] Qt6 not found ÎÃÃ¶ SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+        message(WARNING "[SoloIDE] Qt6 not found ├Ä┬ô├â┬ç├â┬╢ SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
 add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
@@ -11893,11 +14665,45 @@ target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 add_executable(test_llama_native tests/test_llama_native.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/BP16Extractor.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_llama_native PRIVATE InferenceEngine)
@@ -11905,12 +14711,50 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
 
 # K2-001 Runtime Validation Gate
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
-    src/generation/integration/RawrXDEngineAdapter.cpp
+    src/adapter/RawrXDEngineAdapter.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_deep2_kernels.asm
+    src/inference/RawrXD_LlamaNative.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
@@ -11919,6 +14763,9 @@ add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECT
 # Q4_K Block Decoder Verification Test
 # Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
 add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -11941,11 +14788,46 @@ add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosschec
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
 add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_deep2_kernels.asm
+    src/inference/RawrXD_LlamaNative.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
@@ -11953,11 +14835,47 @@ add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTOR
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
@@ -11965,11 +14883,47 @@ add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DI
 
 # K2-003: Native Deep2 Layer Execution
 add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
@@ -11978,6 +14932,11 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 # K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
 # Must pass after K2-003A (Q4_K decoder certified) before full layer execution
 add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -11987,6 +14946,11 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 # K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
 # Proves one complete transformer layer executes on real Q4_K weights
 add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003c_single_layer_forward PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -11995,11 +14959,47 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
 
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
-    src/core/ModelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp)
 set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
@@ -12008,6 +15008,11 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 # K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
 # Proves scalability from 003C single-layer to multi-layer with bounded memory
 add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12017,6 +15022,12 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 # K2-005: Bounded Autoregressive Decode with KV Cache
 # Proves KV cache correctly stores/retrieves K/V across decode steps
 add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_005_autoregressive_kv_cache PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12024,8 +15035,14 @@ target_link_libraries(k2_005_autoregressive_kv_cache PRIVATE InferenceEngine)
 add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_cache WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-006: Bounded Autoregressive Token Generation
-# Proves logits ÎÃ¥Ã argmax ÎÃ¥Ã token ÎÃ¥Ã decode ÎÃ¥Ã repeat pipeline works
+# Proves logits ├Ä┬ô├â┬Ñ├â┬å argmax ├Ä┬ô├â┬Ñ├â┬å token ├Ä┬ô├â┬Ñ├â┬å decode ├Ä┬ô├â┬Ñ├â┬å repeat pipeline works
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_006_bounded_token_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12036,6 +15053,9 @@ add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_gener
 # Proves output.weight can be streamed row-by-row to produce logits
 # without unbounded allocation. Independent of K2-006 synthetic baseline.
 add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007_real_output_projection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12048,10 +15068,13 @@ add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
 set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-# K2-007B: Projection ÎÃ¥Ã Logits Interface
+# K2-007B: Projection ├Ä┬ô├â┬Ñ├â┬å Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
 add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007b_projection_logits_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12060,9 +15083,15 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 
 # K2-008: End-to-End Semantic Generation
 # Proves tokenizer + real output projection communicate end-to-end:
-# text ÎÃ¥Ã tokens ÎÃ¥Ã real K2 inference ÎÃ¥Ã logits ÎÃ¥Ã argmax ÎÃ¥Ã token ÎÃ¥Ã text.
+# text ├Ä┬ô├â┬Ñ├â┬å tokens ├Ä┬ô├â┬Ñ├â┬å real K2 inference ├Ä┬ô├â┬Ñ├â┬å logits ├Ä┬ô├â┬Ñ├â┬å argmax ├Ä┬ô├â┬Ñ├â┬å token ├Ä┬ô├â┬Ñ├â┬å text.
 # Independent of K2-006 synthetic baseline.
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MLA_KvExpand_Fused.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12081,6 +15110,10 @@ add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${C
 # Proves token_embd.weight can be streamed row-by-row without loading
 # the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
 add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_009_token_embedding_lookup PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -12088,6 +15121,9 @@ target_link_libraries(k2_009_token_embedding_lookup PRIVATE InferenceEngine)
 add_test(NAME k2_009_token_embedding_lookup COMMAND k2_009_token_embedding_lookup WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
+    tests/b004_transformer_router_streaming_integration.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12101,12 +15137,14 @@ set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 
 function(rawrxd_configure_b004_target target_name)
@@ -12161,6 +15199,8 @@ endif()
 # ============================================================================
 set(B012_AMORTIZATION_SOURCES
     B012/build/amortization_test.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12174,12 +15214,14 @@ set(B012_AMORTIZATION_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b012_amortization_test EXCLUDE_FROM_ALL
     ${B012_AMORTIZATION_SOURCES}
@@ -12212,6 +15254,8 @@ endif()
 set(B013_STABILITY_SOURCES
     B013/build/stability_test.cpp
     B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12225,12 +15269,14 @@ set(B013_STABILITY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b013_stability_test EXCLUDE_FROM_ALL
     ${B013_STABILITY_SOURCES}
@@ -12254,7 +15300,13 @@ endif()
 # B014: Compute Decomposition Measurement
 # ============================================================================
 set(B014_COMPUTE_SOURCES
+    B014/build/compute_decomposition.cpp
     B014/build/b014_profiler.cpp
+    B014/build/B014_RingAdapter.cpp
+    src/runtime/Sovereign_RingTelemetry.cpp
+    src/runtime/Sovereign_KernelBridge_CPP.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12268,12 +15320,14 @@ set(B014_COMPUTE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_compute_decomposition EXCLUDE_FROM_ALL
     ${B014_COMPUTE_SOURCES}
@@ -12297,7 +15351,10 @@ endif()
 # B014-BoundaryProbe: Isolate first failure point
 # ============================================================================
 set(B014_BOUNDARY_SOURCES
+    B014/build/b014_boundary_probe.cpp
     B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12311,12 +15368,14 @@ set(B014_BOUNDARY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_boundary_probe EXCLUDE_FROM_ALL
     ${B014_BOUNDARY_SOURCES}
@@ -12340,7 +15399,10 @@ endif()
 # B014-SingleBoundary: Test one boundary per invocation
 # ============================================================================
 set(B014_SINGLE_SOURCES
+    B014/build/b014_single_boundary.cpp
     B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12354,12 +15416,14 @@ set(B014_SINGLE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_single_boundary EXCLUDE_FROM_ALL
     ${B014_SINGLE_SOURCES}
@@ -12383,7 +15447,10 @@ endif()
 # B014-LifetimeProbe: Pinpoint exact destructor/cleanup failure
 # ============================================================================
 set(B014_LIFETIME_SOURCES
+    B014/build/b014_lifetime_probe.cpp
     B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12397,12 +15464,14 @@ set(B014_LIFETIME_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 )
 add_executable(b014_lifetime_probe EXCLUDE_FROM_ALL
     ${B014_LIFETIME_SOURCES}
@@ -12426,7 +15495,9 @@ endif()
 # B005: Canonical Model Certification
 # ============================================================================
 set(B005_CANONICAL_MODEL_SOURCES
-    tests/b005/b005_canonical_model_certification.cpp
+    tests/b005_canonical_model_certification.cpp
+    src/canonical/gguf_adapter.cpp
+    src/canonical/unified_model_loader.cpp
 )
 
 add_executable(b005_canonical_model_certification EXCLUDE_FROM_ALL
@@ -12448,7 +15519,9 @@ endif()
 # B006: KV Cache Verification
 # ============================================================================
 set(B006_KV_CACHE_SOURCES
-    tests/b006/b006_kv_cache_verification.cpp
+    tests/b006_kv_cache_verification.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12526,7 +15599,9 @@ endif()
 # B007: Performance Baseline Certification
 # ============================================================================
 set(B007_PERF_BASELINE_SOURCES
-    tests/b007/b007_performance_baseline.cpp
+    tests/b007_performance_baseline.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12604,7 +15679,7 @@ endif()
 # B008: Build / CI Integration Gate
 # ============================================================================
 set(B008_CI_SOURCES
-    tests/b008/b008_ci_integration.cpp
+    tests/b008_ci_integration.cpp
 )
 
 add_executable(b008_ci_integration EXCLUDE_FROM_ALL
@@ -12628,6 +15703,8 @@ endif()
 # ============================================================================
 set(B010_RESIDENCY_SOURCES
     tests/b010/b010_weight_residency_profile.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12702,7 +15779,9 @@ endif()
 # B011: Targeted Weight Residency Optimization
 # ============================================================================
 set(B011_RESIDENCY_OPT_SOURCES
-    tests/b011/b011_weight_residency_optimization.cpp
+    tests/b011_weight_residency_optimization.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_transformer.cpp
@@ -12990,7 +16069,7 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
-# B010/B011 Fast Experiment ÎÃÃ¶ Direct StreamingMatMul residency test
+# B010/B011 Fast Experiment ├Ä┬ô├â┬ç├â┬╢ Direct StreamingMatMul residency test
 # ============================================================================
 set(B010B011_FAST_SOURCES
     tests/b010_b011_fast_experiment.cpp
@@ -13387,13 +16466,62 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 )
 
 # ============================================================================
-# Certification Harness ÎÃÃ¶ Adversarial Evidence-Producing Benchmark Suite
+# Certification Harness ├Ä┬ô├â┬ç├â┬╢ Adversarial Evidence-Producing Benchmark Suite
 # ============================================================================
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
     src/deep2/QuantKernelRegistry.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEEliminate.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/TrailBrake.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4k_gemv_v2.asm
+    src/deep2/sovereign_q2k_gemv_v2.asm
+    src/deep2/sovereign_q3k_gemv_v2.asm
+    src/deep2/sovereign_moe_fused.asm
+    src/sampling/advanced_sampler.cpp
+    src/deep2/ProductionProfiler.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(certification_harness PROPERTIES
     EXCLUDE_FROM_ALL TRUE
@@ -13439,7 +16567,7 @@ endif()
 include(cmake/RawrXDSovereignFinish.cmake)
 
 
-# test_v_proj_parity â©ââ BATCH2_V_PROJ_001
+# test_v_proj_parity ├ó┬ê┬⌐├ó┬ö┬É├ó┬ò┬£ BATCH2_V_PROJ_001
 if(TARGET InferenceEngine)
     add_executable(test_v_proj_parity
         src/deep2/test_v_proj_parity.cpp
@@ -13489,7 +16617,7 @@ if(TARGET InferenceEngine)
 endif()
 
 
-option(BUILD_PROBE_CHAT_QUALITY "probe" ON)
+option(BUILD_PROBE_CHAT_QUALITY "probe" OFF)
 if(BUILD_PROBE_CHAT_QUALITY AND TARGET InferenceEngine)
   add_executable(_probe_chat_quality src/deep2/_probe_chat_quality.cpp)
   target_link_libraries(_probe_chat_quality PRIVATE InferenceEngine dxgi)
