@@ -43,6 +43,8 @@ target_include_directories(rawr_monolith PRIVATE
 
 target_compile_definitions(rawr_monolith PRIVATE
     RAWR_MONOLITH_STANDALONE
+    RAWR_HAS_SOVEREIGN_ENGINES=1
+    RAWR_HAS_RAWR_INFERENCE=1
     WIN32_LEAN_AND_MEAN
     NOMINMAX
 )
