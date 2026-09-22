@@ -1,0 +1,200 @@
+﻿-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- Γö£├äΓö¼├┤Γö£├⌐Γö¼├║Γö£├óΓö¼Γöñ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found ΓÇö Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [NanoQuant] DISABLED Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] Γ£à Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_c1_c9: missing src/deep2/K2C1C9.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping agentic rawr CLI: missing src/cli/rawr_main.cpp and other agentic sources
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agentic_cli_001: missing certs/rawrxd_agentic_cli_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_session_001: missing certs/rawrxd_agent_session_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_tools_001: missing certs/rawrxd_agent_tools_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_patch_001: missing certs/rawrxd_agent_patch_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_build_test_001: missing certs/rawrxd_agent_build_test_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_001: missing certs/rawrxd_agent_steer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_safety_001: missing certs/rawrxd_agent_safety_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_resume_001: missing certs/rawrxd_agent_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_run_quality_001: missing certs/rawrxd_run_quality_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_k2_prefetch_overlap_001_src: missing certs/vwa_k2_prefetch_overlap_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target vwa_bounded_k2_001: missing certs/vwa_bounded_k2_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001_src: missing certs/k2_useful_tps_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_stdout_clean_001: missing certs/rawrxd_stdout_clean_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_no_ollama_contract_001: missing certs/rawrxd_no_ollama_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_dual_lane_contract_001: missing certs/rawrxd_dual_lane_contract_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_auto_ladder_001: missing certs/rawrxd_auto_ladder_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_chat_repl_001: missing certs/rawrxd_chat_repl_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_frontdoor_001: missing certs/rawrxd_product_frontdoor_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_embed_norm_guard_001: missing certs/rawrxd_embed_norm_guard_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_decode_carry_001: missing certs/rawrxd_decode_carry_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_workspace_live_001: missing certs/rawrxd_agent_workspace_live_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_loop_e2e_001: missing certs/rawrxd_agent_loop_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_agent_steer_resume_001: missing certs/rawrxd_agent_steer_resume_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_second_model_001: missing certs/rawrxd_second_model_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_llama32_prefill_divergence_001: missing certs/rawrxd_llama32_prefill_divergence_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_e2e_001: missing certs/rawrxd_autocomplete_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_model_compat_001: missing certs/rawrxd_local_model_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_live_second_001: missing certs/rawrxd_autocomplete_live_second_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_k2_product_e2e_001: missing certs/rawrxd_k2_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_e2e_001: missing certs/rawrxd_product_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_lavapath_001: missing certs/rawrxd_product_lavapath_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_mount_001: missing certs/rawrxd_mount_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_ge_probe_001: missing certs/rawrxd_ge_probe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_capability_solve_001: missing certs/rawrxd_capability_solve_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_qkv_rows_measure_001: missing certs/rawrxd_qkv_rows_measure_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_kernel_tune_001: missing certs/rawrxd_kernel_tune_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_streamer_vocab_ext_001: missing certs/rawrxd_streamer_vocab_ext_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_actual_e2e_generation_001: missing certs/rawrxd_actual_e2e_generation_001.cpp
+-- [Deep2] RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping Deep2_Gateway_Runtime_Certification: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_benchmark: missing source files
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target k2_useful_tps_001: missing certs/k2_useful_tps_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target mla_cert_001: missing certs/mla_cert_001.cpp
+-- [Deep2] Benchmark cert CLI: deep2_benchmark + k2_useful_tps_001 + mla_cert_001
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping deep2_product_lavapath: missing source files
+-- [Deep2] RAWRXD_BACKGROUND_TERMINALS kitchen-sink wired
+-- [Deep2] RAWRXD_REMAINING_STYLE_CLI wired
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_001: missing certs/rawrxd_product_layer_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_002: missing certs/rawrxd_product_layer_002.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_win32_editor_surface_001: missing certs/rawrxd_win32_editor_surface_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_rawr_pipe_001: missing certs/rawrxd_rawr_pipe_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_editor_agent_e2e_001: missing certs/rawrxd_editor_agent_e2e_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_ghost_bind_001: missing certs/rawrxd_product_ghost_bind_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_autocomplete_cancel_001: missing certs/rawrxd_autocomplete_cancel_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_installer_clean_machine_001: missing certs/rawrxd_installer_clean_machine_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_offline_demo_001: missing certs/rawrxd_offline_demo_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_repeatable_demo_record_001: missing certs/rawrxd_repeatable_demo_record_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_runtime_001: missing certs/rawrxd_product_runtime_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_local_api_compat_001: missing certs/rawrxd_local_api_compat_001.cpp
+-- [RAWRXD_BUILD_SOURCE_INTEGRITY_001] Skipping cert target rawrxd_product_layer_003: missing certs/rawrxd_product_layer_003.cpp
+-- [Deep2] RAWRXD_PRODUCT_LAYER wired
+-- [Interstellar] sources missing ΓÇö skipping (BUILD_INTERSTELLAR gated)
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (BΓö£├äΓö¼├┤Γö£├óΓö¼├æΓö£├óΓö¼├ÑCΓö£├äΓö¼├┤Γö£├óΓö¼├æΓö£├óΓö¼├ÑA): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó runtime tensor dumping enabled
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- Configuring done (5.1s)

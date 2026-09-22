@@ -33,6 +33,9 @@ void RawrPE64Linker::setImageBase(uint64_t base) { m_imageBase = base; }
 void RawrPE64Linker::addImport(const ImportDesc& desc) { m_imports.push_back(desc); }
 void RawrPE64Linker::addBaseRelocation(uint64_t rva) { m_relocs.push_back(rva); }
 
+void RawrPE64Linker::writeU8(std::vector<uint8_t>& out, uint8_t v) {
+    out.push_back(v);
+}
 void RawrPE64Linker::writeU16(std::vector<uint8_t>& out, uint16_t v) {
     out.push_back(static_cast<uint8_t>(v & 0xFF));
     out.push_back(static_cast<uint8_t>((v >> 8) & 0xFF));
@@ -113,8 +116,6 @@ RawrPE64Linker::IdatBuild RawrPE64Linker::buildIdat(uint32_t rvaBase) const {
         patchU32(buf, dirOff + 0, static_cast<uint32_t>(rvaBase + iltCursor));
         patchU32(buf, dirOff + 4, 0); // TimeDateStamp
         patchU32(buf, dirOff + 8, 0); // ForwarderChain
-        // Name RVA
-        patchU32(buf, dirOff + 12, static_cast<uint32_t>(rvaBase + nameRvaAccum));
         // FirstThunk -> IAT RVA
         patchU32(buf, dirOff + 16, static_cast<uint32_t>(rvaBase + iatCursor));
 
@@ -146,6 +147,8 @@ RawrPE64Linker::IdatBuild RawrPE64Linker::buildIdat(uint32_t rvaBase) const {
         std::memcpy(buf.data() + dllNameOff, imp.dllName.data(), imp.dllName.size() + 1);
         size_t dllNameLen = imp.dllName.size() + 1;
         size_t dllPad = (dllNameLen % 2 == 0) ? 0 : 1;
+        // Name RVA must point to the DLL name string, which comes after all function entries
+        patchU32(buf, dirOff + 12, static_cast<uint32_t>(rvaBase + dllNameOff));
         nameRvaAccum = dllNameOff + dllNameLen + dllPad;
     }
 
@@ -181,17 +184,16 @@ std::vector<uint8_t> RawrPE64Linker::link() const {
     size_t dosHeaderSize = 0x40;
     size_t peSigSize = 4;
     size_t coffHeaderSize = 24;
-    size_t optHeaderSize = 240; // PE32+ optional header
-    size_t dataDirSize = 16 * 16;
+    size_t optHeaderSize = 240; // PE32+ optional header (standard fields + data directories)
     size_t sectionTableSize = (m_sections.size() + (hasImports ? 1 : 0)) * 40;
-    size_t headersSize = dosHeaderSize + peSigSize + coffHeaderSize + optHeaderSize + dataDirSize + sectionTableSize;
+    size_t headersSize = dosHeaderSize + peSigSize + coffHeaderSize + optHeaderSize + sectionTableSize;
     size_t headersFileSize = alignFile(headersSize);
 
     // DOS Header
     out.resize(0x40, 0);
     out[0] = 'M'; out[1] = 'Z';
-    writeU32(out, static_cast<uint32_t>(headersFileSize)); out.resize(0x3C, 0);
-    writeU32(out, static_cast<uint32_t>(0x40));
+    // e_lfanew at offset 0x3C points to PE signature (immediately after DOS header)
+    out[0x3C] = 0x40; out[0x3D] = 0x00; out[0x3E] = 0x00; out[0x3F] = 0x00;
     out.resize(0x40);
     // PE Signature
     append(out, "PE\0\0", 4);
@@ -201,15 +203,17 @@ std::vector<uint8_t> RawrPE64Linker::link() const {
     writeU32(out, 0); // time stamp
     writeU32(out, 0); // symbol table
     writeU32(out, 0); // number of symbols
-    writeU16(out, static_cast<uint16_t>(optHeaderSize + dataDirSize)); // size of optional header
+    writeU16(out, static_cast<uint16_t>(optHeaderSize)); // size of optional header = 240 (data dirs are INSIDE opt header)
     writeU16(out, 0x22); // characteristics: executable, large address aware
 
     // Optional Header (PE32+)
     writeU16(out, 0x20b); // PE32+ magic
-    writeU16(out, 14);    // major linker version
-    writeU16(out, 0);     // minor
+    out.push_back(14);    // major linker version (U8)
+    out.push_back(0);     // minor linker version (U8)
     writeU32(out, 0);     // size of code
-    writeU32(out, 0);     // size of initialized data
+    uint32_t sizeOfInitData = 0;
+    if (hasImports) sizeOfInitData = static_cast<uint32_t>(alignSection(idat.size()));
+    writeU32(out, sizeOfInitData); // size of initialized data
     writeU32(out, 0);     // size of uninitialized data
     uint32_t entryRva = 0;
     if (m_entrySection < m_sections.size()) {
@@ -221,10 +225,11 @@ std::vector<uint8_t> RawrPE64Linker::link() const {
     writeU32(out, sectionAlignment);
     writeU32(out, fileAlignment);
     writeU16(out, 6);   // major OS version
-    writeU16(out, 0);   // minor
-    writeU32(out, 0);   // image version
-    writeU32(out, 0);   // major subsystem version
-    writeU32(out, 0);   // minor subsystem version
+    writeU16(out, 0);   // minor OS version
+    writeU16(out, 0);   // major image version
+    writeU16(out, 0);   // minor image version
+    writeU16(out, 5);   // major subsystem version
+    writeU16(out, 0);   // minor subsystem version
     writeU32(out, 0);   // win32 version value
     uint32_t totalImageSize = sectionAlignment;
     if (!m_sections.empty()) {
@@ -236,7 +241,7 @@ std::vector<uint8_t> RawrPE64Linker::link() const {
     writeU32(out, totalImageSize); // size of image
     writeU32(out, static_cast<uint32_t>(headersFileSize)); // size of headers
     writeU32(out, 0); // checksum
-    writeU16(out, 1); // subsystem: console
+    writeU16(out, 3); // subsystem: WINDOWS_CUI (console)
     writeU16(out, 0x8160); // dll characteristics (high entropy ASLR, nx compat, dynamic base, guard)
     writeU64(out, 0x100000); // size of stack reserve
     writeU64(out, 0x10000);  // size of stack commit

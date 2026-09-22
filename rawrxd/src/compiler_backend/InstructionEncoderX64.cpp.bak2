@@ -1,0 +1,705 @@
+#include "InstructionEncoderX64.hpp"
+#include <cstring>
+
+namespace RawrXD {
+namespace Backend {
+
+InstructionEncoderX64::InstructionEncoderX64() = default;
+
+uint32_t InstructionEncoderX64::createLabel(const std::string& name) {
+    uint32_t id = m_nextLabelId++;
+    m_labels.emplace(id, Label(name, id));
+    return id;
+}
+
+void InstructionEncoderX64::bindLabel(uint32_t labelId, size_t offset) {
+    auto it = m_labels.find(labelId);
+    if (it == m_labels.end()) throw EncodingError("bindLabel: unknown label id");
+    it->second.bound = true;
+    it->second.boundOffset = offset;
+}
+
+bool InstructionEncoderX64::isLabelBound(uint32_t labelId) const {
+    auto it = m_labels.find(labelId);
+    if (it == m_labels.end()) return false;
+    return it->second.bound;
+}
+
+size_t InstructionEncoderX64::getLabelOffset(uint32_t labelId) const {
+    auto it = m_labels.find(labelId);
+    if (it == m_labels.end()) throw EncodingError("getLabelOffset: unknown label id");
+    if (!it->second.bound) throw EncodingError("getLabelOffset: label not bound");
+    return it->second.boundOffset;
+}
+
+void InstructionEncoderX64::reset() {
+    m_currentOffset = 0;
+    m_nextLabelId = 1;
+    m_labels.clear();
+}
+
+void InstructionEncoderX64::emitRex(std::vector<uint8_t>& out, bool w, bool r, bool x, bool b) {
+    uint8_t rex = 0x40;
+    if (w) rex |= 0x08;
+    if (r) rex |= 0x04;
+    if (x) rex |= 0x02;
+    if (b) rex |= 0x01;
+    out.push_back(rex);
+}
+
+void InstructionEncoderX64::emitModRM(std::vector<uint8_t>& out, uint8_t mod, uint8_t reg, uint8_t rm) {
+    out.push_back((mod << 6) | ((reg & 0x07) << 3) | (rm & 0x07));
+}
+
+void InstructionEncoderX64::emitSIB(std::vector<uint8_t>& out, uint8_t scale, uint8_t index, uint8_t base) {
+    uint8_t scaleBits = (scale == 8) ? 3 : (scale == 4) ? 2 : (scale == 2) ? 1 : 0;
+    out.push_back((scaleBits << 6) | ((index & 0x07) << 3) | (base & 0x07));
+}
+
+void InstructionEncoderX64::emitImm(std::vector<uint8_t>& out, const Immediate& imm) {
+    for (uint8_t i = 0; i < imm.size; ++i) {
+        out.push_back(static_cast<uint8_t>((imm.value >> (i * 8)) & 0xFF));
+    }
+}
+
+void InstructionEncoderX64::emitDisp8(std::vector<uint8_t>& out, int8_t disp) {
+    out.push_back(static_cast<uint8_t>(disp));
+}
+
+void InstructionEncoderX64::emitDisp32(std::vector<uint8_t>& out, int32_t disp) {
+    for (uint8_t i = 0; i < 4; ++i) {
+        out.push_back(static_cast<uint8_t>((disp >> (i * 8)) & 0xFF));
+    }
+}
+
+uint8_t InstructionEncoderX64::determineOperandSize(const InstructionIR& inst) const {
+    if (inst.operandSize != 0) return inst.operandSize;
+    // Infer from operands
+    for (const auto& op : inst.operands) {
+        if (op.kind == OperandKind::Register) {
+            uint8_t code = static_cast<uint8_t>(op.reg);
+            if (code >= 8) return 8; // R8-R15 are 64-bit
+            // Legacy GPRs (0-7): default to 32-bit unless REX.W is forced
+            return inst.hasRexW ? 8 : 4;
+        }
+        if (op.kind == OperandKind::Immediate) return op.imm.size;
+    }
+    return 4; // default 32-bit
+}
+
+bool InstructionEncoderX64::needsRexW(const InstructionIR& inst, uint8_t opSize) const {
+    if (inst.hasRexW) return true;
+    // Many instructions default to 32-bit; force REX.W for 64-bit
+    if (opSize == 8) {
+        switch (inst.mnemonic) {
+            case Mnemonic::MOV:
+            case Mnemonic::ADD:
+            case Mnemonic::SUB:
+            case Mnemonic::AND:
+            case Mnemonic::OR:
+            case Mnemonic::XOR:
+            case Mnemonic::CMP:
+            case Mnemonic::TEST:
+            case Mnemonic::SHL:
+            case Mnemonic::SHR:
+            case Mnemonic::IMUL:
+            case Mnemonic::INC:
+            case Mnemonic::DEC:
+            case Mnemonic::PUSH:
+            case Mnemonic::POP:
+            case Mnemonic::CALL:
+            case Mnemonic::JMP:
+            case Mnemonic::LEA:
+                return true;
+            default:
+                return false;
+        }
+    }
+    return false;
+}
+
+bool InstructionEncoderX64::isRexExtendedReg(Register r) const {
+    return regRequiresRex(r);
+}
+
+bool InstructionEncoderX64::isRexExtendedMem(const MemoryOperand& mem) const {
+    return regRequiresRex(mem.base) || regRequiresRex(mem.index);
+}
+
+void InstructionEncoderX64::encodeModRMSIB(std::vector<uint8_t>& out,
+    uint8_t regField, const MemoryOperand& mem, std::vector<Fixup>& fixups) {
+    if (mem.ripRelative) {
+        // RIP-relative: mod=00, rm=101 (RIP+disp32)
+        // Requires REX prefix if regField extended
+        // ModR/M byte: mod=00, reg=regField, rm=101
+        emitModRM(out, 0, regField, 5);
+        emitDisp32(out, mem.displacement);
+        fixups.push_back(Fixup{ FixupKind::RipRel32, out.size() - 4, 0, 0, mem.displacement });
+        return;
+    }
+
+    uint8_t baseCode = regCode(mem.base);
+    bool needsSib = false;
+    uint8_t mod = 0;
+    bool disp32 = false;
+    bool disp8 = false;
+
+    if (!mem.hasBase() && !mem.hasIndex()) {
+        // Absolute address: mod=00, rm=101 + disp32
+        emitModRM(out, 0, regField, 5);
+        emitDisp32(out, mem.displacement);
+        return;
+    }
+
+    if (mem.hasIndex()) {
+        needsSib = true;
+    }
+    if (mem.hasBase() && baseCode == 4) { // RSP/ESP as base forces SIB
+        needsSib = true;
+    }
+    if (mem.hasBase() && baseCode == 5 && mem.displacement == 0) {
+        // RBP/RBP-like base with disp0 needs disp8(0) to avoid ambiguity
+        disp8 = true;
+    }
+
+    if (mem.displacement != 0) {
+        if (mem.displacement >= -128 && mem.displacement <= 127) {
+            disp8 = true;
+        } else {
+            disp32 = true;
+        }
+    }
+
+    if (disp8) mod = 1;
+    else if (disp32) mod = 2;
+    else mod = 0;
+
+    if (needsSib) {
+        uint8_t sibBase = mem.hasBase() ? baseCode : 5; // no base -> base=101 (disp32)
+        uint8_t sibIndex = mem.hasIndex() ? regCode(mem.index) : 4; // no index -> index=100
+        uint8_t scaleBits = (mem.scale == 8) ? 3 : (mem.scale == 4) ? 2 : (mem.scale == 2) ? 1 : 0;
+        emitModRM(out, mod, regField, 4);
+        emitSIB(out, scaleBits, sibIndex, sibBase);
+    } else {
+        emitModRM(out, mod, regField, baseCode);
+    }
+
+    if (disp8) emitDisp8(out, static_cast<int8_t>(mem.displacement));
+    else if (disp32) emitDisp32(out, mem.displacement);
+    else if (needsSib && !mem.hasBase()) emitDisp32(out, mem.displacement);
+}
+
+void InstructionEncoderX64::encodeModRMSIB(std::vector<uint8_t>& out,
+    uint8_t regField, Register reg, std::vector<Fixup>&) {
+    emitModRM(out, 3, regField, regCode(reg));
+}
+
+EncodedInstruction InstructionEncoderX64::encode(const InstructionIR& inst) {
+    switch (inst.mnemonic) {
+        case Mnemonic::MOV: return encodeMOV(inst);
+        case Mnemonic::LEA: return encodeLEA(inst);
+        case Mnemonic::PUSH: return encodePUSH(inst);
+        case Mnemonic::POP: return encodePOP(inst);
+        case Mnemonic::ADD: return encodeALU(inst, 0x00); // ADD r/m, r = 0x00; ADD r, r/m = 0x02
+        case Mnemonic::SUB: return encodeALU(inst, 0x28);
+        case Mnemonic::AND: return encodeALU(inst, 0x20);
+        case Mnemonic::OR:  return encodeALU(inst, 0x08);
+        case Mnemonic::XOR: return encodeALU(inst, 0x30);
+        case Mnemonic::CMP: return encodeCMP(inst);
+        case Mnemonic::TEST: return encodeTEST(inst);
+        case Mnemonic::SHL: return encodeShift(inst, 4);
+        case Mnemonic::SHR: return encodeShift(inst, 5);
+        case Mnemonic::IMUL: return encodeIMUL(inst);
+        case Mnemonic::INC: return encodeINC_DEC(inst, true);
+        case Mnemonic::DEC: return encodeINC_DEC(inst, false);
+        case Mnemonic::CALL: return encodeCALL(inst);
+        case Mnemonic::JMP: return encodeJMP(inst);
+        case Mnemonic::JCC: return encodeJCC(inst);
+        case Mnemonic::RET: return encodeRET(inst);
+        case Mnemonic::NOP: return encodeNOP(inst);
+        default:
+            throw EncodingError("Unsupported mnemonic");
+    }
+}
+
+EncodedInstruction InstructionEncoderX64::encodeMOV(const InstructionIR& inst) {
+    if (inst.operands.size() != 2) throw EncodingError("MOV requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+
+    if (dst.kind == OperandKind::Register && src.kind == OperandKind::Register) {
+        // MOV r, r/m or r/m, r
+        // For reg,reg: opcode 0x89 (r/m <- r) or 0x8B (r <- r/m). Use 0x89 with mod=3.
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x89);
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.reg, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Immediate) {
+        // MOV r, imm
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (opSize == 1) {
+            if (bExt) emitRex(result.bytes, false, false, false, bExt);
+            result.bytes.push_back(0xB0 + (regCode(dst.reg) & 0x07));
+            emitImm(result.bytes, src.imm);
+        } else if (opSize == 8) {
+            if (src.imm.size == 8) {
+                if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+                result.bytes.push_back(0xB8 + (regCode(dst.reg) & 0x07));
+                emitImm(result.bytes, src.imm);
+            } else {
+                // MOV r/m64, imm32 (sign-extended)
+                if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+                result.bytes.push_back(0xC7);
+                encodeModRMSIB(result.bytes, 0, dst.reg, result.fixups);
+                Immediate imm32 = src.imm;
+                imm32.size = 4;
+                emitImm(result.bytes, imm32);
+            }
+        } else {
+            if (bExt) emitRex(result.bytes, false, false, false, bExt);
+            result.bytes.push_back(0xB8 + (regCode(dst.reg) & 0x07));
+            Immediate imm32 = src.imm;
+            imm32.size = 4;
+            emitImm(result.bytes, imm32);
+        }
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Memory) {
+        // MOV r, [mem]
+        bool rExt = isRexExtendedReg(dst.reg);
+        bool bExt = isRexExtendedMem(src.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x8B);
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.mem, result.fixups);
+    } else if (dst.kind == OperandKind::Memory && src.kind == OperandKind::Register) {
+        // MOV [mem], r
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedMem(dst.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x89);
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.mem, result.fixups);
+    } else if (dst.kind == OperandKind::Memory && src.kind == OperandKind::Immediate) {
+        // MOV [mem], imm
+        bool bExt = isRexExtendedMem(dst.mem);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        if (opSize == 1) {
+            result.bytes.push_back(0xC6);
+        } else {
+            result.bytes.push_back(0xC7);
+        }
+        encodeModRMSIB(result.bytes, 0, dst.mem, result.fixups);
+        Immediate imm32 = src.imm;
+        imm32.size = (opSize == 1) ? 1 : 4;
+        emitImm(result.bytes, imm32);
+    } else {
+        throw EncodingError("Unsupported MOV operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeLEA(const InstructionIR& inst) {
+    if (inst.operands.size() != 2) throw EncodingError("LEA requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    if (dst.kind != OperandKind::Register || src.kind != OperandKind::Memory) {
+        throw EncodingError("LEA requires reg, mem");
+    }
+    EncodedInstruction result;
+    bool rExt = isRexExtendedReg(dst.reg);
+    bool bExt = isRexExtendedMem(src.mem);
+    if (rExt || bExt) emitRex(result.bytes, false, rExt, false, bExt);
+    result.bytes.push_back(0x8D);
+    encodeModRMSIB(result.bytes, regCode(dst.reg), src.mem, result.fixups);
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodePUSH(const InstructionIR& inst) {
+    if (inst.operands.size() != 1) throw EncodingError("PUSH requires 1 operand");
+    const auto& op = inst.operands[0];
+    EncodedInstruction result;
+    if (op.kind == OperandKind::Register) {
+        bool bExt = isRexExtendedReg(op.reg);
+        if (bExt) emitRex(result.bytes, false, false, false, bExt);
+        result.bytes.push_back(0x50 + (regCode(op.reg) & 0x07));
+    } else if (op.kind == OperandKind::Immediate) {
+        if (op.imm.size == 1) {
+            result.bytes.push_back(0x6A);
+            emitImm(result.bytes, op.imm);
+        } else {
+            result.bytes.push_back(0x68);
+            emitImm(result.bytes, op.imm);
+        }
+    } else {
+        throw EncodingError("Unsupported PUSH operand");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodePOP(const InstructionIR& inst) {
+    if (inst.operands.size() != 1) throw EncodingError("POP requires 1 operand");
+    const auto& op = inst.operands[0];
+    if (op.kind != OperandKind::Register) throw EncodingError("POP requires register");
+    EncodedInstruction result;
+    bool bExt = isRexExtendedReg(op.reg);
+    if (bExt) emitRex(result.bytes, false, false, false, bExt);
+    result.bytes.push_back(0x58 + (regCode(op.reg) & 0x07));
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeALU(const InstructionIR& inst, uint8_t opcode) {
+    if (inst.operands.size() != 2) throw EncodingError("ALU requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+
+    if (dst.kind == OperandKind::Register && src.kind == OperandKind::Register) {
+        // ADD/SUB/AND/OR/XOR r, r/m
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back((opSize == 1 ? opcode : opcode + 1) + 0x02); // r, r/m form
+        // ModR/M: reg field encodes dst (accumulator), rm field encodes src
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.reg, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Immediate) {
+        // ADD/SUB/AND/OR/XOR r, imm
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        if (opSize == 1) {
+            result.bytes.push_back(0x80);
+            encodeModRMSIB(result.bytes, opcode / 8, dst.reg, result.fixups);
+            emitImm(result.bytes, src.imm);
+        } else {
+            if (src.imm.size == 1 && opSize == 8) {
+                // Try sign-extended imm8
+                int8_t simm = static_cast<int8_t>(src.imm.value);
+                if (static_cast<int64_t>(simm) == static_cast<int64_t>(src.imm.value)) {
+                    result.bytes.push_back(0x83);
+                    encodeModRMSIB(result.bytes, opcode / 8, dst.reg, result.fixups);
+                    emitImm(result.bytes, src.imm);
+                    return result;
+                }
+            }
+            result.bytes.push_back(0x81);
+            encodeModRMSIB(result.bytes, opcode / 8, dst.reg, result.fixups);
+            Immediate imm32 = src.imm;
+            imm32.size = 4;
+            emitImm(result.bytes, imm32);
+        }
+    } else if (dst.kind == OperandKind::Memory && src.kind == OperandKind::Register) {
+        // ALU [mem], r
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedMem(dst.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(opSize == 1 ? opcode : opcode + 1); // r/m, r form
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.mem, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Memory) {
+        // ALU r, [mem]
+        bool rExt = isRexExtendedReg(dst.reg);
+        bool bExt = isRexExtendedMem(src.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back((opSize == 1 ? opcode : opcode + 1) + 0x02); // r, r/m form
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.mem, result.fixups);
+    } else if (dst.kind == OperandKind::Memory && src.kind == OperandKind::Immediate) {
+        bool bExt = isRexExtendedMem(dst.mem);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        if (opSize == 1) {
+            result.bytes.push_back(0x80);
+            encodeModRMSIB(result.bytes, opcode / 8, dst.mem, result.fixups);
+            emitImm(result.bytes, src.imm);
+        } else {
+            result.bytes.push_back(0x81);
+            encodeModRMSIB(result.bytes, opcode / 8, dst.mem, result.fixups);
+            Immediate imm32 = src.imm;
+            imm32.size = 4;
+            emitImm(result.bytes, imm32);
+        }
+    } else {
+        throw EncodingError("Unsupported ALU operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeIMUL(const InstructionIR& inst) {
+    if (inst.operands.size() != 2) throw EncodingError("IMUL requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+    if (dst.kind == OperandKind::Register && src.kind == OperandKind::Register) {
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x0F);
+        result.bytes.push_back(0xAF);
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.reg, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Immediate) {
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        result.bytes.push_back(0x69);
+        encodeModRMSIB(result.bytes, regCode(dst.reg), dst.reg, result.fixups);
+        Immediate imm32 = src.imm;
+        imm32.size = 4;
+        emitImm(result.bytes, imm32);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Memory) {
+        bool rExt = isRexExtendedReg(dst.reg);
+        bool bExt = isRexExtendedMem(src.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x0F);
+        result.bytes.push_back(0xAF);
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported IMUL operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeCMP(const InstructionIR& inst) {
+    if (inst.operands.size() != 2) throw EncodingError("CMP requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+    if (dst.kind == OperandKind::Register && src.kind == OperandKind::Register) {
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x3B);
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.reg, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Immediate) {
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        if (opSize == 1) {
+            result.bytes.push_back(0x80);
+            encodeModRMSIB(result.bytes, 7, dst.reg, result.fixups);
+            emitImm(result.bytes, src.imm);
+        } else {
+            if (src.imm.size == 1 && opSize == 8) {
+                int8_t simm = static_cast<int8_t>(src.imm.value);
+                if (static_cast<int64_t>(simm) == static_cast<int64_t>(src.imm.value)) {
+                    result.bytes.push_back(0x83);
+                    encodeModRMSIB(result.bytes, 7, dst.reg, result.fixups);
+                    emitImm(result.bytes, src.imm);
+                    return result;
+                }
+            }
+            result.bytes.push_back(0x81);
+            encodeModRMSIB(result.bytes, 7, dst.reg, result.fixups);
+            Immediate imm32 = src.imm;
+            imm32.size = 4;
+            emitImm(result.bytes, imm32);
+        }
+    } else if (dst.kind == OperandKind::Memory && src.kind == OperandKind::Register) {
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedMem(dst.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x39);
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.mem, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Memory) {
+        bool rExt = isRexExtendedReg(dst.reg);
+        bool bExt = isRexExtendedMem(src.mem);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x3B);
+        encodeModRMSIB(result.bytes, regCode(dst.reg), src.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported CMP operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeTEST(const InstructionIR& inst) {
+    if (inst.operands.size() != 2) throw EncodingError("TEST requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+    if (dst.kind == OperandKind::Register && src.kind == OperandKind::Register) {
+        bool rExt = isRexExtendedReg(src.reg);
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || rExt || bExt) emitRex(result.bytes, rexW, rExt, false, bExt);
+        result.bytes.push_back(0x85);
+        encodeModRMSIB(result.bytes, regCode(src.reg), dst.reg, result.fixups);
+    } else if (dst.kind == OperandKind::Register && src.kind == OperandKind::Immediate) {
+        bool bExt = isRexExtendedReg(dst.reg);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        result.bytes.push_back(0xF7);
+        encodeModRMSIB(result.bytes, 0, dst.reg, result.fixups);
+        Immediate imm32 = src.imm;
+        imm32.size = 4;
+        emitImm(result.bytes, imm32);
+    } else {
+        throw EncodingError("Unsupported TEST operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeShift(const InstructionIR& inst, uint8_t shiftOpcode) {
+    if (inst.operands.size() != 2) throw EncodingError("Shift requires 2 operands");
+    const auto& dst = inst.operands[0];
+    const auto& src = inst.operands[1];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+    if (dst.kind != OperandKind::Register && dst.kind != OperandKind::Memory) {
+        throw EncodingError("Shift destination must be register or memory");
+    }
+    bool bExt = (dst.kind == OperandKind::Register) ? isRexExtendedReg(dst.reg) : isRexExtendedMem(dst.mem);
+    if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+    if (src.kind == OperandKind::Immediate) {
+        if (src.imm.value == 1) {
+            // shift by 1
+            result.bytes.push_back(opSize == 1 ? 0xD0 : 0xD1);
+            if (dst.kind == OperandKind::Register) encodeModRMSIB(result.bytes, shiftOpcode, dst.reg, result.fixups);
+            else encodeModRMSIB(result.bytes, shiftOpcode, dst.mem, result.fixups);
+        } else {
+            result.bytes.push_back(opSize == 1 ? 0xC0 : 0xC1);
+            if (dst.kind == OperandKind::Register) encodeModRMSIB(result.bytes, shiftOpcode, dst.reg, result.fixups);
+            else encodeModRMSIB(result.bytes, shiftOpcode, dst.mem, result.fixups);
+            emitImm(result.bytes, src.imm);
+        }
+    } else if (src.kind == OperandKind::Register && src.reg == Register::CL) {
+        result.bytes.push_back(opSize == 1 ? 0xD2 : 0xD3);
+        if (dst.kind == OperandKind::Register) encodeModRMSIB(result.bytes, shiftOpcode, dst.reg, result.fixups);
+        else encodeModRMSIB(result.bytes, shiftOpcode, dst.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported shift count operand");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeINC_DEC(const InstructionIR& inst, bool isInc) {
+    if (inst.operands.size() != 1) throw EncodingError("INC/DEC requires 1 operand");
+    const auto& op = inst.operands[0];
+    uint8_t opSize = determineOperandSize(inst);
+    bool rexW = needsRexW(inst, opSize);
+    EncodedInstruction result;
+    if (op.kind == OperandKind::Register) {
+        bool bExt = isRexExtendedReg(op.reg);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        result.bytes.push_back(opSize == 1 ? 0xFE : 0xFF);
+        encodeModRMSIB(result.bytes, isInc ? 0 : 1, op.reg, result.fixups);
+    } else if (op.kind == OperandKind::Memory) {
+        bool bExt = isRexExtendedMem(op.mem);
+        if (rexW || bExt) emitRex(result.bytes, rexW, false, false, bExt);
+        result.bytes.push_back(opSize == 1 ? 0xFE : 0xFF);
+        encodeModRMSIB(result.bytes, isInc ? 0 : 1, op.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported INC/DEC operand");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeCALL(const InstructionIR& inst) {
+    if (inst.operands.size() != 1) throw EncodingError("CALL requires 1 operand");
+    const auto& op = inst.operands[0];
+    EncodedInstruction result;
+    if (op.kind == OperandKind::Label) {
+        if (op.labelRelSize == 1) {
+            result.bytes.push_back(0xEB); // Actually this is JMP short, CALL short doesn't exist
+            throw EncodingError("CALL does not support rel8");
+        } else {
+            result.bytes.push_back(0xE8);
+            size_t fixupOff = result.bytes.size();
+            result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0);
+            result.fixups.push_back(Fixup{ FixupKind::Rel32, fixupOff, 0, op.labelId, 0 });
+        }
+    } else if (op.kind == OperandKind::Register) {
+        bool bExt = isRexExtendedReg(op.reg);
+        if (bExt) emitRex(result.bytes, false, false, false, bExt);
+        result.bytes.push_back(0xFF);
+        encodeModRMSIB(result.bytes, 2, op.reg, result.fixups);
+    } else if (op.kind == OperandKind::Memory) {
+        bool bExt = isRexExtendedMem(op.mem);
+        if (bExt) emitRex(result.bytes, false, false, false, bExt);
+        result.bytes.push_back(0xFF);
+        encodeModRMSIB(result.bytes, 2, op.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported CALL operand");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeJMP(const InstructionIR& inst) {
+    if (inst.operands.size() != 1) throw EncodingError("JMP requires 1 operand");
+    const auto& op = inst.operands[0];
+    EncodedInstruction result;
+    if (op.kind == OperandKind::Label) {
+        if (op.labelRelSize == 1) {
+            result.bytes.push_back(0xEB);
+            size_t fixupOff = result.bytes.size();
+            result.bytes.push_back(0);
+            result.fixups.push_back(Fixup{ FixupKind::Rel8, fixupOff, 0, op.labelId, 0 });
+        } else {
+            result.bytes.push_back(0xE9);
+            size_t fixupOff = result.bytes.size();
+            result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0);
+            result.fixups.push_back(Fixup{ FixupKind::Rel32, fixupOff, 0, op.labelId, 0 });
+        }
+    } else if (op.kind == OperandKind::Register) {
+        bool bExt = isRexExtendedReg(op.reg);
+        if (bExt) emitRex(result.bytes, false, false, false, bExt);
+        result.bytes.push_back(0xFF);
+        encodeModRMSIB(result.bytes, 4, op.reg, result.fixups);
+    } else if (op.kind == OperandKind::Memory) {
+        bool bExt = isRexExtendedMem(op.mem);
+        if (bExt) emitRex(result.bytes, false, false, false, bExt);
+        result.bytes.push_back(0xFF);
+        encodeModRMSIB(result.bytes, 4, op.mem, result.fixups);
+    } else {
+        throw EncodingError("Unsupported JMP operand");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeJCC(const InstructionIR& inst) {
+    if (inst.operands.size() != 1) throw EncodingError("JCC requires 1 operand");
+    const auto& op = inst.operands[0];
+    if (op.kind != OperandKind::Label) throw EncodingError("JCC requires label operand");
+    EncodedInstruction result;
+    uint8_t cc = static_cast<uint8_t>(inst.cc);
+    if (op.labelRelSize == 1) {
+        result.bytes.push_back(0x70 + cc);
+        size_t fixupOff = result.bytes.size();
+        result.bytes.push_back(0);
+        result.fixups.push_back(Fixup{ FixupKind::Rel8, fixupOff, 0, op.labelId, 0 });
+    } else {
+        result.bytes.push_back(0x0F);
+        result.bytes.push_back(0x80 + cc);
+        size_t fixupOff = result.bytes.size();
+        result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0); result.bytes.push_back(0);
+        result.fixups.push_back(Fixup{ FixupKind::Rel32, fixupOff, 0, op.labelId, 0 });
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeRET(const InstructionIR& inst) {
+    EncodedInstruction result;
+    if (inst.operands.empty()) {
+        result.bytes.push_back(0xC3);
+    } else if (inst.operands.size() == 1 && inst.operands[0].kind == OperandKind::Immediate) {
+        result.bytes.push_back(0xC2);
+        emitImm(result.bytes, inst.operands[0].imm);
+    } else {
+        throw EncodingError("Unsupported RET operand combination");
+    }
+    return result;
+}
+
+EncodedInstruction InstructionEncoderX64::encodeNOP(const InstructionIR& inst) {
+    EncodedInstruction result;
+    if (inst.operands.empty()) {
+        result.bytes.push_back(0x90);
+    } else {
+        throw EncodingError("NOP takes no operands");
+    }
+    return result;
+}
+
+} // namespace Backend
+} // namespace RawrXD

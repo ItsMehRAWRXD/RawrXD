@@ -1,0 +1,11 @@
+RawrXD Swarm48 portable contract self-test
+Environment: local Linux C++20 compiler (not the user's Windows/MSVC/Vulkan workstation)
+
+logical_agents=48
+resident_weight_images=2
+completed=48 failed=0
+r9700_kv_bytes=8388608
+rx7800_kv_bytes=4194304
+RAWRXD_SWARM48_CORE=PASS
+
+Scope: validates source-level session sharing, paged-KV accounting, per-device batch slot scheduling, and 48-agent lifecycle against a fake inference adapter. It does NOT certify the Deep2/Vulkan bridge or real-GPU throughput.

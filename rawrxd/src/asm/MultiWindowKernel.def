@@ -1,0 +1,14 @@
+LIBRARY RawrXD_MultiWindow_Kernel
+EXPORTS
+    KernelInit
+    KernelShutdown
+    SubmitTask
+    CancelTask
+    IsTaskComplete
+    RegisterWindow
+    UnregisterWindow
+    SendIPCMessage
+    GetKernelStats
+    SwarmBroadcast
+    ChainOfThought
+    GetMicroseconds

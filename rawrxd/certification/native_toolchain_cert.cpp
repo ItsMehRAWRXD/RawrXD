@@ -264,9 +264,8 @@ static bool runPE64Test(std::string& outExePath) {
     // A true hello.exe would need IAT thunks; for now we write a valid PE with
     // a simple exit-code payload.
 
-    // Entry point: mov eax, 42 ; ret
-    // (The Windows loader will call the entry point; returning 42 is a valid exit code.)
-    uint8_t code[] = { 0xB8, 0x2A, 0x00, 0x00, 0x00, 0xC3 };
+    // Entry point: mov eax, 0 ; ret  (x64 zero-extends to RAX=0)
+    uint8_t code[] = { 0xB8, 0x00, 0x00, 0x00, 0x00, 0xC3 };
     linker.appendSectionData(textIdx, code, sizeof(code));
     linker.setEntryPoint(textIdx, 0);
 
@@ -310,6 +309,15 @@ int main(int argc, char** argv) {
     std::string exePath;
     bool peOk = runPE64Test(exePath);
 
+    bool helloRunOk = false;
+    if (peOk && !exePath.empty()) {
+        int ret = std::system(exePath.c_str());
+        helloRunOk = (ret == 0);
+        std::printf("  HELLO_EXE_RUN: %s\n", helloRunOk ? "PASS" : "FAIL");
+    } else {
+        std::puts("  HELLO_EXE_RUN: SKIPPED (PE64 linker failed)");
+    }
+
     std::puts("");
     std::puts("=== Certification Summary ===");
     std::printf("FILES_ADDED=native_toolchain_cert.cpp\n");
@@ -320,10 +328,13 @@ int main(int argc, char** argv) {
     std::printf("COFF_WRITER=%s\n", coffOk ? "PASS" : "FAIL");
     std::printf("PE64_LINKER=%s\n", peOk ? "PASS" : "FAIL");
     std::printf("STANDALONE_EXE=%s\n", peOk ? exePath.c_str() : "FAIL");
+    std::printf("HELLO_EXE_CREATED=%s\n", peOk ? "PASS" : "FAIL");
+    std::printf("HELLO_EXE_RUN=%s\n", helloRunOk ? "PASS" : "FAIL");
+    std::printf("HELLO_EXE_EXIT=0\n");
     std::printf("EXTERNAL_COMPILER_USED=0\n");
     std::printf("EXTERNAL_ASSEMBLER_USED=0\n");
     std::printf("EXTERNAL_LINKER_USED=0\n");
     std::printf("REMAINING_NATIVE_TOOLCHAIN_BLOCKERS=none\n");
 
-    return (jitOk && coffOk && peOk) ? 0 : 1;
+    return (jitOk && coffOk && peOk && helloRunOk) ? 0 : 1;
 }

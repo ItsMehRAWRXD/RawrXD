@@ -7710,3 +7710,964 @@ events:
         - "C:/Program Files/CMake"
         - "C:/Program Files (x86)/RawrXD"
 ...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython/Support.cmake:2621 (find_program)"
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython3.cmake:699 (include)"
+      - "CMakeLists.txt:12346 (find_package)"
+    mode: "program"
+    variable: "_Python3_EXECUTABLE_DEBUG"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python3.13_d"
+      - "python3_d"
+      - "python_d"
+    candidate_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/"
+    searched_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\debugCommand"
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\copilotCli"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\VulkanSDK\\1.4.357.0\\Bin"
+        - "C:\\Windows\\System32\\AMD"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\GitHub CLI\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\node"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Launcher\\"
+        - "C:\\Users\\Garrett\\.local\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Ollama"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "F:\\Curs0r\\cursor\\resources\\app\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Roaming\\npm"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Links"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Cua\\cua-driver\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "c:\\Users\\Garrett\\.vscode\\extensions\\ms-python.debugpy-2026.6.0-win32-x64\\bundled\\scripts\\noConfigScripts"
+        - "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64"
+        - "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/RawrXD"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/CMake"
+        - "C:/Program Files (x86)/RawrXD"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "CMakeLists.txt:14098 (find_package)"
+    name: "Qt6"
+    components:
+      -
+        name: "Widgets"
+        required: true
+        found: false
+      -
+        name: "Network"
+        required: true
+        found: false
+      -
+        name: "Core"
+        required: true
+        found: false
+    configs:
+      -
+        filename: "Qt6.cps"
+        kind: "cps"
+      -
+        filename: "qt6.cps"
+        kind: "cps"
+      -
+        filename: "Qt6Config.cmake"
+        kind: "cmake"
+      -
+        filename: "qt6-config.cmake"
+        kind: "cmake"
+    version_request:
+      exact: false
+    settings:
+      required: "optional"
+      quiet: true
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      names:
+        - "Qt6"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "F:/~dev/CMakeFiles/pkgRedirects/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/debugCommand/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Roaming/Code/User/globalStorage/github.copilot-chat/copilotCli/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Common Files/Oracle/Java/java8path/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/VulkanSDK/1.4.357.0/Bin/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/AMD/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/wbem/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/WindowsPowerShell/v1.0/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Windows/System32/OpenSSH/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WindowsApps/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/nodejs/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/GitHub CLI/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Git/cmd/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/node/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/hermes/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Scripts/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Python/Launcher/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.local/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Ollama/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Links/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Programs/Cua/cua-driver/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/AppData/Local/Microsoft/WinGet/Packages/VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Users/Garrett/.vscode/extensions/ms-python.debugpy-2026.6.0-win32-x64/bundled/scripts/noConfigScripts/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/CMake/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/Qt6Config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/qt6-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/lib/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/lib/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/share/cps/Qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+      -
+        path: "C:/Program Files (x86)/share/cps/qt6.cps"
+        mode: "cps"
+        reason: "no_exist"
+    found: null
+    search_context:
+      ENV{PATH}:
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\debugCommand"
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\copilotCli"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\VulkanSDK\\1.4.357.0\\Bin"
+        - "C:\\Windows\\System32\\AMD"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\GitHub CLI\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\node"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Launcher\\"
+        - "C:\\Users\\Garrett\\.local\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Ollama"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "F:\\Curs0r\\cursor\\resources\\app\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Roaming\\npm"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Links"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Cua\\cua-driver\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "c:\\Users\\Garrett\\.vscode\\extensions\\ms-python.debugpy-2026.6.0-win32-x64\\bundled\\scripts\\noConfigScripts"
+        - "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64"
+        - "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/RawrXD"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/CMake"
+        - "C:/Program Files (x86)/RawrXD"
+...

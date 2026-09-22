@@ -1,0 +1,22 @@
+Batch 1 policy
+
+RESTORE:
+  src/ANSIParser.cpp -- real native implementation, no third-party dependencies.
+
+DO NOT RECREATE JUST TO SATISFY OLD CMAKE:
+  src/agentic_engine.cpp      -- historical version is Qt/ggml and contains stub fallback.
+  src/gguf_d3d12_bridge.cpp  -- indexed historical implementation is explicitly stub-only.
+  src/vulkan_kernel_bridge.cpp -- map to Deep2Engine_VulkanRuntime.cpp + vulkan_compute.cpp.
+  src/ai_completion_real.cpp -- map to rawr_run_stream.cpp + Deep2Engine::generateStream.
+  src/rdna3_bridge.cpp       -- create only if a current live header/linker diagnostic requires it.
+
+DECLARATION-DRIVEN:
+  src/subagent_core.cpp -- inspect current subagent_core.h and unresolved symbols before implementing.
+
+Existing real loaders should be reused:
+  src/gguf_loader.cpp
+  src/gguf_vocab_resolver.cpp
+  src/rawrxd_model_loader.cpp
+
+Do not use minimal_gold_main.cpp as the shipping IDE entry; it is a core-runtime test console,
+not the full workbench.

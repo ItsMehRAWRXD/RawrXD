@@ -49,6 +49,7 @@ private:
     std::vector<ImportDesc> m_imports;
     std::vector<uint64_t> m_relocs;
 
+    static void writeU8(std::vector<uint8_t>& out, uint8_t v);
     static void writeU16(std::vector<uint8_t>& out, uint16_t v);
     static void writeU32(std::vector<uint8_t>& out, uint32_t v);
     static void writeU64(std::vector<uint8_t>& out, uint64_t v);

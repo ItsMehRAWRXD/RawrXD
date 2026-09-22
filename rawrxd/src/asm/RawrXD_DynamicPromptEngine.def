@@ -1,0 +1,11 @@
+LIBRARY RawrXD_DynamicPromptEngine
+EXPORTS
+    PromptGen_AnalyzeContext
+    PromptGen_BuildCritic
+    PromptGen_BuildAuditor
+    PromptGen_Interpolate
+    PromptGen_GetTemplate
+    PromptGen_ForceMode
+    PromptGen_ClassifyToStruct
+    PromptGen_GetVersion
+    PromptGen_GetModeName

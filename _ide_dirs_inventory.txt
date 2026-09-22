@@ -1,0 +1,29 @@
+﻿=== src/ide === (empty)
+=== src/llm_adapter === (empty)
+=== src/backend === (empty)
+=== src/kernels === (empty)
+=== src/plugin_system === (empty)
+=== src/config === (empty)
+=== src/auth === (empty)
+=== src/command === (empty)
+=== src/ui === (empty)
+=== src/bridge === (empty)
+=== src/agent ===
+  agentic_deep_thinking_engine.cpp
+  local_reasoning_engine.cpp
+  local_reasoning_integration.cpp
+  model_invoker.cpp
+  telemetry_collector.cpp
+=== src/gpu === (empty)
+=== src/inference ===
+  NegativeSpaceProfiler.cpp
+=== src/codec === (empty)
+=== src/reverse === (empty)
+=== src/sampling === (empty)
+=== src/runtime ===
+  StreamRouterAdapter.cpp
+  TensorExecutionRouter.cpp
+=== src/compression === (empty)
+=== src/deep2/production === (empty)
+=== Ship === (missing)
+=== src/full_agentic_ide === (empty)

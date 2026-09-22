@@ -1,0 +1,104 @@
+﻿-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- The ASM_MASM compiler identification is MSVC
+-- Found assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- G3_K3C_E2E_REAL_001: smoke_k3c_e2e configured
+-- P1: CPUInferenceEngine::LoadModel harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- Γö£├äΓö¼├┤Γö£├⌐Γö¼├║Γö£├óΓö¼Γöñ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found ΓÇö Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [NanoQuant] DISABLED Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix ΓÇö Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] Γ£à Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- MultiWindow Kernel DLL target enabled
+-- DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)
+-- Win32IDE: Real lane - using isolated handlers + runtime handlers
+-- [Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)
+-- [Win32IDE] Sovereign GPU ASM disabled Γö£├äΓö¼├┤Γö£├óΓö¼├ºΓö£├óΓö¼Γòó fraudulent claims removed
+-- [Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)
+-- Deep2Engine Metadata Regression Test configured
+-- [Win32IDE] Partial ODR purge: Deep2 test/main TUs removed
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/ai_completion_real.cpp
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/vulkan_kernel_bridge.cpp
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/gguf_d3d12_bridge.cpp
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/rdna3_bridge.cpp
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/agentic_engine.cpp
+-- [StrictIDEClosure] removed absent historical TU from IDE source list: src/subagent_core.cpp
+-- Configuring incomplete, errors occurred!

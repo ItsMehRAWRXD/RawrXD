@@ -1,4 +1,4 @@
-﻿# CMakeLists_native.txt - Pure Native RawrXD Build
+# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
 include(cmake/P1_ProductRuntimeAuthority.cmake)
 include(cmake/GgufDynamicGeometry.fragment.cmake)
@@ -26,11 +26,11 @@ endif()
 # =============================================================================
 # MUST run before project() because CMake's compiler test needs these paths.
 # The environment on this machine has partial SDK installs:
-#   10.0.22621.0 ├Ä┬ô├â┬ç├â┬╢ has ucrt, shared, um includes BUT um/x64 libs are separate
-#   10.0.26100.0 ├Ä┬ô├â┬ç├â┬╢ has um/shared includes and um/x64 libs BUT no ucrt
+#   10.0.22621.0 +�-�+�-�+�-� has ucrt, shared, um includes BUT um/x64 libs are separate
+#   10.0.26100.0 +�-�+�-�+�-� has um/shared includes and um/x64 libs BUT no ucrt
 # We combine them to form a complete toolchain.
 if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
-    # Not running inside a VS Developer Prompt ├Ä┬ô├â┬ç├â┬╢ inject paths manually
+    # Not running inside a VS Developer Prompt +�-�+�-�+�-� inject paths manually
     # Auto-detect Windows SDK: try D: first, fall back to C:
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
@@ -81,7 +81,7 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         message(FATAL_ERROR "[SDK Fix] Could not find a valid MSVC installation with cl.exe. Please install Visual Studio Build Tools or run from a Developer Command Prompt.")
     endif()
     
-    # SDK bin tools (rc.exe, mt.exe) ├Ä┬ô├â┬ç├â┬╢ use the version that actually has the bin directory
+    # SDK bin tools (rc.exe, mt.exe) +�-�+�-�+�-� use the version that actually has the bin directory
     if(EXISTS "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
         set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
     else()
@@ -151,7 +151,7 @@ endif()
 # Vulkan SDK Detection (Common - must run before targets are defined)
 # ============================================================================
 if(RAWR_ENABLE_VULKAN)
-    # Try manual path first ├Ä┬ô├â┬ç├â┬╢ D: first, then C:
+    # Try manual path first +�-�+�-�+�-� D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
     if(NOT _VK_SDK_DIRS)
         file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
@@ -239,7 +239,7 @@ option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentatio
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 option(RAWRXD_BUILD_RAWRENGINE "Build RawrEngine.exe (set OFF for Win32IDE-only configure/P1)" ON)
 if(RAWRXD_BUILD_WIN32IDE AND NOT RAWRXD_BUILD_RAWRENGINE)
-    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) ├Ä┬ô├â┬ç├â┬╢ Win32IDE-only configure")
+    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) +�-�+�-�+�-� Win32IDE-only configure")
 endif()
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -323,7 +323,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic stack ├Ä┬ô├â┬ç├â┬╢ headless CLI parity (no Win32IDE GUI dependencies)
+        # Agentic stack +�-�+�-�+�-� headless CLI parity (no Win32IDE GUI dependencies)
         src/agentic_engine.cpp
         src/agent_history.cpp
         src/agent_policy.cpp
@@ -448,12 +448,12 @@ if(RAWRXD_BUILD_CLI)
         target_link_libraries(rawrxd PRIVATE Vulkan::Vulkan dxgi)
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
     elseif(RAWR_ENABLE_VULKAN)
-        message(STATUS "[rawrxd] Vulkan SDK not found ├Ä┬ô├â┬ç├â┬╢ GPU compute uses CPU fallback")
+        message(STATUS "[rawrxd] Vulkan SDK not found +�-�+�-�+�-� GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 
     # =============================================================================
-    # RawrXD Serve ├Ä┬ô├â┬ç├â┬╢ Ollama-compatible HTTP server with shared model runtime
+    # RawrXD Serve +�-�+�-�+�-� Ollama-compatible HTTP server with shared model runtime
     # =============================================================================
     add_executable(rawrxd-serve
         src/serve/rawrxd_serve_main.cpp
@@ -594,7 +594,7 @@ if(RAWRXD_BUILD_CLI)
 
     # =========================================================================
     # Vulkan Compute Diagnostic Test
-    # Minimal proof: buffer allocation ├Ä┬ô├â┬Ñ├â┬å transfer ├Ä┬ô├â┬Ñ├â┬å compute fill ├Ä┬ô├â┬Ñ├â┬å readback
+    # Minimal proof: buffer allocation +�-�+�-�+�-� transfer +�-�+�-�+�-� compute fill +�-�+�-�+�-� readback
     # =========================================================================
     if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
         add_executable(vulkan_compute_diagnostic
@@ -625,7 +625,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Tensor Upload + Readback Verification Test
-        # Proves: staging buffer ├Ä┬ô├â┬Ñ├â┬å device-local buffer ├Ä┬ô├â┬Ñ├â┬å readback ├Ä┬ô├â┬Ñ├â┬å verification
+        # Proves: staging buffer +�-�+�-�+�-� device-local buffer +�-�+�-�+�-� readback +�-�+�-�+�-� verification
         # =====================================================================
         add_executable(vulkan_tensor_upload_test
             tests/vulkan_tensor_upload_test.cpp
@@ -655,7 +655,7 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan GEMM Verification Test
-        # Proves: compute shader dispatch ├Ä┬ô├â┬Ñ├â┬å GPU GEMM ├Ä┬ô├â┬Ñ├â┬å readback ├Ä┬ô├â┬Ñ├â┬å CPU comparison
+        # Proves: compute shader dispatch +�-�+�-�+�-� GPU GEMM +�-�+�-�+�-� readback +�-�+�-�+�-� CPU comparison
         # =====================================================================
         add_executable(vulkan_gemm_test
             tests/vulkan_gemm_test.cpp
@@ -750,8 +750,8 @@ if(RAWRXD_BUILD_CLI)
 
         # =====================================================================
         # Vulkan Transformer GEMM Integration Test
-        # Proves: real Qwen GGUF ├Ä┬ô├â┬Ñ├â┬å RawrXDInference ├Ä┬ô├â┬Ñ├â┬å model loader ├Ä┬ô├â┬Ñ├â┬å GPU-resident
-        #         weight ├Ä┬ô├â┬Ñ├â┬å Vulkan GEMM dispatch ├Ä┬ô├â┬Ñ├â┬å verified output.
+        # Proves: real Qwen GGUF +�-�+�-�+�-� RawrXDInference +�-�+�-�+�-� model loader +�-�+�-�+�-� GPU-resident
+        #         weight +�-�+�-�+�-� Vulkan GEMM dispatch +�-�+�-�+�-� verified output.
         # =====================================================================
         add_executable(vulkan_transformer_gemm_test
             tests/vulkan_transformer_gemm_test.cpp
@@ -865,7 +865,7 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
 
         # =====================================================================
-        # fused_qkv_gguf_validation: Full GGUF parse ├Ä┬ô├â┬Ñ├â┬å elastic index ├Ä┬ô├â┬Ñ├â┬å fused
+        # fused_qkv_gguf_validation: Full GGUF parse +�-�+�-�+�-� elastic index +�-�+�-�+�-� fused
         # QKV execution gate. Exercises all new code paths.
         # =====================================================================
         add_executable(fused_qkv_gguf_validation
@@ -983,7 +983,7 @@ if(WIN32)
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
-    # G3_K3C_E2E_REAL_001 ├ó┬Ç┬ö k3c ├ó┬å┬Æ ProductRuntime one-step (PROMOTE=0)
+    # G3_K3C_E2E_REAL_001 +�-�-� k3c +�-�-� ProductRuntime one-step (PROMOTE=0)
     add_executable(smoke_k3c_e2e
         evidence/RAWRXD_PERFORMANCE_001/G3_K3C_E2E_REAL_001/smoke_k3c_e2e.cpp
     )
@@ -1237,7 +1237,7 @@ if(WIN32)
     message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
 
     # =====================================================================
-    # RESIDENCY-A/B-CERT ├Ä┬ô├â┬ç├â┬╢ Elastic Residency A/B Certification Harness
+    # RESIDENCY-A/B-CERT +�-�+�-�+�-� Elastic Residency A/B Certification Harness
     # =====================================================================
     add_executable(residency_ab_cert
         tests/residency_ab_cert.cpp
@@ -1289,7 +1289,7 @@ if(WIN32)
     message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
 
     # =====================================================================
-    # validate_val051_evidence ├Ä┬ô├â┬ç├â┬╢ Evidence JSON validator for VAL-051.2.A
+    # validate_val051_evidence +�-�+�-�+�-� Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
         tests/validate_val051_evidence.cpp
@@ -1312,7 +1312,7 @@ if(WIN32)
     message(STATUS "validate_val051_evidence: VAL-051.2.A evidence validator configured")
 
     # =====================================================================
-    # test_gguf_tokenizer_bounds ├Ä┬ô├â┬ç├â┬╢ Fuzz-style bounds validation for ParseGGUF
+    # test_gguf_tokenizer_bounds +�-�+�-�+�-� Fuzz-style bounds validation for ParseGGUF
     # =====================================================================
     add_executable(test_gguf_tokenizer_bounds
         tests/test_gguf_tokenizer_bounds.cpp
@@ -1344,7 +1344,7 @@ if(WIN32)
     message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
 
     # =====================================================================
-    # test_parseheader_bounds ├Ä┬ô├â┬ç├â┬╢ Adversarial ParseHeader bounds validation
+    # test_parseheader_bounds +�-�+�-�+�-� Adversarial ParseHeader bounds validation
     # =====================================================================
     add_executable(test_parseheader_bounds
         tests/test_parseheader_bounds.cpp
@@ -1368,7 +1368,7 @@ if(WIN32)
 endif()
 
 # =====================================================================
-# test_parseheader_fuzz ├Ä┬ô├â┬ç├â┬╢ B32 Deterministic ParseHeader Fuzz Matrix
+# test_parseheader_fuzz +�-�+�-�+�-� B32 Deterministic ParseHeader Fuzz Matrix
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
     add_executable(test_parseheader_fuzz
@@ -1393,7 +1393,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_metadata_bounds ├Ä┬ô├â┬ç├â┬╢ B33 GGUF Metadata Bounds Gate
+# test_gguf_metadata_bounds +�-�+�-�+�-� B33 GGUF Metadata Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
     add_executable(test_gguf_metadata_bounds
@@ -1418,7 +1418,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
 endif()
 
 # =====================================================================
-# test_gguf_tensor_bounds ├Ä┬ô├â┬ç├â┬╢ B34 GGUF Tensor/Offset Bounds Gate
+# test_gguf_tensor_bounds +�-�+�-�+�-� B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
     add_executable(test_gguf_tensor_bounds
@@ -1670,7 +1670,7 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15A ├Ä┬ô├â┬ç├â┬╢ GGUF Alignment Diagnostic
+# Batch 15A +�-�+�-�+�-� GGUF Alignment Diagnostic
 # Instruments a single tensor (default blk.29.attn_qkv.weight) for offset,
 # alignment, bounds, and dequant correctness.
 # =============================================================================
@@ -1714,7 +1714,7 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Batch 15B ├Ä┬ô├â┬ç├â┬╢ Q4_0 GEMV Certification
+# Batch 15B +�-�+�-�+�-� Q4_0 GEMV Certification
 # Verifies Q4_0 scalar GEMV path against independent reference implementation.
 # =============================================================================
 if(WIN32)
@@ -1772,7 +1772,7 @@ endif()
 # CXX standard set above (MSVC 23, others 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Static link MSVC runtime ├Ä┬ô├â┬ç├â┬╢ required for RawrEngine and Gold builds
+# Static link MSVC runtime +�-�+�-�+�-� required for RawrEngine and Gold builds
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
@@ -1913,7 +1913,7 @@ if(RAWR_HAS_MASM)
         src/masm/rawrxd_math_masm.asm
         src/masm/rawrxd_transformer_masm_fixed.asm
         src/masm/rawrxd_transformer_full.asm
-        # Sovereign ABI bridge ├Ä┬ô├â┬ç├â┬╢ stable C++/MASM execution plane seam
+        # Sovereign ABI bridge +�-�+�-�+�-� stable C++/MASM execution plane seam
         src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -2108,7 +2108,7 @@ set(SOURCES
     src/core/local_ai_core.cpp
     src/core/native_inference_pipeline.cpp
     
-    # Layer Offload Manager ├Ä┬ô├â┬ç├â┬╢ RAM streaming for 74B+ models on 16GB VRAM
+    # Layer Offload Manager +�-�+�-�+�-� RAM streaming for 74B+ models on 16GB VRAM
     src/core/layer_offload_manager.cpp
     
     # Three-layer hotpatch system (needed by decision tree)
@@ -2142,43 +2142,43 @@ set(SOURCES
     # Agentic Loop State (iterative reasoning state machine)
     src/agentic_loop_state.cpp
 
-    # Autonomous SubAgents ├Ä┬ô├â┬ç├â┬╢ Bulk Fix Orchestration for models/swarms
+    # Autonomous SubAgents +�-�+�-�+�-� Bulk Fix Orchestration for models/swarms
     src/agent/autonomous_subagent.cpp
     src/agent/agentic_failure_detector.cpp
     src/agent/agentic_puppeteer.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Sovereign Puppeteer Architecture ├Ä┬ô├â┬ç├â┬╢ Self-Modification System
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Sovereign Puppeteer Architecture +�-�+�-�+�-� Self-Modification System
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/sovereign/introspection/SymbolTableGenerator.cpp
     src/sovereign/puppeteer/PuppeteerAPI.cpp
     src/sovereign/puppeteer/VEH_Watchdog.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Intent-to-Execution Guardrails ├Ä┬ô├â┬ç├â┬╢ Model Control Plane
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Intent-to-Execution Guardrails +�-�+�-�+�-� Model Control Plane
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/intent/intent_config.cpp
     src/intent/intent_abi.cpp
     src/guardrails/capability_policy.cpp
     src/guardrails/patch_firewall.cpp
     src/hotpatch/patch_transaction.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Sovereign Agent Kernel ├Ä┬ô├â┬ç├â┬╢ Orchestration Layer
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Sovereign Agent Kernel +�-�+�-�+�-� Orchestration Layer
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/kernel/AgentKernel.cpp
     src/kernel/TelemetryInjector.cpp
     src/kernel/IntentExecutionPipeline.cpp
     src/kernel/IntentReplayEngine.cpp
 
-    # HTTP Client ├Ä┬ô├â┬ç├â┬╢ WinHTTP/curl async with future retention
+    # HTTP Client +�-�+�-�+�-� WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
     # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
-    # LocalReasoningEngine ├Ä┬ô├â┬ç├â┬╢ API-free static analysis + pattern detection (no Qt, no API key)
+    # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
 
     # Agent Self-Repair (MASM64 self-patching kernel bridge)
@@ -2189,13 +2189,13 @@ set(SOURCES
     src/agentic/DeterministicReplayEngine.cpp
     src/agentic/AgentToolHandlers.cpp
 
-    # T4: Autonomous Recovery Orchestrator (FailureClass ├Ä┬ô├â┬Ñ├â┬å recovery ├Ä┬ô├â┬Ñ├â┬å verify ├Ä┬ô├â┬Ñ├â┬å commit)
+    # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
     src/agentic/autonomous_recovery_orchestrator.cpp
 
     # CoT Fallback System (required by unified_hotpatch_manager.cpp)
     src/core/cot_fallback_system.cpp
     
-    # T4.5: Agentic Deep Thinking Engine ├Ä┬ô├â┬ç├â┬╢ Autonomous monitoring, recovery, and orchestration
+    # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
     src/agentic/AgenticDeepThinkingEngine.cpp
 
     # T4.6: Validation Fault Injection and Recovery Telemetry (Mission 2.1-2.3)
@@ -2223,9 +2223,9 @@ set(SOURCES
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
     src/agent/DiskRecoveryAgent.cpp
     
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # IDE Subsystems ├Ä┬ô├â┬ç├â┬╢ Repository Intelligence, Build, Diagnostics, etc.
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # IDE Subsystems +�-�+�-�+�-� Repository Intelligence, Build, Diagnostics, etc.
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/repo/FileIndex.cpp
     src/repo/SymbolTable.cpp
     src/repo/ASTCache.cpp
@@ -2287,84 +2287,84 @@ set(SOURCES
     src/core/swarm_worker.cpp
     src/tool_registry.cpp
 
-    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) ├Ä┬ô├â┬ç├â┬╢ required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
+    # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +�-�+�-�+�-� required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
     src/license_enforcement.cpp
     src/feature_flags_runtime.cpp
     src/tools/license_validator_manifest.cpp
 
-    # Agentic config + enterprise feature manager + model name utils ├Ä┬ô├â┬ç├â┬╢ required by complete_server, subagent_core
+    # Agentic config + enterprise feature manager + model name utils +�-�+�-�+�-� required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
     src/model_name_utils.cpp
     src/model_config.cpp
 
-    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) ├Ä┬ô├â┬ç├â┬╢ required by complete_server, execution_scheduler, local_ai_core
+    # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +�-�+�-�+�-� required by complete_server, execution_scheduler, local_ai_core
     src/core/multi_gpu.cpp
 
-    # Engine registry (register_engine) ├Ä┬ô├â┬ç├â┬╢ required by sovereign_engines
+    # Engine registry (register_engine) +�-�+�-�+�-� required by sovereign_engines
     src/core/engine_registry.cpp
 
-    # Telemetry + observability ├Ä┬ô├â┬ç├â┬╢ required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
+    # Telemetry + observability +�-�+�-�+�-� required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
     src/agentic_observability.cpp
 
-    # BoundedAgentLoop + FIMPromptBuilder ├Ä┬ô├â┬ç├â┬╢ required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
+    # BoundedAgentLoop + FIMPromptBuilder +�-�+�-�+�-� required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/FIMPromptBuilder.cpp
 
-    # Subsystem registry ├Ä┬ô├â┬ç├â┬╢ required by AgentOrchestrator, ToolRegistry, feature_handlers
+    # Subsystem registry +�-�+�-�+�-� required by AgentOrchestrator, ToolRegistry, feature_handlers
     src/core/rawrxd_subsystem_api.cpp
 
-    # IDEConfig ├Ä┬ô├â┬ç├â┬╢ required by OrchestratorBridge
+    # IDEConfig +�-�+�-�+�-� required by OrchestratorBridge
     src/config/IDEConfig.cpp
 
-    # Disk recovery ASM agent + tool handler ├Ä┬ô├â┬ç├â┬╢ required by ToolRegistry
+    # Disk recovery ASM agent + tool handler +�-�+�-�+�-� required by ToolRegistry
     src/agentic/DiskRecoveryAgent.cpp
     src/agentic/DiskRecoveryToolHandler.cpp
 
-    # Agentic bridge (ExecuteAgentCommand) ├Ä┬ô├â┬ç├â┬╢ headless stub for RawrEngine
+    # Agentic bridge (ExecuteAgentCommand) +�-�+�-�+�-� headless stub for RawrEngine
     src/win32app/agentic_bridge_headless.cpp
 
-    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) ├Ä┬ô├â┬ç├â┬╢ required by agentic_failure_detector
+    # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +�-�+�-�+�-� required by agentic_failure_detector
     src/core/ai_agent_masm_core_impl.cpp
 
-    # Context deterioration hotpatch + LSP hotpatch + symbol provider ├Ä┬ô├â┬ç├â┬╢ required by feature_handlers, auto_feature_registry
+    # Context deterioration hotpatch + LSP hotpatch + symbol provider +�-�+�-�+�-� required by feature_handlers, auto_feature_registry
     src/core/context_deterioration_hotpatch.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
     src/lsp/hotpatch_symbol_provider.cpp
 
-    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) ├Ä┬ô├â┬ç├â┬╢ required by enterprise_licensev2_impl
+    # License anti-tampering (computeHMAC_SHA256, verifyLicenseKeyIntegrity) +�-�+�-�+�-� required by enterprise_licensev2_impl
     src/core/license_anti_tampering.cpp
 
     # Reverse-engineered bridge stubs (Heartbeat_Shutdown, GPU_*, GetHighResTick, TicksTo*, CalculateCRC32, AllocateDMABuffer, Tensor_QuantizedMatMul)
     # stub file removed
 
-    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) ├Ä┬ô├â┬ç├â┬╢ required by main, complete_server
+    # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) +�-�+�-�+�-� required by main, complete_server
     src/core/support_tier.cpp
 
-    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) ├Ä┬ô├â┬ç├â┬╢ required by rawrxd_subsystem_api
+    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) +�-�+�-�+�-� required by rawrxd_subsystem_api
     # removed stub unit
 
-    # Feature registry (FeatureRegistry::instance, registerFeature) ├Ä┬ô├â┬ç├â┬╢ required by enterprise_feature_manager
+    # Feature registry (FeatureRegistry::instance, registerFeature) +�-�+�-�+�-� required by enterprise_feature_manager
     src/core/feature_registry.cpp
-    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) ├Ä┬ô├â┬ç├â┬╢ required by feature_registry
+    # Menu auditor (RawrXD::Audit::verifyCommandInMenu) +�-�+�-�+�-� required by feature_registry
     src/core/menu_auditor.cpp
 
-    # GGUF diagnostic provider + LSP server ├Ä┬ô├â┬ç├â┬╢ required by lsp_hotpatch_bridge
+    # GGUF diagnostic provider + LSP server +�-�+�-�+�-� required by lsp_hotpatch_bridge
     src/lsp/gguf_diagnostic_provider.cpp
     src/lsp/RawrXD_LSPServer.cpp
 
-    # Extension polyfill engine + VSCode API ├Ä┬ô├â┬ç├â┬╢ required by js_extension_host
+    # Extension polyfill engine + VSCode API +�-�+�-�+�-� required by js_extension_host
     src/core/extension_polyfill_engine.cpp
     src/modules/vscode_extension_api.cpp
 
-    # JS extension host ├Ä┬ô├â┬ç├â┬╢ required by ssot_handlers_ext
+    # JS extension host +�-�+�-�+�-� required by ssot_handlers_ext
     src/core/js_extension_host.cpp
 
-    # Model source resolver ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
+    # Model source resolver +�-�+�-�+�-� required by auto_feature_registry
     src/model_source_resolver.cpp
 
-    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
+    # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
     src/modules/ReverseEngineering.cpp
 
     # AgenticDeepThinkingEngine full implementation
@@ -2384,7 +2384,7 @@ set(SOURCES
 
     # Stubgen: AnalyzerDistiller + StreamingOrchestrator (C++ fallbacks, guarded by RAWR_HAS_MASM)
 
-    # PT Driver Contract ├Ä┬ô├â┬ç├â┬╢ Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
+    # PT Driver Contract +�-�+�-�+�-� Page Table substrate (VEH watchpoints, COW snapshots, ASLR, large pages)
     src/core/pt_driver_contract.cpp
 
     # Phase 21: Distributed Swarm Inference Orchestrator
@@ -2394,17 +2394,17 @@ set(SOURCES
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
 
-    # Phase 44: Voice Automation ├Ä┬ô├â┬ç├â┬╢ Toggleable TTS Response Reader
+    # Phase 44: Voice Automation +�-�+�-�+�-� Toggleable TTS Response Reader
     src/core/voice_automation.cpp
 
-    # DirectML GPU Inference Engine ├Ä┬ô├â┬ç├â┬╢ D3D12 + DML operators for transformer forward pass
+    # DirectML GPU Inference Engine +�-�+�-�+�-� D3D12 + DML operators for transformer forward pass
     src/core/directml_compute.cpp
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
     src/dml_inference_engine.cpp
 
-    # Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification Service
+    # Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
 
     # Phase 33: Quick-Win Ports
@@ -2413,7 +2413,7 @@ set(SOURCES
     src/core/alert_system.cpp
 
     # Shared Feature Dispatch System (CLI + GUI unified command routing)
-    # NOTE: shared_feature_dispatch.cpp REMOVED ├Ä┬ô├â┬ç├â┬╢ its 4 extern "C" symbols are
+    # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� its 4 extern "C" symbols are
     # superseded by unified_command_dispatch.cpp (superset with AutoRegistrar)
     src/core/feature_registration.cpp
     src/core/feature_handlers.cpp
@@ -2425,7 +2425,7 @@ set(SOURCES
     src/core/ssot_handlers_ext_runtime_minimal.cpp
     src/core/ssot_validation.cpp
 
-    # Unified Command Dispatch ├Ä┬ô├â┬ç├â┬╢ Zero-drift SSOT dispatch (replaces manual registration)
+    # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
     src/core/unified_command_dispatch.cpp
 
     # Phase 32A: Chain-of-Thought Multi-Model Review Engine
@@ -2439,11 +2439,11 @@ set(SOURCES
     # Phase 36: Cross-Process MMF State Synchronization (shared with Win32IDE)
     src/core/rawrxd_state_mmf.cpp
 
-    # Phase 46: VulkanKernel ├Ä┬ô├â┬ç├â┬╢ Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
+    # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
     src/vulkan_compute.cpp
     src/backend/VulkanGemmDispatcher.cpp
 
-    # Phase 46: Live Binary Patcher ├Ä┬ô├â┬ç├â┬╢ Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
+    # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
     src/core/live_binary_patcher.cpp
 
     # Phase 37: Iterative Partial Inference with Adaptive Tensor Traversal
@@ -2454,9 +2454,9 @@ set(SOURCES
     src/core/convergence_controller.cpp
     src/core/iterative_tensor_traversal.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Cursor-Parity Gaps ├Ä┬ô├â┬ç├â┬╢ META prerequisites + GAP 1-10
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Cursor-Parity Gaps +�-�+�-�+�-� META prerequisites + GAP 1-10
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
     # META 1: SQLite RAII Wrapper + Real Amalgamation
     src/core/sqlite_wrapper.cpp
@@ -2478,7 +2478,7 @@ set(SOURCES
     # GAP 1.5: Agentic Transaction Layer (Cursor-Composer-class orchestration)
     src/agentic/agentic_transaction.cpp
 
-    # P6: Agent Workflow Orchestrator (DAG-based plan├Ä┬ô├â┬Ñ├â┬åexecute├Ä┬ô├â┬Ñ├â┬åvalidate├Ä┬ô├â┬Ñ├â┬åcommit)
+    # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
     src/agentic/agent_workflow_orchestrator.cpp
 
     # GAP 2: HNSW Vector Index
@@ -2490,7 +2490,7 @@ set(SOURCES
     # GAP 4: Ghost-Text Context Assembler
     src/agentic/context_assembler.cpp
 
-    # GAP 5: Chat Message Renderer (Markdown ├Ä┬ô├â┬Ñ├â┬å HTML)
+    # GAP 5: Chat Message Renderer (Markdown +�-�+�-�+�-� HTML)
     src/ui/chat_message_renderer.cpp
     src/ui/tool_action_status.cpp
     src/ui/chat_panel.cpp
@@ -2533,40 +2533,40 @@ set(SOURCES
     # T3-D: Hotpatch Telemetry Safety Layer
     src/telemetry/hotpatch_telemetry_safety.cpp
 
-    # Unified Telemetry Core ├Ä┬ô├â┬ç├â┬╢ single entry point for all telemetry layers
+    # Unified Telemetry Core +�-�+�-�+�-� single entry point for all telemetry layers
     src/telemetry/UnifiedTelemetryCore.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # GPU + Agentic + UI Integration (STL/Win32 native)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
-    # GPU Backend ├Ä┬ô├â┬ç├â┬╢ Vulkan/CUDA/CPU fallback chain (fprintf logging)
+    # GPU Backend +�-�+�-�+�-� Vulkan/CUDA/CPU fallback chain (fprintf logging)
     src/gpu/gpu_backend.cpp
 
-    # KV-Cache Optimizer ├Ä┬ô├â┬ç├â┬╢ sliding-window eviction, std::chrono timing
+    # KV-Cache Optimizer +�-�+�-�+�-� sliding-window eviction, std::chrono timing
     src/gpu/kv_cache_optimizer.cpp
 
-    # Speculative Decoder v1 ├Ä┬ô├â┬ç├â┬╢ draft/verify with std::mt19937 RNG
+    # Speculative Decoder v1 +�-�+�-�+�-� draft/verify with std::mt19937 RNG
     src/gpu/speculative_decoder.cpp
 
-    # Agentic Controller ├Ä┬ô├â┬ç├â┬╢ callback-based event loop (no QObject/signals)
+    # Agentic Controller +�-�+�-�+�-� callback-based event loop (no QObject/signals)
     src/agentic_controller.cpp
 
-    # Phase 2 UI Integration ├Ä┬ô├â┬ç├â┬╢ Win32 MessageBox, std::filesystem, std::function callbacks
+    # Phase 2 UI Integration +�-�+�-�+�-� Win32 MessageBox, std::filesystem, std::function callbacks
     src/ui/phase2_integration_example.cpp
 
-    # Multi-Model Benchmark Tool ├Ä┬ô├â┬ç├â┬╢ has its own main(), built as separate target
+    # Multi-Model Benchmark Tool +�-�+�-�+�-� has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
 
-    # Agentic Agent Coordinator ├Ä┬ô├â┬ç├â┬╢ multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
+    # Agentic Agent Coordinator +�-�+�-�+�-� multi-agent lifecycle (ctor, dtor, createAgent, synchronize)
     src/agentic_agent_coordinator.cpp
 
-    # Production Config Manager ├Ä┬ô├â┬ç├â┬╢ singleton config loader (instance, loadConfig, value)
+    # Production Config Manager +�-�+�-�+�-� singleton config loader (instance, loadConfig, value)
     src/production_config_manager.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Core Production Subsystems (Verified Working)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
     # Deterministic Swarm Reproducibility (same input + seed = same result)
     src/core/deterministic_swarm.cpp
@@ -2576,31 +2576,31 @@ set(SOURCES
     # Input Guard with Backend Slicing (OOM protection, chunk routing, budget)
     src/core/input_guard_slicer.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/test_harness/replay_fixture.cpp
     src/test_harness/replay_oracle.cpp
     src/test_harness/replay_mock_inference.cpp
     src/test_harness/replay_harness.cpp
     src/test_harness/replay_reporter.cpp
 
-    # Phase 34: Instructions Context Provider ├Ä┬ô├â┬ç├â┬╢ Read tools.instructions.md (All Lines)
+    # Phase 34: Instructions Context Provider +�-�+�-�+�-� Read tools.instructions.md (All Lines)
     src/core/instructions_provider.cpp
 
-    # Phase 13: Distributed Pipeline Orchestrator ├Ä┬ô├â┬ç├â┬╢ DAG scheduling, work-stealing
+    # Phase 13: Distributed Pipeline Orchestrator +�-�+�-�+�-� DAG scheduling, work-stealing
     src/core/distributed_pipeline_orchestrator.cpp
 
-    # Phase 14: Hotpatch Control Plane ├Ä┬ô├â┬ç├â┬╢ Lifecycle, transactions, dependency graphs
+    # Phase 14: Hotpatch Control Plane +�-�+�-�+�-� Lifecycle, transactions, dependency graphs
     src/core/hotpatch_control_plane.cpp
 
-    # Phase 15: Static Analysis Engine ├Ä┬ô├â┬ç├â┬╢ CFG/SSA, dominators, optimizations
+    # Phase 15: Static Analysis Engine +�-�+�-�+�-� CFG/SSA, dominators, optimizations
     src/core/static_analysis_engine.cpp
 
     # Top-50: Unified Problems (LSP + SAST + SCA + Secrets)
     src/core/problems_aggregator.cpp
 
-    # Top-50: Secrets scanning (API keys, high-entropy) ├Ä┬ô├â┬ç├â┬╢ Security
+    # Top-50: Secrets scanning (API keys, high-entropy) +�-�+�-�+�-� Security
     src/security/secrets_scanner.cpp
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
@@ -2615,19 +2615,19 @@ set(SOURCES
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
     src/security/RawrXD_GoogleDork_Scanner.cpp
 
-    # Universal Dorker ├Ä┬ô├â┬ç├â┬╢ LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
+    # Universal Dorker +�-�+�-�+�-� LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
     src/security/RawrXD_Universal_Dorker.cpp
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
     src/security/SecurityHardening.cpp
 
-    # Phase 15b: Code Linter ├Ä┬ô├â┬ç├â┬╢ Real-time syntax/semantic linting (C++, ASM, Python, JS)
+    # Phase 15b: Code Linter +�-�+�-�+�-� Real-time syntax/semantic linting (C++, ASM, Python, JS)
     src/core/code_linter.cpp
 
-    # Phase 16: Semantic Code Intelligence ├Ä┬ô├â┬ç├â┬╢ Cross-refs, type inference, indexing
+    # Phase 16: Semantic Code Intelligence +�-�+�-�+�-� Cross-refs, type inference, indexing
     src/core/semantic_code_intelligence.cpp
 
-    # Phase 17: Enterprise Telemetry & Compliance ├Ä┬ô├â┬ç├â┬╢ OTLP tracing, audit, GDPR
+    # Phase 17: Enterprise Telemetry & Compliance +�-�+�-�+�-� OTLP tracing, audit, GDPR
     src/core/enterprise_telemetry_compliance.cpp
 
     # Core workflow/reasoning engines (required by unified_hotpatch_manager, etc.)
@@ -2665,7 +2665,7 @@ set(SOURCES
     # NOTE: rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # src/core/rawrengine_missing_stubs.cpp
 
-    # Phase 50: Enterprise Hardening ├Ä┬ô├â┬ç├â┬╢ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+    # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
     src/core/update_signature.cpp
     src/core/cursor_github_parity_bridge.cpp
     src/core/local_parity_bridge.cpp
@@ -2675,11 +2675,11 @@ set(SOURCES
     src/core/enterprise_stress_tests.cpp
     src/core/auto_update_system.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Autonomy Gap Closure ├Ä┬ô├â┬ç├â┬╢ Phase A-D + Tier 1.4 + Tier 2.3
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
-    # Phase A: Closed-Loop Verification (Write ├Ä┬ô├â┬Ñ├â┬å Compile ├Ä┬ô├â┬Ñ├â┬å Test ├Ä┬ô├â┬Ñ├â┬å Fix)
+    # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
     src/agentic/autonomous_verification_loop.cpp
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
@@ -2697,10 +2697,10 @@ set(SOURCES
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
     src/agentic/autonomous_communicator.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/telemetry/telemetry_export.cpp
     src/agentic/agentic_composer_ux.cpp
     src/context/context_mention_parser.cpp
@@ -2745,9 +2745,9 @@ set(SOURCES
 
     # NOTE: Removed Transcendence IDE Panel - part of valuation theater fiction
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Cognitive Architecture ├Ä┬ô├â┬ç├â┬╢ Autonomous Reverse Engineering OS
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/agentic/cognitive/cognitive_types.cpp
     src/agentic/cognitive/enhanced_blackboard.cpp
     src/agentic/cognitive/mission_director.cpp
@@ -2755,9 +2755,9 @@ set(SOURCES
     src/agentic/cognitive/dynamic_planner.cpp
     src/agentic/cognitive/autonomous_orchestrator.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # TrailBrake / HotPatcher / AntiPatcher Safety System
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/deep2/TrailBrake.cpp
     src/deep2/HotPatcher.cpp
     src/deep2/HotPatcherSafety.cpp
@@ -2860,7 +2860,7 @@ set(SOURCES
     src/deep2/mars/MARSController.cpp
     src/sampling/advanced_sampler.cpp
 
-    # Sovereign ABI runtime ├Ä┬ô├â┬ç├â┬╢ stable C++/MASM execution plane seam
+    # Sovereign ABI runtime +�-�+�-�+�-� stable C++/MASM execution plane seam
     src/runtime/Sovereign_RingTelemetry.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
@@ -3165,7 +3165,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
-    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
+    # +�-�+�-�+�-�+�-�+�-�+�-� Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) +�-�+�-�+�-�+�-�+�-�+�-�
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
     src/deep2/SovereignOutOfCoreRuntime.cpp
@@ -3176,10 +3176,10 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/deep2/IQQuantKernels.cpp
     src/vulkan_compute.cpp
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Kimi K2.6 300-Agent Swarm Architecture (subset ├Ä┬ô├â┬ç├â┬╢ excluded files
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Kimi K2.6 300-Agent Swarm Architecture (subset +�-�+�-�+�-� excluded files
     # reference symbols not available in RawrEngine target)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/swarm/SwarmOrchestrator.cpp
     src/swarm/KimiSwarmOrchestrator.cpp
     src/swarm/ArchitectAgent.cpp
@@ -3199,7 +3199,7 @@ list(APPEND RAWR_ENGINE_SOURCES
 )
 
 # =============================================================================
-# Command Table Audit ├Ä┬ô├â┬ç├â┬╢ Build-time coverage validation targets
+# Command Table Audit +�-�+�-�+�-� Build-time coverage validation targets
 # =============================================================================
 include(cmake/AutoFeatureRegistry.cmake)
 
@@ -3295,7 +3295,7 @@ if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
     target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
 endif()
 
-message(STATUS "├Ä┬ô├é┬ú├â┬┤ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
+message(STATUS "+�-�+�-�+�-� RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
 
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
@@ -3303,18 +3303,18 @@ message(STATUS "├Ä┬ô├é┬ú├â┬┤ RawrXD_Compression configured (r
 add_subdirectory(src/reverse_engineering)
 
 # =============================================================================
-# CEO Agent Module ├Ä┬ô├â┬ç├â┬╢ Autonomous Software Engineering Layer
+# CEO Agent Module +�-�+�-�+�-� Autonomous Software Engineering Layer
 # =============================================================================
 add_subdirectory(src/ceo)
 
 # =============================================================================
-# Repository Intelligence Module ├Ä┬ô├â┬ç├â┬╢ Deep Code Understanding
+# Repository Intelligence Module +�-�+�-�+�-� Deep Code Understanding
 # =============================================================================
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
 
 # =============================================================================
-# RGUF (RawrXD GGUF Unified Format) ├Ä┬ô├â┬ç├â┬╢ Pack/inspect/patch encrypted model blocks
+# RGUF (RawrXD GGUF Unified Format) +�-�+�-�+�-� Pack/inspect/patch encrypted model blocks
 # =============================================================================
 add_subdirectory(rguf_source)
 
@@ -3339,9 +3339,9 @@ if(WIN32)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 # OMEGA-1 Post-Build Manifest Generation
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 if(WIN32)
     add_custom_command(TARGET RawrEngine POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -3557,7 +3557,7 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
 # Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
-# Fix: Case-sensitive regex misses mixed-case files ├Ä┬ô├â┬ç├â┬╢ use explicit REMOVE_ITEM
+# Fix: Case-sensitive regex misses mixed-case files +�-�+�-�+�-� use explicit REMOVE_ITEM
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/agentic/AgenticDeepThinkingEngine.cpp
     src/agentic/DeterministicReplayEngine.cpp
@@ -3627,7 +3627,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     )
 endif()
 # Gold: MultiResponseEngine methods are defined inline in win32app/multi_response_engine.h; the
-# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)├Ä┬ô├â┬ç├â┬╢drop
+# standalone .cpp duplicates those symbols. AUTO SSOT lane links ssot_handlers_ext (superset)+�-�+�-�+�-�drop
 # ssot_handlers + auto_feature_registry to avoid LNK2005 duplicate CommandResult handlers.
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES src/core/multi_response_engine.cpp)
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
@@ -3698,9 +3698,9 @@ if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 # OMEGA-1 Post-Build Manifest Generation for Gold
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 if(WIN32)
     add_custom_command(TARGET RawrXD_Gold POST_BUILD
         COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
@@ -3844,730 +3844,207 @@ target_sources(RawrXD_Gold PRIVATE
     src/asm/RawrXD_PE_Exporter.asm
 )
 
-# Vulkan SDK for Gold build ├Ä┬ô├â┬ç├â┬╢ linked later after find_package(Vulkan)
+# Vulkan SDK for Gold build +�-�+�-�+�-� linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# MASM x64 Assembly ├Ä┬ô├â┬ç├â┬╢ Phase 20/21 AVX-512 Requantization + Swarm Streaming
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# MASM x64 Assembly +�-�+�-�+�-� Phase 20/21 AVX-512 Requantization + Swarm Streaming
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 if(MSVC)
     # Prefer prebuilt MASM objects when available (some checked-in .asm files are placeholders).
     set(RAWRXD_PREBUILT_OBJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj")
     set(RAWRXD_PREBUILT_GENESIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build_genesis")
     set(RAWRXD_PREBUILT_SRCASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
 
-    # Phase 20: AVX-512 Q4_K_M ├Ä┬ô├â┬Ñ├â┬å Q2_K requantization kernel
-    set(ASM_REQUANTIZE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
-    set(ASM_REQUANTIZE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/requantize_q4km_to_q2k_avx512.obj")
-    add_custom_command(
-        OUTPUT ${ASM_REQUANTIZE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_REQUANTIZE_OBJ} ${ASM_REQUANTIZE_SRC}
-        DEPENDS ${ASM_REQUANTIZE_SRC}
-        COMMENT "[MASM] Assembling requantize_q4km_to_q2k_avx512.asm (AVX-512 DQ/BW)"
-        VERBATIM
-    )
+    # Phase 20: AVX-512 Q4_K_M +�-�+�-�+�-� Q2_K requantization kernel
+    set(ASM_REQUANTIZE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
 
     # Phase 20: ROCm GPU requantization dispatch stubs
-    set(ASM_GPU_REQUANT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/gpu_requantize_rocm.asm")
-    set(ASM_GPU_REQUANT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/gpu_requantize_rocm.obj")
-    add_custom_command(
-        OUTPUT ${ASM_GPU_REQUANT_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_GPU_REQUANT_OBJ} ${ASM_GPU_REQUANT_SRC}
-        DEPENDS ${ASM_GPU_REQUANT_SRC}
-        COMMENT "[MASM] Assembling gpu_requantize_rocm.asm (HIP dispatch)"
-        VERBATIM
-    )
+    set(ASM_GPU_REQUANT_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/gpu_requantize_rocm.asm")
 
     # Phase 21: Zero-copy tensor network streaming
-    set(ASM_SWARM_TENSOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm")
-    set(ASM_SWARM_TENSOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/swarm_tensor_stream.obj")
-    add_custom_command(
-        OUTPUT ${ASM_SWARM_TENSOR_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_SWARM_TENSOR_OBJ} ${ASM_SWARM_TENSOR_SRC}
-        DEPENDS ${ASM_SWARM_TENSOR_SRC}
-        COMMENT "[MASM] Assembling swarm_tensor_stream.asm (CRC32C, RLE, chunks)"
-        VERBATIM
-    )
+    set(ASM_SWARM_TENSOR_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm")
 
-    # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Gap Buffer + Tokenizer
-    set(ASM_MONACOCORE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
-    set(ASM_MONACOCORE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MonacoCore.obj")
-    add_custom_command(
-        OUTPUT ${ASM_MONACOCORE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_MONACOCORE_OBJ} ${ASM_MONACOCORE_SRC}
-        DEPENDS ${ASM_MONACOCORE_SRC}
-        COMMENT "[MASM] Assembling RawrXD_MonacoCore.asm (Gap Buffer, Tokenizer)"
-        VERBATIM
-    )
+    # Phase 28: MonacoCore Native Editor Engine +�-�+�-�+�-� Gap Buffer + Tokenizer
+    set(ASM_MONACOCORE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
 
-    # Phase 29: PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ Native MSF v7.00 Parser Kernel
-    set(ASM_PDBKERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
-    set(ASM_PDBKERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PDBKernel.obj")
-    add_custom_command(
-        OUTPUT ${ASM_PDBKERNEL_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_PDBKERNEL_OBJ} ${ASM_PDBKERNEL_SRC}
-        DEPENDS ${ASM_PDBKERNEL_SRC}
-        COMMENT "[MASM] Assembling RawrXD_PDBKernel.asm (MSF magic, PubSym scan, GUID hex)"
-        VERBATIM
-    )
+    # Phase 29: PDB Symbol Server +�-�+�-�+�-� Native MSF v7.00 Parser Kernel
+    set(ASM_PDBKERNEL_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
 
-    # Phase 30: Accelerator Router ├Ä┬ô├â┬ç├â┬╢ MASM Fast-Path Bridge
-    set(ASM_ROUTERBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
-    set(ASM_ROUTERBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RouterBridge.obj")
-    add_custom_command(
-        OUTPUT ${ASM_ROUTERBRIDGE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_ROUTERBRIDGE_OBJ} ${ASM_ROUTERBRIDGE_SRC}
-        DEPENDS ${ASM_ROUTERBRIDGE_SRC}
-        COMMENT "[MASM] Assembling RawrXD_RouterBridge.asm (Fast-Path Router Dispatch)"
-        VERBATIM
-    )
+    # Phase 30: Accelerator Router +�-�+�-�+�-� MASM Fast-Path Bridge
+    set(ASM_ROUTERBRIDGE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
 
-    # Phase 29.2: GSI Hash ├Ä┬ô├â┬ç├â┬╢ MASM Accelerated Hash + Bucket Probe
-    set(ASM_GSIHASH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
-    set(ASM_GSIHASH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GSIHash.obj")
-    add_custom_command(
-        OUTPUT ${ASM_GSIHASH_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_GSIHASH_OBJ} ${ASM_GSIHASH_SRC}
-        DEPENDS ${ASM_GSIHASH_SRC}
-        COMMENT "[MASM] Assembling RawrXD_GSIHash.asm (PDB hash, GSI bucket probe)"
-        VERBATIM
-    )
+    # Phase 29.2: GSI Hash +�-�+�-�+�-� MASM Accelerated Hash + Bucket Probe
+    set(ASM_GSIHASH_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
 
-    # Phase 29.2: Reference Provider ├Ä┬ô├â┬ç├â┬╢ FNV-1a Hash + Pattern Match
-    set(ASM_REFPROVIDER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
-    set(ASM_REFPROVIDER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RefProvider.obj")
-    add_custom_command(
-        OUTPUT ${ASM_REFPROVIDER_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_REFPROVIDER_OBJ} ${ASM_REFPROVIDER_SRC}
-        DEPENDS ${ASM_REFPROVIDER_SRC}
-        COMMENT "[MASM] Assembling RawrXD_RefProvider.asm (Reference hash, pattern match)"
-        VERBATIM
-    )
+    # Phase 29.2: Reference Provider +�-�+�-�+�-� FNV-1a Hash + Pattern Match
+    set(ASM_REFPROVIDER_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
 
-    # Phase 31: IDE Self-Audit ├Ä┬ô├â┬ç├â┬╢ Stub Detection Kernel
-    set(ASM_STUBDETECTOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
-    set(ASM_STUBDETECTOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_StubDetector.obj")
-    add_custom_command(
-        OUTPUT ${ASM_STUBDETECTOR_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_STUBDETECTOR_OBJ} ${ASM_STUBDETECTOR_SRC}
-        DEPENDS ${ASM_STUBDETECTOR_SRC}
-        COMMENT "[MASM] Assembling RawrXD_StubDetector.asm (Stub Pattern Scanner)"
-        VERBATIM
-    )
+    # Phase 31: IDE Self-Audit +�-�+�-�+�-� Stub Detection Kernel
+    set(ASM_STUBDETECTOR_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
 
-    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ Pure MASM CoT DLL Core
-    set(ASM_COT_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
-    set(ASM_COT_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_engine.obj")
-    add_custom_command(
-        OUTPUT ${ASM_COT_ENGINE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_ENGINE_OBJ} ${ASM_COT_ENGINE_SRC}
-        DEPENDS ${ASM_COT_ENGINE_SRC}
-        COMMENT "[MASM] Assembling rawrxd_cot_engine.asm (CoT Engine: 12 roles, 6 presets, 1GB arena, SEH)"
-        VERBATIM
-    )
+    # Phase 37: Chain-of-Thought Engine +�-�+�-�+�-� Pure MASM CoT DLL Core
+    set(ASM_COT_ENGINE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
 
-    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ DLL Entry + SRW Lock
-    set(ASM_COT_DLL_ENTRY_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
-    set(ASM_COT_DLL_ENTRY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_dll_entry.obj")
-    add_custom_command(
-        OUTPUT ${ASM_COT_DLL_ENTRY_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_DLL_ENTRY_OBJ} ${ASM_COT_DLL_ENTRY_SRC}
-        DEPENDS ${ASM_COT_DLL_ENTRY_SRC}
-        COMMENT "[MASM] Assembling rawrxd_cot_dll_entry.asm (DllMain, SRW Lock, Thread Tracking)"
-        VERBATIM
-    )
+    # Phase 37: Chain-of-Thought Engine +�-�+�-�+�-� DLL Entry + SRW Lock
+    set(ASM_COT_DLL_ENTRY_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
 
-    # Phase 39├Ä┬ô├â┬ç├â┬┤42: CoT Enterprise Finishers ├Ä┬ô├â┬ç├â┬╢ Snapshot, Telemetry, Copy Engine, Security
-    set(ASM_COT_PHASE39_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
-    set(ASM_COT_PHASE39_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_phase39.obj")
-    add_custom_command(
-        OUTPUT ${ASM_COT_PHASE39_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_PHASE39_OBJ} ${ASM_COT_PHASE39_SRC}
-        DEPENDS ${ASM_COT_PHASE39_SRC}
-        COMMENT "[MASM] Assembling rawrxd_cot_phase39.asm (Snapshot, Telemetry, CopyEngine, Seal, Quotas)"
-        VERBATIM
-    )
+    # Phase 39+�-�+�-�+�-�42: CoT Enterprise Finishers +�-�+�-�+�-� Snapshot, Telemetry, Copy Engine, Security
+    set(ASM_COT_PHASE39_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
 
     # LSP Bridge: MASM64 Symbol Index Accelerator (binary search, batch FNV-1a, prefix scan)
-    set(ASM_LSP_SYMINDEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm")
-    set(ASM_LSP_SYMINDEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSP_SymbolIndex.obj")
-    add_custom_command(
-        OUTPUT ${ASM_LSP_SYMINDEX_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_LSP_SYMINDEX_OBJ} ${ASM_LSP_SYMINDEX_SRC}
-        DEPENDS ${ASM_LSP_SYMINDEX_SRC}
-        COMMENT "[MASM] Assembling RawrXD_LSP_SymbolIndex.asm (Hash Lookup, Batch FNV-1a, Prefix Scan)"
-        VERBATIM
-    )
+    set(ASM_LSP_SYMINDEX_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm")
 
-    # Phase 45: RawrCodex ├Ä┬ô├â┬ç├â┬╢ Agentic Decision Tree Core (295KB, 21 procs)
-    set(ASM_RAWRCODEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
-    set(ASM_RAWRCODEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrCodex.obj")
-    add_custom_command(
-        OUTPUT ${ASM_RAWRCODEX_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_RAWRCODEX_OBJ} ${ASM_RAWRCODEX_SRC}
-        DEPENDS ${ASM_RAWRCODEX_SRC}
-        COMMENT "[MASM] Assembling RawrCodex.asm (Agentic Decision Tree, Pattern Engine)"
-        VERBATIM
-    )
+    # Phase 45: RawrCodex +�-�+�-�+�-� Agentic Decision Tree Core (295KB, 21 procs)
+    set(ASM_RAWRCODEX_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
 
-    # Phase 45: Debug Engine ├Ä┬ô├â┬ç├â┬╢ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
-    set(ASM_DEBUG_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
-    set(ASM_DEBUG_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Debug_Engine.obj")
-    add_custom_command(
-        OUTPUT ${ASM_DEBUG_ENGINE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_DEBUG_ENGINE_OBJ} ${ASM_DEBUG_ENGINE_SRC}
-        DEPENDS ${ASM_DEBUG_ENGINE_SRC}
-        COMMENT "[MASM] Assembling RawrXD_Debug_Engine.asm (Breakpoints, Watchpoints, Symbolic DynTrace)"
-        VERBATIM
-    )
+    # Phase 45: Debug Engine +�-�+�-�+�-� Native Debugger Kernel (51KB, DynTrace symbolic resolution)
+    set(ASM_DEBUG_ENGINE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
 
-    # Phase 45: QuadBuffer Streamer ├Ä┬ô├â┬ç├â┬╢ High-Performance Memory Streaming (52KB)
-    set(ASM_QUADBUFFER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
-    set(ASM_QUADBUFFER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_QuadBuffer_Streamer.obj")
-    add_custom_command(
-        OUTPUT ${ASM_QUADBUFFER_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_QUADBUFFER_OBJ} ${ASM_QUADBUFFER_SRC}
-        DEPENDS ${ASM_QUADBUFFER_SRC}
-        COMMENT "[MASM] Assembling RawrXD_QuadBuffer_Streamer.asm (4-Buffer Ring, Zero-Copy Streaming)"
-        VERBATIM
-    )
+    # Phase 45: QuadBuffer Streamer +�-�+�-�+�-� High-Performance Memory Streaming (52KB)
+    set(ASM_QUADBUFFER_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
 
-    # Phase 45: Swarm Network ├Ä┬ô├â┬ç├â┬╢ Distributed Composition Protocol (36KB)
-    set(ASM_SWARM_NETWORK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
-    set(ASM_SWARM_NETWORK_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Swarm_Network.obj")
-    add_custom_command(
-        OUTPUT ${ASM_SWARM_NETWORK_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_SWARM_NETWORK_OBJ} ${ASM_SWARM_NETWORK_SRC}
-        DEPENDS ${ASM_SWARM_NETWORK_SRC}
-        COMMENT "[MASM] Assembling RawrXD_Swarm_Network.asm (P2P Discovery, Task Distribution)"
-        VERBATIM
-    )
+    # Phase 45: Swarm Network +�-�+�-�+�-� Distributed Composition Protocol (36KB)
+    set(ASM_SWARM_NETWORK_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
 
-    # Phase 45: Enterprise License ├Ä┬ô├â┬ç├â┬╢ Feature Gate + Hardware Fingerprint (31KB)
-    set(ASM_ENTERPRISE_LIC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
-    set(ASM_ENTERPRISE_LIC_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_EnterpriseLicense.obj")
-    add_custom_command(
-        OUTPUT ${ASM_ENTERPRISE_LIC_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_ENTERPRISE_LIC_OBJ} ${ASM_ENTERPRISE_LIC_SRC}
-        DEPENDS ${ASM_ENTERPRISE_LIC_SRC}
-        COMMENT "[MASM] Assembling RawrXD_EnterpriseLicense.asm (License Validation, HWID, Feature Gates)"
-        VERBATIM
-    )
+    # Phase 45: Enterprise License +�-�+�-�+�-� Feature Gate + Hardware Fingerprint (31KB)
+    set(ASM_ENTERPRISE_LIC_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
 
-    # Phase 45: License Shield ├Ä┬ô├â┬ç├â┬╢ Anti-Tamper + Integrity Guard (34KB)
-    set(ASM_LICENSE_SHIELD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
-    set(ASM_LICENSE_SHIELD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_License_Shield.obj")
-    add_custom_command(
-        OUTPUT ${ASM_LICENSE_SHIELD_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_LICENSE_SHIELD_OBJ} ${ASM_LICENSE_SHIELD_SRC}
-        DEPENDS ${ASM_LICENSE_SHIELD_SRC}
-        COMMENT "[MASM] Assembling RawrXD_License_Shield.asm (CRC32 Integrity, Anti-Debug, Tamper Detection)"
-        VERBATIM
-    )
+    # Phase 45: License Shield +�-�+�-�+�-� Anti-Tamper + Integrity Guard (34KB)
+    set(ASM_LICENSE_SHIELD_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
 
-    # Phase 46: VulkanBridge ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
-    set(ASM_VULKANBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
-    set(ASM_VULKANBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_VulkanBridge.obj")
-    add_custom_command(
-        OUTPUT ${ASM_VULKANBRIDGE_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_VULKANBRIDGE_OBJ} ${ASM_VULKANBRIDGE_SRC}
-        DEPENDS ${ASM_VULKANBRIDGE_SRC}
-        COMMENT "[MASM] Assembling RawrXD_VulkanBridge.asm (GPU Dispatch Shim: Init, MatMul, FlashAttn, Hotswap)"
-        VERBATIM
-    )
+    # Phase 46: VulkanBridge +�-�+�-�+�-� MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
+    set(ASM_VULKANBRIDGE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
 
-    # Phase 49: SocketResponder ├Ä┬ô├â┬ç├â┬╢ MASM64 IOCP Zero-Copy HTTP Server
-    set(ASM_SOCKETRESP_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
-    set(_ASM_SOCKETRESP_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SocketResponder.obj")
-    if(EXISTS "${_ASM_SOCKETRESP_PREBUILT}")
-        set(ASM_SOCKETRESP_OBJ "${_ASM_SOCKETRESP_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_SocketResponder.obj")
-    else()
-        set(ASM_SOCKETRESP_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SocketResponder.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SOCKETRESP_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SOCKETRESP_OBJ} ${ASM_SOCKETRESP_SRC}
-            DEPENDS ${ASM_SOCKETRESP_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SocketResponder.asm (IOCP HTTP: /health /status /models sub-0.5ms)"
-            VERBATIM
-        )
-    endif()
+    # Phase 49: SocketResponder +�-�+�-�+�-� MASM64 IOCP Zero-Copy HTTP Server
+    set(ASM_SOCKETRESP_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
 
-    # Phase 49: TridentBeacon ├Ä┬ô├â┬ç├â┬╢ MASM64 COM Trident Host + Beacon JS Bridge
-    set(ASM_TRIDENTBEACON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
-    set(_ASM_TRIDENTBEACON_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon.obj")
-    if(EXISTS "${_ASM_TRIDENTBEACON_PREBUILT}")
-        set(ASM_TRIDENTBEACON_OBJ "${_ASM_TRIDENTBEACON_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon.obj")
-    else()
-        set(ASM_TRIDENTBEACON_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon.obj")
-        add_custom_command(
-            OUTPUT ${ASM_TRIDENTBEACON_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTBEACON_OBJ} ${ASM_TRIDENTBEACON_SRC}
-            DEPENDS ${ASM_TRIDENTBEACON_SRC}
-            COMMENT "[MASM] Assembling RawrXD_TridentBeacon.asm (COM Trident Host, Beacon IDispatch, Ollama Bridge)"
-            VERBATIM
-        )
-    endif()
+    # Phase 49: TridentBeacon +�-�+�-�+�-� MASM64 COM Trident Host + Beacon JS Bridge
+    set(ASM_TRIDENTBEACON_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
 
-    # Phase 49: TridentBeacon GPU ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Acceleration + WebGL Bridge
-    set(ASM_TRIDENTGPU_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
-    set(_ASM_TRIDENTGPU_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon_GPU.obj")
-    if(EXISTS "${_ASM_TRIDENTGPU_PREBUILT}")
-        set(ASM_TRIDENTGPU_OBJ "${_ASM_TRIDENTGPU_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon_GPU.obj")
-    else()
-        set(ASM_TRIDENTGPU_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon_GPU.obj")
-        add_custom_command(
-            OUTPUT ${ASM_TRIDENTGPU_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTGPU_OBJ} ${ASM_TRIDENTGPU_SRC}
-            DEPENDS ${ASM_TRIDENTGPU_SRC}
-            COMMENT "[MASM] Assembling RawrXD_TridentBeacon_GPU.asm (IE11 Feature Control, WebGL FBO, OpenGL Bridge)"
-            VERBATIM
-        )
-    endif()
+    # Phase 49: TridentBeacon GPU +�-�+�-�+�-� MASM64 GPU Acceleration + WebGL Bridge
+    set(ASM_TRIDENTGPU_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
 
-    # Phase 50: AgenticOrchestrator ├Ä┬ô├â┬ç├â┬╢ VTable Dispatch + SPSC Task Queue
-    set(ASM_AGENTIC_ORCH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
-    set(_ASM_AGENTIC_ORCH_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_AgenticOrchestrator.obj")
-    set(_ASM_AGENTIC_ORCH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_AgenticOrchestrator.obj")
-    if(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT1}")
-        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj")
-    elseif(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT2}")
-        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj (genesis)")
-    else()
-        set(ASM_AGENTIC_ORCH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_AgenticOrchestrator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_AGENTIC_ORCH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_AGENTIC_ORCH_OBJ} ${ASM_AGENTIC_ORCH_SRC}
-            DEPENDS ${ASM_AGENTIC_ORCH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)"
-            VERBATIM
-        )
-    endif()
+    # Phase 50: AgenticOrchestrator +�-�+�-�+�-� VTable Dispatch + SPSC Task Queue
+    set(ASM_AGENTIC_ORCH_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
 
-    # Phase 50: GGUF Vulkan Loader ├Ä┬ô├â┬ç├â┬╢ Memory-Mapped Parser + Staging Buffer
-    set(ASM_GGUF_VKLOAD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
-    set(_ASM_GGUF_VKLOAD_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_GGUF_Vulkan_Loader.obj")
-    set(_ASM_GGUF_VKLOAD_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
-    if(EXISTS "${_ASM_GGUF_VKLOAD_PREBUILT1}")
-        set(ASM_GGUF_VKLOAD_OBJ "${_ASM_GGUF_VKLOAD_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_GGUF_Vulkan_Loader.obj")
-    elseif(EXISTS "${_ASM_GGUF_VKLOAD_PREBUILT2}")
-        set(ASM_GGUF_VKLOAD_OBJ "${_ASM_GGUF_VKLOAD_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_GGUF_Vulkan_Loader.obj (genesis)")
-    else()
-        set(ASM_GGUF_VKLOAD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
-        add_custom_command(
-            OUTPUT ${ASM_GGUF_VKLOAD_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_GGUF_VKLOAD_OBJ} ${ASM_GGUF_VKLOAD_SRC}
-            DEPENDS ${ASM_GGUF_VKLOAD_SRC}
-            COMMENT "[MASM] Assembling RawrXD_GGUF_Vulkan_Loader.asm (GGUF v3, FNV-1a, Tensor Staging, GGML Types)"
-            VERBATIM
-        )
-    endif()
+    # Phase 50: GGUF Vulkan Loader +�-�+�-�+�-� Memory-Mapped Parser + Staging Buffer
+    set(ASM_GGUF_VKLOAD_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
 
-    # Phase 50: LSP-AI Bridge ├Ä┬ô├â┬ç├â┬╢ SymbolIndex ├Ä┬ô├â┬Ñ├â┬╢ ContextAnalyzer Fusion
-    set(ASM_LSP_BRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
-    set(_ASM_LSP_BRIDGE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_LSP_AI_Bridge.obj")
-    set(_ASM_LSP_BRIDGE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_LSP_AI_Bridge.obj")
-    if(EXISTS "${_ASM_LSP_BRIDGE_PREBUILT1}")
-        set(ASM_LSP_BRIDGE_OBJ "${_ASM_LSP_BRIDGE_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_LSP_AI_Bridge.obj")
-    elseif(EXISTS "${_ASM_LSP_BRIDGE_PREBUILT2}")
-        set(ASM_LSP_BRIDGE_OBJ "${_ASM_LSP_BRIDGE_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_LSP_AI_Bridge.obj (genesis)")
-    else()
-        set(ASM_LSP_BRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSP_AI_Bridge.obj")
-        add_custom_command(
-            OUTPUT ${ASM_LSP_BRIDGE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_LSP_BRIDGE_OBJ} ${ASM_LSP_BRIDGE_SRC}
-            DEPENDS ${ASM_LSP_BRIDGE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_LSP_AI_Bridge.asm (Symbol Ranking, Weight Fusion, Kind Boost)"
-            VERBATIM
-        )
-    endif()
+    # Phase 50: LSP-AI Bridge +�-�+�-�+�-� SymbolIndex +�-�+�-�+�-� ContextAnalyzer Fusion
+    set(ASM_LSP_BRIDGE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
 
-    # Phase 50: Streaming QuadBuffer ├Ä┬ô├â┬ç├â┬╢ HWND Token Rendering + GDI Double-Buffer
-    set(ASM_STREAM_QBUF_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
-    set(_ASM_STREAM_QBUF_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Streaming_QuadBuffer.obj")
+    # Phase 50: Streaming QuadBuffer +�-�+�-�+�-� HWND Token Rendering + GDI Double-Buffer
+    set(ASM_STREAM_QBUF_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
 
-    # Batch 2 kernels are intentionally not manually assembled here.
-    # Keep manual MASM object generation limited to entries wired into MASM_OBJECTS.
+    # Phase 50: SelfPatch Engine +�-�+�-�+�-� Runtime Code Morphing + CPU Optimization
+    set(ASM_SPENGINE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
 
-    if(EXISTS "${_ASM_STREAM_QBUF_PREBUILT}")
-        set(ASM_STREAM_QBUF_OBJ "${_ASM_STREAM_QBUF_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Streaming_QuadBuffer.obj")
-    else()
-        set(ASM_STREAM_QBUF_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Streaming_QuadBuffer.obj")
-        add_custom_command(
-            OUTPUT ${ASM_STREAM_QBUF_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_STREAM_QBUF_OBJ} ${ASM_STREAM_QBUF_SRC}
-            DEPENDS ${ASM_STREAM_QBUF_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Streaming_QuadBuffer.asm (SPSC Ring, GDI BitBlt, 60 FPS Render)"
-            VERBATIM
-        )
-    endif()
-
-    # Phase 50: SelfPatch Engine ├Ä┬ô├â┬ç├â┬╢ Runtime Code Morphing + CPU Optimization
-    set(ASM_SPENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
-    set(_ASM_SPENGINE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfPatch_Engine.obj")
-    if(EXISTS "${_ASM_SPENGINE_PREBUILT}")
-        set(ASM_SPENGINE_OBJ "${_ASM_SPENGINE_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_SelfPatch_Engine.obj")
-    else()
-        set(ASM_SPENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfPatch_Engine.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SPENGINE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPENGINE_OBJ} ${ASM_SPENGINE_SRC}
-            DEPENDS ${ASM_SPENGINE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SelfPatch_Engine.asm (Hotpatch Table, Code Caves, CPUID Optimize, Quant Switch)"
-            VERBATIM
-        )
-    endif()
-
-    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels ├ó┬Ç┬ö Q4MatMul, KV Attention, Tile Streamer
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels +�-�-� Q4MatMul, KV Attention, Tile Streamer
     # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
-    set(ASM_RDNA3_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
-    set(_ASM_RDNA3_KERNELS_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
-    if(EXISTS "${_ASM_RDNA3_KERNELS_PREBUILT}")
-        set(ASM_RDNA3_KERNELS_OBJ "${_ASM_RDNA3_KERNELS_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RDNA3_Full_Test.obj (RDNA3 kernels)")
-    elseif(EXISTS "${ASM_RDNA3_KERNELS_SRC}")
-        set(ASM_RDNA3_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RDNA3_Full_Test.obj")
-        add_custom_command(
-            OUTPUT ${ASM_RDNA3_KERNELS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /W3 /nologo /Zi /Fo${ASM_RDNA3_KERNELS_OBJ} "${ASM_RDNA3_KERNELS_SRC}"
-            DEPENDS "${ASM_RDNA3_KERNELS_SRC}"
-            COMMENT "[MASM] Assembling RDNA3_Full_Test.asm (Q4MatMul, KV Attention, Tile Streamer)"
-            VERBATIM
-        )
-    else()
-        message(WARNING "[MASM] RDNA3 kernels not found. GPU acceleration disabled.")
-        set(ASM_RDNA3_KERNELS_OBJ "")
-    endif()
+    set(ASM_RDNA3_KERNELS_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
 
-    # Phase Camellia: Camellia-256 Encryption Engine ├Ä┬ô├â┬ç├â┬╢ MASM x64 CTR-mode workspace encryption
-    set(ASM_CAMELLIA256_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
-    set(_ASM_CAMELLIA256_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_Camellia256.obj")
-    set(_ASM_CAMELLIA256_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256.obj")
-    if(EXISTS "${_ASM_CAMELLIA256_PREBUILT1}")
-        set(ASM_CAMELLIA256_OBJ "${_ASM_CAMELLIA256_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256.obj")
-    elseif(EXISTS "${_ASM_CAMELLIA256_PREBUILT2}")
-        set(ASM_CAMELLIA256_OBJ "${_ASM_CAMELLIA256_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256.obj (genesis)")
-    else()
-        set(ASM_CAMELLIA256_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256.obj")
-        add_custom_command(
-            OUTPUT ${ASM_CAMELLIA256_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_OBJ} ${ASM_CAMELLIA256_SRC}
-            DEPENDS ${ASM_CAMELLIA256_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Camellia256.asm (Camellia-256 CTR Encrypt, 24-Round Feistel, HWID Key)"
-            VERBATIM
-        )
-    endif()
+    # Phase Camellia: Camellia-256 Encryption Engine +�-�+�-�+�-� MASM x64 CTR-mode workspace encryption
+    set(ASM_CAMELLIA256_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
 
     # Phase Camellia-Auth: Authenticated Encrypt/Decrypt (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
-    set(ASM_CAMELLIA256_AUTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm")
-    set(_ASM_CAMELLIA256_AUTH_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Camellia256_Auth.obj")
-    set(_ASM_CAMELLIA256_AUTH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256_Auth.obj")
-    if(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
-        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj")
-    elseif(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
-        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj (genesis)")
-    else()
-        set(ASM_CAMELLIA256_AUTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256_Auth.obj")
-        add_custom_command(
-            OUTPUT ${ASM_CAMELLIA256_AUTH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_AUTH_OBJ} ${ASM_CAMELLIA256_AUTH_SRC}
-            DEPENDS ${ASM_CAMELLIA256_AUTH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)"
-            VERBATIM
-        )
-    endif()
+    set(ASM_CAMELLIA256_AUTH_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm")
 
     # Phase KQ: Q4_K Bare-Metal Dequantization Kernel (AVX2 + AVX-512, CPUID Dispatch)
-    set(ASM_KQUANT_KERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm")
-    set(_ASM_KQUANT_KERNEL_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_KQuant_Kernel.obj")
-    if(EXISTS "${_ASM_KQUANT_KERNEL_PREBUILT}")
-        set(ASM_KQUANT_KERNEL_OBJ "${_ASM_KQUANT_KERNEL_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_KQuant_Kernel.obj")
-    else()
-        set(ASM_KQUANT_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_KQuant_Kernel.obj")
-        add_custom_command(
-            OUTPUT ${ASM_KQUANT_KERNEL_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_KQUANT_KERNEL_OBJ} ${ASM_KQUANT_KERNEL_SRC}
-            DEPENDS ${ASM_KQUANT_KERNEL_SRC}
-            COMMENT "[MASM] Assembling RawrXD_KQuant_Kernel.asm (Q4_K AVX2+AVX-512 Dequant, CPUID Dispatch)"
-            VERBATIM
-        )
-    endif()
+    set(ASM_KQUANT_KERNEL_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm")
 
-    # Phase WD: Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification (HMAC-SHA256)
-    set(ASM_WATCHDOG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
-    set(_ASM_WATCHDOG_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Watchdog.obj")
-    if(EXISTS "${_ASM_WATCHDOG_PREBUILT}")
-        set(ASM_WATCHDOG_OBJ "${_ASM_WATCHDOG_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Watchdog.obj")
-    else()
-        set(ASM_WATCHDOG_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Watchdog.obj")
-        add_custom_command(
-            OUTPUT ${ASM_WATCHDOG_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_WATCHDOG_OBJ} ${ASM_WATCHDOG_SRC}
-            DEPENDS ${ASM_WATCHDOG_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)"
-            VERBATIM
-        )
-    endif()
+    # Phase WD: Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification (HMAC-SHA256)
+    set(ASM_WATCHDOG_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
 
-    # Phase E: SelfHost Engine ├Ä┬ô├â┬ç├â┬╢ Recursive Self-Compilation
-    set(ASM_SELFHOST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
-    set(_ASM_SELFHOST_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_SelfHost_Engine.obj")
-    set(_ASM_SELFHOST_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfHost_Engine.obj")
-    if(EXISTS "${_ASM_SELFHOST_PREBUILT1}")
-        set(ASM_SELFHOST_OBJ "${_ASM_SELFHOST_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_SelfHost_Engine.obj")
-    elseif(EXISTS "${_ASM_SELFHOST_PREBUILT2}")
-        set(ASM_SELFHOST_OBJ "${_ASM_SELFHOST_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_SelfHost_Engine.obj (genesis)")
-    else()
-        set(ASM_SELFHOST_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfHost_Engine.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SELFHOST_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SELFHOST_OBJ} ${ASM_SELFHOST_SRC}
-            DEPENDS ${ASM_SELFHOST_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SelfHost_Engine.asm (Self-Compile, uASM, Atomic Swap)"
-            VERBATIM
-        )
-    endif()
+    # Phase E: SelfHost Engine +�-�+�-�+�-� Recursive Self-Compilation
+    set(ASM_SELFHOST_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
 
-    # Phase F: Hardware Synthesizer ├Ä┬ô├â┬ç├â┬╢ FPGA/ASIC Acceleration
-    set(ASM_HWSYNTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
-    set(_ASM_HWSYNTH_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_HardwareSynthesizer.obj")
-    if(EXISTS "${_ASM_HWSYNTH_PREBUILT}")
-        set(ASM_HWSYNTH_OBJ "${_ASM_HWSYNTH_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_HardwareSynthesizer.obj")
-    else()
-        set(ASM_HWSYNTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_HardwareSynthesizer.obj")
-        add_custom_command(
-            OUTPUT ${ASM_HWSYNTH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HWSYNTH_OBJ} ${ASM_HWSYNTH_SRC}
-            DEPENDS ${ASM_HWSYNTH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_HardwareSynthesizer.asm (Dataflow, GEMM Spec, Verilog Gen)"
-            VERBATIM
-        )
-    endif()
+    # Phase F: Hardware Synthesizer +�-�+�-�+�-� FPGA/ASIC Acceleration
+    set(ASM_HWSYNTH_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
 
-    # Phase G: Mesh Brain ├Ä┬ô├â┬ç├â┬╢ Distributed Consciousness P2P Mesh
-    set(ASM_MESHBRAIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
-    set(_ASM_MESHBRAIN_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_MeshBrain.obj")
-    if(EXISTS "${_ASM_MESHBRAIN_PREBUILT}")
-        set(ASM_MESHBRAIN_OBJ "${_ASM_MESHBRAIN_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_MeshBrain.obj")
-    else()
-        set(ASM_MESHBRAIN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MeshBrain.obj")
-        add_custom_command(
-            OUTPUT ${ASM_MESHBRAIN_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_MESHBRAIN_OBJ} ${ASM_MESHBRAIN_SRC}
-            DEPENDS ${ASM_MESHBRAIN_SRC}
-            COMMENT "[MASM] Assembling RawrXD_MeshBrain.asm (CRDT, ZKP, DHT, FedAvg, Gossip)"
-            VERBATIM
-        )
-    endif()
+    # Phase G: Mesh Brain +�-�+�-�+�-� Distributed Consciousness P2P Mesh
+    set(ASM_MESHBRAIN_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
 
-    # Phase H: Speciator Engine ├Ä┬ô├â┬ç├â┬╢ Metamorphic Evolution
-    set(ASM_SPECIATOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
-    set(_ASM_SPECIATOR_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Speciator.obj")
-    if(EXISTS "${_ASM_SPECIATOR_PREBUILT}")
-        set(ASM_SPECIATOR_OBJ "${_ASM_SPECIATOR_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Speciator.obj")
-    else()
-        set(ASM_SPECIATOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Speciator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SPECIATOR_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPECIATOR_OBJ} ${ASM_SPECIATOR_SRC}
-            DEPENDS ${ASM_SPECIATOR_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Speciator.asm (Genome, Crossover, Mutation, Speciation)"
-            VERBATIM
-        )
-    endif()
+    # Phase H: Speciator Engine +�-�+�-�+�-� Metamorphic Evolution
+    set(ASM_SPECIATOR_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
 
-    # Phase I: Neural Bridge ├Ä┬ô├â┬ç├â┬╢ Direct Cortex Interface
-    set(ASM_NEURALBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
-    set(_ASM_NEURALBRIDGE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_NeuralBridge.obj")
-    if(EXISTS "${_ASM_NEURALBRIDGE_PREBUILT}")
-        set(ASM_NEURALBRIDGE_OBJ "${_ASM_NEURALBRIDGE_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_NeuralBridge.obj")
-    else()
-        set(ASM_NEURALBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_NeuralBridge.obj")
-        add_custom_command(
-            OUTPUT ${ASM_NEURALBRIDGE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NEURALBRIDGE_OBJ} ${ASM_NEURALBRIDGE_SRC}
-            DEPENDS ${ASM_NEURALBRIDGE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_NeuralBridge.asm (EEG FFT, Intent Classify, Phosphene HUD)"
-            VERBATIM
-        )
-    endif()
+    # Phase I: Neural Bridge +�-�+�-�+�-� Direct Cortex Interface
+    set(ASM_NEURALBRIDGE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
 
-    # Phase ├ó┬ò┬¼├ó┬î┬É: Omega Orchestrator ├Ä┬ô├â┬ç├â┬╢ Autonomous Development Pipeline
-    set(ASM_OMEGA_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
-    set(_ASM_OMEGA_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_OmegaOrchestrator.obj")
-    if(EXISTS "${_ASM_OMEGA_PREBUILT}")
-        set(ASM_OMEGA_OBJ "${_ASM_OMEGA_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_OmegaOrchestrator.obj")
-    else()
-        set(ASM_OMEGA_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_OmegaOrchestrator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_OMEGA_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_OMEGA_OBJ} ${ASM_OMEGA_SRC}
-            DEPENDS ${ASM_OMEGA_SRC}
-            COMMENT "[MASM] Assembling RawrXD_OmegaOrchestrator.asm (Task DAG, Agents, Pipeline, Self-Improve)"
-            VERBATIM
-        )
-    endif()
+    # Phase +�-�-�+�-�-�: Omega Orchestrator +�-�+�-�+�-� Autonomous Development Pipeline
+    set(ASM_OMEGA_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
 
-    # Phase ├Ä┬ô├â┬¬├ó┬é┬º: PerfCounters ├Ä┬ô├â┬ç├â┬╢ RDTSC Per-Kernel Cycle Histogram
-    set(ASM_PERFCOUNTERS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
-    set(_ASM_PERFCOUNTERS_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_PerfCounters.obj")
-    set(_ASM_PERFCOUNTERS_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_PerfCounters.obj")
-    if(EXISTS "${_ASM_PERFCOUNTERS_PREBUILT1}")
-        set(ASM_PERFCOUNTERS_OBJ "${_ASM_PERFCOUNTERS_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_PerfCounters.obj")
-    elseif(EXISTS "${_ASM_PERFCOUNTERS_PREBUILT2}")
-        set(ASM_PERFCOUNTERS_OBJ "${_ASM_PERFCOUNTERS_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_PerfCounters.obj (genesis)")
-    else()
-        set(ASM_PERFCOUNTERS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PerfCounters.obj")
-        add_custom_command(
-            OUTPUT ${ASM_PERFCOUNTERS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PERFCOUNTERS_OBJ} ${ASM_PERFCOUNTERS_SRC}
-            DEPENDS ${ASM_PERFCOUNTERS_SRC}
-            COMMENT "[MASM] Assembling RawrXD_PerfCounters.asm (RDTSC Cycle Histograms, 64 Slots)"
-            VERBATIM
-        )
-    endif()
+    # Phase +�-�+�-�+�-�-�: PerfCounters +�-�+�-�+�-� RDTSC Per-Kernel Cycle Histogram
+    set(ASM_PERFCOUNTERS_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
 
     # Prebuilt-only MASM modules: these .asm sources are intentionally excluded from
     # ASM_KERNEL_SOURCES due to known ml64 incompatibilities in checked-in scaffolds.
     # For IDE/link correctness, prefer the vetted prebuilt .obj blobs when present.
     #
     # Phase 14.2: Hotpatch kernel (trampolines, shadow buffers, I-cache flush)
-    set(ASM_HOTPATCH_KERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Hotpatch_Kernel.asm")
-    set(_ASM_HOTPATCH_KERNEL_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Hotpatch_Kernel.obj")
-    set(_ASM_HOTPATCH_KERNEL_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Hotpatch_Kernel.obj")
-    if(EXISTS "${_ASM_HOTPATCH_KERNEL_PREBUILT1}")
-        set(ASM_HOTPATCH_KERNEL_OBJ "${_ASM_HOTPATCH_KERNEL_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Hotpatch_Kernel.obj")
-    elseif(EXISTS "${_ASM_HOTPATCH_KERNEL_PREBUILT2}")
-        set(ASM_HOTPATCH_KERNEL_OBJ "${_ASM_HOTPATCH_KERNEL_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Hotpatch_Kernel.obj (genesis)")
-    else()
-        set(ASM_HOTPATCH_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Hotpatch_Kernel.obj")
-        add_custom_command(
-            OUTPUT ${ASM_HOTPATCH_KERNEL_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HOTPATCH_KERNEL_OBJ} ${ASM_HOTPATCH_KERNEL_SRC}
-            DEPENDS ${ASM_HOTPATCH_KERNEL_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Hotpatch_Kernel.asm"
-            VERBATIM
-        )
-    endif()
+    set(ASM_HOTPATCH_KERNEL_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Hotpatch_Kernel.asm")
 
     # Phase 14.3: Snapshot kernel (capture/restore/verify/discard)
-    set(ASM_SNAPSHOT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Snapshot.asm")
-    set(_ASM_SNAPSHOT_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Snapshot.obj")
-    set(_ASM_SNAPSHOT_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Snapshot.obj")
-    if(EXISTS "${_ASM_SNAPSHOT_PREBUILT1}")
-        set(ASM_SNAPSHOT_OBJ "${_ASM_SNAPSHOT_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Snapshot.obj")
-    elseif(EXISTS "${_ASM_SNAPSHOT_PREBUILT2}")
-        set(ASM_SNAPSHOT_OBJ "${_ASM_SNAPSHOT_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Snapshot.obj (genesis)")
-    else()
-        set(ASM_SNAPSHOT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Snapshot.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SNAPSHOT_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SNAPSHOT_OBJ} ${ASM_SNAPSHOT_SRC}
-            DEPENDS ${ASM_SNAPSHOT_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Snapshot.asm"
-            VERBATIM
-        )
-    endif()
+    set(ASM_SNAPSHOT_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Snapshot.asm")
 
     # Phase 46: Pyre compute kernels (sgemm/gemv/norm/rope)
-    set(ASM_PYRE_COMPUTE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Pyre_Compute.asm")
-    set(_ASM_PYRE_COMPUTE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Pyre_Compute.obj")
-    set(_ASM_PYRE_COMPUTE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Pyre_Compute.obj")
-    if(EXISTS "${_ASM_PYRE_COMPUTE_PREBUILT1}")
-        set(ASM_PYRE_COMPUTE_OBJ "${_ASM_PYRE_COMPUTE_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Pyre_Compute.obj")
-    elseif(EXISTS "${_ASM_PYRE_COMPUTE_PREBUILT2}")
-        set(ASM_PYRE_COMPUTE_OBJ "${_ASM_PYRE_COMPUTE_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_Pyre_Compute.obj (genesis)")
-    else()
-        set(ASM_PYRE_COMPUTE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Pyre_Compute.obj")
-        add_custom_command(
-            OUTPUT ${ASM_PYRE_COMPUTE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PYRE_COMPUTE_OBJ} ${ASM_PYRE_COMPUTE_SRC}
-            DEPENDS ${ASM_PYRE_COMPUTE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Pyre_Compute.asm"
-            VERBATIM
-        )
-    endif()
+    set(ASM_PYRE_COMPUTE_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Pyre_Compute.asm")
 
     # Phase 49: Copilot gap closer (VecDB/Composer/CRDT/Git context)
-    set(ASM_COPILOT_GAPCLOSER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_CopilotGapCloser.asm")
-    set(_ASM_COPILOT_GAPCLOSER_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_CopilotGapCloser.obj")
-    set(_ASM_COPILOT_GAPCLOSER_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_CopilotGapCloser.obj")
-    if(EXISTS "${_ASM_COPILOT_GAPCLOSER_PREBUILT1}")
-        set(ASM_COPILOT_GAPCLOSER_OBJ "${_ASM_COPILOT_GAPCLOSER_PREBUILT1}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_CopilotGapCloser.obj")
-    elseif(EXISTS "${_ASM_COPILOT_GAPCLOSER_PREBUILT2}")
-        set(ASM_COPILOT_GAPCLOSER_OBJ "${_ASM_COPILOT_GAPCLOSER_PREBUILT2}")
-        message(STATUS "[MASM] Using prebuilt RawrXD_CopilotGapCloser.obj (genesis)")
-    else()
-        set(ASM_COPILOT_GAPCLOSER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_CopilotGapCloser.obj")
-        add_custom_command(
-            OUTPUT ${ASM_COPILOT_GAPCLOSER_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_COPILOT_GAPCLOSER_OBJ} ${ASM_COPILOT_GAPCLOSER_SRC}
-            DEPENDS ${ASM_COPILOT_GAPCLOSER_SRC}
-            COMMENT "[MASM] Assembling RawrXD_CopilotGapCloser.asm"
-            VERBATIM
-        )
-    endif()
+    set(ASM_COPILOT_GAPCLOSER_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_CopilotGapCloser.asm")
 
     # NativeSpeed kernels (SIMD fast-paths)
-    set(ASM_NATIVE_SPEED_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm")
-    set(_ASM_NATIVE_SPEED_KERNELS_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/native_speed_kernels.obj")
-    if(EXISTS "${_ASM_NATIVE_SPEED_KERNELS_PREBUILT}")
-        set(ASM_NATIVE_SPEED_KERNELS_OBJ "${_ASM_NATIVE_SPEED_KERNELS_PREBUILT}")
-        message(STATUS "[MASM] Using prebuilt native_speed_kernels.obj (genesis)")
-    else()
-        set(ASM_NATIVE_SPEED_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/native_speed_kernels.obj")
-        add_custom_command(
-            OUTPUT ${ASM_NATIVE_SPEED_KERNELS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NATIVE_SPEED_KERNELS_OBJ} ${ASM_NATIVE_SPEED_KERNELS_SRC}
-            DEPENDS ${ASM_NATIVE_SPEED_KERNELS_SRC}
-            COMMENT "[MASM] Assembling native_speed_kernels.asm"
-            VERBATIM
-        )
-    endif()
+    set(ASM_NATIVE_SPEED_KERNELS_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm")
 
-    # Brutal gzip deflate ├Ä┬ô├â┬ç├â┬╢ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
-    set(ASM_DEFLATE_BRUTAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
-    set(ASM_DEFLATE_BRUTAL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj")
-    add_custom_command(
-        OUTPUT ${ASM_DEFLATE_BRUTAL_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /I "${CMAKE_CURRENT_SOURCE_DIR}/include" /Fo${ASM_DEFLATE_BRUTAL_OBJ} ${ASM_DEFLATE_BRUTAL_SRC}
-        DEPENDS ${ASM_DEFLATE_BRUTAL_SRC}
-        COMMENT "[MASM] Assembling deflate_brutal_masm.asm"
-        VERBATIM
-    )
+    # Brutal gzip deflate +�-�+�-�+�-� stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
+    set(ASM_DEFLATE_BRUTAL_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
 
     # Collect all MASM objects
     set(MASM_OBJECTS
@@ -4641,22 +4118,15 @@ if(MSVC)
     endif()
 
     # =========================================================================
-    # NanoQuant Engine ├Ä┬ô├â┬ç├â┬╢ Sub-1-Bit Quantization Static Library
+    # NanoQuant Engine +�-�+�-�+�-� Sub-1-Bit Quantization Static Library
     # MASM64 kernel (ADMM, AVX2/AVX-512) + C++ bridge + GGML type registration
-    # Disabled by default ├Ä┬ô├â┬ç├â┬╢ ASM kernel requires ml64 port fixes (A2008/A2083).
+    # Disabled by default +�-�+�-�+�-� ASM kernel requires ml64 port fixes (A2008/A2083).
     # Enable with: cmake -DRAWR_ENABLE_NANOQUANT=ON
     # =========================================================================
     option(RAWR_ENABLE_NANOQUANT "Enable NanoQuant sub-1-bit quantization engine (requires working NanoQuant ASM)" OFF)
     if(RAWR_ENABLE_NANOQUANT)
-    set(ASM_NANOQUANT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm")
-    set(ASM_NANOQUANT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_NanoQuant_Engine.obj")
-    add_custom_command(
-        OUTPUT ${ASM_NANOQUANT_OBJ}
-        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_NANOQUANT_OBJ} ${ASM_NANOQUANT_SRC}
-        DEPENDS ${ASM_NANOQUANT_SRC}
-        COMMENT "[MASM] Assembling RawrXD_NanoQuant_Engine.asm (ADMM, AVX2/512, NQ_1/NQ_R4)"
-        VERBATIM
-    )
+    set(ASM_NANOQUANT_OBJ "")
+    message(STATUS "[RAWRXD_SOURCE_AUTHORITY_001] OMIT absent optional MASM source: ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NanoQuant_Engine.asm")
 
     add_library(RawrXD_NanoQuant STATIC
         src/ggml/ggml_nanoquant.cpp
@@ -4682,12 +4152,12 @@ if(MSVC)
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
-    message(STATUS "[NanoQuant] DISABLED ├Ä┬ô├â┬ç├â┬╢ enable with -DRAWR_ENABLE_NANOQUANT=ON")
+    message(STATUS "[NanoQuant] DISABLED +�-�+�-�+�-� enable with -DRAWR_ENABLE_NANOQUANT=ON")
     endif()
 endif()
 
 # =============================================================================
-# Vulkan SDK (optional ├Ä┬ô├â┬ç├â┬╢ GPU compute acceleration)
+# Vulkan SDK (optional +�-�+�-�+�-� GPU compute acceleration)
 # =============================================================================
 # Phase 4A: Apply Vulkan detection fix for Windows
 include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
@@ -4764,7 +4234,7 @@ endif()
 # =============================================================================
 # Phase 6: Standalone Inference Engine Executable (T4)
 # =============================================================================
-# Produces RawrXD-InferenceEngine.exe ├Ä┬ô├â┬ç├â┬╢ loads GGUF and emits tokens with no IDE.
+# Produces RawrXD-InferenceEngine.exe +�-�+�-�+�-� loads GGUF and emits tokens with no IDE.
 # This is the self-hosting blocker: inference must run independently.
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
@@ -4854,7 +4324,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/codec/compression.cpp
     src/codec/brutal_gzip.cpp
     src/codec/gzip_brutal_inflate.cpp
-    # Deep2 core ├Ä┬ô├â┬ç├â┬╢ unified into InferenceEngine for canonical local inference
+    # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
     src/deep2/lavapath/GgufDynamicGeometry_io.cpp
     src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
@@ -5043,7 +4513,7 @@ src/vulkan_fwd_q4k_act.cpp
     src/deep2/LivePath_FusedTick.cpp
     src/deep2/Deep2LivePath_MechEnd.cpp
     src/deep2/Deep2LivePath_Thermal.cpp
-    # Reverse Knowledge Compiler (RKC) ├ó┬Ç┬ö proof-state before LLM
+    # Reverse Knowledge Compiler (RKC) +�-�-� proof-state before LLM
     src/rkc/RKCValidator.cpp
     src/rkc/RKCWorld.cpp
     src/rkc/RKCCodeWorld.cpp
@@ -5065,9 +4535,9 @@ src/vulkan_fwd_q4k_act.cpp
     src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
     src/BackendOrchestrator.cpp
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Agentic Core ├Ä┬ô├â┬ç├â┬╢ minimal verified set (add more after individual validation)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Agentic Core +�-�+�-�+�-� minimal verified set (add more after individual validation)
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/agentic/ErrorRecoveryManager.cpp
     src/agentic/BoundedAgentLoop.cpp
     src/agentic/OrchestratorBridge.cpp
@@ -5123,9 +4593,9 @@ src/vulkan_fwd_q4k_act.cpp
     src/agentic/tool_executor.cpp
     src/agentic/tool_registry.cpp
     src/agentic/vulkan_compute_real.cpp
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Sovereign Runtime ├Ä┬ô├â┬ç├â┬╢ verified .cpp files only
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Sovereign Runtime +�-�+�-�+�-� verified .cpp files only
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     src/sovereign/SovereignRuntime.cpp
     src/sovereign/ExecutionContract.cpp
     src/sovereign/SovereignCoreWrapper.cpp
@@ -5208,7 +4678,7 @@ option(RAWRXD_DEEP2_CERT "Enable Deep2 production/reference parity hooks" OFF)
 if(RAWRXD_DEEP2_CERT)
     target_compile_definitions(InferenceEngine PRIVATE RAWRXD_DEEP2_CERT=1)
     target_include_directories(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
-    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 ├Ä┬ô├â┬ç├â┬╢ stage telemetry + reference parity enabled")
+    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 +�-�+�-�+�-� stage telemetry + reference parity enabled")
 endif()
 
 # Add Vulkan include directories if available
@@ -5390,7 +4860,7 @@ set_target_properties(RawrXD-InferenceEngine PROPERTIES
     OUTPUT_NAME RawrXD-InferenceEngine
 )
 
-# Telemetry_Kernel.asm uses ADDR32 relocations ├Ä┬ô├â┬ç├â┬╢ require /LARGEADDRESSAWARE:NO
+# Telemetry_Kernel.asm uses ADDR32 relocations +�-�+�-�+�-� require /LARGEADDRESSAWARE:NO
 if(MSVC)
     target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -5468,7 +4938,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
-        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) ├Ä┬ô├â┬ç├â┬╢ required by auto_feature_registry
+        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
         list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
     endif()
 
@@ -5568,7 +5038,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
-        # Deep2 completion provider and bridge ├Ä┬ô├â┬ç├â┬╢ real local inference for ghost text
+        # Deep2 completion provider and bridge +�-�+�-�+�-� real local inference for ghost text
         src/ai_completion_real.cpp
         src/ide/Deep2Bridge.cpp
         src/ide/SovereignSharedMemoryBridge.cpp
@@ -5617,7 +5087,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32TerminalManager.cpp
         src/win32app/TransparentRenderer.cpp
 
-        # Plugin System ├Ä┬ô├â┬ç├â┬╢ Phase 43: Native Win32 DLL loading (C ABI)
+        # Plugin System +�-�+�-�+�-� Phase 43: Native Win32 DLL loading (C ABI)
         src/plugin_system/win32_plugin_loader.cpp
         src/win32app/Win32IDE_Plugins.cpp
         src/win32app/Win32IDE_HandleExtensionCommand.cpp
@@ -5639,7 +5109,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/backend/vulkan_compute.cpp
         src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
 
-        # Bounded Agent Loop + FIM Provider (Agent├Ä┬ô├â┬Ñ├â┬åIDE Pivot)
+        # Bounded Agent Loop + FIM Provider (Agent+�-�+�-�+�-�IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
         src/agentic/OllamaProvider.cpp
@@ -5648,10 +5118,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
         src/agentic/DeterministicReplayEngine.cpp
 
-        # T4: Autonomous Recovery Orchestrator (FailureClass ├Ä┬ô├â┬Ñ├â┬å recovery ├Ä┬ô├â┬Ñ├â┬å verify ├Ä┬ô├â┬Ñ├â┬å commit)
+        # T4: Autonomous Recovery Orchestrator (FailureClass +�-�+�-�+�-� recovery +�-�+�-�+�-� verify +�-�+�-�+�-� commit)
         src/agentic/autonomous_recovery_orchestrator.cpp
         
-        # T4.5: Agentic Deep Thinking Engine ├Ä┬ô├â┬ç├â┬╢ Autonomous monitoring, recovery, and orchestration
+        # T4.5: Agentic Deep Thinking Engine +�-�+�-�+�-� Autonomous monitoring, recovery, and orchestration
         src/agentic/AgenticDeepThinkingEngine.cpp
 
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
@@ -5669,7 +5139,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_001.cpp
         src/core/unlinked_symbols_batch_002.cpp  # ggml/matmul; asm_pyre_* gated when RAWRXD_HAS_ASM_PYRE
         src/core/unlinked_symbols_batch_003.cpp
-        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* ├Ä┬ô├â┬Ñ├â┬å ASM
+        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* +�-�+�-�+�-� ASM
         src/core/win32ide_watchdog_init.cpp        # sole C provider for asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
         src/core/unlinked_symbols_batch_006.cpp
@@ -5713,7 +5183,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations ├Ä┬ô├â┬ç├â┬╢ real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations +�-�+�-�+�-� real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -5731,7 +5201,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # T5: Agentic Transaction Layer (multi-step command execute/rollback)
         src/agentic/agentic_transaction.cpp
 
-        # P6: Agent Workflow Orchestrator (DAG-based plan├Ä┬ô├â┬Ñ├â┬åexecute├Ä┬ô├â┬Ñ├â┬åvalidate├Ä┬ô├â┬Ñ├â┬åcommit)
+        # P6: Agent Workflow Orchestrator (DAG-based plan+�-�+�-�+�-�execute+�-�+�-�+�-�validate+�-�+�-�+�-�commit)
         src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
@@ -5846,7 +5316,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Agent-Driven Hotpatch Orchestration (Phase 18)
         src/agent/agentic_hotpatch_orchestrator.cpp
 
-        # HTTP Client ├Ä┬ô├â┬ç├â┬╢ WinHTTP async with future retention (CLI+GUI)
+        # HTTP Client +�-�+�-�+�-� WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
         src/agent/model_invoker.cpp
         src/agent/planner.cpp
@@ -5868,10 +5338,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/agentic_puppeteer.cpp
         src/cloud_api_client.cpp
 
-        # LocalReasoningEngine ├Ä┬ô├â┬ç├â┬╢ API-free static analysis + pattern detection
+        # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
 
-        # Agent Self-Repair ├Ä┬ô├â┬ç├â┬╢ MASM64 self-patching kernel bridge
+        # Agent Self-Repair +�-�+�-�+�-� MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp
         src/agent/agent_self_healing_orchestrator.cpp
         
@@ -5933,19 +5403,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/lsp/RawrXD_LSPServer.cpp
         src/win32app/Win32IDE_LSPServer.cpp
 
-        # Phase 27b: LSP ├Ä┬ô├â┬Ñ├â┬╢ Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
+        # Phase 27b: LSP +�-�+�-�+�-� Hotpatch Bridge (Symbol Export, Diagnostics, JSON-RPC Extension)
         src/lsp/lsp_hotpatch_bridge.cpp
         src/lsp/hotpatch_symbol_provider.cpp
         src/lsp/gguf_diagnostic_provider.cpp
 
-        # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Toggleable Engine System
+        # Phase 28: MonacoCore Native Editor Engine +�-�+�-�+�-� Toggleable Engine System
         src/core/MonacoCoreEngine.cpp
         src/core/WebView2EditorEngine.cpp
         src/core/RichEditEditorEngine.cpp
         src/core/EditorEngineFactory.cpp
         src/win32app/Win32IDE_EditorEngine.cpp
 
-        # Phase 29: Native PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ MSF v7.00 Parser + Symbol Cache
+        # Phase 29: Native PDB Symbol Server +�-�+�-�+�-� MSF v7.00 Parser + Symbol Cache
         src/core/pdb_native.cpp
         src/core/pdb_lsp_bridge.cpp
         src/win32app/Win32IDE_PDBSymbols.cpp
@@ -5956,7 +5426,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/auto_discovery.cpp
         src/win32app/Win32IDE_AuditDashboard.cpp
 
-        # Phase 32: The Final Gauntlet ├Ä┬ô├â┬ç├â┬╢ Pre-Packaging Runtime Verification
+        # Phase 32: The Final Gauntlet +�-�+�-�+�-� Pre-Packaging Runtime Verification
         src/core/final_gauntlet.cpp
         src/win32app/Win32IDE_Gauntlet.cpp
 
@@ -5973,10 +5443,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_QuickWins.cpp
 
         # Shared Feature Dispatch System (CLI + GUI unified command routing)
-        # NOTE: shared_feature_dispatch.cpp REMOVED ├Ä┬ô├â┬ç├â┬╢ duplicated by unified_command_dispatch.cpp
+        # NOTE: shared_feature_dispatch.cpp REMOVED +�-�+�-�+�-� duplicated by unified_command_dispatch.cpp
         src/core/feature_registration.cpp
         src/core/feature_handlers.cpp
-        # auto_feature_registry excluded for Win32 IDE ├Ä┬ô├â┬ç├â┬╢ use ssot_handlers (lightweight stubs)
+        # auto_feature_registry excluded for Win32 IDE +�-�+�-�+�-� use ssot_handlers (lightweight stubs)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
@@ -5996,7 +5466,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
-        # Unified Command Dispatch ├Ä┬ô├â┬ç├â┬╢ Zero-drift SSOT dispatch (replaces manual registration)
+        # Unified Command Dispatch +�-�+�-�+�-� Zero-drift SSOT dispatch (replaces manual registration)
         src/core/unified_command_dispatch.cpp
         src/core/startup_phase_registry.cpp
 
@@ -6013,11 +5483,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 34: Telemetry Export
         src/win32app/Win32IDE_Telemetry.cpp
 
-        # Phase 36: MCP Integration ├ó┬Ç┬ö Model Context Protocol Server + Client
+        # Phase 36: MCP Integration +�-�-� Model Context Protocol Server + Client
         src/mcp_integration.cpp
         src/win32app/Win32IDE_MCP.cpp
 
-        # Phase 36: Flight Recorder ├Ä┬ô├â┬ç├â┬╢ memory-mapped binary ring-buffer logger
+        # Phase 36: Flight Recorder +�-�+�-�+�-� memory-mapped binary ring-buffer logger
         src/win32app/Win32IDE_FlightRecorder.cpp
 
         # Phase 36: QuickJS VSIX JavaScript Extension Host
@@ -6031,15 +5501,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/js_extension_host.cpp
         src/core/extension_polyfill_engine.cpp
 
-        # Phase 46: VulkanKernel ├Ä┬ô├â┬ç├â┬╢ Full GPU Compute Engine
+        # Phase 46: VulkanKernel +�-�+�-�+�-� Full GPU Compute Engine
         src/vulkan_compute.cpp
 
-        # Phase 46: Live Binary Patcher ├Ä┬ô├â┬ç├â┬╢ Layer 5 Hotpatch
+        # Phase 46: Live Binary Patcher +�-�+�-�+�-� Layer 5 Hotpatch
         src/core/live_binary_patcher.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Core Production Subsystems (Verified Working)
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/core/deterministic_swarm.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
@@ -6069,7 +5539,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
 
-        # Instructions Provider ├Ä┬ô├â┬ç├â┬╢ unified *.instructions.md loader (HTTP+CLI+GUI)
+        # Instructions Provider +�-�+�-�+�-� unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
         src/win32app/Win32IDE_Instructions.cpp
 
@@ -6130,7 +5600,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_MarketplacePanel.cpp
         src/win32app/Win32IDE_Collab.cpp
 
-        # Phase 51: mIRC Control Bridge ├Ä┬ô├â┬ç├â┬╢ IRC bot for remote IDE control
+        # Phase 51: mIRC Control Bridge +�-�+�-�+�-� IRC bot for remote IDE control
         src/win32app/Win32IDE_IRCBridge.cpp
         src/win32app/Win32IDE_IRCBridgeCommands.cpp
         src/collab/websocket_hub.cpp
@@ -6162,7 +5632,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/ConsentPrompt.cpp
         src/win32app/AutonomousAgent.cpp
 
-        # UI Rendering ├Ä┬ô├â┬ç├â┬╢ Chat message renderer + tool action status + chat panel
+        # UI Rendering +�-�+�-�+�-� Chat message renderer + tool action status + chat panel
         src/ui/chat_message_renderer.cpp
         src/ui/tool_action_status.cpp
         src/ui/chat_panel.cpp
@@ -6177,7 +5647,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # ASM Stub Implementations - REMOVED: All stub files deleted, real implementations only
 
-        # Phase 50: Enterprise Hardening ├Ä┬ô├â┬ç├â┬╢ Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
+        # Phase 50: Enterprise Hardening +�-�+�-�+�-� Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
         src/core/update_signature.cpp
         src/core/cursor_github_parity_bridge.cpp
         src/core/swarm_reconciliation.cpp
@@ -6186,11 +5656,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/enterprise_stress_tests.cpp
         src/core/auto_update_system.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-        # Autonomy Gap Closure ├Ä┬ô├â┬ç├â┬╢ Phase A-D + Tier 1.4 + Tier 2.3
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # Autonomy Gap Closure +�-�+�-�+�-� Phase A-D + Tier 1.4 + Tier 2.3
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
-        # Phase A: Closed-Loop Verification (Write ├Ä┬ô├â┬Ñ├â┬å Compile ├Ä┬ô├â┬Ñ├â┬å Test ├Ä┬ô├â┬Ñ├â┬å Fix)
+        # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
         src/agentic/autonomous_verification_loop.cpp
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
@@ -6212,9 +5682,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Unified Telemetry Core
         src/telemetry/UnifiedTelemetryCore.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Cursor/JB-Parity Feature Modules
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/telemetry/telemetry_export.cpp
         src/agentic/agentic_composer_ux.cpp
         src/context/context_mention_parser.cpp
@@ -6226,20 +5696,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CursorParity.cpp
         src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Compile-Debt Resolved: IDE Feature Modules (Tasks, Git, Search,
         # Fuzzy Search, Refactor, CallStack, Multi-File Search)
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/win32app/Win32IDE_Tasks.cpp
         src/win32app/Win32IDE_GitPanel.cpp
         src/win32app/Win32IDE_Refactor.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
         src/win32app/Win32IDE_FuzzySearch.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer
         # (Minimap, DiffView, SettingsGUI, CodeLens, InlayHints, Hover)
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/win32app/Win32IDE_Minimap.cpp
         src/win32app/Win32IDE_DiffView.cpp
         src/win32app/Win32IDE_SettingsGUI.cpp
@@ -6247,9 +5717,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_InlayHints.cpp
         src/win32app/Win32IDE_HoverTooltips.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Flagship Product Pillars (Provable Agent, AI RE, Airgapped)
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/win32app/Win32IDE_ProvableAgent.cpp
         src/win32app/Win32IDE_AIReverseEngineering.cpp
         src/win32app/Win32IDE_AirgappedEnterprise.cpp
@@ -6302,22 +5772,22 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/license_enforcement.cpp
         src/feature_flags_runtime.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Batch 2 Parity Enhancements (Peek, AutoSave, TermSplit, Snippets, MultiCursor)
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/win32app/Win32IDE_PeekView.cpp
         src/win32app/Win32IDE_AutoSave.cpp
         src/win32app/Win32IDE_TerminalSplit.cpp
         src/win32app/Win32IDE_SnippetEngine.cpp
         src/win32app/Win32IDE_MultiCursor.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-        # Cognitive Architecture ├Ä┬ô├â┬ç├â┬╢ Autonomous Reverse Engineering OS
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+        # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/agentic/cognitive/cognitive_types.cpp
         src/agentic/cognitive/enhanced_blackboard.cpp
         src/agentic/cognitive/mission_director.cpp
@@ -6325,9 +5795,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/cognitive/dynamic_planner.cpp
         src/agentic/cognitive/autonomous_orchestrator.cpp
 
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # TrailBrake / HotPatcher / AntiPatcher Safety System
-        # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+        # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         src/deep2/TrailBrake.cpp
         src/deep2/HotPatcher.cpp
         src/deep2/HotPatcherSafety.cpp
@@ -6605,7 +6075,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
-        # HEXMAG_IDE_ROUTE ├Ä┬ô├â┬ç├â┬╢ controller + MASM client + FINALIZE_POLICY
+        # HEXMAG_IDE_ROUTE +�-�+�-�+�-� controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
         src/win32app/Win32IDE_HexMagCopilotRoute.cpp
         # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
@@ -6635,7 +6105,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # - Neural_Entropy_Shield.asm: Marketing word salad
         # All src/asm/gpu/RawrXD_RDNA3_*.asm files removed from build.
         set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 0)
-        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled ├Ä┬ô├â┬ç├â┬╢ fraudulent claims removed")
+        message(STATUS "[Win32IDE] Sovereign GPU ASM disabled +�-�+�-�+�-� fraudulent claims removed")
 
         set_source_files_properties(${WIN32IDE_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
     endif()
@@ -6742,11 +6212,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             if(src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stub\\.cpp$|/stub_.*\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|_stub\\.asm$|/stub_.*\\.asm$|/shim_.*\\.(cpp|asm)$|/missing_handler|/link_stubs_.*\\.(cpp|asm)$|_link_shims?\\.(cpp|asm)$|_fallback[^/]*\\.(cpp|asm)$|_(mock|fake)\\.(cpp|asm)$)" OR
                src MATCHES "(stub_|_stub\\.(cpp|asm)$|shim_|_shims?\\.(cpp|asm)$|shims?\\.(cpp|asm)$|/stubs\\.(cpp|asm)$)" OR
                src MATCHES "(mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                                # ai_agent_masm_core_impl.cpp provides required MASM symbols ├Ä┬ô├â┬ç├â┬╢ exempt
+                                # ai_agent_masm_core_impl.cpp provides required MASM symbols +�-�+�-�+�-� exempt
                                 if(src MATCHES "ai_agent_masm_core_impl\\.cpp$")
                                     continue()
                                 endif()
-                                # These are real production implementations, not stubs ├Ä┬ô├â┬ç├â┬╢ exempt
+                                # These are real production implementations, not stubs +�-�+�-�+�-� exempt
                                 if(src MATCHES "cot_fallback_system\\.cpp$" OR
                                    src MATCHES "dml_asm_fallback\\.cpp$")
                                     continue()
@@ -6781,7 +6251,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                 message(WARNING "[EMERGENCY OVERRIDE] Stub files linked to ${target_name} (CI will reject)")
             endif()
         else()
-            message(STATUS "├Ä┬ô├é┬ú├â┬┤ ${target_name}: No stub policy violations")
+            message(STATUS "+�-�+�-�+�-� ${target_name}: No stub policy violations")
         endif()
     endfunction()
     
@@ -6868,7 +6338,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endif()
 
-    # v14.7.6 Batch 2 parity files ├Ä┬ô├â┬ç├â┬╢ compilation fixes applied, re-enabled
+    # v14.7.6 Batch 2 parity files +�-�+�-�+�-� compilation fixes applied, re-enabled
     # (PeekView, AutoSave, TerminalSplit now compile cleanly)
 
     list(REMOVE_DUPLICATES WIN32IDE_SOURCES)
@@ -6920,17 +6390,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ResourceGenerator.cpp
     )
 
-    # Runtime surface ├Ä┬ô├â┬ç├â┬╢ unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
+    # Runtime surface +�-�+�-�+�-� unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
         src/runtime_surface/RuntimeSurfaceModule.cpp
         src/runtime_surface/GenerationStopwatch.cpp
     )
 
-    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç Performance-optimization batches 3├Ä┬ô├â┬ç├â┬┤6 ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
+    # +�-�+�-�+�-�+�-�+�-�+�-� Performance-optimization batches 3+�-�+�-�+�-�6 +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Batch 3: Unified tiered memory pool (CPU / GPU / disk / compressed)
     # Batch 4: Work-stealing ExecutionScheduler (resolves friend-class declaration)
-    # Batch 5: InferenceProfiler ├Ä┬ô├â┬ç├â┬╢ per-layer profiling + Prometheus export
-    # Batch 6: BackendOrchestrator ├Ä┬ô├â┬ç├â┬╢ dynamic switching, sharding, semantic cache
+    # Batch 5: InferenceProfiler +�-�+�-�+�-� per-layer profiling + Prometheus export
+    # Batch 6: BackendOrchestrator +�-�+�-�+�-� dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
         src/memory/SequentialBlowoffValve.cpp
@@ -7127,7 +6597,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     )
     message(STATUS "Deep2Engine Metadata Regression Test configured")
 
-    # ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç SDMA GPU Scheduler (C++ replacement for MASM) ├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç├Ä┬ô├â┬╢├â┬ç
+    # +�-�+�-�+�-�+�-�+�-�+�-� SDMA GPU Scheduler (C++ replacement for MASM) +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
     # sdma_ring_allocator: O(1) tensor slot bitmap allocator with spinlock
@@ -7170,9 +6640,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/sovereign_autonomy/SovereignAgentRuntime.cpp
     )
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND WIN32IDE_SOURCES
         src/win32ide/Omega1IPCClient.cpp
         src/win32ide/GhostTextRenderer.cpp
@@ -7181,9 +6651,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32ide/Win32IDE_Omega1Integration.cpp
     )
     
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Elastic Engine ├Ä┬ô├â┬ç├â┬╢ Predictive tensor residency + governance
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Elastic Engine +�-�+�-�+�-� Predictive tensor residency + governance
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND WIN32IDE_SOURCES
         src/runtime/elastic/ElasticEngine.cpp
         src/runtime/elastic/ElasticGGUFIndex.cpp
@@ -7217,18 +6687,18 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/runtime/Sovereign_KernelBridge_CPP.cpp
     )
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # OMEGA-1 Engine Server - IPC Server for IDE integration
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND RAWR_ENGINE_SOURCES
         src/engine/Omega1Engine_Server.cpp
     )
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # P1_UI_WINDOW_OWNERSHIP_001 ├Ä┬ô├â┬ç├â┬╢ partial ODR purge (tests/mains only).
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # P1_UI_WINDOW_OWNERSHIP_001 +�-�+�-�+�-� partial ODR purge (tests/mains only).
     # Broader stub removal (batch_021 / ssot / LSP / CursorParity) caused
-    # LNK1120├ó┬ö┬£├â┬╣334; those need symbol-level dedupe, not TU deletion.
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # LNK1120+�-�-�+�-�334; those need symbol-level dedupe, not TU deletion.
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(REMOVE_ITEM WIN32IDE_SOURCES
         src/deep2/TheDualityExample.cpp
         src/deep2/Deep2Server_Minimal.cpp
@@ -7236,7 +6706,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/Deep2APIServer_Complete.cpp
         src/deep2/GGUFVerifier.cpp
         src/deep2/GGUFLoader_Fixed.cpp
-        # keep MASMKernelStubs.cpp ├Ä┬ô├â┬ç├â┬╢ provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
+        # keep MASMKernelStubs.cpp +�-�+�-�+�-� provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
         src/deep2/dump_tensors.cpp
         src/deep2/Deep2Engine_KernelTest.cpp
         src/deep2/moe_microbench.cpp
@@ -7259,7 +6729,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
 
     # ADDR32 MASM objs cannot link with /LARGEADDRESSAWARE (required for amdvlk
-    # ProductOpenSession ├ó┬Ç┬ö R01). Drop them from IDE; feature flags already gate calls.
+    # ProductOpenSession +�-�-� R01). Drop them from IDE; feature flags already gate calls.
     set(_WIN32IDE_ASM ${ASM_KERNEL_SOURCES})
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
@@ -7289,7 +6759,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     endif()
 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
-    # a stale handle, indexer, or crashed link left the binary busy ├Ä┬ô├â┬ç├â┬╢ harmless if files are absent).
+    # a stale handle, indexer, or crashed link left the binary busy +�-�+�-�+�-� harmless if files are absent).
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # Use CMake-native removal to avoid shell quoting issues in generated link commands.
     if(MSVC)
@@ -7358,15 +6828,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             /MANIFEST:NO
             "/FORCE:MULTIPLE"
         )
-        # FORCE still required: ssot├Ä┬ô├â┬Ñ├â┬╢auto_feature, batch_021 stubs├Ä┬ô├â┬Ñ├â┬╢real TUs, omega C├Ä┬ô├â┬Ñ├â┬╢batch,
-        # v280├Ä┬ô├â┬Ñ├â┬╢batch_001, CursorParity├Ä┬ô├â┬Ñ├â┬╢SemanticIndex, etc. Surgical ASM fixes landed;
+        # FORCE still required: ssot+�-�+�-�+�-�auto_feature, batch_021 stubs+�-�+�-�+�-�real TUs, omega C+�-�+�-�+�-�batch,
+        # v280+�-�+�-�+�-�batch_001, CursorParity+�-�+�-�+�-�SemanticIndex, etc. Surgical ASM fixes landed;
         # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
             VERBATIM
         )
-        # R25: keep PE LAA:YES. Do not clear LAA ┬ù 2GB VA breaks mmap streaming.
+        # R25: keep PE LAA:YES. Do not clear LAA -� 2GB VA breaks mmap streaming.
         # Certify after link: dumpbin /headers | findstr Large
         # GPU/ICD remains deferred; DualStick not reopened.
     endif()
@@ -7410,7 +6880,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             ${QUICKJS_DIR}/quickjs.c
             ${QUICKJS_DIR}/libregexp.c
             ${QUICKJS_DIR}/libunicode.c
-            ${QUICKJS_DIR}/quickjs-libc.c
         )
         if(EXISTS "${QUICKJS_DIR}/cutils.c")
             list(APPEND QUICKJS_SOURCES ${QUICKJS_DIR}/cutils.c)
@@ -7512,7 +6981,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
             message(FATAL_ERROR "[ProductionLane] QuickJS not found at ${QUICKJS_DIR} and Win32IDE would require QuickJS stubs; strict production strip requires a real QuickJS provider.")
         endif()
-        message(STATUS "QuickJS not found at ${QUICKJS_DIR} ├Ä┬ô├â┬ç├â┬╢ JS extension host uses stubs")
+        message(STATUS "QuickJS not found at ${QUICKJS_DIR} +�-�+�-�+�-� JS extension host uses stubs")
         # Create stub include directory so headers compile
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_QUICKJS_STUB=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=0)
@@ -7595,7 +7064,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # If monolithic objects are linked, avoid also compiling/linking the overlapping C++ fallback provider.
         if(_WIN32IDE_LINKED_MONOLITHIC_OBJS)
             list(REMOVE_ITEM WIN32IDE_SOURCES src/core/model_loader_fallbacks.cpp)
-            message(STATUS "[Win32IDE] Monolithic ASM objects linked ├Ä┬ô├â┬ç├â┬╢ removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
+            message(STATUS "[Win32IDE] Monolithic ASM objects linked +�-�+�-�+�-� removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
         endif()
     else()
         message(STATUS "[Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)")
@@ -7646,7 +7115,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         add_dependencies(RawrXD-Win32IDE re_deobfuscator)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_DEOBF_OBJECTS})
     endif()
-    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) ├Ä┬ô├â┬ç├â┬╢ it defines main() and conflicts with WinMain
+    # Skip RE_MODEL_OBJECTS (model_llm_harvester.asm) +�-�+�-�+�-� it defines main() and conflicts with WinMain
     # if(TARGET re_model_reverse)
     #     add_dependencies(RawrXD-Win32IDE re_model_reverse)
     #     target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_MODEL_OBJECTS})
@@ -7736,7 +7205,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endforeach()
 
-    # Product Finish 100 ├ó┬Ç┬ö Waves 3-4 (git/search/session/approval/smoke)
+    # Product Finish 100 +�-�-� Waves 3-4 (git/search/session/approval/smoke)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/RawrXD_Product100.cmake)
 endif()
 
@@ -7787,22 +7256,22 @@ endif()
 # Duplicate/partial RawrXD_Gold source block removed here.
 # Canonical RawrXD_Gold target is defined in the standalone Gold section above.
     # ============================================================================
-    # CI Gating Targets ├Ä┬ô├â┬ç├â┬╢ Release / Debug / AddressSanitizer
+    # CI Gating Targets +�-�+�-�+�-� Release / Debug / AddressSanitizer
     # ============================================================================
 # Usage:
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release           (production)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug             (dev)
 #   cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DRAWR_ASAN=ON  (ASAN)
 #
-# ASAN (MSVC): /fsanitize=address ├Ä┬ô├â┬ç├â┬╢ detects heap overflows, use-after-free
+# ASAN (MSVC): /fsanitize=address +�-�+�-�+�-� detects heap overflows, use-after-free
 option(RAWR_ASAN "Enable AddressSanitizer (MSVC /fsanitize=address)" OFF)
 
-# PMASSA: bye Ollama ├Ä┬ô├â┬ç├â┬╢ prefer local GGUF / inference; Ollama code can be excluded when ON
+# PMASSA: bye Ollama +�-�+�-�+�-� prefer local GGUF / inference; Ollama code can be excluded when ON
 # See docs/PMASSA_BYE_OLLAMA.md
 option(RAWRXD_PMASSA "PMASSA: phase out Ollama (prefer local GGUF; define RAWRXD_PMASSA)" OFF)
 if(RAWRXD_PMASSA)
     add_compile_definitions(RAWRXD_PMASSA=1)
-    message(STATUS "[PMASSA] Bye Ollama ├Ä┬ô├â┬ç├â┬╢ RAWRXD_PMASSA=ON")
+    message(STATUS "[PMASSA] Bye Ollama +�-�+�-�+�-� RAWRXD_PMASSA=ON")
 endif()
 
 if(RAWR_ASAN AND MSVC)
@@ -7925,10 +7394,10 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# SovereignTest_Suite ├Ä┬ô├â┬ç├â┬╢ Pre-Build CI/CD Gate (beaconism pattern)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# SovereignTest_Suite +�-�+�-�+�-� Pre-Build CI/CD Gate (beaconism pattern)
 # Validates: atomic rollback, cache coherency, patch correctness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" OFF)
 if(BUILD_SOVEREIGN_TEST_SUITE)
     add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
@@ -7956,10 +7425,10 @@ if(BUILD_SOVEREIGN_TEST_SUITE)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# SovereignTest_VAL038_E2E ├Ä┬ô├â┬ç├â┬╢ Integration E2E Harness for VAL-038 Kernel
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# SovereignTest_VAL038_E2E +�-�+�-�+�-� Integration E2E Harness for VAL-038 Kernel
 # Live-fire validation: Cold-start -> Hot-patch -> Inference -> Hash validation
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" OFF)
 if(BUILD_SOVEREIGN_VAL038_E2E)
     add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
@@ -7985,10 +7454,10 @@ if(BUILD_SOVEREIGN_VAL038_E2E)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# Deep2_Batch_Test ├Ä┬ô├â┬ç├â┬╢ Model Stress-Test Harness with PageFaultMonitor
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# Deep2_Batch_Test +�-�+�-�+�-� Model Stress-Test Harness with PageFaultMonitor
 # Discovery-Load-Benchmark-Validation sequence for all models
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" OFF)
 if(BUILD_DEEP2_BATCH_TEST)
     add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
@@ -8014,9 +7483,9 @@ if(BUILD_DEEP2_BATCH_TEST)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# test_generate_one_token ├Ä┬ô├â┬ç├â┬╢ Minimal Codestral One-Token Validation Gate
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# test_generate_one_token +�-�+�-�+�-� Minimal Codestral One-Token Validation Gate
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" OFF)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
@@ -8040,7 +7509,7 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
-# test_q4k_gemv_parity ├Ä┬ô├â┬ç├â┬╢ BATCH2_Q4K_GEMV_001 standalone cert
+# test_q4k_gemv_parity +�-�+�-�+�-� BATCH2_Q4K_GEMV_001 standalone cert
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)
 if(BUILD_DEEP2_Q4K_GEMV_PARITY)
     add_executable(test_q4k_gemv_parity
@@ -8168,8 +7637,8 @@ if(BUILD_DEEP2_STREAMING)
     message(STATUS "[Deep2] Streaming test: test_streaming")
 endif()
 
-# deep2_streamer_cert ├Ä┬ô├â┬ç├â┬╢ STREAMER-CERT-001: Full streaming certification harness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# deep2_streamer_cert +�-�+�-�+�-� STREAMER-CERT-001: Full streaming certification harness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" OFF)
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
@@ -8194,7 +7663,7 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
-# OLLAMA_PARITY_STREAMER_001 ├ó┬Ç┬ö Deep2 owns stream surface; zero Ollama HTTP
+# OLLAMA_PARITY_STREAMER_001 +�-�-� Deep2 owns stream surface; zero Ollama HTTP
 option(BUILD_DEEP2_STREAMER_PARITY "Build Deep2 Ollama-parity streamer" OFF)
 if(BUILD_DEEP2_STREAMER_PARITY)
     add_executable(deep2_streamer_parity
@@ -8221,7 +7690,7 @@ if(BUILD_DEEP2_STREAMER_PARITY)
     message(STATUS "[Deep2] Ollama-parity streamer: deep2_streamer_parity")
 endif()
 
-# STREAMER_GPU_SOLO_001 ├ó┬Ç┬ö SingleGpu plan: enum all, open one primary (no GGUF claim yet)
+# STREAMER_GPU_SOLO_001 +�-�-� SingleGpu plan: enum all, open one primary (no GGUF claim yet)
 option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" OFF)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
@@ -9060,7 +8529,7 @@ if(BUILD_DEEP2_LOCAL_AGENT_AUDIT_001)
     message(STATUS "[Deep2] LOCAL_AGENT_AUDIT_001: deep2_local_agent_audit_001")
 endif()
 
-# A0 ├ó┬Ç┬ö product floor: process stays alive (no model / no VWA / no InferenceEngine)
+# A0 +�-�-� product floor: process stays alive (no model / no VWA / no InferenceEngine)
 option(BUILD_P0_PROCESS_ALIVE_001 "Build P0_PROCESS_ALIVE_001 cert" OFF)
 if(BUILD_P0_PROCESS_ALIVE_001)
     add_executable(p0_process_alive_001
@@ -9077,7 +8546,7 @@ if(BUILD_P0_PROCESS_ALIVE_001)
     message(STATUS "[Deep2] P0_PROCESS_ALIVE_001: p0_process_alive_001")
 endif()
 
-# B0 ├ó┬Ç┬ö VWA range contract (RMV-layered; no second mount)
+# B0 +�-�-� VWA range contract (RMV-layered; no second mount)
 option(BUILD_VWA_RANGE_CONTRACT_001 "Build VWA_RANGE_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_RANGE_CONTRACT_001)
     add_executable(vwa_range_contract_001
@@ -9097,7 +8566,7 @@ if(BUILD_VWA_RANGE_CONTRACT_001)
     message(STATUS "[Deep2] VWA_RANGE_CONTRACT_001: vwa_range_contract_001")
 endif()
 
-# C1 substrate ├ó┬Ç┬ö K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
+# C1 substrate +�-�-� K2 logits physical lineage (VWA on RMV; GPU_DISPATCH separate)
 option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
@@ -9120,7 +8589,7 @@ if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     message(STATUS "[Deep2] K2 logits VWA lineage: deep2_k2_logits_vwa_lineage_001")
 endif()
 
-# B0 ├ó┬Ç┬ö VWA address contract (types + ResolvePhysicalSpan only)
+# B0 +�-�-� VWA address contract (types + ResolvePhysicalSpan only)
 option(BUILD_VWA_ADDRESS_CONTRACT_001 "Build VWA_ADDRESS_CONTRACT_001 cert" OFF)
 if(BUILD_VWA_ADDRESS_CONTRACT_001)
     add_executable(vwa_address_contract_001
@@ -9140,7 +8609,7 @@ if(BUILD_VWA_ADDRESS_CONTRACT_001)
     message(STATUS "[Deep2] VWA_ADDRESS_CONTRACT_001: vwa_address_contract_001")
 endif()
 
-# B1 ├ó┬Ç┬ö VWA POC-1: RMV ├ó┬å┬Æ MASM resolve ├ó┬å┬Æ exact ReadFile + dequant (real GGUF)
+# B1 +�-�-� VWA POC-1: RMV +�-�-� MASM resolve +�-�-� exact ReadFile + dequant (real GGUF)
 option(BUILD_VWA_POC_1_001 "Build VWA_POC_1_001 cert" OFF)
 if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
     set(_VWA_POC_ML64 "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe")
@@ -10170,7 +9639,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
     )
     message(STATUS "[Deep2] K2 TryGpu logits split: deep2_k2_trygpu_logits_split_cert")
 
-    # C1 live ├ó┬Ç┬ö fulfilled├ó┬å┬ÆTryGpuHot range attribution under BOUNDED_STREAM
+    # C1 live +�-�-� fulfilled+�-�-�TryGpuHot range attribution under BOUNDED_STREAM
     add_executable(deep2_k2_logits_gpu_range_attribution_001
         src/deep2/deep2_k2_logits_gpu_range_attribution_001.cpp)
     target_link_libraries(deep2_k2_logits_gpu_range_attribution_001
@@ -10190,7 +9659,7 @@ if(BUILD_DEEP2_K2_TRYGPU_LOGITS_SPLIT_CERT)
                    "deep2_k2_logits_gpu_range_attribution_001")
 endif()
 
-# C1├ó┬Ç┬ôC9 additive helpers (observational lineage + cut/overlap/bound validators)
+# C1+�-�-�C9 additive helpers (observational lineage + cut/overlap/bound validators)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2C1C9.fragment.cmake)
 if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     target_link_libraries(InferenceEngine PUBLIC deep2_c1_c9)
@@ -10201,7 +9670,7 @@ if(TARGET deep2_c1_c9 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] C1-C9 helpers: deep2_c1_c9 linked to InferenceEngine")
 endif()
 
-# VWA B3├ó┬Ç┬ôB8 no-fiction range core (resolve/fulfill/IOCP; no manager)
+# VWA B3+�-�-�B8 no-fiction range core (resolve/fulfill/IOCP; no manager)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaB3B8.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2VwaConsumerGates.fragment.cmake)
 if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
@@ -10209,7 +9678,7 @@ if(TARGET deep2_vwa_range_core AND TARGET InferenceEngine)
     message(STATUS "[Deep2] VWA B3-B8 range core: deep2_vwa_range_core")
 endif()
 
-# RAWRXD_RUN_MODELNAME_001 ├ó┬Ç┬ö Ollama-style `rawr run <alias>` front door (Deep2).
+# RAWRXD_RUN_MODELNAME_001 +�-�-� Ollama-style `rawr run <alias>` front door (Deep2).
 option(BUILD_RAWRXD_RUN_MODELNAME_001 "Build RAWRXD_RUN_MODELNAME_001 + rawr CLI" OFF)
 if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     add_executable(rawrxd_run_modelname_001
@@ -10272,10 +9741,10 @@ if(BUILD_RAWRXD_RUN_MODELNAME_001 AND TARGET InferenceEngine)
     message(STATUS "[Deep2] Runner front door: rawr + useful_tps + NORMAL_GGUF_FINAL")
 endif()
 
-# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 ├ó┬Ç┬ö run/chat/agent/steer/resume + certs
+# RAWRXD_AGENTIC_CLI_SOURCE_DROP_001 +�-�-� run/chat/agent/steer/resume + certs
 include(${CMAKE_SOURCE_DIR}/cmake/RawrAgenticCli.fragment.cmake)
 
-# Deep2 Gateway cert island ├ó┬Ç┬ö Win32 only (no Ship / no C++23)
+# Deep2 Gateway cert island +�-�-� Win32 only (no Ship / no C++23)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2GatewayCertStandalone.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2BenchmarkCert.fragment.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Deep2ProductLavapath.fragment.cmake)
@@ -10662,8 +10131,8 @@ if(BUILD_DEEP2_PLACEMENT_COST_CERT)
     message(STATUS "[Deep2] Placement cost cert: deep2_placement_cost_cert")
 endif()
 
-# deep2_mars_e2e ├Ä┬ô├â┬ç├â┬╢ MARS dual-GPU placement + hotpatch + generate smoke
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# deep2_mars_e2e +�-�+�-�+�-� MARS dual-GPU placement + hotpatch + generate smoke
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" OFF)
 if(BUILD_DEEP2_MARS_E2E)
     add_executable(deep2_mars_e2e
@@ -10708,7 +10177,7 @@ if(BUILD_TEST_MARS_CONTROLLER)
     message(STATUS "[Deep2] MARS controller unit smoke: test_mars_controller")
 endif()
 
-# deep2_execution_policy_smoke ├Ä┬ô├â┬ç├â┬╢ user-owned ExecutionPolicy validate/store
+# deep2_execution_policy_smoke +�-�+�-�+�-� user-owned ExecutionPolicy validate/store
 option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" OFF)
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
@@ -10732,7 +10201,7 @@ if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     message(STATUS "[Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke")
 endif()
 
-# p1_ide_exec_policy_apply_001 ├Ä┬ô├â┬ç├â┬╢ IDE load enforces ExecutionPolicy placement
+# p1_ide_exec_policy_apply_001 +�-�+�-�+�-� IDE load enforces ExecutionPolicy placement
 option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     add_executable(p1_ide_exec_policy_apply_001
@@ -10755,7 +10224,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
     message(STATUS "[Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001")
 endif()
 
-# p1_ide_exec_policy_live_gguf_001 ├Ä┬ô├â┬ç├â┬╢ real GGUF ├Ä┬ô├â┬Ñ├â┬å residency ├Ä┬ô├â┬Ñ├â┬å generate
+# p1_ide_exec_policy_live_gguf_001 +�-�+�-�+�-� real GGUF +�-�+�-�+�-� residency +�-�+�-�+�-� generate
 option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" OFF)
 if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     add_executable(p1_ide_exec_policy_live_gguf_001
@@ -10778,7 +10247,7 @@ if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
     message(STATUS "[Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001")
 endif()
 
-# p1_real_speedup_001 ├Ä┬ô├â┬ç├â┬╢ external wall REAL_SPEEDUP (frozen contract)
+# p1_real_speedup_001 +�-�+�-�+�-� external wall REAL_SPEEDUP (frozen contract)
 option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" OFF)
 if(BUILD_P1_REAL_SPEEDUP)
     add_executable(p1_real_speedup_001
@@ -10801,7 +10270,7 @@ if(BUILD_P1_REAL_SPEEDUP)
     message(STATUS "[Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001")
 endif()
 
-# p1_repeatability_trial_validity_diag_001 ├Ä┬ô├â┬ç├â┬╢ MeasuredGenerate acceptance diagnostic
+# p1_repeatability_trial_validity_diag_001 +�-�+�-�+�-� MeasuredGenerate acceptance diagnostic
 option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
     "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" OFF)
 if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
@@ -10871,7 +10340,7 @@ if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
     message(STATUS "[Deep2] P1 repeatability state drift diag")
 endif()
 
-# p1_ui_encoding_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_ENCODING_001 (UTF-8├Ä┬ô├â┬Ñ├â┬åUTF-16 Win32 boundary)
+# p1_ui_encoding_cert +�-�+�-�+�-� P1_UI_ENCODING_001 (UTF-8+�-�+�-�+�-�UTF-16 Win32 boundary)
 option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" OFF)
 if(BUILD_P1_UI_ENCODING_CERT)
     add_executable(p1_ui_encoding_cert
@@ -10893,7 +10362,7 @@ if(BUILD_P1_UI_ENCODING_CERT)
     message(STATUS "[Win32] UI encoding cert: p1_ui_encoding_cert")
 endif()
 
-# p1_ui_menu_e2e_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
+# p1_ui_menu_e2e_cert +�-�+�-�+�-� P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
 option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" OFF)
 if(BUILD_P1_UI_MENU_E2E_CERT)
     add_executable(p1_ui_menu_e2e_cert
@@ -10912,7 +10381,7 @@ if(BUILD_P1_UI_MENU_E2E_CERT)
     message(STATUS "[Win32] UI menu E2E cert: p1_ui_menu_e2e_cert")
 endif()
 
-# p1_ui_sidebar_encoding_cert ├Ä┬ô├â┬ç├â┬╢ P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
+# p1_ui_sidebar_encoding_cert +�-�+�-�+�-� P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
 option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" OFF)
 if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
     add_executable(p1_ui_sidebar_encoding_cert
@@ -10949,9 +10418,9 @@ if(BUILD_P1_UI_MENU_LIFETIME_CERT)
     message(STATUS "[Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert")
 endif()
 
-# deep2_parity_cert ├Ä┬ô├â┬ç├â┬╢ PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
+# deep2_parity_cert +�-�+�-�+�-� PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
 # External llama.cpp measuring stick is tools/parity_ref (separate process only).
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" OFF)
 if(BUILD_DEEP2_PARITY_CERT)
     add_executable(deep2_parity_cert
@@ -10973,8 +10442,8 @@ if(BUILD_DEEP2_PARITY_CERT)
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
 endif()
 
-# ide_agent_loop_cert ├Ä┬ô├â┬ç├â┬╢ Win32IDE agent spine: read ├Ä┬ô├â┬Ñ├â┬å edit ├Ä┬ô├â┬Ñ├â┬å diag ├Ä┬ô├â┬Ñ├â┬å build ├Ä┬ô├â┬Ñ├â┬å run
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# ide_agent_loop_cert +�-�+�-�+�-� Win32IDE agent spine: read +�-�+�-�+�-� edit +�-�+�-�+�-� diag +�-�+�-�+�-� build +�-�+�-�+�-� run
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" OFF)
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
@@ -11005,8 +10474,8 @@ if(BUILD_IDE_AGENT_LOOP_CERT)
     message(STATUS "[Agentic] IDE agent loop cert: ide_agent_loop_cert")
 endif()
 
-# test_deterministic_replay ├Ä┬ô├â┬ç├â┬╢ STREAMER-CERT-001: deterministic replay gate
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# test_deterministic_replay +�-�+�-�+�-� STREAMER-CERT-001: deterministic replay gate
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" OFF)
 if(BUILD_DETERMINISTIC_REPLAY)
     add_executable(test_deterministic_replay
@@ -11028,8 +10497,8 @@ if(BUILD_DETERMINISTIC_REPLAY)
     message(STATUS "[Deep2] Deterministic replay gate: test_deterministic_replay")
 endif()
 
-# dump_qwen35_meta ├Ä┬ô├â┬ç├â┬╢ Dump Qwen3.5 GGUF metadata + tensor topology
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# dump_qwen35_meta +�-�+�-�+�-� Dump Qwen3.5 GGUF metadata + tensor topology
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
@@ -11103,7 +10572,7 @@ if(BUILD_RAWRXD_AGENTIC)
     )
     message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
 
-    # HEXMAG_IDE_E2E_001 ├Ä┬ô├â┬ç├â┬╢ Copilot send path ├Ä┬ô├â┬Ñ├â┬å controller ├Ä┬ô├â┬Ñ├â┬å tuner ├Ä┬ô├â┬Ñ├â┬å FinalizePolicy
+    # HEXMAG_IDE_E2E_001 +�-�+�-�+�-� Copilot send path +�-�+�-�+�-� controller +�-�+�-�+�-� tuner +�-�+�-�+�-� FinalizePolicy
     add_executable(hexmag_ide_e2e_cert
         tests/hexmag_ide_e2e_cert.cpp
         src/core/hexmag_runtime_controller.cpp
@@ -11154,8 +10623,8 @@ if(BUILD_RAWRXD_AGENTIC)
     message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
 endif()
 
-# layer_harness ├Ä┬ô├â┬ç├â┬╢ Single-layer Qwen3.5 correctness harness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# layer_harness +�-�+�-�+�-� Single-layer Qwen3.5 correctness harness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" OFF)
 if(BUILD_LAYER_HARNESS)
     add_executable(layer_harness
@@ -11194,8 +10663,8 @@ if(BUILD_LAYER_HARNESS)
     message(STATUS "[Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source")
 endif()
 
-# qwen35_attn_contract ├Ä┬ô├â┬ç├â┬╢ Establish Qwen3.5 full-attention contract
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# qwen35_attn_contract +�-�+�-�+�-� Establish Qwen3.5 full-attention contract
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF)
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
@@ -11218,8 +10687,8 @@ if(BUILD_QWEN35_ATTN_CONTRACT)
     message(STATUS "[Deep2] Qwen3.5 attention contract: qwen35_attn_contract")
 endif()
 
-# test_val_051_3_multi_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.3: 4-Token Autoregressive Generation Gate
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# test_val_051_3_multi_token +�-�+�-�+�-� VAL-051.3: 4-Token Autoregressive Generation Gate
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" OFF)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
@@ -11244,9 +10713,9 @@ if(BUILD_VAL_051_3)
     message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_fifteen_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.5: 15-Token KV Stability Gate
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_fifteen_token +�-�+�-�+�-� VAL-051.5: 15-Token KV Stability Gate
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" OFF)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
@@ -11271,9 +10740,9 @@ if(BUILD_VAL_051_5)
     message(STATUS "[Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_diag_1_token ├Ä┬ô├â┬ç├â┬╢ VAL-051.5-DIAG: 1-Token Diagnostic Harness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_diag_1_token +�-�+�-�+�-� VAL-051.5-DIAG: 1-Token Diagnostic Harness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_DIAG "Build VAL-051.5 1-token diagnostic harness" OFF)
 if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
@@ -11351,10 +10820,10 @@ if(BUILD_VAL_051_5_DIAG)
     message(STATUS "[Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_bp16_int_1_token ├Ä┬ô├â┬ç├â┬╢ BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 Integration Test
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-option(BUILD_VAL_BP16_INT "Build BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 integration test" OFF)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_bp16_int_1_token +�-�+�-�+�-� BP16 +�-�+�-�+�-� Deep2 Integration Test
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+option(BUILD_VAL_BP16_INT "Build BP16 +�-�+�-�+�-� Deep2 integration test" OFF)
 if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
         tests/val_bp16_int_1_token.cpp
@@ -11424,12 +10893,12 @@ if(BUILD_VAL_BP16_INT)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME val_bp16_int_1_token
     )
-    message(STATUS "[Deep2] BP16 ├Ä┬ô├â┬Ñ├â┬å Deep2 integration test: val_bp16_int_1_token")
+    message(STATUS "[Deep2] BP16 +�-�+�-�+�-� Deep2 integration test: val_bp16_int_1_token")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q6k_synthetic ├Ä┬ô├â┬ç├â┬╢ Synthetic Q6_K Layout & Dequant Correctness Test
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q6k_synthetic +�-�+�-�+�-� Synthetic Q6_K Layout & Dequant Correctness Test
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" OFF)
 if(BUILD_VAL_051_5_Q6K)
     add_executable(val_051_5_q6k_synthetic
@@ -11449,9 +10918,9 @@ if(BUILD_VAL_051_5_Q6K)
     message(STATUS "[Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_streamer ├Ä┬ô├â┬ç├â┬╢ BP16 Streaming Reader Round-Trip Validation
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_streamer +�-�+�-�+�-� BP16 Streaming Reader Round-Trip Validation
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" OFF)
 if(BUILD_VAL_051_5_BP16_STREAMER)
     add_executable(val_051_5_bp16_streamer
@@ -11473,9 +10942,9 @@ if(BUILD_VAL_051_5_BP16_STREAMER)
     message(STATUS "[Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_e2e ├Ä┬ô├â┬ç├â┬╢ End-to-End BP16 Inference Test
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_e2e +�-�+�-�+�-� End-to-End BP16 Inference Test
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" OFF)
 if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
@@ -11549,9 +11018,9 @@ if(BUILD_VAL_051_5_BP16_E2E)
     message(STATUS "[Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_compare ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Weight & Inference Comparison
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_compare +�-�+�-�+�-� GGUF vs BP16 Weight & Inference Comparison
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" OFF)
 if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
@@ -11632,9 +11101,9 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
     message(STATUS "[Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_weights ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Weight Correctness (no inference)
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_weights +�-�+�-�+�-� GGUF vs BP16 Weight Correctness (no inference)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" OFF)
 if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
@@ -11708,9 +11177,9 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
     message(STATUS "[Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_verify ├Ä┬ô├â┬ç├â┬╢ Direct BP16 Weight Verification (no Deep2Engine)
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_verify +�-�+�-�+�-� Direct BP16 Weight Verification (no Deep2Engine)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" OFF)
 if(BUILD_VAL_051_5_BP16_VERIFY)
     add_executable(val_051_5_bp16_verify
@@ -11737,9 +11206,9 @@ if(BUILD_VAL_051_5_BP16_VERIFY)
     message(STATUS "[Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_logits ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 1-Token Forward & Logits Equivalence
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_logits +�-�+�-�+�-� GGUF vs BP16 1-Token Forward & Logits Equivalence
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" OFF)
 if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
@@ -11813,9 +11282,9 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
     message(STATUS "[Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_6_bp16_perf ├Ä┬ô├â┬ç├â┬╢ BP16 Performance Benchmark & Prefetch Optimization
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_6_bp16_perf +�-�+�-�+�-� BP16 Performance Benchmark & Prefetch Optimization
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" OFF)
 if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
@@ -11889,9 +11358,9 @@ if(BUILD_VAL_051_6_BP16_PERF)
     message(STATUS "[Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_7_bp16_profile ├Ä┬ô├â┬ç├â┬╢ Forward-Path Profiling
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_7_bp16_profile +�-�+�-�+�-� Forward-Path Profiling
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" OFF)
 if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
@@ -11965,9 +11434,9 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_7_bp16_lightweight_profile ├Ä┬ô├â┬ç├â┬╢ Lightweight forward-path profiler
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_7_bp16_lightweight_profile +�-�+�-�+�-� Lightweight forward-path profiler
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" OFF)
 if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
@@ -12041,8 +11510,8 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     message(STATUS "[Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile")
 endif()
 
-# minimal_1token_profiler ├Ä┬ô├â┬ç├â┬╢ Minimal 1-token production profiler
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# minimal_1token_profiler +�-�+�-�+�-� Minimal 1-token production profiler
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" OFF)
 if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
@@ -12116,8 +11585,8 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
     message(STATUS "[Deep2] Minimal 1-token profiler: minimal_1token_profiler")
 endif()
 
-# quick_1layer_profiler ├Ä┬ô├â┬ç├â┬╢ Fast 1-layer quant breakdown
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# quick_1layer_profiler +�-�+�-�+�-� Fast 1-layer quant breakdown
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" OFF)
 if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
@@ -12191,9 +11660,9 @@ if(BUILD_QUICK_1LAYER_PROFILER)
     message(STATUS "[Deep2] Quick 1-layer profiler: quick_1layer_profiler")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# q4k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Q4_K GEMV micro-benchmark (reference vs stack-buffer)
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# q4k_gemv_bench +�-�+�-�+�-� Q4_K GEMV micro-benchmark (reference vs stack-buffer)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_Q4K_GEMV_BENCH)
     add_executable(q4k_gemv_bench
@@ -12213,9 +11682,9 @@ if(BUILD_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: q4k_gemv_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# q5k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Q5_K GEMV micro-benchmark (reference vs SIMD)
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# q5k_gemv_bench +�-�+�-�+�-� Q5_K GEMV micro-benchmark (reference vs SIMD)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_Q5K_GEMV_BENCH)
     add_executable(q5k_gemv_bench
@@ -12235,9 +11704,9 @@ if(BUILD_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: q5k_gemv_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_diag ├Ä┬ô├â┬ç├â┬╢ Minimal BP16 forward crash isolation
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_diag +�-�+�-�+�-� Minimal BP16 forward crash isolation
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" OFF)
 if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
@@ -12312,9 +11781,9 @@ if(BUILD_VAL_051_5_BP16_DIAG)
     message(STATUS "[Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_bench ├Ä┬ô├â┬ç├â┬╢ GGUF vs BP16 Inference Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_bench +�-�+�-�+�-� GGUF vs BP16 Inference Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
@@ -12389,9 +11858,9 @@ if(BUILD_VAL_051_5_BP16_BENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_bp16_loadbench ├Ä┬ô├â┬ç├â┬╢ Load-Time Only Benchmark (no inference)
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_bp16_loadbench +�-�+�-�+�-� Load-Time Only Benchmark (no inference)
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
@@ -12419,9 +11888,9 @@ if(BUILD_VAL_051_5_BP16_LOADBENCH)
     message(STATUS "[Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q4k_fused_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q4_K fused vs reference correctness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q4k_fused_verify +�-�+�-�+�-� Synthetic Q4_K fused vs reference correctness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" OFF)
 if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     add_executable(val_051_5_q4k_fused_verify
@@ -12437,9 +11906,9 @@ if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
     message(STATUS "[Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q4k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q4_K GEMV Micro-Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q4k_gemv_bench +�-�+�-�+�-� Isolated Q4_K GEMV Micro-Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     add_executable(val_051_5_q4k_gemv_bench
@@ -12458,9 +11927,9 @@ if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
     message(STATUS "[Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q2k_gemv_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q2_K SIMD vs scalar correctness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q2k_gemv_verify +�-�+�-�+�-� Synthetic Q2_K SIMD vs scalar correctness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     add_executable(val_051_5_q2k_gemv_verify
@@ -12476,9 +11945,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q2k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q2_K GEMV Micro-Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q2k_gemv_bench +�-�+�-�+�-� Isolated Q2_K GEMV Micro-Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     add_executable(val_051_5_q2k_gemv_bench
@@ -12494,9 +11963,9 @@ if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
     message(STATUS "[Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q5k_gemv_verify ├Ä┬ô├â┬ç├â┬╢ Synthetic Q5_K scalar vs dequant-dot correctness
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q5k_gemv_verify +�-�+�-�+�-� Synthetic Q5_K scalar vs dequant-dot correctness
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     add_executable(val_051_5_q5k_gemv_verify
@@ -12512,9 +11981,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
     message(STATUS "[Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q5k_gemv_bench ├Ä┬ô├â┬ç├â┬╢ Isolated Q5_K GEMV Micro-Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q5k_gemv_bench +�-�+�-�+�-� Isolated Q5_K GEMV Micro-Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     add_executable(val_051_5_q5k_gemv_bench
@@ -12530,9 +11999,9 @@ if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
     message(STATUS "[Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q5k_forward_bench ├Ä┬ô├â┬ç├â┬╢ Simulated Full Forward Pass Q5_K Timing
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q5k_forward_bench +�-�+�-�+�-� Simulated Full Forward Pass Q5_K Timing
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" OFF)
 if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     add_executable(val_051_5_q5k_forward_bench
@@ -12548,9 +12017,9 @@ if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
     message(STATUS "[Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_8_linearw_thread_scaling ├Ä┬ô├â┬ç├â┬╢ Row-Parallel LinearW Scaling Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_8_linearw_thread_scaling +�-�+�-�+�-� Row-Parallel LinearW Scaling Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" OFF)
 if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
@@ -12624,9 +12093,9 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     message(STATUS "[Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_8_layer_profile ├Ä┬ô├â┬ç├â┬╢ Synthetic Full Transformer Layer Profiler
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_8_layer_profile +�-�+�-�+�-� Synthetic Full Transformer Layer Profiler
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" OFF)
 if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
@@ -12700,9 +12169,9 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
     message(STATUS "[Deep2] Layer profiler: val_051_8_layer_profile")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# val_051_5_q2k_profile ├Ä┬ô├â┬ç├â┬╢ Q2_K vs Q4_K GEMV Profiling Benchmark
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# val_051_5_q2k_profile +�-�+�-�+�-� Q2_K vs Q4_K GEMV Profiling Benchmark
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" OFF)
 if(BUILD_VAL_051_5_Q2K_PROFILE)
     add_executable(val_051_5_q2k_profile
@@ -12718,10 +12187,10 @@ if(BUILD_VAL_051_5_Q2K_PROFILE)
     message(STATUS "[Deep2] Q2_K profile: val_051_5_q2k_profile")
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# SovereignTest_PatchRegistry ├Ä┬ô├â┬ç├â┬╢ PatchRegistry Abstraction Layer Tests
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# SovereignTest_PatchRegistry +�-�+�-�+�-� PatchRegistry Abstraction Layer Tests
 # Validates CI/CD mock path and prepares for production hot-patching
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" OFF)
 if(BUILD_PATCHREGISTRY_TEST)
     add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
@@ -12749,10 +12218,10 @@ if(BUILD_PATCHREGISTRY_TEST)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# SovereignTest_HotPatcher ├Ä┬ô├â┬ç├â┬╢ Production Live Binary Patching Tests
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# SovereignTest_HotPatcher +�-�+�-�+�-� Production Live Binary Patching Tests
 # Validates VirtualProtectEx, WriteProcessMemory, FlushInstructionCache
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" OFF)
 if(BUILD_HOTPATCHER_TEST)
     add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
@@ -12781,10 +12250,10 @@ if(BUILD_HOTPATCHER_TEST)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# SovereignTest_AutonomousAgent ├Ä┬ô├â┬ç├â┬╢ End-to-End Autonomous Agent Integration Test
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# SovereignTest_AutonomousAgent +�-�+�-�+�-� End-to-End Autonomous Agent Integration Test
 # Validates: SessionStore -> AgentGraphRuntime -> ToolRegistry -> AutonomousAgent
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" OFF)
 if(BUILD_AUTONOMOUS_AGENT_TEST)
     add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
@@ -12818,10 +12287,10 @@ if(BUILD_AUTONOMOUS_AGENT_TEST)
     endif()
 endif()
 
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-# AntiHallucinationHotPatcher ├Ä┬ô├â┬ç├â┬╢ MASM Anti-Hallucination Guard
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# AntiHallucinationHotPatcher +�-�+�-�+�-� MASM Anti-Hallucination Guard
 # Validates patches before application to prevent logic drift
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" OFF)
 if(BUILD_ANTI_HALLUCINATION AND MSVC)
     # Assemble the MASM file
@@ -12864,9 +12333,9 @@ if(BUILD_ANTI_HALLUCINATION AND MSVC)
         add_dependencies(SovereignTest_Suite SovereignTest_AntiHallucination)
     endif()
 endif()
-# ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
-# CI gate: stress_test ├Ä┬ô├â┬ç├â┬╢ build and note availability
+# CI gate: stress_test +�-�+�-�+�-� build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -12891,7 +12360,7 @@ if(Python3_FOUND)
         COMMAND ${Python3_EXECUTABLE} 
             ${CMAKE_SOURCE_DIR}/tools/validate_command_registry.py --strict
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Validating command registry (STRICT ├Ä┬ô├â┬ç├â┬╢ all IDM_* must be in COMMAND_TABLE)..."
+        COMMENT "Validating command registry (STRICT +�-�+�-�+�-� all IDM_* must be in COMMAND_TABLE)..."
         VERBATIM
     )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -12921,7 +12390,7 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
 )
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
 
-# Autonomous Agentic Pipeline unit test (Task 5 ├Ä┬ô├â┬ç├â┬╢ buildable)
+# Autonomous Agentic Pipeline unit test (Task 5 +�-�+�-�+�-� buildable)
 if(WIN32)
     add_executable(test_autonomous_pipeline
         tests/test_autonomous_pipeline.cpp
@@ -12966,9 +12435,9 @@ if(WIN32)
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Hotpatch Stress Test ├Ä┬ô├â┬ç├â┬╢ Acquisition-grade memory hotpatch validation
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Hotpatch Stress Test +�-�+�-�+�-� Acquisition-grade memory hotpatch validation
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
         src/test_harness/hotpatch_stress_test.cpp
         src/core/model_memory_hotpatch.cpp
@@ -12986,9 +12455,9 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Hotpatch E2E Test ├Ä┬ô├â┬ç├â┬╢ Real GGUF tensor ├Ä┬ô├â┬Ñ├â┬å hotpatch ├Ä┬ô├â┬Ñ├â┬å inference ├Ä┬ô├â┬Ñ├â┬å rollback
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Hotpatch E2E Test +�-�+�-�+�-� Real GGUF tensor +�-�+�-�+�-� hotpatch +�-�+�-�+�-� inference +�-�+�-�+�-� rollback
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
         src/test_harness/hotpatch_e2e_test.cpp
         src/core/model_memory_hotpatch.cpp
@@ -13008,9 +12477,9 @@ if(WIN32)
     )
     set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
         src/test_harness/arch_cert_tensor_inventory.cpp
     )
@@ -13019,9 +12488,9 @@ if(WIN32)
     )
     set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # FWD-CERT-001: Deterministic Forward-Pass Certification
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
         src/test_harness/fwd_cert_001.cpp
         src/tokenizer/gguf_embedded_tokenizer.cpp
@@ -13034,9 +12503,9 @@ if(WIN32)
     )
     set_property(TARGET fwd_cert_001 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Production Benchmark ├Ä┬ô├â┬ç├â┬╢ Batch 1: Repeatable 1/10/32/128 token benchmark
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Production Benchmark +�-�+�-�+�-� Batch 1: Repeatable 1/10/32/128 token benchmark
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
         src/deep2/Deep2QuantCert.cpp
         src/deep2/Deep2Determinism.cpp
@@ -13157,9 +12626,9 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production benchmark target: RawrXD-ProductionBenchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Production Certification Test ├Ä┬ô├â┬ç├â┬╢ validates certification framework
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Production Certification Test +�-�+�-�+�-� validates certification framework
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
         tests/test_deep2_production.cpp
         src/deep2/Deep2QuantCert.cpp
@@ -13184,9 +12653,9 @@ if(WIN32)
     )
     message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # GPU Inference Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.2-GPU-HYBRID Phase C
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # GPU Inference Benchmark +�-�+�-�+�-� v16.2-GPU-HYBRID Phase C
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
         src/tools/gpu_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
@@ -13229,9 +12698,9 @@ if(WIN32)
     )
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Fused Layer Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.3 Phase D Layer Fusion
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Fused Layer Benchmark +�-�+�-�+�-� v16.3 Phase D Layer Fusion
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
         src/tools/fused_layer_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
@@ -13260,9 +12729,9 @@ if(WIN32)
     )
     message(STATUS "[Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # KV Cache Benchmark ├Ä┬ô├â┬ç├â┬╢ v16.4 Phase E GPU-Resident KV Cache
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # KV Cache Benchmark +�-�+�-�+�-� v16.4 Phase E GPU-Resident KV Cache
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
         src/tools/kv_cache_benchmark.cpp
         src/gguf_d3d12_bridge.cpp
@@ -13291,15 +12760,15 @@ if(WIN32)
     )
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Fix #3 NHWC Layout Benchmark ├Ä┬ô├â┬ç├â┬╢ REMOVED: stub file deleted
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Fix #3 NHWC Layout Benchmark +�-�+�-�+�-� REMOVED: stub file deleted
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
     # TARGET REMOVED: src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp was deleted
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Fix #4 Flash Attention v2 Benchmark ├Ä┬ô├â┬ç├â┬╢ Memory-efficient attention
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Fix #4 Flash Attention v2 Benchmark +�-�+�-�+�-� Memory-efficient attention
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/Fix4_FlashAttention_Benchmark.cpp
     )
@@ -13324,9 +12793,9 @@ if(WIN32)
     )
     message(STATUS "[Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Fix #5 Fused Quantized Kernels ├Ä┬ô├â┬ç├â┬╢ Q4_0/Q8_0 fused dequantize+GEMM
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Fix #5 Fused Quantized Kernels +�-�+�-�+�-� Q4_0/Q8_0 fused dequantize+GEMM
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
     )
@@ -13351,9 +12820,9 @@ if(WIN32)
     )
     message(STATUS "[Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
     )
@@ -13378,9 +12847,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # VAL-032: AVX-512 Assembly Kernel Benchmark
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
     )
@@ -13406,9 +12875,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-032 Simple Intrinsics Benchmark ├Ä┬ô├â┬ç├â┬╢ Direct AVX-512 performance measurement
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-032 Simple Intrinsics Benchmark +�-�+�-�+�-� Direct AVX-512 performance measurement
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_avx512_intrinsics.cpp
         src/benchmark/tree_attention_bench_simple.cpp
@@ -13429,9 +12898,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-033 Profiling Instrumentation ├Ä┬ô├â┬ç├â┬╢ Per-stage cycle-accurate timing
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-033 Profiling Instrumentation +�-�+�-�+�-� Per-stage cycle-accurate timing
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_profiled.cpp
     )
@@ -13451,9 +12920,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-033] Profiling instrumentation: tree_attention_profiled")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-034 Q@K^T Alignment Optimization ├Ä┬ô├â┬ç├â┬╢ 64-byte aligned loads
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-034 Q@K^T Alignment Optimization +�-�+�-�+�-� 64-byte aligned loads
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_aligned.cpp
     )
@@ -13473,9 +12942,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-035 Tiled Q@K^T ├Ä┬ô├â┬ç├â┬╢ Register-resident Q, streaming K
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-035 Tiled Q@K^T +�-�+�-�+�-� Register-resident Q, streaming K
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_tiled.cpp
     )
@@ -13495,9 +12964,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-035] Tiled Q@K^T: tree_attention_tiled")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-036 Vectorized Softmax ├Ä┬ô├â┬ç├â┬╢ AVX-512 polynomial exp approximation
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-036 Vectorized Softmax +�-�+�-�+�-� AVX-512 polynomial exp approximation
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_vectorized.cpp
     )
@@ -13517,9 +12986,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-036] Vectorized softmax: tree_attention_vectorized")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-037 Tree Sparsity ├Ä┬ô├â┬ç├â┬╢ Exploit tree structure to reduce computation
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-037 Tree Sparsity +�-�+�-�+�-� Exploit tree structure to reduce computation
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_sparse.cpp
     )
@@ -13539,9 +13008,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-037] Tree sparsity: tree_attention_sparse")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_fused_sparse.cpp
     )
@@ -13561,9 +13030,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.1] Fused online softmax: tree_attention_fused_sparse")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-037.2 Tree-Specialized Fused Attention ├Ä┬ô├â┬ç├â┬╢ Exploit 4x4 tree topology
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-037.2 Tree-Specialized Fused Attention +�-�+�-�+�-� Exploit 4x4 tree topology
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_tree_specialized.cpp
     )
@@ -13583,9 +13052,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-038.1 MASM Mechanical Translation ├Ä┬ô├â┬ç├â┬╢ Same algorithm, optimal registers
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-038.1 MASM Mechanical Translation +�-�+�-�+�-� Same algorithm, optimal registers
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
         src/benchmark/tree_attention_masm_val038_wrapper.cpp
@@ -13610,9 +13079,9 @@ if(WIN32)
     )
     message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-038 Fused Attention ├Ä┬ô├â┬ç├â┬╢ Q@K^T ├Ä┬ô├â┬Ñ├â┬å Softmax ├Ä┬ô├â┬Ñ├â┬å A@V in single kernel
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-038 Fused Attention +�-�+�-�+�-� Q@K^T +�-�+�-�+�-� Softmax +�-�+�-�+�-� A@V in single kernel
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/VAL038_FusedAttention_Benchmark.cpp
     )
@@ -13634,11 +13103,11 @@ if(WIN32)
     )
     message(STATUS "[VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # VAL-038 Validation Benchmark (B ├Ä┬ô├â┬Ñ├â┬å C ├Ä┬ô├â┬Ñ├â┬å A)
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # VAL-038 Validation Benchmark (B +�-�+�-�+�-� C +�-�+�-�+�-� A)
     # Step B: Control flow validation with debug counters
     # Step C: Numerical correctness vs scalar reference
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
         src/benchmark/VAL038_Validation_Benchmark.cpp
     )
@@ -13658,11 +13127,11 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME VAL038_Validation_Benchmark
     )
-    message(STATUS "[VAL-038] Validation benchmark (B├Ä┬ô├â┬Ñ├â┬åC├Ä┬ô├â┬Ñ├â┬åA): VAL038_Validation_Benchmark")
+    message(STATUS "[VAL-038] Validation benchmark (B+�-�+�-�+�-�C+�-�+�-�+�-�A): VAL038_Validation_Benchmark")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # TPS smoke ├Ä┬ô├â┬ç├â┬╢ GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # TPS smoke +�-�+�-�+�-� GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
         src/tools/RawrXD_TpsSmoke.cpp
         src/llm_adapter/GGUFRunner.cpp
@@ -13694,10 +13163,10 @@ if(WIN32)
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
 
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
-    # Model analysis ├Ä┬ô├â┬ç├â┬╢ shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
-    # Note: gguf_k_quants.cpp stays out of the lib ├Ä┬ô├â┬ç├â┬╢ Win32IDE already links one copy.
-    # ├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë├Ä┬ô├â┬▓├â┬ë
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+    # Model analysis +�-�+�-�+�-� shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
+    # Note: gguf_k_quants.cpp stays out of the lib +�-�+�-�+�-� Win32IDE already links one copy.
+    # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_library(RawrXD-ModelAnalysisLib STATIC EXCLUDE_FROM_ALL
         src/core/model_anatomy.cpp
         src/core/neurological_diff.cpp
@@ -13994,13 +13463,13 @@ endif()
 # Applied to whichever rawrxd target exists (GUI or Sovereign CLI)
 # =============================================================================
 if(RAWRXD_ENABLE_VALIDATION AND TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON ├Ä┬ô├â┬ç├â┬╢ runtime tensor dumping enabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON +�-�+�-�+�-� runtime tensor dumping enabled")
     target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
     target_include_directories(rawrxd PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
     )
 elseif(TARGET rawrxd)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF ├Ä┬ô├â┬ç├â┬╢ runtime tensor dumping disabled")
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF +�-�+�-�+�-� runtime tensor dumping disabled")
 endif()
 
 # ============================================================================
@@ -14589,7 +14058,7 @@ endif()
 # =============================================================================
 
 # =============================================================================
-# SoloIDE ├Ä┬ô├â┬ç├â┬╢ Sovereign Agentic Desktop Environment
+# SoloIDE +�-�+�-�+�-� Sovereign Agentic Desktop Environment
 # =============================================================================
 set(SOLOIDE_SOURCES
     src/soloide/main.cpp
@@ -14625,7 +14094,7 @@ set(SOLOIDE_HEADERS
 )
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
-    # Find Qt6 ├Ä┬ô├â┬ç├â┬╢ try qmake-based detection first, then manual paths
+    # Find Qt6 +�-�+�-�+�-� try qmake-based detection first, then manual paths
     find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
     if(NOT Qt6_FOUND)
         find_package(Qt6 COMPONENTS Widgets Network Core
@@ -14656,7 +14125,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         )
         message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
     else()
-        message(WARNING "[SoloIDE] Qt6 not found ├Ä┬ô├â┬ç├â┬╢ SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+        message(WARNING "[SoloIDE] Qt6 not found +�-�+�-�+�-� SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
 add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
@@ -15035,7 +14504,7 @@ target_link_libraries(k2_005_autoregressive_kv_cache PRIVATE InferenceEngine)
 add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_cache WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-006: Bounded Autoregressive Token Generation
-# Proves logits ├Ä┬ô├â┬Ñ├â┬å argmax ├Ä┬ô├â┬Ñ├â┬å token ├Ä┬ô├â┬Ñ├â┬å decode ├Ä┬ô├â┬Ñ├â┬å repeat pipeline works
+# Proves logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� decode +�-�+�-�+�-� repeat pipeline works
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/K2MLAWeights.cpp
@@ -15068,7 +14537,7 @@ add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
 set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-# K2-007B: Projection ├Ä┬ô├â┬Ñ├â┬å Logits Interface
+# K2-007B: Projection +�-�+�-�+�-� Logits Interface
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
 add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
@@ -15083,7 +14552,7 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 
 # K2-008: End-to-End Semantic Generation
 # Proves tokenizer + real output projection communicate end-to-end:
-# text ├Ä┬ô├â┬Ñ├â┬å tokens ├Ä┬ô├â┬Ñ├â┬å real K2 inference ├Ä┬ô├â┬Ñ├â┬å logits ├Ä┬ô├â┬Ñ├â┬å argmax ├Ä┬ô├â┬Ñ├â┬å token ├Ä┬ô├â┬Ñ├â┬å text.
+# text +�-�+�-�+�-� tokens +�-�+�-�+�-� real K2 inference +�-�+�-�+�-� logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� text.
 # Independent of K2-006 synthetic baseline.
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
     src/deep2/K2GlobalTensorIndex.cpp
@@ -16069,7 +15538,7 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
-# B010/B011 Fast Experiment ├Ä┬ô├â┬ç├â┬╢ Direct StreamingMatMul residency test
+# B010/B011 Fast Experiment +�-�+�-�+�-� Direct StreamingMatMul residency test
 # ============================================================================
 set(B010B011_FAST_SOURCES
     tests/b010_b011_fast_experiment.cpp
@@ -16466,7 +15935,7 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 )
 
 # ============================================================================
-# Certification Harness ├Ä┬ô├â┬ç├â┬╢ Adversarial Evidence-Producing Benchmark Suite
+# Certification Harness +�-�+�-�+�-� Adversarial Evidence-Producing Benchmark Suite
 # ============================================================================
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
@@ -16558,6 +16027,39 @@ if(DEFINED _MSVC_ROOT)
 endif()
 message(STATUS "certification_harness: Adversarial evidence-producing certification suite configured")
 
+# ============================================================================
+# Native Toolchain Certification (standalone, zero external tools)
+# ============================================================================
+add_executable(native_toolchain_cert EXCLUDE_FROM_ALL
+    certification/native_toolchain_cert.cpp
+)
+set_target_properties(native_toolchain_cert PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+target_include_directories(native_toolchain_cert PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/compiler_backend
+    ${CMAKE_SOURCE_DIR}/src/sovereign/puppeteer
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(native_toolchain_cert PRIVATE
+    RawrXD-RE-Library
+)
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET native_toolchain_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET native_toolchain_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET native_toolchain_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+message(STATUS "native_toolchain_cert: Native toolchain certification target configured")
+
 if(BUILD_TESTING)
     add_test(NAME b009_batched_prefill_certification
              COMMAND b009_batched_prefill_certification)
@@ -16567,7 +16069,7 @@ endif()
 include(cmake/RawrXDSovereignFinish.cmake)
 
 
-# test_v_proj_parity ├ó┬ê┬⌐├ó┬ö┬É├ó┬ò┬£ BATCH2_V_PROJ_001
+# test_v_proj_parity +�-�-�+�-�-�+�-�-� BATCH2_V_PROJ_001
 if(TARGET InferenceEngine)
     add_executable(test_v_proj_parity
         src/deep2/test_v_proj_parity.cpp

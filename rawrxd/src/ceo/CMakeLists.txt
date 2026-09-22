@@ -26,7 +26,6 @@ target_include_directories(rawrxd_ceo PUBLIC
 )
 
 target_link_libraries(rawrxd_ceo PUBLIC
-    nlohmann_json::nlohmann_json
 )
 
 # CEO Agent CLI Executable

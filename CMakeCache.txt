@@ -542,7 +542,7 @@ BUILD_VAL_051_8_LAYER_PROFILE:BOOL=ON
 //Build LinearW thread-scaling benchmark
 BUILD_VAL_051_8_LINEARW_THREAD_SCALING:BOOL=ON
 
-//Build BP16 ÃŽÂ“ÃƒÂ¥ÃƒÂ† Deep2 integration test
+//Build BP16 +�-�+�-�+�-� Deep2 integration test
 BUILD_VAL_BP16_INT:BOOL=ON
 
 //Build VWA_ADDRESS_CONTRACT_001 cert
@@ -884,6 +884,9 @@ JSON_SystemInclude:BOOL=OFF
 
 //Path to a program.
 NASM_EXECUTABLE:FILEPATH=NASM_EXECUTABLE-NOTFOUND
+
+//The directory containing a CMake configuration file for Qt6.
+Qt6_DIR:PATH=Qt6_DIR-NOTFOUND
 
 //Allow stub/link-fallback units in RawrXD-Win32IDE agentic path
 RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK:BOOL=OFF

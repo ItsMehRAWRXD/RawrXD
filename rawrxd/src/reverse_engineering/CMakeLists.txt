@@ -33,6 +33,9 @@ set(RE_CPP_SOURCES
     pe_analyzer.cpp
     decompiler.cpp
     binary_patcher.cpp
+    ../compiler_backend/InstructionEncoderX64.cpp
+    ../compiler_backend/RawrCOFFWriter.cpp
+    ../compiler_backend/RawrPE64Linker.cpp
 )
 
 set(RE_CPP_HEADERS
