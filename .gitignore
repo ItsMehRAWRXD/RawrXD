@@ -23,3 +23,4 @@ rawrxd/CMakeLists.txt_*
 rawrxd/CMakeLists.txt.bak*
 rawrxd/build_win32ide.txt
 rawrxd/cmake_*.txt
+rawrxd/missing_files*.txt
