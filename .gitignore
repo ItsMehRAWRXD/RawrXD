@@ -8,3 +8,18 @@ cert_run_output*.txt
 build*/
 !build_p2/Release/rawr_monolith.exe
 rawrxd/src/deep2/vulkan_compute_tmp.cpp
+
+# Temporary / diagnostic logs
+*_log.txt
+*_log*.txt
+*_stderr.txt
+*_stdout.txt
+*_stdout*.txt
+*_stderr*.txt
+missing_sources.txt
+src_files.txt
+vcxproj_list.txt
+rawrxd/CMakeLists.txt_*
+rawrxd/CMakeLists.txt.bak*
+rawrxd/build_win32ide.txt
+rawrxd/cmake_*.txt

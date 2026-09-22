@@ -106,13 +106,8 @@ std::string excerpt(const std::string& s, size_t maxBytes) {
 
 // Dirty-state evidence: is the working tree clean at HEAD?
 bool gitTreeClean(const std::filesystem::path& ws) {
-#ifdef _WIN32
-    const std::string git = "C:\\Program Files\\Git\\cmd\\git.exe";
-#else
-    const std::string git = "git";
-#endif
-    std::string cmd = "\"" + git + "\" -C \"" + ws.string() +
-                      "\" diff --quiet --stat";
+    // Use cd + bare git to avoid spaces-in-path issues with _popen/cmd parsing.
+    std::string cmd = "cd /d \"" + ws.string() + "\" && git diff --quiet --stat";
 #ifdef _WIN32
     FILE* pipe = _popen(cmd.c_str(), "r");
 #else
