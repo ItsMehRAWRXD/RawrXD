@@ -16,6 +16,11 @@ public:
 
 private:
     void drawQuad(Renderer* renderer, float x, float y, float w, float h, uint32_t color);
+    bool ensureInit(Renderer* renderer);
+
+    bool m_initialized = false;
+    Renderer::Shader m_hudShader = {};
+    ID3D11Buffer* m_colorCB = nullptr;
 };
 
 } // namespace Sunshine

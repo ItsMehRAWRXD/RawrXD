@@ -1,4 +1,5 @@
 #include "HUD.hpp"
+#include <cstring>
 
 namespace Sunshine {
 
@@ -9,14 +10,36 @@ float4 main(float2 pos : POSITION) : SV_POSITION {
 )";
 
 static const char* kHUDPS = R"(
-float4 color : register(c0);
+cbuffer Color : register(b0) {
+    float4 color;
+};
 float4 main() : SV_TARGET {
     return color;
 }
 )";
 
+static void makeRGBA(uint32_t hex, float* out) {
+    out[0] = ((hex >> 16) & 0xFF) / 255.0f;
+    out[1] = ((hex >> 8)  & 0xFF) / 255.0f;
+    out[2] = ((hex >> 0)  & 0xFF) / 255.0f;
+    out[3] = ((hex >> 24) & 0xFF) / 255.0f;
+}
+
+bool HUD::ensureInit(Renderer* renderer) {
+    if (m_initialized) return true;
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    if (!renderer->compileShader(kHUDVS, kHUDPS, layout, 1, &m_hudShader)) return false;
+    m_colorCB = renderer->createConstantBuffer(sizeof(float) * 4);
+    if (!m_colorCB) return false;
+    m_initialized = true;
+    return true;
+}
+
 void HUD::drawQuad(Renderer* renderer, float x, float y, float w, float h, uint32_t color) {
-    // Get window size via GetClientRect since Renderer doesn't expose Window* directly
+    if (!ensureInit(renderer)) return;
+
     HWND hwnd = GetActiveWindow();
     RECT rc; GetClientRect(hwnd, &rc);
     int ww = rc.right - rc.left;
@@ -39,9 +62,39 @@ void HUD::drawQuad(Renderer* renderer, float x, float y, float w, float h, uint3
     renderer->createVertexBuffer(verts, sizeof(verts), sizeof(float) * 2, &vb);
     if (!vb) return;
 
-    // Simplified: we don't have a HUD shader compiled in core; skip actual draw for now
-    // and rely on certification logic. In a full build we'd compile a simple color shader.
-    // For now just release the buffer.
+    // Set HUD shader
+    renderer->setShader(&m_hudShader);
+
+    // Update color constant buffer
+    float colorBuf[4];
+    makeRGBA(color, colorBuf);
+    renderer->getContext()->UpdateSubresource(m_colorCB, 0, nullptr, colorBuf, 0, 0);
+    renderer->setConstantBuffer(0, m_colorCB);
+
+    // Save current depth/stencil state
+    ID3D11DepthStencilState* oldDS = nullptr;
+    renderer->getContext()->OMGetDepthStencilState(&oldDS, nullptr);
+
+    // Create and set depth-disabled state
+    static ID3D11DepthStencilState* s_dsOff = nullptr;
+    if (!s_dsOff) {
+        D3D11_DEPTH_STENCIL_DESC dsd = {};
+        dsd.DepthEnable = FALSE;
+        dsd.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+        dsd.StencilEnable = FALSE;
+        renderer->getDevice()->CreateDepthStencilState(&dsd, &s_dsOff);
+    }
+    renderer->setDepthStencilState(s_dsOff);
+
+    // Draw as triangle strip
+    renderer->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    renderer->setVertexBuffer(vb, sizeof(float) * 2);
+    renderer->draw(4);
+
+    // Restore depth/stencil state
+    renderer->setDepthStencilState(oldDS);
+    if (oldDS) oldDS->Release();
+
     vb->Release();
 }
 
@@ -72,7 +125,6 @@ void HUD::drawHealthBar(Renderer* renderer, int health, int screenW, int screenH
 }
 
 void HUD::drawScore(Renderer* renderer, int score, int screenW, int screenH) {
-    // Score rendered as a small bar on top-right (placeholder geometry)
     float bw = 100.0f;
     float bh = 16.0f;
     float bx = (float)screenW - bw - 20.0f;
@@ -87,3 +139,4 @@ void HUD::drawAll(Renderer* renderer, const Player& player, int screenW, int scr
 }
 
 } // namespace Sunshine
+

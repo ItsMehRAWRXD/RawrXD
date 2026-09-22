@@ -157,14 +157,22 @@ bool Renderer::compileShader(const char* vsCode, const char* psCode, const D3D11
     HRESULT hr;
     hr = D3DCompile(vsCode, strlen(vsCode), nullptr, nullptr, nullptr, "main", "vs_4_0", 0, 0, &out->vsBlob, &vsErrors);
     if (FAILED(hr)) {
-        if (vsErrors) vsErrors->Release();
+        if (vsErrors) {
+            FILE* f = nullptr; fopen_s(&f, "f:\\~dev\\rawrxd\\shader_errors.txt", "w");
+            if (f) { fwrite(vsErrors->GetBufferPointer(), 1, vsErrors->GetBufferSize(), f); fclose(f); }
+            vsErrors->Release();
+        }
         return false;
     }
     ID3DBlob* psBlob = nullptr;
     hr = D3DCompile(psCode, strlen(psCode), nullptr, nullptr, nullptr, "main", "ps_4_0", 0, 0, &psBlob, &psErrors);
     if (FAILED(hr)) {
         if (psBlob) psBlob->Release();
-        if (psErrors) psErrors->Release();
+        if (psErrors) {
+            FILE* f = nullptr; fopen_s(&f, "f:\\~dev\\rawrxd\\shader_errors.txt", "w");
+            if (f) { fwrite(psErrors->GetBufferPointer(), 1, psErrors->GetBufferSize(), f); fclose(f); }
+            psErrors->Release();
+        }
         return false;
     }
 
@@ -232,6 +240,18 @@ void Renderer::drawIndexed(uint32_t count) {
 void Renderer::draw(uint32_t count) {
     m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_context->Draw(count, 0);
+}
+
+void Renderer::setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology) {
+    m_context->IASetPrimitiveTopology(topology);
+}
+
+void Renderer::setDepthStencilState(ID3D11DepthStencilState* state) {
+    m_context->OMSetDepthStencilState(state, 0);
+}
+
+void Renderer::setRasterizerState(ID3D11RasterizerState* state) {
+    m_context->RSSetState(state);
 }
 
 ID3D11Buffer* Renderer::createConstantBuffer(uint32_t size) {

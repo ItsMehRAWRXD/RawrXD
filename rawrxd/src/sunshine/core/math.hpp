@@ -83,6 +83,14 @@ struct Mat4 {
         r.m[0][0] = s.x; r.m[1][1] = s.y; r.m[2][2] = s.z;
         return r;
     }
+    static Mat4 rotateX(float angleDeg) {
+        float c = std::cos(angleDeg * 3.14159265f / 180.0f);
+        float s = std::sin(angleDeg * 3.14159265f / 180.0f);
+        Mat4 r = identity();
+        r.m[1][1] = c;  r.m[2][1] = -s;
+        r.m[1][2] = s;  r.m[2][2] = c;
+        return r;
+    }
     static Mat4 rotateY(float angleDeg) {
         float c = std::cos(angleDeg * 3.14159265f / 180.0f);
         float s = std::sin(angleDeg * 3.14159265f / 180.0f);

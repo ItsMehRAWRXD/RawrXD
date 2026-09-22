@@ -18,6 +18,9 @@ public:
 
     ID3D11Device* getDevice() const { return m_device; }
     ID3D11DeviceContext* getContext() const { return m_context; }
+    ID3D11RenderTargetView* getRenderTargetView() const { return m_rtv; }
+    ID3D11DepthStencilView* getDepthStencilView() const { return m_dsv; }
+    ID3D11DepthStencilState* getDepthStencilState() const { return m_depthStencilState; }
 
     struct Shader {
         ID3D11VertexShader* vs = nullptr;
@@ -38,6 +41,9 @@ public:
     void setConstantBuffer(uint32_t slot, ID3D11Buffer* cb);
     void drawIndexed(uint32_t count);
     void draw(uint32_t count);
+    void setPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY topology);
+    void setDepthStencilState(ID3D11DepthStencilState* state);
+    void setRasterizerState(ID3D11RasterizerState* state);
 
     ID3D11Buffer* createConstantBuffer(uint32_t size);
 
