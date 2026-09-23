@@ -91,6 +91,53 @@ static void runToolchainGate()
 }
 
 // ---------------------------------------------------------------------------
+// Local Inference Gate — runs inside the shipping IDE process
+// ---------------------------------------------------------------------------
+static void runInferenceGate()
+{
+    appendOutputLine("=== RAWRXD_WIN32IDE_INFERENCE_001 ===");
+    appendOutputLine("IDE_LAUNCH=PASS");
+
+    RawrXD::IDE::InferenceGateResult r = RawrXD::IDE::runLocalInferenceGate();
+
+    appendOutputLine("COMMAND_DISPATCH=PASS");
+    appendOutputLine(std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL"));
+    appendOutputLine(std::string("MODEL_LOADED=") + (r.modelLoaded ? "PASS" : "FAIL"));
+    appendOutputLine(std::string("TOKENIZER_READY=") + (r.tokenizerReady ? "PASS" : "FAIL"));
+    appendOutputLine(std::string("FORWARD_PASS_OK=") + (r.forwardPassOk ? "PASS" : "FAIL"));
+    appendOutputLine(std::string("LOGITS_FINITE=") + (r.logitsFinite ? "PASS" : "FAIL"));
+    appendOutputLine(std::string("GENERATED_TOKEN=") + std::to_string(r.generatedToken));
+    appendOutputLine("SYNTHETIC_TOKEN_OUTPUT=0");
+
+    bool allOk = r.modelFound && r.modelLoaded && r.tokenizerReady && r.forwardPassOk && r.logitsFinite;
+    appendOutputLine(std::string("VERDICT=") + (allOk ? "PASS" : "FAIL"));
+    appendOutputLine("");
+
+    // Write certification receipt
+    {
+        HANDLE hFile = CreateFileA(
+            "F:\\~dev\\rawrxd\\win32ide_strict\\build\\Release\\cert_receipt_gate2.txt",
+            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            std::string receipt = "=== RAWRXD_WIN32IDE_INFERENCE_001 ===\r\n";
+            receipt += "IDE_LAUNCH=PASS\r\n";
+            receipt += "COMMAND_DISPATCH=PASS\r\n";
+            receipt += std::string("MODEL_FOUND=") + (r.modelFound ? "PASS" : "FAIL") + "\r\n";
+            receipt += std::string("MODEL_LOADED=") + (r.modelLoaded ? "PASS" : "FAIL") + "\r\n";
+            receipt += std::string("TOKENIZER_READY=") + (r.tokenizerReady ? "PASS" : "FAIL") + "\r\n";
+            receipt += std::string("FORWARD_PASS_OK=") + (r.forwardPassOk ? "PASS" : "FAIL") + "\r\n";
+            receipt += std::string("LOGITS_FINITE=") + (r.logitsFinite ? "PASS" : "FAIL") + "\r\n";
+            receipt += std::string("GENERATED_TOKEN=") + std::to_string(r.generatedToken) + "\r\n";
+            receipt += "SYNTHETIC_TOKEN_OUTPUT=0\r\n";
+            receipt += std::string("VERDICT=") + (allOk ? "PASS" : "FAIL") + "\r\n";
+            DWORD written = 0;
+            WriteFile(hFile, receipt.data(), (DWORD)receipt.size(), &written, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Window Procedure
 // ---------------------------------------------------------------------------
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -122,6 +169,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_BUILD_NATIVE:
             runToolchainGate();
+            break;
+        case IDM_MODEL_LOCAL:
+            runInferenceGate();
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);

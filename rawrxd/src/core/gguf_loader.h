@@ -117,6 +117,7 @@ public:
         }
         m_path.clear();
         m_fileSize = 0;
+        m_metaCount = 0;
         m_meta = GGUFMetadata{};
         m_tensors.clear();
     }
@@ -142,18 +143,16 @@ public:
         uint64_t meta_count_u64 = 0;
         if (!ReadFile(m_hFile, &meta_count_u64, sizeof(meta_count_u64), &read, nullptr) || read != sizeof(meta_count_u64))
             return false;
-        // For now we don't deeply parse metadata KV pairs here; leave to ParseMetadata
+        m_metaCount = meta_count_u64;
         return true;
     }
 
     bool ParseMetadata() {
-        // Minimal metadata parse — reads architecture_type and key counts.
-        // Full parse deferred to streaming_gguf_loader.h for production.
         if (!m_hFile) return false;
-        // Reset file pointer after header
-        SetFilePointer(m_hFile, static_cast<LONG>(sizeof(uint32_t) * 2 + sizeof(uint64_t) * 2), nullptr, FILE_BEGIN);
-        // TODO: implement full KV parse if needed by callers.
-        // For now, mark as parsed so caller can continue.
+        // File pointer is already past header (24 bytes) after ParseHeader()
+        for (uint64_t i = 0; i < m_metaCount; ++i) {
+            if (!SkipKvPair()) return false;
+        }
         return true;
     }
 
@@ -161,15 +160,127 @@ public:
         if (!m_hFile) return false;
         m_tensors.clear();
         m_tensors.reserve(m_meta.tensor_count);
-        // Placeholder: real tensor info parse requires reading name strings,
-        // dimensions, type codes, and offsets from GGUF spec.
         for (uint32_t i = 0; i < m_meta.tensor_count; ++i) {
             TensorInfo t{};
-            std::snprintf(t.name, sizeof(t.name), "tensor_%u", i);
+            // name_len (u64) + name
+            uint64_t nameLen = 0;
+            DWORD read = 0;
+            if (!ReadFile(m_hFile, &nameLen, sizeof(nameLen), &read, nullptr) || read != sizeof(nameLen))
+                return false;
+            if (nameLen >= sizeof(t.name)) nameLen = sizeof(t.name) - 1;
+            if (!ReadFile(m_hFile, t.name, static_cast<DWORD>(nameLen), &read, nullptr) || read != static_cast<DWORD>(nameLen))
+                return false;
+            t.name[nameLen] = '\0';
+            // n_dims (u32)
+            if (!ReadFile(m_hFile, &t.dims, sizeof(t.dims), &read, nullptr) || read != sizeof(t.dims))
+                return false;
+            if (t.dims > 4) t.dims = 4;
+            // shape (u64 * dims)
+            for (uint32_t d = 0; d < t.dims; ++d) {
+                if (!ReadFile(m_hFile, &t.shape[d], sizeof(t.shape[d]), &read, nullptr) || read != sizeof(t.shape[d]))
+                    return false;
+            }
+            // type (u32)
+            if (!ReadFile(m_hFile, &t.type, sizeof(t.type), &read, nullptr) || read != sizeof(t.type))
+                return false;
+            // offset (u64)
+            if (!ReadFile(m_hFile, &t.offset, sizeof(t.offset), &read, nullptr) || read != sizeof(t.offset))
+                return false;
+            // Compute byteSize
+            uint64_t elemCount = 1;
+            for (uint32_t d = 0; d < t.dims; ++d) elemCount *= t.shape[d];
+            switch (t.type) {
+                case 0: t.byteSize = elemCount * 4; break; // F32
+                case 1: t.byteSize = elemCount * 2; break; // F16
+                default: t.byteSize = elemCount * 4; break; // fallback
+            }
             m_tensors.push_back(t);
         }
         return true;
     }
+
+private:
+    bool SkipKvPair() {
+        // key_len (u64) + key string
+        uint64_t keyLen = 0;
+        DWORD read = 0;
+        if (!ReadFile(m_hFile, &keyLen, sizeof(keyLen), &read, nullptr) || read != sizeof(keyLen))
+            return false;
+        if (keyLen > 4096) return false; // sanity
+        std::vector<char> keyBuf(keyLen + 1);
+        if (!ReadFile(m_hFile, keyBuf.data(), static_cast<DWORD>(keyLen), &read, nullptr) || read != static_cast<DWORD>(keyLen))
+            return false;
+        // value_type (u32)
+        uint32_t valType = 0;
+        if (!ReadFile(m_hFile, &valType, sizeof(valType), &read, nullptr) || read != sizeof(valType))
+            return false;
+        return SkipValue(valType);
+    }
+
+    bool SkipValue(uint32_t valType) {
+        DWORD read = 0;
+        switch (valType) {
+            case 0: case 1: case 7: { // uint8, int8, bool
+                uint8_t tmp; return ReadFile(m_hFile, &tmp, sizeof(tmp), &read, nullptr) && read == sizeof(tmp);
+            }
+            case 2: case 3: { // uint16, int16
+                uint16_t tmp; return ReadFile(m_hFile, &tmp, sizeof(tmp), &read, nullptr) && read == sizeof(tmp);
+            }
+            case 4: case 5: case 6: { // uint32, int32, float32
+                uint32_t tmp; return ReadFile(m_hFile, &tmp, sizeof(tmp), &read, nullptr) && read == sizeof(tmp);
+            }
+            case 10: case 11: case 12: { // uint64, int64, float64
+                uint64_t tmp; return ReadFile(m_hFile, &tmp, sizeof(tmp), &read, nullptr) && read == sizeof(tmp);
+            }
+            case 8: { // string
+                uint64_t strLen = 0;
+                if (!ReadFile(m_hFile, &strLen, sizeof(strLen), &read, nullptr) || read != sizeof(strLen)) return false;
+                if (strLen > 0) {
+                    std::vector<char> buf(strLen);
+                    if (!ReadFile(m_hFile, buf.data(), static_cast<DWORD>(strLen), &read, nullptr) || read != static_cast<DWORD>(strLen)) return false;
+                }
+                return true;
+            }
+            case 9: { // array
+                uint32_t arrType = 0;
+                if (!ReadFile(m_hFile, &arrType, sizeof(arrType), &read, nullptr) || read != sizeof(arrType)) return false;
+                uint64_t arrLen = 0;
+                if (!ReadFile(m_hFile, &arrLen, sizeof(arrLen), &read, nullptr) || read != sizeof(arrLen)) return false;
+                if (arrType == 8) { // array of strings
+                    for (uint64_t i = 0; i < arrLen; ++i) {
+                        uint64_t sl = 0;
+                        if (!ReadFile(m_hFile, &sl, sizeof(sl), &read, nullptr) || read != sizeof(sl)) return false;
+                        if (sl > 0) {
+                            std::vector<char> buf(sl);
+                            if (!ReadFile(m_hFile, buf.data(), static_cast<DWORD>(sl), &read, nullptr) || read != static_cast<DWORD>(sl)) return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    uint64_t elemSize = 1;
+                    switch (arrType) {
+                        case 0: case 1: case 7: elemSize = 1; break;
+                        case 2: case 3: elemSize = 2; break;
+                        case 4: case 5: case 6: elemSize = 4; break;
+                        case 10: case 11: case 12: elemSize = 8; break;
+                        default: elemSize = 1; break;
+                    }
+                    uint64_t skipBytes = arrLen * elemSize;
+                    while (skipBytes > 0) {
+                        uint32_t chunk = (skipBytes > 0x7FFFFFFFu) ? 0x7FFFFFFFu : static_cast<uint32_t>(skipBytes);
+                        std::vector<char> buf(chunk);
+                        if (!ReadFile(m_hFile, buf.data(), chunk, &read, nullptr) || read != chunk) return false;
+                        skipBytes -= chunk;
+                    }
+                    return true;
+                }
+            }
+            default:
+                return false;
+        }
+    }
+
+public:
 
     bool ParseTensors() {
         if (!ParseHeader()) return false;
@@ -220,6 +331,7 @@ public:
 private:
     std::string         m_path;
     GGUFMetadata        m_meta;
+    uint64_t            m_metaCount = 0;
     std::vector<TensorInfo> m_tensors;
 
     HANDLE              m_hFile    = nullptr;

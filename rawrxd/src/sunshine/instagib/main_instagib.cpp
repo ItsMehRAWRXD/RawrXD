@@ -1,5 +1,8 @@
 #include <windows.h>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
 
 #include "sunshine/core/WindowWin32.hpp"
 #include "sunshine/core/RendererD3D11.hpp"
@@ -108,11 +111,60 @@ public:
     }
 
     void run() {
+        // Capture config from environment
+        uint32_t captureAfterMs = 0;
+        bool captureExit = false;
+        wchar_t capturePath[512] = L"";
+        {
+            const char* ms = getenv("SUNSHINE_CAPTURE_AFTER_MS");
+            if (ms) captureAfterMs = (uint32_t)atoi(ms);
+            const char* exitStr = getenv("SUNSHINE_CAPTURE_EXIT");
+            if (exitStr && atoi(exitStr)) captureExit = true;
+            const char* pathStr = getenv("SUNSHINE_CAPTURE_PATH");
+            if (pathStr) {
+                size_t n = strlen(pathStr);
+                if (n < sizeof(capturePath) / sizeof(capturePath[0])) {
+                    for (size_t i = 0; i < n; ++i) capturePath[i] = (wchar_t)pathStr[i];
+                    capturePath[n] = L'\0';
+                }
+            } else if (captureAfterMs > 0) {
+                wcscpy_s(capturePath, L"sunshine_capture.bmp");
+            }
+        }
+
+        bool firstFrame = true;
+        uint64_t renderStart = 0;
+        bool captured = false;
+
         while (m_running) {
             double dt = m_timer.tick();
             if (dt > 0.25) dt = 0.25;
             update((float)dt);
             render();
+
+            if (captureAfterMs > 0 && !captured) {
+                uint64_t nowTick = GetTickCount64();
+                if (firstFrame) {
+                    renderStart = nowTick;
+                    firstFrame = false;
+                }
+                if ((nowTick - renderStart) >= captureAfterMs) {
+                    if (wcslen(capturePath) > 0) {
+                        if (m_renderer.captureFrame(capturePath)) {
+                            FILE* lf = nullptr;
+                            fopen_s(&lf, "instagib_log.txt", "a");
+                            if (lf) {
+                                char buf[512];
+                                sprintf_s(buf, "CAPTURE_OK path=%S ms=%u", capturePath, captureAfterMs);
+                                fprintf(lf, "%s\n", buf);
+                                fclose(lf);
+                            }
+                        }
+                    }
+                    captured = true;
+                    if (captureExit) m_running = false;
+                }
+            }
         }
     }
 

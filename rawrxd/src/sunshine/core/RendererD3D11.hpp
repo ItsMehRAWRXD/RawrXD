@@ -47,6 +47,8 @@ public:
 
     ID3D11Buffer* createConstantBuffer(uint32_t size);
 
+    bool captureFrame(const wchar_t* path);
+
 private:
     Window* m_window = nullptr;
     ID3D11Device* m_device = nullptr;

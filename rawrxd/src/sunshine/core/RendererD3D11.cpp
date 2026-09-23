@@ -249,6 +249,79 @@ void Renderer::setDepthStencilState(ID3D11DepthStencilState* state) {
     m_context->OMSetDepthStencilState(state, 0);
 }
 
+static bool writeMappedTextureBMP(const wchar_t* path, const void* data, uint32_t rowPitch, uint32_t width, uint32_t height) {
+    FILE* f = nullptr;
+    _wfopen_s(&f, path, L"wb");
+    if (!f) return false;
+
+    const uint32_t dstRowSize = ((width * 3 + 3) / 4) * 4;
+    const uint32_t bmpFileSize = 54 + dstRowSize * height;
+
+    // BITMAPFILEHEADER
+    uint8_t fileHdr[14] = {};
+    fileHdr[0] = 'B'; fileHdr[1] = 'M';
+    *(uint32_t*)(fileHdr + 2) = bmpFileSize;
+    *(uint32_t*)(fileHdr + 10) = 54;
+    fwrite(fileHdr, 1, 14, f);
+
+    // BITMAPINFOHEADER
+    uint8_t infoHdr[40] = {};
+    *(uint32_t*)(infoHdr + 0) = 40;
+    *(uint32_t*)(infoHdr + 4) = width;
+    *(uint32_t*)(infoHdr + 8) = height;
+    *(uint16_t*)(infoHdr + 12) = 1;
+    *(uint16_t*)(infoHdr + 14) = 24;
+    *(uint32_t*)(infoHdr + 20) = dstRowSize * height;
+    fwrite(infoHdr, 1, 40, f);
+
+    const uint8_t* src = (const uint8_t*)data;
+    std::vector<uint8_t> row(dstRowSize);
+    for (int y = (int)height - 1; y >= 0; --y) {
+        const uint8_t* srcRow = src + y * rowPitch;
+        uint8_t* dst = row.data();
+        for (uint32_t x = 0; x < width; ++x) {
+            dst[x * 3 + 0] = srcRow[x * 4 + 0]; // B
+            dst[x * 3 + 1] = srcRow[x * 4 + 1]; // G
+            dst[x * 3 + 2] = srcRow[x * 4 + 2]; // R
+        }
+        fwrite(row.data(), 1, dstRowSize, f);
+    }
+    fclose(f);
+    return true;
+}
+
+bool Renderer::captureFrame(const wchar_t* path) {
+    ID3D11Texture2D* backBuffer = nullptr;
+    HRESULT hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
+    if (FAILED(hr) || !backBuffer) return false;
+
+    D3D11_TEXTURE2D_DESC desc{};
+    backBuffer->GetDesc(&desc);
+
+    D3D11_TEXTURE2D_DESC stagingDesc = desc;
+    stagingDesc.Usage = D3D11_USAGE_STAGING;
+    stagingDesc.BindFlags = 0;
+    stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    stagingDesc.MiscFlags = 0;
+
+    ID3D11Texture2D* staging = nullptr;
+    hr = m_device->CreateTexture2D(&stagingDesc, nullptr, &staging);
+    if (FAILED(hr)) { backBuffer->Release(); return false; }
+
+    m_context->CopyResource(staging, backBuffer);
+
+    D3D11_MAPPED_SUBRESOURCE mapped{};
+    hr = m_context->Map(staging, 0, D3D11_MAP_READ, 0, &mapped);
+    if (FAILED(hr)) { staging->Release(); backBuffer->Release(); return false; }
+
+    bool ok = writeMappedTextureBMP(path, mapped.pData, (uint32_t)mapped.RowPitch, desc.Width, desc.Height);
+
+    m_context->Unmap(staging, 0);
+    staging->Release();
+    backBuffer->Release();
+    return ok;
+}
+
 void Renderer::setRasterizerState(ID3D11RasterizerState* state) {
     m_context->RSSetState(state);
 }
