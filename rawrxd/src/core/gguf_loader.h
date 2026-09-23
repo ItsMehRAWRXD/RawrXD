@@ -32,7 +32,7 @@ namespace RawrXD {
 // ============================================================================
 // Magic
 // ============================================================================
-constexpr uint32_t GGUF_MAGIC = 0x46475547u; // 'GGUF' little-endian
+constexpr uint32_t GGUF_MAGIC = 0x46554747u; // 'GGUF' little-endian
 
 // ============================================================================
 // GGUFMetadata — Architecture and vocabulary metadata extracted from header

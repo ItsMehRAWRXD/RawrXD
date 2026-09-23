@@ -8,6 +8,9 @@ Prove the standalone Instagib EXE can auto-capture its D3D11 backbuffer to BMP a
 - **Target**: x64, `/std:c++17 /O2 /W3 /EHsc`
 - **Result**: Zero errors. EXE: `bin\Instagib.exe`
 
+## Commit SHA
+`1ba51bd7`
+
 ## New Code (capture-only, no gameplay changes)
 - `RendererD3D11.cpp`: added `captureFrame()` — `GetBuffer` → `CreateTexture2D` (staging) → `CopyResource` → `Map` → `writeMappedTextureBMP`
 - `RendererD3D11.hpp`: declared `bool captureFrame(const wchar_t* path);`
@@ -22,13 +25,14 @@ Prove the standalone Instagib EXE can auto-capture its D3D11 backbuffer to BMP a
 
 ## Evidence Captured
 
-| File | Size | Timestamp |
-|------|------|-----------|
-| `evidence\instagib_1000ms.bmp` | 2,764,854 bytes | 2026-09-22 21:56 |
-| `evidence\instagib_3000ms.bmp` | 2,764,854 bytes | 2026-09-22 21:54 |
-| `evidence\instagib_5000ms.bmp` | 2,764,854 bytes | 2026-09-22 21:56 |
+| File | Size | SHA-256 |
+|------|------|---------|
+| `bin\Instagib.exe` | - | `291fdc90d66bfb7efbaf57b28ec2e1a32ec6f0141fce8e8f13511a04baeb781c` |
+| `evidence\instagib_1000ms.bmp` | 2,764,854 | `356b61809ed8a7f6eb4b99eafcba9ca313b80358693e7232b9751aa3abd4a72c` |
+| `evidence\instagib_3000ms.bmp` | 2,764,854 | `e9ba02d3212c15d8cc3767779f70b9bc8f9b3a4a486e2009af1ca6aee66cce12` |
+| `evidence\instagib_5000ms.bmp` | 2,764,854 | `b7c88f71f8bbc85f4cfdf24fcf6ebd935f459fc218306f9096fab065f2373260` |
 
-All files are **1280×720 24-bit BMP** (header validated: `BM`, offset=54, width=1280, height=720, bpp=24).
+All BMPs are **1280×720 24-bit** (header validated: `BM`, offset=54, width=1280, height=720, bpp=24).
 
 ### Log Output
 ```
@@ -54,9 +58,11 @@ CAPTURE_OK path=F:\~dev\rawrxd\evidence\instagib_3000ms.bmp  ms=3000
 | Capture path | **PASS** | `evidence\instagib_3000ms.bmp` exists |
 | Frame nonempty | **PASS** | file size matches 1280×720×3+54; no truncation |
 | Game continues after capture | **PASS** | when `SUNSHINE_CAPTURE_EXIT=0`, game keeps running |
+| Frames distinct | **PASS** | 1000→3000: 7.30% pixel change; 3000→5000: 57.09% pixel change |
+| Old black-wedge artifact | **ABSENT** | not visible in any capture |
 
 ## Verdict
 **PASS** — Automated D3D11 backbuffer capture is functional. Visual regression loop is now possible.
 
-## Next Step
-SUNSHINE_INSTAGIB_005: Inspect captured frames for rendering artifacts and certify visual correctness.
+## Freeze File
+`RAWRXD_SUNSHINE_004_FREEZE.txt` contains the SHA-256 of this receipt for tamper evidence.

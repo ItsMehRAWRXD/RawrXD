@@ -1,0 +1,14 @@
+RAWRXD_SUNSHINE_004_FREEZE
+
+Receipt: RECEIPT_SUNSHINE_INSTAGIB_004.md
+SHA256: 29fe670cb27e5c2e0b94acf2d3674a9fa7bbc93f45c0258e58efd82754364a3a
+
+Commit: 1ba51bd7
+
+Assets:
+- bin/Instagib.exe                291fdc90d66bfb7efbaf57b28ec2e1a32ec6f0141fce8e8f13511a04baeb781c
+- evidence/instagib_1000ms.bmp   356b61809ed8a7f6eb4b99eafcba9ca313b80358693e7232b9751aa3abd4a72c
+- evidence/instagib_3000ms.bmp   e9ba02d3212c15d8cc3767779f70b9bc8f9b3a4a486e2009af1ca6aee66cce12
+- evidence/instagib_5000ms.bmp   b7c88f71f8bbc85f4cfdf24fcf6ebd935f459fc218306f9096fab065f2373260
+
+Frozen: 2026-09-22
