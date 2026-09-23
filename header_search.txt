@@ -1,0 +1,68 @@
+﻿=== RawrXD_LSPServer.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== masm_bridge_cathedral.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== pdb_gsi_hash.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== plugin_signature.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== native_gguf_loader.h ===
+FOUND: F:\~dev\rawrxd\include\native_gguf_loader.h  size=1477
+GIT: none
+
+=== agentic_failure_detector.hpp ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== autonomous_subagent.hpp ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== vscode_extension_api.h ===
+FOUND: F:\~dev\rawrxd\include\vscode_extension_api.h  size=80223
+GIT: none
+
+=== rawrxd_tokenizer.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== streaming_gguf_loader.h ===
+FOUND: F:\~dev\rawrxd\include\streaming_gguf_loader.h  size=5103
+GIT: none
+
+=== hexmag_client.hpp ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== HexMagAction.hpp ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== cstdint.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== hotpatch_telemetry_safety.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== IDETheme.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== QString ===
+NOT_FOUND_ON_DISK
+GIT: none
+
+=== RawrXD_MonacoCore.h ===
+NOT_FOUND_ON_DISK
+GIT: none
+

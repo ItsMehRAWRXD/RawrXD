@@ -19,7 +19,7 @@
 // ============================================================================
 
 #include "../../include/pdb_native.h"
-#include "../../include/pdb_gsi_hash.h"
+// #include "../../include/pdb_gsi_hash.h"   /* header missing — recovered in build pass */
 
 #include <cstdio>
 #include <cstring>

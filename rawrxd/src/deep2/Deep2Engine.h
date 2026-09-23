@@ -299,6 +299,15 @@ enum class ModelState : uint8_t {
     Generating = 3
 };
 
+// ============================================================================
+// Model-load stage diagnostics (RAWRXD_MODEL_ADMISSION_DIAG_001)
+// ============================================================================
+struct ModelLoadDiag {
+    int stageCode = 0;            // Unique per-stage identifier
+    std::string stageName;        // Human-readable stage tag
+    std::string message;          // Detailed failure reason
+};
+
 using TokenCallback =
     std::function<bool(int32_t tokenId, const std::string& token)>;
 
@@ -313,8 +322,8 @@ public:
     // Initialize with configuration
     bool initialize(const EngineConfig& config);
     
-    // Load model from GGUF file
-    bool loadModel(const std::string& ggufPath);
+    // Load model from GGUF file (optional out-param for granular diagnostics)
+    bool loadModel(const std::string& ggufPath, ModelLoadDiag* diag = nullptr);
 
     // Load model from BP16 file (exact weight extraction, no dequantization)
     bool loadModelFromBP16(const std::string& bp16Path);
@@ -381,6 +390,9 @@ public:
     const Deep2::KimiK2Config& k2ShardConfig() const { return k2ShardConfig_; }
     Deep2::K2NativeStreamGate::Result runK2NativeStreamPartial(const Deep2::K2NativeStreamGate::Config& cfg);
     
+    // Model architecture from GGUF metadata (populated after loadModel succeeds)
+    const std::string& modelArchitecture() const noexcept { return modelArchitecture_; }
+
     // Get engine info
     bool isInitialized() const { return initialized; }
     bool isModelLoaded() const { return modelWeights.loaded; }
@@ -1074,6 +1086,7 @@ private:
 
     bool initialized = false;
     ModelState modelState_ = ModelState::Closed;
+    std::string modelArchitecture_;               // <<< set from GGUF metadata after loadModel()
     bool hostQ8GemvSafe_ = true;
     bool hostDecodeSanitize_ = false;
     int hostQ8Ffn_ = 1;

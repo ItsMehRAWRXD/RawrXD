@@ -20,6 +20,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Subsystem: Windows (not Console)
 add_executable(${PROJECT_NAME} WIN32)
 
+# Prevent Windows.h min/max macro collision with std::max / std::min
+target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
+
 # Strict source closure - ONLY these files
 target_sources(${PROJECT_NAME} PRIVATE
     # Entry point (real Win32 window + message pump)
@@ -38,21 +41,28 @@ target_sources(${PROJECT_NAME} PRIVATE
 
     # JIT Assembler
     ${CMAKE_SOURCE_DIR}/../src/sovereign/puppeteer/JITAssembler.cpp
-
-    # Gate 2A: Deep2Engine compile-closure probe
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Tokenizer.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Sampler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/GGUFLoader.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/QuantKernelRegistry.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2DualGpuRowSplit.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/vulkan_compute.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuMoEMLA.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_Speculative.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_VulkanRuntime.cpp
-
-    # Quant kernel registry (GEMV/Dequant dispatch tables + LookupQuantType)
-    ${CMAKE_SOURCE_DIR}/../src/deep2/QuantKernelRegistry.cpp
-    ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2DualGpuRowSplit.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/strict_gpu_violations.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuForward.cpp
-    ${CMAKE_SOURCE_DIR}/deep2_extern_definitions.cpp
+    # Agentic streaming stack (RAWRXD_WIN32IDE_AGENT_001)
+    ${CMAKE_SOURCE_DIR}/../src/agentic/StreamingResultChannel.cpp
+    ${CMAKE_SOURCE_DIR}/../src/ai/streaming_inference_engine.cpp
+    ${CMAKE_SOURCE_DIR}/../src/agentic_model_streamer_bridge.cpp
+    ${CMAKE_SOURCE_DIR}/../src/agentic/streaming_command_handler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/runtime/shared/BP1BraidStreamer.cpp
+    # Agentic Gate
+    ${CMAKE_SOURCE_DIR}/../src/win32app/ide_agentic_gate.cpp
+    # Tool Authority
+    ${CMAKE_SOURCE_DIR}/../src/deep2/AgentToolAuthority.cpp
 )
 
 # Include directories for the backend headers
@@ -61,26 +71,15 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/compiler_backend
     ${CMAKE_SOURCE_DIR}/../src/sovereign/puppeteer
     ${CMAKE_SOURCE_DIR}/../src/core
-    ${CMAKE_SOURCE_DIR}/../src/deep2
+    ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src
-    C:/VulkanSDK/1.4.357.0/Include
+    # Vulkan SDK header for Deep2 real GPU backend
+    "C:/VulkanSDK/1.4.357.0/Include"
 )
 
-# MSVC specific
-if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX- /DNOMINMAX)
-    # Ensure Windows subsystem entry (WinMain)
-    set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE TRUE)
-endif()
-
-# Vulkan loader library
-if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        "C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib"
-    )
-endif()
-
-
+# Vulkan SDK library for Deep2 GPU backend
+target_link_directories(${PROJECT_NAME} PRIVATE "C:/VulkanSDK/1.4.357.0/Lib")
+target_link_libraries(${PROJECT_NAME} PRIVATE vulkan-1.lib dxgi psapi)
 # Certification: verify no STUB files are linked
 set(STRICT_IDE_SOURCES
     main_win32.cpp

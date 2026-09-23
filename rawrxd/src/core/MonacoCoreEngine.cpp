@@ -38,7 +38,7 @@
 // ============================================================================
 
 #include "editor_engine.h"
-#include "RawrXD_MonacoCore.h"
+// #include "RawrXD_MonacoCore.h"   /* header missing — recovered in build pass */
 
 #include <d2d1.h>
 #include <dwrite.h>

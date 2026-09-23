@@ -45,9 +45,19 @@
 // Forward declarations
 class AgenticDecisionTree;
 class SwarmCoordinator;
-struct TreeContext;
-struct DecisionOutcome;
+enum class DecisionOutcome : uint8_t;
 struct SwarmNodeInfo;
+
+struct TreeContext {
+    std::string inferencePrompt;
+    std::string inferenceOutput;
+    std::string targetBinaryPath;
+    std::uint64_t targetFunctionAddr = 0;
+    float failureConfidence = 0.0f;
+    int failureType = 0;
+    bool patchApplied = false;
+    int totalRetries = 0;
+};
 
 // ============================================================================
 // Swarm Agentic Task Types (extensions to SwarmTaskType)

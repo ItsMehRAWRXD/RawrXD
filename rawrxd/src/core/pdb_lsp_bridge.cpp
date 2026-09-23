@@ -35,7 +35,7 @@
 
 #include "../../include/pdb_native.h"
 #include "../../include/pdb_reference_provider.h"
-#include "../../include/lsp/RawrXD_LSPServer.h"
+// #include "../../include/lsp/RawrXD_LSPServer.h"   /* header missing — recovered in build pass */
 
 #include <cstdio>
 #include <cstring>

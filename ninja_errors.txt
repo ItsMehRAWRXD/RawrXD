@@ -1,0 +1,8 @@
+﻿FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/core/embedding_engine.cpp.obj 
+F:\~dev\rawrxd\src\core\embedding_engine.cpp(9): fatal error C1083: Cannot open inc
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/core/code_linter.cpp.obj 
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/core/ssot_handlers_ext_isolated
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/core/autonomous_workflow_engine
+F:\~dev\rawrxd\src\core\autonomous_workflow_engine.cpp(15): fatal error C1083: Cann
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/core/agentic_task_graph.cpp.obj
+ninja: build stopped: cannot make progress due to previous errors.

@@ -122,7 +122,7 @@ public:
         if (descriptor.id.empty()) throw std::invalid_argument("tool id is empty");
 
         std::unique_lock lock(mu_);
-        if (entries_.contains(descriptor.id) || aliases_.contains(descriptor.id))
+        if (entries_.find(descriptor.id) != entries_.end() || aliases_.find(descriptor.id) != aliases_.end())
             throw std::invalid_argument("duplicate tool id: " + descriptor.id);
 
         std::vector<std::string> canonical_aliases;
@@ -130,7 +130,7 @@ public:
         for (const auto& alias : descriptor.aliases) {
             auto a = canonicalId(alias);
             if (a.empty() || a == descriptor.id) continue;
-            if (entries_.contains(a) || aliases_.contains(a))
+            if (entries_.find(a) != entries_.end() || aliases_.find(a) != aliases_.end())
                 throw std::invalid_argument("duplicate tool alias: " + a);
             canonical_aliases.push_back(std::move(a));
         }
@@ -155,7 +155,7 @@ public:
     bool contains(std::string_view id) const {
         const auto key = canonicalId(id);
         std::shared_lock lock(mu_);
-        return entries_.contains(key) || aliases_.contains(key);
+        return entries_.find(key) != entries_.end() || aliases_.find(key) != aliases_.end();
     }
 
     std::optional<ToolDescriptor> describe(std::string_view id) const {

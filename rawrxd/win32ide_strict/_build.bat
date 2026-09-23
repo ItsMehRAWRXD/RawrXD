@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" "F:\~dev\rawrxd\win32ide_strict\build_v3\RawrXD-Win32IDE.sln" /p:Configuration=Release /p:Platform=x64 /verbosity:minimal

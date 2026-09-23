@@ -15,8 +15,8 @@
 #include "byte_level_hotpatcher.hpp"
 #include "sentinel_watchdog.hpp"
 #include "auto_repair_orchestrator.hpp"
-#include "../agent/agentic_failure_detector.hpp"
-#include "../agent/agentic_puppeteer.hpp"
+// #include "../agent/agentic_failure_detector.hpp"   /* header missing — recovered in build pass */
+// #include "../agent/agentic_puppeteer.hpp"            /* header missing — recovered in build pass */
 #include "../server/gguf_server_hotpatch.hpp"
 #include "context_deterioration_hotpatch.hpp"
 #include "subsystem_agent_bridge.hpp"

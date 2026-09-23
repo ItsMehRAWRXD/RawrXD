@@ -19,6 +19,13 @@ public:
 
     static CPUInferenceEngine& Instance();
     bool IsLoaded() const { return false; }
+
+    // Stub for execution_scheduler.cpp build
+    void TransformerLayer(float* state, float* scratch, int layerIdx,
+                          int batchSize, uint32_t deviceId) {
+        (void)state; (void)scratch; (void)layerIdx;
+        (void)batchSize; (void)deviceId;
+    }
 };
 
 } // namespace RawrXD

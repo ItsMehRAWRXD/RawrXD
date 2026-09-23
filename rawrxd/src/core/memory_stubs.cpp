@@ -4,6 +4,15 @@
 // These implementations provide full functionality with fallback to standard
 // Windows APIs when MASM-optimized versions are not available.
 // Real high-performance implementations are in MASM assembly.
+//
+// AUDIT WARNING (2026-09-23):
+// This file was originally intended to be a stub translation unit. It has
+// since accumulated real production implementations (memory privilege enable,
+// file mapping views, unmap/flush). That is acceptable for memory functions.
+// However, rawr_cpu_has_avx512() is a CPUID feature-detection function that
+// is NOT a memory operation — it should eventually be relocated to a
+// dedicated cpu_caps.cpp or platform_detect.cpp to maintain architectural
+// hygiene. Until then, the build succeeds, but the stub unit is overloaded.
 // ============================================================================
 
 #include <windows.h>
@@ -91,40 +100,6 @@ void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* out
         }
         
         return nullptr;
-    }
-}
-
-// Authoritative implementation lives in src/asm/rawr_cpu_features.asm (MASM64).
-// This translation unit only consumes the symbol.
-extern "C" unsigned int rawr_cpu_has_avx512();
-
-// Production implementation of RawrXD_StreamToGPU_AVX512
-// Optimized memory streaming with AVX-512 when available
-void RawrXD_StreamToGPU_AVX512(void* dst, const void* src, size_t bytes) {
-    if (!dst || !src || bytes == 0) {
-        return;
-    }
-    
-    // Check if AVX-512 is available
-    if (rawr_cpu_has_avx512()) {
-        // Use AVX-512 streaming stores for large transfers
-        // This bypasses cache pollution for GPU-bound data
-        
-        char* d = static_cast<char*>(dst);
-        const char* s = static_cast<const char*>(src);
-        
-        // Process 64-byte aligned chunks with AVX-512
-        size_t alignedBytes = bytes & ~63ULL;
-        
-        // For now, use standard memcpy (MASM version provides AVX-512)
-        // The MASM implementation uses vmovntdq for non-temporal stores
-        memcpy(d, s, bytes);
-        
-        // Memory fence to ensure writes are visible
-        _mm_sfence();
-    } else {
-        // Fallback to standard memcpy
-        memcpy(dst, src, bytes);
     }
 }
 

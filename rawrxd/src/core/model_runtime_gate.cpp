@@ -94,8 +94,7 @@ void ModelRuntimeGate::notifyModelResident(std::string_view modelKey, std::uint6
     m_residentKey.assign(modelKey.begin(), modelKey.end());
     m_residentBytes = bytes;
     RawrXD::Logging::Logger::instance().info(
-        std::string("[ModelRuntimeGate] Resident model: ") + m_residentKey + " (" + std::to_string(bytes) + " bytes)",
-        "ModelRuntimeGate");
+        std::string("[ModelRuntimeGate] Resident model: ") + m_residentKey + " (" + std::to_string(bytes) + " bytes)");
 }
 
 void ModelRuntimeGate::notifyModelUnloaded(std::string_view modelKey)
@@ -107,8 +106,7 @@ void ModelRuntimeGate::notifyModelUnloaded(std::string_view modelKey)
         m_residentBytes = 0;
     }
     RawrXD::Logging::Logger::instance().info(
-        std::string("[ModelRuntimeGate] Unloaded model: ") + key,
-        "ModelRuntimeGate");
+        std::string("[ModelRuntimeGate] Unloaded model: ") + key);
 }
 
 void ModelRuntimeGate::beginGeneration(std::string_view backend, std::string_view modelKey)
@@ -119,8 +117,7 @@ void ModelRuntimeGate::beginGeneration(std::string_view backend, std::string_vie
     m_generationCount.fetch_add(1, std::memory_order_acq_rel);
     GenerationStopwatch::instance().beginGeneration();
     RawrXD::Logging::Logger::instance().info(
-        std::string("[ModelRuntimeGate] beginGeneration backend=") + std::string(backend) + " model=" + std::string(modelKey),
-        "ModelRuntimeGate");
+        std::string("[ModelRuntimeGate] beginGeneration backend=") + std::string(backend) + " model=" + std::string(modelKey));
 }
 
 void ModelRuntimeGate::endGeneration()
@@ -137,8 +134,7 @@ void ModelRuntimeGate::endGeneration()
     GenerationStopwatch::instance().endGeneration();
     m_lastGenMs.store(ms, std::memory_order_release);
     RawrXD::Logging::Logger::instance().info(
-        std::string("[ModelRuntimeGate] endGeneration duration_ms=") + std::to_string(ms),
-        "ModelRuntimeGate");
+        std::string("[ModelRuntimeGate] endGeneration duration_ms=") + std::to_string(ms));
 }
 
 GenerationScope::GenerationScope(std::string_view backend, std::string_view modelKey)
@@ -166,14 +162,12 @@ LaneGuard::LaneGuard(SubsystemLane lane)
     if (g.strictLaneBudget()) {
         m_allowed = false;
         RawrXD::Logging::Logger::instance().warning(
-            std::string("[ModelRuntimeGate] Lane busy (strict): ") + std::to_string(static_cast<unsigned>(lane)),
-            "ModelRuntimeGate");
+            std::string("[ModelRuntimeGate] Lane busy (strict): ") + std::to_string(static_cast<unsigned>(lane)));
         return;
     }
     m_allowed = true;
     RawrXD::Logging::Logger::instance().warning(
-        std::string("[ModelRuntimeGate] Lane busy (fail-open): ") + std::to_string(static_cast<unsigned>(lane)),
-        "ModelRuntimeGate");
+        std::string("[ModelRuntimeGate] Lane busy (fail-open): ") + std::to_string(static_cast<unsigned>(lane)));
 }
 
 LaneGuard::~LaneGuard()

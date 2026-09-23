@@ -15,6 +15,7 @@
 #include <limits>
 #include <new>
 #include <stdexcept>
+#include <fstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -369,15 +370,23 @@ bool Deep2Engine::allocateBuffers() {
 
     if (H == 0 || V == 0 || I == 0) return false;
 
+    // Determine projection dimensions based on model metadata (supports rectangular attention like Gemma3)
+    const size_t numHeads = modelWeights.numHeads ? modelWeights.numHeads : config.numHeads;
+    const size_t headDim = modelWeights.headDim ? modelWeights.headDim : config.headDim;
+    const size_t numKVHeads = modelWeights.numKVHeads ? modelWeights.numKVHeads : numHeads;
+
+    const size_t qDim  = (numHeads && headDim) ? (numHeads * headDim) : H;
+    const size_t kvDim = (numKVHeads && headDim) ? (numKVHeads * headDim) : H;
+
     deallocateBuffers();
 
     hiddenStates    = new (std::nothrow) float[H];
     attentionOutput = new (std::nothrow) float[H];
     ffnOutput       = new (std::nothrow) float[H];
     logits          = new (std::nothrow) float[V];
-    qProj           = new (std::nothrow) float[H];
-    kProj           = new (std::nothrow) float[H];
-    vProj           = new (std::nothrow) float[H];
+    qProj           = new (std::nothrow) float[qDim];
+    kProj           = new (std::nothrow) float[kvDim];
+    vProj           = new (std::nothrow) float[kvDim];
     gateBuf         = new (std::nothrow) float[I];
     upBuf           = new (std::nothrow) float[I];
     layerTemp       = new (std::nothrow) float[H];
@@ -394,9 +403,9 @@ bool Deep2Engine::allocateBuffers() {
     std::memset(attentionOutput, 0, H * sizeof(float));
     std::memset(ffnOutput,       0, H * sizeof(float));
     std::memset(logits,          0, V * sizeof(float));
-    std::memset(qProj,           0, H * sizeof(float));
-    std::memset(kProj,           0, H * sizeof(float));
-    std::memset(vProj,           0, H * sizeof(float));
+    std::memset(qProj,           0, qDim * sizeof(float));
+    std::memset(kProj,           0, kvDim * sizeof(float));
+    std::memset(vProj,           0, kvDim * sizeof(float));
     std::memset(gateBuf,         0, I * sizeof(float));
     std::memset(upBuf,           0, I * sizeof(float));
     std::memset(layerTemp,       0, H * sizeof(float));
@@ -445,8 +454,15 @@ void Deep2Engine::reset() {
 }
 
 // =================== LOAD MODEL (REAL GGUF BIND) ====================
-bool Deep2Engine::loadModel(const std::string& ggufPath) {
-    if (ggufPath.empty()) return false;
+bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
+    if (ggufPath.empty()) {
+        if (diag) {
+            diag->stageCode = 1;
+            diag->stageName = "LOAD_EMPTY_PATH";
+            diag->message = "GGUF path string is empty.";
+        }
+        return false;
+    }
 
     // Tear down aliases before replacing the mapping.
     modelWeights = {};
@@ -457,14 +473,25 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (!loader->load(ggufPath)) {
         std::fprintf(stderr, "[Deep2Engine] GGUF load failed: %s\n",
                      loader->error().c_str());
+        if (diag) {
+            diag->stageCode = 2;
+            diag->stageName = "LOAD_GGUF_OPEN";
+            diag->message = std::string("GGUFLoader::load() failed: ") + loader->error().c_str();
+        }
         return false;
     }
 
     const std::string arch = loader->getMetaString("general.architecture");
     if (arch.empty()) {
         std::fprintf(stderr, "[Deep2Engine] GGUF missing general.architecture\n");
+        if (diag) {
+            diag->stageCode = 3;
+            diag->stageName = "LOAD_ARCH_MISSING";
+            diag->message = "GGUF metadata lacks general.architecture.";
+        }
         return false;
     }
+    modelArchitecture_ = arch;
 
     auto metaSize = [&](const std::string& suffix, size_t def = 0) -> size_t {
         const int64_t v = loader->getMetaInt(arch + "." + suffix,
@@ -525,6 +552,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (!bindFirst(modelWeights.tokenEmbed,
                    {"token_embd.weight", "token_embeddings.weight"})) {
         std::fprintf(stderr, "[Deep2Engine] GGUF missing token embedding tensor\n");
+        if (diag) {
+            diag->stageCode = 4;
+            diag->stageName = "BIND_TOKEN_EMBED";
+            diag->message = "Missing token_embd.weight or token_embeddings.weight tensor.";
+        }
         return false;
     }
 
@@ -538,6 +570,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.hiddenDim != embedCols ||
         modelWeights.vocabSize == 0) {
         std::fprintf(stderr, "[Deep2Engine] embedding geometry mismatch\n");
+        if (diag) {
+            diag->stageCode = 5;
+            diag->stageName = "EMBED_GEOMETRY";
+            diag->message = "Embedding geometry mismatch (hiddenDim==0, hiddenDim!=embedCols, or vocabSize==0).";
+        }
         return false;
     }
 
@@ -572,11 +609,26 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         (modelWeights.hiddenDim % modelWeights.numHeads) != 0 ||
         (modelWeights.numHeads % modelWeights.numKVHeads) != 0) {
         std::fprintf(stderr, "[Deep2Engine] invalid transformer head/layer geometry\n");
+        if (diag) {
+            diag->stageCode = 6;
+            diag->stageName = "HEAD_LAYER_GEOMETRY";
+            diag->message = "Invalid head/layer geometry (numLayers==0, numHeads==0, numKVHeads==0, hiddenDim%numHeads!=0, or numHeads%numKVHeads!=0).";
+        }
         return false;
     }
 
-    modelWeights.headDim =
-        modelWeights.hiddenDim / modelWeights.numHeads;
+    // For GQA models (e.g. gemma3), key/value head sizes can differ from
+    // query head size.  Honor GGUF metadata when present.
+    size_t keyLen   = metaSize("attention.key_length", 0);
+    size_t valueLen = metaSize("attention.value_length", 0);
+    if (keyLen != 0) {
+        modelWeights.headDim = keyLen;
+    } else if (valueLen != 0) {
+        modelWeights.headDim = valueLen;
+    } else {
+        modelWeights.headDim =
+            modelWeights.hiddenDim / modelWeights.numHeads;
+    }
 
     modelWeights.intermediateDim =
         metaSize("feed_forward_length", 0);
@@ -603,6 +655,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     if (!(modelWeights.normEps > 0.0f)) {
         std::fprintf(stderr, "[Deep2Engine] GGUF missing layer-norm epsilon\n");
+        if (diag) {
+            diag->stageCode = 7;
+            diag->stageName = "NORM_EPS_MISSING";
+            diag->message = "GGUF missing attention.layer_norm_rms_epsilon / attention.layer_norm_epsilon.";
+        }
         return false;
     }
 
@@ -638,6 +695,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         modelWeights.lmHead.rows != modelWeights.vocabSize ||
         modelWeights.lmHead.cols != modelWeights.hiddenDim) {
         std::fprintf(stderr, "[Deep2Engine] final norm / LM-head topology invalid\n");
+        if (diag) {
+            diag->stageCode = 8;
+            diag->stageName = "FINAL_NORM_LMHEAD";
+            diag->message = "Final norm or LM-head topology invalid (missing data, or lmHead.rows!=vocabSize, or lmHead.cols!=hiddenDim).";
+        }
         return false;
     }
 
@@ -771,6 +833,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu MoE router geometry mismatch\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 9;
+                    diag->stageName = "MOE_ROUTER_GEOMETRY";
+                    diag->message = "Layer MoE router geometry mismatch (rows!=numExperts or cols!=hiddenDim).";
+                }
                 return false;
             }
 
@@ -780,6 +847,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu missing routed expert tensors\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 10;
+                    diag->stageName = "MOE_EXPERT_TENSOR_MISSING";
+                    diag->message = "Missing routed expert tensors (gate/up/down) for MoE layer.";
+                }
                 return false;
             }
 
@@ -788,6 +860,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 lw.moeDown.size() != modelWeights.numExperts) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu incomplete expert set\n", layer);
+                if (diag) {
+                    diag->stageCode = 11;
+                    diag->stageName = "MOE_INCOMPLETE_EXPERT_SET";
+                    diag->message = "Incomplete expert set (moeGate/Up/Down size != numExperts).";
+                }
                 return false;
             }
 
@@ -805,6 +882,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     std::fprintf(stderr,
                         "[Deep2Engine] layer %zu expert %zu geometry mismatch\n",
                         layer, e);
+                    if (diag) {
+                        diag->stageCode = 12;
+                        diag->stageName = "MOE_EXPERT_GEOMETRY_MISMATCH";
+                        diag->message = "Expert geometry mismatch (gate/up/down dimensions incorrect).";
+                    }
                     return false;
                 }
             }
@@ -838,6 +920,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu incomplete shared expert\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 13;
+                    diag->stageName = "MOE_SHARED_EXPERT_INCOMPLETE";
+                    diag->message = "Incomplete shared expert (some tensors present but not all).";
+                }
                 return false;
             }
         }
@@ -846,6 +933,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing transformer norm tensors\n",
                 layer);
+            if (diag) {
+                diag->stageCode = 14;
+                diag->stageName = "LAYER_NORM_MISSING";
+                diag->message = "Missing attn_norm.weight or ffn_norm.weight for layer.";
+            }
             return false;
         }
 
@@ -855,6 +947,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         if (!splitQkv && !fusedQkv) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing Q/K/V topology\n", layer);
+            if (diag) {
+                diag->stageCode = 15;
+                diag->stageName = "QKV_TOPOLOGY_MISSING";
+                diag->message = "Missing Q/K/V topology (neither split nor fused QKV present).";
+            }
             return false;
         }
 
@@ -863,6 +960,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu missing dense FFN tensors\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 16;
+                    diag->stageName = "DENSE_FFN_MISSING";
+                    diag->message = "Missing dense FFN tensors (wUp or wDown not bound).";
+                }
                 return false;
             }
 
@@ -876,22 +978,47 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu FFN geometry mismatch\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 17;
+                    diag->stageName = "FFN_GEOMETRY_MISMATCH";
+                    diag->message = "Dense FFN geometry mismatch (wUp/wDown dimensions incorrect).";
+                }
                 return false;
             }
         }
 
         if (splitQkv) {
+            const size_t qDim = modelWeights.numHeads * modelWeights.headDim;
             const size_t kvDim =
                 modelWeights.numKVHeads * modelWeights.headDim;
-            if (lw.wq.rows != modelWeights.hiddenDim ||
+            if (lw.wq.rows != qDim ||
                 lw.wq.cols != modelWeights.hiddenDim ||
                 lw.wk.rows != kvDim ||
                 lw.wk.cols != modelWeights.hiddenDim ||
                 lw.wv.rows != kvDim ||
                 lw.wv.cols != modelWeights.hiddenDim) {
                 std::fprintf(stderr,
-                    "[Deep2Engine] layer %zu attention projection geometry mismatch\n",
-                    layer);
+                    "[Deep2Engine] layer %zu attention projection geometry mismatch."
+                    " headDim=%zu qDim=%zu kvDim=%zu hiddenDim=%zu"
+                    " wq(r=%zu,c=%zu) wk(r=%zu,c=%zu) wv(r=%zu,c=%zu)\n",
+                    layer,
+                    modelWeights.headDim, qDim, kvDim, modelWeights.hiddenDim,
+                    lw.wq.rows, lw.wq.cols,
+                    lw.wk.rows, lw.wk.cols,
+                    lw.wv.rows, lw.wv.cols);
+                if (diag) {
+                    diag->stageCode = 18;
+                    diag->stageName = "ATTN_PROJECTION_GEOMETRY";
+                    char dmsg[512];
+                    std::snprintf(dmsg, sizeof(dmsg),
+                        "ATTN headDim=%zu qDim=%zu kvDim=%zu hiddenDim=%zu"
+                        " wq(r=%zu,c=%zu) wk(r=%zu,c=%zu) wv(r=%zu,c=%zu).",
+                        modelWeights.headDim, qDim, kvDim, modelWeights.hiddenDim,
+                        lw.wq.rows, lw.wq.cols,
+                        lw.wk.rows, lw.wk.cols,
+                        lw.wv.rows, lw.wv.cols);
+                    diag->message = dmsg;
+                }
                 return false;
             }
         }
@@ -899,6 +1026,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     if (!modelWeights.isMoE && modelWeights.intermediateDim == 0) {
         std::fprintf(stderr, "[Deep2Engine] missing feed-forward geometry\n");
+        if (diag) {
+            diag->stageCode = 19;
+            diag->stageName = "FEED_FORWARD_GEOMETRY_MISSING";
+            diag->message = "Missing feed-forward geometry (intermediateDim==0 for dense model).";
+        }
         return false;
     }
 
@@ -912,6 +1044,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             modelWeights.numExpertsPerToken > modelWeights.numExperts ||
             modelWeights.moeIntermediateDim == 0) {
             std::fprintf(stderr, "[Deep2Engine] invalid MoE metadata\n");
+            if (diag) {
+                diag->stageCode = 20;
+                diag->stageName = "MOE_METADATA_INVALID";
+                diag->message = "Invalid MoE metadata (numExpertsPerToken==0, >numExperts, or moeIntermediateDim==0).";
+            }
             return false;
         }
 
@@ -931,6 +1068,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             std::fprintf(stderr,
                 "[Deep2Engine] unsupported expert_gating_func=%lld\n",
                 static_cast<long long>(gating));
+            if (diag) {
+                diag->stageCode = 21;
+                diag->stageName = "MOE_GATING_FUNC_UNSUPPORTED";
+                diag->message = "Unsupported expert_gating_func value.";
+            }
             return false;
         }
         moeConfig_.gatingFunc =
@@ -966,6 +1108,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     std::fprintf(stderr,
                         "[Deep2Engine] layer %zu has neither complete dense nor MoE FFN\n",
                         layer);
+                    if (diag) {
+                        diag->stageCode = 22;
+                        diag->stageName = "HYBRID_FFN_INCOMPLETE";
+                        diag->message = "Layer has neither complete dense nor MoE FFN tensors.";
+                    }
                     return false;
                 }
                 continue;
@@ -976,6 +1123,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu router initialization failed\n",
                     layer);
+                if (diag) {
+                    diag->stageCode = 23;
+                    diag->stageName = "MOE_ROUTER_INIT_FAILED";
+                    diag->message = "MoE router initialization failed for layer.";
+                }
                 return false;
             }
             moeRouters_[layer] = std::move(router);
@@ -998,6 +1150,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     std::fprintf(stderr,
                         "[Deep2Engine] layer %zu expert %zu byte overflow\n",
                         layer, e);
+                    if (diag) {
+                        diag->stageCode = 24;
+                        diag->stageName = "MOE_EXPERT_BYTE_OVERFLOW";
+                        diag->message = "Expert byte size overflow (sum of gate/up/down bytes exceeds limits).";
+                    }
                     return false;
                 }
                 h.bytes = a + b + c;
@@ -1008,6 +1165,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         if (moeLayerCount == 0) {
             std::fprintf(stderr,
                 "[Deep2Engine] expert_count>0 but no MoE layer tensors were bound\n");
+            if (diag) {
+                diag->stageCode = 25;
+                diag->stageName = "MOE_NO_LAYERS_BOUND";
+                diag->message = "MoE enabled (expert_count>0) but no MoE layer tensors were bound.";
+            }
             return false;
         }
         moeInitialized_ = true;
@@ -1051,11 +1213,21 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     if (!initialized) {
         EngineConfig recovered = config;
         if (!initialize(recovered)) {
+            if (diag) {
+                diag->stageCode = 26;
+                diag->stageName = "ENGINE_INIT_FAILED";
+                diag->message = "Engine initialize(recovered) failed after GGUF bind.";
+            }
             modelWeights.loaded = false;
             ggufResult = {};
             return false;
         }
     } else if (!allocateBuffers()) {
+        if (diag) {
+            diag->stageCode = 27;
+            diag->stageName = "BUFFER_ALLOC_FAILED";
+            diag->message = "allocateBuffers() failed after GGUF bind.";
+        }
         modelWeights.loaded = false;
         ggufResult = {};
         return false;
@@ -1070,6 +1242,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         kc.maxSeqLen = config.maxSeqLen;
         if (!kvCache->allocate(kc)) {
             std::fprintf(stderr, "[Deep2Engine] KV cache allocation failed\n");
+            if (diag) {
+                diag->stageCode = 28;
+                diag->stageName = "KV_CACHE_ALLOC_FAILED";
+                diag->message = "KV cache allocation failed.";
+            }
             modelWeights.loaded = false;
             ggufResult = {};
             return false;
@@ -1710,16 +1887,22 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         ? modelWeights.headDim
         : (numHeads ? H / numHeads : 0);
 
+    const size_t qDim = numHeads * headDim;
+    const size_t kvDim = numKVHeads * headDim;
+
     if (H == 0 || numHeads == 0 || numKVHeads == 0 || headDim == 0 ||
-        numHeads * headDim != H || numHeads % numKVHeads != 0) {
+        numHeads % numKVHeads != 0) {
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "ATTN_GEOM_FAIL H=" << H << " nh=" << numHeads << " nkv=" << numKVHeads << " hd=" << headDim << " nh*hd=" << (numHeads*headDim) << " nh%nkv=" << (numKVHeads ? (numHeads%numKVHeads) : -1) << "\n";
+        }
         throw std::runtime_error("attention: invalid MHA/GQA geometry");
     }
 
-    const size_t kvDim = numKVHeads * headDim;
     const size_t groupSize = numHeads / numKVHeads;
 
     std::memset(output, 0, H * sizeof(float));
-    std::memset(qProj, 0, H * sizeof(float));
+    std::memset(qProj, 0, qDim * sizeof(float));
     std::memset(kProj, 0, kvDim * sizeof(float));
     std::memset(vProj, 0, kvDim * sizeof(float));
 
@@ -1738,27 +1921,27 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
         const bool grouped=tryVulkanHostGEMVGroup(
             qkvW,qkvY,3,input,H);
         if(grouped){
-            if(bq) for(size_t i=0;i<H;++i) qProj[i]+=bq[i];
+            if(bq) for(size_t i=0;i<qDim;++i) qProj[i]+=bq[i];
             if(bk) for(size_t i=0;i<kvDim;++i) kProj[i]+=bk[i];
             if(bv) for(size_t i=0;i<kvDim;++i) vProj[i]+=bv[i];
         } else {
-            LinearW(lw.wq, input, bq, qProj, H);
+            LinearW(lw.wq, input, bq, qProj, qDim);
             LinearW(lw.wk, input, bk, kProj, kvDim);
             LinearW(lw.wv, input, bv, vProj, kvDim);
         }
-        parityEmit(ParityCheckpoint::Q, qProj, H);
+        parityEmit(ParityCheckpoint::Q, qProj, qDim);
         parityEmit(ParityCheckpoint::K, kProj, kvDim);
         parityEmit(ParityCheckpoint::V, vProj, kvDim);
-        parityEmitLayer(static_cast<int>(layer), "Q", qProj, H);
+        parityEmitLayer(static_cast<int>(layer), "Q", qProj, qDim);
         parityEmitLayer(static_cast<int>(layer), "K", kProj, kvDim);
         parityEmitLayer(static_cast<int>(layer), "V", vProj, kvDim);
     } else if (lw.wqkv.data) {
-        const size_t fusedDim = H + 2 * kvDim;
+        const size_t fusedDim = qDim + 2 * kvDim;
         std::vector<float> fused(fusedDim);
         LinearW(lw.wqkv, input, nullptr, fused.data(), fusedDim);
-        std::memcpy(qProj, fused.data(), H * sizeof(float));
-        std::memcpy(kProj, fused.data() + H, kvDim * sizeof(float));
-        std::memcpy(vProj, fused.data() + H + kvDim, kvDim * sizeof(float));
+        std::memcpy(qProj, fused.data(), qDim * sizeof(float));
+        std::memcpy(kProj, fused.data() + qDim, kvDim * sizeof(float));
+        std::memcpy(vProj, fused.data() + qDim + kvDim, kvDim * sizeof(float));
     } else {
         throw std::runtime_error("attention: no Q or fused-QKV weight");
     }
@@ -1804,9 +1987,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
             : config.ropeScaling;
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads,
                   pos, theta, scaling);
-        parityEmit(ParityCheckpoint::Q_Rope, qProj, H);
+        parityEmit(ParityCheckpoint::Q_Rope, qProj, qDim);
         parityEmit(ParityCheckpoint::K_Rope, kProj, kvDim);
-        parityEmitLayer(static_cast<int>(layer), "Q_ROPE", qProj, H);
+        parityEmitLayer(static_cast<int>(layer), "Q_ROPE", qProj, qDim);
         parityEmitLayer(static_cast<int>(layer), "K_ROPE", kProj, kvDim);
     }
 
@@ -2176,17 +2359,37 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 
 // =================== FORWARD ALL LAYERS ====================
 bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
-    if (!modelWeights.loaded || !hidden || seqLen == 0) return false;
-    if (modelWeights.layers.size() < modelWeights.numLayers) return false;
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FWD_ENTER seqLen=" << seqLen << " loaded=" << modelWeights.loaded << " layers=" << modelWeights.layers.size() << " numLayers=" << modelWeights.numLayers << "\n";
+    }
+    if (!modelWeights.loaded || !hidden || seqLen == 0) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FWD_FAIL_GUARD\n";
+        return false;
+    }
+    if (modelWeights.layers.size() < modelWeights.numLayers) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FWD_FAIL_LAYER_COUNT layers=" << modelWeights.layers.size() << " num=" << modelWeights.numLayers << "\n";
+        return false;
+    }
 
     // Batch10: MoE and MLA currently use host-orchestrated GPU-heavy execution.
     // It is a product execution lane, but NOT fully-resident GPU authority.
     if (vulkanEnabled_ && vulkanInitialized_ &&
         (modelWeights.isMoE || modelWeights.useMLA)) {
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "FWD_MOE_MLA_HYBRID\n";
+        }
         if (forwardTokenGpuHybrid(hidden, seqLen))
             return true;
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_FAIL_MOE_STRICT\n";
+            }
             return false;
         }
     }
@@ -2224,6 +2427,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     // Everything below is fallback only.
     if (residentFirst && vulkanEnabled_ && vulkanInitialized_ &&
         !modelWeights.isMoE && !modelWeights.useMLA) {
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "FWD_RESIDENT_FIRST\n";
+        }
         if (tryGpuTokenForward(hidden))
             return true;
         std::fprintf(stderr,
@@ -2233,11 +2440,19 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             // Strict authority must not silently accept the slower host lane
             // when the resident graph declined; record and fail closed.
             vulkanStrictViolation_ = true;
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_FAIL_RESIDENT_STRICT\n";
+            }
             return false;
         }
     }
 
     if(dualRowDense){
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "FWD_DUALROW_DENSE\n";
+        }
         try {
             for(size_t l=0;l<modelWeights.numLayers;++l){
                 forwardLayer(l,hidden,layerOut,seqLen);
@@ -2247,6 +2462,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             }
             ++gpuFwd_.dualRowDenseTokens;
             gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_DUALROW_OK\n";
+            }
             return true;
         } catch(const std::bad_alloc& bae) {
 #ifdef _WIN32
@@ -2270,6 +2489,10 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             std::fprintf(stderr,
                 "[Deep2Engine] dual-row dense forward failed: %s\n",
                 ex.what());
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_DUALROW_EXC " << ex.what() << "\n";
+            }
             if(vulkanStrictNoCpuFallback_){
                 vulkanStrictViolation_=true;
                 return false;
@@ -2281,9 +2504,16 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
 
     // Dense Batch9 resident path.
     if (vulkanEnabled_ && vulkanInitialized_) {
-
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "FWD_VULKAN_RESIDENT\n";
+        }
         if (tryGpuTokenForward(hidden)) {
             gpuFwdCommitted_ = true;
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_VULKAN_OK\n";
+            }
             return true;
         }
 
@@ -2291,10 +2521,18 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         gpuFwdCommitted_ = false;
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "FWD_FAIL_VULKAN_STRICT\n";
+            }
             return false;
         }
     }
 
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FWD_CPU_FALLBACK layers=" << modelWeights.numLayers << "\n";
+    }
     try {
         for (size_t l = 0; l < modelWeights.numLayers; ++l) {
             forwardLayer(l, hidden, layerOut, seqLen);
@@ -2303,10 +2541,18 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         }
     } catch (const std::exception& ex) {
         std::fprintf(stderr, "[Deep2Engine] forward failed: %s\n", ex.what());
+        {
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "FWD_EXC " << ex.what() << "\n";
+        }
         gpuFwdCommitted_ = false;
         return false;
     }
 
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FWD_CPU_OK\n";
+    }
     gpuFwdCommitted_ = false;
     return true;
 }
@@ -2316,12 +2562,39 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                               int* outputTokens, size_t maxOutputLen,
                               InferenceStats* stats,
                               std::function<bool(int)> onToken) {
-    std::fprintf(stderr,"GEN_ENTER maxOut=%zu\n",maxOutputLen); std::fflush(stderr);
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_ENTER maxOut=" << maxOutputLen
+            << " init=" << initialized
+            << " loaded=" << modelWeights.loaded
+            << " hiddenStates=" << (hiddenStates ? "yes" : "no")
+            << " logits=" << (logits ? "yes" : "no")
+            << " hdim=" << config.hiddenDim
+            << " vsize=" << config.vocabSize
+            << " maxSeqLen=" << config.maxSeqLen
+            << "\n";
+    }
     if (stats) *stats = {};
-    if (!initialized || !modelWeights.loaded) { std::fprintf(stderr,"GEN_FAIL_INIT\n"); return 0; }
-    if (!promptTokens || promptLen == 0) { std::fprintf(stderr,"GEN_FAIL_PROMPT\n"); return 0; }
-    if (!outputTokens || maxOutputLen == 0) { std::fprintf(stderr,"GEN_FAIL_OUTPUT\n"); return 0; }
-    if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) { std::fprintf(stderr,"GEN_FAIL_STATE\n"); return 0; }
+    if (!initialized || !modelWeights.loaded) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_FAIL_INIT\n";
+        return 0;
+    }
+    if (!promptTokens || promptLen == 0) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_FAIL_PROMPT\n";
+        return 0;
+    }
+    if (!outputTokens || maxOutputLen == 0) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_FAIL_OUTPUT\n";
+        return 0;
+    }
+    if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_FAIL_STATE hidden=" << (hiddenStates?"yes":"no") << " logits=" << (logits?"yes":"no") << " hdim=" << config.hiddenDim << " vsize=" << config.vocabSize << "\n";
+        return 0;
+    }
 
     // A fresh top-level generate transaction consumes any old cancel request.
     clearCancel();
@@ -2330,6 +2603,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     auto t0 = std::chrono::steady_clock::now();
 
     std::vector<float> hidden(config.hiddenDim);
+
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_PREFILL_BEGIN promptLen=" << promptLen << "\n";
+    }
 
     // Prefill each prompt token exactly once, in token order.
     for (size_t p = 0; p < promptLen; ++p) {
@@ -2341,29 +2619,48 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         parityBeginStep(static_cast<int>(p));
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;
-            std::fprintf(stderr,"GEN_PREFILL_EMBED_FAIL p=%zu\n",p); std::fflush(stderr);
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "GEN_PREFILL_EMBED_FAIL p=" << p << "\n";
+            }
             return 0;
         }
         if (!forwardTokenAllLayers(hidden.data(), p + 1)) {
             modelState_ = ModelState::Choreographable;
-            std::fprintf(stderr,"GEN_PREFILL_FORWARD_FAIL p=%zu\n",p); std::fflush(stderr);
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "GEN_PREFILL_FORWARD_FAIL p=" << p << "\n";
+            }
             return 0;
         }
         if (config.useKVCache && kvCache) kvCache->advance();
+    }
+
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_PREFILL_DONE\n";
     }
 
     auto tPrefillEnd = std::chrono::steady_clock::now();
     parityEmit((ParityCheckpoint)20, hidden.data(), config.hiddenDim);
 
     // Context cap is an execution invariant, not a best-effort hint.
+    if (config.maxSeqLen == 0) {
+        config.maxSeqLen = 8192; // default if metadata omitted
+    }
     size_t decodeLimit = maxOutputLen;
     if (config.maxSeqLen != 0) {
         if (promptLen >= config.maxSeqLen) {
             decodeLimit = 0;
-            std::fprintf(stderr,"GEN_DECODE_LIMIT_ZERO seqCap\n"); std::fflush(stderr);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "GEN_DECODE_LIMIT_ZERO seqCap=" << config.maxSeqLen << " promptLen=" << promptLen << "\n";
         } else {
             decodeLimit = std::min(decodeLimit, config.maxSeqLen - promptLen);
         }
+    }
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "GEN_DECODE_LIMIT=" << decodeLimit << " maxSeqLen=" << config.maxSeqLen << "\n";
     }
 
     size_t generated = 0;

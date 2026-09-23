@@ -97,25 +97,11 @@ RecoveryResult AutonomousRecoveryOrchestrator::executeRecovery(const DivergenceE
     return {};
 }
 
-class AgentToolRegistry {
-public:
-    static AgentToolRegistry& Instance();
-    ToolExecResult Dispatch(const std::string& name, const nlohmann::json& params);
-    void RegisterHandler(const std::string& name, ToolExecResult (*handler)(const nlohmann::json&));
-};
+#include <atomic>
 
-AgentToolRegistry& AgentToolRegistry::Instance() {
-    static AgentToolRegistry inst;
-    return inst;
-}
-
-ToolExecResult AgentToolRegistry::Dispatch(const std::string& name, const nlohmann::json& params) {
-    (void)name; (void)params;
-    return {};
-}
-
-void AgentToolRegistry::RegisterHandler(const std::string& name, ToolExecResult (*handler)(const nlohmann::json&)) {
-    (void)name; (void)handler;
+namespace RawrXD::Agentic {
+    std::atomic<uint64_t> g_agentToolInvocations{0};
+    std::atomic<uint64_t> g_directAgentToolBypasses{0};
 }
 
 } // namespace Agent
@@ -149,36 +135,33 @@ extern "C" {
     void asm_watchdog_shutdown() {}
 }
 
-// Command handlers stubs
-struct CommandContext {};
-struct CommandResult {
-    bool success;
-    const char* message;
-};
+// Command handlers stubs — must match shared_feature_dispatch.h signatures
+#include "shared_feature_dispatch.h"
+#include "feature_handlers.h"
 
-CommandResult handleFileNew(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileOpen(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileSave(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileSaveAs(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileSaveAll(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileClose(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileRecentFiles(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileLoadModel(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileModelFromHF(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileModelFromOllama(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileModelFromURL(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileUnifiedLoad(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleFileQuickLoad(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditUndo(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditRedo(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditCut(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditCopy(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditPaste(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditSelectAll(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditFind(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleEditReplace(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleGitStatus(const CommandContext&) { return {true, "OK"}; }
-CommandResult handleGitCommit(const CommandContext&) { return {true, "OK"}; }
+CommandResult handleFileNew(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileOpen(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileSave(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileSaveAs(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileSaveAll(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileClose(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileRecentFiles(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileLoadModel(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileModelFromHF(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileModelFromOllama(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileModelFromURL(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileUnifiedLoad(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleFileQuickLoad(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditUndo(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditRedo(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditCut(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditCopy(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditPaste(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditSelectAll(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditFind(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleEditReplace(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleGitStatus(const CommandContext&) { return CommandResult::ok("OK"); }
+CommandResult handleGitCommit(const CommandContext&) { return CommandResult::ok("OK"); }
 
 // Autonomy namespace stubs
 namespace RawrXD {
@@ -255,11 +238,6 @@ std::string PerfTelemetry::getDiagnostics() const { return ""; }
 
 // ASM dispatch bridge stubs
 extern "C" {
-    void rawrxd_dispatch_feature() {}
-    void rawrxd_dispatch_command() {}
-    void rawrxd_dispatch_cli() {}
-    void rawrxd_get_feature_count() {}
-    void* g_hHeap = nullptr;
     void BeaconSend() {}
     void RunInference() {}
 
@@ -337,19 +315,4 @@ extern "C" {
     void asm_hwsynth_gen_jtag_header() {}
     void asm_hwsynth_get_stats() {}
     void asm_hwsynth_shutdown() {}
-}
-
-// AgentSelfHealingOrchestrator stub - use actual header
-#include "../agent/agent_self_healing_orchestrator.hpp"
-
-AgentSelfHealingOrchestrator::AgentSelfHealingOrchestrator() {}
-AgentSelfHealingOrchestrator::~AgentSelfHealingOrchestrator() {}
-
-AgentSelfHealingOrchestrator& AgentSelfHealingOrchestrator::instance() {
-    static AgentSelfHealingOrchestrator inst;
-    return inst;
-}
-
-SelfHealReport AgentSelfHealingOrchestrator::runHealingCycle() {
-    return SelfHealReport::begin(0);
 }

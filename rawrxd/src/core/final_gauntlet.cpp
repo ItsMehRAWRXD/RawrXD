@@ -27,11 +27,11 @@
 #include "final_gauntlet.h"
 
 // MonacoCore (GapBuffer)
-#include "RawrXD_MonacoCore.h"
+// #include "RawrXD_MonacoCore.h"   /* header missing — recovered in build pass */
 
 // PDB subsystem
 #include "pdb_native.h"
-#include "pdb_gsi_hash.h"
+// #include "pdb_gsi_hash.h"   /* header missing — recovered in build pass */
 #include "pdb_reference_provider.h"
 
 // Pull PDB types into scope

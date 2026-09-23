@@ -6,7 +6,7 @@
 // ============================================================================
 
 #include "execution_scheduler.h"
-#include "../cpu_inference_engine.h"
+#include "cpu_inference_engine.h"
 #include "enterprise_license.h"
 #include "enterprise/multi_gpu.h"
 #include "unified_hotpatch_manager.hpp"
@@ -272,7 +272,7 @@ bool ExecutionScheduler::runForwardPass(float* state, float* scratch, int seqPos
             auto initResult = mgr.Initialize();
             if (!initResult.success) {
                 std::cerr << "[Scheduler] WARN: multi-GPU init failed: "
-                          << (initResult.detail ? initResult.detail : "unknown") << std::endl;
+                          << (initResult.message.empty() ? "unknown" : initResult.message) << std::endl;
             }
         }
 
@@ -285,7 +285,7 @@ bool ExecutionScheduler::runForwardPass(float* state, float* scratch, int seqPos
                                            m_config.multiGPUDispatchStrategy);
                 if (!r.success) {
                     std::cerr << "[Scheduler] WARN: multi-GPU dispatch failed: "
-                              << (r.detail ? r.detail : "unknown") << std::endl;
+                              << (r.message.empty() ? "unknown" : r.message) << std::endl;
                 } else {
                     m_multiGpuPlanned = true;
                     m_lastPlannedLayers = static_cast<uint32_t>(m_numLayers);

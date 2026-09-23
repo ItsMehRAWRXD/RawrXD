@@ -15,7 +15,7 @@ class Win32Api {
 class Program {
     static void Main() {
         var psi = new System.Diagnostics.ProcessStartInfo {
-            FileName = @"F:\~dev\rawrxd\win32ide_strict\build\Release\RawrXD-Win32IDE.exe",
+            FileName = @"F:\~dev\rawrxd\win32ide_strict\build_v3\Release\RawrXD-Win32IDE.exe",
             UseShellExecute = true
         };
         var proc = System.Diagnostics.Process.Start(psi);
@@ -48,7 +48,7 @@ class Program {
         var sb = new StringBuilder(len + 1);
         Win32Api.SendMessage(edit, 0x000D, (IntPtr)(len + 1), sb);
         string text = sb.ToString();
-        System.IO.File.WriteAllText(@"F:\~dev\rawrxd\win32ide_strict\build\Release\gate2_output.txt", text);
+        System.IO.File.WriteAllText(@"F:\~dev\rawrxd\win32ide_strict\build_v3\Release\gate2_output.txt", text);
         Console.WriteLine(text);
         proc.Kill();
     }
