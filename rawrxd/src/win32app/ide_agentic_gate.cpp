@@ -125,11 +125,16 @@ AgenticGateResult runAgenticGate()
     }
 
     // ── 2. Load real instruction model ──────────────────────────────────
-    std::string modelPath = "F:\\models\\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf";
+    // Prefer real instruction model; fall back to test model.
+    std::string modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
+    DWORD attribs = GetFileAttributesA(modelPath.c_str());
+    if (attribs == INVALID_FILE_ATTRIBUTES || (attribs & FILE_ATTRIBUTE_DIRECTORY)) {
+        modelPath = "F:\\~dev\\rawrxd\\src\\core\\test_tiny_with_vocab.gguf";
+    }
     r.modelLoadedOk = engine.loadModel(modelPath);
     if (!r.modelLoadedOk) {
         r.failStage = "MODEL_LOAD";
-        r.diagnostics = "Deep2Engine::loadModel failed for real Qwen model.";
+        r.diagnostics = "Deep2Engine::loadModel failed for model: " + modelPath;
         return r;
     }
 

@@ -1893,7 +1893,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     if (H == 0 || numHeads == 0 || numKVHeads == 0 || headDim == 0 ||
         numHeads % numKVHeads != 0) {
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "ATTN_GEOM_FAIL H=" << H << " nh=" << numHeads << " nkv=" << numKVHeads << " hd=" << headDim << " nh*hd=" << (numHeads*headDim) << " nh%nkv=" << (numKVHeads ? (numHeads%numKVHeads) : -1) << "\n";
         }
         throw std::runtime_error("attention: invalid MHA/GQA geometry");
@@ -2360,16 +2360,16 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
 // =================== FORWARD ALL LAYERS ====================
 bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "FWD_ENTER seqLen=" << seqLen << " loaded=" << modelWeights.loaded << " layers=" << modelWeights.layers.size() << " numLayers=" << modelWeights.numLayers << "\n";
     }
     if (!modelWeights.loaded || !hidden || seqLen == 0) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "FWD_FAIL_GUARD\n";
         return false;
     }
     if (modelWeights.layers.size() < modelWeights.numLayers) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "FWD_FAIL_LAYER_COUNT layers=" << modelWeights.layers.size() << " num=" << modelWeights.numLayers << "\n";
         return false;
     }
@@ -2379,7 +2379,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (vulkanEnabled_ && vulkanInitialized_ &&
         (modelWeights.isMoE || modelWeights.useMLA)) {
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_MOE_MLA_HYBRID\n";
         }
         if (forwardTokenGpuHybrid(hidden, seqLen))
@@ -2387,7 +2387,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_FAIL_MOE_STRICT\n";
             }
             return false;
@@ -2428,7 +2428,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     if (residentFirst && vulkanEnabled_ && vulkanInitialized_ &&
         !modelWeights.isMoE && !modelWeights.useMLA) {
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_RESIDENT_FIRST\n";
         }
         if (tryGpuTokenForward(hidden))
@@ -2441,7 +2441,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             // when the resident graph declined; record and fail closed.
             vulkanStrictViolation_ = true;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_FAIL_RESIDENT_STRICT\n";
             }
             return false;
@@ -2450,7 +2450,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
 
     if(dualRowDense){
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_DUALROW_DENSE\n";
         }
         try {
@@ -2463,7 +2463,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             ++gpuFwd_.dualRowDenseTokens;
             gpuFwdCommitted_=false; // not FULL_RESIDENT_GPU
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_DUALROW_OK\n";
             }
             return true;
@@ -2490,7 +2490,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
                 "[Deep2Engine] dual-row dense forward failed: %s\n",
                 ex.what());
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_DUALROW_EXC " << ex.what() << "\n";
             }
             if(vulkanStrictNoCpuFallback_){
@@ -2505,13 +2505,13 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     // Dense Batch9 resident path.
     if (vulkanEnabled_ && vulkanInitialized_) {
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_VULKAN_RESIDENT\n";
         }
         if (tryGpuTokenForward(hidden)) {
             gpuFwdCommitted_ = true;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_VULKAN_OK\n";
             }
             return true;
@@ -2522,7 +2522,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "FWD_FAIL_VULKAN_STRICT\n";
             }
             return false;
@@ -2530,7 +2530,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     }
 
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "FWD_CPU_FALLBACK layers=" << modelWeights.numLayers << "\n";
     }
     try {
@@ -2542,7 +2542,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     } catch (const std::exception& ex) {
         std::fprintf(stderr, "[Deep2Engine] forward failed: %s\n", ex.what());
         {
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_EXC " << ex.what() << "\n";
         }
         gpuFwdCommitted_ = false;
@@ -2550,7 +2550,7 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
     }
 
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "FWD_CPU_OK\n";
     }
     gpuFwdCommitted_ = false;
@@ -2563,7 +2563,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                               InferenceStats* stats,
                               std::function<bool(int)> onToken) {
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_ENTER maxOut=" << maxOutputLen
             << " init=" << initialized
             << " loaded=" << modelWeights.loaded
@@ -2576,22 +2576,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
     if (stats) *stats = {};
     if (!initialized || !modelWeights.loaded) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_FAIL_INIT\n";
         return 0;
     }
     if (!promptTokens || promptLen == 0) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_FAIL_PROMPT\n";
         return 0;
     }
     if (!outputTokens || maxOutputLen == 0) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_FAIL_OUTPUT\n";
         return 0;
     }
     if (!hiddenStates || !logits || config.hiddenDim == 0 || config.vocabSize == 0) {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_FAIL_STATE hidden=" << (hiddenStates?"yes":"no") << " logits=" << (logits?"yes":"no") << " hdim=" << config.hiddenDim << " vsize=" << config.vocabSize << "\n";
         return 0;
     }
@@ -2605,7 +2605,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     std::vector<float> hidden(config.hiddenDim);
 
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_PREFILL_BEGIN promptLen=" << promptLen << "\n";
     }
 
@@ -2620,7 +2620,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "GEN_PREFILL_EMBED_FAIL p=" << p << "\n";
             }
             return 0;
@@ -2628,7 +2628,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (!forwardTokenAllLayers(hidden.data(), p + 1)) {
             modelState_ = ModelState::Choreographable;
             {
-                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "GEN_PREFILL_FORWARD_FAIL p=" << p << "\n";
             }
             return 0;
@@ -2637,7 +2637,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
 
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_PREFILL_DONE\n";
     }
 
@@ -2652,14 +2652,14 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     if (config.maxSeqLen != 0) {
         if (promptLen >= config.maxSeqLen) {
             decodeLimit = 0;
-            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "GEN_DECODE_LIMIT_ZERO seqCap=" << config.maxSeqLen << " promptLen=" << promptLen << "\n";
         } else {
             decodeLimit = std::min(decodeLimit, config.maxSeqLen - promptLen);
         }
     }
     {
-        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v3\\Release\\gen_debug.txt", std::ios::app);
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
         dbg << "GEN_DECODE_LIMIT=" << decodeLimit << " maxSeqLen=" << config.maxSeqLen << "\n";
     }
 
