@@ -12,6 +12,8 @@
 
 #include "multiwindow_scheduler.hpp"
 
+#include <windows.h>
+
 // Win32 macros conflict with our method names
 #ifdef CreateWindow
 #undef CreateWindow
@@ -164,8 +166,7 @@ Window MultiWindowScheduler::CreateWindow(uint32_t type, int32_t x, int32_t y,
 bool MultiWindowScheduler::DestroyWindow(MW_WINDOW_ID id) {
     if (!m_initialized) return false;
 
-    BOOL ok = KCALL(UnregisterWindow, id);
-    if (!ok) return false;
+    KCALL(UnregisterWindow, id);
 
     std::lock_guard<std::mutex> lock(m_mutex);
     m_windows.erase(id);
@@ -185,13 +186,13 @@ MW_TASK_ID MultiWindowScheduler::Submit(const TaskOptions& opts) {
     if (!m_initialized) return 0;
 
     MW_TASK_ID id = KCALL(SubmitTask,
-        static_cast<uint32_t>(opts.type),
-        static_cast<uint32_t>(opts.priority),
+        opts.type,
+        opts.priority,
         opts.windowId,
-        opts.callback,
-        opts.userData,
         opts.modelId,
-        opts.dependsOn
+        opts.dependsOn,
+        opts.callback,
+        opts.userData
     );
 
     return id;
@@ -232,8 +233,8 @@ MW_TASK_ID MultiWindowScheduler::CreateCoTPipeline(MW_WINDOW_ID windowId,
                                                     const MW_TaskCallback* steps,
                                                     uint32_t stepCount) {
     if (!m_initialized || !steps || stepCount == 0) return 0;
-    return KCALL(ChainOfThought, windowId, stepCount,
-                 const_cast<MW_TaskCallback*>(steps));
+    return KCALL(ChainOfThought, windowId, const_cast<MW_TaskCallback*>(steps),
+                 stepCount);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -304,7 +305,7 @@ uint32_t MultiWindowScheduler::ReadReplayLog(MW_ReplayEntry* out,
 
     uint32_t count = 0;
     for (uint32_t i = 0; i < MW_SHM_REPLAY_MAX && count < maxCount; ++i) {
-        if (entries[i].timestamp == 0) continue; // empty slot
+        if (entries[i].timestampUs == 0) continue; // empty slot
         out[count++] = entries[i];
     }
 

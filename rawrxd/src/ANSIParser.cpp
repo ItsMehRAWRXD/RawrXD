@@ -1,6 +1,5 @@
 // RawrXD native ANSI SGR -> Win32 RichEdit renderer.
 // No third-party dependencies.
-#include "ANSIParser.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -13,6 +12,9 @@
 #include <vector>
 
 namespace RawrXD {
+
+int AppendANSIToRichEdit(HWND h, const std::string& input); // exported declaration
+
 namespace {
 struct Style {
     COLORREF fg = RGB(220,220,220);

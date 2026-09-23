@@ -241,7 +241,7 @@ std::vector<uint8_t> RawrPE64Linker::link() const {
     writeU32(out, totalImageSize); // size of image
     writeU32(out, static_cast<uint32_t>(headersFileSize)); // size of headers
     writeU32(out, 0); // checksum
-    writeU16(out, 3); // subsystem: WINDOWS_CUI (console)
+    writeU16(out, 2); // subsystem: WINDOWS_GUI (GUI)
     writeU16(out, 0x8160); // dll characteristics (high entropy ASLR, nx compat, dynamic base, guard)
     writeU64(out, 0x100000); // size of stack reserve
     writeU64(out, 0x10000);  // size of stack commit

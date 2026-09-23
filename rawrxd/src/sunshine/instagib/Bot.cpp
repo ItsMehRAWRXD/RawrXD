@@ -12,7 +12,7 @@ void Bot::spawn(const Vec3& spawnPosition, float startYaw) {
     health = 100;
     alive = true;
     respawnTimer = 0.0f;
-    fireCooldown = 0.0f;
+    lastFireTime = -999.0f;
     thinkTimer = 0.0f;
 }
 
@@ -26,7 +26,7 @@ Vec3 Bot::getRight() const {
     return Vec3(std::cos(rad), 0.0f, std::sin(rad));
 }
 
-void Bot::update(float dt, const Vec3& targetPos, const Arena& arena, double now, Weapon* weapon) {
+void Bot::update(float dt, const Vec3& targetPos, const Arena& arena, double now, Weapon* weapon, Player* player) {
     if (!alive) {
         respawnTimer -= dt;
         if (respawnTimer <= 0.0f) {
@@ -55,7 +55,8 @@ void Bot::update(float dt, const Vec3& targetPos, const Arena& arena, double now
         pos = pos + f * (moveSpeed * dt);
     }
 
-    if (dist <= fireRange && weapon && weapon->canFire(now)) {
+    float botCooldown = 0.15f; // same as weapon cooldown
+    if (dist <= fireRange && (float)(now - lastFireTime) >= botCooldown) {
         // Check line of sight using a ray from bot to target
         Ray ray;
         ray.origin = pos + Vec3(0.0f, 1.6f, 0.0f);
@@ -68,7 +69,8 @@ void Bot::update(float dt, const Vec3& targetPos, const Arena& arena, double now
             }
         }
         if (!blocked) {
-            weapon->fire(now);
+            lastFireTime = (float)now;
+            if (player) player->takeDamage(weapon ? weapon->damage : 100);
         }
     }
 }

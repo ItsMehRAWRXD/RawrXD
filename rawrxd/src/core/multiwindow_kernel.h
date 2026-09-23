@@ -47,6 +47,7 @@ enum {
 
 enum {
     MW_SHM_REPLAY_BASE  = 0x00000001,
+    MW_SHM_REPLAY_MAX   = 1024,
     MW_IPC_SHARED_SIZE  = 65536,
 };
 

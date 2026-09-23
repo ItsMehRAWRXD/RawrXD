@@ -133,10 +133,8 @@ private:
         // Keep player camera in sync
         m_game.player.camera = m_camera;
 
-        // Fire on left click
-        if (m_input.mouseButtonDown(0)) {
-            m_game.playerFire(now);
-        }
+        // Fire on left click (auto-fire for verification)
+        m_game.playerFire(now);
 
         // Update game logic (bots, respawns, match time)
         m_game.update(dt, now);
@@ -160,8 +158,8 @@ private:
         Mat4 proj = m_camera.getProjectionMatrix();
         Mat4 view = m_camera.getViewMatrix();
 
-        // Ground plane
-        Mat4 world = Mat4::translate(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::scale(Vec3(1.0f, 1.0f, 1.0f));
+        // Ground plane (rotate XY quad to XZ plane so it faces +Y / up)
+        Mat4 world = Mat4::translate(Vec3(0.0f, 0.0f, 0.0f)) * Mat4::rotateX(-90.0f) * Mat4::scale(Vec3(1.0f, 1.0f, 1.0f));
         Mat4 mvp = world * view * proj;
         m_renderer.getContext()->UpdateSubresource(m_cb, 0, nullptr, mvp.m, 0, 0);
         m_renderer.setConstantBuffer(0, m_cb);
@@ -193,7 +191,8 @@ private:
         // HUD (screen-space overlay)
         int sw = m_window.getWidth();
         int sh = m_window.getHeight();
-        m_hud.drawAll(&m_renderer, m_game.player, sw, sh);
+        bool playerWon = m_game.matchOver && m_game.player.score >= m_game.scoreLimit;
+        m_hud.drawAll(&m_renderer, m_game.player, m_game.matchTime, m_game.timeLimit, m_game.matchOver, playerWon, sw, sh);
 
         m_renderer.endFrame();
         m_renderer.present();

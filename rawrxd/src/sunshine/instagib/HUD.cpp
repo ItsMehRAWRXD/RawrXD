@@ -132,10 +132,37 @@ void HUD::drawScore(Renderer* renderer, int score, int screenW, int screenH) {
     drawQuad(renderer, bx, by, bw, bh, 0xFF0088FF);
 }
 
-void HUD::drawAll(Renderer* renderer, const Player& player, int screenW, int screenH) {
+void HUD::drawTimer(Renderer* renderer, float matchTime, float timeLimit, int screenW, int screenH) {
+    int seconds = (int)(timeLimit - matchTime);
+    if (seconds < 0) seconds = 0;
+    int mins = seconds / 60;
+    int secs = seconds % 60;
+    // Approximate timer bar at top center
+    float bw = 120.0f;
+    float bh = 20.0f;
+    float bx = ((float)screenW - bw) * 0.5f;
+    float by = 10.0f;
+    uint32_t col = seconds <= 10 ? 0xFFFF0000 : 0xFFFFFFFF;
+    drawQuad(renderer, bx, by, bw, bh, col);
+}
+
+void HUD::drawMatchOver(Renderer* renderer, bool playerWon, int screenW, int screenH) {
+    float bw = 400.0f;
+    float bh = 80.0f;
+    float bx = ((float)screenW - bw) * 0.5f;
+    float by = ((float)screenH - bh) * 0.5f;
+    uint32_t col = playerWon ? 0xFF00FF00 : 0xFFFF0000;
+    drawQuad(renderer, bx, by, bw, bh, col);
+}
+
+void HUD::drawAll(Renderer* renderer, const Player& player, float matchTime, float timeLimit, bool matchOver, bool playerWon, int screenW, int screenH) {
     drawCrosshair(renderer);
     drawHealthBar(renderer, player.health, screenW, screenH);
     drawScore(renderer, player.score, screenW, screenH);
+    drawTimer(renderer, matchTime, timeLimit, screenW, screenH);
+    if (matchOver) {
+        drawMatchOver(renderer, playerWon, screenW, screenH);
+    }
 }
 
 } // namespace Sunshine

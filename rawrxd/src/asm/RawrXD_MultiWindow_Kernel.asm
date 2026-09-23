@@ -2,10 +2,6 @@
 ; Minimal MASM64 stub for the MultiWindow Kernel DLL.
 ; Provides C-ABI exports matching multiwindow_kernel.h.
 
-.686
-.MODEL flat, C
-OPTION PROLOGUE:NONE, EPILOGUE:NONE
-
 .code
 
 ; ------------------------------------------------------------------

@@ -15,7 +15,16 @@
 
 #include "multiwindow_kernel.h"
 
-// Win32 macros conflict with our method names
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <mutex>
+#include <atomic>
+#include <cstdio>
+#include <cstring>
+#include <windows.h>
+
+// Win32 macros conflict with our method names — undef AFTER windows.h
 #ifdef CreateWindow
 #undef CreateWindow
 #endif
@@ -28,14 +37,6 @@
 #ifdef DestroyWindow
 #undef DestroyWindow
 #endif
-
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <mutex>
-#include <atomic>
-#include <cstdio>
-#include <cstring>
 
 namespace RawrXD {
 

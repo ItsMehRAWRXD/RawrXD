@@ -83,6 +83,7 @@ Mesh makeQuadMesh(Renderer* renderer, float width, float height) {
 
 void drawMesh(Renderer* renderer, const Mesh* mesh) {
     if (!mesh || !mesh->vertexBuffer) return;
+    renderer->setPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     renderer->setVertexBuffer(mesh->vertexBuffer, mesh->stride);
     if (mesh->indexBuffer) {
         renderer->setIndexBuffer(mesh->indexBuffer, mesh->indexFormat);
@@ -158,7 +159,9 @@ bool Ray::intersectsAABB(const AABB& box, float* outT) const {
         if (t2 < tmax) tmax = t2;
         if (tmin > tmax) return false;
     }
-    if (outT) *outT = tmin > 0 ? tmin : tmax;
+    float t = tmin > 0.0f ? tmin : tmax;
+    if (t < 0.0f) return false;
+    if (outT) *outT = t;
     return true;
 }
 

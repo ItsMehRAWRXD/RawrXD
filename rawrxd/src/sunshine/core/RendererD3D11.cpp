@@ -230,15 +230,14 @@ void Renderer::setIndexBuffer(ID3D11Buffer* ib, DXGI_FORMAT format) {
 
 void Renderer::setConstantBuffer(uint32_t slot, ID3D11Buffer* cb) {
     m_context->VSSetConstantBuffers(slot, 1, &cb);
+    m_context->PSSetConstantBuffers(slot, 1, &cb);
 }
 
 void Renderer::drawIndexed(uint32_t count) {
-    m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_context->DrawIndexed(count, 0, 0);
 }
 
 void Renderer::draw(uint32_t count) {
-    m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_context->Draw(count, 0);
 }
 

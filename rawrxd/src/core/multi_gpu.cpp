@@ -710,5 +710,24 @@ std::string MultiGPUManager::GenerateTopologyReport() const {
     return ss.str();
 }
 
+// ============================================================================
+// MultiGPUResult factory helpers
+// ============================================================================
+MultiGPUResult MultiGPUResult::ok(const char* msg) {
+    return MultiGPUResult{true, 0, msg ? msg : ""};
+}
+
+MultiGPUResult MultiGPUResult::error(const char* msg, int c) {
+    return MultiGPUResult{false, c, msg ? msg : ""};
+}
+
+// ============================================================================
+// MultiGPUManager state query
+// ============================================================================
+bool MultiGPUManager::IsInitialized() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_initialized;
+}
+
 } // namespace RawrXD::Enterprise
 

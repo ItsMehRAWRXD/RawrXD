@@ -18,6 +18,9 @@ void Camera::setPosition(const Vec3& pos) {
 void Camera::setLookAt(const Vec3& target) {
     m_target = target;
     updateVectors();
+    // Derive yaw/pitch from current forward so rotateYawPitch starts correctly
+    m_pitch = std::asin(m_forward.y) * 180.0f / 3.14159265f;
+    m_yaw   = std::atan2(m_forward.z, m_forward.x) * 180.0f / 3.14159265f;
 }
 
 void Camera::setUp(const Vec3& up) {
@@ -31,6 +34,7 @@ void Camera::updateVectors() {
 }
 
 void Camera::rotateYawPitch(float yawDeltaDeg, float pitchDeltaDeg) {
+    if (yawDeltaDeg == 0.0f && pitchDeltaDeg == 0.0f) return;
     m_yaw += yawDeltaDeg;
     m_pitch += pitchDeltaDeg;
     if (m_pitch > 89.0f) m_pitch = 89.0f;
