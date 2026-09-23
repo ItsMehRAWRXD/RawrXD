@@ -56,7 +56,12 @@ void GameRules::update(float dt, double now) {
     std::vector<Sphere> botSpheres;
     for (auto& bot : bots) {
         if (bot.alive) {
-            bot.update(dt, player.camera.getPosition(), arena, now, &weapon, &player);
+            if (!deterministic) {
+                bot.update(dt, player.camera.getPosition(), arena, now, &weapon, &player);
+            } else {
+                // In deterministic mode bots don't fire, just idle
+                bot.update(dt, player.camera.getPosition(), arena, now, nullptr, nullptr);
+            }
             Sphere s;
             s.center = bot.pos + Vec3(0.0f, 1.6f, 0.0f);
             s.radius = 0.5f;

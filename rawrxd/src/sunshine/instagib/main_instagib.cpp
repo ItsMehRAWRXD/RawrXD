@@ -115,6 +115,9 @@ public:
         uint32_t captureAfterMs = 0;
         bool captureExit = false;
         wchar_t capturePath[512] = L"";
+        uint32_t captureFrame = 0;
+        bool deterministic = false;
+        float fixedDt = 0.0f;
         {
             const char* ms = getenv("SUNSHINE_CAPTURE_AFTER_MS");
             if (ms) captureAfterMs = (uint32_t)atoi(ms);
@@ -127,38 +130,61 @@ public:
                     for (size_t i = 0; i < n; ++i) capturePath[i] = (wchar_t)pathStr[i];
                     capturePath[n] = L'\0';
                 }
-            } else if (captureAfterMs > 0) {
+            } else if (captureAfterMs > 0 || captureFrame > 0) {
                 wcscpy_s(capturePath, L"sunshine_capture.bmp");
+            }
+            const char* frameStr = getenv("SUNSHINE_CAPTURE_FRAME");
+            if (frameStr) captureFrame = (uint32_t)atoi(frameStr);
+            const char* detStr = getenv("SUNSHINE_DETERMINISTIC");
+            if (detStr && atoi(detStr)) {
+                deterministic = true;
+                fixedDt = 1.0f / 60.0f;
+                const char* fixedMs = getenv("SUNSHINE_FIXED_TIMESTEP_MS");
+                if (fixedMs) fixedDt = (float)atof(fixedMs) / 1000.0f;
+                if (fixedDt <= 0.0f) fixedDt = 1.0f / 60.0f;
             }
         }
 
         bool firstFrame = true;
         uint64_t renderStart = 0;
         bool captured = false;
+        uint32_t frameCount = 0;
+
+        m_game.deterministic = deterministic;
 
         while (m_running) {
-            double dt = m_timer.tick();
-            if (dt > 0.25) dt = 0.25;
-            update((float)dt);
+            double dt = deterministic ? (double)fixedDt : m_timer.tick();
+            if (!deterministic && dt > 0.25) dt = 0.25;
+            update((float)dt, deterministic);
             render();
+            ++frameCount;
 
-            if (captureAfterMs > 0 && !captured) {
-                uint64_t nowTick = GetTickCount64();
-                if (firstFrame) {
-                    renderStart = nowTick;
-                    firstFrame = false;
+            if (!captured) {
+                bool shouldCapture = false;
+                if (captureFrame > 0 && frameCount >= captureFrame) {
+                    shouldCapture = true;
+                } else if (captureAfterMs > 0) {
+                    uint64_t nowTick = GetTickCount64();
+                    if (firstFrame) {
+                        renderStart = nowTick;
+                        firstFrame = false;
+                    }
+                    if ((nowTick - renderStart) >= captureAfterMs) {
+                        shouldCapture = true;
+                    }
                 }
-                if ((nowTick - renderStart) >= captureAfterMs) {
-                    if (wcslen(capturePath) > 0) {
-                        if (m_renderer.captureFrame(capturePath)) {
-                            FILE* lf = nullptr;
-                            fopen_s(&lf, "instagib_log.txt", "a");
-                            if (lf) {
-                                char buf[512];
+                if (shouldCapture && wcslen(capturePath) > 0) {
+                    if (m_renderer.captureFrame(capturePath)) {
+                        FILE* lf = nullptr;
+                        fopen_s(&lf, "instagib_log.txt", "a");
+                        if (lf) {
+                            char buf[512];
+                            if (captureFrame > 0)
+                                sprintf_s(buf, "CAPTURE_OK path=%S frame=%u", capturePath, frameCount);
+                            else
                                 sprintf_s(buf, "CAPTURE_OK path=%S ms=%u", capturePath, captureAfterMs);
-                                fprintf(lf, "%s\n", buf);
-                                fclose(lf);
-                            }
+                            fprintf(lf, "%s\n", buf);
+                            fclose(lf);
                         }
                     }
                     captured = true;
@@ -169,24 +195,28 @@ public:
     }
 
 private:
-    void update(float dt) {
-        m_input.update();
+    void update(float dt, bool deterministic) {
+        if (!deterministic) {
+            m_input.update();
+            float speed = 5.0f * dt;
+            if (m_input.keyDown('W')) m_camera.moveForward(speed);
+            if (m_input.keyDown('S')) m_camera.moveForward(-speed);
+            if (m_input.keyDown('A')) m_camera.moveRight(-speed);
+            if (m_input.keyDown('D')) m_camera.moveRight(speed);
+
+            float sens = 0.15f;
+            m_camera.rotateYawPitch(m_input.mouseDeltaX() * sens, m_input.mouseDeltaY() * sens);
+        }
+
         double now = m_timer.now();
-
-        float speed = 5.0f * dt;
-        if (m_input.keyDown('W')) m_camera.moveForward(speed);
-        if (m_input.keyDown('S')) m_camera.moveForward(-speed);
-        if (m_input.keyDown('A')) m_camera.moveRight(-speed);
-        if (m_input.keyDown('D')) m_camera.moveRight(speed);
-
-        float sens = 0.15f;
-        m_camera.rotateYawPitch(m_input.mouseDeltaX() * sens, m_input.mouseDeltaY() * sens);
 
         // Keep player camera in sync
         m_game.player.camera = m_camera;
 
         // Fire on left click (auto-fire for verification)
-        m_game.playerFire(now);
+        if (!deterministic) {
+            m_game.playerFire(now);
+        }
 
         // Update game logic (bots, respawns, match time)
         m_game.update(dt, now);
@@ -198,8 +228,10 @@ private:
             m_camera = m_game.player.camera;
         }
 
-        if (m_input.keyDown(VK_ESCAPE) || !m_window.processMessages()) {
+        if (!deterministic && (m_input.keyDown(VK_ESCAPE) || !m_window.processMessages())) {
             m_running = false;
+        } else if (deterministic) {
+            if (!m_window.processMessages()) m_running = false;
         }
     }
 
@@ -257,8 +289,7 @@ private:
     Camera    m_camera;
     GameRules m_game;
     HUD       m_hud;
-    bool      m_running = false;
-
+    bool      m_running = false;    bool m_deterministic = false;
     Mesh m_groundMesh = {};
     Mesh m_cubeMesh = {};
     Renderer::Shader m_shader = {};

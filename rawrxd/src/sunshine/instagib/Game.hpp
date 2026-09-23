@@ -15,6 +15,7 @@ struct GameRules {
     float timeLimit = 300.0f; // seconds
     float matchTime = 0.0f;
     bool matchOver = false;
+    bool deterministic = false;
 
     Player player;
     std::vector<Bot> bots;
