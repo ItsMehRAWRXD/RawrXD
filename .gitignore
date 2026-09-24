@@ -24,3 +24,27 @@ rawrxd/CMakeLists.txt.bak*
 rawrxd/build_win32ide.txt
 rawrxd/cmake_*.txt
 rawrxd/missing_files*.txt
+
+# Build artifacts
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+
+# Root-level temp artifacts
+production_profiler_test_out.json
+_build_*.bat
+_build_*.py
+_elastic_build.txt
+_elastic_test.exe
+_test_cyclone.exe
+_test_cyclone_build.txt
+_test_cyclone_run.txt
+_bg_worker_brief_cyclone.txt
+run_inspect.bat
+tmp_*.py
+tmp_*.txt
+
+# Deep2 closure artifacts (not source)
+_deep2_closure/
