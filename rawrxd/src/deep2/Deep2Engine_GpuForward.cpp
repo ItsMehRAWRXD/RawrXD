@@ -235,6 +235,12 @@ bool Deep2Engine::forwardLayerGpuResident(
         kvCache ? static_cast<uint64_t>(kvCache->currentLength()) : 0ull;
     CycloneScheduler* liveCyc = LivePath_ActiveCyclone();
     if (!liveCyc && cycloneEnabled_) liveCyc = cyclone_.get();
+    const uint64_t layerStartNs =
+        (liveCyc && LivePath_Active())
+            ? static_cast<uint64_t>(
+                  std::chrono::duration_cast<std::chrono::nanoseconds>(
+                      std::chrono::steady_clock::now().time_since_epoch()).count())
+            : 0ull;
     if (LivePath_Active())
         LivePath_OnLayerStart(liveCyc, layer, liveSeq);
 
@@ -249,6 +255,14 @@ bool Deep2Engine::forwardLayerGpuResident(
     auto fail = [&]() -> bool {
         if (ownFusion) (void)vc->EndFusedLayer();
         (void)vc->FlushWeightComputes();
+        if (liveCyc && LivePath_Active()) {
+            const uint64_t abortNs =
+                static_cast<uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now().time_since_epoch()).count());
+            (void)abortNs; // duration not needed for abort path
+            LivePath_OnLayerAbort(liveCyc, layer, liveSeq);
+        }
         return false;
     };
     const float* attnW = EnsureF32(*this, lw.attnNorm, vulkanWeightF32_);
@@ -463,8 +477,14 @@ bool Deep2Engine::forwardLayerGpuResident(
     if (downloadExit) {
         ++c.hostSyncBoundaries; // exit boundary only
     }
-    if (LivePath_Active())
-        LivePath_OnLayerEnd(liveCyc, layer, liveSeq, 0);
+    if (liveCyc && LivePath_Active()) {
+        const uint64_t layerEndNs =
+            static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()).count());
+        const uint64_t dur = (layerEndNs > layerStartNs) ? (layerEndNs - layerStartNs) : 0ull;
+        LivePath_OnLayerEnd(liveCyc, layer, liveSeq, dur);
+    }
     return true;
 }
 
@@ -705,12 +725,69 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
              * B011: raise next-slot layer residency priority before copy. */
             if (elasticResidencyEnabled_ && elasticResidency_) {
                 const uint32_t nLo = multiGpuLayerPlan_.rangeLo[s + 1];
-                elasticResidency_->PredictLayerNeeds(nLo, nullptr, 0);
+                // Gather actual resident tensor names from next layer's LayerWeights.
+                // Only include tensors with real backing data and nonzero bytes.
+                std::vector<std::string> needNames;
+                if (nLo < modelWeights.layers.size()) {
+                    const auto& lw = modelWeights.layers[nLo];
+                    auto addTensor = [&needNames, this](const WeightTensor& wt) {
+                        if (!wt.data || wt.sizeBytes == 0 || wt.name.empty())
+                            return;
+                        elasticResidency_->registerTensor(wt.name,
+                                                           static_cast<uint64_t>(wt.sizeBytes));
+                        needNames.push_back(wt.name);
+                    };
+                    addTensor(lw.wq);
+                    addTensor(lw.wk);
+                    addTensor(lw.wv);
+                    addTensor(lw.wo);
+                    addTensor(lw.bq);
+                    addTensor(lw.bk);
+                    addTensor(lw.bv);
+                    addTensor(lw.attnNorm);
+                    addTensor(lw.attnQNorm);
+                    addTensor(lw.attnKNorm);
+                    addTensor(lw.wGate);
+                    addTensor(lw.wUp);
+                    addTensor(lw.wDown);
+                    addTensor(lw.ffnNorm);
+                    addTensor(lw.wqkv);
+                    // MLA tensors
+                    addTensor(lw.attnQ_a);
+                    addTensor(lw.attnQ_a_norm);
+                    addTensor(lw.attnQ_b);
+                    addTensor(lw.attnKV_a_mqa);
+                    addTensor(lw.attnKV_a_norm);
+                    addTensor(lw.attnK_b);
+                    addTensor(lw.attnV_b);
+                    addTensor(lw.attnO);
+                    // MoE tensors
+                    addTensor(lw.moeRouter);
+                    addTensor(lw.moeSharedGate);
+                    addTensor(lw.moeSharedUp);
+                    addTensor(lw.moeSharedDown);
+                    for (const auto& t : lw.moeGate) addTensor(t);
+                    for (const auto& t : lw.moeUp)   addTensor(t);
+                    for (const auto& t : lw.moeDown) addTensor(t);
+                    // SSM tensors
+                    addTensor(lw.ssmA);
+                    addTensor(lw.ssmAlpha);
+                    addTensor(lw.ssmBeta);
+                    addTensor(lw.ssmIn);
+                    addTensor(lw.ssmD);
+                    addTensor(lw.ssmConv1d);
+                    addTensor(lw.ssmConv1dBias);
+                    addTensor(lw.ssmDtBias);
+                    addTensor(lw.ssmNorm);
+                    addTensor(lw.ssmOut);
+                }
+                elasticResidency_->PredictLayerNeeds(
+                    nLo,
+                    needNames.empty() ? nullptr : &needNames,
+                    needNames.size());
                 /* Wait residency for next slot tensors before arena copy. */
                 {
-                    std::vector<std::string> waitNames;
                     /* Predict already enqueued UnifiedAsyncMove; readiness gate. */
-                    (void)waitNames;
                 }
                 fprintf(stderr,
                         "BATCH_D_OWNERSHIP_TRANSFER from=%u to=%u ready_gate=1 "

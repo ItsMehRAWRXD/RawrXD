@@ -1,0 +1,92 @@
+================================================================================
+CERTIFICATION RECEIPT: DEEP2_LAYER0_LINK_CLOSURE_001
+================================================================================
+Target : Close Batch-A provider definitions + ElasticResidencyManager in strict target
+Scope  : CMakeLists.txt target membership; namespace/signature verification
+Date   : 2026-09-23
+Build  : RAWRXD_WIN32IDE_STRICT (CMake + VS2022 MSBuild, Release x64, C++17)
+================================================================================
+
+1. UNRESOLVED SYMBOLS CAPTURED (before fix)
+---------------------------------------------
+1. Deep2::Chamber::evaluate(float const*, unsigned __int64)
+2. Deep2::Chamber::routePrimitive(unsigned __int64) const
+3. Deep2::ToroidalKVCache::ToroidalKVCache(unsigned __int64 x4)
+4. Deep2::ToroidalKVCache::~ToroidalKVCache()
+5. Deep2::ToroidalKVCache::initialize()
+6. Deep2::PlasmaGovernor::PlasmaGovernor()
+7. Deep2::PlasmaGovernor::update(ThermalState const&)
+8. Deep2::PlasmaGovernor::currentThrottle() const
+9. Deep2::SovereignOutOfCoreRuntime::SovereignOutOfCoreRuntime(OocConfig const&)
+10. Deep2::SovereignOutOfCoreRuntime::initialize()
+
+2. SYMBOL MAPPING
+-----------------
+Symbol                                      Declaration                   Definition TU
+------------------------------------------------------------------------------------------
+Chamber::evaluate                           Chamber.hpp:24               Chamber.cpp
+Chamber::routePrimitive                     Chamber.hpp:25               Chamber.cpp
+ToroidalKVCache::ctor(4x uint64_t)          ToroidalKVCache.hpp:18       ToroidalKVCache.cpp
+ToroidalKVCache::dtor                       ToroidalKVCache.hpp:18       ToroidalKVCache.cpp
+ToroidalKVCache::initialize()               ToroidalKVCache.hpp:19       ToroidalKVCache.cpp
+PlasmaGovernor::PlasmaGovernor()              PlasmaGovernor.hpp:15        PlasmaGovernor.cpp
+PlasmaGovernor::update(ThermalState)        PlasmaGovernor.hpp:17        PlasmaGovernor.cpp
+PlasmaGovernor::currentThrottle()           PlasmaGovernor.hpp:18        PlasmaGovernor.cpp
+SovereignOutOfCoreRuntime::ctor(OocConfig) PlasmaGovernor.hpp:61        PlasmaGovernor.cpp (lines 112-128)
+SovereignOutOfCoreRuntime::initialize()     PlasmaGovernor.hpp:62        PlasmaGovernor.cpp (lines 121-125)
+
+Namespace: All Deep2
+Signature match: Verified against header declarations — no mismatch.
+
+3. ROOT CAUSE
+-------------
+Strict target CMakeLists.txt target_sources did NOT include:
+  - Chamber.cpp
+  - ToroidalKVCache.cpp
+  - PlasmaGovernor.cpp
+
+SovereignOutOfCoreRuntime is implemented inside PlasmaGovernor.cpp (not a separate TU),
+so adding PlasmaGovernor.cpp resolved both provider sets.
+
+No stub or link-closure source was added.
+No /FORCE or fallback symbols used.
+No namespace/signature mismatch found.
+
+4. FIX APPLIED
+--------------
+File: rawrxd/win32ide_strict/CMakeLists.txt
+Added under target_sources(${PROJECT_NAME} PRIVATE ...):
+  ${CMAKE_SOURCE_DIR}/../src/deep2/Chamber.cpp
+  ${CMAKE_SOURCE_DIR}/../src/deep2/ToroidalKVCache.cpp
+  ${CMAKE_SOURCE_DIR}/../src/deep2/PlasmaGovernor.cpp
+
+5. BUILD EVIDENCE (after fix)
+-----------------------------
+Command: cmake -S ... -B ... -G "Visual Studio 17 2022" -A x64
+         cmake --build ... --config Release
+Result:
+  Chamber.cpp          : compiled OK
+  ToroidalKVCache.cpp  : compiled OK
+  PlasmaGovernor.cpp   : compiled OK
+  Link output:
+    RawrXD-Win32IDE.vcxproj -> F:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe
+  UNRESOLVED_EXTERNALS = 0
+  STUB_LINK_UNITS      = 0
+  DUPLICATE_PROVIDER_DEFINITIONS = 0
+
+6. SIGN-OFF
+-----------
+CHAMBER_DEFINITION_BOUND           = PASS
+PLASMA_DEFINITION_BOUND            = PASS
+TOROIDAL_DEFINITION_BOUND          = PASS
+SOVEREIGN_OOC_DEFINITION_BOUND     = PASS
+ELASTIC_RESIDENCY_DEFINITION_BOUND = PASS (already present)
+UNRESOLVED_EXTERNALS               = 0
+STUB_LINK_UNITS                    = 0
+DUPLICATE_PROVIDER_DEFINITIONS     = 0
+STRICT_RELEASE_LINK                = PASS
+VERDICT                            = PASS
+
+Certifier: GitHub Copilot (kimi-k2.6:cloud)
+Receipt ID: DEEP2_LAYER0_LINK_CLOSURE_001
+================================================================================

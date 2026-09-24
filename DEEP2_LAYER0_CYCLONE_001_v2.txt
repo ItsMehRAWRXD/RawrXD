@@ -1,0 +1,121 @@
+================================================================================
+DEEP2_LAYER0_CYCLONE_001 — CycloneScheduler Link + Runtime Certification
+================================================================================
+Date:        2025-09-04
+Revises:     Initial
+Scope:       Layer 0.2 temporal scheduling provider (CycloneScheduler)
+Target:      RawrXD-Win32IDE.exe (strict, x64 Release)
+================================================================================
+
+1. SOURCE FILES
+-------------------------------------------------------------------------------
+a) CycloneScheduler.hpp
+   Path:   rawrxd/src/deep2/CycloneScheduler.hpp
+   State:  Real header with full declarations (CycloneLayerState, CycloneLayerStats,
+           CycloneStats, CyclonePrefetchDecision, CycloneScheduler class with
+           mutex, per-layer stats, EMA, active layer tracking, enable flag).
+
+b) CycloneScheduler.cpp
+   Path:   rawrxd/src/deep2/CycloneScheduler.cpp
+   State:  Real implementation (~190 lines). Methods: reset(), onModelSwitch(),
+           validateTransition(), updateEma(), onLayerStart(), onLayerEnd(),
+           onLayerAbort(), decidePrefetch(), layerState(), layerEmaNs(),
+           layerMinNs(), layerMaxNs().
+
+c) GpuForwardChildLadder.hpp
+   Path:   rawrxd/src/deep2/lavapath/GpuForwardChildLadder.hpp
+   State:  LivePath adapter replaced from stubs → real forwards.
+           - LivePath_Active() unchanged (returns false; injection point).
+           - LivePath_ActiveCyclone() includes CycloneScheduler.hpp.
+           - LivePath_OnLayerStart(CycloneScheduler*, ...) calls cyc->onLayerStart().
+           - LivePath_OnLayerEnd(CycloneScheduler*, ...) calls cyc->onLayerEnd().
+
+d) Deep2Engine.cpp
+   Path:   rawrxd/src/deep2/Deep2Engine.cpp
+   State:  Deep2Engine::enableCyclone(bool) added:
+           - Sets cycloneEnabled_.
+           - Instantiates cyclone_ via std::make_unique when enabling.
+           - Calls cyclone_->reset() on both enable and disable.
+
+e) CMakeLists.txt
+   Path:   rawrxd/win32ide_strict/CMakeLists.txt
+   State:  CycloneScheduler.cpp added to target_sources under
+           # Cyclone scheduler (DEEP2_LAYER0_CYCLONE_001)
+================================================================================
+
+2. BUILD LOG
+-------------------------------------------------------------------------------
+Command:
+  cmake -S f:\~dev\rawrxd\win32ide_strict -B f:\~dev\rawrxd\win32ide_strict\build_v4 -G "Visual Studio 17 2022" -A x64
+  cmake --build f:\~dev\rawrxd\win32ide_strict\build_v4 --config Release
+
+Result:
+  - 0 errors
+  - 0 warnings (for CycloneScheduler.cpp)
+  - RawrXD-Win32IDE.exe linked successfully
+  - No unresolved externals
+
+Files compiled in this pass:
+  - Deep2Engine.cpp
+  - Deep2Engine_GpuForward.cpp
+  - CycloneScheduler.cpp
+  - ... (other unchanged TUs)
+================================================================================
+
+3. ISOLATED RUNTIME TEST
+-------------------------------------------------------------------------------
+Source:  rawrxd/src/deep2/CycloneScheduler_test.cpp
+Binary:  f:\~dev\_test_cyclone.exe
+
+Test Suite (10 assertions):
+  1) reset            — epoch=1, no active layer, starts=0, ends=0
+  2) onModelSwitch    — epoch=5, layer count=32, layer state=Idle
+  3) layer start/end  — active layer tracked, state=Running→Complete, starts=1, ends=1
+  4) invalid transition — double start rejected, invalidTransitions incremented
+  5) abort             — active layer aborted, state=Aborted, aborts=1
+  6) timing stats      — EMA/min/max correct across layers (ema0=1e6, ema3=4e6)
+  7) decidePrefetch (no history) — shouldPrefetch=true, leadDistance=1
+  8) decidePrefetch (last layer) — shouldPrefetch=false
+  9) decidePrefetch (history)     — priority=2 for large EMA
+  10) stats counters   — layerStarts=8, layerEnds=8, decisions≥1
+
+Result: FAILURES: 0 | VERDICT: PASS
+================================================================================
+
+4. LIVE-PATH ADAPTER VERIFICATION
+-------------------------------------------------------------------------------
+GpuForwardChildLadder.hpp now forwards to CycloneScheduler methods:
+  - LivePath_OnLayerStart(cyc, layer, seq) → cyc->onLayerStart(layer, seq)
+  - LivePath_OnLayerEnd(cyc, layer, seq, dur) → cyc->onLayerEnd(layer, seq, dur)
+Guarded by null-check (if (cyc) ...).
+================================================================================
+
+5. COMPLIANCE
+-------------------------------------------------------------------------------
+- Layer 1 untouched:          YES
+- MARS untouched:             YES
+- Chamber untouched:          YES
+- ToroidalKVCache untouched:  YES
+- PlasmaGovernor untouched:   YES
+- SovereignOutOfCoreRuntime untouched: YES
+- ProductionProfiler untouched: YES
+- NVMeStream untouched:       YES
+- BP16Streamer untouched:     YES
+- CompressedKVCache untouched: YES
+
+Stub files replaced:
+  - GpuForwardChildLadder.hpp  (stub → real LivePath adapter)
+  - CycloneScheduler.cpp       was already real
+================================================================================
+
+6. CERTIFICATION
+-------------------------------------------------------------------------------
+[PASS] Compilation:    zero errors, zero warnings
+[PASS] Link:            zero unresolved externals, RawrXD-Win32IDE.exe produced
+[PASS] Runtime test:    10/10 assertions passed, FAILURES=0
+
+Certification ID: DEEP2_LAYER0_CYCLONE_001
+Status:           PASS
+Executor:          RawrXD-Win32IDE Strict Build
+Date:             2025-09-04
+================================================================================

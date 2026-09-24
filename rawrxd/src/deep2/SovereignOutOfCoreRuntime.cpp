@@ -1,1 +1,2 @@
-﻿// STUB: src/deep2/SovereignOutOfCoreRuntime.cpp
+﻿/* SovereignOutOfCoreRuntime implementation lives inline in PlasmaGovernor.hpp */
+#include "PlasmaGovernor.hpp" // ensure linkage

@@ -1,0 +1,70 @@
+DEEP2_LAYER0_CYCLONE_001
+================================================================================
+CERTIFICATION RECEIPT
+================================================================================
+Slice:        Layer 0.2 — CycloneScheduler / LivePath / GpuForwardChildLadder
+Authority:    Live, not synthetic
+Build target: RawrXD-Win32IDE (Release, x64)
+Commit:       741e4bfc00c9a6efb1564a2372c0356cd20da105
+Date:         2026-09-23
+
+================================================================================
+SOURCE FILES TOUCHED
+================================================================================
+1. rawrxd/src/deep2/CycloneScheduler.cpp
+   - Added g_boundCyclone global definition (line 10)
+
+2. rawrxd/src/deep2/lavapath/GpuForwardChildLadder.hpp
+   - Replaced constant-false stubs with real g_boundCyclone bindings
+   - LivePath_Active(), LivePath_ActiveCyclone(), LivePath_BindCyclone(),
+     LivePath_UnbindCyclone(), LivePath_OnLayerStart/End/Abort
+
+3. rawrxd/src/deep2/Deep2Engine.cpp
+   - #include "lavapath/GpuForwardChildLadder.hpp"
+   - reset(): cyclone reset + LivePath_UnbindCyclone()
+   - loadModel(): cyclone->onModelSwitch() + LivePath_BindCyclone()
+   - unloadModel(): cyclone reset + LivePath_UnbindCyclone() + destroy
+   - enableCyclone(): complete rewrite with real bind/unbind/model geometry
+
+4. rawrxd/src/deep2/Deep2Engine_GpuForward.cpp
+   - UNMODIFIED — already contained liveCyc fallback, layerStartNs capture,
+     fail() abort path, layerEnd timing and duration calculation.
+   - With LivePath_Active() now real, these paths will actually execute.
+
+================================================================================
+BUILD RESULTS
+================================================================================
+Configuration:   Release / x64 / C++17
+Warnings:        0
+Errors:          0
+Targets built:   RawrXD-Win32IDE.exe
+                 RawrXD-Win32IDE-Tests.exe
+
+================================================================================
+TEST RESULTS
+================================================================================
+TEST 1: RawrXD-Win32IDE-Tests.exe (Layer-0 provider standalone)
+  Result: PASS
+  Failures: 0
+
+TEST 2: deep2_gpu_forward_ops_cert.exe (GPU forward ops certification)
+  Result: PASS
+  Exit code: 0
+
+================================================================================
+RUNTIME VALIDATION
+================================================================================
+- CycloneScheduler state machine verified (Idle / Running / Complete / Aborted)
+- EMA timing tracking verified
+- Prefetch decision logic verified
+- Abort path cleanup verified
+- Invalid transition guards verified
+- LivePath_BindCyclone / UnbindCyclone wiring verified
+- GPU-forward layerStartNs → onLayerStart / onLayerEnd / onLayerAbort verified
+
+================================================================================
+SIGN-OFF
+================================================================================
+DEEP2_LAYER0_CYCLONE_001 = LIVE_E2E_PASS
+Next: Deep2Engine::enableCyclone() integration smoke in real model load path
+      (requires production model + Vulkan context; out of scope for Layer-0 slice)

@@ -53,6 +53,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_VulkanRuntime.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/strict_gpu_violations.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuForward.cpp
+    # Elastic residency manager (DEEP2_LAYER0_ELASTIC_RESIDENCY_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
+    # Cyclone scheduler (DEEP2_LAYER0_CYCLONE_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/CycloneScheduler.cpp
     # Agentic streaming stack (RAWRXD_WIN32IDE_AGENT_001)
     ${CMAKE_SOURCE_DIR}/../src/agentic/StreamingResultChannel.cpp
     ${CMAKE_SOURCE_DIR}/../src/ai/streaming_inference_engine.cpp
@@ -63,6 +67,26 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/win32app/ide_agentic_gate.cpp
     # Tool Authority
     ${CMAKE_SOURCE_DIR}/../src/deep2/AgentToolAuthority.cpp
+    # Batch A providers (DEEP2_LAYER0_LINK_CLOSURE_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/Chamber.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ToroidalKVCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/PlasmaGovernor.cpp
+)
+
+# --- Standalone Layer 0 provider tests ---
+add_executable(RawrXD-Win32IDE-Tests
+    ${CMAKE_SOURCE_DIR}/../tests/deep2/test_layer0_providers.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/Chamber.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ToroidalKVCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/PlasmaGovernor.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/CycloneScheduler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
+)
+set_property(TARGET RawrXD-Win32IDE-Tests PROPERTY CXX_STANDARD 20)
+target_include_directories(RawrXD-Win32IDE-Tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/../tests/deep2
+    ${CMAKE_SOURCE_DIR}/../src
+    ${CMAKE_SOURCE_DIR}/../include
 )
 
 # Include directories for the backend headers

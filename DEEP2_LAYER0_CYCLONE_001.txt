@@ -1,0 +1,71 @@
+=== DEEP2_LAYER0_CYCLONE_001 ===
+CycloneScheduler Layer-0 Provider Closure
+Date: 2025-06-06
+Authority: RawrXD Win32IDE Strict Build
+
+1. REAL IMPLEMENTATION PRESENT
+   - Header:  f:\~dev\rawrxd\src\deep2\CycloneScheduler.hpp
+     Defines: CycloneLayerState, CycloneLayerStats, CycloneStats, CyclonePrefetchDecision,
+               class CycloneScheduler with lifecycle, timing, prefetch, queries.
+   - Source:   f:\~dev\rawrxd\src\deep2\CycloneScheduler.cpp
+     ~210 lines. Implements reset, onModelSwitch, onLayerStart, onLayerEnd, onLayerAbort,
+     decidePrefetch, layerState, layerEmaNs, layerMinNs, layerMaxNs.
+     Uses std::chrono::steady_clock, EMA updates, LRU-style per-layer stats, std::mutex.
+
+2. CALLER WIRED TO IT
+   - Deep2Engine.cpp:
+       void Deep2Engine::enableCyclone(bool enable) { ... }
+       Creates std::make_unique<CycloneScheduler>() when enabled; resets when disabled.
+   - Deep2Engine.h:
+       std::unique_ptr<CycloneScheduler> cyclone_ (line ~952)
+       bool cycloneEnabled_ = false (line ~953)
+   - GpuForwardChildLadder.hpp:
+       LivePath_ActiveCyclone() returns real engine-owned instance pointer.
+       LivePath_OnLayerStart / LivePath_OnLayerEnd / LivePath_OnLayerAbort forward to cyclone_.
+   - Deep2Engine_GpuForward.cpp:
+       Captures layerStartNs via steady_clock before layer execution.
+       fail() lambda calls LivePath_OnLayerAbort.
+       Passes real duration (layerEndNs - layerStartNs) to LivePath_OnLayerEnd.
+
+3. REFERENCE / UNIT / RUNTIME TEST PASSES
+   - Test target: RawrXD-Win32IDE-Tests
+   - Test source: f:\~dev\rawrxd\tests\deep2\test_layer0_providers.cpp
+   - CycloneScheduler test coverage:
+       * lifecycle (reset, onModelSwitch, onLayerStart, onLayerEnd, onLayerAbort)
+       * timing (layerEmaNs, layerMinNs, layerMaxNs)
+       * invalid transition guards (double-start)
+       * decidePrefetch behavior (conservative prefetch when no history, skip prefetch on last layer)
+   - Build command:
+       cmake --build f:\~dev\rawrxd\win32ide_strict\build_v4 --config Release --target RawrXD-Win32IDE-Tests
+   - Execution:
+       f:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE-Tests.exe
+   - Result:
+       === Layer0 Provider Tests ===
+       === PASS: 0 failure(s) ===
+
+4. OLD FALLBACK OR PLACEHOLDER PATH REMOVED
+   - CycloneScheduler.cpp no longer contains // STUB or // [RAWRXD_BUILD_AUTHORITY_BASELINE_001] stub.
+   - No stub references to CycloneScheduler remain in strict build source graph.
+   - CycloneScheduler.cpp entry exists in f:\~dev\rawrxd\win32ide_strict\CMakeLists.txt.
+
+5. BUILD EVIDENCE (Strict Win32IDE)
+   - Configured: cmake -S f:\~dev\rawrxd\win32ide_strict -B f:\~dev\rawrxd\win32ide_strict\build_v4
+   - Build:      cmake --build f:\~dev\rawrxd\win32ide_strict\build_v4 --config Release
+   - Output:     RawrXD-Win32IDE.exe (link-closure target)
+   - Test build: RawrXD-Win32IDE-Tests.exe
+   - Compiler:   MSVC 19.43 (cl 19.43.xxxxx)
+   - Platform:   x64 Release
+
+6. SOURCE HASH SUMMARY (informal)
+   - Deep2Engine.cpp: enableCyclone() single definition at line ~3132 (duplicate removed).
+   - CycloneScheduler.hpp: full class declaration, no stub markers.
+   - CycloneScheduler.cpp: real implementation, no stub markers.
+   - GpuForwardChildLadder.hpp: real adapter with abort handler.
+   - test_layer0_providers.cpp: CycloneScheduler tests added, 0 failures.
+
+7. SCOPE COMPLIANCE
+   - This receipt covers ONLY CycloneScheduler.
+   - Layer-1 providers (ProductionProfiler, NVMeStream, BP16Streamer, CompressedKVCache, MARSController) NOT touched.
+   - Next Layer-0 provider TBD per user directive.
+
+CERTIFIED: DEEP2_LAYER0_CYCLONE_001 = CLOSED

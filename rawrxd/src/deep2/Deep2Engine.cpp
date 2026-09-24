@@ -7,6 +7,7 @@
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
+#include "lavapath/GpuForwardChildLadder.hpp"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -455,8 +456,8 @@ void Deep2Engine::reset() {
     // BATCH10_RESET_MLA_CACHE
     for (auto& gpu : vulkanDevices_) {
         if (gpu) gpu->ResetMLACache();
-    specKvMirrorReset();
     }
+    specKvMirrorReset();
 
     gpuFwdCommitted_ = false;
     gpuFwd_ = {};
@@ -1251,6 +1252,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                   ggufPath.c_str());
 
     modelWeights.loaded = true;
+    if (cycloneEnabled_ && cyclone_) {
+        cyclone_->onModelSwitch(static_cast<uint32_t>(modelWeights.numLayers), 0);
+        Deep2::LivePath_BindCyclone(cyclone_.get());
+    }
 
     // Runtime may be entered through loadModel-only clients.
     if (!initialized) {
@@ -1300,7 +1305,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     if (tokenizer) {
         if (auto* bpe = dynamic_cast<BPETokenizer*>(tokenizer.get())) {
             if (!bpe->loadFromGGUF(*loader)) {
-                bpe->loadFromFile(ggufPath + ".vocab");
+                if (!bpe->loadFromFile(ggufPath + ".vocab")) {
+                    std::fprintf(stderr, "[Deep2Engine] tokenizer load failed for %s\n", ggufPath.c_str());
+                    if (diag) {
+                        diag->stageCode = 29;
+                        diag->stageName = "TOKENIZER_LOAD_FAILED";
+                        diag->message = "Failed to load tokenizer from GGUF or fallback vocab file.";
+                    }
+                    modelWeights.loaded = false;
+                    ggufResult = {};
+                    return false;
+                }
             }
         }
     }
@@ -1362,12 +1377,24 @@ void Deep2Engine::unloadModel() {
     weights = nullptr;
     weightSize = 0;
     modelWeights = {};
+    ggufResult = {};
     specWs_.clear();
     specKvMirrorReset();
     kvCache = std::make_unique<KVCache>();
     clearCancel();
     gpuFwd_ = {};
     gpuFwdCommitted_ = false;
+    lmHeadPinned_[0] = false;
+    lmHeadPinned_[1] = false;
+    lmHeadPinRow0Count_ = 0;
+    moeRouters_.clear();
+    moePinnedHandles_.clear();
+    if (cycloneEnabled_ && cyclone_) {
+        cyclone_->reset();
+        Deep2::LivePath_UnbindCyclone();
+        cyclone_.reset();
+        cycloneEnabled_ = false;
+    }
     modelState_ = ModelState::Closed;
 }
 
@@ -3042,13 +3069,123 @@ void Deep2Engine::disableMARS() {
 
 // =================== SOVEREIGN (TRUTHFUL LIFECYCLE) ====================
 void Deep2Engine::enableAllEnhancements() {
-    // Do not flip feature flags merely because placeholder provider classes
-    // exist. Each provider must establish its own successful initialization
-    // contract before its corresponding enabled flag becomes true.
-    chamberEnabled_ = false;
-    toroidalKVEnabled_ = false;
-    plasmaGovernorEnabled_ = false;
-    sovereignRuntimeEnabled_ = false;
+    enableChamber(true);
+    enableToroidalKV(true);
+    enablePlasmaGovernor(true);
+    enableSovereignRuntime(true);
+}
+
+void Deep2Engine::enableChamber(bool enable) {
+    if (!enable) {
+        chamber_.reset();
+        chamberEnabled_ = false;
+        return;
+    }
+    if (!chamber_) {
+        chamber_ = std::make_unique<Deep2::Chamber>();
+    }
+    chamberEnabled_ = true;
+}
+
+Deep2::ChamberResult Deep2Engine::evaluateChamber(const float* hidden_state, size_t dim) {
+    if (!chamberEnabled_ || !chamber_)
+        return Deep2::ChamberResult{};
+    return chamber_->evaluate(hidden_state, dim);
+}
+
+Deep2::FormulaRoute Deep2Engine::routePrimitive(uint64_t context_hash) {
+    if (!chamberEnabled_ || !chamber_)
+        return Deep2::FormulaRoute{};
+    return chamber_->routePrimitive(context_hash);
+}
+
+void Deep2Engine::enableToroidalKV(bool enable, size_t maxTokens) {
+    if (!enable) {
+        toroidalKV_.reset();
+        toroidalKVEnabled_ = false;
+        return;
+    }
+    if (!toroidalKV_ || toroidalKV_->capacity() != maxTokens) {
+        toroidalKV_ = std::make_unique<Deep2::ToroidalKVCache>(
+            config.numLayers, config.numHeads, config.headDim, maxTokens);
+        if (!toroidalKV_->initialize()) {
+            toroidalKV_.reset();
+            toroidalKVEnabled_ = false;
+            return;
+        }
+    }
+    toroidalKVEnabled_ = true;
+}
+
+void Deep2Engine::enablePlasmaGovernor(bool enable) {
+    if (!enable) {
+        plasmaGovernor_.reset();
+        plasmaGovernorEnabled_ = false;
+        return;
+    }
+    if (!plasmaGovernor_) {
+        plasmaGovernor_ = std::make_unique<Deep2::PlasmaGovernor>();
+    }
+    plasmaGovernorEnabled_ = true;
+}
+
+void Deep2Engine::updateThermalState(const Deep2::ThermalState& state) {
+    if (plasmaGovernorEnabled_ && plasmaGovernor_)
+        plasmaGovernor_->update(state);
+}
+
+float Deep2Engine::currentThrottle() const {
+    if (plasmaGovernorEnabled_ && plasmaGovernor_)
+        return plasmaGovernor_->currentThrottle();
+    return 1.0f;
+}
+
+void Deep2Engine::enableCyclone(bool enable) {
+    if (!enable) {
+        if (cyclone_) {
+            cyclone_->reset();
+            Deep2::LivePath_UnbindCyclone();
+            cyclone_.reset();
+            cycloneEnabled_ = false;
+        }
+        return;
+    }
+    if (!cyclone_) {
+        cyclone_ = std::make_unique<Deep2::CycloneScheduler>();
+    }
+    cyclone_->reset();
+    if (modelWeights.loaded && modelWeights.numLayers > 0) {
+        cyclone_->onModelSwitch(static_cast<uint32_t>(modelWeights.numLayers), 0);
+        Deep2::LivePath_BindCyclone(cyclone_.get());
+    }
+    // If model is not loaded yet, onModelSwitch + bind happen in loadModel().
+    cycloneEnabled_ = true;
+}
+
+void Deep2Engine::enableSovereignRuntime(bool enable) {
+    if (!enable) {
+        sovereignRuntime_.reset();
+        sovereignRuntimeEnabled_ = false;
+        return;
+    }
+    if (!sovereignRuntime_) {
+        Deep2::SovereignOutOfCoreRuntime::OocConfig cfg{};
+        sovereignRuntime_ = std::make_unique<Deep2::SovereignOutOfCoreRuntime>(cfg);
+    }
+    if (!sovereignRuntime_->isInitialized()) {
+        if (!sovereignRuntime_->initialize()) {
+            sovereignRuntime_.reset();
+            sovereignRuntimeEnabled_ = false;
+            return;
+        }
+    }
+    sovereignRuntimeEnabled_ = true;
+}
+
+Deep2::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_)
+        return sovereignRuntime_.get();
+    return nullptr;
 }
 
 // =================== PROFILER / TELEMETRY (TRUTHFUL LIFECYCLE) ====================

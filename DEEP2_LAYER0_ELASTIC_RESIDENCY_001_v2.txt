@@ -1,0 +1,84 @@
+================================================================================
+CERTIFICATION RECEIPT: DEEP2_LAYER0_ELASTIC_RESIDENCY_001 v2
+================================================================================
+Target : ElasticResidencyManager (Layer 0.1) — runtime certified, not just compilation
+Scope  : ElasticResidencyManager.hpp, ElasticResidencyManager.cpp,
+         Deep2Engine_GpuForward.cpp caller, CMakeLists.txt strict target
+Date   : 2026-09-23
+Build  : RAWRXD_WIN32IDE_STRICT (CMake + VS2022 MSBuild, Release x64, C++17)
+================================================================================
+
+1. SOURCE CLOSURE
+-----------------
+File                                       Status
+---------------------------------------------
+rawrxd/src/deep2/ElasticResidencyManager.hpp   Real header with full state, stats, tier, hash
+rawrxd/src/deep2/ElasticResidencyManager.cpp   Real implementation (~190 lines) replacing stub
+rawrxd/src/deep2/Deep2Engine_GpuForward.cpp     Caller wiring with data-backed tensor registration
+rawrxd/win32ide_strict/CMakeLists.txt         target_sources includes ElasticResidencyManager.cpp
+
+2. IMPLEMENTATION HIGHLIGHTS
+----------------------------
+- ResidencyState enum: Unknown, Requested, Prefetching, Resident, Evictable, Evicted.
+- ResidencyTier enum: Unknown, VRAM, RAM, NVMe.
+- ResidencyTierHash: custom hash for std::unordered_map keyed by enum class (MSVC requirement).
+- ElasticResidencyStats: atomic counters for predictions, tensorRequests, alreadyResidentHits,
+  prefetchHits, misses, promotions, evictions, bytesRequested, bytesPromoted, bytesEvicted,
+  vramResidentBytes, ramResidentBytes, nvmeResidentBytes.
+- Lifecycle: registerTensor() (GPU forward), PredictLayerNeeds() (scheduler hint), bumpEpoch(),
+  markResident(), markEvicted(), markPrefetched(), markMiss(), enforceBudget(), reset().
+- Budget enforcement: eviction sorted by lastAccessEpoch, subtracts tier counters atomically.
+- GPU forward caller: addTensor lambda requires `wt.data != nullptr && wt.sizeBytes > 0 &&
+  !wt.name.empty()` before registering name/size with ElasticResidencyManager.
+
+3. BUG FOUND AND FIXED DURING RUNTIME CERTIFICATION
+----------------------------------------------------
+Issue: enforceBudget() evicted tensors but did NOT decrement tier counters
+       (vramResidentBytes / ramResidentBytes / nvmeResidentBytes).
+Impact: stats_.vramResidentBytes remained at pre-eviction value, causing budget accounting failure.
+Fix:   Added tier switch block inside eviction loop to subtract evicted bytes from the
+       corresponding resident counter before marking tensor Evicted.
+File:  rawrxd/src/deep2/ElasticResidencyManager.cpp (lines ~162-170)
+
+4. ISOLATED TEST EVIDENCE
+-------------------------
+Binary: F:\~dev\_elastic_test.exe
+Build:  cl.exe /std:c++17 /EHsc (VS2022 BuildTools) — zero warnings, zero errors.
+Tests:  12 assertions exercised
+Result: FAILURES=0, VERDICT=PASS
+
+Assertions covered:
+  - Initial miss (prediction + request counting)
+  - Promotion (markResident, tier assignment, byte counters)
+  - Resident hit (alreadyResidentHits)
+  - Prefetch hit (prefetchHits, state transition)
+  - Miss (misses, bytesRequested)
+  - Budget enforcement + eviction (evictions, resident bytes decrement, budget compliance)
+  - Tier transitions (VRAM, RAM, NVMe counters)
+  - Reset clears all state and counters
+  - Model switch (reset semantics)
+  - Invalid / zero-byte request (empty/null safety)
+  - Hit rate calculation (50% rate confirmed)
+  - buildPlanForLayer (correct request list)
+
+5. DEEP2 INTEGRATED BUILD EVIDENCE
+----------------------------------
+Command: cmake -S ... -B ... -G "Visual Studio 17 2022" -A x64
+         cmake --build ... --config Release
+Result:
+  ElasticResidencyManager.cpp : compiled OK (zero warnings)
+  Link output: RawrXD-Win32IDE.vcxproj -> F:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe
+  UNRESOLVED_EXTERNALS = 0
+  STUB_LINK_UNITS      = 0
+
+6. SIGN-OFF
+-----------
+ISOLATED_TEST_BUILD     = PASS
+DEEP2_INTEGRATED_BUILD  = PASS
+TEST_FAILURES           = 0
+BUDGET_ENFORCEMENT_FIX  = LANDED
+VERDICT                 = PASS
+
+Certifier: GitHub Copilot (kimi-k2.6:cloud)
+Receipt ID: DEEP2_LAYER0_ELASTIC_RESIDENCY_001 v2
+================================================================================
