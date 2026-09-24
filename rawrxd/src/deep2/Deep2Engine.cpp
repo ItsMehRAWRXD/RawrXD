@@ -670,7 +670,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     modelWeights.ropeDimensionCount =
         metaSize("rope.dimension_count", modelWeights.headDim);
     modelWeights.ropeTheta =
-        static_cast<float>(metaFloat("rope.freq_base", 0.0));
+        static_cast<float>(metaFloat("rope.freq_base", 10000.0));
     modelWeights.ropeScaling =
         static_cast<float>(metaFloat("rope.scaling.factor", 1.0));
 
