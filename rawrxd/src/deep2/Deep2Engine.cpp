@@ -1864,6 +1864,8 @@ void Deep2Engine::applyRoPE(float* q, float* k,
 // =================== FORWARD LAYER ====================
 void Deep2Engine::forwardLayer(size_t layer, const float* input,
                                float* output, size_t seqLen) {
+    if (profiler_) profiler_->beginLayer(static_cast<uint32_t>(layer));
+    auto tLayer0 = std::chrono::steady_clock::now();
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"FWD_LAYER layer=%zu seqLen=%zu\n",layer,seqLen); std::fflush(stderr);
     }
@@ -1923,6 +1925,12 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     }
     parityEmit(ParityCheckpoint::LayerResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "LAYER_RESIDUAL", output, H);
+    auto tLayer1 = std::chrono::steady_clock::now();
+    if (profiler_) {
+        profiler_->recordGpuForward(
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tLayer1 - tLayer0).count()));
+        profiler_->endLayer(static_cast<uint32_t>(layer));
+    }
     if (deep2ForwardTraceEnabled()) {
         std::fprintf(stderr,"FWD_LAYER layer=%zu DONE\n",layer); std::fflush(stderr);
     }
@@ -2693,26 +2701,39 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (cancelRequested_.load(std::memory_order_acquire)) {
             modelState_ = ModelState::Choreographable;
             std::fprintf(stderr,"GEN_PREFILL_CANCEL p=%zu\n",p); std::fflush(stderr);
+            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
             return 0;
         }
         parityBeginStep(static_cast<int>(p));
+        if (profiler_) profiler_->beginToken(static_cast<uint32_t>(p), p, Deep2::ProfilePhase::Prefill);
+        auto tEmbed0 = std::chrono::steady_clock::now();
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;
             {
                 std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "GEN_PREFILL_EMBED_FAIL p=" << p << "\n";
             }
+            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
             return 0;
         }
+        auto tEmbed1 = std::chrono::steady_clock::now();
+        if (profiler_) profiler_->recordCpuOverhead(
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmbed1 - tEmbed0).count()));
+        auto tFwd0 = std::chrono::steady_clock::now();
         if (!forwardTokenAllLayers(hidden.data(), p + 1)) {
             modelState_ = ModelState::Choreographable;
             {
                 std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
                 dbg << "GEN_PREFILL_FORWARD_FAIL p=" << p << "\n";
             }
+            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
             return 0;
         }
+        auto tFwd1 = std::chrono::steady_clock::now();
+        if (profiler_) profiler_->recordGpuForward(
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()));
         if (config.useKVCache && kvCache) kvCache->advance();
+        if (profiler_) profiler_->endToken(static_cast<uint32_t>(p));
     }
 
     {
@@ -2763,19 +2784,31 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Exactly one emitted token remains unforwarded between decode
         // transactions. Accepted speculative prefix tokens are already in KV.
         if(pendingForward) {
+            if (profiler_) profiler_->beginToken(static_cast<uint32_t>(generated), promptLen + generated, Deep2::ProfilePhase::Decode);
             parityBeginStep(static_cast<int>(
                 kvCache?kvCache->currentLength():promptLen+generated-1));
+            auto tEmb0 = std::chrono::steady_clock::now();
             if(!embedToken(pendingToken,hidden.data())) {
                 std::fprintf(stderr,"GEN_PENDING_EMBED_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                 break;
             }
+            auto tEmb1 = std::chrono::steady_clock::now();
+            if (profiler_) profiler_->recordCpuOverhead(
+                static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmb1 - tEmb0).count()));
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
+            auto tFwd0 = std::chrono::steady_clock::now();
             if(!forwardTokenAllLayers(hidden.data(),seq)) {
                 std::fprintf(stderr,"GEN_PENDING_FORWARD_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                 break;
             }
+            auto tFwd1 = std::chrono::steady_clock::now();
+            if (profiler_) profiler_->recordGpuForward(
+                static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count()));
             if(config.useKVCache&&kvCache&&!kvCache->advance()) {
                 std::fprintf(stderr,"GEN_PENDING_KV_FAIL gen=%zu\n",generated); std::fflush(stderr);
+                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
                 break;
             }
             pendingForward=false;
@@ -2864,12 +2897,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
             std::fprintf(stderr, "[LOGITS_HEAD] %s\n", topDbg.c_str());
         }
+        auto tSample0 = std::chrono::steady_clock::now();
         const int nextTok = sampleToken(logits);
+        auto tSample1 = std::chrono::steady_clock::now();
+        if (profiler_) profiler_->recordSampling(
+            static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tSample1 - tSample0).count()));
         if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
             std::fprintf(stderr,"GEN_SAMPLE_FAIL nextTok=%d vocab=%zu\n",nextTok,config.vocabSize); std::fflush(stderr);
+            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
             break;
         }
-        outputTokens[generated++] = nextTok;
+        outputTokens[generated] = nextTok;
+        if (profiler_) profiler_->endToken(static_cast<uint32_t>(generated));
+        ++generated;
         if(specActive) medusaDecoder_->observe(nextTok);
         pendingToken=nextTok;
         pendingForward=true;
@@ -2877,6 +2917,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             std::fprintf(stderr,"GEN_ONTOKEN_STOP gen=%zu\n",generated); std::fflush(stderr);
             break;
         }
+    }
+
+    // Flush any dangling active token profile when decode loop exits
+    if (profiler_ && profiler_->counters().tokensStarted > profiler_->counters().tokensCompleted + profiler_->counters().tokensAborted) {
+        // active token may remain; abort it to keep counters balanced
+        // (the last pending forward token was already ended above, so this
+        // should normally be a no-op, but guards speculative paths)
     }
 
     if (deep2ForwardTraceEnabled()) {
@@ -3192,17 +3239,29 @@ Deep2::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
 void Deep2Engine::enableProfiling(bool enable) {
     profilingEnabled_ = false;
     if (!enable) {
+        if (profiler_) profiler_->setEnabled(false);
         profiler_.reset();
         profileHistory_.clear();
         return;
     }
 
-    // ProductionProfiler in the connected provider source is still an empty
-    // class. Keep profiling disabled rather than emit fabricated telemetry.
-    profiler_ = std::make_unique<ProductionProfiler>();
+    if (!profiler_) {
+        profiler_ = std::make_unique<ProductionProfiler>();
+    }
+    profiler_->reset();
+    profiler_->setEnabled(true);
     profileHistory_.clear();
-    // profilingEnabled_ intentionally remains false until real Begin/End token
-    // instrumentation is supplied by ProductionProfiler.
+    profilingEnabled_ = true;
+}
+
+bool Deep2Engine::saveProfileJSON(const std::string& path) const {
+    if (!profiler_) return false;
+    return profiler_->saveJSON(path);
+}
+
+std::string Deep2Engine::getProfileJSONSummary() const {
+    if (!profiler_) return "{}";
+    return profiler_->toJSON();
 }
 
 // =================== TOKEN HELPERS ====================

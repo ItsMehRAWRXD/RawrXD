@@ -55,6 +55,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuForward.cpp
     # Elastic residency manager (DEEP2_LAYER0_ELASTIC_RESIDENCY_001)
     ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
+    # Production profiler (DEEP2_LAYER0_PRODUCTION_PROFILER_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ProductionProfiler.cpp
     # Cyclone scheduler (DEEP2_LAYER0_CYCLONE_001)
     ${CMAKE_SOURCE_DIR}/../src/deep2/CycloneScheduler.cpp
     # Agentic streaming stack (RAWRXD_WIN32IDE_AGENT_001)
@@ -83,6 +85,18 @@ add_executable(RawrXD-Win32IDE-Tests
     ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
 )
 set_property(TARGET RawrXD-Win32IDE-Tests PROPERTY CXX_STANDARD 20)
+
+# --- ProductionProfiler isolated test ---
+add_executable(RawrXD-ProductionProfiler-Test
+    ${CMAKE_SOURCE_DIR}/../tests/deep2/ProductionProfiler_test.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ProductionProfiler.cpp
+)
+set_property(TARGET RawrXD-ProductionProfiler-Test PROPERTY CXX_STANDARD 20)
+target_include_directories(RawrXD-ProductionProfiler-Test PRIVATE
+    ${CMAKE_SOURCE_DIR}/../tests/deep2
+    ${CMAKE_SOURCE_DIR}/../src
+    ${CMAKE_SOURCE_DIR}/../include
+)
 target_include_directories(RawrXD-Win32IDE-Tests PRIVATE
     ${CMAKE_SOURCE_DIR}/../tests/deep2
     ${CMAKE_SOURCE_DIR}/../src
