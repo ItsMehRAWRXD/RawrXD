@@ -1,0 +1,18 @@
+READER OK n_fields= 34
+  gemma3.rope.global.freq_base: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+  gemma3.rope.local.freq_base: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+  general.architecture: [4]
+  gemma3.attention.head_count: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.attention.head_count_kv: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.attention.key_length: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.attention.layer_norm_rms_epsilon: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+  gemma3.attention.sliding_window: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.attention.value_length: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.block_count: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.context_length: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.embedding_length: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.feed_forward_length: types=[<GGUFValueType.UINT32: 4>] data=[3]
+  gemma3.final_logit_softcapping: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+  gemma3.rope.global.freq_base: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+  gemma3.rope.local.freq_base: types=[<GGUFValueType.FLOAT32: 6>] data=[3]
+DONE
