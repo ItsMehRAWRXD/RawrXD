@@ -1610,6 +1610,9 @@ static void gemv_q2_k_scalar(
             const block_q2_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
             float dmin = f16_to_f32(blk.dmin);
+            // NaN/Inf guard — match Q3_K pattern
+            if (!std::isfinite(d)) d = 0.0f;
+            if (!std::isfinite(dmin)) dmin = 0.0f;
             size_t base = b * 256;
             size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
             if (elemsInBlock == 0) break;

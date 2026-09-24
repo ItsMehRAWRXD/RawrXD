@@ -196,7 +196,12 @@ InferenceGateResult runLocalInferenceGate()
 {
     InferenceGateResult result;
     // Prefer the real model for genuine tokenizer admission; fall back to test model.
-    result.modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
+    result.modelPath = "D:\\rawrxd\\llama3.2-3b-Q2_K.gguf";
+    {
+        DWORD attribsReal = GetFileAttributesA(result.modelPath.c_str());
+        if (attribsReal == INVALID_FILE_ATTRIBUTES || (attribsReal & FILE_ATTRIBUTE_DIRECTORY))
+            result.modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
+    }
     {
         DWORD attribsReal = GetFileAttributesA(result.modelPath.c_str());
         if (attribsReal == INVALID_FILE_ATTRIBUTES || (attribsReal & FILE_ATTRIBUTE_DIRECTORY))
@@ -370,6 +375,19 @@ InferenceGateResult runLocalInferenceGate()
     result.deep2EntryUsed = true;
     result.kvCacheInit = true;
     result.backendCreateOk = true;
+
+    // ── 4b. Vulkan backend selection ────────────────────────────────────
+    {
+        const char* envDisableVulkan = std::getenv("DEEP2_DISABLE_VULKAN");
+        bool disableVulkan = (envDisableVulkan && envDisableVulkan[0] == '1');
+        if (disableVulkan) {
+            engine.enableVulkan(false);
+            engine.setVulkanStrictNoCpuFallback(false);
+        } else {
+            engine.enableVulkan(true);
+            engine.setVulkanStrictNoCpuFallback(false);
+        }
+    }
 
     // RAWRXD_MODEL_ADMISSION_DIAG_001 fields (static values for this gate)
     result.modelLoader    = "Deep2";

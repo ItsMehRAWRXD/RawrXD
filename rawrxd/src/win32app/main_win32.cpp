@@ -7,6 +7,7 @@
 #include <thread>
 #include "ide_inference_gate.hpp"
 #include "ide_agentic_gate.hpp"
+#include "closure/RawrXDAutoClosure.hpp"
 
 // Forward declarations for gate modules
 namespace RawrXD::IDE {
@@ -38,6 +39,7 @@ struct StartupOptions {
     std::wstring receiptPath;
     uint32_t phase1TimeoutMs = 600000;
     uint32_t phase2TimeoutMs = 300000;
+    std::string modelPath;   // --model=... override (UTF-8)
 };
 
 static StartupOptions g_startupOptions;
@@ -310,11 +312,23 @@ static void runInferenceGate()
 // ---------------------------------------------------------------------------
 static void runAgenticGate()
 {
-    appendOutputLine("=== RAWRXD_WIN32IDE_AGENT_001 ===");
-    appendOutputLine("IDE_LAUNCH=PASS");
+    RawrXD::IDE::AgenticGateResult r;
+    try {
+        appendOutputLine("=== RAWRXD_WIN32IDE_AGENT_001 ===");
+        appendOutputLine("IDE_LAUNCH=PASS");
 
-    RawrXD::IDE::AgenticGateResult r = RawrXD::IDE::runAgenticGate();
+        r = RawrXD::IDE::runAgenticGate();
+    } catch (const std::exception& e) {
+        if (r.failStage.empty()) r.failStage = "EXCEPTION";
+        r.failCode = -1;
+        r.diagnostics = std::string("Outer exception: ") + e.what();
+    } catch (...) {
+        if (r.failStage.empty()) r.failStage = "UNKNOWN_EXCEPTION";
+        r.failCode = -1;
+        r.diagnostics = "Outer unknown exception in runAgenticGate.";
+    }
 
+    // ── Emit diagnostics ───────────────────────────────────────────
     appendOutputLine("COMMAND_DISPATCH=PASS");
     appendOutputLine(std::string("STREAMER_BUILT=") + (r.streamerBuilt ? "PASS" : "FAIL"));
     appendOutputLine(std::string("ENGINE_INIT=") + (r.engineInitOk ? "PASS" : "FAIL"));
@@ -353,7 +367,7 @@ static void runAgenticGate()
     appendOutputLine(std::string("VERDICT=") + (allOk ? "PASS" : "FAIL"));
     appendOutputLine("");
 
-    // Write certification receipt
+    // ── Write certification receipt UNCONDITIONALLY ──────────────────
     {
         std::string receiptDir = getExeDir();
         if (!receiptDir.empty()) receiptDir += "\\";
@@ -361,6 +375,13 @@ static void runAgenticGate()
         HANDLE hFile = CreateFileA(
             receiptPath.c_str(),
             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            // Fallback: try writing to current working directory
+            receiptPath = "cert_receipt_agentic.txt";
+            hFile = CreateFileA(
+                receiptPath.c_str(),
+                GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        }
         if (hFile != INVALID_HANDLE_VALUE) {
             std::string receipt = "=== RAWRXD_WIN32IDE_AGENT_001 ===\r\n";
             receipt += "IDE_LAUNCH=PASS\r\n";
@@ -396,6 +417,10 @@ static void runAgenticGate()
                 receipt += std::string("FAIL_STAGE=") + r.failStage + "\r\n";
                 receipt += std::string("FAIL_CODE=") + std::to_string(r.failCode) + "\r\n";
                 receipt += std::string("FAIL_MESSAGE=") + r.diagnostics + "\r\n";
+            } else {
+                receipt += "FAIL_STAGE=NONE\r\n";
+                receipt += "FAIL_CODE=0\r\n";
+                receipt += "FAIL_MESSAGE=\r\n";
             }
             receipt += "=== MODEL_STREAM_BEGIN ===\r\n";
             receipt += r.streamedText;
@@ -499,6 +524,11 @@ static int runAutorunGate(AutoRunMode mode)
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     (void)hPrevInstance;
+
+    // RAWRXD_AUTOCLOSURE_001 — bounded autonomous CLI path before GUI startup.
+    if (RawrXD::AutoClosure::CommandLineRequested()) {
+        return RawrXD::AutoClosure::RunFromCurrentCommandLine();
+    }
 
     // Parse command line for autorun / cert mode
     int argc = 0;

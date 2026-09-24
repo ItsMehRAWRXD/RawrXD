@@ -242,6 +242,7 @@ struct Deep2MultiGpuLayerPlan {
 inline bool Deep2MultiGpu_SlotIsCpu(
     const Deep2MultiGpuLayerPlan& p, int slot) noexcept
 {
+    if (!p.active) return false;   // inactive plan = single-GPU, not CPU
     return slot < 0 ||
            static_cast<size_t>(slot) >= p.slotKind.size() ||
            p.slotKind[static_cast<size_t>(slot)] == MultiGpuSlotKind::CPU;

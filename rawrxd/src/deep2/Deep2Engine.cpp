@@ -43,6 +43,23 @@ static void rmsnorm(float* out, const float* in, const float* weight,
 // =================== HELPER: SiLU ====================
 static float silu(float x) { return x / (1.0f + std::exp(-x)); }
 
+// =================== HELPER: GELU (tanh approximation) ====================
+static float geluTanh(float x) {
+    // GeLU approximation: 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+    const float c = 0.044715f;
+    const float sqrt2OverPi = 0.7978845608f;
+    float t = sqrt2OverPi * (x + c * x * x * x);
+    return 0.5f * x * (1.0f + std::tanh(t));
+}
+
+// =================== HELPER: GeGLU (GELU-based gated activation) ====================
+static void geglu(const float* gate, const float* up, float* output, size_t dim) {
+    if (!gate || !up || !output || dim == 0) return;
+    for (size_t i = 0; i < dim; ++i) {
+        output[i] = geluTanh(gate[i]) * up[i];
+    }
+}
+
 // =================== HELPER: Softmax ====================
 static void softmax(float* x, size_t n) {
     if (!x || n == 0) return;
@@ -738,17 +755,26 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
     //   GPT-J adjacent:    gpt-neox/phi (legacy GGUF conversions)
     const bool archIsNeoxRoPE =
         arch == "llama" || arch == "qwen" || arch == "qwen2" ||
-        arch == "mistral" || arch == "gemma" || arch == "gemma2" ||
-        arch == "gemma3" || arch == "baichuan" || arch == "yi" ||
+        arch == "mistral" || arch == "baichuan" || arch == "yi" ||
         arch == "olmo" || arch == "starchat" || arch == "replit" ||
         arch == "refact" || arch == "stablelm" || arch == "deepseek2";
     modelWeights.ropeNeoxStyle = archIsNeoxRoPE;
     if (const char* overrideStyle = std::getenv("DEEP2_ROPE_GPTJ")) {
         if (overrideStyle[0] == '1') modelWeights.ropeNeoxStyle = false;
     }
+    // Diagnostic: log chosen RoPE style for first-run verification
+    {
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "ROPE_STYLE arch=" << arch << " neox=" << (modelWeights.ropeNeoxStyle ? "yes" : "no") << "\n";
+    }
 
     const size_t modelContext = metaSize("context_length", 0);
-    if (modelContext > 0) config.maxSeqLen = modelContext;
+    if (modelContext > 0) {
+        // Respect caller-configured maxSeqLen (e.g., inference gate), but
+        // also clamp to the model's declared context length.
+        if (config.maxSeqLen == 0 || modelContext < config.maxSeqLen)
+            config.maxSeqLen = modelContext;
+    }
 
     // Global output tensors.
     bindFirst(modelWeights.finalNorm,
@@ -797,6 +823,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         bindTensor(p + "ffn_up.weight", lw.wUp);
         bindTensor(p + "ffn_down.weight", lw.wDown);
         bindTensor(p + "ffn_norm.weight", lw.ffnNorm);
+        bindTensor(p + "attn_post_norm.weight", lw.attnPostNorm);
+        bindTensor(p + "ffn_post_norm.weight", lw.ffnPostNorm);
 
         // Batch 8: real MoE router + expert tensor binding.
         bindFirst(lw.moeRouter,
@@ -1501,12 +1529,19 @@ bool Deep2Engine::embedToken(int tokenId, float* output) {
 
     const auto* src = static_cast<const uint8_t*>(wt.data) + offset;
     dequant(src, output, H);
+
+    // Gemma3: scale embeddings by sqrt(hiddenDim)
+    if (modelArchitecture_ == "gemma3") {
+        const float scale = std::sqrt(static_cast<float>(H));
+        for (size_t i = 0; i < H; ++i) output[i] *= scale;
+    }
+
     parityEmit(ParityCheckpoint::Embed, output, H);
     return finiteVector(output, H);
 }
 
 bool Deep2Engine::embedTokensBatch(
-    const int* tokenIds,size_t count,float* outputBatch)
+    const int32_t* tokenIds,size_t count,float* outputBatch)
 {
     if(!tokenIds||!outputBatch||count==0||count>4||
        modelWeights.hiddenDim==0)
@@ -1768,6 +1803,24 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         throw std::runtime_error("LinearW: no registered GEMV kernel");
     }
 
+    // Diagnostic: log input statistics before GEMV
+    float inMin =  std::numeric_limits<float>::infinity();
+    float inMax = -std::numeric_limits<float>::infinity();
+    size_t inBad = SIZE_MAX;
+    for (size_t i = 0; i < cols; ++i) {
+        if (!std::isfinite(input[i])) { inBad = i; break; }
+        if (input[i] < inMin) inMin = input[i];
+        if (input[i] > inMax) inMax = input[i];
+    }
+    if (deep2ForwardTraceEnabled()) {
+        std::fprintf(stderr,
+            "LINEAR_CPU_BEGIN name=%s type=%d rows=%zu cols=%zu "
+            "inputFinite=%d inputBad=%zu inputMin=%.9g inputMax=%.9g\n",
+            wtn, wt.type, rows, cols,
+            (inBad == SIZE_MAX) ? 1 : 0, inBad, inMin, inMax);
+        std::fflush(stderr);
+    }
+
     std::memset(output, 0, outDim * sizeof(float));
     kernel(static_cast<const uint8_t*>(wt.data), input, output, rows, cols);
 
@@ -1775,7 +1828,22 @@ void Deep2Engine::LinearW(const WeightTensor& wt,
         for (size_t i = 0; i < outDim; ++i) output[i] += bias[i];
     }
 
-    if (!finiteVector(output, outDim)) {
+    size_t outBad = SIZE_MAX;
+    float outMin =  std::numeric_limits<float>::infinity();
+    float outMax = -std::numeric_limits<float>::infinity();
+    for (size_t i = 0; i < outDim; ++i) {
+        if (!std::isfinite(output[i])) { outBad = i; break; }
+        if (output[i] < outMin) outMin = output[i];
+        if (output[i] > outMax) outMax = output[i];
+    }
+    if (outBad != SIZE_MAX) {
+        if (deep2ForwardTraceEnabled()) {
+            std::fprintf(stderr,
+                "LINEAR_CPU_NONFINITE name=%s type=%d firstBadIdx=%zu value=%.9g\n",
+                wtn, wt.type, outBad,
+                outBad < outDim ? output[outBad] : 0.0f);
+            std::fflush(stderr);
+        }
         throw std::runtime_error("LinearW: non-finite output");
     }
 }
@@ -1936,6 +2004,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     }
     computeAttention(layer, layerTemp, attentionOutput, seqLen);
 
+    // Gemma3: post-attention norm before residual add
+    if (modelArchitecture_ == "gemma3") {
+        if (!lw.attnPostNorm.data)
+            throw std::runtime_error("forwardLayer: missing attn_post_norm for gemma3");
+        RMSNormW(lw.attnPostNorm, attentionOutput, attentionOutput, H, modelWeights.normEps);
+    }
+
     for (size_t i = 0; i < H; ++i) {
         output[i] = input[i] + attentionOutput[i];
     }
@@ -1961,6 +2036,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
 
     if (!finiteVector(ffnOutput, H)) {
         throw std::runtime_error("forwardLayer: non-finite FFN output");
+    }
+
+    // Gemma3: post-FFN norm before residual add
+    if (modelArchitecture_ == "gemma3") {
+        if (!lw.ffnPostNorm.data)
+            throw std::runtime_error("forwardLayer: missing ffn_post_norm for gemma3");
+        RMSNormW(lw.ffnPostNorm, ffnOutput, ffnOutput, H, modelWeights.normEps);
     }
 
     for (size_t i = 0; i < H; ++i) output[i] += ffnOutput[i];
@@ -2197,7 +2279,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input,
     }
 }
 
-// =================== FFN (SwiGLU real) ====================
+// =================== FFN (SwiGLU / GeGLU real) ====================
 void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     (void)layer;
     size_t H = config.hiddenDim;
@@ -2205,7 +2287,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 
     const LayerWeights& lw = modelWeights.layers[layer];
     if (lw.wGate.data && lw.wUp.data && lw.wDown.data) {
-        // Real SwiGLU: gate = Wg @ x, up = Wu @ x
+        // Real SwiGLU / GeGLU: gate = Wg @ x, up = Wu @ x
         const WeightTensor* guW[2]={&lw.wGate,&lw.wUp};
         float* guY[2]={gateBuf,upBuf};
         if(!tryVulkanHostGEMVGroup(guW,guY,2,input,H)){
@@ -2217,10 +2299,16 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
         parityEmit(ParityCheckpoint::FfnUp,   upBuf,   I);
         parityEmitLayer(static_cast<int>(layer), "FFN_GATE", gateBuf, I);
         parityEmitLayer(static_cast<int>(layer), "FFN_UP",   upBuf,   I);
-        // silu(gate) * up
-        for (size_t i = 0; i < I; ++i) gateBuf[i] = silu(gateBuf[i]) * upBuf[i];
-        parityEmit(ParityCheckpoint::Swiglu, gateBuf, I);
-        parityEmitLayer(static_cast<int>(layer), "SWIGLU", gateBuf, I);
+        // Gemma3 uses GeGLU (GELU-based); everything else uses SiLU-based SwiGLU
+        if (modelArchitecture_ == "gemma3") {
+            geglu(gateBuf, upBuf, gateBuf, I);
+            parityEmit(ParityCheckpoint::Swiglu, gateBuf, I);
+            parityEmitLayer(static_cast<int>(layer), "GEGLU", gateBuf, I);
+        } else {
+            for (size_t i = 0; i < I; ++i) gateBuf[i] = silu(gateBuf[i]) * upBuf[i];
+            parityEmit(ParityCheckpoint::Swiglu, gateBuf, I);
+            parityEmitLayer(static_cast<int>(layer), "SWIGLU", gateBuf, I);
+        }
         // down = Wd @ gateBuf
         LinearW(lw.wDown, gateBuf, nullptr, output, H);
         parityEmit(ParityCheckpoint::FfnDown, output, H);
@@ -2569,8 +2657,24 @@ bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {
             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "FWD_RESIDENT_FIRST\n";
         }
-        if (tryGpuTokenForward(hidden))
+        if (tryGpuTokenForward(hidden)) {
+            {
+                size_t hiddenFinite = 0, hiddenNan = 0, hiddenInf = 0;
+                float hiddenMin = std::numeric_limits<float>::max();
+                float hiddenMax = -std::numeric_limits<float>::max();
+                for (size_t i = 0; i < config.hiddenDim; ++i) {
+                    const float v = hidden[i];
+                    if (std::isnan(v)) ++hiddenNan;
+                    else if (std::isinf(v)) ++hiddenInf;
+                    else { ++hiddenFinite; hiddenMin = std::min(hiddenMin, v); hiddenMax = std::max(hiddenMax, v); }
+                }
+                std::fprintf(stderr,
+                    "GPU_HIDDEN_POST_FORWARD finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                    hiddenFinite, hiddenNan, hiddenInf, hiddenMin, hiddenMax);
+                std::fflush(stderr);
+            }
             return true;
+        }
         std::fprintf(stderr,
             "[RESIDENT_FIRST] resident forward declined; "
             "falling back to dual-row lane\n");
@@ -2895,72 +2999,98 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
         if(specActive&&remaining>=2) {
-            if (deep2ForwardTraceEnabled()) {
-                {
-                    std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                    dbg << "SPEC_PATH_ENTER gen=" << generated << " rem=" << remaining << "\n";
-                }
-            }
-            std::vector<int32_t> proposals;
-            if (deep2ForwardTraceEnabled()) {
-                {
-                    std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                    dbg << "SPEC_BUILD_PROPOSALS_BEGIN\n";
-                }
-            }
-            (void)buildAdaptiveSpeculativeProposals(
-                hidden.data(),remaining,proposals);
-            if (deep2ForwardTraceEnabled()) {
-                {
-                    std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                    dbg << "SPEC_BUILD_PROPOSALS_END count=" << proposals.size() << "\n";
-                }
-            }
-            if(!proposals.empty()) {
-
-                std::vector<int32_t> verified;
+            try {
                 if (deep2ForwardTraceEnabled()) {
                     {
                         std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                        dbg << "SPEC_VSGW_BEGIN proposals=" << proposals.size() << "\n";
+                        dbg << "SPEC_PATH_ENTER gen=" << generated << " rem=" << remaining << "\n";
                     }
                 }
-                if(verifySpeculativeGreedyWindow(
-                        hidden.data(),proposals,remaining,verified)&&
-                   !verified.empty()) {
+                std::vector<int32_t> proposals;
+                if (deep2ForwardTraceEnabled()) {
+                    {
+                        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                        dbg << "SPEC_BUILD_PROPOSALS_BEGIN\n";
+                    }
+                }
+                (void)buildAdaptiveSpeculativeProposals(
+                    hidden.data(),remaining,proposals);
+                if (deep2ForwardTraceEnabled()) {
+                    {
+                        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                        dbg << "SPEC_BUILD_PROPOSALS_END count=" << proposals.size() << "\n";
+                    }
+                }
+                if(!proposals.empty()) {
+
+                    std::vector<int32_t> verified;
                     if (deep2ForwardTraceEnabled()) {
                         {
                             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                            dbg << "SPEC_VSGW_END verified=" << verified.size() << "\n";
+                            dbg << "SPEC_VSGW_BEGIN proposals=" << proposals.size() << "\n";
                         }
                     }
-                    bool stop=false;
-                    for(int32_t tok:verified) {
-                        if(generated>=decodeLimit) break;
-                        outputTokens[generated++]=tok;
-                        medusaDecoder_->observe(tok);
-                        if(onToken&&!onToken(tok)) {stop=true;break;}
+                    if(verifySpeculativeGreedyWindow(
+                            hidden.data(),proposals,remaining,verified)&&
+                       !verified.empty()) {
+                        if (deep2ForwardTraceEnabled()) {
+                            {
+                                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                                dbg << "SPEC_VSGW_END verified=" << verified.size() << "\n";
+                            }
+                        }
+                        if(medusaDecoder_) {
+                            ++medusaDecoder_->stats.exact.speculativeWindowsSucceeded;
+                        }
+                        bool stop=false;
+                        for(int32_t tok:verified) {
+                            if(generated>=decodeLimit) break;
+                            outputTokens[generated++]=tok;
+                            medusaDecoder_->observe(tok);
+                            if(onToken&&!onToken(tok)) {stop=true;break;}
+                        }
+                        if(!verified.empty()) {
+                            pendingToken=verified.back();
+                            pendingForward=true;
+                        }
+                        if(stop) break;
+                        continue;
+                    } else {
+                        if (deep2ForwardTraceEnabled()) {
+                            {
+                                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                                dbg << "SPEC_VSGW_FAILED_OR_EMPTY\n";
+                            }
+                        }
                     }
-                    if(!verified.empty()) {
-                        pendingToken=verified.back();
-                        pendingForward=true;
-                    }
-                    if(stop) break;
-                    continue;
                 } else {
                     if (deep2ForwardTraceEnabled()) {
                         {
                             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                            dbg << "SPEC_VSGW_FAILED_OR_EMPTY\n";
+                            dbg << "SPEC_NO_PROPOSALS\n";
                         }
                     }
                 }
-            } else {
+            } catch(const std::exception& e) {
                 if (deep2ForwardTraceEnabled()) {
                     {
                         std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
-                        dbg << "SPEC_NO_PROPOSALS\n";
+                        dbg << "SPEC_EXCEPTION_FALLBACK gen=" << generated << " exc=" << e.what() << "\n";
                     }
+                }
+                if(medusaDecoder_) {
+                    ++medusaDecoder_->stats.exact.exceptionFallbacks;
+                    ++medusaDecoder_->stats.exact.proposalExceptions;
+                }
+            } catch(...) {
+                if (deep2ForwardTraceEnabled()) {
+                    {
+                        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                        dbg << "SPEC_UNKNOWN_EXCEPTION_FALLBACK gen=" << generated << "\n";
+                    }
+                }
+                if(medusaDecoder_) {
+                    ++medusaDecoder_->stats.exact.exceptionFallbacks;
                 }
             }
         }
@@ -2969,6 +3099,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "GEN_COMPUTE_LOGITS_ENTER gen=" << generated << "\n";
         }
+        std::fprintf(stderr, "FINAL_NORM_ENTER\n"); std::fflush(stderr);
         try {
             computeLogits(hidden.data(), logits);
         } catch (const std::exception& e) {
@@ -2981,6 +3112,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         {
             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
             dbg << "GEN_COMPUTE_LOGITS_OK gen=" << generated << "\n";
+        }
+        std::fprintf(stderr, "COMPUTE_LOGITS_RETURNED\n"); std::fflush(stderr);
+        {
+            size_t finite = 0, nan = 0, inf = 0;
+            float logitMin = std::numeric_limits<float>::max();
+            float logitMax = -std::numeric_limits<float>::max();
+            for (size_t i = 0; i < config.vocabSize; ++i) {
+                const float v = logits[i];
+                if (std::isnan(v)) ++nan;
+                else if (std::isinf(v)) ++inf;
+                else { ++finite; logitMin = std::min(logitMin, v); logitMax = std::max(logitMax, v); }
+            }
+            std::fprintf(stderr,
+                "LOGITS_SANITY count=%zu finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (size_t)config.vocabSize, finite, nan, inf, logitMin, logitMax);
+            std::fflush(stderr);
         }
         // Step label was set by the prefill loop (step 0) or by the decode
         // parityBeginStep(promptLen+i-1) before this token's forward pass.
@@ -3016,6 +3163,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
         auto tSample0 = std::chrono::steady_clock::now();
         const int nextTok = sampleToken(logits);
+        std::fprintf(stderr, "SAMPLER_RESULT token=%d vocab=%zu\n", nextTok, (size_t)config.vocabSize);
+        std::fflush(stderr);
         auto tSample1 = std::chrono::steady_clock::now();
         {
             std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);

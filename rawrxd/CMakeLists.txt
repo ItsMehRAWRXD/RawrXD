@@ -6759,6 +6759,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(REMOVE_ITEM _WIN32IDE_ASM
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
+    list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 
@@ -7530,6 +7531,26 @@ if(BUILD_DEEP2_TOKEN_GATE)
     )
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
+
+# test_q2k_single_tensor_oracle — Minimal Q2_K GEMV oracle
+add_executable(test_q2k_single_tensor_oracle
+    src/deep2/test_q2k_single_tensor_oracle.cpp
+)
+target_link_libraries(test_q2k_single_tensor_oracle PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(test_q2k_single_tensor_oracle PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(test_q2k_single_tensor_oracle PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(test_q2k_single_tensor_oracle PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_q2k_single_tensor_oracle
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle")
 
 # test_q4k_gemv_parity +�-�+�-�+�-� BATCH2_Q4K_GEMV_001 standalone cert
 option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" OFF)

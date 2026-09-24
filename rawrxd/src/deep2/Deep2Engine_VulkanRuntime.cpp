@@ -476,14 +476,27 @@ uint64_t Deep2Engine::vulkanSlotQueueSubmits(unsigned slot) const {
 }
 
 bool Deep2Engine::tryGpuTokenForward(float* hidden) {
+    std::fprintf(stderr, "GPU_FORWARD_ENTER hidden=%p loaded=%u vulkanEnabled=%u init=%u devices=%u layers=%u\n",
+        (void*)hidden,
+        modelWeights.loaded?1u:0u,
+        vulkanEnabled_?1u:0u,
+        vulkanInitialized_?1u:0u,
+        (unsigned)vulkanDevices_.size(),
+        (unsigned)modelWeights.numLayers);
     if (!hidden || !modelWeights.loaded || !vulkanEnabled_ ||
         !vulkanInitialized_ || vulkanDevices_.empty() ||
-        modelWeights.numLayers==0)
+        modelWeights.numLayers==0) {
+        std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=GUARD reason=init_or_hidden\n");
         return false;
+    }
 
-    for (auto& d : vulkanDevices_) {
-        if (!d || !d->initialized() || !d->computeReady())
+    for (size_t i=0;i<vulkanDevices_.size();++i) {
+        auto& d = vulkanDevices_[i];
+        if (!d || !d->initialized() || !d->computeReady()) {
+            std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=DEVICE_CHECK device=%zu init=%u ready=%u\n",
+                i, (d&&d->initialized())?1u:0u, (d&&d->computeReady())?1u:0u);
             return false;
+        }
         d->SetWorkEpoch(kvCache?kvCache->currentLength():0);
     }
 
@@ -491,16 +504,48 @@ bool Deep2Engine::tryGpuTokenForward(float* hidden) {
     bool ok=false;
 
     if (vulkanDevices_.size()>1 && multiGpuLayerPlan_.active) {
+        std::fprintf(stderr, "GPU_FORWARD_STAGE=MULTIMAP\n");
         ok=forwardGpuMultiMap(hidden,out.data());
     } else {
+        std::fprintf(stderr, "GPU_FORWARD_STAGE=CONTIGUOUS_RANGE\n");
         ok=forwardGpuContiguousRange(
             0,0,static_cast<uint32_t>(modelWeights.numLayers-1),
             hidden,out.data());
     }
 
-    if (!ok) return false;
+    if (!ok) {
+        std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=RANGE_OR_MULTIMAP\n");
+        return false;
+    }
     std::memcpy(hidden,out.data(),config.hiddenDim*sizeof(float));
+
+    // Fail-closed: hidden state must be finite after GPU resident forward.
+    // This catches numerical errors before they propagate to computeLogits.
+    {
+        size_t hiddenFinite = 0, hiddenNan = 0, hiddenInf = 0;
+        float hiddenMin = std::numeric_limits<float>::max();
+        float hiddenMax = -std::numeric_limits<float>::max();
+        for (size_t i = 0; i < config.hiddenDim; ++i) {
+            const float v = hidden[i];
+            if (std::isnan(v)) ++hiddenNan;
+            else if (std::isinf(v)) ++hiddenInf;
+            else { ++hiddenFinite; hiddenMin = std::min(hiddenMin, v); hiddenMax = std::max(hiddenMax, v); }
+        }
+        std::fprintf(stderr,
+            "GPU_FORWARD_FINITE_CHECK finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+            hiddenFinite, hiddenNan, hiddenInf, hiddenMin, hiddenMax);
+        std::fflush(stderr);
+        if (hiddenNan > 0 || hiddenInf > 0) {
+            std::fprintf(stderr,
+                "GPU_FORWARD_FAIL_STAGE=HIDDEN_NONFINITE nan=%zu inf=%zu\n",
+                hiddenNan, hiddenInf);
+            std::fflush(stderr);
+            return false;
+        }
+    }
+
     gpuFwdCommitted_=true;
+    std::fprintf(stderr, "GPU_FORWARD_OK\n");
     return true;
 }
 

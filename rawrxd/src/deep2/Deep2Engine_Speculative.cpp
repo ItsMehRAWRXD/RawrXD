@@ -63,20 +63,22 @@ bool Deep2Engine::proposeSelfSpeculativeGreedy(
     if(!depth) return false;
 
     // First proposal is exact: it comes from the current FULL target hidden.
-    std::vector<float> lg(modelWeights.vocabSize);
-    computeLogits(currentHidden,lg.data());
-    int tok=greedyArgmax(lg.data(),lg.size());
+    specWs_.logits.resize(modelWeights.vocabSize);
+    float* lg=specWs_.logits.data();
+    computeLogits(currentHidden,lg);
+    int tok=greedyArgmax(lg,modelWeights.vocabSize);
     if(tok<0) return false;
     proposals.push_back(tok);
     if(maxDraft==1) return true;
 
     const size_t base=kvCache->currentLength();
     KVSpecTransaction tx(*kvCache);
-    std::vector<float> h(modelWeights.hiddenDim);
+    specWs_.hidden.resize(modelWeights.hiddenDim);
+    float* h=specWs_.hidden.data();
 
     while(proposals.size()<maxDraft) {
         const int prev=proposals.back();
-        if(!embedToken(prev,h.data())) {
+        if(!embedToken(prev,h)) {
             tx.rollback(); return false;
         }
 
@@ -85,9 +87,9 @@ bool Deep2Engine::proposeSelfSpeculativeGreedy(
         const size_t seq=kvCache->currentLength()+1;
         try {
             for(uint32_t l=0;l<depth;++l) {
-                forwardLayer(l,h.data(),layerOut,seq);
+                forwardLayer(l,h,layerOut,seq);
                 std::memcpy(
-                    h.data(),layerOut,modelWeights.hiddenDim*sizeof(float));
+                    h,layerOut,modelWeights.hiddenDim*sizeof(float));
             }
         } catch(...) {
             tx.rollback(); return false;
@@ -96,8 +98,8 @@ bool Deep2Engine::proposeSelfSpeculativeGreedy(
             tx.rollback(); return false;
         }
 
-        computeLogits(h.data(),lg.data());
-        tok=greedyArgmax(lg.data(),lg.size());
+        computeLogits(h,lg);
+        tok=greedyArgmax(lg,modelWeights.vocabSize);
         if(tok<0) {
             tx.rollback(); return false;
         }
@@ -320,7 +322,7 @@ bool Deep2Engine::trySpecQ4KGroup(
 }
 
 bool Deep2Engine::forwardSpeculativeBlock(
-    const int* tokenIds,size_t count,size_t basePos,float* finalHiddenBatch)
+    const int32_t* tokenIds,size_t count,size_t basePos,float* finalHiddenBatch)
 {
     if(!tokenIds||!finalHiddenBatch||count==0||count>4||
        !modelWeights.loaded||modelWeights.isMoE||modelWeights.useMLA||
@@ -332,12 +334,16 @@ bool Deep2Engine::forwardSpeculativeBlock(
     const size_t HD=modelWeights.headDim;
     const size_t KD=NK*HD;
     const size_t I=modelWeights.intermediateDim;
+    const size_t qDim=NH*HD;
     if(!H||!NH||!NK||!HD||!I||NH%NK!=0||
        basePos+count>kvCache->capacity()||
        kvCache->currentLength()<basePos+count)
         return false;
 
     auto& ws=specWs_;
+    if(count > SIZE_MAX / H) return false;
+    if(count > SIZE_MAX / KD) return false;
+    if(count > SIZE_MAX / I) return false;
     ws.hidden.resize(count*H);
     ws.norm.resize(count*H);
     ws.q.resize(count*H);
@@ -392,7 +398,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
         const WeightTensor* qkvW[3]={&lw.wq,&lw.wk,&lw.wv};
         float* qkvO[3]={q,k,v};
         try{
-            LinearWBatch4(lw.wq,norm,count,bq,q,H);
+            LinearWBatch4(lw.wq,norm,count,bq,q,qDim);
             LinearWBatch4(lw.wk,norm,count,bk,k,KD);
             LinearWBatch4(lw.wv,norm,count,bv,v,KD);
         }catch(const std::exception& e){
@@ -419,7 +425,7 @@ bool Deep2Engine::forwardSpeculativeBlock(
             }
             if(config.useRoPE)
                 applyRoPE(qb,kb,HD,NH,NK,basePos+b,
-                          modelWeights.ropeTheta,
+                          ropeThetaForLayer(layer),
                           modelWeights.ropeScaling>0.0f
                               ? modelWeights.ropeScaling:1.0f);
 
@@ -577,10 +583,11 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
     if(B==0) return false;
 
     // First proposal can be rejected before running any speculative block.
-    std::vector<float> currentLogits(modelWeights.vocabSize);
+    specWs_.logits.resize(modelWeights.vocabSize);
+    float* currentLogits=specWs_.logits.data();
     std::fprintf(stderr,"VSGW_LOGITS_0_BEGIN\n"); std::fflush(stderr);
-    computeLogits(currentHidden,currentLogits.data());
-    const int first=greedyArgmax(currentLogits.data(),currentLogits.size());
+    computeLogits(currentHidden,currentLogits);
+    const int first=greedyArgmax(currentLogits,modelWeights.vocabSize);
     std::fprintf(stderr,"VSGW_LOGITS_0_END first=%d\n",first); std::fflush(stderr);
     if(first<0) return false;
     if(proposals[0]!=first) {
@@ -609,12 +616,14 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
     if(!kvCache->advanceBy(B)) { std::fprintf(stderr,"VSGW_ADVANCE_BY_FAIL\n"); std::fflush(stderr); return false; }
     std::fprintf(stderr,"VSGW_ADVANCE_BY_OK kv=%zu\n",kvCache->currentLength()); std::fflush(stderr);
 
-    std::vector<float> hiddenBatch(B*modelWeights.hiddenDim);
+    if(B > SIZE_MAX / modelWeights.hiddenDim) return false;
+    specWs_.hidden.resize(B*modelWeights.hiddenDim);
+    float* hiddenBatch=specWs_.hidden.data();
     const auto __b0=std::chrono::steady_clock::now();
     std::fprintf(stderr,"VSGW_FORWARD_BLOCK_BEGIN B=%zu base=%zu\n",B,base); std::fflush(stderr);
     if(!forwardSpeculativeBlock(
-            reinterpret_cast<const int*>(proposals.data()),
-            B,base,hiddenBatch.data())) {
+            proposals.data(),
+            B,base,hiddenBatch)) {
         std::fprintf(stderr,"VSGW_FORWARD_BLOCK_FAIL\n"); std::fflush(stderr);
         return false; // RAII rollback
     }
@@ -627,15 +636,16 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
 
     int32_t top1[4]{};
     std::fprintf(stderr,"VSGW_TOP1_BEGIN\n"); std::fflush(stderr);
-    if(!computeGreedyTop1Batch(hiddenBatch.data(),B,top1)) {
+    if(!computeGreedyTop1Batch(hiddenBatch,B,top1)) {
         std::fprintf(stderr,"VSGW_TOP1_FALLBACK\n"); std::fflush(stderr);
         // Exact fallback retains correctness; strict 85 authority will expose
         // zero GPU-top1 batches rather than silently minting the optimization.
-        std::vector<float> logitsBatch(B*modelWeights.vocabSize);
-        computeLogitsBatch(hiddenBatch.data(),B,logitsBatch.data());
+        if(B > SIZE_MAX / modelWeights.vocabSize) return false;
+        specWs_.logitsBatch.resize(B*modelWeights.vocabSize);
+        computeLogitsBatch(hiddenBatch,B,specWs_.logitsBatch.data());
         for(size_t j=0;j<B;++j)
             top1[j]=greedyArgmax(
-                logitsBatch.data()+j*modelWeights.vocabSize,
+                specWs_.logitsBatch.data()+j*modelWeights.vocabSize,
                 modelWeights.vocabSize);
     }
     std::fprintf(stderr,"VSGW_TOP1_END tok0=%d tok1=%d\n",(int)top1[0],B>1?(int)top1[1]:-1); std::fflush(stderr);
@@ -676,7 +686,7 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
     // currentHidden must describe the last KV-committed token. The final
     // replacement/bonus remains unforwarded, matching ordinary decode.
     std::memcpy(currentHidden,
-                hiddenBatch.data()+(accepted-1)*modelWeights.hiddenDim,
+                hiddenBatch+(accepted-1)*modelWeights.hiddenDim,
                 modelWeights.hiddenDim*sizeof(float));
 
     if(medusaDecoder_)

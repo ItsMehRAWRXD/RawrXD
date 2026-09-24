@@ -111,6 +111,10 @@ struct LayerWeights {
     WeightTensor attnQNorm;   // [headDim] per-head Q RMSNorm (Qwen3.5)
     WeightTensor attnKNorm;   // [headDim] per-head K RMSNorm (Qwen3.5)
 
+    // Gemma3 post-normalization (applied after attention / FFN and before residual)
+    WeightTensor attnPostNorm;  // [hiddenDim] RMSNorm weights
+    WeightTensor ffnPostNorm;   // [hiddenDim] RMSNorm weights
+
     // MLA (Multi-Latent Attention) — K2 factorized attention
     // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
     WeightTensor attnQ_a;        // [qLoraRank, hiddenDim]
@@ -721,7 +725,7 @@ public:
     // Token embedding lookup (public for tree speculative decoding)
     // Returns false on FATAL_EMBED (zero/nonfinite row). Callers must abort inference.
     bool embedToken(int tokenId, float* output);
-    bool embedTokensBatch(const int* tokenIds, size_t count, float* outputBatch);
+    bool embedTokensBatch(const int32_t* tokenIds, size_t count, float* outputBatch);
 
     // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
     void computeLogits(const float* hiddenState, float* logits);
