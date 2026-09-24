@@ -68,7 +68,7 @@ public:
 
     // Decode: decompress entry → FP32 KV head
     bool decode(int layer, size_t seqPos, size_t head,
-                float* dst, size_t count) const;
+                float* dst, size_t count);
 
     // Touch: update LRU order without decode
     bool touch(int layer, size_t seqPos, size_t head);

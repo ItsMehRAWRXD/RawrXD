@@ -184,7 +184,7 @@ bool CompressedKVCache::encode(int layer, size_t seqPos, size_t head,
 }
 
 bool CompressedKVCache::decode(int layer, size_t seqPos, size_t head,
-                               float* dst, size_t count) const {
+                               float* dst, size_t count) {
     if (!initialized_.load() || !dst || count == 0) return false;
     auto t0 = std::chrono::high_resolution_clock::now();
 
@@ -203,7 +203,7 @@ bool CompressedKVCache::decode(int layer, size_t seqPos, size_t head,
     }
     auto lit = lruMap_.find(key);
     if (lit != lruMap_.end()) {
-        const_cast<decltype(lru_)>&(lru_).splice(lru_.begin(), const_cast<decltype(lru_)>&(lru_), lit->second);
+        lru_.splice(lru_.begin(), lru_, lit->second);
     }
 
     switch (cfg_.quantType) {
@@ -224,7 +224,7 @@ bool CompressedKVCache::decode(int layer, size_t seqPos, size_t head,
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    const_cast<CompressedKVCache*>(this)->recordDecodeLatency(
+    recordDecodeLatency(
         static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count()));
     return true;
 }
