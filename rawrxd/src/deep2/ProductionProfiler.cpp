@@ -47,8 +47,7 @@ void ProductionProfiler::reset() {
 void ProductionProfiler::onModelSwitch(uint64_t newEpoch) {
     std::lock_guard<std::mutex> lock(mtx_);
     if (activeToken_) {
-        // Abort active profile on model switch
-        flushActiveProfile();
+        // discard active profile on model switch
         ++counters_.tokensAborted;
         activeToken_ = false;
     }
@@ -62,7 +61,7 @@ void ProductionProfiler::setEnabled(bool enable) {
     if (!enable) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (activeToken_) {
-            flushActiveProfile();
+            // discard active profile on disable
             ++counters_.tokensAborted;
             activeToken_ = false;
         }
@@ -144,7 +143,7 @@ void ProductionProfiler::abortToken(uint32_t tokenId) {
         return; // mismatched token id
     }
 
-    flushActiveProfile();
+    // discard active profile; do not add to history
     ++counters_.tokensAborted;
     activeToken_ = false;
 }

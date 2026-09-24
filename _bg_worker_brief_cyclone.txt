@@ -1,0 +1,35 @@
+=== DEEP2_LAYER0_CYCLONE_001 — BACKGROUND WORKER BRIEF ===
+OBJECTIVE: Close CycloneScheduler as a Layer-0 provider per completion rule:
+  REAL IMPLEMENTATION PRESENT + CALLER WIRED TO IT + REFERENCE / UNIT / RUNTIME TEST PASSES + OLD FALLBACK OR PLACEHOLDER PATH REMOVED.
+
+SOURCE-AUTHORITY PREFLIGHT (already verified):
+- ElasticResidencyManager real impl present in src/deep2/ (header + cpp).
+- Elastic GPU-forward caller passes real tensor names (not nullptr,0).
+- Elastic in strict Win32IDE build graph.
+
+CURRENT STATE:
+- CycloneScheduler.hpp: real header (state machine, timing, prefetch decisions).
+- CycloneScheduler.cpp: real implementation (~210 lines).
+- GpuForwardChildLadder.hpp: LivePath adapter real with OnLayerAbort.
+- Deep2Engine.cpp: enableCyclone() implemented (single definition at line ~3132 after removing duplicate earlier).
+- Deep2Engine_GpuForward.cpp: passes real duration to LivePath_OnLayerEnd; fail() calls LivePath_OnLayerAbort.
+- CMakeLists.txt: RawrXD-Win32IDE-Tests target added, CycloneScheduler.cpp linked.
+- test_layer0_providers.cpp: CycloneScheduler unit tests added.
+
+EDITS JUST MADE to test_layer0_providers.cpp to fix two assertion mismatches:
+  1) onModelSwitch(4,1) → CHECK(cyc.currentEpoch() == 1) [epoch param 0 means use internal epoch_ which starts at 1; onModelSwitch increments epoch_ only if epoch != 0].
+  2) decidePrefetch(0,0) returns d.layer == nextLayer (0), not nextLayer+1.
+
+REMAINING WORK FOR THIS WORKER:
+1. Build the strict Win32IDE Release target (RawrXD-Win32IDE-Tests) via:
+   cmake --build f:\~dev\rawrxd\win32ide_strict\build_v4 --config Release --target RawrXD-Win32IDE-Tests
+2. Run the test executable:
+   f:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE-Tests.exe
+3. If any failures remain, inspect logs, edit test assertions or implementation as needed, rebuild, rerun until 0 failures.
+4. Verify no CycloneScheduler stub references remain in the codebase (grep for "STUB.*CycloneScheduler", "CycloneScheduler.*STUB", "TODO.*CycloneScheduler", "FIXME.*CycloneScheduler").
+5. Verify CycloneScheduler.cpp is in strict CMake target and Deep2Engine.cpp calls it.
+6. Produce exact DEEP2_LAYER0_CYCLONE_001 receipt file at f:\~dev\DEEP2_LAYER0_CYCLONE_001.txt with build evidence, test pass count, source hash summary, and the exact certification format.
+
+SCOPE FREEZE: Do NOT begin ProductionProfiler, NVMeStream, BP16Streamer, CompressedKVCache, MARSController, or any Layer-1 work.
+
+FAIL-CLOSED LAW: NOT_RUN != PASS. Do not invent PASS. Build must compile, tests must run, receipt must contain real evidence.

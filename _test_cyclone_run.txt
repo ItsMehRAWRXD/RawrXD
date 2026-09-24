@@ -1,0 +1,26 @@
+=== CycloneScheduler Runtime Certification ===
+
+[TEST 1] reset
+  PASS
+[TEST 2] onModelSwitch
+  PASS
+[TEST 3] layer start/end
+  PASS
+[TEST 4] invalid transition (double start)
+  PASS
+[TEST 5] abort
+  PASS
+[TEST 6] timing stats
+  PASS: ema0=1000000 ema3=4000000
+[TEST 7] decidePrefetch no history
+  PASS: shouldPrefetch=1 lead=1
+[TEST 8] decidePrefetch last layer
+  PASS
+[TEST 9] decidePrefetch with history
+  PASS: priority=2
+[TEST 10] stats counters
+  PASS: starts=8 ends=8
+
+=== Results ===
+FAILURES: 0
+VERDICT: PASS

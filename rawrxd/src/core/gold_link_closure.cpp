@@ -1078,48 +1078,12 @@ public:
 
 // ============================================================================
 // Batch 7: TransitionState, Chamber, PlasmaGovernor stubs
+// REMOVED — real implementations now provided by:
+//   src/deep2/Chamber.hpp, src/deep2/Chamber.cpp
+//   src/deep2/PlasmaGovernor.hpp, src/deep2/PlasmaGovernor.cpp
+//   src/deep2/ToroidalKVCache.hpp, src/deep2/ToroidalKVCache.cpp
+//   src/deep2/SovereignOutOfCoreRuntime.hpp (via PlasmaGovernor.hpp)
 // ============================================================================
-
-namespace rawrxd {
-
-class TransitionState {
-public:
-    static uint64_t hashHiddenState(const float*, size_t) { return 0; }
-};
-
-enum class ChamberResult { Ok = 0, Fail = 1 };
-struct FormulaRoute { int id = 0; };
-
-class Chamber {
-public:
-    Chamber() = default;
-    ChamberResult evaluate(const float*, size_t) { return ChamberResult::Ok; }
-    FormulaRoute routePrimitive(size_t) const { return FormulaRoute{}; }
-};
-
-struct PlasmaToken {};
-
-class ToroidalKVCache {
-public:
-    ToroidalKVCache(size_t, size_t, size_t, size_t) {}
-    bool injectToken(const PlasmaToken&, const float*, const float*) { return true; }
-    bool queryTokenRange(size_t, size_t, const float*&, const float*&, size_t&) const { return false; }
-};
-
-struct ThermalState { float temp = 0.0f; };
-
-class PlasmaGovernor {
-public:
-    PlasmaGovernor() = default;
-    void updateThermalState(const ThermalState&) {}
-    float currentThrottle() const { return 1.0f; }
-    bool needsCoolingPause() const { return false; }
-    unsigned int coolingPauseMicros() const { return 0; }
-};
-
-// REMOVED: SovereignOutOfCoreRuntime stub - now provided by src/deep2/SovereignOutOfCoreRuntime.cpp
-
-} // namespace rawrxd
 
 // ============================================================================
 // Batch 8: Deep2_Q6_K_GEMV stub

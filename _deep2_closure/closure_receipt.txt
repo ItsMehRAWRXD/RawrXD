@@ -1,0 +1,8 @@
+DEEP2_ENGINE_SOURCE_CLOSURE_001
+ORIGINAL_BYTES=122640
+COMPLETED_BYTES=126531
+PATCH_BYTES=13046
+EXPLICIT_STUB_WORD_MATCHES_AFTER_PATCH=1
+2144:             "computeFFN: dense FFN tensors are not fully bound; synthetic fallback is forbidden");
+PROVIDER_BOUNDARIES_FAIL_CLOSED=PASS
+NOTE=Not compile-certified because the supplied conversation did not include the live local Deep2Engine.h/provider headers.

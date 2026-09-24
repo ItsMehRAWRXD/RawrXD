@@ -25,41 +25,33 @@ endif()
 # ============================================================================
 
 if(NASM_EXECUTABLE)
-<<<<<<< HEAD
-    set(MASM_SOLO_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/masm/masm_solo_compiler.asm)
-=======
     set(MASM_SOLO_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/masm/masm_solo_compiler_fixed.asm)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     set(MASM_SOLO_OBJ ${CMAKE_CURRENT_BINARY_DIR}/masm_solo_compiler.obj)
-    
+
     add_custom_command(
         OUTPUT ${MASM_SOLO_OBJ}
-        COMMAND ${NASM_EXECUTABLE} -f win64 
+        COMMAND ${NASM_EXECUTABLE} -f win64
                 ${MASM_SOLO_SOURCE}
                 -o ${MASM_SOLO_OBJ}
         DEPENDS ${MASM_SOLO_SOURCE}
         COMMENT "Assembling MASM Solo Compiler (pure NASM assembly)"
         VERBATIM
     )
-    
+
     add_executable(masm_solo_compiler ${MASM_SOLO_OBJ})
-    
+
     # Link with minimal Windows API
     target_link_libraries(masm_solo_compiler PRIVATE kernel32 user32)
-    
+
     # Set linker properties for raw assembly
     set_target_properties(masm_solo_compiler PROPERTIES
         LINKER_LANGUAGE C
-<<<<<<< HEAD
-        LINK_FLAGS "/ENTRY:main /SUBSYSTEM:CONSOLE /NODEFAULTLIB"
-=======
         LINK_FLAGS "/ENTRY:main /SUBSYSTEM:CONSOLE /NODEFAULTLIB /LARGEADDRESSAWARE:NO"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     )
-    
+
     install(TARGETS masm_solo_compiler DESTINATION bin)
-    
+
     message(STATUS "MASM Solo Compiler: ENABLED")
 else()
     message(STATUS "MASM Solo Compiler: DISABLED (NASM not found)")
@@ -73,13 +65,10 @@ add_executable(masm_cli_compiler
     src/masm/masm_cli_compiler.cpp
 )
 
-<<<<<<< HEAD
-=======
 set_target_properties(masm_cli_compiler PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 # Require C++17 for filesystem support
 target_compile_features(masm_cli_compiler PRIVATE cxx_std_17)
 
@@ -100,52 +89,21 @@ if(WIN32)
     target_compile_definitions(masm_cli_compiler PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
-<<<<<<< HEAD
-=======
 # Use static runtime for CLI compiler to avoid missing debug DLLs in tests
 if(MSVC)
     set_property(TARGET masm_cli_compiler PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 install(TARGETS masm_cli_compiler DESTINATION bin)
 
 message(STATUS "MASM CLI Compiler: ENABLED")
 
 # ============================================================================
-<<<<<<< HEAD
 # 3. MASM IDE Integration (Win32 / C++20 — no Qt)
 # ============================================================================
 # IDE uses Win32 IDE (RawrXD-Win32IDE); MASM is integrated there. No Qt dependency.
 
 message(STATUS "MASM IDE: Win32/C++20 (no Qt)")
-=======
-# 3. MASM Qt IDE Integration
-# ============================================================================
-
-if(Qt6_FOUND OR Qt5_FOUND)
-    set(MASM_QT_SOURCES
-        src/masm/MASMCompilerWidget.cpp
-        src/masm/MASMCompilerWidget.h
-    )
-    
-    # Add to main Qt application
-    if(TARGET ${PROJECT_NAME})
-        target_sources(${PROJECT_NAME} PRIVATE ${MASM_QT_SOURCES})
-        
-        # Add MASM include directory
-        target_include_directories(${PROJECT_NAME} PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
-        )
-        
-        message(STATUS "MASM Qt IDE Integration: ENABLED")
-    else()
-        message(STATUS "Main Qt project target not found - Qt integration not added")
-    endif()
-else()
-    message(STATUS "MASM Qt IDE Integration: DISABLED (Qt not found)")
-endif()
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # ============================================================================
 # Test Programs
@@ -158,7 +116,7 @@ file(MAKE_DIRECTORY ${MASM_TEST_DIR})
 
 # Create test programs if they don't exist
 if(NOT EXISTS ${MASM_TEST_DIR}/hello.asm)
-    file(WRITE ${MASM_TEST_DIR}/hello.asm 
+    file(WRITE ${MASM_TEST_DIR}/hello.asm
 "; Hello World Test Program
 ; Demonstrates basic MASM compilation
 
@@ -175,7 +133,7 @@ main proc
     mov rcx, -11
     call GetStdHandle
     mov rbx, rax
-    
+
     ; Write message
     mov rcx, rbx
     lea rdx, [message]
@@ -185,7 +143,7 @@ main proc
     mov qword ptr [rsp+32], 0
     call WriteFile
     add rsp, 40
-    
+
     ; Exit
     xor rcx, rcx
     call ExitProcess
@@ -209,14 +167,14 @@ if(NOT EXISTS ${MASM_TEST_DIR}/factorial.asm)
 factorial proc
     cmp rcx, 1
     jle .base
-    
+
     push rcx
     dec rcx
     call factorial
     pop rcx
     imul rax, rcx
     ret
-    
+
 .base:
     mov rax, 1
     ret
@@ -226,7 +184,7 @@ main proc
     mov rcx, 10
     call factorial
     mov [result], rax
-    
+
     xor rcx, rcx
     call ExitProcess
 main endp
@@ -240,11 +198,11 @@ if(NASM_EXECUTABLE AND TARGET masm_solo_compiler)
     add_test(NAME masm_solo_hello
              COMMAND masm_solo_compiler ${MASM_TEST_DIR}/hello.asm ${CMAKE_CURRENT_BINARY_DIR}/hello_solo.exe
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    
+
     add_test(NAME masm_solo_factorial
              COMMAND masm_solo_compiler ${MASM_TEST_DIR}/factorial.asm ${CMAKE_CURRENT_BINARY_DIR}/factorial_solo.exe
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    
+
     set_tests_properties(masm_solo_hello masm_solo_factorial PROPERTIES
         LABELS "masm;solo"
         TIMEOUT 30)
@@ -254,15 +212,15 @@ if(TARGET masm_cli_compiler)
     add_test(NAME masm_cli_hello
              COMMAND masm_cli_compiler --verbose ${MASM_TEST_DIR}/hello.asm -o ${CMAKE_CURRENT_BINARY_DIR}/hello_cli.exe
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    
+
     add_test(NAME masm_cli_factorial
              COMMAND masm_cli_compiler -O2 ${MASM_TEST_DIR}/factorial.asm -o ${CMAKE_CURRENT_BINARY_DIR}/factorial_cli.exe
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    
+
     add_test(NAME masm_cli_multifile
              COMMAND masm_cli_compiler --verbose -g ${MASM_TEST_DIR}/hello.asm ${MASM_TEST_DIR}/factorial.asm -o ${CMAKE_CURRENT_BINARY_DIR}/combined.exe
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    
+
     set_tests_properties(masm_cli_hello masm_cli_factorial masm_cli_multifile PROPERTIES
         LABELS "masm;cli"
         TIMEOUT 30)
@@ -290,13 +248,8 @@ add_custom_target(masm_docs
     COMMAND ${CMAKE_COMMAND} -E echo "   Usage:    masm_cli_compiler [options] source.asm"
     COMMAND ${CMAKE_COMMAND} -E echo "   Help:     masm_cli_compiler --help"
     COMMAND ${CMAKE_COMMAND} -E echo ""
-<<<<<<< HEAD
     COMMAND ${CMAKE_COMMAND} -E echo "3. Win32 IDE Integration (C++20, no Qt)"
     COMMAND ${CMAKE_COMMAND} -E echo "   Location: Integrated into RawrXD Win32 IDE"
-=======
-    COMMAND ${CMAKE_COMMAND} -E echo "3. Qt IDE Integration"
-    COMMAND ${CMAKE_COMMAND} -E echo "   Location: Integrated into main Qt application"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     COMMAND ${CMAKE_COMMAND} -E echo "   Features: Syntax highlighting, error markers, debugger"
     COMMAND ${CMAKE_COMMAND} -E echo "   Access:   MASM menu in main application"
     COMMAND ${CMAKE_COMMAND} -E echo ""
@@ -320,7 +273,7 @@ add_custom_target(masm_docs
 # Install Documentation
 # ============================================================================
 
-install(FILES 
+install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/MASM_COMPILER_SUITE_COMPLETE.md
     DESTINATION docs
 )
@@ -338,14 +291,6 @@ else()
     message(STATUS "  Solo Compiler:      DISABLED")
 endif()
 message(STATUS "  CLI Compiler:       ENABLED")
-<<<<<<< HEAD
 message(STATUS "  IDE Integration:    Win32/C++20 (no Qt)")
-=======
-if(Qt6_FOUND OR Qt5_FOUND)
-    message(STATUS "  Qt IDE Integration: ENABLED")
-else()
-    message(STATUS "  Qt IDE Integration: DISABLED")
-endif()
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 message(STATUS "  Test Programs:      ${MASM_TEST_DIR}")
 message(STATUS "========================================")
