@@ -4323,6 +4323,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/codec/gzip_brutal_inflate.cpp
     # Deep2 core +�-�+�-�+�-� unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
+    src/deep2/Deep2Engine_Speculative.cpp
+    src/deep2/strict_gpu_violations.cpp
     src/deep2/lavapath/GgufDynamicGeometry_io.cpp
     src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
     src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
@@ -7511,7 +7513,6 @@ option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" OFF)
 if(BUILD_DEEP2_TOKEN_GATE)
     add_executable(test_generate_one_token
         src/deep2/test_generate_one_token.cpp
-        src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(test_generate_one_token PRIVATE InferenceEngine)
     if(MSVC)

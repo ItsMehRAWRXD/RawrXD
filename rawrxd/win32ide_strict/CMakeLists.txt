@@ -73,6 +73,11 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/Chamber.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/ToroidalKVCache.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/PlasmaGovernor.cpp
+    # Batch A1 providers (DEEP2_LAYER0_PROVIDER_CLOSURE_002)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/NVMeStream.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/BP16Streamer.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/CompressedKVCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/mars/MARSController.cpp
 )
 
 # --- Standalone Layer 0 provider tests ---
@@ -85,6 +90,27 @@ add_executable(RawrXD-Win32IDE-Tests
     ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
 )
 set_property(TARGET RawrXD-Win32IDE-Tests PROPERTY CXX_STANDARD 20)
+
+# --- DEEP2_LAYER0_FINAL_001 integrated evidence capture ---
+add_executable(RawrXD-Layer0-Final-Evidence
+    ${CMAKE_SOURCE_DIR}/../tests/deep2/test_layer0_final_evidence.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/Chamber.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ToroidalKVCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/PlasmaGovernor.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/CycloneScheduler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/ProductionProfiler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/NVMeStream.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/BP16Streamer.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/CompressedKVCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/mars/MARSController.cpp
+)
+set_property(TARGET RawrXD-Layer0-Final-Evidence PROPERTY CXX_STANDARD 20)
+target_include_directories(RawrXD-Layer0-Final-Evidence PRIVATE
+    ${CMAKE_SOURCE_DIR}/../tests/deep2
+    ${CMAKE_SOURCE_DIR}/../src
+    ${CMAKE_SOURCE_DIR}/../include
+)
 
 # --- ProductionProfiler isolated test ---
 add_executable(RawrXD-ProductionProfiler-Test

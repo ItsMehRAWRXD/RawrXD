@@ -8,6 +8,7 @@
 #include <chrono>
 #include <string>
 #include <cstdio>
+#include <fstream>
 
 namespace RawrXD::IDE {
 
@@ -422,7 +423,7 @@ InferenceGateResult runLocalInferenceGate()
     result.tokenizerReady = true;
 
     // ── 7. Generate ────────────────────────────────────────────────────
-    const size_t maxOut = 1;  // Gate 2 requires exactly 1 generated token
+    const size_t maxOut = 10; // Gate 2: test with up to 10 to see if any tokens emerge
     std::vector<int> outTokens(maxOut, 0);
     Deep2::InferenceStats stats{};
 
@@ -433,6 +434,7 @@ InferenceGateResult runLocalInferenceGate()
         &stats
     );
     auto t1 = std::chrono::high_resolution_clock::now();
+    std::fprintf(stderr,"GATE_GENERATE_END nGen=%zu maxOut=%zu\n",nGen,maxOut); std::fflush(stderr);
 
     result.decodeOk = (nGen > 0);
     result.generatedTokens = static_cast<int>(nGen);
@@ -442,6 +444,29 @@ InferenceGateResult runLocalInferenceGate()
         result.firstTokenId = outTokens[0];
         result.generatedToken = outTokens[0];
         result.firstTokenText = engine.detokenize({outTokens[0]});
+        // Log full generated text for debugging
+        {
+            std::string genText;
+            for (size_t i = 0; i < nGen; ++i) {
+                genText += engine.detokenize({outTokens[i]});
+            }
+            std::fprintf(stderr, "[INFERENCE_GATE] prompt='%s' nGen=%zu tokens=[", prompt.c_str(), nGen);
+            for (size_t i = 0; i < nGen; ++i) {
+                if (i) std::fprintf(stderr, ", ");
+                std::fprintf(stderr, "%d", outTokens[i]);
+            }
+            std::fprintf(stderr, "] text='%s'\n", genText.c_str());
+            std::fflush(stderr);
+            {
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "[INFERENCE_GATE] prompt='" << prompt << "' nGen=" << nGen << " tokens=[";
+                for (size_t i = 0; i < nGen; ++i) {
+                    if (i) dbg << ", ";
+                    dbg << outTokens[i];
+                }
+                dbg << "] text='" << genText << "'\n";
+            }
+        }
         result.forwardPassOk = true;   // <<< FIX: mark forward pass OK
 
         double elapsedMs = std::chrono::duration<double, std::milli>(t1 - t0).count();

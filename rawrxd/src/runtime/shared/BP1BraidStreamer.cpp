@@ -118,14 +118,10 @@ bool BP1BraidStreamer::runSession(const std::string& prompt, const Inference::St
     if (!openChannel()) return false;
     bool ok = startGeneration(prompt, opts);
     // startGeneration is blocking; all events are now in the channel.
-    // Close channel so the bridge knows to exit after draining.
+    // Wait for the bridge to drain events before closing.
+    pumpUntilDone(std::chrono::milliseconds(10));
+    // Safe to close channel now that bridge has finished.
     closeChannel();
-    // Wait briefly for bridge to finish processing remaining events
-    if (impl_->bridge_) {
-        while (impl_->bridge_->isRunning()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-    }
     if (ok) {
         impl_->streamsCompleted_.fetch_add(1, std::memory_order_acq_rel);
     } else if (impl_->cancelRequested_.load(std::memory_order_acquire)) {

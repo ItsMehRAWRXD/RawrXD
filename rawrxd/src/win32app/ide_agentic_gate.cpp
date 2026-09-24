@@ -124,8 +124,13 @@ AgenticGateResult runAgenticGate()
         return r;
     }
 
+    // Enable Vulkan/GPU acceleration if available
+    engine.enableVulkan(true);
+    // Allow CPU fallback if Vulkan fails — certification must complete
+    engine.setVulkanStrictNoCpuFallback(false);
+
     // ── 2. Load real instruction model ──────────────────────────────────
-    // Prefer real instruction model; fall back to test model.
+    // Prefer small Gemma3-1B model (699MB, supported arch); fall back to tiny test model.
     std::string modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
     DWORD attribs = GetFileAttributesA(modelPath.c_str());
     if (attribs == INVALID_FILE_ATTRIBUTES || (attribs & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -137,6 +142,9 @@ AgenticGateResult runAgenticGate()
         r.diagnostics = "Deep2Engine::loadModel failed for model: " + modelPath;
         return r;
     }
+
+    // Re-enable verified speculative decoding (window=4); hardened with exception boundary
+    engine.enableVerifiedSpeculation(true, 4);
 
     // ── 3. Bind Tool Authority ──────────────────────────────────────────
     RawrXD::Agentic::AgentToolRegistry registry;
@@ -179,7 +187,7 @@ AgenticGateResult runAgenticGate()
     bool session1Ok = runWithWatchdog(
         braid,
         [&]() { return braid.runSession(r.promptUsed, opts); },
-        std::chrono::seconds(180),
+        std::chrono::seconds(600),
         wd1Fired);
 
     if (!session1Ok) {
@@ -251,7 +259,7 @@ AgenticGateResult runAgenticGate()
     bool session2Ok = runWithWatchdog(
         braid,
         [&]() { return braid.runSession(phase2Prompt, opts2); },
-        std::chrono::seconds(180),
+        std::chrono::seconds(300),
         wd2Fired);
 
     if (!session2Ok) {

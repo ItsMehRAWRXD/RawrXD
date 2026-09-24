@@ -189,9 +189,12 @@ struct ModelWeights {
     size_t ropeDimensionCount = 0;
     bool   useMLA         = false;
 
-    float  ropeTheta      = 0.0f;   // unset until GGUF dynamic geometry
-    float  ropeScaling    = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
-    float  normEps        = 0.0f;   // unset until GGUF dynamic geometry
+    float  ropeTheta       = 0.0f;   // unset until GGUF dynamic geometry
+    float  ropeThetaLocal  = 0.0f;   // Gemma3 local (sliding-window) base
+    float  ropeScaling     = 0.0f;   // 0 + !present => no scale (not a guessed 1.0)
+    float  normEps         = 0.0f;   // unset until GGUF dynamic geometry
+    size_t slidingWindowSize   = 0;   // e.g. 512
+    size_t slidingWindowPattern = 0;  // e.g. 6 (every Nth layer is local)
     bool   ropeNeoxStyle  = false;  // true: NeoX rotated-half (llama/qwen); false: GPT-J adjacent
     bool   tieEmbeddings  = false;
     bool   isMoE          = false;
@@ -501,7 +504,7 @@ public:
     bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
     bool tryGpuTokenForward(float* hidden);
     bool forwardTokenAllLayers(float* hidden, size_t seqLen);
-    bool forwardSpeculativeBlock(const int* tokenIds,size_t count,
+    bool forwardSpeculativeBlock(const int32_t* tokenIds,size_t count,
                                  size_t basePos,float* finalHiddenBatch);
     bool verifySpeculativeGreedyWindow(
         float* currentHidden,
@@ -512,6 +515,9 @@ public:
         const float* currentHidden,size_t maxDraft,
         std::vector<int32_t>& proposals,
         uint32_t draftLayersOverride=0);
+
+    // Gemma3-style per-layer RoPE theta (global vs local)
+    float ropeThetaForLayer(size_t layer) const noexcept;
     bool buildAdaptiveSpeculativeProposals(
         const float* currentHidden,size_t remaining,
         std::vector<int32_t>& proposals);
@@ -858,11 +864,12 @@ private:
     struct SpecWorkspace {
         std::vector<float> hidden,norm,q,k,v,attn,proj,gate,up,down;
         std::vector<float> logits,scores;
+        std::vector<float> logitsBatch;
         std::vector<float> kPacked,vPacked;
         void clear() {
             hidden.clear();norm.clear();q.clear();k.clear();v.clear();
             attn.clear();proj.clear();gate.clear();up.clear();down.clear();
-            logits.clear();scores.clear();
+            logits.clear();scores.clear();logitsBatch.clear();
             kPacked.clear();vPacked.clear();
         }
     };

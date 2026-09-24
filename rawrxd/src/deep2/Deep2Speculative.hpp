@@ -66,6 +66,11 @@ struct SpeculativeCounters {
     uint64_t pipelineCommitWindows=0;
     uint64_t pipelineOverlapNs=0;
 
+    uint64_t exceptionFallbacks=0;
+    uint64_t proposalExceptions=0;
+    uint64_t verificationExceptions=0;
+    uint64_t speculativeWindowsSucceeded=0;
+
     double acceptanceEwma=0.50;
 
     double acceptedPerTargetPass() const noexcept {

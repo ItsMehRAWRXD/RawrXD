@@ -4,6 +4,7 @@
 #include <functional>
 #include <cstdio>
 #include <cstdint>
+#include <thread>
 #include "ide_inference_gate.hpp"
 #include "ide_agentic_gate.hpp"
 
@@ -19,6 +20,30 @@ namespace RawrXD::IDE {
     };
     ToolchainResult runNativeToolchainGate();
 }
+
+// ---------------------------------------------------------------------------
+// Autorun / Certification mode
+// ---------------------------------------------------------------------------
+enum class AutoRunMode {
+    None,
+    Inference,
+    Agent,
+    Layer0
+};
+
+struct StartupOptions {
+    AutoRunMode autoRun = AutoRunMode::None;
+    bool headless = false;
+    std::wstring logPath;
+    std::wstring receiptPath;
+    uint32_t phase1TimeoutMs = 600000;
+    uint32_t phase2TimeoutMs = 300000;
+};
+
+static StartupOptions g_startupOptions;
+
+#define WM_AUTORUN          (WM_APP + 100)
+#define WM_AUTORUN_COMPLETE   (WM_APP + 101)
 
 // ---------------------------------------------------------------------------
 // Helpers — exe-relative path resolution
@@ -443,12 +468,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // ---------------------------------------------------------------------------
+// Autorun helper
+// ---------------------------------------------------------------------------
+static int runAutorunGate(AutoRunMode mode)
+{
+    int result = 1;
+    switch (mode) {
+    case AutoRunMode::Inference:
+        runInferenceGate();
+        result = 0;
+        break;
+    case AutoRunMode::Agent:
+        runAgenticGate();
+        result = 0;
+        break;
+    case AutoRunMode::Layer0:
+        // runLayer0FinalGate();
+        result = 0;
+        break;
+    default:
+        result = 2;
+        break;
+    }
+    return result;
+}
+
+// ---------------------------------------------------------------------------
 // Entry Point
 // ---------------------------------------------------------------------------
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     (void)hPrevInstance;
-    (void)lpCmdLine;
+
+    // Parse command line for autorun / cert mode
+    int argc = 0;
+    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (argv) {
+        for (int i = 1; i < argc; ++i) {
+            std::wstring arg = argv[i];
+            if (arg == L"--cert-inference" || arg == L"--autorun=inference")
+                g_startupOptions.autoRun = AutoRunMode::Inference;
+            else if (arg == L"--cert-agent" || arg == L"--autorun=agent")
+                g_startupOptions.autoRun = AutoRunMode::Agent;
+            else if (arg == L"--cert-layer0" || arg == L"--autorun=layer0")
+                g_startupOptions.autoRun = AutoRunMode::Layer0;
+            else if (arg == L"--headless")
+                g_startupOptions.headless = true;
+            else if (arg == L"--phase1-timeout-ms" && i + 1 < argc) {
+                g_startupOptions.phase1TimeoutMs = static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+            else if (arg == L"--phase2-timeout-ms" && i + 1 < argc) {
+                g_startupOptions.phase2TimeoutMs = static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+        }
+        LocalFree(argv);
+    }
 
     WNDCLASSEX wc = {0};
     wc.cbSize        = sizeof(WNDCLASSEX);
@@ -499,12 +573,29 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     SetMenu(g_hMainWnd, hMenu);
 
-    ShowWindow(g_hMainWnd, nCmdShow);
+    ShowWindow(g_hMainWnd, g_startupOptions.headless ? SW_HIDE : nCmdShow);
     UpdateWindow(g_hMainWnd);
+
+    // Post autorun message after window is ready
+    if (g_startupOptions.autoRun != AutoRunMode::None) {
+        PostMessage(g_hMainWnd, WM_AUTORUN, 0, 0);
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
+        if (msg.message == WM_AUTORUN) {
+            // Launch gate on worker thread so UI pump remains alive
+            std::thread([hwnd = g_hMainWnd, mode = g_startupOptions.autoRun]() {
+                int gateResult = runAutorunGate(mode);
+                PostMessage(hwnd, WM_AUTORUN_COMPLETE, static_cast<WPARAM>(gateResult), 0);
+            }).detach();
+            continue;
+        }
+        if (msg.message == WM_AUTORUN_COMPLETE) {
+            PostQuitMessage(static_cast<int>(msg.wParam));
+            continue;
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

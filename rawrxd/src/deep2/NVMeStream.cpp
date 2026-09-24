@@ -130,6 +130,7 @@ bool NVMeStream::readSync(const std::string& tensorName,
 
     {
         std::lock_guard<std::mutex> lk(statsMtx_);
+        ++stats_.requestsSubmitted;
         ++stats_.requestsCompleted;
         stats_.bytesReadActual += outBytesRead;
         if (outBytesRead < byteCount) ++stats_.shortReads;
