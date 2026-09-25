@@ -19,7 +19,7 @@ bool StreamEngine::initialize(const NVMeStreamConfig& cfg,
     if (!controller || !nvme) return false;
     controller_ = controller;
     nvme_     = nvme;
-    cfg_      = cfg;
+    cfg_ = std::make_unique<NVMeStreamConfig>(cfg);
     return nvme_->initialize(cfg.modelPath);
 }
 

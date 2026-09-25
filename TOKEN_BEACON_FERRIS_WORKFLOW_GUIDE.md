@@ -3,15 +3,32 @@
 ## Overview
 This guide provides the repeatable, contamination-proof workflow for measuring the ABAB token ownership machine using per-token beacons and two AMD GPUs (R9700 + RX 7800 XT). All values must trace to measured receipts with full provenance.
 
-## Experiment Classification (Four Axes Framework)
+## Experiment Classification (Five Orthogonal Core Scaling Axes)
 
-This experiment belongs to **Axis 2 — Implementation Scaling**:
+This experiment belongs to **Axis 2 — IMPLEMENTATION_SCALING** (one of five orthogonal core scaling axes):
 - Same exact model: Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
-- Same nominal model size: 19,851,336,672 bytes (SIZE_X = 1)
+- Same exact model bytes: 19,851,336,672 (SIZE_X = 1, α undefined for model scaling)
 - Different engine/config: TOKEN_BEACON_FERRIS ABAB ownership policy
-- NOT model scaling (SIZE_X = 1, α undefined)
-- NOT concurrency scaling (genuine simultaneous requests, AGENT_COUNT=1,2,3)
-- NOT residency scaling (physical working set, separate axis)
+- **NOT** a sixth scaling axis. See DEEP2_EMPIRICAL_SCALING_AUTHORITY_002 framework.
+- **NOT** model scaling (Axis 1) — SIZE_X = 1, α is undefined; model scaling requires SIZE_X != 1
+- **NOT** concurrency scaling (Axis 3) — genuine simultaneous requests require AGENT_COUNT=1,2,3 with wall aggregate TPS
+- **NOT** residency scaling (Axis 4) — physical working set vs effective bytes is separate axis
+
+The five orthogonal core scaling axes (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002):
+  AXIS_1 = MODEL_SCALING        — distinct exact model-size scaling (α when SIZE_X != 1)
+  AXIS_2 = IMPLEMENTATION_SCALING — same model, different engine/config (this experiment)
+  AXIS_3 = CONCURRENCY_SCALING  — genuine simultaneous-stream scaling (AGENT_COUNT=1,2,3...)
+  AXIS_4 = RESIDENCY_SCALING    — physical/effective working-set scaling
+  AXIS_5 = SWARM_HEX_MAG_SCALING — orchestration rather than simultaneous inference
+
+Token Beacon Ferris classification:
+  PRIMARY: IMPLEMENTATION_SCALING (Axis 2)
+  SECONDARY AUTHORITY: PLACEMENT_AUTHORITY, LATENCY_TAIL, RESOURCE_EFFICIENCY
+  NOT a sixth axis. Hex Mag = orchestration scaling (Axis 5)
+  Token Beacon Ferris = execution/placement implementation (Axis 2)
+  Concurrency = simultaneous-stream scaling (Axis 3)
+  Residency = physical/effective working-set scaling (Axis 4)
+  Model scaling = distinct exact model-size scaling (Axis 1)
 
 **Primary authority**: Tokens per second (TPS) under ABAB beacon policy
 **Secondary authorities**: BEACON_OVERHEAD_RATIO, PREPARATION_HIDDEN_RATIO, active/standby GPU utilization

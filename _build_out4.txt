@@ -1,0 +1,167 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\~dev\build_streaming\Release\rawrxd_screenpilot_e2e.lib
+  Deep2Engine.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(118,39): warning C4476: 'fprintf' : unknown type field character ',' in format specifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(105,23): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(116,25): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30): warning C4477: 'fprintf' : format string '%llu' requires an argument of type 'unsigned __int64', but variadic argument 3 has type 'int' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%u' in the format string
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%I32u' in the format string
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13): warning C4474: 'fprintf' : too many arguments passed for format string [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13):
+      placeholders and their parameters expect 25 variadic arguments, but 27 were provided
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(232,13): warning C4063: case '20' is not a valid value for switch of enum 'Deep2::Deep2Engine::ParityCheckpoint' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(855,16):
+      see declaration of 'Deep2::Deep2Engine::ParityCheckpoint'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(302,28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(351,54): warning C4458: declaration of 'logits' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1100,12):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(891,42): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1593,62): warning C4458: declaration of 'weightSize' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1094,12):
+      see declaration of 'Deep2::Deep2Engine::weightSize'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1819,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1832,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2838,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2849,39): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(3485,53): error C2039: 'getStats': is not a member of 'Deep2::VramStreamingController' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\VramStreamingController.hpp(78,7):
+      see declaration of 'Deep2::VramStreamingController'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(3486,41): error C3536: 'vstats': cannot be used before it is initialized [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_VulkanRuntime.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(60,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(229,26): warning C4456: declaration of 'layerBytes' hides previous local declaration [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(188,31):
+      see declaration of 'layerBytes'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(302,9): error C2065: 'expertTransports_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(303,9): error C2065: 'expertCaches_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(307,21): error C3083: 'deep2': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(307,28): error C2039: 'VulkanExpertTransportConfig': is not a member of 'rawrxd' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Sampler.hpp(7,11):
+      see declaration of 'rawrxd'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(307,28): error C2065: 'VulkanExpertTransportConfig': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(307,56): error C2146: syntax error: missing ';' before identifier 'vtcfg' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(307,56): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(308,13): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(309,13): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(310,13): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(311,13): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(312,13): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(313,38): error C3083: 'deep2': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(313,45): error C3083: 'VulkanExpertTransport': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(313,68): error C2039: 'create': is not a member of 'rawrxd' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Sampler.hpp(7,11):
+      see declaration of 'rawrxd'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(313,75): error C2065: 'vtcfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(313,68): error C3861: 'create': identifier not found [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(318,21): error C3083: 'deep2': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(318,28): error C2039: 'ExpertCacheConfig': is not a member of 'rawrxd' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Sampler.hpp(7,11):
+      see declaration of 'rawrxd'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(318,28): error C2065: 'ExpertCacheConfig': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(318,46): error C2146: syntax error: missing ';' before identifier 'eccfg' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(318,46): error C2065: 'eccfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(319,13): error C2065: 'eccfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(320,13): error C2065: 'eccfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(321,51): error C3083: 'deep2': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(321,58): error C2039: 'ExpertCache': is not a member of 'rawrxd' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Sampler.hpp(7,11):
+      see declaration of 'rawrxd'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(321,58): error C2065: 'ExpertCache': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(321,71): error C2065: 'eccfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,13): error C2065: 'expertTransports_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46): error C2672: 'std::move': no matching overloaded function found [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(5172,9):
+      could be '_FwdIt2 std::move(_ExPo &&,_FwdIt1,_FwdIt1,_FwdIt2) noexcept'
+          F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46):
+          '_FwdIt2 std::move(_ExPo &&,_FwdIt1,_FwdIt1,_FwdIt2) noexcept': expects 4 arguments - 1 provided
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(5160,21):
+      or       '_OutIt std::move(_InIt,_InIt,_OutIt)'
+          F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46):
+          '_OutIt std::move(_InIt,_InIt,_OutIt)': expects 3 arguments - 1 provided
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\type_traits(1512,64):
+      or       'remove_reference<_Ty>::type &&std::move(_Ty &&) noexcept'
+          F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46):
+          Failed to specialize function template 'remove_reference<_Ty>::type &&std::move(_Ty &&) noexcept'
+              F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46):
+              With the following template arguments:
+                  F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(322,46):
+                  '_Ty=<error type> &'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(323,13): error C2065: 'expertCaches_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(323,47): error C3536: 'cache': cannot be used before it is initialized [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(326,52): error C2065: 'eccfg': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(325,17): warning C4473: 'fprintf' : not enough arguments passed for format string [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(325,17):
+      placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+      F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(325,17):
+      the missing variadic argument 2 is required by format string '%llu'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(103,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(113,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_GpuMoEMLA.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(167,32): warning C4458: declaration of 'weights' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1093,12):
+      see declaration of 'Deep2::Deep2Engine::weights'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(215,24): warning C4458: declaration of 'logits' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1100,12):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(230,26): error C2065: 'expertCaches_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(231,21): error C2065: 'expertCaches_': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(231,20): error C2530: 'cache': references must be initialized [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(232,13): error C3536: 'cache': cannot be used before it is initialized [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(235,48): error C3083: 'deep2': the symbol to the left of a '::' must be a type [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(235,55): error C2039: 'ExpertKey': is not a member of 'rawrxd' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Sampler.hpp(7,11):
+      see declaration of 'rawrxd'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(235,55): error C2065: 'ExpertKey': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  StreamEngine.cpp
+F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5): error C2679: binary '=': no operator found which takes a right-hand operand of type 'const Deep2::NVMeStreamConfig' (or there is no acceptable conversion) [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3476,17):
+      could be 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &)'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &)': cannot convert argument 2 from 'const Deep2::NVMeStreamConfig' to 'const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              Reason: cannot convert from 'const Deep2::NVMeStreamConfig' to 'const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3362,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::nullptr_t) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::nullptr_t) noexcept': cannot convert argument 2 from 'const Deep2::NVMeStreamConfig' to 'std::nullptr_t'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3413,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &&) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+          'initializing': cannot convert from 'const Deep2::NVMeStreamConfig' to 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &&'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              Reason: cannot convert from 'const Deep2::NVMeStreamConfig' to 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3406,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept': could not deduce template argument for 'std::unique_ptr<_Ux,_Dx> &&' from 'const Deep2::NVMeStreamConfig'
+      F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+      while trying to match the argument list '(std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>, const Deep2::NVMeStreamConfig)'
+  
+  Generating Code...

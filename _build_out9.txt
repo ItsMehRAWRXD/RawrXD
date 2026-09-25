@@ -1,0 +1,33 @@
+CMake is re-running because F:/~dev/build_streaming/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/CMakeLists.txt'
+  is newer than 'F:/~dev/build_streaming/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: F:/~dev/build_streaming
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\~dev\build_streaming\Release\rawrxd_screenpilot_e2e.lib
+  Assembling F:\~dev\src\deep2\Classify.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Assembling F:\~dev\rawrxd\src\rawr_classifier_scalar.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Assembling F:\~dev\rawrxd\src\rawr_classifier_avx2.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  HostStagingRing.cpp
+  MARSController.cpp
+  Generating Code...
+  rawr_monolith.vcxproj -> F:\~dev\build_streaming\Release\rawr_monolith.exe

@@ -1,0 +1,12 @@
+CMake is re-running because F:/~dev/build_streaming/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/CMakeLists.txt'
+  is newer than 'F:/~dev/build_streaming/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: F:/~dev/build_streaming
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\~dev\build_streaming\Release\rawrxd_screenpilot_e2e.lib
+  rawr_monolith.vcxproj -> F:\~dev\build_streaming\Release\rawr_monolith.exe

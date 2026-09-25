@@ -8671,3 +8671,171 @@ events:
         - "C:/Program Files/CMake"
         - "C:/Program Files (x86)/RawrXD"
 ...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython/Support.cmake:2621 (find_program)"
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython3.cmake:699 (include)"
+      - "CMakeLists.txt:12412 (find_package)"
+    mode: "program"
+    variable: "_Python3_EXECUTABLE_DEBUG"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python3.13_d"
+      - "python3_d"
+      - "python_d"
+    candidate_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/"
+    searched_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\debugCommand"
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\copilotCli"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\VulkanSDK\\1.4.357.0\\Bin"
+        - "C:\\Windows\\System32\\AMD"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\GitHub CLI\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\node"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Launcher\\"
+        - "C:\\Users\\Garrett\\.local\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Ollama"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "F:\\Curs0r\\cursor\\resources\\app\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Roaming\\npm"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Links"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Cua\\cua-driver\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "c:\\Users\\Garrett\\.vscode\\extensions\\ms-python.debugpy-2026.6.0-win32-x64\\bundled\\scripts\\noConfigScripts"
+        - "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64"
+        - "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/RawrXD"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/CMake"
+        - "C:/Program Files (x86)/RawrXD"
+...
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython/Support.cmake:2621 (find_program)"
+      - "C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython3.cmake:699 (include)"
+      - "CMakeLists.txt:12412 (find_package)"
+    mode: "program"
+    variable: "_Python3_EXECUTABLE_DEBUG"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "python3.13_d"
+      - "python3_d"
+      - "python_d"
+    candidate_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/"
+    searched_directories:
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3.13_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python3_d"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.com"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d.exe"
+      - "C:/Users/Garrett/AppData/Local/Programs/Python/Python313/python_d"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\debugCommand"
+        - "c:\\Users\\Garrett\\AppData\\Roaming\\Code\\User\\globalStorage\\github.copilot-chat\\copilotCli"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path"
+        - "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath"
+        - "C:\\VulkanSDK\\1.4.357.0\\Bin"
+        - "C:\\Windows\\System32\\AMD"
+        - "C:\\Windows\\system32"
+        - "C:\\Windows"
+        - "C:\\Windows\\System32\\Wbem"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\Windows\\System32\\OpenSSH\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Program Files\\CMake\\bin"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\nodejs\\"
+        - "C:\\Program Files\\GitHub CLI\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\node"
+        - "C:\\Users\\Garrett\\AppData\\Local\\hermes\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Python313\\"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Python\\Launcher\\"
+        - "C:\\Users\\Garrett\\.local\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Ollama"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Ninja-build.Ninja_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "F:\\Curs0r\\cursor\\resources\\app\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Roaming\\npm"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Links"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Programs\\Cua\\cua-driver\\bin"
+        - "C:\\Users\\Garrett\\AppData\\Local\\Microsoft\\WinGet\\Packages\\VirtualDrivers.Virtual-Display-Driver_Microsoft.Winget.Source_8wekyb3d8bbwe"
+        - "c:\\Users\\Garrett\\.vscode\\extensions\\ms-python.debugpy-2026.6.0-win32-x64\\bundled\\scripts\\noConfigScripts"
+        - "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64"
+        - "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64"
+      CMAKE_INSTALL_PREFIX: "C:/Program Files (x86)/RawrXD"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "C:/Program Files"
+        - "C:/Program Files (x86)"
+        - "C:/Program Files/CMake"
+        - "C:/Program Files (x86)/RawrXD"
+...

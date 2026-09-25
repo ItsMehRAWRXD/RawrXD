@@ -196,6 +196,8 @@ static void softmax(float* x, size_t n) {
 }
 
 // =================== LAYER-0 PARITY PROBE (FNV-1a fingerprints) ============
+namespace Deep2 {
+
 // Emits one compact record per checkpoint for an external oracle. Format:
 //   STEP=<name> COUNT=<n> FINITE=<k> MIN=<v> MAX=<v> MEAN=<v> L2=<v>
 //   FIRST8=<a,b,c,d,e,f,g,h> HASH=<hex>
@@ -957,6 +959,17 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                   {(p + "ffn_post_norm.weight").c_str(),
                    (p + "post_ffw_norm.weight").c_str()});
 
+        // Nemotron-H / Mamba-style SSM tensor binding.
+        // These are optional; presence determines block type below.
+        bindTensor(p + "ssm_in.weight", lw.ssmIn);
+        bindTensor(p + "ssm_conv1d.weight", lw.ssmConv1d);
+        bindTensor(p + "ssm_conv1d.bias", lw.ssmConv1dBias);
+        bindTensor(p + "ssm_dt.bias", lw.ssmDtBias);
+        bindTensor(p + "ssm_a.weight", lw.ssmA);
+        bindTensor(p + "ssm_d.weight", lw.ssmD);
+        bindTensor(p + "ssm_norm.weight", lw.ssmNorm);
+        bindTensor(p + "ssm_out.weight", lw.ssmOut);
+
         // Batch 8: real MoE router + expert tensor binding.
         bindFirst(lw.moeRouter,
                   {(p + "ffn_gate_inp.weight").c_str(),
@@ -1158,7 +1171,69 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             }
         }
 
-        if (!lw.attnNorm.data || !lw.ffnNorm.data) {
+        // NEMOTRON_H_LAYER_DIAG: before rejection, print every tensor we
+        // already bound for block 0 so the fix is data-driven, not guessed.
+        if (arch == "nemotron_h" && layer == 0) {
+            std::fprintf(stderr, "NEMOTRON_H_LAYER_DIAG=%zu\n", layer);
+            auto pr = [&](const char* label, const WeightTensor& wt) {
+                std::fprintf(stderr, "  %s_PRESENT=%s\n", label, wt.data ? "1" : "0");
+            };
+            pr("ATTN_NORM", lw.attnNorm);
+            pr("FFN_NORM", lw.ffnNorm);
+            pr("SSM_IN", lw.ssmIn);
+            pr("SSM_CONV1D", lw.ssmConv1d);
+            pr("SSM_DT", lw.ssmDtBias);
+            pr("SSM_A", lw.ssmA);
+            pr("SSM_D", lw.ssmD);
+            pr("SSM_NORM", lw.ssmNorm);
+            pr("SSM_OUT", lw.ssmOut);
+            pr("ATTN_QKV", lw.wqkv);
+            pr("ATTN_Q", lw.wq);
+            pr("ATTN_K", lw.wk);
+            pr("ATTN_V", lw.wv);
+            pr("ATTN_OUT", lw.wo);
+            pr("FFN_UP", lw.wUp);
+            pr("FFN_DOWN", lw.wDown);
+            pr("FFN_GATE", lw.wGate);
+        }
+
+        // For Nemotron-H, do NOT enforce the generic attn_norm+ffn_norm
+        // invariant that conventional transformers require.
+        const bool isNemotronH = (arch == "nemotron_h");
+        if (isNemotronH) {
+            if (!lw.attnNorm.data) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu missing nemotron_h layer norm\n",
+                    layer);
+                if (diag) {
+                    diag->stageCode = 14;
+                    diag->stageName = "NEMOTRON_H_LAYER_NORM_MISSING";
+                    diag->message = "Nemotron-H layer missing attn_norm.weight.";
+                }
+                return false;
+            }
+            // Nemotron-H hybrid layers do not require ffnNorm.
+            // We determine block type from what tensors are present.
+            const bool hasSSMBlock =
+                lw.ssmIn.data || lw.ssmConv1d.data || lw.ssmDtBias.data ||
+                lw.ssmA.data || lw.ssmD.data || lw.ssmNorm.data || lw.ssmOut.data;
+            const bool hasAttnBlock =
+                lw.wqkv.data || (lw.wq.data && lw.wk.data && lw.wv.data) || lw.wo.data;
+            if (!hasSSMBlock && !hasAttnBlock) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] layer %zu nemotron_h block has neither SSM nor attention tensors\n",
+                    layer);
+                if (diag) {
+                    diag->stageCode = 15;
+                    diag->stageName = "NEMOTRON_H_BLOCK_TYPE_UNKNOWN";
+                    diag->message = "Nemotron-H layer has neither SSM nor attention tensors bound.";
+                }
+                return false;
+            }
+            lw.hasSSM = hasSSMBlock;
+            // Skip generic QKV / FFN checks for Nemotron-H here; they are
+            // validated below with architecture-aware rules.
+        } else if (!lw.attnNorm.data || !lw.ffnNorm.data) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing transformer norm tensors\n",
                 layer);
@@ -1173,7 +1248,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         const bool splitQkv =
             lw.wq.data && lw.wk.data && lw.wv.data;
         const bool fusedQkv = lw.wqkv.data != nullptr;
-        if (!splitQkv && !fusedQkv) {
+        if (!isNemotronH && !splitQkv && !fusedQkv) {
             std::fprintf(stderr,
                 "[Deep2Engine] layer %zu missing Q/K/V topology\n", layer);
             if (diag) {
@@ -1184,7 +1259,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             return false;
         }
 
-        if (!modelWeights.isMoE) {
+        if (!modelWeights.isMoE && !isNemotronH) {
             if (!lw.wUp.data || !lw.wDown.data) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu missing dense FFN tensors\n",
@@ -1272,7 +1347,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         }
     }
 
-    if (!modelWeights.isMoE && modelWeights.intermediateDim == 0) {
+    if (!modelWeights.isMoE && modelWeights.intermediateDim == 0 && !(arch == "nemotron_h")) {
         std::fprintf(stderr, "[Deep2Engine] missing feed-forward geometry\n");
         if (diag) {
             diag->stageCode = 19;
@@ -3189,6 +3264,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmb1 - tEmb0).count()));
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
             auto tFwd0 = std::chrono::steady_clock::now();
+            if (vramStreamingController_) vramStreamingController_->beginTokenMeasurement(promptLen + generated);
             if(!forwardTokenAllLayers(hidden.data(),seq)) {
                 {
                     std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
@@ -3210,30 +3286,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
             pendingForward=false;
 
-            // ----- telemetry: one token fully emitted -----
-            telemetry.active_weight_bytes = /* from expert manager */ 0; // TODO wire real value
-            telemetry.vram_weight_bytes_read = /* from GPU forward */ 0; // TODO wire real value
-            telemetry.ram_to_gpu_bytes = /* H2D transfer bytes for this token */ 0; // TODO wire real value
-            telemetry.gpu_to_gpu_bytes = /* GPU-internal copy bytes */ 0; // TODO wire real value
-            telemetry.kv_read_bytes = /* KV read bytes for this token */ 0; // TODO wire real value
-            telemetry.kv_write_bytes = /* KV write bytes for this token */ 0; // TODO wire real value
-            telemetry.scratch_bytes = /* scratch allocation bytes */ 0; // TODO wire real value
-            telemetry.experts_total = /* expert cache total */ 0; // TODO wire real value
-            telemetry.experts_active = /* expert cache active */ 0; // TODO wire real value
-            telemetry.expert_cache_hits = /* expert cache hits this token */ 0; // TODO wire real value
-            telemetry.expert_cache_misses = /* expert cache misses this token */ 0; // TODO wire real value
-            telemetry.gpu_busy_ns = /* GPU busy ns for this token */ 0; // TODO wire real value
-            telemetry.gpu_idle_ns = /* GPU idle ns for this token */ 0; // TODO wire real value
-            telemetry.wait_ns = /* wait/sync ns for this token */ 0; // TODO wire real value
-            telemetry.submit_ns = /* submit ns for this token */ 0; // TODO wire real value
-            telemetry.nominal_gpu_work_ns = /* nominal GPU work ns */ 0; // TODO wire real value
-            telemetry.avoided_gpu_work_ns = /* avoided GPU work ns */ 0; // TODO wire real value
-            telemetry.hotpatch_resolves = /* hotpatch resolves this token */ 0; // TODO wire real value
-            telemetry.hotpatch_fallbacks = /* hotpatch fallbacks this token */ 0; // TODO wire real value
-            telemetry.hotpatched_steps = /* hotpatched steps this token */ 0; // TODO wire real value
-            telemetry.fallback_steps = /* fallback steps this token */ 0; // TODO wire real value
-            telemetry.token_total_ns = /* elapsed ns for this token */ 0; // TODO wire real value
-            telemetry.record_token();
+            // ----- streaming telemetry: one token fully emitted -----
+            if (vramStreamingController_) {
+                uint64_t tokenBytesMoved = 0;
+                vramStreamingController_->endTokenMeasurement(tokenBytesMoved);
+                telemetry.ram_to_gpu_bytes = tokenBytesMoved;
+                telemetry.token_total_ns = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tFwd1 - tFwd0).count());
+                telemetry.record_token();
+            } else {
+                telemetry.record_token();
+            }
         }
 
         const size_t remaining=decodeLimit-generated;
@@ -3485,6 +3547,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
         if (generated > 0) {
             stats->latencyMs = stats->totalWallMs / static_cast<double>(generated);
+        }
+
+        // VRAM streaming telemetry
+        if (vramStreamingController_) {
+            auto vstats = vramStreamingController_->stats();
+            stats->vramTokensMeasured = vstats.tokensMeasured;
+            stats->vramCeilingBytes = vstats.vramCeilingBytes;
+            stats->vramPeakUsedBytes = vstats.vramPeakBytes;
+            stats->hostSpillBytes = vstats.hostRamUsedBytes + vstats.hostNvmeUsedBytes;
+            if (vstats.tokensMeasured > 0) {
+                stats->avgVramBytesPerToken = static_cast<double>(vstats.tokenBytesMovedSum) / static_cast<double>(vstats.tokensMeasured);
+            }
+            if (stats->decodeMs > 0.0 && vstats.tokensMeasured > 0) {
+                // measured streaming TPS: measured tokens / decode wall time
+                stats->vramStreamingTokensPerSecond = static_cast<double>(vstats.tokensMeasured) / (stats->decodeMs / 1000.0);
+            }
         }
     }
 

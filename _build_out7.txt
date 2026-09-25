@@ -1,0 +1,84 @@
+CMake is re-running because F:/~dev/build_streaming/CMakeFiles/generate.stamp is out-of-date.
+  the file 'F:/~dev/CMakeLists.txt'
+  is newer than 'F:/~dev/build_streaming/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: F:/~dev/build_streaming
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule F:/~dev/CMakeLists.txt
+  rawrxd_screenpilot_e2e.vcxproj -> F:\~dev\build_streaming\Release\rawrxd_screenpilot_e2e.lib
+  Building Custom Rule F:/~dev/CMakeLists.txt
+  Assembling F:\~dev\src\deep2\Classify.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Assembling F:\~dev\rawrxd\src\rawr_classifier_scalar.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Assembling F:\~dev\rawrxd\src\rawr_classifier_avx2.asm...
+MASM : warning A4018: invalid command-line option : /arch:AVX512 [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /fp:fast [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /permissive- [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4018: invalid command-line option : /EHsc [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+MASM : warning A4008: invalid command-line option value, default is used : /W [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(118,39): warning C4476: 'fprintf' : unknown type field character ',' in format specifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(105,23): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(116,25): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30): warning C4477: 'fprintf' : format string '%llu' requires an argument of type 'unsigned __int64', but variadic argument 3 has type 'int' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%u' in the format string
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%I32u' in the format string
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13): warning C4474: 'fprintf' : too many arguments passed for format string [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13):
+      placeholders and their parameters expect 25 variadic arguments, but 27 were provided
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(232,13): warning C4063: case '20' is not a valid value for switch of enum 'Deep2::Deep2Engine::ParityCheckpoint' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(851,16):
+      see declaration of 'Deep2::Deep2Engine::ParityCheckpoint'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(302,28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(351,54): warning C4458: declaration of 'logits' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1094,12):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1350,70): error C2065: 'isNemotronH': undeclared identifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(891,42): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1664,62): warning C4458: declaration of 'weightSize' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1088,12):
+      see declaration of 'Deep2::Deep2Engine::weightSize'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1890,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1903,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2907,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2918,39): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_GpuToken.cpp
+  Deep2DeviceManager.cpp
+  BP16Streamer.cpp
+  CompressedKVCache.cpp
+  NVMeStream.cpp
+  ElasticResidencyManager.cpp
+  CycloneScheduler.cpp
+  ProductionProfiler.cpp
+  Chamber.cpp
+  ToroidalKVCache.cpp
+  PlasmaGovernor.cpp
+  SovereignOutOfCoreRuntime.cpp
+  ExpertCache.cpp
+  VulkanExpertTransport.cpp
+F:\~dev\rawrxd\src\deep2\expert_cache\VulkanExpertTransport.cpp(10,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\expert_cache\VulkanExpertTransport.cpp(10,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  Generating Code...

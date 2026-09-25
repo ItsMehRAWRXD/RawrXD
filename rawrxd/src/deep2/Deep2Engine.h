@@ -60,12 +60,8 @@
 #include <cstdint>
 
 // RAWRXD_EXPERT_CACHE_004/005
-#ifdef DEEP2_ENABLE_EXPERT_CACHE
-#include "ExpertCache.h"
-#endif
-#ifdef DEEP2_ENABLE_EXPERT_CACHE
-#include "VulkanExpertTransport.h"
-#endif
+#include "expert_cache/ExpertCache.h"
+#include "expert_cache/VulkanExpertTransport.h"
 
 namespace Deep2 {
 
@@ -279,6 +275,14 @@ struct InferenceStats {
     size_t cacheHits = 0;
     size_t cacheMisses = 0;
     double memoryBandwidthGBps = 0.0;
+
+    // VRAM streaming telemetry (populated when VramStreamingController is active)
+    double vramStreamingTokensPerSecond = 0.0; // measured TPS with streaming overhead
+    double avgVramBytesPerToken = 0.0;         // average bytes moved per token
+    uint64_t vramTokensMeasured = 0;           // number of tokens measured
+    uint64_t vramCeilingBytes = 0;             // active ceiling at end of generation
+    uint64_t vramPeakUsedBytes = 0;            // peak VRAM used during generation
+    uint64_t hostSpillBytes = 0;               // total bytes spilled to host
 };
 
 // ============================================================================

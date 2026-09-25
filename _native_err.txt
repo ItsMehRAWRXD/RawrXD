@@ -1,0 +1,26 @@
+[rawr run] MODEL_RESOLUTION: resolving 'gemma3-1b-Q2_K'
+[rawr run] MODEL_RESOLUTION=PASS  path=D:\rawrxd\gemma3-1b-Q2_K.gguf
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[rawr run] MODEL_LOAD: loading...
+[Deep2Engine] ROPE_ARCH=gemma3 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=512 SLIDING_WINDOW_PATTERN=6
+[Deep2Engine] GGUF mapped: arch=gemma3 shards=1 tensors=340 layers=26 hidden=1152 heads=4 kv_heads=1 vocab=262144
+ARCH=gemma3
+HIDDEN=1152
+LAYERS=26
+HEADS=4
+KV_HEADS=1
+HEAD_DIM=256
+GQA_GROUP=4
+FFN_DIM=6912
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=256
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=1
+[rawr run] MODEL_LOAD=PASS  1383 ms
+[rawr run] GENERATE: streaming...

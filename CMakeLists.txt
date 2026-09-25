@@ -27,9 +27,25 @@ add_executable(rawr_monolith
     rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
     rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
     rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+    rawrxd/src/deep2/Deep2Engine_GpuToken.cpp
+    rawrxd/src/deep2/Deep2DeviceManager.cpp
     rawrxd/src/deep2/VramStreamingController.cpp
     rawrxd/src/deep2/StreamEngine.cpp
     rawrxd/src/deep2/StreamRouter.cpp
+    rawrxd/src/deep2/BP16Streamer.cpp
+    rawrxd/src/deep2/CompressedKVCache.cpp
+    rawrxd/src/deep2/NVMeStream.cpp
+    rawrxd/src/deep2/ElasticResidencyManager.cpp
+    rawrxd/src/deep2/CycloneScheduler.cpp
+    rawrxd/src/deep2/ProductionProfiler.cpp
+    rawrxd/src/deep2/Chamber.cpp
+    rawrxd/src/deep2/ToroidalKVCache.cpp
+    rawrxd/src/deep2/PlasmaGovernor.cpp
+    rawrxd/src/deep2/SovereignOutOfCoreRuntime.cpp
+    rawrxd/src/deep2/expert_cache/ExpertCache.cpp
+    rawrxd/src/deep2/expert_cache/VulkanExpertTransport.cpp
+    rawrxd/src/deep2/expert_cache/HostStagingRing.cpp
+    rawrxd/src/deep2/mars/MARSController.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm

@@ -1,0 +1,156 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  rawrxd_screenpilot_e2e.vcxproj -> F:\~dev\build_streaming\Release\rawrxd_screenpilot_e2e.lib
+  rawr_monolith_v2.cpp
+F:\~dev\rawrxd\src\rawr_braid_integration.hpp(288,33): warning C4244: '=': conversion from 'uint32_t' to 'uint16_t', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  (compiling source file '../rawr_monolith_v2.cpp')
+  
+F:\~dev\rawrxd\src\rawr_braid_integration.hpp(278,11): warning C4100: 'stagingBuffer': unreferenced parameter [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  (compiling source file '../rawr_monolith_v2.cpp')
+  
+F:\~dev\rawrxd\src\rawr_braid_integration.hpp(276,11): warning C4100: 'errorBudget': unreferenced parameter [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  (compiling source file '../rawr_monolith_v2.cpp')
+  
+F:\~dev\rawr_monolith_v2.cpp(60,11): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawr_monolith_v2.cpp(60,11):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+F:\~dev\rawr_monolith_v2.cpp(61,11): warning C4005: 'NOMINMAX': macro redefinition [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawr_monolith_v2.cpp(61,11):
+      'NOMINMAX' previously declared on the command line
+  
+F:\~dev\rawr_monolith_v2.cpp(318,49): warning C4244: 'argument': conversion from 'uint64_t' to 'uint32_t', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawr_monolith_v2.cpp(449,33): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawr_monolith_v2.cpp(647,21): warning C4100: 'id': unreferenced parameter [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawr_gemm_avx512.h(681,21): warning C4100: 'id': unreferenced parameter [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  (compiling source file '../rawr_monolith_v2.cpp')
+  
+F:\~dev\rawr_monolith_v2.cpp(898,21): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawr_monolith_v2.cpp(1324,13): warning C4189: 'req_id': local variable is initialized but not referenced [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawr_monolith_v2.cpp(1415,21): warning C4456: declaration of 'model_path' hides previous local declaration [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawr_monolith_v2.cpp(1407,17):
+      see declaration of 'model_path'
+  
+  rawr_run_stream.cpp
+  rawr_agent.cpp
+  rawr_agent_audit_driver.cpp
+F:\~dev\src\rawr_agent_audit_driver.cpp(30,9): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\src\rawr_agent_audit_driver.cpp(30,9):
+      'WIN32_LEAN_AND_MEAN' previously declared on the command line
+  
+  Deep2Engine.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(118,39): warning C4476: 'fprintf' : unknown type field character ',' in format specifier [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(105,23): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(116,25): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30): warning C4477: 'fprintf' : format string '%llu' requires an argument of type 'unsigned __int64', but variadic argument 3 has type 'int' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%u' in the format string
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(128,30):
+      consider using '%I32u' in the format string
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13): warning C4474: 'fprintf' : too many arguments passed for format string [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(141,13):
+      placeholders and their parameters expect 25 variadic arguments, but 27 were provided
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(232,13): warning C4063: case '20' is not a valid value for switch of enum 'Deep2::Deep2Engine::ParityCheckpoint' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(851,16):
+      see declaration of 'Deep2::Deep2Engine::ParityCheckpoint'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(302,28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(351,54): warning C4458: declaration of 'logits' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1094,12):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(891,42): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1664,62): warning C4458: declaration of 'weightSize' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1088,12):
+      see declaration of 'Deep2::Deep2Engine::weightSize'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1890,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(1903,30): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2907,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(2918,39): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(94,17): warning C4505: 'Deep2::now_ns': unreferenced function with internal linkage has been removed [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp(154,13): warning C4505: 'rmsnorm': unreferenced function with internal linkage has been removed [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_Speculative.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_Speculative.cpp(42,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_Speculative.cpp(246,18): warning C4189: 'KD': local variable is initialized but not referenced [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_Speculative.cpp(542,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_SsVkDecodeBind.cpp
+F:\~dev\rawrxd\src\deep2\FinalNormAcquire.hpp(10,40): warning C4099: 'Deep2::WeightTensor': type name first seen using 'struct' now seen using 'class' [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  (compiling source file '../rawrxd/src/deep2/Deep2Engine_SsVkDecodeBind.cpp')
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(77,8):
+      see declaration of 'Deep2::WeightTensor'
+  
+  Deep2Engine_VulkanRuntime.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(60,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(229,26): warning C4456: declaration of 'layerBytes' hides previous local declaration [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(188,31):
+      see declaration of 'layerBytes'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(103,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_VulkanRuntime.cpp(113,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_GpuForward.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(35,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(40,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(133,29): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(260,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(268,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(272,31): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(277,27): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(470,35): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(376,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuForward.cpp(377,15): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2DualGpuRowSplit.cpp
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(20,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(28,26): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(42,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(79,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(84,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(169,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(457,34): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(459,34): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(535,24): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(639,28): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+F:\~dev\rawrxd\src\deep2\Deep2DualGpuRowSplit.cpp(645,32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details. [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+  Deep2Engine_GpuMoEMLA.cpp
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(167,32): warning C4458: declaration of 'weights' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1087,12):
+      see declaration of 'Deep2::Deep2Engine::weights'
+  
+F:\~dev\rawrxd\src\deep2\Deep2Engine_GpuMoEMLA.cpp(215,24): warning C4458: declaration of 'logits' hides class member [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      F:\~dev\rawrxd\src\deep2\Deep2Engine.h(1094,12):
+      see declaration of 'Deep2::Deep2Engine::logits'
+  
+  StreamEngine.cpp
+F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5): error C2679: binary '=': no operator found which takes a right-hand operand of type 'const Deep2::NVMeStreamConfig' (or there is no acceptable conversion) [F:\~dev\build_streaming\rawr_monolith.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3476,17):
+      could be 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &)'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &)': cannot convert argument 2 from 'const Deep2::NVMeStreamConfig' to 'const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              Reason: cannot convert from 'const Deep2::NVMeStreamConfig' to 'const std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3362,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::nullptr_t) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::nullptr_t) noexcept': cannot convert argument 2 from 'const Deep2::NVMeStreamConfig' to 'std::nullptr_t'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3413,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &&) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+          'initializing': cannot convert from 'const Deep2::NVMeStreamConfig' to 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &&'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              Reason: cannot convert from 'const Deep2::NVMeStreamConfig' to 'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>'
+              F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,17):
+              No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3406,30):
+      or       'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept'
+          F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+          'std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>> &std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>::operator =(std::unique_ptr<_Ux,_Dx> &&) noexcept': could not deduce template argument for 'std::unique_ptr<_Ux,_Dx> &&' from 'const Deep2::NVMeStreamConfig'
+      F:\~dev\rawrxd\src\deep2\StreamEngine.cpp(22,5):
+      while trying to match the argument list '(std::unique_ptr<Deep2::NVMeStreamConfig,std::default_delete<Deep2::NVMeStreamConfig>>, const Deep2::NVMeStreamConfig)'
+  
+  Generating Code...
