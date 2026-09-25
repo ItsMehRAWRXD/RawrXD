@@ -99,6 +99,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_VulkanRuntime.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/strict_gpu_violations.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuForward.cpp
+    # Continuous streaming execution (RAWRXD_CONTINUOUS_STREAM_REALITY_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/streaming/ContinuousExecution.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/streaming/Win32ContinuousBridge.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/streaming/EventLedger.cpp
     # Expert cache (RAWRXD_EXPERT_CACHE_004/005)
     ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertCache.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertTensorCatalog.cpp

@@ -43,6 +43,7 @@
 #include "VramStreamingController.hpp"
 #include "StreamEngine.h"
 #include "StreamRouter.h"
+#include "TimeReverseDigest.hpp"
 // Sovereign Engine components (Dragon Lore)
 #include "Chamber.hpp"
 #include "ToroidalKVCache.hpp"
@@ -475,6 +476,12 @@ public:
     bool endTokenStreamingMeasurement(uint64_t& outBytesMoved);
     VramStreamingStats getVramStreamingStats() const;
 
+    // TimeReverseDigest: reverse-time materialization scheduler
+    void enableTimeReverseDigest(bool enable);
+    bool isTimeReverseEnabled() const { return timeReverseEnabled_; }
+    TimeReverseDigest* getTimeReverseDigest() const { return timeReverseDigest_.get(); }
+    void setTimeReverseHorizonMs(double ms);
+
     // Cyclone temporal scheduler (live generate ownership)
     void enableCyclone(bool enable);
     bool isCycloneEnabled() const { return cycloneEnabled_; }
@@ -564,7 +571,48 @@ public:
         const char* failureStage = nullptr;
     };
 
-    ForwardResult forwardTokenAllLayers(float* hidden, size_t seqLen);
+    // RAWRXD_CONTINUOUS_STREAM_REALITY_001 — the only live decode primitive.
+    // There is no other generation path for chat, agentic, swarm, or tool-resume mode.
+    struct DecodeCursor {
+        int pendingToken = -1;
+        bool pendingForward = false;
+        std::vector<float> hidden;
+        std::vector<float> logits;
+        size_t seq = 0;
+        ExecutionRoute lockedRoute = ExecutionRoute::Unset;
+        bool requiresResidentGpu = false;
+        uint64_t maxOutputTokens = 0;
+        uint64_t tokensGenerated = 0;
+    };
+
+    struct DecodeOneResult {
+        enum class Kind { Text, Eos, StopSeq, Error } kind = Kind::Error;
+        int token = -1;
+        std::string text;
+        std::string error;
+
+        static DecodeOneResult make_error(const char* msg) {
+            DecodeOneResult r{};
+            r.kind = Kind::Error;
+            r.error = msg;
+            return r;
+        }
+        static DecodeOneResult make_token(int tok) {
+            DecodeOneResult r{};
+            r.kind = Kind::Text;
+            r.token = tok;
+            return r;
+        }
+        static DecodeOneResult make_eos(int tok) {
+            DecodeOneResult r{};
+            r.kind = Kind::Eos;
+            r.token = tok;
+            return r;
+        }
+    };
+
+    bool initializeDecodeCursor(DecodeCursor& cursor) const;
+    DecodeOneResult decodeContinuousOne(DecodeCursor& cursor);
     bool forwardSpeculativeBlock(const int32_t* tokenIds,size_t count,
                                  size_t basePos,float* finalHiddenBatch);
     bool verifySpeculativeGreedyWindow(
@@ -1073,6 +1121,10 @@ private:
     std::unique_ptr<VramStreamingController> vramStreamingController_;
     std::unique_ptr<StreamEngine> streamEngine_;
     std::unique_ptr<StreamRouter> streamRouter_;
+
+    // TimeReverseDigest: reverse-time materialization scheduler
+    std::unique_ptr<TimeReverseDigest> timeReverseDigest_;
+    bool timeReverseEnabled_ = false;
 
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;

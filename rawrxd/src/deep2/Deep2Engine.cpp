@@ -1994,6 +1994,107 @@ int Deep2Engine::sampleToken(const float* logitsPtr) {
     return sampler->sample(logitsPtr, (int)config.vocabSize);
 }
 
+// =================== DECODE CONTINUOUS ONE ====================
+// RAWRXD_CONTINUOUS_STREAM_REALITY_001
+// The only live decode primitive. No other generation path exists for
+// chat, agentic, swarm, or tool-resume mode.
+bool Deep2Engine::initializeDecodeCursor(DecodeCursor& cursor) const {
+    if (!initialized || !modelWeights.loaded ||
+        config.hiddenDim == 0 || config.vocabSize == 0) {
+        return false;
+    }
+    cursor.hidden.assign(config.hiddenDim, 0.0f);
+    cursor.logits.assign(config.vocabSize, 0.0f);
+    cursor.pendingToken = -1;
+    cursor.pendingForward = false;
+    cursor.seq = 0;
+    cursor.lockedRoute = ExecutionRoute::Unset;
+    cursor.requiresResidentGpu = false;
+    cursor.maxOutputTokens = 0;
+    cursor.tokensGenerated = 0;
+    return true;
+}
+
+Deep2Engine::DecodeOneResult Deep2Engine::decodeContinuousOne(DecodeCursor& cursor) {
+    using R = DecodeOneResult;
+
+    // --- Validate state ---
+    if (!initialized || !modelWeights.loaded) {
+        return R::make_error("ENGINE_NOT_INITIALIZED");
+    }
+    if (cursor.hidden.size() != config.hiddenDim ||
+        cursor.logits.size() != config.vocabSize) {
+        return R::make_error("CURSOR_GEOMETRY_MISMATCH");
+    }
+
+    // --- Cancel check ---
+    if (cancelRequested_.load(std::memory_order_acquire)) {
+        return R::make_error("CANCELLED");
+    }
+
+    // --- Forward the pending token (if any) ---
+    if (cursor.pendingForward) {
+        if (cursor.pendingToken < 0 ||
+            static_cast<size_t>(cursor.pendingToken) >= modelWeights.vocabSize) {
+            return R::make_error("INVALID_PENDING_TOKEN");
+        }
+
+        if (!embedToken(cursor.pendingToken, cursor.hidden.data())) {
+            return R::make_error("EMBED_FAILED");
+        }
+
+        const size_t seq = kvCache ? kvCache->currentLength() + 1 : cursor.seq + 1;
+
+        auto fr = forwardTokenAllLayers(cursor.hidden.data(), seq);
+        if (!fr.ok) {
+            return R::make_error("FORWARD_FAILED");
+        }
+
+        // Route locking: first forward establishes the route.
+        if (cursor.lockedRoute == ExecutionRoute::Unset) {
+            cursor.lockedRoute = fr.actualRoute;
+            cursor.requiresResidentGpu = (fr.actualRoute == ExecutionRoute::VulkanResident);
+        }
+        // Route mutation is a fatal violation.
+        if (fr.actualRoute != cursor.lockedRoute) {
+            return R::make_error("EXECUTION_ROUTE_MUTATED");
+        }
+        // Resident-forward must commit GPU work before KV advance.
+        if (cursor.requiresResidentGpu && !fr.gpuCommitted) {
+            return R::make_error("GPU_FORWARD_NOT_COMMITTED");
+        }
+
+        // Only advance KV after a committed forward.
+        if (config.useKVCache && kvCache) {
+            if (!kvCache->advance()) {
+                return R::make_error("KV_ADVANCE_FAILED");
+            }
+        }
+        cursor.seq = seq;
+        cursor.pendingForward = false;
+    }
+
+    // --- Compute logits ---
+    try {
+        computeLogits(cursor.hidden.data(), cursor.logits.data());
+    } catch (const std::exception& e) {
+        (void)e;
+        return R::make_error("LOGITS_FAILED");
+    }
+
+    // --- Sample token ---
+    const int nextTok = sampleToken(cursor.logits.data());
+    if (nextTok < 0 || static_cast<size_t>(nextTok) >= config.vocabSize) {
+        return R::make_error("SAMPLE_FAILED");
+    }
+
+    cursor.pendingToken = nextTok;
+    cursor.pendingForward = true;
+    ++cursor.tokensGenerated;
+
+    return R::make_token(nextTok);
+}
+
 int Deep2Engine::sampleCommittedToken(const float* logitsPtr) {
     return sampleToken(logitsPtr);
 }
@@ -3569,14 +3670,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             for (int vi = 0; vi < vocab; ++vi) { double d = logits[vi] - mean; var += d * d; }
             var = std::sqrt(var / vocab);
             {
-                dbg << "[LOGITS] token=" << generated
-                    << " min=" << minv << " max=" << maxv << " mean=" << mean
-                    << " std=" << var << " argmax=" << maxi << "\n";
-                std::string topDbg;
-                for (int ti = 0; ti < std::min(vocab, 5); ++ti) {
-                    if (ti) topDbg += " ";
-                    topDbg += std::to_string(logits[ti]);
-                }
+                std::fprintf(stderr, "[LOGITS] token=%zu min=%g max=%g mean=%g std=%g argmax=%d\n",
+                    generated, minv, maxv, mean, var, maxi);
             }
         }
         auto tSample0 = std::chrono::steady_clock::now();
@@ -3975,6 +4070,25 @@ bool Deep2Engine::endTokenStreamingMeasurement(uint64_t& outBytesMoved) {
 
 VramStreamingStats Deep2Engine::getVramStreamingStats() const {
     return vramStreamingController_ ? vramStreamingController_->stats() : VramStreamingStats{};
+}
+
+// =================== TIME-REVERSE DIGEST ====================
+void Deep2Engine::enableTimeReverseDigest(bool enable) {
+    if (!enable) {
+        timeReverseDigest_.reset();
+        timeReverseEnabled_ = false;
+        return;
+    }
+    if (!timeReverseDigest_) {
+        timeReverseDigest_ = std::make_unique<TimeReverseDigest>();
+    }
+    timeReverseEnabled_ = true;
+}
+
+void Deep2Engine::setTimeReverseHorizonMs(double ms) {
+    if (timeReverseDigest_) {
+        timeReverseDigest_->setHorizonNs(static_cast<uint64_t>(ms * 1e6));
+    }
 }
 
 // =================== GPU SCHEDULER ====================

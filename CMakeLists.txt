@@ -46,6 +46,8 @@ add_executable(rawr_monolith
     rawrxd/src/deep2/expert_cache/VulkanExpertTransport.cpp
     rawrxd/src/deep2/expert_cache/HostStagingRing.cpp
     rawrxd/src/deep2/mars/MARSController.cpp
+    rawrxd/src/deep2/streaming/ContinuousExecution.cpp
+    rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm
@@ -57,6 +59,7 @@ target_include_directories(rawr_monolith PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2/streaming
     ${Vulkan_INCLUDE_DIRS}
 )
 
@@ -134,6 +137,13 @@ add_executable(deep2_benchmark
     rawrxd/src/deep2/expert_cache/HostStagingRing.cpp
     rawrxd/src/deep2/mars/MARSController.cpp
     rawrxd/src/deep2/strict_gpu_violations.cpp
+    rawrxd/src/deep2/Beaconism.cpp
+    rawrxd/src/deep2/GpuScheduler.cpp
+    rawrxd/src/deep2/TimeReverseDigest.cpp
+    rawrxd/src/deep2/RealGGUFParity.cpp
+    rawrxd/src/deep2/streaming/ContinuousExecution.cpp
+    rawrxd/src/deep2/streaming/Win32ContinuousBridge.cpp
+    rawrxd/src/deep2/streaming/ContinuousEventLedger.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm
@@ -145,6 +155,7 @@ target_include_directories(deep2_benchmark PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
     ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2
+    ${CMAKE_CURRENT_SOURCE_DIR}/rawrxd/src/deep2/streaming
     ${Vulkan_INCLUDE_DIRS}
 )
 

@@ -1,4 +1,4 @@
-#include "continuous_execution.hpp"
+#include "ContinuousExecution.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -90,8 +90,9 @@ bool ToolRegistry::execute(std::string_view name,
 Session::Session(RunId id,
                  ModelBindings model,
                  std::shared_ptr<const ToolRegistry> tools,
-                 std::shared_ptr<EventPipe> events)
-    : id_(id), model_(std::move(model)), tools_(std::move(tools)), events_(std::move(events)) {
+                 std::shared_ptr<EventPipe> events,
+                 EventLedger* ledger)
+    : id_(id), model_(std::move(model)), tools_(std::move(tools)), events_(std::move(events)), ledger_(ledger) {
     validate_bindings();
 
     if (model_.set_progress_sink) {
@@ -161,6 +162,12 @@ void Session::emit(Event ev) {
     ev.run_id = id_;
     ev.sequence = sequence_.fetch_add(1, std::memory_order_acq_rel) + 1;
     ev.work_epoch = std::max(ev.work_epoch, work_epoch_.load(std::memory_order_acquire));
+
+    // RAWRXD_CONTINUOUS_STREAM_REALITY_001: persist to durable ledger first.
+    if (ledger_) {
+        ledger_->append(id_, ev);
+    }
+
     auto pr = events_->push(std::move(ev));
     if (pr == PushResult::TransportClosed) {
         if (!terminal()) {
@@ -344,7 +351,8 @@ void Session::run(Request request) {
     }
 }
 
-Controller::Controller() : events_(std::make_shared<EventPipe>()) {}
+Controller::Controller() : events_(std::make_shared<EventPipe>()), ledger_(nullptr) {}
+Controller::Controller(EventLedger* ledger) : events_(std::make_shared<EventPipe>()), ledger_(ledger) {}
 
 RunId Controller::start(ModelBindings model,
                         std::shared_ptr<const ToolRegistry> tools,
@@ -355,7 +363,7 @@ RunId Controller::start(ModelBindings model,
         std::lock_guard<std::mutex> lk(mu_);
         if (shutting_down_) throw std::logic_error("Controller is shutting down");
         id = next_id_.fetch_add(1, std::memory_order_acq_rel);
-        s = std::make_unique<Session>(id, std::move(model), std::move(tools), events_);
+        s = std::make_unique<Session>(id, std::move(model), std::move(tools), events_, ledger_);
         auto* raw = s.get();
         sessions_.emplace(id, std::move(s));
         raw->start(std::move(request));

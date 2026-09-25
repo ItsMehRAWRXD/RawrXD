@@ -1,4 +1,5 @@
 #pragma once
+#include "ContinuousEventLedger.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
@@ -160,12 +161,16 @@ struct Request {
     std::uint64_t max_output_tokens{0};
 };
 
+class ToolRegistry final;
+class EventLedger;
+
 class Session final {
 public:
     Session(RunId id,
             ModelBindings model,
             std::shared_ptr<const ToolRegistry> tools,
-            std::shared_ptr<EventPipe> events);
+            std::shared_ptr<EventPipe> events,
+            EventLedger* ledger = nullptr);
     ~Session();
 
     Session(const Session&) = delete;
@@ -199,13 +204,16 @@ private:
     std::atomic<std::uint64_t> work_epoch_{0};
     std::uint64_t token_index_{0};
     std::string full_text_;
+    EventLedger* ledger_ = nullptr;
 };
 
 class Controller final {
 public:
     Controller();
+    explicit Controller(EventLedger* ledger);
 
     std::shared_ptr<EventPipe> events() const { return events_; }
+    EventLedger* ledger() const { return ledger_; }
 
     RunId start(ModelBindings model,
                 std::shared_ptr<const ToolRegistry> tools,
@@ -217,6 +225,7 @@ public:
 
 private:
     std::shared_ptr<EventPipe> events_;
+    EventLedger* ledger_ = nullptr;
     std::mutex mu_;
     std::unordered_map<RunId, std::unique_ptr<Session>> sessions_;
     std::atomic<RunId> next_id_{1};

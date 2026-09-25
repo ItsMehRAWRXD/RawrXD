@@ -778,6 +778,7 @@ typedef struct {
 } RXDTokenBudget;
 
 static RXDTokenBudget g_token_budget = {0};
+static bool g_budget_run_started = false;
 
 static void rxd_token_budget_init(uint32_t total_budget, uint32_t agent_count) {
     g_token_budget.budget = total_budget;
@@ -785,17 +786,24 @@ static void rxd_token_budget_init(uint32_t total_budget, uint32_t agent_count) {
     g_token_budget.reserved = 0;
     g_token_budget.per_agent_budget = agent_count > 0 ? total_budget / agent_count : total_budget;
     g_token_budget.exceeded = false;
+    g_budget_run_started = false;
 }
 
+static void rxd_token_budget_start_run(void) { g_budget_run_started = true; }
+static void rxd_token_budget_end_run(void)   { g_budget_run_started = false; }
+
 static bool rxd_token_budget_reserve(RXDAgent* agent, uint32_t tokens) {
-    if (g_token_budget.used + tokens > g_token_budget.budget) {
-        g_token_budget.exceeded = true;
-        strncpy(g_token_budget.exceeded_agent, agent->name, 
-                sizeof(g_token_budget.exceeded_agent) - 1);
-        return false;
+    // Admission phase: budget may ACCEPT/REJECT before run starts.
+    // After run starts, budget becomes accounting/telemetry only.
+    if (!g_budget_run_started) {
+        if (g_token_budget.used + tokens > g_token_budget.budget) {
+            g_token_budget.exceeded = true;
+            strncpy(g_token_budget.exceeded_agent, agent->name,
+                    sizeof(g_token_budget.exceeded_agent) - 1);
+            g_token_budget.exceeded_agent[sizeof(g_token_budget.exceeded_agent) - 1] = '\0';
+            return false;
+        }
     }
-    
-    g_token_budget.used += tokens;
     g_token_budget.reserved += tokens;
     return true;
 }

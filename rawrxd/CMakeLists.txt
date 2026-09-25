@@ -4404,6 +4404,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2DeviceManager.cpp
     src/deep2/DualLaneChoreographer.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
+    src/deep2/GpuScheduler.cpp
     src/deep2/Deep2MultiGpu_CostCut.cpp
     src/deep2/vulkan_compute.cpp
     src/deep2/Deep2Engine_VulkanRuntime.cpp
@@ -4616,7 +4617,7 @@ src/vulkan_fwd_q4k_act.cpp
     src/sovereign/Profiler.cpp
     src/sovereign/DistributedKV.cpp
     src/sovereign/ExpertSharding.cpp
-    src/sovereign/Beaconism.cpp
+    src/deep2/Beaconism.cpp
     src/sovereign/rawr_transport_strict.cpp
     # src/sovereign/verify_integration.cpp  # excluded: C++20 format header conflicts with MSVC 14.44
     # MASM GEMV kernels
@@ -4670,6 +4671,8 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
     src/agentic/streaming_command_handler.cpp
     # Global symbol definitions for agentic tool registry counters + authority binding
     src/deep2/AgentToolAuthority.cpp
+    # TimeReverseDigest: reverse-time materialization scheduler
+    src/deep2/TimeReverseDigest.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
@@ -10508,6 +10511,36 @@ if(BUILD_DEEP2_PARITY_CERT)
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
 endif()
 
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+# Deep2 end-to-end streaming benchmark (non-blocking, TimeReverseDigest + VramStreaming)
+# Replaces the stubbed deep2_end_to_end_bench.cpp with a real event-driven streaming harness.
+# +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
+option(BUILD_DEEP2_END_TO_END_BENCH "Build Deep2 end-to-end streaming benchmark" OFF)
+if(BUILD_DEEP2_END_TO_END_BENCH)
+    add_executable(deep2_end_to_end_bench
+        src/deep2/deep2_end_to_end_bench.cpp
+    )
+    target_link_libraries(deep2_end_to_end_bench PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_end_to_end_bench PRIVATE
+            $<$<CONFIG:Debug>:/Od>
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+            /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_end_to_end_bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_end_to_end_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_end_to_end_bench
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] End-to-end streaming benchmark: deep2_end_to_end_bench")
+endif()
+
 # ide_agent_loop_cert +�-�+�-�+�-� Win32IDE agent spine: read +�-�+�-�+�-� edit +�-�+�-�+�-� diag +�-�+�-�+�-� build +�-�+�-�+�-� run
 # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" OFF)
@@ -15261,9 +15294,10 @@ set(B010_RESIDENCY_SOURCES
     src/runtime/memory/TensorPlacementManager.cpp
 )
 
-add_executable(b010_weight_residency_profile EXCLUDE_FROM_ALL
-    ${B010_RESIDENCY_SOURCES}
-)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/b010/b010_weight_residency_profile.cpp")
+    add_executable(b010_weight_residency_profile EXCLUDE_FROM_ALL
+        ${B010_RESIDENCY_SOURCES}
+    )
 target_include_directories(b010_weight_residency_profile PRIVATE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/include
@@ -15309,6 +15343,7 @@ if(BUILD_TESTING)
     add_test(NAME b010_weight_residency_profile
              COMMAND b010_weight_residency_profile)
 endif()
+endif() # EXISTS b010_weight_residency_profile.cpp
 
 # ============================================================================
 # B011: Targeted Weight Residency Optimization

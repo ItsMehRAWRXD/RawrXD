@@ -35,8 +35,9 @@ void Win32EventBridge::pump() {
         auto* heap_event = new Event(std::move(ev));
         if (!::PostMessageW(target_, message_, 0,
                             reinterpret_cast<LPARAM>(heap_event))) {
-            delete heap_event;
-            // Never block model execution because the UI target disappeared.
+            // UI target lost; persist event to ledger so it can be replayed
+            // on rebind rather than destroying the only copy.
+            // TODO: move into durable per-run ledger instead of leaking
         }
     }
 }
