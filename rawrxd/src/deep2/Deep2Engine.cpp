@@ -3094,21 +3094,29 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     std::copy_n(x0, inner, convIn);
     std::copy_n(B0, 2 * groupBC, convIn + inner);
 
-    // Dequantize conv1d weights + bias once per step
-    std::vector<float> convK(convChannels * ssmConvKernel, 0.0f);
-    std::vector<float> convB(convChannels, 0.0f);
-    {
+    // ---- 3. dequantize conv1d weights + bias ONCE per layer, reused per token ----
+    static std::vector<float> convK_cache;  // initialized first call only
+    static std::vector<float> convB_cache;  // initialized first call only
+    static bool        convK_init       = false;
+    static bool        convB_init       = false;
+    if (!convK_init) {
         const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1d.type);
         if (!dq) throw std::runtime_error("computeSSM: cannot get conv1d dequant");
         const size_t nConv = convChannels * ssmConvKernel;
-        std::vector<float> tmpConv(nConv);
-        dq(static_cast<const uint8_t*>(lw.ssmConv1d.data), tmpConv.data(), nConv);
-        convK = std::move(tmpConv);
+        convK_cache.resize(nConv);
+        dq(static_cast<const uint8_t*>(lw.ssmConv1d.data), convK_cache.data(), nConv);
         if (lw.ssmConv1dBias.data) {
             const auto* dqB = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1dBias.type);
-            if (dqB) dqB(static_cast<const uint8_t*>(lw.ssmConv1dBias.data), convB.data(), convChannels);
+            if (dqB) {
+                convB_cache.resize(convChannels);
+                dqB(static_cast<const uint8_t*>(lw.ssmConv1dBias.data), convB_cache.data(), convChannels);
+            }
         }
+        convK_init = true;
+        convB_init = true;
     }
+    auto& convK = convK_cache;
+    auto& convB = convB_cache;
 
     float* convHist = ssmConvState + layer * convChannels * (ssmConvKernel > 1 ? (ssmConvKernel - 1) : 0);
     float* convOut  = ssmY; // borrow ssmY as scratch [convChannels]
@@ -3120,23 +3128,35 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     const float* B = convOut + inner;
     const float* C = B + groupBC;
 
-    // ---- 3. prepare dt bias, A, D ----
-    std::vector<float> dtBias(heads), A(heads), D(heads);
-    {
+    // ---- 4. prepare dt bias, A, D (dequant from cached per-layer data) ----
+    static std::vector<float> dtBias_layer;
+    static std::vector<float> A_layer;
+    static std::vector<float> D_layer;
+    static bool dtBias_init = false, A_init = false, D_init = false;
+    if (!dtBias_init) {
         const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmDtBias.type);
         if (!dq) throw std::runtime_error("computeSSM: cannot get dtBias dequant");
-        dq(static_cast<const uint8_t*>(lw.ssmDtBias.data), dtBias.data(), heads);
+        dtBias_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmDtBias.data), dtBias_layer.data(), heads);
+        dtBias_init = true;
     }
-    {
+    if (!A_init) {
         const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmA.type);
         if (!dq) throw std::runtime_error("computeSSM: cannot get A dequant");
-        dq(static_cast<const uint8_t*>(lw.ssmA.data), A.data(), heads);
+        A_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmA.data), A_layer.data(), heads);
+        A_init = true;
     }
-    {
+    if (!D_init) {
         const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmD.type);
         if (!dq) throw std::runtime_error("computeSSM: cannot get D dequant");
-        dq(static_cast<const uint8_t*>(lw.ssmD.data), D.data(), heads);
+        D_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmD.data), D_layer.data(), heads);
+        D_init = true;
     }
+    auto& dtBias = dtBias_layer;
+    auto& A      = A_layer;
+    auto& D      = D_layer;
 
     std::vector<float> dt(heads);
     for (size_t h = 0; h < heads; ++h) {
@@ -3144,7 +3164,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         if (A[h] > 0.0f) A[h] = -std::exp(A[h]);
     }
 
-    // ---- 4. selective scan (mamba2Step) ----
+    // ---- 5. selective scan (mamba2Step) ----
     float* statePtr = ssmState + layer * heads * headDim * stateN;
     float* yPtr     = ssmX; // reuse scratch [inner]
     mamba2Step(x, B, C, dt.data(), A.data(), D.data(),
@@ -3153,14 +3173,18 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     if (!finite(yPtr, inner))
         throw std::runtime_error("computeSSM: selective scan produced non-finite output");
 
-    // ---- 5. gated RMS norm ----
-    std::vector<float> normW;
-    {
+    // ---- 6. gated RMS norm (dequant from cached per-layer data) ----
+    static std::vector<float> normW_cache;
+    static bool        norm_init = false;
+    if (!norm_init) {
         const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmNorm.type);
         if (!dq) throw std::runtime_error("computeSSM: cannot get norm dequant");
-        normW.resize(inner);
-        dq(static_cast<const uint8_t*>(lw.ssmNorm.data), normW.data(), inner);
+        normW_cache.resize(inner);
+        dq(static_cast<const uint8_t*>(lw.ssmNorm.data), normW_cache.data(), inner);
+        norm_init = true;
     }
+    auto& normW = normW_cache;
+
     for (size_t h = 0; h < heads; ++h) {
         float* yh = yPtr + h * headDim;
         double ss = 0.0;
@@ -3172,7 +3196,7 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         }
     }
 
-    // ---- 6. output projection ----
+    // ---- 7. output projection ----
     std::fill(output, output + H, 0.0f);
     LinearW(lw.ssmOut, yPtr, nullptr, output, H);
 
@@ -4475,3 +4499,4 @@ bool Deep2Engine::growContext(size_t newMaxSeqLen) {
 // Old null-device stubs removed.
 
 } // namespace Deep2
+//fcukevol

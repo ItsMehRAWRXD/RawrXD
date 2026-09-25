@@ -1,0 +1,206 @@
+========================================
+  DEEP2_NATIVE_BENCHMARK_001
+========================================
+ENGINE=Deep2Engine
+VULKAN_REQUESTED=0
+STRICT_VULKAN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+VULKAN_ENABLED=0
+MODEL_LOAD: loading F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3 ...
+[Deep2Engine] ROPE_ARCH=nemotron_h_moe ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] SSM_META inner=4096 state=128 heads=64 groups=8 convK=4
+[Deep2Engine] bound packed experts from 'blk.1.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.1.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.3.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.3.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] Auto-correcting numKVHeads from 32 to 2 (from wk.rows=256 / headDim=128)
+[Deep2Engine] bound packed experts from 'blk.6.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.6.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.8.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.8.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.10.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.10.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.13.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.13.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.15.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.15.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.17.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.17.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.20.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.20.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.22.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.22.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.24.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.24.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.27.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.27.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.29.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.29.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.31.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.31.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.34.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.34.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.36.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.36.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.38.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.38.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.40.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.40.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.43.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.43.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.45.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.45.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.47.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.47.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.49.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.49.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.51.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.51.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.52.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.52.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] MoE bound: experts=128 topk=6 shared=1 moe_layers=24 gating=1 scale=2.5000 norm=1
+[Deep2Engine] GGUF mapped: arch=nemotron_h_moe shards=1 tensors=417 layers=53 hidden=2688 heads=32 kv_heads=2 vocab=131072
+ARCH=nemotron_h_moe
+HIDDEN=2688
+LAYERS=53
+HEADS=32
+KV_HEADS=2
+HEAD_DIM=128
+GQA_GROUP=16
+FFN_DIM=0
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=84
+ROPE_NEOX=0
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+MODEL_LOAD=PASS 716 ms
+MODEL_ARCH=nemotron_h_moe
+MODEL_LAYERS=53
+MODEL_HIDDEN=2688
+MODEL_HEADS=32
+MODEL_KV_HEADS=2
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.57715 max=9.98628
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-54.6046 max=19.7354
+SAMPLER_RESULT token=10081 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.64606 max=11.0071
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-23.3426 max=38.5755
+SAMPLER_RESULT token=1319 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-12.0973 max=11.3214
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-27.8809 max=51.3304
+SAMPLER_RESULT token=3907 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-21.2097 max=7.93282
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-35.3052 max=70.5352
+SAMPLER_RESULT token=13199 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.26724 max=25.2015
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.3633 max=45.4506
+SAMPLER_RESULT token=1408 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-15.2874 max=21.6194
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.9816 max=35.0832
+SAMPLER_RESULT token=69160 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-11.2311 max=14.7676
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-15.9989 max=45.6973
+SAMPLER_RESULT token=1408 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.0052 max=14.8889
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-15.9091 max=19.7018
+SAMPLER_RESULT token=1102 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.927 max=44.8825
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-15.5646 max=12.7602
+SAMPLER_RESULT token=1443 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.94065 max=37.045
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-9.70826 max=12.2792
+SAMPLER_RESULT token=10517 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.24757 max=9.08231
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-23.9225 max=12.4487
+SAMPLER_RESULT token=124634 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-16.6071 max=9.79172
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-25.0243 max=20.9331
+SAMPLER_RESULT token=97014 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.9281 max=16.2053
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-13.7889 max=25.0582
+SAMPLER_RESULT token=1321 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-9.58191 max=17.1461
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-13.7224 max=12.4898
+SAMPLER_RESULT token=27165 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.5226 max=30.4264
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.2239 max=12.6277
+SAMPLER_RESULT token=3068 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.5216 max=30.4237
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.2228 max=12.6266
+SAMPLER_RESULT token=3068 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.5206 max=30.4206
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.2216 max=12.6253
+SAMPLER_RESULT token=3068 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-10.5195 max=30.4175
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-12.2204 max=12.624
+SAMPLER_RESULT token=3068 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-12.2064 max=27.455
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-16.047 max=19.056
+SAMPLER_RESULT token=1121 vocab=131072
+FINAL_NORM_ENTER
+FINALNORM_POST min=-11.652 max=46.7587
+COMPUTE_LOGITS_RETURNED
+LOGITS_SANITY count=131072 finite=131072 nan=0 inf=0 min=-15.2114 max=12.6491
+SAMPLER_RESULT token=1443 vocab=131072
+
+========================================
+  RECEIPT
+========================================
+GATE=DEEP2_NATIVE_BENCHMARK_001
+ENGINE=Deep2Engine
+EXECUTION_BACKEND=CPU
+VULKAN_REQUESTED=0
+VULKAN_INITIALIZED=0
+GPU_FORWARD=0
+CPU_FORWARD=1
+CPU_FALLBACK=0
+MODEL=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+PROMPT_TOKENS=0
+GENERATED_TOKENS=20
+PREFILL_MS=0
+DECODE_MS=62712.3
+DECODE_TPS_REAL=0.319
+VERDICT=PASS
+_h ( includingprocess on repression onf H subsHEAD╓╝ and/datadexdexdexdexy H
