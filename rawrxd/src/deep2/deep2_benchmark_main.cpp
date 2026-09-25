@@ -137,13 +137,19 @@ int main(int argc, char** argv) {
         std::chrono::steady_clock::now() - tLoad0).count();
     std::fprintf(stderr, "MODEL_LOAD=PASS %.0f ms\n", loadMs);
 
-    // Report model metadata if available
+    // Report actual model metadata from the loaded weights
+    const Deep2::EngineConfig& loadedCfg = engine.getConfig();
     std::fprintf(stderr,
-        "MODEL_ARCH=unknown\n"
-        "MODEL_LAYERS=0\n"
-        "MODEL_HIDDEN=0\n"
-        "MODEL_HEADS=0\n"
-        "MODEL_KV_HEADS=0\n");
+        "MODEL_ARCH=%s\n"
+        "MODEL_LAYERS=%zu\n"
+        "MODEL_HIDDEN=%zu\n"
+        "MODEL_HEADS=%zu\n"
+        "MODEL_KV_HEADS=%zu\n",
+        engine.modelArchitecture().empty() ? "unknown" : engine.modelArchitecture().c_str(),
+        loadedCfg.numLayers,
+        loadedCfg.hiddenDim,
+        loadedCfg.numHeads,
+        loadedCfg.numKVHeads);
 
     // --- Generate ---
     Deep2::GenerationOptions opts{};

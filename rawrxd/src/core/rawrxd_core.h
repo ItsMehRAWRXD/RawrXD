@@ -63,20 +63,21 @@ typedef enum {
 } GGMLType;
 
 static const size_t GGML_RXD_BLOCK_SIZE[] = {
-    [GGML_RXD_TYPE_F32] = 1, [GGML_RXD_TYPE_F16] = 1,
-    [GGML_RXD_TYPE_Q4_0] = 32, [GGML_RXD_TYPE_Q4_1] = 32,
-    [GGML_RXD_TYPE_Q5_0] = 32, [GGML_RXD_TYPE_Q5_1] = 32,
-    [GGML_RXD_TYPE_Q8_0] = 32, [GGML_RXD_TYPE_Q8_1] = 32,
-    [GGML_RXD_TYPE_Q2_K] = 256, [GGML_RXD_TYPE_Q3_K] = 256,
-    [GGML_RXD_TYPE_Q4_K] = 256, [GGML_RXD_TYPE_Q5_K] = 256, [GGML_RXD_TYPE_Q6_K] = 256,
+    1, 1,
+    32, 32,
+    32, 32,
+    32, 32,
+    256, 256,
+    256, 256, 256,
 };
 
 static const size_t GGML_RXD_BYTES_PER_BLOCK[] = {
-    [GGML_RXD_TYPE_F32] = 4, [GGML_RXD_TYPE_F16] = 2,
-    [GGML_RXD_TYPE_Q4_0] = 18, [GGML_RXD_TYPE_Q4_1] = 20,
-    [GGML_RXD_TYPE_Q5_0] = 22, [GGML_RXD_TYPE_Q5_1] = 24,
-    [GGML_RXD_TYPE_Q8_0] = 34, [GGML_RXD_TYPE_Q8_1] = 36,
-    [GGML_RXD_TYPE_Q4_K] = 144, [GGML_RXD_TYPE_Q5_K] = 176, [GGML_RXD_TYPE_Q6_K] = 210,
+    4, 2,
+    18, 20,
+    22, 24,
+    34, 36,
+    0, 0,
+    144, 176, 210,
 };
 
 typedef struct {

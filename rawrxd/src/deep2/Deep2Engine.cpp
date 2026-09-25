@@ -126,7 +126,7 @@ void TokenTelemetryAccumulator::record_token() {
     // Emit a CSV row if the file is open.
     if (csv_fp) {
         std::fprintf(csv_fp, "%llu,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%u,%u,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu\n",
-            (unsigned long long)tokens_generated, /* token_index */ 0, /* token_id */ 0,
+            (unsigned long long)tokens_generated, /* token_index */ 0, (unsigned long long)/* token_id */ 0,
             (unsigned long long)model_file_bytes, (unsigned long long)active_weight_bytes,
             (unsigned long long)vram_weight_bytes_read, (unsigned long long)ram_to_gpu_bytes,
             (unsigned long long)gpu_to_gpu_bytes, (unsigned long long)kv_read_bytes,
@@ -549,6 +549,22 @@ bool Deep2Engine::allocateBuffers() {
     layerTemp       = new (std::nothrow) float[H];
     layerOut        = new (std::nothrow) float[H];
 
+    // SSM / Mamba2 per-layer state buffers (Nemotron-H)
+    const bool archIsNemotronH = (modelArchitecture_ == "nemotron_h" || modelArchitecture_ == "nemotron_h_moe");
+    if (archIsNemotronH && ssmInner_ && ssmStateSize_ && ssmHeads_ && ssmGroups_ &&
+        modelWeights.numLayers > 0) {
+        const size_t groupBC = ssmGroups_ * ssmStateSize_;
+        const size_t convChannels = ssmInner_ + 2 * groupBC;
+        const size_t inRows = 2 * ssmInner_ + 2 * groupBC + ssmHeads_;
+        ssmX      = new (std::nothrow) float[ssmInner_];
+        ssmY      = new (std::nothrow) float[ssmInner_];
+        ssmTemp   = new (std::nothrow) float[inRows];
+        ssmState  = new (std::nothrow) float[modelWeights.numLayers * ssmHeads_ * (ssmInner_ / ssmHeads_) * ssmStateSize_];
+        ssmConvState = new (std::nothrow) float[modelWeights.numLayers * convChannels * (ssmConvKernel ? (ssmConvKernel - 1) : 0)];
+        if (ssmState)  std::memset(ssmState,  0, modelWeights.numLayers * ssmHeads_ * (ssmInner_ / ssmHeads_) * ssmStateSize_ * sizeof(float));
+        if (ssmConvState && ssmConvKernel > 1) std::memset(ssmConvState, 0, modelWeights.numLayers * convChannels * (ssmConvKernel - 1) * sizeof(float));
+    }
+
     if (!hiddenStates || !attentionOutput || !ffnOutput || !logits ||
         !qProj || !kProj || !vProj || !gateBuf || !upBuf || !layerTemp ||
         !layerOut) {
@@ -586,6 +602,11 @@ void Deep2Engine::deallocateBuffers() {
     delete[] upBuf;           upBuf = nullptr;
     delete[] layerTemp;       layerTemp = nullptr;
     delete[] layerOut;        layerOut = nullptr;
+    delete[] ssmState;        ssmState = nullptr;
+    delete[] ssmConvState;      ssmConvState = nullptr;
+    delete[] ssmX;              ssmX = nullptr;
+    delete[] ssmY;              ssmY = nullptr;
+    delete[] ssmTemp;           ssmTemp = nullptr;
 }
 
 // =================== RESET (REAL KV RESET) ====================
@@ -599,6 +620,18 @@ void Deep2Engine::reset() {
         std::memset(attentionOutput, 0, config.hiddenDim * sizeof(float));
     if (ffnOutput && config.hiddenDim)
         std::memset(ffnOutput, 0, config.hiddenDim * sizeof(float));
+
+    // Reset SSM recurrent state for new conversation
+    if (ssmState) {
+        const size_t stateBytes = modelWeights.numLayers * ssmHeads_ * (ssmInner_ / ssmHeads_) * ssmStateSize_ * sizeof(float);
+        std::memset(ssmState, 0, stateBytes);
+    }
+    if (ssmConvState) {
+        const size_t groupBC = ssmGroups_ * ssmStateSize_;
+        const size_t convChannels = ssmInner_ + 2 * groupBC;
+        const size_t convHistBytes = modelWeights.numLayers * convChannels * (ssmConvKernel > 1 ? (ssmConvKernel - 1) : 0) * sizeof(float);
+        std::memset(ssmConvState, 0, convHistBytes);
+    }
 
     // BATCH10_RESET_MLA_CACHE
     for (auto& gpu : vulkanDevices_) {
@@ -897,6 +930,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         dbg << "ROPE_STYLE arch=" << arch << " neox=" << (modelWeights.ropeNeoxStyle ? "yes" : "no") << "\n";
     }
 
+    // Nemotron-H / Mamba2 SSM metadata (read from GGUF keys used by llama.cpp converters)
+    if (arch == "nemotron_h" || arch == "nemotron_h_moe") {
+        ssmInner_      = metaSize("ssm.inner_size",      0);
+        ssmStateSize_  = metaSize("ssm.state_size",      0);
+        ssmHeads_      = metaSize("ssm.head_count",      0);
+        ssmGroups_     = metaSize("ssm.group_count",     0);
+        ssmConvKernel  = metaSize("ssm.conv_kernel",     0);
+        const size_t ssmDtRank = metaSize("ssm.time_step_rank", 0);
+        if (ssmDtRank) ssmHeads_ = ssmDtRank; // dt_rank == heads for Mamba2
+        if (ssmInner_ && ssmStateSize_ && ssmHeads_ && ssmGroups_) {
+            nemotronGeoOk_ = 1;
+            std::fprintf(stderr,
+                "[Deep2Engine] SSM_META inner=%zu state=%zu heads=%zu groups=%zu convK=%zu\n",
+                ssmInner_, ssmStateSize_, ssmHeads_, ssmGroups_, ssmConvKernel);
+        } else {
+            std::fprintf(stderr,
+                "[Deep2Engine] SSM metadata incomplete: inner=%zu state=%zu heads=%zu groups=%zu\n",
+                ssmInner_, ssmStateSize_, ssmHeads_, ssmGroups_);
+        }
+    }
+
     const size_t modelContext = metaSize("context_length", 0);
     if (modelContext > 0) {
         // Respect caller-configured maxSeqLen (e.g., inference gate), but
@@ -973,8 +1027,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         bindTensor(p + "ssm_conv1d.weight", lw.ssmConv1d);
         bindTensor(p + "ssm_conv1d.bias", lw.ssmConv1dBias);
         bindTensor(p + "ssm_dt.bias", lw.ssmDtBias);
-        bindTensor(p + "ssm_a.weight", lw.ssmA);
-        bindTensor(p + "ssm_d.weight", lw.ssmD);
+        bindFirst(lw.ssmA, {(p + "ssm_a.weight").c_str(), (p + "ssm_a").c_str()});
+        bindFirst(lw.ssmD, {(p + "ssm_d.weight").c_str(), (p + "ssm_d").c_str()});
         bindTensor(p + "ssm_norm.weight", lw.ssmNorm);
         bindTensor(p + "ssm_out.weight", lw.ssmOut);
 
@@ -1002,17 +1056,49 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             }
             if (!t) return false;
 
-            if (!t->data || t->shape.size() != 3 ||
-                t->shape[0] <= 0 || t->shape[1] <= 0 ||
-                t->shape[2] != static_cast<int64_t>(modelWeights.numExperts) ||
-                modelWeights.numExperts == 0 ||
-                (t->sizeBytes % modelWeights.numExperts) != 0) {
+            if (!t->data || t->shape.size() != 3 || modelWeights.numExperts == 0) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] packed expert tensor found but rejected: "
+                    "ndims=%zu, numExperts=%zu, hasData=%d\n",
+                    t->shape.size(), modelWeights.numExperts, t->data ? 1 : 0);
                 return false;
             }
 
-            const size_t sliceBytes =
-                t->sizeBytes / modelWeights.numExperts;
+            // Auto-detect which dimension holds the expert count.
+            // Standard: shape[2]==E (DeepSeek/Kimi). Nemotron-H-MoE may use shape[0]==E.
+            int expertDimIdx = -1;
+            for (int i = 0; i < 3; ++i) {
+                if (t->shape[i] == static_cast<int64_t>(modelWeights.numExperts)) {
+                    expertDimIdx = i;
+                    break;
+                }
+            }
+            if (expertDimIdx < 0) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] packed expert shape [%lld,%lld,%lld] does not "
+                    "contain numExperts=%zu in any dim\n",
+                    static_cast<long long>(t->shape[0]),
+                    static_cast<long long>(t->shape[1]),
+                    static_cast<long long>(t->shape[2]),
+                    modelWeights.numExperts);
+                return false;
+            }
+
+            if ((t->sizeBytes % modelWeights.numExperts) != 0) {
+                std::fprintf(stderr,
+                    "[Deep2Engine] packed expert sizeBytes=%zu not divisible by numExperts=%zu\n",
+                    t->sizeBytes, modelWeights.numExperts);
+                return false;
+            }
+
+            const size_t sliceBytes = t->sizeBytes / modelWeights.numExperts;
             if (sliceBytes == 0) return false;
+
+            // The per-expert matrix dimensions are the two dims that are NOT expertDimIdx.
+            size_t matDim[2];
+            int    matIdx = 0;
+            for (int i = 0; i < 3; ++i)
+                if (i != expertDimIdx) matDim[matIdx++] = static_cast<size_t>(t->shape[i]);
 
             dst.assign(modelWeights.numExperts, WeightTensor{});
             for (size_t e = 0; e < modelWeights.numExperts; ++e) {
@@ -1026,11 +1112,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 WeightTensor& wt = dst[e];
                 wt.data = const_cast<uint8_t*>(t->data + byteOffset);
                 wt.type = static_cast<int>(t->type);
-                wt.cols = static_cast<size_t>(t->shape[0]);
-                wt.rows = static_cast<size_t>(t->shape[1]);
+                wt.cols = matDim[0];
+                wt.rows = matDim[1];
                 wt.sizeBytes = sliceBytes;
                 wt.name = t->name + "#expert=" + std::to_string(e);
-                wt.shape = { t->shape[0], t->shape[1] };
+                wt.shape = { static_cast<int64_t>(matDim[0]), static_cast<int64_t>(matDim[1]) };
                 wt.mapped = true;
                 wt.shardId = t->shardId;
                 if (static_cast<uint64_t>(byteOffset) >
@@ -1039,6 +1125,14 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 wt.fileOffset = t->fileOffset + static_cast<uint64_t>(byteOffset);
                 wt.hasFileBacking = true;
             }
+            std::fprintf(stderr,
+                "[Deep2Engine] bound packed experts from '%s' "
+                "expertDim=%d, shape=[%lld,%lld,%lld], experts=%zu\n",
+                t->name.c_str(), expertDimIdx,
+                static_cast<long long>(t->shape[0]),
+                static_cast<long long>(t->shape[1]),
+                static_cast<long long>(t->shape[2]),
+                modelWeights.numExperts);
             return true;
         };
 
@@ -1091,8 +1185,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 return false;
             }
 
-            if (!bindExpertFamily("gate", "gate_proj", "w1", lw.moeGate) ||
-                !bindExpertFamily("up",   "up_proj",   "w3", lw.moeUp) ||
+            if (!bindExpertFamily("up",   "up_proj",   "w3", lw.moeUp) ||
                 !bindExpertFamily("down", "down_proj", "w2", lw.moeDown)) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu missing routed expert tensors\n",
@@ -1100,9 +1193,27 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 if (diag) {
                     diag->stageCode = 10;
                     diag->stageName = "MOE_EXPERT_TENSOR_MISSING";
-                    diag->message = "Missing routed expert tensors (gate/up/down) for MoE layer.";
+                    diag->message = "Missing routed expert tensors (up/down) for MoE layer.";
                 }
                 return false;
+            }
+            // Nematron-H uses packed experts without per-expert gate projections (SwiGLU fused gate/up).
+            // Only require gate if this is NOT a nemotron_h_moe model.
+            if (arch != "nemotron_h_moe") {
+                if (!bindExpertFamily("gate", "gate_proj", "w1", lw.moeGate)) {
+                    std::fprintf(stderr,
+                        "[Deep2Engine] layer %zu missing routed expert gate tensors\n",
+                        layer);
+                    if (diag) {
+                        diag->stageCode = 10;
+                        diag->stageName = "MOE_EXPERT_TENSOR_MISSING";
+                        diag->message = "Missing routed expert gate tensors for MoE layer.";
+                    }
+                    return false;
+                }
+            } else {
+                lw.moeGate.resize(modelWeights.numExperts);
+                for (size_t e = 0; e < modelWeights.numExperts; ++e) lw.moeGate[e] = WeightTensor{};
             }
 
             if (lw.moeGate.size() != modelWeights.numExperts ||
@@ -1119,19 +1230,19 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
             }
 
             if (modelWeights.moeIntermediateDim == 0)
-                modelWeights.moeIntermediateDim = lw.moeGate[0].rows;
+                modelWeights.moeIntermediateDim = lw.moeGate[0].rows != 0 ? lw.moeGate[0].rows : lw.moeUp[0].rows;
 
             const size_t EI = modelWeights.moeIntermediateDim;
             for (size_t e = 0; e < modelWeights.numExperts; ++e) {
                 const auto& g = lw.moeGate[e];
                 const auto& u = lw.moeUp[e];
                 const auto& d = lw.moeDown[e];
-                if (g.rows != EI || g.cols != modelWeights.hiddenDim ||
-                    u.rows != EI || u.cols != modelWeights.hiddenDim ||
+                const bool gateOk = (arch == "nemotron_h_moe") || (g.rows == EI && g.cols == modelWeights.hiddenDim);
+                if (!gateOk || u.rows != EI || u.cols != modelWeights.hiddenDim ||
                     d.rows != modelWeights.hiddenDim || d.cols != EI) {
                     std::fprintf(stderr,
-                        "[Deep2Engine] layer %zu expert %zu geometry mismatch\n",
-                        layer, e);
+                        "[Deep2Engine] layer %zu expert %zu geometry mismatch EI=%zu hiddenDim=%zu g(%zu,%zu) u(%zu,%zu) d(%zu,%zu)\n",
+                        layer, e, EI, modelWeights.hiddenDim, g.rows, g.cols, u.rows, u.cols, d.rows, d.cols);
                     if (diag) {
                         diag->stageCode = 12;
                         diag->stageName = "MOE_EXPERT_GEOMETRY_MISMATCH";
@@ -1165,8 +1276,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 lw.moeSharedGate.data &&
                 lw.moeSharedUp.data &&
                 lw.moeSharedDown.data;
-            if ((anyShared && !allShared) ||
-                (modelWeights.numSharedExperts > 0 && !allShared)) {
+            if ((arch != "nemotron_h" && arch != "nemotron_h_moe") && ((anyShared && !allShared) ||
+                (modelWeights.numSharedExperts > 0 && !allShared))) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu incomplete shared expert\n",
                     layer);
@@ -1227,7 +1338,8 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
                 lw.ssmA.data || lw.ssmD.data || lw.ssmNorm.data || lw.ssmOut.data;
             const bool hasAttnBlock =
                 lw.wqkv.data || (lw.wq.data && lw.wk.data && lw.wv.data) || lw.wo.data;
-            const bool hasFFNBlock = lw.wUp.data || lw.wDown.data;
+            const bool hasFFNBlock = lw.wUp.data || lw.wDown.data || lw.wGate.data ||
+                                    lw.moeUp.size() > 0 || lw.moeDown.size() > 0;
             if (!hasSSMBlock && !hasAttnBlock && !hasFFNBlock) {
                 std::fprintf(stderr,
                     "[Deep2Engine] layer %zu nemotron_h block has neither SSM, attention, nor FFN tensors\n",
@@ -1462,16 +1574,22 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
 
             if (!layerIsMoE) {
                 // Leading/interleaved dense layers are legal in hybrid MoE.
+                // Nematron-H pure attention layers have neither dense nor MoE FFN;
+                // that is allowed if the layer has attention or SSM.
                 if (!lw.wUp.data || !lw.wDown.data) {
-                    std::fprintf(stderr,
-                        "[Deep2Engine] layer %zu has neither complete dense nor MoE FFN\n",
-                        layer);
-                    if (diag) {
-                        diag->stageCode = 22;
-                        diag->stageName = "HYBRID_FFN_INCOMPLETE";
-                        diag->message = "Layer has neither complete dense nor MoE FFN tensors.";
+                    const bool hasOtherBlock = (arch == "nemotron_h_moe") &&
+                        (lw.hasSSM || lw.hasAttn || lw.hasFFN);
+                    if (!hasOtherBlock) {
+                        std::fprintf(stderr,
+                            "[Deep2Engine] layer %zu has neither complete dense nor MoE FFN\n",
+                            layer);
+                        if (diag) {
+                            diag->stageCode = 22;
+                            diag->stageName = "HYBRID_FFN_INCOMPLETE";
+                            diag->message = "Layer has neither complete dense nor MoE FFN tensors.";
+                        }
+                        return false;
                     }
-                    return false;
                 }
                 continue;
             }
@@ -2673,10 +2791,12 @@ void Deep2Engine::computeMoEFFN(size_t layer,
         lw.moeRouter.rows != E ||
         lw.moeRouter.cols != H)
         throw std::runtime_error("MoE: router tensor not bound");
-    if (lw.moeGate.size() != E ||
-        lw.moeUp.size() != E ||
+    if (lw.moeUp.size() != E ||
         lw.moeDown.size() != E)
         throw std::runtime_error("MoE: expert tensors not fully bound");
+    // Nematron-H uses packed experts without per-expert gate projections.
+    if (modelArchitecture_ != "nemotron_h_moe" && lw.moeGate.size() != E)
+        throw std::runtime_error("MoE: expert gate tensors not fully bound");
     if (layer >= moeRouters_.size() || !moeRouters_[layer])
         throw std::runtime_error("MoE: router runtime not initialized");
 
@@ -2822,29 +2942,40 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
         hiddenDim == 0 || expertDim == 0)
         throw std::runtime_error("MoE expert: invalid handle/geometry");
 
-    const WeightTensor& gate = *handle.gate;
     const WeightTensor& up   = *handle.up;
     const WeightTensor& down = *handle.down;
 
-    if (!gate.data || !up.data || !down.data ||
-        gate.rows != expertDim || gate.cols != hiddenDim ||
+    if (!up.data || !down.data ||
         up.rows != expertDim || up.cols != hiddenDim ||
         down.rows != hiddenDim || down.cols != expertDim)
         throw std::runtime_error("MoE expert: tensor geometry mismatch");
 
-    std::vector<float> gateBufLocal(expertDim, 0.0f);
-    std::vector<float> upBufLocal(expertDim, 0.0f);
+    if (handle.gate && handle.gate->data) {
+        const WeightTensor& gate = *handle.gate;
+        if (gate.rows != expertDim || gate.cols != hiddenDim)
+            throw std::runtime_error("MoE expert: gate tensor geometry mismatch");
 
-    LinearW(gate, input, nullptr, gateBufLocal.data(), expertDim);
-    LinearW(up,   input, nullptr, upBufLocal.data(), expertDim);
+        std::vector<float> gateBufLocal(expertDim, 0.0f);
+        std::vector<float> upBufLocal(expertDim, 0.0f);
 
-    SwiGLU(gateBufLocal.data(),
-           upBufLocal.data(),
-           gateBufLocal.data(),
-           expertDim);
+        LinearW(gate, input, nullptr, gateBufLocal.data(), expertDim);
+        LinearW(up,   input, nullptr, upBufLocal.data(), expertDim);
 
-    std::fill(output, output + hiddenDim, 0.0f);
-    LinearW(down, gateBufLocal.data(), nullptr, output, hiddenDim);
+        SwiGLU(gateBufLocal.data(),
+               upBufLocal.data(),
+               gateBufLocal.data(),
+               expertDim);
+
+        std::fill(output, output + hiddenDim, 0.0f);
+        LinearW(down, gateBufLocal.data(), nullptr, output, hiddenDim);
+    } else {
+        // Nematron-H packed experts: no per-expert gate projection; up acts as gate.
+        std::vector<float> upBufLocal(expertDim, 0.0f);
+        LinearW(up, input, nullptr, upBufLocal.data(), expertDim);
+        for (size_t i = 0; i < expertDim; ++i) upBufLocal[i] = silu(upBufLocal[i]);
+        std::fill(output, output + hiddenDim, 0.0f);
+        LinearW(down, upBufLocal.data(), nullptr, output, hiddenDim);
+    }
 
     if (!finiteVector(output, hiddenDim))
         throw std::runtime_error("MoE expert: non-finite output");
@@ -2866,29 +2997,41 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer,
         return;
     }
 
-    if (!lw.moeSharedGate.data ||
-        !lw.moeSharedUp.data ||
-        !lw.moeSharedDown.data)
+    const bool all = lw.moeSharedGate.data &&
+                     lw.moeSharedUp.data &&
+                     lw.moeSharedDown.data;
+    if (all) {
+        const size_t I = lw.moeSharedGate.rows;
+        if (I == 0 ||
+            lw.moeSharedGate.cols != H ||
+            lw.moeSharedUp.rows != I || lw.moeSharedUp.cols != H ||
+            lw.moeSharedDown.rows != H || lw.moeSharedDown.cols != I)
+            throw std::runtime_error("MoE shared: tensor geometry mismatch");
+
+        std::vector<float> gate(I, 0.0f);
+        std::vector<float> up(I, 0.0f);
+
+        LinearW(lw.moeSharedGate, input, nullptr, gate.data(), I);
+        LinearW(lw.moeSharedUp, input, nullptr, up.data(), I);
+        SwiGLU(gate.data(), up.data(), gate.data(), I);
+
+        std::fill(output, output + H, 0.0f);
+        LinearW(lw.moeSharedDown, gate.data(), nullptr, output, H);
+    } else if (lw.moeSharedUp.data && lw.moeSharedDown.data) {
+        // Nematron-H style shared expert without gate projection.
+        const size_t I = lw.moeSharedUp.rows;
+        if (I == 0 ||
+            lw.moeSharedUp.cols != H ||
+            lw.moeSharedDown.rows != H || lw.moeSharedDown.cols != I)
+            throw std::runtime_error("MoE shared: tensor geometry mismatch");
+        std::vector<float> up(I, 0.0f);
+        LinearW(lw.moeSharedUp, input, nullptr, up.data(), I);
+        for (size_t i = 0; i < I; ++i) up[i] = silu(up[i]);
+        std::fill(output, output + H, 0.0f);
+        LinearW(lw.moeSharedDown, up.data(), nullptr, output, H);
+    } else {
         throw std::runtime_error("MoE shared: incomplete shared expert");
-
-    const size_t I = lw.moeSharedGate.rows;
-    if (I == 0 ||
-        lw.moeSharedGate.cols != H ||
-        lw.moeSharedUp.rows != I ||
-        lw.moeSharedUp.cols != H ||
-        lw.moeSharedDown.rows != H ||
-        lw.moeSharedDown.cols != I)
-        throw std::runtime_error("MoE shared: tensor geometry mismatch");
-
-    std::vector<float> gate(I, 0.0f);
-    std::vector<float> up(I, 0.0f);
-
-    LinearW(lw.moeSharedGate, input, nullptr, gate.data(), I);
-    LinearW(lw.moeSharedUp, input, nullptr, up.data(), I);
-    SwiGLU(gate.data(), up.data(), gate.data(), I);
-
-    std::fill(output, output + H, 0.0f);
-    LinearW(lw.moeSharedDown, gate.data(), nullptr, output, H);
+    }
 
     if (!finiteVector(output, H))
         throw std::runtime_error("MoE shared: non-finite output");
@@ -2896,6 +3039,12 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer,
 
 // =================== SSM / Mamba (STRICT PROVIDER BOUNDARY) ====================
 void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
+    using Deep2::Arch::Ref::silu;
+    using Deep2::Arch::Ref::softplus;
+    using Deep2::Arch::Ref::depthwiseConvStep;
+    using Deep2::Arch::Ref::mamba2Step;
+    using Deep2::Arch::Ref::finite;
+
     if (!input || !output || layer >= modelWeights.layers.size())
         throw std::runtime_error("computeSSM: invalid layer/input/output");
 
@@ -2903,18 +3052,134 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     if (!lw.hasSSM)
         throw std::runtime_error("computeSSM: layer is not an SSM/Mamba layer");
 
-    // TODO: implement real selective scan + causal conv1d.
-    // Until then, identity fallback so Nemotron-H models can run for TPS benchmarking.
     const size_t H = config.hiddenDim;
-    std::memcpy(output, input, H * sizeof(float));
-    static bool warned = false;
-    if (!warned) {
-        std::fprintf(stderr,
-            "[Deep2Engine] WARNING: SSM identity fallback active for layer %zu. "
-            "Text quality will be degraded. Real selective scan not yet bound.\n",
-            layer);
-        warned = true;
+    if (!nemotronGeoOk_ || !ssmInner_ || !ssmStateSize_ || !ssmHeads_ || !ssmGroups_) {
+        std::memcpy(output, input, H * sizeof(float));
+        static bool warnedOnce = false;
+        if (!warnedOnce) {
+            std::fprintf(stderr,
+                "[Deep2Engine] WARNING: SSM metadata incomplete; identity fallback active.\n");
+            warnedOnce = true;
+        }
+        return;
     }
+
+    const size_t inner       = ssmInner_;
+    const size_t stateN      = ssmStateSize_;
+    const size_t heads       = ssmHeads_;
+    const size_t groups      = ssmGroups_;
+    const size_t headDim     = inner / heads;
+    const size_t groupBC     = groups * stateN;
+    const size_t convChannels = inner + 2 * groupBC;
+    const size_t inRows      = 2 * inner + 2 * groupBC + heads;
+
+    if (!ssmX || !ssmY || !ssmTemp || !ssmState || !ssmConvState)
+        throw std::runtime_error("computeSSM: SSM buffers not allocated");
+
+    if (!lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmConv1d.data ||
+        !lw.ssmDtBias.data || !lw.ssmA.data || !lw.ssmD.data || !lw.ssmNorm.data)
+        throw std::runtime_error("computeSSM: required SSM tensors missing");
+
+    // ---- 1. input projection: z | x0 | B0 | C0 | dt0 ----
+    LinearW(lw.ssmIn, input, nullptr, ssmTemp, inRows);
+
+    const float* z  = ssmTemp;
+    const float* x0 = z + inner;
+    const float* B0 = x0 + inner;
+    const float* C0 = B0 + groupBC;
+    const float* dt0 = C0 + groupBC;
+
+    // ---- 2. causal depthwise conv1d over x,B,C ----
+    float* convIn = ssmX; // borrow ssmX as scratch [convChannels]
+    std::copy_n(x0, inner, convIn);
+    std::copy_n(B0, 2 * groupBC, convIn + inner);
+
+    // Dequantize conv1d weights + bias once per step
+    std::vector<float> convK(convChannels * ssmConvKernel, 0.0f);
+    std::vector<float> convB(convChannels, 0.0f);
+    {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1d.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get conv1d dequant");
+        const size_t nConv = convChannels * ssmConvKernel;
+        std::vector<float> tmpConv(nConv);
+        dq(static_cast<const uint8_t*>(lw.ssmConv1d.data), tmpConv.data(), nConv);
+        convK = std::move(tmpConv);
+        if (lw.ssmConv1dBias.data) {
+            const auto* dqB = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1dBias.type);
+            if (dqB) dqB(static_cast<const uint8_t*>(lw.ssmConv1dBias.data), convB.data(), convChannels);
+        }
+    }
+
+    float* convHist = ssmConvState + layer * convChannels * (ssmConvKernel > 1 ? (ssmConvKernel - 1) : 0);
+    float* convOut  = ssmY; // borrow ssmY as scratch [convChannels]
+    depthwiseConvStep(convIn, convChannels, convK.data(), ssmConvKernel,
+                      convHist, convB.data(), convOut);
+    for (size_t i = 0; i < convChannels; ++i) convOut[i] = silu(convOut[i]);
+
+    const float* x = convOut;
+    const float* B = convOut + inner;
+    const float* C = B + groupBC;
+
+    // ---- 3. prepare dt bias, A, D ----
+    std::vector<float> dtBias(heads), A(heads), D(heads);
+    {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmDtBias.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get dtBias dequant");
+        dq(static_cast<const uint8_t*>(lw.ssmDtBias.data), dtBias.data(), heads);
+    }
+    {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmA.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get A dequant");
+        dq(static_cast<const uint8_t*>(lw.ssmA.data), A.data(), heads);
+    }
+    {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmD.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get D dequant");
+        dq(static_cast<const uint8_t*>(lw.ssmD.data), D.data(), heads);
+    }
+
+    std::vector<float> dt(heads);
+    for (size_t h = 0; h < heads; ++h) {
+        dt[h] = dt0[h] + dtBias[h];
+        if (A[h] > 0.0f) A[h] = -std::exp(A[h]);
+    }
+
+    // ---- 4. selective scan (mamba2Step) ----
+    float* statePtr = ssmState + layer * heads * headDim * stateN;
+    float* yPtr     = ssmX; // reuse scratch [inner]
+    mamba2Step(x, B, C, dt.data(), A.data(), D.data(),
+               heads, groups, headDim, stateN, statePtr, yPtr);
+
+    if (!finite(yPtr, inner))
+        throw std::runtime_error("computeSSM: selective scan produced non-finite output");
+
+    // ---- 5. gated RMS norm ----
+    std::vector<float> normW;
+    {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmNorm.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get norm dequant");
+        normW.resize(inner);
+        dq(static_cast<const uint8_t*>(lw.ssmNorm.data), normW.data(), inner);
+    }
+    for (size_t h = 0; h < heads; ++h) {
+        float* yh = yPtr + h * headDim;
+        double ss = 0.0;
+        for (size_t d = 0; d < headDim; ++d) ss += double(yh[d]) * double(yh[d]);
+        const float inv = 1.0f / std::sqrt(float(ss / double(headDim)) + modelWeights.normEps);
+        for (size_t d = 0; d < headDim; ++d) {
+            const float nw = normW[d % normW.size()];
+            yh[d] = yh[d] * inv * nw * silu(z[h * headDim + d]);
+        }
+    }
+
+    // ---- 6. output projection ----
+    std::fill(output, output + H, 0.0f);
+    LinearW(lw.ssmOut, yPtr, nullptr, output, H);
+
+    if (!finite(output, H))
+        throw std::runtime_error("computeSSM: final output is non-finite");
+
+    ++ssmRealCalls_;
 }
 
 // =================== FORWARD ALL LAYERS ====================

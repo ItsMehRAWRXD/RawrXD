@@ -67,7 +67,7 @@ struct MoEWeightHandle {
     size_t bytes = 0;
 
     bool valid() const noexcept {
-        return layer >= 0 && expert >= 0 && gate && up && down;
+        return layer >= 0 && expert >= 0 && up && down;
     }
 };
 

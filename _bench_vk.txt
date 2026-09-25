@@ -1,0 +1,106 @@
+========================================
+  DEEP2_NATIVE_BENCHMARK_001
+========================================
+ENGINE=Deep2Engine
+VULKAN_REQUESTED=1
+STRICT_VULKAN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+VULKAN_ENABLED=1
+MODEL_LOAD: loading g:\~dev\rawrxd\models\_matrix_f\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf ...
+[Deep2Engine] ROPE_ARCH=nemotron_h ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+NEMOTRON_H_LAYER_DIAG=0
+  ATTN_NORM_PRESENT=1
+  FFN_NORM_PRESENT=0
+  SSM_IN_PRESENT=1
+  SSM_CONV1D_PRESENT=1
+  SSM_DT_PRESENT=1
+  SSM_A_PRESENT=0
+  SSM_D_PRESENT=0
+  SSM_NORM_PRESENT=1
+  SSM_OUT_PRESENT=1
+  ATTN_QKV_PRESENT=0
+  ATTN_Q_PRESENT=0
+  ATTN_K_PRESENT=0
+  ATTN_V_PRESENT=0
+  ATTN_OUT_PRESENT=0
+  FFN_UP_PRESENT=0
+  FFN_DOWN_PRESENT=0
+  FFN_GATE_PRESENT=0
+[Deep2Engine] Auto-correcting numKVHeads from 40 to 8 (from wk.rows=1024 / headDim=128)
+[Deep2Engine] GGUF mapped: arch=nemotron_h shards=1 tensors=263 layers=42 hidden=3136 heads=40 kv_heads=8 vocab=131072
+ARCH=nemotron_h
+HIDDEN=3136
+LAYERS=42
+HEADS=40
+KV_HEADS=8
+HEAD_DIM=128
+GQA_GROUP=5
+FFN_DIM=0
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=78
+ROPE_NEOX=0
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+MODEL_LOAD=PASS 628 ms
+MODEL_ARCH=unknown
+MODEL_LAYERS=0
+MODEL_HIDDEN=0
+MODEL_HEADS=0
+MODEL_KV_HEADS=0
+GPU_FORWARD_ENTER hidden=000001BA94975040 loaded=1 vulkanEnabled=1 init=1 devices=1 layers=42
+GPU_FORWARD_STAGE=CONTIGUOUS_RANGE
+[HOT_LANE_PREP_OK] slot=0 maxIn=12544 maxRows=131072
+UPLOAD_ENTER dstBuf=000001BA94806650 src=000001BA94975040 bytes=12544 dstSize=12544
+UPLOAD_STAGING bytes=12544
+UPLOAD_MEMCPY bytes=12544
+UPLOAD_BEGIN bytes=12544
+BEGIN_CMD_ALLOC
+BEGIN_CMD_ALLOC_OK cmd=000001BC05C62020
+UPLOAD_COPY bytes=12544
+UPLOAD_ENDSUBMIT bytes=12544
+UPLOAD_OK bytes=12544
+GPU_LAYER_ENTER layer=0 slot=0
+GPU_FORWARD_STAGE=ENSURE_ARENA layer=0 slot=0
+[HOT_LANE_PREP_OK] slot=0 maxIn=12544 maxRows=131072
+GPU_FORWARD_STAGE=SET_EPOCH layer=0 slot=0
+GPU_FORWARD_STAGE=GET_LAYER_WEIGHTS layer=0 slot=0
+GPU_FORWARD_STAGE=CHECK_WEIGHT_DATA layer=0 slot=0
+GPU_FORWARD_FAIL_STAGE=WEIGHT_DATA layer=0 wq=0000000000000000 wk=0000000000000000 wv=0000000000000000 wo=0000000000000000 attnO=0000000000000000 wGate=0000000000000000 wUp=0000000000000000 wDown=0000000000000000
+GPU_FORWARD_FAIL_STAGE=RANGE_OR_MULTIMAP
+
+========================================
+  RECEIPT
+========================================
+GATE=DEEP2_NATIVE_BENCHMARK_001
+ENGINE=Deep2Engine
+EXECUTION_BACKEND=GPU
+VULKAN_REQUESTED=1
+VULKAN_INITIALIZED=1
+GPU_FORWARD=1
+CPU_FORWARD=0
+CPU_FALLBACK=0
+MODEL=g:\~dev\rawrxd\models\_matrix_f\NVIDIA-Nemotron-3-Nano-4B-GGUF\NVIDIA-Nemotron-3-Nano-4B-Q8_0.gguf
+PROMPT_TOKENS=0
+GENERATED_TOKENS=0
+PREFILL_MS=0
+DECODE_MS=41.4
+DECODE_TPS_REAL=0.000
+VERDICT=FAIL

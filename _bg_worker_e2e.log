@@ -17,3 +17,7 @@
 [10:58:19] gen_debug.txt first 200 lines captured
 [10:58:19] No recent Application crash events (ID 1000) in last 10 min
 [10:58:19] STEP E: Configuring parity build...
+[03:16:38] === E2E WORKER START ===
+[03:16:38] STEP A: Rebuilding RawrXD-Win32IDE Release...
+[03:17:26] BUILD FAILED (RC=1). See _build_strict.log
+[03:17:26] === E2E WORKER HALTED ===

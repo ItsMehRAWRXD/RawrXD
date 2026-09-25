@@ -335,17 +335,43 @@ bool Deep2Engine::forwardLayerGpuResident(
     }
     const uint32_t kvDim = static_cast<uint32_t>(kvDim64);
     const uint32_t qDim = static_cast<uint32_t>(qDim64);
-    const uint32_t inter = (uint32_t)(lw.wGate.rows ? lw.wGate.rows
-                                                    : modelWeights.intermediateDim);
-    std::fprintf(stderr, "GPU_FORWARD_STAGE=CHECK_WEIGHT_DATA layer=%u slot=%u\n", layer, slot);
-    if (!lw.wq.data || !lw.wk.data || !lw.wv.data ||
-        !(lw.wo.data || lw.attnO.data) ||
-        !lw.wGate.data || !lw.wUp.data || !lw.wDown.data) {
-        std::fprintf(stderr, "GPU_FORWARD_FAIL_STAGE=WEIGHT_DATA layer=%u wq=%p wk=%p wv=%p wo=%p attnO=%p wGate=%p wUp=%p wDown=%p\n",
-            layer, (void*)lw.wq.data, (void*)lw.wk.data, (void*)lw.wv.data,
-            (void*)lw.wo.data, (void*)lw.attnO.data, (void*)lw.wGate.data,
-            (void*)lw.wUp.data, (void*)lw.wDown.data);
-        return false;
+    const uint32_t inter = (uint32_t)(
+        lw.wGate.rows ? lw.wGate.rows :
+        (lw.wUp.rows   ? lw.wUp.rows   : modelWeights.intermediateDim));
+
+    const bool doAttn = lw.hasAttn;
+    const bool doSSM  = lw.hasSSM;
+    const bool doFFN  = lw.hasFFN;
+
+    std::fprintf(stderr, "GPU_FORWARD_STAGE=CHECK_WEIGHT_DATA layer=%u slot=%u doAttn=%d doSSM=%d doFFN=%d\n",
+        layer, slot, (int)doAttn, (int)doSSM, (int)doFFN);
+
+    if (doAttn) {
+        if (!lw.wq.data || !lw.wk.data || !lw.wv.data ||
+            !(lw.wo.data || lw.attnO.data)) {
+            std::fprintf(stderr,
+                "GPU_FORWARD_FAIL_STAGE=WEIGHT_DATA_ATTN layer=%u wq=%p wk=%p wv=%p wo=%p attnO=%p\n",
+                layer, (void*)lw.wq.data, (void*)lw.wk.data, (void*)lw.wv.data,
+                (void*)lw.wo.data, (void*)lw.attnO.data);
+            return false;
+        }
+    }
+    if (doFFN) {
+        if (!lw.wUp.data || !lw.wDown.data) {
+            std::fprintf(stderr,
+                "GPU_FORWARD_FAIL_STAGE=WEIGHT_DATA_FFN layer=%u wUp=%p wDown=%p\n",
+                layer, (void*)lw.wUp.data, (void*)lw.wDown.data);
+            return false;
+        }
+        if (lw.wGate.data) {
+            // SwiGLU path — gate required
+        } else {
+            // Simple MLP (no gate) — GPU SiLU not yet bound; fall back to CPU for this layer
+            std::fprintf(stderr,
+                "GPU_FORWARD_FAIL_STAGE=WEIGHT_DATA_FFN layer=%u reason=no_gate_simple_mlp_not_yet_on_gpu\n",
+                layer);
+            return false;
+        }
     }
     std::fprintf(stderr, "GPU_FORWARD_STAGE=WEIGHT_DATA_OK layer=%u slot=%u\n", layer, slot);
 

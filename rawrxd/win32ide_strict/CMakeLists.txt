@@ -138,6 +138,10 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/BP16Streamer.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/CompressedKVCache.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/mars/MARSController.cpp
+    # Streaming / residency controller (DEEP2_LAYER0_STREAMING_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/VramStreamingController.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/StreamEngine.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/StreamRouter.cpp
     # SG-01 to SG-10 speculative special graph (RAWRXD_SPECULATIVE_SPECIAL_GRAPH_001)
     ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpecialGraph.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpeculativeBatch.cpp

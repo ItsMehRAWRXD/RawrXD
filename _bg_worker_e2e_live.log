@@ -1,0 +1,4 @@
+[03:16:38] === E2E WORKER START ===
+[03:16:38] STEP A: Rebuilding RawrXD-Win32IDE Release...
+[03:17:26] BUILD FAILED (RC=1). See _build_strict.log
+[03:17:26] === E2E WORKER HALTED ===
