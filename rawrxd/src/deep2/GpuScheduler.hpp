@@ -177,11 +177,14 @@ private:
     std::string scheduleAgentAffinity(const GpuWorkItem& work);
     std::string scheduleAdaptive(const GpuWorkItem& work);
 
-    // Helpers
+    // Helpers (mutex must be held for _Unlocked variants)
     const GpuDeviceDescriptor* findDevice(const std::string& name) const;
+    const GpuDeviceDescriptor* findDeviceUnlocked(const std::string& name) const;
     float estimateTransferCost(const std::string& from, const std::string& to, size_t bytes) const;
     void emitDecisionBeacon(const GpuWorkItem& work, const std::string& chosenDevice,
                             const std::vector<DeviceScore>& scores);
+    bool isTensorResidentUnlocked(const std::string& tensorName,
+                                   const std::string& device) const;
 };
 
 } // namespace Deep2
