@@ -1,0 +1,67 @@
+# CMake generation dependency list for this directory.
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeASMInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeASM_MASMInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeCInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeCXXInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeGenericSystem.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeInitializeConfigs.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeRCInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CMakeSystemSpecificInitialize.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CheckCSourceCompiles.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CheckIncludeFile.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/CheckLibraryExists.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Compiler/MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Compiler/MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Compiler/MSVC.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython/Support.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindPython3.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindThreads.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/FindVulkan.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CMakeASMLinkerInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CMakeASM_MASMLinkerInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CMakeCLinkerInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CMakeCXXLinkerInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CMakeCommonLinkerInformation.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CheckCommon.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Internal/CheckSourceCompiles.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Linker/MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Linker/MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Linker/MSVC.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Linker/Windows-MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Linker/Windows-MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Linker/Windows-MSVC.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Windows-Initialize.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Windows-MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Windows-MSVC-CXX.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/Windows.cmake
+C:/Program Files/CMake/share/cmake-4.4/Modules/Platform/WindowsPaths.cmake
+F:/~dev/rawrxd/CMakeLists.txt
+F:/~dev/rawrxd/build/CMakeFiles/4.4.2/CMakeASM_MASMCompiler.cmake
+F:/~dev/rawrxd/build/CMakeFiles/4.4.2/CMakeCCompiler.cmake
+F:/~dev/rawrxd/build/CMakeFiles/4.4.2/CMakeCXXCompiler.cmake
+F:/~dev/rawrxd/build/CMakeFiles/4.4.2/CMakeRCCompiler.cmake
+F:/~dev/rawrxd/build/CMakeFiles/4.4.2/CMakeSystem.cmake
+F:/~dev/rawrxd/cmake/AutoFeatureRegistry.cmake
+F:/~dev/rawrxd/cmake/Deep2BenchmarkCert.fragment.cmake
+F:/~dev/rawrxd/cmake/Deep2C1C9.fragment.cmake
+F:/~dev/rawrxd/cmake/Deep2GatewayCertStandalone.fragment.cmake
+F:/~dev/rawrxd/cmake/Deep2ProductLavapath.fragment.cmake
+F:/~dev/rawrxd/cmake/Deep2VwaB3B8.fragment.cmake
+F:/~dev/rawrxd/cmake/Deep2VwaConsumerGates.fragment.cmake
+F:/~dev/rawrxd/cmake/GgufDynamicGeometry.fragment.cmake
+F:/~dev/rawrxd/cmake/IntentGuardrails.cmake
+F:/~dev/rawrxd/cmake/Interstellar.fragment.cmake
+F:/~dev/rawrxd/cmake/P1_ProductRuntimeAuthority.cmake
+F:/~dev/rawrxd/cmake/RawrAgenticCli.fragment.cmake
+F:/~dev/rawrxd/cmake/RawrBackgroundTerminals.fragment.cmake
+F:/~dev/rawrxd/cmake/RawrProductLayer.fragment.cmake
+F:/~dev/rawrxd/cmake/RawrRemainingStyleCli.fragment.cmake
+F:/~dev/rawrxd/cmake/RawrXD-Vulkan-Fix.cmake
+F:/~dev/rawrxd/cmake/RawrXDSovereignFinish.cmake

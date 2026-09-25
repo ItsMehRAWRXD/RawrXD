@@ -34,6 +34,9 @@ int main(int argc, char** argv) {
     }
     std::fprintf(stderr, "PASS=initialize\n");
 
+    engine.enableVulkan(true);
+    std::fprintf(stderr, "VULKAN=ENABLED\n");
+
     if (!engine.loadModel(modelPath)) {
         std::fprintf(stderr, "FAIL=loadModel\n");
         return 1;

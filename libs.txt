@@ -1,0 +1,6 @@
+F:\~dev\rawrxd\build\Release\flame_graph_profiler.lib
+F:\~dev\rawrxd\build\Release\Omega1Engine.lib
+F:\~dev\rawrxd\build\Release\pmc_profiler.lib
+F:\~dev\rawrxd\build\Release\RawrXD_Compression.lib
+F:\~dev\rawrxd\build\rguf_source\Release\rguf.lib
+F:\~dev\rawrxd\build\src\reverse_engineering\Release\RawrXD-RE-Library.lib

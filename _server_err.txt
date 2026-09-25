@@ -1,0 +1,45 @@
+=============================================
+  Deep2 OpenAI-Compatible Local Model Server
+=============================================
+[server] Loading model: D:\rawrxd\gemma3-1b-Q2_K.gguf
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+[Deep2Engine] ROPE_ARCH=gemma3 ROPE_THETA_GLOBAL=1000000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=512 SLIDING_WINDOW_PATTERN=6
+[Deep2Engine] GGUF mapped: arch=gemma3 shards=1 tensors=340 layers=26 hidden=1152 heads=4 kv_heads=1 vocab=262144
+ARCH=gemma3
+HIDDEN=1152
+LAYERS=26
+HEADS=4
+KV_HEADS=1
+HEAD_DIM=256
+GQA_GROUP=4
+FFN_DIM=6912
+ROPE_THETA=1e+06
+ROPE_SCALING=1
+ROPE_DIM=256
+ROPE_NEOX=1
+RMS_EPS=1e-06
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=1
+[OpenAI] MODEL_LOAD=PASS  model=gemma3-1b-Q2_K
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+DEEP2_DENSE_SLOT slot=0 lo=0 hi=25 speed_weight=1.320
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=1
+[server] Vulkan GPU acceleration enabled.
+[OpenAI] Server listening on http://127.0.0.1:11435
+[server] Ready.   Endpoint: http://127.0.0.1:11435/v1/chat/completions
+[server] Press Ctrl+C to stop.
+[HOT_LANE_PREP_OK] slot=0 maxIn=6912 maxRows=262144
+[HOT_LANE_PREP_OK] slot=0 maxIn=6912 maxRows=262144

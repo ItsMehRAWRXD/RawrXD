@@ -163,6 +163,8 @@ struct LayerWeights {
     WeightTensor ssmNorm;       // SSM path RMSNorm
     WeightTensor ssmOut;        // SSM output projection
     bool         hasSSM = false; // true when SSM tensors are populated
+    bool         hasAttn = true; // true when attention tensors are present
+    bool         hasFFN  = true; // true when FFN tensors are present
 };
 
 // ============================================================================

@@ -112,7 +112,7 @@ bool VulkanGemmDispatcher::Initialize(const DispatchConfig& config) {
                             async_tasks_.pop();
                         }
                     }
-                    if (task) task();
+                    if (task.valid()) task();
                 }
             });
         }

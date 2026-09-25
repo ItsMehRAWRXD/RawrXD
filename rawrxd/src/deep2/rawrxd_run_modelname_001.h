@@ -9,4 +9,5 @@
 int rawrxd_run_modelname_001(const char* modelNameOrPath,
                               const char* prompt,
                               uint32_t    maxTokens,
-                              bool        vulkanEnabled);
+                              bool        vulkanEnabled,
+                              bool        strictVulkan = false);

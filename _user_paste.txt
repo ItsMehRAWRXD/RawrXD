@@ -1,0 +1,225 @@
+﻿The new `/api/show` output resolves an important ambiguity:
+
+```text
+format             = gguf
+family             = nemotron_h_moe
+parameter_size     = 32.9B
+quantization_level = Q4_K_M
+```
+
+So the next step should **not** be more broad drive scanning or `ollama cp`. It should be **manifest → model digest → exact blob → Deep2 CPU admission**.
+
+Also, the previous `>24 GB` searches can miss this model. A 32.9B Q4_K_M file does not have to be 25–27 GB.
+
+Ollama's current source builds blob paths from the active model root as `blobs\sha256-...`, with the digest obtained from the manifest; `ollama cp` copies the manifest rather than exporting a new GGUF. :chatgpt-content-reference{index="0"}
+
+Run this directly:
+
+```powershell
+$roots = @(
+    $env:OLLAMA_MODELS,
+    [Environment]::GetEnvironmentVariable('OLLAMA_MODELS','User'),
+    [Environment]::GetEnvironmentVariable('OLLAMA_MODELS','Machine'),
+    "$HOME\.ollama\models",
+    "G:\OllamaModels"
+) | Where-Object { $_ } | Select-Object -Unique
+
+foreach ($root in $roots) {
+    Write-Host "`n=== ROOT: $root ===" -ForegroundColor Cyan
+
+    $manifest = Join-Path $root "manifests\registry.ollama.ai\library\nemotron-3.5-lightning\30b"
+
+    if (!(Test-Path $manifest)) {
+        Write-Host "Manifest not found"
+        continue
+    }
+
+    Write-Host "MANIFEST=$manifest" -ForegroundColor Green
+
+    $m = Get-Content $manifest -Raw | ConvertFrom-Json
+
+    $m.layers | ForEach-Object {
+        $blob = Join-Path $root "blobs\$($_.digest -replace ':','-')"
+
+        [PSCustomObject]@{
+            MediaType = $_.mediaType
+            Digest    = $_.digest
+            SizeGB    = [math]::Round($_.size / 1GB, 3)
+            Exists    = Test-Path $blob
+            Blob      = $blob
+        }
+    } | Format-Table -AutoSize
+}
+```
+
+You are looking specifically for something like:
+
+```text
+MediaType
+application/vnd.ollama.image.model
+```
+
+Then automatically extract it:
+
+```powershell
+$root = "G:\OllamaModels"
+
+$manifest = Join-Path $root `
+    "manifests\registry.ollama.ai\library\nemotron-3.5-lightning\30b"
+
+$m = Get-Content $manifest -Raw | ConvertFrom-Json
+
+$modelLayer = $m.layers |
+    Where-Object { $_.mediaType -eq "application/vnd.ollama.image.model" } |
+    Sort-Object size -Descending |
+    Select-Object -First 1
+
+$blob = Join-Path $root "blobs\$($modelLayer.digest -replace ':','-')"
+
+Write-Host "DIGEST=$($modelLayer.digest)"
+Write-Host "SIZE_GB=$([math]::Round($modelLayer.size/1GB,3))"
+Write-Host "BLOB=$blob"
+Write-Host "EXISTS=$(Test-Path $blob)"
+```
+
+### Prove it's GGUF
+
+Do this before Deep2:
+
+```powershell
+$fs = [IO.File]::OpenRead($blob)
+$b = New-Object byte[] 4
+[void]$fs.Read($b,0,4)
+$fs.Close()
+
+$magic = [BitConverter]::ToString($b)
+
+Write-Host "MAGIC=$magic"
+
+if ($magic -eq "47-47-55-46") {
+    Write-Host "GGUF=PASS" -ForegroundColor Green
+} else {
+    Write-Host "GGUF=FAIL" -ForegroundColor Red
+}
+```
+
+Expected:
+
+```text
+MAGIC=47-47-55-46
+GGUF=PASS
+```
+
+Ollama's code explicitly maps manifest digests such as `sha256:abcd...` to files named `sha256-abcd...` under the model root's `blobs` directory. :chatgpt-content-reference{index="1"}
+
+## Then feed the blob directly to Deep2
+
+Don't duplicate the model just to rename it:
+
+```powershell
+& "F:\~dev\build_streaming\Release\deep2_benchmark.exe" `
+    $blob `
+    "Hello, my name is"
+```
+
+This first run should deliberately remain:
+
+```text
+VULKAN_REQUESTED=0
+```
+
+because right now you need to establish **architecture correctness**, not speed.
+
+The admission ladder should be:
+
+```text
+MODEL_FILE_OPEN=PASS
+GGUF_MAGIC=PASS
+ARCH=nemotron_h_moe
+METADATA_PARSE=PASS
+TENSOR_TABLE_PARSE=PASS
+
+HYBRID_LAYER_CLASSIFICATION=PASS
+SSM_LAYER_ADMISSION=PASS
+ATTENTION_LAYER_ADMISSION=PASS
+GQA_GEOMETRY=PASS
+MOE_EXPERT_GEOMETRY=PASS
+
+MODEL_LOAD=PASS
+TOKENIZE=PASS
+FORWARD_PASS=PASS
+LOGITS_FINITE=PASS
+GENERATED_TOKEN_COUNT>0
+```
+
+### There is a new architectural distinction to watch
+
+Your earlier Deep2 target was:
+
+```text
+NVIDIA-Nemotron-3-Nano-4B
+family ≈ nemotron_h
+```
+
+Your actual Ollama 30B baseline is:
+
+```text
+nemotron-3.5-lightning:30b
+family = nemotron_h_moe
+```
+
+That `_moe` matters.
+
+So after fixing the earlier GQA issue:
+
+```text
+Q heads  = 40
+KV heads = 8
+Q dim    = 5120
+KV dim   = 1024
+```
+
+Deep2 may expose another legitimate blocker when it reaches the **MoE expert tensors/router**. That would be useful evidence; it means the benchmark has advanced past GQA and into the actual 30B architecture.
+
+### Only after CPU correctness: Vulkan
+
+Your current benchmark reports:
+
+```text
+ENGINE=Deep2Engine
+VULKAN_REQUESTED=0
+VULKAN_ENABLED=0
+```
+
+Therefore don't interpret anything from that executable as GPU performance yet.
+
+Once the exact 30B GGUF reaches a finite-token CPU forward pass, turn on whatever Vulkan switch the benchmark source actually consumes and require:
+
+```text
+VULKAN_REQUESTED=1
+VULKAN_ENABLED=1
+
+MODEL=exact same Ollama blob
+QUANT=Q4_K_M
+NUM_PREDICT=32
+
+GENERATED=32
+LOGITS_FINITE=1
+GPU_FORWARD_COUNT>0
+CPU_FALLBACK_COUNT=0
+```
+
+Then you finally have the valid comparison:
+
+```text
+OLLAMA_30B_WALL_TPS      = 126.67
+DEEP2_30B_CPU_TPS        = ?
+DEEP2_30B_VULKAN_TPS     = ?
+
+DEEP2_VS_OLLAMA =
+    DEEP2_30B_VULKAN_TPS / 126.67
+```
+
+Your existing `183.43 TPS` Ollama value can remain as an **internal decode metric**, but **126.67 wall TPS** is the better apples-to-apples external throughput baseline.
+
+The immediate target is therefore **find the exact `application/vnd.ollama.image.model` blob and make `nemotron_h_moe` reach one finite Deep2 token**. GPU optimization comes after that.

@@ -77,7 +77,8 @@ static std::string resolveModelPath(const std::string& nameOrPath) {
 int rawrxd_run_modelname_001(const char* modelNameOrPath,
                               const char* prompt,
                               uint32_t    maxTokens,
-                              bool        vulkanEnabled) {
+                              bool        vulkanEnabled,
+                              bool        strictVulkan) {
     if (!modelNameOrPath || !modelNameOrPath[0]) {
         std::fprintf(stderr, "[rawr run] ERROR: no model specified\n");
         return 1;
@@ -119,6 +120,16 @@ int rawrxd_run_modelname_001(const char* modelNameOrPath,
     if (vulkanEnabled) {
         engine.enableVulkan(true);
         std::fprintf(stderr, "[rawr run] VULKAN=ENABLED\n");
+    }
+    if (strictVulkan) {
+        if (!engine.isVulkanInitialized()) {
+            std::fprintf(stderr,
+                "[rawr run] STRICT_GPU_VIOLATION "
+                "enabled=%d initialized=%d\n",
+                engine.isVulkanEnabled() ? 1 : 0,
+                engine.isVulkanInitialized() ? 1 : 0);
+            return 1;
+        }
     }
 
     // --- Load ---

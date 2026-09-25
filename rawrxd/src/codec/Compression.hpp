@@ -3,6 +3,7 @@
 #include <vector>
 #include <span>
 #include <optional>
+#include <memory>
 #include <stdint.h>
 
 namespace rawrxd::codec {

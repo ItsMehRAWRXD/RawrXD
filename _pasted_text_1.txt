@@ -1,0 +1,101 @@
+﻿Created 
+
+Ran terminal command: python f:\~dev\find_nemo_blob.py
+
+Ran terminal command: where python
+
+Ran terminal command: py f:\~dev\find_nemo_blob.py
+
+Ran terminal command: py -c "import os; [print(f'{os.path.getsize(os.path.join(r,f))/1e9:.2f} GB  {os.path.join(r,f)}') for r,d,files in os.walk(r'C:\Users\Garrett\.ollama\models\blobs') for f in files if os.path.getsize(os.path.join(r,f)) > 20e9]"
+
+Ran terminal command: dir /s /b "C:\Users\Garrett\.ollama\models\manifests"
+
+Ran terminal command: Get-ChildItem -Recurse 'C:\Users\Garrett\.ollama\models\manifests' | Select-Object FullName, Length
+
+Ran terminal command: ollama list
+
+Ran terminal command: Get-ChildItem -Recurse 'C:\Users\Garrett\.ollama\models\blobs' | Where-Object { $_.Length -gt 24GB } | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length / 1GB, 2)}}
+
+Ran terminal command: Get-ChildItem -Recurse 'C:\Users\Garrett\.ollama\models\blobs' | Select-Object -First 5 | Select-Object FullName, Length
+
+Ran terminal command: Get-ChildItem Env: | Where-Object { $_.Name -like '*OLLAMA*' } | Select-Object Name, Value
+
+Ran terminal command: cmd /c "dir /s C:\Users\Garrett\.ollama\models\blobs"
+
+Ran terminal command: cmd /c "dir /s /b C:\Users\Garrett\.ollama\models\manifests" | findstr nemo
+
+Ran terminal command: cmd /c "dir /s /b C:\Users\Garrett\.ollama\models\manifests" | findstr nemo
+
+Ran terminal command: Get-ChildItem -Path G:\ -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*nemo*' -or $_.Name -like '*nemotron*' } | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length/1GB,2)}}
+
+Ran terminal command: Get-ChildItem -Path G:\~dev -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq '.gguf' -and $_.Length -gt 20GB } | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length/1GB,2)}}
+
+Ran terminal command: Get-ChildItem -Path G:\~dev\rawrxd -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq '.gguf' } | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length/1GB,2)}}
+
+Ran terminal command: Get-ChildItem -Path G:\ -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq '.gguf' -and [math]::Abs($_.Length/1GB - 25) -lt 2 } | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length/1GB,2)}}
+
+Ran terminal command: Get-ChildItem G:\ -Recurse -Filter "*.gguf" -ErrorAction SilentlyContinue | Select-Object FullName, @{N='SizeGB';E={[math]::Round($_.Length/1GB,2)}} | Sort-Object SizeGB -Descending | Select-Object -First 20
+
+Ran terminal command: echo %COMSPEC%
+
+Ran terminal command: cmd /c "dir /s /b G:\*.gguf"
+
+Read , lines 1 to 50
+
+Read , lines 51 to 200
+
+Read , lines 200 to 286
+
+Ran terminal command: cmd /c "for %a in (C D E F G) do @dir /s /b %a:\*e7a64ff15fb1* 2>nul"
+
+Read , lines 1 to 50
+
+Ran terminal command: cmd /c "for %a in (C D E F G) do @for /r %a:\ %f in (*.gguf) do @if %~zf GTR 26000000000 if %~zf LSS 27000000000 echo %~zf %f"
+
+Read , lines 1 to 100
+
+Ran terminal command: py f:\~dev\measure_ollama_native.py
+
+Read , lines 1 to 100
+
+Ran terminal command: type "c:\Users\Garrett\AppData\Roaming\Code\copilot-terminal-output\copilot-terminal-output-eb37bad2-7d3f-40ad-9b46-5d36f6a16bd2.txt" | findstr /i "case wall aggregate agent summary"
+
+Ran terminal command: curl -s http://localhost:11434/api/tags | findstr "nemotron"
+
+Ran terminal command: py -c "import urllib.request, json; print('Ollama reachable:', urllib.request.urlopen('http://localhost:11434/api/tags', timeout=5).status)"
+
+Ran terminal command: py f:\~dev\measure_ollama_native.py 2>&1 | findstr /v /c:"GGUF" /c:"models" /c:"build" /c:"test" /c:"Matrix" /c:"archive" /c:"gguf"
+
+Ran terminal command: py f:\~dev\measure_ollama_native.py
+
+Read 
+
+Ran terminal command: py -c "
+import urllib.request, json
+req = urllib.request.Request('http://localhost:11434/api/show', data=json.dumps({'model': 'nemotron-3.5-lightning:30b'}).encode(), headers={'Content-Type': 'application/json'})
+resp = urllib.request.urlopen(req)
+print(resp.read().decode()[:2000])
+"
+
+We successfully ran the Ollama benchmark for `nemotron-3.5-lightning:30b`. Here's what we found:
+
+**Ollama benchmark results** (`DEEP2_CONCURRENCY_SCALE_001_OLLAMA.txt`):
+| Agents | Wall Aggregate TPS | Sum Agent Decode TPS |
+|--------|-------------------|---------------------|
+| 1      | **126.67**        | 183.43              |
+| 2      | **126.07**        | 364.22              |
+
+**Key findings:**
+- The model **is** available via Ollama (`localhost:11434`) — confirmed by `ollama list`
+- **No standalone GGUF file** for nemotron-3.5-lightning:30b exists on G: drive (all GGUFs scanned, none ~25GB with nemotron in the name)
+- Ollama stores models as internal blobs, not as raw GGUF files that Deep2 can directly load
+- The C: drive Ollama blob directory is **empty** — the model is likely stored elsewhere via Ollama's internal storage
+
+**What do you need?**
+1. **Use Ollama-served nemotron for benchmarking** (what we just did) — ✅ working
+2. **Export a GGUF from Ollama** so Deep2 can load it natively — requires `ollama cp` or manual export
+3. **Fix the Deep2 GPU build** so we can test GPU TPS vs Ollama TPS — still blocked by CMake failures
+
+What's the next step?
+
+Made changes.
