@@ -6,6 +6,8 @@
 #ifndef DEEP2_ENGINE_H
 #define DEEP2_ENGINE_H
 
+#include "Beaconism.hpp"
+#include "GpuScheduler.hpp"
 #include "ReverseIntegration.hpp"
 #include "mars/MARSController.hpp"
 #include "ThreadPool.h"
@@ -546,7 +548,23 @@ public:
                                    const float* hostIn, float* hostOut);
     bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
     bool tryGpuTokenForward(float* hidden);
-    bool forwardTokenAllLayers(float* hidden, size_t seqLen);
+    // Execution route tracking for strict no-fallback authority
+    enum class ExecutionRoute : uint8_t {
+        Unset,
+        Cpu,
+        VulkanResident,
+        VulkanMoeHybrid,
+        VulkanDualRow,
+        HostFallback
+    };
+    struct ForwardResult {
+        bool ok = false;
+        ExecutionRoute actualRoute = ExecutionRoute::Unset;
+        bool gpuCommitted = false;
+        const char* failureStage = nullptr;
+    };
+
+    ForwardResult forwardTokenAllLayers(float* hidden, size_t seqLen);
     bool forwardSpeculativeBlock(const int32_t* tokenIds,size_t count,
                                  size_t basePos,float* finalHiddenBatch);
     bool verifySpeculativeGreedyWindow(
@@ -628,6 +646,35 @@ public:
     uint32_t vulkanSlotComputeQueueFamily(unsigned slot) const;
     uint32_t vulkanSlotTransferQueueFamily(unsigned slot) const;
     uint64_t vulkanSlotTransferQueueSubmits(unsigned slot) const;
+
+    // GpuScheduler: dual-GPU policy scheduler integration
+    void setGpuPolicy(GpuPolicy policy);
+    GpuPolicy currentGpuPolicy() const;
+    GpuScheduler* getGpuScheduler() const;
+    void initializeGpuScheduler();
+    std::string scheduleGpuWork(const GpuWorkItem& work);
+
+    // Per-token GPU telemetry counters (for Beaconism / profiler)
+    struct TokenGpuCounters {
+        uint64_t tokenWallNs = 0;
+        uint64_t gpu0ExecNs = 0;
+        uint64_t gpu1ExecNs = 0;
+        uint64_t gpu0WaitNs = 0;
+        uint64_t gpu1WaitNs = 0;
+        uint64_t hostMergeNs = 0;
+        uint64_t hostOrchestrationNs = 0;
+        uint64_t cpuSsmNs = 0;
+        uint64_t transferNs = 0;
+        uint64_t vkSubmits = 0;
+        uint64_t fenceWaits = 0;
+        size_t gpu0Rows = 0;
+        size_t gpu1Rows = 0;
+        size_t h2dBytes = 0;
+        size_t d2hBytes = 0;
+        size_t stagingBytes = 0;
+    };
+    const TokenGpuCounters& lastTokenCounters() const { return lastTokenCounters_; }
+    void resetTokenCounters() { lastTokenCounters_ = {}; }
     uint64_t vulkanSlotTransferRingOverlapNs(unsigned slot) const;
     bool vulkanSlotTimelineSemaphoreEnabled(unsigned slot) const;
     uint64_t vulkanSlotTimelineSignals(unsigned slot) const;
@@ -1116,6 +1163,19 @@ private:
     float* ssmX = nullptr;     /* yInner scratch [ssmInner_] */
     float* ssmY = nullptr;
     float* ssmTemp = nullptr;  /* proj scratch [ssmInRows_] */
+
+    // Per-layer SSM dequant caches — replaces process-static globals in computeSSM()
+    struct SSMLayerRuntimeCache {
+        std::vector<float> convK;
+        std::vector<float> convB;
+        std::vector<float> dtBias;
+        std::vector<float> A;
+        std::vector<float> D;
+        std::vector<float> normW;
+        bool initialized = false;
+    };
+    std::vector<SSMLayerRuntimeCache> ssmLayerCaches_;
+
     size_t ssmStateDim = 32;   /* legacy; Nemotron uses ssmStateSize_=128 */
     size_t ssmConvKernel = 4;
     size_t ssmInner_ = 0;
@@ -1150,6 +1210,13 @@ private:
     ModelState modelState_ = ModelState::Closed;
     std::string modelArchitecture_;               // <<< set from GGUF metadata after loadModel()
     bool hostQ8GemvSafe_ = true;
+
+    // GpuScheduler instance
+    std::unique_ptr<GpuScheduler> gpuScheduler_;
+
+    // Per-token GPU telemetry (last completed token)
+    mutable TokenGpuCounters lastTokenCounters_;
+
     bool hostDecodeSanitize_ = false;
     int hostQ8Ffn_ = 1;
     int hostQ8Attn_ = 1;

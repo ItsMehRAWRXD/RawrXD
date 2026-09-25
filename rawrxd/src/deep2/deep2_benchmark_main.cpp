@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
     // --- Vulkan ---
     if (vulkanEnabled) {
         engine.enableVulkan(true);
+        engine.setVulkanStrictNoCpuFallback(strictVulkan);
         std::fprintf(stderr, "VULKAN_ENABLED=1\n");
     } else {
         std::fprintf(stderr, "VULKAN_ENABLED=0\n");

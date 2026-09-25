@@ -5,6 +5,19 @@
 
 namespace Deep2 {
 
+const char* GpuPolicyName(GpuPolicy p) {
+    switch (p) {
+        case GpuPolicy::SINGLE:        return "SINGLE";
+        case GpuPolicy::FLIP_TOKEN:    return "FLIP_TOKEN";
+        case GpuPolicy::FLIP_LAYER:    return "FLIP_LAYER";
+        case GpuPolicy::PIPELINE_LAYER:return "PIPELINE_LAYER";
+        case GpuPolicy::SPLIT_EXPERT:  return "SPLIT_EXPERT";
+        case GpuPolicy::AGENT_AFFINITY:return "AGENT_AFFINITY";
+        case GpuPolicy::ADAPTIVE:      return "ADAPTIVE";
+        default:                       return "UNKNOWN";
+    }
+}
+
 GpuScheduler::GpuScheduler() = default;
 GpuScheduler::~GpuScheduler() = default;
 

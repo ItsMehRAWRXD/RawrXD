@@ -50,7 +50,8 @@ int run_full_forward(void* user, uint64_t token_index, D2DecodeReceipt* io) {
     Deep2Engine& e = *u->engine;
     const size_t seq = e.persistentKvLength() + 1;
     if (!e.embedToken(u->lastInputToken, u->hidden.data())) return D2X_ECALL;
-    if (!e.forwardTokenAllLayers(u->hidden.data(), seq)) return D2X_ECALL;
+    auto fr = e.forwardTokenAllLayers(u->hidden.data(), seq);
+    if (!fr.ok) return D2X_ECALL;
     const auto& c = e.gpuForwardCounters();
     const auto& ds = DualStickState();
     io->full_model_forward = 1;

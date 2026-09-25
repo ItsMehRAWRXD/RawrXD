@@ -1,0 +1,120 @@
+========================================
+  DEEP2_NATIVE_BENCHMARK_001
+========================================
+ENGINE=Deep2Engine
+VULKAN_REQUESTED=1
+STRICT_VULKAN=0
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 14 GEMV kernels, 14 dequant kernels
+VK_PHYS ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 type=2 discrete=1 compute=1 localGB=31.86
+VK_PHYS_DEDUP ordinal=1 name=Microsoft Direct3D12 (AMD Radeon AI PRO R9700) vendor=0x1002 device=0x7551 reason=FALLBACK_DEDUP
+VK_PHYS ordinal=1 name=AMD Radeon(TM) Graphics vendor=0x1002 device=0x164E type=1 discrete=0 compute=1 localGB=31.56
+VK_PHYS_DEDUP ordinal=3 name=Microsoft Direct3D12 (AMD Radeon(TM) Graphics) vendor=0x1002 device=0x164E reason=FALLBACK_DEDUP
+VK_PHYS ordinal=2 name=Microsoft Direct3D12 (Microsoft Basic Render Driver) vendor=0x1414 device=0x008C type=4 discrete=0 compute=1 localGB=47.08
+DEEP2_GPU_CANDIDATE rank=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551 discrete=1 localGB=31.86
+[SHADER_PATH] ops=F:\~dev\rawrxd\src\deep2\shaders\deep2_ops.spv q=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv.spv qb=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch.spv q4r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch4row.spv q8r=F:\~dev\rawrxd\src\deep2\shaders\deep2_qgemv_batch8row.spv am=F:\~dev\rawrxd\src\deep2\shaders\deep2_argmax.spv so=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_ops.spv sa=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_attn.spv ac=F:\~dev\rawrxd\src\deep2\shaders\deep2_spec_accept.spv
+[PIPELINE_CREATE] ops=1 q=1 qb=1 q4r=1 q8r=1
+[SCRATCH_RESERVE_OK] attention bytes=134217728
+BATCH9_VK_DEVICE ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 vram=34208743424 compute_pipeline=1 qgemv_pipeline=1 batch4row=1 batch8row=1 calibrated=1
+DEEP2_GPU_SELECT slot=0 ordinal=0 name=AMD Radeon AI PRO R9700 vendor=0x1002 device=0x7551
+BATCH9_VULKAN_INIT=DEVICE_BACKED devices=1 plan_active=0
+EXPERT_CACHE_INIT slot=0 budgetBytes=8552185856
+VULKAN_ENABLED=1
+MODEL_LOAD: loading F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3 ...
+[Deep2Engine] ROPE_ARCH=nemotron_h_moe ROPE_THETA_GLOBAL=10000.0 ROPE_THETA_LOCAL=10000.0 SLIDING_WINDOW=0 SLIDING_WINDOW_PATTERN=0
+[Deep2Engine] SSM_META inner=4096 state=128 heads=64 groups=8 convK=4
+[Deep2Engine] bound packed experts from 'blk.1.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.1.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.3.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.3.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] Auto-correcting numKVHeads from 32 to 2 (from wk.rows=256 / headDim=128)
+[Deep2Engine] bound packed experts from 'blk.6.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.6.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.8.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.8.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.10.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.10.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.13.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.13.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.15.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.15.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.17.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.17.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.20.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.20.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.22.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.22.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.24.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.24.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.27.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.27.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.29.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.29.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.31.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.31.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.34.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.34.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.36.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.36.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.38.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.38.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.40.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.40.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.43.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.43.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.45.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.45.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.47.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.47.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.49.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.49.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.51.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.51.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.52.ffn_up_exps.weight' expertDim=2, shape=[2688,1856,128], experts=128
+[Deep2Engine] bound packed experts from 'blk.52.ffn_down_exps.weight' expertDim=2, shape=[1856,2688,128], experts=128
+[Deep2Engine] MoE bound: experts=128 topk=6 shared=1 moe_layers=24 gating=1 scale=2.5000 norm=1
+[Deep2Engine] GGUF mapped: arch=nemotron_h_moe shards=1 tensors=417 layers=53 hidden=2688 heads=32 kv_heads=2 vocab=131072
+ARCH=nemotron_h_moe
+HIDDEN=2688
+LAYERS=53
+HEADS=32
+KV_HEADS=2
+HEAD_DIM=128
+GQA_GROUP=16
+FFN_DIM=0
+ROPE_THETA=10000
+ROPE_SCALING=1
+ROPE_DIM=84
+ROPE_NEOX=0
+RMS_EPS=1e-05
+Q_BIAS=absent
+K_BIAS=absent
+V_BIAS=absent
+TIE_EMBED=0
+MODEL_LOAD=PASS 41134 ms
+MODEL_ARCH=nemotron_h_moe
+MODEL_LAYERS=53
+MODEL_HIDDEN=2688
+MODEL_HEADS=32
+MODEL_KV_HEADS=2
+GEMV_SINGLE fullView failed name=blk.0.ssm_in.weight
+BATCH10_GPU_HYBRID_FAIL layer_math=LinearW: GPU path failed under strict mode
+
+========================================
+  RECEIPT
+========================================
+GATE=DEEP2_NATIVE_BENCHMARK_001
+ENGINE=Deep2Engine
+EXECUTION_BACKEND=GPU
+VULKAN_REQUESTED=1
+VULKAN_INITIALIZED=1
+GPU_FORWARD=1
+CPU_FORWARD=0
+CPU_FALLBACK=0
+MODEL=F:\OllamaModels\blobs\sha256-5c19f6282f4fc51cb114cb6c876d70ca2fc3b9cf0fbd0a018d9908f4fe1f63b3
+PROMPT_TOKENS=0
+GENERATED_TOKENS=0
+PREFILL_MS=0
+DECODE_MS=13.2
+DECODE_TPS_REAL=0.000
+VERDICT=FAIL

@@ -270,7 +270,8 @@ static bool processInput(Deep2Engine& e,int32_t token,std::size_t pos,
                          bool trace) {
     if(trace)e.parityBeginStep(int(pos));
     if(!e.embedToken(token,hidden.data()))return false;
-    if(!e.forwardTokenAllLayers(hidden.data(),pos+1))return false;
+    auto fr = e.forwardTokenAllLayers(hidden.data(),pos+1);
+    if(!fr.ok) return false;
     if(e.getConfig().useKVCache&&!e.advancePersistentKv())return false;
     e.computeLogits(hidden.data(),logits.data());
     if(trace)e.parityEmitLogitsTop10(logits.data(),logits.size());
