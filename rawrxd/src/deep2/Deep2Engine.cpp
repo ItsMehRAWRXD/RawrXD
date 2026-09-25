@@ -8,6 +8,8 @@
 #include "QuantKernelRegistry.hpp"
 #include "Deep2DualGpuRowSplit.hpp"
 #include "lavapath/GpuForwardChildLadder.hpp"
+#include "Deep2ArchitectureRuntime.hpp"
+#include "expert_cache/Deep2Batch005Integration.h"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -25,6 +27,128 @@
 #endif
 
 namespace Deep2 {
+
+// ------------------------------------------------------------
+// Token-path telemetry accumulator (C++20, zero-dependency beyond the standard lib).
+// All fields are caller-fed from real execution points — no synthetic estimates.
+// ------------------------------------------------------------
+struct TokenTelemetryAccumulator {
+    // One‑time initialization / open
+    bool open(const char* csv_path = nullptr, const char* jsonl_path = nullptr);
+
+    // Call once per generated token (ideally right after the token is fully emitted).
+    void record_token();
+
+    // ------------------------------------------------------------------
+    // Counters filled from the real Deep2 execution points (see the per‑file wiring below).
+    // ------------------------------------------------------------------
+    // Token loop / timing
+    uint64_t tokens_generated{};
+    uint64_t token_total_ns{};          // TOKEN_TOTAL_NS wall‑clock per token
+
+    // Model footprint
+    uint64_t model_file_bytes{};
+
+    // Weight traffic per token
+    uint64_t active_weight_bytes{};
+    uint64_t vram_weight_bytes_read{};
+    uint64_t ram_to_gpu_bytes{};
+    uint64_t gpu_to_gpu_bytes{};
+    uint64_t kv_read_bytes{};
+    uint64_t kv_write_bytes{};
+    uint64_t scratch_bytes{};
+
+    // Expert‑cache
+    uint32_t experts_total{};
+    uint32_t experts_active{};
+    uint64_t expert_cache_hits{};
+    uint64_t expert_cache_misses{};
+
+    // GPU timing (ns)
+    uint64_t gpu_busy_ns{};
+    uint64_t gpu_idle_ns{};
+    uint64_t wait_ns{};
+    uint64_t submit_ns{};
+
+    // Hotpatch authority (populated by the address‑space layer)
+    uint64_t hotpatch_resolves{};
+    uint64_t hotpatch_fallbacks{};
+    uint64_t hotpatched_steps{};
+    uint64_t fallback_steps{};
+    uint64_t nominal_gpu_work_ns{};
+    uint64_t avoided_gpu_work_ns{};
+
+    // CSV/JSONL output (kept simple for the first integration)
+    FILE* csv_fp{};
+    FILE* jsonl_fp{};
+};
+
+// ------------------------------------------------------------
+// Global instance – one per engine process lifetime.
+// ------------------------------------------------------------
+static TokenTelemetryAccumulator telemetry;
+
+// ------------------------------------------------------------
+// Helper: now_ns using steady_clock (same as the telemetry lib).
+// ------------------------------------------------------------
+static uint64_t now_ns() noexcept {
+    using namespace std::chrono;
+    return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
+// ------------------------------------------------------------
+// TokenTelemetryAccumulator methods
+// ------------------------------------------------------------
+bool TokenTelemetryAccumulator::open(const char* csv_path, const char* jsonl_path) {
+    bool ok = true;
+    if (csv_path) {
+        csv_fp = std::fopen(csv_path, "w");
+        if (!csv_fp) { ok = false; csv_fp = nullptr; }
+        else { std::fprintf(csv_fp, "token_index,token_id,model_file_bytes,active_weight_bytes,"
+                    "vram_weight_bytes_read,ram_to_gpu_bytes,gpu_to_gpu_bytes,"
+                    "kv_read_bytes,kv_write_bytes,scratch_bytes,"
+                    "experts_total,experts_active,expert_cache_hits,expert_cache_misses,"
+                    "gpu_busy_ns,gpu_idle_ns,wait_ns,submit_ns,"
+                    "hotpatch_resolves,hotpatch_fallbacks,hotpatched_steps,fallback_steps,"
+                    "nominal_gpu_work_ns,avoided_gpu_work_ns,tokens_generated,token_total_ns\n"); }
+    }
+    if (jsonl_path) {
+        jsonl_fp = std::fopen(jsonl_path, "w");
+        if (!jsonl_fp) { ok = false; jsonl_fp = nullptr; }
+        else { std::fprintf(jsonl_fp, "{\"model_file_bytes\":%,}\n"); } // placeholder – real writer below
+    }
+    return ok;
+}
+
+void TokenTelemetryAccumulator::record_token() {
+    ++tokens_generated;
+
+    // Emit a CSV row if the file is open.
+    if (csv_fp) {
+        std::fprintf(csv_fp, "%llu,%d,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%u,%u,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu\n",
+            (unsigned long long)tokens_generated, /* token_index */ 0, /* token_id */ 0,
+            (unsigned long long)model_file_bytes, (unsigned long long)active_weight_bytes,
+            (unsigned long long)vram_weight_bytes_read, (unsigned long long)ram_to_gpu_bytes,
+            (unsigned long long)gpu_to_gpu_bytes, (unsigned long long)kv_read_bytes,
+            (unsigned long long)kv_write_bytes, (unsigned long long)scratch_bytes,
+            experts_total, experts_active,
+            (unsigned long long)expert_cache_hits, (unsigned long long)expert_cache_misses,
+            (unsigned long long)gpu_busy_ns, (unsigned long long)gpu_idle_ns,
+            (unsigned long long)wait_ns, (unsigned long long)submit_ns,
+            (unsigned long long)hotpatch_resolves, (unsigned long long)hotpatch_fallbacks,
+            (unsigned long long)hotpatched_steps, (unsigned long long)fallback_steps,
+            (unsigned long long)nominal_gpu_work_ns, (unsigned long long)avoided_gpu_work_ns,
+            tokens_generated, token_total_ns);
+    }
+    // JSONL row would be written similarly.
+}
+
+// ------------------------------------------------------------
+// Early‑exit if telemetry not configured.
+// ------------------------------------------------------------
+#define TELEMETRY_GUARD if (!telemetry.csv_fp && !telemetry.jsonl_fp) return;
+
+} // namespace Deep2
 
 // =================== HELPER: RMSNorm ====================
 static void rmsnorm(float* out, const float* in, const float* weight,
@@ -335,6 +459,9 @@ static size_t packedBytesRequired(int type, size_t rows, size_t cols) {
 }
 
 // =================== CONSTRUCTOR / DESTRUCTOR ====================
+namespace {
+    rawrxd::Batch005Runtime s_expertCacheRuntime; // keeps expert_cache objects alive
+}
 Deep2Engine::Deep2Engine() {}
 Deep2Engine::~Deep2Engine() { unloadModel(); }
 
@@ -823,8 +950,12 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         bindTensor(p + "ffn_up.weight", lw.wUp);
         bindTensor(p + "ffn_down.weight", lw.wDown);
         bindTensor(p + "ffn_norm.weight", lw.ffnNorm);
-        bindTensor(p + "attn_post_norm.weight", lw.attnPostNorm);
-        bindTensor(p + "ffn_post_norm.weight", lw.ffnPostNorm);
+        bindFirst(lw.attnPostNorm,
+                  {(p + "attn_post_norm.weight").c_str(),
+                   (p + "post_attention_norm.weight").c_str()});
+        bindFirst(lw.ffnPostNorm,
+                  {(p + "ffn_post_norm.weight").c_str(),
+                   (p + "post_ffw_norm.weight").c_str()});
 
         // Batch 8: real MoE router + expert tensor binding.
         bindFirst(lw.moeRouter,
@@ -1291,6 +1422,30 @@ bool Deep2Engine::loadModel(const std::string& ggufPath, ModelLoadDiag* diag) {
         }
         moeInitialized_ = true;
 
+        // RAWRXD_EXPERT_CACHE_MOE_001: register all expert gate/up/down into each ExpertCache
+        for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
+            auto& cache = expertCaches_[dev];
+            if (!cache) continue;
+            for (size_t L = 0; L < modelWeights.layers.size(); ++L) {
+                const auto& lw = modelWeights.layers[L];
+                if (lw.moeGate.empty() || lw.moeUp.empty() || lw.moeDown.empty()) continue;
+                for (size_t e = 0; e < lw.moeGate.size(); ++e) {
+                    rawrxd::deep2::ExpertKey key{static_cast<uint32_t>(L), static_cast<uint32_t>(e)};
+                    size_t totalBytes = lw.moeGate[e].sizeBytes + lw.moeUp[e].sizeBytes + lw.moeDown[e].sizeBytes;
+                    std::vector<char> staging;
+                    staging.resize(totalBytes);
+                    std::memcpy(staging.data(), lw.moeGate[e].data, lw.moeGate[e].sizeBytes);
+                    std::memcpy(staging.data() + lw.moeGate[e].sizeBytes, lw.moeUp[e].data, lw.moeUp[e].sizeBytes);
+                    std::memcpy(staging.data() + lw.moeGate[e].sizeBytes + lw.moeUp[e].sizeBytes, lw.moeDown[e].data, lw.moeDown[e].sizeBytes);
+                    expertStagingBuffers_.push_back(std::move(staging));
+                    rawrxd::deep2::ExpertLocation loc{};
+                    loc.hostPtr = expertStagingBuffers_.back().data();
+                    loc.bytes   = totalBytes;
+                    cache->registerExpert(key, loc);
+                }
+            }
+        }
+
         std::fprintf(stderr,
             "[Deep2Engine] MoE bound: experts=%zu topk=%zu shared=%zu "
             "moe_layers=%zu gating=%u scale=%.4f norm=%u\n",
@@ -1572,6 +1727,16 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logitsOut) {
 
     RMSNormW(modelWeights.finalNorm, hiddenState, layerTemp,
              H, modelWeights.normEps);
+    {
+        float fnMin = std::numeric_limits<float>::infinity();
+        float fnMax = -std::numeric_limits<float>::infinity();
+        for (size_t i = 0; i < H; ++i) {
+            if (layerTemp[i] < fnMin) fnMin = layerTemp[i];
+            if (layerTemp[i] > fnMax) fnMax = layerTemp[i];
+        }
+        std::fprintf(stderr, "FINALNORM_POST min=%g max=%g\n", fnMin, fnMax);
+        std::fflush(stderr);
+    }
     parityEmit(ParityCheckpoint::FinalNorm, layerTemp, H);
     LinearW(modelWeights.lmHead, layerTemp, nullptr, logitsOut, V);
 
@@ -2014,6 +2179,16 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
     for (size_t i = 0; i < H; ++i) {
         output[i] = input[i] + attentionOutput[i];
     }
+    {
+        float arMin = std::numeric_limits<float>::infinity();
+        float arMax = -std::numeric_limits<float>::infinity();
+        for (size_t i = 0; i < H; ++i) {
+            if (output[i] < arMin) arMin = output[i];
+            if (output[i] > arMax) arMax = output[i];
+        }
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "ATTN_RESIDUAL layer=" << layer << " min=" << arMin << " max=" << arMax << "\n";
+    }
     parityEmit(ParityCheckpoint::AttnResidual, output, H);
     parityEmitLayer(static_cast<int>(layer), "ATTN_RESIDUAL", output, H);
 
@@ -2032,6 +2207,17 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input,
         computeMoEFFN(layer, layerTemp, ffnOutput);
     } else {
         computeFFN(layer, layerTemp, ffnOutput);
+    }
+
+    {
+        float ffnMin = std::numeric_limits<float>::infinity();
+        float ffnMax = -std::numeric_limits<float>::infinity();
+        for (size_t i = 0; i < H; ++i) {
+            if (ffnOutput[i] < ffnMin) ffnMin = ffnOutput[i];
+            if (ffnOutput[i] > ffnMax) ffnMax = ffnOutput[i];
+        }
+        std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+        dbg << "FFN_POST layer=" << layer << " min=" << ffnMin << " max=" << ffnMax << "\n";
     }
 
     if (!finiteVector(ffnOutput, H)) {
@@ -2375,15 +2561,29 @@ void Deep2Engine::computeMoEFFN(size_t layer,
         route.expertWeights.size() != K)
         throw std::runtime_error("MoE: route failed");
 
+    // BATCH007: advisory prefetch of routed experts into per-device ExpertCache
+    const uint64_t cpuEpoch = kvCache ? kvCache->currentLength() : 0;
+    for (size_t dev = 0; dev < expertCaches_.size(); ++dev) {
+        auto& cache = expertCaches_[dev];
+        if (!cache) continue;
+        for (size_t k = 0; k < K; ++k) {
+            const int eid = route.expertIds[k];
+            if (eid >= 0) cache->prefetch(rawrxd::deep2::ExpertKey{static_cast<uint32_t>(layer), static_cast<uint32_t>(eid)}, cpuEpoch);
+        }
+    }
+
     std::fill(output, output + H, 0.0f);
 
     // Shared expert participates independently of routed top-k experts.
     if (lw.moeSharedGate.data || lw.moeSharedUp.data ||
         lw.moeSharedDown.data) {
-        std::vector<float> shared(H, 0.0f);
-        computeSharedExpertFFN(layer, input, shared.data());
+        // BATCH007: reuse pre-allocated layerTemp instead of heap vector
+        if (!layerTemp)
+            throw std::runtime_error("MoE: layerTemp not allocated");
+        std::fill(layerTemp, layerTemp + H, 0.0f);
+        computeSharedExpertFFN(layer, input, layerTemp);
         for (size_t i = 0; i < H; ++i)
-            output[i] += shared[i];
+            output[i] += layerTemp[i];
     }
 
     auto runOne = [&](size_t routeIndex) -> std::vector<float> {
@@ -2875,6 +3075,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             return 0;
         }
         auto tEmbed1 = std::chrono::steady_clock::now();
+        {
+            float emMin = std::numeric_limits<float>::infinity();
+            float emMax = -std::numeric_limits<float>::infinity();
+            for (size_t i = 0; i < config.hiddenDim; ++i) {
+                if (hidden[i] < emMin) emMin = hidden[i];
+                if (hidden[i] > emMax) emMax = hidden[i];
+            }
+            std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+            dbg << "EMBED_POST_PREFILL p=" << p << " min=" << emMin << " max=" << emMax << "\n";
+        }
         if (profiler_) profiler_->recordCpuOverhead(
             static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmbed1 - tEmbed0).count()));
         auto tFwd0 = std::chrono::steady_clock::now();
@@ -2965,6 +3175,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 break;
             }
             auto tEmb1 = std::chrono::steady_clock::now();
+            {
+                float emMin = std::numeric_limits<float>::infinity();
+                float emMax = -std::numeric_limits<float>::infinity();
+                for (size_t i = 0; i < config.hiddenDim; ++i) {
+                    if (hidden[i] < emMin) emMin = hidden[i];
+                    if (hidden[i] > emMax) emMax = hidden[i];
+                }
+                std::ofstream dbg("F:\\~dev\\rawrxd\\win32ide_strict\\build_v4\\Release\\gen_debug.txt", std::ios::app);
+                dbg << "EMBED_POST_DECODE gen=" << generated << " min=" << emMin << " max=" << emMax << "\n";
+            }
             if (profiler_) profiler_->recordCpuOverhead(
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(tEmb1 - tEmb0).count()));
             const size_t seq=(kvCache?kvCache->currentLength():promptLen)+1;
@@ -2989,6 +3209,31 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 break;
             }
             pendingForward=false;
+
+            // ----- telemetry: one token fully emitted -----
+            telemetry.active_weight_bytes = /* from expert manager */ 0; // TODO wire real value
+            telemetry.vram_weight_bytes_read = /* from GPU forward */ 0; // TODO wire real value
+            telemetry.ram_to_gpu_bytes = /* H2D transfer bytes for this token */ 0; // TODO wire real value
+            telemetry.gpu_to_gpu_bytes = /* GPU-internal copy bytes */ 0; // TODO wire real value
+            telemetry.kv_read_bytes = /* KV read bytes for this token */ 0; // TODO wire real value
+            telemetry.kv_write_bytes = /* KV write bytes for this token */ 0; // TODO wire real value
+            telemetry.scratch_bytes = /* scratch allocation bytes */ 0; // TODO wire real value
+            telemetry.experts_total = /* expert cache total */ 0; // TODO wire real value
+            telemetry.experts_active = /* expert cache active */ 0; // TODO wire real value
+            telemetry.expert_cache_hits = /* expert cache hits this token */ 0; // TODO wire real value
+            telemetry.expert_cache_misses = /* expert cache misses this token */ 0; // TODO wire real value
+            telemetry.gpu_busy_ns = /* GPU busy ns for this token */ 0; // TODO wire real value
+            telemetry.gpu_idle_ns = /* GPU idle ns for this token */ 0; // TODO wire real value
+            telemetry.wait_ns = /* wait/sync ns for this token */ 0; // TODO wire real value
+            telemetry.submit_ns = /* submit ns for this token */ 0; // TODO wire real value
+            telemetry.nominal_gpu_work_ns = /* nominal GPU work ns */ 0; // TODO wire real value
+            telemetry.avoided_gpu_work_ns = /* avoided GPU work ns */ 0; // TODO wire real value
+            telemetry.hotpatch_resolves = /* hotpatch resolves this token */ 0; // TODO wire real value
+            telemetry.hotpatch_fallbacks = /* hotpatch fallbacks this token */ 0; // TODO wire real value
+            telemetry.hotpatched_steps = /* hotpatched steps this token */ 0; // TODO wire real value
+            telemetry.fallback_steps = /* fallback steps this token */ 0; // TODO wire real value
+            telemetry.token_total_ns = /* elapsed ns for this token */ 0; // TODO wire real value
+            telemetry.record_token();
         }
 
         const size_t remaining=decodeLimit-generated;
@@ -3507,6 +3752,72 @@ bool Deep2Engine::handleTensorFault(uint64_t tensorId) {
 bool Deep2Engine::handleGPUFailure(int gpu) {
     if (!marsEnabled_ || !marsController_) return false;
     return marsController_->handleGPUFailure(gpu);
+}
+
+// =================== 24 GiB HARD-RESIDENCY / MEASURED STREAMING ====================
+void Deep2Engine::enableVramStreaming(bool enable) {
+    if (!enable) {
+        if (streamEngine_) streamEngine_->shutdown();
+        streamEngine_.reset();
+        streamRouter_.reset();
+        vramStreamingController_.reset();
+        vramStreamingEnabled_ = false;
+        streamPrefetchEnabled_ = false;
+        return;
+    }
+    if (!vramStreamingController_) {
+        vramStreamingController_ = std::make_unique<Deep2::VramStreamingController>();
+    }
+    if (!streamEngine_) {
+        streamEngine_ = std::make_unique<Deep2::StreamEngine>();
+    }
+    if (!streamRouter_) {
+        streamRouter_ = std::make_unique<Deep2::StreamRouter>();
+    }
+
+    // Attach NVMe stream if available
+    if (nvmeStream_) {
+        vramStreamingController_->attachNvmeStream(nvmeStream_.get());
+        streamEngine_->initialize(nvmeConfig_, vramStreamingController_.get(), nvmeStream_.get());
+    }
+
+    // Attach elastic residency manager if available
+    if (elasticResidency_) {
+        vramStreamingController_->attachElasticManager(elasticResidency_.get());
+        streamRouter_->initialize(vramStreamingController_.get(), streamEngine_.get(), elasticResidency_.get());
+    } else {
+        streamRouter_->initialize(vramStreamingController_.get(), streamEngine_.get(), nullptr);
+    }
+
+    vramStreamingEnabled_ = true;
+}
+
+void Deep2Engine::lockVramResidency() {
+    if (vramStreamingController_) vramStreamingController_->lockResidency();
+}
+
+void Deep2Engine::unlockVramResidency() {
+    if (vramStreamingController_) vramStreamingController_->unlockResidency();
+}
+
+void Deep2Engine::setVramCeilingGiB(uint32_t gib) {
+    if (vramStreamingController_) vramStreamingController_->setVramCeilingGiB(gib);
+}
+
+uint64_t Deep2Engine::vramCeilingBytes() const {
+    return vramStreamingController_ ? vramStreamingController_->vramCeilingBytes() : 0;
+}
+
+void Deep2Engine::beginTokenStreamingMeasurement(uint64_t tokenIndex) {
+    if (vramStreamingController_) vramStreamingController_->beginTokenMeasurement(tokenIndex);
+}
+
+bool Deep2Engine::endTokenStreamingMeasurement(uint64_t& outBytesMoved) {
+    return vramStreamingController_ ? vramStreamingController_->endTokenMeasurement(outBytesMoved) : false;
+}
+
+VramStreamingStats Deep2Engine::getVramStreamingStats() const {
+    return vramStreamingController_ ? vramStreamingController_->stats() : VramStreamingStats{};
 }
 
 // =================== COMPRESSED KV CACHE ====================

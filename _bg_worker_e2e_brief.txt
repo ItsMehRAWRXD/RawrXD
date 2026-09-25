@@ -1,0 +1,19 @@
+=== RAWRXD_WIN32IDE_E2E_001 — BACKGROUND WORKER BRIEF ===
+OBJECTIVE: Prove AutoClosure + strict inference gate end-to-end after P0 model-fallback removal.
+
+GATES:
+1. STRICT_RELEASE_BUILD
+   - Target: RawrXD-Win32IDE Release
+   - Must compile with no errors after ide_agentic_gate.cpp / ide_inference_gate.cpp edits.
+
+2. AUTOCLOSURE_REAL_RUNTIME
+   - Run: RawrXD-Win32IDE.exe --autoclose --model "D:\rawrxd\gemma3-1b-Q2_K.gguf" --workspace "F:\~dev\rawrxd" --gate-tokens 8 --nonce "7E91B462" --receipt "F:\~dev\rawrxd\win32ide_strict\build_v4\Release\cert_receipt_autoclose.txt" --wall-ms 300000
+   - Verify receipt contains: MODEL_LOADED=PASS, TOKENIZER_READY=PASS, FORWARD_PASS_OK=PASS, LOGITS_FINITE=PASS, GENERATED_TOKEN_COUNT>0, REAL_GPU_FORWARD=PASS, GPU_FALLBACK_DELTA=0.
+
+3. AGENTIC_ROUND_TRIP (if gate 2 passes)
+   - Run agent gate with tool authority, verify nonce "7E91B462" appears in output.
+
+4. REAL_AUTONOMOUS_TASK (future)
+   - Source read/edit/build/test cycle with zero human intervention.
+
+FAIL-CLOSED LAW: NOT_RUN != PASS. Build must compile, receipt must contain real evidence.

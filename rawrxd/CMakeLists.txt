@@ -7532,6 +7532,29 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
+# test_generate_313_tokens — BATCH007 313-token regression gate for Gemma3
+option(BUILD_DEEP2_313_TOKEN_GATE "Build 313-token regression gate" OFF)
+if(BUILD_DEEP2_313_TOKEN_GATE)
+    add_executable(test_generate_313_tokens
+        src/deep2/test_generate_313_tokens.cpp
+    )
+    target_link_libraries(test_generate_313_tokens PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_generate_313_tokens PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_generate_313_tokens PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_generate_313_tokens PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_generate_313_tokens
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] 313-token regression gate: test_generate_313_tokens")
+endif()
+
 # test_q2k_single_tensor_oracle — Minimal Q2_K GEMV oracle
 add_executable(test_q2k_single_tensor_oracle
     src/deep2/test_q2k_single_tensor_oracle.cpp

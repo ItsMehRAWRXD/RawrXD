@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/agentic_hotpatch_orchestrator.cpp
+// agentic_hotpatch_orchestrator — stub

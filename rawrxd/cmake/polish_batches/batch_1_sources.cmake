@@ -3,9 +3,6 @@
 # Safe: this file only defines a list; it does NOT modify sources.
 
 set(RAWRXD_BATCH_1_SOURCES
-  "${CMAKE_SOURCE_DIR}/src/agent_explainability.cpp"
-  "${CMAKE_SOURCE_DIR}/src/agent_history.cpp"
-  "${CMAKE_SOURCE_DIR}/src/agent_policy.cpp"
   "${CMAKE_SOURCE_DIR}/src/agent/agent_self_healing_orchestrator.cpp"
   "${CMAKE_SOURCE_DIR}/src/agent/agent_self_repair.cpp"
   "${CMAKE_SOURCE_DIR}/src/agent/agentic_deep_thinking_engine_stub.cpp"

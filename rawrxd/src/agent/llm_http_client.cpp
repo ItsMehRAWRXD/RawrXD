@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/llm_http_client.cpp
+// llm_http_client — stub

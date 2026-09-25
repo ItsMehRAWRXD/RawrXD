@@ -1,0 +1,9 @@
+GATE=RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001
+PROVENANCE=retained Win32_IDE_Complete.cpp consolidated source corpus
+POLICY=apply only to current pure // STUB targets unless -Force
+REFERENCE_SECTIONS=37
+EXCLUDED_FROM_AUTO_APPLY=digestion_engine_stub.cpp;digestion_test_harness.cpp;simple_test.cpp;test_runner.cpp
+AUTO_APPLY_CANDIDATES=33
+CURRENT_REPO_BUILD=NOT_RUN_IN_THIS_ENVIRONMENT
+CURRENT_REPO_RUNTIME=NOT_RUN_IN_THIS_ENVIRONMENT
+VERDICT=RECOVERY_SOURCE_READY_NOT_PRODUCT_PASS

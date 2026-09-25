@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/autonomous_subagent.cpp
+// autonomous_subagent — stub

@@ -1,0 +1,22 @@
+=== RAWRXD_EXPERT_CACHE_MOE_001 — BACKGROUND WORKER BRIEF ===
+OBJECTIVE: Certify expert cache on a real (synthetic) MoE model: produce CACHE_HITS>0, CPU_EXPERT_COMPUTE=0, and a real end-to-end forward pass with the synthetic MoE GGUF.
+
+CURRENT STATE:
+- Expert cache structurally integrated in Deep2Engine.cpp/h; sources are in CMakeLists.txt.
+- Previous build_v4 had unresolved externals for ExpertCache::~ExpertCache and VulkanExpertTransport::~VulkanTransport. Those destructors ARE defined in .cpp files; likely a stale build or missing source list in the v4 CMake configure.
+- Synthetic MoE GGUF exists at D:\rawrxd\synthetic_moe.gguf (v2, 341,696 bytes, 23 tensors, 2 layers, 4 experts, top-2, float32).
+- GGUFLoader.hpp has a v3 header bug but v2 loads fine.
+- The --cert-inference autorun reads RAWRXD_AGENT_MODEL env var.
+- Deep2Engine.cpp computeMoEFFN() exists but expert cache is not wired into it yet.
+- Deep2Engine.h already declares ExpertCache and VulkanExpertTransport members.
+
+REMAINING WORK:
+1. Ensure build_v4 Release target (RawrXD-Win32IDE) compiles and links with expert cache sources. If unresolved externals persist, verify CMakeLists.txt includes all expert_cache .cpp files and that the build directory is reconfigured (delete CMakeCache.txt if needed).
+2. In Deep2Engine.cpp, instantiate ExpertCache and VulkanExpertTransport during init (if numExperts > 1).
+3. In computeMoEFFN(), add expert cache lookup before computeExpertFFN(). On miss, upload expert weights via VulkanExpertTransport.
+4. Run: set RAWRXD_AGENT_MODEL=D:\rawrxd\synthetic_moe.gguf; run build_v4\Release\RawrXD-Win32IDE.exe --cert-inference.
+5. Verify receipt shows MODEL_ARCH=llama (or whatever the synthetic model reports), FORWARD_PASS_OK=PASS, GENERATED_TOKEN_COUNT>0.
+6. If cache metrics are available in stdout/stderr or a dedicated receipt, confirm CACHE_HITS>0 and CPU_EXPERT_COMPUTE=0.
+7. Produce exact RAWRXD_EXPERT_CACHE_MOE_001 receipt at f:\~dev\RAWRXD_EXPERT_CACHE_MOE_001.txt with build evidence, runtime metrics, and certification format.
+
+FAIL-CLOSED LAW: NOT_RUN != PASS. Build must compile, inference must run, receipt must contain real evidence.

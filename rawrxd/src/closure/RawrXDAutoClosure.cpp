@@ -157,7 +157,7 @@ static bool HashFileSha256(const fs::path& p, std::string& hex, uint64_t& bytes)
     std::ifstream f(p, std::ios::binary);
     if (!f) return false;
     Sha256 s;
-    std::array<char,1<<20> buf{};
+    std::vector<char> buf(1 << 20);
     bytes = 0;
     while (f) {
         f.read(buf.data(), static_cast<std::streamsize>(buf.size()));
@@ -227,17 +227,21 @@ static GateResult DecodeBounded(
     uint32_t maxTokens,
     const std::string& stopText = {})
 {
+    std::fprintf(stderr,"[AC_DECODE] ENTER prompt_len=%zu maxTok=%u\n",prompt.size(),maxTokens); std::fflush(stderr);
     GateResult r;
     r.modelLoaded=e.isModelLoaded();
     if(!r.modelLoaded){r.failStage="MODEL_NOT_LOADED";return r;}
     if(maxTokens==0){r.failStage="TOKEN_BUDGET_ZERO";return r;}
 
     try {
+        std::fprintf(stderr,"[AC_DECODE] reset\n"); std::fflush(stderr);
         e.reset();
+        std::fprintf(stderr,"[AC_DECODE] tokenize\n"); std::fflush(stderr);
         auto toks=e.tokenize(prompt);
         r.promptTokens=toks.size();
         r.tokenizerReady=!toks.empty();
         if(toks.empty()){r.failStage="TOKENIZE_EMPTY";return r;}
+        std::fprintf(stderr,"[AC_DECODE] tok_count=%zu H=%zu V=%zu\n",toks.size(),e.getConfig().hiddenDim,e.getConfig().vocabSize); std::fflush(stderr);
 
         const auto& cfg=e.getConfig();
         const size_t H=cfg.hiddenDim;
@@ -252,12 +256,14 @@ static GateResult DecodeBounded(
 
         size_t seq=0;
         for(size_t i=0;i<toks.size();++i) {
+            std::fprintf(stderr,"[AC_DECODE] prefill_embed i=%zu tok=%d\n",i,(int)toks[i]); std::fflush(stderr);
             if(!e.embedToken(toks[i],hidden.data())) {
                 r.failStage="PREFILL_EMBED";
                 r.failMessage="token_index="+std::to_string(i);
                 return r;
             }
             ++seq;
+            std::fprintf(stderr,"[AC_DECODE] prefill_forward i=%zu seq=%zu\n",i,seq); std::fflush(stderr);
             if(!e.forwardTokenAllLayers(hidden.data(),seq)) {
                 r.failStage="PREFILL_FORWARD";
                 r.failMessage="token_index="+std::to_string(i);
@@ -266,8 +272,10 @@ static GateResult DecodeBounded(
             if(cfg.useKVCache) e.advancePersistentKv();
         }
         r.forwardPassOk=true;
+        std::fprintf(stderr,"[AC_DECODE] prefill_done\n"); std::fflush(stderr);
 
         for(uint32_t step=0;step<maxTokens;++step) {
+            std::fprintf(stderr,"[AC_DECODE] decode_step=%u\n",step); std::fflush(stderr);
             e.computeLogits(hidden.data(),logits.data());
 
             bool finite=true;
@@ -319,6 +327,7 @@ static GateResult DecodeBounded(
         r.strictGpuViolation=e.vulkanStrictViolation();
         r.pass=r.generatedTokens>0&&r.forwardPassOk&&r.logitsFinite;
         if(!r.pass&&r.failStage.empty()) r.failStage="NO_TOKENS";
+        std::fprintf(stderr,"[AC_DECODE] DONE pass=%d gen=%zu\n",(int)r.pass,r.generatedTokens); std::fflush(stderr);
         return r;
     } catch(const std::exception& ex) {
         r.failStage="EXCEPTION";
@@ -331,23 +340,31 @@ static GateResult DecodeBounded(
 }
 
 static bool SetupEngine(Deep2::Deep2Engine& e,const Options& o,GateResult& r) {
+    std::fprintf(stderr,"[AC_SETUP] ENTER model=%s\n",PathUtf8(o.modelPath).c_str()); std::fflush(stderr);
     if(o.modelPath.empty()){r.failStage="MODEL_PATH_EMPTY";return false;}
     if(!fs::exists(o.modelPath)){r.failStage="MODEL_NOT_FOUND";return false;}
+    std::fprintf(stderr,"[AC_SETUP] hash_start\n"); std::fflush(stderr);
     if(!HashFileSha256(o.modelPath,r.modelSha256,r.modelBytes)){
         r.failStage="MODEL_HASH_FAILED";return false;
     }
+    std::fprintf(stderr,"[AC_SETUP] hash_ok bytes=%zu\n",r.modelBytes); std::fflush(stderr);
 
     Deep2::EngineConfig cfg{};
     cfg.maxSeqLen=4096;
     cfg.numThreads=0;
+    std::fprintf(stderr,"[AC_SETUP] init_start\n"); std::fflush(stderr);
     if(!e.initialize(cfg)){r.failStage="ENGINE_INIT";return false;}
+    std::fprintf(stderr,"[AC_SETUP] init_ok\n"); std::fflush(stderr);
+    std::fprintf(stderr,"[AC_SETUP] load_start\n"); std::fflush(stderr);
     if(!e.loadModel(PathUtf8(o.modelPath))){
         r.failStage="MODEL_LOAD";return false;
     }
+    std::fprintf(stderr,"[AC_SETUP] load_ok\n"); std::fflush(stderr);
     r.modelLoaded=true;
 
     e.setVulkanStrictNoCpuFallback(o.strictGpu);
     e.enableVulkan(true);
+    std::fprintf(stderr,"[AC_SETUP] vulkan_strict=%d init=%d\n",(int)o.strictGpu,(int)e.isVulkanInitialized()); std::fflush(stderr);
     if(o.strictGpu&&!e.isVulkanInitialized()){
         r.failStage="VULKAN_INIT";return false;
     }
@@ -358,6 +375,7 @@ static bool SetupEngine(Deep2::Deep2Engine& e,const Options& o,GateResult& r) {
     go.topP=1.0f;
     go.seed=1;
     e.configureGeneration(go);
+    std::fprintf(stderr,"[AC_SETUP] DONE\n"); std::fflush(stderr);
     return true;
 }
 
@@ -874,6 +892,15 @@ static uint64_t ArgU64(const std::vector<std::wstring>& a,const std::wstring& k,
 static Options ParseOptions(const std::vector<std::wstring>& a) {
     Options o;
     if(auto v=ArgValue(a,L"--model")) o.modelPath=*v;
+    if(o.modelPath.empty()) {
+        // Fall back: first positional non-flag argument is treated as model path
+        for(size_t i=1;i<a.size();++i) {
+            if(!a[i].empty() && a[i][0]!=L'-') {
+                o.modelPath=a[i];
+                break;
+            }
+        }
+    }
     if(auto v=ArgValue(a,L"--workspace")) o.workspace=*v;
     if(auto v=ArgValue(a,L"--task")) o.task=WideToUtf8(*v);
     if(auto v=ArgValue(a,L"--task-file")) o.taskFile=*v;

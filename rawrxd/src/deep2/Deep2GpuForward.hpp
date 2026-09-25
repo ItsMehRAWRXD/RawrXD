@@ -88,7 +88,9 @@ inline bool Deep2GpuForward_Resident(const GpuForwardCounters& c) noexcept {
 }
 
 inline bool Deep2GpuForward_IsReal(const GpuForwardCounters& c, uint64_t) noexcept {
-    return Deep2GpuForward_Resident(c) && c.hostMaterializations == 0;
+    // Allow the final-download materialization (host must sample logits),
+    // but reject any cross-device host bounce or other unexpected staging.
+    return Deep2GpuForward_Resident(c) && c.hostMaterializations == c.matFinalDownload;
 }
 
 // B5_MATERIALIZATION_PROFILE_001: class sum must equal the raw counter.

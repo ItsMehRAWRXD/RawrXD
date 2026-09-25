@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/AgenticNavigator.cpp
+// AgenticNavigator — stub

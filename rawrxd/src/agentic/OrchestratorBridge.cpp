@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/OrchestratorBridge.cpp
+// OrchestratorBridge — stub

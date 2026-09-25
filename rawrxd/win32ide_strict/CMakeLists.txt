@@ -34,6 +34,8 @@ endif()
 
 # Autoclosure header location
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../src/closure)
+# Expert cache headers
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache)
 
 # Strict source closure - ONLY these files
 target_sources(${PROJECT_NAME} PRIVATE
@@ -45,6 +47,38 @@ target_sources(${PROJECT_NAME} PRIVATE
 
     # IDE-native local inference gate (RAWRXD_WIN32IDE_INFERENCE_001)
     ${CMAKE_SOURCE_DIR}/../src/win32app/ide_inference_gate.cpp
+
+    # IDE-native agentic streaming gate (RAWRXD_WIN32IDE_AGENT_001)
+    ${CMAKE_SOURCE_DIR}/../src/win32app/ide_agentic_gate.cpp
+
+    # IDE stub closure recovery — full implementations (RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001)
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Commands.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Sidebar.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_MCPHooks.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Core.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_EditorEngine.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_FileOps.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_TabManager.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_ShellLayout.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_ChatPanel.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_AgentPanel.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_TerminalSplit.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_GitPanel.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_SearchPanel.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_SyntaxHighlight.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_GhostText.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Settings.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Session.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_LSPClient.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_MCP.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Watchdog.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_AutoSave.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_BuildRunner.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_StatusBar.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_AgenticBridge.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_StreamingUX.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_Logger.cpp
+    ${CMAKE_SOURCE_DIR}/../src/win32app/Win32IDE_logMessage.cpp
 
     # Frozen native toolchain
     ${CMAKE_SOURCE_DIR}/../src/compiler_backend/InstructionEncoderX64.cpp
@@ -65,6 +99,18 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_VulkanRuntime.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/strict_gpu_violations.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/Deep2Engine_GpuForward.cpp
+    # Expert cache (RAWRXD_EXPERT_CACHE_004/005)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertTensorCatalog.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/PackedExpertSlicer.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/VulkanExpertTransport.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/HostStagingRing.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/Deep2ExpertCacheBridge.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertScheduler.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/Deep2StackGuard.cpp
+    # RAWRXD_EXPERT_CACHE_006
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/Deep2MultiGpuExpertCache.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache/ExpertCacheBenchmark.cpp
     # Elastic residency manager (DEEP2_LAYER0_ELASTIC_RESIDENCY_001)
     ${CMAKE_SOURCE_DIR}/../src/deep2/ElasticResidencyManager.cpp
     # Production profiler (DEEP2_LAYER0_PRODUCTION_PROFILER_001)
@@ -92,6 +138,18 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2/BP16Streamer.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/CompressedKVCache.cpp
     ${CMAKE_SOURCE_DIR}/../src/deep2/mars/MARSController.cpp
+    # SG-01 to SG-10 speculative special graph (RAWRXD_SPECULATIVE_SPECIAL_GRAPH_001)
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpecialGraph.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpeculativeBatch.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpeculativeExecutor.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/KvTransaction.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/VerifyBatch.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/DraftPolicy.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/AcceptanceOracle.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/DualGpuOverlap.cpp
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative/SpeculativeCert.cpp
+    # RAWRXD_AGENTIC_E2E_001
+    ${CMAKE_SOURCE_DIR}/../src/agentic/RawrXDAgenticE2E.cpp
 )
 
 # --- Standalone Layer 0 provider tests ---
@@ -151,13 +209,19 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/core
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src
+    ${CMAKE_SOURCE_DIR}/../src/deep2/speculative
+    ${CMAKE_SOURCE_DIR}/../src/deep2/special_graph
+    ${CMAKE_SOURCE_DIR}/../src/agentic
+    ${CMAKE_SOURCE_DIR}/../src/core
+    ${CMAKE_SOURCE_DIR}/../src/screenpilot
     # Vulkan SDK header for Deep2 real GPU backend
     "C:/VulkanSDK/1.4.357.0/Include"
 )
 
 # Vulkan SDK library for Deep2 GPU backend
 target_link_directories(${PROJECT_NAME} PRIVATE "C:/VulkanSDK/1.4.357.0/Lib")
-target_link_libraries(${PROJECT_NAME} PRIVATE vulkan-1.lib dxgi psapi)
+target_link_libraries(${PROJECT_NAME} PRIVATE vulkan-1.lib dxgi psapi shell32 ole32 comdlg32)
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/STACK:16777216")
 # Certification: verify no STUB files are linked
 set(STRICT_IDE_SOURCES
     main_win32.cpp
@@ -214,6 +278,7 @@ add_executable(test_q2k_single_tensor_oracle
 )
 target_include_directories(test_q2k_single_tensor_oracle PRIVATE
     ${CMAKE_SOURCE_DIR}/../src/deep2
+    ${CMAKE_SOURCE_DIR}/../src/deep2/expert_cache
     ${CMAKE_SOURCE_DIR}/../src/tokenizer
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../src

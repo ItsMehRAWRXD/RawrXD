@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/agentic_transaction.cpp
+// agentic_transaction — stub

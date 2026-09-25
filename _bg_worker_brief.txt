@@ -1,0 +1,33 @@
+﻿RAWRXD E2E Background Worker — Continue-Ensure Dispatch
+
+MISSION: Complete all remaining integration and verification tasks.
+
+1. FIX RECEIPT GENERATION:
+   - The gate runs without crashing now (gen_debug shows gemma3 FWD_VULKAN_OK through seqLen=11).
+   - But cert_receipt_agentic.txt is NOT being written.
+   - Investigate: Does runAgenticGate() in ide_agentic_gate.cpp return before receipt code in main_win32.cpp runs?
+   - The receipt is written UNCONDITIONALLY in main_win32.cpp runAgenticGate() after the try/catch.
+   - If receipt is missing, either: (a) process crashes AFTER gen_debug but before receipt, or (b) process exits early.
+   - Add more debug logging to ide_agentic_gate.cpp to trace exact return path.
+   - Also check if the process is being killed by the E2E worker script timeout (120 seconds may be insufficient).
+
+2. BUILD rawrxd_real_gguf_parity:
+   - Complete cmake configure and build for rawrxd_real_gguf_parity target.
+   - Copy executable to F:\~dev\rawrxd_real_gguf_parity.exe.
+
+3. WIRE SPECULATIVE SPECIAL GRAPH:
+   - Read Deep2SpeculativeAdapter.hpp and SpecialGraph.hpp to understand API.
+   - Add hooks in Deep2Engine::forwardLayer() to call speculative graph executor.
+   - Rebuild and verify.
+
+4. INTEGRATE MISSING BATCHES:
+   - Copy files from F:\~dev\_tmp_missing_batches_drop\rawrxd_next_missing_batches_RAWRXD_NEXT_MISSING_BATCHES_002\src\ to rawrxd/src/.
+   - Update CMakeLists.txt to include new sources.
+   - Rebuild.
+
+5. VERIFY GATE END-TO-END:
+   - Run gate with --cert-agent --headless.
+   - Confirm receipt file exists and contains expected content.
+   - Confirm gen_debug.txt shows completion markers for gemma3.
+
+Report back all results in F:\~dev\_bg_worker_e2e.log.

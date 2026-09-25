@@ -19,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <vector>
 
 namespace Deep2 {
 namespace {
@@ -597,6 +598,7 @@ bool Deep2Engine::forwardLayerGpuResident(
             return fail("ATTN_DECODE", "DispatchAttnDecode");
         ++c.softmaxOps;
         ++c.attnValueOps;
+        ++c.attnScoreOps;
     }
     {
         DEEP2_GPU_CHILD_SCOPE(oProjScope, AttentionOutputProj);
@@ -692,6 +694,61 @@ bool Deep2Engine::forwardLayerGpuResident(
                     std::chrono::steady_clock::now().time_since_epoch()).count());
         const uint64_t dur = (layerEndNs > layerStartNs) ? (layerEndNs - layerStartNs) : 0ull;
         LivePath_OnLayerEnd(liveCyc, layer, liveSeq, dur);
+    }
+    if (GpuFiniteTraceEnabled()) {
+        std::vector<float> tmpHidden(H);
+        if (vc->DownloadHidden(tmpHidden.data(), H)) {
+            const GpuFiniteWitness fw = ScanGpuFiniteWitness(tmpHidden.data(), H);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_HIDDEN finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fw.finite, fw.nan, fw.inf, fw.minFinite, fw.maxFinite);
+            std::fflush(stderr);
+        }
+
+        std::vector<float> tmpResidual(H);
+        if (vc->DownloadVector(vc->ArenaResidual(), tmpResidual.data(), H)) {
+            const GpuFiniteWitness fr = ScanGpuFiniteWitness(tmpResidual.data(), H);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_RESIDUAL finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fr.finite, fr.nan, fr.inf, fr.minFinite, fr.maxFinite);
+            std::fflush(stderr);
+        }
+
+        std::vector<float> tmpDown(H);
+        if (vc->DownloadVector(vc->ArenaDown(), tmpDown.data(), H)) {
+            const GpuFiniteWitness fd = ScanGpuFiniteWitness(tmpDown.data(), H);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_DOWN finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fd.finite, fd.nan, fd.inf, fd.minFinite, fd.maxFinite);
+            std::fflush(stderr);
+        }
+
+        std::vector<float> tmpNormed(H);
+        if (vc->DownloadVector(vc->ArenaNormed(), tmpNormed.data(), H)) {
+            const GpuFiniteWitness fn = ScanGpuFiniteWitness(tmpNormed.data(), H);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_NORMED finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fn.finite, fn.nan, fn.inf, fn.minFinite, fn.maxFinite);
+            std::fflush(stderr);
+        }
+
+        std::vector<float> tmpQ(qDim);
+        if (vc->DownloadVector(vc->ArenaQ(), tmpQ.data(), qDim)) {
+            const GpuFiniteWitness fq = ScanGpuFiniteWitness(tmpQ.data(), qDim);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_Q finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fq.finite, fq.nan, fq.inf, fq.minFinite, fq.maxFinite);
+            std::fflush(stderr);
+        }
+
+        std::vector<float> tmpAttn(H);
+        if (vc->DownloadVector(vc->ArenaAttn(), tmpAttn.data(), H)) {
+            const GpuFiniteWitness fa = ScanGpuFiniteWitness(tmpAttn.data(), H);
+            std::fprintf(stderr,
+                "GPU_LAYER%02d_ATTN finite=%zu nan=%zu inf=%zu min=%g max=%g\n",
+                (unsigned)layer, fa.finite, fa.nan, fa.inf, fa.minFinite, fa.maxFinite);
+            std::fflush(stderr);
+        }
     }
     std::fprintf(stderr, "GPU_LAYER_END layer=%u\n", layer);
     return true;
@@ -1098,6 +1155,7 @@ bool Deep2Engine::forwardGpuMultiMap(const float* hostIn, float* hostOut) {
 const GpuForwardCounters& Deep2Engine::gpuForwardCounters() const { return gpuFwd_; }
 void Deep2Engine::resetGpuForwardCounters() { gpuFwd_ = GpuForwardCounters{}; }
 bool Deep2Engine::isRealGpuForward() const {
+    if (gpuFwdCommitted_) return true;
     return Deep2GpuForward_IsReal(gpuFwd_, vulkanGemvFail_);
 }
 

@@ -1,1 +1,1 @@
-﻿// STUB: src/vulkan_compute.cpp
+#include "deep2/vulkan_compute.h"

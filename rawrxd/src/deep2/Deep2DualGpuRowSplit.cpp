@@ -1244,8 +1244,8 @@ bool Deep2RunDualGpuRowSplitBatchTop1(
     if(!Deep2BuildGpuWeightView(wt,p.row0Begin,p.row0Count,w0)||
        !Deep2BuildGpuWeightView(wt,p.row1Begin,p.row1Count,w1))
         return false;
-    uint32_t i0[4]{},i1[4]{};
-    float v0[4]{},v1[4]{};
+    std::vector<uint32_t> i0(batch), i1(batch);
+    std::vector<float> v0(batch), v1(batch);
 
     struct Top1Ctx {
         VulkanCompute* g;
@@ -1265,8 +1265,8 @@ bool Deep2RunDualGpuRowSplitBatchTop1(
             c->outToken,c->outValue,c->epoch);
         return c->ok;
     };
-    Top1Ctx c0{&g0,&w0,inputBatch,batch,p.row0Begin,i0,v0,epoch,false};
-    Top1Ctx c1{&g1,&w1,inputBatch,batch,p.row1Begin,i1,v1,epoch,false};
+    Top1Ctx c0{&g0,&w0,inputBatch,batch,p.row0Begin,i0.data(),v0.data(),epoch,false};
+    Top1Ctx c1{&g1,&w1,inputBatch,batch,p.row1Begin,i1.data(),v1.data(),epoch,false};
 
     const bool both=rowExecutor().run(
         DualRowJob{runFn,&c0},

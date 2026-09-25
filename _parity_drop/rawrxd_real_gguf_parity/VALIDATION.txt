@@ -1,0 +1,6 @@
+COMPILER=/usr/bin/g++
+STUB_COMPILE_EXIT=0
+CLI_HELP_EXIT=0
+CLI_HELP_OUTPUT=rawrxd_real_gguf_parity --model MODEL.gguf [options] |   --prompt TEXT       deterministic prompt |   --steps N           greedy teacher-forced decode steps (default 8) |   --abs X --rel X --rms X --cosine X |   --topk N [--topk-exact] |   --receipt FILE --cpu-trace FILE --gpu-trace FILE |   --golden FILE --write-golden |   --golden FILE --verify-golden   (skip CPU pass; verify independent golden) |   --no-trace --allow-fallback --allow-no-real-gpu
+REAL_RAWRXD_BUILD=NOT_RUN_IN_CONTAINER
+REAL_GGUF_RUNTIME=NOT_RUN_IN_CONTAINER

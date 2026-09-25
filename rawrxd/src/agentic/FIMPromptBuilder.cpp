@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/FIMPromptBuilder.cpp
+// FIMPromptBuilder — stub

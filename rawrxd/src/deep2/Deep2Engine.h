@@ -38,6 +38,9 @@
 #include "Deep2LivePath.hpp"
 #include "RouterPrefetchTelemetry.hpp"
 #include "ProductionProfiler.hpp"
+#include "VramStreamingController.hpp"
+#include "StreamEngine.h"
+#include "StreamRouter.h"
 // Sovereign Engine components (Dragon Lore)
 #include "Chamber.hpp"
 #include "ToroidalKVCache.hpp"
@@ -55,6 +58,14 @@
 #include <unordered_map>
 #include <atomic>
 #include <cstdint>
+
+// RAWRXD_EXPERT_CACHE_004/005
+#ifdef DEEP2_ENABLE_EXPERT_CACHE
+#include "ExpertCache.h"
+#endif
+#ifdef DEEP2_ENABLE_EXPERT_CACHE
+#include "VulkanExpertTransport.h"
+#endif
 
 namespace Deep2 {
 
@@ -438,6 +449,24 @@ public:
     NVMeStream* HostNvme() const noexcept { return nvmeStream_.get(); }
     int GgufMmapBound() const noexcept { return ggufResult.mmapBound; }
 
+    // 24 GiB hard-residency / measured streaming controller
+    void enableVramStreaming(bool enable);
+    bool isVramStreamingEnabled() const { return vramStreamingEnabled_; }
+    VramStreamingController* getVramStreamingController() const { return vramStreamingController_.get(); }
+    StreamEngine* getStreamEngine() const { return streamEngine_.get(); }
+    StreamRouter* getStreamRouter() const { return streamRouter_.get(); }
+
+    // Lock / unlock / set ceiling (GiB)
+    void lockVramResidency();
+    void unlockVramResidency();
+    void setVramCeilingGiB(uint32_t gib);
+    uint64_t vramCeilingBytes() const;
+
+    // Per-token measurement helpers
+    void beginTokenStreamingMeasurement(uint64_t tokenIndex);
+    bool endTokenStreamingMeasurement(uint64_t& outBytesMoved);
+    VramStreamingStats getVramStreamingStats() const;
+
     // Cyclone temporal scheduler (live generate ownership)
     void enableCyclone(bool enable);
     bool isCycloneEnabled() const { return cycloneEnabled_; }
@@ -452,6 +481,10 @@ public:
     // Async Vulkan prefetch state management
     void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
     bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
+
+    // Async stream prefetch state management (measured streaming controller)
+    void setStreamPrefetchEnabled(bool enable) { streamPrefetchEnabled_ = enable; }
+    bool isStreamPrefetchEnabled() const { return streamPrefetchEnabled_; }
 
     // Production profiler (Batch 1)
     void enableProfiling(bool enable);
@@ -931,6 +964,8 @@ private:
     bool nvmeStreamingEnabled_ = false;
     bool slidingWindowEnabled_ = false;
     bool reverseAnalysisEnabled_ = false;
+    bool vramStreamingEnabled_ = false;
+    bool streamPrefetchEnabled_ = false;
     
     // MARS: Dynamic dual-GPU VRAM orchestration
     std::unique_ptr<Deep2::MARSController> marsController_;
@@ -959,6 +994,11 @@ private:
     std::unique_ptr<ElasticResidencyManager> elasticResidency_;
     bool elasticResidencyEnabled_ = false;
 
+    // RAWRXD_EXPERT_CACHE_004/005: per-device expert cache
+    std::vector<std::unique_ptr<rawrxd::deep2::ExpertCache>> expertCaches_;
+    std::vector<std::unique_ptr<rawrxd::deep2::VulkanExpertTransport>> expertTransports_;
+    std::vector<std::vector<char>> expertStagingBuffers_;
+
     // Cyclone: temporal prediction over Elastic (live generate)
     std::unique_ptr<CycloneScheduler> cyclone_;
     bool cycloneEnabled_ = false;
@@ -975,6 +1015,11 @@ private:
     // BP16 streaming support (zero-copy mapped weight access)
     std::unique_ptr<BP16Streamer> bp16Streamer_;
     bool bp16Enabled_ = false;
+
+    // 24 GiB hard-residency / measured streaming controller
+    std::unique_ptr<VramStreamingController> vramStreamingController_;
+    std::unique_ptr<StreamEngine> streamEngine_;
+    std::unique_ptr<StreamRouter> streamRouter_;
 
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;

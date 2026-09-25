@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/rawrxd/src",
+                "C:/VulkanSDK/1.4.357.0/Include",
                 "${defaultKeypath}",
                 "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/*/include",
                 "C:/Program Files (x86)/Windows Kits/10/Include/*/ucrt",

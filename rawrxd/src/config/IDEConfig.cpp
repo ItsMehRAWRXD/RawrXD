@@ -1,1 +1,1 @@
-﻿// STUB: src/config/IDEConfig.cpp
+#include "IDEConfig.h"

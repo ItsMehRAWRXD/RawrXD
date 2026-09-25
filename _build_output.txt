@@ -1,0 +1,22 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  DualGpuIndependentAgentScheduler.cpp
+  MultiAgentMergeAuthority.cpp
+  RawrXDAutoClosure.cpp
+  HexMagResidencyAuthority.cpp
+  Deep2Engine.cpp
+  FleetSpecialGraph.cpp
+  FleetSpecialGraphExecutor.cpp
+  AcceptanceOracle.cpp
+  DraftPolicy.cpp
+  DualGpuOverlap.cpp
+  KvTransaction.cpp
+  SpecialGraph.cpp
+  SpeculativeBatch.cpp
+  SpeculativeCert.cpp
+  SpeculativeExecutor.cpp
+  VerifyBatch.cpp
+  ScreenPilotToolAuthorityBridge.cpp
+  main_win32.cpp
+  Generating Code...
+  RawrXD-Win32IDE.vcxproj -> F:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe

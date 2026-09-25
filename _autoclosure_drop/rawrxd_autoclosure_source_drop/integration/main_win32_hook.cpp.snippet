@@ -1,0 +1,8 @@
+// RAWRXD_AUTOCLOSURE_001 — add near the other project includes:
+#include "closure/RawrXDAutoClosure.hpp"
+
+// RAWRXD_AUTOCLOSURE_001 — make this the FIRST executable statement in
+// WinMain/wWinMain, before the GUI creates windows or starts normal model work:
+if (RawrXD::AutoClosure::CommandLineRequested()) {
+    return RawrXD::AutoClosure::RunFromCurrentCommandLine();
+}

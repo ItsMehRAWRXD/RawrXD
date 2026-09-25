@@ -576,12 +576,12 @@ PatchResult LayerOffloadManager::allocateBuffers() {
 // Q2_K Dequantization — 256-element superblocks to FP32
 // ============================================================================
 // Superblock layout (84 bytes for 256 elements):
-//   [0..1]   f16 global_scale
-//   [2..3]   f16 global_min
-//   [4..19]  16 bytes: paired lo=scale_q4, hi=min_q4 for each sub-block
-//   [20..83] 64 bytes: 256 2-bit quants packed (4 per byte)
+//   [0..15]  scales[16]: 4-bit scale + 4-bit min per sub-block
+//   [16..79] qs[64]: 256 2-bit quants packed (4 per byte)
+//   [80..81] f16 global_scale (d)
+//   [82..83] f16 global_min   (dmin)
 //
-// Reconstruction: value = global_scale * sub_scale_q4 * quant_2bit + global_min * sub_min_q4
+// Reconstruction: value = global_scale * sub_scale_q4 * quant_2bit - global_min * sub_min_q4
 // ============================================================================
 PatchResult LayerOffloadManager::dequantQ2K(const void* src, float* dst, uint64_t numElements) {
     if (!src || !dst || numElements == 0) {
@@ -598,41 +598,38 @@ PatchResult LayerOffloadManager::dequantQ2K(const void* src, float* dst, uint64_
     const uint8_t* p = static_cast<const uint8_t*>(src);
 
     for (uint64_t b = 0; b < nBlocks; b++) {
+        // Read per-sub-block scale/min nibbles (16 bytes → 16 pairs)
+        const uint8_t* sm_bytes = p + 0;
+
+        // Read 2-bit quants (64 bytes → 256 values)
+        const uint8_t* q_bytes = p + 16;
+
         // Read global scale and min (f16)
         uint16_t raw_scale, raw_min;
-        memcpy(&raw_scale, p + 0, 2);
-        memcpy(&raw_min, p + 2, 2);
+        memcpy(&raw_scale, p + 80, 2);
+        memcpy(&raw_min, p + 82, 2);
         float g_scale = f16_to_f32(raw_scale);
         float g_min   = f16_to_f32(raw_min);
 
-        // Read per-sub-block scale/min nibbles (16 bytes → 16 pairs)
-        const uint8_t* sm_bytes = p + 4;
-
-        // Read 2-bit quants (64 bytes → 256 values)
-        const uint8_t* q_bytes = p + 20;
-
         for (uint32_t sb = 0; sb < N_SUB; sb++) {
-            // Extract sub-block scale and min from packed nibble
-            // Each byte has: lo nibble = scale for sub-block pair[0], hi nibble = min
-            // Wait — we packed 2 sub-blocks per 2 bytes (see Python encoder)
-            // Actually in the Python encoder: every 2 sub-blocks produce 2 bytes
-            // sm_bytes[sb] has lo=scale, hi=min for sub-block sb
             uint8_t sm = sm_bytes[sb];
             float sub_scale = g_scale * static_cast<float>(sm & 0x0F);
             float sub_min   = g_min   * static_cast<float>((sm >> 4) & 0x0F);
 
             // Dequantize 16 elements for this sub-block
-            uint32_t base_elem = sb * SUB_SIZE;
-            for (uint32_t e = 0; e < SUB_SIZE; e++) {
-                uint32_t elem_idx = base_elem + e;
-                // Each byte has 4 2-bit values
-                uint32_t byte_idx = elem_idx / 4;
-                uint32_t bit_shift = (elem_idx % 4) * 2;
-                uint8_t q = (q_bytes[byte_idx] >> bit_shift) & 0x03;
+            // qs indexing matches gguf reference: (chunk, subBlock, group, pos)
+            int chunk      = sb / 8;
+            int subBlock   = (sb % 8) / 2;
+            int group      = sb % 2;
+            for (int pos = 0; pos < 16; ++pos) {
+                int qsIdx   = chunk * 32 + group * 16 + pos;
+                int qsShift = subBlock * 2;
+                uint8_t q   = (q_bytes[qsIdx] >> qsShift) & 0x03;
 
+                int elem_idx = sb * SUB_SIZE + pos;
                 uint64_t out_idx = b * SB_SIZE + elem_idx;
                 if (out_idx < numElements) {
-                    dst[out_idx] = sub_scale * static_cast<float>(q) + sub_min;
+                    dst[out_idx] = sub_scale * static_cast<float>(q) - sub_min;
                 }
             }
         }

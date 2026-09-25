@@ -27,6 +27,9 @@ add_executable(rawr_monolith
     rawrxd/src/deep2/Deep2MultiGpuLayerPlan.cpp
     rawrxd/src/deep2/Deep2DualGpuRowSplit.cpp
     rawrxd/src/deep2/Deep2Engine_GpuMoEMLA.cpp
+    rawrxd/src/deep2/VramStreamingController.cpp
+    rawrxd/src/deep2/StreamEngine.cpp
+    rawrxd/src/deep2/StreamRouter.cpp
     src/deep2/Classify.asm
     rawrxd/src/rawr_classifier_scalar.asm
     rawrxd/src/rawr_classifier_avx2.asm

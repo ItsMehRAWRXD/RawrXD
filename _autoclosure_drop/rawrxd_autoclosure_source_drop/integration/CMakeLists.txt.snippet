@@ -1,0 +1,9 @@
+# RAWRXD_AUTOCLOSURE_001
+# Append this AFTER add_executable(RawrXD-Win32IDE ...).
+target_sources(RawrXD-Win32IDE PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/closure/RawrXDAutoClosure.cpp
+)
+target_include_directories(RawrXD-Win32IDE PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/closure
+)

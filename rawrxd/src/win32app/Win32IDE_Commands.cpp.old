@@ -1,0 +1,126 @@
+// Win32IDE_Commands.cpp — command palette and command dispatch
+#include <windows.h>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <functional>
+
+namespace RawrXD::IDE {
+
+struct Command {
+    int         id;
+    std::string name;
+    std::string shortcut;
+    std::function<void()> handler;
+};
+
+static std::vector<Command> g_commands;
+static HWND g_paletteWnd = nullptr;
+static HWND g_paletteEdit = nullptr;
+static HWND g_paletteList = nullptr;
+
+void Commands_Register(int id, const std::string& name, const std::string& shortcut, std::function<void()> fn)
+{
+    for (auto& c : g_commands) { if (c.id == id) { c.handler = fn; return; } }
+    g_commands.push_back({id, name, shortcut, fn});
+}
+
+bool Commands_Execute(int id)
+{
+    for (auto& c : g_commands) {
+        if (c.id == id && c.handler) { c.handler(); return true; }
+    }
+    return false;
+}
+
+static void PaletteFilter(const std::string& query)
+{
+    SendMessageA(g_paletteList, LB_RESETCONTENT, 0, 0);
+    std::string q = query;
+    std::transform(q.begin(), q.end(), q.begin(), ::tolower);
+    for (auto& c : g_commands) {
+        std::string n = c.name;
+        std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+        if (q.empty() || n.find(q) != std::string::npos) {
+            std::string entry = c.name;
+            if (!c.shortcut.empty()) entry += "  " + c.shortcut;
+            SendMessageA(g_paletteList, LB_ADDSTRING, 0, (LPARAM)entry.c_str());
+        }
+    }
+}
+
+static LRESULT CALLBACK PaletteProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_CREATE: {
+        RECT rc; GetClientRect(hwnd, &rc);
+        g_paletteEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
+            WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+            8, 8, rc.right - 16, 28, hwnd, (HMENU)1, nullptr, nullptr);
+        g_paletteList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "",
+            WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL,
+            8, 44, rc.right - 16, rc.bottom - 52, hwnd, (HMENU)2, nullptr, nullptr);
+        PaletteFilter("");
+        SetFocus(g_paletteEdit);
+        return 0;
+    }
+    case WM_COMMAND:
+        if (LOWORD(wParam) == 1 && HIWORD(wParam) == EN_CHANGE) {
+            char buf[256] = {};
+            GetWindowTextA(g_paletteEdit, buf, sizeof(buf));
+            PaletteFilter(buf);
+        }
+        if (LOWORD(wParam) == 2 && HIWORD(wParam) == LBN_DBLCLK) {
+            int sel = (int)SendMessageA(g_paletteList, LB_GETCURSEL, 0, 0);
+            if (sel >= 0) {
+                // find matching command
+                char buf[256] = {};
+                GetWindowTextA(g_paletteEdit, buf, sizeof(buf));
+                std::string q = buf;
+                std::transform(q.begin(), q.end(), q.begin(), ::tolower);
+                int idx = 0;
+                for (auto& c : g_commands) {
+                    std::string n = c.name;
+                    std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+                    if (q.empty() || n.find(q) != std::string::npos) {
+                        if (idx == sel) { DestroyWindow(hwnd); c.handler(); return 0; }
+                        ++idx;
+                    }
+                }
+            }
+        }
+        break;
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE) { DestroyWindow(hwnd); return 0; }
+        break;
+    case WM_DESTROY:
+        g_paletteWnd = nullptr;
+        return 0;
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+void Commands_ShowPalette(HWND parent)
+{
+    if (g_paletteWnd) { SetFocus(g_paletteWnd); return; }
+    static bool registered = false;
+    if (!registered) {
+        WNDCLASSEXA wc = {};
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = PaletteProc;
+        wc.hInstance = GetModuleHandleA(nullptr);
+        wc.lpszClassName = "RawrXDPalette";
+        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        RegisterClassExA(&wc);
+        registered = true;
+    }
+    RECT pr; GetClientRect(parent, &pr);
+    int pw = 500, ph = 400;
+    int px = (pr.right - pw) / 2, py = 60;
+    g_paletteWnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+        "RawrXDPalette", "Command Palette",
+        WS_POPUP | WS_BORDER | WS_VISIBLE,
+        px, py, pw, ph, parent, nullptr, GetModuleHandleA(nullptr), nullptr);
+}
+
+} // namespace RawrXD::IDE

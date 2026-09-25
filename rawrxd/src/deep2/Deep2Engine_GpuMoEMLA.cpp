@@ -225,6 +225,17 @@ bool Deep2Engine::computeMoEFFNGpu(
     std::fill(output,output+H,0.0f);
     const size_t gpuN=vulkanDevices_.size();
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
+
+    // BATCH007: advisory prefetch of routed experts into per-device ExpertCache
+    for(size_t dev=0;dev<expertCaches_.size();++dev){
+        auto& cache=expertCaches_[dev];
+        if(!cache) continue;
+        for(size_t k=0;k<K;++k){
+            const int eid=route.expertIds[k];
+            if(eid>=0) cache->prefetch(rawrxd::deep2::ExpertKey{static_cast<uint32_t>(layer),static_cast<uint32_t>(eid)},epoch);
+        }
+    }
+
     std::vector<std::vector<float>> expertOut(
         K,std::vector<float>(H,0.0f));
 

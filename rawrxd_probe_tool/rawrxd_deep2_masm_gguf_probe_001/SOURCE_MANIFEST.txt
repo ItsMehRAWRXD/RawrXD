@@ -1,0 +1,16 @@
+RAWRXD_DEEP2_GGUF_EXECIMAGE_PROBE_001 SOURCE MANIFEST
+
+deep2_defs.inc           lines=131    bytes=4362     sha256=d17950f79cf709d4e19f3a7cd2cfed7338671f7df4e0c23c2fad8f63bd7ddcdf
+deep2_probe.asm          lines=1403   bytes=28068    sha256=16250e03bb8ef23f1823a4c2954ba886143b12ddaa8bb8356d28b49772508a5d
+build.bat                lines=8      bytes=468      sha256=bdadffe1a730a692fedebb95f18456025a6352c3bc74abd1ec45ea6a372d6209
+run_gemma3.bat           lines=4      bytes=134      sha256=ee6560959fdc6d8ad4604cc30d2ebab3e718ac6299ef6f7d88525a9eba0a6ac2
+verify_outputs.ps1       lines=21     bytes=759      sha256=2bdc546ca697da7818281ed24c62cce2853a5a3dfdd279fa5ef33e6c32510d25
+README.md                lines=82     bytes=3396     sha256=b9d2f005141f4e2db21051da04f14fd294e9301db0839df90eb0f2d6fee0e195
+
+SOURCE_GREP_STUB_TODO_PLACEHOLDER:
+SOURCE_PLACEHOLDER_AUDIT=PASS
+RUNTIME_THIRD_PARTY_IMPORTS=0
+CRT_IMPORTS=0
+NETWORK_IMPORTS=0
+DYNAMIC_HEAP_CALLS=0
+SOURCE_ONLY=1

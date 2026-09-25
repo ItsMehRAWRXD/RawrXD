@@ -6,6 +6,29 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <limits>
+
+// Local copy of fp16→fp32 conversion (same as QuantKernelRegistry.cpp)
+static inline float f16_to_f32(uint16_t h) {
+    uint32_t sign = (static_cast<uint32_t>(h & 0x8000)) << 16;
+    uint32_t exp  = (h >> 10) & 0x1F;
+    uint32_t frac = h & 0x03FF;
+    if (exp == 0) {
+        if (frac == 0) return reinterpret_cast<const float&>(sign);
+        uint32_t e = 1;
+        uint32_t f = frac;
+        while ((f & 0x0400) == 0) { f <<= 1; e++; }
+        f &= 0x03FF;
+        uint32_t bits = sign | ((127 - 15 + 2 - e) << 23) | (f << 13);
+        return reinterpret_cast<float&>(bits);
+    }
+    if (exp == 31) {
+        uint32_t bits = sign | 0x7F800000 | (frac << 13);
+        return reinterpret_cast<float&>(bits);
+    }
+    uint32_t bits = sign | ((exp + 127 - 15) << 23) | (frac << 13);
+    return reinterpret_cast<float&>(bits);
+}
 
 using namespace Deep2;
 
@@ -46,6 +69,56 @@ int main(int argc, char** argv) {
 
     std::fprintf(stderr, "TENSOR=blk.0.attn_q.weight type=%d rows=%zu cols=%zu elements=%zu\n",
                  wq.type, wq.rows, wq.cols, numElements);
+
+    // ------------------------------------------------------------------
+    // Diagnostic: dump block 0 raw bytes and decoded values
+    // ------------------------------------------------------------------
+    {
+        const block_q2_K* blk0 = reinterpret_cast<const block_q2_K*>(wq.data);
+        uint16_t raw_d = blk0->d;
+        uint16_t raw_dmin = blk0->dmin;
+        float d_f = f16_to_f32(raw_d);
+        float dmin_f = f16_to_f32(raw_dmin);
+        std::fprintf(stderr, "Q2K_BLOCK=0 RAW_D_HEX=%04X RAW_DMIN_HEX=%04X D_FLOAT=%.9g DMIN_FLOAT=%.9g\n",
+                     raw_d, raw_dmin, d_f, dmin_f);
+        std::fprintf(stderr, "Q2K_BLOCK=0 SCALES=");
+        for (int i = 0; i < 16; ++i) std::fprintf(stderr, "%02X ", blk0->scales[i]);
+        std::fprintf(stderr, "\n");
+        std::fprintf(stderr, "Q2K_BLOCK=0 QS=");
+        for (int i = 0; i < 16; ++i) std::fprintf(stderr, "%02X ", blk0->qs[i]);
+        std::fprintf(stderr, "...\n");
+        // Decode first 16 weights using same logic as dequant_q2_k
+        float w_min = std::numeric_limits<float>::infinity();
+        float w_max = -std::numeric_limits<float>::infinity();
+        std::fprintf(stderr, "Q2K_BLOCK=0 W=");
+        for (int chunk = 0; chunk < 2; ++chunk) {
+            for (int subBlock = 0; subBlock < 4; ++subBlock) {
+                for (int group = 0; group < 2; ++group) {
+                    int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                    uint8_t sc = blk0->scales[scaleIdx];
+                    float dl = d_f * (float)(sc & 0x0F);
+                    float ml = dmin_f * (float)(sc >> 4);
+                    for (int pos = 0; pos < 16; ++pos) {
+                        int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
+                        if (i >= 16) break; // only first 16 weights
+                        int qsIdx = chunk * 32 + group * 16 + pos;
+                        int qsShift = subBlock * 2;
+                        int q = (blk0->qs[qsIdx] >> qsShift) & 0x03;
+                        float wv = dl * (float)q - ml;
+                        std::fprintf(stderr, "%.4f ", wv);
+                        if (wv < w_min) w_min = wv;
+                        if (wv > w_max) w_max = wv;
+                    }
+                }
+            }
+        }
+        std::fprintf(stderr, "\nQ2K_BLOCK=0 W_MIN=%.6f W_MAX=%.6f\n", w_min, w_max);
+        if (!std::isfinite(d_f) || !std::isfinite(dmin_f) || std::fabsf(w_max) > 100.0f || std::fabsf(w_min) > 100.0f) {
+            std::fprintf(stderr, "Q2K_PLAUSIBILITY_FAIL\n");
+        } else {
+            std::fprintf(stderr, "Q2K_PLAUSIBILITY_PASS\n");
+        }
+    }
 
     // ------------------------------------------------------------------
     // Input vector: unit vector of 1.0f (same as prior test to keep continuity)

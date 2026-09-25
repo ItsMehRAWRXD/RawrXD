@@ -1,1 +1,1 @@
-﻿// STUB: src/cli/swarm_orchestrator.cpp
+// swarm_orchestrator — stub

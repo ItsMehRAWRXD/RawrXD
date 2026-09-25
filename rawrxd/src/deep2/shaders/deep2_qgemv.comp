@@ -61,9 +61,8 @@ float q2k_weight(uint rowBase, uint col) {
     uint block = col / 256u;
     uint idx = col % 256u;
     uint b = rowBase + block * 84u;
-    float ds = geth(b + 0u);
-    float dm = geth(b + 2u);
 
+    // Layout B: scales[16], qs[64], d (2 bytes), dmin (2 bytes)
     uint chunk = idx / 128u;
     uint rem = idx % 128u;
     uint subBlock = rem / 32u;
@@ -71,13 +70,15 @@ float q2k_weight(uint rowBase, uint col) {
     uint pos = rem % 16u;
 
     uint scaleIdx = chunk * 8u + subBlock * 2u + group;
-    uint packedScale = getb(b + 4u + scaleIdx);
+    uint packedScale = getb(b + 0u + scaleIdx);
+    float ds = geth(b + 80u);
+    float dm = geth(b + 82u);
     float dl = ds * float(packedScale & 15u);
     float ml = dm * float(packedScale >> 4u);
 
     uint qsIdx = chunk * 32u + group * 16u + pos;
     uint shift = subBlock * 2u;
-    uint q = (getb(b + 20u + qsIdx) >> shift) & 3u;
+    uint q = (getb(b + 16u + qsIdx) >> shift) & 3u;
     return dl * float(q) - ml;
 }
 

@@ -929,13 +929,16 @@ DMLResult GGUFDMLBridge::dequantizeTensor(const void* srcData, void* dstData,
                     float sub_scale   = d    * static_cast<float>(sc_byte & 0xF);
                     float sub_min     = dmin * static_cast<float>(sc_byte >> 4);
 
-                    // Each sub-block: 16 elements, 2 bits each = 4 bytes in qs
-                    int qs_offset = sb * 4;
-                    for (int j = 0; j < 16; ++j) {
-                        int byte_idx = qs_offset + (j / 4);
-                        int bit_pos  = (j % 4) * 2;
-                        uint8_t q    = (qs[byte_idx] >> bit_pos) & 0x3;
-                        dstF32[b * 256 + sb * 16 + j] = sub_scale * static_cast<float>(q) - sub_min;
+                    // qs indexing matches gguf reference:
+                    // chunk in [0,1], subBlock in [0,3], group in [0,1]
+                    int chunk    = sb / 8;
+                    int subBlock = (sb % 8) / 2;
+                    int group    = sb % 2;
+                    for (int pos = 0; pos < 16; ++pos) {
+                        int qsIdx   = chunk * 32 + group * 16 + pos;
+                        int qsShift = subBlock * 2;
+                        uint8_t q   = (qs[qsIdx] >> qsShift) & 0x3;
+                        dstF32[b * 256 + sb * 16 + pos] = sub_scale * static_cast<float>(q) - sub_min;
                     }
                 }
             }

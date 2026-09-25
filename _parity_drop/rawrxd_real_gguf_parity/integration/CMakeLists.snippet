@@ -1,0 +1,20 @@
+# RAWRXD_REAL_GGUF_PARITY_001
+# Append to rawrxd/CMakeLists.txt (installer can do this automatically).
+if(NOT TARGET rawrxd_real_gguf_parity)
+    add_executable(rawrxd_real_gguf_parity
+        tools/real_gguf_parity_main.cpp
+        src/deep2/RealGGUFParity.cpp
+    )
+    target_include_directories(rawrxd_real_gguf_parity PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_link_libraries(rawrxd_real_gguf_parity PRIVATE InferenceEngine)
+    target_compile_features(rawrxd_real_gguf_parity PRIVATE cxx_std_20)
+    if(MSVC)
+        target_compile_options(rawrxd_real_gguf_parity PRIVATE /EHsc /W4)
+        set_target_properties(rawrxd_real_gguf_parity PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+endif()

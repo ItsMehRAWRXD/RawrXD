@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/quantum_production_orchestrator.cpp
+// quantum_production_orchestrator — stub

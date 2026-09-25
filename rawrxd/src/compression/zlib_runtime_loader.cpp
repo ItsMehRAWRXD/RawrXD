@@ -1,1 +1,1 @@
-﻿// STUB: src/compression/zlib_runtime_loader.cpp
+// zlib_runtime_loader — stub

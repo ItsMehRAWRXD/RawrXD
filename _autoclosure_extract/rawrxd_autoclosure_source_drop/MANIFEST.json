@@ -1,0 +1,41 @@
+{
+  "release": "RAWRXD_AUTOCLOSURE_001",
+  "generated_utc": "2026-09-24T11:26:06.626522+00:00",
+  "files": [
+    {
+      "path": "README_DROPIN.md",
+      "bytes": 4895,
+      "sha256": "938df65ceb7199d3e783092cc491baeafe73663e0b3de0ebffb5d4ecde85aade"
+    },
+    {
+      "path": "VALIDATION.txt",
+      "bytes": 330,
+      "sha256": "b5b6de95031bbb0f36be53eb36c80b938de0755c006c004cf6a3c1c51670e8c8"
+    },
+    {
+      "path": "apply_rawrxd_autoclosure.ps1",
+      "bytes": 4411,
+      "sha256": "1ade3c5b2d62d365153e12907898eb84961e86efb08b9a99fd64dc40864b4615"
+    },
+    {
+      "path": "integration/CMakeLists.txt.snippet",
+      "bytes": 322,
+      "sha256": "9da0bc90f9f8bcbe81189c7fcce3d60c58cce591773fcb966d893d00894cd882"
+    },
+    {
+      "path": "integration/main_win32_hook.cpp.snippet",
+      "bytes": 378,
+      "sha256": "0cc5b97ddda445f7be54876e01fceb7b091277776dcdfeb3ef6e62a6e358bc79"
+    },
+    {
+      "path": "src/closure/RawrXDAutoClosure.cpp",
+      "bytes": 40349,
+      "sha256": "9e0b9dccd7230a29b265fbba91713e27353e5732bfc5e90eacbdbd99bd89480b"
+    },
+    {
+      "path": "src/closure/RawrXDAutoClosure.hpp",
+      "bytes": 3472,
+      "sha256": "273581949c6fa0518b1e9f71f47030da77b5b03403f162d2b6cdec87bafaceda"
+    }
+  ]
+}

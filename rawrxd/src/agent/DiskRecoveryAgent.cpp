@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/DiskRecoveryAgent.cpp
+// DiskRecoveryAgent (agent) — stub

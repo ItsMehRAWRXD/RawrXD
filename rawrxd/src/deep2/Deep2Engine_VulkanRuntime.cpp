@@ -297,6 +297,36 @@ void Deep2Engine::enableVulkan(bool enable) {
         static_cast<unsigned>(vulkanDevices_.size()),
         multiGpuLayerPlan_.active?1u:0u);
 
+    // RAWRXD_EXPERT_CACHE_MOE_001: create VulkanExpertTransport + ExpertCache per device
+    {
+        expertTransports_.clear();
+        expertCaches_.clear();
+        for (size_t i = 0; i < vulkanDevices_.size(); ++i) {
+            VulkanCompute* vc = vulkanDevices_[i].get();
+            if (!vc) continue;
+            rawrxd::deep2::VulkanExpertTransportConfig vtcfg{};
+            vtcfg.physicalDevice = vc->PhysicalDeviceHandle();
+            vtcfg.device         = vc->DeviceHandle();
+            vtcfg.queue          = vc->QueueHandle();
+            vtcfg.commandPool    = vc->CommandPoolHandle();
+            vtcfg.deviceOrdinal  = static_cast<uint32_t>(i);
+            auto transport = rawrxd::deep2::VulkanExpertTransport::create(vtcfg);
+            if (!transport) {
+                std::fprintf(stderr, "EXPERT_CACHE_TRANSPORT_FAIL slot=%zu\n", i);
+                continue;
+            }
+            rawrxd::deep2::ExpertCacheConfig eccfg{};
+            eccfg.budgetBytes   = vc->deviceLocalBytes() / 4; // 25% VRAM budget
+            eccfg.deviceOrdinal = static_cast<uint32_t>(i);
+            auto cache = std::make_unique<rawrxd::deep2::ExpertCache>(eccfg, transport->callbacks());
+            expertTransports_.push_back(std::move(transport));
+            expertCaches_.push_back(std::move(cache));
+            std::fprintf(stderr,
+                "EXPERT_CACHE_INIT slot=%zu budgetBytes=%llu\n",
+                i, static_cast<unsigned long long>(eccfg.budgetBytes));
+        }
+    }
+
     // B5.2a capability probe — before any peer-transfer implementation.
     // EXTERNAL_MEMORY_API_SUPPORTED does NOT license cross-physical-device
     // import (Vulkan restricts Win32 import to the same physical device as

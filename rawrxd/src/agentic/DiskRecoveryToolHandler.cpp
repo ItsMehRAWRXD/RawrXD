@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/DiskRecoveryToolHandler.cpp
+// DiskRecoveryToolHandler — stub

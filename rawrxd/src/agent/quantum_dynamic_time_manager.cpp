@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/quantum_dynamic_time_manager.cpp
+// quantum_dynamic_time_manager — stub

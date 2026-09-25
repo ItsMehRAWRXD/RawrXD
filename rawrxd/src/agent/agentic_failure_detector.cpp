@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/agentic_failure_detector.cpp
+// agentic_failure_detector — stub

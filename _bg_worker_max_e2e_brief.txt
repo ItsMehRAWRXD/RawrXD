@@ -1,0 +1,75 @@
+=== RAWRXD_MAX_E2E_BRIEF — Background Worker ===
+OBJECTIVE: Close the remaining shipping-reachable stubs and prove real GPU forward + agentic lifecycle end-to-end.
+
+ENVIRONMENT:
+  $env:RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK="0"
+  $env:RAWRXD_ENABLE_MISSING_HANDLER_STUBS="0"
+  $env:RAWRXD_STRICT_AGENTIC_REALITY="1"
+  $env:DEEP2_REQUIRE_REFERENCE_PAIR="1"
+
+GATE 0 — STRICT_RELEASE_BUILD (already PASS):
+  RawrXD-Win32IDE.exe built at F:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe
+
+GATE 1 — SHIPPING_INFERENCE_REALITY:
+  Run: RawrXD-Win32IDE.exe --autoclose <real model>
+  Verify receipt contains:
+    MODEL_LOADED=PASS
+    WEIGHTS_LOADED=PASS
+    TOKENIZER_READY=PASS
+    FORWARD_PASS_OK=PASS
+    LOGITS_FINITE=PASS
+    GENERATED_TOKEN_COUNT=>0
+    REAL_GPU_FORWARD=PASS
+    SYNTHETIC_TOKEN_OUTPUT=0
+    STUB_FALLBACKS=0
+    CPU_FALLBACKS=0
+    TOOL_AUTHORITY_BYPASS=0
+    VERDICT=PASS
+  If any field missing/fail, fix first real failure and re-run.
+
+GATE 2 — AGENT_TRANSACTION_WIRE (agentic_transaction.cpp):
+  Replace stub with real RAWRXD_AGENT_TRANSACTION_001 implementation.
+  Required: snapshot, edit TX ID, optimistic revision check, atomic write,
+            build/test binding, rollback, failed patch preservation, commit authority.
+
+GATE 3 — BOUNDED_SUPERVISOR_WIRE (BoundedAgentLoop.cpp):
+  Replace stub with real RAWRXD_AGENT_SUPERVISOR_001 implementation.
+  Required: MODEL TURN → TOOL REQUEST → TOOL AUTHORITY → OBSERVATION → MODEL TURN → BUILD/TEST → retry/finish/fail
+  Required controls: maxTurns, maxToolCalls, modelTimeout, toolTimeout, totalTimeout, cancel, noProgressDetection, repeatedActionDetection.
+
+GATE 4 — RUNTIME_FAÇADE (Deep2ModelRuntime.cpp):
+  Replace stub with thin canonical Deep2 façade.
+  Required: loadModel(), createContext(), bindDevice(), forward(), sample(), resetState(), unload()
+  Must call Deep2Engine, not recreate inference. No fake success. No synthetic tokens.
+
+GATE 5 — DUAL_GPU_PIPELINE (DualGpuPipeline.cpp):
+  If reachable from shipping binary: make thin façade delegating to DualGpuIndependentAgentScheduler.
+  If unreachable: mark DEAD and remove from source closure.
+
+GATE 6 — GPU_DISPATCH_GATE (gpu_dispatch_gate.cpp):
+  If reachable: convert to certification gate only (DEVICE_SELECTED, GPU_CONTEXT_CREATED, GPU_BUFFER_CREATED, GPU_DISPATCH_EXECUTED, GPU_RESULT_FINITE, CPU_FALLBACKS=0).
+  If unreachable: mark DEAD.
+
+GATE 7 — ELASTIC_RESIDENCY_INTEGRATION (runtime/elastic/ElasticResidencyManager.cpp):
+  Bind under HexMagResidencyAuthority policy.
+  HexMag decides residency; ElasticResidencyManager performs map/pin/evict/reload.
+  Invariants: STALE_PINS=0, BUDGET_VIOLATIONS=0, WRONG_DEVICE_RESIDENCY=0, RELOAD_CORRUPTION=0.
+
+GATE 8 — AGENT_E2E_LIFECYCLE:
+  Run agent: read → edit → build → test → retry → finish
+  Verify no synthetic tokens, no stub fallbacks, no tool authority bypass.
+
+GATE 9 — DUAL_AGENT_E2E:
+  Two agents on distinct GPUs (R9700 + RX 7800 XT) with explicit staged transfer.
+  Verify no shared KV/context pointers.
+
+GATE 10 — HEXMAG + SCREENPILOT + MERGE_CERTS:
+  Run HexMagResidencyAuthoritySelfTest, ScreenPilotToolAuthorityBridgeSelfTest, MultiAgentMergeAuthoritySelfTest.
+  Verify all PASS.
+
+GATE 11 — UNIFIED_CERTIFICATION + CLEAN_CLONE:
+  Run scripts/certify_clean_clone_release.ps1 on fresh single-branch clone.
+  Emit final fail-closed receipt.
+
+FAIL-CLOSED LAW: NOT_RUN != PASS. Build must compile, receipt must contain real evidence.
+SCOPE FREEZE: Do not chase the 459 STUB hits blindly; only close SHIPPING_REACHABLE stubs.

@@ -1,0 +1,8 @@
+RAWRXD_AUTOCLOSURE_001
+SOURCE_ONLY=1
+THIRD_PARTY_DEPENDENCIES=0
+PLATFORM_DEPS=Win32 + existing Deep2Engine public API
+CPP_STANDARD=C++20
+STATIC_SYNTAX_CHECK=PASS
+CHECK_METHOD=clang++ -fsyntax-only against a minimal Win32/Deep2 API stub
+NOTE=Not compiled against the user's newer private F:\\~dev working tree in this environment.

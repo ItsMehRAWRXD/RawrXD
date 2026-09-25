@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/RawrXD_ToolRegistry.cpp
+// RawrXD_ToolRegistry — stub

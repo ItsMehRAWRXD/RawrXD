@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/eval_framework.cpp
+// eval_framework — stub

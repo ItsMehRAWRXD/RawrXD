@@ -179,12 +179,12 @@ bool Deep2Engine::computeGreedyTop1Batch(
     for(size_t b=0;b<count;++b)
         RMSNormW(modelWeights.finalNorm,hiddenBatch+b*H,
                  norm.data()+b*H,H,modelWeights.normEps);
-    uint32_t tok[4]{};
-    float val[4]{};
+    std::vector<uint32_t> tok(count);
+    std::vector<float> val(count);
     const uint64_t epoch=kvCache?kvCache->currentLength():0;
     if(!Deep2RunDualGpuRowSplitBatchTop1(
             *vulkanDevices_[0],*vulkanDevices_[1],modelWeights.lmHead,
-            norm.data(),(uint32_t)count,tok,val,epoch))
+            norm.data(),(uint32_t)count,tok.data(),val.data(),epoch))
         return false;
     for(size_t b=0;b<count;++b) outTokens[b]=(int32_t)tok[b];
     if(medusaDecoder_) ++medusaDecoder_->stats.exact.gpuTop1Batches;
@@ -634,9 +634,9 @@ bool Deep2Engine::verifySpeculativeGreedyWindow(
                 std::chrono::steady_clock::now()-__b0).count();
     }
 
-    int32_t top1[4]{};
+    std::vector<int32_t> top1(B);
     std::fprintf(stderr,"VSGW_TOP1_BEGIN\n"); std::fflush(stderr);
-    if(!computeGreedyTop1Batch(hiddenBatch,B,top1)) {
+    if(!computeGreedyTop1Batch(hiddenBatch,B,top1.data())) {
         std::fprintf(stderr,"VSGW_TOP1_FALLBACK\n"); std::fflush(stderr);
         // Exact fallback retains correctness; strict 85 authority will expose
         // zero GPU-top1 batches rather than silently minting the optimization.

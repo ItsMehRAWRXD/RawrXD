@@ -1,0 +1,19 @@
+﻿[10:18:55] === E2E WORKER START ===
+[10:18:55] STEP A: Rebuilding RawrXD-Win32IDE Release...
+[10:19:20] BUILD OK
+[10:19:20] STEP B: Running gate --cert-agent --headless...
+[10:19:25] Gate EXIT_CODE=1
+[10:19:25] gen_debug.txt first 200 lines captured
+[10:19:25] Recent Application crash events found:
+[10:19:25] System.Object[]
+[10:19:25] System.Object[]
+[10:19:25] STEP E: Configuring parity build...
+[10:56:00] === E2E WORKER START ===
+[10:56:00] STEP A: Rebuilding RawrXD-Win32IDE Release...
+[10:56:19] BUILD OK
+[10:56:19] STEP B: Running gate --cert-agent --headless...
+[10:58:19] Gate timed out, killed
+[10:58:19] Gate EXIT_CODE=-999
+[10:58:19] gen_debug.txt first 200 lines captured
+[10:58:19] No recent Application crash events (ID 1000) in last 10 min
+[10:58:19] STEP E: Configuring parity build...

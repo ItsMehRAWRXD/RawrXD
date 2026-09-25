@@ -1,0 +1,31 @@
+--- a/src/rawr_agent.cpp
++++ b/src/rawr_agent.cpp
+@@
+ #include "deep2/AgentToolAuthority.hpp"
+ #include "deep2/AgentToolRegistry.hpp"
++#include "agentic/RawrXDAgenticE2E.hpp"
+ #include "rawr_agent_dispatch.hpp"
+ #include "rawr_run_stream.hpp"
+@@
+     AgentToolRegistry authority;
+     BindAgentToolAuthority(authority);
+     registerAuditToolProviders(authority, &ledger);
++    if (!auditMode) {
++        // Real coding mutation + process execution path. These are actual
++        // providers; no synthetic success or fallback handlers are installed.
++        rawrxd::agentic_e2e::registerRawrXDCodingTools(authority);
++    }
+@@
+-    const std::string systemPrompt =
+-        options.systemPrompt.empty()
+-            ? std::string(auditMode && requireCoverage
+-                              ? kAuditSystemPrompt
+-                              : kLoopCertSystemPrompt) +
+-                  (auditMode && requireCoverage ? agentToolCatalogJson()
+-                                                : std::string())
+-            : options.systemPrompt;
++    const std::string systemPrompt = options.systemPrompt.empty()
++        ? (auditMode && requireCoverage
++              ? std::string(kAuditSystemPrompt) + agentToolCatalogJson()
++              : rawrxd::agentic_e2e::rawrXDCodingSystemPrompt())
++        : options.systemPrompt;

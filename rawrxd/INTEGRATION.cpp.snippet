@@ -1,0 +1,29 @@
+// 1) Include once in the Win32 Native Compile Test implementation:
+#include "agentic/RawrXDAgenticE2E.hpp"
+
+// 2) At process/IDE initialization, on the IDE-owned process-lifetime registry:
+//    (do NOT create a stack registry and bind it globally.)
+rawrxd::agentic_e2e::registerRawrXDCodingTools(toolAuthority);
+
+// 3) For the normal coding-agent path, use this system prompt when no custom
+//    prompt was supplied. This replaces the old minimal loop-cert-only prompt:
+const std::string codingSystemPrompt =
+    rawrxd::agentic_e2e::rawrXDCodingSystemPrompt();
+
+// 4) Immediately after RAWRXD_WIN32IDE_INFERENCE_001 passes, reuse that exact
+//    already-loaded Deep2 engine. Do NOT load a fixture/substitute model.
+rawrxd::agentic_e2e::AgenticE2EOptions aopt;
+aopt.workspaceRoot = workspaceRoot;     // your real opened workspace root
+aopt.fixtureDir = ".rawr/agentic_gate";
+aopt.maxSteps = 10;
+aopt.maxTokensPerStep = 256;
+aopt.processTimeoutMs = 120000;
+aopt.keepFixture = false;
+
+const auto agenticReceipt =
+    rawrxd::agentic_e2e::runAgenticE2EGate(deep2Engine, aopt);
+appendNativeCompileTestOutput(
+    rawrxd::agentic_e2e::formatAgenticE2EReceipt(agenticReceipt));
+
+// 5) The outer gate must fail if agenticReceipt.pass() is false. Do not convert
+//    failure into a warning and do not increment any synthetic/stub fallback.

@@ -1,0 +1,352 @@
+# Token Beacon Ferris Experiment Receipt
+# Gate: DEEP2_TOKEN_BEACON_FERRIS_001
+# Classification: IMPLEMENTATION_SCALING + PLACEMENT_AUTHORITY (Axis 2, NOT a 6th axis)
+# Two AMD GPUs: R9700 (32GB) + RX 7800 XT (16GB)
+# Model: Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf (19851336672 bytes)
+
+GATE=DEEP2_TOKEN_BEACON_FERRIS_001
+STATUS=ACTIVE  # Will transition to PASS/FAIL after runs complete
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_BYTES=19851336672
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+
+# Hardware configuration
+GPU0=AMD Radeon AI PRO R9700  (32 GB VRAM)
+GPU1=AMD Radeon RX 7800 XT  (16 GB VRAM)
+GPU0_DRIVER=AMD ROCm 6.0+
+GPU1_DRIVER=AMD ROCm 6.0+
+GPU0_PEER_ACCESS=no  # R9700 and 7800 XT in separate device groups, no direct peer memory
+
+# Token execution policy
+EXECUTION_POLICY=TOKEN_BEACON_FERRIS
+TOKEN_OWNERSHIP=ABAB  # A B A B A B alternating ownership
+# Classification: PRIMARY=IMPLEMENTATION_SCALING (Axis 2), SECONDARY AUTHORITY=PLACEMENT_AUTHORITY
+# NOT a sixth scaling axis. See DEEP2_EMPIRICAL_SCALING_AUTHORITY_002 framework.
+
+# KV state architecture
+PERSISTENT_STATE=mirrored_on_A+B  # Full model weights on both devices
+KV_DELTA_PER_TOKEN=256 KiB  # 2 × 64 layers × 8 KV heads × 128 head_dim × 2 bytes FP16
+EXPECTED_KV_THROUGHPUT=21.25 MiB/sec  # KV delta bytes × 85 tokens/sec
+
+# Synchronization mechanism
+SYNC_FENCE=yes  # Fence between token ownership flips
+BEACON_SIZE_BYTES=~32  # TokenBeacon struct size (tens of bytes only, control plane only)
+STATE_EPOCH_INCREMENT=yes  # Epoch counter increments each token flip
+
+# Authority classification — Five orthogonal core scaling axes
+# AXIS_1 = MODEL_SCALING
+# AXIS_2 = IMPLEMENTATION_SCALING  ← This experiment
+# AXIS_3 = CONCURRENCY_SCALING
+# AXIS_4 = RESIDENCY_SCALING
+# AXIS_5 = SWARM_HEX_MAG_SCALING
+#
+# Token Beacon Ferris is NOT a sixth axis. It sits under Axis 2 (Implementation Scaling)
+# with SECONDARY AUTHORITY: PLACEMENT_AUTHORITY, LATENCY_TAIL, RESOURCE_EFFICIENCY
+AXIS=IMPLEMENTATION_SCALING  # Axis 2: same model, different engine/config (beacon policy)
+SECONDARY_AUTHORITY=PLACEMENT_AUTHORITY,LATENCY_TAIL,RESOURCE_EFFICIENCY
+CLASSIFICATION=TOKEN_BEACON_FERRIS_ABAB_ownership_machine
+
+# Comparison baselines (frozen from DEEP2_32B_BASELINE_AUTHORITY_001)
+BASELINE_R9700_ONLY=DEEP2_32B_BASELINE_AUTHORITY_001  # Solitary R9700 run
+BASELINE_7800XT_ONLY=DEEP2_32B_BASELINE_AUTHORITY_001  # Solitary 7800XT run
+BASELINE_DUAL_SPLIT=DEEP2_32B_BASELINE_AUTHORITY_001  # Ordinary dual-GPU layer split
+
+# ---- Outlier Policy (corrected from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Never silently discard unusual measurements.
+# All raw runs remain preserved.
+# Allowed RAW_RUN_STATUS values:
+#   VALID — run passes all provenance and classification checks
+#   FLAGGED — run has noted anomalies, still retained
+#   EXCLUDED_BY_PREDECLARED_RULE — excluded only under pre-declared rule
+# If excluded: EXCLUSION_REASON and EXCLUSION_RULE must be present.
+# Median reporting does not authorize deletion of inconvenient results.
+
+# ---- Multi-Dimension Runs (corrected from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# A physical run may generate evidence for multiple dimensions.
+# Example: Token Beacon Ferris run may produce:
+#   IMPLEMENTATION_SCALING evidence
+#   PLACEMENT_AUTHORITY evidence
+#   LATENCY evidence
+#   RESIDENCY evidence
+#   RELIABILITY evidence
+# That is valid.
+# What must remain isolated is the CLAIM.
+# Do not say: "TPS increased therefore Hex Mag improved"
+# if both scheduler topology and hardware placement changed.
+# Instead: CLAIM_VARIABLE, CONTROL_VARIABLES, CONFOUNDERS must identify
+# the causal comparison.
+
+# ---- Model-Size Alpha Convention (corrected from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# For positive slowdown-exponent convention:
+#   TPS ∝ SIZE^-α
+#   α = -ln(TPS_X) / ln(SIZE_X)
+# Valid only when:
+#   SIZE_X != 1 (distinct model bytes, not just nominal vs active)
+#   MODEL_BYTES_A = exact measured file lengths, not approximate nominal values
+#   MODEL_BYTES_B = exact measured file lengths
+#   same execution policy
+#   same agent count
+#   same workload policy
+#   raw timing authority exists
+# If SIZE_X == 1 (same model), the result is implementation scaling, not model scaling
+# If any valid condition fails: ALPHA=UNDEFINED
+#
+# Do not mix with signed slope ln(TPS_X)/ln(SIZE_X) convention.
+# If you want a positive model-size slowdown exponent, use:
+#   TPS ∝ SIZE^-α
+#   α = -ln(TPS_B / TPS_A) / ln(SIZE_B / SIZE_A)
+# rather than mixing that convention with the signed slope.
+
+# ---- Beacon Transfer Rule ----
+# Do not transfer the complete model or complete KV cache on every token.
+# Preferred structure: persistent model/state replica + per-token mutable delta
+# + control beacon
+# Conceptually: GPU A computes token N --> token ID + KV append + mutable state
+# delta --> BEACON --> GPU B computes token N+1
+# For hardware without direct peer access:
+#   GPU A --> GPU DMA --> pinned host-visible staging --> GPU DMA --> GPU B
+
+# ---- Token-State Coherency ----
+# Every mutable state dependency between token turns must be identified.
+# At minimum: TOKEN_ID, POSITION, ROPE_POSITION, KV_APPEND, KV_EPOCH,
+# SAMPLER_RNG_STATE, SAMPLING_HISTORY, PENALTY_STATE, GRAMMAR_STATE,
+# SPECULATION_STATE, MOE_ROUTING_STATE, EXPERT_CACHE_GENERATION,
+# WINDOW_STATE, ATTENTION_SINK_STATE, CACHE_EVICTION_GENERATION
+# A token flip is not valid until the next hardware owner has authoritative
+# state for every required mutable dependency.
+
+# ---- Beacon Authority Fields ----
+# Record for every token turn:
+TOKEN_INDEX
+TOKEN_OWNER  # Which GPU computes this token
+
+BEACON_SEQUENCE
+BEACON_BYTES  # Should be ~32 bytes (TokenBeacon struct, control plane only)
+BEACON_CONTROL_NS  # Beacon transmission + synchronization time
+
+KV_DELTA_BYTES  # Per-token KV append size (~256 KiB = 2 × 64 × 8 × 128 × 2 FP16)
+KV_TRANSFER_NS  # DMA transfer time for per-token KV delta
+
+FENCE_WAIT_NS  # Time waiting on synchronization queue fence
+QUEUE_IDLE_NS  # Queue idle time between tokens
+
+TOKEN_COMPUTE_NS  # Time from beacon receive to token completion
+NEXT_DEVICE_PREP_NS  # Time the standby GPU spends preparing next token
+
+INTER_TOKEN_NS  # Total time between consecutive token starts
+
+GPU0_BUSY_NS  # Fraction of time GPU0 is computing
+GPU1_BUSY_NS  # Fraction of time GPU1 is computing
+
+GPU0_PREFETCH_OVERLAP_NS  # Standby prep hidden by active compute (GPU0)
+GPU1_PREFETCH_OVERLAP_NS  # Standby prep hidden by active compute (GPU1)
+
+# Derived quantities (computed after runs complete):
+#   BEACON_OVERHEAD_RATIO = (BEACON_CONTROL_NS + KV_TRANSFER_NS + FENCE_WAIT_NS) / WALL_DECODE_NS
+#   PREPARATION_HIDDEN_RATIO = STANDBY_PREPARATION_OVERLAPPED_NS / TOTAL_STANDBY_PREPARATION_NS
+
+# ---- Five Core Scaling Axes Summary ----
+# AXIS_1 = MODEL_SCALING        — distinct exact model-size scaling (α when SIZE_X != 1)
+# AXIS_2 = IMPLEMENTATION_SCALING — same model, different engine/config (this experiment)
+#   PRIMARY: IMPLEMENTATION_GAIN = TPS_NEW / TPS_BASELINE
+# AXIS_3 = CONCURRENCY_SCALING  — genuine simultaneous-stream scaling (AGENT_COUNT=1,2,3...)
+#   Primary: WALL_GAIN_N = WALL_AGGREGATE_TPS_N / WALL_AGGREGATE_TPS_1
+# AXIS_4 = RESIDENCY_SCALING    — physical/effective working-set scaling
+#   Derived: RESIDENCY_RATIO = PHYSICAL_WORKING_SET_BYTES / MODEL_BYTES
+# AXIS_5 = SWARM_HEX_MAG_SCALING — orchestration rather than simultaneous inference
+#   Derived: USEFUL_WORK_PER_SEC, USEFUL_SWARM_TPS, DUPLICATE_WORK_RATIO, etc.
+#
+# Token Beacon Ferris sits under Axis 2 + PLACEMENT_AUTHORITY, NOT as a 6th axis.
+# Hex Mag = orchestration scaling (Axis 5)
+# Token Beacon Ferris = execution/placement implementation (Axis 2)
+# Concurrency = simultaneous-stream scaling (Axis 3)
+# Residency = physical/effective working-set scaling (Axis 4)
+# Model scaling = distinct exact model-size scaling (Axis 1)
+
+# ---- Asymmetric GPU adjustment ----
+# GPUs are asymmetric: R9700 (32GB) + 7800 XT (16GB)
+# Generalized beacon wheel should support weighted ownership:
+#   A A B
+#   A A B
+#   A A A B
+#   A A A B
+# Dynamic form: A A B A A A B A ...
+# based on measured hardware service time.
+# Controller learns:
+#   R9700 median token service = X
+#   7800XT median token service = Y
+# and adjusts slot ownership accordingly.
+
+# ---- MoE version (future work) ----
+# For MoE, the beacon can include router information:
+# TOKEN_ID, POSITION, KV_EPOCH, TOP_EXPERT_0..3, EXPERT_CACHE_GENERATION
+# Then the device receiving the next turn knows what happened and can update
+# its expert predictor/cache.
+
+# ---- Bigger-model version ----
+# Instead of requiring every byte on both devices:
+#               SYSTEM RAM
+#                   │
+#             backing weights
+#                   │
+#          ┌────────┴────────┐
+#          ▼                 ▼
+#     R9700 HOT SET      7800 HOT SET
+#       32 GB              16 GB
+#          │                 │
+#          └──── BEACON ─────┘
+#
+# During A's turn: A = token engine, B = predicts/prepares/caches next likely working set
+# During B's turn: B = token engine, A = predicts/prepares/caches next likely working set
+# Now the ferris wheel includes cache preparation, not merely compute alternation.
+# That has a much stronger chance of creating useful overlap.
+
+# ---- One hard requirement ----
+# For true ABAB token execution, the hardware about to receive ownership must possess
+# everything required to execute that token.
+# That means either: A = complete required weights, B = complete required weights
+# or some mechanism giving B access to weights it doesn't locally contain.
+# This is why the idea is easiest to prove first with a model fitting independently
+# on both devices. Your 7800 XT's 16 GB is therefore the immediate constraint for
+# the literal replicated-model version.
+# For models larger than that, evolve into:
+# BEACON FERRIS + expert/weight cache + selective replication + remote backing store
+# rather than abandoning the concept.
+
+# ---- Authority workflow (8-step, corrected from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+
+1. IDENTIFY
+   exact model SHA-256: 8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+   exact model bytes: 19851336672 (measured file length, NOT nominal "32B")
+   quant: Q4_K_M
+   shard count: 1 (replicated model on both GPUs)
+   two AMD GPUs: R9700 (32GB) + 7800 XT (16GB), separate device groups, no peer access
+
+2. FREEZE TEST CONDITIONS
+   prompt hash: <will be filled per run>
+   context: <will be filled per run>
+   num_predict: 256
+   warmup: 32 tokens
+   GPU configuration: R9700 + 7800 XT, separate device groups, no peer memory
+   host configuration: <will be filled per run>
+   agent count: 1 (single-stream with TOKEN_BEACON_FERRIS policy)
+   execution policy: TOKEN_BEACON_FERRIS
+   token ownership: ABAB (classified under Implementation Scaling + Placement Authority)
+
+3. COLLECT RAW VALUES
+   All fields from BEACON AUTHORITY FIELDS section above
+   ≥5 runs with identical frozen conditions
+
+4. DERIVE
+   decode TPS = eval_count × 1e9 / eval_duration_ns  # per-token, then aggregate
+   Compare medians, not best single run
+
+5. CLASSIFY THE EXPERIMENT
+   Axis 2 — Implementation Scaling (same model, different engine/config: beacon policy)
+   NOT Axis 1 — Model Scaling (SIZE_X = 1, α undefined, need SIZE_X != 1 for α)
+   NOT Axis 3 — Concurrency Scaling (not genuine simultaneous requests, AGENT_COUNT=1)
+   NOT Axis 4 — Residency Scaling (separate axis)
+   NOT a 6th scaling axis (Beacon Ferris is implementation+placement, not new axis)
+
+6. REJECT CONTAMINATION
+   approximate model bytes → FAIL CLOSED (use exact 19851336672, NOT nominal "32B")
+   SIZE_X == 1 → no model-size α (this is implementation scaling only, Axis 2)
+   reported TPS without raw timing → non-authoritative (must use eval_count × 1e9 / eval_duration_ns)
+   different agent count → not implementation-only comparison (this is single-stream beacon policy)
+   different engine policy → not pure beacon policy comparison (keep prompt, quant, warmup identical)
+   Do NOT silently discard unusual measurements — all raw runs preserved
+   Allowed RAW_RUN_STATUS: VALID, FLAGGED, EXCLUDED_BY_PREDECLARED_RULE
+   If excluded: EXCLUSION_REASON and EXCLUSION_RULE must be present
+
+7. REPEAT
+   ≥5 runs with identical frozen conditions
+   retain all raw runs
+   compare medians, not best single run
+   Flag/explain exclusions only under predeclared rule — do not automatically discard outliers
+
+8. PROMOTE
+   only after provenance and classification checks pass
+   update empirical_tps_dataset.txt with new receipt
+   compute derived quantities:
+     BEACON_OVERHEAD_RATIO = (BEACON_CONTROL_NS + KV_TRANSFER_NS + FENCE_WAIT_NS) / WALL_DECODE_NS
+     PREPARATION_HIDDEN_RATIO = STANDBY_PREPARATION_OVERLAPPED_NS / TOTAL_STANDBY_PREPARATION_NS
+   promote only if: ABAB_TOKEN_TPS > R9700_ONLY_TPS without degrading
+     output correctness, p95/p99 latency, stability
+
+# ---- Falsification Requirement (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Every promoted claim contains:
+#   CLAIM=
+#   FALSIFIED_IF=
+#   FALSIFICATION_STATUS=
+# Example:
+#   CLAIM: Token Beacon Ferris improves decode throughput by hiding next-device preparation.
+#   FALSIFIED_IF: Repeated controlled ABAB runs fail to exceed the single-R9700 baseline
+#     while correctness, warm-state and workload controls are held fixed.
+# A claim without a falsification condition remains: HYPOTHESIS
+
+# ---- Provenance Chain (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Every frozen result binds:
+#   MODEL_SHA256: 8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+#   MODEL_BYTES: 19851336672
+#   PROMPT_HASH: <filled per run>
+#   TASK_CORPUS_HASH: <filled per run>
+#   EXE_SHA256: <filled per run>
+#   BUILD_ID: <filled per run>
+#   EXECUTION_POLICY: TOKEN_BEACON_FERRIS
+#   EXECUTION_POLICY_HASH: <filled per run>
+#   RAW_RUN_SHA256: <filled per run>
+#   MANIFEST_SHA256: <filled per run>
+# Authority is attached to this exact configuration, not merely to a model name.
+
+# ---- Warm-State Authority (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Every run records:
+#   RUN_ORDINAL: <number>
+#   SESSION_ORDINAL: <number>
+#   WARM_STATE: COLD | WARM | HOT
+# Never compare cold baseline against late-session hot optimized run as if warm state were unchanged.
+# Warm-up improvement is itself measurable evidence.
+
+# ---- Prefill / Decode Separation (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Never collapse these into one throughput number.
+#   PREFILL_TPS = PROMPT_TOKENS * 1e9 / PREFILL_DURATION_NS
+#   DECODE_TPS = EVAL_COUNT * 1e9 / EVAL_DURATION_NS
+# Both should remain visible.
+
+# ---- Streaming Smoothness (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Average TPS can hide large idle gaps.
+# Record token timestamps and derive:
+#   TTFT
+#   INTER_TOKEN_P50, INTER_TOKEN_P95, INTER_TOKEN_P99
+#   MAX_TOKEN_GAP
+#   STALL_FRACTION
+# This is especially important for Beacon Ferris because high average throughput with
+# alternating synchronization stalls may still produce poor streaming behavior.
+
+# ---- Correctness Authority (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Performance cannot be promoted if correctness deteriorates.
+#   TASK_COUNT, TASK_PASS_COUNT, TASK_FAIL_COUNT, INVALID_OUTPUT_COUNT
+#   USEFUL_WORK_UNITS, DUPLICATE_WORK_UNITS
+# Primary quality metric: TASK_PASS_RATE = TASK_PASS_COUNT / TASK_COUNT
+# Performance improvement with materially worse correctness remains: VALIDATED_NONFROZEN
+# unless the experiment explicitly targets a different quality/performance point.
+
+# ---- Reliability Authority (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# Record: ATTEMPTS, SUCCESS_COUNT, CRASH_COUNT, HANG_COUNT, TIMEOUT_COUNT, RETRY_COUNT
+# Also measure sustained performance: EARLY_TPS, MEDIAN_TPS, LATE_TPS
+# This distinguishes peak throughput from durable throughput.
+
+# ---- Swarm / Hex Mag Scaling (from DEEP2_EMPIRICAL_SCALING_AUTHORITY_002) ----
+# This axis measures orchestration rather than merely simultaneous inference.
+# Changes can include: SWARM_SIZE, HEX_CELL_COUNT, ROLE_TOPOLOGY, TASK_ROUTING,
+# DELEGATION_POLICY, MERGE_POLICY, WORK_STEAL_POLICY, MODEL_ASSIGNMENT, GPU_ASSIGNMENT
+# Primary authority is not raw token count alone.
+# Measure: COMPLETED_WORK_UNITS, USEFUL_WORK_UNITS, SWARM_WALL_DURATION_NS
+#   SWARM_TOTAL_GENERATED_TOKENS, SWARM_USEFUL_TOKENS, SWARM_DUPLICATE_TOKENS
+#   COORDINATION_WAIT_NS, HANDOFF_COUNT, MERGE_COUNT, RETRY_COUNT, FAILED_BRANCH_COUNT
+# Derived:
+#   USEFUL_WORK_PER_SEC = USEFUL_WORK_UNITS / WALL_SECONDS
+#   USEFUL_SWARM_TPS = SWARM_USEFUL_TOKENS / WALL_SECONDS
+#   DUPLICATE_WORK_RATIO = DUPLICATE_WORK / TOTAL_WORK
+#   SWARM_GAIN_N = USEFUL_WORK_PER_SEC_N / SINGLE_AGENT_USEFUL_WORK_PER_SEC
+#   SWARM_EFFICIENCY_N = SWARM_GAIN_N / AGENT_COUNT
+# This distinguishes more generated traffic from more useful autonomous engineering work.

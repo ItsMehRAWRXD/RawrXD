@@ -1,1 +1,1 @@
-﻿// STUB: src/auth/rbac_engine.cpp
+// rbac_engine — stub

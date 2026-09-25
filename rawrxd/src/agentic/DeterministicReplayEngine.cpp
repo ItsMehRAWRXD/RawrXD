@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/DeterministicReplayEngine.cpp
+// DeterministicReplayEngine — stub

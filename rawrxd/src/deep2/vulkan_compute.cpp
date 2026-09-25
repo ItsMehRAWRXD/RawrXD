@@ -1756,13 +1756,44 @@ bool VulkanCompute::dispatchOps(
     VkDescriptorSet set=getOpsDescriptor(aa,bb,cc,dd);
     if(set==VK_NULL_HANDLE) return false;
 
-    const uint32_t requiredBytes = push.n * sizeof(float);
-    if (aa.size < requiredBytes || bb.size < requiredBytes || cc.size < requiredBytes || dd.size < requiredBytes) {
-        std::fprintf(stderr, "DISPATCH_OPS_BOUNDS_FAIL op=%u n=%u req=%u aa=%u bb=%u cc=%u dd=%u\n",
-            push.op, push.n, requiredBytes,
-            static_cast<uint32_t>(aa.size), static_cast<uint32_t>(bb.size),
-            static_cast<uint32_t>(cc.size), static_cast<uint32_t>(dd.size));
-        return false;
+    if (push.op == OP_ROPE) {
+        // GQA-aware asymmetric bounds: Q/K may differ in head count.
+        uint32_t qRequired = push.p1 * push.p0 * sizeof(float);
+        uint32_t kRequired = push.p2 * push.p0 * sizeof(float);
+        if (aa.size < qRequired || cc.size < qRequired ||
+            bb.size < kRequired || dd.size < kRequired) {
+            std::fprintf(stderr,
+                "DISPATCH_OPS_BOUNDS_FAIL op=ROPE qReq=%u kReq=%u aa=%u bb=%u cc=%u dd=%u\n",
+                qRequired, kRequired,
+                static_cast<uint32_t>(aa.size), static_cast<uint32_t>(bb.size),
+                static_cast<uint32_t>(cc.size), static_cast<uint32_t>(dd.size));
+            return false;
+        }
+    } else if (push.op == OP_GEMV_F32) {
+        // GEMV: aa=weights (rows×cols), bb=input (cols), cc/dd=output (rows)
+        uint32_t rows = push.n;
+        uint32_t cols = push.p0;
+        uint32_t weightRequired = rows * cols * sizeof(float);
+        uint32_t inRequired  = cols * sizeof(float);
+        uint32_t outRequired = rows * sizeof(float);
+        if (aa.size < weightRequired || bb.size < inRequired ||
+            cc.size < outRequired || dd.size < outRequired) {
+            std::fprintf(stderr,
+                "DISPATCH_OPS_BOUNDS_FAIL op=GEMV rows=%u cols=%u wReq=%u inReq=%u outReq=%u aa=%u bb=%u cc=%u dd=%u\n",
+                rows, cols, weightRequired, inRequired, outRequired,
+                static_cast<uint32_t>(aa.size), static_cast<uint32_t>(bb.size),
+                static_cast<uint32_t>(cc.size), static_cast<uint32_t>(dd.size));
+            return false;
+        }
+    } else {
+        const uint32_t requiredBytes = push.n * sizeof(float);
+        if (aa.size < requiredBytes || bb.size < requiredBytes || cc.size < requiredBytes || dd.size < requiredBytes) {
+            std::fprintf(stderr, "DISPATCH_OPS_BOUNDS_FAIL op=%u n=%u req=%u aa=%u bb=%u cc=%u dd=%u\n",
+                push.op, push.n, requiredBytes,
+                static_cast<uint32_t>(aa.size), static_cast<uint32_t>(bb.size),
+                static_cast<uint32_t>(cc.size), static_cast<uint32_t>(dd.size));
+            return false;
+        }
     }
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, opsPipeline_);
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -3568,6 +3599,68 @@ bool VulkanCompute::RunExpertFFN(
     if (!DispatchSwiGLU(g,u,act,intermediate)) return false;
     if (!DispatchWeight(down,act,y)) return false;
     return DownloadVector(y,output,hidden);
+}
+
+bool VulkanCompute::RunExpertFFNResident(
+    DeviceBuf& gateBuf,
+    DeviceBuf& upBuf,
+    DeviceBuf& downBuf,
+    const float* input, float* output,
+    uint32_t hidden, uint32_t intermediate,
+    uint64_t epoch)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMu_);
+    if (!input || !output || !hidden || !intermediate ||
+        !gateBuf || !upBuf || !downBuf)
+        return false;
+
+    SetWorkEpoch(epoch);
+    if (!EnsureScratch(0,hidden) ||
+        !EnsureScratch(1,intermediate) ||
+        !EnsureScratch(2,intermediate) ||
+        !EnsureScratch(3,intermediate) ||
+        !EnsureScratch(4,hidden))
+        return false;
+
+    DeviceBuf& x = Scratch(0);
+    DeviceBuf& g = Scratch(1);
+    DeviceBuf& u = Scratch(2);
+    DeviceBuf& act = Scratch(3);
+    DeviceBuf& y = Scratch(4);
+
+    if (!UploadVector(x,input,hidden)) return false;
+
+    // gate: [intermediate, hidden]
+    {
+        OpsPush p{};
+        p.op = OP_GEMV_F32;
+        p.n = intermediate;
+        p.p0 = hidden;
+        if (!dispatchOps(gateBuf, x, g, g, p, (intermediate + 63u) / 64u))
+            return false;
+    }
+    // up: [intermediate, hidden]
+    {
+        OpsPush p{};
+        p.op = OP_GEMV_F32;
+        p.n = intermediate;
+        p.p0 = hidden;
+        if (!dispatchOps(upBuf, x, u, u, p, (intermediate + 63u) / 64u))
+            return false;
+    }
+    // SwiGLU
+    if (!DispatchSwiGLU(g, u, act, intermediate))
+        return false;
+    // down: [hidden, intermediate]
+    {
+        OpsPush p{};
+        p.op = OP_GEMV_F32;
+        p.n = hidden;
+        p.p0 = intermediate;
+        if (!dispatchOps(downBuf, act, y, y, p, (hidden + 63u) / 64u))
+            return false;
+    }
+    return DownloadVector(y, output, hidden);
 }
 
 void VulkanCompute::ResetMLACache() {

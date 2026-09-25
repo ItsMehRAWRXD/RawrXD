@@ -1,0 +1,56 @@
+{
+  "release": "RAWRXD_REAL_GGUF_PARITY_001",
+  "generated_utc": "2026-09-24T12:05:25.999250+00:00",
+  "files": [
+    {
+      "path": "GOLDEN_FORMAT.md",
+      "bytes": 766,
+      "sha256": "fbcb688cadfb0de649ea09ff383b15ef4511b6cbb721a1057fde1e882d212754"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5935,
+      "sha256": "eddae5e6e4e5c96ecf450eb8776e1bb8f9c8ac7dc8f2c070c844d36e77edcacc"
+    },
+    {
+      "path": "VALIDATION.txt",
+      "bytes": 605,
+      "sha256": "5a0f109f91f473d689de61f8d7a9606beca2c329ce3765b4f72ffbd6de74160c"
+    },
+    {
+      "path": "apply_rawrxd_real_gguf_parity.ps1",
+      "bytes": 1367,
+      "sha256": "0ddc131e59cdde64df0f1d74592826004f45d1e6a284bd0a4b4d8426007c706d"
+    },
+    {
+      "path": "integration/CMakeLists.snippet",
+      "bytes": 860,
+      "sha256": "fa99ab95c9215b73341998e96a743f00d90bcc0bf01bfdb6f76b64ff2c715c88"
+    },
+    {
+      "path": "src/deep2/RealGGUFParity.cpp",
+      "bytes": 28333,
+      "sha256": "1b2896081aa4f54ef997578351620384887171af3e9fe5f59616affb41d305e0"
+    },
+    {
+      "path": "src/deep2/RealGGUFParity.hpp",
+      "bytes": 2629,
+      "sha256": "3f54d4755d9aabfaa6caab4c8bed908f62a6c565fd186a69a6bad8b9ddaa4e41"
+    },
+    {
+      "path": "tests/stub/deep2/Deep2Engine.h",
+      "bytes": 1524,
+      "sha256": "46e21b8409960c4e53283f28723d3ecf02760289b3d9b61f5dcad67cac7bf460"
+    },
+    {
+      "path": "tools/real_gguf_parity_main.cpp",
+      "bytes": 130,
+      "sha256": "0d574df3298473f872031eaa2600022c7d6a659ab8a63c54c9b7bcd06c69ce74"
+    },
+    {
+      "path": "tools/run_real_gguf_parity_matrix.ps1",
+      "bytes": 1324,
+      "sha256": "78bd77e5d1cbe412533674bcf8f512c2ba56ae846b0c1b65df8fa1aa1ac0cba9"
+    }
+  ]
+}

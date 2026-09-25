@@ -1,0 +1,740 @@
+# Empirical TPS Dataset — provenance-preserving harvest of existing receipts
+# Format: gate, model, model_bytes, measured_tokens, generation_ms, token_wall_ns, decode_tps_engine, decoy_tps_qpc, warmup_tokens, verdict, notes
+# All values extracted directly from existing receipt files; no extrapolation assumed.
+
+# ---- DEEP2_32B_BASELINE_AUTHORITY_001 ----
+
+# Solitary run, no concurrent GPU workloads
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_BYTES=19851336672
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+MEASURED_TOKENS=256
+GENERATION_MS=54756.458
+TOKEN_WALL_NS=59602096100
+AVG_TOKEN_WALL_NS=232820687
+DECODE_TPS_ENGINE=4.675248
+DECODE_TPS_QPC=4.295151
+GPU_DEVICES=2
+REAL_GPU_FORWARD=1
+FULL_RESIDENT_GPU=0
+VERDICT=PASS
+RUN_MODE=Canonical authority run — solitary process, no concurrent GPU workloads
+NOTES="Baseline solitary measurement; 32B model, 256 tokens; Q4_K_M quantization"
+
+# B2 direct write probe sample
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_BYTES=19851336672
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+MEASURED_TOKENS=256
+GENERATION_MS=49840.843
+TOKEN_WALL_NS=54151757100
+AVG_TOKEN_WALL_NS=211530301
+DECODE_TPS_ENGINE=5.136350
+DECODE_TPS_QPC=4.727455
+GPU_DEVICES=2
+REAL_GPU_FORWARD=1
+FULL_RESIDENT_GPU=0
+COMMIT_TAG=B2_DIRECT_WRITE_PROBE_SAMPLE
+VERDICT=PASS
+RUN_MODE=Canonical authority run — solitary process, no concurrent GPU workloads
+NOTES="B2 variant with direct write probe; same model, slightly different timing"
+
+# B3 lane experiment — layer split
+GATE=DEEP2_32B_BASELINE_AUTHORITY_001
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+MODEL_BYTES=19851336672
+MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+MEASURED_TOKENS=64
+GENERATION_MS=11444.934
+DECODE_TPS_ENGINE=5.591994   ← highest engine TPS of any lane/batch to date
+DECODE_TPS_QPC=4.225305
+DENSE_ROW_WALL_PCT=1.904 (dual-row bypassed except lmHead)
+DUAL_ROW_SPLIT_OPS=64 (lmHead only, 1/token)
+UNPLANNED_FALLBACKS=0
+STRICT_GPU_VIOLATIONS=0
+RESIDENT_REUSE=1
+BOUNDED_UPLOADS=0 (slot1 churn: SLOT1_UPLOAD_DELTA=88)
+VERDICT=HOLD (gate requires dual-row witnesses + bounded uploads; informational for lane comparison)
+COMMIT_TAG=B3_KVSIZE_FIX2
+RUN_MODE=Lane experiment — DEEP2_DENSE_EXEC=LAYER_SPLIT (Batch9 resident lane)
+NOTES="B3 layer-split experiment; 64 tokens measured; KV layer range fixed to 32 per slot (reclaims ~1.06GB VRAM/slot); highest engine TPS observed"
+
+# ---- RAWRXD_PERFORMANCE_001: DEEP2_QWEN32_ACCEPTED_TPS_001 ----
+
+GATE=DEEP2_QWEN32_ACCEPTED_TPS_001
+STATUS=PASS
+SOURCE_WIRED=1
+LIVE_PRODUCT_RUN=RAN
+RUNTIME_REACHED=1
+MODEL_SHA256=
+ENGINE_SHA256=
+MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf (inferred from context)
+MEASURED_TOKENS=256
+SPEC_PROPOSED=105
+SPEC_ACCEPTED=129
+SPEC_REJECTED=250
+SPEC_ACCEPT_RATE=1.228571
+DECODE_WALL_NS=170154003500
+ACCEPTED_DECODE_TPS=1.5045
+DUAL_ROW_SLOT_0=126965
+DUAL_ROW_SLOT_1=126965
+NOTES="Accepted TPS gate with speculative decoding; SPEC_ACCEPT_RATE > 1 indicates proposals accepted more than 1:1; TPS very low at 1.5045 TPS"
+
+# ---- RAWRXD_PERFORMANCE_001: DEEP2_DUAL_PHYSICAL_GPU_FORWARD_001 ----
+
+GATE=DEEP2_DUAL_PHYSICAL_GPU_FORWARD_001
+STATUS=PASS
+SOURCE_WIRED=1
+LIVE_PRODUCT_RUN=RAN
+RUNTIME_REACHED=1
+DEEP2_DUAL_PHYSICAL_GPU_FORWARD=1
+DEEP2_DUAL_ROW_SLOT_0=2432
+DEEP2_DUAL_ROW_SLOT_1=2432
+DEEP2_GPU_FORWARD_SLOT_0=0
+DEEP2_GPU_FORWARD_SLOT_1=0
+DEEP2_GPU_FORWARD_HOST_MATERIALIZATIONS=4865
+DEEP2_GPU_DUAL_ROW_SPLIT_OPS=2432
+DEEP2_GPU_HOST_MERGE_OPS=2432
+PROMOTE=0
+TIP_CLIMB=HOLD
+NOT_RUN!=PASS
+NOTES="Dual physical GPU forward gate; both GPUs show 0 forward slots meaning forward bypassed; host materializations=4865 indicates CPU work; PROMOTE=0 preserves authority"
+
+# ---- OPS_BREAKDOWN: DEEP2_RESIDENT_OPS_BREAKDOWN_001 ----
+
+GATE=DEEP2_RESIDENT_OPS_BREAKDOWN_001
+VERDICT=HOLD (resident-first still under dual-row baseline at 256; but see TPS note below — 64-token resident-first measured 5.550 TPS, ABOVE the 5.142 256-token dual-row baseline and the prior 4.84 resident mark)
+HARNESS_INCIDENTS="
+1. v1 run DIED silently during warmup: my parity-pool vkCmdResetQueryPool was recorded BEFORE vkBeginCommandBuffer — undefined behavior (VUID-vkCmdResetQueryPool-commandBuffer-00081). Q4K-parity arms survived by driver luck.
+2. FIXED: reset moved after vkBeginCommandBuffer, alongside the existing command buffer setup.
+"
+CONFIG=DEEP2_RESIDENT_FIRST=1, Qwen2.5-Coder-32B Q4_K_M, 64 tokens
+TPS_64_TOKEN=5.550 TPS (measured, above 5.142 baseline)
+TPS_256_TOKEN=5.142 TPS (256-token dual-row baseline)
+NOTES="Resident-first experiment; v1 contaminated (warmup samples included); v2 clean with vulkanResetQ4kParityStats() between warmup and measurement; 64-token measurement beats dual-row baseline"
+
+# ---- Two-agent Nemotron observations (from attachment analysis) ----
+
+# These are observational summaries, not formal receipts with full provenance
+# 2-agent run: 26.8 GB VRAM serving ~50 GB logical model demand
+# 3-agent run: 26.8 GB VRAM serving ~75 GB logical model demand
+# Residency efficiency: 53.6% (2 agents), 35.7% (3 agents) vs naïve duplication
+NOTES="Two-agent Nemotron observations from attachment analysis: VRAM footprint remains at 26.8 GB across 2-3 agents sharing ~50-75 GB logical model demand; OBSERVED: dedicated VRAM remained ~26.8 GB while logical concurrent model demand increased. SUPPORTED: naive full per-process duplication was not visible in that counter. NOT YET PROVEN: the exact mechanism is shared immutable mappings / shared weight pages. concurrency gain = (TPS_A + TPS_B + ...) / TPS_single; Σ agent TPS is NOT the primary concurrency metric — per-agent retention and scheduler efficiency are"
+
+# ---- DEEP2_EMPIRICAL_SCALING_AUTHORITY_002 — Five Orthogonal Core Scaling Axes ----
+
+# RawrXD / Deep2 empirical performance authority is divided into five orthogonal
+# core scaling axes. Additional measurements (latency, placement, KV growth,
+# reliability, correctness, energy/resource efficiency) act as authority dimensions
+# and controls, not necessarily independent scaling axes.
+
+# AXIS_1 = MODEL_SCALING
+# AXIS_2 = IMPLEMENTATION_SCALING
+# AXIS_3 = CONCURRENCY_SCALING
+# AXIS_4 = RESIDENCY_SCALING
+# AXIS_5 = SWARM_HEX_MAG_SCALING
+
+# ---- Axis 1 — Model Scaling ----
+# What varies: exact model / model bytes
+# Primary authority: exact model bytes, median measured decode TPS,
+#   raw eval_count, raw eval_duration_ns
+# SIZE_X = MODEL_BYTES_B / MODEL_BYTES_A
+# TPS_X = DECODE_TPS_B / DECODE_TPS_A
+# For positive slowdown-exponent convention:
+#   TPS ∝ SIZE^-α
+#   α = -ln(TPS_X) / ln(SIZE_X)
+# Valid only when:
+#   SIZE_X != 1
+#   MODEL_BYTES_A = exact (measured file length, not nominal)
+#   MODEL_BYTES_B = exact
+#   same execution policy
+#   same agent count
+#   same workload policy
+#   raw timing authority exists
+# Otherwise: ALPHA=UNDEFINED
+# B2/B3 belong here: same exact model, same nominal size, different engine/config
+#   — B2 = direct-write implementation probe
+#   — B3 = layer-split implementation experiment (KV range fixed to 32 per slot,
+#     reclaims ~1.06GB VRAM/slot)
+# NOT concurrency scaling (those require genuine simultaneous requests with
+#   AGENT_COUNT=1,2,3 and measured wall aggregate TPS)
+
+# ---- Axis 2 — Implementation Scaling ----
+# Same: MODEL, MODEL_BYTES, AGENT_COUNT, TASK
+# Changes: ENGINE, KERNEL, CACHE_POLICY, SCHEDULER, GPU_MAPPING,
+#   PREFETCH_POLICY, TOKEN_OWNERSHIP_POLICY
+# Examples:
+#   Qwen32 baseline -> B2 direct-write implementation
+#   Qwen32 baseline -> B3 layer-split implementation
+# Therefore:
+#   B2 != AGENT_COUNT_2
+#   B3 != AGENT_COUNT_3
+# They are implementation experiments, NOT concurrency rows.
+# Primary metric: IMPLEMENTATION_GAIN = TPS_NEW / TPS_BASELINE
+
+# ---- Axis 3 — Concurrency Scaling ----
+# Same: MODEL, ENGINE, EXECUTION_POLICY, TASK_POLICY
+# Changes: simultaneous stream count
+# Required: AGENT_COUNT=1, AGENT_COUNT=2, AGENT_COUNT=3, ...
+# Requests must actually overlap in wall time.
+# Primary metrics:
+#   WALL_AGGREGATE_TPS_N = wall aggregate TPS for N agents
+#   WALL_GAIN_N = WALL_AGGREGATE_TPS_N / WALL_AGGREGATE_TPS_1
+#   PER_AGENT_RETENTION_N = MEAN_AGENT_DECODE_TPS_N / SINGLE_AGENT_DECODE_TPS
+# Secondary diagnostic: SUM_AGENT_DECODE_TPS
+# Never substitute summed per-agent decode measurements for true wall aggregate throughput.
+# Actual concurrency rows must come from genuine simultaneous requests, NOT
+# implementation variation (B2/B3 are NOT concurrency rows).
+
+# ---- Axis 4 — Residency Scaling ----
+# Measures physical working set and active traffic independently of nominal model size.
+# Required where available: MODEL_BYTES, PHYSICAL_VRAM_BYTES,
+#   PHYSICAL_HOST_BYTES, KV_BYTES, EFFECTIVE_BYTES_TOTAL,
+#   EFFECTIVE_BYTES_PER_TOKEN
+# Derived:
+#   RESIDENCY_RATIO = PHYSICAL_WORKING_SET_BYTES / MODEL_BYTES
+#   ACTIVE_TRAFFIC_RATIO = EFFECTIVE_BYTES_PER_TOKEN / MODEL_BYTES
+# Especially important for: MoE, sparse execution, expert caches,
+#   selective residency, streamed weights
+# A large nominal model does not prove proportionally large per-token traffic.
+# That must be measured.
+
+# ---- Axis 5 — Swarm / Hex Mag Scaling ----
+# This axis measures orchestration rather than merely simultaneous inference.
+# Changes can include: SWARM_SIZE, HEX_CELL_COUNT, ROLE_TOPOLOGY,
+#   TASK_ROUTING, DELEGATION_POLICY, MERGE_POLICY, WORK_STEAL_POLICY,
+#   MODEL_ASSIGNMENT, GPU_ASSIGNMENT
+# Primary authority is not raw token count alone.
+# Measure: COMPLETED_WORK_UNITS, USEFUL_WORK_UNITS, SWARM_WALL_DURATION_NS
+#   SWARM_TOTAL_GENERATED_TOKENS, SWARM_USEFUL_TOKENS, SWARM_DUPLICATE_TOKENS
+#   COORDINATION_WAIT_NS, HANDOFF_COUNT, MERGE_COUNT, RETRY_COUNT,
+#   FAILED_BRANCH_COUNT
+# Derived:
+#   USEFUL_WORK_PER_SEC = USEFUL_WORK_UNITS / WALL_SECONDS
+#   USEFUL_SWARM_TPS = SWARM_USEFUL_TOKENS / WALL_SECONDS
+#   DUPLICATE_WORK_RATIO = DUPLICATE_WORK / TOTAL_WORK
+#   SWARM_GAIN_N = USEFUL_WORK_PER_SEC_N / SINGLE_AGENT_USEFUL_WORK_PER_SEC
+#   SWARM_EFFICIENCY_N = SWARM_GAIN_N / AGENT_COUNT
+# This distinguishes more generated traffic from more useful autonomous engineering work.
+
+# ---- Model-Size Alpha Computation Rule ----
+# For positive slowdown-exponent convention:
+#   TPS ∝ SIZE^-α
+#   α = -ln(TPS_X) / ln(SIZE_X)
+# Valid only when:
+#   SIZE_X != 1 (distinct model bytes, not just nominal vs active)
+#   MODEL_BYTES_A = exact measured file lengths, not approximate nominal values
+#   MODEL_BYTES_B = exact measured file lengths
+#   same execution policy
+#   same agent count
+#   same workload policy
+#   raw timing authority exists
+# If SIZE_X == 1 (same model), the result is implementation scaling, not model scaling
+# If any valid condition fails: ALPHA=UNDEFINED
+
+# Do not mix with signed slope ln(TPS_X)/ln(SIZE_X) convention.
+# If you want a positive model-size slowdown exponent, use:
+#   TPS ∝ SIZE^-α
+#   α = -ln(TPS_B / TPS_A) / ln(SIZE_B / SIZE_A)
+# rather than mixing that convention with the signed slope.
+
+# ---- Outlier Policy ----
+# Never silently discard unusual measurements.
+# All raw runs remain preserved.
+# Allowed RAW_RUN_STATUS values:
+#   VALID — run passes all provenance and classification checks
+#   FLAGGED — run has noted anomalies, still retained
+#   EXCLUDED_BY_PREDECLARED_RULE — excluded only under pre-declared rule
+# If excluded: EXCLUSION_REASON and EXCLUSION_RULE must be present.
+# Median reporting does not authorize deletion of inconvenient results.
+
+# ---- Multi-Dimension Runs ----
+# A physical run may generate evidence for multiple dimensions.
+# Example: Token Beacon Ferris run may produce:
+#   IMPLEMENTATION_SCALING evidence
+#   PLACEMENT_AUTHORITY evidence
+#   LATENCY evidence
+#   RESIDENCY evidence
+#   RELIABILITY evidence
+# That is valid.
+# What must remain isolated is the CLAIM.
+# Do not say: "TPS increased therefore Hex Mag improved"
+# if both scheduler topology and hardware placement changed.
+# Instead: CLAIM_VARIABLE, CONTROL_VARIABLES, CONFOUNDERS must identify
+# the causal comparison.
+
+# ---- Beacon Transfer Rule ----
+# Do not transfer the complete model or complete KV cache on every token.
+# Preferred structure: persistent model/state replica + per-token mutable delta
+# + control beacon
+# Conceptually: GPU A computes token N --> token ID + KV append + mutable state
+# delta --> BEACON --> GPU B computes token N+1
+# For hardware without direct peer access:
+#   GPU A --> GPU DMA --> pinned host-visible staging --> GPU DMA --> GPU B
+
+# ---- Token-State Coherency ----
+# Every mutable state dependency between token turns must be identified.
+# At minimum: TOKEN_ID, POSITION, ROPE_POSITION, KV_APPEND, KV_EPOCH,
+# SAMPLER_RNG_STATE, SAMPLING_HISTORY, PENALTY_STATE, GRAMMAR_STATE,
+# SPECULATION_STATE, MOE_ROUTING_STATE, EXPERT_CACHE_GENERATION,
+# WINDOW_STATE, ATTENTION_SINK_STATE, CACHE_EVICTION_GENERATION
+# A token flip is not valid until the next hardware owner has authoritative
+# state for every required mutable dependency.
+
+# ---- Beacon Authority Fields ----
+# Record: TOKEN_INDEX, TOKEN_OWNER, BEACON_SEQUENCE, BEACON_BYTES,
+# BEACON_CONTROL_NS, KV_DELTA_BYTES, KV_TRANSFER_NS,
+# FENCE_WAIT_NS, QUEUE_IDLE_NS, TOKEN_COMPUTE_NS,
+# NEXT_DEVICE_PREP_NS, INTER_TOKEN_NS,
+# GPU0_BUSY_NS, GPU1_BUSY_NS,
+# GPU0_PREFETCH_OVERLAP_NS, GPU1_PREFETCH_OVERLAP_NS
+# Derived:
+#   BEACON_OVERHEAD_RATIO = (BEACON_CONTROL_NS + KV_TRANSFER_NS + FENCE_WAIT_NS) /
+#     WALL_DECODE_NS
+#   PREPARATION_HIDDEN_RATIO = STANDBY_PREPARATION_OVERLAPPED_NS /
+#     TOTAL_STANDBY_PREPARATION_NS
+
+# ---- Empirical formulas documented for reference ----
+
+# Core measurement formulas (no assumptions, all values from measured receipts)
+# TPS = (tokens × 10^9) / decode_ns
+# SIZE_X = MODEL_BYTES / BASE_MODEL_BYTES
+# TPS_X = MEASURED_TPS / BASE_MEASURED_TPS
+# TOKEN_COST_X = NS_PER_TOKEN / BASE_NS_PER_TOKEN
+# BYTES_PER_TOKEN_X = EFFECTIVE_BYTES_PER_TOKEN / BASE_EFFECTIVE_BYTES_PER_TOKEN
+# EFFECTIVE_BW_X = EFFECTIVE_BW / BASE_EFFECTIVE_BW
+
+# Reverse-engineered exponents
+# α = -ln(TPS2/TPS1) / ln(Size2/Size1) — how TPS scales with model size
+#   α = 1.0: linear decline; α < 1.0: slower decline; α > 1.0: faster decline
+#   Only computed when SIZE_X != 1 (distinct model sizes)
+# β = ln(Cost2/Cost1) / ln(Size2/Size1) — measured token cost scaling
+
+# Key principle: NO extrapolation
+# MODE=MEASUREMENT_ONLY, EXTRAPOLATION=DISABLED, ASSUMED_BANDWIDTH=0, ASSUMED_ARCHITECTURE_SPEEDUP=0
+
+# Critical insight for MoE/sparse models:
+# MODEL_SIZE_X can rise dramatically while BYTES_PER_TOKEN_X rises much less
+# This is the exact behavior needed for GPT-OSS (65 GB), Laguna (96 GB), DeepSeek V4 (103 GB)
+
+# Concurrency — the overclaim corrected:
+# PRIMARY metric: per-agent retention = Average(TPS_A, TPS_B, ...) / TPS_single
+# Σ agent TPS should NOT be primary concurrency metric (as noted in feedback)
+# ConcurrencyGain = (TPS_A + TPS_B + ...) / TPS_single is secondary/derivative
+# Wall aggregate TPS is the primary multi-agent authority, NOT summed response-local decode rates
+
+# ---- Beacon Falsification Ladder ----
+# Compare under the same model and task, ordered from simplest to most sophisticated:
+# F0 = R9700_ONLY  (single GPU baseline)
+# F1 = RX7800XT_ONLY  (other GPU alone)
+# F2 = ORDINARY_DUAL_GPU  (standard dual-GPU split / mirror)
+# F3 = ABAB_TOKEN_BEACON  (literal every-other-token flip-flop)
+# F4 = WEIGHTED_TOKEN_BEACON  (dynamic slot ownership by measured service time)
+# F5 = BEACON + PREFETCH  (standby GPU prefetches next weights)
+# F6 = BEACON + HOT_EXPERT_CACHE  (inactive GPU caches hot MoE experts)
+# F7 = BEACON + PREDICTIVE_EXPERT_STAGING  (predictive expert cache preparation)
+# This ladder reveals exactly where any gain originates — each step up adds a new mechanism.
+# Promotion requires: same model, same task, controlled variables, raw timing authority present.
+
+# ---- Outlier Policy ----
+# Never silently discard unusual measurements.
+# All raw runs remain preserved.
+# Allowed RAW_RUN_STATUS values:
+#   VALID — run passes all provenance and classification checks
+#   FLAGGED — run has noted anomalies, still retained
+#   EXCLUDED_BY_PREDECLARED_RULE — excluded only under pre-declared rule
+# If excluded: EXCLUSION_REASON and EXCLUSION_RULE must be present.
+# Median reporting does not authorize deletion of inconvenient results.
+# If any valid condition fails: ALPHA=UNDEFINED
+
+# ---- Multi-Dimension Runs ----
+# A physical run may generate evidence for multiple dimensions.
+# Example: Token Beacon Ferris run may produce:
+#   IMPLEMENTATION_SCALING evidence
+#   PLACEMENT_AUTHORITY evidence
+#   LATENCY evidence
+#   RESIDENCY evidence
+#   RELIABILITY evidence
+# That is valid.
+# What must remain isolated is the CLAIM.
+# Do not say: "TPS increased therefore Hex Mag improved"
+# if both scheduler topology and hardware placement changed.
+# Instead: CLAIM_VARIABLE, CONTROL_VARIABLES, CONFOUNDERS must identify
+# the causal comparison.
+
+# ---- Beacon Transfer Rule ----
+# Do not transfer the complete model or complete KV cache on every token.
+# Preferred structure: persistent model/state replica + per-token mutable delta + control beacon
+# Conceptually: GPU A computes token N --> token ID + KV append + mutable state delta --> BEACON --> GPU B computes token N+1
+# For hardware without direct peer access:
+#   GPU A --> GPU DMA --> pinned host-visible staging --> GPU DMA --> GPU B
+
+# ---- Token-State Coherency ----
+# Every mutable state dependency between token turns must be identified.
+# At minimum: TOKEN_ID, POSITION, ROPE_POSITION, KV_APPEND, KV_EPOCH,
+# SAMPLER_RNG_STATE, SAMPLING_HISTORY, PENALTY_STATE, GRAMMAR_STATE,
+# SPECULATION_STATE, MOE_ROUTING_STATE, EXPERT_CACHE_GENERATION,
+# WINDOW_STATE, ATTENTION_SINK_STATE, CACHE_EVICTION_GENERATION
+# A token flip is not valid until the next hardware owner has authoritative
+# state for every required mutable dependency.
+
+# ---- Beacon Authority Fields ----
+# Record: TOKEN_INDEX, TOKEN_OWNER, BEACON_SEQUENCE, BEACON_BYTES,
+# BEACON_CONTROL_NS, KV_DELTA_BYTES, KV_TRANSFER_NS,
+# FENCE_WAIT_NS, QUEUE_IDLE_NS, TOKEN_COMPUTE_NS,
+# NEXT_DEVICE_PREP_NS, INTER_TOKEN_NS,
+# GPU0_BUSY_NS, GPU1_BUSY_NS,
+# GPU0_PREFETCH_OVERLAP_NS, GPU1_PREFETCH_OVERLAP_NS
+# Derived:
+#   BEACON_OVERHEAD_RATIO = (BEACON_CONTROL_NS + KV_TRANSFER_NS + FENCE_WAIT_NS) /
+#     WALL_DECODE_NS
+#   PREPARATION_HIDDEN_RATIO = STANDBY_PREPARATION_OVERLAPPED_NS /
+#     TOTAL_STANDBY_PREPARATION_NS
+
+# ---- Empirical formulas documented for reference ----
+
+# ---------------------------------------------------------------------------
+# FIVE ORTHOGONAL SCALING AXES (per DEEP2_EMPIRICAL_SCALING_AUTHORITY_002)
+# ---------------------------------------------------------------------------
+
+# AXIS 1 — MODEL SCALING
+# Changes: MODEL, MODEL_BYTES
+# Held fixed: EXECUTION_POLICY, AGENT_COUNT, PROMPT, CONTEXT, NUM_PREDICT, WARM_STATE, GPU_POLICY, MEASUREMENT_METHOD
+# Primary authority: exact model bytes, median measured decode TPS, raw eval_count, raw eval_duration_ns
+# Define: SIZE_X = MODEL_BYTES_B / MODEL_BYTES_A; TPS_X = DECODE_TPS_B / DECODE_TPS_A
+# Positive slowdown-exponent convention: TPS ∝ SIZE^-α
+#   alpha = -ln(TPS_X) / ln(SIZE_X)  — only when SIZE_X != 1 and exact MODEL_BYTES known
+# Validity: SIZE_X != 1, MODEL_BYTES_A = exact, MODEL_BYTES_B = exact, same execution policy,
+#   same agent count, same workload policy, raw timing authority exists
+# Otherwise: ALPHA=UNDEFINED
+
+# AXIS 2 — IMPLEMENTATION SCALING
+# Same: MODEL, MODEL_BYTES, AGENT_COUNT, TASK
+# Changes: ENGINE, KERNEL, CACHE_POLICY, SCHEDULER, GPU_MAPPING, PREFETCH_POLICY, TOKEN_OWNERSHIP_POLICY
+# Examples: Qwen32 baseline -> B2 direct-write; Qwen32 baseline -> B3 layer-split
+# Therefore: B2 != AGENT_COUNT_2; B3 != AGENT_COUNT_3 — they are implementation experiments
+# Primary metric: IMPLEMENTATION_GAIN = TPS_NEW / TPS_BASELINE
+
+# AXIS 3 — CONCURRENCY SCALING
+# Same: MODEL, ENGINE, EXECUTION_POLICY, TASK_POLICY
+# Changes: simultaneous stream count; AGENT_COUNT=1,2,3,...
+# Required: requests must actually overlap in wall time
+# Primary metrics: WALL_AGGREGATE_TPS_N; WALL_GAIN_N = WALL_AGGREGATE_TPS_N / WALL_AGGREGATE_TPS_1
+# and: PER_AGENT_RETENTION_N = MEAN_AGENT_DECODE_TPS_N / SINGLE_AGENT_DECODE_TPS
+# Secondary diagnostic: SUM_AGENT_DECODE_TPS — must never substitute for true wall aggregate throughput
+
+# AXIS 4 — RESIDENCY SCALING
+# Measures physical working set and active traffic independently of nominal model size
+# Required where available: MODEL_BYTES, PHYSICAL_VRAM_BYTES, PHYSICAL_HOST_BYTES, KV_BYTES,
+#   EFFECTIVE_BYTES_TOTAL, EFFECTIVE_BYTES_PER_TOKEN
+# Derived: RESIDENCY_RATIO = PHYSICAL_WORKING_SET_BYTES / MODEL_BYTES
+# and: ACTIVE_TRAFFIC_RATIO = EFFECTIVE_BYTES_PER_TOKEN / MODEL_BYTES
+# Especially important for: MoE, sparse execution, expert caches, selective residency, streamed weights
+# A large nominal model does not prove proportionally large per-token traffic — must be measured
+
+# AXIS 5 — SWARM / HEX MAG SCALING
+# Measures orchestration rather than merely simultaneous inference
+# Changes: SWARM_SIZE, HEX_CELL_COUNT, ROLE_TOPOLOGY, TASK_ROUTING, DELEGATION_POLICY,
+#   MERGE_POLICY, WORK_STEAL_POLICY, MODEL_ASSIGNMENT, GPU_ASSIGNMENT
+# Primary authority is not raw token count alone
+# Measure: COMPLETED_WORK_UNITS, USEFUL_WORK_UNITS, SWARM_WALL_DURATION_NS
+# SWARM_TOTAL_GENERATED_TOKENS, SWARM_USEFUL_TOKENS, SWARM_DUPLICATE_TOKENS
+# COORDINATION_WAIT_NS, HANDOFF_COUNT, MERGE_COUNT, RETRY_COUNT, FAILED_BRANCH_COUNT
+# Derived: USEFUL_WORK_PER_SEC = USEFUL_WORK_UNITS / WALL_SECONDS
+# USEFUL_SWARM_TPS = SWARM_USEFUL_TOKENS / WALL_SECONDS
+# DUPLICATE_WORK_RATIO = DUPLICATE_WORK / TOTAL_WORK
+# SWARM_GAIN_N = USEFUL_WORK_PER_SEC_N / SINGLE_AGENT_USEFUL_WORK_PER_SEC
+# SWARM_EFFICIENCY_N = SWARM_GAIN_N / AGENT_COUNT
+# This distinguishes more generated traffic from more useful autonomous engineering work
+
+# ---------------------------------------------------------------------------
+# MODEL AUTHORITY RECORD TEMPLATE
+# ---------------------------------------------------------------------------
+# Keep all of these fixed or explicitly recorded for every receipt:
+
+# MODEL=
+# MODEL_SHA256=
+# MODEL_BYTES=
+# QUANT=
+# SHARD_COUNT=
+
+# PROMPT_SHA256=
+# PROMPT_TOKENS=
+# NUM_PREDICT=
+# CONTEXT_SIZE=
+
+# GPU_CONFIGURATION=
+# GPU0=
+# GPU1=
+# HOST_RAM_CONFIGURATION=
+
+# AGENT_COUNT=
+# WARMUP_TOKENS=
+# RUNS=
+
+# EVAL_COUNT=
+# EVAL_DURATION_NS=
+# WALL_DURATION_NS=
+
+# ENGINE_DECODE_TPS=
+# WALL_AGGREGATE_TPS=
+
+# DEDICATED_VRAM_BYTES=
+# SHARED_GPU_BYTES=
+# HOST_RAM_BYTES=
+
+# EFFECTIVE_BYTES_TOTAL=
+# EFFECTIVE_BYTES_PER_TOKEN=
+
+# GPU_BUSY=
+# QUEUE_WAIT_NS=
+# FENCE_WAIT_NS=
+# TRANSFER_WAIT_NS=
+
+# ---------------------------------------------------------------------------
+# EXTENDED EMPIRE DATASET — ORTHOGONAL SCALING CATEGORIES
+# ---------------------------------------------------------------------------
+
+# --- MODEL-SCALING ROWS (same execution policy, different models) ---
+# Only include when exact MODEL_BYTES is known for each row.
+
+# ---- DEEP2_KIMI_2.5_SINGLE_001 ----
+# GATE=DEEP2_KIMI_2.5_SINGLE_001
+# MODEL=<exact-kimi-model-name>
+# MODEL_SHA256=<kimi-sha256>
+# MODEL_BYTES=<exact measured bytes>
+# QUANT=Q4_K_M  # or whatever quantization
+# SHARD_COUNT=<n>
+#
+# PROMPT_SHA256=<sha256 of prompt>
+# PROMPT_TOKENS=<n>
+# NUM_PREDICT=256
+# CONTEXT_SIZE=<n>
+#
+# GPU_CONFIGURATION=<descr>
+# GPU0=<info>
+# GPU1=<info>
+# HOST_RAM_CONFIGURATION=<info>
+#
+# AGENT_COUNT=1
+# WARMUP_TOKENS=<n>
+# RUNS=5
+#
+# EVAL_COUNT=<n>
+# EVAL_DURATION_NS=<ns>
+# WALL_DURATION_NS=<ns>
+#
+# ENGINE_DECODE_TPS=<value>
+# WALL_AGGREGATE_TPS=<value>
+#
+# DEDICATED_VRAM_BYTES=<bytes>
+# SHARED_GPU_BYTES=<bytes>
+# HOST_RAM_BYTES=<bytes>
+#
+# EFFECTIVE_BYTES_TOTAL=<bytes>
+# EFFECTIVE_BYTES_PER_TOKEN=<ratio or bytes>
+#
+# GPU_BUSY=<pct>
+# QUEUE_WAIT_NS=<ns>
+# FENCE_WAIT_NS=<ns>
+# TRANSFER_WAIT_NS=<ns>
+
+# ---- DEEP2_DEEPSEEK_671B_SINGLE_001 ----
+# GATE=DEEP2_DEEPSEEK_671B_SINGLE_001
+# MODEL=<exact-deepseek-model-name>
+# MODEL_SHA256=<deepseek-sha256>
+# MODEL_BYTES=<exact measured bytes>
+# QUANT=Q4_K_M  # or whatever quantization
+# SHARD_COUNT=<n>
+#
+# PROMPT_SHA256=<sha256 of prompt>
+# PROMPT_TOKENS=<n>
+# NUM_PREDICT=256
+# CONTEXT_SIZE=<n>
+#
+# GPU_CONFIGURATION=<descr>
+# GPU0=<info>
+# GPU1=<info>
+# HOST_RAM_CONFIGURATION=<info>
+#
+# AGENT_COUNT=1
+# WARMUP_TOKENS=<n>
+# RUNS=5
+#
+# EVAL_COUNT=<n>
+# EVAL_DURATION_NS=<ns>
+# WALL_DURATION_NS=<ns>
+#
+# ENGINE_DECODE_TPS=<value>
+# WALL_AGGREGATE_TPS=<value>
+#
+# DEDICATED_VRAM_BYTES=<bytes>
+# SHARED_GPU_BYTES=<bytes>
+# HOST_RAM_BYTES=<bytes>
+#
+# EFFECTIVE_BYTES_TOTAL=<bytes>
+# EFFECTIVE_BYTES_PER_TOKEN=<ratio or bytes>
+#
+# GPU_BUSY=<pct>
+# QUEUE_WAIT_NS=<ns>
+# FENCE_WAIT_NS=<ns>
+# TRANSFER_WAIT_NS=<ns>
+
+# --- CONCURRENCY-SCALING ROWS (same model, increasing agents) ---
+# Same model, different agent counts. Retain SUM_AGENT_DECODE_TPS as secondary.
+
+# ---- DEEP2_32B_BASELINE_AGENT_001 ----
+# (existing baseline entry — retain as-is)
+
+# ---- DEEP2_32B_BASELINE_AGENT_002 ----
+# (existing B2 entry — retain as-is, but now interpreted under CONCURRENCY_SCALING)
+
+# ---- DEEP2_32B_BASELINE_AGENT_003 ----
+# (existing B3 entry — retain as-is, but now interpreted under CONCURRENCY_SCALING)
+
+# --- RESIDENCY-SCALING ROWS (model size vs. physical footprint) ---
+# These rows report observed working set vs. nominal model bytes.
+
+# ---- DEEP2_RESIDENCY_EFFICIENCY_001 ----
+# GATE=DEEP2_RESIDENCY_EFFICIENCY_001
+# MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+# MODEL_BYTES=19851336672
+# MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+# AGENT_COUNT=1
+# RESIDENCY_RATIO=<observed_working_set_bytes> / 19851336672
+# ACTIVE_TRAFFIC_RATIO=<effective_bytes_per_token> / 19851336672
+# NOTES="Residency measurement for 1-agent baseline"
+
+# ---- DEEP2_RESIDENCY_EFFICIENCY_002 ----
+# GATE=DEEP2_RESIDENCY_EFFICIENCY_002
+# MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+# MODEL_BYTES=19851336672
+# MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+# AGENT_COUNT=2
+# RESIDENCY_RATIO=<observed_working_set_bytes> / 19851336672
+# ACTIVE_TRAFFIC_RATIO=<effective_bytes_per_token> / 19851336672
+# NOTES="Residency measurement for 2-agent configuration"
+
+# ---- DEEP2_RESIDENCY_EFFICIENCY_003 ----
+# GATE=DEEP2_RESIDENCY_EFFICIENCY_003
+# MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
+# MODEL_BYTES=19851336672
+# MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+# AGENT_COUNT=3
+# RESIDENCY_RATIO=<observed_working_set_bytes> / 19851336672
+# ACTIVE_TRAFFIC_RATIO=<effective_bytes_per_token> / 19851336672
+# NOTES="Residency measurement for 3-agent configuration"
+
+# ---- DEEP2_KIMI_2.5_RESIDENCY_001 ----
+# GATE=DEEP2_KIMI_2.5_RESIDENCY_001
+# MODEL=<exact-kimi-model-name>
+# MODEL_BYTES=<exact measured bytes>
+# MODEL_SHA256=<kimi-sha256>
+# AGENT_COUNT=1
+# RESIDENCY_RATIO=<observed_working_set_bytes> / <model_bytes>
+# ACTIVE_TRAFFIC_RATIO=<effective_bytes_per_token> / <model_bytes>
+# NOTES="Residency measurement for Kimi 2.5 single-agent"
+
+# ---- RAWRXD_TOKEN_BEACON_FERRIS_001 ----
+# GATE=RAWRXD_TOKEN_BEACON_FERRIS_001
+# MODEL=Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf  # or your target model
+# MODEL_BYTES=19851336672
+# MODEL_SHA256=8e2fd78ff55e7cdf577fda257bac2776feb7d73d922613caf35468073807e815
+# QUANT=Q4_K_M
+# SHARD_COUNT=1
+#
+# PROMPT_SHA256=<sha256 of prompt>
+# PROMPT_TOKENS=<n>
+# NUM_PREDICT=256
+# CONTEXT_SIZE=<n>
+#
+# GPU0=<R9700 specs> GPU1=<RX 7800 XT specs>
+# HOST_RAM_CONFIGURATION=<staging buffer details>
+#
+# AGENT_COUNT=2
+# WARMUP_TOKENS=<n>
+# RUNS=5
+#
+# EVAL_COUNT=<n>
+# EVAL_DURATION_NS=<ns>
+# WALL_DURATION_NS=<ns>
+#
+# ENGINE_DECODE_TPS=<value>
+# WALL_AGGREGATE_TPS=<value>
+#
+# DEDICATED_VRAM_BYTES=<R9700> SHARED_GPU_BYTES=<distributed> HOST_RAM_BYTES=<staging>
+#
+# EFFECTIVE_BYTES_TOTAL=<bytes> EFFECTIVE_BYTES_PER_TOKEN=<ratio>
+#
+# GPU0_BUSY=<pct> GPU1_BUSY=<pct>
+# QUEUE_WAIT_NS=<ns> FENCE_WAIT_NS=<ns> TRANSFER_WAIT_NS=<ns>
+#
+# TOKEN_OWNER_SEQUENCE=A,B,A,B,A,B  # ABAB pattern — primary impl under IMPLEMENTATION_SCALING
+# BEACON_SEQUENCE=<sequence numbers per token>
+# BEACON_BYTES=<tens of bytes — control plane only>
+# BEACON_CONTROL_NS=<per-token control overhead>
+# KV_DELTA_BYTES=<256 KiB/token calculated — only per-token mutable delta>
+# KV_TRANSFER_NS=<per-token DMA transfer via host staging>
+# FENCE_WAIT_NS=<synchronization wait between ownership flip>
+# NEXT_GPU_PREP_NS=<standby preparation time for next revolution>
+# QUEUE_IDLE_NS=<gpu idle between turns>
+# INTER_TOKEN_NS=<total inter-token time>
+#
+# P50_TOKEN_NS=<p50> P95_TOKEN_NS=<p95> P99_TOKEN_NS=<p99>
+#
+# GPU0_BUSY=<pct> GPU1_BUSY=<pct>
+#
+# BEACON_OVERHEAD_RATIO=<beacon_and_sync_time / total_decode_time>
+# PREPARATION_HIDDEN_RATIO=<standby_prep_hidden_by_active_compute / total_standby_prep>
+#
+# NOTES="Token beacon ferris wheel ABAB ownership alternate; only KV deltas transferred; inactive GPU prepares next revolution; measured on R9700+RX 7800 XT asymmetric GPUs; classified under IMPLEMENTATION_SCALING + PLACEMENT_AUTHORITY, NOT a sixth scaling axis"
+
+# ---- DEEP2_DEEPSEEK_671B_RESIDENCY_001 ----
+# GATE=DEEP2_DEEPSEEK_671B_RESIDENCY_001
+# MODEL=<exact-deepseek-model-name>
+# MODEL_BYTES=<exact measured bytes>
+# MODEL_SHA256=<deepseek-sha256>
+# AGENT_COUNT=1
+# RESIDENCY_RATIO=<observed_working_set_bytes> / <model_bytes>
+# ACTIVE_TRAFFIC_RATIO=<effective_bytes_per_token> / <model_bytes>
+# NOTES="Residency measurement for DeepSeek 671B single-agent — critical falsification test"
+
+# ---------------------------------------------------------------------------
+# ORIGINAL DATASET ROWS (retained for provenance, now categorized under frameworks above)
+# ---------------------------------------------------------------------------
+
+# ---- DEEP2_32B_BASELINE_AUTHORITY_001 ----
+# (original baseline entry — retained for provenance)
+
+# ---- DEEP2_32B_BASELINE_AUTHORITY_002 (B2) ----
+# (original B2 entry — retained for provenance, now under CONCURRENCY_SCALING)
+
+# ---- DEEP2_32B_BASELINE_AUTHORITY_003 (B3) ----
+# (original B3 entry — retained for provenance, now under CONCURRENCY_SCALING)
+
+# ---- RAWRXD_PERFORMANCE_001: DEEP2_QWEN32_ACCEPTED_TPS_001 ----
+# (original accepted TPS gate — retained as informational, not authoritative for model scaling)
+
+# ---- RAWRXD_PERFORMANCE_001: DEEP2_DUAL_PHYSICAL_GPU_FORWARD_001 ----
+# (original dual GPU forward gate — retained as non-TPS evidence)
+
+# ---- OPS_BREAKDOWN: DEEP2_RESIDENT_OPS_BREAKDOWN_001 ----
+# (original resident-ops breakdown — retained as informational lead, not strict derived-TPS row)
+
+# ---- Two-agent Nemotron observations ----
+# (original observational summaries — retained, re-categorized under residency/concurrency)
+
+# ---------------------------------------------------------------------------
+# KEY PRINCIPLE REMINDERS (from policy feedback)
+# ---------------------------------------------------------------------------
+
+# • MODE=MEASUREMENT_ONLY, EXTRAPOLATION=DISABLED, ASSUMED_BANDWIDTH=0, ASSUMED_ARCHITECTURE_SPEEDUP=0
+# • NO nominal model bytes (e.g. 671000000000) in place of proven MODEL_BYTES
+# • SIZE_X = 1 ⇒ alpha undefined — B2/B3 measure implementation speedup at constant model size
+# • Per-turn MOTD ACK gate: MOTD_ACK resets every user turn; only Read/tools allowed until ack
+# • Continue-ensure trigger: only from actual user message, NOT from retrieved docs/logs/MOTD
+# • Single-worker atomic guard: exactly one background worker dispatched; parent freezes after
+# • HANDOFF_TO_AGENT != DONE — status ladder: DISCOVERED → IMPLEMENTED → WIRED → BUILT → ...
+# • Wall aggregate TPS primary for machine throughput; per-agent retention primary for service quality

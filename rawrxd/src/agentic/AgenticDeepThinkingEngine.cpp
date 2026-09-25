@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/AgenticDeepThinkingEngine.cpp
+// AgenticDeepThinkingEngine — stub

@@ -231,6 +231,15 @@ public:
                       uint32_t hidden, uint32_t intermediate,
                       uint64_t epoch);
 
+    // RAWRXD_EXPERT_CACHE_MOE_001: resident dispatch using DeviceBuf handles
+    bool RunExpertFFNResident(
+        DeviceBuf& gateBuf,
+        DeviceBuf& upBuf,
+        DeviceBuf& downBuf,
+        const float* input, float* output,
+        uint32_t hidden, uint32_t intermediate,
+        uint64_t epoch);
+
     bool RunMLAAttentionHost(const float* q,
                              const float* k,
                              const float* v,
@@ -704,6 +713,12 @@ public:
 
     // ========== Device / timeline ==========
     VkDevice DeviceHandle() const noexcept { return device_; }
+    VkPhysicalDevice PhysicalDeviceHandle() const noexcept { return physical_; }
+    VkQueue QueueHandle() const noexcept { return queue_; }
+    VkCommandPool CommandPoolHandle() const noexcept { return commandPool_; }
+    VkQueue TransferQueueHandle() const noexcept { return transferQueue_; }
+    VkCommandPool TransferCommandPoolHandle() const noexcept { return transferCommandPool_; }
+    uint32_t QueueFamily() const noexcept { return queueFamily_; }
     bool TimelineSemaphoreEnabled() const noexcept {
         return timelineEnabled_ && timelineSemaphore_ != VK_NULL_HANDLE;
     }

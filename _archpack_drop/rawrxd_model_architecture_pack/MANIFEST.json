@@ -1,0 +1,41 @@
+{
+  "release": "RAWRXD_MODEL_ARCH_PACK_001",
+  "generated_utc": "2026-09-24T11:52:24.032436+00:00",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4111,
+      "sha256": "92a646d88d7f96698771b6066257512736397986b111d513c157ec38fbf884c0"
+    },
+    {
+      "path": "VALIDATION.txt",
+      "bytes": 110,
+      "sha256": "6917ec6792cf7382dc3ab6b7a097bdcde0409ec8cd57608dd6904f7dca1f819b"
+    },
+    {
+      "path": "apply_rawrxd_model_architecture_pack.ps1",
+      "bytes": 7774,
+      "sha256": "7d4c12a83b59e461aaf1244b0f5f437ea5afc3864f284cf4550430d0453aba49"
+    },
+    {
+      "path": "src/deep2/Deep2ArchitectureRuntime.hpp",
+      "bytes": 16844,
+      "sha256": "d4df0525842e8e2b789e04b1c2ac3502e4478ac35e220525fa8f80be6755927f"
+    },
+    {
+      "path": "src/deep2/Deep2ModelArchitecture.hpp",
+      "bytes": 7935,
+      "sha256": "0560016a56f8a6703432648377e95f482904cdd214220d30fd280af46520e7d1"
+    },
+    {
+      "path": "src/deep2/Deep2RecurrentMath.hpp",
+      "bytes": 6372,
+      "sha256": "f1d67260c422891d3c40f5072bcf2e0c7c7c3ab0e1c0820e11e0bff2f22052ec"
+    },
+    {
+      "path": "tests/architecture_math_selftest.cpp",
+      "bytes": 1597,
+      "sha256": "6dd4829175aa3c0e526fe11eb4e373b71ab74a8c086ff4bcb1dde005f5b9c27b"
+    }
+  ]
+}

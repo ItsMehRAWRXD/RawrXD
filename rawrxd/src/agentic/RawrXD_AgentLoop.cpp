@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/RawrXD_AgentLoop.cpp
+// RawrXD_AgentLoop — stub

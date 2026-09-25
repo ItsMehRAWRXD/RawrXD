@@ -1,1 +1,1 @@
-﻿// STUB: src/agent/quantum_missing_impl.cpp
+// quantum_missing_impl — stub

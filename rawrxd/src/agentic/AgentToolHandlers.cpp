@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/AgentToolHandlers.cpp
+// AgentToolHandlers — stub

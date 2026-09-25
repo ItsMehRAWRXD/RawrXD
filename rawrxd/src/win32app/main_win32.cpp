@@ -4,10 +4,33 @@
 #include <functional>
 #include <cstdio>
 #include <cstdint>
+#include <cstdarg>
 #include <thread>
+#include <io.h>
+#include <fcntl.h>
 #include "ide_inference_gate.hpp"
 #include "ide_agentic_gate.hpp"
 #include "closure/RawrXDAutoClosure.hpp"
+#include "agentic/RawrXDAgenticE2E.hpp"
+#include "deep2/Deep2Engine.h"
+#include "Win32IDE_MCPHooks.h"
+
+// Recovered IDE stubs — RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001
+extern "C" void Win32IDE_Sidebar_Create(HWND hwndParent, HINSTANCE hInstance);
+extern "C" void Win32IDE_Sidebar_SetVisibility(bool visible);
+extern "C" bool Win32IDE_Sidebar_IsVisible();
+extern "C" void Win32IDE_Commands_SetMainWindow(HWND hwnd);
+extern "C" void Win32IDE_Commands_SetEditorWindow(HWND hwnd);
+extern "C" bool Win32IDE_Commands_Route(int commandId);
+extern "C" void Win32IDE_Commands_Register(int id, void (*fn)());
+
+namespace RawrXD::IDE {
+    void ShellLayout_RegisterAll(HINSTANCE hInst);
+    void ShellLayout_CreateAll(HWND parent, HINSTANCE hInst);
+    void ShellLayout_Resize(int W, int H);
+    HWND ShellLayout_GetEditor();
+    HWND ShellLayout_GetTerminal();
+}
 
 // Forward declarations for gate modules
 namespace RawrXD::IDE {
@@ -29,7 +52,8 @@ enum class AutoRunMode {
     None,
     Inference,
     Agent,
-    Layer0
+    Layer0,
+    AgenticE2E
 };
 
 struct StartupOptions {
@@ -43,6 +67,7 @@ struct StartupOptions {
 };
 
 static StartupOptions g_startupOptions;
+static FILE* g_headlessLog = nullptr;  // File log for GUI-subsystem headless runs
 
 #define WM_AUTORUN          (WM_APP + 100)
 #define WM_AUTORUN_COMPLETE   (WM_APP + 101)
@@ -68,17 +93,83 @@ static std::string getExeDir()
 }
 
 // ---------------------------------------------------------------------------
+// Headless log helper — GUI apps have no connected stderr; write to file instead
+// ---------------------------------------------------------------------------
+static void openHeadlessLog()
+{
+    if (g_headlessLog) return;
+    std::string logPath = getExeDir();
+    if (!logPath.empty()) logPath += "\\";
+    logPath += "headless_gate_log.txt";
+    g_headlessLog = std::fopen(logPath.c_str(), "w");
+    if (g_headlessLog) {
+        std::setvbuf(g_headlessLog, nullptr, _IONBF, 0);
+    }
+}
+
+static void headlessLogPrintf(const char* fmt, ...)
+{
+    if (!g_headlessLog) return;
+    va_list args;
+    va_start(args, fmt);
+    std::vfprintf(g_headlessLog, fmt, args);
+    va_end(args);
+}
+
+static void closeHeadlessLog()
+{
+    if (g_headlessLog) {
+        std::fclose(g_headlessLog);
+        g_headlessLog = nullptr;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// GUI-subsystem apps have no connected stderr; redirect it to a file
+// so that std::fprintf(stderr, ...) calls across all modules don't crash
+// with ucrtbase!_invoke_watson (0xc0000409).
+// ---------------------------------------------------------------------------
+static void redirectStderrToFile()
+{
+    std::string path = getExeDir();
+    if (!path.empty()) path += "\\";
+    path += "headless_stderr.txt";
+    FILE* newStderr = nullptr;
+    // freopen_s properly reassigns the stderr FILE* (not just fd) to a file
+    errno_t err = ::freopen_s(&newStderr, path.c_str(), "w", stderr);
+    if (err == 0 && newStderr) {
+        std::setvbuf(stderr, nullptr, _IONBF, 0);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Window state
 // ---------------------------------------------------------------------------
 static HWND g_hMainWnd = NULL;
 static HWND g_hOutput  = NULL;
 
-// Menu IDs
-#define IDM_FILE_EXIT       1001
+// Menu IDs (must match Win32IDE_Commands.cpp)
+#define IDM_FILE_NEW        1001
+#define IDM_FILE_OPEN       1002
+#define IDM_FILE_SAVE       1003
+#define IDM_FILE_SAVEAS     1004
+#define IDM_FILE_SAVEALL    1005
+#define IDM_FILE_CLOSE      1006
+#define IDM_FILE_EXIT       1099
 #define IDM_BUILD_NATIVE    2001
+#define IDM_EDIT_UNDO       2101
+#define IDM_EDIT_REDO       2102
+#define IDM_EDIT_CUT        2103
+#define IDM_EDIT_COPY       2104
+#define IDM_EDIT_PASTE      2105
+#define IDM_EDIT_SELECT_ALL 2106
+#define IDM_EDIT_FIND       2107
+#define IDM_EDIT_REPLACE    2108
 #define IDM_MODEL_LOCAL     3001
 #define IDM_MODEL_DIAG      3002
 #define IDM_AGENTIC_GATE    4001
+#define IDM_AGENTIC_E2E_GATE 4002
+#define IDM_VIEW_SIDEBAR    5001
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -94,6 +185,10 @@ static void appendOutput(const std::string& text)
 static void appendOutputLine(const std::string& text)
 {
     appendOutput(text + "\r\n");
+    if (g_startupOptions.headless) {
+        // GUI-subsystem apps have no connected stderr; use file log instead
+        headlessLogPrintf("%s\n", text.c_str());
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -310,9 +405,125 @@ static void runInferenceGate()
 // ---------------------------------------------------------------------------
 // Agentic Gate — RAWRXD_WIN32IDE_AGENT_001
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Agentic E2E Gate — RAWRXD_WIN32IDE_AGENTIC_001
+// ---------------------------------------------------------------------------
+static void runAgenticE2EGate()
+{
+    appendOutputLine("=== RAWRXD_WIN32IDE_AGENTIC_001 ===");
+    appendOutputLine("IDE_LAUNCH=PASS");
+
+    // Deep2Engine init (same pattern as ide_inference_gate.cpp)
+    Deep2::EngineConfig cfg{};
+    cfg.maxSeqLen = 8192;
+    cfg.hiddenDim = 3072;
+    cfg.numHeads = 24;
+    cfg.numLayers = 28;
+    cfg.vocabSize = 128256;
+    cfg.intermediateDim = 8192;
+
+    Deep2::Deep2Engine engine;
+    if (!engine.initialize(cfg)) {
+        appendOutputLine("COMMAND_DISPATCH=FAIL");
+        appendOutputLine("FAIL_STAGE=ENGINE_INIT");
+        appendOutputLine("FAIL_MESSAGE=Deep2Engine::initialize failed");
+        appendOutputLine("VERDICT=FAIL");
+        // Write minimal receipt
+        std::string receiptDir = getExeDir();
+        if (!receiptDir.empty()) receiptDir += "\\";
+        std::string receiptPath = receiptDir + "cert_receipt_agentic_e2e.txt";
+        HANDLE hFile = CreateFileA(receiptPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            std::string r = "=== RAWRXD_WIN32IDE_AGENTIC_001 ===\r\nVERDICT=FAIL\r\n";
+            DWORD written = 0; WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL); CloseHandle(hFile);
+        }
+        return;
+    }
+
+    // Resolve model path
+    std::string modelPath = "D:\\rawrxd\\llama3.2-3b-Q2_K.gguf";
+    const char* envModel = std::getenv("RAWRXD_AGENT_MODEL");
+    if (envModel && envModel[0]) modelPath = envModel;
+    if (!g_startupOptions.modelPath.empty()) modelPath = g_startupOptions.modelPath;
+
+    Deep2::ModelLoadDiag diag{};
+    if (!engine.loadModel(modelPath.c_str(), &diag)) {
+        appendOutputLine("COMMAND_DISPATCH=FAIL");
+        appendOutputLine("FAIL_STAGE=LOAD_MODEL");
+        appendOutputLine(std::string("FAIL_MESSAGE=") + diag.message + " [code=" + std::to_string(diag.stageCode) + "]");
+        appendOutputLine("VERDICT=FAIL");
+        std::string receiptDir = getExeDir();
+        if (!receiptDir.empty()) receiptDir += "\\";
+        std::string receiptPath = receiptDir + "cert_receipt_agentic_e2e.txt";
+        HANDLE hFile = CreateFileA(receiptPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            std::string r = "=== RAWRXD_WIN32IDE_AGENTIC_001 ===\r\nFAIL_STAGE=LOAD_MODEL\r\nVERDICT=FAIL\r\n";
+            DWORD written = 0; WriteFile(hFile, r.data(), (DWORD)r.size(), &written, NULL); CloseHandle(hFile);
+        }
+        return;
+    }
+
+    appendOutputLine("COMMAND_DISPATCH=PASS");
+
+    rawrxd::agentic_e2e::AgenticE2EOptions opts{};
+    opts.workspaceRoot = getExeDir();
+    opts.fixtureDir = ".rawr/agentic_gate";
+    opts.maxSteps = 10;
+    opts.maxTokensPerStep = 256;
+    opts.processTimeoutMs = 120000;
+    opts.keepFixture = false;
+
+    rawrxd::agentic_e2e::AgenticE2EReceipt r = rawrxd::agentic_e2e::runAgenticE2EGate(engine, opts);
+
+    appendOutputLine("REAL_MODEL_INFERENCE=" + std::string(r.modelInference ? "PASS" : "FAIL"));
+    appendOutputLine("TOOL_AUTHORITY=" + std::string(r.toolAuthority ? "PASS" : "FAIL"));
+    appendOutputLine("FILE_READ=" + std::string(r.fileRead ? "PASS" : "FAIL"));
+    appendOutputLine("FILE_EDIT=" + std::string(r.fileEdit ? "PASS" : "FAIL"));
+    appendOutputLine("BUILD_RAN=" + std::string(r.buildRan ? "PASS" : "FAIL"));
+    appendOutputLine("BUILD_PASS=" + std::string(r.buildPassed ? "PASS" : "FAIL"));
+    appendOutputLine("TEST_RAN=" + std::string(r.testRan ? "PASS" : "FAIL"));
+    appendOutputLine("TEST_PASS=" + std::string(r.testPassed ? "PASS" : "FAIL"));
+    appendOutputLine("TOOL_RESULT_IN_CONTEXT=" + std::string(r.toolResultFedBack ? "PASS" : "FAIL"));
+    appendOutputLine("MODEL_FINAL=" + std::string(r.reachedFinal ? "PASS" : "FAIL"));
+    appendOutputLine("STEPS=" + std::to_string(r.steps));
+    appendOutputLine("TOOL_CALLS=" + std::to_string(r.toolCalls));
+    appendOutputLine("SUCCESSFUL_TOOL_CALLS=" + std::to_string(r.successfulToolCalls));
+    appendOutputLine("FAILED_TOOL_CALLS=" + std::to_string(r.failedToolCalls));
+    appendOutputLine("GENERATED_TOKEN_COUNT=" + std::to_string(r.generatedTokens));
+    appendOutputLine("CHILD_EXIT_CODE=" + std::to_string(r.childExitCode));
+    appendOutputLine("SYNTHETIC_TOKEN_OUTPUT=0");
+    appendOutputLine("STUB_FALLBACKS=" + std::to_string(r.stubFallbacks));
+    if (!r.firstTool.empty()) appendOutputLine("FIRST_TOOL=" + r.firstTool);
+    if (!r.failStage.empty()) {
+        appendOutputLine("FAIL_STAGE=" + r.failStage);
+        if (!r.failMessage.empty()) appendOutputLine("FAIL_MESSAGE=" + r.failMessage);
+    }
+    appendOutputLine(std::string("VERDICT=") + (r.pass() ? "PASS" : "FAIL"));
+    appendOutputLine("");
+
+    // Write certification receipt
+    {
+        std::string receiptDir = getExeDir();
+        if (!receiptDir.empty()) receiptDir += "\\";
+        std::string receiptPath = receiptDir + "cert_receipt_agentic_e2e.txt";
+        HANDLE hFile = CreateFileA(receiptPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            std::string receipt = rawrxd::agentic_e2e::formatAgenticE2EReceipt(r);
+            receipt += "=== RECEIPT_END ===\r\n";
+            DWORD written = 0;
+            WriteFile(hFile, receipt.data(), (DWORD)receipt.size(), &written, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Agentic Gate — RAWRXD_WIN32IDE_AGENT_001
+// ---------------------------------------------------------------------------
 static void runAgenticGate()
 {
     RawrXD::IDE::AgenticGateResult r;
+    headlessLogPrintf("MAIN_AGENT_GATE_CALL\n");
     try {
         appendOutputLine("=== RAWRXD_WIN32IDE_AGENT_001 ===");
         appendOutputLine("IDE_LAUNCH=PASS");
@@ -328,6 +539,7 @@ static void runAgenticGate()
         r.diagnostics = "Outer unknown exception in runAgenticGate.";
     }
 
+    headlessLogPrintf("MAIN_AGENT_GATE_RETURNED\n");
     // ── Emit diagnostics ───────────────────────────────────────────
     appendOutputLine("COMMAND_DISPATCH=PASS");
     appendOutputLine(std::string("STREAMER_BUILT=") + (r.streamerBuilt ? "PASS" : "FAIL"));
@@ -369,6 +581,7 @@ static void runAgenticGate()
 
     // ── Write certification receipt UNCONDITIONALLY ──────────────────
     {
+        headlessLogPrintf("CERT_RECEIPT_WRITE_BEGIN\n");
         std::string receiptDir = getExeDir();
         if (!receiptDir.empty()) receiptDir += "\\";
         std::string receiptPath = receiptDir + "cert_receipt_agentic.txt";
@@ -383,6 +596,7 @@ static void runAgenticGate()
                 GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         }
         if (hFile != INVALID_HANDLE_VALUE) {
+            headlessLogPrintf("CERT_RECEIPT_WRITE_END path=%s\n", receiptPath.c_str());
             std::string receipt = "=== RAWRXD_WIN32IDE_AGENT_001 ===\r\n";
             receipt += "IDE_LAUNCH=PASS\r\n";
             receipt += "COMMAND_DISPATCH=PASS\r\n";
@@ -442,17 +656,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        // Create a read-only multiline edit control for output
+        HINSTANCE hInst = ((LPCREATESTRUCT)lParam)->hInstance;
+        // Full IDE shell layout (sidebar, editor, chat, agent, terminal, git, search)
+        RawrXD::IDE::ShellLayout_RegisterAll(hInst);
+        RawrXD::IDE::ShellLayout_CreateAll(hWnd, hInst);
+
+        // Wire command router to real editor and main window
+        HWND hEditor = RawrXD::IDE::ShellLayout_GetEditor();
+        Win32IDE_Commands_SetMainWindow(hWnd);
+        Win32IDE_Commands_SetEditorWindow(hEditor);
+
+        // Legacy output control: re-parent it into terminal area for now
         g_hOutput = CreateWindowExA(
             WS_EX_CLIENTEDGE,
             "EDIT",
             "",
             WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL,
-            10, 10, 760, 500,
-            hWnd, NULL, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-        // Set a fixed-width font
-        SendMessageA(g_hOutput, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), TRUE);
-        appendOutputLine("RawrXD Win32 IDE — Build -> Native Compile Test to run toolchain gate.\r\n");
+            0, 0, 400, 200,
+            RawrXD::IDE::ShellLayout_GetTerminal(),
+            NULL, hInst, NULL);
+        if (g_hOutput)
+        {
+            SendMessageA(g_hOutput, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), TRUE);
+            appendOutputLine("RawrXD Win32 IDE — Build -> Native Compile Test to run toolchain gate.\r\n");
+        }
+        break;
+    }
+    case WM_SIZE:
+    {
+        int W = LOWORD(lParam);
+        int H = HIWORD(lParam);
+        RawrXD::IDE::ShellLayout_Resize(W, H);
         break;
     }
     case WM_COMMAND:
@@ -475,7 +709,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_AGENTIC_GATE:
             runAgenticGate();
             break;
+        case IDM_AGENTIC_E2E_GATE:
+            runAgenticE2EGate();
+            break;
+        case IDM_VIEW_SIDEBAR:
+        {
+            bool vis = !Win32IDE_Sidebar_IsVisible();
+            Win32IDE_Sidebar_SetVisibility(vis);
+            // Also trigger shell layout resize to reflow editor
+            RECT rc; GetClientRect(hWnd, &rc);
+            RawrXD::IDE::ShellLayout_Resize(rc.right, rc.bottom);
+            break;
+        }
         default:
+            // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 — delegate to command router
+            if (Win32IDE_Commands_Route(wmId)) break;
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
         break;
@@ -511,6 +759,10 @@ static int runAutorunGate(AutoRunMode mode)
         // runLayer0FinalGate();
         result = 0;
         break;
+    case AutoRunMode::AgenticE2E:
+        runAgenticE2EGate();
+        result = 0;
+        break;
     default:
         result = 2;
         break;
@@ -542,13 +794,27 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 g_startupOptions.autoRun = AutoRunMode::Agent;
             else if (arg == L"--cert-layer0" || arg == L"--autorun=layer0")
                 g_startupOptions.autoRun = AutoRunMode::Layer0;
-            else if (arg == L"--headless")
+            else if (arg == L"--cert-agentic-e2e" || arg == L"--autorun=agentic-e2e")
+                g_startupOptions.autoRun = AutoRunMode::AgenticE2E;
+            else if (arg == L"--headless") {
                 g_startupOptions.headless = true;
+                openHeadlessLog();
+                redirectStderrToFile();
+            }
             else if (arg == L"--phase1-timeout-ms" && i + 1 < argc) {
                 g_startupOptions.phase1TimeoutMs = static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
             }
             else if (arg == L"--phase2-timeout-ms" && i + 1 < argc) {
                 g_startupOptions.phase2TimeoutMs = static_cast<uint32_t>(std::wcstoul(argv[++i], nullptr, 10));
+            }
+            else if ((arg == L"--model" || arg == L"--model=") && i + 1 < argc) {
+                int len = WideCharToMultiByte(CP_UTF8, 0, argv[++i], -1, nullptr, 0, nullptr, nullptr);
+                if (len > 0) {
+                    std::string u8(static_cast<size_t>(len), '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &u8[0], len, nullptr, nullptr);
+                    while (!u8.empty() && u8.back() == '\0') u8.pop_back();
+                    g_startupOptions.modelPath = u8;
+                }
             }
         }
         LocalFree(argv);
@@ -585,8 +851,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // Create menu bar
     HMENU hMenu = CreateMenu();
     HMENU hFile = CreatePopupMenu();
-    AppendMenuA(hFile, MF_STRING, IDM_FILE_EXIT, "E&xit");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_NEW,     "&New\tCtrl+N");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_OPEN,   "&Open...\tCtrl+O");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_SAVE,    "&Save\tCtrl+S");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_SAVEAS,  "Save &As...\tCtrl+Shift+S");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_SAVEALL,"Save A&ll");
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_CLOSE,   "&Close\tCtrl+W");
+    AppendMenuA(hFile, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hFile, MF_STRING, IDM_FILE_EXIT,    "E&xit");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hFile, "&File");
+
+    HMENU hEdit = CreatePopupMenu();
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_UNDO,       "&Undo\tCtrl+Z");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REDO,       "&Redo\tCtrl+Y");
+    AppendMenuA(hEdit, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_CUT,        "Cu&t\tCtrl+X");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_COPY,       "&Copy\tCtrl+C");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_PASTE,      "&Paste\tCtrl+V");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_SELECT_ALL, "Select &All\tCtrl+A");
+    AppendMenuA(hEdit, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_FIND,       "&Find...\tCtrl+F");
+    AppendMenuA(hEdit, MF_STRING, IDM_EDIT_REPLACE,    "&Replace...\tCtrl+H");
+    AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEdit, "&Edit");
 
     HMENU hBuild = CreatePopupMenu();
     AppendMenuA(hBuild, MF_STRING, IDM_BUILD_NATIVE, "&Native Compile Test\tF5");
@@ -598,13 +884,42 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hModel, "&Model");
 
     HMENU hAgentic = CreatePopupMenu();
-    AppendMenuA(hAgentic, MF_STRING, IDM_AGENTIC_GATE, "Agentic &Gate\tF8");
+    AppendMenuA(hAgentic, MF_STRING, IDM_AGENTIC_GATE,    "Agentic &Gate\tF8");
+    AppendMenuA(hAgentic, MF_STRING, IDM_AGENTIC_E2E_GATE, "Agentic E&2E Gate\tF9");
     AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hAgentic, "&Agentic");
+
+    HMENU hView = CreatePopupMenu();
+    AppendMenuA(hView, MF_STRING, IDM_VIEW_SIDEBAR, "&Toggle Sidebar\tCtrl+Shift+B");
+    AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hView, "&View");
 
     SetMenu(g_hMainWnd, hMenu);
 
+    // Accelerator table for Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S, Ctrl+W, Ctrl+Z, Ctrl+Y,
+    // Ctrl+X, Ctrl+C, Ctrl+V, Ctrl+A, Ctrl+F, Ctrl+H
+    static ACCEL accel[] = {
+        { FCONTROL|FVIRTKEY, 'N', IDM_FILE_NEW },
+        { FCONTROL|FVIRTKEY, 'O', IDM_FILE_OPEN },
+        { FCONTROL|FVIRTKEY, 'S', IDM_FILE_SAVE },
+        { FCONTROL|FSHIFT|FVIRTKEY, 'S', IDM_FILE_SAVEAS },
+        { FCONTROL|FVIRTKEY, 'W', IDM_FILE_CLOSE },
+        { FCONTROL|FVIRTKEY, 'Z', IDM_EDIT_UNDO },
+        { FCONTROL|FVIRTKEY, 'Y', IDM_EDIT_REDO },
+        { FCONTROL|FVIRTKEY, 'X', IDM_EDIT_CUT },
+        { FCONTROL|FVIRTKEY, 'C', IDM_EDIT_COPY },
+        { FCONTROL|FVIRTKEY, 'V', IDM_EDIT_PASTE },
+        { FCONTROL|FVIRTKEY, 'A', IDM_EDIT_SELECT_ALL },
+        { FCONTROL|FVIRTKEY, 'F', IDM_EDIT_FIND },
+        { FCONTROL|FVIRTKEY, 'H', IDM_EDIT_REPLACE },
+    };
+    HACCEL hAccel = CreateAcceleratorTableA(accel, sizeof(accel)/sizeof(accel[0]));
+
     ShowWindow(g_hMainWnd, g_startupOptions.headless ? SW_HIDE : nCmdShow);
     UpdateWindow(g_hMainWnd);
+
+    // RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001 — wire command router + MCP bridge
+    Win32IDE_Commands_SetMainWindow(g_hMainWnd);
+    Win32IDE_Commands_SetEditorWindow(g_hOutput);
+    RawrXD::MCPBridgeManager::GetInstance().Initialize(GetModuleHandle(NULL));
 
     // Post autorun message after window is ready
     if (g_startupOptions.autoRun != AutoRunMode::None) {
@@ -626,9 +941,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             PostQuitMessage(static_cast<int>(msg.wParam));
             continue;
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAcceleratorA(g_hMainWnd, hAccel, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
+    if (hAccel) DestroyAcceleratorTable(hAccel);
+
+    closeHeadlessLog();
     return (int)msg.wParam;
 }

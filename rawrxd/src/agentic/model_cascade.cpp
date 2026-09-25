@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/model_cascade.cpp
+// model_cascade — stub

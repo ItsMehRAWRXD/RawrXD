@@ -1,0 +1,17 @@
+# RAWRXD_AGENTIC_E2E_001 — add the implementation to the shipping IDE target.
+# Adjust the target name only if your strict target is named differently.
+target_sources(RawrXD-Win32IDE PRIVATE
+    src/agentic/RawrXDAgenticE2E.cpp
+)
+
+# Your existing target already includes src/ and links Deep2/Win32. No new
+# package, library, DLL, SDK, or third-party dependency is required by this drop.
+
+# Optional standalone cert target, if rawr_run_stream.cpp is part of this tree:
+# add_executable(rawrxd_agentic_e2e_gate
+#     tests/rawrxd_agentic_e2e_gate.cpp
+#     src/agentic/RawrXDAgenticE2E.cpp
+#     ../src/rawr_run_stream.cpp
+# )
+# target_include_directories(rawrxd_agentic_e2e_gate PRIVATE src ../src)
+# Link it to the same Deep2/Vulkan/system libraries as the existing inference gate.

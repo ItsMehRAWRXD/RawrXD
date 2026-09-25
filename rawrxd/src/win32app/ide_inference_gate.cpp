@@ -195,17 +195,17 @@ static bool lightweightGgufProbe(const char* path, InferenceGateResult& r)
 InferenceGateResult runLocalInferenceGate()
 {
     InferenceGateResult result;
-    // Prefer the real model for genuine tokenizer admission; fall back to test model.
+    // Strict cert: use env override or default; fail closed if missing.
     result.modelPath = "D:\\rawrxd\\llama3.2-3b-Q2_K.gguf";
-    {
-        DWORD attribsReal = GetFileAttributesA(result.modelPath.c_str());
-        if (attribsReal == INVALID_FILE_ATTRIBUTES || (attribsReal & FILE_ATTRIBUTE_DIRECTORY))
-            result.modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
+    const char* envModel = std::getenv("RAWRXD_AGENT_MODEL");
+    if (envModel && envModel[0]) {
+        result.modelPath = envModel;
     }
-    {
-        DWORD attribsReal = GetFileAttributesA(result.modelPath.c_str());
-        if (attribsReal == INVALID_FILE_ATTRIBUTES || (attribsReal & FILE_ATTRIBUTE_DIRECTORY))
-            result.modelPath = "F:\\~dev\\rawrxd\\src\\core\\test_tiny_with_vocab.gguf";
+    DWORD attribsReal = GetFileAttributesA(result.modelPath.c_str());
+    if (attribsReal == INVALID_FILE_ATTRIBUTES || (attribsReal & FILE_ATTRIBUTE_DIRECTORY)) {
+        result.failStage = "MODEL_NOT_FOUND";
+        result.diagnostics = "Model file not found: " + result.modelPath;
+        return result;
     }
 
     // ── 1. Model discovery ──────────────────────────────────────────────
@@ -356,12 +356,12 @@ InferenceGateResult runLocalInferenceGate()
 
     // ── 4. Initialize Deep2Engine ───────────────────────────────────────
     Deep2::EngineConfig cfg{};
-    cfg.maxSeqLen = 256;
-    cfg.hiddenDim = 2048;
-    cfg.numHeads = 32;
-    cfg.numLayers = 22;
-    cfg.vocabSize = 32000;
-    cfg.intermediateDim = 5632;
+    cfg.maxSeqLen = 8192;
+    cfg.hiddenDim = 3072;
+    cfg.numHeads = 24;
+    cfg.numLayers = 28;
+    cfg.vocabSize = 128256;
+    cfg.intermediateDim = 8192;
 
     Deep2::Deep2Engine engine;
     result.backendCreateAttempted = true;

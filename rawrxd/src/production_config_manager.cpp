@@ -1,1 +1,1 @@
-﻿// STUB: src/production_config_manager.cpp
+// production_config_manager — stub

@@ -1,0 +1,168 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file f:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe
+
+PE signature found
+
+File Type: EXECUTABLE IMAGE
+
+FILE HEADER VALUES
+            8664 machine (x64)
+               6 number of sections
+        6AB54D8D time date stamp Thu Sep 24 12:19:25 2026
+               0 file pointer to symbol table
+               0 number of symbols
+              F0 size of optional header
+              22 characteristics
+                   Executable
+                   Application can handle large (>2GB) addresses
+
+OPTIONAL HEADER VALUES
+             20B magic # (PE32+)
+           14.44 linker version
+           C6E00 size of code
+           31E00 size of initialized data
+               0 size of uninitialized data
+           C0858 entry point (00000001400C0858)
+            1000 base of code
+       140000000 image base (0000000140000000 to 00000001400FCFFF)
+            1000 section alignment
+             200 file alignment
+            6.00 operating system version
+            0.00 image version
+            6.00 subsystem version
+               0 Win32 version
+           FD000 size of image
+             400 size of headers
+               0 checksum
+               2 subsystem (Windows GUI)
+            8160 DLL characteristics
+                   High Entropy Virtual Addresses
+                   Dynamic base
+                   NX compatible
+                   Terminal Server Aware
+          100000 size of stack reserve
+            1000 size of stack commit
+          100000 size of heap reserve
+            1000 size of heap commit
+               0 loader flags
+              10 number of directories
+               0 [       0] RVA [size] of Export Directory
+           EABAC [     168] RVA [size] of Import Directory
+           FB000 [     1E0] RVA [size] of Resource Directory
+           F3000 [    7680] RVA [size] of Exception Directory
+               0 [       0] RVA [size] of Certificates Directory
+           FC000 [     3F0] RVA [size] of Base Relocation Directory
+           D7870 [      1C] RVA [size] of Debug Directory
+               0 [       0] RVA [size] of Architecture Directory
+               0 [       0] RVA [size] of Global Pointer Directory
+           D7900 [      28] RVA [size] of Thread Storage Directory
+           D7730 [     140] RVA [size] of Load Configuration Directory
+               0 [       0] RVA [size] of Bound Import Directory
+           C8000 [     C58] RVA [size] of Import Address Table Directory
+               0 [       0] RVA [size] of Delay Import Directory
+               0 [       0] RVA [size] of COM Descriptor Directory
+               0 [       0] RVA [size] of Reserved Directory
+
+
+SECTION HEADER #1
+   .text name
+   C6D67 virtual size
+    1000 virtual address (0000000140001000 to 00000001400C7D66)
+   C6E00 size of raw data
+     400 file pointer to raw data (00000400 to 000C71FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+60000020 flags
+         Code
+         Execute Read
+
+SECTION HEADER #2
+  .rdata name
+   269AE virtual size
+   C8000 virtual address (00000001400C8000 to 00000001400EE9AD)
+   26A00 size of raw data
+   C7200 file pointer to raw data (000C7200 to 000EDBFF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40000040 flags
+         Initialized Data
+         Read Only
+
+  Debug Directories
+
+        Time Type        Size      RVA  Pointer
+    -------- ------- -------- -------- --------
+    6AB54D8D coffgrp      3E0 000DA43C    D963C
+
+SECTION HEADER #3
+   .data name
+    3488 virtual size
+   EF000 virtual address (00000001400EF000 to 00000001400F2487)
+    2A00 size of raw data
+   EDC00 file pointer to raw data (000EDC00 to 000F05FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+C0000040 flags
+         Initialized Data
+         Read Write
+
+SECTION HEADER #4
+  .pdata name
+    7680 virtual size
+   F3000 virtual address (00000001400F3000 to 00000001400FA67F)
+    7800 size of raw data
+   F0600 file pointer to raw data (000F0600 to 000F7DFF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40000040 flags
+         Initialized Data
+         Read Only
+
+SECTION HEADER #5
+   .rsrc name
+     1E0 virtual size
+   FB000 virtual address (00000001400FB000 to 00000001400FB1DF)
+     200 size of raw data
+   F7E00 file pointer to raw data (000F7E00 to 000F7FFF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40000040 flags
+         Initialized Data
+         Read Only
+
+SECTION HEADER #6
+  .reloc name
+     3F0 virtual size
+   FC000 virtual address (00000001400FC000 to 00000001400FC3EF)
+     400 size of raw data
+   F8000 file pointer to raw data (000F8000 to 000F83FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+42000040 flags
+         Initialized Data
+         Discardable
+         Read Only
+
+  Summary
+
+        4000 .data
+        8000 .pdata
+       27000 .rdata
+        1000 .reloc
+        1000 .rsrc
+       C7000 .text

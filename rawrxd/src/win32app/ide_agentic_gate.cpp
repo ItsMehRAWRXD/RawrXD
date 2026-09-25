@@ -16,11 +16,28 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <cstdarg>
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
 
 namespace RawrXD::IDE {
+
+// ── Headless trace file logger (GUI apps have no stderr) ──────────────
+static void gateTraceLog(const char* fmt, ...)
+{
+    static FILE* fp = nullptr;
+    if (!fp) {
+        fp = std::fopen("headless_gate_log.txt", "a");
+        if (fp) std::setvbuf(fp, nullptr, _IONBF, 0);
+    }
+    if (fp) {
+        std::va_list args;
+        va_start(args, fmt);
+        std::vfprintf(fp, fmt, args);
+        va_end(args);
+    }
+}
 
 // ── Interruptible watchdog wrapper ─────────────────────────────────────
 template<typename F>
@@ -31,23 +48,38 @@ bool runWithWatchdog(RawrXD::Runtime::BP1BraidStreamer& braid, F&& fn,
     std::condition_variable cv;
     bool done = false;
     bool fired = false;
+    bool result = false;
+    std::exception_ptr ex;
 
     std::thread watchdog([&]() {
-        std::unique_lock<std::mutex> lk(mu);
-        if (!cv.wait_for(lk, timeout, [&]() { return done; })) {
-            fired = true;
-            outFired.store(true, std::memory_order_release);
-            braid.requestCancel();
+        try {
+            std::unique_lock<std::mutex> lk(mu);
+            if (!cv.wait_for(lk, timeout, [&]() { return done; })) {
+                fired = true;
+                outFired.store(true, std::memory_order_release);
+                braid.requestCancel();
+            }
+        } catch (...) {
+            // Watchdog exceptions silently ignored — main work owns failure
         }
     });
 
-    bool result = fn();
+    try {
+        result = fn();
+    } catch (...) {
+        ex = std::current_exception();
+    }
+
     {
         std::lock_guard<std::mutex> lk(mu);
         done = true;
     }
     cv.notify_one();
-    watchdog.join();
+    if (watchdog.joinable())
+        watchdog.join();
+
+    if (ex)
+        std::rethrow_exception(ex);
     return result;
 }
 
@@ -119,6 +151,7 @@ AgenticGateResult runAgenticGate()
 {
     AgenticGateResult r;
     r.failStage = "UNKNOWN";
+    gateTraceLog("AGENT_GATE_ENTER\n");
 
     try {
         const std::string fixturePath = "F:\\\\~dev\\\\rawrxd\\\\agent_gate_workspace\\\\nonce.txt";
@@ -140,19 +173,12 @@ AgenticGateResult runAgenticGate()
             return r;
         }
 
-        // ── 2. Backend selection ─────────────────────────────────────────────
-        const char* envDisableVulkan = std::getenv("DEEP2_DISABLE_VULKAN");
-        bool disableVulkan = (envDisableVulkan && envDisableVulkan[0] == '1');
-        if (disableVulkan) {
-            r.diagnostics += "[BACKEND_REQUESTED=CPU] ";
-            engine.enableVulkan(false);
-            engine.setVulkanStrictNoCpuFallback(false);
-        } else {
-            engine.enableVulkan(true);
-            engine.setVulkanStrictNoCpuFallback(true);
-        }
+        // ── 2. Backend selection (CPU-only for gate to avoid GPU TDR) ────
+        engine.enableVulkan(false);
+        engine.setVulkanStrictNoCpuFallback(false);
+        r.diagnostics += "[BACKEND=CPU] ";
 
-        // ── 3. Model path override ──────────────────────────────────────────
+        // ── 3. Model path (strict: no fixture fallback) ─────────────────────
         std::string modelPath = "D:\\rawrxd\\gemma3-1b-Q2_K.gguf";
         const char* envModel = std::getenv("RAWRXD_AGENT_MODEL");
         if (envModel && envModel[0]) {
@@ -160,7 +186,9 @@ AgenticGateResult runAgenticGate()
         }
         DWORD attribs = GetFileAttributesA(modelPath.c_str());
         if (attribs == INVALID_FILE_ATTRIBUTES || (attribs & FILE_ATTRIBUTE_DIRECTORY)) {
-            modelPath = "F:\\~dev\\rawrxd\\src\\core\\test_tiny_with_vocab.gguf";
+            r.failStage = "MODEL_NOT_FOUND";
+            r.diagnostics = "Model file not found: " + modelPath;
+            return r;
         }
         r.modelLoadedOk = engine.loadModel(modelPath);
         if (!r.modelLoadedOk) {
@@ -204,15 +232,12 @@ AgenticGateResult runAgenticGate()
 
         r.streamerBuilt = true;
 
-        // ── Build Phase 1 prompt ──────────────────────────────────────────
+        // ── Build Phase 1 prompt (compact to avoid TDR) ──────────────────
         std::string phase1System =
-            "You are a RawrXD agent with access to one tool: read_file.\n"
-            "To call read_file you MUST emit EXACTLY one XML block with no other text:\n"
-            "<tool>read_file</tool><args>{\"path\":\"F:\\\\~dev\\\\rawrxd\\\\agent_gate_workspace\\\\nonce.txt\"}</args>\n";
+            "You are a tool agent. Available tool: read_file.\n"
+            "To call: <tool>read_file</tool><args>{\"path\":\"P\"}</args>\n";
         std::string phase1User =
-            "Read F:\\\\~dev\\\\rawrxd\\\\agent_gate_workspace\\\\nonce.txt and report the value of RAWRXD_AGENT_NONCE.\n"
-            "You MUST use the read_file tool before answering.\n"
-            "Emit ONLY the XML tool call. Do not add any other text.\n";
+            "Read F:\\\\~dev\\\\rawrxd\\\\agent_gate_workspace\\\\nonce.txt. Emit only the tool call.\n";
 
         if (isLlamaInstruct) {
             r.promptUsed = applyLlamaChatTemplate(phase1System, phase1User);
@@ -229,12 +254,14 @@ AgenticGateResult runAgenticGate()
         r.channelOpened     = true;
         r.generationStarted = true;
 
+        gateTraceLog("AGENT_GENERATE_BEGIN phase=1\n");
         std::atomic<bool> wd1Fired{false};
         bool session1Ok = runWithWatchdog(
             braid,
             [&]() { return braid.runSession(r.promptUsed, opts); },
             std::chrono::seconds(600),
             wd1Fired);
+        gateTraceLog("AGENT_GENERATE_RETURN phase=1 ok=%d\n", (int)session1Ok);
 
         if (!session1Ok) {
             r.failStage = wd1Fired.load(std::memory_order_acquire) ? "WATCHDOG_TIMEOUT_PHASE1" : "SESSION_PHASE1";
@@ -312,12 +339,14 @@ AgenticGateResult runAgenticGate()
 
         r.continuationStarted = true;
 
+        gateTraceLog("AGENT_GENERATE_BEGIN phase=2\n");
         std::atomic<bool> wd2Fired{false};
         bool session2Ok = runWithWatchdog(
             braid,
             [&]() { return braid.runSession(phase2Prompt, opts2); },
             std::chrono::seconds(300),
             wd2Fired);
+        gateTraceLog("AGENT_GENERATE_RETURN phase=2 ok=%d\n", (int)session2Ok);
 
         if (!session2Ok) {
             r.failStage = wd2Fired.load(std::memory_order_acquire) ? "WATCHDOG_TIMEOUT_PHASE2" : "SESSION_PHASE2";
@@ -356,6 +385,7 @@ AgenticGateResult runAgenticGate()
         r.diagnostics = "Unknown exception caught in runAgenticGate.";
     }
 
+    gateTraceLog("AGENT_GATE_RETURN stage=%s ok=%d\n", r.failStage.empty() ? "OK" : r.failStage.c_str(), (int)(r.failStage.empty()));
     return r;
 }
 

@@ -1,0 +1,39 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  ide_inference_gate.cpp
+  Deep2Engine.cpp
+  Deep2DualGpuRowSplit.cpp
+  Deep2Engine_GpuMoEMLA.cpp
+  Deep2Engine_Speculative.cpp
+  Deep2Engine_VulkanRuntime.cpp
+  Deep2Engine_GpuForward.cpp
+  ExpertCache.cpp
+  ExpertTensorCatalog.cpp
+  PackedExpertSlicer.cpp
+  VulkanExpertTransport.cpp
+  HostStagingRing.cpp
+  Deep2ExpertCacheBridge.cpp
+  ExpertScheduler.cpp
+  Deep2StackGuard.cpp
+  streaming_inference_engine.cpp
+  ide_agentic_gate.cpp
+  RawrXDAutoClosure.cpp
+  SpecialGraph.cpp
+  SpeculativeBatch.cpp
+  Generating Code...
+  Compiling...
+  SpeculativeExecutor.cpp
+  KvTransaction.cpp
+  VerifyBatch.cpp
+  DraftPolicy.cpp
+  AcceptanceOracle.cpp
+  DualGpuOverlap.cpp
+  SpeculativeCert.cpp
+  FleetSpecialGraph.cpp
+  FleetSpecialGraphExecutor.cpp
+  DualGpuIndependentAgentScheduler.cpp
+  MultiAgentMergeAuthority.cpp
+  HexMagResidencyAuthority.cpp
+  ScreenPilotToolAuthorityBridge.cpp
+  Generating Code...
+  RawrXD-Win32IDE.vcxproj -> F:\~dev\rawrxd\win32ide_strict\build_v4\Release\RawrXD-Win32IDE.exe

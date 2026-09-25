@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/context_assembler.cpp
+// context_assembler — stub

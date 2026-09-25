@@ -17,7 +17,6 @@ if(NOT DEFINED WIN32IDE_SOURCES)
 endif()
 
 set(_RAWRXD_HISTORICAL_SOURCE_NAMES
-    src/ai_completion_real.cpp
     src/vulkan_kernel_bridge.cpp
     src/gguf_d3d12_bridge.cpp
     src/rdna3_bridge.cpp

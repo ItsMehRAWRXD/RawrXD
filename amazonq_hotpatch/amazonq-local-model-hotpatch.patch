@@ -1,0 +1,228 @@
+--- /dev/null
++++ b/packages/core/src/shared/clients/localModelChatClient.ts
+@@ -0,0 +1,185 @@
++/*!
++ * Local-model adapter for Amazon Q VS Code.
++ * No external dependencies. Designed for OpenAI-compatible local endpoints.
++ */
++
++type AnyRequest = any
++
++function env(name: string, fallback?: string): string | undefined {
++    return process.env[name] ?? fallback
++}
++
++export function localQEnabled(): boolean {
++    return env('RAWRXD_Q_LOCAL', '0') === '1'
++}
++
++function makeConversationId(): string {
++    return `local-${Date.now()}-${Math.random().toString(16).slice(2)}`
++}
++
++function pushMessage(out: any[], role: string, content: unknown) {
++    if (typeof content === 'string' && content.length) {
++        out.push({ role, content })
++    }
++}
++
++function appendEditorContext(out: any[], req: AnyRequest) {
++    const current = req?.conversationState?.currentMessage?.userInputMessage
++    const ctx = current?.userInputMessageContext
++    const editor = ctx?.editorState
++    if (!editor) return
++
++    const chunks: string[] = []
++    const doc = editor.document
++    if (doc?.text) {
++        chunks.push(
++            `ACTIVE FILE: ${doc.relativeFilePath ?? '<unknown>'}\n` +
++            `LANGUAGE: ${doc.programmingLanguage?.languageName ?? '<unknown>'}\n` +
++            `${doc.text}`
++        )
++    }
++
++    const relevant = Array.isArray(editor.relevantDocuments) ? editor.relevantDocuments : []
++    for (const r of relevant) {
++        if (!r?.text) continue
++        chunks.push(
++            `RELEVANT FILE: ${r.relativeFilePath ?? '<unknown>'}\n` +
++            `LANGUAGE: ${r.programmingLanguage?.languageName ?? '<unknown>'}\n` +
++            `${r.text}`
++        )
++    }
++
++    if (chunks.length) {
++        out.push({
++            role: 'system',
++            content:
++                'The IDE supplied the following local workspace context. Use it as coding context.\n\n' +
++                chunks.join('\n\n---\n\n'),
++        })
++    }
++}
++
++function toOpenAIMessages(req: AnyRequest): any[] {
++    const messages: any[] = []
++    const state = req?.conversationState
++
++    for (const item of state?.history ?? []) {
++        if (item?.userInputMessage) {
++            pushMessage(messages, 'user', item.userInputMessage.content)
++        } else if (item?.assistantResponseMessage) {
++            pushMessage(messages, 'assistant', item.assistantResponseMessage.content)
++        }
++    }
++
++    appendEditorContext(messages, req)
++
++    const current = state?.currentMessage
++    if (current?.userInputMessage) {
++        pushMessage(messages, 'user', current.userInputMessage.content)
++    } else if (current?.assistantResponseMessage) {
++        pushMessage(messages, 'assistant', current.assistantResponseMessage.content)
++    }
++
++    if (!messages.length) {
++        messages.push({ role: 'user', content: '' })
++    }
++    return messages
++}
++
++async function invokeLocal(req: AnyRequest): Promise<string> {
++    const url = env('RAWRXD_Q_LOCAL_URL', 'http://127.0.0.1:11435/v1/chat/completions')!
++    const model = env('RAWRXD_Q_LOCAL_MODEL', 'local')!
++    const apiKey = env('RAWRXD_Q_LOCAL_API_KEY', 'local')!
++    const maxTokens = Number(env('RAWRXD_Q_LOCAL_MAX_TOKENS', '2048'))
++    const temperature = Number(env('RAWRXD_Q_LOCAL_TEMP', '0.2'))
++
++    const response = await fetch(url, {
++        method: 'POST',
++        headers: {
++            'content-type': 'application/json',
++            authorization: `Bearer ${apiKey}`,
++        },
++        body: JSON.stringify({
++            model,
++            messages: toOpenAIMessages(req),
++            stream: false,
++            max_tokens: Number.isFinite(maxTokens) ? maxTokens : 2048,
++            temperature: Number.isFinite(temperature) ? temperature : 0.2,
++        }),
++    })
++
++    const raw = await response.text()
++    if (!response.ok) {
++        throw new Error(`Local model HTTP ${response.status}: ${raw.slice(0, 1000)}`)
++    }
++
++    let body: any
++    try {
++        body = JSON.parse(raw)
++    } catch {
++        // Also permits a very small custom Deep2 endpoint that returns raw text.
++        return raw
++    }
++
++    // OpenAI-compatible, Ollama-compatible, and tiny custom-response fallbacks.
++    const content =
++        body?.choices?.[0]?.message?.content ??
++        body?.message?.content ??
++        body?.response ??
++        body?.content
++
++    if (typeof content !== 'string') {
++        throw new Error('Local model response did not contain assistant text.')
++    }
++    return content
++}
++
++async function* responseEvents(conversationId: string, text: string): AsyncGenerator<any> {
++    // ChatSession.chatIam() consumes the metadata event before returning the iterator.
++    yield {
++        messageMetadataEvent: {
++            conversationId,
++            utteranceId: `local-utterance-${Date.now()}`,
++        },
++    }
++    yield {
++        assistantResponseEvent: {
++            content: text,
++        },
++    }
++}
++
++export function createLocalQDeveloperStreamingClient(): any {
++    return {
++        async sendMessage(req: AnyRequest) {
++            const conversationId =
++                req?.conversationState?.conversationId ?? makeConversationId()
++            const text = await invokeLocal(req)
++            return {
++                $metadata: {
++                    httpStatusCode: 200,
++                    requestId: `local-${Date.now()}`,
++                },
++                sendMessageResponse: responseEvents(conversationId, text),
++            }
++        },
++    }
++}
++
++export function createLocalCodeWhispererStreamingClient(): any {
++    return {
++        async generateAssistantResponse(req: AnyRequest) {
++            const conversationId =
++                req?.conversationState?.conversationId ?? makeConversationId()
++            const text = await invokeLocal(req)
++            return {
++                $metadata: {
++                    httpStatusCode: 200,
++                    requestId: `local-${Date.now()}`,
++                },
++                conversationId,
++                generateAssistantResponseResponse: responseEvents(conversationId, text),
++            }
++        },
++    }
++}
+--- a/packages/core/src/shared/clients/qDeveloperChatClient.ts
++++ b/packages/core/src/shared/clients/qDeveloperChatClient.ts
+@@ -7,9 +7,17 @@
+ import { getUserAgent } from '../telemetry/util'
+ import { ConfiguredRetryStrategy } from '@smithy/util-retry'
+ import { AuthUtil } from '../../codewhisperer/util/authUtil'
++import {
++    createLocalQDeveloperStreamingClient,
++    localQEnabled,
++} from './localModelChatClient'
+ 
+ // Create a client for featureDev streaming based off of aws sdk v3
+ export async function createQDeveloperStreamingClient(): Promise<QDeveloperStreaming> {
++    if (localQEnabled()) {
++        return createLocalQDeveloperStreamingClient() as QDeveloperStreaming
++    }
++
+     const cwsprConfig = getCodewhispererConfig()
+     const credentials = await AuthUtil.instance.getCredentials()
+     const streamingClient = new QDeveloperStreaming({
+--- a/packages/core/src/shared/clients/codewhispererChatClient.ts
++++ b/packages/core/src/shared/clients/codewhispererChatClient.ts
+@@ -7,9 +7,17 @@
+ import { getCodewhispererConfig } from '../../codewhisperer/client/codewhisperer'
+ import { AuthUtil } from '../../codewhisperer/util/authUtil'
+ import { getUserAgent } from '../telemetry/util'
++import {
++    createLocalCodeWhispererStreamingClient,
++    localQEnabled,
++} from './localModelChatClient'
+ 
+ // Create a client for featureDev streaming based off of aws sdk v3
+ export async function createCodeWhispererChatStreamingClient(): Promise<CodeWhispererStreaming> {
++    if (localQEnabled()) {
++        return createLocalCodeWhispererStreamingClient() as CodeWhispererStreaming
++    }
++
+     const bearerToken = await AuthUtil.instance.getBearerToken()
+     const cwsprConfig = getCodewhispererConfig()
+     const streamingClient = new CodeWhispererStreaming({

@@ -1,1 +1,1 @@
-﻿// STUB: src/agentic/agentic_executor.cpp
+// agentic_executor — stub

@@ -1,0 +1,9 @@
+Lines: 99
+Line 99: [INFERENCE_GATE] prompt='Hello' nGen=10 tokens=[245836, 50901, 177560, 15187, 48971, 57528, 104862, 7827, 21492, 162939] text='㇂paradigmcarapaceoutcomeszooeddaquifertemporullahiInteract'
+
+--- Last 5 lines ---
+GEN_COMPUTE_LOGITS_OK gen=9
+GEN_SAMPLE nextTok=162939 gen=9
+GEN_OUTPUT gen=9 tok=162939
+GEN_RETURN generated=10
+[INFERENCE_GATE] prompt='Hello' nGen=10 tokens=[245836, 50901, 177560, 15187, 48971, 57528, 104862, 7827, 21492, 162939] text='㇂paradigmcarapaceoutcomeszooeddaquifertemporullahiInteract'

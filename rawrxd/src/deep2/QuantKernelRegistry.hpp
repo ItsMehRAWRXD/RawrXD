@@ -68,10 +68,10 @@ struct block_q8_0 {
 
 // Q2_K: 256 weights, 16 scales — 84 bytes
 struct block_q2_K {
-    uint16_t d;           // fp16 super-scale
-    uint16_t dmin;        // fp16 super-min
     uint8_t  scales[16];  // 4-bit scale/min pairs
     uint8_t  qs[64];      // 2-bit weights (256 values)
+    uint16_t d;           // fp16 super-scale
+    uint16_t dmin;        // fp16 super-min
 };
 
 // Q3_K: 256 weights, 12-byte scale packing, hmask — 110 bytes
