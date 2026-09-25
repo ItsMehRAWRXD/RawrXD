@@ -1,0 +1,170 @@
+void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
+    using Deep2::Arch::Ref::silu;
+    using Deep2::Arch::Ref::softplus;
+    using Deep2::Arch::Ref::depthwiseConvStep;
+    using Deep2::Arch::Ref::mamba2Step;
+    using Deep2::Arch::Ref::finite;
+
+    if (!input || !output || layer >= modelWeights.layers.size())
+        throw std::runtime_error("computeSSM: invalid layer/input/output");
+
+    const LayerWeights& lw = modelWeights.layers[layer];
+    if (!lw.hasSSM)
+        throw std::runtime_error("computeSSM: layer is not an SSM/Mamba layer");
+
+    const size_t H = config.hiddenDim;
+    if (!nemotronGeoOk_ || !ssmInner_ || !ssmStateSize_ || !ssmHeads_ || !ssmGroups_) {
+        std::memcpy(output, input, H * sizeof(float));
+        static bool warnedOnce = false;
+        if (!warnedOnce) {
+            std::fprintf(stderr,
+                "[Deep2Engine] WARNING: SSM metadata incomplete; identity fallback active.\n");
+            warnedOnce = true;
+        }
+        return;
+    }
+
+    const size_t inner       = ssmInner_;
+    const size_t stateN      = ssmStateSize_;
+    const size_t heads       = ssmHeads_;
+    const size_t groups      = ssmGroups_;
+    const size_t headDim     = inner / heads;
+    const size_t groupBC     = groups * stateN;
+    const size_t convChannels = inner + 2 * groupBC;
+    const size_t inRows      = 2 * inner + 2 * groupBC + heads;
+
+    if (!ssmX || !ssmY || !ssmTemp || !ssmState || !ssmConvState)
+        throw std::runtime_error("computeSSM: SSM buffers not allocated");
+
+    if (!lw.ssmIn.data || !lw.ssmOut.data || !lw.ssmConv1d.data ||
+        !lw.ssmDtBias.data || !lw.ssmA.data || !lw.ssmD.data || !lw.ssmNorm.data)
+        throw std::runtime_error("computeSSM: required SSM tensors missing");
+
+    // ---- 1. input projection: z | x0 | B0 | C0 | dt0 ----
+    LinearW(lw.ssmIn, input, nullptr, ssmTemp, inRows);
+
+    const float* z  = ssmTemp;
+    const float* x0 = z + inner;
+    const float* B0 = x0 + inner;
+    const float* C0 = B0 + groupBC;
+    const float* dt0 = C0 + groupBC;
+
+    // ---- 2. causal depthwise conv1d over x,B,C ----
+    float* convIn = ssmX; // borrow ssmX as scratch [convChannels]
+    std::copy_n(x0, inner, convIn);
+    std::copy_n(B0, 2 * groupBC, convIn + inner);
+
+    // ---- 3. dequantize conv1d weights + bias ONCE per layer, reused per token ----
+    static std::vector<float> convK_cache;  // initialized first call only
+    static std::vector<float> convB_cache;  // initialized first call only
+    static bool        convK_init       = false;
+    static bool        convB_init       = false;
+    if (!convK_init) {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1d.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get conv1d dequant");
+        const size_t nConv = convChannels * ssmConvKernel;
+        convK_cache.resize(nConv);
+        dq(static_cast<const uint8_t*>(lw.ssmConv1d.data), convK_cache.data(), nConv);
+        if (lw.ssmConv1dBias.data) {
+            const auto* dqB = QuantKernelRegistry::Instance().GetDequant(lw.ssmConv1dBias.type);
+            if (dqB) {
+                convB_cache.resize(convChannels);
+                dqB(static_cast<const uint8_t*>(lw.ssmConv1dBias.data), convB_cache.data(), convChannels);
+            }
+        }
+        convK_init = true;
+        convB_init = true;
+    }
+    auto& convK = convK_cache;
+    auto& convB = convB_cache;
+
+    float* convHist = ssmConvState + layer * convChannels * (ssmConvKernel > 1 ? (ssmConvKernel - 1) : 0);
+    float* convOut  = ssmY; // borrow ssmY as scratch [convChannels]
+    depthwiseConvStep(convIn, convChannels, convK.data(), ssmConvKernel,
+                      convHist, convB.data(), convOut);
+    for (size_t i = 0; i < convChannels; ++i) convOut[i] = silu(convOut[i]);
+
+    const float* x = convOut;
+    const float* B = convOut + inner;
+    const float* C = B + groupBC;
+
+    // ---- 4. prepare dt bias, A, D (dequant from cached per-layer data) ----
+    static std::vector<float> dtBias_layer;
+    static std::vector<float> A_layer;
+    static std::vector<float> D_layer;
+    static bool dtBias_init = false, A_init = false, D_init = false;
+    if (!dtBias_init) {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmDtBias.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get dtBias dequant");
+        dtBias_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmDtBias.data), dtBias_layer.data(), heads);
+        dtBias_init = true;
+    }
+    if (!A_init) {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmA.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get A dequant");
+        A_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmA.data), A_layer.data(), heads);
+        A_init = true;
+    }
+    if (!D_init) {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmD.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get D dequant");
+        D_layer.resize(heads);
+        dq(static_cast<const uint8_t*>(lw.ssmD.data), D_layer.data(), heads);
+        D_init = true;
+    }
+    auto& dtBias = dtBias_layer;
+    auto& A      = A_layer;
+    auto& D      = D_layer;
+
+    std::vector<float> dt(heads);
+    for (size_t h = 0; h < heads; ++h) {
+        dt[h] = dt0[h] + dtBias[h];
+        if (A[h] > 0.0f) A[h] = -std::exp(A[h]);
+    }
+
+    // ---- 5. selective scan (mamba2Step) ----
+    float* statePtr = ssmState + layer * heads * headDim * stateN;
+    float* yPtr     = ssmX; // reuse scratch [inner]
+    mamba2Step(x, B, C, dt.data(), A.data(), D.data(),
+               heads, groups, headDim, stateN, statePtr, yPtr);
+
+    if (!finite(yPtr, inner))
+        throw std::runtime_error("computeSSM: selective scan produced non-finite output");
+
+    // ---- 6. gated RMS norm (dequant from cached per-layer data) ----
+    static std::vector<float> normW_cache;
+    static bool        norm_init = false;
+    if (!norm_init) {
+        const auto* dq = QuantKernelRegistry::Instance().GetDequant(lw.ssmNorm.type);
+        if (!dq) throw std::runtime_error("computeSSM: cannot get norm dequant");
+        normW_cache.resize(inner);
+        dq(static_cast<const uint8_t*>(lw.ssmNorm.data), normW_cache.data(), inner);
+        norm_init = true;
+    }
+    auto& normW = normW_cache;
+
+    for (size_t h = 0; h < heads; ++h) {
+        float* yh = yPtr + h * headDim;
+        double ss = 0.0;
+        for (size_t d = 0; d < headDim; ++d) ss += double(yh[d]) * double(yh[d]);
+        const float inv = 1.0f / std::sqrt(float(ss / double(headDim)) + modelWeights.normEps);
+        for (size_t d = 0; d < headDim; ++d) {
+            const float nw = normW[d % normW.size()];
+            yh[d] = yh[d] * inv * nw * silu(z[h * headDim + d]);
+        }
+    }
+
+    // ---- 7. output projection ----
+    std::fill(output, output + H, 0.0f);
+    LinearW(lw.ssmOut, yPtr, nullptr, output, H);
+
+    if (!finite(output, H))
+        throw std::runtime_error("computeSSM: final output is non-finite");
+
+    ++ssmRealCalls_;
+}
+
+// =================== FORWARD ALL LAYERS ====================
+bool Deep2Engine::forwardTokenAllLayers(float* hidden, size_t seqLen) {

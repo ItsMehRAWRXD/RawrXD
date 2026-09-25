@@ -3145,6 +3145,8 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
         if (!dq) throw std::runtime_error("computeSSM: cannot get A dequant");
         A_layer.resize(heads);
         dq(static_cast<const uint8_t*>(lw.ssmA.data), A_layer.data(), heads);
+        for (size_t h = 0; h < heads; ++h)
+            if (A_layer[h] > 0.0f) A_layer[h] = -std::exp(A_layer[h]);
         A_init = true;
     }
     if (!D_init) {
@@ -3158,16 +3160,14 @@ void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
     auto& A      = A_layer;
     auto& D      = D_layer;
 
-    std::vector<float> dt(heads);
-    for (size_t h = 0; h < heads; ++h) {
-        dt[h] = dt0[h] + dtBias[h];
-        if (A[h] > 0.0f) A[h] = -std::exp(A[h]);
-    }
+    static std::vector<float> dt_static;
+    dt_static.resize(heads);
+    for (size_t h = 0; h < heads; ++h) dt_static[h] = dt0[h] + dtBias[h];
 
     // ---- 5. selective scan (mamba2Step) ----
     float* statePtr = ssmState + layer * heads * headDim * stateN;
     float* yPtr     = ssmX; // reuse scratch [inner]
-    mamba2Step(x, B, C, dt.data(), A.data(), D.data(),
+    mamba2Step(x, B, C, dt_static.data(), A.data(), D.data(),
                heads, groups, headDim, stateN, statePtr, yPtr);
 
     if (!finite(yPtr, inner))
