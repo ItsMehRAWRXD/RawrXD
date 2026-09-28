@@ -676,3 +676,34 @@ uint32_t Dbg_MemoryScan(uint64_t /*processHandle*/, uint64_t /*startAddress*/,
 }
 
 } // extern "C"
+
+// ============================================================================
+// Private constructors/destructors for singleton classes
+// ============================================================================
+
+// AutonomousWorkflowEngine
+AutonomousWorkflowEngine::AutonomousWorkflowEngine() = default;
+AutonomousWorkflowEngine::~AutonomousWorkflowEngine() = default;
+
+// RawrXD::Agentic::AgenticTaskGraph
+RawrXD::Agentic::AgenticTaskGraph::AgenticTaskGraph() = default;
+RawrXD::Agentic::AgenticTaskGraph::~AgenticTaskGraph() = default;
+
+// RawrXD::Embeddings::EmbeddingEngine
+RawrXD::Embeddings::EmbeddingEngine::EmbeddingEngine() = default;
+RawrXD::Embeddings::EmbeddingEngine::~EmbeddingEngine() = default;
+
+// RawrXD::Vision::VisionEncoder
+RawrXD::Vision::VisionEncoder::VisionEncoder() = default;
+RawrXD::Vision::VisionEncoder::~VisionEncoder() = default;
+
+// RawrXD::PDB::NativePDBParser::unload
+void RawrXD::PDB::NativePDBParser::unload() {}
+
+// RawrXD::PDB::PDBManager
+RawrXD::PDB::PDBManager::PDBManager() = default;
+RawrXD::PDB::PDBManager::~PDBManager() = default;
+
+// RawrXD::PDB::PDBSymbolServer
+RawrXD::PDB::PDBSymbolServer::PDBSymbolServer() = default;
+RawrXD::PDB::PDBSymbolServer::~PDBSymbolServer() = default;
