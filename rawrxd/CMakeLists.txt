@@ -6807,6 +6807,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)
+    # RAWRXD_AGENTIC_E2E_001: real fail-closed agentic E2E gate implementation
+    # (resolves runAgenticE2EGate/formatAgenticE2EReceipt externals from main_win32.cpp)
+    list(APPEND WIN32IDE_SOURCES src/agentic/RawrXDAgenticE2E.cpp)
+    # Real IDE agentic gate driver (resolves RawrXD::IDE::runAgenticGate from main_win32.cpp)
+    list(APPEND WIN32IDE_SOURCES src/win32app/ide_agentic_gate.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
     target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")
