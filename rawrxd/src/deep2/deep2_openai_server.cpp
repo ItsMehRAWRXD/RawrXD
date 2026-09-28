@@ -713,8 +713,20 @@ bool OpenAIServer::run(uint16_t port,
             std::fprintf(stderr, "[OpenAI] AUTH_REQUIRED=0 WARNING: LAN-exposed without authentication\n");
         }
     } else {
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-        std::fprintf(stderr, "[OpenAI] BIND_MODE=LOOPBACK_ONLY\n");
+        // Parse specific IP address (IPv4)
+        int result = inet_pton(AF_INET, bindAddress.c_str(), &addr.sin_addr);
+        if (result <= 0) {
+            std::fprintf(stderr, "[OpenAI] ERROR: Invalid bind address: %s\n", bindAddress.c_str());
+            closesocket(pImpl->listenSocket);
+            pImpl->listenSocket = INVALID_SOCKET;
+            WSACleanup();
+            return false;
+        }
+        if (bindAddress == "127.0.0.1") {
+            std::fprintf(stderr, "[OpenAI] BIND_MODE=LOOPBACK_ONLY\n");
+        } else {
+            std::fprintf(stderr, "[OpenAI] BIND_MODE=EXPLICIT_IP (%s)\n", bindAddress.c_str());
+        }
     }
     addr.sin_port = htons(port);
 

@@ -111,7 +111,11 @@ private:
 
 static bool hashFile(const fs::path& p,std::string& hex,std::uint64_t& bytes) {
     std::ifstream f(p,std::ios::binary); if(!f) return false;
-    Sha256 s; std::array<char,4u*1024u*1024u> buf{}; bytes=0;
+    Sha256 s;
+    // 4 MiB read buffer must live on the heap — 1 MiB default stack overflows otherwise (0xC00000FD).
+    static thread_local std::array<char,4u*1024u*1024u> buf{};
+    std::fill(buf.begin(), buf.end(), char{});
+    bytes=0;
     while(f){f.read(buf.data(),std::streamsize(buf.size()));const auto n=f.gcount();
         if(n>0){s.update(reinterpret_cast<const std::uint8_t*>(buf.data()),std::size_t(n));bytes+=std::uint64_t(n);}}
     const auto d=s.finish(); std::ostringstream o;o<<std::hex<<std::setfill('0');
@@ -474,3 +478,8 @@ int RunRealGgufParityCli(int argc,char** argv) {
 }
 
 } // namespace Deep2::Parity
+
+// RAWRXD_REAL_GGUF_PARITY_001: CLI entry point
+int main(int argc, char** argv) {
+    return Deep2::Parity::RunRealGgufParityCli(argc, argv);
+}
