@@ -53,8 +53,9 @@ int main(int argc, char** argv) {
     }
 
     e.enableParityProbe(trace, 1);
-    // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for L4 (explosion layer)
-    e.enableParityProbeFullVectors(4);
+    // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for L0 (input layer:
+    // exposes ATTNNORM/Q/K/V full vectors for external verification).
+    e.enableParityProbeFullVectors(0);
 
     // CPU path only: keep vulkan off so the host lane executes all operators.
     e.enableVulkan(false);
