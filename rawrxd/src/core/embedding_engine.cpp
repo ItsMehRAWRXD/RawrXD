@@ -6,7 +6,7 @@
 
 #include "embedding_engine.hpp"
 // Production GGUF loader integration with streaming support
-#include "../streaming_gguf_loader.h"
+#include "sovereign_gguf_mapper.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -555,25 +555,11 @@ EmbedResult EmbeddingEngine::loadModel(const EmbeddingModelConfig& config) {
             // (use TF-IDF fallback from IncrementalIndexer)
             modelHandle_ = nullptr;
         } else {
-            // Load GGUF model via streaming_gguf_loader
-            auto* loader = new StreamingGGUFLoader();
-            if (loader->Open(config.modelPath)) {
-                if (loader->ParseHeader() && loader->ParseMetadata() && loader->BuildTensorIndex()) {
-                    // Pre-load embedding layer tensors for fast inference
-                    auto zones = loader->GetAllZones();
-                    for (const auto& zone : zones) {
-                        if (zone.find("embd") != std::string::npos ||
-                            zone.find("token") != std::string::npos ||
-                            zone.find("embed") != std::string::npos) {
-                            loader->LoadZone(zone, 2048);
-                        }
-                    }
-                    modelHandle_ = static_cast<void*>(loader);
-                } else {
-                    loader->Close();
-                    delete loader;
-                    modelHandle_ = nullptr;
-                }
+            // Load GGUF model via the real Deep2 GGUF loader (memory-mapped shards).
+            auto* loader = new ::Deep2::GGUFLoader();
+            if (loader->load(config.modelPath)) {
+                // Tensors are memory-mapped on load; index built eagerly.
+                modelHandle_ = static_cast<void*>(loader);
             } else {
                 delete loader;
                 modelHandle_ = nullptr;
@@ -645,41 +631,51 @@ EmbedResult EmbeddingEngine::inferEmbedding(const std::string& text,
     if (modelHandle_) {
         // Full GGUF model inference path
         // Route through loaded model tensors for embedding generation
-        auto* loader = static_cast<StreamingGGUFLoader*>(modelHandle_);
-        auto tensorIndex = loader->GetTensorIndex();
+        auto* loader = static_cast<::Deep2::GGUFLoader*>(modelHandle_);
 
-        // Find token embedding weights
-        std::vector<uint8_t> embedWeightData;
-        for (const auto& tref : tensorIndex) {
-            if (tref.name.find("token_embd") != std::string::npos ||
-                tref.name.find("word_embed") != std::string::npos ||
-                tref.name.find("embedding") != std::string::npos) {
-                loader->LoadTensorZone(tref.name, embedWeightData);
+        // Find token embedding weights (memory-mapped; never copied)
+        const ::Deep2::GGUFTensor* embedTensor = nullptr;
+        for (const auto& tname : loader->listTensors()) {
+            if (tname.find("token_embd") != std::string::npos ||
+                tname.find("word_embed") != std::string::npos ||
+                tname.find("embedding") != std::string::npos) {
+                embedTensor = loader->getTensor(tname);
                 break;
             }
         }
 
-        if (!embedWeightData.empty()) {
+        if (embedTensor && embedTensor->data && embedTensor->sizeBytes > 0) {
             // Use model weights for embedding: project tokenized text through weight matrix
-            const float* weights = reinterpret_cast<const float*>(embedWeightData.data());
-            size_t weightCount = embedWeightData.size() / sizeof(float);
+            const uint8_t* rawWeights = embedTensor->data;
+            const size_t weightBytes = embedTensor->sizeBytes;
             out.resize(config_.dimensions, 0.0f);
 
             // Hash-based token projection through model weights
             std::istringstream iss(text);
             std::string word;
             uint32_t wordCount = 0;
+            // Row count = tensor elements / embedding dimension (F32 layout)
+            const size_t rowCount = embedTensor->numElements() / static_cast<size_t>(config_.dimensions);
             while (iss >> word) {
                 // Hash word to a "token ID"
                 uint32_t h = 0;
                 for (char c : word) h = h * 31 + static_cast<uint32_t>(c);
-                uint32_t tokenId = h % (weightCount / config_.dimensions + 1);
+                uint32_t tokenId = h % static_cast<uint32_t>(rowCount + 1);
 
                 // Look up token embedding from weight matrix
+                // Token embeddings are F32 in GGUF (token_embd); interpret raw
+                // mapped bytes directly. Guard against non-f32 tensors.
+                const bool isF32 = (embedTensor->type == ::Deep2::GGMLType::GGML_TYPE_F32);
                 size_t rowStart = static_cast<size_t>(tokenId) * config_.dimensions;
                 for (uint32_t d = 0; d < config_.dimensions; ++d) {
-                    if (rowStart + d < weightCount) {
-                        out[d] += weights[rowStart + d];
+                    size_t wIdx = rowStart + d;
+                    if (isF32) {
+                        const size_t byteOff = wIdx * sizeof(float);
+                        if (byteOff + sizeof(float) <= weightBytes) {
+                            float wv;
+                            std::memcpy(&wv, rawWeights + byteOff, sizeof(float));
+                            out[d] += wv;
+                        }
                     }
                 }
                 wordCount++;
@@ -1149,3 +1145,4 @@ void EmbeddingEngine::shutdown() {
 
 } // namespace Embeddings
 } // namespace RawrXD
+

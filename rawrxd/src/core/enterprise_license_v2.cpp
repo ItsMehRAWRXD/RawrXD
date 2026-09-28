@@ -47,7 +47,11 @@ namespace RawrXD::License
 // g_FeatureManifest — compile-time table of all 61 licenseable features
 // ============================================================================
 // Fields: id, name, description, minTier, implemented, wiredToUI, tested, sourceFile, phase
-const FeatureDefV2 g_FeatureManifest[TOTAL_FEATURES] = {
+// W3/BatchD: definition must be non-const to match the header contract
+// (include/enterprise_license.h: "extern FeatureDefV2 g_FeatureManifest[TOTAL_FEATURES];").
+// A const array mangles to a different symbol (?g_FeatureManifest@...3QBU...B) and
+// never satisfies the non-const reference from enterprise_licensev2_impl.obj.
+FeatureDefV2 g_FeatureManifest[TOTAL_FEATURES] = {
 
     // ── Community Tier (0–5) ─────────────────────────────────────
     {FeatureID::BasicGGUFLoading, "Basic GGUF Loading", "Local GGUF file loading and parsing", LicenseTierV2::Community,

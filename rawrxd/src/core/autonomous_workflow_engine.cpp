@@ -284,6 +284,45 @@ WorkflowStageResult AutonomousWorkflowEngine::executeScan(
 // ============================================================================
 // Stage: Bulk Fix
 // ============================================================================
+// BulkFixOrchestrator::applyBulkRefactor — real execution path (W3). One
+// SubagentTask per target through rawrxd::agent::RunSubagentTasks (in-process
+// runner). A target counts as fixed only when the runner reported real
+// success; failures are recorded per-target and fail the batch.
+BulkFixResult BulkFixOrchestrator::applyBulkRefactor(
+    const std::string& batchId,
+    const BulkFixStrategy& strategy,
+    const std::vector<BulkFixTarget>& targets)
+{
+    (void)batchId;
+    BulkFixResult r;
+
+    std::vector<rawrxd::agent::SubagentTask> tasks;
+    tasks.reserve(targets.size());
+    for (const auto& t : targets) {
+        rawrxd::agent::SubagentTask st;
+        st.id          = t.id;
+        st.description = strategy.name + " :: " + t.path;
+        st.targetFiles.push_back(t.path);
+        st.maxRetries  = static_cast<uint32_t>(strategy.maxRetries);
+        st.timeoutMs   = 60000;
+        tasks.push_back(std::move(st));
+    }
+
+    const auto outcomes = rawrxd::agent::RunSubagentTasks(tasks);
+    for (size_t i = 0; i < outcomes.size() && i < targets.size(); ++i) {
+        if (outcomes[i].success) {
+            ++r.fixed_;
+            r.appliedFiles.push_back(targets[i].path);
+        } else {
+            ++r.failed_;
+            if (r.error.empty()) r.error = outcomes[i].detail;
+        }
+    }
+    r.success = (r.failed_ == 0 && !targets.empty());
+    if (!r.success && r.error.empty()) r.error = "bulk fix had failures";
+    return r;
+}
+
 WorkflowStageResult AutonomousWorkflowEngine::executeBulkFix(
     const std::string& strategy,
     const WorkflowPolicy& policy,

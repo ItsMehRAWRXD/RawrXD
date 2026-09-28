@@ -20,6 +20,10 @@ struct GhostTextState {
     std::function<std::string(const std::string&)> completionProvider;
 };
 
+// BATCH C (W3): adapters in this TU set/clear the pending suggestion directly.
+// External TUs (LSP_AI_Bridge) reach them through the free functions below;
+// the state must therefore have internal-linkage storage visible to both
+// halves of this translation unit.
 static GhostTextState g_ghost;
 
 void GhostText_Init(HWND editorHwnd)
@@ -105,13 +109,7 @@ void GhostText_Paint(HDC hdc, int cursorX, int cursorY, int charH)
     SelectObject(hdc, old);
 }
 
-} // namespace RawrXD::IDE}
-
-// W3 fix: re-open namespace so the adapters below can access g_ghost and land
-// in RawrXD::IDE (their declarations in Win32IDE_LSP_AI_Bridge.cpp are inside
-// namespace RawrXD::IDE, so the mangled names require it).
-namespace RawrXD::IDE {
-
+} // namespace RawrXD::IDE
 
 // ============================================================================
 // EditorEngine ghost-text adapters (BATCH C / W3)
@@ -120,7 +118,11 @@ namespace RawrXD::IDE {
 // text engine above: Set replaces the pending suggestion for a line,
 // Clear dismisses it. Both keep the completion provider untouched so the
 // debounced request path keeps working alongside explicit LSP suggestions.
+// W3: adapter block was appended after the namespace close — re-open the
+// namespace so g_ghost is in scope and the symbols land in RawrXD::IDE.
 // ============================================================================
+namespace RawrXD::IDE {
+
 void EditorEngine_SetGhostText(int line, const std::string& text)
 {
     g_ghost.suggestion  = text;

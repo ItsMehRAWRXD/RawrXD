@@ -1,10 +1,35 @@
 #pragma once
-#include "gguf_loader.h"
+#include "../src/core/gguf_loader.h"   // RawrXD::TensorInfo / GGUFMetadata
 #include <string>
 #include <vector>
 #include <map>
 #include <memory>
 #include <cstdint>
+#include "../src/deep2/GGUFLoader.hpp" // Deep2::GGMLType (real enum)
+
+// ============================================================================
+// STREAMING GGUF LOADER - Memory-efficient tensor loading with zone-based
+// streaming (game engine style)
+// ============================================================================
+
+// GGMLType used by this surface is the real Deep2 enum.
+using GGMLType = Deep2::GGMLType;
+using RawrXD::TensorInfo;
+
+// IGGUFLoader — the loader interface this streaming loader implements.
+// Declared here (was previously provided by the deleted RawrXD_Interfaces.h).
+// The methods mirror exactly the overrides below in StreamingGGUFLoader;
+// nothing here has an implementation (pure interface).
+class IGGUFLoader {
+public:
+    virtual ~IGGUFLoader() = default;
+    virtual bool        Open(const std::string& filepath) = 0;
+    virtual bool        Close() = 0;
+    virtual std::vector<TensorInfo> GetAllTensorInfo() const = 0;
+    virtual std::vector<TensorInfo> GetTensorInfo() const = 0;
+    virtual size_t      GetTensorByteSize(const TensorInfo& tensor) const = 0;
+    virtual std::string GetTypeString(GGMLType type) const = 0;
+};
 
 // ============================================================================
 // STREAMING GGUF LOADER - Memory-efficient tensor loading with zone-based

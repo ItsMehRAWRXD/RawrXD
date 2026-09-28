@@ -6830,6 +6830,45 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_StatusBar.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_EditorEngine.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_GhostText.cpp)
+    # BATCH E (W3): real singleton subsystem TUs, on disk but never wired
+    # (same category as RawrXDAgenticE2E/re_api_bridge: library-not-linked).
+    # EmbeddingEngine real engine (38KB, real body; now bound to the real
+    # RawrXD::GGUFLoader via sovereign_gguf_mapper.h).
+    list(APPEND WIN32IDE_SOURCES src/core/embedding_engine.cpp)
+    # VisionEncoder: the zone-streaming loader contract (LoadZone/GetAllZones/
+    # BuildTensorIndex on StreamingGGUFLoader) had no implementation TU in the
+    # tree. Rewritten to the real Deep2::GGUFLoader (memory-mapped shards,
+    # listTensors/getTensor/close) — the same loader the Deep2 inference path
+    # uses. Now wired fail-closed with a real body.
+    list(APPEND WIN32IDE_SOURCES src/core/vision_encoder.cpp)
+    # LSP hotpatch real impls (written by RAWRXD_AGENTIC_E2E_001 follow-on).
+    list(APPEND WIN32IDE_SOURCES src/lsp/lsp_hotpatch_impl.cpp)
+    list(APPEND WIN32IDE_SOURCES src/lsp/lsp_hotpatch_bridge_impl.cpp)
+    # Closure ToolGateway real dispatch (PLAN->AUTHORIZE->APPLY->RECORD tools).
+    list(APPEND WIN32IDE_SOURCES src/closure/ToolGateway.cpp)
+    # WorkspaceGuard real path-jail (used by ToolGateway resolve; was
+    # on-disk-but-unwired).
+    list(APPEND WIN32IDE_SOURCES src/closure/WorkspaceGuard.cpp)
+    # BATCH F (W3): real LocalReasoningEngine (integration-API pImpl class;
+    # deterministic multi-phase reasoning, no LLM required, fail-closed).
+    list(APPEND WIN32IDE_SOURCES src/agent/local_reasoning_engine_real.cpp)
+    list(APPEND WIN32IDE_SOURCES src/agent/local_reasoning_integration.cpp)
+    # BATCH G (W3): remaining real singleton TUs — autonomous workflow engine
+    # (33KB), agentic task graph (77KB), PDB native parser (72KB).
+    list(APPEND WIN32IDE_SOURCES src/core/autonomous_workflow_engine.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/agentic_task_graph.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/pdb_native.cpp)
+    # BATCH G3 (W3): pdb_gsi_hash.cpp — GSI hash + TPI parser; header
+    # (pdb_gsi_hash.h) reconstructed, so the TU un-excludes cleanly.
+    list(APPEND WIN32IDE_SOURCES src/core/pdb_gsi_hash.cpp)
+    # BATCH G (W3): real debugger C bridge (Dbg_ Win32 API bodies, HexMag
+    # counters, IsStubFunction) + real QuadBuffer VRAM residency registry.
+    list(APPEND WIN32IDE_SOURCES src/core/win32ide_debugger_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/win32ide_quadbuffer_bridge.cpp)
+    # BATCH I (W3): real TransferScheduler (priority queue + bandwidth
+    # accounting + honest callbacks; prior file was a 2-byte scaffold) and
+    # the real AgenticTaskGraph (77KB TU, previously commented out).
+    list(APPEND WIN32IDE_SOURCES src/runtime/memory/TransferScheduler.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
     target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")
@@ -7647,6 +7686,26 @@ set_target_properties(test_q2k_single_tensor_oracle PROPERTIES
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
 message(STATUS "[Deep2] Q2_K single-tensor oracle: test_q2k_single_tensor_oracle")
+
+# test_embed_parity -- EMBED_PARITY_001
+add_executable(test_embed_parity
+    tests/test_embed_parity.cpp
+)
+target_link_libraries(test_embed_parity PRIVATE InferenceEngine)
+if(MSVC)
+    target_compile_options(test_embed_parity PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+endif()
+target_include_directories(test_embed_parity PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/tokenizer
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(test_embed_parity PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME test_embed_parity
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+message(STATUS "[Deep2] Embed parity test: test_embed_parity")
 
 # test_tokenizer — Tokenizer encode/decode verification
 add_executable(test_tokenizer
@@ -16551,3 +16610,5 @@ if(TARGET InferenceEngine)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME ev512_ide_restore_reload_fault_smoke)
 endif()
+
+

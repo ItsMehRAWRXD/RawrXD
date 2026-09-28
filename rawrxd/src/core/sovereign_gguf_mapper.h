@@ -8,12 +8,12 @@
 #define SOVEREIGN_GGUF_MAPPER_H
 
 #include "sovereign_transformer_forward.h"
-#include "../RawrXD_Interfaces.h"
-
-// Forward declaration
-namespace RawrXD {
-    class StreamingGGUFLoader;
-}
+#include "gguf_loader.h"             // RawrXD::GGUFLoader (real file-backed loader)
+#include "../deep2/GGUFLoader.hpp"   // Deep2::GGMLType (real enum)
+// RawrXD_Interfaces.h no longer exists. The mapper is now bound to the REAL
+// production loader (RawrXD::GGUFLoader — real CreateFileA/ReadFile surface
+// in gguf_loader.h). The orphaned StreamingGGUFLoader contract had no
+// implementation TU and is not used.
 
 namespace Sovereign {
 
@@ -43,7 +43,7 @@ namespace Sovereign {
 //   }
 //
 bool MapGGUFTensorsToModelWeights(
-    RawrXD::StreamingGGUFLoader* loader,
+    RawrXD::GGUFLoader* loader,
     ModelWeights& weights,
     bool verbose = true
 );
@@ -65,8 +65,10 @@ bool RunDryLoadTest(bool verbose = true);
 // =============================================================================
 // Get GGML Type Name
 // =============================================================================
-// Returns human-readable name for GGML quantization types
-const char* GetGGMLTypeName(::RawrXD::GGMLType type);
+// Returns human-readable name for GGML quantization types. The real enum
+// lives in namespace Deep2 (src/deep2/GGUFLoader.hpp) — the old
+// ::RawrXD::GGMLType no longer exists.
+const char* GetGGMLTypeName(Deep2::GGMLType type);
 
 } // namespace Sovereign
 

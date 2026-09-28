@@ -33,6 +33,10 @@ set(RE_CPP_SOURCES
     pe_analyzer.cpp
     decompiler.cpp
     binary_patcher.cpp
+    # W3: real API adapters implementing the RawrXD::ReverseEngineering public
+    # surface (NativeDisassembler/BinaryAnalyzer/RECodex/NativeCompiler)
+    # referenced by the IDE (pdb_reference_provider, auto_feature_registry).
+    re_api_bridge.cpp
     ../compiler_backend/InstructionEncoderX64.cpp
     ../compiler_backend/RawrCOFFWriter.cpp
     ../compiler_backend/RawrPE64Linker.cpp

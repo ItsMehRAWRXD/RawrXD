@@ -10,8 +10,11 @@
 #include "sovereign_q4_0_dequant.h"
 #include "sovereign_tokenizer.h"
 #include "sovereign_quantized_matmul.h"
-#include "../gguf_loader.h"
-#include "../streaming_gguf_loader.h"
+#include "gguf_loader.h"
+#include "sovereign_gguf_mapper.h"   // own header: Deep2::GGMLType decl + API
+// NOTE: the mapper is bound to the REAL RawrXD::GGUFLoader (gguf_loader.h).
+// The orphaned StreamingGGUFLoader contract had no implementation TU and is
+// not used. RawrXD::GGUFLoader exposes the real ReadTensorData surface.
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -21,6 +24,19 @@
 #include <random>
 
 namespace Sovereign {
+
+// ============================================================================
+// ReadTensorByName — real data read through RawrXD::GGUFLoader.
+// Returns true and fills `out` with exactly `info.byteSize` bytes on success.
+// ============================================================================
+static bool ReadTensorByName(RawrXD::GGUFLoader* loader,
+                             const std::string& name,
+                             std::vector<uint8_t>& out) {
+    const RawrXD::TensorInfo* info = loader->GetTensor(name.c_str());
+    if (!info || info->byteSize == 0) return false;
+    out.resize(static_cast<size_t>(info->byteSize));
+    return loader->ReadTensorData(*info, out.data(), out.size());
+}
 
 // =============================================================================
 // GGUF Tensor Name Mapping
@@ -70,31 +86,21 @@ std::string FormatTensorName(const char* pattern, int layer_idx) {
 // =============================================================================
 // Helper: Get GGML type name
 // =============================================================================
-const char* GetGGMLTypeName(::RawrXD::GGMLType type) {
+const char* GetGGMLTypeName(Deep2::GGMLType type) {
     switch (type) {
-        case RawrXD::GGMLType::F32: return "F32";
-        case RawrXD::GGMLType::F16: return "F16";
-        case RawrXD::GGMLType::Q4_0: return "Q4_0";
-        case RawrXD::GGMLType::Q4_1: return "Q4_1";
-        case RawrXD::GGMLType::Q5_0: return "Q5_0";
-        case RawrXD::GGMLType::Q5_1: return "Q5_1";
-        case RawrXD::GGMLType::Q8_0: return "Q8_0";
-        case RawrXD::GGMLType::Q8_1: return "Q8_1";
-        case RawrXD::GGMLType::Q2_K: return "Q2_K";
-        case RawrXD::GGMLType::Q3_K: return "Q3_K";
-        case RawrXD::GGMLType::Q4_K: return "Q4_K";
-        case RawrXD::GGMLType::Q5_K: return "Q5_K";
-        case RawrXD::GGMLType::Q6_K: return "Q6_K";
-        case RawrXD::GGMLType::Q8_K: return "Q8_K";
-        case RawrXD::GGMLType::IQ2_XXS: return "IQ2_XXS";
-        case RawrXD::GGMLType::IQ2_XS: return "IQ2_XS";
-        case RawrXD::GGMLType::IQ3_XXS: return "IQ3_XXS";
-        case RawrXD::GGMLType::IQ1_S: return "IQ1_S";
-        case RawrXD::GGMLType::IQ4_NL: return "IQ4_NL";
-        case RawrXD::GGMLType::IQ3_S: return "IQ3_S";
-        case RawrXD::GGMLType::IQ2_S: return "IQ2_S";
-        case RawrXD::GGMLType::IQ4_XS: return "IQ4_XS";
-        case RawrXD::GGMLType::IQ1_M: return "IQ1_M";
+        case Deep2::GGMLType::GGML_TYPE_F32: return "F32";
+        case Deep2::GGMLType::GGML_TYPE_F16: return "F16";
+        case Deep2::GGMLType::GGML_TYPE_Q4_0: return "Q4_0";
+        case Deep2::GGMLType::GGML_TYPE_Q4_1: return "Q4_1";
+        case Deep2::GGMLType::GGML_TYPE_Q5_0: return "Q5_0";
+        case Deep2::GGMLType::GGML_TYPE_Q5_1: return "Q5_1";
+        case Deep2::GGMLType::GGML_TYPE_Q8_0: return "Q8_0";
+        case Deep2::GGMLType::GGML_TYPE_Q2_K: return "Q2_K";
+        case Deep2::GGMLType::GGML_TYPE_Q3_K: return "Q3_K";
+        case Deep2::GGMLType::GGML_TYPE_Q4_K: return "Q4_K";
+        case Deep2::GGMLType::GGML_TYPE_Q5_K: return "Q5_K";
+        case Deep2::GGMLType::GGML_TYPE_Q6_K: return "Q6_K";
+        case Deep2::GGMLType::GGML_TYPE_Q8_K: return "Q8_K";
         default: return "UNKNOWN";
     }
 }
@@ -103,21 +109,31 @@ const char* GetGGMLTypeName(::RawrXD::GGMLType type) {
 // Map GGUF Tensors to ModelWeights
 // =============================================================================
 bool MapGGUFTensorsToModelWeights(
-    RawrXD::StreamingGGUFLoader* loader,
+    RawrXD::GGUFLoader* loader,
     ModelWeights& weights,
-    bool verbose = true
+    bool verbose
 ) {
     if (!loader) {
         fprintf(stderr, "[GGUF Mapper] ERROR: Loader is null\n");
         return false;
     }
-    
+
     if (verbose) {
         printf("[GGUF Mapper] Starting tensor mapping...\n");
     }
-    
-    // Get tensor info from loader
-    auto tensor_info = loader->GetAllTensorInfo();
+
+    // Get tensor info from loader (real RawrXD::GGUFLoader surface)
+    const size_t tensorCount = loader->GetTensorCount();
+    if (tensorCount == 0 && !loader->ParseTensors()) {
+        fprintf(stderr, "[GGUF Mapper] ERROR: No tensors found in GGUF\n");
+        return false;
+    }
+    std::vector<RawrXD::TensorInfo> tensor_info;
+    tensor_info.reserve(loader->GetTensorCount());
+    for (size_t i = 0; i < loader->GetTensorCount(); ++i) {
+        const RawrXD::TensorInfo* t = loader->GetTensor(i);
+        if (t) tensor_info.push_back(*t);
+    }
     if (tensor_info.empty()) {
         fprintf(stderr, "[GGUF Mapper] ERROR: No tensors found in GGUF\n");
         return false;
@@ -201,9 +217,9 @@ bool MapGGUFTensorsToModelWeights(
                     if (name == expected_name) {
                         // Found a match! Map this tensor
                         if (verbose) {
-                            printf("[GGUF Mapper] Mapping '%s' -> %s[%u] (type=%s, size=%zu)\n",
+                            printf("[GGUF Mapper] Mapping '%s' -> %s[%u] (type=%s, size=%u)\n",
                                    name.c_str(), mapping.weight_type, layer,
-                                   GetGGMLTypeName(info.type), info.size);
+                                   GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)), info.byteSize);
                         }
                         
                         // TODO: For now, just allocate dummy memory
@@ -227,9 +243,9 @@ bool MapGGUFTensorsToModelWeights(
                         if (target_ptr) {
                             // Load tensor data from GGUF using direct read
                             std::vector<uint8_t> tensor_data;
-                            if (loader->GetTensorDataDirect(name, tensor_data)) {
+                            if (ReadTensorByName(loader, name, tensor_data)) {
                                 // Handle different quantization types
-                                if (info.type == ::RawrXD::GGMLType::Q3_K) {
+                                if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q3_K) {
                                     // Store quantized data directly (memory-efficient)
                                     uint32_t n_elements = GetElementCount_Q3_K_S(tensor_data.size());
                                     QuantizedWeightData* q_target = nullptr;
@@ -259,7 +275,7 @@ bool MapGGUFTensorsToModelWeights(
                                             }
                                         }
                                     }
-                                } else if (info.type == ::RawrXD::GGMLType::Q6_K) {
+                                } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q6_K) {
                                     // Store Q6_K quantized data
                                     uint32_t n_elements = GetElementCount_Q6_K(tensor_data.size());
                                     QuantizedWeightData* q_target = nullptr;
@@ -287,7 +303,7 @@ bool MapGGUFTensorsToModelWeights(
                                             }
                                         }
                                     }
-                                } else if (info.type == ::RawrXD::GGMLType::Q4_0) {
+                                } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q4_0) {
                                     // Store Q4_0 quantized data (memory-efficient)
                                     uint32_t n_elements = GetElementCount_Q4_0(tensor_data.size());
                                     QuantizedWeightData* q_target = nullptr;
@@ -315,7 +331,7 @@ bool MapGGUFTensorsToModelWeights(
                                             }
                                         }
                                     }
-                                } else if (info.type == ::RawrXD::GGMLType::F32) {
+                                } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_F32) {
                                     // Already float32, store directly
                                     float* float_data = static_cast<float*>(
                                         VirtualAlloc(nullptr, tensor_data.size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
@@ -331,10 +347,10 @@ bool MapGGUFTensorsToModelWeights(
                                     // Other types: allocate stub
                                     if (verbose) {
                                         printf("[GGUF Mapper]   -> WARNING: Unsupported type %s, allocating stub\n",
-                                               GetGGMLTypeName(info.type));
+                                               GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)));
                                     }
                                     *target_ptr = static_cast<float*>(
-                                        VirtualAlloc(nullptr, info.size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
+                                        VirtualAlloc(nullptr, info.byteSize * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
                                     );
                                     mapped = true;
                                 }
@@ -359,17 +375,17 @@ bool MapGGUFTensorsToModelWeights(
                         // Handle fused QKV separately (no F32 pointer, only quantized)
                         if (strcmp(mapping.weight_type, "wqkv") == 0) {
                             std::vector<uint8_t> tensor_data;
-                            if (loader->GetTensorDataDirect(name, tensor_data)) {
+                            if (ReadTensorByName(loader, name, tensor_data)) {
                                 uint32_t n_elements = 0;
                                 int quant_type = 0;
                                 
-                                if (info.type == ::RawrXD::GGMLType::Q3_K) {
+                                if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q3_K) {
                                     n_elements = GetElementCount_Q3_K_S(tensor_data.size());
                                     quant_type = 1;
-                                } else if (info.type == ::RawrXD::GGMLType::Q6_K) {
+                                } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q6_K) {
                                     n_elements = GetElementCount_Q6_K(tensor_data.size());
                                     quant_type = 2;
-                                } else if (info.type == ::RawrXD::GGMLType::Q4_0) {
+                                } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q4_0) {
                                     n_elements = GetElementCount_Q4_0(tensor_data.size());
                                     quant_type = 3;
                                 }
@@ -386,7 +402,7 @@ bool MapGGUFTensorsToModelWeights(
                                         mapped = true;
                                         if (verbose) {
                                             printf("[GGUF Mapper]   -> Stored fused QKV (%s): %u elements in %zu bytes\n",
-                                                   GetGGMLTypeName(info.type), n_elements, tensor_data.size());
+                                                   GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)), n_elements, tensor_data.size());
                                         }
                                     }
                                 }
@@ -400,14 +416,14 @@ bool MapGGUFTensorsToModelWeights(
                 // Handle global tensors
                 if (name == mapping.gguf_pattern) {
                     if (verbose) {
-                        printf("[GGUF Mapper] Mapping '%s' -> %s (type=%s, size=%zu)\n",
+                        printf("[GGUF Mapper] Mapping '%s' -> %s (type=%s, size=%u)\n",
                                name.c_str(), mapping.weight_type,
-                               GetGGMLTypeName(info.type), info.size);
+                               GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)), info.byteSize);
                     }
                     
                     // Map global tensors with dequantization
                     std::vector<uint8_t> tensor_data;
-                    if (loader->GetTensorDataDirect(name, tensor_data)) {
+                    if (ReadTensorByName(loader, name, tensor_data)) {
                         float** target_ptr = nullptr;
                         QuantizedWeightData* q_target = nullptr;
                         if (strcmp(mapping.weight_type, "token_embeddings") == 0) {
@@ -421,7 +437,7 @@ bool MapGGUFTensorsToModelWeights(
                         }
                         
                         if (target_ptr) {
-                            if (info.type == ::RawrXD::GGMLType::Q3_K) {
+                            if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q3_K) {
                                 // Store quantized for embeddings/lm_head
                                 if (q_target) {
                                     uint32_t n_elements = GetElementCount_Q3_K_S(tensor_data.size());
@@ -448,7 +464,7 @@ bool MapGGUFTensorsToModelWeights(
                                         mapped = true;
                                     }
                                 }
-                            } else if (info.type == ::RawrXD::GGMLType::Q6_K) {
+                            } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q6_K) {
                                 if (q_target) {
                                     uint32_t n_elements = GetElementCount_Q6_K(tensor_data.size());
                                     q_target->data = static_cast<uint8_t*>(
@@ -473,7 +489,7 @@ bool MapGGUFTensorsToModelWeights(
                                         mapped = true;
                                     }
                                 }
-                            } else if (info.type == ::RawrXD::GGMLType::Q4_0) {
+                            } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_Q4_0) {
                                 // Handle Q4_0 for token_embeddings and lm_head
                                 if (q_target) {
                                     uint32_t n_elements = GetElementCount_Q4_0(tensor_data.size());
@@ -505,7 +521,7 @@ bool MapGGUFTensorsToModelWeights(
                                         if (dequantized) VirtualFree(dequantized, 0, MEM_RELEASE);
                                     }
                                 }
-                            } else if (info.type == ::RawrXD::GGMLType::F32) {
+                            } else if (static_cast<Deep2::GGMLType>(info.type) == Deep2::GGMLType::GGML_TYPE_F32) {
                                 float* float_data = static_cast<float*>(
                                     VirtualAlloc(nullptr, tensor_data.size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
                                 );
@@ -516,12 +532,12 @@ bool MapGGUFTensorsToModelWeights(
                                 }
                             } else {
                                 fprintf(stderr, "[GGUF Mapper] WARNING: Unsupported type %s for %s, allocating stub\n",
-                                        GetGGMLTypeName(info.type), mapping.weight_type);
+                                        GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)), mapping.weight_type);
                                 *target_ptr = static_cast<float*>(
-                                    VirtualAlloc(nullptr, info.size * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
+                                    VirtualAlloc(nullptr, info.byteSize * 4, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE)
                                 );
                                 if (*target_ptr) {
-                                    memset(*target_ptr, 0, info.size * 4);
+                                    memset(*target_ptr, 0, info.byteSize * 4);
                                 }
                                 mapped = true;
                             }
@@ -538,7 +554,7 @@ bool MapGGUFTensorsToModelWeights(
         } else {
             if (verbose) {
                 printf("[GGUF Mapper] Skipping '%s' (type=%s)\n",
-                       name.c_str(), GetGGMLTypeName(info.type));
+                       name.c_str(), GetGGMLTypeName(static_cast<Deep2::GGMLType>(info.type)));
             }
             skipped_count++;
         }
@@ -564,10 +580,11 @@ bool MapGGUFTensorsToModelWeights(
     if (weights.attn_norm && weights.attn_norm[0]) {
         // Try to get actual size from tensor info
         std::string norm_name = "blk.0.attn_norm.weight";
-        auto tensor_info = loader->GetTensorInfo();
+        std::vector<RawrXD::TensorInfo> tensor_info;
+        for (size_t i = 0; i < loader->GetTensorCount(); ++i) { const RawrXD::TensorInfo* t = loader->GetTensor(i); if (t) tensor_info.push_back(*t); }
         for (const auto& info : tensor_info) {
             if (info.name == norm_name) {
-                inferred_hidden_dim = static_cast<uint32_t>(info.size / sizeof(float));
+                inferred_hidden_dim = static_cast<uint32_t>(info.byteSize / sizeof(float));
                 printf("[GGUF Mapper] Inferred hidden_dim=%u from attn_norm[0] size\n", inferred_hidden_dim);
                 break;
             }
@@ -577,10 +594,11 @@ bool MapGGUFTensorsToModelWeights(
     // If still not set, try from ffn_norm
     if (inferred_hidden_dim == 0 && weights.ffn_norm && weights.ffn_norm[0]) {
         std::string norm_name = "blk.0.ffn_norm.weight";
-        auto tensor_info = loader->GetTensorInfo();
+        std::vector<RawrXD::TensorInfo> tensor_info;
+        for (size_t i = 0; i < loader->GetTensorCount(); ++i) { const RawrXD::TensorInfo* t = loader->GetTensor(i); if (t) tensor_info.push_back(*t); }
         for (const auto& info : tensor_info) {
             if (info.name == norm_name) {
-                inferred_hidden_dim = static_cast<uint32_t>(info.size / sizeof(float));
+                inferred_hidden_dim = static_cast<uint32_t>(info.byteSize / sizeof(float));
                 printf("[GGUF Mapper] Inferred hidden_dim=%u from ffn_norm[0] size\n", inferred_hidden_dim);
                 break;
             }
@@ -606,13 +624,14 @@ bool MapGGUFTensorsToModelWeights(
     printf("[DIAG] Config hidden_dim=%u, inferred from tensors=%u, final=%u\n",
            config_hidden_dim, inferred_hidden_dim, weights.hidden_dim);
     
-    // Infer vocab_size from actual vocabulary loaded
+    // Infer vocab_size from actual vocabulary loaded.
+    // NOTE: the real RawrXD::GGUFLoader does not carry a tokenizer vocabulary
+    // (that lives in sovereign_tokenizer / the Deep2 tokenizer path). The
+    // vocab here is therefore the METADATA vocab only — fail-closed: no
+    // synthetic vocabulary is invented.
     uint32_t inferred_vocab_size = 0;
-    const auto& vocab = loader->GetVocabulary();
-    if (!vocab.empty()) {
-        inferred_vocab_size = static_cast<uint32_t>(vocab.size());
-        printf("[GGUF Mapper] Inferred vocab_size=%u from actual vocabulary\n", inferred_vocab_size);
-    }
+    const uint32_t tokenizer_vocab_size_real = 0;  // no tokenizer vocab on the real loader
+    (void)tokenizer_vocab_size_real;
     
     // Also try to infer from token_embeddings tensor
     // NOTE: This calculation is often wrong for Q4_0 - prefer tokenizer vocab
@@ -646,14 +665,14 @@ bool MapGGUFTensorsToModelWeights(
     uint32_t metadata_vocab_size = metadata.vocab_size;
     
     // Get actual tokenizer vocab size (may be smaller if GGUF is truncated)
-    uint32_t tokenizer_vocab_size = static_cast<uint32_t>(vocab.size());
+    uint32_t tokenizer_vocab_size = static_cast<uint32_t>(tokenizer_vocab_size_real);
     
     // Use the LARGER of metadata vs tokenizer vocab size
     // The metadata vocab_size is the authoritative value from model training
     if (metadata_vocab_size > tokenizer_vocab_size) {
         tokenizer_vocab_size = metadata_vocab_size;
-        printf("[GGUF Mapper] Using metadata vocab_size=%u (larger than tokenizer vocab %zu)\n",
-               metadata_vocab_size, vocab.size());
+        printf("[GGUF Mapper] Using metadata vocab_size=%u (larger than tokenizer vocab %u)\n",
+               metadata_vocab_size, tokenizer_vocab_size_real);
     }
     
     // Calculate token embedding vocab
@@ -768,11 +787,17 @@ bool MapGGUFTensorsToModelWeights(
     
     // Validate hidden_dim matches actual tensor sizes
     uint32_t actual_norm_elements = 0;
-    auto tensor_info_check = loader->GetTensorInfo();
-    for (const auto& info : tensor_info_check) {
-        if (info.name == "blk.0.attn_norm.weight") {
-            actual_norm_elements = static_cast<uint32_t>(info.size / sizeof(float));
-            break;
+    {
+        std::vector<RawrXD::TensorInfo> tensor_info_check;
+        for (size_t i = 0; i < loader->GetTensorCount(); ++i) {
+            const RawrXD::TensorInfo* t = loader->GetTensor(i);
+            if (t) tensor_info_check.push_back(*t);
+        }
+        for (const auto& info : tensor_info_check) {
+            if (info.name == std::string("blk.0.attn_norm.weight")) {
+                actual_norm_elements = static_cast<uint32_t>(info.byteSize / sizeof(float));
+                break;
+            }
         }
     }
     if (actual_norm_elements > 0 && weights.hidden_dim != actual_norm_elements) {
@@ -787,13 +812,14 @@ bool MapGGUFTensorsToModelWeights(
         printf("[DIAG] hidden_dim=%u ✓ (matches tensor sizes)\n", weights.hidden_dim);
     }
     
-    // Validate vocab_size
-    const auto& vocab_check = loader->GetVocabulary();
-    if (!vocab_check.empty() && weights.vocab_size != vocab_check.size()) {
-        printf("[DIAG] WARNING: vocab_size=%u but vocabulary has %zu tokens\n",
-               weights.vocab_size, vocab_check.size());
+    // Validate vocab_size. The real RawrXD::GGUFLoader carries no tokenizer
+    // vocabulary (no GetVocabulary) — the metadata vocab_size is the only
+    // honest source here; no synthetic vocabulary is invented.
+    if (weights.vocab_size != metadata_vocab_size && metadata_vocab_size > 0) {
+        printf("[DIAG] WARNING: vocab_size=%u but metadata vocab is %u\n",
+               weights.vocab_size, metadata_vocab_size);
     } else {
-        printf("[DIAG] vocab_size=%u ✓\n", weights.vocab_size);
+        printf("[DIAG] vocab_size=%u OK\n", weights.vocab_size);
     }
     
     // Validate quantized weights exist
@@ -925,7 +951,7 @@ bool RunDryLoadTest(bool verbose) {
     // Create a synthetic "tensor info" list that mimics Llama 3.2 structure
     struct SyntheticTensor {
         std::string name;
-        ::RawrXD::GGMLType type;
+        Deep2::GGMLType type;
         uint64_t size;
         std::vector<uint8_t> data;
     };
@@ -946,7 +972,7 @@ bool RunDryLoadTest(bool verbose) {
     {
         SyntheticTensor t;
         t.name = "token_embd.weight";
-        t.type = ::RawrXD::GGMLType::Q3_K;
+        t.type = Deep2::GGMLType::GGML_TYPE_Q3_K;
         uint64_t n_blocks = (vocab_size * hidden_dim + 255) / 256;
         t.size = n_blocks * 98;
         t.data.resize(t.size);
@@ -958,7 +984,7 @@ bool RunDryLoadTest(bool verbose) {
     {
         SyntheticTensor t;
         t.name = "output_norm.weight";
-        t.type = ::RawrXD::GGMLType::F32;
+        t.type = Deep2::GGMLType::GGML_TYPE_F32;
         t.size = hidden_dim * sizeof(float);
         t.data.resize(t.size);
         float* fdata = reinterpret_cast<float*>(t.data.data());
@@ -970,7 +996,7 @@ bool RunDryLoadTest(bool verbose) {
     {
         SyntheticTensor t;
         t.name = "output.weight";
-        t.type = ::RawrXD::GGMLType::Q3_K;
+        t.type = Deep2::GGMLType::GGML_TYPE_Q3_K;
         uint64_t n_blocks = (vocab_size * hidden_dim + 255) / 256;
         t.size = n_blocks * 98;
         t.data.resize(t.size);
@@ -987,7 +1013,7 @@ bool RunDryLoadTest(bool verbose) {
         {
             SyntheticTensor t;
             t.name = buf;
-            t.type = ::RawrXD::GGMLType::F32;
+            t.type = Deep2::GGMLType::GGML_TYPE_F32;
             t.size = hidden_dim * sizeof(float);
             t.data.resize(t.size);
             float* fdata = reinterpret_cast<float*>(t.data.data());
@@ -1001,7 +1027,7 @@ bool RunDryLoadTest(bool verbose) {
             snprintf(buf, sizeof(buf), "blk.%d.%s.weight", layer, attn_name);
             SyntheticTensor t;
             t.name = buf;
-            t.type = ::RawrXD::GGMLType::Q3_K;
+            t.type = Deep2::GGMLType::GGML_TYPE_Q3_K;
             // Simplified: assume square-ish matrices
             uint64_t n_blocks = (hidden_dim * hidden_dim + 255) / 256;
             t.size = n_blocks * 98;
@@ -1015,7 +1041,7 @@ bool RunDryLoadTest(bool verbose) {
         {
             SyntheticTensor t;
             t.name = buf;
-            t.type = ::RawrXD::GGMLType::F32;
+            t.type = Deep2::GGMLType::GGML_TYPE_F32;
             t.size = hidden_dim * sizeof(float);
             t.data.resize(t.size);
             float* fdata = reinterpret_cast<float*>(t.data.data());
@@ -1029,7 +1055,7 @@ bool RunDryLoadTest(bool verbose) {
             snprintf(buf, sizeof(buf), "blk.%d.%s.weight", layer, ffn_name);
             SyntheticTensor t;
             t.name = buf;
-            t.type = ::RawrXD::GGMLType::Q3_K;
+            t.type = Deep2::GGMLType::GGML_TYPE_Q3_K;
             uint64_t n_blocks = (hidden_dim * ffn_dim + 255) / 256;
             t.size = n_blocks * 98;
             t.data.resize(t.size);
@@ -1081,7 +1107,7 @@ bool RunDryLoadTest(bool verbose) {
     int dequant_passed = 0;
     
     for (const auto& t : synthetic_tensors) {
-        if (t.type == ::RawrXD::GGMLType::Q3_K) {
+        if (t.type == Deep2::GGMLType::GGML_TYPE_Q3_K) {
             dequant_tests++;
             uint32_t n_elements = GetElementCount_Q3_K_S(t.size);
             float* dequantized = nullptr;
@@ -1118,9 +1144,9 @@ bool RunDryLoadTest(bool verbose) {
     // Simulate allocating all dequantized tensors
     for (const auto& t : synthetic_tensors) {
         uint32_t n_elements = 0;
-        if (t.type == ::RawrXD::GGMLType::Q3_K) {
+        if (t.type == Deep2::GGMLType::GGML_TYPE_Q3_K) {
             n_elements = GetElementCount_Q3_K_S(t.size);
-        } else if (t.type == ::RawrXD::GGMLType::F32) {
+        } else if (t.type == Deep2::GGMLType::GGML_TYPE_F32) {
             n_elements = t.size / sizeof(float);
         }
         
@@ -1228,3 +1254,8 @@ bool RunDryLoadTest(bool verbose) {
 }
 
 } // namespace Sovereign
+
+
+
+
+

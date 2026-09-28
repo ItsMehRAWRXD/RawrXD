@@ -5,7 +5,7 @@
 // ============================================================================
 
 #include "vision_encoder.hpp"
-#include "../streaming_gguf_loader.h"
+#include "sovereign_gguf_mapper.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -1056,32 +1056,13 @@ VisionResult VisionEncoder::loadModel(const VisionModelConfig& config)
     // Compute derived values
     config_.numPatches = (config_.inputSize / config_.patchSize) * (config_.inputSize / config_.patchSize);
 
-    // Load GGUF vision model via streaming_gguf_loader
+    // Load GGUF vision model via the real Deep2 GGUF loader (memory-mapped)
     if (!config.modelPath.empty() && std::filesystem::exists(config.modelPath))
     {
-        auto* loader = new RawrXD::StreamingGGUFLoader();
-        if (loader->Open(config.modelPath))
+        auto* loader = new ::Deep2::GGUFLoader();
+        if (loader->load(config.modelPath))
         {
-            if (loader->ParseHeader() && loader->ParseMetadata() && loader->BuildTensorIndex())
-            {
-                // Load the embedding zone first (most critical for vision)
-                auto zones = loader->GetAllZones();
-                for (const auto& zone : zones)
-                {
-                    if (zone.find("embd") != std::string::npos || zone.find("patch") != std::string::npos ||
-                        zone.find("position") != std::string::npos)
-                    {
-                        loader->LoadZone(zone, 1024);
-                    }
-                }
-                modelHandle_ = static_cast<void*>(loader);
-            }
-            else
-            {
-                loader->Close();
-                delete loader;
-                modelHandle_ = nullptr;
-            }
+            modelHandle_ = static_cast<void*>(loader);
         }
         else
         {
@@ -1097,25 +1078,10 @@ VisionResult VisionEncoder::loadModel(const VisionModelConfig& config)
     if (!config.projectorPath.empty() && std::filesystem::exists(config.projectorPath))
     {
         // Load mm_projector for LLaVA-style models
-        auto* projLoader = new RawrXD::StreamingGGUFLoader();
-        if (projLoader->Open(config.projectorPath))
+        auto* projLoader = new ::Deep2::GGUFLoader();
+        if (projLoader->load(config.projectorPath))
         {
-            if (projLoader->ParseHeader() && projLoader->ParseMetadata() && projLoader->BuildTensorIndex())
-            {
-                // Load all projector tensors (typically small)
-                auto zones = projLoader->GetAllZones();
-                for (const auto& zone : zones)
-                {
-                    projLoader->LoadZone(zone, 512);
-                }
-                projectorHandle_ = static_cast<void*>(projLoader);
-            }
-            else
-            {
-                projLoader->Close();
-                delete projLoader;
-                projectorHandle_ = nullptr;
-            }
+            projectorHandle_ = static_cast<void*>(projLoader);
         }
         else
         {
@@ -1134,16 +1100,16 @@ VisionResult VisionEncoder::unloadModel()
 
     if (modelHandle_)
     {
-        auto* loader = static_cast<RawrXD::StreamingGGUFLoader*>(modelHandle_);
-        loader->Close();
+        auto* loader = static_cast<::Deep2::GGUFLoader*>(modelHandle_);
+        loader->close();
         delete loader;
     }
     modelHandle_ = nullptr;
 
     if (projectorHandle_)
     {
-        auto* projLoader = static_cast<RawrXD::StreamingGGUFLoader*>(projectorHandle_);
-        projLoader->Close();
+        auto* projLoader = static_cast<::Deep2::GGUFLoader*>(projectorHandle_);
+        projLoader->close();
         delete projLoader;
     }
     projectorHandle_ = nullptr;
@@ -1264,27 +1230,27 @@ VisionResult VisionEncoder::inferVisionModel(const std::vector<float>& preproces
     if (modelHandle_)
     {
         // Route through GGUF loaded model — extract vision transformer weights
-        auto* loader = static_cast<RawrXD::StreamingGGUFLoader*>(modelHandle_);
-        auto tensorIndex = loader->GetTensorIndex();
+        auto* loader = static_cast<::Deep2::GGUFLoader*>(modelHandle_);
 
-        // Find patch embedding weights
-        std::vector<uint8_t> patchEmbedData;
-        for (const auto& tref : tensorIndex)
+        // Find patch embedding weights (memory-mapped; never copied)
+        const ::Deep2::GGUFTensor* patchTensor = nullptr;
+        for (const auto& tname : loader->listTensors())
         {
-            if (tref.name.find("patch_embed") != std::string::npos ||
-                tref.name.find("patch_embd") != std::string::npos || tref.name.find("v.patch") != std::string::npos)
+            if (tname.find("patch_embed") != std::string::npos ||
+                tname.find("patch_embd") != std::string::npos || tname.find("v.patch") != std::string::npos)
             {
-                loader->LoadTensorZone(tref.name, patchEmbedData);
+                patchTensor = loader->getTensor(tname);
                 break;
             }
         }
 
-        if (!patchEmbedData.empty())
+        if (patchTensor && patchTensor->data && patchTensor->sizeBytes > 0)
         {
             // Apply patch embedding: project preprocessed patches through weights
-            const float* weights = reinterpret_cast<const float*>(patchEmbedData.data());
-            size_t weightCount = patchEmbedData.size() / sizeof(float);
+            const uint8_t* rawWeights = patchTensor->data;
+            const size_t weightBytes = patchTensor->sizeBytes;
             uint32_t dim = config_.embeddingDim;
+            const bool isF32 = (patchTensor->type == ::Deep2::GGMLType::GGML_TYPE_F32);
 
             // Simple linear projection: embedding[d] = sum(patches[i] * weights[i*dim+d])
             for (uint32_t d = 0; d < dim; ++d)
@@ -1296,7 +1262,15 @@ VisionResult VisionEncoder::inferVisionModel(const std::vector<float>& preproces
                 for (size_t i = 0; i < stride && i < preprocessed.size(); ++i)
                 {
                     size_t wIdx = i * dim + d;
-                    float w = (wIdx < weightCount) ? weights[wIdx] : 0.0f;
+                    float w = 0.0f;
+                    if (isF32)
+                    {
+                        const size_t byteOff = wIdx * sizeof(float);
+                        if (byteOff + sizeof(float) <= weightBytes)
+                        {
+                            std::memcpy(&w, rawWeights + byteOff, sizeof(float));
+                        }
+                    }
                     acc += preprocessed[i] * w;
                 }
                 output.embedding[d] = acc;
@@ -1305,18 +1279,17 @@ VisionResult VisionEncoder::inferVisionModel(const std::vector<float>& preproces
             // If projector available, apply mm_projector transform
             if (projectorHandle_)
             {
-                auto* projLoader = static_cast<RawrXD::StreamingGGUFLoader*>(projectorHandle_);
-                auto projTensors = projLoader->GetTensorIndex();
-                for (const auto& tref : projTensors)
+                auto* projLoader = static_cast<::Deep2::GGUFLoader*>(projectorHandle_);
+                for (const auto& ptname : projLoader->listTensors())
                 {
-                    if (tref.name.find("weight") != std::string::npos)
+                    if (ptname.find("weight") != std::string::npos)
                     {
-                        std::vector<uint8_t> projData;
-                        projLoader->LoadTensorZone(tref.name, projData);
-                        if (!projData.empty())
+                        const ::Deep2::GGUFTensor* pTensor = projLoader->getTensor(ptname);
+                        if (pTensor && pTensor->data && pTensor->sizeBytes > 0 &&
+                            pTensor->type == ::Deep2::GGMLType::GGML_TYPE_F32)
                         {
-                            const float* pw = reinterpret_cast<const float*>(projData.data());
-                            size_t pwCount = projData.size() / sizeof(float);
+                            const float* pw = reinterpret_cast<const float*>(pTensor->data);
+                            size_t pwCount = pTensor->sizeBytes / sizeof(float);
                             std::vector<float> projected(dim, 0.0f);
                             for (uint32_t d = 0; d < dim; ++d)
                             {
@@ -2222,8 +2195,8 @@ void VisionEncoder::shutdown()
     // Free model loader (same logic as unloadModel but can be called from destructor)
     if (modelHandle_)
     {
-        auto* loader = static_cast<RawrXD::StreamingGGUFLoader*>(modelHandle_);
-        loader->Close();
+        auto* loader = static_cast<::Deep2::GGUFLoader*>(modelHandle_);
+        loader->close();
         delete loader;
         modelHandle_ = nullptr;
     }
@@ -2231,8 +2204,8 @@ void VisionEncoder::shutdown()
     // Free projector loader
     if (projectorHandle_)
     {
-        auto* projLoader = static_cast<RawrXD::StreamingGGUFLoader*>(projectorHandle_);
-        projLoader->Close();
+        auto* projLoader = static_cast<::Deep2::GGUFLoader*>(projectorHandle_);
+        projLoader->close();
         delete projLoader;
         projectorHandle_ = nullptr;
     }
@@ -2246,3 +2219,4 @@ void VisionEncoder::shutdown()
 
 }  // namespace Vision
 }  // namespace RawrXD
+

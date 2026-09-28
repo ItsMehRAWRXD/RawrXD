@@ -9,6 +9,9 @@ std::string BoundedAgentLoop::Execute(const std::string& task) {
     std::string result;
     while (currentStep_ < config_.maxSteps) {
         ++currentStep_;
+        if (progress_) {
+            progress_(currentStep_, config_.maxSteps, "executing", task);
+        }
         // Stub: no real model invocation yet
         break;
     }

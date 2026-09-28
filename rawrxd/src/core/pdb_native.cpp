@@ -19,7 +19,7 @@
 // ============================================================================
 
 #include "../../include/pdb_native.h"
-// #include "../../include/pdb_gsi_hash.h"   /* header missing — recovered in build pass */
+#include "../../include/pdb_gsi_hash.h"   /* W3: header recovered (reconstructed) */
 
 #include <cstdio>
 #include <cstring>
@@ -60,7 +60,10 @@ static const uint32_t PUB32_NAME_OFFSET = 14;
 // When building with MinGW (non-MSVC), the MASM64 ASM kernels are not
 // assembled. These C++ implementations provide equivalent functionality.
 // On MSVC builds, the ASM object provides these symbols via extern "C".
-#ifndef RAWR_HAS_MASM
+// W3 fix: the MASM PDB kernel asm files are scaffold stubs that do not export
+// PDB_ValidateMagic/PDB_ScanPublics/PDB_BuildPageList/PDB_GuidToHex, and the
+// parser calls them unconditionally — the portable implementations must
+// always compile (fail-closed, no unresolved fallbacks).
 
 uint32_t PDB_ValidateMagic(const void* superBlock) {
     // Compare first 32 bytes against MSF v7.00 magic
@@ -146,7 +149,6 @@ uint32_t PDB_GuidToHex(const uint8_t guid[16], char* out, uint32_t maxLen) {
     return pos;
 }
 
-#endif // !RAWR_HAS_MASM
 
 // ============================================================================
 // NativePDBParser — Constructor / Destructor

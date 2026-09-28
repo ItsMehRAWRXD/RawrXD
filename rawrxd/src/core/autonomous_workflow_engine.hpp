@@ -36,8 +36,58 @@ class BulkFixOrchestrator;
 class AgenticFailureDetector;
 class AgenticPuppeteer;
 struct BulkFixResult;
-struct BulkFixTarget;
 struct ReasoningProfile;
+
+// BulkFixTarget — one file the bulk-fix stage will rewrite. Defined here
+// (was forward-declared only while the .cpp used it by value → C2079).
+// Field names follow the existing .cpp usage (id/path/category/status).
+struct BulkFixTarget {
+    enum class Status : uint8_t { Pending = 0, Applied = 1, Failed = 2, Skipped = 3 };
+    std::string  id;
+    std::string  path;
+    std::string  category;
+    Status       status = Status::Pending;
+    bool         verified = false;
+    std::string  failureDetail;
+};
+
+// BulkFixStrategy / BulkFixResult — orchestrator contracts used by the
+// bulk-fix stage (the .cpp constructs them by value; forward declarations
+// alone produced C2065/C2146). Real fields per the existing call sites.
+struct BulkFixStrategy {
+    std::string name;
+    int         maxParallel = 4;
+    int         maxRetries  = 3;
+    bool        autoVerify  = true;
+    bool        selfHeal    = true;
+};
+
+struct BulkFixResult {
+    bool        success = false;
+    std::string error;
+    int         fixedCount()  const { return fixed_; }
+    int         failedCount() const { return failed_; }
+    int         fixed_  = 0;
+    int         failed_ = 0;
+    std::vector<std::string> appliedFiles;
+};
+
+// BulkFixOrchestrator — real implementation (W3): executes a bulk fix batch
+// by dispatching one SubagentTask per target through the agent layer's
+// RunSubagentTasks (real in-process runner). Fail-closed: any task failure
+// marks the batch failed; nothing is reported as applied unless the subagent
+// reported real success.
+class BulkFixOrchestrator {
+public:
+    void setMaxParallel(int n) { maxParallel_ = n > 0 ? n : 1; }
+
+    BulkFixResult applyBulkRefactor(const std::string& batchId,
+                                    const BulkFixStrategy& strategy,
+                                    const std::vector<BulkFixTarget>& targets);
+
+private:
+    int maxParallel_ = 4;
+};
 
 // ============================================================================
 // WorkflowStage — Pipeline stage identifiers

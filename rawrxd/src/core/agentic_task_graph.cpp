@@ -26,13 +26,14 @@
 #include <direct.h>
 #include <windows.h>
 #define RAWRXD_MKDIR(p) _mkdir(p)
-#else
-#include <sys/stat.h>
+#endif
 
 // ============================================================================
 // Local helper: route a shell command through the canonical AgentToolRegistry.
 // Every agent-originated file/shell/build/test/process action must cross the
 // registry. No silent fallback. No direct process spawn.
+// (Previously nested inside the #else branch of the platform include block —
+//  on _WIN32 builds the definition vanished, producing C3861 at every call.)
 // ============================================================================
 static int run_shell_command(const std::string& cmd) {
     using namespace RawrXD::Agentic;
@@ -44,6 +45,9 @@ static int run_shell_command(const std::string& cmd) {
     ToolResult res = authority.invoke(std::move(req), std::move(ctx));
     return res.ok() ? 0 : (res.exit_code ? res.exit_code : 1);
 }
+
+#ifndef _WIN32
+#include <sys/stat.h>
 
 // agentic_task_graph executor_agenticLoop — Phase 31 implementation complete
 
@@ -1996,7 +2000,7 @@ TaskResult AgenticTaskGraph::executor_agenticLoop(TaskNode* self, void* context)
     loop.SetProgressCallback(
         [self](int step, int maxSteps, const std::string& status, const std::string& /*detail*/)
         {
-            self->progressPercentage = static_cast<uint32_t>((step * 100) / std::max(maxSteps, 1));
+            self->progressPercentage = static_cast<uint32_t>((step * 100) / (std::max)(maxSteps, 1));
             (void)status;
         });
 

@@ -14,7 +14,7 @@
 // ============================================================================
 
 #include "../../include/pdb_native.h"
-// #include "../../include/pdb_gsi_hash.h"   /* header missing — recovered in build pass */
+#include "../../include/pdb_gsi_hash.h"   /* GSIHashTable / TPIStreamParser class definitions */
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -40,7 +40,11 @@ namespace PDB {
 // .asm object instead.
 //
 
-#ifndef RAWR_HAS_MASM
+// W3 fix: the MASM kernels (RawrXD_PDBKernel*.asm) are scaffold stubs with no
+// PDB_HashName/PDB_GSIHashLookup exports, and the GSIHashTable class methods
+// below call them unconditionally — the portable definitions must always
+// compile. (Guarding them out under RAWR_HAS_MASM left the calls unresolved.)
+// Fail-closed: real portable implementation, always.
 
 extern "C" uint32_t PDB_HashName(const char* name, uint32_t nameLen) {
     // Microsoft PDB hash algorithm (case-insensitive):
@@ -123,7 +127,6 @@ extern "C" uint32_t PDB_GSIHashLookup(
     return 0xFFFFFFFF;
 }
 
-#endif // !RAWR_HAS_MASM
 
 
 // ============================================================================
