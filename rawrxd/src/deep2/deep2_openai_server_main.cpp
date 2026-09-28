@@ -32,20 +32,23 @@ static void printUsage(const char* prog) {
         "Usage: %s [options]\n"
         "\n"
         "Options:\n"
-        "  --model <path>    Path to GGUF model file (required)\n"
-        "  --port  <n>       HTTP port (default: 11435)\n"
-        "  --threads <n>     CPU thread count (default: auto)\n"
-        "  --vulkan          Enable Vulkan GPU acceleration\n"
-        "  --help            Show this message\n"
+        "  --model <path>      Path to GGUF model file (required)\n"
+        "  --port  <n>         HTTP port (default: 11435)\n"
+        "  --host  <ip>        Bind address (default: 127.0.0.1). Use 0.0.0.0 for LAN (requires --auth-token)\n"
+        "  --auth-token <tok>  Bearer token for /v1/* routes (required when --host is not 127.0.0.1)\n"
+        "  --threads <n>       CPU thread count (default: auto)\n"
+        "  --vulkan            Enable Vulkan GPU acceleration\n"
+        "  --help              Show this message\n"
         "\n"
         "Environment:\n"
-        "  DEEP2_MODEL_PATH  Default model path\n"
-        "  DEEP2_SERVER_PORT Default port\n"
+        "  DEEP2_MODEL_PATH    Default model path\n"
+        "  DEEP2_SERVER_PORT   Default port\n"
         "\n"
         "Examples:\n"
         "  %s --model F:\\\\models\\\\Qwen2.5-Coder-32B-Q4_K_M.gguf\n"
-        "  %s --model C:\\\\models\\\\model.gguf --port 8080 --vulkan\n",
-        prog, prog, prog);
+        "  %s --model C:\\\\models\\\\model.gguf --port 8080 --vulkan\n"
+        "  %s --model model.gguf --host 0.0.0.0 --auth-token secret123\n",
+        prog, prog, prog, prog);
 }
 
 int main(int argc, char** argv) {
@@ -72,9 +75,15 @@ int main(int argc, char** argv) {
             modelPath = argv[++i];
         } else if (std::strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
             port = static_cast<uint16_t>(std::atoi(argv[++i]));
+        } else if (std::strcmp(argv[i], "--host") == 0 && i + 1 < argc) {
+            listenAddr = argv[++i];
+        } else if (std::strcmp(argv[i], "--auth-token") == 0 && i + 1 < argc) {
+            authToken = argv[++i];
         } else if (std::strcmp(argv[i], "--listen") == 0 && i + 1 < argc) {
+            // Legacy alias for --host (kept for the AWS drop's deploy scripts).
             listenAddr = argv[++i];
         } else if (std::strcmp(argv[i], "--auth") == 0 && i + 1 < argc) {
+            // Legacy alias for --auth-token.
             authToken = argv[++i];
         } else if (std::strcmp(argv[i], "--threads") == 0 && i + 1 < argc) {
             numThreads = std::atoi(argv[++i]);
