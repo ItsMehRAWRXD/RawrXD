@@ -140,5 +140,3 @@ extern "C" uint64_t RawrXD_ASMToolDispatchFastPath(uint32_t opcode,
     }
     return 1;
 }
-
-#endif  // !defined(_MSC_VER)
