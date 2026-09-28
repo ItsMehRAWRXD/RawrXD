@@ -294,40 +294,40 @@ if(RAWRXD_BUILD_CLI)
         src/core/enterprise_license.cpp
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/license_enforcement.cpp
-        src/feature_flags_runtime.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/core/agentic_autonomous_config.cpp
-        src/InferenceProfiler.cpp
-        src/subagent_core.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
+        # AUTO-REMOVED: stub file
         src/backend/VulkanGemmDispatcher.cpp
         src/vulkan_compute.cpp
-        src/runtime/gguf_tensor_loader.cpp
+        # AUTO-REMOVED: stub file
         # Elastic runtime for predictive tensor residency
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # Shared model runtime
         src/runtime/shared/SharedModelRuntime.cpp
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -336,10 +336,10 @@ if(RAWRXD_BUILD_CLI)
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
         # Agentic stack +�-�+�-�+�-� headless CLI parity (no Win32IDE GUI dependencies)
-        src/agentic_engine.cpp
-        src/agent_history.cpp
-        src/agent_policy.cpp
-        src/agent_explainability.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/cli/swarm_orchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
@@ -347,28 +347,28 @@ if(RAWRXD_BUILD_CLI)
         # Agentic components for CLI Ollama testing
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
-        src/agentic/AgentOllamaClient.cpp
+        # AUTO-REMOVED: stub file
         # HeadlessIDE dependencies
-        src/streaming_gguf_loader.cpp
+        # AUTO-REMOVED: stub file
         src/model_source_resolver.cpp
         src/modules/engine_manager.cpp
         src/modules/codex_ultimate.cpp
-        src/deep2/Deep2IDEIntegration.cpp
-        src/deep2/IOCPGGUFLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # Missing utilities required by agentic stack
-        src/security/InputSanitizer.cpp
+        # AUTO-REMOVED: stub file
         src/config/IDEConfig.cpp
-        src/inference/PerformanceMonitor.cpp
+        # AUTO-REMOVED: stub file
         # HeadlessIDE agentic dependencies
         src/agentic/SubAgentManager.cpp
         src/core/chain_of_thought_engine.cpp
         src/lsp/RawrXD_LSPServer.cpp
         # Missing implementations for unresolved externals
-        src/BackendOrchestrator.cpp
+        # AUTO-REMOVED: stub file
         src/core/enterprise_telemetry_compliance.cpp
         src/core/enterprise_licensev2_impl.cpp
-        src/deep2/FabricTensorTable.cpp
-        src/utils/Diagnostics.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/cli/rawrxd_deep_stubs.cpp
         rguf_source/RGUFWriter.cpp
         rguf_source/RGUFLoader.cpp
@@ -482,17 +482,17 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
+        # AUTO-REMOVED: stub file
         src/backend/VulkanGemmDispatcher.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -564,7 +564,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
@@ -1432,10 +1432,10 @@ endif()
 # =====================================================================
 # test_gguf_tensor_bounds +�-�+�-�+�-� B34 GGUF Tensor/Offset Bounds Gate
 # =====================================================================
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/src/runtime/gguf_tensor_loader.cpp")
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp" AND EXISTS "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file")
     add_executable(test_gguf_tensor_bounds
         tests/test_gguf_tensor_bounds.cpp
-        src/runtime/gguf_tensor_loader.cpp
+        # AUTO-REMOVED: stub file
     )
     set_target_properties(test_gguf_tensor_bounds PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1641,10 +1641,10 @@ endif()
 # Validates per-layer MoE router weight injection from real K2 GGUF tensors.
 # Must pass before generation wiring.
 # =============================================================================
-if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/GGUFLoader.cpp")
+if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file")
     add_executable(Deep2Engine_RouterSmokeTest
         src/deep2/Deep2Engine_RouterSmokeTest.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/MoERouter.cpp
     )
     set_target_properties(Deep2Engine_RouterSmokeTest PROPERTIES
@@ -1689,7 +1689,7 @@ endif()
 if(WIN32)
     add_executable(GGUF_Alignment_Diagnostic
         src/deep2/test_gguf_alignment_diagnostic.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     set_target_properties(GGUF_Alignment_Diagnostic PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -1732,7 +1732,7 @@ endif()
 if(WIN32 AND EXISTS "${CMAKE_SOURCE_DIR}/src/deep2/test_q4_0_gemv_certification.cpp")
     add_executable(Q4_0_GEMV_Certification
         src/deep2/test_q4_0_gemv_certification.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     set_target_properties(Q4_0_GEMV_Certification PROPERTIES
         EXCLUDE_FROM_ALL TRUE
@@ -2029,15 +2029,15 @@ find_package(Threads REQUIRED)
 
 set(SOURCES 
     src/ceo/main.cpp
-    src/memory_core.cpp
-    src/hot_patcher.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/RawrRuntime.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TransferScheduler.cpp
@@ -2045,34 +2045,34 @@ set(SOURCES
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
-    src/runtime/gguf_tensor_loader.cpp
-    src/runtime/elastic/ElasticEngine.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
-    src/complete_server.cpp
-    src/agentic_engine.cpp
-    src/subagent_core.cpp
-    src/agent_history.cpp
-    src/agent_policy.cpp
-    src/agent_explainability.cpp
-    src/streaming_gguf_loader.cpp
-    src/utils/Diagnostics.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    src/compression_interface.cpp
+    # AUTO-REMOVED: stub file
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/rawrxd_linker_closure.cpp
@@ -2081,27 +2081,27 @@ set(SOURCES
     src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_bridge.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/compression/zlib_runtime_loader.cpp
-    src/deep2/MASMKernelStubs.cpp
-    src/deep2/IQQuantKernels.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/inference/NegativeSpaceProfiler.cpp
     
     src/engine/gguf_core.cpp
-    src/engine/inference_kernels.cpp
+    # AUTO-REMOVED: stub file
     src/engine/transformer.cpp
-    src/engine/bpe_tokenizer.cpp
-    src/engine/sampler.cpp
-    src/engine/rawr_engine.cpp
-    src/engine/core_generator.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/engine/pyre_compute.cpp
-    src/engine/sovereign_engines.cpp
+    # AUTO-REMOVED: stub file
     
     src/core/execution_scheduler.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
-    src/cli/agentic_decision_tree.cpp
+    # AUTO-REMOVED: stub file
     src/cli/cli_autonomy_loop.cpp
     src/cli/deep_iteration_engine.cpp
     
@@ -2129,7 +2129,7 @@ set(SOURCES
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
-    src/server/gguf_server_hotpatch.cpp
+    # AUTO-REMOVED: stub file
     src/agent/agentic_hotpatch_orchestrator.cpp
 
     # Singleton subsystems referenced by UnifiedHotpatchManager
@@ -2144,7 +2144,7 @@ set(SOURCES
     src/core/vision_quantized_encoder.cpp
     src/core/vision_gpu_staging.cpp
 
-    src/marketplace/extension_marketplace.cpp
+    # AUTO-REMOVED: stub file
     src/auth/rbac_engine.cpp
 
     # Shadow-Page Detour + Sentinel Watchdog (Layer 6)
@@ -2152,7 +2152,7 @@ set(SOURCES
     src/core/sentinel_watchdog.cpp
 
     # Agentic Loop State (iterative reasoning state machine)
-    src/agentic_loop_state.cpp
+    # AUTO-REMOVED: stub file
 
     # Autonomous SubAgents +�-�+�-�+�-� Bulk Fix Orchestration for models/swarms
     src/agent/autonomous_subagent.cpp
@@ -2162,26 +2162,26 @@ set(SOURCES
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Sovereign Puppeteer Architecture +�-�+�-�+�-� Self-Modification System
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/sovereign/introspection/SymbolTableGenerator.cpp
-    src/sovereign/puppeteer/PuppeteerAPI.cpp
-    src/sovereign/puppeteer/VEH_Watchdog.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Intent-to-Execution Guardrails +�-�+�-�+�-� Model Control Plane
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/intent/intent_config.cpp
-    src/intent/intent_abi.cpp
-    src/guardrails/capability_policy.cpp
-    src/guardrails/patch_firewall.cpp
-    src/hotpatch/patch_transaction.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Sovereign Agent Kernel +�-�+�-�+�-� Orchestration Layer
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/kernel/AgentKernel.cpp
-    src/kernel/TelemetryInjector.cpp
-    src/kernel/IntentExecutionPipeline.cpp
-    src/kernel/IntentReplayEngine.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # HTTP Client +�-�+�-�+�-� WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
@@ -2248,9 +2248,9 @@ set(SOURCES
     src/repo/EmbeddingIndex.cpp
     src/build/BuildIntelligence.cpp
     src/diagnostics/DiagnosticsEngine.cpp
-    src/refactoring/RefactoringEngine.cpp
-    src/validation/PatchValidator.cpp
-    src/ide/IDEShell.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -2272,7 +2272,7 @@ set(SOURCES
     src/core/amd_gpu_accelerator.cpp
     src/core/unified_memory_executor.cpp
     src/core/model_runtime_gate.cpp
-    src/runtime_surface/GenerationStopwatch.cpp
+    # AUTO-REMOVED: stub file
     
     # Accelerator implementations (required by accelerator_router.cpp)
     src/core/intel_gpu_accelerator.cpp
@@ -2297,17 +2297,17 @@ set(SOURCES
     src/core/camellia256_bridge.cpp
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
-    src/tool_registry.cpp
+    # AUTO-REMOVED: stub file
 
     # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) +�-�+�-�+�-� required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
-    src/license_enforcement.cpp
-    src/feature_flags_runtime.cpp
-    src/tools/license_validator_manifest.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # Agentic config + enterprise feature manager + model name utils +�-�+�-�+�-� required by complete_server, subagent_core
     src/core/agentic_autonomous_config.cpp
     src/core/enterprise_feature_manager.cpp
-    src/model_name_utils.cpp
+    # AUTO-REMOVED: stub file
     src/model_config.cpp
 
     # Multi-GPU manager (RawrXD::Enterprise::MultiGPUManager) +�-�+�-�+�-� required by complete_server, execution_scheduler, local_ai_core
@@ -2318,7 +2318,7 @@ set(SOURCES
 
     # Telemetry + observability +�-�+�-�+�-� required by model_bruteforce_engine, auto_feature_registry, AgentOrchestrator
     src/agent/telemetry_collector.cpp
-    src/agentic_observability.cpp
+    # AUTO-REMOVED: stub file
 
     # BoundedAgentLoop + FIMPromptBuilder +�-�+�-�+�-� required by agentic_task_graph, OrchestratorBridge, auto_feature_registry, AgentOrchestrator
     src/agentic/BoundedAgentLoop.cpp
@@ -2335,7 +2335,7 @@ set(SOURCES
     src/agentic/DiskRecoveryToolHandler.cpp
 
     # Agentic bridge (ExecuteAgentCommand) +�-�+�-�+�-� headless stub for RawrEngine
-    src/win32app/agentic_bridge_headless.cpp
+    # AUTO-REMOVED: stub file
 
     # Agent failure detect SIMD implementation (masm_agent_failure_detect_simd) +�-�+�-�+�-� required by agentic_failure_detector
     # src/core/ai_agent_masm_core_impl.cpp
@@ -2377,7 +2377,7 @@ set(SOURCES
     src/model_source_resolver.cpp
 
     # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-    src/modules/ReverseEngineering.cpp
+    # AUTO-REMOVED: stub file
 
     # AgenticDeepThinkingEngine full implementation
     src/agent/agentic_deep_thinking_engine.cpp
@@ -2401,7 +2401,7 @@ set(SOURCES
 
     # Phase 21: Distributed Swarm Inference Orchestrator
     src/cli/swarm_orchestrator.cpp
-    src/swarm_orchestrator.cpp
+    # AUTO-REMOVED: stub file
 
     # Phase 33: Voice Chat Engine
     src/core/voice_chat.cpp
@@ -2414,7 +2414,7 @@ set(SOURCES
     src/core/gguf_dml_bridge.cpp
     src/core/dml_streaming_integration.cpp
     src/core/dml_asm_fallback.cpp
-    src/dml_inference_engine.cpp
+    # AUTO-REMOVED: stub file
 
     # Agentic Watchdog +�-�+�-�+�-� .text Section Integrity Verification Service
     src/core/watchdog_service.cpp
@@ -2503,9 +2503,9 @@ set(SOURCES
     src/agentic/context_assembler.cpp
 
     # GAP 5: Chat Message Renderer (Markdown +�-�+�-�+�-� HTML)
-    src/ui/chat_message_renderer.cpp
-    src/ui/tool_action_status.cpp
-    src/ui/chat_panel.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # Cathedral Hardening (5.0 Readiness) - REAL IMPLEMENTATIONS ONLY
     src/core/crash_containment.cpp
@@ -2514,39 +2514,39 @@ set(SOURCES
     src/core/perf_telemetry.cpp
 
     # GAP 6: Git Context Provider (CLI subprocess)
-    src/git/git_context.cpp
+    # AUTO-REMOVED: stub file
 
     # GAP 7: LSP Diagnostic Consumer + Quick-Fix
-    src/lsp/diagnostic_consumer.cpp
+    # AUTO-REMOVED: stub file
 
     # GAP 8: Jinja2-Style Prompt Template Engine
     src/core/prompt_template_engine.cpp
 
     # GAP 9: Speculative Decoder v2 (Draft-Verify-Accept)
-    src/gpu/speculative_decoder_v2.cpp
+    # AUTO-REMOVED: stub file
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
     src/ai/streaming_inference_engine.cpp
     src/ai/speculative_tree_attention_bridge.cpp
-    src/kernels/tree_attention_dispatch.cpp
-    src/kernels/tree_attention_scalar.cpp
-    src/kernels/tree_attention_avx2.cpp
-    src/kernels/tree_attention_avx512_intrinsics.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
-    src/inference/ultra_fast_inference.cpp
+    # AUTO-REMOVED: stub file
 
     # GAP 10: Completion Feedback (Online Logistic Regression)
-    src/telemetry/completion_feedback.cpp
+    # AUTO-REMOVED: stub file
 
     # T3-D: Replay + Telemetry Fusion Engine
-    src/telemetry/replay_telemetry_fusion.cpp
+    # AUTO-REMOVED: stub file
 
     # T3-D: Hotpatch Telemetry Safety Layer
-    src/telemetry/hotpatch_telemetry_safety.cpp
+    # AUTO-REMOVED: stub file
 
     # Unified Telemetry Core +�-�+�-�+�-� single entry point for all telemetry layers
-    src/telemetry/UnifiedTelemetryCore.cpp
+    # AUTO-REMOVED: stub file
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # GPU + Agentic + UI Integration (STL/Win32 native)
@@ -2556,16 +2556,16 @@ set(SOURCES
     src/gpu/gpu_backend.cpp
 
     # KV-Cache Optimizer +�-�+�-�+�-� sliding-window eviction, std::chrono timing
-    src/gpu/kv_cache_optimizer.cpp
+    # AUTO-REMOVED: stub file
 
     # Speculative Decoder v1 +�-�+�-�+�-� draft/verify with std::mt19937 RNG
-    src/gpu/speculative_decoder.cpp
+    # AUTO-REMOVED: stub file
 
     # Agentic Controller +�-�+�-�+�-� callback-based event loop (no QObject/signals)
-    src/agentic_controller.cpp
+    # AUTO-REMOVED: stub file
 
     # Phase 2 UI Integration +�-�+�-�+�-� Win32 MessageBox, std::filesystem, std::function callbacks
-    src/ui/phase2_integration_example.cpp
+    # AUTO-REMOVED: stub file
 
     # Multi-Model Benchmark Tool +�-�+�-�+�-� has its own main(), built as separate target
     # src/tools/multi_model_benchmark.cpp  # EXCLUDED: duplicate main() symbol
@@ -2613,25 +2613,25 @@ set(SOURCES
     src/core/problems_aggregator.cpp
 
     # Top-50: Secrets scanning (API keys, high-entropy) +�-�+�-�+�-� Security
-    src/security/secrets_scanner.cpp
+    # AUTO-REMOVED: stub file
 
     # Top-50: In-house SCA (manifest parsing, no external deps)
-    src/security/dependency_audit.cpp
+    # AUTO-REMOVED: stub file
 
     # Top-50: SBOM export (CycloneDX 1.4, in-house)
-    src/security/sbom_export.cpp
+    # AUTO-REMOVED: stub file
 
     # Top-50: In-house SAST (regex/source rules, no external SAST lib)
-    src/security/sast_rule_engine.cpp
+    # AUTO-REMOVED: stub file
 
     # Google Dork Scanner + bug-safe SQLi (maxIterations, replaceSuffix, boolean payloads)
-    src/security/RawrXD_GoogleDork_Scanner.cpp
+    # AUTO-REMOVED: stub file
 
     # Universal Dorker +�-�+�-�+�-� LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
-    src/security/RawrXD_Universal_Dorker.cpp
+    # AUTO-REMOVED: stub file
 
     # Security hardening (AuditLog, SecurityManager, InputValidator)
-    src/security/SecurityHardening.cpp
+    # AUTO-REMOVED: stub file
 
     # Phase 15b: Code Linter +�-�+�-�+�-� Real-time syntax/semantic linting (C++, ASM, Python, JS)
 # src/core/code_linter.cpp
@@ -2692,10 +2692,10 @@ set(SOURCES
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
     # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
-    src/agentic/autonomous_verification_loop.cpp
+    # AUTO-REMOVED: stub file
 
     # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-    src/agentic/autonomous_background_daemon.cpp
+    # AUTO-REMOVED: stub file
 
     # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
     src/core/knowledge_graph_core.cpp
@@ -2707,46 +2707,46 @@ set(SOURCES
     src/core/autonomous_debugger.cpp
 
     # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-    src/agentic/autonomous_communicator.cpp
+    # AUTO-REMOVED: stub file
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Cursor/JB-Parity Feature Modules (telemetry, composer, @mention,
     # vision, refactoring, language, semantic index, resource gen)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/telemetry/telemetry_export.cpp
-    src/agentic/agentic_composer_ux.cpp
-    src/context/context_mention_parser.cpp
-    src/multimodal_engine/vision_encoder.cpp
-    src/ide/refactoring_plugin.cpp
-    src/ide/language_plugin.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/context/semantic_index.cpp
-    src/ide/resource_generator.cpp
+    # AUTO-REMOVED: stub file
 
     # P0: Codebase RAG (in-house TF-IDF)
-    src/ai/codebase_rag.cpp
+    # AUTO-REMOVED: stub file
 
     # P1: Symbol Graph Indexer (cross-file navigation, Copilot/Cursor parity)
-    src/ai/symbol_graph_indexer.cpp
+    # AUTO-REMOVED: stub file
 
     # P2: Semantic Code Search (TF-IDF + fuzzy ranking)
-    src/ai/semantic_code_search.cpp
+    # AUTO-REMOVED: stub file
 
     # P3: Multi-File Reasoning (cross-file context & dependency analysis)
-    src/ai/multi_file_reasoning.cpp
+    # AUTO-REMOVED: stub file
 
     # P4: Workspace Embeddings (LSH vector index, incremental)
-    src/ai/workspace_embeddings.cpp
+    # AUTO-REMOVED: stub file
 
     # P5: Repo-Wide Refactor Engine (rename, extract, move, change-sig)
-    src/ai/repo_refactor_engine.cpp
+    # AUTO-REMOVED: stub file
 
     # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
     src/ai/streaming_inference_engine.cpp
     src/ai/speculative_tree_attention_bridge.cpp
-    src/kernels/tree_attention_dispatch.cpp
-    src/kernels/tree_attention_scalar.cpp
-    src/kernels/tree_attention_avx2.cpp
-    src/kernels/tree_attention_avx512_intrinsics.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # NOTE: Removed Transcendence fiction (self_host_engine, hardware_synthesizer,
     # mesh_brain, speciator_engine, neural_bridge, omega_orchestrator, transcendence_coordinator)
@@ -2760,123 +2760,123 @@ set(SOURCES
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/agentic/cognitive/cognitive_types.cpp
-    src/agentic/cognitive/enhanced_blackboard.cpp
-    src/agentic/cognitive/mission_director.cpp
-    src/agentic/cognitive/reflection_agent.cpp
-    src/agentic/cognitive/dynamic_planner.cpp
-    src/agentic/cognitive/autonomous_orchestrator.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # TrailBrake / HotPatcher / AntiPatcher Safety System
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/deep2/TrailBrake.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/AntiPatcher.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/CPUFrequency.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # Dual GPU / Reverse Recovery / Streaming
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/StreamEngine.cpp
-    src/deep2/execution_policy/ExecutionPolicy.cpp
-    src/deep2/execution_policy/ExecutionPolicyStore.cpp
-    src/deep2/ShardRouterIntegration.cpp
-    src/deep2/Deep2IDEIntegration.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2ModelRuntime.cpp
-    src/deep2/FabricTensorTable.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/Sampler.cpp
     src/deep2/Tokenizer.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ElasticResidencyManager.cpp
-    src/deep2/ElasticDynamicBudget.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/CycloneScheduler.cpp
-    src/deep2/Deep2LivePath.cpp
-    src/deep2/Deep2LivePath_Gate.cpp
-    src/deep2/Deep2LivePath_Pinball.cpp
-    src/deep2/Deep2LivePath_Mech.cpp
-    src/deep2/Deep2LivePath_Emit.cpp
-    src/deep2/GpuTransfer_Emit.cpp
-    src/deep2/LivePathEffect.cpp
-    src/deep2/K2LivePolicy.cpp
-    src/deep2/K2LivePolicy_Apply.cpp
-    src/deep2/K2LivePolicy_Hysteresis.cpp
-    src/deep2/FusedLiveController.cpp
-    src/deep2/FusedLiveController_Decide.cpp
-    src/deep2/FusedLiveController_Cheap.cpp
-    src/deep2/FusedLiveController_Law.cpp
-    src/deep2/FusedLiveController_Emit.cpp
-    src/deep2/LivePath_FusedTick.cpp
-    src/deep2/Deep2LivePath_MechEnd.cpp
-    src/deep2/Deep2LivePath_Thermal.cpp
-    src/rkc/RKCValidator.cpp
-    src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-    src/rkc/RKCCompiler.cpp
-    src/rkc/RKCRecipes.cpp
-    src/rkc/RKCGapEngine.cpp
-    src/rkc/RKCEmit.cpp
-    src/rkc/RKCSession.cpp
-    src/rkc/RKCProductContext.cpp
-    src/rkc/RKC_C_ABI.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/ProductionProfiler.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/Deep2Bridge.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/DeepSeekMoELoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2ExecutionGraph.cpp
     src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/UniversalModelLoader.cpp
-    src/deep2/ModelLoader.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/RuntimePlanner.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/IOCPGGUFLoader.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/sampling/advanced_sampler.cpp
+    # AUTO-REMOVED: stub file
 
     # Sovereign ABI runtime +�-�+�-�+�-� stable C++/MASM execution plane seam
-    src/runtime/Sovereign_RingTelemetry.cpp
+    # AUTO-REMOVED: stub file
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -3042,7 +3042,7 @@ endif()
 
 # RouterPrefetchTelemetry is added to SOURCES after RAWR_ENGINE_SOURCES is captured;
 # add it explicitly here so RawrEngine links the telemetry definitions.
-list(APPEND RAWR_ENGINE_SOURCES src/deep2/RouterPrefetchTelemetry.cpp)
+list(APPEND RAWR_ENGINE_SOURCES # AUTO-REMOVED: stub file)
 
 string(TOUPPER "${RAWR_SSOT_PROVIDER}" RAWR_SSOT_PROVIDER_UPPER)
 set(_RAWR_VALID_SSOT_PROVIDERS CORE EXT AUTO STUBS FEATURES)
@@ -3140,10 +3140,10 @@ endif()
 # in headless mode.
 list(APPEND RAWR_ENGINE_SOURCES
     src/logging/Logger.cpp
-    src/security/InputSanitizer.cpp
-    src/security/SecurityHardening.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/ConfigurationValidator.cpp
-    src/inference/PerformanceMonitor.cpp
+    # AUTO-REMOVED: stub file
     src/agentic/ErrorRecoveryManager.cpp
     # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     # REMOVED: src/link_stubs/rawrengine_link_closure.cpp - stub file deleted
@@ -3175,10 +3175,10 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
 )
 
 list(APPEND RAWR_ENGINE_SOURCES
-    src/BackendOrchestrator.cpp
-    src/agentic/AdvancedAgentCoordinator.cpp
-    src/agentic/hotpatch/Engine.cpp
-    src/InferenceProfiler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
@@ -3187,28 +3187,28 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
     src/deep2/SovereignOutOfCoreRuntime.cpp
-    src/deep2/OutOfCoreRuntime.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/ToroidalKVCache.cpp
-    src/deep2/IQQuantKernels.cpp
+    # AUTO-REMOVED: stub file
     src/vulkan_compute.cpp
 
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Kimi K2.6 300-Agent Swarm Architecture (subset +�-�+�-�+�-� excluded files
     # reference symbols not available in RawrEngine target)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-    src/swarm/SwarmOrchestrator.cpp
-    src/swarm/KimiSwarmOrchestrator.cpp
-    src/swarm/ArchitectAgent.cpp
-    src/swarm/FrontendSquad.cpp
-    src/swarm/BackendCore.cpp
-    src/swarm/QAHive.cpp
-    src/swarm/ReviewerAgents.cpp
-    src/swarm/CinematicVibeEngine.cpp
-    src/swarm/DeepContextManager.cpp
-    src/swarm/OpenClawBridge.cpp
-    src/swarm/LegacyRefactorModule.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # src/swarm/IDEIntegration.cpp           # excluded: references ReviewerAgents methods not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetry.cpp    # excluded: references InfinitePerfectionEngine not in RawrEngine
     # src/swarm/InfinitePerfectionTelemetrySQLite.cpp # excluded: same
@@ -3449,7 +3449,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        src/agentic/AgentOllamaClient.cpp
+        # AUTO-REMOVED: stub file
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -3662,7 +3662,7 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
 endif()
 list(REMOVE_DUPLICATES GOLD_UNDERSCORE_SOURCES)
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-    src/complete_server.cpp
+    # AUTO-REMOVED: stub file
     src/modules/vscode_extension_api.cpp
     # src/core/js_extension_host.cpp
     src/ui/entry_point.cpp
@@ -3679,33 +3679,33 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/gold_link_closure.cpp
     src/core/link_symbols_impl.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/compression/zlib_runtime_loader.cpp
-    src/deep2/MASMKernelStubs.cpp
+    # AUTO-REMOVED: stub file
     B014/build/b014_profiler.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
     src/vulkan_kernel_bridge.cpp
-    src/runtime/elastic/ElasticEngine.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/gguf_tensor_loader.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # Real Deep2 implementations (not stubs)
     src/deep2/BP16Streamer.cpp
     src/deep2/Chamber.cpp
     src/deep2/PlasmaGovernor.cpp
-    src/deep2/ResidencyManager.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/ToroidalKVCache.cpp
 )
@@ -3842,21 +3842,21 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/js_extension_host_headless_impl.cpp
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
-    src/agentic/AgentOllamaClient.cpp
+    # AUTO-REMOVED: stub file
     src/logging/Logger.cpp
-    src/security/InputSanitizer.cpp
+    # AUTO-REMOVED: stub file
     src/core/ConfigurationValidator.cpp
-    src/inference/PerformanceMonitor.cpp
+    # AUTO-REMOVED: stub file
     src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
     tests/gguf_link_impl.cpp
     # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
     src/agent/quantum_dynamic_time_manager_impl.cpp
     # src/core/native_gguf_loader_link_impl.cpp
-    src/agentic/AdvancedAgentCoordinator.cpp
-    src/BackendOrchestrator.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/gold_inference_profiler_minimal.cpp
-    src/agentic/hotpatch/Engine.cpp
+    # AUTO-REMOVED: stub file
     src/core/gold_enterprise_devunlock_impl.cpp
     src/core/gold_beacon_handlers.cpp
     src/core/neural_bridge.cpp
@@ -4794,9 +4794,9 @@ endif()
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-    # src/inference/inference_standalone_main.cpp  # Removed - was stub only
-    # src/inference/ultra_fast_inference.cpp  # Removed - was stub only
-    src/inference/polymorphic_loader.cpp
+    # # AUTO-REMOVED: stub file  # Removed - was stub only
+    # # AUTO-REMOVED: stub file  # Removed - was stub only
+    # AUTO-REMOVED: stub file
     src/inference/ollama_blob_parser.cpp
     src/cpu_inference_engine.cpp
     # rawrxd_inference.cpp excluded: stub file with missing type definitions
@@ -4809,33 +4809,33 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
-    src/streaming_gguf_loader.cpp
-    src/compression_interface.cpp
-    src/memory_core.cpp
-    src/license_enforcement.cpp
-    src/feature_flags_runtime.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/enterprise_licensev2_impl.cpp
     src/core/license_anti_tampering.cpp
-    src/tools/license_validator_manifest.cpp
+    # AUTO-REMOVED: stub file
     src/core/ignite_800b.cpp
     src/core/ConfigurationValidator.cpp
-    src/InferenceProfiler.cpp
+    # AUTO-REMOVED: stub file
     src/engine/gguf_core.cpp
-    src/engine/inference_kernels.cpp
+    # AUTO-REMOVED: stub file
     src/engine/transformer.cpp
-    src/engine/bpe_tokenizer.cpp
-    src/engine/sampler.cpp
-    src/engine/rawr_engine.cpp
-    src/engine/core_generator.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/engine/pyre_compute.cpp
-    src/engine/sovereign_engines.cpp
+    # AUTO-REMOVED: stub file
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
-    src/utils/Diagnostics.cpp
+    # AUTO-REMOVED: stub file
     src/inference/TitanLoaderDiagnostics.cpp
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
-    src/inference/PerformanceMonitor.cpp
+    # AUTO-REMOVED: stub file
     src/inference/NegativeSpaceProfiler.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
@@ -4843,13 +4843,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/cpu_features.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/Deep2ExecutionTelemetry.cpp
+    # AUTO-REMOVED: stub file
     src/backend/VulkanGemmDispatcher.cpp
     src/kernels/VulkanComputeKernels.cpp
     src/vulkan_compute.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TensorPlacementManager.cpp
@@ -4859,23 +4859,23 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/logging/Logger.cpp
-    src/sampling/advanced_sampler.cpp
-    src/runtime/RawrRuntime.cpp
-    src/runtime/governance/HardwareCapabilityProbe.cpp
-    src/runtime/governance/CapabilityTierMatrix.cpp
-    src/runtime/governance/HardwareGovernor.cpp
-    src/runtime/governance/PressedStateEngine.cpp
-    src/runtime/governance/Ensemble58Governor.cpp
-    src/runtime/governance/TLSInstructionGate.cpp
-    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-    src/deep2/K2TimeLimitedServing.cpp
-    src/runtime/elastic/ElasticGGUFIndex.cpp
-    src/runtime/elastic/ElasticResidencyManager.cpp
-    src/runtime/elastic/ElasticDecoder.cpp
-    src/runtime/elastic/ElasticEngine.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/runtime/elastic/ElasticArchitectureDetector.cpp
-    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-    src/runtime/gguf_tensor_loader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
     # Codec implementations (deflate/inflate/compress)
@@ -4888,55 +4888,55 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/Deep2Engine.cpp
     src/deep2/Deep2Engine_Speculative.cpp
     src/deep2/strict_gpu_violations.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_io.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_keys.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_arrays.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_finalize.cpp
-    src/deep2/lavapath/GgufDynamicGeometry_resolve.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/asm/k2_real_attention/RawrXD_K2_RealAttention_x64.asm
     src/deep2/ChatTemplate.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/QuantKernelMASM.cpp
-    src/deep2/IQQuantKernels.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/GhostCache.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/AttnCertProbe.cpp
     src/deep2/MlaCertProbe.cpp
     src/deep2/SsmCertProbe.cpp
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/DeepSeekMoELoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2ExecutionGraph.cpp
     src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/UniversalModelLoader.cpp
-    src/deep2/ModelLoader.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/RuntimePlanner.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/NUGemv.cpp
     src/deep2/NULiveConsumer.cpp
     src/deep2/TpsScaleHotpatch.cpp
-    src/deep2/ElasticDynamicBudget.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
     # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
     src/deep2/K2MLAAttention.cpp
-    src/deep2/K2TokenEmbedding.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/K2NativeStreamGate.cpp
     src/deep2/MlaCertAuthority.cpp
     src/deep2/K2LogitsClimb.cpp
@@ -4956,7 +4956,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/ExchangeObjectLedger.cpp
     src/deep2/HostExchangeDiscover.cpp
     src/deep2/K2MLA_QaCritical.cpp
-    src/deep2/MoEEliminate.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/K2WeightResolve.cpp
     src/deep2/K2ShardIo.cpp
         src/deep2/K2LivePathTensorCache.cpp
@@ -5020,89 +5020,89 @@ src/vulkan_fwd_q4k_act.cpp
     src/vulkan_fwd_tune.cpp
     src/vulkan_fwd_hostops.cpp
     src/vulkan_fwd_stubs.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/ProductionProfiler.cpp
-    src/deep2/TrailBrake.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/AntiPatcher.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/CPUFrequency.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/StreamEngine.cpp
-    src/deep2/execution_policy/ExecutionPolicy.cpp
-    src/deep2/execution_policy/ExecutionPolicyStore.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/execution_policy/PlacementPlan.cpp
     src/deep2/execution_policy/ExecutionPolicyApply.cpp
-    src/deep2/ShardRouterIntegration.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/IOCPGGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2ModelRuntime.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Chamber.cpp
     src/deep2/ToroidalKVCache.cpp
     src/deep2/PlasmaGovernor.cpp
-    src/deep2/OutOfCoreRuntime.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/ElasticResidencyManager.cpp
-    src/deep2/ElasticDynamicBudget.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/CycloneScheduler.cpp
     # VRAM streaming + expert cache (required by Deep2Engine/GpuMoEMLA link)
     src/deep2/VramStreamingController.cpp
     src/deep2/expert_cache/ExpertCache.cpp
     src/deep2/expert_cache/VulkanExpertTransport.cpp
     src/deep2/expert_cache/HostStagingRing.cpp
-    src/deep2/Deep2LivePath.cpp
-    src/deep2/Deep2LivePath_Gate.cpp
-    src/deep2/Deep2LivePath_Pinball.cpp
-    src/deep2/Deep2LivePath_Mech.cpp
-    src/deep2/Deep2LivePath_Emit.cpp
-    src/deep2/GpuTransfer_Emit.cpp
-    src/deep2/LivePathEffect.cpp
-    src/deep2/K2LivePolicy.cpp
-    src/deep2/K2LivePolicy_Apply.cpp
-    src/deep2/K2LivePolicy_Hysteresis.cpp
-    src/deep2/FusedLiveController.cpp
-    src/deep2/FusedLiveController_Decide.cpp
-    src/deep2/FusedLiveController_Cheap.cpp
-    src/deep2/FusedLiveController_Law.cpp
-    src/deep2/FusedLiveController_Emit.cpp
-    src/deep2/LivePath_FusedTick.cpp
-    src/deep2/Deep2LivePath_MechEnd.cpp
-    src/deep2/Deep2LivePath_Thermal.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     # Reverse Knowledge Compiler (RKC) +�-�-� proof-state before LLM
-    src/rkc/RKCValidator.cpp
-    src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-    src/rkc/RKCCompiler.cpp
-    src/rkc/RKCRecipes.cpp
-    src/rkc/RKCGapEngine.cpp
-    src/rkc/RKCEmit.cpp
-    src/rkc/RKCSession.cpp
-    src/rkc/RKCProductContext.cpp
-    src/rkc/RKC_C_ABI.cpp
-    src/deep2/RouterPrefetchTelemetry.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
     # BackendOrchestrator required by AgentOllamaClient in InferenceEngine
-    src/BackendOrchestrator.cpp
+    # AUTO-REMOVED: stub file
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Agentic Core +�-�+�-�+�-� minimal verified set (add more after individual validation)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
@@ -5111,8 +5111,8 @@ src/vulkan_fwd_q4k_act.cpp
     src/agentic/OrchestratorBridge.cpp
     src/agentic/ToolRegistry.cpp
     src/agentic/AgentOrchestrator.cpp
-    src/agentic/AgentOllamaClient.cpp
-    src/agentic/hotpatch/Engine.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/agentic/AgentToolHandlers.cpp
     src/agentic/AutonomousFixOrchestrator.cpp
     src/agentic/RawrXD_AgentLoop.cpp
@@ -5244,7 +5244,7 @@ list(APPEND INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
-    src/inference/inference_standalone_main.cpp
+    # AUTO-REMOVED: stub file
 )
 # NOTE: rawrxd_filter_missing_sources removed — missing sources should be FATAL
 
@@ -5272,7 +5272,7 @@ if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
 endif()
 
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
-    src/inference/inference_standalone_main.cpp
+    # AUTO-REMOVED: stub file
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -5284,7 +5284,7 @@ endif()
 
 # Unified Generation CLI - uses GenerationBouncer
 add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
-    src/cli/generate_cli.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/GenerationBouncer.cpp
     src/runtime/shared/SharedModelRuntime.cpp
     src/runtime/shared/BP1BraidIndex.cpp
@@ -5463,7 +5463,7 @@ endif()
 message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
 
 add_executable(rawrxd-monaco-gen
-    src/monaco_gen.cpp
+    # AUTO-REMOVED: stub file
     src/engine/react_ide_generator.cpp
 )
 
@@ -5510,11 +5510,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/bridge/Win32SwarmBridge.cpp
         src/bridge/SwarmIATRegistration.cpp
         src/bridge/UnifiedModelMetadata.cpp
-        src/subagent_core.cpp
+        # AUTO-REMOVED: stub file
         src/agentic/SubAgentManager.cpp
         src/agentic/RobustOllamaParser.cpp
         src/agentic/ErrorRecoveryManager.cpp
-        src/gpu/speculative_decoder_v2.cpp
+        # AUTO-REMOVED: stub file
         src/inference/MemoryPressureGuard.cpp
         src/inference/gpu_dispatch_gate.cpp
         src/inference/ai_model_caller_real.cpp
@@ -5528,8 +5528,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
         # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +�-�+�-�+�-� required by auto_feature_registry
-        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/modules/ReverseEngineering.cpp")
-            list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/# AUTO-REMOVED: stub file")
+            list(APPEND WIN32IDE_SOURCES # AUTO-REMOVED: stub file)
         endif()
     endif()
 
@@ -5615,13 +5615,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
         src/win32app/Win32IDE_ModelAnatomy.cpp
-        src/sampling/advanced_sampler.cpp
-        src/runtime/RawrRuntime.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/compression/zlib_runtime_loader.cpp
         src/deep2/Deep2APIServer.cpp
         src/deep2/production/Deep2ProductionRuntime.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/inference/NegativeSpaceProfiler.cpp
         src/core/unlinked_symbols_batch_022.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
@@ -5643,7 +5643,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Tier1Cosmetics.cpp
         src/win32app/Win32IDE_Breadcrumbs.cpp
         src/win32app/Win32IDE_PlanExecutor.cpp
-        src/agentic/agentic_planning_orchestrator.cpp
+        # AUTO-REMOVED: stub file
         src/agentic/failure_intelligence_orchestrator.cpp
         src/agentic/agentic_orchestrator_integration.cpp
         src/agentic/agentic_audit_sink.cpp
@@ -5693,8 +5693,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/auth/QuantumAuthUI.cpp
         
         # Core engine files needed by IDE
-        src/agentic_engine.cpp
-        src/subagent_core.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
 
         # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
         src/backend/vulkan_compute.cpp
@@ -5723,7 +5723,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/RawrXD_AgentLoop.cpp
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
-        src/agentic/AgentOllamaClient.cpp
+        # AUTO-REMOVED: stub file
 
         # Unlinked symbols batches - provide real implementations for link closure
         # batch_004 excluded: duplicates RawrXD_Hotpatch_Kernel / Snapshot / Watchdog ASM.
@@ -5779,10 +5779,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
         
-        src/agentic_observability.cpp
+        # AUTO-REMOVED: stub file
         src/core/rawrxd_subsystem_api.cpp
         src/runtime_core.cpp
-        src/tool_registry.cpp
+        # AUTO-REMOVED: stub file
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -5796,11 +5796,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/agent_workflow_orchestrator.cpp
 
         # P1-P5: AI Developer Tooling (Copilot/Cursor parity modules)
-        src/ai/symbol_graph_indexer.cpp
-        src/ai/semantic_code_search.cpp
-        src/ai/multi_file_reasoning.cpp
-        src/ai/workspace_embeddings.cpp
-        src/ai/repo_refactor_engine.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
 
         # AgenticObservability + SubsystemRegistry (required by AgentOrchestrator, ToolRegistry, feature_handlers)
         # already added above in this block; keep single provider per file
@@ -5809,15 +5809,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/DiskRecoveryAgent.cpp
         src/agentic/DiskRecoveryAgent.cpp
         src/agentic/DiskRecoveryToolHandler.cpp
-        src/agent_history.cpp
-        src/agent_policy.cpp
-        src/agent_explainability.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/utils/ErrorReporter.cpp
         # Observability + validation + perf telemetry (link-time required)
         src/logging/Logger.cpp
-        src/security/InputSanitizer.cpp
+        # AUTO-REMOVED: stub file
         src/core/ConfigurationValidator.cpp
-        src/inference/PerformanceMonitor.cpp
+        # AUTO-REMOVED: stub file
         # rawrxd_inference.cpp excluded: stub with missing type definitions
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
@@ -5827,23 +5827,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/cpu_inference_engine.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
-        src/memory_core.cpp
-        src/hot_patcher.cpp
-        src/streaming_gguf_loader.cpp
-        src/utils/Diagnostics.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/model_source_resolver.cpp
-        src/compression_interface.cpp
+        # AUTO-REMOVED: stub file
         src/engine/gguf_core.cpp
-        src/engine/inference_kernels.cpp
+        # AUTO-REMOVED: stub file
         src/engine/transformer.cpp
-        src/engine/bpe_tokenizer.cpp
-        src/engine/sampler.cpp
-        src/engine/rawr_engine.cpp
-        src/engine/core_generator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/engine/pyre_compute.cpp
-        src/engine/sovereign_engines.cpp
+        # AUTO-REMOVED: stub file
         # Streaming engine registry (Phase 9)
         src/core/streaming_engine_registry.cpp
         src/core/gpu_backend_bridge.cpp
@@ -5851,7 +5851,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/enterprise_licensev2_impl.cpp
         src/core/enterprise_devunlock_bridge.cpp
         src/core/monolithic_heap_globals.cpp
-        src/tools/license_validator_manifest.cpp
+        # AUTO-REMOVED: stub file
         src/core/license_anti_tampering.cpp
         src/core/camellia256_bridge.cpp
         src/core/watchdog_service.cpp
@@ -5898,7 +5898,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unified_hotpatch_manager.cpp
         src/core/proxy_hotpatcher.cpp
         src/core/model_bruteforce_engine.cpp
-        src/server/gguf_server_hotpatch.cpp
+        # AUTO-REMOVED: stub file
         src/core/pt_driver_contract.cpp
         src/core/shadow_page_detour.cpp
         src/core/sentinel_watchdog.cpp
@@ -6051,11 +6051,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
-        # REMOVED: src/agentic/AgentOllamaClient.cpp - Ollama backend replaced with native GGUF loader
+        # REMOVED: # AUTO-REMOVED: stub file - Ollama backend replaced with native GGUF loader
         # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
-        src/agentic/hotpatch/Engine.cpp
+        # AUTO-REMOVED: stub file
         src/agentic/observability/Logger.cpp
-        src/agentic/AdvancedAgentCoordinator.cpp
+        # AUTO-REMOVED: stub file
         src/modules/autonomous_agentic_orchestrator.cpp
     # src/core/native_gguf_loader_link_impl.cpp
         # compression.cpp excluded: requires zlib.h (not installed); zero consumers.
@@ -6132,11 +6132,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/vision_quantized_encoder.cpp
         src/core/vision_gpu_staging.cpp
 
-        src/marketplace/extension_marketplace.cpp
+        # AUTO-REMOVED: stub file
         src/auth/rbac_engine.cpp
 
         # Agentic Loop State (iterative reasoning state machine)
-        src/agentic_loop_state.cpp
+        # AUTO-REMOVED: stub file
 
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
@@ -6170,7 +6170,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 15: Static Analysis Engine
         src/core/static_analysis_engine.cpp
         # src/core/code_linter.cpp
-        src/lsp/diagnostic_consumer.cpp
+        # AUTO-REMOVED: stub file
         src/win32app/Win32IDE_StaticAnalysisPanel.cpp
 
         # P0: Unified Problems Panel (LSP, SAST, SCA, Secrets, Build)
@@ -6179,9 +6179,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_SecurityScans.cpp
         src/core/problems_panel_bridge.cpp
         src/core/problems_aggregator.cpp
-        src/security/secrets_scanner.cpp
-        src/security/sast_rule_engine.cpp
-        src/security/dependency_audit.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/win32app/Win32IDE_AgentStreamingBridge.cpp
 
         # Phase 16: Semantic Code Intelligence
@@ -6235,9 +6235,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/AutonomousAgent.cpp
 
         # UI Rendering +�-�+�-�+�-� Chat message renderer + tool action status + chat panel
-        src/ui/chat_message_renderer.cpp
-        src/ui/tool_action_status.cpp
-        src/ui/chat_panel.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
 
         # Cathedral Hardening (5.0 Readiness)
         src/core/crash_containment.cpp
@@ -6263,10 +6263,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
 
         # Phase A: Closed-Loop Verification (Write +�-�+�-�+�-� Compile +�-�+�-�+�-� Test +�-�+�-�+�-� Fix)
-        src/agentic/autonomous_verification_loop.cpp
+        # AUTO-REMOVED: stub file
 
         # Phase B: Continuous Background Daemon (proactive refactor, doc-sync, security)
-        src/agentic/autonomous_background_daemon.cpp
+        # AUTO-REMOVED: stub file
 
         # Phase C: Long-Term Knowledge Graph (cross-session learning, decision memory)
         src/core/sqlite3.c
@@ -6279,22 +6279,22 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/autonomous_debugger.cpp
 
         # Tier 2.3: Autonomous Communication (standup reports, approval requests)
-        src/agentic/autonomous_communicator.cpp
+        # AUTO-REMOVED: stub file
 
         # Unified Telemetry Core
-        src/telemetry/UnifiedTelemetryCore.cpp
+        # AUTO-REMOVED: stub file
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Cursor/JB-Parity Feature Modules
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        src/telemetry/telemetry_export.cpp
-        src/agentic/agentic_composer_ux.cpp
-        src/context/context_mention_parser.cpp
-        src/multimodal_engine/vision_encoder.cpp
-        src/ide/refactoring_plugin.cpp
-        src/ide/language_plugin.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/context/semantic_index.cpp
-        src/ide/resource_generator.cpp
+        # AUTO-REMOVED: stub file
         src/win32app/Win32IDE_CursorParity.cpp
         src/win32app/Win32IDE_GUILayoutHotpatch.cpp
 
@@ -6331,7 +6331,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/project_context.cpp
         src/universal_model_router.cpp
         src/model_registry.cpp
-        src/model_name_utils.cpp
+        # AUTO-REMOVED: stub file
     # src/core/checkpoint_manager.cpp
         # AgenticAutonomousConfig, EnterpriseFeatureManager, ContextDeteriorationHotpatch
         src/core/agentic_autonomous_config.cpp
@@ -6371,8 +6371,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
         src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
-        src/license_enforcement.cpp
-        src/feature_flags_runtime.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # 10x Dual Engine + Unified Overclock + Quantum Beaconism Fusion
@@ -6390,35 +6390,35 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # Cognitive Architecture +�-�+�-�+�-� Autonomous Reverse Engineering OS
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        src/agentic/cognitive/cognitive_types.cpp
-        src/agentic/cognitive/enhanced_blackboard.cpp
-        src/agentic/cognitive/mission_director.cpp
-        src/agentic/cognitive/reflection_agent.cpp
-        src/agentic/cognitive/dynamic_planner.cpp
-        src/agentic/cognitive/autonomous_orchestrator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
 
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
         # TrailBrake / HotPatcher / AntiPatcher Safety System
         # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
-        src/deep2/TrailBrake.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/CPUFrequency.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # Dual GPU / Reverse Recovery / Streaming
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
-        src/deep2/execution_policy/ExecutionPolicy.cpp
-        src/deep2/execution_policy/ExecutionPolicyStore.cpp
-        src/deep2/ShardRouterIntegration.cpp
-        src/deep2/Deep2IDEIntegration.cpp
-        src/deep2/IOCPGGUFLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ModelRuntime.cpp
-        src/deep2/FabricTensorTable.cpp
+        # AUTO-REMOVED: stub file
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -6635,8 +6635,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Avoid mixing parallel GGUF engine stacks in this lane.
     list(REMOVE_ITEM WIN32IDE_SOURCES
-        src/engine/sovereign_engines.cpp
-        src/engine/rawr_engine.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/engine/gguf_core.cpp
     )
     # Re-wire providers needed by this target's link graph.
@@ -6756,7 +6756,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
 
         list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/win32app/agentic_bridge_headless.cpp
+            # AUTO-REMOVED: stub file
             src/win32app/Win32IDE_headless_stubs.cpp
             src/core/ignite_800b.cpp
             src/stubs.cpp
@@ -6908,7 +6908,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/K2LivePathTensorCache_Prefetch.cpp
         src/deep2/K2LivePathTensorCache_Emit.cpp
         src/deep2/K2MLAAttention.cpp
-        src/deep2/K2TokenEmbedding.cpp
+        # AUTO-REMOVED: stub file
         src/win32app/ScreenPilotModelHub.cpp
         src/marketplace/extension_package_local.cpp
         src/deep2/Sampler.cpp
@@ -7000,7 +7000,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Runtime surface +�-�+�-�+�-� unity module (single TU) + GenerationStopwatch (separate TU: shared with model_runtime_gate)
     list(APPEND WIN32IDE_SOURCES
         src/runtime_surface/RuntimeSurfaceModule.cpp
-        src/runtime_surface/GenerationStopwatch.cpp
+        # AUTO-REMOVED: stub file
     )
 
     # +�-�+�-�+�-�+�-�+�-�+�-� Performance-optimization batches 3+�-�+�-�+�-�6 +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
@@ -7015,8 +7015,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/inference/DualGpuPipeline.cpp
         src/inference/Deep2Engine.cpp
         src/kernels/VulkanComputeKernels.cpp
-        src/InferenceProfiler.cpp
-        src/BackendOrchestrator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # --- Missing sources causing LNK2001 (added 2026-08-10) ---
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
@@ -7029,94 +7029,94 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         B014/build/b014_profiler.cpp
         src/deep2/Deep2Engine.cpp
         src/deep2/CycloneScheduler.cpp
-        src/deep2/Deep2LivePath.cpp
-        src/deep2/Deep2LivePath_Gate.cpp
-        src/deep2/Deep2LivePath_Pinball.cpp
-        src/deep2/Deep2LivePath_Mech.cpp
-        src/deep2/Deep2LivePath_Emit.cpp
-        src/deep2/GpuTransfer_Emit.cpp
-        src/deep2/LivePathEffect.cpp
-        src/deep2/K2LivePolicy.cpp
-        src/deep2/K2LivePolicy_Apply.cpp
-        src/deep2/K2LivePolicy_Hysteresis.cpp
-        src/deep2/FusedLiveController.cpp
-        src/deep2/FusedLiveController_Decide.cpp
-        src/deep2/FusedLiveController_Cheap.cpp
-        src/deep2/FusedLiveController_Law.cpp
-        src/deep2/FusedLiveController_Emit.cpp
-        src/deep2/LivePath_FusedTick.cpp
-        src/deep2/Deep2LivePath_MechEnd.cpp
-        src/deep2/Deep2LivePath_Thermal.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/PlasmaGovernor.cpp
         src/deep2/ElasticResidencyManager.cpp
-        src/rkc/RKCValidator.cpp
-        src/rkc/RKCWorld.cpp
-    src/rkc/RKCCodeWorld.cpp
-    src/rkc/RKCMinimalSource.cpp
-    src/rkc/RKCNegativeKnowledge.cpp
-    src/rkc/RKCModelInventory.cpp
-    src/rkc/RKCDeep2Authority.cpp
-        src/rkc/RKCCompiler.cpp
-        src/rkc/RKCRecipes.cpp
-        src/rkc/RKCGapEngine.cpp
-        src/rkc/RKCEmit.cpp
-        src/rkc/RKCSession.cpp
-        src/rkc/RKCProductContext.cpp
-        src/rkc/RKC_C_ABI.cpp
-        src/deep2/KimiK2Config.cpp
-        src/deep2/K2MLAWeights.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/K2MLA_KvExpand_Fused.cpp
-        src/deep2/K2MoEWeights.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         # Deep2 component files required by Deep2Engine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/WarmupScheduler.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/StreamRouter.cpp
-        src/deep2/Deep2Bridge.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/ShardRouterIntegration.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
-        src/deep2/RuntimePlanner.cpp
-        src/deep2/ModelLoader.cpp
-        src/deep2/ModelRegistry.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/UniversalModelLoader.cpp
-        src/deep2/RawrXDInferenceAdapter.cpp
-        src/inference/RawrXD_LlamaNative.cpp
-        src/deep2/InferenceSession.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/FabricTensorTable.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ScaleQuality.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/TheDualityExample.cpp
         src/deep2/Deep2Discovery.cpp
         src/deep2/Deep2Benchmark.cpp
@@ -7131,8 +7131,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GGUFDiagnostics.cpp
         src/deep2/GGUFLoader_Fixed.cpp
         src/deep2/GGUFVerifier.cpp
-        src/deep2/IQQuantKernels.cpp
-        src/deep2/MASMKernelStubs.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mcp_bridge.cpp
         src/deep2/gpu/Deep2GPUBackend.cpp
         src/deep2/MultiGPU/GPUDeviceRegistry.cpp
@@ -7191,7 +7191,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # ============================================================================
     add_executable(Deep2Engine_MetadataRegressionTest
         src/deep2/Deep2Engine_MetadataRegressionTest.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -7262,32 +7262,32 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Elastic Engine +�-�+�-�+�-� Predictive tensor residency + governance
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     list(APPEND WIN32IDE_SOURCES
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/runtime/elastic/ElasticArchitectureDetector.cpp
         src/runtime/shared/SharedModelRuntime.cpp
         src/runtime/shared/BP1BraidIndex.cpp
         src/runtime/shared/BP1BraidStreamer.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/runtime/memory/CapacityManager.cpp
-        src/runtime/memory/PlacementPolicy.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/TensorPlacementManager.cpp
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
+        # AUTO-REMOVED: stub file
         src/backend/VulkanGemmDispatcher.cpp
-        src/runtime/gguf_tensor_loader.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
@@ -9226,7 +9226,7 @@ option(BUILD_K2_LOGITS_VWA_LINEAGE_001 "Build K2 logits VWA lineage cert" OFF)
 if(BUILD_K2_LOGITS_VWA_LINEAGE_001)
     add_executable(deep2_k2_logits_vwa_lineage_001
         src/deep2/deep2_k2_logits_vwa_lineage_001.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(deep2_k2_logits_vwa_lineage_001 PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -9278,7 +9278,7 @@ if(BUILD_VWA_POC_1_001 AND WIN32 AND MSVC)
         VERBATIM)
     add_executable(vwa_poc_1_001
         src/deep2/vwa_poc_1_001.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
         ${_VWA_POC_ASM_OBJ}
     )
     target_include_directories(vwa_poc_1_001 PRIVATE
@@ -10142,8 +10142,8 @@ option(BUILD_DEEP2_VWA_IOCP_RANGE_001 "Build VWA_IOCP_RANGE_001" OFF)
 if(BUILD_DEEP2_VWA_IOCP_RANGE_001 AND WIN32 AND MSVC)
     add_executable(deep2_vwa_iocp_range_001
         src/deep2/deep2_vwa_iocp_range_001.cpp
-        src/deep2/IOCPGGUFLoader.cpp
-        src/deep2/GGUFLoader.cpp)
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file)
     target_compile_definitions(deep2_vwa_iocp_range_001 PRIVATE VWA_IOCP_RANGE_CERT=1)
     target_compile_options(deep2_vwa_iocp_range_001 PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20 /Gy)
@@ -10605,7 +10605,7 @@ option(BUILD_DEEP2_NU_PACK_FORMAT_CERT "Build NU_PACK_FORMAT_001" OFF)
 if(BUILD_DEEP2_NU_PACK_FORMAT_CERT)
     add_executable(deep2_nu_pack_format_cert
         src/deep2/deep2_nu_pack_format_cert.cpp
-        src/deep2/NUFusedPacker.cpp)
+        # AUTO-REMOVED: stub file)
     if(MSVC)
         target_compile_options(deep2_nu_pack_format_cert PRIVATE
             $<$<NOT:$<CONFIG:Debug>>:/O2> /EHsc /W4 /std:c++20)
@@ -10841,9 +10841,9 @@ if(BUILD_TEST_MARS_CONTROLLER)
     add_executable(test_mars_controller
         src/deep2/mars/test_mars_controller.cpp
         src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(test_mars_controller PRIVATE /O2 /EHsc /W3 /std:c++20)
@@ -10864,8 +10864,8 @@ option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" 
 if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
     add_executable(deep2_execution_policy_smoke
         src/deep2/deep2_execution_policy_smoke.cpp
-        src/deep2/execution_policy/ExecutionPolicy.cpp
-        src/deep2/execution_policy/ExecutionPolicyStore.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/execution_policy/PlacementPlan.cpp
         src/deep2/execution_policy/ExecutionPolicyApply.cpp
     )
@@ -11160,10 +11160,10 @@ option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harne
 if(BUILD_IDE_AGENT_LOOP_CERT)
     add_executable(ide_agent_loop_cert
         src/agentic/ide_agent_loop_cert.cpp
-        src/security/InputSanitizer.cpp
+        # AUTO-REMOVED: stub file
         src/agent/agentic_hotpatch_orchestrator.cpp
         src/core/proxy_hotpatcher.cpp
-        src/deep2/IOCPGGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_link_libraries(ide_agent_loop_cert PRIVATE InferenceEngine)
     if(MSVC)
@@ -11215,7 +11215,7 @@ option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" OFF)
 if(BUILD_DUMP_QWEN35_META)
     add_executable(dump_qwen35_meta
         src/deep2/dump_qwen35_meta.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
     if(MSVC)
@@ -11359,7 +11359,7 @@ if(BUILD_LAYER_HARNESS)
 
     add_executable(test_l10_ffn_inp_same_source
         src/deep2/test_l10_ffn_inp_same_source.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(test_l10_ffn_inp_same_source PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -11381,7 +11381,7 @@ option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" OFF
 if(BUILD_QWEN35_ATTN_CONTRACT)
     add_executable(qwen35_attn_contract
         src/deep2/qwen35_attn_contract.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
     if(MSVC)
@@ -11460,51 +11460,51 @@ if(BUILD_VAL_051_5_DIAG)
     add_executable(val_051_5_diag_1_token
         tests/val_051_5_diag_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ProductionProfiler.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
@@ -11512,7 +11512,7 @@ if(BUILD_VAL_051_5_DIAG)
         src/deep2/sovereign_q2k_gemv_v2.asm
         src/deep2/sovereign_q3k_gemv_v2.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(val_051_5_diag_1_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11540,55 +11540,55 @@ if(BUILD_VAL_BP16_INT)
     add_executable(val_bp16_int_1_token
         tests/val_bp16_int_1_token.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(val_bp16_int_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11662,53 +11662,53 @@ if(BUILD_VAL_051_5_BP16_E2E)
     add_executable(val_051_5_bp16_e2e
         tests/val_051_5_bp16_e2e.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11738,60 +11738,60 @@ if(BUILD_VAL_051_5_BP16_COMPARE)
     add_executable(val_051_5_bp16_compare
         tests/val_051_5_bp16_compare.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11821,53 +11821,53 @@ if(BUILD_VAL_051_5_BP16_WEIGHTS)
     add_executable(val_051_5_bp16_weights
         tests/val_051_5_bp16_weights.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -11898,7 +11898,7 @@ if(BUILD_VAL_051_5_BP16_VERIFY)
         tests/val_051_5_bp16_verify.cpp
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(val_051_5_bp16_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -11926,53 +11926,53 @@ if(BUILD_VAL_051_5_BP16_LOGITS)
     add_executable(val_051_5_bp16_logits
         tests/val_051_5_bp16_logits.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12002,53 +12002,53 @@ if(BUILD_VAL_051_6_BP16_PERF)
     add_executable(val_051_6_bp16_perf
         tests/val_051_6_bp16_perf.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12078,53 +12078,53 @@ if(BUILD_VAL_051_7_BP16_PROFILE)
     add_executable(val_051_7_bp16_profile
         tests/val_051_7_bp16_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12154,53 +12154,53 @@ if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
     add_executable(val_051_7_bp16_lightweight_profile
         tests/val_051_7_bp16_lightweight_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12229,53 +12229,53 @@ if(BUILD_MINIMAL_1TOKEN_PROFILER)
     add_executable(minimal_1token_profiler
         tests/minimal_1token_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12304,53 +12304,53 @@ if(BUILD_QUICK_1LAYER_PROFILER)
     add_executable(quick_1layer_profiler
         tests/quick_1layer_profiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12424,53 +12424,53 @@ if(BUILD_VAL_051_5_BP16_DIAG)
     add_executable(val_051_5_bp16_diag
         tests/val_051_5_bp16_diag.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12501,53 +12501,53 @@ if(BUILD_VAL_051_5_BP16_BENCH)
     add_executable(val_051_5_bp16_bench
         tests/val_051_5_bp16_bench.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12577,7 +12577,7 @@ option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" OFF)
 if(BUILD_VAL_051_5_BP16_LOADBENCH)
     add_executable(val_051_5_bp16_loadbench
         tests/val_051_5_bp16_loadbench.cpp
-        src/deep2/GGUFLoader.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/BP16Extractor.cpp
         src/deep2/BP16Streamer.cpp
     )
@@ -12737,55 +12737,55 @@ if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
     add_executable(val_051_8_linearw_thread_scaling
         tests/val_051_8_linearw_thread_scaling.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(val_051_8_linearw_thread_scaling PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -12813,55 +12813,55 @@ if(BUILD_VAL_051_8_LAYER_PROFILE)
     add_executable(val_051_8_layer_profile
         tests/val_051_8_layer_profile.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/BP16Extractor.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
     )
     if(MSVC)
         target_compile_options(val_051_8_layer_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -13088,7 +13088,7 @@ endif()
 # Build: cmake --build . --target RawrXD-InferenceRoutingTest
 # Run:   .\bin\RawrXD-InferenceRoutingTest.exe
 add_executable(RawrXD-InferenceRoutingTest
-    src/tests/inference_routing_test.cpp
+    # AUTO-REMOVED: stub file
 )
 set_target_properties(RawrXD-InferenceRoutingTest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY bin
@@ -13121,7 +13121,7 @@ if(WIN32)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
             # NOTE: Removed quantum_agent_orchestrator.cpp - marketing fiction
-            src/agentic/AgentOllamaClient.cpp
+            # AUTO-REMOVED: stub file
             src/inference/gpu_dispatch_gate.cpp
             src/cpu_inference_engine_autofix_stub.cpp
             src/gguf_d3d12_bridge.cpp
@@ -13151,12 +13151,12 @@ if(WIN32)
     # Hotpatch Stress Test +�-�+�-�+�-� Acquisition-grade memory hotpatch validation
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
-        src/test_harness/hotpatch_stress_test.cpp
+        # AUTO-REMOVED: stub file
         src/core/model_memory_hotpatch.cpp
-        src/license_enforcement.cpp
+        # AUTO-REMOVED: stub file
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/feature_flags_runtime.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(hotpatch_stress_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13171,12 +13171,12 @@ if(WIN32)
     # Hotpatch E2E Test +�-�+�-�+�-� Real GGUF tensor +�-�+�-�+�-� hotpatch +�-�+�-�+�-� inference +�-�+�-�+�-� rollback
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
-        src/test_harness/hotpatch_e2e_test.cpp
+        # AUTO-REMOVED: stub file
         src/core/model_memory_hotpatch.cpp
-        src/license_enforcement.cpp
+        # AUTO-REMOVED: stub file
         src/core/enterprise_license_v2.cpp
         src/core/license_anti_tampering.cpp
-        src/feature_flags_runtime.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(hotpatch_e2e_test PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13193,7 +13193,7 @@ if(WIN32)
     # ARCH-CERT-001: GGUF Tensor/Operation Inventory
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
-        src/test_harness/arch_cert_tensor_inventory.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(arch_cert_tensor_inventory PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -13204,7 +13204,7 @@ if(WIN32)
     # FWD-CERT-001: Deterministic Forward-Pass Certification
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
-        src/test_harness/fwd_cert_001.cpp
+        # AUTO-REMOVED: stub file
         src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(fwd_cert_001 PRIVATE InferenceEngine bcrypt.lib)
@@ -13219,53 +13219,53 @@ if(WIN32)
     # Production Benchmark +�-�+�-�+�-� Batch 1: Repeatable 1/10/32/128 token benchmark
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
-        src/deep2/Deep2QuantCert.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2Determinism.cpp
         src/deep2/Deep2GenerationCert.cpp
         src/deep2/Deep2ProductionCert.cpp
         src/deep2/ProductionBenchmark.cpp
         src/deep2/ProductionProfiler.cpp
         src/deep2/Deep2Engine.cpp
-        src/deep2/KimiK2Config.cpp
-        src/deep2/K2MLAWeights.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/K2MLA_KvExpand_Fused.cpp
-        src/deep2/K2MoEWeights.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/Deep2Bridge.cpp
-        src/deep2/InferenceSession.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/QuantKernelRegistry.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/RouterPrefetchTelemetry.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/DeepSeekMoELoader.cpp
+        # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2ExecutionGraph.cpp
         src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/UniversalModelLoader.cpp
-        src/deep2/ModelLoader.cpp
-        src/deep2/ModelRegistry.cpp
-        src/deep2/RuntimePlanner.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/RawrXDInferenceAdapter.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/mars/MARSController.cpp
-        src/sampling/advanced_sampler.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/ResidencyTrace.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_q4k_gemv_v2.asm
@@ -13288,27 +13288,27 @@ if(WIN32)
         src/deep2/Chamber.cpp
         src/deep2/ToroidalKVCache.cpp
         src/deep2/PlasmaGovernor.cpp
-        src/deep2/OutOfCoreRuntime.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/SovereignOutOfCoreRuntime.cpp
         src/deep2/BP16Streamer.cpp
-        src/deep2/ResidencyManager.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/GhostCache.cpp
         src/deep2/ElasticResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/LlamaNativeBridge.cpp
         src/deep2/RawrRuntime.cpp
         src/inference/ollama_blob_parser.cpp
         src/deep2/ZlibRuntimeLoader.cpp
-        src/deep2/DualGPUHook.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/deep2/asm_stubs.cpp
         src/vulkan_compute.cpp
     )
@@ -13343,7 +13343,7 @@ if(WIN32)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
         tests/test_deep2_production.cpp
-        src/deep2/Deep2QuantCert.cpp
+        # AUTO-REMOVED: stub file
         src/deep2/Deep2Determinism.cpp
         src/deep2/Deep2GenerationCert.cpp
         src/deep2/Deep2ProductionCert.cpp
@@ -13369,7 +13369,7 @@ if(WIN32)
     # GPU Inference Benchmark +�-�+�-�+�-� v16.2-GPU-HYBRID Phase C
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-Benchmark EXCLUDE_FROM_ALL
-        src/tools/gpu_benchmark.cpp
+        # AUTO-REMOVED: stub file
         src/gguf_d3d12_bridge.cpp
         src/kernels/flash_attention.cpp
     )
@@ -13414,7 +13414,7 @@ if(WIN32)
     # Fused Layer Benchmark +�-�+�-�+�-� v16.3 Phase D Layer Fusion
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
-        src/tools/fused_layer_benchmark.cpp
+        # AUTO-REMOVED: stub file
         src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-FusedBenchmark PRIVATE
@@ -13445,7 +13445,7 @@ if(WIN32)
     # KV Cache Benchmark +�-�+�-�+�-� v16.4 Phase E GPU-Resident KV Cache
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-KVBenchmark EXCLUDE_FROM_ALL
-        src/tools/kv_cache_benchmark.cpp
+        # AUTO-REMOVED: stub file
         src/gguf_d3d12_bridge.cpp
     )
     target_include_directories(RawrXD-KVBenchmark PRIVATE
@@ -13482,7 +13482,7 @@ if(WIN32)
     # Fix #4 Flash Attention v2 Benchmark +�-�+�-�+�-� Memory-efficient attention
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(Fix4_FlashAttention_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix4_FlashAttention_Benchmark.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(Fix4_FlashAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13509,7 +13509,7 @@ if(WIN32)
     # Fix #5 Fused Quantized Kernels +�-�+�-�+�-� Q4_0/Q8_0 fused dequantize+GEMM
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(Fix5_FusedQuantized_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix5_FusedQuantized_Benchmark.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(Fix5_FusedQuantized_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13536,7 +13536,7 @@ if(WIN32)
     # VAL-032: Speculative Decoding (Medusa-style) Benchmark
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(VAL032_SpeculativeDecoding_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13563,7 +13563,7 @@ if(WIN32)
     # VAL-032: AVX-512 Assembly Kernel Benchmark
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(VAL032_AVX512_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13591,7 +13591,7 @@ if(WIN32)
     # VAL-032 Simple Intrinsics Benchmark +�-�+�-�+�-� Direct AVX-512 performance measurement
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_avx512_intrinsics.cpp
+        # AUTO-REMOVED: stub file
         src/benchmark/tree_attention_bench_simple.cpp
     )
     target_include_directories(tree_attention_bench_simple PRIVATE
@@ -13614,7 +13614,7 @@ if(WIN32)
     # VAL-033 Profiling Instrumentation +�-�+�-�+�-� Per-stage cycle-accurate timing
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_profiled.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_profiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13636,7 +13636,7 @@ if(WIN32)
     # VAL-034 Q@K^T Alignment Optimization +�-�+�-�+�-� 64-byte aligned loads
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_aligned.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_aligned PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13658,7 +13658,7 @@ if(WIN32)
     # VAL-035 Tiled Q@K^T +�-�+�-�+�-� Register-resident Q, streaming K
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_tiled.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_tiled PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13680,7 +13680,7 @@ if(WIN32)
     # VAL-036 Vectorized Softmax +�-�+�-�+�-� AVX-512 polynomial exp approximation
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_vectorized.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_vectorized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13702,7 +13702,7 @@ if(WIN32)
     # VAL-037 Tree Sparsity +�-�+�-�+�-� Exploit tree structure to reduce computation
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_sparse.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13724,7 +13724,7 @@ if(WIN32)
     # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_fused_sparse.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_fused_sparse PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13746,7 +13746,7 @@ if(WIN32)
     # VAL-037.2 Tree-Specialized Fused Attention +�-�+�-�+�-� Exploit 4x4 tree topology
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_tree_specialized.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(tree_attention_tree_specialized PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13769,7 +13769,7 @@ if(WIN32)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
-        src/benchmark/tree_attention_masm_val038_wrapper.cpp
+        # AUTO-REMOVED: stub file
         src/benchmark/tree_attention_masm_val038.asm
     )
     target_include_directories(tree_attention_masm_val038 PRIVATE
@@ -13795,7 +13795,7 @@ if(WIN32)
     # VAL-038 Fused Attention +�-�+�-�+�-� Q@K^T +�-�+�-�+�-� Softmax +�-�+�-�+�-� A@V in single kernel
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL038_FusedAttention_Benchmark.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(VAL038_FusedAttention_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13821,7 +13821,7 @@ if(WIN32)
     # Step C: Numerical correctness vs scalar reference
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL038_Validation_Benchmark.cpp
+        # AUTO-REMOVED: stub file
     )
     target_include_directories(VAL038_Validation_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -13845,14 +13845,14 @@ if(WIN32)
     # TPS smoke +�-�+�-�+�-� GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # +�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�+�-�
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
-        src/tools/RawrXD_TpsSmoke.cpp
+        # AUTO-REMOVED: stub file
         src/llm_adapter/GGUFRunner.cpp
         src/llm_adapter/gguf_k_quants.cpp
         src/llm_adapter/QuantBackend.cpp
         src/llm_adapter/ggufrunner_link_kernels.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
-        src/runtime_surface/GenerationStopwatch.cpp
+        # AUTO-REMOVED: stub file
         src/runtime_surface/RuntimeSurfaceModule.cpp
         src/logging/Logger.cpp
     )
@@ -13901,7 +13901,7 @@ if(WIN32)
     )
 
     add_executable(RawrXD-ModelAnalysis EXCLUDE_FROM_ALL
-        src/tools/model_analysis_cli.cpp
+        # AUTO-REMOVED: stub file
         src/llm_adapter/gguf_k_quants.cpp
     )
     target_include_directories(RawrXD-ModelAnalysis PRIVATE
@@ -13935,7 +13935,7 @@ endif()
 # Swarm smoke test (manual)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
-        src/tests/SwarmSmokeTest.cpp
+        # AUTO-REMOVED: stub file
         src/bridge/Win32SwarmBridge.cpp
         src/bridge/SwarmIATRegistration.cpp
         src/agentic/SubAgentManager.cpp
@@ -13957,10 +13957,10 @@ endif()
 
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
-    src/tests/backend_orchestrator_shard_smoke.cpp
+    # AUTO-REMOVED: stub file
     # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
-    src/BackendOrchestrator.cpp
-    src/InferenceProfiler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
 )
@@ -13978,7 +13978,7 @@ message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShar
 # Agentic Planning Orchestrator Smoke Tests
 # ============================================================================
 add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
-    src/agentic/agentic_planning_orchestrator.cpp
+    # AUTO-REMOVED: stub file
     src/agentic/agentic_orchestrator_integration.cpp
     src/agentic/agentic_audit_sink.cpp
     src/agentic/agentic_orchestrator_smoke_test.cpp
@@ -14053,7 +14053,7 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 # Only add sovereign runtime if CLI version not already defined
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
-        src/sovereign/rawrxd.cpp
+        # AUTO-REMOVED: stub file
         src/sovereign/SovereignRuntime.cpp
         src/sovereign/ExecutionContract.cpp
         src/sovereign/Deep2InferenceWrapper.cpp
@@ -14073,20 +14073,20 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
-        src/runtime/gguf_tensor_loader.cpp
-        src/runtime/Deep2ExecutionTelemetry.cpp
-        src/runtime/elastic/ElasticEngine.cpp
-        src/runtime/elastic/ElasticGGUFIndex.cpp
-        src/runtime/elastic/ElasticResidencyManager.cpp
-        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
-        src/runtime/elastic/ElasticDecoder.cpp
-        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
-        src/runtime/governance/HardwareCapabilityProbe.cpp
-        src/runtime/governance/CapabilityTierMatrix.cpp
-        src/runtime/governance/HardwareGovernor.cpp
-        src/runtime/governance/PressedStateEngine.cpp
-        src/runtime/governance/Ensemble58Governor.cpp
-        src/runtime/governance/TLSInstructionGate.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/inference/NegativeSpaceProfiler.cpp
     )
 
@@ -14139,7 +14139,7 @@ if(TARGET rawrxd_runtime)
 else()
     target_sources(rawrxd PRIVATE
         src/runtime/TensorExecutionRouter.cpp
-        src/runtime/memory/PlacementPolicy.cpp
+        # AUTO-REMOVED: stub file
         src/runtime/memory/ResidencyTracker.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
         src/runtime/memory/CapacityManager.cpp
@@ -14340,7 +14340,7 @@ endif()
 # Sovereign Bridge Test Harness
 # ============================================================================
 add_executable(TestSovereignBridge EXCLUDE_FROM_ALL
-    src/ide/test_sovereign_bridge.cpp
+    # AUTO-REMOVED: stub file
     src/ide/SovereignSharedMemoryBridge.cpp
 )
 target_compile_features(TestSovereignBridge PRIVATE cxx_std_17)
@@ -14362,7 +14362,7 @@ message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build
 # DebugBridge Telemetry Test
 # ============================================================================
 add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
-    src/debug/test_debugbridge_telemetry.cpp
+    # AUTO-REMOVED: stub file
 )
 target_compile_features(TestDebugBridgeTelemetry PRIVATE cxx_std_17)
 set_target_properties(TestDebugBridgeTelemetry PROPERTIES
@@ -14374,7 +14374,7 @@ message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
 # Pure MASM Inference Test
 # ============================================================================
 add_executable(TestMASMInference EXCLUDE_FROM_ALL
-    src/test_masm_inference.cpp
+    # AUTO-REMOVED: stub file
     src/gguf_masm_weight_bridge.cpp
 )
 target_compile_features(TestMASMInference PRIVATE cxx_std_17)
@@ -14409,7 +14409,7 @@ message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 # Debugger Stress Tests
 # ============================================================================
 add_executable(stress_target EXCLUDE_FROM_ALL
-    src/debug/stress_target.cpp
+    # AUTO-REMOVED: stub file
 )
 target_compile_features(stress_target PRIVATE cxx_std_17)
 set_target_properties(stress_target PROPERTIES
@@ -14417,7 +14417,7 @@ set_target_properties(stress_target PROPERTIES
 )
 
 add_executable(stress_memory EXCLUDE_FROM_ALL
-    src/debug/stress_memory.cpp
+    # AUTO-REMOVED: stub file
 )
 target_compile_features(stress_memory PRIVATE cxx_std_17)
 set_target_properties(stress_memory PROPERTIES
@@ -14430,7 +14430,7 @@ message(STATUS "[Test] Debugger stress tests: stress_target, stress_memory")
 # SovereignRPC Simulator Test
 # ============================================================================
 add_executable(test_simulator EXCLUDE_FROM_ALL
-    src/rpc/test_simulator.cpp
+    # AUTO-REMOVED: stub file
     src/rpc/SovereignRPC_Simulator.cpp
     src/rpc/SovereignRPC_Scheduler.cpp
 )
@@ -14453,7 +14453,7 @@ message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
     add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
         tests/test_q4_fused_pipeline.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
     target_include_directories(test_q4_fused_pipeline PRIVATE
@@ -14474,7 +14474,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
         tests/test_q4_cache_alignment.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
     target_include_directories(test_q4_cache_alignment PRIVATE
@@ -14495,7 +14495,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
     add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
         tests/test_q4_asm_debug.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
     target_include_directories(test_q4_asm_debug PRIVATE
@@ -14539,7 +14539,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
     add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
         tests/test_q4_scalar_simd.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
     target_include_directories(test_q4_scalar_simd PRIVATE
@@ -14567,7 +14567,7 @@ endif()
 # VAL-051 Witness System Test
 # =============================================================================
 add_executable(witness_system_test EXCLUDE_FROM_ALL
-    src/validation/witness_system_test.cpp
+    # AUTO-REMOVED: stub file
     src/core/inference_witness.cpp
 )
 target_include_directories(witness_system_test PRIVATE
@@ -14586,9 +14586,9 @@ message(STATUS "========================================")
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
     add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
         tests/benchmark_dispatch_overhead.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_overhead PRIVATE
@@ -14609,7 +14609,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
     add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
         tests/benchmark_planner_amortization.cpp
-        src/nevm/nevm_execution_plan.cpp
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
@@ -14630,10 +14630,10 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
     add_executable(validate_end_to_end EXCLUDE_FROM_ALL
         tests/validate_end_to_end.cpp
-        src/nevm/nevm_execution_plan.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
     target_include_directories(validate_end_to_end PRIVATE
@@ -14654,7 +14654,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
     add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
         tests/nevm_determinism_validation.cpp
-        src/nevm/nevm_execution_plan.cpp
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_kernel_bridge.cpp
     )
     target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
@@ -14678,7 +14678,7 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
     add_executable(nevm_stress_test EXCLUDE_FROM_ALL
         tests/nevm_stress_test.cpp
-        src/nevm/nevm_execution_plan.cpp
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_mmu.cpp
     )
     target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
@@ -14732,9 +14732,9 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
     add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
         tests/benchmark_dispatch_pmc.cpp
-        src/nevm/nevm_tensor_descriptor.cpp
+        # AUTO-REMOVED: stub file
         src/nevm/nevm_kernel_bridge.cpp
-        src/memory/Q4WeightPreprocess.cpp
+        # AUTO-REMOVED: stub file
     )
     target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
     target_include_directories(benchmark_dispatch_pmc PRIVATE
@@ -14841,52 +14841,52 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
     endif()
 endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_generation.cpp")
-add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/IOCPGGUFLoader.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
+add_executable(test_generation tests/test_generation.cpp # AUTO-REMOVED: stub file src/deep2/Deep2Engine.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/MoERouter.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp # AUTO-REMOVED: stub file src/deep2/QuantKernelRegistry.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/mars/MARSController.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp # AUTO-REMOVED: stub file # AUTO-REMOVED: stub file)
 set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
 add_executable(test_llama_native tests/test_llama_native.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/inference/RawrXD_LlamaNative.cpp
-    src/deep2/InferenceSession.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/BP16Streamer.cpp
     src/deep2/BP16Extractor.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/ResidencyManager.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
 )
 set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_llama_native PRIVATE InferenceEngine)
@@ -14894,51 +14894,51 @@ add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${C
 
 # K2-001 Runtime Validation Gate
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
-    src/adapter/RawrXDEngineAdapter.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/MASMKernelStubs.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_deep2_kernels.asm
-    src/inference/RawrXD_LlamaNative.cpp
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp)
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
 add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14946,9 +14946,9 @@ add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECT
 # Q4_K Block Decoder Verification Test
 # Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
 add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -14973,143 +14973,143 @@ endif()
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
 add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/deep2/MASMKernelStubs.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_deep2_kernels.asm
-    src/inference/RawrXD_LlamaNative.cpp
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp)
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-002: Bounded Tensor Streaming Validation
 add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp)
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
 add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-003: Native Deep2 Layer Execution
 add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp)
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
 add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15117,11 +15117,11 @@ add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRE
 # K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
 # Must pass after K2-003A (Q4_K decoder certified) before full layer execution
 add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15131,11 +15131,11 @@ add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validat
 # K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
 # Proves one complete transformer layer executes on real Q4_K weights
 add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_003c_single_layer_forward PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15144,48 +15144,48 @@ add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward 
 
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/Deep2Bridge.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2Engine.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/InferenceSession.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/FabricTensorTable.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/DualGPUHook.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/MoEArchitectureParser.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/NUFusedPacker.cpp
-    src/deep2/WarmupScheduler.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
-    src/inference/RawrXD_LlamaNative.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp)
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
 add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15193,11 +15193,11 @@ add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRE
 # K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
 # Proves scalability from 003C single-layer to multi-layer with bounded memory
 add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15207,12 +15207,12 @@ add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_la
 # K2-005: Bounded Autoregressive Decode with KV Cache
 # Proves KV cache correctly stores/retrieves K/V across decode steps
 add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_005_autoregressive_kv_cache PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15222,12 +15222,12 @@ add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_ca
 # K2-006: Bounded Autoregressive Token Generation
 # Proves logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� decode +�-�+�-�+�-� repeat pipeline works
 add_executable(k2_006_bounded_token_generation tests/k2_006_bounded_token_generation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_006_bounded_token_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15238,9 +15238,9 @@ add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_gener
 # Proves output.weight can be streamed row-by-row to produce logits
 # without unbounded allocation. Independent of K2-006 synthetic baseline.
 add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007_real_output_projection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15259,9 +15259,9 @@ endif()
 # Narrow integration gate: proves real output projection produces a valid
 # logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
 add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_007b_projection_logits_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15273,12 +15273,12 @@ add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_log
 # text +�-�+�-�+�-� tokens +�-�+�-�+�-� real K2 inference +�-�+�-�+�-� logits +�-�+�-�+�-� argmax +�-�+�-�+�-� token +�-�+�-�+�-� text.
 # Independent of K2-006 synthetic baseline.
 add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/K2MLAWeights.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/K2MLA_KvExpand_Fused.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/KVCache.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15288,7 +15288,7 @@ add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_se
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
 add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
-    src/deep2/K2TimeLimitedServing.cpp)
+    # AUTO-REMOVED: stub file)
 set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15297,10 +15297,10 @@ add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${C
 # Proves token_embd.weight can be streamed row-by-row without loading
 # the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
 add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
-    src/deep2/K2TokenEmbedding.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/GGUFLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp)
 set_target_properties(k2_009_token_embedding_lookup PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -15324,7 +15324,7 @@ set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15401,7 +15401,7 @@ set(B012_AMORTIZATION_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15456,7 +15456,7 @@ set(B013_STABILITY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15490,7 +15490,7 @@ set(B014_COMPUTE_SOURCES
     B014/build/compute_decomposition.cpp
     B014/build/b014_profiler.cpp
     B014/build/B014_RingAdapter.cpp
-    src/runtime/Sovereign_RingTelemetry.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
@@ -15507,7 +15507,7 @@ set(B014_COMPUTE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15555,7 +15555,7 @@ set(B014_BOUNDARY_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15603,7 +15603,7 @@ set(B014_SINGLE_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -15651,7 +15651,7 @@ set(B014_LIFETIME_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
-    src/runtime/memory/PlacementPolicy.cpp
+    # AUTO-REMOVED: stub file
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
@@ -16661,56 +16661,56 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
     src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/Deep2Engine.cpp
-    src/deep2/K2GlobalTensorIndex.cpp
-    src/deep2/GGUFLoader.cpp
-    src/deep2/ThreadPool.cpp
-    src/deep2/KVCache.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/MoERouter.cpp
-    src/deep2/MoEWeightProxy.cpp
-    src/deep2/MoEEliminate.cpp
-    src/deep2/MoEWeightsLoader.cpp
-    src/deep2/DeepSeekMoELoader.cpp
-    src/deep2/TensorHop.cpp
-    src/deep2/MoEArchitectureParser.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/Deep2ExecutionGraph.cpp
-    src/deep2/ReverseHotpatchEngine.cpp
-    src/deep2/ReverseIntegration.cpp
-    src/deep2/DualGPUHook.cpp
-    src/deep2/ReverseTensorRecovery.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/StreamEngine.cpp
     src/deep2/StreamRouter.cpp
-    src/deep2/FusedInferenceKernel.cpp
-    src/deep2/MedusaDecoder.cpp
-    src/deep2/WarmupScheduler.cpp
-    src/deep2/NUFusedPacker.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/CompressedKVCache.cpp
     src/deep2/NVMeStream.cpp
-    src/deep2/SlidingWindowEngine.cpp
-    src/deep2/HotPatcher.cpp
-    src/deep2/HotPatcherSafety.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/AntiPatcher.cpp
-    src/deep2/TrailBrake.cpp
-    src/deep2/PatchCache.cpp
-    src/deep2/BottleTTL.cpp
-    src/deep2/GoalSystem.cpp
-    src/deep2/CPUFrequency.cpp
-    src/deep2/mars/VRAMManager.cpp
-    src/deep2/mars/TensorHotpatch.cpp
-    src/deep2/mars/DualGPUBackend.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/mars/MARSController.cpp
-    src/reverse/ReverseEngine.cpp
-    src/reverse/ReverseModelLoader.cpp
+    # AUTO-REMOVED: stub file
+    # AUTO-REMOVED: stub file
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm
     src/deep2/sovereign_q4k_gemv_v2.asm
     src/deep2/sovereign_q2k_gemv_v2.asm
     src/deep2/sovereign_q3k_gemv_v2.asm
     src/deep2/sovereign_moe_fused.asm
-    src/sampling/advanced_sampler.cpp
+    # AUTO-REMOVED: stub file
     src/deep2/ProductionProfiler.cpp
     src/deep2/BP16Streamer.cpp
-    src/deep2/ResidencyManager.cpp
+    # AUTO-REMOVED: stub file
 )
 set_target_properties(certification_harness PROPERTIES
     EXCLUDE_FROM_ALL TRUE
