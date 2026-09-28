@@ -105,4 +105,40 @@ void GhostText_Paint(HDC hdc, int cursorX, int cursorY, int charH)
     SelectObject(hdc, old);
 }
 
-} // namespace RawrXD::IDE
+} // namespace RawrXD::IDE}
+
+// W3 fix: re-open namespace so the adapters below can access g_ghost and land
+// in RawrXD::IDE (their declarations in Win32IDE_LSP_AI_Bridge.cpp are inside
+// namespace RawrXD::IDE, so the mangled names require it).
+namespace RawrXD::IDE {
+
+
+// ============================================================================
+// EditorEngine ghost-text adapters (BATCH C / W3)
+// LSP_AI_Bridge (Win32IDE_LSP_AI_Bridge.cpp) declares and calls these in
+// namespace RawrXD::IDE. They are the editor-facing surface over the ghost
+// text engine above: Set replaces the pending suggestion for a line,
+// Clear dismisses it. Both keep the completion provider untouched so the
+// debounced request path keeps working alongside explicit LSP suggestions.
+// ============================================================================
+void EditorEngine_SetGhostText(int line, const std::string& text)
+{
+    g_ghost.suggestion  = text;
+    g_ghost.visible     = !text.empty();
+    g_ghost.anchorLine  = line;
+    g_ghost.pending.store(false);
+    if (g_ghost.editorHwnd && g_ghost.visible)
+        InvalidateRect(g_ghost.editorHwnd, nullptr, FALSE);
+}
+
+void EditorEngine_ClearGhostText()
+{
+    g_ghost.suggestion.clear();
+    g_ghost.visible     = false;
+    g_ghost.anchorLine  = -1;
+    g_ghost.pending.store(false);
+    if (g_ghost.editorHwnd)
+        InvalidateRect(g_ghost.editorHwnd, nullptr, FALSE);
+}
+
+} // namespace RawrXD::IDE (adapters)

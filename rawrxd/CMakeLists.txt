@@ -6812,6 +6812,24 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(APPEND WIN32IDE_SOURCES src/agentic/RawrXDAgenticE2E.cpp)
     # Real IDE agentic gate driver (resolves RawrXD::IDE::runAgenticGate from main_win32.cpp)
     list(APPEND WIN32IDE_SOURCES src/win32app/ide_agentic_gate.cpp)
+    # BATCH B (W3): LiveBinaryPatcher real implementation TU — previously
+    # excluded because hotpatch_telemetry_safety.h was never committed; the
+    # header now exists (real T3-D safety layer) so the 33KB real TU compiles.
+    list(APPEND WIN32IDE_SOURCES src/core/live_binary_patcher.cpp)
+    # BATCH B (W3): AgentOllamaClient real implementation TU (replaces the
+    # 24B stub from all git history; WinHTTP client, fail-closed timeouts).
+    list(APPEND WIN32IDE_SOURCES src/agentic/AgentOllamaClient.cpp)
+    # BATCH C (W3): IDELogger real implementation (OutputDebugString +
+    # timestamped stderr; callers: enterprise_license, IDE UI).
+    list(APPEND WIN32IDE_SOURCES src/win32app/IDELogger.cpp)
+    # BATCH D (W3): sole non-const g_FeatureManifest definition matching
+    # include/enterprise_license.h (5-member FeatureDefV2, FeatureID order).
+    list(APPEND WIN32IDE_SOURCES src/core/enterprise_license_manifest.cpp)
+    # BATCH C (W3): real IDE UI engine TUs — they existed in win32app but
+    # were never listed in WIN32IDE_SOURCES (category: library-not-linked).
+    list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_StatusBar.cpp)
+    list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_EditorEngine.cpp)
+    list(APPEND WIN32IDE_SOURCES src/win32app/Win32IDE_GhostText.cpp)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     # BATCH N2: /FS prevents C1041 PDB contention under parallel builds
     target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")
@@ -6880,6 +6898,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_backend"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer"
+        "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty"
     )
     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
         target_include_directories(RawrXD-Win32IDE PRIVATE
