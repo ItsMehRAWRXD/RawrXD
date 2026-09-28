@@ -308,6 +308,23 @@ struct GenerationOptions {
     uint64_t seed = 0;
 };
 
+// DEEP2_HTTP_FAILURE_SEMANTICS_001 — intentional status contract for
+// generation outcomes. HTTP mapping lives in the server layer:
+//   Completed/EndOfSequence -> 200 (immediate EOS may legitimately
+//                               produce zero tokens)
+//   InvalidInput            -> 400
+//   ForwardFailure          -> 500
+//   InternalError           -> 500
+//   Cancelled               -> 200 (partial output is the honest result)
+enum class GenerationStatus : uint8_t {
+    Completed = 0,
+    EndOfSequence = 1,
+    Cancelled = 2,
+    InvalidInput = 3,
+    ForwardFailure = 4,
+    InternalError = 5,
+};
+
 struct GenerationResult {
     uint64_t promptTokens = 0;
     uint64_t generatedTokens = 0;
@@ -317,6 +334,10 @@ struct GenerationResult {
 
     bool cancelled = false;
     bool completed = false;
+    // P0.3: precise outcome; failureDetail carries the engine's reason
+    // (e.g. "attention: sequence/KV position mismatch") verbatim.
+    GenerationStatus status = GenerationStatus::InternalError;
+    std::string failureDetail;
 };
 
 enum class ModelState : uint8_t {
@@ -1029,7 +1050,11 @@ private:
     void specKvMirrorReset();
 
     std::atomic<bool> cancelRequested_{false};
-    
+
+    // DEEP2_HTTP_FAILURE_SEMANTICS_001: reason for the most recent forward
+    // failure inside generate(); cleared at each successful transaction.
+    std::string lastFailureDetail_;
+    GenerationStatus lastFailureStatus_ = GenerationStatus::InternalError;
     // Real model weights
     ModelWeights modelWeights;
 

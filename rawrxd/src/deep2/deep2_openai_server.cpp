@@ -652,8 +652,28 @@ static void handleConnection(SOCKET clientSock,
                              result.generatedTokens, engine->kvCacheLength());
                 std::fflush(stderr);
 
+                // DEEP2_HTTP_FAILURE_SEMANTICS_001: intentional status mapping.
+                const char* finish = "stop";
+                if (result.status == Deep2::GenerationStatus::Cancelled)
+                    finish = "cancelled";
+                else if (result.status == Deep2::GenerationStatus::EndOfSequence)
+                    finish = "length";
+                resp.choices.clear();
+                resp.choices.push_back({0, "assistant", accumulated, finish});
+
                 std::string body = serializeChatCompletion(resp);
-                std::string httpResp = buildHttpResponse(200, "OK", "application/json", body);
+                int httpCode = 200;
+                std::string bodyOut = body;
+                if (result.status == Deep2::GenerationStatus::ForwardFailure ||
+                    result.status == Deep2::GenerationStatus::InternalError) {
+                    httpCode = 500;
+                    bodyOut = buildJsonError(500, "inference_error",
+                        result.failureDetail.empty()
+                            ? "generation failed"
+                            : result.failureDetail);
+                }
+                std::string httpResp = buildHttpResponse(httpCode, httpCode == 200 ? "OK" : "Internal Server Error", "application/json", bodyOut);
+                statusCode = httpCode;
                 send(clientSock, httpResp.c_str(), static_cast<int>(httpResp.size()), 0);
                 goto done;
             }

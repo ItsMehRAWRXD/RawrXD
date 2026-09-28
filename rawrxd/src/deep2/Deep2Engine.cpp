@@ -355,11 +355,11 @@ void Deep2Engine::parityEmitLogitsTop10(const float* logits, size_t n) {
     if (!logits || n == 0) return;
     // Greedy top-10 with first-max-wins tie-break (matches GreedySampler and
     // np.argmax): linear scan, strictly-greater comparison.
-    int topIdx[10] = {};
-    float topVal[10];
+    int topIdx[50] = {};
+    float topVal[50];
     std::fill(std::begin(topVal), std::end(topVal),
               -std::numeric_limits<float>::infinity());
-    const size_t keep = std::min<size_t>(10, n);
+    const size_t keep = std::min<size_t>(50, n);
     for (size_t i = 0; i < n; ++i) {
         float val = logits[i];
         // Insert into the (up to) 10-slot sorted-desc list.
@@ -426,6 +426,7 @@ void Deep2Engine::parityEmitLayer(int layer, const char* cpName,
         first[4], first[5], first[6], first[7],
         static_cast<unsigned long long>(hash));
     // DEEP2_QWEN2_CPU_CORRECTNESS_001: full-vector dump for the target layer.
+    // LOGITS also dumped as VEC when fullVecLayer == -2.
     if (parityProbe_->fullVecLayer >= 0 && layer == parityProbe_->fullVecLayer) {
         std::fprintf(parityProbe_->f,
             "STEP=%d VEC=LAYER_%d_%s N=%zu\n",
@@ -3525,6 +3526,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         auto tEmbed0 = std::chrono::steady_clock::now();
         if (!embedToken(promptTokens[p], hidden.data())) {
             modelState_ = ModelState::Choreographable;            if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
+            lastFailureDetail_ = "embedToken failed for prefill token " + std::to_string(p);
+            lastFailureStatus_ = GenerationStatus::InternalError;
             return 0;
         }
         auto tEmbed1 = std::chrono::steady_clock::now();
@@ -3544,6 +3547,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             if (!fr.ok) {
                 modelState_ = ModelState::Choreographable;
                 if (profiler_) profiler_->abortToken(static_cast<uint32_t>(p));
+                lastFailureStatus_ = GenerationStatus::ForwardFailure;
+                lastFailureDetail_ = std::string("prefill forward failed at token ")
+                    + std::to_string(p)
+                    + (fr.failureStage ? (std::string(" stage=") + fr.failureStage) : std::string());
                 return 0;
             }
         }
@@ -3587,6 +3594,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 kvCache?kvCache->currentLength():promptLen+generated-1));
             auto tEmb0 = std::chrono::steady_clock::now();
             if(!embedToken(pendingToken,hidden.data())) {                if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
+                lastFailureDetail_ = "embedToken failed for decode token " + std::to_string(generated);
+                lastFailureStatus_ = GenerationStatus::InternalError;
                 break;
             }
             auto tEmb1 = std::chrono::steady_clock::now();
@@ -3607,6 +3616,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 auto fr = forwardTokenAllLayers(hidden.data(),seq);
                 if(!fr.ok) {
                     if (profiler_) profiler_->abortToken(static_cast<uint32_t>(generated));
+                    lastFailureStatus_ = GenerationStatus::ForwardFailure;
+                    lastFailureDetail_ = std::string("decode forward failed at token ")
+                        + std::to_string(generated)
+                        + (fr.failureStage ? (std::string(" stage=") + fr.failureStage) : std::string());
                     break;
                 }
             }
@@ -3685,7 +3698,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }        std::fprintf(stderr, "FINAL_NORM_ENTER\n"); std::fflush(stderr);
         try {
             computeLogits(hidden.data(), logits);
-        } catch (const std::exception& e) {            break;
+        } catch (const std::exception& e) {
+            lastFailureStatus_ = GenerationStatus::InternalError;
+            lastFailureDetail_ = std::string("computeLogits failed at token ")
+                + std::to_string(generated) + ": " + e.what();
+            break;
         }        std::fprintf(stderr, "COMPUTE_LOGITS_RETURNED\n"); std::fflush(stderr);
         {
             size_t finite = 0, nan = 0, inf = 0;
@@ -3793,6 +3810,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     }
 
     modelState_ = ModelState::Choreographable;
+    // DEEP2_HTTP_FAILURE_SEMANTICS_001: successful transaction clears stale
+    // failure state so a later 0-token result is never mislabeled.
+    lastFailureDetail_.clear();
+    lastFailureStatus_ = GenerationStatus::Completed;
     return generated;
 }
 
@@ -3847,6 +3868,19 @@ GenerationResult Deep2Engine::generateStream(
     res.generationTimeMs = st.decodeMs;
     res.cancelled = cancelRequested_.load(std::memory_order_acquire);
     res.completed = !res.cancelled;
+    // P0.3: intentional status contract (see enum comment in Deep2Engine.h).
+    if (res.cancelled) {
+        res.status = GenerationStatus::Cancelled;
+    } else if (n > 0) {
+        res.status = GenerationStatus::Completed;
+    } else if (!lastFailureDetail_.empty()) {
+        res.status = lastFailureStatus_;
+        res.failureDetail = lastFailureDetail_;
+    } else {
+        // Zero tokens without a recorded failure = immediate EOS / context
+        // boundary. Legitimate, NOT an error.
+        res.status = GenerationStatus::EndOfSequence;
+    }
     return res;
 }
 
