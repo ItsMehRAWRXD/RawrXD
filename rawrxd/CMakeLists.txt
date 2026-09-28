@@ -1,4 +1,4 @@
-﻿# CMakeLists_native.txt - Pure Native RawrXD Build
+# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
 include(cmake/P1_ProductRuntimeAuthority.cmake)
 include(cmake/GgufDynamicGeometry.fragment.cmake)
@@ -257,7 +257,7 @@ if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         message(FATAL_ERROR "[ProductionLane] RAWRXD_BUILD_CLI=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON (rawrxd CLI links compatibility shims).")
     endif()
-    file(GLOB UI_SOURCES "# AUTO-REMOVED: stub file")
+    # file(GLOB UI_SOURCES ...) -- stub deleted
     file(GLOB ASM_SOURCES "src/asm/RawrXD_IPC_Dispatcher.asm" "src/asm/RawrXD_Disasm_Kernel.asm")
 
     add_executable(rawrxd
@@ -2956,7 +2956,7 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         message(FATAL_ERROR "[ProductionLane] RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/__DELETED_STUB__")
-        file(READ "${CMAKE_SOURCE_DIR}/# AUTO-REMOVED: stub file" _RAWR_MISSING_HANDLER_STUBS_SRC)
+        file(READ "${CMAKE_SOURCE_DIR}/__DELETED_STUB__" _RAWR_MISSING_HANDLER_STUBS_SRC)
         if(_RAWR_MISSING_HANDLER_STUBS_SRC MATCHES "history/reconstructed")
             message(FATAL_ERROR "[ProductionLane] # AUTO-REMOVED: stub file is history-indirected. Promote canonical ownership under src/core before strict production strip builds.")
         endif()
@@ -5481,94 +5481,94 @@ set(OMEGA1_HEADERS
 # Win32 GUI IDE - Zero Bloat Track B (v14.6.0)
 # Entry: main_win32.cpp (WinMain) so full IDE createWindow/showWindow/layout and all modules run.
 # Previously entry_point.cpp (wWinMain) created a minimal window and could leave it hidden (nCmdShow=SW_HIDE).
-# if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
-#     set(WIN32IDE_SOURCES
-#         src/win32app/main_win32.cpp
-#         src/win32app/ide_inference_gate.cpp
-#         src/win32app/ide_agentic_gate.cpp
-#         src/win32app/ide_toolchain_gate.cpp
-#         src/agentic/RawrXDAgenticE2E.cpp
-#         src/core/gold_command_providers.cpp
-#         src/sovereign/puppeteer/JITAssembler.cpp
+if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
+    set(WIN32IDE_SOURCES
+        src/win32app/main_win32.cpp
+        src/win32app/ide_inference_gate.cpp
+        src/win32app/ide_agentic_gate.cpp
+        src/win32app/ide_toolchain_gate.cpp
+        src/agentic/RawrXDAgenticE2E.cpp
+        src/core/gold_command_providers.cpp
+        src/sovereign/puppeteer/JITAssembler.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-#         src/agent/quantum_agent_orchestrator.cpp
-#         src/agent/quantum_autonomous_todo_system.cpp
-#         src/agent/quantum_multi_model_agent_cycling.cpp
-#         src/agent/quantum_dynamic_time_manager.cpp
-#         src/agent/quantum_missing_impl.cpp
-#         src/agent/quantum_production_orchestrator.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-#         src/win32app/RawrXD-Win32IDE.rc
-#         src/bridge/Win32SwarmBridge.cpp
-#         src/bridge/SwarmIATRegistration.cpp
-#         src/bridge/UnifiedModelMetadata.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-#         src/agentic/ErrorRecoveryManager.cpp
+        src/agent/quantum_agent_orchestrator.cpp
+        src/agent/quantum_autonomous_todo_system.cpp
+        src/agent/quantum_multi_model_agent_cycling.cpp
+        src/agent/quantum_dynamic_time_manager.cpp
+        src/agent/quantum_missing_impl.cpp
+        src/agent/quantum_production_orchestrator.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
+        src/win32app/RawrXD-Win32IDE.rc
+        src/bridge/Win32SwarmBridge.cpp
+        src/bridge/SwarmIATRegistration.cpp
+        src/bridge/UnifiedModelMetadata.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-#     )
+        # AUTO-REMOVED: stub file
+        src/agentic/ErrorRecoveryManager.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+    )
 # 
     # AUTO provider: auto_feature_registry.cpp provides the real handlers
 #     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
-#         list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
+        list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
         # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) +âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ required by auto_feature_registry
-#         if(EXISTS "${CMAKE_SOURCE_DIR}/__DELETED_STUB__")
+        if(EXISTS "${CMAKE_SOURCE_DIR}/__DELETED_STUB__")
             # list(APPEND WIN32IDE_SOURCES ...) -- stub file deleted
-#         endif()
-#     endif()
+        endif()
+    endif()
 # 
     # MASM64 UI Dispatcher (MSVC/MASM-only).
-#     if(RAWR_HAS_MASM)
-#         set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
-#         set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
-#         list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
-#     endif()
+    if(RAWR_HAS_MASM)
+        set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
+        set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
+    endif()
 # 
     # MASM64 ViewState - Enterprise-grade lock-free UI state management
-#     if(RAWR_HAS_MASM)
-#         set(VIEWSTATE_MASM src/asm/view_state_x64.asm)
-#         set_source_files_properties(${VIEWSTATE_MASM} PROPERTIES LANGUAGE ASM_MASM)
-#         list(APPEND WIN32IDE_SOURCES ${VIEWSTATE_MASM})
-#     endif()
+    if(RAWR_HAS_MASM)
+        set(VIEWSTATE_MASM src/asm/view_state_x64.asm)
+        set_source_files_properties(${VIEWSTATE_MASM} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${VIEWSTATE_MASM})
+    endif()
 # 
     # MASM64 Tensor Operations - Pure x64 assembly inference kernels
-#     if(RAWR_HAS_MASM)
-#         set(TENSOR_OPS_MASM src/asm/tensor_masm.asm)
-#         set_source_files_properties(${TENSOR_OPS_MASM} PROPERTIES LANGUAGE ASM_MASM)
-#         list(APPEND WIN32IDE_SOURCES ${TENSOR_OPS_MASM})
-#     endif()
+    if(RAWR_HAS_MASM)
+        set(TENSOR_OPS_MASM src/asm/tensor_masm.asm)
+        set_source_files_properties(${TENSOR_OPS_MASM} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${TENSOR_OPS_MASM})
+    endif()
 # 
     # NOTE:
     # Win32IDE target creation/linking is performed in the canonical block below
     # (single add_executable + full source/link configuration).
 # 
-#     list(APPEND WIN32IDE_SOURCES
+    list(APPEND WIN32IDE_SOURCES
         # Core Win32IDE implementation units (required for real GUI command/menu behavior)
         # AUTO-REMOVED: stub file
-#         src/win32app/Win32IDE_Core.cpp
+        src/win32app/Win32IDE_Core.cpp
         # AUTO-REMOVED: stub file
-#         src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_Commands.cpp
         # AUTO-REMOVED: stub file
-#         src/command/CommandBroker.cpp
-#         src/command/CommandEventJournal.cpp
+        src/command/CommandBroker.cpp
+        src/command/CommandEventJournal.cpp
         # AUTO-REMOVED: stub file
-#         src/command/CapabilityProfile.cpp
+        src/command/CapabilityProfile.cpp
         # AUTO-REMOVED: stub file
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
         # fought Core via /FORCE:MULTIPLE and risked a second product shell.
@@ -5576,28 +5576,28 @@ set(OMEGA1_HEADERS
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-#         src/win32app/CICDSettings.cpp
+        src/win32app/CICDSettings.cpp
         # AUTO-REMOVED: stub file
             # AUTO-REMOVED: stub file
             # AUTO-REMOVED: stub file
             # AUTO-REMOVED: stub file
-#                     src/win32app/Win32IDE_Watchdog.cpp
-#         src/win32app/Win32IDE_SyntaxHighlight.cpp
+                    src/win32app/Win32IDE_Watchdog.cpp
+        src/win32app/Win32IDE_SyntaxHighlight.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-#         src/win32app/Win32IDE_StreamingUX.cpp
-#         src/win32app/Win32IDE_Sidebar.cpp
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-        # AUTO-REMOVED: stub file
-#         src/win32app/Win32IDE_Logger.cpp
-#         src/win32app/Win32IDE_AgenticBridge.cpp
+        src/win32app/Win32IDE_StreamingUX.cpp
+        src/win32app/Win32IDE_Sidebar.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
-#         src/win32app/Win32IDE_TabManager.cpp
+        src/win32app/Win32IDE_Logger.cpp
+        src/win32app/Win32IDE_AgenticBridge.cpp
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        # AUTO-REMOVED: stub file
+        src/win32app/Win32IDE_TabManager.cpp
 #         src/win32app/Win32IDE_Settings.cpp
         # AUTO-REMOVED: stub file
         # AUTO-REMOVED: stub file
@@ -6419,10 +6419,9 @@ set(OMEGA1_HEADERS
         # AUTO-REMOVED: stub file
 #         src/deep2/Deep2ModelRuntime.cpp
         # AUTO-REMOVED: stub file
-#     )
-# 
-#     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
-#         list(REMOVE_ITEM WIN32IDE_SOURCES
+    )
+    # if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
+    #     list(REMOVE_ITEM WIN32IDE_SOURCES
 #             src/core/masm_stress_harness.cpp
 #             src/core/convergence_stress_harness.cpp
 #             src/core/enterprise_stress_tests.cpp
@@ -7348,47 +7347,47 @@ set(OMEGA1_HEADERS
     # snapshot/kquant/native_speed/sgemm/FlashAttention/Enterprise/Swarm/DiskRecovery/Dbg).
     # The checked-in .asm kernels are 26-byte scaffolds that assemble to empty .obj,
     # so the C symbols have NO other provider. Taxonomy: REAL_IMPLEMENTATION_EXISTS.
-#     list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/runtime_symbol_bridge.cpp)
     # BATCH N2: real C implementation TUs (see _n2_classification_receipt.md)
-#     list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)
-#     list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)
-#     list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)
-#     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
-#     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
+    list(APPEND WIN32IDE_SOURCES src/core/inference_link_production.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/win32ide_asm_kernel_bridge.cpp)
+    list(APPEND WIN32IDE_SOURCES src/core/kquant_nonmsvc.cpp)
+    add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
+    rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 # 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
-#     set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-#     target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")  # BATCH N2: fix C1041 PDB contention
+    set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    target_compile_options(RawrXD-Win32IDE PRIVATE "/FS")  # BATCH N2: fix C1041 PDB contention
 # 
     # Static CRT (/MT) needs ATL static lib path for atls.lib (LNK1104 otherwise).
-#     if(MSVC AND CMAKE_CXX_COMPILER)
-#         get_filename_component(_MSVC_BIN "${CMAKE_CXX_COMPILER}" DIRECTORY)
-#         get_filename_component(_MSVC_VC "${_MSVC_BIN}/../../.." ABSOLUTE)
-#         set(_ATL_LIB "${_MSVC_VC}/atlmfc/lib/x64")
-#         if(EXISTS "${_ATL_LIB}/atls.lib")
-#             target_link_directories(RawrXD-Win32IDE PRIVATE "${_ATL_LIB}")
-#             message(STATUS "[Win32IDE] ATL static lib: ${_ATL_LIB}")
-#         endif()
-#     endif()
+    if(MSVC AND CMAKE_CXX_COMPILER)
+        get_filename_component(_MSVC_BIN "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        get_filename_component(_MSVC_VC "${_MSVC_BIN}/../../.." ABSOLUTE)
+        set(_ATL_LIB "${_MSVC_VC}/atlmfc/lib/x64")
+        if(EXISTS "${_ATL_LIB}/atls.lib")
+            target_link_directories(RawrXD-Win32IDE PRIVATE "${_ATL_LIB}")
+            message(STATUS "[Win32IDE] ATL static lib: ${_ATL_LIB}")
+        endif()
+    endif()
 # 
     # GPU sovereign ASM link state (UI/runtime detection)
-#     if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})
-#     else()
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=0)
-#     endif()
+    if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})
+    else()
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=0)
+    endif()
 # 
     # Ensure link output dir exists; clear prior exe/pdb before link (mitigates MSVC LNK1104 when
     # a stale handle, indexer, or crashed link left the binary busy +âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ harmless if files are absent).
-#     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     # Use CMake-native removal to avoid shell quoting issues in generated link commands.
-#     if(MSVC)
-#         add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
-#             COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>" "$<TARGET_PDB_FILE:RawrXD-Win32IDE>"
-#             COMMENT "RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked"
-#             VERBATIM
-#         )
-#     endif()
+    if(MSVC)
+        add_custom_command(TARGET RawrXD-Win32IDE PRE_LINK
+            COMMAND ${CMAKE_COMMAND} -E rm -f "$<TARGET_FILE:RawrXD-Win32IDE>" "$<TARGET_PDB_FILE:RawrXD-Win32IDE>"
+            COMMENT "RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked"
+            VERBATIM
+        )
+    endif()
 # 
     # =========================================================================
     # PRODUCTION POLICY ENFORCEMENT
@@ -7411,81 +7410,81 @@ set(OMEGA1_HEADERS
 # 
     # External infra pack is mirrored into the project tree under D: and wired
     # as include/lib providers for Win32IDE.
-#     set(RAWRXD_INFRA_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/external/rawr_infra")
-#     target_include_directories(RawrXD-Win32IDE PRIVATE
-#         "${CMAKE_CURRENT_SOURCE_DIR}/Ship"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/include"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/masm"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign_autonomy"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_backend"
-#         "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer"
-#     )
-#     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
-#         target_include_directories(RawrXD-Win32IDE PRIVATE
-#             "${RAWRXD_INFRA_ROOT}/Headers"
-#             "${RAWRXD_INFRA_ROOT}/Source"
-#         )
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_INFRA_AVAILABLE=1)
-#         if(EXISTS "${RAWRXD_INFRA_ROOT}/Libraries")
-#             target_link_directories(RawrXD-Win32IDE PRIVATE "${RAWRXD_INFRA_ROOT}/Libraries")
-#         endif()
-#         message(STATUS "[Infra] Win32IDE wired to ${RAWRXD_INFRA_ROOT}")
-#     else()
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_INFRA_AVAILABLE=0)
-#     endif()
+    set(RAWRXD_INFRA_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/external/rawr_infra")
+    target_include_directories(RawrXD-Win32IDE PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/Ship"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/masm"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign_autonomy"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/compiler_backend"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer"
+    )
+    if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
+        target_include_directories(RawrXD-Win32IDE PRIVATE
+            "${RAWRXD_INFRA_ROOT}/Headers"
+            "${RAWRXD_INFRA_ROOT}/Source"
+        )
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_INFRA_AVAILABLE=1)
+        if(EXISTS "${RAWRXD_INFRA_ROOT}/Libraries")
+            target_link_directories(RawrXD-Win32IDE PRIVATE "${RAWRXD_INFRA_ROOT}/Libraries")
+        endif()
+        message(STATUS "[Infra] Win32IDE wired to ${RAWRXD_INFRA_ROOT}")
+    else()
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_INFRA_AVAILABLE=0)
+    endif()
 # 
     # MAP output for link graph verification
-#     if(MSVC)
-#         set(_IDE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.map")
-#         set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
+    if(MSVC)
+        set(_IDE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.map")
+        set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
         # Telemetry/Pattern ADDR32 objs removed from IDE ASM; LAA:YES required.
         # R25 ProductOpen: /LARGEADDRESSAWARE (VA >> 2GB for mmap streaming).
         # HOST_DECODE still forced when GPU/ICD unsafe (ProductStreamerPrep).
-#         target_link_options(RawrXD-Win32IDE PRIVATE
-#             /LARGEADDRESSAWARE
-#             /DEBUG:FULL
-#             "/MAP:${_IDE_MAP_PATH}"
-#             /MAPINFO:EXPORTS
-#             /MANIFEST:NO
-#             "/FORCE:MULTIPLE"
-#         )
+        target_link_options(RawrXD-Win32IDE PRIVATE
+            /LARGEADDRESSAWARE
+            /DEBUG:FULL
+            "/MAP:${_IDE_MAP_PATH}"
+            /MAPINFO:EXPORTS
+            /MANIFEST:NO
+            "/FORCE:MULTIPLE"
+        )
         # FORCE still required: ssot+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œauto_feature, batch_021 stubs+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œreal TUs, omega C+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œbatch,
         # v280+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œbatch_001, CursorParity+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œ+âˆ©â”â•œ-âˆ©â”â•œSemanticIndex, etc. Surgical ASM fixes landed;
         # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
-#         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
-#             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
-#             VERBATIM
-#         )
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
+            VERBATIM
+        )
         # R25: keep PE LAA:YES. Do not clear LAA -âˆ©â”â•œ 2GB VA breaks mmap streaming.
         # Certify after link: dumpbin /headers | findstr Large
         # GPU/ICD remains deferred; DualStick not reopened.
-#     endif()
+    endif()
 # 
     # Runtime feature gates for this target's source graph.
-#     target_compile_definitions(RawrXD-Win32IDE PRIVATE
-#         UNICODE
-#         _UNICODE
-#         RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
-#         RAWR_HAS_SOVEREIGN_ENGINES=0
-#         RAWR_HAS_RAWR_INFERENCE=0
-#         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
-#         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-#         RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
-#         ${_RAWR_ASM_FEATURE_DEFINITIONS}
-#         RAWRXD_USE_DEDICATED_CODELENS=1
-#         RAWRXD_USE_DEDICATED_INLAY=1
-#         RAWRXD_USE_DEDICATED_HOVER=1
-#         RAWRXD_USE_DEDICATED_MINIMAP=1
-#         RAWRXD_DISABLE_DUPLICATE_SHIMS=1
-#     )
-#     if(RAWR_HAS_MASM)
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAS_BRUTAL_GZIP_MASM=1)
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_MASM_GLOBALS_LINKED=1)
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_MASM=1)
-#         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_ASM_PYRE=1)
-#     endif()
+    target_compile_definitions(RawrXD-Win32IDE PRIVATE
+        UNICODE
+        _UNICODE
+        RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        RAWR_HAS_SOVEREIGN_ENGINES=0
+        RAWR_HAS_RAWR_INFERENCE=0
+        RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
+        RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
+        RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        ${_RAWR_ASM_FEATURE_DEFINITIONS}
+        RAWRXD_USE_DEDICATED_CODELENS=1
+        RAWRXD_USE_DEDICATED_INLAY=1
+        RAWRXD_USE_DEDICATED_HOVER=1
+        RAWRXD_USE_DEDICATED_MINIMAP=1
+        RAWRXD_DISABLE_DUPLICATE_SHIMS=1
+    )
+    if(RAWR_HAS_MASM)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE HAS_BRUTAL_GZIP_MASM=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_MASM_GLOBALS_LINKED=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_MASM=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_ASM_PYRE=1)
+    endif()
 # 
     # =========================================================================
     # Phase 36: QuickJS Static Library (embedded JS runtime)
