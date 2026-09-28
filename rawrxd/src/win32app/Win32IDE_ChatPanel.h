@@ -1,6 +1,7 @@
 // Win32IDE_ChatPanel.h — ChatPanel API header
 #pragma once
 #include <string>
+#include <functional>
 
 namespace RawrXD::IDE {
 

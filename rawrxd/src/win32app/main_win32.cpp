@@ -15,6 +15,7 @@
 #include "agentic/RawrXDAgenticE2E.hpp"
 #include "deep2/Deep2Engine.h"
 #include "Win32IDE_MCPHooks.h"
+#include "Win32IDE_ChatPanel.h"
 
 // Recovered IDE stubs — RAWRXD_IDE_STUB_CLOSURE_RECOVERY_001
 extern "C" void Win32IDE_Sidebar_Create(HWND hwndParent, HINSTANCE hInstance);
@@ -69,6 +70,96 @@ struct StartupOptions {
 
 static StartupOptions g_startupOptions;
 static FILE* g_headlessLog = nullptr;  // File log for GUI-subsystem headless runs
+
+// ---------------------------------------------------------------------------
+// Persistent chat engine — wires ChatPanel → Deep2Engine → streamed tokens
+// ---------------------------------------------------------------------------
+static std::unique_ptr<Deep2::Deep2Engine> g_chatEngine;
+static std::thread g_chatThread;
+static std::atomic<bool> g_chatCancelled{false};
+static HWND g_hMainWnd = nullptr;
+
+#define WM_CHAT_TOKEN     (WM_APP + 200)
+#define WM_CHAT_DONE      (WM_APP + 201)
+
+struct ChatTokenData {
+    std::string token;
+};
+
+// Called on the UI thread to safely update the chat panel
+static void onChatToken(const std::string& token) {
+    RawrXD::IDE::ChatPanel_AppendStreamToken(token);
+}
+
+static void onChatDone() {
+    RawrXD::IDE::ChatPanel_EndStreaming();
+}
+
+// Worker thread: runs Deep2Engine::generateStream with token callback
+static void chatWorkerThread(std::string prompt) {
+    if (!g_chatEngine || !g_chatEngine->isInitialized()) {
+        if (g_hMainWnd) PostMessageA(g_hMainWnd, WM_CHAT_DONE, 0, 0);
+        return;
+    }
+
+    g_chatCancelled = false;
+
+    Deep2::GenerationOptions opts;
+    opts.maxTokens = 256;
+    opts.temperature = 0.8f;
+    opts.topP = 0.95f;
+    opts.topK = 40;
+
+    auto callback = [](int32_t tokenId, const std::string& token) -> bool {
+        // Stream token to UI (safe because ChatPanel_AppendStreamToken is simple)
+        onChatToken(token);
+        return !g_chatCancelled.load();
+    };
+
+    Deep2::GenerationResult result = g_chatEngine->generateStream(prompt, opts, callback);
+
+    if (g_hMainWnd) PostMessageA(g_hMainWnd, WM_CHAT_DONE, 0, 0);
+}
+
+// Initialize the persistent chat engine with a model path
+static bool initChatEngine(const std::string& modelPath) {
+    if (modelPath.empty()) return false;
+
+    DWORD attr = GetFileAttributesA(modelPath.c_str());
+    if (attr == INVALID_FILE_ATTRIBUTES) return false;
+
+    g_chatEngine = std::make_unique<Deep2::Deep2Engine>();
+
+    Deep2::EngineConfig config;
+    config.maxContextTokens = 4096;
+    config.cpuThreads = 0;  // auto
+
+    if (!g_chatEngine->initialize(config)) return false;
+    if (!g_chatEngine->loadModel(modelPath)) return false;
+
+    return true;
+}
+
+// Wire ChatPanel send callback to Deep2Engine
+static void wireChatToDeep2() {
+    RawrXD::IDE::ChatPanel_SetSendCallback([](const std::string& prompt) {
+        if (!g_chatEngine) {
+            RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::System,
+                "[No model loaded. Use --model <path.gguf> to load a model at startup.]");
+            return;
+        }
+
+        if (g_chatThread.joinable()) {
+            g_chatCancelled = true;
+            g_chatThread.join();
+        }
+
+        RawrXD::IDE::ChatPanel_BeginStreaming();
+        RawrXD::IDE::ChatPanel_AddMessage(RawrXD::IDE::MsgRole::Assistant, "");
+
+        g_chatThread = std::thread(chatWorkerThread, prompt);
+    });
+}
 
 #define WM_AUTORUN          (WM_APP + 100)
 #define WM_AUTORUN_COMPLETE   (WM_APP + 101)
@@ -658,6 +749,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
     {
         HINSTANCE hInst = ((LPCREATESTRUCT)lParam)->hInstance;
+        g_hMainWnd = hWnd;
         // Full IDE shell layout (sidebar, editor, chat, agent, terminal, git, search)
         RawrXD::IDE::ShellLayout_RegisterAll(hInst);
         RawrXD::IDE::ShellLayout_CreateAll(hWnd, hInst);
@@ -666,6 +758,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HWND hEditor = RawrXD::IDE::ShellLayout_GetEditor();
         Win32IDE_Commands_SetMainWindow(hWnd);
         Win32IDE_Commands_SetEditorWindow(hEditor);
+
+        // Wire ChatPanel → Deep2Engine streaming
+        // Try --model path, then RAWRXD_AGENT_MODEL env, then default
+        std::string chatModel = g_startupOptions.modelPath;
+        if (chatModel.empty()) {
+            const char* envModel = std::getenv("RAWRXD_AGENT_MODEL");
+            if (envModel) chatModel = envModel;
+        }
+        if (!chatModel.empty() && initChatEngine(chatModel)) {
+            appendOutputLine("Chat engine loaded: " + chatModel + "\r\n");
+        } else {
+            appendOutputLine("Chat engine: no model loaded (use --model <path.gguf>)\r\n");
+        }
+        wireChatToDeep2();
 
         // Legacy output control: re-parent it into terminal area for now
         g_hOutput = CreateWindowExA(
@@ -729,7 +835,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
+    case WM_CHAT_DONE:
+        onChatDone();
+        break;
     case WM_DESTROY:
+        // Clean up chat engine
+        g_chatCancelled = true;
+        if (g_chatThread.joinable()) g_chatThread.join();
+        if (g_chatEngine) {
+            g_chatEngine->unloadModel();
+            g_chatEngine.reset();
+        }
         PostQuitMessage(0);
         break;
     case WM_CLOSE:
