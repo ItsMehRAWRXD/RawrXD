@@ -4269,8 +4269,8 @@ endif()
 # T4 integration: the AutonomousRecoveryOrchestrator invokes this for reasoning.
 # =============================================================================
 set(INFERENCE_ENGINE_SOURCES
-    src/inference/inference_standalone_main.cpp
-    src/inference/ultra_fast_inference.cpp
+    # src/inference/inference_standalone_main.cpp  # Removed - was stub only
+    # src/inference/ultra_fast_inference.cpp  # Removed - was stub only
     src/inference/polymorphic_loader.cpp
     src/inference/ollama_blob_parser.cpp
     src/cpu_inference_engine.cpp

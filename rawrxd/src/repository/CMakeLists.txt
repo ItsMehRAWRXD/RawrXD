@@ -14,7 +14,6 @@ add_library(rawrxd_repository STATIC
     ../repo/ASTCache.cpp
     ../repo/TypeDatabase.cpp
     ../repo/CallGraph.cpp
-    ../repo/IncludeGraph.cpp
     ../repo/SearchIndex.cpp
     ../repo/EmbeddingIndex.cpp
 )

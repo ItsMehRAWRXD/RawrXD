@@ -1,0 +1,2 @@
+REVERTED_DEPTH=0
+L6702: # src/sovereign/build/BuildStateGraph.cpp  # REMOVED: phantom declaration — file never existed in any commit, no header, no symbol references (dead declaration per Batch N1/N2 classification)

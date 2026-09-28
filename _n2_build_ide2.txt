@@ -1,0 +1,10 @@
+CMake is re-running because F:/~dev/rawrxd/build_clean_n1/CMakeFiles/generate.stamp is out-of-date.
+CMake Error at CMakeLists.txt:14056 (if):
+  the file 'F:/~dev/rawrxd/CMakeLists.txt'
+  Flow control statements are not properly nested.
+  is newer than 'F:/~dev/rawrxd/build_clean_n1/CMakeFiles/generate.stamp.depend'
+
+  result='-1'
+
+-- Configuring incomplete, errors occurred!
+CMake Configure step failed.  Build files cannot be regenerated correctly.
