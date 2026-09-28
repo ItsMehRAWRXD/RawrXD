@@ -1,0 +1,5 @@
+STREAMING_REFS=4
+model_source_resolver.cpp:27: bool StreamingGGUFLoader::load(const std::string& path) {
+model_source_resolver.cpp:32: bool StreamingGGUFLoader::isLoaded() const {
+model_source_resolver.cpp:36: void StreamingGGUFLoader::unload() {
+model_source_resolver.h:21: class StreamingGGUFLoader {

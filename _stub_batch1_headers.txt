@@ -1,0 +1,15 @@
+STUB=agent_explainability.cpp HEADER=NONE
+STUB=agent_history.cpp HEADER=NONE
+STUB=agent_policy.cpp HEADER=NONE
+STUB=agentic_agent_coordinator.cpp HEADER=NONE
+STUB=agentic_controller.cpp HEADER=NONE
+STUB=agentic_engine.cpp HEADER=NONE
+STUB=agentic_loop_state.cpp HEADER=NONE
+STUB=agentic_observability.cpp HEADER=NONE
+STUB=ai_completion_real.cpp HEADER=NONE
+STUB=ai_model_caller.cpp HEADER=NONE
+STUB=autonomous_feature_engine.cpp HEADER=NONE
+STUB=autonomous_intelligence_orchestrator.cpp HEADER=NONE
+STUB=BackendOrchestrator.cpp HEADER=NONE
+STUB=benchmark_menu_widget.cpp HEADER=NONE
+STUB=benchmark_runner.cpp HEADER=NONE

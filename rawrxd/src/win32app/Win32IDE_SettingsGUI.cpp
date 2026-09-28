@@ -60,30 +60,30 @@ static HWND CreateLabel(HWND parent, const char* text, int x, int y, int w, int 
 
 static HWND CreateEdit(HWND parent, const char* text, int x, int y, int w, int h, int id)
 {
-    HWND h = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", text,
+    HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", text,
                              WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL,
                              x, y, w, h, parent, (HMENU)(intptr_t)id, nullptr, nullptr);
-    SendMessageA(h, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
-    return h;
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
+    return hwnd;
 }
 
 static HWND CreateCheck(HWND parent, const char* text, int x, int y, int w, int h, int id, bool checked)
 {
-    HWND h = CreateWindowExA(0, "BUTTON", text,
+    HWND hwnd = CreateWindowExA(0, "BUTTON", text,
                              WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX,
                              x, y, w, h, parent, (HMENU)(intptr_t)id, nullptr, nullptr);
-    SendMessageA(h, BM_SETCHECK, checked ? BST_CHECKED : BST_UNCHECKED, 0);
-    SendMessageA(h, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
-    return h;
+    SendMessageA(hwnd, BM_SETCHECK, checked ? BST_CHECKED : BST_UNCHECKED, 0);
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
+    return hwnd;
 }
 
 static HWND CreateCombo(HWND parent, int x, int y, int w, int h, int id)
 {
-    HWND h = CreateWindowExA(0, "COMBOBOX", "",
+    HWND hwnd = CreateWindowExA(0, "COMBOBOX", "",
                              WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | CBS_HASSTRINGS,
                              x, y, w, h, parent, (HMENU)(intptr_t)id, nullptr, nullptr);
-    SendMessageA(h, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
-    return h;
+    SendMessageA(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
+    return hwnd;
 }
 
 static void CreateGeneralPage(HWND parent)
@@ -215,16 +215,16 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         }
 
         // Add tabs
-        TCITEM tie = {};
+        TCITEMA tie = {};
         tie.mask = TCIF_TEXT;
         tie.pszText = (LPSTR)"General";
-        TabCtrl_InsertItem(g_hTab, 0, &tie);
+        SendMessageA(g_hTab, TCM_INSERTITEMA, 0, (LPARAM)&tie);
         tie.pszText = (LPSTR)"LSP";
-        TabCtrl_InsertItem(g_hTab, 1, &tie);
+        SendMessageA(g_hTab, TCM_INSERTITEMA, 1, (LPARAM)&tie);
         tie.pszText = (LPSTR)"MCP";
-        TabCtrl_InsertItem(g_hTab, 2, &tie);
+        SendMessageA(g_hTab, TCM_INSERTITEMA, 2, (LPARAM)&tie);
         tie.pszText = (LPSTR)"Editor";
-        TabCtrl_InsertItem(g_hTab, 3, &tie);
+        SendMessageA(g_hTab, TCM_INSERTITEMA, 3, (LPARAM)&tie);
 
         RECT tr; GetClientRect(g_hTab, &tr);
         TabCtrl_AdjustRect(g_hTab, FALSE, &tr);

@@ -42,14 +42,14 @@ public:
                 result = it->second(cmd);
             } else {
                 result.ok = false;
-                result.error_message = "No handler registered for command type";
+                result.stderr_str = "No handler registered for command type";
             }
 
             lock.lock();
             cmd.completed = true;
             cmd.succeeded = result.ok;
             cmd.completed_at = std::chrono::steady_clock::now();
-            if (!result.ok) cmd.error_message = result.error_message;
+            if (!result.ok) cmd.error_message = result.stderr_str;
             if (state_cb_) state_cb_(cmd);
             cv_.notify_all();
         }

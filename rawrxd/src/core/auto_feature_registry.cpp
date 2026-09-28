@@ -18,6 +18,7 @@
 #include "auto_feature_registry_guards.hpp"
 #include "feature_handlers.h"
 #include "native_inference_pipeline.hpp"
+#include "../agent/local_reasoning_integration.hpp"
 // Command IDs used by handlers when routing to GUI (avoid pulling full Win32IDE.h)
 #ifndef IDM_TERMINAL_CLEAR
 #define IDM_TERMINAL_CLEAR 4010
@@ -140,8 +141,8 @@ static AgenticDeepThinkingEngine& getDeepThinkingEngine() {
     static AgenticDeepThinkingEngine s_dt;
     return s_dt;
 }
-static LocalReasoningEngine& getLocalReasoningEngine() {
-    return LocalReasoningIntegration::instance();
+static rawrxd::agent::LocalReasoningEngine& getLocalReasoningEngine() {
+    return rawrxd::agent::LocalReasoningIntegration::instance();
 }
 
 // ============================================================================
@@ -1029,14 +1030,13 @@ static CommandResult handleLocalAnalyze(const CommandContext& ctx) {
 
     ctx.output("LocalReasoningEngine analyzing...\n");
     auto& engine = getLocalReasoningEngine();
-    LocalReasoningEngine::AnalysisContext analysisCtx;
-    analysisCtx.code = codeToAnalyze;
-    analysisCtx.language = language;
-    analysisCtx.deep = deepAnalysis;
+    rawrxd::agent::AgentContext aCtx;
+    aCtx.session_id = "analyze";
+    aCtx.user_query = "Analyze this " + language + " code:\n" + codeToAnalyze;
 
-    auto result = engine.analyze(analysisCtx);
+    auto result = engine.Reason(aCtx);
     ctx.output("Analysis Result:\n");
-    ctx.output(result.c_str());
+    ctx.output(result.final_answer.c_str());
     ctx.output("\n");
 
     TelemetryCollector::instance()->trackFeatureUsage("local.analyze");
@@ -1061,14 +1061,13 @@ static CommandResult handleLocalAnalyzeDeep(const CommandContext& ctx) {
 
     ctx.output("Deep offline analysis (may take longer)...\n");
     auto& engine = getLocalReasoningEngine();
-    LocalReasoningEngine::AnalysisContext analysisCtx;
-    analysisCtx.code = codeToAnalyze;
-    analysisCtx.language = language;
-    analysisCtx.deep = true;
+    rawrxd::agent::AgentContext aCtx;
+    aCtx.session_id = "deep_analyze";
+    aCtx.user_query = "Deep analyze this " + language + " code:\n" + codeToAnalyze;
 
-    auto result = engine.analyze(analysisCtx);
+    auto result = engine.Reason(aCtx);
     ctx.output("Deep Analysis Result:\n");
-    ctx.output(result.c_str());
+    ctx.output(result.final_answer.c_str());
     ctx.output("\n");
 
     TelemetryCollector::instance()->trackFeatureUsage("local.analyze.deep");
@@ -1077,15 +1076,15 @@ static CommandResult handleLocalAnalyzeDeep(const CommandContext& ctx) {
 
 static CommandResult handleLocalAnalyzeStatus(const CommandContext& ctx) {
     auto& engine = getLocalReasoningEngine();
-    auto stats = engine.getStats();
+    bool running = engine.IsRunning();
     char buf[2048];
     snprintf(buf, sizeof(buf),
              "Local Reasoning Engine Status\n"
              "Mode: Offline Heuristics\n"
              "API Required: NONE - 100%% Offline\n"
              "Privacy: 100%% - Runs Locally\n"
-             "Stats: %s\n",
-             stats.c_str());
+             "Running: %s\n",
+             running ? "YES" : "NO");
     ctx.output(buf);
     return CommandResult::ok("local.analyze.status");
 }
@@ -1104,17 +1103,16 @@ static CommandResult handleKernelAnalyze(const CommandContext& ctx) {
     ctx.output("⚙️ Kernel-mode analysis (x64 MASM expertise)...\n");
 
     auto& engine = getLocalReasoningEngine();
-    LocalReasoningEngine::AnalysisContext analysisCtx;
-    analysisCtx.code = codeToAnalyze;
-    analysisCtx.language = "asm";  // Force assembly mode
-    analysisCtx.deep = true;
+    rawrxd::agent::AgentContext aCtx;
+    aCtx.session_id = "kernel_analyze";
+    aCtx.user_query = "Analyze this assembly code (x64 kernel mode):\n" + codeToAnalyze;
 
-    std::string result = engine.analyze(analysisCtx);
+    auto result = engine.Reason(aCtx);
 
     ctx.output("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
     ctx.output("🔧 KERNEL-MODE ANALYSIS RESULTS\n");
     ctx.output("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
-    ctx.output(result.c_str());
+    ctx.output(result.final_answer.c_str());
     ctx.output("\n");
     ctx.output(std::string("[x64 Analysis] Checked for: ABI violations, register preservation, stack alignment\n").c_str());
 
@@ -1135,17 +1133,16 @@ static CommandResult handlePerfAnalyze(const CommandContext& ctx) {
     ctx.output("⚡ Performance analysis (no API required)...\n");
 
     auto& engine = getLocalReasoningEngine();
-    LocalReasoningEngine::AnalysisContext analysisCtx;
-    analysisCtx.code = codeToAnalyze;
-    analysisCtx.language = "cpp";  // Default to C++
-    analysisCtx.deep = true;
+    rawrxd::agent::AgentContext aCtx;
+    aCtx.session_id = "perf_analyze";
+    aCtx.user_query = "Performance analysis of this C++ code (hotspots, SIMD, cache):\n" + codeToAnalyze;
 
-    std::string result = engine.analyze(analysisCtx);
+    auto result = engine.Reason(aCtx);
 
     ctx.output("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
     ctx.output("⚡ PERFORMANCE ANALYSIS RESULTS\n");
     ctx.output("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
-    ctx.output(result.c_str());
+    ctx.output(result.final_answer.c_str());
     ctx.output("\n");
 
     TelemetryCollector::instance()->trackFeatureUsage("perf.analyze");

@@ -4956,7 +4956,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/ide_inference_gate.cpp
+        src/win32app/ide_agentic_gate.cpp
         src/win32app/ide_toolchain_gate.cpp
+        src/agentic/RawrXDAgenticE2E.cpp
         src/core/gold_command_providers.cpp
         src/sovereign/puppeteer/JITAssembler.cpp
         src/win32app/HeadlessIDE.cpp
@@ -5287,7 +5289,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/security/InputSanitizer.cpp
         src/core/ConfigurationValidator.cpp
         src/inference/PerformanceMonitor.cpp
-        src/rawrxd_inference.cpp
+        # rawrxd_inference.cpp excluded: stub with missing type definitions
         src/rawrxd_model_loader.cpp
         src/rawrxd_transformer.cpp
         src/rawrxd_tokenizer.cpp
@@ -5400,6 +5402,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # LocalReasoningEngine +�-�+�-�+�-� API-free static analysis + pattern detection
         src/agent/local_reasoning_engine.cpp
+
+        # Link stubs for unresolved symbols (enterprise, ASM, security subsystems)
+        src/core/link_stubs_production.cpp
+        src/core/win32ide_link_stubs.cpp
 
         # Agent Self-Repair +�-�+�-�+�-� MASM64 self-patching kernel bridge
         src/agent/agent_self_repair.cpp

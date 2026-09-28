@@ -14,6 +14,24 @@ std::string Settings_Get(const std::string& key, const std::string& def);
 void Settings_Set(const std::string& key, const std::string& value);
 void Settings_Save();
 
+// Inline int/bool wrappers (not declared in header, defined here)
+static int Settings_GetInt(const std::string& key, int def) {
+    std::string v = Settings_Get(key, "");
+    if (v.empty()) return def;
+    try { return std::stoi(v); } catch (...) { return def; }
+}
+static bool Settings_GetBool(const std::string& key, bool def) {
+    std::string v = Settings_Get(key, "");
+    if (v.empty()) return def;
+    return v == "1" || v == "true" || v == "True" || v == "TRUE";
+}
+static void Settings_SetInt(const std::string& key, int val) {
+    Settings_Set(key, std::to_string(val));
+}
+static void Settings_SetBool(const std::string& key, bool val) {
+    Settings_Set(key, val ? "1" : "0");
+}
+
 // External build runner
 bool BuildRunner_Run(const std::string& cmd, const std::string& dir);
 bool BuildRunner_IsRunning();

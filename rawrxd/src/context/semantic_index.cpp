@@ -1,7 +1,7 @@
 ﻿#include "SemanticIndex.hpp"
-#include <math>
+#include <cmath>
 #include <numeric>
-#include <stdexcept>
+#include <algorithm>
 #include <stdexcept>
 #include <map>
 #include <fstream>

@@ -8,6 +8,8 @@
 #include <atomic>
 #include <cstdio>
 #include <cctype>
+#include <algorithm>
+#include <string>
 
 namespace RawrXD::IDE {
 namespace LSPServer {

@@ -1,0 +1,4 @@
+HEADER=agentic_agent_coordinator.h MISSING
+HEADER=agentic_loop_state.h MISSING
+HEADER=agentic_engine.h MISSING
+HEADER=agentic_iterative_reasoning.h MISSING

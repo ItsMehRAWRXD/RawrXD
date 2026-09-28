@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <optional>
 #include <span>
+#include <memory>
+#include <mutex>
 
 namespace rawrxd::bridge {
 

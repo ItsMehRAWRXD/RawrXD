@@ -1,6 +1,7 @@
 ﻿// Win32IDE_LSP_AI_Bridge.cpp — bridges LSP diagnostics to AI context and ghost text
 #include <windows.h>
 #include <cstring>
+#include <string>
 #include <vector>
 #include <deque>
 #include <functional>

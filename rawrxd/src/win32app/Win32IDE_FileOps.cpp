@@ -1,5 +1,6 @@
 // Win32IDE_FileOps.cpp — file open/save dialogs and file I/O helpers
 #include <windows.h>
+#include <commdlg.h>
 #include <string>
 #include <fstream>
 #include <sstream>

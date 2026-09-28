@@ -1,0 +1,1108 @@
+[1/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\polymorphic_loader.cpp.obj
+[2/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ultra_fast_inference.cpp.obj
+[3/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ollama_blob_parser.cpp.obj
+[4/1263] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs\cutils.c.obj
+[5/1263] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs\libunicode.c.obj
+[6/1263] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs\dtoa.c.obj
+[7/1263] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs\libregexp.c.obj
+[8/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_model_loader.cpp.obj
+[9/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+[10/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+[11/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_sampler.cpp.obj
+[12/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\compression_interface.cpp.obj
+[13/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\memory_core.cpp.obj
+[14/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\license_enforcement.cpp.obj
+[15/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_tokenizer.cpp.obj
+[16/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\feature_flags_runtime.cpp.obj
+[17/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\tools\license_validator_manifest.cpp.obj
+[18/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_vocab_resolver.cpp.obj
+[19/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj
+[20/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\InferenceProfiler.cpp.obj
+[21/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ignite_800b.cpp.obj
+[22/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\enterprise_licensev2_impl.cpp.obj
+[23/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_loader.cpp.obj
+[24/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+[25/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+[26/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+[27/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+[28/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+[29/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+[30/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+[31/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\license_anti_tampering.cpp.obj
+[32/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+[33/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+[34/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+[35/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+[36/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+[37/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[38/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+[39/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+[40/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\gguf_core.cpp.obj
+[41/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\memory_stubs.cpp.obj
+[42/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\cpu_features.cpp.obj
+[43/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\TensorExecutionRouter.cpp.obj
+[44/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj
+[45/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ConfigurationValidator.cpp.obj
+[46/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+[47/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\link_stubs.cpp.obj
+[48/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\kernels\VulkanComputeKernels.cpp.obj
+[49/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TransferScheduler.cpp.obj
+[50/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj
+[51/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PlacementPolicy.cpp.obj
+[52/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\ResidencyTracker.cpp.obj
+[53/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj
+[54/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TensorPlacementManager.cpp.obj
+[55/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\CapacityManager.cpp.obj
+[56/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj
+[57/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\GenerationBouncer.cpp.obj
+[58/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\StreamRouterAdapter.cpp.obj
+[59/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Sovereign_KernelBridge_CPP.cpp.obj
+[60/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\logging\Logger.cpp.obj
+[61/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sampling\advanced_sampler.cpp.obj
+[62/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\RawrRuntime.cpp.obj
+[63/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+[64/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+[65/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+[66/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+[67/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+[68/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+[69/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+[70/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2TimeLimitedServing.cpp.obj
+[71/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj
+[72/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+[73/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+[74/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+[75/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+[76/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticArchitectureDetector.cpp.obj
+[77/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+[78/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\gguf_tensor_loader.cpp.obj
+[79/1263] Building CXX object CMakeFiles\InferenceEngine.dir\tests\b009\b009b_batched_gemm.cpp.obj
+[80/1263] Building CXX object CMakeFiles\InferenceEngine.dir\B014\build\b014_profiler.cpp.obj
+[81/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\brutal_gzip.cpp.obj
+[82/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\gzip_brutal_inflate.cpp.obj
+[83/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_compute.cpp.obj
+[84/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\strict_gpu_violations.cpp.obj
+[85/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\GgufDynamicGeometry_io.cpp.obj
+[86/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\GgufDynamicGeometry_keys.cpp.obj
+[87/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+[88/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\GgufDynamicGeometry_arrays.cpp.obj
+[89/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\GgufDynamicGeometry_finalize.cpp.obj
+[90/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\k2_real_attention\RawrXD_K2_RealAttention_x64.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\k2_real_attention\RawrXD_K2_RealAttention_x64.asm
+[91/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\GgufDynamicGeometry_resolve.cpp.obj
+[92/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GGUFLoader.cpp.obj
+[93/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\InferenceSession.cpp.obj
+[94/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelMASM.cpp.obj
+[95/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\IQQuantKernels.cpp.obj
+[96/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GhostCache.cpp.obj
+[97/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ThreadPool.cpp.obj
+[98/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KVCache.cpp.obj
+[99/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\swarm_scheduler.cpp.obj
+[100/1263] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs\quickjs.c.obj
+[101/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MlaCertProbe.cpp.obj
+[102/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SsmCertProbe.cpp.obj
+[103/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightProxy.cpp.obj
+[104/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEEliminate.cpp.obj
+[105/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightsLoader.cpp.obj
+[106/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEArchitectureParser.cpp.obj
+[107/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TensorHop.cpp.obj
+[108/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[109/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoERouter.cpp.obj
+[110/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\backend\VulkanGemmDispatcher.cpp.obj
+[111/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedInferenceKernel.cpp.obj
+[112/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\UniversalModelLoader.cpp.obj
+[113/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelLoader.cpp.obj
+[114/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelRegistry.cpp.obj
+[115/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RuntimePlanner.cpp.obj
+[116/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+[117/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NUFusedPacker.cpp.obj
+[118/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NUGemv.cpp.obj
+[119/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AttnCertProbe.cpp.obj
+[120/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[121/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NULiveConsumer.cpp.obj
+[122/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TpsScaleHotpatch.cpp.obj
+[123/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ElasticDynamicBudget.cpp.obj
+[124/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[125/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MedusaDecoder.cpp.obj
+[126/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RawrXDInferenceAdapter.cpp.obj
+[127/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KimiK2Config.cpp.obj
+[128/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLAWeights.cpp.obj
+[129/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_KvExpand_Fused.cpp.obj
+[130/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLAAttention.cpp.obj
+[131/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2TokenEmbedding.cpp.obj
+[132/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2NativeStreamGate.cpp.obj
+[133/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamRouter.cpp.obj
+[134/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MlaCertAuthority.cpp.obj
+[135/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LogitsClimb.cpp.obj
+[136/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LogitsSplit.cpp.obj
+[137/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LogitsLineage.cpp.obj
+[138/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2GpuStreamCopy.cpp.obj
+[139/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2GpuStreamCopy_Overlap.cpp.obj
+[140/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2BraidExecutionPolicy.cpp.obj
+[141/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_GpuGemv.cpp.obj
+[142/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_FusedQ4KT.cpp.obj
+[143/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_QPathDevice.cpp.obj
+[144/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_QPathDevice_Emit.cpp.obj
+[145/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_PathB.cpp.obj
+[146/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_PathB_Attn.cpp.obj
+[147/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2QbHostShrinkD2h.cpp.obj
+[148/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\QbHostReadbackWindow.cpp.obj
+[149/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\ExchangeObjectLedger.cpp.obj
+[150/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HostExchangeDiscover.cpp.obj
+[151/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MLA_QaCritical.cpp.obj
+[152/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2WeightResolve.cpp.obj
+[153/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2ShardIo.cpp.obj
+[154/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+[155/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePathTensorCache_Prefetch.cpp.obj
+[156/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePathTensorCache.cpp.obj
+[157/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePathTensorCache_Emit.cpp.obj
+[158/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_Speculative.cpp.obj
+[159/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DualLaneChoreographer.cpp.obj
+[160/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CompressedKVCache.cpp.obj
+[161/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2MultiGpuLayerPlan.cpp.obj
+[162/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NVMeStream.cpp.obj
+[163/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ChatTemplate.cpp.obj
+[164/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2MultiGpu_CostCut.cpp.obj
+[165/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2DeviceManager.cpp.obj
+[166/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\GpuDecodeEfficiency.cpp.obj
+[167/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\AmdGpuPowerBackend.cpp.obj
+[168/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuToken.cpp.obj
+[169/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GpuScheduler.cpp.obj
+[170/1263] Building C object CMakeFiles\InferenceEngine.dir\src\deep2\d2_engine_ssvk_decode_bind.c.obj
+[171/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\DualStickStreamWindow.cpp.obj
+[172/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\DualStickStreamWindow_Acquire.cpp.obj
+[173/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\DualStickStreamWindow_Emit.cpp.obj
+[174/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\DualStickEnvSnap.cpp.obj
+[175/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Space.cpp.obj
+[176/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Emit.cpp.obj
+[177/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_EmitExec.cpp.obj
+[178/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Advance.cpp.obj
+[179/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Chair.cpp.obj
+[180/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Register.cpp.obj
+[181/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FutureConsumer_Notes.cpp.obj
+[182/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch.cpp.obj
+[183/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Move.cpp.obj
+[184/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Worker.cpp.obj
+[185/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Nvme.cpp.obj
+[186/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_Seal.cpp.obj
+[187/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+[188/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\HostFutureConsumerPrefetch_KnO3.cpp.obj
+[189/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\KN_O3KKEN.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\lavapath\KN_O3KKEN.asm
+[190/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\r25_productopen_masm.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\lavapath\r25_productopen_masm.asm
+[191/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FreeTokenMicroZone.cpp.obj
+[192/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\k3c_token.cpp.obj
+[193/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\lavapath\FreeTokenMicroZone_Query.cpp.obj
+[194/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_resident.cpp.obj
+[195/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_fused.cpp.obj
+[196/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_weight_window.cpp.obj
+[197/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_weight_policy.cpp.obj
+[198/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_weight_prefetch.cpp.obj
+[199/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q4k.cpp.obj
+[200/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q4k_host.cpp.obj
+[201/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q4k_fused.cpp.obj
+[202/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q4k_climb.cpp.obj
+[203/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q4k_act.cpp.obj
+[204/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q8_kva_climb.cpp.obj
+[205/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q6k.cpp.obj
+[206/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_attn_mla.cpp.obj
+[207/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_q6k_host.cpp.obj
+[208/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_quant_pipe.cpp.obj
+[209/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_quant_host.cpp.obj
+[210/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_quant.cpp.obj
+[211/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_cmdpool.cpp.obj
+[212/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_tune.cpp.obj
+[213/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_hostops.cpp.obj
+[214/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_fwd_stubs.cpp.obj
+[215/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2MoEWeights.cpp.obj
+[216/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+[217/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+[218/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TrailBrake.cpp.obj
+[219/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcher.cpp.obj
+[220/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\HotPatcherSafety.cpp.obj
+[221/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\vulkan_compute.cpp.obj
+[222/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GoalSystem.cpp.obj
+[223/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PatchCache.cpp.obj
+[224/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BottleTTL.cpp.obj
+[225/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CPUFrequency.cpp.obj
+[226/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DualGPUHook.cpp.obj
+[227/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseTensorRecovery.cpp.obj
+[228/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2DualGpuRowSplit.cpp.obj
+[229/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\execution_policy\ExecutionPolicy.cpp.obj
+[230/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\execution_policy\ExecutionPolicyStore.cpp.obj
+[231/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\execution_policy\PlacementPlan.cpp.obj
+[232/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\execution_policy\ExecutionPolicyApply.cpp.obj
+[233/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ShardRouterIntegration.cpp.obj
+[234/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_VulkanRuntime.cpp.obj
+[235/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+[236/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_SsVkDecodeBind.cpp.obj
+[237/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\IOCPGGUFLoader.cpp.obj
+[238/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FabricTensorTable.cpp.obj
+[239/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseIntegration.cpp.obj
+[240/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+[241/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseEngine.cpp.obj
+[242/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\reverse\ReverseModelLoader.cpp.obj
+[243/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AntiPatcher.cpp.obj
+[244/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuForward.cpp.obj
+[245/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine_GpuMoEMLA.cpp.obj
+[246/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+[247/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ProductionProfiler.cpp.obj
+[248/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ResidencyManager.cpp.obj
+[249/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Chamber.cpp.obj
+[250/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\PlasmaGovernor.cpp.obj
+[251/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+[252/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ToroidalKVCache.cpp.obj
+[253/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+[254/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamEngine.cpp.obj
+[255/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\expert_cache\ExpertCache.cpp.obj
+[256/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath.cpp.obj
+[257/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_Gate.cpp.obj
+[258/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_Pinball.cpp.obj
+[259/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_Mech.cpp.obj
+[260/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_Emit.cpp.obj
+[261/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ElasticResidencyManager.cpp.obj
+[262/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GpuTransfer_Emit.cpp.obj
+[263/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\LivePathEffect.cpp.obj
+[264/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePolicy.cpp.obj
+[265/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePolicy_Apply.cpp.obj
+[266/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2LivePolicy_Hysteresis.cpp.obj
+[267/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedLiveController.cpp.obj
+[268/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedLiveController_Decide.cpp.obj
+[269/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedLiveController_Cheap.cpp.obj
+[270/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedLiveController_Law.cpp.obj
+[271/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedLiveController_Emit.cpp.obj
+[272/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\LivePath_FusedTick.cpp.obj
+[273/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_MechEnd.cpp.obj
+[274/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2LivePath_Thermal.cpp.obj
+[275/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCValidator.cpp.obj
+[276/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCWorld.cpp.obj
+[277/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCCodeWorld.cpp.obj
+[278/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCMinimalSource.cpp.obj
+[279/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\BP16Streamer.cpp.obj
+[280/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCNegativeKnowledge.cpp.obj
+[281/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCModelInventory.cpp.obj
+[282/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCDeep2Authority.cpp.obj
+[283/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCCompiler.cpp.obj
+[284/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCRecipes.cpp.obj
+[285/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCGapEngine.cpp.obj
+[286/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCEmit.cpp.obj
+[287/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCSession.cpp.obj
+[288/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKCProductContext.cpp.obj
+[289/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\rkc\RKC_C_ABI.cpp.obj
+[290/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RouterPrefetchTelemetry.cpp.obj
+[291/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CycloneScheduler.cpp.obj
+[292/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\VRAMManager.cpp.obj
+[293/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\TensorHotpatch.cpp.obj
+[294/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\DualGPUBackend.cpp.obj
+[295/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\BackendOrchestrator.cpp.obj
+[296/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\OrchestratorBridge.cpp.obj
+[297/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentOllamaClient.cpp.obj
+[298/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\hotpatch\Engine.cpp.obj
+[299/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentToolHandlers.cpp.obj
+[300/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AutonomousFixOrchestrator.cpp.obj
+[301/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_AgentLoop.cpp.obj
+[302/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\expert_cache\HostStagingRing.cpp.obj
+[303/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_AgentHost.cpp.obj
+[304/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_RewardModel.cpp.obj
+[305/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_SymbolHealer.cpp.obj
+[306/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RawrXD_ToolRegistry.cpp.obj
+[307/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DeterministicReplayEngine.cpp.obj
+[308/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DiffEngine.cpp.obj
+[309/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\DirectFIM.cpp.obj
+[310/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\FIMPromptBuilder.cpp.obj
+[311/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GgmlEngine.cpp.obj
+[312/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GGMLAgenticEngine.cpp.obj
+[313/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\BoundedAgentLoop.cpp.obj
+[314/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\gguf_types.cpp.obj
+[315/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\GGUFLoader.cpp.obj
+[316/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\expert_cache\VulkanExpertTransport.cpp.obj
+[317/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\KnowledgeGraph.cpp.obj
+[318/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\chain_of_thought.cpp.obj
+[319/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\change_impact_analyzer.cpp.obj
+[320/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\context_assembler.cpp.obj
+[321/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\context_mention_parser.cpp.obj
+[322/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RepositoryIndexer.cpp.obj
+[323/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\RobustOllamaParser.cpp.obj
+[324/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SelfImprovement.cpp.obj
+[325/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SubAgentManager.cpp.obj
+[326/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\slash_command_parser.cpp.obj
+[327/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_executor.cpp.obj
+[328/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\NativeInferenceClient.cpp.obj
+[329/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_scheduler.cpp.obj
+[330/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\task_graph.cpp.obj
+[331/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Deep2SovereignInferenceGateway.cpp.obj
+[332/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolRegistry.cpp.obj
+[333/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignStandaloneClient.cpp.obj
+[334/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignAssembler_HotPatch.cpp.obj
+[335/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\SovereignAssembler.cpp.obj
+[336/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Phase3_Agent_Kernel_Bridge.cpp.obj
+[337/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\Titan_Sovereign_Bridge.cpp.obj
+[338/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\BackendEmissionService.cpp.obj
+[339/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ExecPipeline.cpp.obj
+[340/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolDispatcher.cpp.obj
+[341/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ToolDispatchTable.cpp.obj
+[342/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_call_parser.cpp.obj
+[343/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_executor.cpp.obj
+[344/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\tool_registry.cpp.obj
+[345/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\vulkan_compute_real.cpp.obj
+[346/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignRuntime.cpp.obj
+[347/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\VramStreamingController.cpp.obj
+[348/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\ExecutionContract.cpp.obj
+[349/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignCoreWrapper.cpp.obj
+[350/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignDenseEngine.cpp.obj
+[351/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignEventBus.cpp.obj
+[352/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignCheckpoint.cpp.obj
+[353/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignVCS.cpp.obj
+[354/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\SovereignWatchdog.cpp.obj
+[355/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Deep2InferenceWrapper.cpp.obj
+[356/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AgenticEngineSovereignHook.cpp.obj
+[357/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\IDE_Lifecycle_Hook.cpp.obj
+[358/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\RawrXD_SovereignStatusPanel.cpp.obj
+[359/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\IntegrityChecker.cpp.obj
+[360/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\HealthReport.cpp.obj
+[361/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AutoRepair.cpp.obj
+[362/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\AutoRepairEngine.cpp.obj
+[363/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\CrashRecovery.cpp.obj
+[364/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\StressTester.cpp.obj
+[365/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\Profiler.cpp.obj
+[366/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\DistributedKV.cpp.obj
+[367/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\ExpertSharding.cpp.obj
+[368/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_deep2_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_deep2_kernels.asm
+[369/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\sovereign\rawr_transport_strict.cpp.obj
+[370/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q4k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q4k_gemv.asm
+[371/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q4_1_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q4_1_gemv.asm
+[372/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q5_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q5_k_gemv.asm
+[373/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q6_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q6_k_gemv.asm
+[374/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_q8_0_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_q8_0_gemv.asm
+[375/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\sovereign_fp16_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\sovereign_fp16_gemv.asm
+[376/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\mars\MARSController.cpp.obj
+[377/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Sampler.cpp.obj
+[378/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\AgentOrchestrator.cpp.obj
+[379/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\StreamingResultChannel.cpp.obj
+[380/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_globals.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\rawr_globals.asm
+[381/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_cpu_features.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\rawr_cpu_features.asm
+[382/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_core.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\inference_core.asm
+[383/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\inference_kernels.asm
+[384/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\quant_avx2.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\quant_avx2.asm
+[385/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Dequant.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_KQuant_Dequant.asm
+[386/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_KQuant_Kernel.asm
+[387/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\FlashAttention_AVX512.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\FlashAttention_AVX512.asm
+[388/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_Telemetry_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_Telemetry_Kernel.asm
+[389/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_math_masm.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\masm\rawrxd_math_masm.asm
+[390/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_transformer_masm_fixed.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\masm\rawrxd_transformer_masm_fixed.asm
+[391/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKB.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\deep2\QuantKB.asm
+[392/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2Device_Score.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2Device_Score.asm
+[393/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2Device_Pick.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2Device_Pick.asm
+[394/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_StrEq.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_StrEq.asm
+[395/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_IsArch.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_IsArch.asm
+[396/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_GlobData.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_GlobData.asm
+[397/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_MlaData.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_MlaData.asm
+[398/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Beaconism.cpp.obj
+[399/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_MoeData.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_MoeData.asm
+[400/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_Scan.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_Scan.asm
+[401/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_Decode.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_Decode.asm
+[402/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_Validate.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_Validate.asm
+[403/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_LayerKind.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_LayerKind.asm
+[404/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2R1_SplitKVB.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2R1_SplitKVB.asm
+[405/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2ThreadAffinity.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2ThreadAffinity.asm
+[406/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterStr.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterStr.asm
+[407/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterEnv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterEnv.asm
+[408/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterParse.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterParse.asm
+[409/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterParseIdx.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterParseIdx.asm
+[410/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterGGUF.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterGGUF.asm
+[411/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterPath.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterPath.asm
+[412/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterShardApply.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterShardApply.asm
+[413/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterShardScan.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterShardScan.asm
+[414/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterShardCheck.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterShardCheck.asm
+[415/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterPrintIO.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterPrintIO.asm
+[416/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterPrint.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterPrint.asm
+[417/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterEvidence.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterEvidence.asm
+[418/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterResolve.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterResolve.asm
+[419/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterCallEngine.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterCallEngine.asm
+[420/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\Deep2OuterHost.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\Deep2OuterHost.asm
+[421/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_Core.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RuntimeEvidence512_Core.asm
+[422/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_Emit.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RuntimeEvidence512_Emit.asm
+[423/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_Collect.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RuntimeEvidence512_Collect.asm
+[424/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\streaming_command_handler.cpp.obj
+[425/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_IDECollect.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RuntimeEvidence512_IDECollect.asm
+[426/1263] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RuntimeEvidence512_IDEEmit.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RuntimeEvidence512_IDEEmit.asm
+[427/1263] Building ASM_MASM object CMakeFiles\RawrXD_MultiWindow_Kernel.dir\src\asm\RawrXD_MultiWindow_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:\~dev\rawrxd\src\asm\RawrXD_MultiWindow_Kernel.asm
+[428/1263] Linking C static library quickjs_static.lib
+[429/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\AgentToolAuthority.cpp.obj
+[430/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Tokenizer.cpp.obj
+[431/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TimeReverseDigest.cpp.obj
+[432/1263] Building CXX object CMakeFiles\RawrXD_MultiWindow_Kernel.dir\src\core\multiwindow_scheduler.cpp.obj
+[433/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic_model_streamer_bridge.cpp.obj
+[434/1263] Building CXX object CMakeFiles\RawrXD-ModelAnalysisLib.dir\src\core\neurological_diff.cpp.obj
+[435/1263] Building CXX object CMakeFiles\InferenceEngine.dir\src\ai\streaming_inference_engine.cpp.obj
+[436/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\pe_tools\re_tools.cpp.obj
+[437/1263] Building CXX object CMakeFiles\RawrXD-ModelAnalysisLib.dir\src\core\model_anatomy.cpp.obj
+[438/1263] [MASM64] Assembling RawrXD_MetaReverse.asm (authenticity detection)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_MetaReverse.asm
+[439/1263] [MASM64] Assembling RawrXD_OmegaDeobfuscator.asm (AVX-512 deobfuscation)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: F:/~dev/rawrxd/src/reverse_engineering/deobfuscator/RawrXD_OmegaDeobfuscator.asm
+[440/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\disassembler.cpp.obj
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(11): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12): warning C4005: 'NOMINMAX': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\disassembler.h(12): note: 'NOMINMAX' previously declared on the command line
+[441/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\pe_analyzer.cpp.obj
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(10): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(10): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(11): warning C4005: 'NOMINMAX': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\pe_analyzer.h(11): note: 'NOMINMAX' previously declared on the command line
+[442/1263] Building CXX object rguf_source\CMakeFiles\rguf.dir\RGUFQuant.cpp.obj
+[443/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\__\compiler_backend\RawrCOFFWriter.cpp.obj
+[444/1263] Building CXX object rguf_source\CMakeFiles\rguf.dir\RGUFPlatform.cpp.obj
+[445/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\__\compiler_backend\InstructionEncoderX64.cpp.obj
+[446/1263] Building CXX object rguf_source\CMakeFiles\rguf.dir\RGUFWriter.cpp.obj
+[447/1263] Linking CXX static library RawrXD-ModelAnalysisLib.lib
+[448/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\__\compiler_backend\RawrPE64Linker.cpp.obj
+[449/1263] Linking CXX static library InferenceEngine.lib
+[450/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\binary_patcher.cpp.obj
+[451/1263] Linking CXX shared library bin\RawrXD_MultiWindow_Kernel.dll
+[452/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE.cpp.obj
+[453/1263] Building CXX object src\reverse_engineering\CMakeFiles\RawrXD-RE-Library.dir\decompiler.cpp.obj
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(11): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(11): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(12): warning C4005: 'NOMINMAX': macro redefinition
+F:\~dev\rawrxd\src\reverse_engineering\decompiler.h(12): note: 'NOMINMAX' previously declared on the command line
+[454/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE_ToolRoutes.cpp.obj
+[455/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE_GuiRoutes.cpp.obj
+[456/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE_FileAliases.cpp.obj
+[457/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_agent_orchestrator.cpp.obj
+[458/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_autonomous_todo_system.cpp.obj
+[459/1263] Building CXX object rguf_source\CMakeFiles\rguf.dir\RGUFLoader.cpp.obj
+[460/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_multi_model_agent_cycling.cpp.obj
+[461/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_dynamic_time_manager.cpp.obj
+[462/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_missing_impl.cpp.obj
+[463/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_production_orchestrator.cpp.obj
+[464/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\autonomous_orchestrator.cpp.obj
+[465/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\agent\orchestrator_cli_handler.cpp.obj
+[466/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\ui\RawrXD_MainLoop.cpp.obj
+[467/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\ui\webview2_bridge.cpp.obj
+[468/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\ui\agentic_bridge.cpp.obj
+[469/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\ui\debugger_core.cpp.obj
+[470/1263] Building RC object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\RawrXD-Win32IDE.rc.res
+[471/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\UnifiedModelMetadata.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/bridge/UnifiedModelMetadata.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_ASM_PYRE=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=0 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=0 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DUNICODE -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\Ship -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\sovereign_autonomy -IF:\~dev\rawrxd\src\runtime -IF:\~dev\rawrxd\src\compiler_backend -IF:\~dev\rawrxd\src\sovereign\puppeteer -IC:\VulkanSDK\1.4.357.0\include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\server -IF:\~dev\rawrxd\src\agent -IF:\~dev\rawrxd\src\agentic -IF:\~dev\rawrxd\src\cli -IF:\~dev\rawrxd\src\win32app -IF:\~dev\rawrxd\src\modules -IF:\~dev\rawrxd\src\utils -IF:\~dev\rawrxd\src\config -IF:\~dev\rawrxd\src\asm -IF:\~dev\rawrxd\src\lsp -IF:\~dev\rawrxd\src\plugin_system -IF:\~dev\rawrxd\src\ide -IF:\~dev\rawrxd\src\llm_adapter -IF:\~dev\rawrxd\src\auth -IF:\~dev\rawrxd\src\context -IF:\~dev\rawrxd\src\multimodal_engine -IF:\~dev\rawrxd\src\telemetry -IF:\~dev\rawrxd\src\ui -IF:\~dev\rawrxd\src\git -IF:\~dev\rawrxd\src\sovereign -IF:\~dev\rawrxd\src\sovereign\spine -IF:\~dev\rawrxd\src\sovereign\terminal -IF:\~dev\rawrxd\src\sovereign\build -IF:\~dev\rawrxd\src\sovereign\agent -IF:\~dev\rawrxd\src\sovereign\bus -IF:\~dev\rawrxd\src\sovereign\compression -IF:\~dev\rawrxd\src\sovereign\awareness -IF:\~dev\rawrxd\src\sovereign\validator -IF:\~dev\rawrxd\src\sovereign\recovery -IF:\~dev\rawrxd\src\sovereign\control -IF:\~dev\rawrxd\src\sovereign\capsule -IF:\~dev\rawrxd\src\sovereign\ide -IF:\~dev\rawrxd\3rdparty\quickjs -IF:\~dev\rawrxd\src\reverse_engineering -IF:\~dev\rawrxd\src\reverse_engineering\pe_tools -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\runtime\governance -IF:\~dev\rawrxd\rguf_source -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:IC:\VulkanSDK\1.4.357.0\Include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W0 /arch:AVX2 /Zi /O2 /showIncludes /FoCMakeFiles\RawrXD-Win32IDE.dir\src\bridge\UnifiedModelMetadata.cpp.obj /Fdbin\RawrXD-Win32IDE.pdb /FS -c F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.hpp(111): error C2039: 'unique_ptr': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\span(26): note: see declaration of 'std'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.hpp(111): error C7568: argument list missing after assumed function template 'unique_ptr'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.hpp(111): error C2062: type '<error type>' unexpected
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.hpp(111): error C2238: unexpected token(s) preceding ';'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(15): error C2614: 'rawrxd::bridge::UnifiedModelMetadataRegistry': illegal member initialization: 'impl_' is not a base or member
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(19): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(19): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(19): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(21): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(26): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(26): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(26): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(27): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(28): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(28): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(29): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(34): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(34): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(34): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(35): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(36): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(36): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(43): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(43): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(43): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(44): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(45): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(45): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(50): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(50): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(50): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(52): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(53): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(53): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(53): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(54): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(60): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(60): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(60): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(62): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(62): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(62): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(63): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(63): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(69): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(69): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(69): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(72): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(72): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(72): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(73): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(73): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(80): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(80): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(80): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(82): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(82): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(82): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(83): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(84): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(84): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(84): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(91): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(91): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(91): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(93): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(93): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(93): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(94): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(94): error C2530: 'req': references must be initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(95): error C3536: 'req': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(100): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(110): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(110): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(110): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(111): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(112): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(112): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(131): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(131): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(131): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(143): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(144): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(144): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(144): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(145): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(146): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(147): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(148): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(149): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(150): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(151): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(152): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(153): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(154): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(155): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(156): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(157): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(158): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(159): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C2530: 'qt': references must be initialized
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C3531: 'qt': a symbol whose type contains 'auto' must have an initializer
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C2143: syntax error: missing ';' before ':'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C2143: syntax error: missing ';' before ')'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): error C2664: 'void rawrxd::bridge::UnifiedModelMetadataRegistry::SerializeRegistry::<lambda_3>::operator ()(const std::basic_string<char,std::char_traits<char>,std::allocator<char>> &) const': cannot convert argument 1 from '<error type>' to 'const std::basic_string<char,std::char_traits<char>,std::allocator<char>> &'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: Reason: cannot convert from '<error type>' to 'const std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string': no overloaded function could convert all the argument types
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(781): note: could be 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::nullptr_t)'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::nullptr_t)': cannot convert argument 1 from '<error type>' to 'std::nullptr_t'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: only a null pointer constant can be converted to nullptr_t
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(768): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const )'
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const )': cannot convert argument 1 from '<error type>' to 'const _Elem *const '
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: Conversion from integral type to pointer type requires reinterpret_cast, C-style cast or parenthesized function-style cast
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1340): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::initializer_list<_Elem>,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::initializer_list<_Elem>,const _Alloc &)': cannot convert argument 1 from '<error type>' to 'std::initializer_list<_Elem>'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+        and
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1157): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Ty &,const unsigned __int64,const unsigned __int64,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1011): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::from_range_t,_Rng &&,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(798): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(_Iter,_Iter,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(792): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const unsigned __int64,const _Elem,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(775): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const ,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(762): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const ,const unsigned __int64,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: while trying to match the argument list '(<error type>)'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(139): note: see declaration of 'rawrxd::bridge::UnifiedModelMetadataRegistry::SerializeRegistry::<lambda_3>::operator ()'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(160): note: while trying to match the argument list '(<error type>)'
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(161): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(162): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(163): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(164): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(165): error C2065: 'meta': undeclared identifier
+F:\~dev\rawrxd\src\bridge\UnifiedModelMetadata.cpp(165): fatal error C1003: error count exceeds 100; stopping compilation
+[472/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ide_toolchain_gate.cpp.obj
+[473/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\sovereign\puppeteer\JITAssembler.cpp.obj
+[474/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\SwarmIATRegistration.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/bridge/SwarmIATRegistration.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_ASM_PYRE=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=0 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=0 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DUNICODE -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\Ship -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\sovereign_autonomy -IF:\~dev\rawrxd\src\runtime -IF:\~dev\rawrxd\src\compiler_backend -IF:\~dev\rawrxd\src\sovereign\puppeteer -IC:\VulkanSDK\1.4.357.0\include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\server -IF:\~dev\rawrxd\src\agent -IF:\~dev\rawrxd\src\agentic -IF:\~dev\rawrxd\src\cli -IF:\~dev\rawrxd\src\win32app -IF:\~dev\rawrxd\src\modules -IF:\~dev\rawrxd\src\utils -IF:\~dev\rawrxd\src\config -IF:\~dev\rawrxd\src\asm -IF:\~dev\rawrxd\src\lsp -IF:\~dev\rawrxd\src\plugin_system -IF:\~dev\rawrxd\src\ide -IF:\~dev\rawrxd\src\llm_adapter -IF:\~dev\rawrxd\src\auth -IF:\~dev\rawrxd\src\context -IF:\~dev\rawrxd\src\multimodal_engine -IF:\~dev\rawrxd\src\telemetry -IF:\~dev\rawrxd\src\ui -IF:\~dev\rawrxd\src\git -IF:\~dev\rawrxd\src\sovereign -IF:\~dev\rawrxd\src\sovereign\spine -IF:\~dev\rawrxd\src\sovereign\terminal -IF:\~dev\rawrxd\src\sovereign\build -IF:\~dev\rawrxd\src\sovereign\agent -IF:\~dev\rawrxd\src\sovereign\bus -IF:\~dev\rawrxd\src\sovereign\compression -IF:\~dev\rawrxd\src\sovereign\awareness -IF:\~dev\rawrxd\src\sovereign\validator -IF:\~dev\rawrxd\src\sovereign\recovery -IF:\~dev\rawrxd\src\sovereign\control -IF:\~dev\rawrxd\src\sovereign\capsule -IF:\~dev\rawrxd\src\sovereign\ide -IF:\~dev\rawrxd\3rdparty\quickjs -IF:\~dev\rawrxd\src\reverse_engineering -IF:\~dev\rawrxd\src\reverse_engineering\pe_tools -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\runtime\governance -IF:\~dev\rawrxd\rguf_source -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:IC:\VulkanSDK\1.4.357.0\Include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W0 /arch:AVX2 /Zi /O2 /showIncludes /FoCMakeFiles\RawrXD-Win32IDE.dir\src\bridge\SwarmIATRegistration.cpp.obj /Fdbin\RawrXD-Win32IDE.pdb /FS -c F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.hpp(88): error C2039: 'unique_ptr': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\optional(30): note: see declaration of 'std'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.hpp(88): error C7568: argument list missing after assumed function template 'unique_ptr'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.hpp(88): error C2062: type '<error type>' unexpected
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.hpp(88): error C2238: unexpected token(s) preceding ';'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(19): error C2614: 'rawrxd::bridge::SwarmIATRegistration': illegal member initialization: 'impl_' is not a base or member
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(23): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(23): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(23): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(24): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(29): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(31): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(38): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(38): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(38): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(39): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(40): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(40): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(42): error C2530: 'hook': references must be initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(42): error C3531: 'hook': a symbol whose type contains 'auto' must have an initializer
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(42): error C2143: syntax error: missing ';' before ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(42): error C2143: syntax error: missing ';' before ')'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(43): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(44): error C3536: 'jt': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(44): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(46): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(49): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(50): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(56): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(56): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(56): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(57): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(57): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(61): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(61): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(61): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(62): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(63): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(63): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(68): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(68): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(68): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(70): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(71): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(71): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(71): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(72): error C2065: 'agent': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(78): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(78): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(78): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(79): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(80): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(80): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(82): error C2530: 'h': references must be initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(82): error C3531: 'h': a symbol whose type contains 'auto' must have an initializer
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(82): error C2143: syntax error: missing ';' before ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(82): error C2143: syntax error: missing ';' before ')'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(86): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(92): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(92): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(92): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(93): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(94): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(94): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(96): error C3536: 'jt': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(103): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(103): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(103): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(104): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(105): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(105): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(111): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(111): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(111): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(113): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(114): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(114): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(122): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(123): error C3536: 'jt': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(123): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(138): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(138): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(138): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(139): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(140): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(140): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(141): error C2530: 'h': references must be initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(141): error C3531: 'h': a symbol whose type contains 'auto' must have an initializer
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(141): error C2143: syntax error: missing ';' before ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(141): error C2143: syntax error: missing ';' before ')'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(142): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(143): error C2064: term does not evaluate to a function taking 2 arguments
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(143): note: class does not define an 'operator()' or a user defined conversion operator to a pointer-to-function or reference-to-function that takes appropriate number of arguments
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(143): note: while trying to match the argument list '(uint32_t, bool)'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(149): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(149): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(149): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(150): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(151): error C3536: 'it': cannot be used before it is initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(151): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(152): error C2530: 'hook': references must be initialized
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(152): error C3531: 'hook': a symbol whose type contains 'auto' must have an initializer
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(152): error C2143: syntax error: missing ';' before ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(152): error C2143: syntax error: missing ';' before ')'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): error C2664: '_Ret std::_Func_class<_Ret,uint32_t,const std::string &,bool>::operator ()(uint32_t,const std::string &,bool) const': cannot convert argument 2 from '<error type>' to 'const std::string &'
+        with
+        [
+            _Ret=void
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: Reason: cannot convert from '<error type>' to 'const std::string'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string': no overloaded function could convert all the argument types
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(781): note: could be 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::nullptr_t)'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::nullptr_t)': cannot convert argument 1 from '<error type>' to 'std::nullptr_t'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: only a null pointer constant can be converted to nullptr_t
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(768): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const )'
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const )': cannot convert argument 1 from '<error type>' to 'const _Elem *const '
+        with
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: Conversion from integral type to pointer type requires reinterpret_cast, C-style cast or parenthesized function-style cast
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1340): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::initializer_list<_Elem>,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::initializer_list<_Elem>,const _Alloc &)': cannot convert argument 1 from '<error type>' to 'std::initializer_list<_Elem>'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+        and
+        [
+            _Elem=char
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: Conversion requires a second user-defined-conversion operator or constructor
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1157): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Ty &,const unsigned __int64,const unsigned __int64,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(1011): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(std::from_range_t,_Rng &&,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(798): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(_Iter,_Iter,const _Alloc &)'
+        with
+        [
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(792): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const unsigned __int64,const _Elem,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(775): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const ,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xstring(762): note: or       'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string(const _Elem *const ,const unsigned __int64,const _Alloc &)'
+        with
+        [
+            _Elem=char,
+            _Alloc=std::allocator<char>
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: while trying to match the argument list '(<error type>)'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\functional(921): note: see declaration of 'std::_Func_class<_Ret,uint32_t,const std::string &,bool>::operator ()'
+        with
+        [
+            _Ret=void
+        ]
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(153): note: while trying to match the argument list '(uint32_t, <error type>, bool)'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(160): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(160): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(160): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(162): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(162): error C2059: syntax error: ':'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(162): error C2143: syntax error: missing ';' before '{'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(163): error C2065: 'hooks': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(169): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(169): error C2512: 'std::lock_guard<std::mutex>::lock_guard': no appropriate default constructor available
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(169): note: while trying to match the argument list '()'
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(170): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(175): error C2065: 'impl_': undeclared identifier
+F:\~dev\rawrxd\src\bridge\SwarmIATRegistration.cpp(175): fatal error C1003: error count exceeds 100; stopping compilation
+[475/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\Win32SwarmBridge.cpp.obj
+[476/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj
+FAILED: [code=2] CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/main_win32.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_ASM_PYRE=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=0 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=0 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_QUICKJS_STUB=0 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DUNICODE -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IF:\~dev\rawrxd\include -IF:\~dev\rawrxd\Ship -IF:\~dev\rawrxd\src\masm -IF:\~dev\rawrxd\src\sovereign_autonomy -IF:\~dev\rawrxd\src\runtime -IF:\~dev\rawrxd\src\compiler_backend -IF:\~dev\rawrxd\src\sovereign\puppeteer -IC:\VulkanSDK\1.4.357.0\include -IF:\~dev\rawrxd\src -IF:\~dev\rawrxd\src\engine -IF:\~dev\rawrxd\src\core -IF:\~dev\rawrxd\src\server -IF:\~dev\rawrxd\src\agent -IF:\~dev\rawrxd\src\agentic -IF:\~dev\rawrxd\src\cli -IF:\~dev\rawrxd\src\win32app -IF:\~dev\rawrxd\src\modules -IF:\~dev\rawrxd\src\utils -IF:\~dev\rawrxd\src\config -IF:\~dev\rawrxd\src\asm -IF:\~dev\rawrxd\src\lsp -IF:\~dev\rawrxd\src\plugin_system -IF:\~dev\rawrxd\src\ide -IF:\~dev\rawrxd\src\llm_adapter -IF:\~dev\rawrxd\src\auth -IF:\~dev\rawrxd\src\context -IF:\~dev\rawrxd\src\multimodal_engine -IF:\~dev\rawrxd\src\telemetry -IF:\~dev\rawrxd\src\ui -IF:\~dev\rawrxd\src\git -IF:\~dev\rawrxd\src\sovereign -IF:\~dev\rawrxd\src\sovereign\spine -IF:\~dev\rawrxd\src\sovereign\terminal -IF:\~dev\rawrxd\src\sovereign\build -IF:\~dev\rawrxd\src\sovereign\agent -IF:\~dev\rawrxd\src\sovereign\bus -IF:\~dev\rawrxd\src\sovereign\compression -IF:\~dev\rawrxd\src\sovereign\awareness -IF:\~dev\rawrxd\src\sovereign\validator -IF:\~dev\rawrxd\src\sovereign\recovery -IF:\~dev\rawrxd\src\sovereign\control -IF:\~dev\rawrxd\src\sovereign\capsule -IF:\~dev\rawrxd\src\sovereign\ide -IF:\~dev\rawrxd\3rdparty\quickjs -IF:\~dev\rawrxd\src\reverse_engineering -IF:\~dev\rawrxd\src\reverse_engineering\pe_tools -IF:\~dev\rawrxd\src\deep2 -IF:\~dev\rawrxd\src\inference -IF:\~dev\rawrxd\src\codec -IF:\~dev\rawrxd\src\runtime\governance -IF:\~dev\rawrxd\rguf_source -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:IC:\VulkanSDK\1.4.357.0\Include -external:W0 /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W0 /arch:AVX2 /Zi /O2 /showIncludes /FoCMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj /Fdbin\RawrXD-Win32IDE.pdb /FS -c F:\~dev\rawrxd\src\win32app\main_win32.cpp
+F:\~dev\rawrxd\src\win32app\Win32IDE_MCPHooks.h(65): error C2061: syntax error: identifier 'SOCKET'
+F:\~dev\rawrxd\src\win32app\main_win32.cpp(787): error C3861: 'CommandLineToArgvW': identifier not found
+[477/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\core\gold_command_providers.cpp.obj
+[478/1263] Building CXX object CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ide_inference_gate.cpp.obj
+ninja: build stopped: subcommand failed.

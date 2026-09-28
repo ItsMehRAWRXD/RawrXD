@@ -264,7 +264,7 @@ static GateResult DecodeBounded(
             }
             ++seq;
             std::fprintf(stderr,"[AC_DECODE] prefill_forward i=%zu seq=%zu\n",i,seq); std::fflush(stderr);
-            if(!e.forwardTokenAllLayers(hidden.data(),seq)) {
+            if(!e.forwardTokenAllLayers(hidden.data(),seq).ok) {
                 r.failStage="PREFILL_FORWARD";
                 r.failMessage="token_index="+std::to_string(i);
                 return r;
@@ -312,7 +312,7 @@ static GateResult DecodeBounded(
                 return r;
             }
             ++seq;
-            if(!e.forwardTokenAllLayers(hidden.data(),seq)) {
+            if(!e.forwardTokenAllLayers(hidden.data(),seq).ok) {
                 r.failStage="DECODE_FORWARD";
                 r.failMessage="step="+std::to_string(step);
                 return r;

@@ -3,6 +3,8 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <memory>
+#include <mutex>
 
 namespace rawrxd::bridge {
 
