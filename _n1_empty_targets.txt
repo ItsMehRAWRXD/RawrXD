@@ -1,0 +1,15 @@
+test_gguf_tensor_bounds
+test_omega1_bridge
+Deep2Engine_RouterSmokeTest
+GGUF_Alignment_Diagnostic
+Q4_0_GEMV_Certification
+Omega1Engine
+InferenceEngine
+RawrXD-InferenceEngine
+RawrXD-Generate
+rawrxd-monaco-gen
+RawrXD-InferenceRoutingTest
+RawrXD-AutoFixCLI
+hotpatch_stress_test
+hotpatch_e2e_test
+arch_cert_tensor_inventory

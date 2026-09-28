@@ -1,0 +1,5 @@
+src/deep2/MoEEliminate.cpp
+src/deep2/ProductionBenchmark.cpp
+src/deep2/ReverseIntegration.cpp
+src/runtime_surface/GenerationStopwatch.cpp
+src/runtime/Deep2ExecutionTelemetry.cpp

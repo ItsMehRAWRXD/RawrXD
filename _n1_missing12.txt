@@ -1,0 +1,4 @@
+src/deep2/HotPatcher.cpp
+src/deep2/mars/TensorHotpatch.cpp
+src/deep2/RuntimePlanner.cpp
+src/runtime/governance/HardwareCapabilityProbe.cpp

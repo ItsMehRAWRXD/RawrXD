@@ -2991,6 +2991,9 @@ if(RAWR_REPLACE_MASM_FALLBACKS)
     endif()
 endif()
 
+# Filter missing sources from all major source lists
+rawrxd_filter_missing_sources(SOURCES)
+
 # Build target-scoped SSOT ownership partition for RawrEngine only.
 set(RAWR_ENGINE_SOURCES ${SOURCES})
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
@@ -4718,6 +4721,7 @@ list(REMOVE_DUPLICATES INFERENCE_ENGINE_LIBRARY_SOURCES)
 list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
     src/inference/inference_standalone_main.cpp
 )
+rawrxd_filter_missing_sources(INFERENCE_ENGINE_LIBRARY_SOURCES)
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
 # Link precompiled MASM objects (tracer + quantKB)
@@ -6813,6 +6817,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/Code_Pattern_Reconstructor.asm)
     list(APPEND WIN32IDE_SOURCES src/closure/RawrXDAutoClosure.cpp)
+    rawrxd_filter_missing_sources(WIN32IDE_SOURCES)
+    rawrxd_filter_missing_sources(_WIN32IDE_ASM)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${_WIN32IDE_ASM} ${WIN32IDE_EXTRA_ASM})
     rawrxd_apply_p1_product_runtime_authority(RawrXD-Win32IDE)
 

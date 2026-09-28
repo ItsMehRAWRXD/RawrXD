@@ -38,7 +38,7 @@
 | 26 | qwen3.8:27b | PASS | PASS | PASS | PASS | PASS | **PASS** | 23.99 |  |
 | 27 | qwen35-40b-heretic-q8:latest | PASS | PASS | PASS | PASS | PASS* | **PASS** (provisional) | 221.58 | see identity mismatch below |
 | 28 | starcoder2:15b | PASS | PASS | PASS | PASS | PASS | **PASS** (as base) | 18.11 | base completion model behavior |
-| 29 | bluehawana/deepseek-v4-flash:iq2_m | PASS | PASS | PASS | PASS | NOT RUN | **PASS** (single-run provisional) | 3.36 | 284B MoE IQ3_XXS; coherent chain format; repeat not yet run |
+| 29 | bluehawana/deepseek-v4-flash:iq2_m | PASS | PASS | PASS | PASS | PASS | **PASS** (full ladder) | 3.36 | 284B MoE IQ3_XXS; coherent chain format; byte-identical repeat proven |
 | 30 | blackgrg26/WORMGPT-14:latest | FAIL | — | — | — | — | **FAIL** | 0 | corrupt/empty blob; `ollama show` fails |
 | 31 | deepseek-v4-flash:0731-cloud | — | — | — | — | — | **RETIRED** | 0 | upstream retired 2026-09-25 |
 
@@ -66,7 +66,7 @@ Raw body shows generation went into the `"thinking"` field (`"thinking":"Okay, t
 - REPEAT=False at the 24-token run was a template-echo artifact. Verdict provisional pending a rebuild from a properly labeled blob.
 
 ### bluehawana/deepseek-v4-flash:iq2_m — now covered
-284.3B MoE (deepseek4 arch, IQ3_XXS, 103 GB) loads in ~39s and generates coherent chain-of-thought style text (`"1. The user asks:..."`), 3.36 tok/s. Single deterministic run verified; REPEAT gate not yet executed (would take ~5 min/run).
+284.3B MoE (deepseek4 arch, IQ3_XXS, 103 GB) loads in ~39s and generates coherent chain-of-thought style text (`"1. The user asks:..."`), 3.36 tok/s. REPEAT gate executed: run1 and run2 byte-identical (B1BYTES=B2BYTES=312E...0A322E, IQ2M_REPEAT_IDENTICAL=True, proof: f:\~dev\_iq2m_repeat_verdict.txt). Full ladder certified..
 
 ## Files
 - `f:\~dev\_coherence_audit.ps1` — audit script (gate ladder per model)
@@ -78,4 +78,4 @@ Raw body shows generation went into the `"thinking"` field (`"thinking":"Okay, t
 - `f:\~dev\qwen15b_modelfile.txt` — 1.5b-base FIM modelfile capture
 
 ## Fail-closed statement
-`LOAD != RUNTIME_REACHED != TOKEN_SURVIVED != COHERENCE_PASS`. Verdicts above are per-model; the two provisional entries (heretic, iq2_m) are marked and must not be cited as full-ladder certified until their remaining gates complete.
+`LOAD != RUNTIME_REACHED != TOKEN_SURVIVED != COHERENCE_PASS`. Verdicts above are per-model; the single remaining provisional entry (heretic) is marked and must not be cited as full-ladder certified until its identity mismatch is resolved. iq2_m is now fully certified.

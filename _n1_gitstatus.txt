@@ -1,0 +1,16 @@
+ M ../_ollama_coherence_verdicts.md
+ m 3rdparty/quickjs
+?? ../_cmake_err_full.txt
+?? ../_iq2m_repeat2.txt
+?? ../_iq2m_repeat_verdict.txt
+?? ../_n1_configure.txt
+?? ../_n1_diskcheck.txt
+?? ../_n1_empty_targets.txt
+?? ../_n1_errctx.txt
+?? ../_n1_gitstatus.txt
+?? ../_n1_missing_resolved.txt
+?? ../_n1_missing_sources.txt
+?? ../_n1_option_scan.txt
+?? ../_n1_strip_scan.txt
+?? ../_stub_caller_scan.txt
+?? ../_win32ide_link_errors.txt

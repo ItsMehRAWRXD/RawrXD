@@ -1,0 +1,2 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+

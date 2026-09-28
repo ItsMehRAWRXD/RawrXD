@@ -1,0 +1,1 @@
+eb2dcf22b Delete 817 one-line STUB placeholder files + fix Win32IDE compilation + Parallels compatibility

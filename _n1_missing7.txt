@@ -1,0 +1,4 @@
+src/deep2/DeepSeekMoELoader.cpp
+src/deep2/DualGPUHook.cpp
+src/deep2/MoEArchitectureParser.cpp
+src/runtime/elastic/ElasticGGUFIndex.cpp
