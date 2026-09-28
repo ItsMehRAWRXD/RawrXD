@@ -1,0 +1,28 @@
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file F:\~dev\rawrxd\build_clean_n1\RawrXD_SelfHost_Engine.obj
+
+File Type: COFF OBJECT
+
+COFF SYMBOL TABLE
+000 0103899C ABS    notype       Static       | @comp.id
+001 00000010 ABS    notype       Static       | @feat.00
+002 00000000 SECT1  notype       Static       | .text$mn
+    Section length    0, #relocs    0, #linenums    0, checksum        0
+004 00000000 SECT2  notype       Static       | .data
+    Section length    0, #relocs    0, #linenums    0, checksum        0
+006 00000000 SECT3  notype       Static       | .debug$S
+    Section length  1C8, #relocs    0, #linenums    0, checksum        0
+008 00000000 SECT4  notype       Static       | .debug$T
+    Section length    4, #relocs    0, #linenums    0, checksum        0
+
+String Table Size = 0x0 bytes
+
+  Summary
+
+           0 .data
+         1C8 .debug$S
+           4 .debug$T
+           0 .text$mn

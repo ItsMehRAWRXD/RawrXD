@@ -1,0 +1,718 @@
+    set(RAWRXD_PREBUILT_OBJ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj")
+    set(RAWRXD_PREBUILT_GENESIS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/build_genesis")
+    set(RAWRXD_PREBUILT_SRCASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
+
+    # Phase 20: AVX-512 Q4_K_M ├Ä┬ô├â┬Ñ├â┬å Q2_K requantization kernel
+    set(ASM_REQUANTIZE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/requantize_q4km_to_q2k_avx512.asm")
+    set(ASM_REQUANTIZE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/requantize_q4km_to_q2k_avx512.obj")
+    add_custom_command(
+        OUTPUT ${ASM_REQUANTIZE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_REQUANTIZE_OBJ} ${ASM_REQUANTIZE_SRC}
+        DEPENDS ${ASM_REQUANTIZE_SRC}
+        COMMENT "[MASM] Assembling requantize_q4km_to_q2k_avx512.asm (AVX-512 DQ/BW)"
+        VERBATIM
+    )
+
+    # Phase 20: ROCm GPU requantization dispatch stubs
+    set(ASM_GPU_REQUANT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/gpu_requantize_rocm.asm")
+    set(ASM_GPU_REQUANT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/gpu_requantize_rocm.obj")
+    add_custom_command(
+        OUTPUT ${ASM_GPU_REQUANT_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_GPU_REQUANT_OBJ} ${ASM_GPU_REQUANT_SRC}
+        DEPENDS ${ASM_GPU_REQUANT_SRC}
+        COMMENT "[MASM] Assembling gpu_requantize_rocm.asm (HIP dispatch)"
+        VERBATIM
+    )
+
+    # Phase 21: Zero-copy tensor network streaming
+    set(ASM_SWARM_TENSOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/swarm_tensor_stream.asm")
+    set(ASM_SWARM_TENSOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/swarm_tensor_stream.obj")
+    add_custom_command(
+        OUTPUT ${ASM_SWARM_TENSOR_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_SWARM_TENSOR_OBJ} ${ASM_SWARM_TENSOR_SRC}
+        DEPENDS ${ASM_SWARM_TENSOR_SRC}
+        COMMENT "[MASM] Assembling swarm_tensor_stream.asm (CRC32C, RLE, chunks)"
+        VERBATIM
+    )
+
+    # Phase 28: MonacoCore Native Editor Engine ├Ä┬ô├â┬ç├â┬╢ Gap Buffer + Tokenizer
+    set(ASM_MONACOCORE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MonacoCore.asm")
+    set(ASM_MONACOCORE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MonacoCore.obj")
+    add_custom_command(
+        OUTPUT ${ASM_MONACOCORE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_MONACOCORE_OBJ} ${ASM_MONACOCORE_SRC}
+        DEPENDS ${ASM_MONACOCORE_SRC}
+        COMMENT "[MASM] Assembling RawrXD_MonacoCore.asm (Gap Buffer, Tokenizer)"
+        VERBATIM
+    )
+
+    # Phase 29: PDB Symbol Server ├Ä┬ô├â┬ç├â┬╢ Native MSF v7.00 Parser Kernel
+    set(ASM_PDBKERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PDBKernel.asm")
+    set(ASM_PDBKERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PDBKernel.obj")
+    add_custom_command(
+        OUTPUT ${ASM_PDBKERNEL_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_PDBKERNEL_OBJ} ${ASM_PDBKERNEL_SRC}
+        DEPENDS ${ASM_PDBKERNEL_SRC}
+        COMMENT "[MASM] Assembling RawrXD_PDBKernel.asm (MSF magic, PubSym scan, GUID hex)"
+        VERBATIM
+    )
+
+    # Phase 30: Accelerator Router ├Ä┬ô├â┬ç├â┬╢ MASM Fast-Path Bridge
+    set(ASM_ROUTERBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RouterBridge.asm")
+    set(ASM_ROUTERBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RouterBridge.obj")
+    add_custom_command(
+        OUTPUT ${ASM_ROUTERBRIDGE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_ROUTERBRIDGE_OBJ} ${ASM_ROUTERBRIDGE_SRC}
+        DEPENDS ${ASM_ROUTERBRIDGE_SRC}
+        COMMENT "[MASM] Assembling RawrXD_RouterBridge.asm (Fast-Path Router Dispatch)"
+        VERBATIM
+    )
+
+    # Phase 29.2: GSI Hash ├Ä┬ô├â┬ç├â┬╢ MASM Accelerated Hash + Bucket Probe
+    set(ASM_GSIHASH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GSIHash.asm")
+    set(ASM_GSIHASH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GSIHash.obj")
+    add_custom_command(
+        OUTPUT ${ASM_GSIHASH_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_GSIHASH_OBJ} ${ASM_GSIHASH_SRC}
+        DEPENDS ${ASM_GSIHASH_SRC}
+        COMMENT "[MASM] Assembling RawrXD_GSIHash.asm (PDB hash, GSI bucket probe)"
+        VERBATIM
+    )
+
+    # Phase 29.2: Reference Provider ├Ä┬ô├â┬ç├â┬╢ FNV-1a Hash + Pattern Match
+    set(ASM_REFPROVIDER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_RefProvider.asm")
+    set(ASM_REFPROVIDER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_RefProvider.obj")
+    add_custom_command(
+        OUTPUT ${ASM_REFPROVIDER_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_REFPROVIDER_OBJ} ${ASM_REFPROVIDER_SRC}
+        DEPENDS ${ASM_REFPROVIDER_SRC}
+        COMMENT "[MASM] Assembling RawrXD_RefProvider.asm (Reference hash, pattern match)"
+        VERBATIM
+    )
+
+    # Phase 31: IDE Self-Audit ├Ä┬ô├â┬ç├â┬╢ Stub Detection Kernel
+    set(ASM_STUBDETECTOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_StubDetector.asm")
+    set(ASM_STUBDETECTOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_StubDetector.obj")
+    add_custom_command(
+        OUTPUT ${ASM_STUBDETECTOR_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_STUBDETECTOR_OBJ} ${ASM_STUBDETECTOR_SRC}
+        DEPENDS ${ASM_STUBDETECTOR_SRC}
+        COMMENT "[MASM] Assembling RawrXD_StubDetector.asm (Stub Pattern Scanner)"
+        VERBATIM
+    )
+
+    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ Pure MASM CoT DLL Core
+    set(ASM_COT_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_engine.asm")
+    set(ASM_COT_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_engine.obj")
+    add_custom_command(
+        OUTPUT ${ASM_COT_ENGINE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_ENGINE_OBJ} ${ASM_COT_ENGINE_SRC}
+        DEPENDS ${ASM_COT_ENGINE_SRC}
+        COMMENT "[MASM] Assembling rawrxd_cot_engine.asm (CoT Engine: 12 roles, 6 presets, 1GB arena, SEH)"
+        VERBATIM
+    )
+
+    # Phase 37: Chain-of-Thought Engine ├Ä┬ô├â┬ç├â┬╢ DLL Entry + SRW Lock
+    set(ASM_COT_DLL_ENTRY_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_dll_entry.asm")
+    set(ASM_COT_DLL_ENTRY_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_dll_entry.obj")
+    add_custom_command(
+        OUTPUT ${ASM_COT_DLL_ENTRY_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_DLL_ENTRY_OBJ} ${ASM_COT_DLL_ENTRY_SRC}
+        DEPENDS ${ASM_COT_DLL_ENTRY_SRC}
+        COMMENT "[MASM] Assembling rawrxd_cot_dll_entry.asm (DllMain, SRW Lock, Thread Tracking)"
+        VERBATIM
+    )
+
+    # Phase 39├Ä┬ô├â┬ç├â┬┤42: CoT Enterprise Finishers ├Ä┬ô├â┬ç├â┬╢ Snapshot, Telemetry, Copy Engine, Security
+    set(ASM_COT_PHASE39_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/rawrxd_cot_phase39.asm")
+    set(ASM_COT_PHASE39_OBJ "${CMAKE_CURRENT_BINARY_DIR}/rawrxd_cot_phase39.obj")
+    add_custom_command(
+        OUTPUT ${ASM_COT_PHASE39_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_COT_PHASE39_OBJ} ${ASM_COT_PHASE39_SRC}
+        DEPENDS ${ASM_COT_PHASE39_SRC}
+        COMMENT "[MASM] Assembling rawrxd_cot_phase39.asm (Snapshot, Telemetry, CopyEngine, Seal, Quotas)"
+        VERBATIM
+    )
+
+    # LSP Bridge: MASM64 Symbol Index Accelerator (binary search, batch FNV-1a, prefix scan)
+    set(ASM_LSP_SYMINDEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_SymbolIndex.asm")
+    set(ASM_LSP_SYMINDEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSP_SymbolIndex.obj")
+    add_custom_command(
+        OUTPUT ${ASM_LSP_SYMINDEX_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_LSP_SYMINDEX_OBJ} ${ASM_LSP_SYMINDEX_SRC}
+        DEPENDS ${ASM_LSP_SYMINDEX_SRC}
+        COMMENT "[MASM] Assembling RawrXD_LSP_SymbolIndex.asm (Hash Lookup, Batch FNV-1a, Prefix Scan)"
+        VERBATIM
+    )
+
+    # Phase 45: RawrCodex ├Ä┬ô├â┬ç├â┬╢ Agentic Decision Tree Core (295KB, 21 procs)
+    set(ASM_RAWRCODEX_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrCodex.asm")
+    set(ASM_RAWRCODEX_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrCodex.obj")
+    add_custom_command(
+        OUTPUT ${ASM_RAWRCODEX_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_RAWRCODEX_OBJ} ${ASM_RAWRCODEX_SRC}
+        DEPENDS ${ASM_RAWRCODEX_SRC}
+        COMMENT "[MASM] Assembling RawrCodex.asm (Agentic Decision Tree, Pattern Engine)"
+        VERBATIM
+    )
+
+    # Phase 45: Debug Engine ├Ä┬ô├â┬ç├â┬╢ Native Debugger Kernel (51KB, DynTrace symbolic resolution)
+    set(ASM_DEBUG_ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Debug_Engine.asm")
+    set(ASM_DEBUG_ENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Debug_Engine.obj")
+    add_custom_command(
+        OUTPUT ${ASM_DEBUG_ENGINE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_DEBUG_ENGINE_OBJ} ${ASM_DEBUG_ENGINE_SRC}
+        DEPENDS ${ASM_DEBUG_ENGINE_SRC}
+        COMMENT "[MASM] Assembling RawrXD_Debug_Engine.asm (Breakpoints, Watchpoints, Symbolic DynTrace)"
+        VERBATIM
+    )
+
+    # Phase 45: QuadBuffer Streamer ├Ä┬ô├â┬ç├â┬╢ High-Performance Memory Streaming (52KB)
+    set(ASM_QUADBUFFER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_QuadBuffer_Streamer.asm")
+    set(ASM_QUADBUFFER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_QuadBuffer_Streamer.obj")
+    add_custom_command(
+        OUTPUT ${ASM_QUADBUFFER_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_QUADBUFFER_OBJ} ${ASM_QUADBUFFER_SRC}
+        DEPENDS ${ASM_QUADBUFFER_SRC}
+        COMMENT "[MASM] Assembling RawrXD_QuadBuffer_Streamer.asm (4-Buffer Ring, Zero-Copy Streaming)"
+        VERBATIM
+    )
+
+    # Phase 45: Swarm Network ├Ä┬ô├â┬ç├â┬╢ Distributed Composition Protocol (36KB)
+    set(ASM_SWARM_NETWORK_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Swarm_Network.asm")
+    set(ASM_SWARM_NETWORK_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Swarm_Network.obj")
+    add_custom_command(
+        OUTPUT ${ASM_SWARM_NETWORK_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_SWARM_NETWORK_OBJ} ${ASM_SWARM_NETWORK_SRC}
+        DEPENDS ${ASM_SWARM_NETWORK_SRC}
+        COMMENT "[MASM] Assembling RawrXD_Swarm_Network.asm (P2P Discovery, Task Distribution)"
+        VERBATIM
+    )
+
+    # Phase 45: Enterprise License ├Ä┬ô├â┬ç├â┬╢ Feature Gate + Hardware Fingerprint (31KB)
+    set(ASM_ENTERPRISE_LIC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_EnterpriseLicense.asm")
+    set(ASM_ENTERPRISE_LIC_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_EnterpriseLicense.obj")
+    add_custom_command(
+        OUTPUT ${ASM_ENTERPRISE_LIC_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_ENTERPRISE_LIC_OBJ} ${ASM_ENTERPRISE_LIC_SRC}
+        DEPENDS ${ASM_ENTERPRISE_LIC_SRC}
+        COMMENT "[MASM] Assembling RawrXD_EnterpriseLicense.asm (License Validation, HWID, Feature Gates)"
+        VERBATIM
+    )
+
+    # Phase 45: License Shield ├Ä┬ô├â┬ç├â┬╢ Anti-Tamper + Integrity Guard (34KB)
+    set(ASM_LICENSE_SHIELD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_License_Shield.asm")
+    set(ASM_LICENSE_SHIELD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_License_Shield.obj")
+    add_custom_command(
+        OUTPUT ${ASM_LICENSE_SHIELD_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_LICENSE_SHIELD_OBJ} ${ASM_LICENSE_SHIELD_SRC}
+        DEPENDS ${ASM_LICENSE_SHIELD_SRC}
+        COMMENT "[MASM] Assembling RawrXD_License_Shield.asm (CRC32 Integrity, Anti-Debug, Tamper Detection)"
+        VERBATIM
+    )
+
+    # Phase 46: VulkanBridge ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Dispatch Shim (VkBridge_Init, MatMul, FlashAttn, Hotswap)
+    set(ASM_VULKANBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_VulkanBridge.asm")
+    set(ASM_VULKANBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_VulkanBridge.obj")
+    add_custom_command(
+        OUTPUT ${ASM_VULKANBRIDGE_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /Fo${ASM_VULKANBRIDGE_OBJ} ${ASM_VULKANBRIDGE_SRC}
+        DEPENDS ${ASM_VULKANBRIDGE_SRC}
+        COMMENT "[MASM] Assembling RawrXD_VulkanBridge.asm (GPU Dispatch Shim: Init, MatMul, FlashAttn, Hotswap)"
+        VERBATIM
+    )
+
+    # Phase 49: SocketResponder ├Ä┬ô├â┬ç├â┬╢ MASM64 IOCP Zero-Copy HTTP Server
+    set(ASM_SOCKETRESP_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SocketResponder.asm")
+    set(_ASM_SOCKETRESP_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SocketResponder.obj")
+    if(EXISTS "${_ASM_SOCKETRESP_PREBUILT}")
+        set(ASM_SOCKETRESP_OBJ "${_ASM_SOCKETRESP_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_SocketResponder.obj")
+    else()
+        set(ASM_SOCKETRESP_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SocketResponder.obj")
+        add_custom_command(
+            OUTPUT ${ASM_SOCKETRESP_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SOCKETRESP_OBJ} ${ASM_SOCKETRESP_SRC}
+            DEPENDS ${ASM_SOCKETRESP_SRC}
+            COMMENT "[MASM] Assembling RawrXD_SocketResponder.asm (IOCP HTTP: /health /status /models sub-0.5ms)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 49: TridentBeacon ├Ä┬ô├â┬ç├â┬╢ MASM64 COM Trident Host + Beacon JS Bridge
+    set(ASM_TRIDENTBEACON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon.asm")
+    set(_ASM_TRIDENTBEACON_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon.obj")
+    if(EXISTS "${_ASM_TRIDENTBEACON_PREBUILT}")
+        set(ASM_TRIDENTBEACON_OBJ "${_ASM_TRIDENTBEACON_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon.obj")
+    else()
+        set(ASM_TRIDENTBEACON_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon.obj")
+        add_custom_command(
+            OUTPUT ${ASM_TRIDENTBEACON_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTBEACON_OBJ} ${ASM_TRIDENTBEACON_SRC}
+            DEPENDS ${ASM_TRIDENTBEACON_SRC}
+            COMMENT "[MASM] Assembling RawrXD_TridentBeacon.asm (COM Trident Host, Beacon IDispatch, Ollama Bridge)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 49: TridentBeacon GPU ├Ä┬ô├â┬ç├â┬╢ MASM64 GPU Acceleration + WebGL Bridge
+    set(ASM_TRIDENTGPU_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_TridentBeacon_GPU.asm")
+    set(_ASM_TRIDENTGPU_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_TridentBeacon_GPU.obj")
+    if(EXISTS "${_ASM_TRIDENTGPU_PREBUILT}")
+        set(ASM_TRIDENTGPU_OBJ "${_ASM_TRIDENTGPU_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon_GPU.obj")
+    else()
+        set(ASM_TRIDENTGPU_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon_GPU.obj")
+        add_custom_command(
+            OUTPUT ${ASM_TRIDENTGPU_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTGPU_OBJ} ${ASM_TRIDENTGPU_SRC}
+            DEPENDS ${ASM_TRIDENTGPU_SRC}
+            COMMENT "[MASM] Assembling RawrXD_TridentBeacon_GPU.asm (IE11 Feature Control, WebGL FBO, OpenGL Bridge)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 50: AgenticOrchestrator ├Ä┬ô├â┬ç├â┬╢ VTable Dispatch + SPSC Task Queue
+    set(ASM_AGENTIC_ORCH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_AgenticOrchestrator.asm")
+    set(_ASM_AGENTIC_ORCH_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_AgenticOrchestrator.obj")
+    set(_ASM_AGENTIC_ORCH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_AgenticOrchestrator.obj")
+    if(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT1}")
+        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj")
+    elseif(EXISTS "${_ASM_AGENTIC_ORCH_PREBUILT2}")
+        set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj (genesis)")
+    else()
+        set(ASM_AGENTIC_ORCH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_AgenticOrchestrator.obj")
+        add_custom_command(
+            OUTPUT ${ASM_AGENTIC_ORCH_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_AGENTIC_ORCH_OBJ} ${ASM_AGENTIC_ORCH_SRC}
+            DEPENDS ${ASM_AGENTIC_ORCH_SRC}
+            COMMENT "[MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 50: GGUF Vulkan Loader ├Ä┬ô├â┬ç├â┬╢ Memory-Mapped Parser + Staging Buffer
+    set(ASM_GGUF_VKLOAD_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_GGUF_Vulkan_Loader.asm")
+    set(_ASM_GGUF_VKLOAD_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_GGUF_Vulkan_Loader.obj")
+    set(_ASM_GGUF_VKLOAD_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
+    if(EXISTS "${_ASM_GGUF_VKLOAD_PREBUILT1}")
+        set(ASM_GGUF_VKLOAD_OBJ "${_ASM_GGUF_VKLOAD_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_GGUF_Vulkan_Loader.obj")
+    elseif(EXISTS "${_ASM_GGUF_VKLOAD_PREBUILT2}")
+        set(ASM_GGUF_VKLOAD_OBJ "${_ASM_GGUF_VKLOAD_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_GGUF_Vulkan_Loader.obj (genesis)")
+    else()
+        set(ASM_GGUF_VKLOAD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
+        add_custom_command(
+            OUTPUT ${ASM_GGUF_VKLOAD_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_GGUF_VKLOAD_OBJ} ${ASM_GGUF_VKLOAD_SRC}
+            DEPENDS ${ASM_GGUF_VKLOAD_SRC}
+            COMMENT "[MASM] Assembling RawrXD_GGUF_Vulkan_Loader.asm (GGUF v3, FNV-1a, Tensor Staging, GGML Types)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 50: LSP-AI Bridge ├Ä┬ô├â┬ç├â┬╢ SymbolIndex ├Ä┬ô├â┬Ñ├â┬╢ ContextAnalyzer Fusion
+    set(ASM_LSP_BRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_LSP_AI_Bridge.asm")
+    set(_ASM_LSP_BRIDGE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_LSP_AI_Bridge.obj")
+    set(_ASM_LSP_BRIDGE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_LSP_AI_Bridge.obj")
+    if(EXISTS "${_ASM_LSP_BRIDGE_PREBUILT1}")
+        set(ASM_LSP_BRIDGE_OBJ "${_ASM_LSP_BRIDGE_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_LSP_AI_Bridge.obj")
+    elseif(EXISTS "${_ASM_LSP_BRIDGE_PREBUILT2}")
+        set(ASM_LSP_BRIDGE_OBJ "${_ASM_LSP_BRIDGE_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_LSP_AI_Bridge.obj (genesis)")
+    else()
+        set(ASM_LSP_BRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSP_AI_Bridge.obj")
+        add_custom_command(
+            OUTPUT ${ASM_LSP_BRIDGE_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_LSP_BRIDGE_OBJ} ${ASM_LSP_BRIDGE_SRC}
+            DEPENDS ${ASM_LSP_BRIDGE_SRC}
+            COMMENT "[MASM] Assembling RawrXD_LSP_AI_Bridge.asm (Symbol Ranking, Weight Fusion, Kind Boost)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 50: Streaming QuadBuffer ├Ä┬ô├â┬ç├â┬╢ HWND Token Rendering + GDI Double-Buffer
+    set(ASM_STREAM_QBUF_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Streaming_QuadBuffer.asm")
+    set(_ASM_STREAM_QBUF_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Streaming_QuadBuffer.obj")
+
+    # Batch 2 kernels are intentionally not manually assembled here.
+    # Keep manual MASM object generation limited to entries wired into MASM_OBJECTS.
+
+    if(EXISTS "${_ASM_STREAM_QBUF_PREBUILT}")
+        set(ASM_STREAM_QBUF_OBJ "${_ASM_STREAM_QBUF_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Streaming_QuadBuffer.obj")
+    else()
+        set(ASM_STREAM_QBUF_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Streaming_QuadBuffer.obj")
+        add_custom_command(
+            OUTPUT ${ASM_STREAM_QBUF_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_STREAM_QBUF_OBJ} ${ASM_STREAM_QBUF_SRC}
+            DEPENDS ${ASM_STREAM_QBUF_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Streaming_QuadBuffer.asm (SPSC Ring, GDI BitBlt, 60 FPS Render)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 50: SelfPatch Engine ├Ä┬ô├â┬ç├â┬╢ Runtime Code Morphing + CPU Optimization
+    set(ASM_SPENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfPatch_Engine.asm")
+    set(_ASM_SPENGINE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfPatch_Engine.obj")
+    if(EXISTS "${_ASM_SPENGINE_PREBUILT}")
+        set(ASM_SPENGINE_OBJ "${_ASM_SPENGINE_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_SelfPatch_Engine.obj")
+    else()
+        set(ASM_SPENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfPatch_Engine.obj")
+        add_custom_command(
+            OUTPUT ${ASM_SPENGINE_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPENGINE_OBJ} ${ASM_SPENGINE_SRC}
+            DEPENDS ${ASM_SPENGINE_SRC}
+            COMMENT "[MASM] Assembling RawrXD_SelfPatch_Engine.asm (Hotpatch Table, Code Caves, CPUID Optimize, Quant Switch)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase RDNA3: RX 7800 XT / R9700 GPU Kernels ├ó┬Ç┬ö Q4MatMul, KV Attention, Tile Streamer
+    # Prebuilt kernel object with embedded RDNA3 ISA (gfx1101+)
+    set(ASM_RDNA3_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/RDNA3_Full_Test.asm")
+    set(_ASM_RDNA3_KERNELS_PREBUILT "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/rdna3/obj/RDNA3_Full_Test.obj")
+    if(EXISTS "${_ASM_RDNA3_KERNELS_PREBUILT}")
+        set(ASM_RDNA3_KERNELS_OBJ "${_ASM_RDNA3_KERNELS_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RDNA3_Full_Test.obj (RDNA3 kernels)")
+    elseif(EXISTS "${ASM_RDNA3_KERNELS_SRC}")
+        set(ASM_RDNA3_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RDNA3_Full_Test.obj")
+        add_custom_command(
+            OUTPUT ${ASM_RDNA3_KERNELS_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /W3 /nologo /Zi /Fo${ASM_RDNA3_KERNELS_OBJ} "${ASM_RDNA3_KERNELS_SRC}"
+            DEPENDS "${ASM_RDNA3_KERNELS_SRC}"
+            COMMENT "[MASM] Assembling RDNA3_Full_Test.asm (Q4MatMul, KV Attention, Tile Streamer)"
+            VERBATIM
+        )
+    else()
+        message(WARNING "[MASM] RDNA3 kernels not found. GPU acceleration disabled.")
+        set(ASM_RDNA3_KERNELS_OBJ "")
+    endif()
+
+    # Phase Camellia: Camellia-256 Encryption Engine ├Ä┬ô├â┬ç├â┬╢ MASM x64 CTR-mode workspace encryption
+    set(ASM_CAMELLIA256_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256.asm")
+    set(_ASM_CAMELLIA256_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_Camellia256.obj")
+    set(_ASM_CAMELLIA256_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256.obj")
+    if(EXISTS "${_ASM_CAMELLIA256_PREBUILT1}")
+        set(ASM_CAMELLIA256_OBJ "${_ASM_CAMELLIA256_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256.obj")
+    elseif(EXISTS "${_ASM_CAMELLIA256_PREBUILT2}")
+        set(ASM_CAMELLIA256_OBJ "${_ASM_CAMELLIA256_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256.obj (genesis)")
+    else()
+        set(ASM_CAMELLIA256_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256.obj")
+        add_custom_command(
+            OUTPUT ${ASM_CAMELLIA256_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_OBJ} ${ASM_CAMELLIA256_SRC}
+            DEPENDS ${ASM_CAMELLIA256_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Camellia256.asm (Camellia-256 CTR Encrypt, 24-Round Feistel, HWID Key)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase Camellia-Auth: Authenticated Encrypt/Decrypt (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
+    set(ASM_CAMELLIA256_AUTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Camellia256_Auth.asm")
+    set(_ASM_CAMELLIA256_AUTH_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Camellia256_Auth.obj")
+    set(_ASM_CAMELLIA256_AUTH_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Camellia256_Auth.obj")
+    if(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
+        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj")
+    elseif(EXISTS "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
+        set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj (genesis)")
+    else()
+        set(ASM_CAMELLIA256_AUTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256_Auth.obj")
+        add_custom_command(
+            OUTPUT ${ASM_CAMELLIA256_AUTH_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_AUTH_OBJ} ${ASM_CAMELLIA256_AUTH_SRC}
+            DEPENDS ${ASM_CAMELLIA256_AUTH_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase KQ: Q4_K Bare-Metal Dequantization Kernel (AVX2 + AVX-512, CPUID Dispatch)
+    set(ASM_KQUANT_KERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_KQuant_Kernel.asm")
+    set(_ASM_KQUANT_KERNEL_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_KQuant_Kernel.obj")
+    if(EXISTS "${_ASM_KQUANT_KERNEL_PREBUILT}")
+        set(ASM_KQUANT_KERNEL_OBJ "${_ASM_KQUANT_KERNEL_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_KQuant_Kernel.obj")
+    else()
+        set(ASM_KQUANT_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_KQuant_Kernel.obj")
+        add_custom_command(
+            OUTPUT ${ASM_KQUANT_KERNEL_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_KQUANT_KERNEL_OBJ} ${ASM_KQUANT_KERNEL_SRC}
+            DEPENDS ${ASM_KQUANT_KERNEL_SRC}
+            COMMENT "[MASM] Assembling RawrXD_KQuant_Kernel.asm (Q4_K AVX2+AVX-512 Dequant, CPUID Dispatch)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase WD: Agentic Watchdog ├Ä┬ô├â┬ç├â┬╢ .text Section Integrity Verification (HMAC-SHA256)
+    set(ASM_WATCHDOG_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Watchdog.asm")
+    set(_ASM_WATCHDOG_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Watchdog.obj")
+    if(EXISTS "${_ASM_WATCHDOG_PREBUILT}")
+        set(ASM_WATCHDOG_OBJ "${_ASM_WATCHDOG_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Watchdog.obj")
+    else()
+        set(ASM_WATCHDOG_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Watchdog.obj")
+        add_custom_command(
+            OUTPUT ${ASM_WATCHDOG_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_WATCHDOG_OBJ} ${ASM_WATCHDOG_SRC}
+            DEPENDS ${ASM_WATCHDOG_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase E: SelfHost Engine ├Ä┬ô├â┬ç├â┬╢ Recursive Self-Compilation
+    set(ASM_SELFHOST_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_SelfHost_Engine.asm")
+    set(_ASM_SELFHOST_PREBUILT1 "${RAWRXD_PREBUILT_SRCASM_DIR}/RawrXD_SelfHost_Engine.obj")
+    set(_ASM_SELFHOST_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_SelfHost_Engine.obj")
+    if(EXISTS "${_ASM_SELFHOST_PREBUILT1}")
+        set(ASM_SELFHOST_OBJ "${_ASM_SELFHOST_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_SelfHost_Engine.obj")
+    elseif(EXISTS "${_ASM_SELFHOST_PREBUILT2}")
+        set(ASM_SELFHOST_OBJ "${_ASM_SELFHOST_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_SelfHost_Engine.obj (genesis)")
+    else()
+        set(ASM_SELFHOST_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfHost_Engine.obj")
+        add_custom_command(
+            OUTPUT ${ASM_SELFHOST_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SELFHOST_OBJ} ${ASM_SELFHOST_SRC}
+            DEPENDS ${ASM_SELFHOST_SRC}
+            COMMENT "[MASM] Assembling RawrXD_SelfHost_Engine.asm (Self-Compile, uASM, Atomic Swap)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase F: Hardware Synthesizer ├Ä┬ô├â┬ç├â┬╢ FPGA/ASIC Acceleration
+    set(ASM_HWSYNTH_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_HardwareSynthesizer.asm")
+    set(_ASM_HWSYNTH_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_HardwareSynthesizer.obj")
+    if(EXISTS "${_ASM_HWSYNTH_PREBUILT}")
+        set(ASM_HWSYNTH_OBJ "${_ASM_HWSYNTH_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_HardwareSynthesizer.obj")
+    else()
+        set(ASM_HWSYNTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_HardwareSynthesizer.obj")
+        add_custom_command(
+            OUTPUT ${ASM_HWSYNTH_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HWSYNTH_OBJ} ${ASM_HWSYNTH_SRC}
+            DEPENDS ${ASM_HWSYNTH_SRC}
+            COMMENT "[MASM] Assembling RawrXD_HardwareSynthesizer.asm (Dataflow, GEMM Spec, Verilog Gen)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase G: Mesh Brain ├Ä┬ô├â┬ç├â┬╢ Distributed Consciousness P2P Mesh
+    set(ASM_MESHBRAIN_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MeshBrain.asm")
+    set(_ASM_MESHBRAIN_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_MeshBrain.obj")
+    if(EXISTS "${_ASM_MESHBRAIN_PREBUILT}")
+        set(ASM_MESHBRAIN_OBJ "${_ASM_MESHBRAIN_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_MeshBrain.obj")
+    else()
+        set(ASM_MESHBRAIN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MeshBrain.obj")
+        add_custom_command(
+            OUTPUT ${ASM_MESHBRAIN_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_MESHBRAIN_OBJ} ${ASM_MESHBRAIN_SRC}
+            DEPENDS ${ASM_MESHBRAIN_SRC}
+            COMMENT "[MASM] Assembling RawrXD_MeshBrain.asm (CRDT, ZKP, DHT, FedAvg, Gossip)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase H: Speciator Engine ├Ä┬ô├â┬ç├â┬╢ Metamorphic Evolution
+    set(ASM_SPECIATOR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Speciator.asm")
+    set(_ASM_SPECIATOR_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Speciator.obj")
+    if(EXISTS "${_ASM_SPECIATOR_PREBUILT}")
+        set(ASM_SPECIATOR_OBJ "${_ASM_SPECIATOR_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Speciator.obj")
+    else()
+        set(ASM_SPECIATOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Speciator.obj")
+        add_custom_command(
+            OUTPUT ${ASM_SPECIATOR_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPECIATOR_OBJ} ${ASM_SPECIATOR_SRC}
+            DEPENDS ${ASM_SPECIATOR_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Speciator.asm (Genome, Crossover, Mutation, Speciation)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase I: Neural Bridge ├Ä┬ô├â┬ç├â┬╢ Direct Cortex Interface
+    set(ASM_NEURALBRIDGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_NeuralBridge.asm")
+    set(_ASM_NEURALBRIDGE_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_NeuralBridge.obj")
+    if(EXISTS "${_ASM_NEURALBRIDGE_PREBUILT}")
+        set(ASM_NEURALBRIDGE_OBJ "${_ASM_NEURALBRIDGE_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_NeuralBridge.obj")
+    else()
+        set(ASM_NEURALBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_NeuralBridge.obj")
+        add_custom_command(
+            OUTPUT ${ASM_NEURALBRIDGE_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NEURALBRIDGE_OBJ} ${ASM_NEURALBRIDGE_SRC}
+            DEPENDS ${ASM_NEURALBRIDGE_SRC}
+            COMMENT "[MASM] Assembling RawrXD_NeuralBridge.asm (EEG FFT, Intent Classify, Phosphene HUD)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase ├ó┬ò┬¼├ó┬î┬É: Omega Orchestrator ├Ä┬ô├â┬ç├â┬╢ Autonomous Development Pipeline
+    set(ASM_OMEGA_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_OmegaOrchestrator.asm")
+    set(_ASM_OMEGA_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_OmegaOrchestrator.obj")
+    if(EXISTS "${_ASM_OMEGA_PREBUILT}")
+        set(ASM_OMEGA_OBJ "${_ASM_OMEGA_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_OmegaOrchestrator.obj")
+    else()
+        set(ASM_OMEGA_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_OmegaOrchestrator.obj")
+        add_custom_command(
+            OUTPUT ${ASM_OMEGA_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_OMEGA_OBJ} ${ASM_OMEGA_SRC}
+            DEPENDS ${ASM_OMEGA_SRC}
+            COMMENT "[MASM] Assembling RawrXD_OmegaOrchestrator.asm (Task DAG, Agents, Pipeline, Self-Improve)"
+            VERBATIM
+        )
+    endif()
+
+    # Phase ├Ä┬ô├â┬¬├ó┬é┬º: PerfCounters ├Ä┬ô├â┬ç├â┬╢ RDTSC Per-Kernel Cycle Histogram
+    set(ASM_PERFCOUNTERS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_PerfCounters.asm")
+    set(_ASM_PERFCOUNTERS_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_PerfCounters.obj")
+    set(_ASM_PERFCOUNTERS_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_PerfCounters.obj")
+    if(EXISTS "${_ASM_PERFCOUNTERS_PREBUILT1}")
+        set(ASM_PERFCOUNTERS_OBJ "${_ASM_PERFCOUNTERS_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_PerfCounters.obj")
+    elseif(EXISTS "${_ASM_PERFCOUNTERS_PREBUILT2}")
+        set(ASM_PERFCOUNTERS_OBJ "${_ASM_PERFCOUNTERS_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_PerfCounters.obj (genesis)")
+    else()
+        set(ASM_PERFCOUNTERS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PerfCounters.obj")
+        add_custom_command(
+            OUTPUT ${ASM_PERFCOUNTERS_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PERFCOUNTERS_OBJ} ${ASM_PERFCOUNTERS_SRC}
+            DEPENDS ${ASM_PERFCOUNTERS_SRC}
+            COMMENT "[MASM] Assembling RawrXD_PerfCounters.asm (RDTSC Cycle Histograms, 64 Slots)"
+            VERBATIM
+        )
+    endif()
+
+    # Prebuilt-only MASM modules: these .asm sources are intentionally excluded from
+    # ASM_KERNEL_SOURCES due to known ml64 incompatibilities in checked-in scaffolds.
+    # For IDE/link correctness, prefer the vetted prebuilt .obj blobs when present.
+    #
+    # Phase 14.2: Hotpatch kernel (trampolines, shadow buffers, I-cache flush)
+    set(ASM_HOTPATCH_KERNEL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Hotpatch_Kernel.asm")
+    set(_ASM_HOTPATCH_KERNEL_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Hotpatch_Kernel.obj")
+    set(_ASM_HOTPATCH_KERNEL_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Hotpatch_Kernel.obj")
+    if(EXISTS "${_ASM_HOTPATCH_KERNEL_PREBUILT1}")
+        set(ASM_HOTPATCH_KERNEL_OBJ "${_ASM_HOTPATCH_KERNEL_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Hotpatch_Kernel.obj")
+    elseif(EXISTS "${_ASM_HOTPATCH_KERNEL_PREBUILT2}")
+        set(ASM_HOTPATCH_KERNEL_OBJ "${_ASM_HOTPATCH_KERNEL_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Hotpatch_Kernel.obj (genesis)")
+    else()
+        set(ASM_HOTPATCH_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Hotpatch_Kernel.obj")
+        add_custom_command(
+            OUTPUT ${ASM_HOTPATCH_KERNEL_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HOTPATCH_KERNEL_OBJ} ${ASM_HOTPATCH_KERNEL_SRC}
+            DEPENDS ${ASM_HOTPATCH_KERNEL_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Hotpatch_Kernel.asm"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 14.3: Snapshot kernel (capture/restore/verify/discard)
+    set(ASM_SNAPSHOT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Snapshot.asm")
+    set(_ASM_SNAPSHOT_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Snapshot.obj")
+    set(_ASM_SNAPSHOT_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Snapshot.obj")
+    if(EXISTS "${_ASM_SNAPSHOT_PREBUILT1}")
+        set(ASM_SNAPSHOT_OBJ "${_ASM_SNAPSHOT_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Snapshot.obj")
+    elseif(EXISTS "${_ASM_SNAPSHOT_PREBUILT2}")
+        set(ASM_SNAPSHOT_OBJ "${_ASM_SNAPSHOT_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Snapshot.obj (genesis)")
+    else()
+        set(ASM_SNAPSHOT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Snapshot.obj")
+        add_custom_command(
+            OUTPUT ${ASM_SNAPSHOT_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SNAPSHOT_OBJ} ${ASM_SNAPSHOT_SRC}
+            DEPENDS ${ASM_SNAPSHOT_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Snapshot.asm"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 46: Pyre compute kernels (sgemm/gemv/norm/rope)
+    set(ASM_PYRE_COMPUTE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_Pyre_Compute.asm")
+    set(_ASM_PYRE_COMPUTE_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_Pyre_Compute.obj")
+    set(_ASM_PYRE_COMPUTE_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_Pyre_Compute.obj")
+    if(EXISTS "${_ASM_PYRE_COMPUTE_PREBUILT1}")
+        set(ASM_PYRE_COMPUTE_OBJ "${_ASM_PYRE_COMPUTE_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Pyre_Compute.obj")
+    elseif(EXISTS "${_ASM_PYRE_COMPUTE_PREBUILT2}")
+        set(ASM_PYRE_COMPUTE_OBJ "${_ASM_PYRE_COMPUTE_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_Pyre_Compute.obj (genesis)")
+    else()
+        set(ASM_PYRE_COMPUTE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Pyre_Compute.obj")
+        add_custom_command(
+            OUTPUT ${ASM_PYRE_COMPUTE_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PYRE_COMPUTE_OBJ} ${ASM_PYRE_COMPUTE_SRC}
+            DEPENDS ${ASM_PYRE_COMPUTE_SRC}
+            COMMENT "[MASM] Assembling RawrXD_Pyre_Compute.asm"
+            VERBATIM
+        )
+    endif()
+
+    # Phase 49: Copilot gap closer (VecDB/Composer/CRDT/Git context)
+    set(ASM_COPILOT_GAPCLOSER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_CopilotGapCloser.asm")
+    set(_ASM_COPILOT_GAPCLOSER_PREBUILT1 "${RAWRXD_PREBUILT_OBJ_DIR}/asm_RawrXD_CopilotGapCloser.obj")
+    set(_ASM_COPILOT_GAPCLOSER_PREBUILT2 "${RAWRXD_PREBUILT_GENESIS_DIR}/RawrXD_CopilotGapCloser.obj")
+    if(EXISTS "${_ASM_COPILOT_GAPCLOSER_PREBUILT1}")
+        set(ASM_COPILOT_GAPCLOSER_OBJ "${_ASM_COPILOT_GAPCLOSER_PREBUILT1}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_CopilotGapCloser.obj")
+    elseif(EXISTS "${_ASM_COPILOT_GAPCLOSER_PREBUILT2}")
+        set(ASM_COPILOT_GAPCLOSER_OBJ "${_ASM_COPILOT_GAPCLOSER_PREBUILT2}")
+        message(STATUS "[MASM] Using prebuilt RawrXD_CopilotGapCloser.obj (genesis)")
+    else()
+        set(ASM_COPILOT_GAPCLOSER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_CopilotGapCloser.obj")
+        add_custom_command(
+            OUTPUT ${ASM_COPILOT_GAPCLOSER_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_COPILOT_GAPCLOSER_OBJ} ${ASM_COPILOT_GAPCLOSER_SRC}
+            DEPENDS ${ASM_COPILOT_GAPCLOSER_SRC}
+            COMMENT "[MASM] Assembling RawrXD_CopilotGapCloser.asm"
+            VERBATIM
+        )
+    endif()
+
+    # NativeSpeed kernels (SIMD fast-paths)
+    set(ASM_NATIVE_SPEED_KERNELS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/asm/native_speed_kernels.asm")
+    set(_ASM_NATIVE_SPEED_KERNELS_PREBUILT "${RAWRXD_PREBUILT_GENESIS_DIR}/native_speed_kernels.obj")
+    if(EXISTS "${_ASM_NATIVE_SPEED_KERNELS_PREBUILT}")
+        set(ASM_NATIVE_SPEED_KERNELS_OBJ "${_ASM_NATIVE_SPEED_KERNELS_PREBUILT}")
+        message(STATUS "[MASM] Using prebuilt native_speed_kernels.obj (genesis)")
+    else()
+        set(ASM_NATIVE_SPEED_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/native_speed_kernels.obj")
+        add_custom_command(
+            OUTPUT ${ASM_NATIVE_SPEED_KERNELS_OBJ}
+            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NATIVE_SPEED_KERNELS_OBJ} ${ASM_NATIVE_SPEED_KERNELS_SRC}
+            DEPENDS ${ASM_NATIVE_SPEED_KERNELS_SRC}
+            COMMENT "[MASM] Assembling native_speed_kernels.asm"
+            VERBATIM
+        )
+    endif()
+
+    # Brutal gzip deflate ├Ä┬ô├â┬ç├â┬╢ stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
+    set(ASM_DEFLATE_BRUTAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/gpu_masm/deflate_brutal_masm.asm")
+    set(ASM_DEFLATE_BRUTAL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/deflate_brutal_masm.obj")
+    add_custom_command(
+        OUTPUT ${ASM_DEFLATE_BRUTAL_OBJ}
+        COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /I "${CMAKE_CURRENT_SOURCE_DIR}/include" /Fo${ASM_DEFLATE_BRUTAL_OBJ} ${ASM_DEFLATE_BRUTAL_SRC}
+        DEPENDS ${ASM_DEFLATE_BRUTAL_SRC}
+        COMMENT "[MASM] Assembling deflate_brutal_masm.asm"
+        VERBATIM
+    )
+
+    # Collect all MASM objects
+    set(MASM_OBJECTS
